@@ -1,0 +1,5 @@
+/config/server.*
+/jspm_packages
+/node_modules
+/c-to-json
+/assets/*

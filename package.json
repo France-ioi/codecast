@@ -1,0 +1,71 @@
+{
+  "name": "fioi-recorder",
+  "version": "0.1.0",
+  "description": "An editor component based on angular.js and Ace.",
+  "homepage": "https://github.com/France-ioi/fioi-editor2",
+  "authors": [
+    "Sébastien Carlier <s.carlier@epixode.fr>"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/France-ioi/fioi-editor2"
+  },
+  "bugs": {
+    "url": "https://github.com/France-ioi/fioi-editor2/issues"
+  },
+  "jspm": {
+    "main": "frontend/main.js",
+    "configFile": "frontend/jspm-0.16.config.js",
+    "dependencies": {
+      "bootstrap": "github:twbs/bootstrap@^3.3.6",
+      "brace": "npm:brace@^0.7.0",
+      "classnames": "npm:classnames@^2.2.3",
+      "epic-component": "npm:epic-component@^0.2.0",
+      "epic-vt": "npm:epic-vt@^0.0.3",
+      "eventemitter2": "npm:eventemitter2@^1.0.0",
+      "font-awesome": "npm:font-awesome@^4.5.0",
+      "immutable": "npm:immutable@^3.7.6",
+      "lamejs": "npm:lamejs@^1.0.0",
+      "lodash": "npm:lodash@^4.6.1",
+      "persistent-c": "npm:persistent-c@^0.1.0",
+      "react": "npm:react-dom@15.0.0-rc.2",
+      "react-ace": "npm:react-ace@^3.2.0",
+      "react-bootstrap": "npm:react-bootstrap@^0.28.4",
+      "react-dom": "npm:react-dom@^0.14.7",
+      "react-redux": "npm:react-redux@^4.4.1",
+      "redux": "npm:redux@^3.3.1",
+      "redux-devtools": "npm:redux-devtools@^3.1.1",
+      "redux-devtools-dock-monitor": "npm:redux-devtools-dock-monitor@^1.1.0",
+      "redux-devtools-log-monitor": "npm:redux-devtools-log-monitor@^1.0.5",
+      "redux-saga": "npm:redux-saga@^0.9.5",
+      "superagent": "npm:superagent@^1.8.2",
+      "text": "github:systemjs/plugin-text@^0.0.7"
+    },
+    "devDependencies": {
+      "babel": "npm:babel-core@^5.8.24",
+      "babel-runtime": "npm:babel-runtime@^5.8.24",
+      "clean-css": "npm:clean-css@^3.4.10",
+      "core-js": "npm:core-js@^1.1.4",
+      "css": "github:systemjs/plugin-css@^0.1.20"
+    },
+    "overrides": {
+      "npm:lamejs@1.0.0": {
+        "main": "lame.all.js",
+        "format": "global",
+        "shim": {
+          "exports": "lamejs",
+          "dependencies": []
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "jspm": "^0.16.31"
+  },
+  "dependencies": {
+    "body-parser": "^1.15.0",
+    "express": "^4.13.4",
+    "jade": "^1.11.0"
+  }
+}
