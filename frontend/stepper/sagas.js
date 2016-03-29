@@ -35,7 +35,7 @@ export default function (actions) {
     if (stopCond && stopCond(state)) {
       return false;
     }
-    context.state = C.stepMicro(state);
+    context.state = C.step(state);
     context.stepCounter += 1;
     return true;
   }
@@ -55,18 +55,6 @@ export default function (actions) {
     }
   }
 
-  function outOfCurrentStmt (state) {
-    return state.direction === 'down' && state.control.seq === 'stmt';
-  };
-
-  function intoNextStmt (state) {
-    return !/^(CompoundStmt|IfStmt|WhileStmt|DoStmt|ForStmt)$/.test(state.control.node[0]);
-  };
-
-  function intoNextExpr (state) {
-    return state.direction === 'down' && state.control.seq;
-  };
-
   function* watchStepperStep () {
     while (true) {
       const action = yield take(actions.recordingScreenStepperStep);
@@ -78,15 +66,15 @@ export default function (actions) {
         switch (action.mode) {
           case 'into':
             // Step out of the current statement.
-            yield call(stepUntil, context, outOfCurrentStmt);
+            yield call(stepUntil, context, C.outOfCurrentStmt);
             // Step into the next statement.
-            yield call(stepUntil, context, intoNextStmt);
+            yield call(stepUntil, context, C.intoNextStmt);
             break;
           case 'expr':
             // Take a single step unconditionally,
-            context.state = C.stepMicro(context.state);
+            context.state = C.step(context.state);
             // then stop when we enter the next expression.
-            yield call(stepUntil, context, intoNextExpr);
+            yield call(stepUntil, context, C.intoNextExpr);
             break;
         }
         yield put({type: actions.recordingScreenStepperIdle, context: viewContext(context)});

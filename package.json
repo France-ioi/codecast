@@ -28,7 +28,7 @@
       "immutable": "npm:immutable@^3.7.6",
       "lamejs": "npm:lamejs@^1.0.0",
       "lodash": "npm:lodash@^4.6.1",
-      "persistent-c": "npm:persistent-c@^0.1.0",
+      "persistent-c": "npm:persistent-c@1.0.1",
       "react": "npm:react-dom@15.0.0-rc.2",
       "react-ace": "npm:react-ace@^3.2.0",
       "react-bootstrap": "npm:react-bootstrap@^0.28.4",
