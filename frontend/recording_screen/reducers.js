@@ -1,6 +1,7 @@
 
 import * as C from 'persistent-c';
 import * as builtins from '../builtins';
+import {getRangeFromOffsets} from '../translator/utils';
 
 export function recordingScreenSourceTextChanged (state, action) {
   return {
@@ -26,11 +27,21 @@ export function recordingScreenStepperRestart (state, action) {
   const {syntaxTree} = state.translated;
   const decls = syntaxTree[2];
   const context = {decls, builtins};
+  let stepperState = C.start(context);
+  while (stepperState.control && !stepperState.control.node[1].begin) {
+    stepperState = C.step(stepperState);
+  }
+  let selection = null;
+  if (stepperState.control) {
+    const attrs = stepperState.control.node[1];
+    selection = getRangeFromOffsets(state.translated, attrs.begin, attrs.end);
+  }
   return {
     ...state,
     recordingScreen: {
       ...state.recordingScreen,
-      stepperState: C.start(context)
+      stepperState: stepperState,
+      selection
     },
     stepper: {
       mode: 'idle'
