@@ -1,5 +1,4 @@
 
-import {takeLatest} from 'redux-saga';
 import {take, put, call, fork, select, race} from 'redux-saga/effects';
 
 import {getRecorderState} from '../selectors';
@@ -41,46 +40,39 @@ export default function (actions) {
     }
   }
 
-  function* watchRecorderStart () {
+  function* recorderStart () {
     try {
-      yield* takeLatest(actions.recorderStart, recorderStart);
+      // The user clicked the "start recording" button.
+      const recorderState = yield select(getRecorderState);
+      if (recorderState.state !== 'ready')
+        return;
+      const {worker, source} = recorderState;
+      // Initialize the worker's state.
+      worker.postMessage({
+        command: "init",
+          config: {
+            sampleRate: source.context.sampleRate
+        }
+      });
+      // Process the audio samples using a script function.
+      const node = source.context.createScriptProcessor(4096, 2, 2);
+      node.onaudioprocess = function (event) {
+        // Pass the buffer on to the worker.
+        worker.postMessage({
+          command: "record",
+          buffer: [
+             event.inputBuffer.getChannelData(0),
+             event.inputBuffer.getChannelData(1)
+          ]
+        });
+      };
+      source.connect(node);
+      node.connect(source.context.destination);
+      const startTime = window.performance.now();
+      yield put({type: actions.recorderStarted, startTime});
     } catch (error) {
       yield put({type: actions.error, source: 'recorderStart', error});
     }
-  }
-
-  function* recorderStart () {
-    // The user clicked the "start recording" button.
-    const recorderState = yield select(getRecorderState);
-    if (recorderState.state !== 'ready')
-      return;
-    const {worker, source} = recorderState;
-    // Initialize the worker's state.
-    worker.postMessage({
-      command: "init",
-        config: {
-          sampleRate: source.context.sampleRate
-      }
-    });
-    // Process the audio samples using a script function.
-    const node = source.context.createScriptProcessor(4096, 2, 2);
-    node.onaudioprocess = function (event) {
-      // Pass the buffer on to the worker.
-      worker.postMessage({
-        command: "record",
-        buffer: [
-           event.inputBuffer.getChannelData(0),
-           event.inputBuffer.getChannelData(1)
-        ]
-      });
-    };
-    source.connect(node);
-    node.connect(source.context.destination);
-    yield put({type: actions.recorderStarted});
-  }
-
-  function* watchRecorderStop () {
-    yield* takeLatest(actions.recorderStop, recorderStop);
   }
 
   function* recorderStop () {
@@ -106,6 +98,20 @@ export default function (actions) {
         const now = window.performance.now();
         yield put({type: actions.recorderTick, now});
       }
+    }
+  }
+
+  function* watchRecorderStart () {
+    while (true) {
+      yield take(actions.recorderStart);
+      yield call(recorderStart);
+    }
+  }
+
+  function* watchRecorderStop () {
+    while (true) {
+      yield take(actions.recorderStop);
+      yield call(recorderStop);
     }
   }
 
