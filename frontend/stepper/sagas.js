@@ -63,6 +63,8 @@ export default function (actions) {
         yield put({type: actions.recordingScreenStepperStart});
         const stepperState = yield select(getStepperState);
         const context = buildContext(stepperState);
+        // Take a single step unconditionally,
+        context.state = C.step(context.state);
         switch (action.mode) {
           case 'into':
             // Step out of the current statement.
@@ -71,8 +73,6 @@ export default function (actions) {
             yield call(stepUntil, context, C.intoNextStmt);
             break;
           case 'expr':
-            // Take a single step unconditionally,
-            context.state = C.step(context.state);
             // then stop when we enter the next expression.
             yield call(stepUntil, context, C.intoNextExpr);
             break;
