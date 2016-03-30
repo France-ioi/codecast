@@ -1,6 +1,72 @@
 
 import {getRangeFromOffsets} from '../translator/utils';
 
+import * as C from 'persistent-c';
+import * as builtins from '../builtins';
+import {getRangeFromOffsets} from '../translator/utils';
+
+export function recordingScreenStepperRestart (state, action) {
+  const {syntaxTree} = state.translated;
+  const decls = syntaxTree[2];
+  const context = {decls, builtins};
+  let stepperState = C.start(context);
+  while (stepperState.control && !stepperState.control.node[1].begin) {
+    stepperState = C.step(stepperState);
+  }
+  let selection = null;
+  if (stepperState.control) {
+    const attrs = stepperState.control.node[1];
+    selection = getRangeFromOffsets(state.translated, attrs.begin, attrs.end);
+  }
+  return {
+    ...state,
+    recordingScreen: {
+      ...state.recordingScreen,
+      stepperState: stepperState,
+      selection
+    },
+    stepper: {
+      mode: 'idle'
+    }
+  };
+};
+
+export function recordingScreenStepperExit (state, action) {
+  return {
+    ...state,
+    recordingScreen: {
+      ...state.recordingScreen,
+      stepperState: undefined
+    },
+    translated: undefined,
+    stepper: undefined
+  };
+};
+
+export function recordingScreenStepperStep (state, action) {
+  if (state.stepper.mode !== 'idle') {
+    return state;
+  } else {
+    return {
+      ...state,
+      stepper: {
+        mode: 'starting',
+        state: state.recordingScreen.stepperState
+      }
+    };
+  }
+};
+
+export function recordingScreenStepperStart (state, action) {
+  return {
+    ...state,
+    stepper: {
+      ...state.stepper,
+      mode: 'running'
+    }
+  };
+};
+
 export function recordingScreenStepperProgress (state, action) {
   // Copy the new state to the recording screen's state, so that
   // the view reflects the current progress.
@@ -33,4 +99,3 @@ export function recordingScreenStepperIdle (state, action) {
     }
   };
 };
-
