@@ -130,38 +130,43 @@ export const RecordingScreen = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {source, selection, translated, stepperState} = self.props;
+    const {source, selection, translated, stepperState, elapsed} = self.props;
     const {control, terminal, error, scope} = (stepperState || {});
     const haveNode = control && control.node;
     setSelection(selection);
     return (
-      <div className="row">
-        <div className="col-md-6">
-          <div className="pane pane-source">
-            <h2>Source C</h2>
-            <AceEditor mode="c_cpp" theme="github" name="input_code" value={source} onLoad={onSourceLoad} onChange={onSourceChange} readOnly={!!translated} width='100%' height='336px'/>
+      <div>
+        <div className="row">
+          <div className="col-md-12">
+            <div className="pane pane-controls">
+              <h2>Contrôles</h2>
+              {translated ?
+                <div>
+                  <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>
+                  <Button onClick={onStepInto} disabled={!haveNode}>step into</Button>
+                  <Button onClick={onStepOut} disabled={true||!haveNode}>step out</Button>
+                  <Button onClick={onRestart}>recommencer</Button>
+                  <Button onClick={onEdit}>éditer</Button>
+                </div>
+              : <div>
+                  <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>
+                </div>}
+              {error && <p>{error}</p>}
+              <p>{Math.round(elapsed / 1000)}s</p>
+            </div>
           </div>
-          {terminal &&
-            <div className="pane pane-terminal">
-              <h2>Terminal</h2>
-              <Terminal terminal={terminal}/>
-            </div>}
         </div>
-        <div className="col-md-6">
-          <div className="pane pane-controls">
-            <h2>Contrôles</h2>
-            {translated ?
-              <div>
-                <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>
-                <Button onClick={onStepInto} disabled={true||!haveNode}>step into</Button>
-                <Button onClick={onStepOut} disabled={true||!haveNode}>step out</Button>
-                <Button onClick={onRestart}>recommencer</Button>
-                <Button onClick={onEdit}>éditer</Button>
-              </div>
-            : <div>
-                <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>
+        <div className="row">
+          <div className="col-md-6">
+            <div className="pane pane-source">
+              <h2>Source C</h2>
+              <AceEditor mode="c_cpp" theme="github" name="input_code" value={source} onLoad={onSourceLoad} onChange={onSourceChange} readOnly={!!translated} width='100%' height='336px'/>
+            </div>
+            {terminal &&
+              <div className="pane pane-terminal">
+                <h2>Terminal</h2>
+                <Terminal terminal={terminal}/>
               </div>}
-            {error && <p>{error}</p>}
           </div>
         </div>
       </div>
@@ -171,9 +176,10 @@ export const RecordingScreen = EpicComponent(self => {
 });
 
 function recordingScreenSelector (state, props) {
-  const {recordingScreen, translated} = state;
+  const {recordingScreen, translated, recorder} = state;
   const {source, selection, stepperState} = recordingScreen;
-  return {source, selection, stepperState, translated};
+  const {elapsed} = recorder;
+  return {source, selection, stepperState, translated, elapsed};
 };
 
 export default connect(recordingScreenSelector)(RecordingScreen);
