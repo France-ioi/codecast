@@ -23,12 +23,15 @@ export function recorderReady (state, action) {
 
 export function recorderStarted (state, action) {
   const {recorder} = state;
+  const {startTime} = action;
   return {
     ...state,
     screen: 'recording',
     recorder: {
       ...recorder,
-      state: 'recording'
+      state: 'recording',
+      startTime,
+      elapsed: 0,
     },
     recordingScreen: {
       source: state.home.source,
@@ -76,5 +79,17 @@ export function recorderStopped (state, action) {
     recorder: undefined,
     translated: undefined,
     stepper: undefined
+  };
+};
+
+export function recorderTick (state, action) {
+  const {recorder} = state;
+  const {now} = action;
+  return {
+    ...state,
+    recorder: {
+      ...recorder,
+      elapsed: now - recorder.startTime
+    }
   };
 };

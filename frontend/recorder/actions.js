@@ -44,6 +44,11 @@ export const recorderStopped = {
   description: "Sent by a saga when recording has stopped and the recorder is ready to start a new recording."
 };
 
+export const recorderTick = {
+  type: 'Recorder.Tick',
+  description: "Sent every second while recording."
+};
+
 export const audioWorkerMessage = {
   type: 'Recorder.AudioWorker.Message',
   description: "Sent by the audio worker."

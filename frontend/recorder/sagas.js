@@ -1,6 +1,6 @@
 
 import {takeLatest} from 'redux-saga';
-import {put, call, fork, select} from 'redux-saga/effects';
+import {take, put, call, fork, select, race} from 'redux-saga/effects';
 
 import {getRecorderState} from '../selectors';
 import {workerUrlFromText, spawnWorker, watchWorker} from '../worker_utils';
@@ -13,6 +13,12 @@ export default function (actions) {
   function asyncGetAudioStream () {
     // Use the modern API returning a promise.
     return navigator.mediaDevices.getUserMedia({audio: true});
+  }
+
+  function* delay(ms) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, ms);
+    });
   }
 
   function* recorderPrepare () {
@@ -87,12 +93,29 @@ export default function (actions) {
     yield put({type: actions.recorderStopped});
   }
 
+  function* recorderTicker () {
+    while (true) {
+      yield take(actions.recorderStarted);
+      while (true) {
+        const outcome = yield race({
+          tick: call(delay, 1000),
+          stopped: take(actions.recorderStopped)
+        });
+        if ('stopped' in outcome)
+          break;
+        const now = window.performance.now();
+        yield put({type: actions.recorderTick, now});
+      }
+    }
+  }
+
   // Currently the recorder is automatically prepared once,
   // when the application starts up.
   return [
     recorderPrepare,
     watchRecorderStart,
-    watchRecorderStop
+    watchRecorderStop,
+    recorderTicker
   ];
 
 };
