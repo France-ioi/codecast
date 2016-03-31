@@ -1,4 +1,6 @@
 
+import Immutable from 'immutable';
+
 export function recorderPreparing (state, action) {
   return {
     ...state,
@@ -32,6 +34,10 @@ export function recorderStarted (state, action) {
       state: 'recording',
       startTime,
       elapsed: 0,
+      timeOffset: 0,
+      lastEventTime: 0,
+      events: Immutable.Stack(),
+      segments: Immutable.Stack()
     },
     recordingScreen: {
       source: state.home.source,
@@ -90,6 +96,21 @@ export function recorderTick (state, action) {
     recorder: {
       ...recorder,
       elapsed: now - recorder.startTime
+    }
+  };
+};
+
+export function recorderAddEvent (state, action) {
+  const {recorder} = state;
+  const {timestamp, payload} = action;
+  const elems = [timestamp, ...payload];
+  const event = Immutable.List(elems);
+  return {
+    ...state,
+    screen: 'recording',
+    recorder: {
+      ...recorder,
+      events: recorder.events.push(event)
     }
   };
 };

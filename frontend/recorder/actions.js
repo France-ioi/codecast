@@ -49,6 +49,11 @@ export const recorderTick = {
   description: "Sent every second while recording."
 };
 
+export const recorderAddEvent = {
+  type: 'Recorder.AddEvent',
+  description: "Add an event to the current recording."
+};
+
 export const audioWorkerMessage = {
   type: 'Recorder.AudioWorker.Message',
   description: "Sent by the audio worker."
