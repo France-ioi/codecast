@@ -13,8 +13,8 @@ import 'brace/theme/github';
 import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
 
+import storeFactory from './store';
 import DevTools from './dev_tools';
-import {storeFactory, ReduxDevTools} from './store';
 import HomeScreen from './home_screen/view';
 import RecordingScreen from './recording_screen/view';
 
