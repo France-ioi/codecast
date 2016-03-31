@@ -18,7 +18,7 @@ import recordingScreenSagas from './recording_screen/sagas';
 import stepperSagas from './stepper/sagas';
 import translatorSagas from './translator/sagas';
 
-export function storeFactory () {
+export default function storeFactory () {
 
   const storeHandlers = {};
   function addHandlers (handlers) {

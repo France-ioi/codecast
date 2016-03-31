@@ -1,6 +1,4 @@
 
-import {getRangeFromOffsets} from '../translator/utils';
-
 import * as C from 'persistent-c';
 import * as builtins from '../builtins';
 import {getRangeFromOffsets} from '../translator/utils';
