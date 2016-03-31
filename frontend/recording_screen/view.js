@@ -9,8 +9,9 @@ const Range = ace.acequire('ace/range').Range;
 
 import Terminal from '../terminal';
 import actions from '../actions';
+import {recordEventAction} from '../recorder';
 
-export const RecordingScreen = EpicComponent(self => {
+export const Editor = EpicComponent(self => {
 
   let editor, selection = null;
 
@@ -37,22 +38,58 @@ export const RecordingScreen = EpicComponent(self => {
     }
   };
 
-  const onSourceLoad = function (editor_) {
+  const onSelectionChanged = function () {
+    const selection_ = editor.selection.getRange();
+    if (sameSelection(selection, selection_))
+      return;
+    selection = selection_;
+    self.props.onSelect(selection);
+  };
+
+  const onTextChanged = function (edit) {
+    // The callback must not trigger a rendering of the Editor.
+    self.props.onEdit(edit)
+  };
+
+  const onLoad = function (editor_) {
     editor = editor_;
     editor.$blockScrolling = Infinity;
     setSelection(self.props.selection);
-    editor.selection.addEventListener("changeCursor", function () {
-      selection = editor.selection.getRange();
-      self.props.dispatch({type: actions.recordingScreenSourceSelectionChanged, selection});
-    }, true);
-    editor.selection.addEventListener("changeSelection", function () {
-      selection = editor.selection.getRange();
-      self.props.dispatch({type: actions.recordingScreenSourceSelectionChanged, selection});
-    }, true);
+    editor.selection.addEventListener("changeCursor", onSelectionChanged, true);
+    editor.selection.addEventListener("changeSelection", onSelectionChanged, true);
+    editor.session.doc.on("change", onTextChanged, true);
     editor.focus();
   };
 
+  self.render = function () {
+    const {name, value, selection, onChange, readOnly} = self.props;
+    setSelection(selection);
+    return <AceEditor mode="c_cpp" theme="github" name={name} value={value} onLoad={onLoad} onChange={onChange} readOnly={readOnly} width='100%' height='336px'/>;
+  };
+
+});
+
+export const RecordingScreen = EpicComponent(self => {
+
+  const onSourceSelect = function (selection) {
+    console.log('onSourceSelect');
+    self.props.dispatch({type: actions.recordingScreenSourceSelectionChanged, selection});
+    self.props.dispatch(recordEventAction(['select', selection]));
+  };
+
+  const onSourceEdit = function (edit) {
+    console.log('onSourceEdit');
+    const {start, end} = edit;
+    const range = {start, end};
+    if (edit.action === 'insert') {
+      self.props.dispatch(recordEventAction(['insert', range, edit.lines]));
+    } else {
+      self.props.dispatch(recordEventAction(['delete', range]));
+    }
+  };
+
   const onSourceChange = function (source) {
+    console.log('onSourceChange');
     self.props.dispatch({type: actions.recordingScreenSourceTextChanged, source});
   };
 
@@ -83,6 +120,14 @@ export const RecordingScreen = EpicComponent(self => {
 
   const onEdit = function () {
     self.props.dispatch({type: actions.recordingScreenStepperExit});
+  };
+
+  const onPauseRecording = function () {
+    // TODO
+  };
+
+  const onStopRecording = function () {
+    // TODO
   };
 
   const renderStack = function (state, scope) {
@@ -129,18 +174,34 @@ export const RecordingScreen = EpicComponent(self => {
     return elems;
   };
 
+  const recordingPanel = function () {
+    return (
+      <div className="row">
+        <div className="col-md-12">
+          <p>Liste des segments, bouton sur le dernier pour le supprimer,
+             bouton sur chaque segment pour le lire.</p>
+        </div>
+      </div>);
+  };
+
   self.render = function () {
-    const {source, selection, translated, stepperState, elapsed} = self.props;
+    const {source, selection, isTranslated, stepperState, elapsed, eventCount, recorderState} = self.props;
     const {control, terminal, error, scope} = (stepperState || {});
     const haveNode = control && control.node;
-    setSelection(selection);
+    console.log('render');
     return (
       <div>
         <div className="row">
           <div className="col-md-12">
             <div className="pane pane-controls">
               <h2>Contrôles</h2>
-              {translated ?
+              <Button onClick={onPauseRecording}>
+                <i className="fa fa-pause"/>
+              </Button>
+              <Button onClick={onStopRecording}>
+                <i className="fa fa-stop"/>
+              </Button>
+              {isTranslated ?
                 <div>
                   <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>
                   <Button onClick={onStepInto} disabled={!haveNode}>step into</Button>
@@ -152,15 +213,16 @@ export const RecordingScreen = EpicComponent(self => {
                   <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>
                 </div>}
               {error && <p>{error}</p>}
-              <p>{Math.round(elapsed / 1000)}s</p>
+              <p>Enregistrement : {Math.round(elapsed / 1000)}s, {eventCount} évènements</p>
             </div>
           </div>
         </div>
+        {recorderState !== 'recording' && recordingPanel()}
         <div className="row">
           <div className="col-md-6">
             <div className="pane pane-source">
               <h2>Source C</h2>
-              <AceEditor mode="c_cpp" theme="github" name="input_code" value={source} onLoad={onSourceLoad} onChange={onSourceChange} readOnly={!!translated} width='100%' height='336px'/>
+              <Editor name="input_code" value={source} selection={selection} onChange={onSourceChange} onEdit={onSourceEdit} onSelect={onSourceSelect} readOnly={isTranslated} width='100%' height='336px'/>
             </div>
             {terminal &&
               <div className="pane pane-terminal">
@@ -178,8 +240,16 @@ export const RecordingScreen = EpicComponent(self => {
 function recordingScreenSelector (state, props) {
   const {recordingScreen, translated, recorder} = state;
   const {source, selection, stepperState} = recordingScreen;
+  const eventCount = recorder.events.count();
   const {elapsed} = recorder;
-  return {source, selection, stepperState, translated, elapsed};
+  return {
+    source, selection,
+    stepperState,
+    recorderState: recorder.state,
+    isTranslated: !!translated,
+    elapsed,
+    eventCount
+  };
 };
 
 export default connect(recordingScreenSelector)(RecordingScreen);
