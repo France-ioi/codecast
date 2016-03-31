@@ -195,24 +195,22 @@ export const RecordingScreen = EpicComponent(self => {
           <div className="col-md-12">
             <div className="pane pane-controls">
               <h2>Contrôles</h2>
-              <Button onClick={onPauseRecording}>
-                <i className="fa fa-pause"/>
-              </Button>
-              <Button onClick={onStopRecording}>
-                <i className="fa fa-stop"/>
-              </Button>
-              {isTranslated ?
-                <div>
-                  <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>
-                  <Button onClick={onStepInto} disabled={!haveNode}>step into</Button>
-                  <Button onClick={onStepOut} disabled={true||!haveNode}>step out</Button>
-                  <Button onClick={onRestart}>recommencer</Button>
-                  <Button onClick={onEdit}>éditer</Button>
-                </div>
-              : <div>
-                  <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>
-                </div>}
+              <p>
+                <Button onClick={onPauseRecording} disabled={true}>
+                  <i className="fa fa-pause"/>
+                </Button>
+                <Button onClick={onStopRecording} disabled={true}>
+                  <i className="fa fa-stop"/>
+                </Button>
+                {isTranslated && <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>}
+                {isTranslated && <Button onClick={onStepInto} disabled={!haveNode}>step into</Button>}
+                {isTranslated && <Button onClick={onStepOut} disabled={true||!haveNode}>step out</Button>}
+                {isTranslated && <Button onClick={onRestart}>recommencer</Button>}
+                {isTranslated && <Button onClick={onEdit}>éditer</Button>}
+                {isTranslated || <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>}
+              </p>
               {error && <p>{error}</p>}
+              {/* TODO: move the ticker to a separate component, to minimize rendering */}
               <p>Enregistrement : {Math.round(elapsed / 1000)}s, {eventCount} évènements</p>
             </div>
           </div>
