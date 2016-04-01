@@ -50,6 +50,9 @@ export const EventView = EpicComponent(self => {
       case 'stepIdle':
         body = <div>idle after {event.get(2)} steps</div>;
         break;
+      case 'stepProgress':
+        body = <div>running for {event.get(2)} steps</div>;
+        break;
       default:
         body = <div>unknown event {event.get(1)}</div>;
         break;

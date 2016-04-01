@@ -47,6 +47,7 @@ export default function (actions) {
         context.progress = false;
         context.timeLimit = window.performance.now() + 20;
         yield put({type: actions.recordingScreenStepperProgress, context: viewContext(context)});
+        yield put(recordEventAction(['stepProgress', context.stepCounter]));
         const interrupted = yield select(getStepperInterrupted);
         if (interrupted) {
           context.running = false;
