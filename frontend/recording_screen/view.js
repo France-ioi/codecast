@@ -86,6 +86,15 @@ export const RecordingScreen = EpicComponent(self => {
       </div>);
   };
 
+  const onTranslate = function () {
+    const {source} = self.props;
+    self.props.dispatch({
+      type: actions.translateSource,
+      language: 'c',
+      source: source
+    });
+  };
+
   const onClearEvents = function () {
     self.props.dispatch({type: actions.recorderClearEvents});
   };
@@ -98,7 +107,7 @@ export const RecordingScreen = EpicComponent(self => {
       <div>
         <div className="row">
           <div className="col-md-12">
-            <RecordingControls dispatch={dispatch} isTranslated={isTranslated} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} />
+            <RecordingControls dispatch={dispatch} isTranslated={isTranslated} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} onTranslate={onTranslate} />
             {error && <p>{error}</p>}
           </div>
         </div>

@@ -42,17 +42,8 @@ export const RecordingControls = EpicComponent(self => {
     self.props.dispatch({type: actions.recordingScreenStepperExit});
   };
 
-  const onTranslate = function () {
-    const {source} = self.props;
-    self.props.dispatch({
-      type: actions.translateSource,
-      language: 'c',
-      source: source
-    });
-  };
-
   self.render = function () {
-    const {isTranslated, haveNode, elapsed, eventCount} = self.props;
+    const {isTranslated, haveNode, elapsed, eventCount, onTranslate} = self.props;
     return (
       <div className="pane pane-controls">
         <h2>Contrôles</h2>
