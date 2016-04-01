@@ -95,10 +95,6 @@ export const RecordingScreen = EpicComponent(self => {
     });
   };
 
-  const onClearEvents = function () {
-    self.props.dispatch({type: actions.recorderClearEvents});
-  };
-
   self.render = function () {
     const {dispatch, source, selection, isTranslated, stepperState, elapsed, events, recorderState} = self.props;
     const {control, terminal, error, scope} = (stepperState || {});
@@ -130,9 +126,6 @@ export const RecordingScreen = EpicComponent(self => {
             <div className="dev-EventsPanel">
               {events.slice(0, 10).map(event => <EventView event={event}/>)}
             </div>
-            <Button onClick={onClearEvents}>
-              clear
-            </Button>
           </div>
         </div>
       </div>
