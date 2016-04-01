@@ -42,12 +42,24 @@ export const Editor = EpicComponent(self => {
     }
   };
 
+  /*
+    Performance fix: Ace fires many redundant selection events, so we wait
+    until the next animation frame before querying the selection and firing
+    the onSelect callback.
+  */
+  let willUpdateSelection = false;
   const onSelectionChanged = function () {
-    const selection_ = editor.selection.getRange();
-    if (sameSelection(selection, selection_))
+    if (willUpdateSelection)
       return;
-    selection = selection_;
-    self.props.onSelect(selection);
+    willUpdateSelection = true;
+    window.requestAnimationFrame(function () {
+      willUpdateSelection = false;
+      const selection_ = editor.selection.getRange();
+      if (sameSelection(selection, selection_))
+        return;
+      selection = selection_;
+      self.props.onSelect(selection);
+    });
   };
 
   const onTextChanged = function (edit) {
@@ -62,4 +74,3 @@ export const Editor = EpicComponent(self => {
   };
 
 });
-
