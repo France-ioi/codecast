@@ -57,7 +57,7 @@ export const EventView = EpicComponent(self => {
         body = <div>unknown event {event.get(1)}</div>;
         break;
     }
-    return <div className="dev-EventView">{body}</div>
+    return <div className="dev-EventView">{timestamp.toFixed(0)} {body}</div>
   };
 
 });
