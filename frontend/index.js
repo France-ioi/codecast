@@ -27,7 +27,7 @@ const App = EpicComponent(self => {
       <div className="container">
         {screen === 'home' && <HomeScreen/>}
         {screen === 'recording' && <RecordingScreen/>}
-        <DevTools/>
+        {false && <DevTools/>}
       </div>
     );
   };
