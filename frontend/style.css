@@ -1,0 +1,12 @@
+.dev-EventsPanel {
+  overflow-y: scroll;
+  max-height: 400px;
+  font-family: monospace;
+  font-size: 8px;
+}
+
+.dev-EventView {
+  width: 100%;
+  overflow: hidden;
+  max-height: 12px;
+}

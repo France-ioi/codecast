@@ -1,0 +1,76 @@
+
+import React from 'react';
+import {Button} from 'react-bootstrap';
+import EpicComponent from 'epic-component';
+
+import actions from '../actions';
+import {recordEventAction} from '../recorder';
+
+export const RecordingControls = EpicComponent(self => {
+
+  const onPauseRecording = function () {
+    // TODO
+  };
+
+  const onStopRecording = function () {
+    // TODO
+  };
+
+  const onStepExpr = function () {
+    self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'expr'});
+  };
+
+  const onStepInto = function () {
+    self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'into'});
+  };
+
+  const onStepOut = function () {
+    self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'out'});
+  };
+
+  const onRestart = function () {
+    self.props.dispatch(recordEventAction(['stepperRestart']));
+    self.props.dispatch({type: actions.recordingScreenStepperRestart});
+  };
+
+  const onEdit = function () {
+    self.props.dispatch(recordEventAction(['translateClear']));
+    self.props.dispatch({type: actions.recordingScreenStepperExit});
+  };
+
+  const onTranslate = function () {
+    const {source} = self.props;
+    self.props.dispatch({
+      type: actions.translateSource,
+      language: 'c',
+      source: source
+    });
+  };
+
+  self.render = function () {
+    const {isTranslated, haveNode, elapsed, eventCount} = self.props;
+    return (
+      <div className="pane pane-controls">
+        <h2>Contrôles</h2>
+        <p>
+          <Button onClick={onPauseRecording} disabled={true}>
+            <i className="fa fa-pause"/>
+          </Button>
+          <Button onClick={onStopRecording} disabled={true}>
+            <i className="fa fa-stop"/>
+          </Button>
+          {isTranslated && <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>}
+          {isTranslated && <Button onClick={onStepInto} disabled={!haveNode}>step into</Button>}
+          {isTranslated && <Button onClick={onStepOut} disabled={true||!haveNode}>step out</Button>}
+          {isTranslated && <Button onClick={onRestart}>recommencer</Button>}
+          {isTranslated && <Button onClick={onEdit}>éditer</Button>}
+          {isTranslated || <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>}
+        </p>
+        <p>Enregistrement : {Math.round(elapsed / 1000)}s, {eventCount} évènements</p>
+      </div>
+    );
+  };
+
+});
+
+export default RecordingControls;

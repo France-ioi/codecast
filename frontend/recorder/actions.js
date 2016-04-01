@@ -54,6 +54,11 @@ export const recorderAddEvent = {
   description: "Add an event to the current recording."
 };
 
+export const recorderClearEvents = {
+  type: 'Recorder.ClearEvents',
+  description: "Clear the events log.  Used in develoment, breaks the recording."
+};
+
 export const audioWorkerMessage = {
   type: 'Recorder.AudioWorker.Message',
   description: "Sent by the audio worker."

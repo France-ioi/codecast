@@ -107,10 +107,20 @@ export function recorderAddEvent (state, action) {
   const event = Immutable.List(elems);
   return {
     ...state,
-    screen: 'recording',
     recorder: {
       ...recorder,
       events: recorder.events.push(event)
+    }
+  };
+};
+
+export function recorderClearEvents (state, action) {
+  const {recorder} = state;
+  return {
+    ...state,
+    recorder: {
+      ...recorder,
+      events: Immutable.List()
     }
   };
 };

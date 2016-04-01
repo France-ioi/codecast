@@ -7,18 +7,18 @@ import EpicComponent from 'epic-component';
 import Terminal from '../terminal';
 import actions from '../actions';
 import {recordEventAction} from '../recorder';
-import {Editor}  from './editor';
+import RecordingControls from './controls';
+import Editor  from './editor';
+import EventView from './event_view'
 
 export const RecordingScreen = EpicComponent(self => {
 
   const onSourceSelect = function (selection) {
-    console.log('onSourceSelect');
     self.props.dispatch({type: actions.recordingScreenSourceSelectionChanged, selection});
     self.props.dispatch(recordEventAction(['select', selection]));
   };
 
   const onSourceEdit = function (edit) {
-    console.log('onSourceEdit');
     const {start, end} = edit;
     const range = {start, end};
     if (edit.action === 'insert') {
@@ -29,45 +29,7 @@ export const RecordingScreen = EpicComponent(self => {
   };
 
   const onSourceChange = function (source) {
-    console.log('onSourceChange');
     self.props.dispatch({type: actions.recordingScreenSourceTextChanged, source});
-  };
-
-  const onTranslate = function () {
-    const {source} = self.props;
-    self.props.dispatch({
-      type: actions.translateSource,
-      language: 'c',
-      source: source
-    });
-  };
-
-  const onStepExpr = function () {
-    self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'expr'});
-  };
-
-  const onStepInto = function () {
-    self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'into'});
-  };
-
-  const onStepOut = function () {
-    self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'out'});
-  };
-
-  const onRestart = function () {
-    self.props.dispatch({type: actions.recordingScreenStepperRestart});
-  };
-
-  const onEdit = function () {
-    self.props.dispatch({type: actions.recordingScreenStepperExit});
-  };
-
-  const onPauseRecording = function () {
-    // TODO
-  };
-
-  const onStopRecording = function () {
-    // TODO
   };
 
   const renderStack = function (state, scope) {
@@ -124,35 +86,20 @@ export const RecordingScreen = EpicComponent(self => {
       </div>);
   };
 
+  const onClearEvents = function () {
+    self.props.dispatch({type: actions.recorderClearEvents});
+  };
+
   self.render = function () {
-    const {source, selection, isTranslated, stepperState, elapsed, eventCount, recorderState} = self.props;
+    const {source, selection, isTranslated, stepperState, elapsed, events, recorderState} = self.props;
     const {control, terminal, error, scope} = (stepperState || {});
     const haveNode = control && control.node;
-    console.log('render');
     return (
       <div>
         <div className="row">
           <div className="col-md-12">
-            <div className="pane pane-controls">
-              <h2>Contrôles</h2>
-              <p>
-                <Button onClick={onPauseRecording} disabled={true}>
-                  <i className="fa fa-pause"/>
-                </Button>
-                <Button onClick={onStopRecording} disabled={true}>
-                  <i className="fa fa-stop"/>
-                </Button>
-                {isTranslated && <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>}
-                {isTranslated && <Button onClick={onStepInto} disabled={!haveNode}>step into</Button>}
-                {isTranslated && <Button onClick={onStepOut} disabled={true||!haveNode}>step out</Button>}
-                {isTranslated && <Button onClick={onRestart}>recommencer</Button>}
-                {isTranslated && <Button onClick={onEdit}>éditer</Button>}
-                {isTranslated || <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>}
-              </p>
-              {error && <p>{error}</p>}
-              {/* TODO: move the ticker to a separate component, to minimize rendering */}
-              <p>Enregistrement : {Math.round(elapsed / 1000)}s, {eventCount} évènements</p>
-            </div>
+            <RecordingControls isTranslated={isTranslated} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} />
+            {error && <p>{error}</p>}
           </div>
         </div>
         {recorderState !== 'recording' && recordingPanel()}
@@ -169,6 +116,16 @@ export const RecordingScreen = EpicComponent(self => {
               </div>}
           </div>
         </div>
+        <div className="row">
+          <div className="col-md-12">
+            <div className="dev-EventsPanel">
+              {events.slice(0, 10).map(event => <EventView event={event}/>)}
+            </div>
+            <Button onClick={onClearEvents}>
+              clear
+            </Button>
+          </div>
+        </div>
       </div>
     );
   };
@@ -178,15 +135,14 @@ export const RecordingScreen = EpicComponent(self => {
 function recordingScreenSelector (state, props) {
   const {recordingScreen, translated, recorder} = state;
   const {source, selection, stepperState} = recordingScreen;
-  const eventCount = recorder.events.count();
-  const {elapsed} = recorder;
+  const {events, elapsed} = recorder;
   return {
     source, selection,
     stepperState,
     recorderState: recorder.state,
     isTranslated: !!translated,
     elapsed,
-    eventCount
+    events
   };
 };
 
