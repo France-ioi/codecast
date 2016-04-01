@@ -18,43 +18,43 @@ export const EventView = EpicComponent(self => {
     let body;
     switch (event.get(1)) {
       case 'select':
-        body = <div>select {renderRange(event.get(2))}</div>;
+        body = <span>select {renderRange(event.get(2))}</span>;
         break;
       case 'insert':
-        body = <div>insert {JSON.stringify(event.get(3))} at {renderRange(event.get(2))}</div>;
+        body = <span>insert {JSON.stringify(event.get(3))} at {renderRange(event.get(2))}</span>;
         break;
       case 'delete':
-        body = <div>delete {renderRange(event.get(2))}</div>;
+        body = <span>delete {renderRange(event.get(2))}</span>;
         break;
       case 'translate':
-        body = <div>begin translation</div>;
+        body = <span>begin translation</span>;
         break;
       case 'translateSuccess':
-        body = <div>translation succeeded</div>;
+        body = <span>translation succeeded</span>;
         break;
       case 'translateFailure':
-        body = <div>translation failed</div>;
+        body = <span>translation failed</span>;
         break;
       case 'translateClear':
-        body = <div>translation cleared</div>;
+        body = <span>translation cleared</span>;
         break;
       case 'stepperRestart':
-        body = <div>restart stepper</div>;
+        body = <span>restart stepper</span>;
         break;
       case 'stepExpr':
-        body = <div>step expr</div>;
+        body = <span>step expr</span>;
         break;
       case 'stepInto':
-        body = <div>step into</div>;
+        body = <span>step into</span>;
         break;
       case 'stepIdle':
-        body = <div>idle after {event.get(2)} steps</div>;
+        body = <span>idle after {event.get(2)} steps</span>;
         break;
       case 'stepProgress':
-        body = <div>running for {event.get(2)} steps</div>;
+        body = <span>running for {event.get(2)} steps</span>;
         break;
       default:
-        body = <div>unknown event {event.get(1)}</div>;
+        body = <span>unknown event {event.get(1)}</span>;
         break;
     }
     return <div className="dev-EventView">{timestamp.toFixed(0)} {body}</div>
