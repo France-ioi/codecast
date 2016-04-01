@@ -1,22 +1,15 @@
 
 import React from 'react';
-import AceEditor from 'react-ace';
 import EpicComponent from 'epic-component';
 import * as ace from 'brace';
 const Range = ace.acequire('ace/range').Range;
 
 export const Editor = EpicComponent(self => {
 
-  let editor, selection = null;
+  let editor, editorNode, selection = null;
 
-  const onLoad = function (editor_) {
-    editor = editor_;
-    editor.$blockScrolling = Infinity;
-    setSelection(self.props.selection);
-    editor.selection.addEventListener("changeCursor", onSelectionChanged, true);
-    editor.selection.addEventListener("changeSelection", onSelectionChanged, true);
-    editor.session.doc.on("change", onTextChanged, true);
-    editor.focus();
+  const refEditor = function (node) {
+    editorNode = node;
   };
 
   const samePosition = function (p1, p2) {
@@ -67,10 +60,28 @@ export const Editor = EpicComponent(self => {
     self.props.onEdit(edit)
   };
 
+  self.componentDidMount = function () {
+    editor = ace.edit(editorNode);
+    editor.$blockScrolling = Infinity;
+    editor.setTheme('ace/theme/github');
+    editor.getSession().setMode('ace/mode/c_cpp');
+    // editor.setShowPrintMargin(false);
+    // editor.setOptions({minLines: 25, maxLines: 50});
+    // readOnly={readOnly}
+    editor.setReadOnly(self.props.readOnly);
+    editor.setValue(self.props.value);
+    setSelection(self.props.selection);
+    editor.focus();
+    editor.selection.addEventListener("changeCursor", onSelectionChanged, true);
+    editor.selection.addEventListener("changeSelection", onSelectionChanged, true);
+    editor.session.doc.on("change", onTextChanged, true);
+  };
+
   self.render = function () {
     const {name, value, selection, onChange, readOnly} = self.props;
     setSelection(selection);
-    return <AceEditor mode="c_cpp" theme="github" name={name} value={value} onLoad={onLoad} onChange={onChange} readOnly={readOnly} width='100%' height='336px'/>;
+    // value={value} onChange={onChange}
+    return <div ref={refEditor} style={{width: '100%', height: '336px'}}></div>
   };
 
 });
