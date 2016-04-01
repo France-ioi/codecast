@@ -41,6 +41,15 @@ export const EventView = EpicComponent(self => {
       case 'stepperRestart':
         body = <div>restart stepper</div>;
         break;
+      case 'stepExpr':
+        body = <div>step expr</div>;
+        break;
+      case 'stepInto':
+        body = <div>step into</div>;
+        break;
+      case 'stepIdle':
+        body = <div>idle after {event.get(2)} steps</div>;
+        break;
       default:
         body = <div>unknown event {event.get(1)}</div>;
         break;

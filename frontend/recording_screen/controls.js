@@ -17,14 +17,18 @@ export const RecordingControls = EpicComponent(self => {
   };
 
   const onStepExpr = function () {
+    self.props.dispatch(recordEventAction(['stepExpr']));
     self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'expr'});
   };
 
   const onStepInto = function () {
+    self.props.dispatch(recordEventAction(['stepInto']));
+    self.props.dispatch(recordEventAction(['stepperRestart']));
     self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'into'});
   };
 
   const onStepOut = function () {
+    self.props.dispatch(recordEventAction(['stepOut']));
     self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'out'});
   };
 

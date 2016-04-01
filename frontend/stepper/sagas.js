@@ -4,6 +4,7 @@ import {take, put, call, fork, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 
 import {getStepperMode, getStepperState} from '../selectors';
+import {recordEventAction} from '../recorder';
 
 export default function (actions) {
 
@@ -77,6 +78,7 @@ export default function (actions) {
             yield call(stepUntil, context, C.intoNextExpr);
             break;
         }
+        yield put(recordEventAction(['stepIdle', context.stepCounter]));
         yield put({type: actions.recordingScreenStepperIdle, context: viewContext(context)});
       }
     }
