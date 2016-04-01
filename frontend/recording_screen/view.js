@@ -91,14 +91,14 @@ export const RecordingScreen = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {source, selection, isTranslated, stepperState, elapsed, events, recorderState} = self.props;
+    const {dispatch, source, selection, isTranslated, stepperState, elapsed, events, recorderState} = self.props;
     const {control, terminal, error, scope} = (stepperState || {});
     const haveNode = control && control.node;
     return (
       <div>
         <div className="row">
           <div className="col-md-12">
-            <RecordingControls isTranslated={isTranslated} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} />
+            <RecordingControls dispatch={dispatch} isTranslated={isTranslated} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} />
             {error && <p>{error}</p>}
           </div>
         </div>
