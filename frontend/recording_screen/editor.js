@@ -74,3 +74,5 @@ export const Editor = EpicComponent(self => {
   };
 
 });
+
+export default Editor;
