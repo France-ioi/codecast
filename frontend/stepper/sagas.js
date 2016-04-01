@@ -66,6 +66,8 @@ export default function (actions) {
         const context = buildContext(stepperState);
         // Take a single step unconditionally,
         context.state = C.step(context.state);
+        context.stepCounter += 1;
+        // ...
         switch (action.mode) {
           case 'into':
             // Step out of the current statement.
