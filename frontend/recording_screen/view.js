@@ -114,12 +114,11 @@ export const RecordingScreen = EpicComponent(self => {
               <h2>Source C</h2>
               <Editor name="input_code" value={source} selection={selection} onChange={onSourceChange} onEdit={onSourceEdit} onSelect={onSourceSelect} readOnly={isTranslated} width='100%' height='336px'/>
             </div>
-            {terminal &&
-              <div className="pane pane-terminal">
-                <h2>Terminal</h2>
-                <Terminal terminal={terminal}/>
-              </div>}
           </div>
+          {terminal && <div className="col-md-6">
+            <h2>Terminal</h2>
+            <Terminal terminal={terminal}/>
+          </div>}
         </div>
         <div className="row">
           <div className="col-md-12">
