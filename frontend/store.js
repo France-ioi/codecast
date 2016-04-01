@@ -37,15 +37,15 @@ export default function storeFactory () {
   }
 
   // const initialSource: "int main (int argc, char** argv) {\n    return 1;\n}\n";
-  const initialSource = "int main (int argc, char** argv) {\n    int a = 1, b = 1;\n    for (a = 0; a < 1000000; a += 1) {\n        b = b * a;\n    }\n    return 1;\n}\n";
+  const initialSource = "int main (int argc, char** argv) {\n    int b = 1;\n    for (int a = 1; a < 1000000; a += 1) {\n        b = b * a;\n        printf(\"%d\\n\", b);\n    }\n    return 1;\n}\n";
   const initialState = {
     screen: 'home',
     home: {
       source: initialSource,
       // source: "int main (int argc, char** argv) {\n    return 1;\n}\n", [1,4-1,13]
       selection: {
-        start: {row: 2, column: 20},
-        end: {row: 2, column: 27}
+        start: {row: 2, column: 24},
+        end: {row: 2, column: 31}
       }
     },
     recordingScreen: {},

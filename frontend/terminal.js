@@ -1,10 +1,12 @@
 
+import React from 'react';
 import EpicComponent from 'epic-component';
 import classnames from 'classnames';
 
 export default EpicComponent(self => {
   self.render = function () {
     const {terminal} = self.props;
+    console.log('terminal render', terminal);
     return (
       <div className="terminal">
         {terminal.lines.map(function (line, i) {

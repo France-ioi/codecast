@@ -1,15 +1,19 @@
 
 import * as C from 'persistent-c';
+import {TermBuffer} from 'epic-vt';
+
 import * as builtins from '../builtins';
 import {getRangeFromOffsets} from '../translator/utils';
+import {stepperOptions} from '../builtins';
 
 export function recordingScreenStepperRestart (state, action) {
   const {syntaxTree} = state.translated;
   const decls = syntaxTree[2];
   const context = {decls, builtins};
   let stepperState = C.start(context);
+  stepperState.terminal = new TermBuffer();
   while (stepperState.control && !stepperState.control.node[1].begin) {
-    stepperState = C.step(stepperState);
+    stepperState = C.step(stepperState, stepperOptions);
   }
   let selection = null;
   if (stepperState.control) {

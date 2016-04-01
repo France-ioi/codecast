@@ -5,6 +5,7 @@ import * as C from 'persistent-c';
 
 import {getStepperMode, getStepperState} from '../selectors';
 import {recordEventAction} from '../recorder';
+import {stepperOptions} from '../builtins';
 
 export default function (actions) {
 
@@ -36,7 +37,7 @@ export default function (actions) {
     if (stopCond && stopCond(state)) {
       return false;
     }
-    context.state = C.step(state);
+    context.state = C.step(state, stepperOptions);
     context.stepCounter += 1;
     return true;
   }
@@ -66,7 +67,7 @@ export default function (actions) {
         const stepperState = yield select(getStepperState);
         const context = buildContext(stepperState);
         // Take a single step unconditionally,
-        context.state = C.step(context.state);
+        context.state = C.step(context.state, stepperOptions);
         context.stepCounter += 1;
         // ...
         switch (action.mode) {

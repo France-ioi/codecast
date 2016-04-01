@@ -10,3 +10,15 @@
   overflow: hidden;
   max-height: 12px;
 }
+
+.terminal {
+  font-family: monospace;
+  background: black;
+  color: #C80;
+  padding: 4px;
+  line-height: 20px;
+}
+.terminal-line {
+  min-height: 1em;
+  white-space: pre;
+}
