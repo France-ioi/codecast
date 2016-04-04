@@ -6,6 +6,9 @@ import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import 'brace';
+// For jspm bundle-sfx, ensure that jspm-0.16.config.js has a meta entry
+// listing brace as a dependency for each of these modules, otherwise the
+// bundle will complain about an undefined "ace" global variable.
 import 'brace/worker/javascript';
 import 'brace/mode/c_cpp';
 import 'brace/theme/github';
