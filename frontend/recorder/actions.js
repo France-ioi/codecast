@@ -36,17 +36,17 @@ export const recorderStarting = {
 
 export const recorderStarted = {
   type: 'Recorder.Started',
-  description: "Sent by a saga in reaction to recorderStart, when recording effectively starts."
+  description: "Sent when recording effectively starts."
 };
 
 export const recorderStopping = {
   type: 'Recorder.Stopping',
-  description: "Sent by a saga in reaction to recorderStop, when we begin assembling the recording."
+  description: "Sent to acknowledge a recorder Stop action."
 };
 
 export const recorderStopped = {
   type: 'Recorder.Stopped',
-  description: "Sent by a saga when recording has stopped and the recorder is ready to start a new recording."
+  description: "Sent has stopped and the recorder is ready to start a new recording."
 };
 
 export const recorderTick = {
