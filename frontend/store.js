@@ -13,6 +13,7 @@ import * as recordingScreenReducers from './recording_screen/reducers';
 import * as stepperReducers from './stepper/reducers';
 import * as translatorReducers from './translator/reducers';
 
+import toplevelSagas from './sagas';
 import recorderSagas from './recorder/sagas';
 import recordingScreenSagas from './recording_screen/sagas';
 import stepperSagas from './stepper/sagas';
@@ -66,6 +67,7 @@ export default function storeFactory () {
   addHandlers(translatorReducers);
 
   const sagas = flatten([
+    toplevelSagas,
     recorderSagas,
     recordingScreenSagas,
     stepperSagas,
