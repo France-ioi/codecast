@@ -7,7 +7,8 @@ import * as recorderActions from './recorder/actions';
 
 export const actionsDescriptors = {};
 export const actionTypes = makeSafeProxy({});
-export default actionTypes;
+export default actionTypes; // key → type
+const keyForActionType = {}; // type → key
 
 function makeSafeProxy (obj) {
   function safeGet(target, property) {
@@ -22,20 +23,27 @@ function makeSafeProxy (obj) {
 }
 
 function defineAction (key, descriptor) {
-  if (key in actionsDescriptors)
+  if (key in actionsDescriptors) {
     throw `duplicate action descriptor: ${key}`;
+  }
+  let type_;
   switch (typeof descriptor) {
     case 'object':
       actionsDescriptors[key] = descriptor;
-      actionTypes[key] = descriptor.type;
+      type_ = descriptor.type;
       break;
     case 'string':
       actionsDescriptors[key] = {type: descriptor};
-      actionTypes[key] = descriptor;
+      type_ = descriptor;
       break;
     default:
       throw "invalid action descriptor";
   }
+  if (type_ in keyForActionType) {
+    throw `conflicting action type: ${key}`;
+  }
+  actionTypes[key] = type_;
+  keyForActionType[type_] = key;
 }
 
 function defineActions (dict) {
