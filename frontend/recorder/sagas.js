@@ -2,62 +2,79 @@
 import {take, put, call, fork, select, race} from 'redux-saga/effects';
 
 import {getRecorderState} from '../selectors';
-import {workerUrlFromText, spawnWorker, watchWorker} from '../worker_utils';
+import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
 
-import audioWorkerText from './audio-worker.js!text';
-const audioWorkerUrl = workerUrlFromText(audioWorkerText);
+// import audioWorkerText from '../../assets/audio_worker.js!text';
+// const audioWorkerUrl = workerUrlFromText(audioWorkerText);
+const audioWorkerUrl = '/assets/audio_worker.js';
 
 export default function (actions) {
 
-  function asyncGetAudioStream () {
+  //
+  // Async helpers (normal functions)
+  //
+
+  function getAudioStream () {
     // Use the modern API returning a promise.
     return navigator.mediaDevices.getUserMedia({audio: true});
   }
 
-  function* delay(ms) {
+  function suspendAudioContext (audioContext) {
+    return audioContext.suspend();
+  }
+
+  function resumeAudioContext (audioContext) {
+    return audioContext.resume();
+  }
+
+  function delay(ms) {
     return new Promise(function (resolve) {
       setTimeout(resolve, ms);
     });
   }
 
+  //
+  // Sagas (generators)
+  //
+
   function* recorderPrepare () {
     try {
-      // Terminate a previous worker.
+      // Clean up any previous audioContext and worker.
       const recorderState = yield select(getRecorderState);
-      if (recorderState.worker) {
-        recorderState.worker.watcher.cancel();
-        recorderState.worker.terminate();
+      if (recorderState.audioContext) {
+        audioContext.close();
       }
-      yield put({type: actions.recorderPreparing});
-      const stream = yield call(asyncGetAudioStream);
+      if (recorderState.worker) {
+        killWorker(worker);
+      }
+      yield put({type: actions.recorderPreparing, progress: 'start'});
+      // Attempt to obtain an audio stream.  The async call will complete once
+      // the user has granted permission to use the microphone.
+      const stream = yield call(getAudioStream);
+      yield put({type: actions.recorderPreparing, progress: 'stream_ok'});
+      // Create the AudioContext, connect the nodes, and suspend the audio
+      // context until we actually start recording.
       const audioContext = new AudioContext();
       const source = audioContext.createMediaStreamSource(stream);
-      const {worker} = yield call(spawnWorker, audioWorkerUrl);
-      worker.watcher = yield fork(watchWorker, worker, actions.audioWorkerMessage);
-      yield put({type: actions.recorderReady, source, worker});
-    } catch (error) {
-      yield put({type: actions.error, source: 'recorderPrepare', error});
-    }
-  }
-
-  function* recorderStart () {
-    try {
-      // The user clicked the "start recording" button.
-      const recorderState = yield select(getRecorderState);
-      if (recorderState.state !== 'ready')
-        return;
-      const {worker, source} = recorderState;
-      // Initialize the worker's state.
-      worker.postMessage({
+      const scriptProcessor = audioContext.createScriptProcessor(
+        /*bufferSize*/ 4096, /*numberOfInputChannels*/ 2, /*numberOfOutputChannels*/ 2);
+      source.connect(scriptProcessor);
+      scriptProcessor.connect(audioContext.destination);
+      yield call(suspendAudioContext, audioContext);
+      yield put({type: actions.recorderPreparing, progress: 'audio_ok'});
+      // Set up a worker to hold and encode the buffers.
+      const worker = yield call(spawnWorker, audioWorkerUrl);
+      yield put({type: actions.recorderPreparing, progress: 'worker_ok'});
+      // Initialize the worker.
+      yield call(callWorker, worker, {
         command: "init",
-          config: {
-            sampleRate: source.context.sampleRate
+        config: {
+          sampleRate: audioContext.sampleRate
         }
       });
-      // Process the audio samples using a script function.
-      const node = source.context.createScriptProcessor(4096, 2, 2);
-      node.onaudioprocess = function (event) {
-        // Pass the buffer on to the worker.
+      yield put({type: actions.recorderPreparing, progress: 'worker_init_ok'});
+      // Set up the ScriptProcessor to divert all buffers to the worker.
+      scriptProcessor.onaudioprocess = function (event) {
         worker.postMessage({
           command: "record",
           buffer: [
@@ -66,23 +83,54 @@ export default function (actions) {
           ]
         });
       };
-      source.connect(node);
-      node.connect(source.context.destination);
+      // Signal that the recorder is ready to start.
+      yield put({type: actions.recorderReady, audioContext, worker});
+    } catch (error) {
+      // XXX send a specialized event and allow retrying recorderPrepare
+      yield put({type: actions.error, source: 'recorderPrepare', error});
+    }
+  }
+
+  function* recorderStart () {
+    try {
+      // The user clicked the "start recording" button.
+      const recorderState = yield select(getRecorderState);
+      if (recorderState.state !== 'ready') {
+        console.log('not ready', recorderState);
+        return;
+      }
+      // Signal that the recorder is starting.
+      yield put({type: actions.recorderStarting});
+      // Resume the audio context to start recording audio buffers.
+      const {audioContext} = recorderState;
+      yield call(resumeAudioContext, audioContext);
+      // Save the start time and signal that recording has started.
       const startTime = window.performance.now();
       yield put({type: actions.recorderStarted, startTime});
     } catch (error) {
+      // XXX generic error
       yield put({type: actions.error, source: 'recorderStart', error});
     }
   }
 
   function* recorderStop () {
-    const recorderState = yield select(getRecorderState);
-    if (recorderState.state !== 'recording')
-      return;
-    yield put({type: actions.recorderStopping});
-    // TODO: save the recording and kill the worker
-    // TODO: let the worker do the mp3 encoding?
-    yield put({type: actions.recorderStopped});
+    try {
+      const recorderState = yield select(getRecorderState);
+      if (recorderState.state !== 'recording')
+        return;
+      // Signal that the recorder is stopping.
+      yield put({type: actions.recorderStopping});
+      // Suspend the audio context to stop recording audio buffers.
+      const {audioContext, worker} = recorderState;
+      yield call(suspendAudioContext, audioContext);
+      const audioResult = yield call(callWorker, worker, {command: "finishRecording"});
+      console.log(audioResult);
+      yield put({type: actions.recorderStopped});
+      console.log('recorderStop stopped');
+    } catch (error) {
+      // XXX generic error
+      yield put({type: actions.error, source: 'recorderStop', error});
+    }
   }
 
   function* recorderTicker () {

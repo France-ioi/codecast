@@ -2,23 +2,35 @@
 import Immutable from 'immutable';
 
 export function recorderPreparing (state, action) {
+  const {progress} = action;
   return {
     ...state,
     recorder: {
-      state: 'preparing'
+      state: 'preparing',
+      progress
     }
   };
 };
 
 export function recorderReady (state, action) {
-  const {source, worker, watcher} = action;
+  const {audioContext, worker} = action;
   return {
     ...state,
     recorder: {
       state: 'ready',
-      source,
+      audioContext,
       worker,
-      watcher
+    }
+  };
+};
+
+export function recorderStarting (state, action) {
+  const {recorder} = state;
+  return {
+    ...state,
+    recorder: {
+      ...recorder,
+      state: 'starting'
     }
   };
 };
@@ -48,25 +60,6 @@ export function recorderStarted (state, action) {
 
 export function recorderStopping (state, action) {
   const {recorder} = state;
-  /*
-    TODO: assemble the recording?
-    const duration = 0;
-    const actions = [];
-    const audioUrls = [];
-    state.segments.forEach(function (segment) {
-       duration += segment.duration;
-       Array.prototype.push.apply(actions, segment.actions);
-       audioUrls.push(segment.audioUrl);
-    });
-    var result = {
-       duration:  duration,
-       actions: actions,
-       audioUrls: audioUrls
-    };
-    state.isRecording = false;
-    state.isPaused = false;
-    state.segments = undefined;
-  */
   return {
     ...state,
     recorder: {
@@ -77,12 +70,16 @@ export function recorderStopping (state, action) {
 };
 
 export function recorderStopped (state, action) {
-  const {recorder} = state;
+  const {audioContext, worker} = state.recorder;
   return {
     ...state,
     screen: 'home',
     recordingScreen: undefined,
-    recorder: undefined,
+    recorder: {
+      state: 'ready',
+      audioContext,
+      worker
+    },
     translated: undefined,
     stepper: undefined
   };
