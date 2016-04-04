@@ -29,6 +29,11 @@ export const recorderReady = {
   description: "Sent by a saga when ready to record."
 };
 
+export const recorderStarting = {
+  type: 'Recorder.Starting',
+  description: "Sent to acknowledge a recorder Start action."
+};
+
 export const recorderStarted = {
   type: 'Recorder.Started',
   description: "Sent by a saga in reaction to recorderStart, when recording effectively starts."
