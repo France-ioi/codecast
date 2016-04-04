@@ -96,18 +96,27 @@ export const RecordingScreen = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {dispatch, source, selection, isTranslated, stepperState, elapsed, events, recorderState} = self.props;
+    const {recorder} = self.props;
+    if (!recorder) {
+      return <p>Recorder is not initialized.</p>;
+    }
+    if (recorder.state === 'preparing') {
+      return <p>Preparing recorder: {recorder.progress}.</p>;
+    }
+    const isRecording = recorder.state === 'recording';
+    const {events, elapsed} = recorder;
+    const {dispatch, source, selection, isTranslated, stepperState} = self.props;
     const {control, terminal, error, scope} = (stepperState || {});
     const haveNode = control && control.node;
     return (
       <div>
         <div className="row">
           <div className="col-md-12">
-            <RecordingControls dispatch={dispatch} isTranslated={isTranslated} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} onTranslate={onTranslate} />
+            <RecordingControls dispatch={dispatch} isRecording={isRecording} isTranslated={isTranslated} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} onTranslate={onTranslate} />
             {error && <p>{error}</p>}
           </div>
         </div>
-        {recorderState !== 'recording' && recordingPanel()}
+        {!isRecording && recordingPanel()}
         <div className="row">
           <div className="col-md-6">
             <div className="pane pane-source">
@@ -136,14 +145,11 @@ export const RecordingScreen = EpicComponent(self => {
 function recordingScreenSelector (state, props) {
   const {recordingScreen, translated, recorder} = state;
   const {source, selection, stepperState} = recordingScreen;
-  const {events, elapsed} = recorder;
   return {
     source, selection,
     stepperState,
-    recorderState: recorder.state,
-    isTranslated: !!translated,
-    elapsed,
-    events
+    recorder,
+    isTranslated: !!translated
   };
 };
 

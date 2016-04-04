@@ -13,7 +13,7 @@ export const RecordingControls = EpicComponent(self => {
   };
 
   const onStopRecording = function () {
-    // TODO
+    self.props.dispatch({type: actions.recorderStop});
   };
 
   const onStepExpr = function () {
@@ -43,15 +43,15 @@ export const RecordingControls = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {isTranslated, haveNode, elapsed, eventCount, onTranslate} = self.props;
+    const {isRecording, isTranslated, haveNode, elapsed, eventCount, onTranslate} = self.props;
     return (
       <div className="pane pane-controls">
         <h2>Contrôles</h2>
         <p>
-          <Button onClick={onPauseRecording} disabled={true}>
+          {false && <Button onClick={onPauseRecording} disabled={!isRecording}>
             <i className="fa fa-pause"/>
-          </Button>
-          <Button onClick={onStopRecording} disabled={true}>
+          </Button>}
+          <Button onClick={onStopRecording} disabled={!isRecording}>
             <i className="fa fa-stop"/>
           </Button>
           {isTranslated && <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>}
