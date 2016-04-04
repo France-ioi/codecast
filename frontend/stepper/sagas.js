@@ -1,5 +1,4 @@
 
-import {takeEvery} from 'redux-saga';
 import {take, put, call, fork, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 
