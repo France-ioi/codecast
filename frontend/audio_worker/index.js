@@ -1,4 +1,3 @@
-'use strict';
 /*
   This file is based on https://github.com/Khan/MultiRecorderJS,
   itself based on https://github.com/mattdiamond/Recorderjs
@@ -16,6 +15,8 @@
 
 */
 
+const Lame = require('lamejs');
+
 // List of chunks for the current recording. Each chunk is a Float32Array.
 var chunksL = [];
 var chunksR = [];
@@ -27,32 +28,47 @@ var recordingSampleRate;
 // from multiple recordings.
 var recordings = {};
 
-self.onmessage = function(e) {
+// Respond to a null message with a null message to indicate that the worker
+// loaded successfully.
+self.onmessage = function (e) {
+  if (e.data === null) {
+    self.onmessage = messageHandler;
+    self.postMessage(null);
+  }
+};
+
+function messageHandler (e) {
   switch (e.data.command) {
     case "init":
       init(e.data.config);
+      sendResponse(e, {});
       break;
     case "record":
       record(e.data.buffer);
       break;
     case "finishRecording":
       var url = finishRecording();
-      sendMessage(e, {url: url});
+      sendResponse(e, {url: url});
       break;
     case "combineRecordings":
       var result = combineRecordings(e.data.recordings, e.data.options);
-      sendMessage(e, result);
+      sendResponse(e, result);
       break;
     case "getRecording":
       var recording = recordings[e.data.recording];
-      sendMessage(e, recording && recording.wav);
+      sendResponse(e, recording && recording.wav);
       break;
     case "clearRecordings":
       clearRecordings();
-      sendMessage(e, {});
+      sendResponse(e, {});
       break;
   }
 };
+
+function sendResponse (e, response) {
+  response.id = e.data.responseId;
+  self.postMessage(response);
+}
 
 function init (config) {
   recordingSampleRate = config.sampleRate;
@@ -148,10 +164,6 @@ function combineChunks (chunks) {
     offset += chunks[i].length;
   }
   return result;
-}
-
-function sendMessage (e, result) {
-  self.postMessage({callbackId: e.data.callbackId, result: result});
 }
 
 function floatTo16BitPCM (output, offset, input) {
@@ -312,5 +324,3 @@ function encodeWav (channels, options) {
 
   return new Blob([buffer], {type: "audio/wav"});
 }
-
-self.postMessage('loaded');
