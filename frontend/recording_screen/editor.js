@@ -65,22 +65,23 @@ export const Editor = EpicComponent(self => {
     editor.$blockScrolling = Infinity;
     editor.setTheme('ace/theme/github');
     editor.getSession().setMode('ace/mode/c_cpp');
-    // editor.setShowPrintMargin(false);
     // editor.setOptions({minLines: 25, maxLines: 50});
-    // readOnly={readOnly}
     editor.setReadOnly(self.props.readOnly);
     editor.setValue(self.props.value);
     setSelection(self.props.selection);
     editor.focus();
-    editor.selection.addEventListener("changeCursor", onSelectionChanged, true);
-    editor.selection.addEventListener("changeSelection", onSelectionChanged, true);
-    editor.session.doc.on("change", onTextChanged, true);
+    const {onSelect, onEdit} = self.props;
+    if (typeof onSelect === 'function') {
+      editor.selection.addEventListener("changeCursor", onSelectionChanged, true);
+      editor.selection.addEventListener("changeSelection", onSelectionChanged, true);
+    }
+    if (typeof onEdit === 'function') {
+      editor.session.doc.on("change", onTextChanged, true);
+    }
   };
 
   self.render = function () {
-    const {name, value, selection, onChange, readOnly} = self.props;
-    setSelection(selection);
-    // value={value} onChange={onChange}
+    setSelection(self.props.selection);
     return <div ref={refEditor} style={{width: '100%', height: '336px'}}></div>
   };
 
