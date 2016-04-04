@@ -13,12 +13,13 @@ const app = express();
 app.set('view engine', 'jade');
 app.set('views', path.join(rootDir, 'backend', 'views'));
 
-console.log(`running in ${process.env.NODE_ENV} mode`);
+const isDevelopment = process.env.NODE_ENV !== 'production';
+console.log(`running in ${isDevelopment ? 'development' : 'production'} mode`);
 
 const staticAssets = {
   jspm_packages: {},
   src: {
-    enabled: process.env.NODE_ENV !== 'production',
+    enabled: isDevelopment,
     path: 'frontend'
   },
   assets: {}
@@ -40,7 +41,7 @@ Object.keys(staticAssets).forEach(function (key) {
 app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
-  res.render('index', {});
+  res.render('index', {development: isDevelopment});
 });
 
 app.post('/translate', function (req, res) {

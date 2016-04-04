@@ -15,6 +15,24 @@ System.config({
     "fioi-recorder": "src/main.js"
   },
 
+  meta: {
+    "brace/worker/javascript": {
+      "deps": [
+        "brace"
+      ]
+    },
+    "brace/mode/c_cpp": {
+      "deps": [
+        "brace"
+      ]
+    },
+    "brace/theme/github": {
+      "deps": [
+        "brace"
+      ]
+    }
+  },
+
   map: {
     "babel": "npm:babel-core@5.8.35",
     "babel-runtime": "npm:babel-runtime@5.8.38",
@@ -167,6 +185,7 @@ System.config({
     "npm:brace@0.7.0": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",
       "process": "github:jspm/nodelibs-process@0.1.2",
+      "systemjs-json": "github:systemjs/plugin-json@0.1.0",
       "w3c-blob": "npm:w3c-blob@0.0.1"
     },
     "npm:browserify-aes@1.0.6": {
