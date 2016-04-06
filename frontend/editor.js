@@ -60,6 +60,14 @@ export const Editor = EpicComponent(self => {
     self.props.onEdit(edit)
   };
 
+  self.componentWillReceiveProps = function (nextProps) {
+    if (editor) {
+      if (self.props.selection !== nextProps.selection) {
+        setSelection(nextProps.selection);
+      }
+    }
+  };
+
   self.componentDidMount = function () {
     editor = ace.edit(editorNode);
     editor.$blockScrolling = Infinity;

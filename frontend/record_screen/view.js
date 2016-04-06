@@ -114,6 +114,7 @@ export const RecordScreen = EpicComponent(self => {
     const {dispatch, screen} = self.props;
     const isTranslated = !!screen.get('translated');
     const stepperState = screen.get('stepperState', {});
+    const selection = screen.get('selection');
     const {control, terminal, error, scope} = (stepperState || {});
     const haveNode = control && control.node;
     // XXX Editor readOnly is not supported yet
@@ -130,7 +131,8 @@ export const RecordScreen = EpicComponent(self => {
           <div className="col-md-6">
             <div className="pane pane-source">
               <h2>Source C</h2>
-              <Editor name="input_code" onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} readOnly={isTranslated} width='100%' height='336px'/>
+              <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
+                      readOnly={isTranslated} width='100%' height='336px' selection={selection}/>
             </div>
           </div>
           {terminal && <div className="col-md-6">
