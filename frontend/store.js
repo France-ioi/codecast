@@ -10,17 +10,11 @@ import actions from './actions';
 
 import * as homeScreenReducers from './home_screen/reducers';
 import * as prepareScreenReducers from './prepare_screen/reducers';
-import * as recordScreenReducers from './record_screen/reducers';
-import * as saveScreenReducers from './save_screen/reducers';
 import * as recorderReducers from './recorder/reducers';
-import * as stepperReducers from './stepper/reducers';
-import * as translatorReducers from './translator/reducers';
+import * as saveScreenReducers from './save_screen/reducers';
 
 import toplevelSagas from './sagas';
 import recorderSagas from './recorder/sagas';
-import stepperSagas from './stepper/sagas';
-import translatorSagas from './translator/sagas';
-import recordScreenSagas from './record_screen/sagas';
 
 export default function storeFactory () {
 
@@ -43,13 +37,12 @@ export default function storeFactory () {
   }
 
   // const initialSource: "int main (int argc, char** argv) {\n    return 1;\n}\n";
-  const initialState = {
+  const initialState = Immutable.Map({
     screen: 'home',
-    screens: Immutable.Map({
-      home: {}
-    }),
-    recorder: {}
-  };
+    home: Immutable.Map({
+      screen: Immutable.Map({})
+    })
+  });
 
   function reducer (state = initialState, action) {
     // DEV: Uncomment the next line to log all actions to the console.
@@ -62,18 +55,12 @@ export default function storeFactory () {
 
   addHandlers(homeScreenReducers);
   addHandlers(prepareScreenReducers);
-  addHandlers(recordScreenReducers);
-  addHandlers(saveScreenReducers);
   addHandlers(recorderReducers);
-  addHandlers(stepperReducers);
-  addHandlers(translatorReducers);
+  addHandlers(saveScreenReducers);
 
   const sagas = flatten([
     toplevelSagas,
-    recordScreenSagas,
-    recorderSagas,
-    stepperSagas,
-    translatorSagas,
+    recorderSagas
   ].map(function (factory) {
     return factory(actions);
   }));

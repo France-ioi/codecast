@@ -7,6 +7,7 @@ export const loadTranslated = function (source, syntaxTree) {
     offset += line.length + 1;
   });
   lineOffsets.push(source.length);
+  // TODO: compute and store the range for every node.
   return {
     source,
     lineOffsets,

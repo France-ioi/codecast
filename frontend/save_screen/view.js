@@ -1,21 +1,27 @@
 
 import React from 'react';
 import {connect} from 'react-redux';
+import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 export const SaveScreen = EpicComponent(self => {
 
+  const noAction = function (event) {
+    event.preventDefault();
+  };
+
   self.render = function () {
-    const {source} = self.props;
+    const {audioUrl, eventsUrl} = self.props;
     return (
       <div>
         <div className="row">
           <div className="col-md-12">
-            <Button onClick={onNewRecording} className="float-left">
-              <i className="fa fa-circle" style={{color: '#a01'}}/>
-              {' nouvel enregistrement'}
-            </Button>
-            <p>...liste des enregistrements...</p>
+            <a className="btn btn-default" href={audioUrl} onClick={noAction}>
+              <i className="fa fa-file-audio-o"/>
+            </a>
+            <a className="btn btn-default" href={eventsUrl} onClick={noAction}>
+              <i className="fa fa-file-video-o"/>
+            </a>
           </div>
         </div>
       </div>
@@ -25,8 +31,10 @@ export const SaveScreen = EpicComponent(self => {
 });
 
 function selector (state, props) {
-  const {audioUrl, events} = state.screens.save;
-  return {audioUrl, events};
+  const save = state.get('save')
+  const audioUrl = save.get('audioUrl');
+  const eventsUrl = save.get('eventsUrl');
+  return {audioUrl, eventsUrl};
 };
 
 export default connect(selector)(SaveScreen);

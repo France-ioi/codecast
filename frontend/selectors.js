@@ -1,20 +1,18 @@
 
-export function getStepperMode (state) {
-  return state.stepper.mode;
+import Immutable from 'immutable';
+
+export function getHomeScreenState (state) {
+  return state.get('home').get('screen');
 };
 
-export function getStepperState (state) {
-  return state.stepper.state;
+export function getPreparedSource (state) {
+  return state.getIn(['prepare', 'source']);
 };
 
 export function getRecorderState (state) {
-  return state.recorder;
+  return state.get('recorder', Immutable.Map());
 };
 
-export function getHomeScreenState (state) {
-  return state.screens.get('home');
-};
-
-export function getPrepareScreenState (state) {
-  return state.screens.get('prepare');
+export function getStepperState (state) {
+  return state.get('recorder').get('stepper');
 };

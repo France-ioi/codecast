@@ -1,3 +1,3 @@
 
-export const prepareScreenSourceEdit = 'PrepareScreen.Source.Edit';
-export const prepareScreenSourceSelect = 'PrepareScreen.Source.Select';
+export const prepareScreenSourceEdit = 'Prepare.Source.Edit';
+export const prepareScreenSourceSelect = 'Prepare.Source.Select';

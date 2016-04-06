@@ -1,2 +1,2 @@
 
-export const homeNewRecording = 'HomeScreen.Recording.New';
+export const homeNewRecording = 'Home.NewRecording';

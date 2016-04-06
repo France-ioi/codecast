@@ -16,9 +16,9 @@ export const PrepareScreen = EpicComponent(self => {
   let editor;
 
   const onSourceInit = function () {
-    const {screen} = self.props;
-    const value = Document.toString(screen.get('source'));
-    const selection = screen.get('selection');
+    const {source} = self.props;
+    const value = Document.toString(source.get('document'));
+    const selection = source.get('selection'); // XXX
     return {value, selection};
   };
 
@@ -35,7 +35,7 @@ export const PrepareScreen = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {screen} = self.props;
+    const {source} = self.props;
     return (
       <div>
         <div className="row">
@@ -47,7 +47,8 @@ export const PrepareScreen = EpicComponent(self => {
                 l'enregistrement.  La position du curseur et la sélection
                 sont aussi conservées.
               </p>
-              <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} width='100%' height='336px'/>
+              <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} width='100%' height='336px'
+                      selection={source.get('selection')}/>
             </div>
           </div>
         </div>
@@ -71,7 +72,8 @@ export const PrepareScreen = EpicComponent(self => {
 });
 
 function selector (state, props) {
-  return {screen: state.screens.get('prepare')};
+  const source = state.get('prepare').get('source');
+  return {source};
 };
 
 export default connect(selector)(PrepareScreen);

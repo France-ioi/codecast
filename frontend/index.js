@@ -21,7 +21,7 @@ import storeFactory from './store';
 import DevTools from './dev_tools';
 import HomeScreen from './home_screen/view';
 import PrepareScreen from './prepare_screen/view';
-import RecordScreen from './record_screen/view';
+import RecordScreen from './recorder/screen';
 import SaveScreen from './save_screen/view';
 
 const App = EpicComponent(self => {
@@ -34,7 +34,7 @@ const App = EpicComponent(self => {
         {screen === 'prepare' && <PrepareScreen/>}
         {screen === 'record' && <RecordScreen/>}
         {screen === 'save' && <SaveScreen/>}
-        {false && <DevTools/>}
+        {<DevTools/>}
       </div>
     );
   };
@@ -42,7 +42,7 @@ const App = EpicComponent(self => {
 });
 
 const appSelector = function (state, props) {
-  const {screen} = state;
+  const screen = state.get('screen');
   return {screen};
 };
 

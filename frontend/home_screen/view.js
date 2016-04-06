@@ -7,6 +7,7 @@ import EpicComponent from 'epic-component';
 import * as ace from 'brace';
 const Range = ace.acequire('ace/range').Range;
 
+import {getHomeScreenState} from '../selectors';
 import actions from '../actions';
 
 export const HomeScreen = EpicComponent(self => {
@@ -33,8 +34,9 @@ export const HomeScreen = EpicComponent(self => {
 
 });
 
-function homeScreenSelector (state, props) {
-  return state.screens.get('home');
+function selector (state, props) {
+  const screen = getHomeScreenState(state);
+  return {};
 };
 
-export default connect(homeScreenSelector)(HomeScreen);
+export default connect(selector)(HomeScreen);

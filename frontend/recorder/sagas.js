@@ -1,12 +1,21 @@
 
-import {take, put, call, fork, select, race} from 'redux-saga/effects';
+import {takeLatest} from 'redux-saga';
+import {take, put, call, race, fork, select} from 'redux-saga/effects';
+import * as C from 'persistent-c';
 
-import {getRecorderState, getPrepareScreenState} from '../selectors';
+import {asyncRequestJson} from '../api';
+import {getPreparedSource, getRecorderState, getStepperState} from '../selectors';
 import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
+import {loadTranslated} from '../common/translate';
+import * as runtime from '../common/runtime';
 
+import {recordEventAction} from './utils';
+
+// XXX worker URL should use SystemJS baseURL?
 // import audioWorkerText from '../../assets/audio_worker.js!text';
 // const audioWorkerUrl = workerUrlFromText(audioWorkerText);
 const audioWorkerUrl = '/assets/audio_worker.js';
+
 
 export default function (actions) {
 
@@ -33,6 +42,43 @@ export default function (actions) {
     });
   }
 
+  /* A context is an object that is mutated as a saga steps through nodes.
+     The context must never escape the saga, use viewContext to export the
+     persistent bits.
+   */
+  function buildContext (state) {
+    const startTime = window.performance.now();
+    return {
+      state,
+      startTime,
+      timeLimit: startTime + 20,
+      stepCounter: 0,
+      running: true,
+      progress: false
+    };
+  }
+
+  function viewContext (context) {
+    // Returns a persistent view of the context.
+    const {state, startTime, stepCounter, running} = context;
+    const elapsed = window.performance.now() - context.startTime;
+    return {state, elapsed, stepCounter};
+  }
+
+  function singleStep (context, stopCond) {
+    const {running, state} = context;
+    if (!running || state.error || !state.control) {
+      context.running = false;
+      return false;
+    }
+    if (stopCond && stopCond(state)) {
+      return false;
+    }
+    context.state = C.step(state, runtime.options);
+    context.stepCounter += 1;
+    return true;
+  }
+
   //
   // Sagas (generators)
   //
@@ -40,12 +86,14 @@ export default function (actions) {
   function* recorderPrepare () {
     try {
       // Clean up any previous audioContext and worker.
-      const recorderState = yield select(getRecorderState);
-      if (recorderState.audioContext) {
-        recorderState.audioContext.close();
+      const recorder = yield select(getRecorderState);
+      let audioContext = recorder.get('audioContext');
+      let worker = recorder.get('worker');
+      if (audioContext) {
+        audioContext.close();
       }
-      if (recorderState.worker) {
-        killWorker(recorderState.worker);
+      if (worker) {
+        killWorker(worker);
       }
       yield put({type: actions.recorderPreparing, progress: 'start'});
       // Attempt to obtain an audio stream.  The async call will complete once
@@ -54,7 +102,7 @@ export default function (actions) {
       yield put({type: actions.recorderPreparing, progress: 'stream_ok'});
       // Create the AudioContext, connect the nodes, and suspend the audio
       // context until we actually start recording.
-      const audioContext = new AudioContext();
+      audioContext = new AudioContext();
       const source = audioContext.createMediaStreamSource(stream);
       const scriptProcessor = audioContext.createScriptProcessor(
         /*bufferSize*/ 4096, /*numberOfInputChannels*/ 2, /*numberOfOutputChannels*/ 2);
@@ -63,7 +111,7 @@ export default function (actions) {
       yield call(suspendAudioContext, audioContext);
       yield put({type: actions.recorderPreparing, progress: 'audio_ok'});
       // Set up a worker to hold and encode the buffers.
-      const worker = yield call(spawnWorker, audioWorkerUrl);
+      worker = yield call(spawnWorker, audioWorkerUrl);
       yield put({type: actions.recorderPreparing, progress: 'worker_ok'});
       // Initialize the worker.
       yield call(callWorker, worker, {
@@ -94,33 +142,31 @@ export default function (actions) {
   function* recorderStart () {
     try {
       // The user clicked the "start recording" button.
-      const recorderState = yield select(getRecorderState);
-      const prepareScreenState = yield select(getPrepareScreenState);
-      if (recorderState.state !== 'ready') {
-        console.log('not ready', recorderState);
+      const recorder = yield select(getRecorderState);
+      if (recorder.get('state') !== 'ready') {
+        console.log('not ready', recorder);
         return;
       }
+      const source = yield select(getPreparedSource);
       // Signal that the recorder is starting.
       yield put({type: actions.recorderStarting});
       // Resume the audio context to start recording audio buffers.
-      const {audioContext} = recorderState;
-      // TODO: race with timeout, in case the audio device is busy
+      const audioContext = recorder.get('audioContext');
+      // Race with timeout, in case the audio device is busy.
       const outcome = yield race({
         resumed: call(resumeAudioContext, audioContext),
         timeout: delay(1000)
       });
-      console.log('outcome', outcome);
       if ('timeout' in outcome) {
+        // XXX We call recorderPrepare to attempt to fix the issue and abort
+        //     the start, ideally we should put an action to notify the user.
         yield call(recorderPrepare);
         return;
       }
       // Save the start time and signal that recording has started.
       const startTime = window.performance.now();
       yield put({type: actions.recorderStarted, startTime});
-      yield put({type: actions.switchToRecordScreen, init: {
-        source: prepareScreenState.get('source'),
-        selection: prepareScreenState.get('selection')
-      }});
+      yield put({type: actions.switchToRecordScreen, source});
     } catch (error) {
       // XXX generic error
       yield put({type: actions.error, source: 'recorderStart', error});
@@ -129,19 +175,24 @@ export default function (actions) {
 
   function* recorderStop () {
     try {
-      const recorderState = yield select(getRecorderState);
-      if (recorderState.state !== 'recording')
+      const recorder = yield select(getRecorderState);
+      if (recorder.get('state') !== 'recording')
         return;
       // Signal that the recorder is stopping.
       yield put({type: actions.recorderStopping});
       // Suspend the audio context to stop recording audio buffers.
-      const {audioContext, worker, events} = recorderState;
+      const audioContext = recorder.get('audioContext');
+      const worker = recorder.get('worker');
+      const events = recorder.get('events');
       yield call(suspendAudioContext, audioContext);
       const audioResult = yield call(callWorker, worker, {command: "finishRecording"});
-      console.log('audio', audioResult.url);
-      console.log('events', events.toJSON());
-      yield put({type: actions.recorderStopped});
-      console.log('recorderStop stopped');
+      const eventsBlob = new Blob([JSON.stringify(events.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
+      const eventsUrl = URL.createObjectURL(eventsBlob);
+      yield put({
+        type: actions.recorderStopped,
+        audioUrl: audioResult.url,
+        eventsUrl: eventsUrl
+      });
     } catch (error) {
       // XXX generic error
       yield put({type: actions.error, source: 'recorderStop', error});
@@ -164,6 +215,26 @@ export default function (actions) {
     }
   }
 
+  function* translateSource (action) {
+    const {source} = action;
+    try {
+      yield put(recordEventAction(['translate', source]));
+      const {ast} = yield call(asyncRequestJson, '/translate', {source});
+      const result = loadTranslated(source, ast);
+      yield put(recordEventAction(['translateSuccess', ast]));
+      yield put({type: actions.translateSourceSucceeded, result});
+      yield put({type: actions.recordScreenStepperRestart, result});
+    } catch (error) {
+      const message = error.toString();
+      yield put({type: actions.translateSourceFailed, error: message, source});
+      yield put(recordEventAction(['translateFailure', message]));
+    }
+  }
+
+  function* watchTranslateSource () {
+    yield* takeLatest(actions.translateSource, translateSource);
+  }
+
   function* watchRecorderStart () {
     while (true) {
       yield take(actions.recorderStart);
@@ -178,13 +249,60 @@ export default function (actions) {
     }
   }
 
+  function* watchStepperStep () {
+    while (true) {
+      const action = yield take(actions.recordScreenStepperStep);
+      const stepper = yield select(getStepperState);
+      if (stepper.get('state') === 'starting') {
+        yield put({type: actions.recordScreenStepperStart});
+        const context = buildContext(stepper.get('compute'));
+        // Take a single step unconditionally,
+        context.state = C.step(context.state, runtime.options);
+        context.stepCounter += 1;
+        // ...
+        switch (action.mode) {
+          case 'into':
+            // Step out of the current statement.
+            yield call(stepUntil, context, C.outOfCurrentStmt);
+            // Step into the next statement.
+            yield call(stepUntil, context, C.intoNextStmt);
+            break;
+          case 'expr':
+            // then stop when we enter the next expression.
+            yield call(stepUntil, context, C.intoNextExpr);
+            break;
+        }
+        yield put(recordEventAction(['stepIdle', context.stepCounter]));
+        yield put({type: actions.recordScreenStepperIdle, context: viewContext(context)});
+      }
+    }
+  }
+
+  function* stepUntil (context, stopCond) {
+    while (singleStep(context, stopCond)) {
+      if (context.progress) {
+        context.progress = false;
+        context.timeLimit = window.performance.now() + 20;
+        yield put({type: actions.recordScreenStepperProgress, context: viewContext(context)});
+        yield put(recordEventAction(['stepProgress', context.stepCounter]));
+        const interrupted = yield select(getStepperInterrupted);
+        if (interrupted) {
+          context.running = false;
+          break;
+        }
+      }
+    }
+  }
+
   // Currently the recorder is automatically prepared once,
   // when the application starts up.
   return [
     recorderPrepare,
+    recorderTicker,
     watchRecorderStart,
     watchRecorderStop,
-    recorderTicker
+    watchTranslateSource,
+    watchStepperStep
   ];
 
 };

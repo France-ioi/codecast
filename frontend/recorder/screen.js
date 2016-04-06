@@ -4,20 +4,20 @@ import {connect} from 'react-redux';
 import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import Terminal from '../terminal';
 import actions from '../actions';
-import {recordEventAction} from '../recorder';
-import RecordControls from './controls';
 import Editor from '../editor';
-import EventView from './event_view'
 import Document from '../document';
+import Terminal from '../terminal';
+import {recordEventAction} from './utils';
+import RecordControls from './controls';
+import EventView from './event_view';
 
 export const RecordScreen = EpicComponent(self => {
 
   const onSourceInit = function () {
-    const {screen} = self.props;
-    const value = Document.toString(screen.get('source'));
-    const selection = screen.get('selection');
+    const {source} = self.props;
+    const value = Document.toString(source.get('document'));
+    const selection = source.get('selection');
     return {value, selection};
   };
 
@@ -92,30 +92,22 @@ export const RecordScreen = EpicComponent(self => {
   };
 
   const onTranslate = function () {
-    const {screen} = self.props;
-    const source = Document.toString(screen.get('source'));
+    const {source} = self.props;
+    const text = Document.toString(source.get('document'));
     self.props.dispatch({
       type: actions.translateSource,
       language: 'c',
-      source: source
+      source: text
     });
   };
 
   self.render = function () {
-    const {recorder} = self.props;
-    if (!recorder) {
-      return <p>Recorder is not initialized.</p>;
-    }
-    if (recorder.state === 'preparing') {
-      return <p>Preparing recorder: {recorder.progress}.</p>;
-    }
-    const isRecording = recorder.state === 'recording';
-    const {events, elapsed} = recorder;
-    const {dispatch, screen} = self.props;
-    const isTranslated = !!screen.get('translated');
-    const stepperState = screen.get('stepperState', {});
-    const selection = screen.get('selection');
-    const {control, terminal, error, scope} = (stepperState || {});
+    const {dispatch, recorderState, source, isTranslated, events, elapsed, stepperState, stepperDisplay} = self.props;
+    const isRecording = recorderState === 'recording';
+    const isIdle = stepperState === 'idle';
+    const selection = source.get('selection');
+    console.log(stepperDisplay);
+    const {control, terminal, error, scope} = stepperDisplay;
     const haveNode = control && control.node;
     // XXX Editor readOnly is not supported yet
     return (
@@ -154,9 +146,18 @@ export const RecordScreen = EpicComponent(self => {
 });
 
 function selector (state, props) {
-  const {screens, recorder} = state;
-  const screen = screens.get('record');
-  return {screen, recorder};
+  const recorder = state.get('recorder');
+  const recorderState = recorder.get('state');
+  const source = recorder.get('source');
+  const isTranslated = !!recorder.get('translated');
+  const events = recorder.get('events');
+  const elapsed = recorder.get('elapsed');
+  const stepperState = recorder.getIn(['stepper', 'state']);
+  const stepperDisplay = recorder.getIn(['stepper', 'display'], {});
+  return {
+    recorderState, source, isTranslated, events, elapsed,
+    stepperState, stepperDisplay,
+  };
 };
 
 export default connect(selector)(RecordScreen);

@@ -4,7 +4,7 @@ import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import actions from '../actions';
-import {recordEventAction} from '../recorder';
+import {recordEventAction} from './utils';
 
 export const RecordingControls = EpicComponent(self => {
 
