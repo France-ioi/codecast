@@ -141,7 +141,7 @@ export const RecordScreen = EpicComponent(self => {
         <div className="row">
           <div className="col-md-12">
             <div className="dev-EventsPanel">
-              {events.slice(0, 10).map(event => <EventView event={event}/>)}
+              {events.slice(-10).map(event => <EventView event={event}/>)}
             </div>
           </div>
         </div>
