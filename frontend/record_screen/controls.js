@@ -18,28 +18,27 @@ export const RecordingControls = EpicComponent(self => {
 
   const onStepExpr = function () {
     self.props.dispatch(recordEventAction(['stepExpr']));
-    self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'expr'});
+    self.props.dispatch({type: actions.recordScreenStepperStep, mode: 'expr'});
   };
 
   const onStepInto = function () {
     self.props.dispatch(recordEventAction(['stepInto']));
-    self.props.dispatch(recordEventAction(['stepperRestart']));
-    self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'into'});
+    self.props.dispatch({type: actions.recordScreenStepperStep, mode: 'into'});
   };
 
   const onStepOut = function () {
     self.props.dispatch(recordEventAction(['stepOut']));
-    self.props.dispatch({type: actions.recordingScreenStepperStep, mode: 'out'});
+    self.props.dispatch({type: actions.recordScreenStepperStep, mode: 'out'});
   };
 
   const onRestart = function () {
     self.props.dispatch(recordEventAction(['stepperRestart']));
-    self.props.dispatch({type: actions.recordingScreenStepperRestart});
+    self.props.dispatch({type: actions.recordScreenStepperRestart});
   };
 
   const onEdit = function () {
     self.props.dispatch(recordEventAction(['translateClear']));
-    self.props.dispatch({type: actions.recordingScreenStepperExit});
+    self.props.dispatch({type: actions.recordScreenStepperExit});
   };
 
   self.render = function () {

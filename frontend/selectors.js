@@ -10,3 +10,11 @@ export function getStepperState (state) {
 export function getRecorderState (state) {
   return state.recorder;
 };
+
+export function getHomeScreenState (state) {
+  return state.screens.get('home');
+};
+
+export function getPrepareScreenState (state) {
+  return state.screens.get('prepare');
+};

@@ -6,7 +6,8 @@ export default function (actions) {
 
   function* translateSourceSucceeded (action) {
     // Restart the stepper whenever a new source code has been translated.
-    yield put({type: actions.recordingScreenStepperRestart});
+    const {result} = action;
+    yield put({type: actions.recordScreenStepperRestart, result});
   }
 
   function* watchTranslateSourceSucceeded () {

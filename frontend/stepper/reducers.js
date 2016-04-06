@@ -6,46 +6,35 @@ import * as builtins from '../builtins';
 import {getRangeFromOffsets} from '../translator/utils';
 import {stepperOptions} from '../builtins';
 
-export function recordingScreenStepperRestart (state, action) {
-  const {syntaxTree} = state.translated;
-  const decls = syntaxTree[2];
+// TODO: split record screen / stepper reducers
+
+export function recordScreenStepperRestart (state, action) {
+  const translated = action.result || state.screens.get('record').get('translated');
+  const decls = translated.syntaxTree[2];
   const context = {decls, builtins};
   let stepperState = C.start(context);
   stepperState.terminal = new TermBuffer();
-  while (stepperState.control && !stepperState.control.node[1].begin) {
-    stepperState = C.step(stepperState, stepperOptions);
-  }
-  let selection = null;
-  if (stepperState.control) {
-    const attrs = stepperState.control.node[1];
-    selection = getRangeFromOffsets(state.translated, attrs.begin, attrs.end);
-  }
+  stepperState = stepIntoUserCode(stepperState);
   return {
     ...state,
-    recordingScreen: {
-      ...state.recordingScreen,
-      stepperState: stepperState,
-      selection
-    },
-    stepper: {
-      mode: 'idle'
-    }
+    stepper: {mode: 'idle'},
+    screens: state.screens.update('record', screen =>
+      updateSelection(
+        screen.set('translated', translated)
+              .set('stepperState', stepperState)))
   };
 };
 
-export function recordingScreenStepperExit (state, action) {
+export function recordScreenStepperExit (state, action) {
   return {
     ...state,
-    recordingScreen: {
-      ...state.recordingScreen,
-      stepperState: undefined
-    },
-    translated: undefined,
-    stepper: undefined
+    stepper: undefined,
+    screens: state.screens.update('record', screen =>
+      screen.set('stepperState', undefined).set('translated', undefined))
   };
 };
 
-export function recordingScreenStepperStep (state, action) {
+export function recordScreenStepperStep (state, action) {
   if (state.stepper.mode !== 'idle') {
     return state;
   } else {
@@ -53,13 +42,13 @@ export function recordingScreenStepperStep (state, action) {
       ...state,
       stepper: {
         mode: 'starting',
-        state: state.recordingScreen.stepperState
+        state: state.screens.get('record').get('stepperState')
       }
     };
   }
 };
 
-export function recordingScreenStepperStart (state, action) {
+export function recordScreenStepperStart (state, action) {
   return {
     ...state,
     stepper: {
@@ -69,35 +58,42 @@ export function recordingScreenStepperStart (state, action) {
   };
 };
 
-export function recordingScreenStepperProgress (state, action) {
+export function recordScreenStepperProgress (state, action) {
   // Copy the new state to the recording screen's state, so that
   // the view reflects the current progress.
   const {context} = action;
   // const {elapsed, stepCounter} = context;
   const stepperState = context.state;
-  const {control} = stepperState;
-  let selection = null;
-  if (control && control.node) {
-    const attrs = control.node[1];
-    selection = getRangeFromOffsets(state.translated, attrs.begin, attrs.end);
-  }
   return {
     ...state,
-    recordingScreen: {
-      ...state.recordingScreen,
-      stepperState,
-      selection
-    }
+    screens: state.screens.update('record', screen =>
+      updateSelection(screen.set('stepperState', stepperState)))
   };
 }
 
-export function recordingScreenStepperIdle (state, action) {
+export function recordScreenStepperIdle (state, action) {
   // Copy stepper state into recording screen and clean up the stepper.
-  state = recordingScreenStepperProgress(state, action);
+  state = recordScreenStepperProgress(state, action);
   return {
     ...state,
-    stepper: {
-      mode: 'idle'
-    }
+    stepper: {mode: 'idle'}
   };
 };
+
+function stepIntoUserCode (stepperState) {
+  while (stepperState.control && !stepperState.control.node[1].begin) {
+    stepperState = C.step(stepperState, stepperOptions);
+  }
+  return stepperState;
+}
+
+function updateSelection (recordScreen) {
+  const {control} = recordScreen.get('stepperState');
+  const translated = recordScreen.get('translated');
+  let selection = null;
+  if (control && control.node) {
+    const attrs = control.node[1];
+    selection = getRangeFromOffsets(translated, attrs.begin, attrs.end);
+  }
+  return recordScreen.set('selection', selection);
+}

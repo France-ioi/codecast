@@ -7,29 +7,34 @@ import EpicComponent from 'epic-component';
 import Terminal from '../terminal';
 import actions from '../actions';
 import {recordEventAction} from '../recorder';
-import RecordingControls from './controls';
-import Editor  from './editor';
+import RecordControls from './controls';
+import Editor from '../editor';
 import EventView from './event_view'
+import Document from '../document';
 
-export const RecordingScreen = EpicComponent(self => {
+export const RecordScreen = EpicComponent(self => {
 
-  const onSourceSelect = function (selection) {
-    self.props.dispatch({type: actions.recordingScreenSourceSelectionChanged, selection});
-    self.props.dispatch(recordEventAction(['select', selection]));
+  const onSourceInit = function () {
+    const {screen} = self.props;
+    const value = Document.toString(screen.get('source'));
+    const selection = screen.get('selection');
+    return {value, selection};
   };
 
-  const onSourceEdit = function (edit) {
-    const {start, end} = edit;
+  const onSourceSelect = function (selection) {
+    self.props.dispatch(recordEventAction(['select', selection]));
+    self.props.dispatch({type: actions.recordScreenSourceSelect, selection});
+  };
+
+  const onSourceEdit = function (delta) {
+    const {start, end} = delta;
     const range = {start, end};
-    if (edit.action === 'insert') {
-      self.props.dispatch(recordEventAction(['insert', range, edit.lines]));
+    if (delta.action === 'insert') {
+      self.props.dispatch(recordEventAction(['insert', range, delta.lines]));
     } else {
       self.props.dispatch(recordEventAction(['delete', range]));
     }
-  };
-
-  const onSourceChange = function (source) {
-    self.props.dispatch({type: actions.recordingScreenSourceTextChanged, source});
+    self.props.dispatch({type: actions.recordScreenSourceEdit, delta});
   };
 
   const renderStack = function (state, scope) {
@@ -87,7 +92,8 @@ export const RecordingScreen = EpicComponent(self => {
   };
 
   const onTranslate = function () {
-    const {source} = self.props;
+    const {screen} = self.props;
+    const source = Document.toString(screen.get('source'));
     self.props.dispatch({
       type: actions.translateSource,
       language: 'c',
@@ -105,14 +111,17 @@ export const RecordingScreen = EpicComponent(self => {
     }
     const isRecording = recorder.state === 'recording';
     const {events, elapsed} = recorder;
-    const {dispatch, source, selection, isTranslated, stepperState} = self.props;
+    const {dispatch, screen} = self.props;
+    const isTranslated = !!screen.get('translated');
+    const stepperState = screen.get('stepperState', {});
     const {control, terminal, error, scope} = (stepperState || {});
     const haveNode = control && control.node;
+    // XXX Editor readOnly is not supported yet
     return (
       <div>
         <div className="row">
           <div className="col-md-12">
-            <RecordingControls dispatch={dispatch} isRecording={isRecording} isTranslated={isTranslated} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} onTranslate={onTranslate} />
+            <RecordControls dispatch={dispatch} isRecording={isRecording} isTranslated={isTranslated} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} onTranslate={onTranslate} />
             {error && <p>{error}</p>}
           </div>
         </div>
@@ -121,7 +130,7 @@ export const RecordingScreen = EpicComponent(self => {
           <div className="col-md-6">
             <div className="pane pane-source">
               <h2>Source C</h2>
-              <Editor name="input_code" value={source} selection={selection} onChange={onSourceChange} onEdit={onSourceEdit} onSelect={onSourceSelect} readOnly={isTranslated} width='100%' height='336px'/>
+              <Editor name="input_code" onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} readOnly={isTranslated} width='100%' height='336px'/>
             </div>
           </div>
           {terminal && <div className="col-md-6">
@@ -142,15 +151,10 @@ export const RecordingScreen = EpicComponent(self => {
 
 });
 
-function recordingScreenSelector (state, props) {
-  const {recordingScreen, translated, recorder} = state;
-  const {source, selection, stepperState} = recordingScreen;
-  return {
-    source, selection,
-    stepperState,
-    recorder,
-    isTranslated: !!translated
-  };
+function selector (state, props) {
+  const {screens, recorder} = state;
+  const screen = screens.get('record');
+  return {screen, recorder};
 };
 
-export default connect(recordingScreenSelector)(RecordingScreen);
+export default connect(selector)(RecordScreen);

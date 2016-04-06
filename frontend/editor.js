@@ -67,9 +67,20 @@ export const Editor = EpicComponent(self => {
     editor.getSession().setMode('ace/mode/c_cpp');
     // editor.setOptions({minLines: 25, maxLines: 50});
     editor.setReadOnly(self.props.readOnly);
-    editor.setValue(self.props.value);
-    setSelection(self.props.selection);
-    editor.focus();
+    if ('onInit' in self.props) {
+      const init = self.props.onInit();
+      editor.setValue(init.value.toString());
+      setSelection(init.selection);
+      if (init.focus) {
+        editor.focus();
+      }
+    } else {
+      // XXX deprecate, always use onInit for now (later, value should be a
+      // persistent document).
+      editor.setValue(self.props.value);
+      setSelection(self.props.selection);
+      editor.focus();
+    }
     const {onSelect, onEdit} = self.props;
     if (typeof onSelect === 'function') {
       editor.selection.addEventListener("changeCursor", onSelectionChanged, true);

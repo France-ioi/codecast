@@ -3,59 +3,57 @@ import {createStore, applyMiddleware, compose} from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import {fork} from 'redux-saga/effects';
 import flatten from 'lodash/flatten';
+import Immutable from 'immutable';
 
 import DevTools from './dev_tools';
 import actions from './actions';
 
 import * as homeScreenReducers from './home_screen/reducers';
+import * as prepareScreenReducers from './prepare_screen/reducers';
+import * as recordScreenReducers from './record_screen/reducers';
+import * as saveScreenReducers from './save_screen/reducers';
 import * as recorderReducers from './recorder/reducers';
-import * as recordingScreenReducers from './recording_screen/reducers';
 import * as stepperReducers from './stepper/reducers';
 import * as translatorReducers from './translator/reducers';
 
 import toplevelSagas from './sagas';
 import recorderSagas from './recorder/sagas';
-import recordingScreenSagas from './recording_screen/sagas';
 import stepperSagas from './stepper/sagas';
 import translatorSagas from './translator/sagas';
+import recordScreenSagas from './record_screen/sagas';
 
 export default function storeFactory () {
 
   const storeHandlers = {};
   function addHandlers (handlers) {
     Object.keys(handlers).forEach(function (key) {
-      if (key in actions) {
-        const actionType = actions[key];
-        if (actionType in storeHandlers) {
-          console.warn(`reducer: duplicate handler ${key}`);
-        } else {
-          storeHandlers[actions[key]] = handlers[key];
-        }
-      } else {
+      if (key === 'default')
+        return;
+      if (!(key in actions)) {
         console.warn(`reducer: no such action ${key}`);
+        return;
+      }
+      const actionType = actions[key];
+      if (actionType in storeHandlers) {
+        console.warn(`reducer: duplicate handler ${key}`);
+      } else {
+        storeHandlers[actions[key]] = handlers[key];
       }
     });
   }
 
   // const initialSource: "int main (int argc, char** argv) {\n    return 1;\n}\n";
-  const initialSource = "int main (int argc, char** argv) {\n    int b = 1;\n    for (int a = 1; a < 1000000; a += 1) {\n        b = b * a;\n        printf(\"%d\\n\", b);\n    }\n    return 1;\n}\n";
   const initialState = {
     screen: 'home',
-    home: {
-      source: initialSource,
-      // source: "int main (int argc, char** argv) {\n    return 1;\n}\n", [1,4-1,13]
-      selection: {
-        start: {row: 2, column: 24},
-        end: {row: 2, column: 31}
-      }
-    },
-    recordingScreen: {},
+    screens: Immutable.Map({
+      home: {}
+    }),
     recorder: {}
   };
 
   function reducer (state = initialState, action) {
     // DEV: Uncomment the next line to log all actions to the console.
-    // console.log('reduce', state, action);
+    //console.log('reduce', state, action);
     if (action.type in storeHandlers) {
       state = storeHandlers[action.type](state, action);
     };
@@ -63,22 +61,24 @@ export default function storeFactory () {
   }
 
   addHandlers(homeScreenReducers);
+  addHandlers(prepareScreenReducers);
+  addHandlers(recordScreenReducers);
+  addHandlers(saveScreenReducers);
   addHandlers(recorderReducers);
-  addHandlers(recordingScreenReducers);
   addHandlers(stepperReducers);
   addHandlers(translatorReducers);
 
   const sagas = flatten([
     toplevelSagas,
+    recordScreenSagas,
     recorderSagas,
-    recordingScreenSagas,
     stepperSagas,
     translatorSagas,
   ].map(function (factory) {
     return factory(actions);
   }));
 
-  return createStore(
+  const store = createStore(
     reducer,
     initialState,
     compose(
@@ -88,4 +88,7 @@ export default function storeFactory () {
       DevTools.instrument()
     ));
 
+  window.store = store;
+
+  return store;
 };

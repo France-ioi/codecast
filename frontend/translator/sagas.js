@@ -4,6 +4,7 @@ import {put, call} from 'redux-saga/effects';
 
 import {asyncRequestJson} from '../api';
 import {recordEventAction} from '../recorder';
+import {loadTranslated} from './utils';
 
 export default function (actions) {
 
@@ -12,7 +13,8 @@ export default function (actions) {
     try {
       yield put(recordEventAction(['translate', source]));
       const {ast} = yield call(asyncRequestJson, '/translate', {source});
-      yield put({type: actions.translateSourceSucceeded, source, syntaxTree: ast});
+      const result = loadTranslated(source, ast);
+      yield put({type: actions.translateSourceSucceeded, result});
       yield put(recordEventAction(['translateSuccess', ast]));
     } catch (error) {
       const message = error.toString();

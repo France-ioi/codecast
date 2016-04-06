@@ -20,7 +20,9 @@ import './style.css!';
 import storeFactory from './store';
 import DevTools from './dev_tools';
 import HomeScreen from './home_screen/view';
-import RecordingScreen from './recording_screen/view';
+import PrepareScreen from './prepare_screen/view';
+import RecordScreen from './record_screen/view';
+import SaveScreen from './save_screen/view';
 
 const App = EpicComponent(self => {
 
@@ -29,7 +31,9 @@ const App = EpicComponent(self => {
     return (
       <div className="container">
         {screen === 'home' && <HomeScreen/>}
-        {screen === 'recording' && <RecordingScreen/>}
+        {screen === 'prepare' && <PrepareScreen/>}
+        {screen === 'record' && <RecordScreen/>}
+        {screen === 'save' && <SaveScreen/>}
         {false && <DevTools/>}
       </div>
     );

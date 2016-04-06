@@ -1,21 +1,12 @@
 
 import React from 'react';
 import {connect} from 'react-redux';
-import AceEditor from 'react-ace';
-import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
-import * as ace from 'brace';
-const Range = ace.acequire('ace/range').Range;
 
-import actions from '../actions';
-
-export const HomeScreen = EpicComponent(self => {
-
-  const onNewRecording = function () {
-    self.props.dispatch({type: actions.homeNewRecording});
-  };
+export const SaveScreen = EpicComponent(self => {
 
   self.render = function () {
+    const {source} = self.props;
     return (
       <div>
         <div className="row">
@@ -33,8 +24,9 @@ export const HomeScreen = EpicComponent(self => {
 
 });
 
-function homeScreenSelector (state, props) {
-  return state.screens.get('home');
+function selector (state, props) {
+  const {audioUrl, events} = state.screens.save;
+  return {audioUrl, events};
 };
 
-export default connect(homeScreenSelector)(HomeScreen);
+export default connect(selector)(SaveScreen);

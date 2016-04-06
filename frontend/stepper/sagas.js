@@ -46,7 +46,7 @@ export default function (actions) {
       if (context.progress) {
         context.progress = false;
         context.timeLimit = window.performance.now() + 20;
-        yield put({type: actions.recordingScreenStepperProgress, context: viewContext(context)});
+        yield put({type: actions.recordScreenStepperProgress, context: viewContext(context)});
         yield put(recordEventAction(['stepProgress', context.stepCounter]));
         const interrupted = yield select(getStepperInterrupted);
         if (interrupted) {
@@ -59,10 +59,10 @@ export default function (actions) {
 
   function* watchStepperStep () {
     while (true) {
-      const action = yield take(actions.recordingScreenStepperStep);
+      const action = yield take(actions.recordScreenStepperStep);
       const mode = yield select(getStepperMode);
       if (mode === 'starting') {
-        yield put({type: actions.recordingScreenStepperStart});
+        yield put({type: actions.recordScreenStepperStart});
         const stepperState = yield select(getStepperState);
         const context = buildContext(stepperState);
         // Take a single step unconditionally,
@@ -82,7 +82,7 @@ export default function (actions) {
             break;
         }
         yield put(recordEventAction(['stepIdle', context.stepCounter]));
-        yield put({type: actions.recordingScreenStepperIdle, context: viewContext(context)});
+        yield put({type: actions.recordScreenStepperIdle, context: viewContext(context)});
       }
     }
   }

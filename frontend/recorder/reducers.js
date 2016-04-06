@@ -40,7 +40,6 @@ export function recorderStarted (state, action) {
   const {startTime} = action;
   return {
     ...state,
-    screen: 'recording',
     recorder: {
       ...recorder,
       state: 'recording',
@@ -48,12 +47,18 @@ export function recorderStarted (state, action) {
       elapsed: 0,
       timeOffset: 0,
       lastEventTime: 0,
-      events: Immutable.Stack(),
-      segments: Immutable.Stack()
-    },
-    recordingScreen: {
-      source: state.home.source,
-      selection: state.home.selection
+      events: Immutable.List()
+    }
+  };
+};
+
+export function recorderStartFailed (state, action) {
+  const {recorder} = state;
+  return {
+    ...state,
+    recorder: {
+      ...recorder,
+      state: 'start_failed'
     }
   };
 };
@@ -71,6 +76,7 @@ export function recorderStopping (state, action) {
 
 export function recorderStopped (state, action) {
   const {audioContext, worker} = state.recorder;
+  // XXX split off switch to home screen
   return {
     ...state,
     screen: 'home',
@@ -100,7 +106,7 @@ export function recorderTick (state, action) {
 export function recorderAddEvent (state, action) {
   const {recorder} = state;
   const {timestamp, payload} = action;
-  const elems = [timestamp, ...payload];
+  const elems = [timestamp - recorder.startTime, ...payload];
   const event = Immutable.List(elems);
   return {
     ...state,

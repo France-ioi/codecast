@@ -1,6 +1,8 @@
 
 import * as homeScreenActions from './home_screen/actions';
-import * as recordingScreenActions from './recording_screen/actions';
+import * as prepareScreenActions from './prepare_screen/actions';
+import * as recordScreenActions from './record_screen/actions';
+import * as saveScreenActions from './save_screen/actions';
 import * as stepperActions from './stepper/actions';
 import * as translatorActions from './translator/actions';
 import * as recorderActions from './recorder/actions';
@@ -48,7 +50,8 @@ function defineAction (key, descriptor) {
 
 function defineActions (dict) {
   Object.keys(dict).forEach(function (key) {
-    defineAction(key, dict[key]);
+    if (key !== 'default')
+      defineAction(key, dict[key]);
   });
 };
 
@@ -58,10 +61,13 @@ defineAction('error', {
 });
 
 defineActions(homeScreenActions);
-defineActions(recordingScreenActions);
+defineActions(prepareScreenActions);
+defineActions(recordScreenActions);
+defineActions(saveScreenActions);
+
+defineActions(recorderActions);
 defineActions(stepperActions);
 defineActions(translatorActions);
-defineActions(recorderActions);
 
 /*
   // These actions are initiated by the user.

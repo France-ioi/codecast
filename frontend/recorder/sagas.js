@@ -1,7 +1,7 @@
 
 import {take, put, call, fork, select, race} from 'redux-saga/effects';
 
-import {getRecorderState} from '../selectors';
+import {getRecorderState, getPrepareScreenState} from '../selectors';
 import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
 
 // import audioWorkerText from '../../assets/audio_worker.js!text';
@@ -42,10 +42,10 @@ export default function (actions) {
       // Clean up any previous audioContext and worker.
       const recorderState = yield select(getRecorderState);
       if (recorderState.audioContext) {
-        audioContext.close();
+        recorderState.audioContext.close();
       }
       if (recorderState.worker) {
-        killWorker(worker);
+        killWorker(recorderState.worker);
       }
       yield put({type: actions.recorderPreparing, progress: 'start'});
       // Attempt to obtain an audio stream.  The async call will complete once
@@ -95,6 +95,7 @@ export default function (actions) {
     try {
       // The user clicked the "start recording" button.
       const recorderState = yield select(getRecorderState);
+      const prepareScreenState = yield select(getPrepareScreenState);
       if (recorderState.state !== 'ready') {
         console.log('not ready', recorderState);
         return;
@@ -103,10 +104,23 @@ export default function (actions) {
       yield put({type: actions.recorderStarting});
       // Resume the audio context to start recording audio buffers.
       const {audioContext} = recorderState;
-      yield call(resumeAudioContext, audioContext);
+      // TODO: race with timeout, in case the audio device is busy
+      const outcome = yield race({
+        resumed: call(resumeAudioContext, audioContext),
+        timeout: delay(1000)
+      });
+      console.log('outcome', outcome);
+      if ('timeout' in outcome) {
+        yield call(recorderPrepare);
+        return;
+      }
       // Save the start time and signal that recording has started.
       const startTime = window.performance.now();
       yield put({type: actions.recorderStarted, startTime});
+      yield put({type: actions.switchToRecordScreen, init: {
+        source: prepareScreenState.get('source'),
+        selection: prepareScreenState.get('selection')
+      }});
     } catch (error) {
       // XXX generic error
       yield put({type: actions.error, source: 'recorderStart', error});
@@ -121,10 +135,11 @@ export default function (actions) {
       // Signal that the recorder is stopping.
       yield put({type: actions.recorderStopping});
       // Suspend the audio context to stop recording audio buffers.
-      const {audioContext, worker} = recorderState;
+      const {audioContext, worker, events} = recorderState;
       yield call(suspendAudioContext, audioContext);
       const audioResult = yield call(callWorker, worker, {command: "finishRecording"});
-      console.log(audioResult);
+      console.log('audio', audioResult.url);
+      console.log('events', events.toJSON());
       yield put({type: actions.recorderStopped});
       console.log('recorderStop stopped');
     } catch (error) {
