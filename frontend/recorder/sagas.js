@@ -16,7 +16,6 @@ import {recordEventAction, RECORDING_FORMAT_VERSION} from './utils';
 // const audioWorkerUrl = workerUrlFromText(audioWorkerText);
 const audioWorkerUrl = '/assets/audio_worker.js';
 
-
 export default function (actions) {
 
   //
@@ -53,8 +52,7 @@ export default function (actions) {
       startTime,
       timeLimit: startTime + 20,
       stepCounter: 0,
-      running: true,
-      progress: false
+      running: true
     };
   }
 
@@ -155,7 +153,7 @@ export default function (actions) {
       // Race with timeout, in case the audio device is busy.
       const outcome = yield race({
         resumed: call(resumeAudioContext, audioContext),
-        timeout: delay(1000)
+        timeout: call(delay, 1000)
       });
       if ('timeout' in outcome) {
         // XXX We call recorderPrepare to attempt to fix the issue and abort
@@ -280,16 +278,28 @@ export default function (actions) {
   }
 
   function* stepUntil (context, stopCond) {
-    while (singleStep(context, stopCond)) {
-      if (context.progress) {
-        context.progress = false;
+    while (true) {
+      // Execute up to 100 steps, or until the stop condition (or end of the
+      // program, or an error condition) is met.
+      for (let stepCount = 100; stepCount !== 0; stepCount -= 1) {
+        if (!singleStep(context, stopCond)) {
+          return;
+        }
+      }
+      // Has the time limit for the current run passed?
+      const now = window.performance.now();
+      if (now >= context.timeLimit) {
+        // Reset the time limit and put a Progress event.
         context.timeLimit = window.performance.now() + 20;
         yield put({type: actions.recordScreenStepperProgress, context: viewContext(context)});
         yield put(recordEventAction(['stepProgress', context.stepCounter]));
+        // Yield until the next tick (XXX consider requestAnimationFrame).
+        yield call(delay, 0);
+        // Stop prematurely if interrupted.
         const interrupted = yield select(getStepperInterrupted);
         if (interrupted) {
           context.running = false;
-          break;
+          return;
         }
       }
     }
