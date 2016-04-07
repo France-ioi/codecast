@@ -8,8 +8,8 @@ import {getPreparedSource, getRecorderState, getStepperState} from '../selectors
 import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
 import {loadTranslated} from '../common/translate';
 import * as runtime from '../common/runtime';
-
-import {recordEventAction, RECORDING_FORMAT_VERSION} from './utils';
+import Document from '../document';
+import {recordEventAction, compressRange, RECORDING_FORMAT_VERSION} from './utils';
 
 // XXX worker URL should use SystemJS baseURL?
 // import audioWorkerText from '../../assets/audio_worker.js!text';
@@ -164,7 +164,13 @@ export default function (actions) {
       // Save the start time and signal that recording has started.
       const startTime = window.performance.now();
       yield put({type: actions.recorderStarted, startTime});
-      yield put(recordEventAction(['start', RECORDING_FORMAT_VERSION]));
+      yield put(recordEventAction(['start', {
+        version: RECORDING_FORMAT_VERSION,
+        source: {
+          document: Document.toString(source.get('document')),
+          selection: compressRange(source.get('selection'))
+        }
+      }]));
       yield put({type: actions.switchToRecordScreen, source});
     } catch (error) {
       // XXX generic error

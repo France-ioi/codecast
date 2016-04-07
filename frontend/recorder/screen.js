@@ -8,7 +8,7 @@ import actions from '../actions';
 import Editor from '../editor';
 import Document from '../document';
 import Terminal from '../terminal';
-import {recordEventAction} from './utils';
+import {recordEventAction, compressRange} from './utils';
 import RecordControls from './controls';
 import EventView from './event_view';
 
@@ -22,7 +22,7 @@ export const RecordScreen = EpicComponent(self => {
   };
 
   const onSourceSelect = function (selection) {
-    self.props.dispatch(recordEventAction(['select', selection]));
+    self.props.dispatch(recordEventAction(['select', compressRange(selection)]));
     self.props.dispatch({type: actions.recordScreenSourceSelect, selection});
   };
 
@@ -30,9 +30,9 @@ export const RecordScreen = EpicComponent(self => {
     const {start, end} = delta;
     const range = {start, end};
     if (delta.action === 'insert') {
-      self.props.dispatch(recordEventAction(['insert', range, delta.lines]));
+      self.props.dispatch(recordEventAction(['insert', compressRange(range), delta.lines]));
     } else {
-      self.props.dispatch(recordEventAction(['delete', range]));
+      self.props.dispatch(recordEventAction(['delete', compressRange(range)]));
     }
     self.props.dispatch({type: actions.recordScreenSourceEdit, delta});
   };
