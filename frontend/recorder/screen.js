@@ -106,7 +106,6 @@ export const RecordScreen = EpicComponent(self => {
     const isRecording = recorderState === 'recording';
     const isIdle = stepperState === 'idle';
     const selection = source.get('selection');
-    console.log(stepperDisplay);
     const {control, terminal, error, scope} = stepperDisplay;
     const haveNode = control && control.node;
     // XXX Editor readOnly is not supported yet
