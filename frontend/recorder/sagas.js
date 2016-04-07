@@ -9,7 +9,7 @@ import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_
 import {loadTranslated} from '../common/translate';
 import * as runtime from '../common/runtime';
 
-import {recordEventAction} from './utils';
+import {recordEventAction, RECORDING_FORMAT_VERSION} from './utils';
 
 // XXX worker URL should use SystemJS baseURL?
 // import audioWorkerText from '../../assets/audio_worker.js!text';
@@ -166,6 +166,7 @@ export default function (actions) {
       // Save the start time and signal that recording has started.
       const startTime = window.performance.now();
       yield put({type: actions.recorderStarted, startTime});
+      yield put(recordEventAction(['start', RECORDING_FORMAT_VERSION]));
       yield put({type: actions.switchToRecordScreen, source});
     } catch (error) {
       // XXX generic error
