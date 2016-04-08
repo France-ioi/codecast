@@ -40,6 +40,18 @@ export const PrepareScreen = EpicComponent(self => {
       <div>
         <div className="row">
           <div className="col-md-12">
+            <div className="pane pane-controls">
+              <p>
+                <Button onClick={onStartRecording} className="float-left">
+                  <i className="fa fa-circle" style={{color: '#a01'}}/>
+                </Button>
+                {" démarrer l'enregistrement"}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-md-12">
             <div className="pane pane-source">
               <h2>Source C initial</h2>
               <p>
@@ -49,19 +61,6 @@ export const PrepareScreen = EpicComponent(self => {
               </p>
               <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} width='100%' height='336px'
                       selection={source.get('selection')}/>
-            </div>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-md-12">
-            <div className="pane pane-controls">
-              <h2>Contrôles</h2>
-              <p>
-                <Button onClick={onStartRecording} className="float-left">
-                  <i className="fa fa-circle" style={{color: '#a01'}}/>
-                </Button>
-                {" démarrer l'enregistrement"}
-              </p>
             </div>
           </div>
         </div>

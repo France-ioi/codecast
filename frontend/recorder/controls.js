@@ -45,7 +45,6 @@ export const RecordingControls = EpicComponent(self => {
     const {isRecording, isTranslated, haveNode, elapsed, eventCount, onTranslate} = self.props;
     return (
       <div className="pane pane-controls">
-        <h2>Contrôles</h2>
         <p>
           {false && <Button onClick={onPauseRecording} disabled={!isRecording}>
             <i className="fa fa-pause"/>
