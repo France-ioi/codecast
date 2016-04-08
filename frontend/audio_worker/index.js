@@ -16,6 +16,7 @@
 */
 
 const Lame = require('lamejs');
+const lameLib = new Lame();
 
 // List of chunks for the current recording. Each chunk is a Float32Array.
 var chunksL = [];
@@ -38,30 +39,34 @@ self.onmessage = function (e) {
 };
 
 function messageHandler (e) {
-  switch (e.data.command) {
-    case "init":
-      init(e.data.config);
-      sendResponse(e, {});
-      break;
-    case "record":
-      record(e.data.buffer);
-      break;
-    case "finishRecording":
-      var url = finishRecording();
-      sendResponse(e, {url: url});
-      break;
-    case "combineRecordings":
-      var result = combineRecordings(e.data.recordings, e.data.options);
-      sendResponse(e, result);
-      break;
-    case "getRecording":
-      var recording = recordings[e.data.recording];
-      sendResponse(e, recording && recording.wav);
-      break;
-    case "clearRecordings":
-      clearRecordings();
-      sendResponse(e, {});
-      break;
+  try {
+    switch (e.data.command) {
+      case "init":
+        init(e.data.config);
+        sendResponse(e, {});
+        break;
+      case "record":
+        record(e.data.buffer);
+        break;
+      case "finishRecording":
+        var url = finishRecording();
+        sendResponse(e, {url: url});
+        break;
+      case "combineRecordings":
+        var result = combineRecordings(e.data.recordings, e.data.options);
+        sendResponse(e, result);
+        break;
+      case "getRecording":
+        var recording = recordings[e.data.recording];
+        sendResponse(e, recording && recording.wav);
+        break;
+      case "clearRecordings":
+        clearRecordings();
+        sendResponse(e, {});
+        break;
+    }
+  } catch (error) {
+    console.log('audio worker: uncaught exception in message handler', error);
   }
 };
 
@@ -78,6 +83,7 @@ function init (config) {
 function record (input) {
   chunksL.push(input[0]);
   chunksR.push(input[1]);
+  console.log('record', chunksL.length, chunksR.length);
 }
 
 function clearRecordings () {
@@ -95,10 +101,16 @@ function finishRecording () {
   var samplesR = combineChunks(chunksR);
   chunksR = [];
   var channels = [samplesL, samplesR];
-  var encodingOptions = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
-  var wav = encodeWav(channels, encodingOptions);
-  var url = URL.createObjectURL(wav);
-  recordings[url] = {wav: wav, url: url, channels: channels};
+  if (true) {
+    var encodingOptions = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
+    var wav = encodeWav(channels, encodingOptions);
+    var url = URL.createObjectURL(wav);
+    recordings[url] = {wav: wav, url: url, channels: channels};
+  } else {
+    var mp3 = encodeMP3(channels, {sampleRate: recordingSampleRate});
+    var url = URL.createObjectURL(mp3);
+    recordings[url] = {mp3: mp3, url: url, channels: channels};
+  }
   return url;
 }
 
@@ -235,6 +247,30 @@ var FIR_48k_8k = [-0.000000, -0.000684, -0.001238, 0.000000, 0.003098, 0.004522,
 var FIR_48k_12k = [0.000000, 0.000790, -0.000000, -0.002338, 0.000000, 0.005222, -0.000000, -0.010087, 0.000000, 0.017899, -0.000000, -0.030433, 0.000000, 0.052057, -0.000000, -0.098769, 0.000000, 0.315800, 0.500000, 0.315800, 0.000000, -0.098769, -0.000000, 0.052057, 0.000000, -0.030433, -0.000000, 0.017899, 0.000000, -0.010087, -0.000000, 0.005222, 0.000000, -0.002338, -0.000000, 0.000790, 0.000000];
 var FIR_48k_16k = [-0.000000, -0.000684, 0.001238, -0.000000, -0.003098, 0.004522, -0.000000, -0.008736, 0.011729, -0.000000, -0.020268, 0.026356, -0.000000, -0.045082, 0.060638, -0.000000, -0.133528, 0.273491, 0.666667, 0.273491, -0.133528, -0.000000, 0.060638, -0.045082, -0.000000, 0.026356, -0.020268, -0.000000, 0.011729, -0.008736, -0.000000, 0.004522, -0.003098, -0.000000, 0.001238, -0.000684, -0.000000];
 var FIR_48k_24k = [0.5, 0.5]; // also try [0,1,0]
+
+function encodeMP3 (channels, options) {
+  var outputRate = 128 /*kbps*/;
+  var encoder = new lameLib.Mp3Encoder(channels.length, options.sampleRate, outputRate);
+  var nSamples = channels[0].length;
+  var sampleBlockSize = 1152;
+  var outputBuffers = [];
+  var i, mp3buf;
+  var leftBuffer = new Int16Array(sampleBlockSize), leftView = new DataView(leftBuffer);
+  var rightBuffer = new Int16Array(sampleBlockSize), rightView = new DataView(rightBuffer);
+  for (i = 0; i < nSamples; i += sampleBlockSize) {
+    floatTo16BitPCM(leftView, 0, channels[0].subarray(i, i + sampleBlockSize));
+    floatTo16BitPCM(rightView, 1, channels[1].subarray(i, i + sampleBlockSize));
+    mp3buf = encoder.encodeBuffer(leftChunk, rightChunk);
+    if (mp3buf.length > 0) {
+      outputBuffers.push(mp3buf);
+    }
+  }
+  mp3buf = encoder.flush();
+  if (mp3buf.length > 0) {
+    outputBuffers.push(mp3buf);
+  }
+  return new Blob(outputBuffers, {type: "audio/mpeg"});
+}
 
 function encodeWav (channels, options) {
   // options.numChannels: 1 (mono), 2 (stereo)
