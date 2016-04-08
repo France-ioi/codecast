@@ -1,7 +1,6 @@
 
 import {createStore, applyMiddleware, compose} from 'redux';
 import createSagaMiddleware from 'redux-saga';
-import {fork} from 'redux-saga/effects';
 import flatten from 'lodash/flatten';
 import Immutable from 'immutable';
 
