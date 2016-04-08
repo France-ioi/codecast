@@ -83,7 +83,6 @@ function init (config) {
 function record (input) {
   chunksL.push(input[0]);
   chunksR.push(input[1]);
-  console.log('record', chunksL.length, chunksR.length);
 }
 
 function clearRecordings () {
