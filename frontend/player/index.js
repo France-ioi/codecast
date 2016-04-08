@@ -43,3 +43,5 @@ const store = window.store = storeFactory();
 const ConnectedApp = connect(selector)(App);
 const container = document.getElementById('react-container');
 ReactDOM.render(<Provider store={store}><ConnectedApp/></Provider>, container);
+
+store.dispatch({type: actions.playerPrepare, audioUrl: '/assets/1.mp3', eventsUrl: '/assets/1.json'});
