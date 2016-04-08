@@ -254,12 +254,12 @@ function encodeMP3 (channels, options) {
   var sampleBlockSize = 1152;
   var outputBuffers = [];
   var i, mp3buf;
-  var leftBuffer = new Int16Array(sampleBlockSize), leftView = new DataView(leftBuffer);
-  var rightBuffer = new Int16Array(sampleBlockSize), rightView = new DataView(rightBuffer);
+  var leftArray = new Int16Array(sampleBlockSize), leftView = new DataView(leftArray.buffer);
+  var rightArray = new Int16Array(sampleBlockSize), rightView = new DataView(rightArray.buffer);
   for (i = 0; i < nSamples; i += sampleBlockSize) {
     floatTo16BitPCM(leftView, 0, channels[0].subarray(i, i + sampleBlockSize));
-    floatTo16BitPCM(rightView, 1, channels[1].subarray(i, i + sampleBlockSize));
-    mp3buf = encoder.encodeBuffer(leftChunk, rightChunk);
+    floatTo16BitPCM(rightView, 0, channels[1].subarray(i, i + sampleBlockSize));
+    mp3buf = encoder.encodeBuffer(leftArray, rightArray);
     if (mp3buf.length > 0) {
       outputBuffers.push(mp3buf);
     }
