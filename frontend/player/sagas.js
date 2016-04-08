@@ -10,6 +10,7 @@ import {loadTranslated, getRangeFromOffsets} from '../common/translate';
 import * as runtime from '../common/runtime';
 import Document from '../common/document';
 
+import {getPlayerState} from './selectors';
 
 export default function (actions) {
 
@@ -48,20 +49,21 @@ export default function (actions) {
     try {
       // Check that the player is idle.
       const player = yield select(getPlayerState);
-      if (player.get('state') !== 'idle')
+      if (player.get('state') !== 'idle') {
         return;
+      }
       // Emit a Preparing action.
       yield put({type: actions.playerPreparing});
       // TODO: Clean up any old resources
       // Create the audio player and start buffering.
-      audioElement = new Audio();
-      audioElement.src = audioUrl;
+      const audio = new Audio();
+      audio.src = audioUrl;
       // Download the events URL
       const events = yield call(getJson, eventsUrl);
       // Compute the future state after every event.
       const states = yield call(computeStates, events);
       // TODO: watch audioElement.buffered?
-      yield put({types: actions.playerReady, states});
+      yield put({type: actions.playerReady, audio, states});
     } catch (error) {
       yield put({type: actions.error, source: 'playerPrepare', error});
     }
@@ -95,8 +97,9 @@ export default function (actions) {
     }
   }
 
-  function* computeStates (state, events) {
+  function* computeStates (events) {
     // TODO: avoid hogging the CPU, emit progress events.
+    let state = null;
     const states = Immutable.List();
     for (let pos = 0; pos < events.length; pos += 1) {
       const event = events[pos];
@@ -108,17 +111,17 @@ export default function (actions) {
           state = Immutable.Map({
             source: Immutable.Map({
               document: Document.fromString(init.source.document),
-              selection: expandRang(init.source.selection)
+              selection: Document.expandRange(init.source.selection)
             })
           });
           break;
         }
         case 'select': {
-          state = state.setIn(['source', 'selection'], expandRange(event[2]));
+          state = state.setIn(['source', 'selection'], Document.expandRange(event[2]));
           break;
         }
         case 'insert': {
-          const range = expandRange(event[2]);
+          const range = Document.expandRange(event[2]);
           const delta = {
             action: 'insert',
             start: range.start,
@@ -130,7 +133,7 @@ export default function (actions) {
           break;
         }
         case 'delete': {
-          const range = expandRange(event[2]);
+          const range = Document.expandRange(event[2]);
           const delta = {
             action: 'delete',
             start: range.start,
@@ -148,14 +151,10 @@ export default function (actions) {
         case 'translateSuccess': {
           const source = state.get('translate');
           const syntaxTree = event[2];
-          const context = {decls: syntaxTree[2], builtins: runtime.builtins};
-          let stepperState = C.start(context);
-          stepperState.terminal = new TermBuffer();
-          stepperState = stepIntoUserCode(stepperState);
           state = state
             .delete('translate')
-            .set('translated', loadTranslated(source, ast))
-            .set('stepper', stepperState);
+            .set('translated', loadTranslated(source, syntaxTree))
+            .set('stepper', runtime.start(syntaxTree));
           break;
         }
         case 'translateFailure': {
@@ -168,6 +167,11 @@ export default function (actions) {
           state = state
             .delete('translated')
             .delete('stepper');
+          break;
+        }
+        case 'stepperRestart': {
+          const syntaxTree = state.get('translated').syntaxTree;
+          state = state.set('stepper', runtime.start(syntaxTree));
           break;
         }
         case 'stepExpr': {
@@ -202,8 +206,12 @@ export default function (actions) {
           state = state.set('stepper', stepperState);
           break;
         }
+        case 'end': {
+          state = state.set('stopped', true);
+          break;
+        }
         default: {
-          console.log(`unknown event type: ${event[2]}`);
+          console.log(`[${event[0]}]: unknown event type ${event[1]}`);
           break;
         }
       }
