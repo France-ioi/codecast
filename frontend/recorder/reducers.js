@@ -1,11 +1,9 @@
 
 import Immutable from 'immutable';
-import * as C from 'persistent-c';
-import {TermBuffer} from 'epic-vt';
 
 import Document from '../common/document';
 import * as runtime from '../common/runtime';
-import {getRangeFromOffsets} from '../common/translate';
+import {getNodeRange} from '../common/translate';
 
 /*
 
@@ -99,11 +97,7 @@ export function recorderAddEvent (state, action) {
 
 export function recordScreenStepperRestart (state, action) {
   const translated = action.result || state.getIn(['recorder', 'translated']);
-  const decls = translated.syntaxTree[2];
-  const context = {decls, builtins: runtime.builtins};
-  let stepperState = C.start(context);
-  stepperState.terminal = new TermBuffer();
-  stepperState = stepIntoUserCode(stepperState);
+  const stepperState = runtime.start(translated.syntaxTree);
   return state.update('recorder', recorder => updateSelection(recorder
     .set('translated', translated)
     .set('stepper', Immutable.Map({state: 'idle', display: stepperState}))));
@@ -145,25 +139,9 @@ export function recordScreenStepperIdle (state, action) {
       {state: 'idle', display: action.context.state}))));
 };
 
-function stepIntoUserCode (stepperState) {
-  while (stepperState.control && !stepperState.control.node[1].begin) {
-    stepperState = C.step(stepperState, runtime.options);
-  }
-  return stepperState;
-}
-
 function updateSelection (recorderState) {
-  const display = recorderState.getIn(['stepper', 'display']);
+  const stepper = recorderState.getIn(['stepper', 'display']);
   const translated = recorderState.get('translated');
-  if (!display || !translated) {
-    return recorderState;
-  }
-  const {control} = display;
-  let selection = null;
-  if (!control || !control.node) {
-    return recorderState;
-  }
-  const attrs = control.node[1];
-  selection = getRangeFromOffsets(translated, attrs.begin, attrs.end);
-  return recorderState.setIn(['source', 'selection'], selection);
+  const range = getNodeRange(stepper, translated);
+  return recorderState.setIn(['source', 'selection'], range);
 }

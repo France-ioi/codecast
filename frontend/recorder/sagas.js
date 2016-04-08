@@ -12,7 +12,7 @@ import Document from '../common/document';
 import {asyncRequestJson} from '../api';
 import {getPreparedSource, getRecorderState, getStepperState} from '../selectors';
 import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
-import {recordEventAction, compressRange} from './utils';
+import {recordEventAction} from './utils';
 
 // XXX worker URL should use SystemJS baseURL?
 // import audioWorkerText from '../../assets/audio_worker.js!text';
@@ -190,7 +190,7 @@ export default function (actions) {
         version: RECORDING_FORMAT_VERSION,
         source: {
           document: Document.toString(source.get('document')),
-          selection: compressRange(source.get('selection'))
+          selection: Document.compressRange(source.get('selection'))
         }
       }]));
       yield put({type: actions.switchToRecordScreen, source});

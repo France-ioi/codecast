@@ -36,3 +36,15 @@ export const getRangeFromOffsets = function (text, start, end) {
     end: getPositionFromOffset(text.lineOffsets, end)
   };
 };
+
+export const getNodeRange = function (stepper, translated) {
+  if (!stepper || !translated) {
+    return recorderState;
+  }
+  const {control} = stepper;
+  if (!control || !control.node) {
+    return null;
+  }
+  const attrs = control.node[1];
+  return getRangeFromOffsets(translated, attrs.begin, attrs.end);
+};

@@ -43,4 +43,25 @@ export const applyDelta = function (docLines, delta) {
   return docLines;
 };
 
-export default {fromString, toString, applyDelta};
+
+export const compressRange = function (range) {
+  const {start, end} = range;
+  if (start.row === end.row && start.column === end.column) {
+    return [start.row, start.column];
+  } else {
+    return [start.row, start.column, end.row, end.column];
+  }
+};
+
+export const expandRange = function (range) {
+  if (range.length === 2) {
+    const pos = {row: range[0], column: range[1]};
+    return {start: pos, end: pos};
+  } else {
+    const start = {row: range[0], column: range[1]};
+    const end = {row: range[2], column: range[3]};
+    return {start, end};
+  }
+};
+
+export default {fromString, toString, applyDelta, compressRange, expandRange};
