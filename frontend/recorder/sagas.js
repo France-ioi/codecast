@@ -209,9 +209,11 @@ export default function (actions) {
       yield put({type: actions.recorderStopping});
       // Suspend the audio context to stop recording audio buffers.
       const context = recorder.get('context');
+      const audioContext = context.get('audioContext');
+      yield call(suspendAudioContext, audioContext);
+      const endEvent = Immutable.List([(audioContext.currentTime * 1000) | 0, 'end']);
+      const events = recorder.get('events').push(endEvent);
       const worker = context.get('worker');
-      const events = recorder.get('events');
-      yield call(suspendAudioContext, context.get('audioContext'));
       const audioResult = yield call(callWorker, worker, {command: "finishRecording"});
       const eventsBlob = new Blob([JSON.stringify(events.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
       const eventsUrl = URL.createObjectURL(eventsBlob);
