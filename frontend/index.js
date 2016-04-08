@@ -35,6 +35,7 @@ const App = EpicComponent(self => {
         {screen === 'record' && <RecordScreen/>}
         {screen === 'save' && <SaveScreen/>}
         {false && <DevTools/>}
+        <canvas id="vumeter" width="10" height="100"></canvas>
       </div>
     );
   };

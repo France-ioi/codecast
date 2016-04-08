@@ -102,9 +102,13 @@ export default function (actions) {
       // context until we actually start recording.
       audioContext = new AudioContext();
       const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
       const scriptProcessor = audioContext.createScriptProcessor(
         /*bufferSize*/ 4096, /*numberOfInputChannels*/ 2, /*numberOfOutputChannels*/ 2);
+      source.connect(analyser);
       source.connect(scriptProcessor);
+      analyser.smoothingTimeConstant = 0.8;
+      analyser.fftSize = 1024;
       scriptProcessor.connect(audioContext.destination);
       yield call(suspendAudioContext, audioContext);
       yield put({type: actions.recorderPreparing, progress: 'audio_ok'});
@@ -120,14 +124,26 @@ export default function (actions) {
       });
       yield put({type: actions.recorderPreparing, progress: 'worker_init_ok'});
       // Set up the ScriptProcessor to divert all buffers to the worker.
+      const vumeterData = new Uint8Array(analyser.frequencyBinCount);
+      const canvasContext = document.getElementById('vumeter').getContext("2d");
       scriptProcessor.onaudioprocess = function (event) {
-        worker.postMessage({
-          command: "record",
-          buffer: [
-             event.inputBuffer.getChannelData(0),
-             event.inputBuffer.getChannelData(1)
-          ]
-        });
+        if (canvasContext) {
+          // Get analyser data and update vumeter.
+          analyser.getByteFrequencyData(vumeterData);
+          let sum = 0, i;
+          for (i = 0; i < vumeterData.length; i++) {
+            sum += vumeterData[i];
+          }
+          const average = sum / vumeterData.length;
+          canvasContext.fillStyle = '#dddddd';
+          canvasContext.fillRect(0, 0, 10, 100);
+          canvasContext.fillStyle = '#00ff00';
+          canvasContext.fillRect(0, 100 - average, 10, 100);
+        }
+        // Post buffers to worker.
+        const ch0 = event.inputBuffer.getChannelData(0);
+        const ch1 = event.inputBuffer.getChannelData(1);
+        worker.postMessage({command: "record", buffer: [ch0, ch1]});
       };
       // Signal that the recorder is ready to start.
       yield put({type: actions.recorderReady, audioContext, worker});
