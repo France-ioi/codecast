@@ -22,3 +22,9 @@
   min-height: 1em;
   white-space: pre;
 }
+
+#vumeter {
+  position: fixed;
+  left: 10px;
+  top: 10px;
+}
