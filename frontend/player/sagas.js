@@ -5,11 +5,11 @@ import {TermBuffer} from 'epic-vt';
 import request from 'superagent';
 import Immutable from 'immutable';
 
+import {RECORDING_FORMAT_VERSION} from '../common/version';
 import {loadTranslated, getRangeFromOffsets} from '../common/translate';
 import * as runtime from '../common/runtime';
 import Document from '../document';
 
-import {RECORDING_FORMAT_VERSION} from '../utils';
 
 export default function (actions) {
 
@@ -69,10 +69,13 @@ export default function (actions) {
 
   function* playerStart () {
     try {
-      // Put Player.Starting
-      // Find state immediately before player position, put that state
-      // Resume audio player
-      // Put Player.Started
+      const player = yield select(getPlayerState);
+      if (player.get('state') !== 'ready')
+        return;
+      yield put({type: actions.playerStarting});
+      // TODO: Find the state immediately before current audio position, put that state.
+      // TODO: Resume the audio player.
+      yield put({type: actions.playerStarted});
     } catch (error) {
       yield put({type: actions.error, source: 'playerStart', error});
     }
@@ -85,8 +88,7 @@ export default function (actions) {
         return;
       // Signal that the player is stopping.
       yield put({type: actions.playerStopping});
-      // Stop the audio player.
-      // Stop the saga that updates the state periodically.
+      // TODO: Stop the audio player.
       yield put({type: actions.playerStopped});
     } catch (error) {
       yield put({type: actions.error, source: 'playerStop', error});
@@ -181,7 +183,7 @@ export default function (actions) {
           break;
         }
         case 'stepIdle': {
-          const stepCounter = event[2];
+          let stepCounter = event[2];
           let stepperState = state.get('stepper');
           while (stepCounter > 0) {
             stepperState = C.step(stepperState, runtime.options);
@@ -191,7 +193,7 @@ export default function (actions) {
           break;
         }
         case 'stepProgress': {
-          const stepCounter = event[2];
+          let stepCounter = event[2];
           let stepperState = state.get('stepper');
           while (stepCounter > 0) {
             stepperState = C.step(stepperState, runtime.options);
@@ -206,7 +208,7 @@ export default function (actions) {
         }
       }
       states.push(Immutable.Map({t, state}));
-    });
+    }
     return states;
   }
 
@@ -231,7 +233,7 @@ export default function (actions) {
     }
   }
 
-  function* playerTicker () {
+  function* playerTick () {
     while (true) {
       yield take(actions.playerStarted);
       while (true) {

@@ -44,6 +44,10 @@ app.get('/', function (req, res) {
   res.render('index', {development: isDevelopment});
 });
 
+app.get('/player', function (req, res) {
+  res.render('player', {development: isDevelopment});
+});
+
 app.post('/translate', function (req, res) {
   const source = req.body.source;
   // int main () { return 1; }
