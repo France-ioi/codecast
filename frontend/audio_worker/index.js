@@ -100,7 +100,7 @@ function finishRecording () {
   var samplesR = combineChunks(chunksR);
   chunksR = [];
   var channels = [samplesL, samplesR];
-  if (true) {
+  if (false ) {
     var encodingOptions = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
     var wav = encodeWav(channels, encodingOptions);
     var url = URL.createObjectURL(wav);
