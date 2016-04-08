@@ -44,8 +44,8 @@ export function recorderPreparing (state, action) {
 };
 
 export function recorderReady (state, action) {
-  const {audioContext, worker} = action;
-  return state.set('recorder', Immutable.Map({state: 'ready', audioContext, worker}));
+  const {context} = action;
+  return state.set('recorder', Immutable.Map({state: 'ready', context: Immutable.Map(context)}));
 };
 
 export function recorderStarting (state, action) {
@@ -73,11 +73,10 @@ export function recorderStopping (state, action) {
 };
 
 export function recorderStopped (state, action) {
-  // Clear the recorder state except the audioContext and worker.
-  const audioContext = state.getIn(['recorder', 'audioContext']);
-  const worker = state.getIn(['recorder', 'worker']);
+  // Clear the recorder state, keeping its context.
+  const context = state.getIn(['recorder', 'context']);
   return state
-    .set('recorder', Immutable.Map({state: 'ready', audioContext, worker}))
+    .set('recorder', Immutable.Map({state: 'ready', context}))
     .set('screen', 'save')
     .set('save', Immutable.Map({
       audioUrl: action.audioUrl,

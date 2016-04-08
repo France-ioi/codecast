@@ -41,7 +41,9 @@ export default function (actions) {
     });
   }
 
-  /* A context is an object that is mutated as a saga steps through nodes.
+  /* XXX Use a different terminology for the stepper context (just below)
+         and the recorder context ({audioContext, worker, scriptProcessor}).
+     A context is an object that is mutated as a saga steps through nodes.
      The context must never escape the saga, use viewContext to export the
      persistent bits.
    */
@@ -85,13 +87,10 @@ export default function (actions) {
     try {
       // Clean up any previous audioContext and worker.
       const recorder = yield select(getRecorderState);
-      let audioContext = recorder.get('audioContext');
-      let worker = recorder.get('worker');
-      if (audioContext) {
-        audioContext.close();
-      }
-      if (worker) {
-        killWorker(worker);
+      let context = recorder.get('context');
+      if (context) {
+        recorder.get('audioContext').close();
+        killWorker(recorder.get('worker'));
       }
       yield put({type: actions.recorderPreparing, progress: 'start'});
       // Attempt to obtain an audio stream.  The async call will complete once
@@ -100,7 +99,7 @@ export default function (actions) {
       yield put({type: actions.recorderPreparing, progress: 'stream_ok'});
       // Create the AudioContext, connect the nodes, and suspend the audio
       // context until we actually start recording.
-      audioContext = new AudioContext();
+      const audioContext = new AudioContext();
       const source = audioContext.createMediaStreamSource(stream);
       const analyser = audioContext.createAnalyser();
       const scriptProcessor = audioContext.createScriptProcessor(
@@ -113,7 +112,7 @@ export default function (actions) {
       yield call(suspendAudioContext, audioContext);
       yield put({type: actions.recorderPreparing, progress: 'audio_ok'});
       // Set up a worker to hold and encode the buffers.
-      worker = yield call(spawnWorker, audioWorkerUrl);
+      const worker = yield call(spawnWorker, audioWorkerUrl);
       yield put({type: actions.recorderPreparing, progress: 'worker_ok'});
       // Initialize the worker.
       yield call(callWorker, worker, {
@@ -145,8 +144,12 @@ export default function (actions) {
         const ch1 = event.inputBuffer.getChannelData(1);
         worker.postMessage({command: "record", buffer: [ch0, ch1]});
       };
-      // Signal that the recorder is ready to start.
-      yield put({type: actions.recorderReady, audioContext, worker});
+      // Signal that the recorder is ready to start, storing the new context.
+      // /!\  Chrome: store a reference to the scriptProcessor node to prevent
+      //      the browser from garbage-collection the node (which seems to
+      //      occur even though the node is still connected).
+      context = {audioContext, worker, scriptProcessor};
+      yield put({type: actions.recorderReady, context});
     } catch (error) {
       // XXX send a specialized event and allow retrying recorderPrepare
       yield put({type: actions.error, source: 'recorderPrepare', error});
@@ -165,10 +168,10 @@ export default function (actions) {
       // Signal that the recorder is starting.
       yield put({type: actions.recorderStarting});
       // Resume the audio context to start recording audio buffers.
-      const audioContext = recorder.get('audioContext');
+      const context = recorder.get('context');
       // Race with timeout, in case the audio device is busy.
       const outcome = yield race({
-        resumed: call(resumeAudioContext, audioContext),
+        resumed: call(resumeAudioContext, context.get('audioContext')),
         timeout: call(delay, 1000)
       });
       if ('timeout' in outcome) {
@@ -202,10 +205,10 @@ export default function (actions) {
       // Signal that the recorder is stopping.
       yield put({type: actions.recorderStopping});
       // Suspend the audio context to stop recording audio buffers.
-      const audioContext = recorder.get('audioContext');
-      const worker = recorder.get('worker');
+      const context = recorder.get('context');
+      const worker = context.get('worker');
       const events = recorder.get('events');
-      yield call(suspendAudioContext, audioContext);
+      yield call(suspendAudioContext, context.get('audioContext'));
       const audioResult = yield call(callWorker, worker, {command: "finishRecording"});
       const eventsBlob = new Blob([JSON.stringify(events.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
       const eventsUrl = URL.createObjectURL(eventsBlob);
