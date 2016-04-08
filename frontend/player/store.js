@@ -16,7 +16,11 @@ export default function storeFactory () {
     return state;
   }
 
-  const initialState = Immutable.Map({});
+  const initialState = Immutable.Map({
+    player: Immutable.Map({
+      state: 'idle'
+    })
+  });
 
   const sagas = sagasFactory(actions);
 

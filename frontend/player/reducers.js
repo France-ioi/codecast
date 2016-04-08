@@ -4,11 +4,15 @@ export const error = function (state, action) {
 };
 
 export const playerPreparing = function (state, action) {
-  return state;
+  return state.setIn(['player', 'state'], 'preparing');
 };
 
 export const playerReady = function (state, action) {
-  return state;
+  const {audio, states} = action;
+  return state.update('player', player => player
+    .set('state', 'ready')
+    .set('audio', audio)
+    .set('states', states));
 };
 
 export const playerStart = function (state, action) {
