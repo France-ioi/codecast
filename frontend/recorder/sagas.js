@@ -4,6 +4,7 @@ import {take, put, call, race, fork, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 import Immutable from 'immutable';
 
+import {RECORDING_FORMAT_VERSION} from '../common/version';
 import {loadTranslated} from '../common/translate';
 import * as runtime from '../common/runtime';
 
@@ -11,7 +12,7 @@ import {asyncRequestJson} from '../api';
 import {getPreparedSource, getRecorderState, getStepperState} from '../selectors';
 import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
 import Document from '../document';
-import {recordEventAction, compressRange, RECORDING_FORMAT_VERSION} from './utils';
+import {recordEventAction, compressRange} from './utils';
 
 // XXX worker URL should use SystemJS baseURL?
 // import audioWorkerText from '../../assets/audio_worker.js!text';
