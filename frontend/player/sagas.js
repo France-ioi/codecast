@@ -76,7 +76,7 @@ export default function (actions) {
         return;
       yield put({type: actions.playerStarting});
       // TODO: Find the state immediately before current audio position, put that state.
-      // TODO: Resume the audio player.
+      player.get('audio').play();
       yield put({type: actions.playerStarted});
     } catch (error) {
       yield put({type: actions.error, source: 'playerStart', error});
@@ -100,7 +100,7 @@ export default function (actions) {
   function* computeStates (events) {
     // TODO: avoid hogging the CPU, emit progress events.
     let state = null;
-    const states = Immutable.List();
+    let states = [];
     for (let pos = 0; pos < events.length; pos += 1) {
       const event = events[pos];
       const t = event[0];
@@ -135,7 +135,7 @@ export default function (actions) {
         case 'delete': {
           const range = Document.expandRange(event[2]);
           const delta = {
-            action: 'delete',
+            action: 'remove',
             start: range.start,
             end: range.end
           };
@@ -215,7 +215,7 @@ export default function (actions) {
           break;
         }
       }
-      states.push(Immutable.Map({t, state}));
+      states.push({t, state});
     }
     return states;
   }
@@ -244,6 +244,8 @@ export default function (actions) {
   function* playerTick () {
     while (true) {
       yield take(actions.playerStarted);
+      const player = yield select(getPlayerState);
+      const audio = player.get('audio');
       while (true) {
         const outcome = yield race({
           tick: call(delay, 20),
@@ -251,7 +253,7 @@ export default function (actions) {
         });
         if ('stopped' in outcome)
           break;
-        const position = 0; /* XXX audio position */
+        const position = Math.round(audio.currentTime * 1000);
         yield put({type: actions.playerTick, position});
       }
     }

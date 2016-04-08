@@ -5,10 +5,10 @@ import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import Document from '../common/document';
+import Terminal from '../common/terminal';
 
 import actions from '../actions';
 import Editor from '../editor';
-import Terminal from '../terminal';
 import {recordEventAction} from './utils';
 import RecordControls from './controls';
 import EventView from './event_view';

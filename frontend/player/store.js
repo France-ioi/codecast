@@ -9,9 +9,30 @@ import sagasFactory from './sagas';
 
 export default function storeFactory () {
 
+  const storeHandlers = {};
+  function addHandlers (handlers) {
+    Object.keys(handlers).forEach(function (key) {
+      if (key === 'default')
+        return;
+      if (!(key in actions)) {
+        console.warn(`reducer: no such action ${key}`);
+        return;
+      }
+      const actionType = actions[key];
+      if (actionType in storeHandlers) {
+        console.warn(`reducer: duplicate handler ${key}`);
+      } else {
+        storeHandlers[actions[key]] = handlers[key];
+      }
+    });
+  }
+  addHandlers(reducers);
+
   const reducer = function (state, action) {
-    if (action.type in reducers) {
-      state = reducers[action.type](state, action);
+    if (action.type in storeHandlers) {
+      state = storeHandlers[action.type](state, action);
+    } else {
+      console.log('unhandled', action.type);
     }
     return state;
   }

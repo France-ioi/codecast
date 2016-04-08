@@ -34,3 +34,30 @@ export const playerStopping = function (state, action) {
 export const playerStopped = function (state, action) {
   return state;
 };
+
+export const playerTick = function (state, action) {
+  return state.update('player', function (player) {
+    const position = action.position;
+    const prevPosition = player.get('position');
+    if (prevPosition !== action.position) {
+      const states = player.get('states');
+      const currentState = findState(states, position);
+      player = player.set('position', position).set('current', currentState.state);
+    }
+    return player;
+  });
+};
+
+const findState = function (states, t) {
+  let low = 0, high = states.length;
+  while (low + 1 < high) {
+    const mid = (low + high) / 2 | 0;
+    const state = states[mid];
+    if (state.t <= t) {
+      low = mid;
+    } else {
+      high = mid;
+    }
+  }
+  return states[low];
+};
