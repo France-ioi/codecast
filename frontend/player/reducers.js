@@ -1,6 +1,6 @@
 
-export const playerPrepare = function (state, action) {
-  return state;
+export const error = function (state, action) {
+  return state.set('lastError', action.error);
 };
 
 export const playerPreparing = function (state, action) {

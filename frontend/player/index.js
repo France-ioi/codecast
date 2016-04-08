@@ -18,13 +18,16 @@ import 'font-awesome/css/font-awesome.min.css!';
 // import './style.css!';
 
 import storeFactory from './store';
+import actions from './actions';
 
 const App = EpicComponent(self => {
 
   self.render = function () {
+    const {lastError} = self.props;
     return (
       <div className="container">
         <p>Player</p>
+        {lastError && <p>{lastError}</p>}
       </div>
     );
   };
@@ -32,8 +35,8 @@ const App = EpicComponent(self => {
 });
 
 const selector = function (state, props) {
-  // const screen = state.get('screen');
-  return {};
+  const lastError = state.get('lastError');
+  return {lastError};
 };
 
 const store = window.store = storeFactory();
