@@ -34,7 +34,7 @@ const App = EpicComponent(self => {
         {screen === 'prepare' && <PrepareScreen/>}
         {screen === 'record' && <RecordScreen/>}
         {screen === 'save' && <SaveScreen/>}
-        {<DevTools/>}
+        {false && <DevTools/>}
       </div>
     );
   };
