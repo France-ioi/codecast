@@ -3,7 +3,7 @@ import Immutable from 'immutable';
 import * as C from 'persistent-c';
 import {TermBuffer} from 'epic-vt';
 
-import Document from '../document';
+import Document from '../common/document';
 import * as runtime from '../common/runtime';
 import {getRangeFromOffsets} from '../common/translate';
 

@@ -7,11 +7,11 @@ import Immutable from 'immutable';
 import {RECORDING_FORMAT_VERSION} from '../common/version';
 import {loadTranslated} from '../common/translate';
 import * as runtime from '../common/runtime';
+import Document from '../common/document';
 
 import {asyncRequestJson} from '../api';
 import {getPreparedSource, getRecorderState, getStepperState} from '../selectors';
 import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
-import Document from '../document';
 import {recordEventAction, compressRange} from './utils';
 
 // XXX worker URL should use SystemJS baseURL?

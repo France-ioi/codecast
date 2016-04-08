@@ -1,7 +1,7 @@
 
 import Immutable from 'immutable';
 
-import Document from '../document';
+import Document from '../common/document';
 
 const initialDocument = Document.fromString("int main (int argc, char** argv) {\n    int b = 1;\n    for (int a = 1; a < 1000000; a += 1) {\n        b = b * a;\n        printf(\"%d\\n\", b);\n    }\n    return 1;\n}\n");
 const initialSelection = {start: {row: 2, column: 24}, end: {row: 2, column: 31}};

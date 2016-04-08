@@ -8,7 +8,7 @@ import Immutable from 'immutable';
 import {RECORDING_FORMAT_VERSION} from '../common/version';
 import {loadTranslated, getRangeFromOffsets} from '../common/translate';
 import * as runtime from '../common/runtime';
-import Document from '../document';
+import Document from '../common/document';
 
 
 export default function (actions) {

@@ -1,7 +1,7 @@
 
 import Immutable from 'immutable';
 
-import Document from '../document';
+import Document from '../common/document';
 
 export function prepareScreenSourceEdit (state, action) {
   const prevSource = state.getIn(['prepare', 'source', 'document']);

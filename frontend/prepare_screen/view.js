@@ -9,7 +9,7 @@ const Range = ace.acequire('ace/range').Range;
 
 import actions from '../actions';
 import Editor from '../editor';
-import Document from '../document';
+import Document from '../common/document';
 
 export const PrepareScreen = EpicComponent(self => {
 
