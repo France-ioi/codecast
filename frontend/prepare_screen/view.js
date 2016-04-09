@@ -7,9 +7,9 @@ import EpicComponent from 'epic-component';
 import * as ace from 'brace';
 const Range = ace.acequire('ace/range').Range;
 
-import actions from '../actions';
-import Editor from '../editor';
+import Editor from '../common/editor';
 import Document from '../common/document';
+import actions from '../actions';
 
 export const PrepareScreen = EpicComponent(self => {
 

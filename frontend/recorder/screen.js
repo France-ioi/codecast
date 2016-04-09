@@ -6,9 +6,9 @@ import EpicComponent from 'epic-component';
 
 import Document from '../common/document';
 import Terminal from '../common/terminal';
+import Editor from '../common/editor';
 
 import actions from '../actions';
-import Editor from '../editor';
 import {recordEventAction} from './utils';
 import RecordControls from './controls';
 import EventView from './event_view';
