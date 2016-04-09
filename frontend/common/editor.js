@@ -60,6 +60,25 @@ export const Editor = EpicComponent(self => {
     self.props.onEdit(edit)
   };
 
+  const reset = function (value, selection) {
+    if (!editor)
+      return;
+    editor.setValue(value);
+    setSelection(selection);
+  };
+
+  const applyDeltas = function (deltas) {
+    if (!editor)
+      return;
+    editor.session.doc.applyDeltas(deltas);
+  };
+
+  const focus = function () {
+    if (!editor)
+      return;
+    editor.focus();
+  };
+
   self.componentWillReceiveProps = function (nextProps) {
     if (editor) {
       if (self.props.selection !== nextProps.selection) {
@@ -75,21 +94,11 @@ export const Editor = EpicComponent(self => {
     editor.getSession().setMode('ace/mode/c_cpp');
     // editor.setOptions({minLines: 25, maxLines: 50});
     editor.setReadOnly(self.props.readOnly);
-    if ('onInit' in self.props) {
-      const init = self.props.onInit();
-      editor.setValue(init.value.toString());
-      setSelection(init.selection);
-      if (init.focus) {
-        editor.focus();
-      }
-    } else {
-      // XXX deprecate, always use onInit for now (later, value should be a
-      // persistent document).
-      editor.setValue(self.props.value);
-      setSelection(self.props.selection);
-      editor.focus();
+    const {onInit, onSelect, onEdit} = self.props;
+    if (typeof onInit === 'function') {
+      const api = {reset, applyDeltas, setSelection, focus};
+      onInit(api);
     }
-    const {onSelect, onEdit} = self.props;
     if (typeof onSelect === 'function') {
       editor.selection.addEventListener("changeCursor", onSelectionChanged, true);
       editor.selection.addEventListener("changeSelection", onSelectionChanged, true);

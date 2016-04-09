@@ -39,7 +39,7 @@ export const getRangeFromOffsets = function (text, start, end) {
 
 export const getNodeRange = function (stepper, translated) {
   if (!stepper || !translated) {
-    return recorderState;
+    return null;
   }
   const {control} = stepper;
   if (!control || !control.node) {

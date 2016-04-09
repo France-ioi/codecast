@@ -19,7 +19,7 @@ import 'font-awesome/css/font-awesome.min.css!';
 
 import storeFactory from './store';
 import actions from './actions';
-import Document from '../common/document';
+import Editor from '../common/editor';
 import Terminal from '../common/terminal';
 
 const App = EpicComponent(self => {
@@ -28,18 +28,22 @@ const App = EpicComponent(self => {
     self.props.dispatch({type: actions.playerStart});
   };
 
+  const onSourceInit = function (editor) {
+    self.props.dispatch({type: actions.playerSourceInit, editor});
+  };
+
   self.render = function () {
     const {playerState, lastError, current} = self.props;
-    const source = current && current.get('source');
-    const stepper = current && current.get('stepper');
+    const currentState = current && current.state;
+    const source = current && currentState.get('source');
+    const stepper = current && currentState.get('stepper');
     const terminal = stepper && stepper.terminal;
-    // current = {source: {document, selection}, translated, stepper}
     return (
       <div className="container">
         <Button onClick={onStart} disabled={playerState !== 'ready'}>
           <i className="fa fa-play"/>
         </Button>
-        <div>{source && Document.toString(source.get('document'))}</div>
+        <Editor onInit={onSourceInit} width='100%' height='336px'/>
         <div>{terminal && <Terminal terminal={terminal}/>}</div>
         {lastError && <p>{lastError}</p>}
       </div>

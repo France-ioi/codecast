@@ -8,11 +8,17 @@ export const playerPreparing = function (state, action) {
 };
 
 export const playerReady = function (state, action) {
-  const {audio, states} = action;
+  const {audio, events, states} = action;
   return state.update('player', player => player
     .set('state', 'ready')
     .set('audio', audio)
-    .set('states', states));
+    .set('events', events)
+    .set('states', states)
+    .set('current', states[0]));
+};
+
+export const playerSourceInit = function (state, action) {
+  return state.setIn(['player', 'editor'], action.editor);
 };
 
 export const playerStart = function (state, action) {
@@ -36,16 +42,7 @@ export const playerStopped = function (state, action) {
 };
 
 export const playerTick = function (state, action) {
-  return state.update('player', function (player) {
-    const position = action.position;
-    const prevPosition = player.get('position');
-    if (prevPosition !== action.position) {
-      const states = player.get('states');
-      const currentState = findState(states, position);
-      player = player.set('position', position).set('current', currentState.state);
-    }
-    return player;
-  });
+  return state.setIn(['player', 'current'], action.current);
 };
 
 const findState = function (states, t) {

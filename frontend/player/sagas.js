@@ -7,8 +7,9 @@ import Immutable from 'immutable';
 
 import {RECORDING_FORMAT_VERSION} from '../common/version';
 import {loadTranslated, getRangeFromOffsets} from '../common/translate';
-import * as runtime from '../common/runtime';
 import Document from '../common/document';
+import * as runtime from '../common/runtime';
+import {getNodeRange} from '../common/translate';
 
 import {getPlayerState} from './selectors';
 
@@ -34,6 +35,39 @@ export default function (actions) {
         }
       });
     });
+  };
+
+  function eventToDelta (event) {
+    const range = Document.expandRange(event[2]);
+    if (event[1] === 'insert') {
+      return {
+        action: 'insert',
+        start: range.start,
+        end: range.end,
+        lines: event[3]
+      };
+    }
+    if (event[1] === 'delete') {
+      return {
+        action: 'remove',
+        start: range.start,
+        end: range.end
+      };
+    }
+  }
+
+  const findState = function (states, time) {
+    let low = 0, high = states.length;
+    while (low + 1 < high) {
+      const mid = (low + high) / 2 | 0;
+      const state = states[mid];
+      if (state.t <= time) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    return states[low];
   };
 
   //
@@ -63,7 +97,8 @@ export default function (actions) {
       // Compute the future state after every event.
       const states = yield call(computeStates, events);
       // TODO: watch audioElement.buffered?
-      yield put({type: actions.playerReady, audio, states});
+      yield put({type: actions.playerReady, audio, events, states});
+      yield call(setCurrent, states[0]);
     } catch (error) {
       yield put({type: actions.error, source: 'playerPrepare', error});
     }
@@ -120,25 +155,8 @@ export default function (actions) {
           state = state.setIn(['source', 'selection'], Document.expandRange(event[2]));
           break;
         }
-        case 'insert': {
-          const range = Document.expandRange(event[2]);
-          const delta = {
-            action: 'insert',
-            start: range.start,
-            end: range.end,
-            lines: event[3]
-          };
-          state = state.updateIn(['source', 'document'], document =>
-            Document.applyDelta(document, delta));
-          break;
-        }
-        case 'delete': {
-          const range = Document.expandRange(event[2]);
-          const delta = {
-            action: 'remove',
-            start: range.start,
-            end: range.end
-          };
+        case 'insert': case 'delete': {
+          const delta = eventToDelta(event);
           state = state.updateIn(['source', 'document'], document =>
             Document.applyDelta(document, delta));
           break;
@@ -175,15 +193,15 @@ export default function (actions) {
           break;
         }
         case 'stepExpr': {
-          state = state.set('currentStep', 'expr');
+          state = state.set('pendingStep', 'expr');
           break;
         }
         case 'stepInto': {
-          state = state.set('currentStep', 'into');
+          state = state.set('pendingStep', 'into');
           break;
         }
         case 'stepOut': {
-          state = state.set('currentStep', 'out');
+          state = state.set('pendingStep', 'out');
           break;
         }
         case 'stepIdle': {
@@ -193,7 +211,7 @@ export default function (actions) {
             stepperState = C.step(stepperState, runtime.options);
             stepCounter -= 1;
           }
-          state = state.delete('currentStep').set('stepper', stepperState);
+          state = state.delete('pendingStep').set('stepper', stepperState);
           break;
         }
         case 'stepProgress': {
@@ -215,7 +233,7 @@ export default function (actions) {
           break;
         }
       }
-      states.push({t, state});
+      states.push({t, eventIndex: pos, state});
     }
     return states;
   }
@@ -241,11 +259,20 @@ export default function (actions) {
     }
   }
 
+  function* setCurrent (state) {
+    const player = yield select(getPlayerState);
+    const editor = player.get('editor');
+    if (editor) {
+      const source = state.state.get('source');
+      const text = Document.toString(source.get('document'));
+      editor.reset(text, source.get('selection'));
+    }
+    yield put({type: actions.playerTick, current: state});
+  }
+
   function* playerTick () {
     while (true) {
       yield take(actions.playerStarted);
-      const player = yield select(getPlayerState);
-      const audio = player.get('audio');
       while (true) {
         const outcome = yield race({
           tick: call(delay, 20),
@@ -253,8 +280,52 @@ export default function (actions) {
         });
         if ('stopped' in outcome)
           break;
-        const position = Math.round(audio.currentTime * 1000);
-        yield put({type: actions.playerTick, position});
+        const player = yield select(getPlayerState);
+        const audio = player.get('audio');
+        const audioTime = Math.round(audio.currentTime * 1000);
+        const prevState = player.get('current');
+        const states = player.get('states');
+        const nextState = findState(states, audioTime);
+        if (nextState.eventIndex < prevState.eventIndex) {
+          // Event index jumped backwards.
+          console.log("<< seek", nextState.t);
+          yield call(setCurrent, nextState);
+        } else if (nextState.t > prevState.t + 1000 && prevState.eventIndex + 10 < nextState.eventIndex) {
+          // Time between last state and new state jumped by more than 1 second,
+          // and there are more than 10 events to replay.
+          console.log("seek >>", nextState.t);
+          yield call(setCurrent, nextState);
+        } else {
+          // Small time delta, attempt to replay events.
+          const events = player.get('events');
+          const editor = player.get('editor');
+          // XXX Assumption: 1-to-1 correspondance between indexes in
+          //                 events and states: states[pos] is the state
+          //                 immediately after replaying events[pos],
+          //                 and pos === states[pos].eventIndex
+          for (let pos = prevState.eventIndex + 1; pos <= nextState.eventIndex; pos += 1) {
+            // console.log(event);
+            const event = events[pos];
+            const state = states[pos + 1].state;  // state reached after event is replayed
+            console.log('step', pos, event, state);
+            switch (event[1]) {
+              case 'select':
+                editor.setSelection(Document.expandRange(event[2]))
+                break;
+              case 'insert': case 'delete':
+                editor.applyDeltas([eventToDelta(event)]);
+                break;
+              case 'stepIdle': case 'stepProgress': {
+                const stepper = state.get('stepper');
+                const translated = state.get('translated');
+                const range = getNodeRange(stepper, translated);
+                editor.setSelection(range);
+                break;
+              }
+            }
+          }
+          yield put({type: actions.playerTick, current: nextState});
+        }
       }
     }
   }
