@@ -67,6 +67,7 @@
   "dependencies": {
     "body-parser": "^1.15.0",
     "express": "^4.13.4",
-    "jade": "^1.11.0"
+    "jade": "^1.11.0",
+    "s3-browser-direct-upload": "^0.1.2"
   }
 }
