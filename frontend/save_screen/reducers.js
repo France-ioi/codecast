@@ -31,7 +31,8 @@ export const saveScreenAudioUploaded = function (state, action) {
 
 export const saveScreenUploadSucceeded = function (state, action) {
   // TODO: set recording id or URL.
-  return state.setIn(['save', 'busy'], false);
+  return state.update('save', save => save
+    .set('busy', false).set('done', true));
 };
 
 export const saveScreenUploadFailed = function (state, action) {

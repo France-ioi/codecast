@@ -1,36 +1,41 @@
 
 import React from 'react';
 import {connect} from 'react-redux';
-import {Button} from 'react-bootstrap';
+import {Button, Input} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import actions from '../actions';
 
 export const SaveScreen = EpicComponent(self => {
 
-  const noAction = function (event) {
-    event.preventDefault();
-  };
-
   const onUpload = function () {
     self.props.dispatch({type: actions.saveScreenUploadStart});
   };
 
   self.render = function () {
-    const {audioUrl, eventsUrl} = self.props;
+    const {audioUrl, eventsUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = self.props;
     return (
       <div>
-        <p><Button onClick={onUpload}>enregistrer</Button></p>
         <p>
-          <a className="btn btn-default" href={audioUrl} onClick={noAction}>
-            <i className="fa fa-file-audio-o"/>
-          </a>
+          <Button onClick={onUpload} disabled={busy || done}>
+            {busy
+              ? <i className="fa fa-spin fa-spinner"/>
+              : (done
+                  ? <i className="fa fa-check"/>
+                  : <i className="fa fa-floppy-o"/>)}
+          </Button>
         </p>
         <p>
-          <a className="btn btn-default" href={eventsUrl} onClick={noAction}>
-            <i className="fa fa-file-video-o"/>
-          </a>
+          <Input type="text" label="URL évènements" readOnly value={eventsUrl}/>
         </p>
+        <p>
+          <Input type="text" label="URL audio" readOnly value={audioUrl}/>
+        </p>
+        {prepare === 'pending' && <p>Préparation de l'enregistrement…</p>}
+        {uploadEvents === 'pending' && <p>Envoi des évènements en cours…</p>}
+        {uploadAudio === 'pending' && <p>Envoi de l'audio en cours…</p>}
+        {error && <p>Une erreur est survenue lors de l'enregistrement.</p>}
+        {done && <p>Enregistrement terminé !</p>}
       </div>
     );
   };
@@ -39,9 +44,11 @@ export const SaveScreen = EpicComponent(self => {
 
 function selector (state, props) {
   const save = state.get('save')
-  const audioUrl = save.get('audioUrl');
-  const eventsUrl = save.get('eventsUrl');
-  return {audioUrl, eventsUrl};
+  const result = {};
+  ['audioUrl', 'eventsUrl', 'busy', 'done', 'prepare', 'uploadEvents', 'uploadAudio', 'error'].forEach(function (key) {
+    result[key] = save.get(key);
+  })
+  return result;
 };
 
 export default connect(selector)(SaveScreen);
