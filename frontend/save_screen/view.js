@@ -4,26 +4,33 @@ import {connect} from 'react-redux';
 import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
+import actions from '../actions';
+
 export const SaveScreen = EpicComponent(self => {
 
   const noAction = function (event) {
     event.preventDefault();
   };
 
+  const onUpload = function () {
+    self.props.dispatch({type: actions.saveScreenUploadStart});
+  };
+
   self.render = function () {
     const {audioUrl, eventsUrl} = self.props;
     return (
       <div>
-        <div className="row">
-          <div className="col-md-12">
-            <a className="btn btn-default" href={audioUrl} onClick={noAction}>
-              <i className="fa fa-file-audio-o"/>
-            </a>
-            <a className="btn btn-default" href={eventsUrl} onClick={noAction}>
-              <i className="fa fa-file-video-o"/>
-            </a>
-          </div>
-        </div>
+        <p><Button onClick={onUpload}>enregistrer</Button></p>
+        <p>
+          <a className="btn btn-default" href={audioUrl} onClick={noAction}>
+            <i className="fa fa-file-audio-o"/>
+          </a>
+        </p>
+        <p>
+          <a className="btn btn-default" href={eventsUrl} onClick={noAction}>
+            <i className="fa fa-file-video-o"/>
+          </a>
+        </p>
       </div>
     );
   };

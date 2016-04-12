@@ -49,10 +49,29 @@ app.get('/player', function (req, res) {
   res.render('player', {development: isDevelopment});
 });
 
-app.get('/upload', function (req, res) {
-  upload.getJsonUploadForm('/uploads/1', function (err, form) {
+app.get('/upload.json', function (req, res) {
+  upload.getJsonUploadForm('uploads/1', function (err, form) {
     // if (err) ...
     res.render('upload', form);
+  });
+});
+
+app.get('/upload.mp3', function (req, res) {
+  upload.getMp3UploadForm('uploads/1', function (err, form) {
+    // if (err) ...
+    res.render('upload', form);
+  });
+});
+
+app.post('/upload', function (req, res) {
+  const id = '1';
+  const base = `uploads/${id}`;
+  upload.getJsonUploadForm(base, function (err, events) {
+    // if (err) ...
+    upload.getMp3UploadForm(base, function (err, audio) {
+      // if (err) ...
+      res.json({events: events, audio: audio});
+    });
   });
 });
 

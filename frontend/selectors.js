@@ -20,3 +20,7 @@ export function getStepperState (state) {
 export function getRecorderSourceEditor (state) {
   return state.getIn(['recorder', 'source', 'editor']);
 };
+
+export function getSaveState (state) {
+  return state.get('save');
+};

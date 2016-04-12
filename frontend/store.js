@@ -14,6 +14,7 @@ import * as saveScreenReducers from './save_screen/reducers';
 
 import toplevelSagas from './sagas';
 import recorderSagas from './recorder/sagas';
+import saveScreenSagas from './save_screen/sagas';
 
 export default function storeFactory () {
 
@@ -59,7 +60,8 @@ export default function storeFactory () {
 
   const sagas = flatten([
     toplevelSagas,
-    recorderSagas
+    recorderSagas,
+    saveScreenSagas
   ].map(function (factory) {
     return factory(actions);
   }));
