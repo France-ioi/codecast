@@ -50,6 +50,7 @@ System.config({
     "lamejs": "npm:lamejs@1.0.0",
     "lodash": "npm:lodash@4.6.1",
     "persistent-c": "npm:persistent-c@2.0.0",
+    "query-string": "npm:query-string@4.1.0",
     "react": "npm:react@15.0.0-rc.2",
     "react-ace": "npm:react-ace@3.2.0",
     "react-bootstrap": "npm:react-bootstrap@0.28.4",
@@ -551,6 +552,9 @@ System.config({
       "process": "github:jspm/nodelibs-process@0.1.2",
       "systemjs-json": "github:systemjs/plugin-json@0.1.0"
     },
+    "npm:persistent-c@2.0.0": {
+      "child_process": "github:jspm/nodelibs-child_process@0.1.0"
+    },
     "npm:process-nextick-args@1.0.6": {
       "process": "github:jspm/nodelibs-process@0.1.2",
       "systemjs-json": "github:systemjs/plugin-json@0.1.0"
@@ -573,6 +577,9 @@ System.config({
     },
     "npm:punycode@1.3.2": {
       "process": "github:jspm/nodelibs-process@0.1.2"
+    },
+    "npm:query-string@4.1.0": {
+      "strict-uri-encode": "npm:strict-uri-encode@1.1.0"
     },
     "npm:randombytes@2.0.3": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",

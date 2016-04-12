@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import {Provider, connect} from 'react-redux';
 import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
+import queryString from 'query-string';
 
 import 'brace';
 // For jspm bundle-sfx, ensure that jspm-0.16.config.js has a meta entry
@@ -15,7 +16,7 @@ import 'brace/theme/github';
 
 import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
-// import './style.css!';
+import '../style.css!';
 
 import storeFactory from './store';
 import actions from './actions';
@@ -65,4 +66,9 @@ const ConnectedApp = connect(selector)(App);
 const container = document.getElementById('react-container');
 ReactDOM.render(<Provider store={store}><ConnectedApp/></Provider>, container);
 
-store.dispatch({type: actions.playerPrepare, audioUrl: '/assets/1.mp3', eventsUrl: '/assets/1.json'});
+const qs = queryString.parse(window.location.search);
+store.dispatch({
+  type: actions.playerPrepare,
+  audioUrl: `https://fioi-recordings.s3.amazonaws.com/uploads/${qs.id}.mp3`,
+  eventsUrl: `https://fioi-recordings.s3.amazonaws.com/uploads/${qs.id}.json`
+});
