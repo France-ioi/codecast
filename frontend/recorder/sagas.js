@@ -10,7 +10,7 @@ import * as runtime from '../common/runtime';
 import Document from '../common/document';
 
 import {asyncRequestJson} from '../api';
-import {getPreparedSource, getRecorderState, getStepperState} from '../selectors';
+import {getPreparedSource, getRecorderState, getStepperState, getRecorderSourceEditor} from '../selectors';
 import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
 import {recordEventAction} from './utils';
 
@@ -80,6 +80,16 @@ export default function (actions) {
     context.state = C.step(state, runtime.options);
     context.stepCounter += 1;
     return true;
+  }
+
+  function* updateSelection () {
+    const editor = yield select(getRecorderSourceEditor);
+    if (editor) {
+      const stepper = yield select(getStepperState);
+      const stepperState = stepper.get('display');
+      const range = runtime.getNodeRange(stepperState);
+      editor.setSelection(range);
+    }
   }
 
   //
@@ -252,7 +262,9 @@ export default function (actions) {
       const result = loadTranslated(source, ast);
       yield put(recordEventAction(['translateSuccess', ast]));
       yield put({type: actions.translateSourceSucceeded, result});
-      yield put({type: actions.recordScreenStepperRestart, result});
+      const stepperState = runtime.start(result.syntaxTree);
+      yield put({type: actions.recordScreenStepperRestart, stepperState});
+      yield call(updateSelection);
     } catch (error) {
       const message = error.toString();
       yield put({type: actions.translateSourceFailed, error: message, source});
@@ -284,7 +296,7 @@ export default function (actions) {
       const stepper = yield select(getStepperState);
       if (stepper.get('state') === 'starting') {
         yield put({type: actions.recordScreenStepperStart});
-        const context = buildContext(stepper.get('compute'));
+        const context = buildContext(stepper.get('current'));
         // Take a single step unconditionally,
         context.state = C.step(context.state, runtime.options);
         context.stepCounter += 1;
@@ -303,6 +315,7 @@ export default function (actions) {
         }
         yield put(recordEventAction(['stepIdle', context.stepCounter]));
         yield put({type: actions.recordScreenStepperIdle, context: viewContext(context)});
+        yield call(updateSelection);
       }
     }
   }
@@ -322,6 +335,7 @@ export default function (actions) {
         // Reset the time limit and put a Progress event.
         context.timeLimit = window.performance.now() + 20;
         yield put({type: actions.recordScreenStepperProgress, context: viewContext(context)});
+        yield call(updateSelection);
         yield put(recordEventAction(['stepProgress', context.stepCounter]));
         // Yield until the next tick (XXX consider requestAnimationFrame).
         yield call(delay, 0);

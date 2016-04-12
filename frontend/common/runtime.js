@@ -40,3 +40,14 @@ export const stepIntoUserCode = function (stepperState) {
   }
   return stepperState;
 };
+
+export const getNodeRange = function (stepper) {
+  if (!stepper) {
+    return null;
+  }
+  const {control} = stepper;
+  if (!control || !control.node) {
+    return null;
+  }
+  return control.node[1].range;
+};

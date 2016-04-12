@@ -6,9 +6,10 @@ const https = require('https');
 const express = require('express');
 const bodyParser = require('body-parser');
 const spawn = require('child_process').spawn;
-
 const rootDir = path.resolve(path.dirname(__dirname));
 const app = express();
+
+const upload = require('./upload');
 
 app.set('view engine', 'jade');
 app.set('views', path.join(rootDir, 'backend', 'views'));
@@ -46,6 +47,13 @@ app.get('/', function (req, res) {
 
 app.get('/player', function (req, res) {
   res.render('player', {development: isDevelopment});
+});
+
+app.get('/upload', function (req, res) {
+  upload.getJsonUploadForm('/uploads/1', function (err, form) {
+    // if (err) ...
+    res.render('upload', form);
+  });
 });
 
 app.post('/translate', function (req, res) {

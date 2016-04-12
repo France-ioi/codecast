@@ -2,8 +2,6 @@
 import Immutable from 'immutable';
 
 import Document from '../common/document';
-import * as runtime from '../common/runtime';
-import {getNodeRange} from '../common/translate';
 
 /*
 
@@ -24,6 +22,10 @@ import {getNodeRange} from '../common/translate';
 export function switchToRecordScreen (state, action) {
   return state.set('screen', 'record')
               .setIn(['recorder', 'source'], Immutable.Map(action.source));
+};
+
+export function recordScreenSourceInit (state, action) {
+  return state.setIn(['recorder', 'source', 'editor'], action.editor);
 };
 
 export function recordScreenSourceEdit (state, action) {
@@ -96,16 +98,13 @@ export function recorderAddEvent (state, action) {
 };
 
 export function recordScreenStepperRestart (state, action) {
-  const translated = action.result || state.getIn(['recorder', 'translated']);
-  const stepperState = runtime.start(translated.syntaxTree);
-  return state.update('recorder', recorder => updateSelection(recorder
-    .set('translated', translated)
-    .set('stepper', Immutable.Map({state: 'idle', display: stepperState}))));
+  const stepperState = action.stepperState || state.getIn(['recorder', 'stepper', 'initial']);
+  return state.update('recorder', recorder => recorder
+    .set('stepper', Immutable.Map({state: 'idle', initial: stepperState, display: stepperState})));
 };
 
 export function recordScreenStepperExit (state, action) {
   return state.update('recorder', recorder => recorder
-    .delete('translated')
     .delete('stepper'));
 };
 
@@ -115,7 +114,7 @@ export function recordScreenStepperStep (state, action) {
   } else {
     return state.updateIn(['recorder', 'stepper'], stepper => stepper
       .set('state', 'starting')
-      .set('compute', stepper.get('display')));
+      .set('current', stepper.get('display')));
   }
 };
 
@@ -126,22 +125,11 @@ export function recordScreenStepperStart (state, action) {
 export function recordScreenStepperProgress (state, action) {
   // Copy the new state to the recording screen's state, so that
   // the view reflects the current progress.
-  return state.update('recorder', recorder =>
-    updateSelection(recorder.update('stepper', stepper => stepper
-      .set('display', action.context.state))));
+  return state.setIn(['recorder', 'stepper', 'display'], action.context.state);
 };
 
 export function recordScreenStepperIdle (state, action) {
   // Copy stepper state into recording screen and clean up the stepper.
   state = recordScreenStepperProgress(state, action);
-  return state.update('recorder', recorder =>
-    updateSelection(recorder.set('stepper', Immutable.Map(
-      {state: 'idle', display: action.context.state}))));
+  return state.setIn(['recorder', 'stepper', 'state'], 'idle');
 };
-
-function updateSelection (recorderState) {
-  const stepper = recorderState.getIn(['stepper', 'display']);
-  const translated = recorderState.get('translated');
-  const range = getNodeRange(stepper, translated);
-  return recorderState.setIn(['source', 'selection'], range);
-}

@@ -79,14 +79,6 @@ export const Editor = EpicComponent(self => {
     editor.focus();
   };
 
-  self.componentWillReceiveProps = function (nextProps) {
-    if (editor) {
-      if (self.props.selection !== nextProps.selection) {
-        setSelection(nextProps.selection);
-      }
-    }
-  };
-
   self.componentDidMount = function () {
     editor = ace.edit(editorNode);
     editor.$blockScrolling = Infinity;
@@ -105,6 +97,20 @@ export const Editor = EpicComponent(self => {
     }
     if (typeof onEdit === 'function') {
       editor.session.doc.on("change", onTextChanged, true);
+    }
+  };
+
+  self.componentWillReceiveProps = function (nextProps) {
+    if (editor) {
+      if (self.props.readOnly !== nextProps.readOnly) {
+        editor.setReadOnly(nextProps.readOnly);
+      }
+    }
+  };
+
+  self.componentWillUnmount = function () {
+    if (typeof self.props.onInit === 'function') {
+      self.props.onInit(null);
     }
   };
 

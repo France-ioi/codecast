@@ -16,3 +16,7 @@ export function getRecorderState (state) {
 export function getStepperState (state) {
   return state.get('recorder').get('stepper');
 };
+
+export function getRecorderSourceEditor (state) {
+  return state.getIn(['recorder', 'source', 'editor']);
+};

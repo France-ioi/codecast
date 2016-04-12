@@ -42,7 +42,7 @@ export const RecordingControls = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {isRecording, isTranslated, haveNode, elapsed, eventCount, onTranslate} = self.props;
+    const {isRecording, isStepping, haveNode, elapsed, eventCount, onTranslate} = self.props;
     return (
       <div className="pane pane-controls">
         <p>
@@ -52,14 +52,14 @@ export const RecordingControls = EpicComponent(self => {
           <Button onClick={onStopRecording} disabled={!isRecording}>
             <i className="fa fa-stop"/>
           </Button>
-          {isTranslated && <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>}
-          {isTranslated && <Button onClick={onStepInto} disabled={!haveNode}>step into</Button>}
-          {isTranslated && <Button onClick={onStepOut} disabled={true||!haveNode}>step out</Button>}
-          {isTranslated && <Button onClick={onRestart}>recommencer</Button>}
-          {isTranslated && <Button onClick={onEdit}>éditer</Button>}
-          {isTranslated || <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>}
+          {isStepping && <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>}
+          {isStepping && <Button onClick={onStepInto} disabled={!haveNode}>step into</Button>}
+          {isStepping && <Button onClick={onStepOut} disabled={true||!haveNode}>step out</Button>}
+          {isStepping && <Button onClick={onRestart}>recommencer</Button>}
+          {isStepping && <Button onClick={onEdit}>éditer</Button>}
+          {isStepping || <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>}
         </p>
-        <p>Enregistrement : {Math.round(elapsed / 1000)}s, {eventCount} évènements</p>
+        <p>Enregistrement : {Math.round(elapsed / 1000)||0}s, {eventCount} évènements</p>
       </div>
     );
   };

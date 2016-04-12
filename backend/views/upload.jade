@@ -1,0 +1,11 @@
+doctype html
+head(lang='fr')
+  meta(charset='utf-8')
+  title upload test
+body
+  form(action=form_url, method="POST", enctype="multipart/form-data")
+    each value, name in params
+      input(type="hidden", name=name, value=value)
+    input(type="file", name="file",)
+    input(type="submit", name="submit", value="Upload")
+  a(href=public_url) get

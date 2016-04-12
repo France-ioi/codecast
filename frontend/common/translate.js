@@ -1,5 +1,6 @@
 
 export const loadTranslated = function (source, syntaxTree) {
+  // Compute line offsets.
   const lineOffsets = [];
   let offset = 0;
   source.split('\n').forEach(function (line) {
@@ -7,7 +8,16 @@ export const loadTranslated = function (source, syntaxTree) {
     offset += line.length + 1;
   });
   lineOffsets.push(source.length);
-  // TODO: compute and store the range for every node.
+  // Compute each node's range.
+  (function traverse (node) {
+    const attrs = node[1];
+    node[1].range = {
+      start: getPositionFromOffset(lineOffsets, attrs.begin),
+      end: getPositionFromOffset(lineOffsets, attrs.end)
+    };
+    const children = node[2];
+    children.forEach(traverse);
+  })(syntaxTree);
   return {
     source,
     lineOffsets,
@@ -16,8 +26,11 @@ export const loadTranslated = function (source, syntaxTree) {
 };
 
 const getPositionFromOffset = function (lineOffsets, offset) {
+  if (typeof offset !== 'number') {
+    return null;
+  }
   let iLeft = 0, iRight = lineOffsets.length;
-  while (iLeft + 1 !== iRight) {
+  while (iLeft + 1 < iRight) {
     const iMiddle = (iLeft + iRight) / 2 |0;
     const middle = lineOffsets[iMiddle];
     if (offset < middle)
@@ -26,25 +39,4 @@ const getPositionFromOffset = function (lineOffsets, offset) {
       iLeft = iMiddle;
   }
   return {row: iLeft, column: offset - lineOffsets[iLeft]};
-};
-
-export const getRangeFromOffsets = function (text, start, end) {
-  if (!start || !end)
-    return null;
-  return {
-    start: getPositionFromOffset(text.lineOffsets, start),
-    end: getPositionFromOffset(text.lineOffsets, end)
-  };
-};
-
-export const getNodeRange = function (stepper, translated) {
-  if (!stepper || !translated) {
-    return null;
-  }
-  const {control} = stepper;
-  if (!control || !control.node) {
-    return null;
-  }
-  const attrs = control.node[1];
-  return getRangeFromOffsets(translated, attrs.begin, attrs.end);
 };

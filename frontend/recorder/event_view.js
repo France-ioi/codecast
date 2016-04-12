@@ -5,11 +5,14 @@ import EpicComponent from 'epic-component';
 export const EventView = EpicComponent(self => {
 
   const renderRange = function (range) {
-    const {start, end} = range;
-    if (start.row === end.row && start.column === end.column)
-      return `${start.row},${start.column}`;
+    const start_row = range[0];
+    const start_column = range[1];
+    const end_row = range[2];
+    const end_column = range[3];
+    if (end_row === undefined || end_column === undefined)
+      return `${start_row},${start_column}`;
     else
-      return `${start.row},${start.column}—${end.row},${end.column}`;
+      return `${start_row},${start_column}—${end_row},${end_column}`;
   };
 
   self.render = function () {
@@ -17,6 +20,9 @@ export const EventView = EpicComponent(self => {
     const timestamp = event.get(0);
     let body;
     switch (event.get(1)) {
+      case 'start':
+        body = <span>start</span>;
+        break;
       case 'select':
         body = <span>select {renderRange(event.get(2))}</span>;
         break;

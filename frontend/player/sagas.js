@@ -9,7 +9,6 @@ import {RECORDING_FORMAT_VERSION} from '../common/version';
 import {loadTranslated, getRangeFromOffsets} from '../common/translate';
 import Document from '../common/document';
 import * as runtime from '../common/runtime';
-import {getNodeRange} from '../common/translate';
 
 import {getPlayerState} from './selectors';
 
@@ -318,7 +317,7 @@ export default function (actions) {
               case 'stepIdle': case 'stepProgress': {
                 const stepper = state.get('stepper');
                 const translated = state.get('translated');
-                const range = getNodeRange(stepper, translated);
+                const range = runtime.getNodeRange(stepper);
                 editor.setSelection(range);
                 break;
               }

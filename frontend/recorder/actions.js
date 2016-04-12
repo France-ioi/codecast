@@ -1,6 +1,7 @@
 
 export const switchToRecordScreen = 'Recorder.Switch';
 
+export const recordScreenSourceInit = 'Recorder.Source.Init';
 export const recordScreenSourceEdit = 'Recorder.Source.Edit';
 export const recordScreenSourceSelect = 'Recorder.Source.Select';
 

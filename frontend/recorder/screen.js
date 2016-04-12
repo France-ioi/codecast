@@ -15,11 +15,17 @@ import EventView from './event_view';
 
 export const RecordScreen = EpicComponent(self => {
 
-  const onSourceInit = function () {
-    const {source} = self.props;
-    const value = Document.toString(source.get('document'));
-    const selection = source.get('selection');
-    return {value, selection};
+  let editor;
+
+  const onSourceInit = function (editor_) {
+    editor = editor_;
+    self.props.dispatch({type: actions.recordScreenSourceInit, editor});
+    if (editor) {
+      const {source} = self.props;
+      const value = Document.toString(source.get('document'));
+      const selection = source.get('selection');
+      editor.reset(value, selection);
+    }
   };
 
   const onSourceSelect = function (selection) {
@@ -36,50 +42,6 @@ export const RecordScreen = EpicComponent(self => {
       self.props.dispatch(recordEventAction(['delete', Document.compressRange(range)]));
     }
     self.props.dispatch({type: actions.recordScreenSourceEdit, delta});
-  };
-
-  const renderStack = function (state, scope) {
-    const elems = [];
-    while (scope) {
-      switch (scope.kind) {
-        case 'function':
-          elems.push(
-            <div key={scope.key}>
-              <span>{"function "}{scope.block[1].name}</span>
-            </div>
-          );
-          break;
-        case 'block':
-          elems.push(
-            <div key={scope.key}>
-              <span>{"block"}</span>
-            </div>
-          );
-          break;
-        case 'vardecl':
-          elems.push(
-            <div key={scope.key}>
-              <span>{"var "}</span>
-              <span>{scope.decl.name}</span>
-              {' = '}
-              <span>JSON.stringify({deref(state, scope.decl.ref, scope.decl.ty)})</span>
-            </div>
-          );
-          break;
-        case 'param':
-          elems.push(
-            <div key={scope.key}>
-              <span>{"var "}</span>
-              <span>{scope.decl.name}</span>
-              {' = '}
-              <span>{JSON.stringify(deref(state, scope.decl.ref, scope.decl.ty))}</span>
-            </div>
-          );
-          break;
-      }
-      scope = scope.parent;
-    }
-    return elems;
   };
 
   const recordingPanel = function () {
@@ -103,18 +65,17 @@ export const RecordScreen = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {dispatch, recorderState, source, isTranslated, events, elapsed, stepperState, stepperDisplay} = self.props;
+    const {dispatch, recorderState, source, events, elapsed, stepperState, stepperDisplay} = self.props;
     const isRecording = recorderState === 'recording';
+    const isStepping = !!stepperState;
     const isIdle = stepperState === 'idle';
-    const selection = source.get('selection');
     const {control, terminal, error, scope} = stepperDisplay;
     const haveNode = control && control.node;
-    // XXX Editor readOnly is not supported yet
     return (
       <div>
         <div className="row">
           <div className="col-md-12">
-            <RecordControls dispatch={dispatch} isRecording={isRecording} isTranslated={isTranslated} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} onTranslate={onTranslate} />
+            <RecordControls dispatch={dispatch} isRecording={isRecording} isStepping={isStepping} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} onTranslate={onTranslate} />
             {error && <p>{error}</p>}
           </div>
         </div>
@@ -124,7 +85,7 @@ export const RecordScreen = EpicComponent(self => {
             <div className="pane pane-source">
               <h2>Source C</h2>
               <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
-                      readOnly={isTranslated} width='100%' height='336px' selection={selection}/>
+                      readOnly={isStepping} width='100%' height='336px' />
             </div>
           </div>
           {terminal && <div className="col-md-6">
@@ -149,13 +110,13 @@ function selector (state, props) {
   const recorder = state.get('recorder');
   const recorderState = recorder.get('state');
   const source = recorder.get('source');
-  const isTranslated = !!recorder.get('translated');
   const events = recorder.get('events');
   const elapsed = recorder.get('elapsed');
-  const stepperState = recorder.getIn(['stepper', 'state']);
-  const stepperDisplay = recorder.getIn(['stepper', 'display'], {});
+  const stepper = recorder.get('stepper')
+  const stepperState = stepper && stepper.get('state');
+  const stepperDisplay = stepper ? stepper.get('display', {}) : {};
   return {
-    recorderState, source, isTranslated, events, elapsed,
+    recorderState, source, events, elapsed,
     stepperState, stepperDisplay,
   };
 };
