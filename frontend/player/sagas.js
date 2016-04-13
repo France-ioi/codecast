@@ -272,7 +272,7 @@ export default function (actions) {
   function* playerTick () {
     while (true) {
       yield take(actions.playerStarted);
-      while (true) {
+      play_loop: while (true) {
         const outcome = yield race({
           tick: call(delay, 20),
           stopped: take(actions.playerStopping)
@@ -305,8 +305,11 @@ export default function (actions) {
           for (let pos = prevState.eventIndex + 1; pos <= nextState.eventIndex; pos += 1) {
             // console.log(event);
             const event = events[pos];
+            if (pos + 1 >= states.length) {
+              // Ticked past last state, stop ticking.
+              break play_loop;
+            }
             const state = states[pos + 1].state;  // state reached after event is replayed
-            console.log('step', pos, event, state);
             switch (event[1]) {
               case 'select':
                 editor.setSelection(Document.expandRange(event[2]))
@@ -321,6 +324,8 @@ export default function (actions) {
                 editor.setSelection(range);
                 break;
               }
+              case 'end':
+                break play_loop;
             }
           }
           yield put({type: actions.playerTick, current: nextState});
