@@ -1,14 +1,13 @@
 
 import React from 'react';
 import EpicComponent from 'epic-component';
+import {deref} from 'persistent-c';
 
 export const StackView = EpicComponent(self => {
 
-  // XXX export/import deref from persistent-c
-
   self.render = function () {
     const {state} = self.props;
-    let scope = self.props.scope;
+    let scope = state.scope;
     const elems = [];
     while (scope) {
       switch (scope.kind) {
@@ -49,8 +48,10 @@ export const StackView = EpicComponent(self => {
       }
       scope = scope.parent;
     }
-    return <div className="stack-view">elems</div>;
+    return <div className="stack-view">{elems}</div>;
   };
 
 
 });
+
+export default StackView;

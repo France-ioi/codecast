@@ -22,6 +22,7 @@ import storeFactory from './store';
 import actions from './actions';
 import Editor from '../common/editor';
 import Terminal from '../common/terminal';
+import StackView from '../common/stack_view';
 
 const App = EpicComponent(self => {
 
@@ -45,6 +46,7 @@ const App = EpicComponent(self => {
           <i className="fa fa-play"/>
         </Button>
         <Editor onInit={onSourceInit} width='100%' height='336px'/>
+        {stepper && <StackView state={stepper}/>}
         <div>{terminal && <Terminal terminal={terminal}/>}</div>
         {lastError && <p>{lastError}</p>}
       </div>
