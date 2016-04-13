@@ -7,6 +7,7 @@ import EpicComponent from 'epic-component';
 import Document from '../common/document';
 import Terminal from '../common/terminal';
 import Editor from '../common/editor';
+import StackView from '../common/stack_view';
 
 import actions from '../actions';
 import {recordEventAction} from './utils';
@@ -88,6 +89,10 @@ export const RecordScreen = EpicComponent(self => {
                       readOnly={isStepping} width='100%' height='336px' />
             </div>
           </div>
+          {stepperDisplay && <div className="col-md-6">
+            <h2>Pile</h2>
+            <StackView state={stepperDisplay}/>
+          </div>}
           {terminal && <div className="col-md-6">
             <h2>Terminal</h2>
             <Terminal terminal={terminal}/>
