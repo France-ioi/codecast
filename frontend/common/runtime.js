@@ -17,7 +17,7 @@ export const start = function (syntaxTree) {
   const decls = syntaxTree[2];
   const context = {decls, builtins: builtins};
   let state = C.start(context);
-  state.terminal = new TermBuffer();
+  state.terminal = new TermBuffer({width: 40});
   state = stepIntoUserCode(state);
   return state;
 };
