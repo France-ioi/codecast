@@ -104,8 +104,12 @@ app.post('/translate', function (req, res) {
     if (errorSent)
       return;
     if (code === 0) {
-      const ast = JSON.parse(chunks.join(''));
-      res.json({ast: ast});
+      try {
+        const ast = JSON.parse(chunks.join(''));
+        res.json({ast: ast});
+      } catch (err) {
+        res.json({error: err.toString()});
+      }
     } else {
       res.json({error: errorChunks.join('')});
     }
