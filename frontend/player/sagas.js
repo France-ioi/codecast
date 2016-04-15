@@ -302,14 +302,14 @@ export default function (actions) {
           //                 events and states: states[pos] is the state
           //                 immediately after replaying events[pos],
           //                 and pos === states[pos].eventIndex
-          for (let pos = prevState.eventIndex + 1; pos <= nextState.eventIndex; pos += 1) {
+          for (let pos = prevState.eventIndex; pos <= nextState.eventIndex; pos += 1) {
             // console.log(event);
             const event = events[pos];
-            if (pos + 1 >= states.length) {
+            if (pos >= states.length) {
               // Ticked past last state, stop ticking.
               break play_loop;
             }
-            const state = states[pos + 1].state;  // state reached after event is replayed
+            const state = states[pos].state;  // state reached after event is replayed
             switch (event[1]) {
               case 'select':
                 editor.setSelection(Document.expandRange(event[2]))
