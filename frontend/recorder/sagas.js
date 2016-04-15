@@ -264,19 +264,24 @@ export default function (actions) {
 
   function* translateSource (action) {
     const {source} = action;
+    let result;
     try {
       yield put(recordEventAction(['translate', source]));
       const {ast} = yield call(asyncRequestJson, '/translate', {source});
-      const result = loadTranslated(source, ast);
+      result = loadTranslated(source, ast);
       yield put(recordEventAction(['translateSuccess', ast]));
       yield put({type: actions.translateSourceSucceeded, result});
-      const stepperState = runtime.start(result.syntaxTree);
-      yield put({type: actions.recordScreenStepperRestart, stepperState});
-      yield call(updateSelection);
     } catch (error) {
       const message = error.toString();
       yield put({type: actions.translateSourceFailed, error: message, source});
       yield put(recordEventAction(['translateFailure', message]));
+    }
+    try {
+      const stepperState = runtime.start(result.syntaxTree);
+      yield put({type: actions.recordScreenStepperRestart, stepperState});
+      yield call(updateSelection);
+    } catch (error) {
+      yield put({type: actions.error, source: 'translateSource', error});
     }
   }
 
