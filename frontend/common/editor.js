@@ -115,7 +115,6 @@ export const Editor = EpicComponent(self => {
   };
 
   self.render = function () {
-    setSelection(self.props.selection);
     return <div ref={refEditor} style={{width: '100%', height: '336px'}}></div>
   };
 
