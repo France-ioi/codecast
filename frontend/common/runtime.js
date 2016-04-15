@@ -3,9 +3,18 @@ import * as C from 'persistent-c';
 import {TermBuffer} from 'epic-vt';
 import {sprintf} from 'sprintf-js';
 
+const unboxValue = function (v) {
+  // XXX hack for strings
+  if (v[0] === 'string') {
+    return v[1];
+  }
+  // XXX this works only for IntegralValue, FloatingValue.
+  return v.number;
+};
+
 const printf = function (state, cont, values) {
   // Unbox each argument's value.
-  const args = values.slice(1).map(v => v[1]);
+  const args = values.slice(1).map(unboxValue);
   const str = sprintf.apply(null, args);
   const result = str.length;
   return {control: cont, effects: [['write', str]], result, seq: 'expr'};
