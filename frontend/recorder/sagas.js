@@ -26,8 +26,16 @@ export default function (actions) {
   //
 
   function getAudioStream () {
-    // Use the modern API returning a promise.
-    return navigator.mediaDevices.getUserMedia({audio: true});
+    const constraints = {audio: true};
+    if (typeof navigator.mediaDevices === 'object') {
+      // Use modern API returning a promise.
+      return navigator.mediaDevices.getUserMedia(constraints);
+    } else {
+      // Use deprecated API taking two callbacks.
+      return new Promise(function (resolve, reject) {
+        navigator.getUserMedia(constraints, resolve, reject);
+      });
+    }
   }
 
   function suspendAudioContext (audioContext) {
