@@ -1,7 +1,7 @@
 
 import React from 'react';
 import EpicComponent from 'epic-component';
-import {deref} from 'persistent-c';
+import {readValue} from 'persistent-c';
 
 export const StackView = EpicComponent(self => {
 
@@ -42,25 +42,19 @@ export const StackView = EpicComponent(self => {
   };
 
   const renderType = function (type, prec) {
-    switch (type[0]) {
-      case 'builtin':
-        return type[1];
+    switch (type.kind) {
+      case 'scalar':
+        return type.repr;
       case 'pointer':
-        return renderType(type[1], 1) + '*';
+        return renderType(type.pointee, 1) + '*';
     }
-    return JSON.stringify(type);
+    return type.toString();
   };
 
   const renderValue = function (value) {
     if (value === undefined)
       return 'undefined';
-    switch (value[0]) {
-      case 'integer':
-        return value[1].toString();
-      case 'floating':
-        return value[1].toString();
-    }
-    return JSON.stringify(value);
+    return value.toString();
   };
 
   const renderDecl = function (state, decl) {
@@ -70,7 +64,7 @@ export const StackView = EpicComponent(self => {
         {' '}
         <span>{decl.name}</span>
         {' = '}
-        <span>{renderValue(deref(state, decl.ref, decl.type))}</span>
+        <span>{renderValue(readValue(state.memory, decl.ref))}</span>
       </div>
     );
   };
@@ -97,7 +91,6 @@ export const StackView = EpicComponent(self => {
     /* TODO: take effects since previous step as a prop */
     const {state} = self.props;
     const frames = getFrames(state.scope);
-    console.log('frames', frames);
     return <div className="stack-view">{frames.map(frame =>
       renderFrame(state, frame))}</div>;
   };
