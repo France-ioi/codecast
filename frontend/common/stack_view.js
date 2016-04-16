@@ -57,14 +57,14 @@ export const StackView = EpicComponent(self => {
     return value.toString();
   };
 
-  const renderDecl = function (state, decl) {
+  const renderDecl = function (state, name, ref) {
     return (
       <div className="scope-decl">
-        <span>{renderType(decl.type, 0)}</span>
+        <span>{renderType(ref.type.pointee, 0)}</span>
         {' '}
-        <span>{decl.name}</span>
+        <span>{name}</span>
         {' = '}
-        <span>{renderValue(readValue(state.memory, decl.ref))}</span>
+        <span>{renderValue(readValue(state.memory, ref))}</span>
       </div>
     );
   };
@@ -75,12 +75,12 @@ export const StackView = EpicComponent(self => {
       <div key={key} className="scope-function">
         <span>{"function "}{frame.name}</span>
         <ul>{frame.params.map(scope =>
-          <li key={scope.key}>{renderDecl(state, scope.decl)}</li>)}</ul>
+          <li key={scope.key}>{renderDecl(state, scope.decl.name, scope.ref)}</li>)}</ul>
         <div className="scope-function-blocks">
           {frame.blocks.map(block =>
             <div key={block.scope.key}>
               <ul>{block.decls.map(scope =>
-                <li key={scope.key}>{renderDecl(state, scope.decl)}</li>)}</ul>
+                <li key={scope.key}>{renderDecl(state, scope.decl.name, scope.ref)}</li>)}</ul>
             </div>)}
         </div>
       </div>
