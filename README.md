@@ -13,3 +13,4 @@
 ## Building self-executable bundles for production
 
     jspm bundle-sfx frontend/index.js assets/frontend.js
+    jspm bundle-sfx frontend/player/index.js assets/player.js
