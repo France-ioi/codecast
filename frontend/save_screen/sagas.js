@@ -54,7 +54,8 @@ export default function (actions) {
       yield call(uploadBlob, response.audio, audioBlob);
       yield put({type: actions.saveScreenAudioUploaded, url: response.audio.public_url});
       // Signal completion.
-      yield put({type: actions.saveScreenUploadSucceeded});
+      const playerUrl = `${document.location}player?id=${response.id}`;
+      yield put({type: actions.saveScreenUploadSucceeded, url: playerUrl});
     } catch (error) {
       yield put({type: actions.saveScreenUploadFailed, error});
     }

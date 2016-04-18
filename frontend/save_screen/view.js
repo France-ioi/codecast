@@ -13,7 +13,7 @@ export const SaveScreen = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {audioUrl, eventsUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = self.props;
+    const {audioUrl, eventsUrl, playerUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = self.props;
     return (
       <div>
         <p>
@@ -35,7 +35,11 @@ export const SaveScreen = EpicComponent(self => {
         {uploadEvents === 'pending' && <p>Envoi des évènements en cours…</p>}
         {uploadAudio === 'pending' && <p>Envoi de l'audio en cours…</p>}
         {error && <p>Une erreur est survenue lors de l'enregistrement.</p>}
-        {done && <p>Enregistrement terminé !</p>}
+        {done &&
+          <div>
+            <p>Enregistrement terminé !</p>
+            <Input type="text" label="Lien pour la lecture" readOnly value={playerUrl}/>
+          </div>}
       </div>
     );
   };
@@ -45,7 +49,7 @@ export const SaveScreen = EpicComponent(self => {
 function selector (state, props) {
   const save = state.get('save')
   const result = {};
-  ['audioUrl', 'eventsUrl', 'busy', 'done', 'prepare', 'uploadEvents', 'uploadAudio', 'error'].forEach(function (key) {
+  ['audioUrl', 'eventsUrl', 'playerUrl', 'busy', 'done', 'prepare', 'uploadEvents', 'uploadAudio', 'error'].forEach(function (key) {
     result[key] = save.get(key);
   })
   return result;
