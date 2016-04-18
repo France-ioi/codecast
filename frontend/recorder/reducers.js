@@ -91,9 +91,8 @@ export function recorderTick (state, action) {
 };
 
 export function recorderAddEvent (state, action) {
-  const startTime = state.getIn(['recorder', 'startTime']);
-  const {timestamp, payload} = action;
-  const event = Immutable.List([timestamp - startTime | 0, ...payload]);
+  const audioContext = state.getIn(['recorder', 'context', 'audioContext']);
+  const event = Immutable.List([Math.round(audioContext.currentTime * 1000), ...action.payload]);
   return state.updateIn(['recorder', 'events'], events => events.push(event));
 };
 
