@@ -34,7 +34,12 @@ export default function (actions) {
     } else {
       // Use deprecated API taking two callbacks.
       return new Promise(function (resolve, reject) {
-        navigator.getUserMedia(constraints, resolve, reject);
+        if (typeof webkit === 'object' && typeof webkit.getUserMedia === 'function') {
+          return webkit.getUserMedia(constraints, resolve, reject);
+        }
+        if (typeof navigator === 'object' && typeof navigator.getUserMedia === 'function') {
+          return navigator.getUserMedia(constraints, resolve, reject);
+        }
       });
     }
   }
