@@ -33,13 +33,9 @@ export default function (actions) {
       return navigator.mediaDevices.getUserMedia(constraints);
     } else {
       // Use deprecated API taking two callbacks.
+      const getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
       return new Promise(function (resolve, reject) {
-        if (typeof webkit === 'object' && typeof webkit.getUserMedia === 'function') {
-          return webkit.getUserMedia(constraints, resolve, reject);
-        }
-        if (typeof navigator === 'object' && typeof navigator.getUserMedia === 'function') {
-          return navigator.getUserMedia(constraints, resolve, reject);
-        }
+        getUserMedia.call(navigator, constraints, resolve, reject);
       });
     }
   }
