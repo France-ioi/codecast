@@ -56,7 +56,7 @@ app.post('/upload', function (req, res) {
     // if (err) ...
     upload.getMp3UploadForm(base, function (err, audio) {
       // if (err) ...
-      res.json({events: events, audio: audio});
+      res.json({id: id, events: events, audio: audio});
     });
   });
 });
