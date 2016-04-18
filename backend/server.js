@@ -49,22 +49,8 @@ app.get('/player', function (req, res) {
   res.render('player', {development: isDevelopment});
 });
 
-app.get('/upload.json', function (req, res) {
-  upload.getJsonUploadForm('uploads/1', function (err, form) {
-    // if (err) ...
-    res.render('upload', form);
-  });
-});
-
-app.get('/upload.mp3', function (req, res) {
-  upload.getMp3UploadForm('uploads/1', function (err, form) {
-    // if (err) ...
-    res.render('upload', form);
-  });
-});
-
 app.post('/upload', function (req, res) {
-  const id = '1';
+  const id = Date.now().toString();
   const base = `uploads/${id}`;
   upload.getJsonUploadForm(base, function (err, events) {
     // if (err) ...
@@ -77,7 +63,6 @@ app.post('/upload', function (req, res) {
 
 app.post('/translate', function (req, res) {
   const source = req.body.source;
-  // int main () { return 1; }
   const cp = spawn('./c-to-json');
   const chunks = [];
   const errorChunks = [];
