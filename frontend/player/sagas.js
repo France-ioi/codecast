@@ -302,7 +302,7 @@ export default function (actions) {
           //                 events and states: states[pos] is the state
           //                 immediately after replaying events[pos],
           //                 and pos === states[pos].eventIndex
-          for (let pos = prevState.eventIndex; pos <= nextState.eventIndex; pos += 1) {
+          for (let pos = prevState.eventIndex; pos < nextState.eventIndex; pos += 1) {
             // console.log(event);
             const event = events[pos];
             if (pos >= states.length) {
