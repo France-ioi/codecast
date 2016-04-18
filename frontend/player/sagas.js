@@ -205,7 +205,7 @@ export default function (actions) {
         }
         case 'stepIdle': {
           let stepCounter = event[2];
-          let stepperState = state.get('stepper');
+          let stepperState = C.clearMemoryLog(state.get('stepper'));
           while (stepCounter > 0) {
             stepperState = C.step(stepperState, runtime.options);
             stepCounter -= 1;

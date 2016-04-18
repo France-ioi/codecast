@@ -61,19 +61,20 @@ export default function (actions) {
   function buildContext (state) {
     const startTime = window.performance.now();
     return {
-      state,
+      state: C.clearMemoryLog(state),
       startTime,
       timeLimit: startTime + 20,
       stepCounter: 0,
-      running: true
+      running: true,
+      effects: []
     };
   }
 
   function viewContext (context) {
     // Returns a persistent view of the context.
-    const {state, startTime, stepCounter, running} = context;
+    const {state, startTime, stepCounter, running, effects} = context;
     const elapsed = window.performance.now() - context.startTime;
-    return {state, elapsed, stepCounter};
+    return {state, elapsed, stepCounter, effects};
   }
 
   function singleStep (context, stopCond) {

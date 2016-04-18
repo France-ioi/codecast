@@ -3,6 +3,18 @@ import * as C from 'persistent-c';
 import {TermBuffer} from 'epic-vt';
 import {sprintf} from 'sprintf-js';
 
+const applyWriteEffect = function (state, effect) {
+  console.log('write', effect);
+  state.terminal = state.terminal.write(effect[1]);
+};
+
+export const options = {
+  effectHandlers: {
+    ...C.defaultEffects,
+    write: applyWriteEffect
+  }
+};
+
 const unboxValue = function (v) {
   // XXX hack for strings
   if (v[0] === 'string') {
@@ -14,6 +26,7 @@ const unboxValue = function (v) {
 
 const printf = function (state, cont, values) {
   // Unbox each argument's value.
+  console.log('printf', values);
   const args = values.slice(1).map(unboxValue);
   const str = sprintf.apply(null, args);
   const result = str.length;
@@ -29,18 +42,6 @@ export const start = function (syntaxTree) {
   state.terminal = new TermBuffer({width: 40});
   state = stepIntoUserCode(state);
   return state;
-};
-
-export const options = {
-  onEffect: function (state, effect) {
-    switch (effect[0]) {
-      case 'write':
-        return {...state, terminal: state.terminal.write(effect[1])};
-      default:
-        console.log('unknown effect', effect);
-        return state;
-    }
-  }
 };
 
 export const stepIntoUserCode = function (stepperState) {
