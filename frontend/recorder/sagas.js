@@ -27,7 +27,8 @@ export default function (actions) {
 
   function getAudioStream () {
     const constraints = {audio: true};
-    if (typeof navigator.mediaDevices === 'object') {
+    if (typeof navigator.mediaDevices === 'object' &&
+        typeof navigator.mediaDevices.getUserMedia === 'function') {
       // Use modern API returning a promise.
       return navigator.mediaDevices.getUserMedia(constraints);
     } else {
