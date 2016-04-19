@@ -31,7 +31,7 @@
 }
 
 .stack-view {
-  font: 12px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+  font: 12px/normal monospace;
 }
 .stack-view .scope-decl-load {
   font-weight: bold;
