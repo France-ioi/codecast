@@ -1,15 +1,55 @@
 
 import React from 'react';
+import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import {readValue} from 'persistent-c';
 
 export const StackView = EpicComponent(self => {
 
-  const getFrames = function (scope) {
+  const refsIntersect = function (ref1, ref2) {
+    const base1 = ref1.address, limit1 = base1 + ref1.type.size - 1;
+    const base2 = ref2.address, limit2 = base2 + ref2.type.size - 1;
+    const result = (base1 <= base2) ? (base2 <= limit1) : (base1 <= limit2);
+    console.log(`${base1}-${limit1} intersects ${base2}-${limit2}: ${result}`)
+    return result;
+  };
+
+  const getScopeRef = function (scope, state) {
+    const {key, ref, decl} = scope;
+    const {memoryLog, memory, oldMemory} = state;
+    const {name} = decl;
+    const {type, address} = ref;
+    const limit = address + type.size - 1;
+    const value = readValue(memory, ref);
+    const result = {key, name, value, type: type.pointee};
+    try {
+      memoryLog.forEach(function (entry, i) {
+        if (refsIntersect(ref, entry[1])) {
+          if (entry[0] === 'load') {
+            if (result.load === undefined) {
+              result.load = i;
+            }
+          } else if (entry[0] === 'store') {
+            if (result.store === undefined) {
+              result.store = i;
+              result.prevValue = readValue(oldMemory, ref);
+            }
+          }
+        }
+      });
+    } catch (err) {
+      result.error = err;
+    }
+    console.log('stack', JSON.stringify(result));
+    return result;
+  };
+
+  const getFrames = function (state) {
     const frames = [];
     let blocks = [];
     let decls = [];
     let params = [];
+    let scope = state.scope;
     while (scope) {
       switch (scope.kind) {
         case 'function':
@@ -23,7 +63,7 @@ export const StackView = EpicComponent(self => {
           blocks = [];
           break;
         case 'param':
-          params.push(scope);
+          params.push(getScopeRef(scope, state));
           break;
         case 'block':
           blocks.push({
@@ -33,7 +73,7 @@ export const StackView = EpicComponent(self => {
           decls = [];
           break;
         case 'vardecl':
-          decls.push(scope)
+          decls.push(getScopeRef(scope, state));
           break;
       }
       scope = scope.parent;
@@ -57,14 +97,15 @@ export const StackView = EpicComponent(self => {
     return value.toString();
   };
 
-  const renderDecl = function (state, name, ref) {
+  const renderDecl = function (decl) {
     return (
       <div className="scope-decl">
-        <span>{renderType(ref.type.pointee, 0)}</span>
+        <span>{renderType(decl.type, 0)}</span>
         {' '}
-        <span>{name}</span>
+        <span>{decl.name}</span>
         {' = '}
-        <span>{renderValue(readValue(state.memory, ref))}</span>
+        <span className={classnames([decl.load !== undefined && 'scope-decl-load'])}>{renderValue(decl.value)}</span>
+        {decl.prevValue && <span className="scope-decl-prevValue">{renderValue(decl.prevValue)}</span>}
       </div>
     );
   };
@@ -74,13 +115,13 @@ export const StackView = EpicComponent(self => {
     return (
       <div key={key} className="scope-function">
         <span>{"function "}{frame.name}</span>
-        <ul>{frame.params.map(scope =>
-          <li key={scope.key}>{renderDecl(state, scope.decl.name, scope.ref)}</li>)}</ul>
+        <ul>{frame.params.map(decl =>
+          <li key={decl.key}>{renderDecl(decl)}</li>)}</ul>
         <div className="scope-function-blocks">
           {frame.blocks.map(block =>
             <div key={block.scope.key}>
-              <ul>{block.decls.map(scope =>
-                <li key={scope.key}>{renderDecl(state, scope.decl.name, scope.ref)}</li>)}</ul>
+              <ul>{block.decls.map(decl =>
+                <li key={decl.key}>{renderDecl(decl)}</li>)}</ul>
             </div>)}
         </div>
       </div>
@@ -90,7 +131,7 @@ export const StackView = EpicComponent(self => {
   self.render = function () {
     /* TODO: take effects since previous step as a prop */
     const {state} = self.props;
-    const frames = getFrames(state.scope);
+    const frames = getFrames(state);
     return <div className="stack-view">{frames.map(frame =>
       renderFrame(state, frame))}</div>;
   };

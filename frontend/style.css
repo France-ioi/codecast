@@ -29,3 +29,14 @@
   left: 10px;
   top: 10px;
 }
+
+.stack-view {
+  font: 12px/normal 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'source-code-pro', monospace;
+}
+.stack-view .scope-decl-load {
+  font-weight: bold;
+}
+.stack-view .scope-decl-prevValue {
+  text-decoration: line-through;
+  padding-left: 0.5em;
+}
