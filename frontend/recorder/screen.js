@@ -80,30 +80,28 @@ export const RecordScreen = EpicComponent(self => {
             {error && <p>{error}</p>}
           </div>
         </div>
-        {!isRecording && recordingPanel()}
         <div className="row">
-          <div className="col-md-6">
-            <div className="pane pane-source">
-              <h2>Source C</h2>
-              <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
-                      readOnly={isStepping} width='100%' height='336px' />
-            </div>
-          </div>
-          {stepperDisplay && <div className="col-md-6">
+          {stepperDisplay && <div className="col-md-3">
             <h2>Pile</h2>
             <StackView state={stepperDisplay}/>
           </div>}
-          {terminal && <div className="col-md-6">
+          <div className="col-md-6">
+            <h2>Source C</h2>
+            <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
+                    readOnly={isStepping} width='100%' height='336px' />
+          </div>
+          {terminal && <div className="col-md-3">
             <h2>Terminal</h2>
             <Terminal terminal={terminal}/>
           </div>}
         </div>
         <div className="row">
-          <div className="col-md-12">
+          {!isRecording && recordingPanel()}
+          {false && <div className="col-md-12">
             <div className="dev-EventsPanel">
               {events.slice(-10).map(event => <EventView event={event}/>)}
             </div>
-          </div>
+          </div>}
         </div>
       </div>
     );
