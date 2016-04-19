@@ -34,6 +34,14 @@ const App = EpicComponent(self => {
     self.props.dispatch({type: actions.playerSourceInit, editor});
   };
 
+  const onSourceEdit = function () {
+    // TODO
+  };
+
+  const onSourceSelect = function () {
+    // TODO
+  };
+
   self.render = function () {
     const {playerState, lastError, current} = self.props;
     const currentState = current && current.state;
@@ -42,13 +50,39 @@ const App = EpicComponent(self => {
     const terminal = stepper && stepper.terminal;
     return (
       <div className="container">
-        <Button onClick={onStart} disabled={playerState !== 'ready'}>
-          <i className="fa fa-play"/>
-        </Button>
-        <Editor onInit={onSourceInit} width='100%' height='336px'/>
-        {stepper && <StackView state={stepper}/>}
-        <div>{terminal && <Terminal terminal={terminal}/>}</div>
-        {lastError && <p>{lastError}</p>}
+        <div className="row">
+          <div className="col-md-3">
+            {lastError && <p>{lastError}</p>}
+          </div>
+          <div className="col-md-6">
+            <Button onClick={onStart} disabled={playerState !== 'ready'}>
+              <i className="fa fa-play"/>
+            </Button>
+          </div>
+          <div className="col-md-3">
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-md-3">
+            {stepper &&
+              <div>
+                <h2>Pile</h2>
+                <StackView state={stepper}/>
+              </div>}
+          </div>
+          <div className="col-md-6">
+            <h2>Source C</h2>
+            <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
+                    readOnly={true} width='100%' height='336px' />
+          </div>
+          <div className="col-md-3">
+            {terminal &&
+              <div>
+                <h2>Terminal</h2>
+                <Terminal terminal={terminal}/>
+              </div>}
+          </div>
+        </div>
       </div>
     );
   };
