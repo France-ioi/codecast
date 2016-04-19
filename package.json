@@ -28,7 +28,7 @@
       "immutable": "npm:immutable@^3.7.6",
       "lamejs": "npm:lamejs@^1.0.0",
       "lodash": "npm:lodash@^4.6.1",
-      "persistent-c": "npm:persistent-c@3.0.0",
+      "persistent-c": "npm:persistent-c@5.0.1",
       "query-string": "npm:query-string@^4.1.0",
       "react": "npm:react-dom@15.0.0-rc.2",
       "react-ace": "npm:react-ace@^3.2.0",
