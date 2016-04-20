@@ -10,6 +10,7 @@ const rootDir = path.resolve(path.dirname(__dirname));
 const app = express();
 
 const upload = require('./upload');
+const directives = require('./directives');
 
 app.set('view engine', 'jade');
 app.set('views', path.join(rootDir, 'backend', 'views'));
@@ -91,6 +92,7 @@ app.post('/translate', function (req, res) {
     if (code === 0) {
       try {
         const ast = JSON.parse(chunks.join(''));
+        directives.enrichSyntaxTree(source, ast);
         res.json({ast: ast});
       } catch (err) {
         res.json({error: err.toString()});
