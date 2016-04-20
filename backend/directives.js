@@ -1,3 +1,51 @@
+var PR = require('packrattle');
+
+var whitespace = PR(/[ \t]+/).optional().drop();
+function lexeme(p) {
+  return PR.seq(p, whitespace).map(function (match) {
+    return match[0][0];
+  });
+}
+var lparen = lexeme(PR('('));
+var rparen = lexeme(PR(')'));
+var lbrack = lexeme(PR('['));
+var rbrack = lexeme(PR(']'));
+var equals = lexeme(PR('='));
+var coma = lexeme(PR(','));
+var ident = lexeme(PR(/[a-zA-Z_-][a-zA-Z0-9_-]*/));
+var identExpr = ident.map(function (match) {
+  return ['ident', match];
+});
+var listExpr = PR.seq(lbrack, PR.repeatSeparated(() => expr, coma, {min:0}).optional(), rbrack).map(function (match) {
+  return match[1] || [];
+});
+var expr = PR.alt(identExpr, listExpr);
+var directiveArgByPos = expr.map(function (match) {
+  return {value: match};
+});
+var directiveArgByName = PR.seq(ident, equals, expr).map(function (match) {
+  return {name: match[0], value: match[2]};
+});
+var directiveArg = PR.alt(directiveArgByName, directiveArgByPos);
+var directiveArgs = PR.repeatSeparated(directiveArg, coma, {min:0}).map(function (match) {
+  var byPos = [], byName = {};
+  match.forEach(function (arg) {
+    if ('name' in arg) {
+      byName[arg.name] = arg.value;
+    } else {
+      byPos.push(arg.value);
+    }
+  });
+  return {byName, byPos};
+});
+var directive = PR.seq(ident, lparen, directiveArgs.optional(), rparen).map(function (match) {
+  var name = match[0];
+  var args = match[2] || {byPos: [], byName: {}};
+  return [name, args.byPos, args.byName];
+});
+var directiveParser = PR.seq(whitespace, directive).map(function (match) {
+  return match[0];
+});
 
 var computeLineOffsets = function (lines) {
   var lineOffsets = [];
@@ -43,7 +91,8 @@ var isDirective = function (line) {
 };
 
 var parseDirective = function (line) {
-  return line;
+  var str = /^\s*\/\/!(.*)\s*$/.exec(line)[1];
+  return directiveParser.run(str);
 };
 
 module.exports.enrichSyntaxTree = function (source, ast) {
@@ -59,7 +108,13 @@ module.exports.enrichSyntaxTree = function (source, ast) {
         var directives = [];
         while (lineNo < lines.length && isDirective(lines[lineNo])) {
           // console.log(`found directive at line ${lineNo}`)
-          directives.push(parseDirective(lines[lineNo]))
+          try {
+            var directive = parseDirective(lines[lineNo]);
+            directives.push(directive);
+            // console.log(JSON.stringify(directive));
+          } catch (error) {
+            directives.push(["error", error]);
+          }
           lineNo += 1;
         }
         node[1].directives = directives;
