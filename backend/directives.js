@@ -98,8 +98,11 @@ var parseDirective = function (line) {
 module.exports.enrichSyntaxTree = function (source, ast) {
   var lines = source.split('\n');
   var lineOffsets = computeLineOffsets(lines);
+  var functionNode;
   var findBlocks = function (node) {
-    if (node[0] === 'CompoundStmt') {
+    if (node[0] === 'FunctionDecl') {
+      functionNode = node;
+    } else if (node[0] === 'CompoundStmt') {
       // console.log('found block', node);
       var blockPos = getPositionFromOffset(lineOffsets, node[1].begin);
       if (blockPos) {
@@ -117,7 +120,14 @@ module.exports.enrichSyntaxTree = function (source, ast) {
           }
           lineNo += 1;
         }
-        node[1].directives = directives;
+        if (functionNode) {
+          // For the first block inside a function, attach the directives
+          // to the function instead of the block.
+          functionNode[1].directives = directives;
+          functionNode = undefined;
+        } else {
+          node[1].directives = directives;
+        }
       }
     }
     node[2].forEach(findBlocks);
