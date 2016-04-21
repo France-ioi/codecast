@@ -3,17 +3,29 @@ import * as C from 'persistent-c';
 import {TermBuffer} from 'epic-vt';
 import {sprintf} from 'sprintf-js';
 
-const applyWriteEffect = function (state, effect) {
-  console.log('write', effect);
-  state.terminal = state.terminal.write(effect[1]);
-};
+// Upon entering a CompoundStmt node, check if node[1].directives contains
+// any directive.
+// Directive example:
+//   ["showArray",[["ident","a"]],{"cursors":[["ident","a"],["ident","b"]]}]
 
-export const options = {
-  effectHandlers: {
-    ...C.defaultEffects,
-    write: applyWriteEffect
-  }
-};
+export const options = function (effects) {
+  const applyWriteEffect = function (state, effect) {
+    state.terminal = state.terminal.write(effect[1]);
+  };
+  const enterEffect = function (state, effect) {
+    const node = effect[2];
+    effects.enter(state, effect);
+    const scope = state.scope;
+    scope.directives = node[1].directives || [];
+  };
+  return {
+    effectHandlers: {
+      ...effects,
+      write: applyWriteEffect,
+      enter: enterEffect
+    }
+  };
+}(C.defaultEffects);
 
 const unboxValue = function (v) {
   // XXX hack for strings
