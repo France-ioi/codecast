@@ -2,44 +2,80 @@
 import React from 'react';
 import classnames from 'classnames';
 import EpicComponent from 'epic-component';
-import {readValue} from 'persistent-c';
+import {inspectPointer, pointerType, PointerValue} from 'persistent-c';
+
+const intersperse = function (elems, sep) {
+  if (elems.length === 0) {
+    return [];
+  }
+  const f = function (xs, x, i) {
+    return xs.concat([sep, x]);
+  };
+  return elems.slice(1).reduce(f, [elems[0]]);
+};
+
+const renderType = function (type, prec) {
+  switch (type.kind) {
+    case 'scalar':
+      return type.repr;
+    case 'pointer':
+      return renderType(type.pointee, 1) + '*';
+  }
+  return type.toString();
+};
+
+const renderValue = function (view) {
+  const classes = [view.load !== undefined && 'value-loaded'];
+  return (
+    <span className="value">
+      <span className={classnames(classes)}>{view.value.toString()}</span>
+      {view.prevValue && <span className="value-previous">{view.prevValue.toString()}</span>}
+    </span>
+  );
+};
+
+const ShowVar = EpicComponent(self => {
+  self.render = function () {
+    const {view} = self.props;
+    const {name, value} = view;
+    if (!value) {
+      return <p>{name} not in scope</p>;
+    }
+    return (<div className="variable-view">
+      <span className="variable-type">{renderType(value.type, 0)}</span>
+      {' '}
+      <span className="variable-name">{name}</span>
+      {' = '}
+      {renderValue(value)}
+    </div>);
+  };
+});
+
+const ShowArray = EpicComponent(self => {
+  self.render = function () {
+    const {view} = self.props;
+    const {name, elemType, elemCount, values} = view;
+    if (!values) {
+      return <p>{name} not in scope</p>;
+    }
+    const valueElems = values.map(value => renderValue(value));
+    return (<div className="constant-array-view">
+      <span className="constant-array-type">{renderType(elemType, 0)}</span>
+      {' '}
+      <span className="variable-name">{name}</span>
+      {'['}
+      {elemCount}
+      {'] = {'}
+      {intersperse(valueElems, ', ')}
+      {'}'}
+    </div>);
+  };
+});
 
 export const DirectivesPane = EpicComponent(self => {
 
-  const refsIntersect = function (ref1, ref2) {
-    const base1 = ref1.address, limit1 = base1 + ref1.type.size - 1;
-    const base2 = ref2.address, limit2 = base2 + ref2.type.size - 1;
-    const result = (base1 <= base2) ? (base2 <= limit1) : (base1 <= limit2);
-    return result;
-  };
-
-  const prepareVariable = function (scope, state) {
-    const {ref, decl} = scope;
-    const {memoryLog, memory, oldMemory} = state;
-    const {name} = decl;
-    const {type, address} = ref;
-    const limit = address + type.size - 1;
-    const value = readValue(memory, ref);
-    const result = {name, value, type: type.pointee};
-    try {
-      memoryLog.forEach(function (entry, i) {
-        if (refsIntersect(ref, entry[1])) {
-          if (entry[0] === 'load') {
-            if (result.load === undefined) {
-              result.load = i;
-            }
-          } else if (entry[0] === 'store') {
-            if (result.store === undefined) {
-              result.store = i;
-              result.prevValue = readValue(oldMemory, ref);
-            }
-          }
-        }
-      });
-    } catch (err) {
-      result.error = err;
-    }
-    return result;
+  const getIdent = function (expr) {
+    return expr[0] === 'ident' && expr[1];
   };
 
   const prepareDirective = function (directive, scope, decls, state) {
@@ -48,9 +84,43 @@ export const DirectivesPane = EpicComponent(self => {
     switch (kind) {
       case 'showVar':
         {
-          const ident = result.name = directive[1][0][1];
+          const ident = result.name = getIdent(directive[1][0]);
+          if (!ident) {
+            result.error = 'invalid variable name';
+            break;
+          }
           const varScope = decls[ident];
-          result.variable = varScope && prepareVariable(varScope, state)
+          if (varScope) {
+            result.value = inspectPointer(varScope.ref, state);
+          }
+          break;
+        }
+      case 'showArray':
+        {
+          const ident = result.name = getIdent(directive[1][0]);
+          const varScope = decls[ident];
+          if (varScope) {
+            // Expect varScope.ref to be a pointer to a constant array.
+            if (varScope.ref.type.kind !== 'pointer') {
+              result.error = 'reference is not a pointer';
+              break;
+            }
+            const varType = varScope.ref.type.pointee;
+            if (varType.kind !== 'constant array') {
+              result.error = 'expected a reference to a constant array';
+            }
+            // Extract the array's address, element type and count.
+            const address = result.address = varScope.ref.address;
+            const elemType = result.elemType = varType.elem;
+            const elemCount = result.elemCount = varType.count.toInteger();
+            // Inspect each array element.
+            const values = result.values = [];
+            const ptr = new PointerValue(pointerType(elemType), address);
+            for (let elemIndex = 0; elemIndex < elemCount; elemIndex += 1) {
+              values.push(inspectPointer(ptr, state));
+              ptr.address += elemType.size;
+            }
+          }
           break;
         }
       default:
@@ -88,50 +158,17 @@ export const DirectivesPane = EpicComponent(self => {
     return views;
   };
 
-  const renderType = function (type, prec) {
-    switch (type.kind) {
-      case 'scalar':
-        return type.repr;
-      case 'pointer':
-        return renderType(type.pointee, 1) + '*';
-    }
-    return type.toString();
-  };
-
-  const renderValue = function (value) {
-    if (value === undefined)
-      return 'undefined';
-    return value.toString();
-  };
-
-  const renderVariable = function (view) {
-    return (
-      <div className="variable-view">
-        <span className="variable-type">{renderType(view.type, 0)}</span>
-        {' '}
-        <span className="variable-name">{view.name}</span>
-        {' = '}
-        <span className={classnames(['variable-value', view.load !== undefined && 'variable-load'])}>{renderValue(view.value)}</span>
-        {view.prevValue && <span className="variable-prevValue">{renderValue(view.prevValue)}</span>}
-      </div>
-    );
-  };
-
-  const renderShowVar = function (view) {
-    // view.name
-    return view.variable && renderVariable(view.variable);
-  };
-
-  const renderFuncs = {
-    showVar: renderShowVar
+  const Components = {
+    showVar: ShowVar,
+    showArray: ShowArray
   };
 
   const renderView = function (view) {
     const {key, kind} = view;
-    const renderFunc = renderFuncs[kind];
+    const Component = Components[kind];
     return (
       <div key={key} className="directive-view">
-        {renderFunc && renderFunc(view)}
+        {Component ? <Component view={view}/> : <p>Bad component {kind}</p>}
       </div>
     );
   };
@@ -139,9 +176,7 @@ export const DirectivesPane = EpicComponent(self => {
   self.render = function () {
     const {state} = self.props;
     const views = getViews(state);
-    console.log(views);
-    return <div className="directive-pane">{views.map(view =>
-      renderView(view))}</div>;
+    return <div className="directive-pane">{views.map(renderView)}</div>;
   };
 
 });

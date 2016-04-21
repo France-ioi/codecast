@@ -33,10 +33,10 @@
 .stack-view {
   font: 12px/normal monospace;
 }
-.stack-view .scope-decl-load {
+.stack-view .scope-decl-load, .value > .value-loaded {
   font-weight: bold;
 }
-.stack-view .scope-decl-prevValue {
+.stack-view .scope-decl-prevValue, .value > .value-previous {
   text-decoration: line-through;
   padding-left: 0.5em;
 }
