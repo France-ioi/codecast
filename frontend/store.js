@@ -45,8 +45,10 @@ export default function storeFactory () {
   });
 
   function reducer (state = initialState, action) {
-    // DEV: Uncomment the next line to log all actions to the console.
-    //console.log('reduce', state, action);
+    // DEV: Uncomment the next lines to log all actions to the console.
+    //if (!/Recorder.Tick/.test(action.type)) {
+    //  console.log('reduce', action);
+    //}
     if (action.type in storeHandlers) {
       state = storeHandlers[action.type](state, action);
     };
