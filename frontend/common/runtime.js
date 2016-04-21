@@ -26,7 +26,6 @@ const unboxValue = function (v) {
 
 const printf = function (state, cont, values) {
   // Unbox each argument's value.
-  console.log('printf', values);
   const args = values.slice(1).map(unboxValue);
   const str = sprintf.apply(null, args);
   const result = str.length;

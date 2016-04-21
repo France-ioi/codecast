@@ -10,7 +10,6 @@ export const StackView = EpicComponent(self => {
     const base1 = ref1.address, limit1 = base1 + ref1.type.size - 1;
     const base2 = ref2.address, limit2 = base2 + ref2.type.size - 1;
     const result = (base1 <= base2) ? (base2 <= limit1) : (base1 <= limit2);
-    console.log(`${base1}-${limit1} intersects ${base2}-${limit2}: ${result}`)
     return result;
   };
 
@@ -40,7 +39,6 @@ export const StackView = EpicComponent(self => {
     } catch (err) {
       result.error = err;
     }
-    console.log('stack', JSON.stringify(result));
     return result;
   };
 
