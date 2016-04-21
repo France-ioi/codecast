@@ -8,6 +8,7 @@ import Document from '../common/document';
 import Terminal from '../common/terminal';
 import Editor from '../common/editor';
 import StackView from '../common/stack_view';
+import DirectivesPane from '../common/directives_pane';
 
 import actions from '../actions';
 import {recordEventAction} from './utils';
@@ -93,6 +94,12 @@ export const RecordScreen = EpicComponent(self => {
           {terminal && <div className="col-md-3">
             <h2>Terminal</h2>
             <Terminal terminal={terminal}/>
+          </div>}
+        </div>
+        <div className="row">
+          {stepperDisplay && <div className="col-md-12">
+            <h2>Vues</h2>
+            <DirectivesPane state={stepperDisplay}/>
           </div>}
         </div>
         <div className="row">
