@@ -51,7 +51,7 @@ const examples = [
   },
   {
     title: "tableau 1D",
-    source: "int main() {\n  int i;\n  int a[8];\n  a[0] = 1;\n  for (i = 1; i < 8; i++) {\n    a[i] = a[i - 1] * 2;\n  }\n  for (i = 0; i < 8; i++) {\n    printf(\"a[%i] = %i\\n\", i, a[i]);\n  }\n}\n"
+    source: "int main() {\n    //! showArray(a, cursors=[i])\n    int i;\n    int a[8];\n    a[0] = 1;\n    for (i = 1; i < 8; i++) {\n        a[i] = a[i - 1] * 2;\n    }\n    for (i = 0; i < 8; i++) {\n        printf(\"a[%i] = %i\\n\", i, a[i]);\n    }\n}\n"
   },
   {
     title: "appel de fonction",
