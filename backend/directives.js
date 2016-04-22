@@ -17,7 +17,7 @@ var identExpr = ident.map(function (match) {
   return ['ident', match];
 });
 var listExpr = PR.seq(lbrack, PR.repeatSeparated(() => expr, coma, {min:0}).optional(), rbrack).map(function (match) {
-  return match[1] || [];
+  return ['list', match[1] || []];
 });
 var expr = PR.alt(identExpr, listExpr);
 var directiveArgByPos = expr.map(function (match) {
