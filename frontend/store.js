@@ -7,12 +7,14 @@ import Immutable from 'immutable';
 import DevTools from './dev_tools';
 import actions from './actions';
 
+import * as systemReducers from './reducers';
 import * as homeScreenReducers from './home_screen/reducers';
 import * as prepareScreenReducers from './prepare_screen/reducers';
 import * as recorderReducers from './recorder/reducers';
 import * as saveScreenReducers from './save_screen/reducers';
 
 import toplevelSagas from './sagas';
+import homeScreenSagas from './home_screen/sagas';
 import recorderSagas from './recorder/sagas';
 import saveScreenSagas from './save_screen/sagas';
 
@@ -55,6 +57,7 @@ export default function storeFactory () {
     return state;
   }
 
+  addHandlers(systemReducers);
   addHandlers(homeScreenReducers);
   addHandlers(prepareScreenReducers);
   addHandlers(recorderReducers);
@@ -62,6 +65,7 @@ export default function storeFactory () {
 
   const sagas = flatten([
     toplevelSagas,
+    homeScreenSagas,
     recorderSagas,
     saveScreenSagas
   ].map(function (factory) {

@@ -57,6 +57,11 @@ defineAction('error', {
   descr: "Sent when a generic error has occurred."
 });
 
+defineAction('switchToScreen', {
+  type: 'system/SwitchToScreen',
+  descr: "Switch to the specified screen."
+});
+
 defineActions(homeScreenActions);
 defineActions(prepareScreenActions);
 defineActions(recorderActions);

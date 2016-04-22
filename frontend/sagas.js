@@ -10,6 +10,8 @@ export default function (actions) {
     }
   }
 
-  return [watchError];
+  return [
+    watchError
+  ];
 
 };
