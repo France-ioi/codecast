@@ -33,10 +33,32 @@
 .stack-view {
   font: 12px/normal monospace;
 }
-.stack-view .scope-decl-load, .value > .value-loaded {
+.stack-view .scope-decl-load {
   font-weight: bold;
 }
-.stack-view .scope-decl-prevValue, .value > .value-previous {
+.stack-view .scope-decl-prevValue {
   text-decoration: line-through;
   padding-left: 0.5em;
+}
+
+.constantArray-elemView {
+  float: left;
+  width: 64px;
+  border: 1px solid black;
+  border-left: 0;
+}
+.constantArray-elemView:first-child {
+  border-left: 1px solid black;
+}
+.constantArray-elemView > * {
+  height: 20px;
+  overflow: hidden;
+  text-align: center;
+}
+
+.value-loaded {
+  font-weight: bold;
+}
+.value-changed {
+  text-decoration: line-through;
 }

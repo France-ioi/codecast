@@ -29,7 +29,7 @@ const renderValue = function (view) {
   return (
     <span className="value">
       <span className={classnames(classes)}>{view.value.toString()}</span>
-      {view.prevValue && <span className="value-previous">{view.prevValue.toString()}</span>}
+      {view.prevValue && <span className="value-changed">{view.prevValue.toString()}</span>}
     </span>
   );
 };
@@ -54,21 +54,47 @@ const ShowVar = EpicComponent(self => {
 const ShowArray = EpicComponent(self => {
   self.render = function () {
     const {view} = self.props;
-    const {name, elemType, elemCount, values} = view;
-    if (!values) {
+    const {name, elemType, elemCount, elems} = view;
+    if (!elems) {
       return <p>{name} not in scope</p>;
     }
-    const valueElems = values.map(value => renderValue(value));
-    return (<div className="constant-array-view">
-      <span className="constant-array-type">{renderType(elemType, 0)}</span>
-      {' '}
-      <span className="variable-name">{name}</span>
-      {'['}
-      {elemCount}
-      {'] = {'}
-      {intersperse(valueElems, ', ')}
-      {'}'}
-    </div>);
+    // TODO: cursors
+    const renderArrayElem = function (elem, i) {
+      const {value, cursors, prevCursors} = elem;
+      const valueClasses = [
+        "constantArray-elemValue",
+        value.load !== undefined && 'value-loaded'
+      ];
+      return (
+        <div className="constantArray-elemView" key={i}>
+          <div className="value-changed">
+            {value.prevValue && value.prevValue.toString()}
+          </div>
+          <div className={classnames(valueClasses)}>
+            {value.value && value.value.toString()}
+          </div>
+          <div className="constantArray-cursors">
+            {cursors && cursors.map(c => <span>{c}</span>)}
+            {prevCursors && prevCursors.map(c => <span className="value-changed">{c}</span>)}
+          </div>
+        </div>
+      );
+    };
+    return (
+      <div className="constantArray-view">
+        <div className="constantArray-decl">
+          <span className="constantArray-type">{renderType(elemType, 0)}</span>
+          {' '}
+          <span className="variable-name">{name}</span>
+          {'['}
+          {elemCount}
+          {'] ='}
+        </div>
+        <div  className="constantArray-elems">
+          {elems.map(renderArrayElem)}
+        </div>
+      </div>
+    );
   };
 });
 
@@ -98,6 +124,7 @@ export const DirectivesPane = EpicComponent(self => {
       case 'showArray':
         {
           const ident = result.name = getIdent(directive[1][0]);
+          const namedArgs = directive[2];
           const varScope = decls[ident];
           if (varScope) {
             // Expect varScope.ref to be a pointer to a constant array.
@@ -114,11 +141,33 @@ export const DirectivesPane = EpicComponent(self => {
             const elemType = result.elemType = varType.elem;
             const elemCount = result.elemCount = varType.count.toInteger();
             // Inspect each array element.
-            const values = result.values = [];
+            const elems = result.elems = [];
             const ptr = new PointerValue(pointerType(elemType), address);
             for (let elemIndex = 0; elemIndex < elemCount; elemIndex += 1) {
-              values.push(inspectPointer(ptr, state));
+              elems.push({value: inspectPointer(ptr, state), cursors: [], prevCursors: []});
               ptr.address += elemType.size;
+            }
+            // Add an extra empty element.
+            elems.push({value: {}, cursors: [], prevCursors: []});
+            // Cursors?
+            if (namedArgs.cursors && namedArgs.cursors[0] === 'list') {
+              const cursorIdents = namedArgs.cursors[1].map(getIdent);
+              cursorIdents.forEach(function (cursorIdent) {
+                const cursorScope = decls[cursorIdent];
+                if (cursorScope) {
+                  const cursorValue = inspectPointer(cursorScope.ref, state);
+                  const cursorPos = cursorValue.value.toInteger();
+                  if (cursorPos >= 0 && cursorPos <= elemCount) {
+                    elems[cursorPos].cursors.push(cursorIdent);
+                  }
+                  if (cursorValue.prevValue) {
+                    const cursorPrevPos = cursorValue.prevValue.toInteger();
+                    if (cursorPrevPos >= 0 && cursorPrevPos <= elemCount) {
+                      elems[cursorPrevPos].prevCursors.push(cursorIdent);
+                    }
+                  }
+                }
+              })
             }
           }
           break;
@@ -174,9 +223,14 @@ export const DirectivesPane = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {state} = self.props;
-    const views = getViews(state);
-    return <div className="directive-pane">{views.map(renderView)}</div>;
+    try {
+      const {state} = self.props;
+      const views = getViews(state);
+      return <div className="directive-pane">{views.map(renderView)}</div>;
+    } catch (err) {
+      console.log(err);
+      return false;
+    }
   };
 
 });
