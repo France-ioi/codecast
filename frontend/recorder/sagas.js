@@ -313,20 +313,26 @@ export default function (actions) {
       if (stepper.get('state') === 'starting') {
         yield put({type: actions.recordScreenStepperStart});
         const context = buildContext(stepper.get('current'));
-        // Take a first step.
-        if (singleStep(context)) {
-          switch (action.mode) {
-            case 'into':
-              // Step out of the current statement.
-              yield call(stepUntil, context, C.outOfCurrentStmt);
-              // Step into the next statement.
-              yield call(stepUntil, context, C.intoNextStmt);
-              break;
-            case 'expr':
-              // then stop when we enter the next expression.
-              yield call(stepUntil, context, C.intoNextExpr);
-              break;
+        try {
+          // Take a first step.
+          if (singleStep(context)) {
+            switch (action.mode) {
+              case 'into':
+                // Step out of the current statement.
+                yield call(stepUntil, context, C.outOfCurrentStmt);
+                // Step into the next statement.
+                yield call(stepUntil, context, C.intoNextStmt);
+                break;
+              case 'expr':
+                // then stop when we enter the next expression.
+                yield call(stepUntil, context, C.intoNextExpr);
+                break;
+            }
           }
+        } catch (error) {
+          console.log(error);
+          // XXX put stepError instead?
+          yield put(recordEventAction(['stepIdle', 0]));
         }
         yield put(recordEventAction(['stepIdle', context.stepCounter]));
         yield put({type: actions.recordScreenStepperIdle, context: viewContext(context)});
