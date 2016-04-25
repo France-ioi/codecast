@@ -2,15 +2,32 @@
 import * as C from 'persistent-c';
 import {TermBuffer} from 'epic-vt';
 import {sprintf} from 'sprintf-js';
-
-// Upon entering a CompoundStmt node, check if node[1].directives contains
-// any directive.
-// Directive example:
-//   ["showArray",[["ident","a"]],{"cursors":[["ident","a"],["ident","b"]]}]
+import Immutable from 'immutable';
 
 export const options = function (effects) {
   const applyWriteEffect = function (state, effect) {
     state.terminal = state.terminal.write(effect[1]);
+  };
+  const applyScanfEffect = function (state, effect) {
+    const args = effect[1];
+    const format = unboxValue(args[1]);
+    const ref = args[2];
+    const valueType = ref.type.pointee;
+    let result;
+    switch (format) {
+      case '%d': {
+        const value = new C.IntegralValue(valueType, parseInt(state.input.first()));
+        state.memory = C.writeValue(state.memory, ref, value);
+        state.input = state.input.shift();
+        result = 1;
+        break;
+      }
+      default:
+        result = 0;
+        break;
+    }
+    state.direction = 'up';
+    state.result = new C.IntegralValue(C.scalarTypes['int'], result);
   };
   const enterEffect = function (state, effect) {
     const node = effect[2];
@@ -22,7 +39,8 @@ export const options = function (effects) {
     effectHandlers: {
       ...effects,
       write: applyWriteEffect,
-      enter: enterEffect
+      enter: enterEffect,
+      scanf: applyScanfEffect
     }
   };
 }(C.defaultEffects);
@@ -44,13 +62,18 @@ const printf = function (state, cont, values) {
   return {control: cont, effects: [['write', str]], result, seq: 'expr'};
 };
 
-export const builtins = {printf};
+const scanf = function (state, cont, values) {
+  return {control: cont, effects: [['scanf', values]], seq: 'expr'};
+};
+
+export const builtins = {printf, scanf};
 
 export const start = function (syntaxTree) {
   const decls = syntaxTree[2];
   const context = {decls, builtins: builtins};
   let state = C.start(context);
   state.terminal = new TermBuffer({width: 40});
+  state.input = Immutable.List(["42"]);
   state = stepIntoUserCode(state);
   return state;
 };
