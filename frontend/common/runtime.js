@@ -13,18 +13,18 @@ export const options = function (effects) {
     const format = unboxValue(args[1]);
     const ref = args[2];
     const valueType = ref.type.pointee;
-    let result;
+    let result = 0;
     switch (format) {
       case '%d': {
-        const value = new C.IntegralValue(valueType, parseInt(state.input.first()));
-        state.memory = C.writeValue(state.memory, ref, value);
-        state.input = state.input.shift();
-        result = 1;
+        if (state.input.size !== 0) {
+          const token = state.input.first();
+          const value = new C.IntegralValue(valueType, parseInt(token));
+          state.input = state.input.shift();
+          state.memory = C.writeValue(state.memory, ref, value);
+          result = 1;
+        }
         break;
       }
-      default:
-        result = 0;
-        break;
     }
     state.direction = 'up';
     state.result = new C.IntegralValue(C.scalarTypes['int'], result);
