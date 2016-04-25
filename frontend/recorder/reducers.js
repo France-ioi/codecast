@@ -113,8 +113,10 @@ export function recorderAddEvent (state, action) {
 
 export function recordScreenStepperRestart (state, action) {
   const stepperState = action.stepperState || state.getIn(['recorder', 'stepper', 'initial']);
-  return state.update('recorder', recorder => recorder
-    .set('stepper', Immutable.Map({state: 'idle', initial: stepperState, display: stepperState})));
+  console.log("recordScreenStepperRestart", stepperState);
+  return state
+    .update('recorder', recorder => recorder
+      .set('stepper', Immutable.Map({state: 'idle', initial: stepperState, display: stepperState})));
 };
 
 export function recordScreenStepperExit (state, action) {
@@ -146,4 +148,16 @@ export function recordScreenStepperIdle (state, action) {
   // Copy stepper state into recording screen and clean up the stepper.
   state = recordScreenStepperProgress(state, action);
   return state.setIn(['recorder', 'stepper', 'state'], 'idle');
+};
+
+export function translateSourceSucceeded (state, action) {
+  const {diagnostics} = action.response;
+  return state
+    .setIn(['recorder', 'translate'], Immutable.Map({diagnostics}));
+};
+
+export function translateSourceFailed (state, action) {
+  const {error, diagnostics} = action;
+  return state
+    .setIn(['recorder', 'translate'], Immutable.Map({error, diagnostics}));
 };

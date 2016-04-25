@@ -20,6 +20,7 @@ export const RecordScreen = EpicComponent(self => {
   const onSourceInit = function (editor) {
     self.props.dispatch({type: actions.recordScreenSourceInit, editor});
     if (editor) {
+      // XXX move to a saga?
       const {source} = self.props;
       const value = Document.toString(source.get('document'));
       const selection = source.get('selection');
@@ -90,17 +91,18 @@ export const RecordScreen = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {dispatch, recorderState, source, events, elapsed, stepperState, stepperDisplay} = self.props;
+    const {dispatch, recorderState, translate, eventCount, elapsed, stepperState, stepperDisplay} = self.props;
     const isRecording = recorderState === 'recording';
     const isStepping = !!stepperState;
     const isIdle = stepperState === 'idle';
     const {control, terminal, error, scope} = stepperDisplay;
     const haveNode = control && control.node;
+    const diagnostics = translate && translate.get('diagnostics');
     return (
       <div>
         <div className="row">
           <div className="col-md-12">
-            <RecordControls dispatch={dispatch} isRecording={isRecording} isStepping={isStepping} haveNode={haveNode} elapsed={elapsed} eventCount={events.count()} onTranslate={onTranslate} />
+            <RecordControls dispatch={dispatch} isRecording={isRecording} isStepping={isStepping} haveNode={haveNode} elapsed={elapsed} eventCount={eventCount} onTranslate={onTranslate} />
             {error && <p>{error}</p>}
           </div>
         </div>
@@ -119,6 +121,13 @@ export const RecordScreen = EpicComponent(self => {
             <Terminal terminal={terminal}/>
           </div>}
         </div>
+        {diagnostics &&
+          <div className="row">
+            <div className="col-md-3"/>
+            <div className="col-md-6">
+              <div dangerouslySetInnerHTML={diagnostics}/>
+            </div>
+          </div>}
         <div className="row">
           {stepperDisplay && <div className="col-md-12">
             <h2>Vues</h2>
@@ -130,7 +139,7 @@ export const RecordScreen = EpicComponent(self => {
             <h2>Entrée standard du programme</h2>
             <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect}
                     readOnly={isStepping} mode='text' width='100%' height='336px' />
-          </div>}
+          </div>
         </div>
         <div className="row">
           {!isRecording && recordingPanel()}
@@ -151,14 +160,15 @@ function selector (state, props) {
   const recorderState = recorder.get('state');
   const source = recorder.get('source');
   const input = recorder.get('input');
-  const events = recorder.get('events');
+  const translate = recorder.get('translate');
+  const eventCount = recorder.get('events').count();
   const elapsed = recorder.get('elapsed');
   const stepper = recorder.get('stepper')
   const stepperState = stepper && stepper.get('state');
   const stepperDisplay = stepper ? stepper.get('display', {}) : {};
   return {
-    recorderState, source, input, events, elapsed,
-    stepperState, stepperDisplay,
+    recorderState, source, input, translate, eventCount, elapsed,
+    stepperState, stepperDisplay
   };
 };
 

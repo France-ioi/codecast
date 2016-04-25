@@ -270,17 +270,29 @@ export default function (actions) {
 
   function* translateSource (action) {
     const {source} = action;
-    let result;
+    yield put(recordEventAction(['translate', source]));
+    let response, result, error;
     try {
-      yield put(recordEventAction(['translate', source]));
-      const {ast} = yield call(asyncRequestJson, '/translate', {source});
-      result = loadTranslated(source, ast);
-      yield put(recordEventAction(['translateSuccess', ast]));
-      yield put({type: actions.translateSourceSucceeded, result});
-    } catch (error) {
-      const message = error.toString();
-      yield put({type: actions.translateSourceFailed, error: message, source});
-      yield put(recordEventAction(['translateFailure', message]));
+      response = yield call(asyncRequestJson, '/translate', {source});
+      result = loadTranslated(source, response.ast);
+    } catch (ex) {
+      error = ex.toString();
+    }
+    let {diagnostics} = response;
+    if (diagnostics) {
+      // Sanitize the server-provided HTML.
+      const el = document.createElement('div');
+      el.innerHtml = `<pre>${diagnostics}</pre>`;
+      diagnostics = {__html: el.innerHtml};
+      console.log('diagnostics', diagnostics);
+    }
+    if (result) {
+      yield put(recordEventAction(['translateSuccess', response]));
+      yield put({type: actions.translateSourceSucceeded, response, diagnostics});
+    } else {
+      yield put(recordEventAction(['translateFailure', response]));
+      yield put({type: actions.translateSourceFailed, error, diagnostics});
+      return;
     }
     try {
       const inputDocument = yield select(getRecordScreenInput);
