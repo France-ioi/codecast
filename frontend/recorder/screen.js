@@ -89,7 +89,7 @@ export const RecordScreen = EpicComponent(self => {
           <div className="col-md-6">
             <h2>Source C</h2>
             <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
-                    readOnly={isStepping} width='100%' height='336px' />
+                    readOnly={isStepping} mode='c_cpp' width='100%' height='336px' />
           </div>
           {terminal && <div className="col-md-3">
             <h2>Terminal</h2>

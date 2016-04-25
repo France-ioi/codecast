@@ -122,7 +122,9 @@ export const PrepareScreen = EpicComponent(self => {
                 l'enregistrement.  La position du curseur et la sélection
                 sont aussi conservées.
               </p>
-              <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} width='100%' height='336px'/>
+              <Editor
+                onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
+                width='100%' height='336px' mode='c_cpp'/>
             </div>
           </div>
         </div>

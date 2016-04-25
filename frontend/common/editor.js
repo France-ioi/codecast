@@ -82,8 +82,8 @@ export const Editor = EpicComponent(self => {
   self.componentDidMount = function () {
     editor = ace.edit(editorNode);
     editor.$blockScrolling = Infinity;
-    editor.setTheme('ace/theme/github');
-    editor.getSession().setMode('ace/mode/c_cpp');
+    editor.setTheme(`ace/theme/${self.props.theme||'github'}`);
+    editor.getSession().setMode(`ace/mode/${self.props.mode||'text'}`);
     // editor.setOptions({minLines: 25, maxLines: 50});
     editor.setReadOnly(self.props.readOnly);
     const {onInit, onSelect, onEdit} = self.props;
