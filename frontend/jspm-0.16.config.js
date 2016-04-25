@@ -51,10 +51,10 @@ System.config({
     "lodash": "npm:lodash@4.11.1",
     "persistent-c": "npm:persistent-c@5.0.1",
     "query-string": "npm:query-string@4.1.0",
-    "react": "npm:react-dom@15.0.0-rc.2",
+    "react": "npm:react@15.0.1",
     "react-ace": "npm:react-ace@3.4.0",
     "react-bootstrap": "npm:react-bootstrap@0.28.5",
-    "react-dom": "npm:react-dom@0.14.8",
+    "react-dom": "npm:react-dom@15.0.1",
     "react-redux": "npm:react-redux@4.4.5",
     "redux": "npm:redux@3.5.2",
     "redux-devtools": "npm:redux-devtools@3.2.0",
@@ -165,6 +165,7 @@ System.config({
       "fs": "github:jspm/nodelibs-fs@0.1.2",
       "inherits": "npm:inherits@2.0.1",
       "minimalistic-assert": "npm:minimalistic-assert@1.0.0",
+      "systemjs-json": "github:systemjs/plugin-json@0.1.2",
       "vm": "github:jspm/nodelibs-vm@0.1.0"
     },
     "npm:assert@1.3.0": {
@@ -379,7 +380,8 @@ System.config({
       "systemjs-json": "github:systemjs/plugin-json@0.1.2"
     },
     "npm:domain-browser@1.1.7": {
-      "events": "github:jspm/nodelibs-events@0.1.1"
+      "events": "github:jspm/nodelibs-events@0.1.1",
+      "systemjs-json": "github:systemjs/plugin-json@0.1.2"
     },
     "npm:elliptic@6.2.3": {
       "bn.js": "npm:bn.js@4.11.3",
@@ -393,7 +395,7 @@ System.config({
       "iconv-lite": "npm:iconv-lite@0.4.13"
     },
     "npm:epic-component@0.2.0": {
-      "react": "npm:react@0.14.8"
+      "react": "npm:react@15.0.1"
     },
     "npm:evp_bytestokey@1.0.0": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",
@@ -407,9 +409,6 @@ System.config({
       "foreach": "npm:foreach@2.0.5",
       "isarray": "npm:isarray@0.0.1",
       "object-keys": "npm:object-keys@1.0.9"
-    },
-    "npm:fbjs@0.6.1": {
-      "process": "github:jspm/nodelibs-process@0.1.2"
     },
     "npm:fbjs@0.8.1": {
       "babel-plugin-syntax-flow": "npm:babel-plugin-syntax-flow@6.5.0",
@@ -626,7 +625,7 @@ System.config({
       "lodash-compat": "npm:lodash-compat@3.10.2",
       "process": "github:jspm/nodelibs-process@0.1.2",
       "react": "npm:react@15.0.1",
-      "react-dom": "npm:react-dom@15.0.0-rc.2",
+      "react-dom": "npm:react-dom@15.0.1",
       "react-overlays": "npm:react-overlays@0.6.3",
       "react-prop-types": "npm:react-prop-types@0.3.0",
       "uncontrollable": "npm:uncontrollable@3.3.1",
@@ -637,10 +636,7 @@ System.config({
       "object-assign": "npm:object-assign@4.0.1",
       "react": "npm:react@15.0.1"
     },
-    "npm:react-dom@0.14.8": {
-      "react": "npm:react@0.14.8"
-    },
-    "npm:react-dom@15.0.0-rc.2": {
+    "npm:react-dom@15.0.1": {
       "react": "npm:react@15.0.1"
     },
     "npm:react-json-tree@0.6.8": {
@@ -658,7 +654,7 @@ System.config({
       "classnames": "npm:classnames@2.2.4",
       "dom-helpers": "npm:dom-helpers@2.4.0",
       "react": "npm:react@15.0.1",
-      "react-dom": "npm:react-dom@15.0.0-rc.2",
+      "react-dom": "npm:react-dom@15.0.1",
       "react-prop-types": "npm:react-prop-types@0.2.2",
       "warning": "npm:warning@2.1.0"
     },
@@ -676,10 +672,6 @@ System.config({
       "process": "github:jspm/nodelibs-process@0.1.2",
       "react": "npm:react@15.0.1",
       "redux": "npm:redux@3.5.2"
-    },
-    "npm:react@0.14.8": {
-      "fbjs": "npm:fbjs@0.6.1",
-      "process": "github:jspm/nodelibs-process@0.1.2"
     },
     "npm:react@15.0.1": {
       "fbjs": "npm:fbjs@0.8.1",

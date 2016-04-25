@@ -30,10 +30,10 @@
       "lodash": "npm:lodash@^4.6.1",
       "persistent-c": "npm:persistent-c@5.0.1",
       "query-string": "npm:query-string@^4.1.0",
-      "react": "npm:react-dom@15.0.0-rc.2",
+      "react": "npm:react@^15.0.1",
       "react-ace": "npm:react-ace@^3.2.0",
       "react-bootstrap": "npm:react-bootstrap@^0.28.4",
-      "react-dom": "npm:react-dom@^0.14.7",
+      "react-dom": "npm:react-dom@^15.0.1",
       "react-redux": "npm:react-redux@^4.4.1",
       "redux": "npm:redux@^3.3.1",
       "redux-devtools": "npm:redux-devtools@^3.1.1",
@@ -52,6 +52,10 @@
       "css": "github:systemjs/plugin-css@^0.1.20"
     },
     "overrides": {
+      "npm:react@15.0.1": {
+        "main": "lib/React.js",
+        "format": "cjs"
+      },
       "npm:lamejs@1.0.0": {
         "main": "lame.all.js",
         "format": "global",
