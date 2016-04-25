@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const spawn = require('child_process').spawn;
 const rootDir = path.resolve(path.dirname(__dirname));
 const app = express();
+const AnsiToHtml = require('ansi-to-html');
 
 const upload = require('./upload');
 const directives = require('./directives');
@@ -90,12 +91,18 @@ app.post('/translate', function (req, res) {
     if (errorSent)
       return;
     if (code === 0) {
-      try {
-        const ast = JSON.parse(chunks.join(''));
-        directives.enrichSyntaxTree(source, ast);
-        res.json({ast: ast});
-      } catch (err) {
-        res.json({error: err.toString()});
+      if (chunks.length === 0) {
+        const convert = new AnsiToHtml();
+        res.json({diagnostics: convert.toHtml(errorChunks.join(''))});
+      } else {
+        try {
+          const ast = JSON.parse(chunks.join(''));
+          const convert = new AnsiToHtml();
+          directives.enrichSyntaxTree(source, ast);
+          res.json({ast: ast, diagnostics: convert.toHtml(errorChunks.join(''))});
+        } catch (err) {
+          res.json({error: err.toString()});
+        }
       }
     } else {
       res.json({error: errorChunks.join('')});
