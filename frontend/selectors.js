@@ -9,6 +9,14 @@ export function getPreparedSource (state) {
   return state.getIn(['prepare', 'source']);
 };
 
+export function getPreparedInput (state) {
+  return state.getIn(['prepare', 'input']);
+};
+
+export function getRecordScreenInput (state) {
+  return state.getIn(['recorder', 'input', 'document']);
+};
+
 export function getRecorderState (state) {
   return state.get('recorder', Immutable.Map());
 };

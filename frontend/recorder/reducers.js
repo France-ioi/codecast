@@ -21,7 +21,8 @@ import Document from '../common/document';
 
 export function switchToRecordScreen (state, action) {
   return state.set('screen', 'record')
-              .setIn(['recorder', 'source'], Immutable.Map(action.source));
+              .setIn(['recorder', 'source'], Immutable.Map(action.source))
+              .setIn(['recorder', 'input'], Immutable.Map(action.input));
 };
 
 export function recordScreenSourceInit (state, action) {
@@ -36,6 +37,20 @@ export function recordScreenSourceEdit (state, action) {
 
 export function recordScreenSourceSelect (state, action) {
   return state.setIn(['recorder', 'source', 'selection'], action.selection);
+};
+
+export function recordScreenInputInit (state, action) {
+  return state.setIn(['recorder', 'input', 'editor'], action.editor);
+};
+
+export function recordScreenInputEdit (state, action) {
+  const prevInput = state.getIn(['recorder', 'input', 'document']);
+  const input = Document.applyDelta(prevInput, action.delta);
+  return state.setIn(['recorder', 'input', 'document'], input);
+};
+
+export function recordScreenInputSelect (state, action) {
+  return state.setIn(['recorder', 'input', 'selection'], action.selection);
 };
 
 export function recorderPreparing (state, action) {

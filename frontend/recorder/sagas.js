@@ -10,7 +10,9 @@ import * as runtime from '../common/runtime';
 import Document from '../common/document';
 
 import {asyncRequestJson} from '../api';
-import {getPreparedSource, getRecorderState, getStepperState, getRecorderSourceEditor} from '../selectors';
+import {
+  getPreparedSource, getPreparedInput, getRecorderState, getStepperState,
+  getRecorderSourceEditor, getRecordScreenInput} from '../selectors';
 import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
 import {recordEventAction} from './utils';
 
@@ -189,6 +191,7 @@ export default function (actions) {
         return;
       }
       const source = yield select(getPreparedSource);
+      const input = yield select(getPreparedInput);
       // Signal that the recorder is starting.
       yield put({type: actions.recorderStarting});
       // Resume the audio context to start recording audio buffers.
@@ -214,7 +217,7 @@ export default function (actions) {
           selection: Document.compressRange(source.get('selection'))
         }
       }]));
-      yield put({type: actions.switchToRecordScreen, source});
+      yield put({type: actions.switchToRecordScreen, source, input});
     } catch (error) {
       // XXX generic error
       yield put({type: actions.error, source: 'recorderStart', error});
@@ -280,7 +283,9 @@ export default function (actions) {
       yield put(recordEventAction(['translateFailure', message]));
     }
     try {
-      const stepperState = runtime.start(result.syntaxTree);
+      const inputDocument = yield select(getRecordScreenInput);
+      const input = Document.toString(inputDocument);
+      const stepperState = runtime.start(result.syntaxTree, {input});
       yield put({type: actions.recordScreenStepperRestart, stepperState});
       yield call(updateSelection);
     } catch (error) {

@@ -5,6 +5,10 @@ export const recordScreenSourceInit = 'Recorder.Source.Init';
 export const recordScreenSourceEdit = 'Recorder.Source.Edit';
 export const recordScreenSourceSelect = 'Recorder.Source.Select';
 
+export const recordScreenInputInit = 'Recorder.Input.Init';
+export const recordScreenInputEdit = 'Recorder.Input.Edit';
+export const recordScreenInputSelect = 'Recorder.Input.Select';
+
 export const recordScreenStepperRestart = {
   type: 'Recorder.Stepper.Restart',
   description: "Sent when the stepper's state is initialized."

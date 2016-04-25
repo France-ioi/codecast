@@ -21,11 +21,15 @@ const initialDocument = Document.fromString([
   "    return 0;",
   "}"
 ].join('\n'));
-const initialSelection = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
-const initialSource = Immutable.Map({document: initialDocument, selection: initialSelection});
+const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
+const initialSource = Immutable.Map({document: initialDocument, selection: startOfBuffer});
+const initialInput = Immutable.Map({document: Document.fromString(""), selection: startOfBuffer});
 
 export function prepareScreenInit (state, action) {
-  return state.set('prepare', Immutable.Map({source: initialSource}))
+  return state.set('prepare', Immutable.Map({
+    source: initialSource,
+    input: initialInput
+  }))
 };
 
 export function prepareScreenSourceEdit (state, action) {
