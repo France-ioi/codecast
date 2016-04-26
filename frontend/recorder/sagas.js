@@ -284,7 +284,6 @@ export default function (actions) {
       const el = document.createElement('div');
       el.innerHtml = `<pre>${diagnostics}</pre>`;
       diagnostics = {__html: el.innerHtml};
-      console.log('diagnostics', diagnostics);
     }
     if (result) {
       yield put(recordEventAction(['translateSuccess', response]));
