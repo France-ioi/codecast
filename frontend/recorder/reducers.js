@@ -121,7 +121,8 @@ export function recordScreenStepperRestart (state, action) {
 
 export function recordScreenStepperExit (state, action) {
   return state.update('recorder', recorder => recorder
-    .delete('stepper'));
+    .delete('stepper')
+    .delete('translate'));
 };
 
 export function recordScreenStepperStep (state, action) {
