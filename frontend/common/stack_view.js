@@ -104,8 +104,8 @@ export const StackView = EpicComponent(self => {
         <span>{renderType(decl.type, 0)}</span>
         {' '}
         <span>{decl.name}</span>
-        {' = '}
-        <span className={classnames([decl.load !== undefined && 'scope-decl-load'])}>{renderValue(decl.value)}</span>
+        {decl.value && ' = '}
+        {decl.value && <span className={classnames([decl.load !== undefined && 'scope-decl-load'])}>{renderValue(decl.value)}</span>}
         {decl.prevValue && <span className="scope-decl-prevValue">{renderValue(decl.prevValue)}</span>}
       </div>
     );
