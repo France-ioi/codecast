@@ -115,8 +115,16 @@ export default function (actions) {
       const recorder = yield select(getRecorderState);
       let context = recorder.get('context');
       if (context) {
-        recorder.get('audioContext').close();
-        killWorker(recorder.get('worker'));
+        const oldContext = recorder.get('audioContext');
+        const oldWorker = recorder.get('worker');
+        if (oldContext) {
+          oldContext.close();
+        }
+        if (oldWorker) {
+          killWorker(oldWorker);
+        }
+        // TODO: put an action to clean up the old context, in case
+        //       the saga fails before recorderReady is sent.
       }
       yield put({type: actions.recorderPreparing, progress: 'start'});
       // Attempt to obtain an audio stream.  The async call will complete once
