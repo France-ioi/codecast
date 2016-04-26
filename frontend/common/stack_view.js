@@ -18,9 +18,12 @@ export const StackView = EpicComponent(self => {
     const {memoryLog, memory, oldMemory} = state;
     const {name} = decl;
     const {type, address} = ref;
+    const result = {key, name, type: type.pointee};
+    if (type.pointee.kind === 'constant array') {
+      return result;
+    }
     const limit = address + type.size - 1;
-    const value = readValue(memory, ref);
-    const result = {key, name, value, type: type.pointee};
+    result.value = readValue(memory, ref);
     try {
       memoryLog.forEach(function (entry, i) {
         if (refsIntersect(ref, entry[1])) {
