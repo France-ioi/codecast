@@ -38,7 +38,7 @@ export default function (actions) {
 
   function eventToDelta (event) {
     const range = Document.expandRange(event[2]);
-    if (event[1] === 'insert') {
+    if (event[1].endsWith('insert')) {
       return {
         action: 'insert',
         start: range.start,
@@ -46,7 +46,7 @@ export default function (actions) {
         lines: event[3]
       };
     }
-    if (event[1] === 'delete') {
+    if (event[1].endsWith('delete')) {
       return {
         action: 'remove',
         start: range.start,
@@ -146,6 +146,13 @@ export default function (actions) {
             source: Immutable.Map({
               document: Document.fromString(init.source.document),
               selection: Document.expandRange(init.source.selection)
+            }),
+            input: init.input ? Immutable.Map({
+              document: Document.fromString(init.input.document),
+              selection: Document.expandRange(init.input.selection)
+            }) : Immutable.Map({
+              document: Document.fromString(''),
+              selection: Document.expandRange([0,0,0,0])
             })
           });
           break;
@@ -156,8 +163,22 @@ export default function (actions) {
         }
         case 'insert': case 'delete': {
           const delta = eventToDelta(event);
-          state = state.updateIn(['source', 'document'], document =>
-            Document.applyDelta(document, delta));
+          if (delta) {
+            state = state.updateIn(['source', 'document'], document =>
+              Document.applyDelta(document, delta));
+          }
+          break;
+        }
+        case 'input.select': {
+          state = state.setIn(['input', 'selection'], Document.expandRange(event[2]));
+          break;
+        }
+        case 'input.insert': case 'input.delete': {
+          const delta = eventToDelta(event);
+          if (delta) {
+            state = state.updateIn(['input', 'document'], document =>
+              Document.applyDelta(document, delta));
+          }
           break;
         }
         case 'translate': {
@@ -167,11 +188,13 @@ export default function (actions) {
         }
         case 'translateSuccess': {
           const source = state.get('translate');
-          const syntaxTree = event[2];
+          const syntaxTree = event[2].ast;
+          const input = state.get('input') && Document.toString(state.get('input').get('document'));
+          const stepperState = runtime.start(syntaxTree, {input});
           state = state
             .delete('translate')
             .set('translated', loadTranslated(source, syntaxTree))
-            .set('stepper', runtime.start(syntaxTree));
+            .set('stepper', stepperState);
           break;
         }
         case 'translateFailure': {
@@ -260,11 +283,17 @@ export default function (actions) {
 
   function* setCurrent (state) {
     const player = yield select(getPlayerState);
-    const editor = player.get('editor');
-    if (editor) {
+    const sourceEditor = player.getIn(['source', 'editor']);
+    if (sourceEditor) {
       const source = state.state.get('source');
       const text = Document.toString(source.get('document'));
-      editor.reset(text, source.get('selection'));
+      sourceEditor.reset(text, source.get('selection'));
+    }
+    const inputEditor = player.getIn(['input', 'editor']);
+    if (inputEditor) {
+      const input = state.state.get('input');
+      const text = Document.toString(input.get('document'));
+      inputEditor.reset(text, input.get('selection'));
     }
     yield put({type: actions.playerTick, current: state});
   }
@@ -297,7 +326,8 @@ export default function (actions) {
         } else {
           // Small time delta, attempt to replay events.
           const events = player.get('events');
-          const editor = player.get('editor');
+          const sourceEditor = player.getIn(['source', 'editor']);
+          const inputEditor = player.getIn(['input', 'editor']);
           // XXX Assumption: 1-to-1 correspondance between indexes in
           //                 events and states: states[pos] is the state
           //                 immediately after replaying events[pos],
@@ -312,16 +342,22 @@ export default function (actions) {
             const state = states[pos].state;  // state reached after event is replayed
             switch (event[1]) {
               case 'select':
-                editor.setSelection(Document.expandRange(event[2]))
+                sourceEditor.setSelection(Document.expandRange(event[2]))
                 break;
               case 'insert': case 'delete':
-                editor.applyDeltas([eventToDelta(event)]);
+                sourceEditor.applyDeltas([eventToDelta(event)]);
+                break;
+              case 'input.select':
+                inputEditor.setSelection(Document.expandRange(event[2]))
+                break;
+              case 'input.insert': case 'input.delete':
+                inputEditor.applyDeltas([eventToDelta(event)]);
                 break;
               case 'stepIdle': case 'stepProgress': {
                 const stepper = state.get('stepper');
                 const translated = state.get('translated');
                 const range = runtime.getNodeRange(stepper);
-                editor.setSelection(range);
+                sourceEditor.setSelection(range);
                 break;
               }
               case 'end':

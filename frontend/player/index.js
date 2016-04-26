@@ -42,6 +42,18 @@ const App = EpicComponent(self => {
     // TODO
   };
 
+  const onInputInit = function (editor) {
+    self.props.dispatch({type: actions.playerInputInit, editor});
+  };
+
+  const onInputEdit = function () {
+    // TODO
+  };
+
+  const onInputSelect = function () {
+    // TODO
+  };
+
   self.render = function () {
     const {playerState, lastError, current} = self.props;
     const currentState = current && current.state;
@@ -73,7 +85,7 @@ const App = EpicComponent(self => {
           <div className="col-md-6">
             <h2>Source C</h2>
             <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
-                    readOnly={true} width='100%' height='336px' />
+                    mode='c_cpp' readOnly={true} width='100%' height='336px' />
           </div>
           <div className="col-md-3">
             {terminal &&
@@ -81,6 +93,15 @@ const App = EpicComponent(self => {
                 <h2>Terminal</h2>
                 <Terminal terminal={terminal}/>
               </div>}
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-md-3">
+          </div>
+          <div className="col-md-6">
+            <h2>Entrée du programme</h2>
+            <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect}
+                    mode='text' readOnly={true} width='100%' height='336px' />
           </div>
         </div>
       </div>

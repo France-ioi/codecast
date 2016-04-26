@@ -53,6 +53,7 @@ defineActions({
   playerPreparing: 'Player.Preparing',
   playerReady: 'Player.Ready',
   playerSourceInit: 'Player.Source.Init',
+  playerInputInit: 'Player.Input.Init',
   playerStart: 'Player.Start',
   playerStarting: 'Player.Starting',
   playerStarted: 'Player.Started',

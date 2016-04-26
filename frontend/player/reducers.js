@@ -18,7 +18,11 @@ export const playerReady = function (state, action) {
 };
 
 export const playerSourceInit = function (state, action) {
-  return state.setIn(['player', 'editor'], action.editor);
+  return state.setIn(['player', 'source', 'editor'], action.editor);
+};
+
+export const playerInputInit = function (state, action) {
+  return state.setIn(['player', 'input', 'editor'], action.editor);
 };
 
 export const playerStart = function (state, action) {
