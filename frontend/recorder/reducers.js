@@ -152,7 +152,7 @@ export function recordScreenStepperIdle (state, action) {
 };
 
 export function translateSourceSucceeded (state, action) {
-  const {diagnostics} = action.response;
+  const {diagnostics} = action;
   return state
     .setIn(['recorder', 'translate'], Immutable.Map({diagnostics}));
 };
