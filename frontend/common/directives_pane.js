@@ -74,8 +74,8 @@ const ShowArray = EpicComponent(self => {
             {value.value && value.value.toString()}
           </div>
           <div className="constantArray-cursors">
-            {cursors && cursors.map(c => <span>{c}</span>)}
-            {prevCursors && prevCursors.map(c => <span className="value-changed">{c}</span>)}
+            {cursors && cursors.map(c => <span key={c}>{c}</span>)}
+            {prevCursors && prevCursors.map(c => <span key={c} className="value-changed">{c}</span>)}
           </div>
         </div>
       );
