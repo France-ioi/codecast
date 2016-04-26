@@ -4,32 +4,14 @@ import {TermBuffer} from 'epic-vt';
 import {sprintf} from 'sprintf-js';
 import Immutable from 'immutable';
 
+import applyScanfEffect from './scanf';
+
+const applyWriteEffect = function (state, effect) {
+  state.terminal = state.terminal.write(effect[1]);
+};
+
 export const options = function (effects) {
-  const applyWriteEffect = function (state, effect) {
-    state.terminal = state.terminal.write(effect[1]);
-  };
-  const applyScanfEffect = function (state, effect) {
-    const args = effect[1];
-    const format = unboxValue(args[1]);
-    const ref = args[2];
-    const valueType = ref.type.pointee;
-    let result = 0;
-    switch (format) {
-      case '%d': {
-        if (state.input.size !== 0) {
-          const token = state.input.first();
-          const value = new C.IntegralValue(valueType, parseInt(token));
-          state.input = state.input.shift();
-          state.memory = C.writeValue(state.memory, ref, value);
-          result = 1;
-        }
-        break;
-      }
-    }
-    state.direction = 'up';
-    state.result = new C.IntegralValue(C.scalarTypes['int'], result);
-  };
-  const enterEffect = function (state, effect) {
+  const applyEnterEffect = function (state, effect) {
     const node = effect[2];
     effects.enter(state, effect);
     const scope = state.scope;
@@ -39,7 +21,7 @@ export const options = function (effects) {
     effectHandlers: {
       ...effects,
       write: applyWriteEffect,
-      enter: enterEffect,
+      enter: applyEnterEffect,
       scanf: applyScanfEffect
     }
   };
