@@ -13,8 +13,9 @@
 
 .terminal {
   font-family: monospace;
+  font-size: 12px;
   padding: 4px;
-  line-height: 20px;
+  line-height: 16px;
 }
 .terminal-line {
   background: black;

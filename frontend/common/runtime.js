@@ -55,7 +55,7 @@ export const start = function (syntaxTree, options) {
   const decls = syntaxTree[2];
   const context = {decls, builtins: builtins};
   let state = C.start(context);
-  state.terminal = new TermBuffer({width: 40});
+  state.terminal = new TermBuffer({lines: 10, width: 80});
   if (options.input) {
     const inputStr = options.input.trim();
     const input = inputStr.length === 0 ? [] : options.input.split(/[\s]+/);

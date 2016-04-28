@@ -90,7 +90,7 @@ const ShowArray = EpicComponent(self => {
           {elemCount}
           {'] ='}
         </div>
-        <div  className="constantArray-elems">
+        <div className="constantArray-elems">
           {elems.map(renderArrayElem)}
         </div>
       </div>
@@ -104,9 +104,9 @@ export const DirectivesPane = EpicComponent(self => {
     return expr[0] === 'ident' && expr[1];
   };
 
-  const prepareDirective = function (directive, scope, decls, state) {
+  const prepareDirective = function (directive, scope, index, decls, state) {
     const kind = directive[0];
-    const result = {kind, key: scope.key};
+    const result = {kind, key: `${scope.key}.${index}`};
     switch (kind) {
       case 'showVar':
         {
@@ -195,11 +195,11 @@ export const DirectivesPane = EpicComponent(self => {
           }
           break;
         case 'function':
-          scope.directives.forEach(directive => views.push(prepareDirective(directive, scope, decls, state)));
+          scope.directives.forEach((directive, i) => views.push(prepareDirective(directive, scope, i, decls, state)));
           decls = {};
           break;
         case 'block':
-          scope.directives.forEach(directive => views.push(prepareDirective(directive, scope, decls, state)));
+          scope.directives.forEach((directive, i) => views.push(prepareDirective(directive, scope, i, decls, state)));
           break;
       }
       scope = scope.parent;
@@ -216,7 +216,7 @@ export const DirectivesPane = EpicComponent(self => {
     const {key, kind} = view;
     const Component = Components[kind];
     return (
-      <div key={key} className="directive-view">
+      <div key={key} className="directive-view clearfix">
         {Component ? <Component view={view}/> : <p>Bad component {kind}</p>}
       </div>
     );

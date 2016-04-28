@@ -59,7 +59,7 @@ export default function (state, effect) {
   const ref = args[2];
   const valueType = ref.type.pointee;
   let result = 0;
-  if (state.input.size !== 0) {
+  if (state.input && state.input.size !== 0) {
     switch (format) {
       case '%d':
         result = scanIntegralValue(state, ref, 'int', token => parseInt(token, 10));
