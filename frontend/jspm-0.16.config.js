@@ -49,8 +49,9 @@ System.config({
     "immutable": "npm:immutable@3.8.1",
     "lamejs": "npm:lamejs@1.1.0",
     "lodash": "npm:lodash@4.11.1",
-    "persistent-c": "npm:persistent-c@5.2.3",
+    "persistent-c": "npm:persistent-c@5.2.4",
     "query-string": "npm:query-string@4.1.0",
+    "rc-slider": "npm:rc-slider@3.6.0",
     "react": "npm:react@15.0.1",
     "react-ace": "npm:react-ace@3.4.0",
     "react-bootstrap": "npm:react-bootstrap@0.28.5",
@@ -147,6 +148,9 @@ System.config({
       "path": "github:jspm/nodelibs-path@0.1.0",
       "process": "github:jspm/nodelibs-process@0.1.2",
       "stream": "github:jspm/nodelibs-stream@0.1.0"
+    },
+    "npm:add-dom-event-listener@1.0.1": {
+      "object-assign": "npm:object-assign@4.0.1"
     },
     "npm:amdefine@1.0.0": {
       "fs": "github:jspm/nodelibs-fs@0.1.2",
@@ -301,6 +305,9 @@ System.config({
       "path": "github:jspm/nodelibs-path@0.1.0",
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
+    "npm:component-classes@1.2.6": {
+      "component-indexof": "npm:component-indexof@0.0.3"
+    },
     "npm:constants-browserify@0.0.1": {
       "systemjs-json": "github:systemjs/plugin-json@0.1.2"
     },
@@ -353,6 +360,9 @@ System.config({
       "public-encrypt": "npm:public-encrypt@4.0.0",
       "randombytes": "npm:randombytes@2.0.3",
       "systemjs-json": "github:systemjs/plugin-json@0.1.2"
+    },
+    "npm:css-animation@1.2.3": {
+      "component-classes": "npm:component-classes@1.2.6"
     },
     "npm:debug@2.2.0": {
       "fs": "github:jspm/nodelibs-fs@0.1.2",
@@ -507,6 +517,11 @@ System.config({
       "lodash.keys": "npm:lodash.keys@4.0.6",
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
+    "npm:lodash.keys@3.1.2": {
+      "lodash._getnative": "npm:lodash._getnative@3.9.1",
+      "lodash.isarguments": "npm:lodash.isarguments@3.0.8",
+      "lodash.isarray": "npm:lodash.isarray@3.0.4"
+    },
     "npm:lodash@4.11.1": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",
       "process": "github:jspm/nodelibs-process@0.1.2"
@@ -574,7 +589,7 @@ System.config({
       "process": "github:jspm/nodelibs-process@0.1.2",
       "systemjs-json": "github:systemjs/plugin-json@0.1.2"
     },
-    "npm:persistent-c@5.2.3": {
+    "npm:persistent-c@5.2.4": {
       "child_process": "github:jspm/nodelibs-child_process@0.1.0",
       "immutable": "npm:immutable@3.8.1"
     },
@@ -609,6 +624,32 @@ System.config({
       "crypto": "github:jspm/nodelibs-crypto@0.1.0",
       "process": "github:jspm/nodelibs-process@0.1.2",
       "systemjs-json": "github:systemjs/plugin-json@0.1.2"
+    },
+    "npm:rc-align@2.2.0": {
+      "dom-align": "npm:dom-align@1.4.0",
+      "rc-util": "npm:rc-util@3.1.3"
+    },
+    "npm:rc-animate@2.0.3": {
+      "css-animation": "npm:css-animation@1.2.3"
+    },
+    "npm:rc-slider@3.6.0": {
+      "classnames": "npm:classnames@2.2.4",
+      "rc-tooltip": "npm:rc-tooltip@3.3.2",
+      "rc-util": "npm:rc-util@3.1.3"
+    },
+    "npm:rc-tooltip@3.3.2": {
+      "rc-trigger": "npm:rc-trigger@1.4.2"
+    },
+    "npm:rc-trigger@1.4.2": {
+      "rc-align": "npm:rc-align@2.2.0",
+      "rc-animate": "npm:rc-animate@2.0.3",
+      "rc-util": "npm:rc-util@3.1.3"
+    },
+    "npm:rc-util@3.1.3": {
+      "add-dom-event-listener": "npm:add-dom-event-listener@1.0.1",
+      "classnames": "npm:classnames@2.2.4",
+      "shallowequal": "npm:shallowequal@0.2.2",
+      "util-deprecate": "npm:util-deprecate@1.0.2"
     },
     "npm:react-ace@3.4.0": {
       "brace": "npm:brace@0.8.0",
@@ -766,6 +807,9 @@ System.config({
       "fs": "github:jspm/nodelibs-fs@0.1.2",
       "inherits": "npm:inherits@2.0.1",
       "process": "github:jspm/nodelibs-process@0.1.2"
+    },
+    "npm:shallowequal@0.2.2": {
+      "lodash.keys": "npm:lodash.keys@3.1.2"
     },
     "npm:smart-mixin@1.2.1": {
       "systemjs-json": "github:systemjs/plugin-json@0.1.2"
