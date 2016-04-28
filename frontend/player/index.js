@@ -23,6 +23,7 @@ import actions from './actions';
 import Editor from '../common/editor';
 import Terminal from '../common/terminal';
 import StackView from '../common/stack_view';
+import DirectivesPane from '../common/directives_pane';
 
 const App = EpicComponent(self => {
 
@@ -30,8 +31,25 @@ const App = EpicComponent(self => {
     self.props.dispatch({type: actions.playerStart});
   };
 
+  const onPause = function () {
+    self.props.dispatch({type: actions.playerPause});
+  };
+
   const onSourceInit = function (editor) {
     self.props.dispatch({type: actions.playerSourceInit, editor});
+  };
+
+  const onEnterFullScreen = function () {
+    var elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    }
   };
 
   const onSourceEdit = function () {
@@ -67,9 +85,11 @@ const App = EpicComponent(self => {
             {lastError && <p>{lastError}</p>}
           </div>
           <div className="col-md-6">
-            <Button onClick={onStart} disabled={playerState !== 'ready'}>
-              <i className="fa fa-play"/>
-            </Button>
+            {/preparing|ready|starting/.test(playerState) &&
+              <Button onClick={onStart} enabled={playerState === 'ready'}>
+                <i className="fa fa-play"/>
+              </Button>}
+            <Button onClick={onEnterFullScreen}>mode plein écran</Button>
           </div>
           <div className="col-md-3">
           </div>
@@ -82,26 +102,30 @@ const App = EpicComponent(self => {
                 <StackView state={stepper}/>
               </div>}
           </div>
-          <div className="col-md-6">
+          <div className="col-md-9">
             <h2>Source C</h2>
             <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
                     mode='c_cpp' readOnly={true} width='100%' height='336px' />
           </div>
-          <div className="col-md-3">
+        </div>
+        <div className="row">
+          {stepper && <div className="col-md-12">
+            <h2>Vues</h2>
+            <DirectivesPane state={stepper}/>
+          </div>}
+        </div>
+        <div className="row">
+          <div className="col-md-6">
+            <h2>Entrée du programme</h2>
+            <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect}
+                    mode='text' readOnly={true} width='100%' height='336px' />
+          </div>
+          <div className="col-md-6">
             {terminal &&
               <div>
                 <h2>Terminal</h2>
                 <Terminal terminal={terminal}/>
               </div>}
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-md-3">
-          </div>
-          <div className="col-md-6">
-            <h2>Entrée du programme</h2>
-            <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect}
-                    mode='text' readOnly={true} width='100%' height='336px' />
           </div>
         </div>
       </div>

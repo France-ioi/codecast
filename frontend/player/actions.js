@@ -60,5 +60,6 @@ defineActions({
   playerStop: 'Player.Stop',
   playerStopping: 'Player.Stopping',
   playerStopped: 'Player.Stopped',
+  playerPause: 'Player.Pause',
   playerTick: 'Player.Tick'
 });

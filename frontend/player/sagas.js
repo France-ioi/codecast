@@ -1,7 +1,6 @@
 
 import {take, put, call, race, fork, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
-import {TermBuffer} from 'epic-vt';
 import request from 'superagent';
 import Immutable from 'immutable';
 
@@ -188,7 +187,15 @@ export default function (actions) {
         }
         case 'translateSuccess': {
           const source = state.get('translate');
-          const syntaxTree = event[2].ast;
+          const data = event[2];
+          let syntaxTree;
+          if (Array.isArray(event[2])) {
+            // Old style without diagnostics, data is the syntax tree.
+            syntaxTree = data;
+          } else {
+            // New style with diagnostics, data is an object.
+            syntaxTree = event[2].ast;
+          }
           const input = state.get('input') && Document.toString(state.get('input').get('document'));
           const stepperState = runtime.start(syntaxTree, {input});
           state = state

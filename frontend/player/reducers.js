@@ -25,24 +25,20 @@ export const playerInputInit = function (state, action) {
   return state.setIn(['player', 'input', 'editor'], action.editor);
 };
 
-export const playerStart = function (state, action) {
-  return state;
+export const playerStarting = function (state, action) {
+  return state.setIn(['player', 'state'], 'starting');
 };
 
 export const playerStarted = function (state, action) {
-  return state;
-};
-
-export const playerStop = function (state, action) {
-  return state;
+  return state.setIn(['player', 'state'], 'playing');
 };
 
 export const playerStopping = function (state, action) {
-  return state;
+  return state.setIn(['player', 'state'], 'stopping');
 };
 
 export const playerStopped = function (state, action) {
-  return state;
+  return state; // set player state to ready or stopped?
 };
 
 export const playerTick = function (state, action) {
