@@ -56,13 +56,12 @@ export const RecordScreen = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {dispatch, recorderState, translate, eventCount, elapsed, stepperState, stepperDisplay} = self.props;
+    const {dispatch, recorderState, diagnostics, eventCount, elapsed, stepperState, stepperDisplay} = self.props;
     const isRecording = recorderState === 'recording';
     const isStepping = !!stepperState;
     const isIdle = stepperState === 'idle';
-    const {control, terminal, error, scope} = stepperDisplay;
+    const {control, terminal, error, scope} = stepperDisplay || {};
     const haveNode = control && control.node;
-    const diagnostics = translate && translate.get('diagnostics');
     return (
       <div>
         <div className="row">
@@ -121,19 +120,18 @@ export const RecordScreen = EpicComponent(self => {
 });
 
 function selector (state, props) {
-  const source = state.get('source');
-  const input = state.get('input');
   const recorder = state.get('recorder');
   const recorderState = recorder.get('state');
   const translate = recorder.get('translate');
+  const diagnostics = translate && translate.get('diagnostics');
   const eventCount = recorder.get('events').count();
   const elapsed = recorder.get('elapsed');
   const stepper = recorder.get('stepper')
   const stepperState = stepper && stepper.get('state');
-  const stepperDisplay = stepper ? stepper.get('display', {}) : {};
+  const stepperDisplay = stepper && stepper.get('display');
   return {
-    recorderState, source, input, translate, eventCount, elapsed,
-    stepperState, stepperDisplay
+    recorderState, eventCount, elapsed,
+    diagnostics, stepperState, stepperDisplay
   };
 };
 
