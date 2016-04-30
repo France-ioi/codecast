@@ -27,8 +27,13 @@ import DirectivesPane from '../common/directives_pane';
 
 const App = EpicComponent(self => {
 
-  const onStart = function () {
-    self.props.dispatch({type: actions.playerStart});
+  const onPlay = function () {
+    const {playerState} = self.props;
+    if (playerState === 'ready') {
+      self.props.dispatch({type: actions.playerStart});
+    } else if (playerState === 'paused') {
+      self.props.dispatch({type: actions.playerResume});
+    }
   };
 
   const onPause = function () {
@@ -37,19 +42,6 @@ const App = EpicComponent(self => {
 
   const onSourceInit = function (editor) {
     self.props.dispatch({type: actions.playerSourceInit, editor});
-  };
-
-  const onEnterFullScreen = function () {
-    var elem = document.documentElement;
-    if (elem.requestFullscreen) {
-      elem.requestFullscreen();
-    } else if (elem.msRequestFullscreen) {
-      elem.msRequestFullscreen();
-    } else if (elem.mozRequestFullScreen) {
-      elem.mozRequestFullScreen();
-    } else if (elem.webkitRequestFullscreen) {
-      elem.webkitRequestFullscreen();
-    }
   };
 
   const onSourceEdit = function () {
@@ -72,6 +64,19 @@ const App = EpicComponent(self => {
     // TODO
   };
 
+  const onEnterFullScreen = function () {
+    var elem = document.documentElement;
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+      elem.mozRequestFullScreen();
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen();
+    }
+  };
+
   self.render = function () {
     const {playerState, lastError, current} = self.props;
     const currentState = current && current.state;
@@ -82,14 +87,19 @@ const App = EpicComponent(self => {
       <div className="container">
         <div className="row">
           <div className="col-md-3">
-            {lastError && <p>{lastError}</p>}
+            {lastError && <p>{JSON.stringify(lastError)}</p>}
           </div>
           <div className="col-md-6">
-            {/preparing|ready|starting/.test(playerState) &&
-              <Button onClick={onStart} enabled={playerState === 'ready'}>
+            {/preparing|starting|ready|paused/.test(playerState) &&
+              <Button onClick={onPlay} enabled={/ready|paused/.test(playerState)}>
                 <i className="fa fa-play"/>
               </Button>}
+            {/playing|pausing/.test(playerState) &&
+              <Button onClick={onPause} enabled={playerState === 'playing'}>
+                <i className="fa fa-pause"/>
+              </Button>}
             <Button onClick={onEnterFullScreen}>mode plein écran</Button>
+            <span>{playerState}</span>
           </div>
           <div className="col-md-3">
           </div>

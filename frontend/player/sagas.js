@@ -116,6 +116,32 @@ export default function (actions) {
     }
   }
 
+  function* playerPause () {
+    try {
+      const player = yield select(getPlayerState);
+      if (player.get('state') !== 'playing')
+        return;
+      yield put({type: actions.playerPausing});
+      player.get('audio').pause();
+      yield put({type: actions.playerPaused});
+    } catch (error) {
+      yield put({type: actions.error, source: 'playerPause', error});
+    }
+  }
+
+  function* playerResume () {
+    try {
+      const player = yield select(getPlayerState);
+      if (player.get('state') !== 'paused')
+        return;
+      yield put({type: actions.playerResuming});
+      player.get('audio').play();
+      yield put({type: actions.playerResumed});
+    } catch (error) {
+      yield put({type: actions.error, source: 'playerResume', error});
+    }
+  }
+
   function* playerStop () {
     try {
       const player = yield select(getPlayerState);
@@ -281,6 +307,20 @@ export default function (actions) {
     }
   }
 
+  function* watchPlayerPause () {
+    while (true) {
+      yield take(actions.playerPause);
+      yield call(playerPause);
+    }
+  }
+
+  function* watchPlayerResume () {
+    while (true) {
+      yield take(actions.playerResume);
+      yield call(playerResume);
+    }
+  }
+
   function* watchPlayerStop () {
     while (true) {
       yield take(actions.playerStop);
@@ -380,6 +420,8 @@ export default function (actions) {
   return [
     watchPlayerPrepare,
     watchPlayerStart,
+    watchPlayerPause,
+    watchPlayerResume,
     watchPlayerStop,
     playerTick
   ];

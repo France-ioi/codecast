@@ -61,5 +61,10 @@ defineActions({
   playerStopping: 'Player.Stopping',
   playerStopped: 'Player.Stopped',
   playerPause: 'Player.Pause',
+  playerPausing: 'Player.Pausing',
+  playerPaused: 'Player.Paused',
+  playerResume: 'Player.Resume',
+  playerResuming: 'Player.Resuming',
+  playerResumed: 'Player.Resumed',
   playerTick: 'Player.Tick'
 });

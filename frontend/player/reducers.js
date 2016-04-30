@@ -1,6 +1,9 @@
 
 export const error = function (state, action) {
-  return state.set('lastError', action.error);
+  return state.set('lastError', {
+    source: action.source,
+    message: action.error.toString()
+  });
 };
 
 export const playerPreparing = function (state, action) {
@@ -33,6 +36,27 @@ export const playerStarted = function (state, action) {
   return state.setIn(['player', 'state'], 'playing');
 };
 
+export const playerPausing = function (state, action) {
+  return state.setIn(['player', 'state'], 'pausing');
+};
+
+export const playerPaused = function (state, action) {
+  return state.update('player', player => player
+    .set('state', 'paused')
+    .set('resume', player.get('current')));
+};
+
+export const playerResuming = function (state, action) {
+  return state.setIn(['player', 'state'], 'resuming');
+};
+
+export const playerResumed = function (state, action) {
+  return state.update('player', player => player
+    .set('state', 'playing')
+    .set('current', player.get('resume'))
+    .delete('resume'));
+};
+
 export const playerStopping = function (state, action) {
   return state.setIn(['player', 'state'], 'stopping');
 };
@@ -43,18 +67,4 @@ export const playerStopped = function (state, action) {
 
 export const playerTick = function (state, action) {
   return state.setIn(['player', 'current'], action.current);
-};
-
-const findState = function (states, t) {
-  let low = 0, high = states.length;
-  while (low + 1 < high) {
-    const mid = (low + high) / 2 | 0;
-    const state = states[mid];
-    if (state.t <= t) {
-      low = mid;
-    } else {
-      high = mid;
-    }
-  }
-  return states[low];
 };
