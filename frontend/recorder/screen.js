@@ -18,56 +18,27 @@ import EventView from './event_view';
 export const RecordScreen = EpicComponent(self => {
 
   const onSourceInit = function (editor) {
-    self.props.dispatch({type: actions.recordScreenSourceInit, editor});
-    if (editor) {
-      // XXX move to a saga?
-      const {source} = self.props;
-      const value = Document.toString(source.get('document'));
-      const selection = source.get('selection');
-      editor.reset(value, selection);
-    }
+    self.props.dispatch({type: actions.sourceInit, editor});
   };
 
   const onSourceSelect = function (selection) {
-    self.props.dispatch(recordEventAction(['select', Document.compressRange(selection)]));
-    self.props.dispatch({type: actions.recordScreenSourceSelect, selection});
+    self.props.dispatch({type: actions.sourceSelect, selection});
   };
 
   const onSourceEdit = function (delta) {
-    const {start, end} = delta;
-    const range = {start, end};
-    if (delta.action === 'insert') {
-      self.props.dispatch(recordEventAction(['insert', Document.compressRange(range), delta.lines]));
-    } else {
-      self.props.dispatch(recordEventAction(['delete', Document.compressRange(range)]));
-    }
-    self.props.dispatch({type: actions.recordScreenSourceEdit, delta});
+    self.props.dispatch({type: actions.sourceEdit, delta});
   };
 
   const onInputInit = function (editor) {
-    self.props.dispatch({type: actions.recordScreenInputInit, editor});
-    if (editor) {
-      const {input} = self.props;
-      const value = Document.toString(input.get('document'));
-      const selection = input.get('selection');
-      editor.reset(value, selection);
-    }
+    self.props.dispatch({type: actions.inputInit, editor});
   };
 
   const onInputSelect = function (selection) {
-    self.props.dispatch(recordEventAction(['input.select', Document.compressRange(selection)]));
-    self.props.dispatch({type: actions.recordScreenInputSelect, selection});
+    self.props.dispatch({type: actions.inputSelect, selection});
   };
 
   const onInputEdit = function (delta) {
-    const {start, end} = delta;
-    const range = {start, end};
-    if (delta.action === 'insert') {
-      self.props.dispatch(recordEventAction(['input.insert', Document.compressRange(range), delta.lines]));
-    } else {
-      self.props.dispatch(recordEventAction(['input.delete', Document.compressRange(range)]));
-    }
-    self.props.dispatch({type: actions.recordScreenInputEdit, delta});
+    self.props.dispatch({type: actions.inputEdit, delta});
   };
 
   const recordingPanel = function () {
@@ -156,10 +127,10 @@ export const RecordScreen = EpicComponent(self => {
 });
 
 function selector (state, props) {
+  const source = state.get('source');
+  const input = state.get('input');
   const recorder = state.get('recorder');
   const recorderState = recorder.get('state');
-  const source = recorder.get('source');
-  const input = recorder.get('input');
   const translate = recorder.get('translate');
   const eventCount = recorder.get('events').count();
   const elapsed = recorder.get('elapsed');

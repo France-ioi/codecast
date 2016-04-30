@@ -62,6 +62,15 @@ defineAction('switchToScreen', {
   descr: "Switch to the specified screen."
 });
 
+defineActions({
+  sourceInit: 'Source.Init',
+  sourceEdit: 'Source.Edit',
+  sourceSelect: 'Source.Select',
+  inputInit: 'Recorder.Input.Init',
+  inputEdit: 'Recorder.Input.Edit',
+  inputSelect: 'Recorder.Input.Select'
+});
+
 defineActions(homeScreenActions);
 defineActions(prepareScreenActions);
 defineActions(recorderActions);

@@ -12,7 +12,7 @@ import Document from '../common/document';
 import {asyncRequestJson} from '../api';
 import {
   getPreparedSource, getPreparedInput, getRecorderState, getStepperState,
-  getRecorderSourceEditor, getRecordScreenInput} from '../selectors';
+  getSource, getInput} from '../selectors';
 import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
 import {recordEventAction} from './utils';
 
@@ -96,7 +96,8 @@ export default function (actions) {
   }
 
   function* updateSelection () {
-    const editor = yield select(getRecorderSourceEditor);
+    const source = yield select(getSource);
+    const editor = source.get('editor');
     if (editor) {
       const stepper = yield select(getStepperState);
       const stepperState = stepper.get('display');
@@ -302,8 +303,8 @@ export default function (actions) {
       return;
     }
     try {
-      const inputDocument = yield select(getRecordScreenInput);
-      const input = Document.toString(inputDocument);
+      const inputState = yield select(getInput);
+      const input = Document.toString(inputState.get('document'));
       const stepperState = runtime.start(result.syntaxTree, {input});
       yield put({type: actions.recordScreenStepperRestart, stepperState});
       yield call(updateSelection);
@@ -327,6 +328,46 @@ export default function (actions) {
     while (true) {
       yield take(actions.recorderStop);
       yield call(recorderStop);
+    }
+  }
+
+  function* watchSourceSelect () {
+    while (true) {
+      const {selection} = yield take(actions.sourceSelect);
+      yield put(recordEventAction(['select', Document.compressRange(selection)]));
+    }
+  }
+
+  function* watchSourceEdit () {
+    while (true) {
+      const {delta} = yield take(actions.sourceEdit);
+      const {start, end} = delta;
+      const range = {start, end};
+      if (delta.action === 'insert') {
+        yield put(recordEventAction(['insert', Document.compressRange(range), delta.lines]));
+      } else {
+        yield put(recordEventAction(['delete', Document.compressRange(range)]));
+      }
+    }
+  }
+
+  function* watchInputSelect () {
+    while (true) {
+      const {selection} = yield take(actions.inputSelect);
+      yield put(recordEventAction(['input.select', Document.compressRange(selection)]));
+    }
+  }
+
+  function* watchInputEdit () {
+    while (true) {
+      const {delta} = yield take(actions.inputEdit);
+      const {start, end} = delta;
+      const range = {start, end};
+      if (delta.action === 'insert') {
+        yield put(recordEventAction(['input.insert', Document.compressRange(range), delta.lines]));
+      } else {
+        yield put(recordEventAction(['input.delete', Document.compressRange(range)]));
+      }
     }
   }
 
@@ -402,7 +443,11 @@ export default function (actions) {
     watchRecorderStart,
     watchRecorderStop,
     watchTranslateSource,
-    watchStepperStep
+    watchStepperStep,
+    watchSourceSelect,
+    watchSourceEdit,
+    watchInputSelect,
+    watchInputEdit
   ];
 
 };

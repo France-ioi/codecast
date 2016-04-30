@@ -1,5 +1,8 @@
 
-import {take} from 'redux-saga/effects';
+import {take, select} from 'redux-saga/effects';
+
+import {getSource, getInput} from './selectors';
+import Document from './common/document';
 
 export default function (actions) {
 
@@ -10,8 +13,42 @@ export default function (actions) {
     }
   }
 
+  function* watchSourceInit () {
+    while (true) {
+      const {editor} = yield take(actions.sourceInit);
+      if (editor) {
+        const source = yield select(getSource);
+        const text = Document.toString(source.get('document'));
+        const selection = source.get('selection');
+        try {
+          editor.reset(text, selection);
+        } catch (error) {
+          console.log(error); // XXX
+        }
+      }
+    }
+  }
+
+  function* watchInputInit () {
+    while (true) {
+      const {editor} = yield take(actions.inputInit);
+      if (editor) {
+        const input = yield select(getInput);
+        const text = Document.toString(input.get('document'));
+        const selection = input.get('selection');
+        try {
+          editor.reset(text, selection);
+        } catch (error) {
+          console.log(error) // XXX
+        }
+      }
+    }
+  }
+
   return [
-    watchError
+    watchError,
+    watchSourceInit,
+    watchInputInit
   ];
 
 };
