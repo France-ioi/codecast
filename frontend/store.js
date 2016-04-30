@@ -10,11 +10,13 @@ import actions from './actions';
 import * as systemReducers from './reducers';
 import * as homeScreenReducers from './home_screen/reducers';
 import * as prepareScreenReducers from './prepare_screen/reducers';
+import * as stepperReducers from './stepper/reducers';
 import * as recorderReducers from './recorder/reducers';
 import * as saveScreenReducers from './save_screen/reducers';
 
 import toplevelSagas from './sagas';
 import homeScreenSagas from './home_screen/sagas';
+import stepperSagas from './stepper/sagas';
 import recorderSagas from './recorder/sagas';
 import saveScreenSagas from './save_screen/sagas';
 
@@ -60,12 +62,14 @@ export default function storeFactory () {
   addHandlers(systemReducers);
   addHandlers(homeScreenReducers);
   addHandlers(prepareScreenReducers);
+  addHandlers(stepperReducers);
   addHandlers(recorderReducers);
   addHandlers(saveScreenReducers);
 
   const sagas = flatten([
     toplevelSagas,
     homeScreenSagas,
+    stepperSagas,
     recorderSagas,
     saveScreenSagas
   ].map(function (factory) {

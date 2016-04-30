@@ -1,8 +1,6 @@
 
 import Immutable from 'immutable';
 
-import Document from '../common/document';
-
 /*
 
   shape of state.recorder:
@@ -81,56 +79,4 @@ export function recorderAddEvent (state, action) {
   const audioContext = state.getIn(['recorder', 'context', 'audioContext']);
   const event = Immutable.List([Math.round(audioContext.currentTime * 1000), ...action.payload]);
   return state.updateIn(['recorder', 'events'], events => events.push(event));
-};
-
-export function recordScreenStepperRestart (state, action) {
-  const stepperState = action.stepperState || state.getIn(['recorder', 'stepper', 'initial']);
-  console.log("recordScreenStepperRestart", stepperState);
-  return state
-    .update('recorder', recorder => recorder
-      .set('stepper', Immutable.Map({state: 'idle', initial: stepperState, display: stepperState})));
-};
-
-export function recordScreenStepperExit (state, action) {
-  return state.update('recorder', recorder => recorder
-    .delete('stepper')
-    .delete('translate'));
-};
-
-export function recordScreenStepperStep (state, action) {
-  if (state.getIn(['recorder', 'stepper', 'state']) !== 'idle') {
-    return state;
-  } else {
-    return state.updateIn(['recorder', 'stepper'], stepper => stepper
-      .set('state', 'starting')
-      .set('current', stepper.get('display')));
-  }
-};
-
-export function recordScreenStepperStart (state, action) {
-  return state.setIn(['recorder', 'stepper', 'state'], 'running');
-};
-
-export function recordScreenStepperProgress (state, action) {
-  // Copy the new state to the recording screen's state, so that
-  // the view reflects the current progress.
-  return state.setIn(['recorder', 'stepper', 'display'], action.context.state);
-};
-
-export function recordScreenStepperIdle (state, action) {
-  // Copy stepper state into recording screen and clean up the stepper.
-  state = recordScreenStepperProgress(state, action);
-  return state.setIn(['recorder', 'stepper', 'state'], 'idle');
-};
-
-export function translateSourceSucceeded (state, action) {
-  const {diagnostics} = action;
-  return state
-    .setIn(['recorder', 'translate'], Immutable.Map({diagnostics}));
-};
-
-export function translateSourceFailed (state, action) {
-  const {error, diagnostics} = action;
-  return state
-    .setIn(['recorder', 'translate'], Immutable.Map({error, diagnostics}));
 };

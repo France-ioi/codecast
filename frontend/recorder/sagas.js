@@ -1,18 +1,11 @@
 
-import {takeLatest} from 'redux-saga';
-import {take, put, call, race, fork, select} from 'redux-saga/effects';
-import * as C from 'persistent-c';
+import {take, put, call, race, select} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
 import {RECORDING_FORMAT_VERSION} from '../common/version';
-import {loadTranslated} from '../common/translate';
-import * as runtime from '../common/runtime';
 import Document from '../common/document';
 
-import {asyncRequestJson} from '../api';
-import {
-  getPreparedSource, getPreparedInput, getRecorderState, getStepperState,
-  getSource, getInput} from '../selectors';
+import {getPreparedSource, getPreparedInput, getRecorderState} from '../selectors';
 import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
 import {recordEventAction} from './utils';
 
@@ -54,56 +47,6 @@ export default function (actions) {
     return new Promise(function (resolve) {
       setTimeout(resolve, ms);
     });
-  }
-
-  /* XXX Use a different terminology for the stepper context (just below)
-         and the recorder context ({audioContext, worker, scriptProcessor}).
-     A context is an object that is mutated as a saga steps through nodes.
-     The context must never escape the saga, use viewContext to export the
-     persistent bits.
-   */
-  function buildContext (state) {
-    const startTime = window.performance.now();
-    return {
-      state: C.clearMemoryLog(state),
-      startTime,
-      timeLimit: startTime + 20,
-      stepCounter: 0,
-      running: true,
-      effects: []
-    };
-  }
-
-  function viewContext (context) {
-    // Returns a persistent view of the context.
-    const {state, startTime, stepCounter, running, effects} = context;
-    const elapsed = window.performance.now() - context.startTime;
-    return {state, elapsed, stepCounter, effects};
-  }
-
-  function singleStep (context, stopCond) {
-    const {running, state} = context;
-    if (!running || state.error || !state.control) {
-      context.running = false;
-      return false;
-    }
-    if (stopCond && stopCond(state)) {
-      return false;
-    }
-    context.state = C.step(state, runtime.options);
-    context.stepCounter += 1;
-    return true;
-  }
-
-  function* updateSelection () {
-    const source = yield select(getSource);
-    const editor = source.get('editor');
-    if (editor) {
-      const stepper = yield select(getStepperState);
-      const stepperState = stepper.get('display');
-      const range = runtime.getNodeRange(stepperState);
-      editor.setSelection(range);
-    }
   }
 
   //
@@ -277,47 +220,6 @@ export default function (actions) {
     }
   }
 
-  function* translateSource (action) {
-    const sourceState = yield select(getSource);
-    const source = Document.toString(sourceState.get('document'));
-    yield put(recordEventAction(['translate', source]));
-    let response, result, error;
-    try {
-      response = yield call(asyncRequestJson, '/translate', {source});
-      result = loadTranslated(source, response.ast);
-    } catch (ex) {
-      error = ex.toString();
-    }
-    let {diagnostics} = response;
-    if (diagnostics) {
-      // Sanitize the server-provided HTML.
-      const el = document.createElement('div');
-      el.innerHtml = `<pre>${diagnostics}</pre>`;
-      diagnostics = {__html: el.innerHtml};
-    }
-    if (result) {
-      yield put(recordEventAction(['translateSuccess', response]));
-      yield put({type: actions.translateSourceSucceeded, response, diagnostics});
-    } else {
-      yield put(recordEventAction(['translateFailure', response]));
-      yield put({type: actions.translateSourceFailed, error, diagnostics});
-      return;
-    }
-    try {
-      const inputState = yield select(getInput);
-      const input = Document.toString(inputState.get('document'));
-      const stepperState = runtime.start(result.syntaxTree, {input});
-      yield put({type: actions.recordScreenStepperRestart, stepperState});
-      yield call(updateSelection);
-    } catch (error) {
-      yield put({type: actions.error, source: 'translateSource', error});
-    }
-  }
-
-  function* watchTranslateSource () {
-    yield* takeLatest(actions.translateSource, translateSource);
-  }
-
   function* watchRecorderStart () {
     while (true) {
       yield take(actions.recorderStart);
@@ -372,69 +274,69 @@ export default function (actions) {
     }
   }
 
-  function* watchStepperStep () {
+  function* watchTranslateStart () {
     while (true) {
-      const action = yield take(actions.recordScreenStepperStep);
-      const stepper = yield select(getStepperState);
-      if (stepper.get('state') === 'starting') {
-        yield put({type: actions.recordScreenStepperStart});
-        const context = buildContext(stepper.get('current'));
-        try {
-          // Take a first step.
-          if (singleStep(context)) {
-            switch (action.mode) {
-              case 'into':
-                // Step out of the current statement.
-                yield call(stepUntil, context, C.outOfCurrentStmt);
-                // Step into the next statement.
-                yield call(stepUntil, context, C.intoNextStmt);
-                break;
-              case 'expr':
-                // then stop when we enter the next expression.
-                yield call(stepUntil, context, C.intoNextExpr);
-                break;
-            }
-          }
-        } catch (error) {
-          console.log(error);
-          // XXX put stepError instead?
-          yield put(recordEventAction(['stepIdle', 0]));
-        }
-        yield put(recordEventAction(['stepIdle', context.stepCounter]));
-        yield put({type: actions.recordScreenStepperIdle, context: viewContext(context)});
-        yield call(updateSelection);
-      }
+      const {source} = yield take(actions.translateStart);
+      yield put(recordEventAction(['translate', source]));
     }
   }
 
-  function* stepUntil (context, stopCond) {
+  function* watchTranslateSuccess () {
     while (true) {
-      // Execute up to 100 steps, or until the stop condition (or end of the
-      // program, or an error condition) is met.
-      for (let stepCount = 100; stepCount !== 0; stepCount -= 1) {
-        if (!singleStep(context, stopCond)) {
-          return;
-        }
-      }
-      // Has the time limit for the current run passed?
-      const now = window.performance.now();
-      if (now >= context.timeLimit) {
-        // Reset the time limit and put a Progress event.
-        context.timeLimit = window.performance.now() + 20;
-        yield put({type: actions.recordScreenStepperProgress, context: viewContext(context)});
-        yield call(updateSelection);
-        yield put(recordEventAction(['stepProgress', context.stepCounter]));
-        // Yield until the next tick (XXX consider requestAnimationFrame).
-        yield call(delay, 0);
-        // Stop prematurely if interrupted.
-        const interrupted = yield select(getStepperInterrupted);
-        if (interrupted) {
-          context.running = false;
-          return;
-        }
-      }
+      const {response} = yield take(actions.translateSucceeded);
+      yield put(recordEventAction(['translateSuccess', response]));
     }
   }
+
+  function* watchTranslateFailure () {
+    while (true) {
+      const {response} = yield take(actions.translateFailed);
+      yield put(recordEventAction(['translateFailure', response]));
+    }
+  }
+
+  function* watchStepperStep () {
+    while (true) {
+      const {mode} = yield take(actions.stepperStep);
+      yield put(recordEventAction(['stepper', mode]));
+    }
+  }
+
+  function* watchStepperProgress () {
+    while (true) {
+      const {context} = yield take(actions.stepperProgress);
+      // CONSIDER: record control node id and step
+      yield put(recordEventAction(['stepper', 'progress', context.stepCounter]));
+    }
+  }
+
+  function* watchStepperIdle () {
+    while (true) {
+      const {context} = yield take(actions.stepperIdle);
+      // CONSIDER: record control node id and step
+      yield put(recordEventAction(['stepper', 'idle', context.stepCounter]));
+    }
+  }
+
+  function* watchStepperRestart () {
+    while (true) {
+      yield take(actions.stepperRestart);
+      yield put(recordEventAction(['stepper', 'restart']));
+    }
+  }
+
+  function* watchStepperExit () {
+    while (true) {
+      yield take(actions.stepperExit);
+      yield put(recordEventAction(['stepper', 'exit']));
+    }
+  }
+
+  const onEdit = function () {
+    self.props.dispatch(recordEventAction(['translateClear']));
+    self.props.dispatch({type: actions.stepperExit});
+  };
+
 
   // Currently the recorder is automatically prepared once,
   // when the application starts up.
@@ -443,12 +345,15 @@ export default function (actions) {
     recorderTicker,
     watchRecorderStart,
     watchRecorderStop,
-    watchTranslateSource,
-    watchStepperStep,
     watchSourceSelect,
     watchSourceEdit,
     watchInputSelect,
-    watchInputEdit
+    watchInputEdit,
+    watchTranslateStart,
+    watchTranslateSuccess,
+    watchTranslateFailure,
+    watchStepperProgress,
+    watchStepperIdle
   ];
 
 };

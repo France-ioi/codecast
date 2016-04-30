@@ -1,6 +1,7 @@
 
 import * as homeScreenActions from './home_screen/actions';
 import * as prepareScreenActions from './prepare_screen/actions';
+import * as stepperActions from './stepper/actions';
 import * as recorderActions from './recorder/actions';
 import * as saveScreenActions from './save_screen/actions';
 
@@ -66,12 +67,13 @@ defineActions({
   sourceInit: 'Source.Init',
   sourceEdit: 'Source.Edit',
   sourceSelect: 'Source.Select',
-  inputInit: 'Recorder.Input.Init',
-  inputEdit: 'Recorder.Input.Edit',
-  inputSelect: 'Recorder.Input.Select'
+  inputInit: 'Input.Init',
+  inputEdit: 'Input.Edit',
+  inputSelect: 'Input.Select'
 });
 
 defineActions(homeScreenActions);
 defineActions(prepareScreenActions);
+defineActions(stepperActions);
 defineActions(recorderActions);
 defineActions(saveScreenActions);

@@ -1,36 +1,6 @@
 
 export const switchToRecordScreen = 'Recorder.Switch';
 
-export const recordScreenStepperRestart = {
-  type: 'Recorder.Stepper.Restart',
-  description: "Sent when the stepper's state is initialized."
-};
-
-export const recordScreenStepperStep = {
-  type: 'Recorder.Stepper.Step',
-  description: "Sent when the user requested stepping in a given mode."
-};
-
-export const recordScreenStepperStart = {
-  type: 'Recorder.Stepper.Start',
-  description: "Sent when the stepper starts evaluating a step."
-};
-
-export const recordScreenStepperProgress = {
-  type: 'Recorder.Stepper.Progress',
-  description: "Sent when the stepper has been evaluating for a while without completing a step."
-};
-
-export const recordScreenStepperIdle = {
-  type: 'Recorder.Stepper.Idle',
-  description: "Sent when the stepper has completed a step and is idle again."
-};
-
-export const recordScreenStepperExit = {
-  type: 'Recorder.Stepper.Exit',
-  description: "Sent when the user exits the stepper."
-};
-
 export const recorderStart = {
   type: 'Recorder.Start',
   description: "Sent by the user to actually start recording."
@@ -94,19 +64,4 @@ export const recorderTick = {
 export const recorderAddEvent = {
   type: 'Recorder.AddEvent',
   description: "Add an event to the current recording."
-};
-
-export const translateSource = {
-  type: 'Translator.Translate',
-  description: "Requested translation of given {source}."
-};
-
-export const translateSourceSucceeded = {
-  type: 'Translator.Translate.Succeeded',
-  description: "Succeeded translating {source} to {syntaxTree}."
-};
-
-export const translateSourceFailed = {
-  type: 'Translator.Translate.Failed',
-  description: "Failed to translate {source} with {error}."
 };

@@ -11,8 +11,7 @@ import StackView from '../common/stack_view';
 import DirectivesPane from '../common/directives_pane';
 
 import actions from '../actions';
-import {recordEventAction} from './utils';
-import RecordControls from './controls';
+import RecorderControls from './controls';
 import EventView from './event_view';
 
 export const RecordScreen = EpicComponent(self => {
@@ -42,7 +41,7 @@ export const RecordScreen = EpicComponent(self => {
   };
 
   const onTranslate = function () {
-    self.props.dispatch({type: actions.translateSource});
+    self.props.dispatch({type: actions.translate});
   };
 
   const recordingPanel = function () {
@@ -66,7 +65,7 @@ export const RecordScreen = EpicComponent(self => {
       <div>
         <div className="row">
           <div className="col-md-12">
-            <RecordControls dispatch={dispatch} isRecording={isRecording} isStepping={isStepping} haveNode={haveNode} elapsed={elapsed} eventCount={eventCount} onTranslate={onTranslate} />
+            <RecorderControls dispatch={dispatch} isRecording={isRecording} isStepping={isStepping} haveNode={haveNode} elapsed={elapsed} eventCount={eventCount} onTranslate={onTranslate} />
             {error && <p>{error}</p>}
           </div>
         </div>
