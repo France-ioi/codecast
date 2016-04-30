@@ -278,7 +278,8 @@ export default function (actions) {
   }
 
   function* translateSource (action) {
-    const {source} = action;
+    const sourceState = yield select(getSource);
+    const source = Document.toString(sourceState.get('document'));
     yield put(recordEventAction(['translate', source]));
     let response, result, error;
     try {

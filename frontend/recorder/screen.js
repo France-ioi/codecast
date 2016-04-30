@@ -41,6 +41,10 @@ export const RecordScreen = EpicComponent(self => {
     self.props.dispatch({type: actions.inputEdit, delta});
   };
 
+  const onTranslate = function () {
+    self.props.dispatch({type: actions.translateSource});
+  };
+
   const recordingPanel = function () {
     return (
       <div className="row">
@@ -49,16 +53,6 @@ export const RecordScreen = EpicComponent(self => {
              bouton sur chaque segment pour le lire.</p>
         </div>
       </div>);
-  };
-
-  const onTranslate = function () {
-    const {source} = self.props;
-    const text = Document.toString(source.get('document'));
-    self.props.dispatch({
-      type: actions.translateSource,
-      language: 'c',
-      source: text
-    });
   };
 
   self.render = function () {
