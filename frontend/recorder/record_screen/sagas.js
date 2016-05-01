@@ -358,7 +358,9 @@ export default function (actions, selectors) {
     watchTranslateSuccess,
     watchTranslateFailure,
     watchStepperProgress,
-    watchStepperIdle
+    watchStepperIdle,
+    watchStepperRestart,
+    watchStepperExit
   ];
 
 };
