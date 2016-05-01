@@ -12,11 +12,11 @@ import 'brace/worker/javascript';
 import 'brace/mode/c_cpp';
 import 'brace/theme/github';
 
-import link from '../common/linker';
-
 import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
 import '../common/style.css!';
+
+import link from '../common/linker';
 
 import * as commonActions from '../common/actions';
 import * as stepperActions from '../stepper/actions';
@@ -41,9 +41,9 @@ import saveScreenSagas from './save_screen/sagas';
 
 import HomeScreenFactory from './home_screen/view';
 import PrepareScreenFactory from './prepare_screen/view';
-import SaveScreenFactory from './save_screen/view';
 import RecorderControlsFactory from './record_screen/controls_view';
 import RecordScreenFactory from './record_screen/view';
+import SaveScreenFactory from './save_screen/view';
 import AppFactory from './app_view';
 
 import * as selectors from './selectors';
