@@ -1,12 +1,9 @@
 
 import React from 'react';
-import {connect} from 'react-redux';
 import {Button, Input} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import actions from '../actions';
-
-export const SaveScreen = EpicComponent(self => {
+export default actions => EpicComponent(self => {
 
   const onUpload = function () {
     self.props.dispatch({type: actions.saveScreenUploadStart});
@@ -45,14 +42,3 @@ export const SaveScreen = EpicComponent(self => {
   };
 
 });
-
-function selector (state, props) {
-  const save = state.get('save')
-  const result = {};
-  ['audioUrl', 'eventsUrl', 'playerUrl', 'busy', 'done', 'prepare', 'uploadEvents', 'uploadAudio', 'error'].forEach(function (key) {
-    result[key] = save.get(key);
-  })
-  return result;
-};
-
-export default connect(selector)(SaveScreen);

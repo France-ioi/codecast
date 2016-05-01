@@ -1,5 +1,5 @@
 
-import Document from './common/document';
+import Document from './document';
 
 export function switchToScreen (state, action) {
   return state.set('screen', action.screen);

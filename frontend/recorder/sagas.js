@@ -4,17 +4,22 @@ import Immutable from 'immutable';
 
 import {RECORDING_FORMAT_VERSION} from '../common/version';
 import Document from '../common/document';
-
-import {getPreparedSource, getPreparedInput, getRecorderState} from '../selectors';
-import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../worker_utils';
-import {recordEventAction} from './utils';
+import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../common/worker_utils';
 
 // XXX worker URL should use SystemJS baseURL?
 // import audioWorkerText from '../../assets/audio_worker.js!text';
 // const audioWorkerUrl = workerUrlFromText(audioWorkerText);
 const audioWorkerUrl = '/assets/audio_worker.js';
 
-export default function (actions) {
+export default function (actions, selectors) {
+
+  function recordEventAction (payload) {
+    return {
+      type: actions.recorderAddEvent,
+      timestamp: window.performance.now(),
+      payload
+    };
+  };
 
   //
   // Async helpers (normal functions)
@@ -56,7 +61,7 @@ export default function (actions) {
   function* recorderPrepare () {
     try {
       // Clean up any previous audioContext and worker.
-      const recorder = yield select(getRecorderState);
+      const recorder = yield select(selectors.getRecorderState);
       let context = recorder.get('context');
       if (context) {
         const oldContext = recorder.get('audioContext');
@@ -137,13 +142,13 @@ export default function (actions) {
   function* recorderStart () {
     try {
       // The user clicked the "start recording" button.
-      const recorder = yield select(getRecorderState);
+      const recorder = yield select(selectors.getRecorderState);
       if (recorder.get('state') !== 'ready') {
         console.log('not ready', recorder);
         return;
       }
-      const source = yield select(getPreparedSource);
-      const input = yield select(getPreparedInput);
+      const source = yield select(selectors.getPreparedSource);
+      const input = yield select(selectors.getPreparedInput);
       // Signal that the recorder is starting.
       yield put({type: actions.recorderStarting});
       // Resume the audio context to start recording audio buffers.
@@ -178,7 +183,7 @@ export default function (actions) {
 
   function* recorderStop () {
     try {
-      const recorder = yield select(getRecorderState);
+      const recorder = yield select(selectors.getRecorderState);
       if (recorder.get('state') !== 'recording')
         return;
       // Signal that the recorder is stopping.

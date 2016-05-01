@@ -2,10 +2,9 @@
 import {take, put, call, select} from 'redux-saga/effects';
 import superagent from 'superagent';
 
-import {asyncRequestJson} from '../api';
-import {getSaveState} from '../selectors';
+import {asyncRequestJson} from '../common/api';
 
-export default function (actions) {
+export default function (actions, selectors) {
 
   function getBlob (url) {
     return new Promise(function (resolve, reject) {
@@ -40,7 +39,7 @@ export default function (actions) {
       // Step 1: prepare the upload by getting the S3 form parameters
       // from the server.
       yield put({type: actions.saveScreenPreparing});
-      const save = yield select(getSaveState);
+      const save = yield select(selectors.getSaveState);
       const response = yield call(asyncRequestJson, '/upload', {/*title*/});
       yield put({type: actions.saveScreenPrepared});
       // Upload the events file.

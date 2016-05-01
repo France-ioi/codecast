@@ -1,16 +1,9 @@
 
 import React from 'react';
-import {connect} from 'react-redux';
-import AceEditor from 'react-ace';
 import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
-import * as ace from 'brace';
-const Range = ace.acequire('ace/range').Range;
 
-import {getHomeScreenState} from '../selectors';
-import actions from '../actions';
-
-export const HomeScreen = EpicComponent(self => {
+export default actions => EpicComponent(self => {
 
   const onNewRecording = function () {
     self.props.dispatch({type: actions.homeNewRecording});
@@ -33,10 +26,3 @@ export const HomeScreen = EpicComponent(self => {
   };
 
 });
-
-function selector (state, props) {
-  const screen = getHomeScreenState(state);
-  return {};
-};
-
-export default connect(selector)(HomeScreen);

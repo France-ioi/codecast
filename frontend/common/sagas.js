@@ -1,10 +1,11 @@
 
 import {take, select} from 'redux-saga/effects';
 
-import {getSource, getInput} from './selectors';
-import Document from './common/document';
+import Document from './document';
 
-export default function (actions) {
+export default function (actions, selectors) {
+
+  const {getSource, getInput} = selectors;
 
   function* watchError () {
     while (true) {

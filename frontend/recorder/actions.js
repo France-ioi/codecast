@@ -40,7 +40,6 @@ export const recorderStarted = {
   type: 'Recorder.Started',
   description: "Sent when recording effectively starts."
 };
-
 export const recorderStartFailed = {
   type: 'Recorder.Start.Failed',
   description: "Sent when the recorder failed to start (probably because the audio device is busy)."

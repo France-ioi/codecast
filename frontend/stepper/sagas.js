@@ -6,11 +6,9 @@ import * as C from 'persistent-c';
 import {loadTranslated} from '../common/translate';
 import * as runtime from '../common/runtime';
 import Document from '../common/document';
+import {asyncRequestJson} from '../common/api';
 
-import {asyncRequestJson} from '../api';
-import {getStepperState, getSource, getInput} from '../selectors';
-
-export default function (actions) {
+export default function (actions, selectors) {
 
   function delay(ms) {
     return new Promise(function (resolve) {
@@ -58,10 +56,10 @@ export default function (actions) {
   }
 
   function* updateSelection () {
-    const source = yield select(getSource);
+    const source = yield select(selectors.getSource);
     const editor = source.get('editor');
     if (editor) {
-      const stepper = yield select(getStepperState);
+      const stepper = yield select(selectors.getStepperState);
       const stepperState = stepper.get('display');
       const range = runtime.getNodeRange(stepperState);
       editor.setSelection(range);
@@ -74,7 +72,7 @@ export default function (actions) {
 
   function* translateSource (action) {
     console.log('translateSource');
-    const sourceState = yield select(getSource);
+    const sourceState = yield select(selectors.getSource);
     const source = Document.toString(sourceState.get('document'));
     yield put({type: actions.translateStart, source});
     let response, result, error;
@@ -98,7 +96,7 @@ export default function (actions) {
       return;
     }
     try {
-      const inputState = yield select(getInput);
+      const inputState = yield select(selectors.getInput);
       const input = Document.toString(inputState.get('document'));
       const stepperState = runtime.start(result.syntaxTree, {input});
       yield put({type: actions.stepperRestart, stepperState});
@@ -111,7 +109,7 @@ export default function (actions) {
   function* watchStepperStep () {
     while (true) {
       const action = yield take(actions.stepperStep);
-      const stepper = yield select(getStepperState);
+      const stepper = yield select(selectors.getStepperState);
       if (stepper.get('state') === 'starting') {
         yield put({type: actions.stepperStart});
         const context = buildContext(stepper.get('current'));
@@ -159,7 +157,7 @@ export default function (actions) {
         // Yield until the next tick (XXX consider requestAnimationFrame).
         yield call(delay, 0);
         // Stop prematurely if interrupted.
-        const interrupted = yield select(getStepperInterrupted);
+        const interrupted = yield select(selectors.getStepperInterrupted);
         if (interrupted) {
           context.running = false;
           return;
