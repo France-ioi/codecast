@@ -19,31 +19,31 @@ import 'font-awesome/css/font-awesome.min.css!';
 import '../common/style.css!';
 
 import * as commonActions from '../common/actions';
-import * as homeScreenActions from '../home_screen/actions';
-import * as prepareScreenActions from '../prepare_screen/actions';
 import * as stepperActions from '../stepper/actions';
-import * as saveScreenActions from '../save_screen/actions';
-import * as recorderActions from './actions';
+import * as homeScreenActions from './home_screen/actions';
+import * as prepareScreenActions from './prepare_screen/actions';
+import * as recordScreenActions from './record_screen/actions';
+import * as saveScreenActions from './save_screen/actions';
 
 import * as commonReducers from '../common/reducers';
-import * as homeScreenReducers from '../home_screen/reducers';
-import * as prepareScreenReducers from '../prepare_screen/reducers';
 import * as stepperReducers from '../stepper/reducers';
-import * as saveScreenReducers from '../save_screen/reducers';
-import * as recorderReducers from './reducers';
+import * as homeScreenReducers from './home_screen/reducers';
+import * as prepareScreenReducers from './prepare_screen/reducers';
+import * as recordScreenReducers from './record_screen/reducers';
+import * as saveScreenReducers from './save_screen/reducers';
 
 import commonSagas from '../common/sagas';
-import homeScreenSagas from '../home_screen/sagas';
-import prepareScreenSagas from '../prepare_screen/sagas';
 import stepperSagas from '../stepper/sagas';
-import saveScreenSagas from '../save_screen/sagas';
-import recorderSagas from './sagas';
+import homeScreenSagas from './home_screen/sagas';
+import prepareScreenSagas from './prepare_screen/sagas';
+import recordScreenSagas from './record_screen/sagas';
+import saveScreenSagas from './save_screen/sagas';
 
-import HomeScreenFactory from '../home_screen/view';
-import PrepareScreenFactory from '../prepare_screen/view';
-import SaveScreenFactory from '../save_screen/view';
-import RecorderControlsFactory from './controls';
-import RecordScreenFactory from './screen';
+import HomeScreenFactory from './home_screen/view';
+import PrepareScreenFactory from './prepare_screen/view';
+import SaveScreenFactory from './save_screen/view';
+import RecorderControlsFactory from './record_screen/controls_view';
+import RecordScreenFactory from './record_screen/view';
 import AppFactory from './app_view';
 
 import * as selectors from './selectors';
@@ -51,34 +51,34 @@ import * as selectors from './selectors';
 const {store, views} = link({
   actionMaps: [
     commonActions,
+    stepperActions,
     homeScreenActions,
     prepareScreenActions,
-    stepperActions,
-    saveScreenActions,
-    recorderActions
+    recordScreenActions,
+    saveScreenActions
   ],
   reducerMaps: [
     commonReducers,
+    stepperReducers,
     homeScreenReducers,
     prepareScreenReducers,
-    stepperReducers,
-    recorderReducers,
+    recordScreenReducers,
     saveScreenReducers
   ],
   sagaFactories: [
     commonSagas,
+    stepperSagas,
     homeScreenSagas,
     prepareScreenSagas,
-    recorderSagas,
-    stepperSagas,
+    recordScreenSagas,
     saveScreenSagas
   ],
   viewFactories: {
     HomeScreen: HomeScreenFactory,
-    SaveScreen: SaveScreenFactory,
+    PrepareScreen: PrepareScreenFactory,
     RecordScreen: RecordScreenFactory,
     RecorderControls: RecorderControlsFactory,
-    PrepareScreen: PrepareScreenFactory,
+    SaveScreen: SaveScreenFactory,
     App: AppFactory
   },
   selectors,

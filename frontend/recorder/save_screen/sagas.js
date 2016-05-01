@@ -2,7 +2,7 @@
 import {take, put, call, select} from 'redux-saga/effects';
 import superagent from 'superagent';
 
-import {asyncRequestJson} from '../common/api';
+import {asyncRequestJson} from '../../common/api';
 
 export default function (actions, selectors) {
 

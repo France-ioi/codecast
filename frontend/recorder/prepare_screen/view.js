@@ -3,8 +3,8 @@ import React from 'react';
 import {Button, Nav, NavDropdown, MenuItem} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import Editor from '../common/editor';
-import Document from '../common/document';
+import Editor from '../../common/editor';
+import Document from '../../common/document';
 
 export default actions => EpicComponent(self => {
 

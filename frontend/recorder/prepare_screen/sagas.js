@@ -1,7 +1,7 @@
 
 import {take, put, select} from 'redux-saga/effects';
 
-import Document from '../common/document';
+import Document from '../../common/document';
 
 export default function (actions, selectors) {
 

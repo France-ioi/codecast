@@ -1,7 +1,7 @@
 
 import Immutable from 'immutable';
 
-import Document from '../common/document';
+import Document from '../../common/document';
 
 const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
 

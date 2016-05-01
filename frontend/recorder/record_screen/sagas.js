@@ -2,9 +2,9 @@
 import {take, put, call, race, select} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
-import {RECORDING_FORMAT_VERSION} from '../common/version';
-import Document from '../common/document';
-import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../common/worker_utils';
+import {RECORDING_FORMAT_VERSION} from '../../common/version';
+import Document from '../../common/document';
+import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../../common/worker_utils';
 
 // XXX worker URL should use SystemJS baseURL?
 // import audioWorkerText from '../../assets/audio_worker.js!text';
