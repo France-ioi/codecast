@@ -9,9 +9,9 @@ import {loadTranslated, getRangeFromOffsets} from '../common/translate';
 import Document from '../common/document';
 import * as runtime from '../common/runtime';
 
-import {getPlayerState} from './selectors';
+export default function (actions, selectors) {
 
-export default function (actions) {
+  const {getPlayerState} = selectors;
 
   // pause, resume audio
 
