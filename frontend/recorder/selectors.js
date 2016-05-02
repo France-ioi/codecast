@@ -1,6 +1,8 @@
 
 import Immutable from 'immutable';
 
+import {getStepperState} from '../stepper/selectors'
+
 export * from '../common/selectors';
 export * from '../stepper/selectors';
 
@@ -18,10 +20,6 @@ export function getPreparedInput (state) {
 
 export function getRecorderState (state) {
   return state.get('recorder', Immutable.Map());
-};
-
-export function getStepperState (state) {
-  return state.get('recorder').get('stepper');
 };
 
 export function getRecorderSourceEditor (state) {
@@ -55,7 +53,7 @@ export function RecordScreen (state, props) {
   const diagnostics = translate && translate.get('diagnostics');
   const eventCount = recorder.get('events').count();
   const elapsed = recorder.get('elapsed');
-  const stepper = recorder.get('stepper')
+  const stepper = getStepperState(state);
   const stepperState = stepper && stepper.get('state');
   const stepperDisplay = stepper && stepper.get('display');
   return {
