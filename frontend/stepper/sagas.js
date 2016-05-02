@@ -168,7 +168,7 @@ export default function (actions, selectors) {
 
   return [
     watchTranslate,
-    watchStepperStep,
+    watchStepperStep
   ];
 
 };
