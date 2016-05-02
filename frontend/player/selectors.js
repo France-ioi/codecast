@@ -1,4 +1,7 @@
 
+export * from '../common/selectors';
+export * from '../stepper/selectors';
+
 export function getPlayerState (state) {
   return state.get('player');
 };
