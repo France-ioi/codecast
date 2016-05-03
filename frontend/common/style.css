@@ -23,8 +23,27 @@ body#app, #app h1, #app h2, #app h3 {
   font: 14px/normal 'Inconsolata';
 }
 
+#app .col-lg-1, #app .col-lg-2, #app .col-lg-3, #app .col-lg-4, #app .col-lg-5,
+#app .col-lg-6, #app .col-lg-7, #app .col-lg-8, #app .col-lg-9, #app .col-lg-10,
+#app .col-lg-11, #app .col-lg-12,
+#app .col-md-1, #app .col-md-2, #app .col-md-3, #app .col-md-4, #app .col-md-5,
+#app .col-md-6, #app .col-md-7, #app .col-md-8, #app .col-md-9, #app .col-md-10,
+#app .col-md-11, #app .col-md-12,
+#app .col-sm-1, #app .col-sm-2, #app .col-sm-3, #app .col-sm-4, #app .col-sm-5,
+#app .col-sm-6, #app .col-sm-7, #app .col-sm-8, #app .col-sm-9, #app .col-sm-10,
+#app .col-sm-11, #app .col-sm-12,
+#app .col-xs-1, #app .col-xs-2, #app .col-xs-3, #app .col-xs-4, #app .col-xs-5,
+#app .col-xs-6, #app .col-xs-7, #app .col-xs-8, #app .col-xs-9, #app .col-xs-10,
+#app .col-xs-11, #app .col-xs-12 {
+  padding-right: 3px;
+  padding-left: 3px;
+}
+#app .row {
+  margin-right: -3px;
+  margin-left: -3px;
+}
 #app .panel {
-  margin-bottom: 5px;
+  margin-bottom: 6px;
   border-radius: 0;
 }
 #app .panel-heading {
@@ -62,6 +81,9 @@ body#app, #app h1, #app h2, #app h3 {
   padding-left: 0.5em;
 }
 
+.constantArray-elems {
+  margin: 2px;
+}
 .constantArray-elemView {
   float: left;
   width: 64px;

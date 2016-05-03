@@ -182,11 +182,11 @@ export default function (actions, selectors) {
           });
           break;
         }
-        case 'select': {
+        case 'source.select': case 'select': {
           state = state.setIn(['source', 'selection'], Document.expandRange(event[2]));
           break;
         }
-        case 'insert': case 'delete': {
+        case 'source.insert': case 'source.delete': case 'insert': case 'delete': {
           const delta = eventToDelta(event);
           if (delta) {
             state = state.updateIn(['source', 'document'], document =>
@@ -206,12 +206,12 @@ export default function (actions, selectors) {
           }
           break;
         }
-        case 'translate': {
+        case 'stepper.translate': case 'translate': {
           // TODO: check that Document.toString(source.document) === event[2]
           state = state.set('translate', event[2]);
           break;
         }
-        case 'translateSuccess': {
+        case 'stepper.translateSuccess': case 'translateSuccess': {
           const source = state.get('translate');
           const data = event[2];
           let syntaxTree;
@@ -230,36 +230,36 @@ export default function (actions, selectors) {
             .set('stepper', stepperState);
           break;
         }
-        case 'translateFailure': {
+        case 'stepper.translateFailure': case 'translateFailure': {
           state = state
             .delete('translate')
             .set('translateError', event[2]);
           break;
         }
-        case 'translateClear': {
+        case 'stepper.exit': case 'translateClear': {
           state = state
             .delete('translated')
             .delete('stepper');
           break;
         }
-        case 'stepperRestart': {
+        case 'stepper.restart': case 'stepperRestart': {
           const syntaxTree = state.get('translated').syntaxTree;
           state = state.set('stepper', runtime.start(syntaxTree));
           break;
         }
-        case 'stepExpr': {
+        case 'stepper.expr': case 'stepExpr': {
           state = state.set('pendingStep', 'expr');
           break;
         }
-        case 'stepInto': {
+        case 'stepper.into': case 'stepInto': {
           state = state.set('pendingStep', 'into');
           break;
         }
-        case 'stepOut': {
+        case 'stepper.out': case 'stepOut': {
           state = state.set('pendingStep', 'out');
           break;
         }
-        case 'stepIdle': {
+        case 'stepper.idle': case 'stepIdle': {
           let stepCounter = event[2];
           let stepperState = C.clearMemoryLog(state.get('stepper'));
           while (stepCounter > 0) {
@@ -269,7 +269,7 @@ export default function (actions, selectors) {
           state = state.delete('pendingStep').set('stepper', stepperState);
           break;
         }
-        case 'stepProgress': {
+        case 'stepper.progress': case 'stepProgress': {
           let stepCounter = event[2];
           let stepperState = state.get('stepper');
           while (stepCounter > 0) {

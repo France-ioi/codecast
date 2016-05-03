@@ -131,9 +131,9 @@ export const StackView = EpicComponent(self => {
 
   self.render = function () {
     /* TODO: take effects since previous step as a prop */
-    const {state} = self.props;
+    const {state, height} = self.props;
     const frames = getFrames(state);
-    return <div className="stack-view">{frames.map(frame =>
+    return <div className="stack-view" style={{height: height||'100%'}}>{frames.map(frame =>
       renderFrame(state, frame))}</div>;
   };
 

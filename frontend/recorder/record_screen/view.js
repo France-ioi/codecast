@@ -71,13 +71,13 @@ export default function (actions, views) {
           <div className="row">
             <div className="col-md-3">
               <Panel header="Variables">
-                {stepperDisplay && <StackView state={stepperDisplay}/>}
+                {stepperDisplay && <StackView state={stepperDisplay} height='280px' />}
               </Panel>
             </div>
             <div className="col-md-9">
               <Panel header="Source">
                 <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
-                        readOnly={isStepping} mode='c_cpp' width='100%' height='336px' />
+                        readOnly={isStepping} mode='c_cpp' width='100%' height='280px' />
               </Panel>
             </div>
           </div>

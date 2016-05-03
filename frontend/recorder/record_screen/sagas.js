@@ -183,7 +183,7 @@ export default function (actions, selectors) {
 
   function* recorderStop () {
     try {
-      const recorder = yield select(selectors.getRecorderState);
+      let recorder = yield select(selectors.getRecorderState);
       if (recorder.get('state') !== 'recording')
         return;
       // Signal that the recorder is stopping.
@@ -192,12 +192,17 @@ export default function (actions, selectors) {
       const context = recorder.get('context');
       const audioContext = context.get('audioContext');
       yield call(suspendAudioContext, audioContext);
-      const endEvent = Immutable.List([(audioContext.currentTime * 1000) | 0, 'end']);
-      const events = recorder.get('events').push(endEvent);
+      // Append the 'end' action to the events stream.
+      yield put(recordEventAction(['end']));
+      // Obtain the URL to the audio object from the worker.
       const worker = context.get('worker');
       const audioResult = yield call(callWorker, worker, {command: "finishRecording"});
+      // Package the events blob and an URL.
+      recorder = yield select(selectors.getRecorderState);
+      const events = recorder.get('events');
       const eventsBlob = new Blob([JSON.stringify(events.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
       const eventsUrl = URL.createObjectURL(eventsBlob);
+      // Signal that the recorder has stopped.
       yield put({
         type: actions.recorderStopped,
         audioUrl: audioResult.url,
@@ -242,7 +247,7 @@ export default function (actions, selectors) {
   function* watchSourceSelect () {
     while (true) {
       const {selection} = yield take(actions.sourceSelect);
-      yield put(recordEventAction(['select', Document.compressRange(selection)]));
+      yield put(recordEventAction(['source.select', Document.compressRange(selection)]));
     }
   }
 
@@ -252,9 +257,9 @@ export default function (actions, selectors) {
       const {start, end} = delta;
       const range = {start, end};
       if (delta.action === 'insert') {
-        yield put(recordEventAction(['insert', Document.compressRange(range), delta.lines]));
+        yield put(recordEventAction(['source.insert', Document.compressRange(range), delta.lines]));
       } else {
-        yield put(recordEventAction(['delete', Document.compressRange(range)]));
+        yield put(recordEventAction(['source.delete', Document.compressRange(range)]));
       }
     }
   }
@@ -282,28 +287,28 @@ export default function (actions, selectors) {
   function* watchTranslateStart () {
     while (true) {
       const {source} = yield take(actions.translateStart);
-      yield put(recordEventAction(['translate', source]));
+      yield put(recordEventAction(['stepper.translate', source]));
     }
   }
 
   function* watchTranslateSuccess () {
     while (true) {
       const {response} = yield take(actions.translateSucceeded);
-      yield put(recordEventAction(['translateSuccess', response]));
+      yield put(recordEventAction(['stepper.translateSuccess', response]));
     }
   }
 
   function* watchTranslateFailure () {
     while (true) {
       const {response} = yield take(actions.translateFailed);
-      yield put(recordEventAction(['translateFailure', response]));
+      yield put(recordEventAction(['stepper.translateFailure', response]));
     }
   }
 
   function* watchStepperStep () {
     while (true) {
       const {mode} = yield take(actions.stepperStep);
-      yield put(recordEventAction(['stepper', mode]));
+      yield put(recordEventAction(['stepper.' + mode]));
     }
   }
 
@@ -311,7 +316,7 @@ export default function (actions, selectors) {
     while (true) {
       const {context} = yield take(actions.stepperProgress);
       // CONSIDER: record control node id and step
-      yield put(recordEventAction(['stepper', 'progress', context.stepCounter]));
+      yield put(recordEventAction(['stepper.progress', context.stepCounter]));
     }
   }
 
@@ -319,29 +324,23 @@ export default function (actions, selectors) {
     while (true) {
       const {context} = yield take(actions.stepperIdle);
       // CONSIDER: record control node id and step
-      yield put(recordEventAction(['stepper', 'idle', context.stepCounter]));
+      yield put(recordEventAction(['stepper.idle', context.stepCounter]));
     }
   }
 
   function* watchStepperRestart () {
     while (true) {
       yield take(actions.stepperRestart);
-      yield put(recordEventAction(['stepper', 'restart']));
+      yield put(recordEventAction(['stepper.restart']));
     }
   }
 
   function* watchStepperExit () {
     while (true) {
       yield take(actions.stepperExit);
-      yield put(recordEventAction(['stepper', 'exit']));
+      yield put(recordEventAction(['stepper.exit']));
     }
   }
-
-  const onEdit = function () {
-    self.props.dispatch(recordEventAction(['translateClear']));
-    self.props.dispatch({type: actions.stepperExit});
-  };
-
 
   // Currently the recorder is automatically prepared once,
   // when the application starts up.

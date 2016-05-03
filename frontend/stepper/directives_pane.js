@@ -93,7 +93,7 @@ const ShowArray = EpicComponent(self => {
       </div>);
     return (
       <Panel className="constantArray-view" header={header}>
-        <div className="constantArray-elems">
+        <div className="constantArray-elems clearfix">
           {elems.map(renderArrayElem)}
         </div>
       </Panel>

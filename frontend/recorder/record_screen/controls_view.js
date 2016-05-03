@@ -50,8 +50,11 @@ export default actions => EpicComponent(self => {
           {isStepping && <Button onClick={onRestart}>recommencer</Button>}
           {isStepping && <Button onClick={onEdit}>éditer</Button>}
           {isStepping || <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>}
+          {' '}
+          <span><i className="fa fa-clock-o"/> {Math.round(elapsed / 1000)||0}s</span>
+          {' '}
+          <span><i className="fa fa-bolt"/> {eventCount}</span>
         </p>
-        <p>Enregistrement : {Math.round(elapsed / 1000)||0}s, {eventCount} évènements</p>
       </div>
     );
   };
