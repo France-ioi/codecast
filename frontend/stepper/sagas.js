@@ -71,7 +71,6 @@ export default function (actions, selectors) {
   }
 
   function* translateSource (action) {
-    console.log('translateSource');
     const sourceState = yield select(selectors.getSource);
     const source = Document.toString(sourceState.get('document'));
     yield put({type: actions.translateStart, source});
