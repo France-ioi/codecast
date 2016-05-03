@@ -55,7 +55,7 @@ const scanFloatingValue = function (state, ref, typeName) {
 
 export default function (state, effect) {
   const args = effect[1];
-  const format = unboxValue(args[1]);  // XXX
+  const format = C.readString(state.memory, args[1]);
   const ref = args[2];
   const valueType = ref.type.pointee;
   let result = 0;
