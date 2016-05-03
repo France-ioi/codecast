@@ -4,7 +4,7 @@ import EpicComponent from 'epic-component';
 import {Button} from 'react-bootstrap';
 
 import Editor from '../common/editor';
-import Terminal from '../common/terminal';
+import Terminal from '../stepper/terminal';
 import StackView from '../stepper/stack_view';
 import DirectivesPane from '../stepper/directives_pane';
 

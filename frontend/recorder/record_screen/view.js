@@ -5,10 +5,10 @@ import {Button, Panel} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import Document from '../../common/document';
-import Terminal from '../../common/terminal';
 import Editor from '../../common/editor';
 import StackView from '../../stepper/stack_view';
 import DirectivesPane from '../../stepper/directives_pane';
+import Terminal from '../../stepper/terminal';
 import EventView from './event_view';
 
 export default function (actions, views) {

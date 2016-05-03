@@ -3,10 +3,11 @@ import {takeLatest} from 'redux-saga';
 import {take, put, call, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 
-import {loadTranslated} from '../common/translate';
-import * as runtime from '../common/runtime';
 import Document from '../common/document';
 import {asyncRequestJson} from '../common/api';
+
+import {loadTranslated} from './translate';
+import * as runtime from './runtime';
 
 export default function (actions, selectors) {
 
