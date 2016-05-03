@@ -89,19 +89,19 @@ export default function (actions, views) {
             </div>}
             <div className="col-md-12">
               {stepperDisplay && <DirectivesPane state={stepperDisplay}/>}
-              <div className="row">
-                <div className="col-md-6">
-                  <Panel header="Entrée">
+              <Panel header="Entrée/Sortie">
+                <div className="row">
+                  <div className="col-md-6">
                     <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect}
                             readOnly={isStepping} mode='text' width='100%' height='168px' />
-                  </Panel>
+                  </div>
+                  <div className="col-md-6">
+                    {terminal
+                      ? <Terminal terminal={terminal}/>
+                      : <p>Programme arrêté, pas de sortie à afficher.</p>}
+                  </div>
                 </div>
-                <div className="col-md-6">
-                  <Panel header="Sortie">
-                    {terminal && <Terminal terminal={terminal}/>}
-                  </Panel>
-                </div>
-              </div>
+              </Panel>
             </div>
           </div>
           <div className="row">
