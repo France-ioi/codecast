@@ -5,9 +5,9 @@ import request from 'superagent';
 import Immutable from 'immutable';
 
 import {RECORDING_FORMAT_VERSION} from '../common/version';
-import {loadTranslated, getRangeFromOffsets} from '../common/translate';
 import Document from '../common/document';
-import * as runtime from '../common/runtime';
+import {loadTranslated, getRangeFromOffsets} from '../stepper/translate';
+import * as runtime from '../stepper/runtime';
 
 export default function (actions, selectors) {
 
