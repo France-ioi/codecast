@@ -9,7 +9,7 @@ const examples = [
   {
     title: "demo",
     source: [
-      "extern int printf (const char *, ...);",
+      "#include <stdio.h>",
       "int main() {",
       "  int n = 0;",
       "  while (1) {",
@@ -67,8 +67,7 @@ const examples = [
   {
     title: "entrée/sortie",
     source: [
-      "extern int printf (const char *, ...);",
-      "extern int scanf (const char *restrict, ...);",
+      "#include <stdio.h>",
       "int main() {",
       "    int a, n;",
       "    printf(\"Entrez un nombre:\\n\");",
