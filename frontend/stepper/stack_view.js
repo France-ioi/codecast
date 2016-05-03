@@ -22,7 +22,6 @@ export const StackView = EpicComponent(self => {
     if (type.pointee.kind === 'constant array') {
       return result;
     }
-    const limit = address + type.size - 1;
     result.value = readValue(memory, ref);
     try {
       memoryLog.forEach(function (entry, i) {
