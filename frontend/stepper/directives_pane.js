@@ -1,5 +1,6 @@
 
 import React from 'react';
+import {Panel} from 'react-bootstrap';
 import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import {inspectPointer, pointerType, PointerValue} from 'persistent-c';
@@ -41,13 +42,14 @@ const ShowVar = EpicComponent(self => {
     if (!value) {
       return <p>{name} not in scope</p>;
     }
-    return (<div className="variable-view">
-      <span className="variable-type">{renderType(value.type, 0)}</span>
-      {' '}
-      <span className="variable-name">{name}</span>
-      {' = '}
-      {renderValue(value)}
-    </div>);
+    const header = (
+      <span>
+        <span className="variable-type">{renderType(value.type, 0)}</span>
+        {' '}
+        <span className="variable-name">{name}</span>
+        {' = '}
+      </span>);
+    return <Panel className="variable-decl" header={header}>{renderValue(value)}</Panel>;
   };
 });
 
@@ -80,20 +82,21 @@ const ShowArray = EpicComponent(self => {
         </div>
       );
     };
+    const header = (
+      <div className="constantArray-decl">
+        <span className="constantArray-type">{renderType(elemType, 0)}</span>
+        {' '}
+        <span className="variable-name">{name}</span>
+        {'['}
+        {elemCount}
+        {'] ='}
+      </div>);
     return (
-      <div className="constantArray-view">
-        <div className="constantArray-decl">
-          <span className="constantArray-type">{renderType(elemType, 0)}</span>
-          {' '}
-          <span className="variable-name">{name}</span>
-          {'['}
-          {elemCount}
-          {'] ='}
-        </div>
+      <Panel className="constantArray-view" header={header}>
         <div className="constantArray-elems">
           {elems.map(renderArrayElem)}
         </div>
-      </div>
+      </Panel>
     );
   };
 });
@@ -217,7 +220,7 @@ export const DirectivesPane = EpicComponent(self => {
     const Component = Components[kind];
     return (
       <div key={key} className="directive-view clearfix">
-        {Component ? <Component view={view}/> : <p>Bad component {kind}</p>}
+        {Component ? <Component view={view}/> : <Panel>Bad component {kind}</Panel>}
       </div>
     );
   };

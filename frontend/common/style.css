@@ -1,19 +1,42 @@
-.dev-EventsPanel {
-  overflow-y: scroll;
-  max-height: 400px;
-  font-family: monospace;
-  font-size: 8px;
+@import url(https://fonts.googleapis.com/css?family=Inconsolata:400,700);
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700);
+
+body#app, #app h1, #app h2, #app h3 {
+  font: 14px/normal 'Open Sans';
+}
+#app h1, #app h2, #app h3 {
+  line-height: 1;
+  padding: 2px;
+  background-color: #eee;
+}
+#app h1 {
+  font-size: 18px;
+}
+#app h2 {
+  font-size: 16px;
+}
+#app h3 {
+  font-size: 14px;
 }
 
-.dev-EventView {
-  width: 100%;
-  overflow: hidden;
-  max-height: 12px;
+#app pre, #app .ace_editor, .terminal, .stack-view {
+  font: 14px/normal 'Inconsolata';
+}
+
+#app .panel {
+  margin-bottom: 5px;
+  border-radius: 0;
+}
+#app .panel-heading {
+  line-height: 1;
+  padding: 2px 4px;
+}
+#app .panel-body {
+  padding: 0;
+  min-height: 14px;
 }
 
 .terminal {
-  font-family: monospace;
-  font-size: 12px;
   padding: 4px;
   line-height: 16px;
 }
@@ -31,9 +54,6 @@
   top: 10px;
 }
 
-.stack-view {
-  font: 12px/normal monospace;
-}
 .stack-view .scope-decl-load {
   font-weight: bold;
 }
@@ -62,4 +82,16 @@
 }
 .value-changed {
   text-decoration: line-through;
+}
+
+.dev-EventsPanel {
+  overflow-y: scroll;
+  max-height: 400px;
+  font-family: monospace;
+  font-size: 8px;
+}
+.dev-EventView {
+  width: 100%;
+  overflow: hidden;
+  max-height: 12px;
 }

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import {connect} from 'react-redux';
-import {Button} from 'react-bootstrap';
+import {Button, Panel} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import Document from '../../common/document';
@@ -69,38 +69,39 @@ export default function (actions, views) {
             </div>
           </div>
           <div className="row">
-            {stepperDisplay && <div className="col-md-3">
-              <h2>Pile</h2>
-              <StackView state={stepperDisplay}/>
-            </div>}
-            <div className="col-md-6">
-              <h2>Source C</h2>
-              <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
-                      readOnly={isStepping} mode='c_cpp' width='100%' height='336px' />
+            <div className="col-md-3">
+              <Panel header="Variables">
+                {stepperDisplay && <StackView state={stepperDisplay}/>}
+              </Panel>
             </div>
-            {terminal && <div className="col-md-3">
-              <h2>Terminal</h2>
-              <Terminal terminal={terminal}/>
-            </div>}
+            <div className="col-md-9">
+              <Panel header="Source">
+                <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
+                        readOnly={isStepping} mode='c_cpp' width='100%' height='336px' />
+              </Panel>
+            </div>
           </div>
-          {diagnostics &&
-            <div className="row">
-              <div className="col-md-3"/>
-              <div className="col-md-6">
+          <div className="row">
+            {diagnostics && <div className="col-md-12">
+              <Panel header="Messages">
                 <div dangerouslySetInnerHTML={diagnostics}/>
+              </Panel>
+            </div>}
+            <div className="col-md-12">
+              {stepperDisplay && <DirectivesPane state={stepperDisplay}/>}
+              <div className="row">
+                <div className="col-md-6">
+                  <Panel header="Entrée">
+                    <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect}
+                            readOnly={isStepping} mode='text' width='100%' height='168px' />
+                  </Panel>
+                </div>
+                <div className="col-md-6">
+                  <Panel header="Sortie">
+                    {terminal && <Terminal terminal={terminal}/>}
+                  </Panel>
+                </div>
               </div>
-            </div>}
-          <div className="row">
-            {stepperDisplay && <div className="col-md-12">
-              <h2>Vues</h2>
-              <DirectivesPane state={stepperDisplay}/>
-            </div>}
-          </div>
-          <div className="row">
-            <div className="col-md-6">
-              <h2>Entrée standard du programme</h2>
-              <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect}
-                      readOnly={isStepping} mode='text' width='100%' height='336px' />
             </div>
           </div>
           <div className="row">
@@ -117,4 +118,4 @@ export default function (actions, views) {
 
   });
 
-}
+};
