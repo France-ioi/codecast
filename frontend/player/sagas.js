@@ -388,10 +388,10 @@ export default function (actions, selectors) {
             }
             const state = states[pos].state;  // state reached after event is replayed
             switch (event[1]) {
-              case 'select':
+              case 'source.select': case 'select':
                 sourceEditor.setSelection(Document.expandRange(event[2]))
                 break;
-              case 'insert': case 'delete':
+              case 'source.insert': case 'source.delete': case 'insert': case 'delete':
                 sourceEditor.applyDeltas([eventToDelta(event)]);
                 break;
               case 'input.select':
@@ -400,7 +400,7 @@ export default function (actions, selectors) {
               case 'input.insert': case 'input.delete':
                 inputEditor.applyDeltas([eventToDelta(event)]);
                 break;
-              case 'stepIdle': case 'stepProgress': {
+              case 'stepper.idle': case 'stepper.progress': case 'stepIdle': case 'stepProgress': {
                 const stepper = state.get('stepper');
                 const translated = state.get('translated');
                 const range = runtime.getNodeRange(stepper);
