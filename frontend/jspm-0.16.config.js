@@ -43,7 +43,7 @@ System.config({
     "core-js": "npm:core-js@1.2.6",
     "css": "github:systemjs/plugin-css@0.1.21",
     "epic-component": "npm:epic-component@0.2.0",
-    "epic-vt": "npm:epic-vt@0.0.3",
+    "epic-vt": "npm:epic-vt@0.0.4",
     "eventemitter2": "npm:eventemitter2@1.0.3",
     "font-awesome": "npm:font-awesome@4.6.1",
     "immutable": "npm:immutable@3.8.1",
