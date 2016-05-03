@@ -27,18 +27,22 @@ export const options = function (effects) {
   };
 }(C.defaultEffects);
 
-const unboxValue = function (v) {
-  // XXX hack for strings
-  if (v[0] === 'string') {
-    return v[1];
+const unboxValue = function (state, value) {
+  if (value.type.kind === 'scalar') {
+    return value.number;
   }
-  // XXX this works only for IntegralValue, FloatingValue.
-  return v.number;
+  if (value.type.kind === 'pointer') {
+    if (value.type.pointee.repr === 'char') {
+      // A char* is interpreted as as string, which is not always correct (%p).
+      return C.readString(state.memory, value);
+    }
+  }
+  return '(not implemented)';
 };
 
 const printf = function (state, cont, values) {
-  // Unbox each argument's value.
-  const args = values.slice(1).map(unboxValue);
+  // Unbox each argument's value (only scalars are supported).
+  const args = values.slice(1).map(v => unboxValue(state, v));
   const str = sprintf.apply(null, args);
   const result = str.length;
   return {control: cont, effects: [['write', str]], result, seq: 'expr'};
