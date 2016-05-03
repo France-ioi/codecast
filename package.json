@@ -56,7 +56,7 @@
         "main": "lib/React.js",
         "format": "cjs"
       },
-      "npm:lamejs@1.0.0": {
+      "npm:lamejs@1.1.0": {
         "main": "lame.all.js",
         "format": "global",
         "shim": {
