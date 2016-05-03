@@ -408,6 +408,7 @@ export default function (actions, selectors) {
                 break;
               }
               case 'end':
+                yield put({type: actions.playerTick, current: nextState});
                 break play_loop;
             }
           }
