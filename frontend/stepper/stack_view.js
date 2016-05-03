@@ -7,8 +7,8 @@ import {readValue} from 'persistent-c';
 export const StackView = EpicComponent(self => {
 
   const refsIntersect = function (ref1, ref2) {
-    const base1 = ref1.address, limit1 = base1 + ref1.type.size - 1;
-    const base2 = ref2.address, limit2 = base2 + ref2.type.size - 1;
+    const base1 = ref1.address, limit1 = base1 + ref1.type.pointee.size - 1;
+    const base2 = ref2.address, limit2 = base2 + ref2.type.pointee.size - 1;
     const result = (base1 <= base2) ? (base2 <= limit1) : (base1 <= limit2);
     return result;
   };
