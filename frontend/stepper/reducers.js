@@ -44,12 +44,10 @@ export function stepperIdle (state, action) {
 
 export function translateSucceeded (state, action) {
   const {diagnostics} = action;
-  return state
-    .setIn(['translate'], Immutable.Map({diagnostics}));
+  return state.set('translate', Immutable.Map({diagnostics}));
 };
 
 export function translateFailed (state, action) {
   const {error, diagnostics} = action;
-  return state
-    .setIn(['translate'], Immutable.Map({error, diagnostics}));
+  return state.set('translate', Immutable.Map({error, diagnostics}));
 };

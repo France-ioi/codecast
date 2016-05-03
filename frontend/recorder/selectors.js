@@ -1,7 +1,7 @@
 
 import Immutable from 'immutable';
 
-import {getStepperState} from '../stepper/selectors'
+import {getStepperState, getTranslateState} from '../stepper/selectors'
 
 export * from '../common/selectors';
 export * from '../stepper/selectors';
@@ -49,7 +49,7 @@ export function PrepareScreen (state, props) {
 export function RecordScreen (state, props) {
   const recorder = state.get('recorder');
   const recorderState = recorder.get('state');
-  const translate = recorder.get('translate');
+  const translate = getTranslateState(state);
   const diagnostics = translate && translate.get('diagnostics');
   const eventCount = recorder.get('events').count();
   const elapsed = recorder.get('elapsed');

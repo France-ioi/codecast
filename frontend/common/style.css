@@ -55,6 +55,11 @@ body#app, #app h1, #app h2, #app h3 {
   min-height: 14px;
 }
 
+#app pre {
+  background: inherit;
+  border: none;
+}
+
 .terminal {
   padding: 4px;
   line-height: 16px;
