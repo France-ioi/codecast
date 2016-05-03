@@ -64,8 +64,11 @@ app.post('/upload', function (req, res) {
 });
 
 app.post('/translate', function (req, res) {
+  const env = {};
+  Object.assign(env, process.env);
+  env.SYSROOT = path.join(rootDir, 'sysroot');
   const source = req.body.source;
-  const cp = spawn('./c-to-json');
+  const cp = spawn('./c-to-json', {env: env});
   const chunks = [];
   const errorChunks = [];
   cp.stdout.on('data', function (chunk) {
