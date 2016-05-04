@@ -13,7 +13,7 @@ export const Editor = EpicComponent(self => {
   };
 
   const samePosition = function (p1, p2) {
-    return p1.row == p2.row && p1.column == p2.column;
+    return p1 && p2 && p1.row == p2.row && p1.column == p2.column;
   };
 
   const sameSelection = function (s1, s2) {
@@ -26,7 +26,7 @@ export const Editor = EpicComponent(self => {
     if (!editor || sameSelection(selection, selection_))
       return;
     selection = selection_;
-    if (selection) {
+    if (selection && selection.start && selection.end) {
       editor.selection.setRange(new Range(
         selection.start.row, selection.start.column,
         selection.end.row, selection.end.column));
