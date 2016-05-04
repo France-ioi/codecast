@@ -62,18 +62,34 @@ const examples = [
   },
   {
     title: "appel de fonction",
-    source: "int fact(int n) {\n  if (n == 0)\n    return 1;\n  return n * fact(n - 1);\n}\nint main() {\n  printf(\"8! = %d\", fact(8));\n}\n"
+    source: [
+      "int fact(int n) {",
+      "    if (n == 0)",
+      "        return 1;",
+      "    return n * fact(n - 1);",
+      "}",
+      "int main() {",
+      "    int n = 12;",
+      "    printf(\"%d! = %d\\n\", n, fact(n));",
+      "}"
+    ].join('\n')
   },
   {
     title: "entrée/sortie",
     source: [
       "#include <stdio.h>",
+      "unsigned long strlen(const char * s) {",
+      "  unsigned long l = 0;",
+      "  while (*s++) ++l;",
+      "  return l;",
+      "}",
       "int main() {",
       "    int a, n;",
-      "    printf(\"Entrez un nombre:\\n\");",
-      "    n = scanf(\"%d\", &a);",
-      "    if (n == 1) {",
-      "        printf(\"Vous avez saisi %d\\n\", a);",
+      "    char s[12];",
+      "    printf(\"Entrez un mot et un nombre:\\n\");",
+      "    n = scanf(\"%s %d\", s, &a);",
+      "    if (n == 2) {",
+      "        printf(\"Longueur du mot * nombre = %lu\\n\", strlen(s) * a);",
       "    } else {",
       "        printf(\"Pas de valeur!\\n\");",
       "    }",
@@ -85,6 +101,17 @@ const examples = [
     title: "factorielle",
     source: "int main (int argc, char** argv) {\n    //! showVar(b)\n    int b = 1;\n    for (int a = 1; a < 1000000; a += 1) {\n        b = b * a;\n        printf(\"%d\\n\", b);\n    }\n    return 1;\n}\n",
     selection: {start: {row: 2, column: 24}, end: {row: 2, column: 31}}
+  },
+  {
+    title: "listes d'initialisation",
+    source: [
+      "#include <stdio.h>",
+      "int main() {",
+      "    int a[] = {1, 2};",
+      "    int * b = a;",
+      "    return 0;",
+      "}"
+    ].join('\n')
   }
   // TODO: test these expressions: a?b:c; a[b]; (int)a; c[0];
 ];
