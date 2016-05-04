@@ -172,6 +172,10 @@ export default function (actions, selectors) {
         source: {
           document: Document.toString(source.get('document')),
           selection: Document.compressRange(source.get('selection'))
+        },
+        input: {
+          document: Document.toString(input.get('document')),
+          selection: Document.compressRange(input.get('selection'))
         }
       }]));
       yield put({type: actions.switchToRecordScreen, source, input});
