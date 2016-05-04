@@ -5,16 +5,6 @@ import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import {inspectPointer, pointerType, PointerValue} from 'persistent-c';
 
-const intersperse = function (elems, sep) {
-  if (elems.length === 0) {
-    return [];
-  }
-  const f = function (xs, x, i) {
-    return xs.concat([sep, x]);
-  };
-  return elems.slice(1).reduce(f, [elems[0]]);
-};
-
 const renderType = function (type, prec) {
   switch (type.kind) {
     case 'scalar':

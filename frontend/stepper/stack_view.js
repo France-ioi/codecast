@@ -3,6 +3,7 @@ import React from 'react';
 import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import {readValue} from 'persistent-c';
+import intersperse from '../common/intersperse';
 
 export const StackView = EpicComponent(self => {
 
@@ -51,6 +52,7 @@ export const StackView = EpicComponent(self => {
     let params = [];
     let scope = state.scope;
     let isReturn = state.control && state.control.return;
+    let isTopFrame = !isReturn;
     while (scope) {
       switch (scope.kind) {
         case 'function':
@@ -58,10 +60,12 @@ export const StackView = EpicComponent(self => {
             scope: scope,
             name: scope.block[2][0][1].identifier,
             params: params,
-            blocks: blocks,
-            retVal: isReturn && state.result
+            blocks: isTopFrame && blocks,
+            retVal: isReturn && state.result,
+            isTop: isTopFrame
           });
-          isReturn = undefined;
+          isTopFrame = isReturn;
+          isReturn = false;
           params = [];
           blocks = [];
           break;
@@ -69,14 +73,18 @@ export const StackView = EpicComponent(self => {
           params.push(getScopeRef(scope, state));
           break;
         case 'block':
-          blocks.push({
-            scope: scope,
-            decls: decls
-          });
-          decls = [];
+          if (isTopFrame && !isReturn) {
+            blocks.push({
+              scope: scope,
+              decls: decls
+            });
+            decls = [];
+          }
           break;
         case 'vardecl':
-          decls.push(getScopeRef(scope, state));
+          if (isTopFrame && !isReturn) {
+            decls.push(getScopeRef(scope, state));
+          }
           break;
       }
       scope = scope.parent;
@@ -115,25 +123,24 @@ export const StackView = EpicComponent(self => {
 
   const renderFrame = function (state, frame) {
     const key = frame.scope.key;
+    const title = `${frame.name}(${intersperse(frame.params.map(decl => renderValue(decl.value)), ',')})`;
     return (
       <div key={key} className="scope-function">
-        <span>{"function "}{frame.name}</span>
-        <ul>{frame.params.map(decl =>
-          <li key={decl.key}>{renderDecl(decl)}</li>)}</ul>
+        <div className={classnames(["scope-function-title", frame.isTop && "scope-function-top"])}>{title}</div>
         {frame.retVal &&
           <span className="scope-function-return">
-            <i className="fa fa-level-up"/>
+            <i className="fa fa-long-arrow-right"/>
             <span className="scope-function-retval">
               {renderValue(frame.retVal)}
             </span>
           </span>}
-        <div className="scope-function-blocks">
+        {frame.blocks && <div className="scope-function-blocks">
           {frame.blocks.map(block =>
             <div key={block.scope.key}>
               <ul>{block.decls.map(decl =>
                 <li key={decl.key}>{renderDecl(decl)}</li>)}</ul>
             </div>)}
-        </div>
+        </div>}
       </div>
     );
   };
@@ -145,6 +152,7 @@ export const StackView = EpicComponent(self => {
     return (
       <div className="stack-view" style={{height: height||'100%'}}>
         {frames.map(frame => renderFrame(state, frame))}
+        <div className="stack-bottom" />
       </div>
     );
   };

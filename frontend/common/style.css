@@ -88,6 +88,9 @@ body#app, #app h1, #app h2, #app h3 {
   text-decoration: line-through;
   padding-left: 0.5em;
 }
+.stack-view .scope-function-top {
+  font-weight: bold;
+}
 .stack-view .scope-function-return {
   padding-left: 24px;
 }
@@ -95,6 +98,11 @@ body#app, #app h1, #app h2, #app h3 {
   display: inline-block;
   margin-left: 8px;
   font-weight: bold;
+}
+.stack-view .stack-bottom {
+  width: 100%;
+  height: 2px;
+  border: 2px;
 }
 
 .constantArray-elems {
