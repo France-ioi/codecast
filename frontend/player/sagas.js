@@ -222,12 +222,9 @@ export default function (actions, selectors) {
             // New style with diagnostics, data is an object.
             syntaxTree = event[2].ast;
           }
-          const input = state.get('input') && Document.toString(state.get('input').get('document'));
-          const stepperState = runtime.start(syntaxTree, {input});
           state = state
             .delete('translate')
-            .set('translated', loadTranslated(source, syntaxTree))
-            .set('stepper', stepperState);
+            .set('translated', loadTranslated(source, syntaxTree));
           break;
         }
         case 'stepper.translateFailure': case 'translateFailure': {
