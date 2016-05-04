@@ -43,6 +43,8 @@ const unboxValue = function (state, value) {
 const printf = function (state, cont, values) {
   // Unbox each argument's value (only scalars are supported).
   const args = values.slice(1).map(v => unboxValue(state, v));
+  // XXX Match sprintf interface.
+  args[0] = args[0].replace('%lu', '%u');
   const str = sprintf.apply(null, args);
   const result = str.length;
   return {control: cont, effects: [['write', str]], result, seq: 'expr'};
