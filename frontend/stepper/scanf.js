@@ -28,71 +28,83 @@ const parseChar = function (str) {
 };
 
 const scanIntegralValue = function (state, ref, typeName, func) {
+  if (state.input.size === 0) {
+    return false;
+  }
   const token = state.input.first();
   const rawValue = func(token);
   const value = new C.IntegralValue(C.scalarTypes[typeName], rawValue);
   if (isNaN(rawValue)) {
-    return 0;
-  } else {
-    state.input = state.input.shift();
-    state.memory = C.writeValue(state.memory, ref, value);
-    return 1;
+    return false;
   }
+  state.input = state.input.shift();
+  state.memory = C.writeValue(state.memory, ref, value);
+  return true;
 };
 
 const scanFloatingValue = function (state, ref, typeName) {
+  if (state.input.size === 0) {
+    return false;
+  }
   const token = state.input.first();
   const rawValue = parseFloat(token);
   if (isNaN(rawValue)) {
-    return 0;
-  } else {
-    const value = new C.FloatingValue(C.scalarTypes[typeName], rawValue);
-    state.input = state.input.shift();
-    state.memory = C.writeValue(state.memory, ref, value);
-    return 1;
+    return false;
   }
+  const value = new C.FloatingValue(C.scalarTypes[typeName], rawValue);
+  state.input = state.input.shift();
+  state.memory = C.writeValue(state.memory, ref, value);
+  return true;
+};
+
+const scanString = function (state, ref) {
+  if (state.input.size === 0) {
+    return false;
+  }
+  const string = state.input.first();
+  state.input = state.input.shift();
+  const value = C.stringValue(string);
+  state.memory = C.writeValue(state.memory, ref, value);
+  return true;
+};
+
+const scanValue = function (state, format, ref) {
+  switch (format) {
+    case '%d':
+      return scanIntegralValue(state, ref, 'int', token => parseInt(token, 10));
+    case '%x':
+      return scanIntegralValue(state, ref, 'int', token => parseInt(token, 16));
+    case '%o':
+      return scanIntegralValue(state, ref, 'int', token => parseInt(token, 8));
+    case '%i':
+      return scanIntegralValue(state, ref, 'int', parsePrefixedInt);
+    case '%u':
+      return scanIntegralValue(state, ref, 'unsigned int', parsePrefixedInt);
+    case '%c':
+      // TODO: if the token contains more than 1 character (possibly after
+      //       UTF-8 encoding), push back the remaining characters onto the
+      //       input.
+      return scanIntegralValue(state, ref, 'char', parseChar);
+    case '%f':
+      return scanFloatingValue(state, ref, 'float');
+    case '%g':
+      return scanFloatingValue(state, ref, 'double');
+    case '%s':
+      return scanString(state, ref);
+  }
+  return false;
 };
 
 export default function (state, effect) {
   const args = effect[1];
-  const format = C.readString(state.memory, args[1]);
-  const ref = args[2];
-  const valueType = ref.type.pointee;
-  let result = 0;
-  if (state.input && state.input.size !== 0) {
-    switch (format) {
-      case '%d':
-        result = scanIntegralValue(state, ref, 'int', token => parseInt(token, 10));
-        break;
-      case '%x':
-        result = scanIntegralValue(state, ref, 'int', token => parseInt(token, 16));
-        break;
-      case '%o':
-        result = scanIntegralValue(state, ref, 'int', token => parseInt(token, 8));
-        break;
-      case '%i':
-        result = scanIntegralValue(state, ref, 'int', parsePrefixedInt);
-        break;
-      case '%u':
-        result = scanIntegralValue(state, ref, 'unsigned int', parsePrefixedInt);
-        break;
-      case '%c':
-        // TODO: if the token contains more than 1 character (possibly after
-        //       UTF-8 encoding), push back the remaining characters onto the
-        //       input.
-        result = scanIntegralValue(state, ref, 'char', parseChar);
-        break;
-      case '%f':
-        result = scanFloatingValue(state, ref, 'float');
-        break;
-      case '%g':
-        result = scanFloatingValue(state, ref, 'double');
-        break;
-      case '%s':
-        // TODO: write the string to memory
-        break;
-    }
+  const formats = C.readString(state.memory, args[1]).split(/[\s]+/);
+  const refs = args.slice(2);
+  let pos = 0;
+  while (pos < formats.length && pos < refs.length && state.input.size !== 0) {
+    if (!scanValue(state, formats[pos], refs[pos]))
+      break;
+    pos += 1;
   }
   state.direction = 'up';
-  state.result = new C.IntegralValue(C.scalarTypes['int'], result);
+  state.result = new C.IntegralValue(C.scalarTypes['int'], pos);
 };
