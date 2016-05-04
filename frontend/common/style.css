@@ -22,6 +22,9 @@ body#app, #app h1, #app h2, #app h3 {
 #app pre, #app .ace_editor, .terminal, .stack-view {
   font: 14px/normal 'Inconsolata';
 }
+#app ul {
+  margin-bottom: 2px;
+}
 
 #app .col-lg-1, #app .col-lg-2, #app .col-lg-3, #app .col-lg-4, #app .col-lg-5,
 #app .col-lg-6, #app .col-lg-7, #app .col-lg-8, #app .col-lg-9, #app .col-lg-10,
@@ -84,6 +87,14 @@ body#app, #app h1, #app h2, #app h3 {
 .stack-view .scope-decl-prevValue {
   text-decoration: line-through;
   padding-left: 0.5em;
+}
+.stack-view .scope-function-return {
+  padding-left: 24px;
+}
+.stack-view .scope-function-retval {
+  display: inline-block;
+  margin-left: 8px;
+  font-weight: bold;
 }
 
 .constantArray-elems {

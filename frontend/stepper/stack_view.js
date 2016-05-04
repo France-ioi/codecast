@@ -50,6 +50,7 @@ export const StackView = EpicComponent(self => {
     let decls = [];
     let params = [];
     let scope = state.scope;
+    let isReturn = state.control && state.control.return;
     while (scope) {
       switch (scope.kind) {
         case 'function':
@@ -57,8 +58,10 @@ export const StackView = EpicComponent(self => {
             scope: scope,
             name: scope.block[2][0][1].identifier,
             params: params,
-            blocks: blocks
+            blocks: blocks,
+            retVal: isReturn && state.result
           });
+          isReturn = undefined;
           params = [];
           blocks = [];
           break;
@@ -117,6 +120,13 @@ export const StackView = EpicComponent(self => {
         <span>{"function "}{frame.name}</span>
         <ul>{frame.params.map(decl =>
           <li key={decl.key}>{renderDecl(decl)}</li>)}</ul>
+        {frame.retVal &&
+          <span className="scope-function-return">
+            <i className="fa fa-level-up"/>
+            <span className="scope-function-retval">
+              {renderValue(frame.retVal)}
+            </span>
+          </span>}
         <div className="scope-function-blocks">
           {frame.blocks.map(block =>
             <div key={block.scope.key}>
@@ -132,8 +142,11 @@ export const StackView = EpicComponent(self => {
     /* TODO: take effects since previous step as a prop */
     const {state, height} = self.props;
     const frames = getFrames(state);
-    return <div className="stack-view" style={{height: height||'100%'}}>{frames.map(frame =>
-      renderFrame(state, frame))}</div>;
+    return (
+      <div className="stack-view" style={{height: height||'100%'}}>
+        {frames.map(frame => renderFrame(state, frame))}
+      </div>
+    );
   };
 
 });
