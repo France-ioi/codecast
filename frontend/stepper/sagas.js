@@ -125,7 +125,8 @@ export default function (actions, selectors) {
                 break;
               case 'expr':
                 // then stop when we enter the next expression.
-                yield call(stepUntil, context, C.intoNextExpr);
+                yield call(stepUntil, context, state => (
+                  C.intoNextExpr(state) || state.control.return));
                 break;
             }
           }
