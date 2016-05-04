@@ -244,7 +244,9 @@ export default function (actions, selectors) {
         }
         case 'stepper.restart': case 'stepperRestart': {
           const syntaxTree = state.get('translated').syntaxTree;
-          state = state.set('stepper', runtime.start(syntaxTree));
+          const input = state.get('input') && Document.toString(state.get('input').get('document'));
+          const stepperState = runtime.start(syntaxTree, {input});
+          state = state.set('stepper', stepperState);
           break;
         }
         case 'stepper.expr': case 'stepExpr': {
