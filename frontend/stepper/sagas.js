@@ -114,21 +114,16 @@ export default function (actions, selectors) {
         yield put({type: actions.stepperStart});
         const context = buildContext(stepper.get('current'));
         try {
-          // Take a first step.
-          if (singleStep(context)) {
-            switch (action.mode) {
-              case 'into':
-                // Step out of the current statement.
-                yield call(stepUntil, context, C.outOfCurrentStmt);
-                // Step into the next statement.
-                yield call(stepUntil, context, C.intoNextStmt);
-                break;
-              case 'expr':
-                // then stop when we enter the next expression.
-                yield call(stepUntil, context, state => (
-                  C.intoNextExpr(state) || state.control.return));
-                break;
-            }
+          switch (action.mode) {
+            case 'into':
+              yield call(stepInto, context);
+              break;
+            case 'expr':
+              yield call(stepExpr, context);
+              break;
+            case 'out':
+              yield call(stepOut, context);
+              break;
           }
         } catch (error) {
           console.log(error); // XXX
@@ -164,6 +159,41 @@ export default function (actions, selectors) {
           return;
         }
       }
+    }
+  }
+
+  function* stepInto (context) {
+    // Take a first step.
+    if (singleStep(context)) {
+      // Step out of the current statement.
+      yield call(stepUntil, context, C.outOfCurrentStmt);
+      // Step into the next statement.
+      yield call(stepUntil, context, C.intoNextStmt);
+    }
+  }
+
+  function* stepExpr (context) {
+    // Take a first step.
+    if (singleStep(context)) {
+      // then stop when we enter the next expression.
+      yield call(stepUntil, context, state => (
+        C.intoNextExpr(state) || state.control.return));
+    }
+  }
+
+  function* stepOut (context) {
+    // Take a first step.
+    if (singleStep(context)) {
+      // Find the closest return continuation.
+      let control = context.state.control;
+      while (!control.return) {
+        control = control.cont;
+        if (!control) {
+          return;
+        }
+      }
+      // Step until that continuation is reached.
+      yield call(stepUntil, context, state => state.control === control);
     }
   }
 
