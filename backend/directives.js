@@ -38,10 +38,14 @@ var directiveArgs = PR.repeatSeparated(directiveArg, coma, {min:0}).map(function
   });
   return {byName, byPos};
 });
-var directive = PR.seq(ident, lparen, directiveArgs.optional(), rparen).map(function (match) {
-  var name = match[0];
-  var args = match[2] || {byPos: [], byName: {}};
-  return [name, args.byPos, args.byName];
+var directiveAssignment = PR.seq(ident, equals).map(function (match) {
+  return match[0];
+});
+var directive = PR.seq(directiveAssignment.optional(), ident, lparen, directiveArgs.optional(), rparen).map(function (match) {
+  var key = match[0];
+  var kind = match[1];
+  var args = match[3] || {byPos: [], byName: {}};
+  return {key: key, kind: kind, byPos: args.byPos, byName: args.byName};
 });
 var directiveParser = PR.seq(whitespace, directive).map(function (match) {
   return match[0];
@@ -99,6 +103,7 @@ module.exports.enrichSyntaxTree = function (source, ast) {
   var lines = source.split('\n');
   var lineOffsets = computeLineOffsets(lines);
   var functionNode;
+  var nextId = 1;
   var findBlocks = function (node) {
     if (node[0] === 'FunctionDecl') {
       functionNode = node;
@@ -113,6 +118,10 @@ module.exports.enrichSyntaxTree = function (source, ast) {
           // console.log(`found directive at line ${lineNo}`)
           try {
             var directive = parseDirective(lines[lineNo]);
+            if (!directive.key) {
+              directive.key = `view${nextId}`;
+              nextId += 1;
+            }
             directives.push(directive);
             // console.log(JSON.stringify(directive));
           } catch (error) {

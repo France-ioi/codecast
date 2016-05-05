@@ -98,12 +98,25 @@ export const DirectivesPane = EpicComponent(self => {
   };
 
   const prepareDirective = function (directive, scope, index, decls, state) {
-    const kind = directive[0];
-    const result = {kind, key: `${scope.key}.${index}`};
+    let key, kind, byPos, byName;
+    if (Array.isArray(directive)) {
+      // Old style [kind, byPos, byName]
+      key = `${scope.key}.${index}`;
+      kind = directive[0];
+      byPos = directive[1];
+      byName = directive[2];
+    } else {
+      // Modern style {key, kind, byPos, byName}
+      key = directive.key;
+      kind = directive.kind;
+      byPos = directive.byPos;
+      byName = directive.byName;
+    }
+    const result = {key, kind};
     switch (kind) {
       case 'showVar':
         {
-          const ident = result.name = getIdent(directive[1][0]);
+          const ident = result.name = getIdent(byPos[0]);
           if (!ident) {
             result.error = 'invalid variable name';
             break;
@@ -116,8 +129,7 @@ export const DirectivesPane = EpicComponent(self => {
         }
       case 'showArray':
         {
-          const ident = result.name = getIdent(directive[1][0]);
-          const namedArgs = directive[2];
+          const ident = result.name = getIdent(byPos[0]);
           const varScope = decls[ident];
           if (varScope) {
             // Expect varScope.ref to be a pointer to a constant array.
@@ -143,8 +155,8 @@ export const DirectivesPane = EpicComponent(self => {
             // Add an extra empty element.
             elems.push({value: {}, cursors: [], prevCursors: []});
             // Cursors?
-            if (namedArgs.cursors && namedArgs.cursors[0] === 'list') {
-              const cursorIdents = namedArgs.cursors[1].map(getIdent);
+            if (byName.cursors && byName.cursors[0] === 'list') {
+              const cursorIdents = byName.cursors[1].map(getIdent);
               cursorIdents.forEach(function (cursorIdent) {
                 const cursorScope = decls[cursorIdent];
                 if (cursorScope) {
