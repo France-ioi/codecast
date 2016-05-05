@@ -46,7 +46,7 @@ export default actions => EpicComponent(self => {
           </Button>
           {isStepping && <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>}
           {isStepping && <Button onClick={onStepInto} disabled={!haveNode}>step into</Button>}
-          {isStepping && <Button onClick={onStepOut} disabled={true||!haveNode}>step out</Button>}
+          {isStepping && <Button onClick={onStepOut} disabled={!haveNode}>step out</Button>}
           {isStepping && <Button onClick={onRestart}>recommencer</Button>}
           {isStepping && <Button onClick={onEdit}>éditer</Button>}
           {isStepping || <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>}
