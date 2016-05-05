@@ -25,6 +25,10 @@ export default actions => EpicComponent(self => {
     self.props.dispatch({type: actions.stepperStep, mode: 'out'});
   };
 
+  const onStepOver = function () {
+    self.props.dispatch({type: actions.stepperStep, mode: 'over'});
+  };
+
   const onRestart = function () {
     self.props.dispatch({type: actions.stepperRestart});
   };
@@ -47,6 +51,7 @@ export default actions => EpicComponent(self => {
           {isStepping && <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>}
           {isStepping && <Button onClick={onStepInto} disabled={!haveNode}>step into</Button>}
           {isStepping && <Button onClick={onStepOut} disabled={!haveNode}>step out</Button>}
+          {isStepping && <Button onClick={onStepOver} disabled={!haveNode}>step over</Button>}
           {isStepping && <Button onClick={onRestart}>recommencer</Button>}
           {isStepping && <Button onClick={onEdit}>éditer</Button>}
           {isStepping || <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>}

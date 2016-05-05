@@ -124,6 +124,9 @@ export default function (actions, selectors) {
             case 'out':
               yield call(stepOut, context);
               break;
+            case 'over':
+              yield call(stepOver, context);
+              break;
           }
         } catch (error) {
           console.log(error); // XXX
@@ -182,19 +185,52 @@ export default function (actions, selectors) {
   }
 
   function* stepOut (context) {
+    // The program must be running.
+    if (!context.state.control) {
+      return;
+    }
+    // If stopped on a return, take a single step.
+    if (context.state.control.return) {
+      if (!singleStep(context)) {
+        return;
+      }
+    }
+    // Find the closest return continuation.
+    const refReturn = findNextReturn(context);
+    // Step until that continuation is reached.
+    yield call(stepUntil, context, state => state.control === refReturn);
+  }
+
+  function findNextReturn (context) {
+    let control = context.state.control;
+    while (control && !control.return) {
+      control = control.cont;
+    }
+    return control;
+  }
+
+  function* stepOver (context) {
+    // Remember the current scope.
+    const refScope = context.state.scope;
     // Take a first step.
     if (singleStep(context)) {
-      // Find the closest return continuation.
-      let control = context.state.control;
-      while (!control.return) {
-        control = control.cont;
-        if (!control) {
-          return;
-        }
-      }
-      // Step until that continuation is reached.
-      yield call(stepUntil, context, state => state.control === control);
+      // Step until out of the current statement but not inside a nested
+      // function call.
+      yield call(stepUntil, context, state =>
+        notInNestedCall(state.scope, refScope) && C.outOfCurrentStmt(state));
+      // Step into the next statement.
+      yield call(stepUntil, context, C.intoNextStmt);
     }
+  }
+
+  function notInNestedCall (scope, refScope) {
+    while (scope.key >= refScope.key) {
+      if (scope.kind === 'function') {
+        return false;
+      }
+      scope = scope.parent;
+    }
+    return true;
   }
 
   return [
