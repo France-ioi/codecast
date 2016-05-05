@@ -151,6 +151,21 @@ export const StackView = EpicComponent(self => {
     );
   };
 
+  const renderFrameParams = function (frame) {
+    if (!frame.isTop){
+      return false;
+    }
+    return (
+      <div className="scope-function-params">
+        <ul>
+          {frame.params.map(function (decl) {
+            return <li key={decl.key}>{renderDecl(decl)}</li>;
+          })}
+        </ul>
+      </div>
+    );
+  };
+
   const renderFrameBlocks = function (frame) {
     const {blocks} = frame;
     if (!frame.blocks){
@@ -190,6 +205,7 @@ export const StackView = EpicComponent(self => {
     return (
       <div key={key} className="scope-function">
         {renderFrameHeader(frame)}
+        {renderFrameParams(frame)}
         {frame.retVal &&
           <div className="scope-function-return">
             <i className="fa fa-long-arrow-right"/>
