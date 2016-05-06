@@ -35,6 +35,10 @@ export default actions => EpicComponent(self => {
     // TODO
   };
 
+  const onSourceScroll = function () {
+    // TODO
+  };
+
   const onInputInit = function (editor) {
     self.props.dispatch({type: actions.playerInputInit, editor});
   };
@@ -44,6 +48,10 @@ export default actions => EpicComponent(self => {
   };
 
   const onInputSelect = function () {
+    // TODO
+  };
+
+  const onInputScroll = function () {
     // TODO
   };
 

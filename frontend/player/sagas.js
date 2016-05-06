@@ -171,14 +171,17 @@ export default function (actions, selectors) {
           state = Immutable.Map({
             source: Immutable.Map({
               document: Document.fromString(init.source.document),
-              selection: Document.expandRange(init.source.selection)
+              selection: Document.expandRange(init.source.selection),
+              scrollTop: init.source.scrollTop || 0
             }),
             input: init.input ? Immutable.Map({
               document: Document.fromString(init.input.document),
-              selection: Document.expandRange(init.input.selection)
+              selection: Document.expandRange(init.input.selection),
+              scrollTop: init.input.scrollTop || 0
             }) : Immutable.Map({
               document: Document.fromString(''),
-              selection: Document.expandRange([0,0,0,0])
+              selection: Document.expandRange([0,0,0,0]),
+              scrollTop: 0
             })
           });
           break;
@@ -195,6 +198,10 @@ export default function (actions, selectors) {
           }
           break;
         }
+        case 'source.scroll': {
+          state = state.setIn(['source', 'scrollTop'], event[2]);
+          break;
+        }
         case 'input.select': {
           state = state.setIn(['input', 'selection'], Document.expandRange(event[2]));
           break;
@@ -205,6 +212,10 @@ export default function (actions, selectors) {
             state = state.updateIn(['input', 'document'], document =>
               Document.applyDelta(document, delta));
           }
+          break;
+        }
+        case 'input.scroll': {
+          state = state.setIn(['input', 'scrollTop'], event[2]);
           break;
         }
         case 'stepper.translate': case 'translate': {
@@ -406,11 +417,17 @@ export default function (actions, selectors) {
               case 'source.insert': case 'source.delete': case 'insert': case 'delete':
                 sourceEditor.applyDeltas([eventToDelta(event)]);
                 break;
+              case 'source.scroll':
+                sourceEditor.setScrollTop(event[2]);
+                break;
               case 'input.select':
                 inputEditor.setSelection(Document.expandRange(event[2]))
                 break;
               case 'input.insert': case 'input.delete':
                 inputEditor.applyDeltas([eventToDelta(event)]);
+                break;
+              case 'input.scroll':
+                inputEditor.setScrollTop(event[2]);
                 break;
               case 'stepper.idle': case 'stepper.progress': case 'stepIdle': case 'stepProgress': {
                 const stepper = state.get('stepper');
