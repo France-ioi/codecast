@@ -242,40 +242,33 @@ export default function (actions, selectors) {
         case 'stepper.restart': case 'stepperRestart': {
           const syntaxTree = state.get('translated').syntaxTree;
           const input = state.get('input') && Document.toString(state.get('input').get('document'));
-          const stepperState = runtime.start(syntaxTree, {input});
-          state = state.set('stepper', stepperState);
+          const stepperState = C.clearMemoryLog(runtime.start(syntaxTree, {input}));
+          state = state.set('stepper', stepperState).set('stepCounter', 0);
           break;
         }
         case 'stepper.expr': case 'stepExpr': {
-          state = state.set('pendingStep', 'expr');
+          state = beginStep(state, 'expr');
           break;
         }
         case 'stepper.into': case 'stepInto': {
-          state = state.set('pendingStep', 'into');
+          state = beginStep(state, 'into');
           break;
         }
-        case 'stepper.out': case 'stepOut': {
-          state = state.set('pendingStep', 'out');
+        case 'stepper.out': {
+          state = beginStep(state, 'out');
+          break;
+        }
+        case 'stepper.over': {
+          state = beginStep(state, 'over');
           break;
         }
         case 'stepper.idle': case 'stepIdle': {
-          let stepCounter = event[2];
-          let stepperState = C.clearMemoryLog(state.get('stepper'));
-          while (stepCounter > 0) {
-            stepperState = C.step(stepperState, runtime.options);
-            stepCounter -= 1;
-          }
-          state = state.delete('pendingStep').set('stepper', stepperState);
+          state = runToStep(state, event[2]);
+          state = state.delete('pendingStep');
           break;
         }
         case 'stepper.progress': case 'stepProgress': {
-          let stepCounter = event[2];
-          let stepperState = state.get('stepper');
-          while (stepCounter > 0) {
-            stepperState = C.step(stepperState, runtime.options);
-            stepCounter -= 1;
-          }
-          state = state.set('stepper', stepperState);
+          state = runToStep(state, event[2]);
           break;
         }
         case 'end': {
@@ -290,6 +283,25 @@ export default function (actions, selectors) {
       states.push({t, eventIndex: pos, state});
     }
     return states;
+  }
+
+  function beginStep(state, step) {
+    return state
+      .set('pendingStep', step)
+      .set('stepCounter', 0)
+      .update('stepper', C.clearMemoryLog);
+  }
+
+  function runToStep (state, targetStepCounter) {
+    let stepperState = state.get('stepper');
+    let stepCounter = state.get('stepCounter');
+    while (stepCounter < targetStepCounter) {
+      stepperState = C.step(stepperState, runtime.options);
+      stepCounter += 1;
+    }
+    return state
+      .set('stepper', stepperState)
+      .set('stepCounter', stepCounter);
   }
 
   function* watchPlayerPrepare () {
