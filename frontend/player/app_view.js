@@ -1,7 +1,7 @@
 
 import React from 'react';
 import EpicComponent from 'epic-component';
-import {Button} from 'react-bootstrap';
+import {Button, Panel} from 'react-bootstrap';
 
 import Editor from '../common/editor';
 import Terminal from '../stepper/terminal';
@@ -63,16 +63,16 @@ export default actions => EpicComponent(self => {
   self.render = function () {
     const {playerState, lastError, current} = self.props;
     const currentState = current && current.state;
-    const source = current && currentState.get('source');
-    const stepper = current && currentState.get('stepper');
-    const terminal = stepper && stepper.terminal;
+    const source = currentState && currentState.get('source');
+    const input = currentState && currentState.get('input');
+    const stepperDisplay = currentState && currentState.get('stepper');
+    const haveStepper = !!stepperDisplay;
+    const terminal = stepperDisplay && stepperDisplay.terminal;
+    const diagnostics = false; // TODO
     return (
       <div className="container">
         <div className="row">
-          <div className="col-md-3">
-            {lastError && <p>{JSON.stringify(lastError)}</p>}
-          </div>
-          <div className="col-md-6">
+          <div className="col-md-12">
             {/preparing|starting|ready|paused/.test(playerState) &&
               <Button onClick={onPlay} enabled={/ready|paused/.test(playerState)}>
                 <i className="fa fa-play"/>
@@ -83,42 +83,43 @@ export default actions => EpicComponent(self => {
               </Button>}
             <Button onClick={onEnterFullScreen}>mode plein écran</Button>
             <span>{playerState}</span>
-          </div>
-          <div className="col-md-3">
+            {lastError && <p>{JSON.stringify(lastError)}</p>}
           </div>
         </div>
         <div className="row">
           <div className="col-md-3">
-            {stepper &&
-              <div>
-                <h2>Pile</h2>
-                <StackView state={stepper}/>
-              </div>}
+            <Panel header="Variables">
+              {stepperDisplay && <StackView state={stepperDisplay} height='280px' />}
+            </Panel>
           </div>
           <div className="col-md-9">
-            <h2>Source C</h2>
-            <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
-                    mode='c_cpp' readOnly={true} width='100%' height='336px' />
+            <Panel header="Source">
+              <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} onScroll={onSourceScroll}
+                      readOnly={haveStepper} mode='c_cpp' width='100%' height='280px' />
+            </Panel>
           </div>
         </div>
         <div className="row">
-          {stepper && <div className="col-md-12">
-            <h2>Vues</h2>
-            <DirectivesPane state={stepper}/>
+          {diagnostics && <div className="col-md-12">
+            <Panel header="Messages">
+              <div dangerouslySetInnerHTML={diagnostics}/>
+            </Panel>
           </div>}
-        </div>
-        <div className="row">
-          <div className="col-md-6">
-            <h2>Entrée du programme</h2>
-            <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect}
-                    mode='text' readOnly={true} width='100%' height='336px' />
-          </div>
-          <div className="col-md-6">
-            {terminal &&
-              <div>
-                <h2>Terminal</h2>
-                <Terminal terminal={terminal}/>
-              </div>}
+          <div className="col-md-12">
+            {stepperDisplay && <DirectivesPane state={stepperDisplay}/>}
+            <Panel header="Entrée/Sortie">
+              <div className="row">
+                <div className="col-md-6">
+                  <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect} onScroll={onInputScroll}
+                          readOnly={haveStepper} mode='text' width='100%' height='168px' />
+                </div>
+                <div className="col-md-6">
+                  {terminal
+                    ? <Terminal terminal={terminal}/>
+                    : <p>Programme arrêté, pas de sortie à afficher.</p>}
+                </div>
+              </div>
+            </Panel>
           </div>
         </div>
       </div>
