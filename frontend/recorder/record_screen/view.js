@@ -27,6 +27,10 @@ export default function (actions, views) {
       self.props.dispatch({type: actions.sourceEdit, delta});
     };
 
+    const onSourceScroll = function (scrollTop, firstVisibleRow) {
+      self.props.dispatch({type: actions.sourceScroll, scrollTop, firstVisibleRow});
+    };
+
     const onInputInit = function (editor) {
       self.props.dispatch({type: actions.inputInit, editor});
     };
@@ -37,6 +41,10 @@ export default function (actions, views) {
 
     const onInputEdit = function (delta) {
       self.props.dispatch({type: actions.inputEdit, delta});
+    };
+
+    const onInputScroll = function (scrollTop, firstVisibleRow) {
+      self.props.dispatch({type: actions.inputScroll, scrollTop, firstVisibleRow});
     };
 
     const onTranslate = function () {
@@ -76,7 +84,7 @@ export default function (actions, views) {
             </div>
             <div className="col-md-9">
               <Panel header="Source">
-                <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
+                <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} onScroll={onSourceScroll}
                         readOnly={isStepping} mode='c_cpp' width='100%' height='280px' />
               </Panel>
             </div>
@@ -92,7 +100,7 @@ export default function (actions, views) {
               <Panel header="Entrée/Sortie">
                 <div className="row">
                   <div className="col-md-6">
-                    <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect}
+                    <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect} onScroll={onInputScroll}
                             readOnly={isStepping} mode='text' width='100%' height='168px' />
                   </div>
                   <div className="col-md-6">

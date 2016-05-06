@@ -84,6 +84,14 @@ export const Editor = EpicComponent(self => {
     editor.focus();
   };
 
+  const setScrollTop = function (top) {
+    if (editor) {
+      editor.session.setScrollTop(top);
+    }
+  };
+
+  let lastScrollTop = 0;
+
   self.componentDidMount = function () {
     editor = ace.edit(editorNode);
     editor.$blockScrolling = Infinity;
@@ -91,9 +99,9 @@ export const Editor = EpicComponent(self => {
     editor.getSession().setMode(`ace/mode/${self.props.mode||'text'}`);
     // editor.setOptions({minLines: 25, maxLines: 50});
     editor.setReadOnly(self.props.readOnly);
-    const {onInit, onSelect, onEdit} = self.props;
+    const {onInit, onSelect, onEdit, onScroll} = self.props;
     if (typeof onInit === 'function') {
-      const api = {reset, applyDeltas, setSelection, focus};
+      const api = {reset, applyDeltas, setSelection, focus, setScrollTop};
       onInit(api);
     }
     if (typeof onSelect === 'function') {
@@ -103,6 +111,16 @@ export const Editor = EpicComponent(self => {
     if (typeof onEdit === 'function') {
       editor.session.doc.on("change", onTextChanged, true);
     }
+    editor.renderer.on("afterRender", function (e) {
+      const scrollTop = editor.session.getScrollTop();
+      if (lastScrollTop !== scrollTop) {
+        lastScrollTop = scrollTop;
+        if (typeof onScroll === 'function') {
+          const firstVisibleRow = editor.getFirstVisibleRow();
+          onScroll(scrollTop, firstVisibleRow);
+        }
+      }
+    });
   };
 
   self.componentWillReceiveProps = function (nextProps) {

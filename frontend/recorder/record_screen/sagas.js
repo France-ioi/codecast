@@ -171,11 +171,13 @@ export default function (actions, selectors) {
         version: RECORDING_FORMAT_VERSION,
         source: {
           document: Document.toString(source.get('document')),
-          selection: Document.compressRange(source.get('selection'))
+          selection: Document.compressRange(source.get('selection')),
+          scrollTop: source.get('scrollTop')
         },
         input: {
           document: Document.toString(input.get('document')),
-          selection: Document.compressRange(input.get('selection'))
+          selection: Document.compressRange(input.get('selection')),
+          scrollTop: input.get('scrollTop')
         }
       }]));
       yield put({type: actions.switchToRecordScreen, source, input});
@@ -268,6 +270,13 @@ export default function (actions, selectors) {
     }
   }
 
+  function* watchSourceScroll () {
+    while (true) {
+      const {scrollTop, firstVisibleRow} = yield take(actions.sourceScroll);
+      yield put(recordEventAction(['source.scroll', scrollTop, firstVisibleRow]));
+    }
+  }
+
   function* watchInputSelect () {
     while (true) {
       const {selection} = yield take(actions.inputSelect);
@@ -285,6 +294,13 @@ export default function (actions, selectors) {
       } else {
         yield put(recordEventAction(['input.delete', Document.compressRange(range)]));
       }
+    }
+  }
+
+  function* watchInputScroll () {
+    while (true) {
+      const {scrollTop, firstVisibleRow} = yield take(actions.inputScroll);
+      yield put(recordEventAction(['input.scroll', scrollTop, firstVisibleRow]));
     }
   }
 
@@ -355,8 +371,10 @@ export default function (actions, selectors) {
     watchRecorderStop,
     watchSourceSelect,
     watchSourceEdit,
+    watchSourceScroll,
     watchInputSelect,
     watchInputEdit,
+    watchInputScroll,
     watchTranslateStart,
     watchTranslateSuccess,
     watchTranslateFailure,

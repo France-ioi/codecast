@@ -25,6 +25,10 @@ export default actions => EpicComponent(self => {
     self.props.dispatch({type: actions.prepareScreenSourceSelect, selection});
   };
 
+  const onSourceScroll = function (scrollTop) {
+    self.props.dispatch({type: actions.prepareScreenSourceScroll, scrollTop});
+  };
+
   const onStartRecording = function () {
     self.props.dispatch({type: actions.recorderStart});
   };

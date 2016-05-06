@@ -136,8 +136,16 @@ const examples = [
 
 export function prepareScreenInit (state, action) {
   const initialDocument = Document.fromString(examples[0].source);
-  const initialSource = Immutable.Map({document: initialDocument, selection: startOfBuffer});
-  const initialInput = Immutable.Map({document: Document.fromString(""), selection: startOfBuffer});
+  const initialSource = Immutable.Map({
+    document: initialDocument,
+    selection: startOfBuffer,
+    scrollTop: 0
+  });
+  const initialInput = Immutable.Map({
+    document: Document.fromString(""),
+    selection: startOfBuffer,
+    scrollTop: 0
+  });
   return state.set('prepare', Immutable.Map({
     source: initialSource,
     input: initialInput,
@@ -157,6 +165,10 @@ export function prepareScreenSourceEdit (state, action) {
 
 export function prepareScreenSourceSelect (state, action) {
   return state.setIn(['prepare', 'source', 'selection'], action.selection);
+};
+
+export function prepareScreenSourceScroll (state, action) {
+  return state.setIn(['prepare', 'source', 'scrollTop'], action.scrollTop);
 };
 
 // No reducer for prepareScreenExampleSelected, the saga watchExampleSelected

@@ -19,6 +19,10 @@ export function sourceSelect (state, action) {
   return state.setIn(['source', 'selection'], action.selection);
 };
 
+export function sourceScroll (state, action) {
+  return state.setIn(['source', 'scrollTop'], action.scrollTop);
+};
+
 export function inputInit (state, action) {
   return state.setIn(['input', 'editor'], action.editor);
 };
@@ -31,4 +35,8 @@ export function inputEdit (state, action) {
 
 export function inputSelect (state, action) {
   return state.setIn(['input', 'selection'], action.selection);
+};
+
+export function inputScroll (state, action) {
+  return state.setIn(['input', 'scrollTop'], action.scrollTop);
 };

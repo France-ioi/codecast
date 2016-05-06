@@ -17,7 +17,9 @@ export const switchToScreen = {
 export const sourceInit = 'Source.Init';
 export const sourceEdit = 'Source.Edit';
 export const sourceSelect = 'Source.Select';
+export const sourceScroll = 'Source.Scroll';
 
 export const inputInit = 'Input.Init';
 export const inputEdit = 'Input.Edit';
 export const inputSelect = 'Input.Select';
+export const inputScroll = 'Input.Scroll';
