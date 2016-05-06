@@ -47,45 +47,34 @@ export default function (actions, views) {
       self.props.dispatch({type: actions.inputScroll, scrollTop, firstVisibleRow});
     };
 
-    const onTranslate = function () {
-      self.props.dispatch({type: actions.translate});
-    };
-
     const recordingPanel = function () {
       return (
         <div className="row">
           <div className="col-md-12">
-            <p>Liste des segments, bouton sur le dernier pour le supprimer,
-               bouton sur chaque segment pour le lire.</p>
+            <p>Encodage en cours, veuillez patienter.</p>
           </div>
         </div>);
     };
 
     self.render = function () {
-      const {dispatch, recorderState, diagnostics, eventCount, elapsed, stepperState, stepperDisplay} = self.props;
-      const isRecording = recorderState === 'recording';
-      const isStepping = !!stepperState;
-      const isIdle = stepperState === 'idle';
-      const {control, terminal, error, scope} = stepperDisplay || {};
-      const haveNode = control && control.node;
+      const {isRecording, diagnostics, haveStepper, terminal} = self.props;
       return (
         <div>
           <div className="row">
             <div className="col-md-12">
-              <views.RecorderControls dispatch={dispatch} isRecording={isRecording} isStepping={isStepping} haveNode={haveNode} elapsed={elapsed} eventCount={eventCount} onTranslate={onTranslate} />
-              {error && <p>{error}</p>}
+              <views.RecorderControls/>
             </div>
           </div>
           <div className="row">
             <div className="col-md-3">
               <Panel header="Variables">
-                {stepperDisplay && <StackView state={stepperDisplay} height='280px' />}
+                {<views.StackView height='280px'/>}
               </Panel>
             </div>
             <div className="col-md-9">
               <Panel header="Source">
                 <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} onScroll={onSourceScroll}
-                        readOnly={isStepping} mode='c_cpp' width='100%' height='280px' />
+                        readOnly={haveStepper} mode='c_cpp' width='100%' height='280px' />
               </Panel>
             </div>
           </div>
@@ -96,12 +85,12 @@ export default function (actions, views) {
               </Panel>
             </div>}
             <div className="col-md-12">
-              {stepperDisplay && <DirectivesPane state={stepperDisplay}/>}
+              <views.DirectivesPane/>
               <Panel header="Entrée/Sortie">
                 <div className="row">
                   <div className="col-md-6">
                     <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect} onScroll={onInputScroll}
-                            readOnly={isStepping} mode='text' width='100%' height='168px' />
+                            readOnly={haveStepper} mode='text' width='100%' height='168px' />
                   </div>
                   <div className="col-md-6">
                     {terminal
@@ -111,14 +100,6 @@ export default function (actions, views) {
                 </div>
               </Panel>
             </div>
-          </div>
-          <div className="row">
-            {!isRecording && recordingPanel()}
-            {false && <div className="col-md-12">
-              <div className="dev-EventsPanel">
-                {events.slice(-10).map(event => <EventView event={event}/>)}
-              </div>
-            </div>}
           </div>
         </div>
       );

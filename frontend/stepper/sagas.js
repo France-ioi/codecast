@@ -139,6 +139,10 @@ export default function (actions, selectors) {
 
   function* stepUntil (context, stopCond) {
     while (true) {
+      // If interrupted, override the stop condition.
+      if (context.interrupted) {
+        stopCond = C.intoNextExpr;
+      }
       // Execute up to 100 steps, or until the stop condition (or end of the
       // program, or an error condition) is met.
       for (let stepCount = 100; stepCount !== 0; stepCount -= 1) {
@@ -158,7 +162,8 @@ export default function (actions, selectors) {
         // Stop prematurely if interrupted.
         const interrupted = yield select(selectors.getStepperInterrupted);
         if (interrupted) {
-          context.running = false;
+          yield put({type: actions.stepperInterrupted});
+          context.interrupted = true;
           return;
         }
       }

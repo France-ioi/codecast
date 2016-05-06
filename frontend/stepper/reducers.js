@@ -42,6 +42,18 @@ export function stepperIdle (state, action) {
   return state.setIn(['stepper', 'state'], 'idle');
 };
 
+export function stepperInterrupt (state, action) {
+  // Cannot interrupt while idle.
+  if (state.getIn(['stepper', 'state']) === 'idle') {
+    return state;
+  }
+  return state.setIn(['stepper', 'interrupt'], true);
+};
+
+export function stepperInterrupted (state, action) {
+  return state.setIn(['stepper', 'interrupt'], false);
+};
+
 export function translateSucceeded (state, action) {
   const {diagnostics} = action;
   return state.set('translate', Immutable.Map({diagnostics}));

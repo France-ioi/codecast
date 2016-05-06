@@ -29,6 +29,10 @@ export default actions => EpicComponent(self => {
     self.props.dispatch({type: actions.stepperStep, mode: 'over'});
   };
 
+  const onInterrupt = function () {
+    self.props.dispatch({type: actions.stepperInterrupt});
+  };
+
   const onRestart = function () {
     self.props.dispatch({type: actions.stepperRestart});
   };
@@ -37,8 +41,13 @@ export default actions => EpicComponent(self => {
     self.props.dispatch({type: actions.stepperExit});
   };
 
+  const onTranslate = function () {
+    self.props.dispatch({type: actions.translate});
+  };
+
   self.render = function () {
-    const {isRecording, isStepping, haveNode, elapsed, eventCount, onTranslate} = self.props;
+    const {isRecording, elapsed, eventCount, haveStepper, isStepping, canStep} = self.props;
+    console.log('canStep', canStep);
     return (
       <div className="pane pane-controls">
         <p>
@@ -48,15 +57,16 @@ export default actions => EpicComponent(self => {
           <Button onClick={onStopRecording} disabled={!isRecording}>
             <i className="fa fa-stop"/>
           </Button>
-          {isStepping && <Button onClick={onStepExpr} disabled={!haveNode}>step expr</Button>}
-          {isStepping && <Button onClick={onStepInto} disabled={!haveNode}>step into</Button>}
-          {isStepping && <Button onClick={onStepOut} disabled={!haveNode}>step out</Button>}
-          {isStepping && <Button onClick={onStepOver} disabled={!haveNode}>step over</Button>}
-          {isStepping && <Button onClick={onRestart}>recommencer</Button>}
-          {isStepping && <Button onClick={onEdit}>éditer</Button>}
-          {isStepping || <Button bsStyle='primary' onClick={onTranslate}>compiler</Button>}
+          {haveStepper && <Button onClick={onStepExpr} disabled={!canStep}>step expr</Button>}
+          {haveStepper && <Button onClick={onStepInto} disabled={!canStep}>step into</Button>}
+          {haveStepper && <Button onClick={onStepOut} disabled={!canStep}>step out</Button>}
+          {haveStepper && <Button onClick={onStepOver} disabled={!canStep}>step over</Button>}
+          {haveStepper && <Button onClick={onInterrupt} disabled={!isStepping}>interrompre</Button>}
+          {haveStepper && <Button onClick={onRestart} disabled={isStepping}>recommencer</Button>}
+          {haveStepper && <Button onClick={onEdit}>éditer</Button>}
+          {haveStepper || <Button onClick={onTranslate} bsStyle='primary'>compiler</Button>}
           {' '}
-          <span><i className="fa fa-clock-o"/> {Math.round(elapsed / 1000)||0}s</span>
+          <span><i className="fa fa-clock-o"/> {elapsed}s</span>
           {' '}
           <span><i className="fa fa-bolt"/> {eventCount}</span>
         </p>

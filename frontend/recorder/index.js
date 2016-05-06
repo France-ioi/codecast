@@ -39,11 +39,13 @@ import prepareScreenSagas from './prepare_screen/sagas';
 import recordScreenSagas from './record_screen/sagas';
 import saveScreenSagas from './save_screen/sagas';
 
+import StackViewFactory from '../stepper/stack_view';
+import DirectivesPaneFactory from '../stepper/directives_pane';
 import HomeScreenFactory from './home_screen/view';
 import PrepareScreenFactory from './prepare_screen/view';
-import RecorderControlsFactory from './record_screen/controls_view';
 import RecordScreenFactory from './record_screen/view';
 import SaveScreenFactory from './save_screen/view';
+import RecorderControlsFactory from './record_screen/controls_view';
 import AppFactory from './app_view';
 
 import * as selectors from './selectors';
@@ -79,6 +81,8 @@ const {store, views} = link({
     RecordScreen: RecordScreenFactory,
     RecorderControls: RecorderControlsFactory,
     SaveScreen: SaveScreenFactory,
+    DirectivesPane: DirectivesPaneFactory,
+    StackView: StackViewFactory,
     App: AppFactory
   },
   selectors,

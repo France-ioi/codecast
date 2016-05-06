@@ -48,3 +48,13 @@ export const stepperExit = {
   type: 'Stepper.Exit',
   description: "Sent when the user exits the stepper."
 };
+
+export const stepperInterrupt = {
+  type: 'Stepper.Interrupt',
+  description: "Sent when the user interrupts the stepper."
+};
+
+export const stepperInterrupted = {
+  type: 'Stepper.Interrupted',
+  description: "Sent when the stepper has halted after an interrupt."
+};

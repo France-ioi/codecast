@@ -5,10 +5,8 @@ import {Button, Panel} from 'react-bootstrap';
 
 import Editor from '../common/editor';
 import Terminal from '../stepper/terminal';
-import StackView from '../stepper/stack_view';
-import DirectivesPane from '../stepper/directives_pane';
 
-export default actions => EpicComponent(self => {
+export default (actions, views) => EpicComponent(self => {
 
   const onPlay = function () {
     const {playerState} = self.props;
@@ -97,7 +95,7 @@ export default actions => EpicComponent(self => {
         <div className="row">
           <div className="col-md-3">
             <Panel header="Variables">
-              {stepperDisplay && <StackView state={stepperDisplay} height='280px' />}
+              {<views.StackView height='280px'/>}
             </Panel>
           </div>
           <div className="col-md-9">
@@ -114,7 +112,7 @@ export default actions => EpicComponent(self => {
             </Panel>
           </div>}
           <div className="col-md-12">
-            {stepperDisplay && <DirectivesPane state={stepperDisplay}/>}
+            <views.DirectivesPane/>
             <Panel header="Entrée/Sortie">
               <div className="row">
                 <div className="col-md-6">

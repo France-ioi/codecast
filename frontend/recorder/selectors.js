@@ -49,17 +49,31 @@ export function PrepareScreen (state, props) {
 export function RecordScreen (state, props) {
   const recorder = state.get('recorder');
   const recorderState = recorder.get('state');
+  const isRecording = recorderState === 'recording';
   const translate = getTranslateState(state);
   const diagnostics = translate && translate.get('diagnostics');
-  const eventCount = recorder.get('events').count();
-  const elapsed = recorder.get('elapsed');
   const stepper = getStepperState(state);
-  const stepperState = stepper && stepper.get('state');
-  const stepperDisplay = stepper && stepper.get('display');
-  return {
-    recorderState, eventCount, elapsed,
-    diagnostics, stepperState, stepperDisplay
-  };
+  const haveStepper = !!stepper;
+  const stepperState = haveStepper && stepper.get('state');
+  const stepperDisplay = haveStepper && stepper.get('display');
+  const terminal = haveStepper && stepperDisplay.terminal;
+  return {isRecording, diagnostics, haveStepper, terminal};
+};
+
+export function RecorderControls (state, props) {
+  const recorder = state.get('recorder');
+  const recorderState = recorder.get('state');
+  const isRecording = recorderState === 'recording';
+  const elapsed = Math.round(recorder.get('elapsed') / 1000) || 0;
+  const eventCount = recorder.get('events').count();
+  const stepper = getStepperState(state);
+  const haveStepper = !!stepper;
+  const stepperState = haveStepper && stepper.get('state');
+  const isStepping = stepperState !== 'idle';
+  const stepperDisplay = haveStepper && stepper.get('display');
+  const {control} = stepperDisplay || {};
+  const canStep = !!(!isStepping && control && control.node);
+  return {isRecording, elapsed, eventCount, haveStepper, isStepping, canStep};
 };
 
 export function SaveScreen (state, props) {

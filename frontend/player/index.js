@@ -31,6 +31,8 @@ import commonSagas from '../common/sagas';
 import stepperSagas from '../stepper/sagas';
 import playerSagas from './sagas';
 
+import StackViewFactory from '../stepper/stack_view';
+import DirectivesPaneFactory from '../stepper/directives_pane';
 import AppFactory from './app_view';
 
 import * as selectors from './selectors';
@@ -52,7 +54,9 @@ const {actionTypes, store, views} = link({
     playerSagas
   ],
   viewFactories: {
-    App: AppFactory
+    App: AppFactory,
+    DirectivesPane: DirectivesPaneFactory,
+    StackView: StackViewFactory
   },
   selectors,
   initialState: Immutable.Map({

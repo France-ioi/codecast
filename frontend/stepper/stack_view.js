@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import {readValue} from 'persistent-c';
 
-export const StackView = EpicComponent(self => {
+export default _actions => EpicComponent(self => {
 
   const refsIntersect = function (ref1, ref2) {
     const base1 = ref1.address, limit1 = base1 + ref1.type.pointee.size - 1;
@@ -221,6 +221,13 @@ export const StackView = EpicComponent(self => {
   self.render = function () {
     /* TODO: take effects since previous step as a prop */
     const {state, height} = self.props;
+    if (!state) {
+      return (
+        <div className="stack-view" style={{height: height||'100%'}}>
+          <p>Programme arrêté.</p>
+        </div>
+      );
+    }
     const frames = getFrames(state);
     return (
       <div className="stack-view" style={{height: height||'100%'}}>
@@ -231,5 +238,3 @@ export const StackView = EpicComponent(self => {
   };
 
 });
-
-export default StackView;

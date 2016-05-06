@@ -66,5 +66,14 @@ export const playerStopped = function (state, action) {
 };
 
 export const playerTick = function (state, action) {
-  return state.setIn(['player', 'current'], action.current);
+  // {current: {t, eventIndex, state}}
+  // Restore the given current state.
+  // Some properties (e.g., stepper) are copied into the
+  // global state to be read by shared components.
+  const {current} = action;
+  const currentState = current.state;
+  const stepperState = currentState.get('stepper');
+  return state
+    .setIn(['player', 'current'], current)
+    .setIn(['stepper', 'display'], stepperState);
 };

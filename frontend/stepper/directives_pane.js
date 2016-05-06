@@ -91,7 +91,7 @@ const ShowArray = EpicComponent(self => {
   };
 });
 
-export const DirectivesPane = EpicComponent(self => {
+export default _actions => EpicComponent(self => {
 
   const getIdent = function (expr) {
     return expr[0] === 'ident' && expr[1];
@@ -228,16 +228,20 @@ export const DirectivesPane = EpicComponent(self => {
   };
 
   self.render = function () {
+    const {state} = self.props;
+    if (!state) {
+      return false;
+    }
     try {
-      const {state} = self.props;
       const views = getViews(state);
       return <div className="directive-pane">{views.map(renderView)}</div>;
     } catch (err) {
-      console.log(err);
-      return false;
+      return (
+        <div className="directive-pane">
+          <pre>{err.toString()}</pre>
+        </div>
+      );
     }
   };
 
 });
-
-export default DirectivesPane;
