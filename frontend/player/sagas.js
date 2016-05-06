@@ -90,6 +90,7 @@ export default function (actions, selectors) {
       // Create the audio player and start buffering.
       const audio = new Audio();
       audio.src = audioUrl;
+      // TODO: audio.onended = ...
       // Download the events URL
       const events = yield call(getJson, eventsUrl);
       // Compute the future state after every event.
@@ -419,6 +420,7 @@ export default function (actions, selectors) {
                 break;
               }
               case 'end':
+                // May never be reached if the audio is a little bit shorter.
                 yield put({type: actions.playerTick, current: nextState});
                 break play_loop;
             }
