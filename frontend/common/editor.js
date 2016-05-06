@@ -17,8 +17,13 @@ export const Editor = EpicComponent(self => {
   };
 
   const sameSelection = function (s1, s2) {
-    if (typeof s1 !== typeof s2 || !!s1 !== !!s2)
+    if (typeof s1 !== typeof s2 || !!s1 !== !!s2) {
       return false;
+    }
+    // Test for same object (and also null).
+    if (s1 === s2) {
+      return true;
+    }
     return samePosition(s1.start, s2.start) && samePosition(s1.end, s2.end);
   };
 
