@@ -1,7 +1,7 @@
 
 import Immutable from 'immutable';
 
-import Document from '../../common/document';
+import Document from '../../utils/document';
 
 const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
 
@@ -134,43 +134,47 @@ const examples = [
   // TODO: test these expressions: a?b:c; a[b]; (int)a; c[0];
 ];
 
-export function prepareScreenInit (state, action) {
-  const initialDocument = Document.fromString(examples[0].source);
-  const initialSource = Immutable.Map({
-    document: initialDocument,
-    selection: startOfBuffer,
-    scrollTop: 0
+export default function (m) {
+
+  m.reducer('prepareScreenInit', function (state, action) {
+    const initialDocument = Document.fromString(examples[0].source);
+    const initialSource = Immutable.Map({
+      document: initialDocument,
+      selection: startOfBuffer,
+      scrollTop: 0
+    });
+    const initialInput = Immutable.Map({
+      document: Document.fromString(""),
+      selection: startOfBuffer,
+      scrollTop: 0
+    });
+    return state.set('prepare', Immutable.Map({
+      source: initialSource,
+      input: initialInput,
+      examples
+    }));
   });
-  const initialInput = Immutable.Map({
-    document: Document.fromString(""),
-    selection: startOfBuffer,
-    scrollTop: 0
+
+  m.reducer('prepareScreenSourceInit', function (state, action) {
+    return state.setIn(['prepare', 'source', 'editor'], action.editor);
   });
-  return state.set('prepare', Immutable.Map({
-    source: initialSource,
-    input: initialInput,
-    examples
-  }));
-};
 
-export function prepareScreenSourceInit (state, action) {
-  return state.setIn(['prepare', 'source', 'editor'], action.editor);
-};
+  m.reducer('prepareScreenSourceEdit', function (state, action) {
+    const prevSource = state.getIn(['prepare', 'source', 'document']);
+    const source = Document.applyDelta(prevSource, action.delta);
+    return state.setIn(['prepare', 'source', 'document'], source);
+  });
 
-export function prepareScreenSourceEdit (state, action) {
-  const prevSource = state.getIn(['prepare', 'source', 'document']);
-  const source = Document.applyDelta(prevSource, action.delta);
-  return state.setIn(['prepare', 'source', 'document'], source);
-};
+  m.reducer('prepareScreenSourceSelect', function (state, action) {
+    return state.setIn(['prepare', 'source', 'selection'], action.selection);
+  });
 
-export function prepareScreenSourceSelect (state, action) {
-  return state.setIn(['prepare', 'source', 'selection'], action.selection);
-};
+  m.reducer('prepareScreenSourceScroll', function (state, action) {
+    return state.setIn(['prepare', 'source', 'scrollTop'], action.scrollTop);
+  });
 
-export function prepareScreenSourceScroll (state, action) {
-  return state.setIn(['prepare', 'source', 'scrollTop'], action.scrollTop);
-};
+  // No reducer for prepareScreenExampleSelected, the saga watchExampleSelected
+  // calls editor.reset which triggers edit/select events that will update the
+  // state.
 
-// No reducer for prepareScreenExampleSelected, the saga watchExampleSelected
-// calls editor.reset which triggers edit/select events that will update the
-// state.
+};

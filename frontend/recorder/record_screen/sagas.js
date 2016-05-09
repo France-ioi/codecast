@@ -2,16 +2,48 @@
 import {take, put, call, race, select} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
-import {RECORDING_FORMAT_VERSION} from '../../common/version';
-import Document from '../../common/document';
-import {workerUrlFromText, spawnWorker, callWorker, killWorker} from '../../common/worker_utils';
+import {RECORDING_FORMAT_VERSION} from '../../version';
+import Document from '../../utils/document';
+import {spawnWorker, callWorker, killWorker} from '../../utils/worker_utils';
 
 // XXX worker URL should use SystemJS baseURL?
+// import {workerUrlFromText} from '../../utils/worker_utils';
 // import audioWorkerText from '../../assets/audio_worker.js!text';
 // const audioWorkerUrl = workerUrlFromText(audioWorkerText);
 const audioWorkerUrl = '/assets/audio_worker.js';
 
-export default function (actions, selectors) {
+function getAudioStream () {
+  const constraints = {audio: true};
+  if (typeof navigator.mediaDevices === 'object' &&
+      typeof navigator.mediaDevices.getUserMedia === 'function') {
+    // Use modern API returning a promise.
+    return navigator.mediaDevices.getUserMedia(constraints);
+  } else {
+    // Use deprecated API taking two callbacks.
+    const getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+    return new Promise(function (resolve, reject) {
+      getUserMedia.call(navigator, constraints, resolve, reject);
+    });
+  }
+}
+
+function suspendAudioContext (audioContext) {
+  return audioContext.suspend();
+}
+
+function resumeAudioContext (audioContext) {
+  return audioContext.resume();
+}
+
+function delay(ms) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
+}
+
+export default function (m) {
+
+  const {actions, selectors} = m;
 
   function recordEventAction (payload) {
     return {
@@ -20,43 +52,6 @@ export default function (actions, selectors) {
       payload
     };
   };
-
-  //
-  // Async helpers (normal functions)
-  //
-
-  function getAudioStream () {
-    const constraints = {audio: true};
-    if (typeof navigator.mediaDevices === 'object' &&
-        typeof navigator.mediaDevices.getUserMedia === 'function') {
-      // Use modern API returning a promise.
-      return navigator.mediaDevices.getUserMedia(constraints);
-    } else {
-      // Use deprecated API taking two callbacks.
-      const getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-      return new Promise(function (resolve, reject) {
-        getUserMedia.call(navigator, constraints, resolve, reject);
-      });
-    }
-  }
-
-  function suspendAudioContext (audioContext) {
-    return audioContext.suspend();
-  }
-
-  function resumeAudioContext (audioContext) {
-    return audioContext.resume();
-  }
-
-  function delay(ms) {
-    return new Promise(function (resolve) {
-      setTimeout(resolve, ms);
-    });
-  }
-
-  //
-  // Sagas (generators)
-  //
 
   function* recorderPrepare () {
     try {
@@ -220,7 +215,14 @@ export default function (actions, selectors) {
     }
   }
 
-  function* recorderTicker () {
+  m.saga(function* watchRecorderPrepare () {
+    while (true) {
+      yield take(actions.recorderPrepare);
+      yield call(recorderPrepare);
+    }
+  });
+
+  m.saga(function* recorderTicker () {
     while (true) {
       yield take(actions.recorderStarted);
       while (true) {
@@ -234,30 +236,30 @@ export default function (actions, selectors) {
         yield put({type: actions.recorderTick, now});
       }
     }
-  }
+  });
 
-  function* watchRecorderStart () {
+  m.saga(function* watchRecorderStart () {
     while (true) {
       yield take(actions.recorderStart);
       yield call(recorderStart);
     }
-  }
+  });
 
-  function* watchRecorderStop () {
+  m.saga(function* watchRecorderStop () {
     while (true) {
       yield take(actions.recorderStop);
       yield call(recorderStop);
     }
-  }
+  });
 
-  function* watchSourceSelect () {
+  m.saga(function* watchSourceSelect () {
     while (true) {
       const {selection} = yield take(actions.sourceSelect);
       yield put(recordEventAction(['source.select', Document.compressRange(selection)]));
     }
-  }
+  });
 
-  function* watchSourceEdit () {
+  m.saga(function* watchSourceEdit () {
     while (true) {
       const {delta} = yield take(actions.sourceEdit);
       const {start, end} = delta;
@@ -268,23 +270,23 @@ export default function (actions, selectors) {
         yield put(recordEventAction(['source.delete', Document.compressRange(range)]));
       }
     }
-  }
+  });
 
-  function* watchSourceScroll () {
+  m.saga(function* watchSourceScroll () {
     while (true) {
       const {scrollTop, firstVisibleRow} = yield take(actions.sourceScroll);
       yield put(recordEventAction(['source.scroll', scrollTop, firstVisibleRow]));
     }
-  }
+  });
 
-  function* watchInputSelect () {
+  m.saga(function* watchInputSelect () {
     while (true) {
       const {selection} = yield take(actions.inputSelect);
       yield put(recordEventAction(['input.select', Document.compressRange(selection)]));
     }
-  }
+  });
 
-  function* watchInputEdit () {
+  m.saga(function* watchInputEdit () {
     while (true) {
       const {delta} = yield take(actions.inputEdit);
       const {start, end} = delta;
@@ -295,94 +297,78 @@ export default function (actions, selectors) {
         yield put(recordEventAction(['input.delete', Document.compressRange(range)]));
       }
     }
-  }
+  });
 
-  function* watchInputScroll () {
+  m.saga(function* watchInputScroll () {
     while (true) {
       const {scrollTop, firstVisibleRow} = yield take(actions.inputScroll);
       yield put(recordEventAction(['input.scroll', scrollTop, firstVisibleRow]));
     }
-  }
+  });
 
-  function* watchTranslateStart () {
+  m.saga(function* watchTranslateStart () {
     while (true) {
       const {source} = yield take(actions.translateStart);
       yield put(recordEventAction(['stepper.translate', source]));
     }
-  }
+  });
 
-  function* watchTranslateSuccess () {
+  m.saga(function* watchTranslateSuccess () {
     while (true) {
       const {response} = yield take(actions.translateSucceeded);
       yield put(recordEventAction(['stepper.translateSuccess', response]));
     }
-  }
+  });
 
-  function* watchTranslateFailure () {
+  m.saga(function* watchTranslateFailure () {
     while (true) {
       const {response} = yield take(actions.translateFailed);
       yield put(recordEventAction(['stepper.translateFailure', response]));
     }
-  }
+  });
 
-  function* watchStepperStep () {
+  m.saga(function* watchStepperStep () {
     while (true) {
       const {mode} = yield take(actions.stepperStep);
       yield put(recordEventAction(['stepper.' + mode]));
     }
-  }
+  });
 
-  function* watchStepperProgress () {
+  m.saga(function* watchStepperProgress () {
     while (true) {
       const {context} = yield take(actions.stepperProgress);
       // CONSIDER: record control node id and step
       yield put(recordEventAction(['stepper.progress', context.stepCounter]));
     }
-  }
+  });
 
-  function* watchStepperIdle () {
+  m.saga(function* watchStepperIdle () {
     while (true) {
       const {context} = yield take(actions.stepperIdle);
       // CONSIDER: record control node id and step
       yield put(recordEventAction(['stepper.idle', context.stepCounter]));
     }
-  }
+  });
 
-  function* watchStepperRestart () {
+  m.saga(function* watchStepperInterrupt () {
+    while (true) {
+      yield take(actions.stepperInterrupt);
+      yield put(recordEventAction(['stepper.interrupt']));
+    }
+  });
+
+  m.saga(function* watchStepperRestart () {
     while (true) {
       yield take(actions.stepperRestart);
       yield put(recordEventAction(['stepper.restart']));
     }
-  }
+  });
 
-  function* watchStepperExit () {
+  m.saga(function* watchStepperExit () {
     while (true) {
       yield take(actions.stepperExit);
       yield put(recordEventAction(['stepper.exit']));
     }
-  }
-
-  // Currently the recorder is automatically prepared once,
-  // when the application starts up.
-  return [
-    recorderPrepare,
-    recorderTicker,
-    watchRecorderStart,
-    watchRecorderStop,
-    watchSourceSelect,
-    watchSourceEdit,
-    watchSourceScroll,
-    watchInputSelect,
-    watchInputEdit,
-    watchInputScroll,
-    watchTranslateStart,
-    watchTranslateSuccess,
-    watchTranslateFailure,
-    watchStepperStep,
-    watchStepperProgress,
-    watchStepperIdle,
-    watchStepperRestart,
-    watchStepperExit
-  ];
+  });
 
 };

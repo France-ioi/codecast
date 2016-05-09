@@ -3,7 +3,9 @@ import React from 'react';
 import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-export default actions => EpicComponent(self => {
+export default m => m.view('RecorderControls', EpicComponent(self => {
+
+  const {actions} = m;
 
   const onPauseRecording = function () {
     // TODO
@@ -74,4 +76,4 @@ export default actions => EpicComponent(self => {
     );
   };
 
-});
+}));

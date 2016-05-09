@@ -3,13 +3,15 @@ import {takeLatest} from 'redux-saga';
 import {take, put, call, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 
-import Document from '../common/document';
-import {asyncRequestJson} from '../common/api';
+import Document from '../utils/document';
+import {asyncRequestJson} from '../utils/api';
 
 import {loadTranslated} from './translate';
 import * as runtime from './runtime';
 
-export default function (actions, selectors) {
+export default function (m) {
+
+  const {actions, selectors} = m;
 
   function delay(ms) {
     return new Promise(function (resolve) {
@@ -67,10 +69,6 @@ export default function (actions, selectors) {
     }
   }
 
-  function* watchTranslate () {
-    yield* takeLatest(actions.translate, translateSource);
-  }
-
   function* translateSource (action) {
     const sourceState = yield select(selectors.getSource);
     const source = Document.toString(sourceState.get('document'));
@@ -103,37 +101,6 @@ export default function (actions, selectors) {
       yield call(updateSelection);
     } catch (error) {
       yield put({type: actions.error, source: 'translate', error});
-    }
-  }
-
-  function* watchStepperStep () {
-    while (true) {
-      const action = yield take(actions.stepperStep);
-      const stepper = yield select(selectors.getStepperState);
-      if (stepper.get('state') === 'starting') {
-        yield put({type: actions.stepperStart});
-        const context = buildContext(stepper.get('current'));
-        try {
-          switch (action.mode) {
-            case 'into':
-              yield call(stepInto, context);
-              break;
-            case 'expr':
-              yield call(stepExpr, context);
-              break;
-            case 'out':
-              yield call(stepOut, context);
-              break;
-            case 'over':
-              yield call(stepOver, context);
-              break;
-          }
-        } catch (error) {
-          console.log(error); // XXX
-        }
-        yield put({type: actions.stepperIdle, context: viewContext(context)});
-        yield call(updateSelection);
-      }
     }
   }
 
@@ -238,9 +205,46 @@ export default function (actions, selectors) {
     return true;
   }
 
-  return [
-    watchTranslate,
-    watchStepperStep
-  ];
+  function* startStepper (mode) {
+    const stepper = yield select(selectors.getStepperState);
+    if (stepper.get('state') === 'starting') {
+      yield put({type: actions.stepperStart});
+      const context = buildContext(stepper.get('current'));
+      try {
+        switch (mode) {
+          case 'into':
+            yield call(stepInto, context);
+            break;
+          case 'expr':
+            yield call(stepExpr, context);
+            break;
+          case 'out':
+            yield call(stepOut, context);
+            break;
+          case 'over':
+            yield call(stepOver, context);
+            break;
+        }
+      } catch (error) {
+        console.log(error); // XXX
+      }
+      yield put({type: actions.stepperIdle, context: viewContext(context)});
+      yield call(updateSelection);
+    }
+  }
+
+  m.saga(function* watchTranslate () {
+    // It is safe to use takeLatest here.  A previous pending call
+    // will be cancelled and its effects so far overwritten by a
+    // new call.
+    yield* takeLatest(actions.translate, translateSource);
+  });
+
+  m.saga(function* watchStepperStep () {
+    while (true) {
+      const {mode} = yield take(actions.stepperStep);
+      yield call(startStepper, mode);
+    }
+  });
 
 };

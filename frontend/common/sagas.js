@@ -1,24 +1,24 @@
 
 import {take, select} from 'redux-saga/effects';
 
-import Document from './document';
+import Document from '../utils/document';
 
-export default function (actions, selectors) {
+export default function (m) {
 
-  const {getSource, getInput} = selectors;
+  const {actions, selectors} = m;
 
-  function* watchError () {
+  m.saga(function* watchError () {
     while (true) {
       const action = yield take(actions.error);
       console.error('error', action);
     }
-  }
+  });
 
-  function* watchSourceInit () {
+  m.saga(function* watchSourceInit () {
     while (true) {
       const {editor} = yield take(actions.sourceInit);
       if (editor) {
-        const source = yield select(getSource);
+        const source = yield select(selectors.getSource);
         const text = Document.toString(source.get('document'));
         const selection = source.get('selection');
         try {
@@ -28,13 +28,13 @@ export default function (actions, selectors) {
         }
       }
     }
-  }
+  });
 
-  function* watchInputInit () {
+  m.saga(function* watchInputInit () {
     while (true) {
       const {editor} = yield take(actions.inputInit);
       if (editor) {
-        const input = yield select(getInput);
+        const input = yield select(selectors.getInput);
         const text = Document.toString(input.get('document'));
         const selection = input.get('selection');
         try {
@@ -44,12 +44,6 @@ export default function (actions, selectors) {
         }
       }
     }
-  }
-
-  return [
-    watchError,
-    watchSourceInit,
-    watchInputInit
-  ];
+  });
 
 };

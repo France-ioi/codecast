@@ -1,65 +1,71 @@
 
 import Immutable from 'immutable';
 
-export function stepperRestart (state, action) {
-  const stepperState = action.stepperState || state.getIn(['stepper', 'initial']);
-  return state.set('stepper',
-    Immutable.Map({
-      state: 'idle',
-      initial: stepperState,
-      display: stepperState
-    }));
-};
+export default function (m) {
 
-export function stepperExit (state, action) {
-  return state
-    .delete('translate')
-    .delete('stepper');
-};
+  m.reducer('stepperRestart', function (state, action) {
+    const stepperState = action.stepperState || state.getIn(['stepper', 'initial']);
+    return state.set('stepper',
+      Immutable.Map({
+        state: 'idle',
+        initial: stepperState,
+        display: stepperState
+      }));
+  });
 
-export function stepperStep (state, action) {
-  if (state.getIn(['stepper', 'state']) !== 'idle') {
-    return state;
-  } else {
-    return state.updateIn(['stepper'], stepper => stepper
-      .set('state', 'starting')
-      .set('current', stepper.get('display')));
+  m.reducer('stepperExit', function (state, action) {
+    return state
+      .delete('translate')
+      .delete('stepper');
+  });
+
+  m.reducer('stepperStep', function (state, action) {
+    if (state.getIn(['stepper', 'state']) !== 'idle') {
+      return state;
+    } else {
+      return state.updateIn(['stepper'], stepper => stepper
+        .set('state', 'starting')
+        .set('current', stepper.get('display')));
+    }
+  });
+
+  m.reducer('stepperStart', function (state, action) {
+    return state.setIn(['stepper', 'state'], 'running');
+  });
+
+  function stepperProgress (state, action) {
+    // Set an intermediate stepping state to be displayed.
+    return state.setIn(['stepper', 'display'], action.context.state);
   }
-};
 
-export function stepperStart (state, action) {
-  return state.setIn(['stepper', 'state'], 'running');
-};
+  m.reducer('stepperProgress', stepperProgress);
 
-export function stepperProgress (state, action) {
-  // Set an intermediate stepping state to be displayed.
-  return state.setIn(['stepper', 'display'], action.context.state);
-};
+  m.reducer('stepperIdle', function (state, action) {
+    // Progress + go back to idle.
+    state = stepperProgress(state, action);
+    return state.setIn(['stepper', 'state'], 'idle');
+  });
 
-export function stepperIdle (state, action) {
-  // Progress + go back to idle.
-  state = stepperProgress(state, action);
-  return state.setIn(['stepper', 'state'], 'idle');
-};
+  m.reducer('stepperInterrupt', function (state, action) {
+    // Cannot interrupt while idle.
+    if (state.getIn(['stepper', 'state']) === 'idle') {
+      return state;
+    }
+    return state.setIn(['stepper', 'interrupt'], true);
+  });
 
-export function stepperInterrupt (state, action) {
-  // Cannot interrupt while idle.
-  if (state.getIn(['stepper', 'state']) === 'idle') {
-    return state;
-  }
-  return state.setIn(['stepper', 'interrupt'], true);
-};
+  m.reducer('stepperInterrupted', function (state, action) {
+    return state.setIn(['stepper', 'interrupt'], false);
+  });
 
-export function stepperInterrupted (state, action) {
-  return state.setIn(['stepper', 'interrupt'], false);
-};
+  m.reducer('translateSucceeded', function (state, action) {
+    const {diagnostics} = action;
+    return state.set('translate', Immutable.Map({diagnostics}));
+  });
 
-export function translateSucceeded (state, action) {
-  const {diagnostics} = action;
-  return state.set('translate', Immutable.Map({diagnostics}));
-};
+  m.reducer('translateFailed', function (state, action) {
+    const {error, diagnostics} = action;
+    return state.set('translate', Immutable.Map({error, diagnostics}));
+  });
 
-export function translateFailed (state, action) {
-  const {error, diagnostics} = action;
-  return state.set('translate', Immutable.Map({error, diagnostics}));
 };

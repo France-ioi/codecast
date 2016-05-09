@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import {readValue} from 'persistent-c';
 
-export default _actions => EpicComponent(self => {
+export default m => m.view('StackView', EpicComponent(self => {
 
   const refsIntersect = function (ref1, ref2) {
     const base1 = ref1.address, limit1 = base1 + ref1.type.pointee.size - 1;
@@ -237,4 +237,4 @@ export default _actions => EpicComponent(self => {
     );
   };
 
-});
+}));

@@ -1,7 +1,8 @@
-
-export const prepareScreenInit = 'Prepare.Init';
-export const prepareScreenSourceInit = 'Prepare.Source.Init';
-export const prepareScreenSourceEdit = 'Prepare.Source.Edit';
-export const prepareScreenSourceSelect = 'Prepare.Source.Select';
-export const prepareScreenSourceScroll = 'Prepare.Source.Scroll';
-export const prepareScreenExampleSelected = 'Prepare.Example.Selected';
+export default function (m) {
+  m.action('prepareScreenInit', 'Prepare.Init');
+  m.action('prepareScreenSourceInit', 'Prepare.Source.Init');
+  m.action('prepareScreenSourceEdit', 'Prepare.Source.Edit');
+  m.action('prepareScreenSourceSelect', 'Prepare.Source.Select');
+  m.action('prepareScreenSourceScroll', 'Prepare.Source.Scroll');
+  m.action('prepareScreenExampleSelected', 'Prepare.Example.Selected');
+};

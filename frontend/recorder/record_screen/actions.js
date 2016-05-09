@@ -1,66 +1,47 @@
 
-export const switchToRecordScreen = 'Recorder.Switch';
+export default function (m) {
 
-export const recorderStart = {
-  type: 'Recorder.Start',
-  description: "Sent by the user to actually start recording."
-};
+  // Sent by a saga when the recorder has initialized and switches
+  // to the record screen.
+  m.action('switchToRecordScreen', 'Recorder.Switch');
 
-export const recorderPause = {
-  type: 'Recorder.Pause',
-  description: "Sent by the user to pause recording."
-};
+  // Sent by the user to actually start recording.
+  m.action('recorderStart', 'Recorder.Start');
 
-export const recorderStop = {
-  type: 'Recorder.Stop',
-  description: "Sent by the user to stop and finalize recording."
-};
+  // Sent by the user to pause recording.
+  m.action('recorderPause', 'Recorder.Pause');
 
-export const recorderBack = {
-  type: 'Recorder.Back',
-  description: "Sent by the user, while recording is paused, to remove the last recorded segment from the recording."
-};
+  // Sent by the user to stop and finalize recording.
+  m.action('recorderStop', 'Recorder.Stop');
 
-export const recorderPreparing = {
-  type: 'Recorder.Preparing',
-  description: "Sent by a saga in reaction to recorderPrepare, when preparation for recording starts."
-};
+  // Sent by the user, while recording is paused, to remove the last recorded segment from the recording.
+  m.action('recorderBack', 'Recorder.Back');
 
-export const recorderReady = {
-  type: 'Recorder.Ready',
-  description: "Sent by a saga when ready to record."
-};
+  // Sent by a saga in reaction to recorderPrepare, when preparation for recording starts.
+  m.action('recorderPreparing', 'Recorder.Preparing');
 
-export const recorderStarting = {
-  type: 'Recorder.Starting',
-  description: "Sent to acknowledge a recorder Start action."
-};
+  // Sent by a saga when ready to record.
+  m.action('recorderReady', 'Recorder.Ready');
 
-export const recorderStarted = {
-  type: 'Recorder.Started',
-  description: "Sent when recording effectively starts."
-};
-export const recorderStartFailed = {
-  type: 'Recorder.Start.Failed',
-  description: "Sent when the recorder failed to start (probably because the audio device is busy)."
-};
+  // Sent to acknowledge a recorder Start action.
+  m.action('recorderStarting', 'Recorder.Starting');
 
-export const recorderStopping = {
-  type: 'Recorder.Stopping',
-  description: "Sent to acknowledge a recorder Stop action."
-};
+  // Sent when recording effectively starts.
+  m.action('recorderStarted', 'Recorder.Started');
 
-export const recorderStopped = {
-  type: 'Recorder.Stopped',
-  description: "Sent has stopped and the recorder is ready to start a new recording."
-};
+  // Sent when the recorder failed to start (probably because the audio device is busy).
+  m.action('recorderStartFailed', 'Recorder.Start.Failed');
 
-export const recorderTick = {
-  type: 'Recorder.Tick',
-  description: "Sent every second while recording."
-};
+  // Sent to acknowledge a recorder Stop action.
+  m.action('recorderStopping', 'Recorder.Stopping');
 
-export const recorderAddEvent = {
-  type: 'Recorder.AddEvent',
-  description: "Add an event to the current recording."
+  // Sent has stopped and the recorder is ready to start a new recording.
+  m.action('recorderStopped', 'Recorder.Stopped');
+
+  // Sent every second while recording.
+  m.action('recorderTick', 'Recorder.Tick');
+
+  // Add an event to the current recording.
+  m.action('recorderAddEvent', 'Recorder.AddEvent');
+
 };

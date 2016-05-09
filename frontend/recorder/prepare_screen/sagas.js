@@ -1,20 +1,22 @@
 
 import {take, put, select} from 'redux-saga/effects';
 
-import Document from '../../common/document';
+import Document from '../../utils/document';
 
-export default function (actions, selectors) {
+export default function (m) {
 
-  function* watchNewRecording () {
+  const {actions, selectors} = m;
+
+  m.saga(function* watchNewRecording () {
     // XXX move to home screen?
     while (true) {
       yield take(actions.homeNewRecording);
       yield put({type: actions.prepareScreenInit});
       yield put({type: actions.switchToScreen, screen: 'prepare'});
     }
-  }
+  });
 
-  function* watchSourceInit () {
+  m.saga(function* watchSourceInit () {
     while (true) {
       const {editor} = yield take(actions.prepareScreenSourceInit);
       if (editor) {
@@ -24,9 +26,9 @@ export default function (actions, selectors) {
         editor.reset(text, selection);
       }
     }
-  }
+  });
 
-  function* watchExampleSelected () {
+  m.saga(function* watchExampleSelected () {
     while (true) {
       const {example} = yield take(actions.prepareScreenExampleSelected);
       const source = yield select(selectors.getPreparedSource);
@@ -37,12 +39,6 @@ export default function (actions, selectors) {
         editor.reset(text, selection);
       }
     }
-  }
-
-  return [
-    watchNewRecording,
-    watchSourceInit,
-    watchExampleSelected
-  ];
+  });
 
 };

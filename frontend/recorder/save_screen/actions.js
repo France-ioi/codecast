@@ -1,11 +1,14 @@
 
-export const saveScreenUploadStart = 'Save.Prepare.Start';
+export default function (m) {
 
-export const saveScreenPreparing = 'Save.Prepare.Pending';
-export const saveScreenPrepared = 'Save.Prepare.Completed';
-export const saveScreenEventsUploading = 'Save.Events.Upload.Pending';
-export const saveScreenEventsUploaded = 'Save.Events.Upload.Success';
-export const saveScreenAudioUploading = 'Save.Audio.Upload.Pending';
-export const saveScreenAudioUploaded = 'Save.Audio.Upload.Success';
-export const saveScreenUploadSucceeded = 'Save.Success';
-export const saveScreenUploadFailed = 'Save.Failure';
+  m.action('saveScreenUploadStart', 'Save.Prepare.Start');
+  m.action('saveScreenPreparing', 'Save.Prepare.Pending');
+  m.action('saveScreenPrepared', 'Save.Prepare.Completed');
+  m.action('saveScreenEventsUploading', 'Save.Events.Upload.Pending');
+  m.action('saveScreenEventsUploaded', 'Save.Events.Upload.Success');
+  m.action('saveScreenAudioUploading', 'Save.Audio.Upload.Pending');
+  m.action('saveScreenAudioUploaded', 'Save.Audio.Upload.Success');
+  m.action('saveScreenUploadSucceeded', 'Save.Success');
+  m.action('saveScreenUploadFailed', 'Save.Failure');
+
+};

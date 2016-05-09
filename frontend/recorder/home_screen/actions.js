@@ -1,2 +1,4 @@
 
-export const homeNewRecording = 'Home.NewRecording';
+export default function (m) {
+  m.action('homeNewRecording', 'Home.NewRecording');
+};

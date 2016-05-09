@@ -2,9 +2,11 @@
 import {take, put, call, select} from 'redux-saga/effects';
 import superagent from 'superagent';
 
-import {asyncRequestJson} from '../../common/api';
+import {asyncRequestJson} from '../../utils/api';
 
-export default function (actions, selectors) {
+export default function (m) {
+
+  const {actions, selectors} = m;
 
   function getBlob (url) {
     return new Promise(function (resolve, reject) {
@@ -60,15 +62,11 @@ export default function (actions, selectors) {
     }
   }
 
-  function* watchUploadStart () {
+  m.saga(function* watchUploadStart () {
     while (true) {
       yield take(actions.saveScreenUploadStart);
       yield call(uploadRecording);
     }
-  }
-
-  return [
-    watchUploadStart
-  ];
+  });
 
 };

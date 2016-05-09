@@ -91,7 +91,7 @@ const ShowArray = EpicComponent(self => {
   };
 });
 
-export default _actions => EpicComponent(self => {
+export default m => m.view('DirectivesPane', EpicComponent(self => {
 
   const getIdent = function (expr) {
     return expr[0] === 'ident' && expr[1];
@@ -244,4 +244,4 @@ export default _actions => EpicComponent(self => {
     }
   };
 
-});
+}));

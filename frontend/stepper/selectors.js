@@ -1,20 +1,24 @@
 
-export function getStepperState (state) {
-  return state.get('stepper');
-};
+export default m => {
 
-export function getTranslateState (state) {
-  return state.get('translate');
-};
+  m.selector('getStepperState', state =>
+    state.get('stepper')
+  );
 
-export const getStepperInterrupted = function (state) {
-  return state.getIn(['stepper', 'interrupt']);
-};
+  m.selector('getTranslateState', state =>
+    state.get('translate')
+  );
 
-export function StackView (state, props) {
-  return {state: state.getIn(['stepper', 'display'])};
-};
+  m.selector('getStepperInterrupted', state =>
+    state.getIn(['stepper', 'interrupt'])
+  );
 
-export function DirectivesPane (state, props) {
-  return {state: state.getIn(['stepper', 'display'])};
+  m.selector('StackView', function (state, props) {
+    return {state: state.getIn(['stepper', 'display'])};
+  });
+
+  m.selector('DirectivesPane', function (state, props) {
+    return {state: state.getIn(['stepper', 'display'])};
+  });
+
 };

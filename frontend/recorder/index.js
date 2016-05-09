@@ -16,83 +16,43 @@ import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
 import '../common/style.css!';
 
-import link from '../common/linker';
+import link from '../utils/linker';
+import DevTools from '../utils/dev_tools';
 
-import * as commonActions from '../common/actions';
-import * as stepperActions from '../stepper/actions';
-import * as homeScreenActions from './home_screen/actions';
-import * as prepareScreenActions from './prepare_screen/actions';
-import * as recordScreenActions from './record_screen/actions';
-import * as saveScreenActions from './save_screen/actions';
+import stepperComponent from '../stepper/index';
+import commonComponent from '../common/index';
+import homeScreenComponent from './home_screen/index';
+import prepareScreenComponent from './prepare_screen/index';
+import recordScreenComponent from './record_screen/index';
+import saveScreenComponent from './save_screen/index';
+import selectors from './selectors'
+import App from './app_view';
 
-import * as commonReducers from '../common/reducers';
-import * as stepperReducers from '../stepper/reducers';
-import * as homeScreenReducers from './home_screen/reducers';
-import * as prepareScreenReducers from './prepare_screen/reducers';
-import * as recordScreenReducers from './record_screen/reducers';
-import * as saveScreenReducers from './save_screen/reducers';
+const {store, actions, views} = link(function (m) {
 
-import commonSagas from '../common/sagas';
-import stepperSagas from '../stepper/sagas';
-import homeScreenSagas from './home_screen/sagas';
-import prepareScreenSagas from './prepare_screen/sagas';
-import recordScreenSagas from './record_screen/sagas';
-import saveScreenSagas from './save_screen/sagas';
+  m.include(stepperComponent);
+  m.include(commonComponent);
+  m.include(homeScreenComponent);
+  m.include(prepareScreenComponent);
+  m.include(recordScreenComponent);
+  m.include(saveScreenComponent);
+  m.include(selectors);
+  m.include(App);
 
-import StackViewFactory from '../stepper/stack_view';
-import DirectivesPaneFactory from '../stepper/directives_pane';
-import HomeScreenFactory from './home_screen/view';
-import PrepareScreenFactory from './prepare_screen/view';
-import RecordScreenFactory from './record_screen/view';
-import SaveScreenFactory from './save_screen/view';
-import RecorderControlsFactory from './record_screen/controls_view';
-import AppFactory from './app_view';
+  m.enhancer(DevTools.instrument());
 
-import * as selectors from './selectors';
-
-const {store, views} = link({
-  actionMaps: [
-    commonActions,
-    stepperActions,
-    homeScreenActions,
-    prepareScreenActions,
-    recordScreenActions,
-    saveScreenActions
-  ],
-  reducerMaps: [
-    commonReducers,
-    stepperReducers,
-    homeScreenReducers,
-    prepareScreenReducers,
-    recordScreenReducers,
-    saveScreenReducers
-  ],
-  sagaFactories: [
-    commonSagas,
-    stepperSagas,
-    homeScreenSagas,
-    prepareScreenSagas,
-    recordScreenSagas,
-    saveScreenSagas
-  ],
-  viewFactories: {
-    HomeScreen: HomeScreenFactory,
-    PrepareScreen: PrepareScreenFactory,
-    RecordScreen: RecordScreenFactory,
-    RecorderControls: RecorderControlsFactory,
-    SaveScreen: SaveScreenFactory,
-    DirectivesPane: DirectivesPaneFactory,
-    StackView: StackViewFactory,
-    App: AppFactory
-  },
-  selectors,
-  initialState: Immutable.Map({
+  m.action('recorderPrepare', 'Recorder.Prepare');
+  m.reducer('init', _ => Immutable.Map({
     screen: 'home',
     home: Immutable.Map({
       screen: Immutable.Map({})
     })
-  })
+  }));
+
 });
+
+store.dispatch({type: actions.init});
+store.dispatch({type: actions.recorderPrepare});
 
 const container = document.getElementById('react-container');
 ReactDOM.render(<Provider store={store}><views.App/></Provider>, container);
