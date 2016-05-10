@@ -7,7 +7,6 @@ import EpicComponent from 'epic-component';
 
 import Document from '../../utils/document';
 import Editor from '../../utils/editor';
-import examples from './examples';
 
 const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
 
@@ -20,7 +19,16 @@ export default function (m) {
   m.action('prepareScreenSourceScroll', 'Prepare.Source.Scroll');
   m.action('prepareScreenExampleSelected', 'Prepare.Example.Selected');
 
+  m.selector('getPreparedSource', state =>
+    state.getIn(['prepare', 'source'])
+  );
+
+  m.selector('getPreparedInput', state =>
+    state.getIn(['prepare', 'input'])
+  );
+
   m.reducer('prepareScreenInit', function (state, action) {
+    const examples = state.getIn(['prepare', 'examples']);
     const initialDocument = Document.fromString(examples[0].source);
     const initialSource = Immutable.Map({
       document: initialDocument,
@@ -32,11 +40,9 @@ export default function (m) {
       selection: startOfBuffer,
       scrollTop: 0
     });
-    return state.set('prepare', Immutable.Map({
-      source: initialSource,
-      input: initialInput,
-      examples
-    }));
+    return state.update('prepare', prepare => prepare
+      .set('source', initialSource)
+      .set('input', initialInput));
   });
 
   m.reducer('prepareScreenSourceInit', function (state, action) {
@@ -93,6 +99,11 @@ export default function (m) {
         editor.reset(text, selection);
       }
     }
+  });
+
+  m.selector('PrepareScreen', function (state, props) {
+    const examples = state.getIn(['prepare', 'examples']);
+    return {examples};
   });
 
   m.view('PrepareScreen', EpicComponent(self => {

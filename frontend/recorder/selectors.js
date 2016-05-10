@@ -9,14 +9,6 @@ export default function (m) {
     state.get('home').get('screen')
   );
 
-  m.selector('getPreparedSource', state =>
-    state.getIn(['prepare', 'source'])
-  );
-
-  m.selector('getPreparedInput', state =>
-    state.getIn(['prepare', 'input'])
-  );
-
   m.selector('getRecorderState', state =>
     state.get('recorder', Immutable.Map())
   );
@@ -36,13 +28,6 @@ export default function (m) {
 
   m.selector('HomeScreen', function (state, props) {
     return {};
-  });
-
-  m.selector('PrepareScreen', function (state, props) {
-    const prepare = state.get('prepare');
-    const source = prepare.get('source');
-    const examples = prepare.get('examples');
-    return {source, examples};
   });
 
   m.selector('RecorderControls', function (state, props) {

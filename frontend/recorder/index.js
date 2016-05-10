@@ -27,6 +27,7 @@ import recordScreenComponent from './record_screen/index';
 import saveScreenComponent from './save_screen/index';
 import selectors from './selectors'
 import App from './app_view';
+import examples from './examples'
 
 const {store, actions, views} = link(function (m) {
 
@@ -46,7 +47,8 @@ const {store, actions, views} = link(function (m) {
     screen: 'home',
     home: Immutable.Map({
       screen: Immutable.Map({})
-    })
+    }),
+    prepare: Immutable.Map({examples})
   }));
 
 });
