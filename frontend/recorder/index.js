@@ -21,10 +21,10 @@ import DevTools from '../utils/dev_tools';
 
 import stepperComponent from '../stepper/index';
 import commonComponent from '../common/index';
-import homeScreenComponent from './home_screen/index';
-import prepareScreenComponent from './prepare_screen/index';
+import homeScreenComponent from './home_screen';
+import prepareScreenComponent from './prepare_screen';
 import recordScreenComponent from './record_screen/index';
-import saveScreenComponent from './save_screen/index';
+import saveScreenComponent from './save_screen';
 import App from './app_view';
 import examples from './examples'
 

@@ -5,8 +5,8 @@ import React from 'react';
 import {Button, Nav, NavDropdown, MenuItem} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import Document from '../../utils/document';
-import Editor from '../../utils/editor';
+import Document from '../utils/document';
+import Editor from '../utils/editor';
 
 const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
 

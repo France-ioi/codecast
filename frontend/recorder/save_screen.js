@@ -4,8 +4,8 @@ import React from 'react';
 import {Button, Input} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import {asyncRequestJson} from '../../utils/api';
-import {getBlob, uploadBlob} from '../../utils/blobs';
+import {asyncRequestJson} from '../utils/api';
+import {getBlob, uploadBlob} from '../utils/blobs';
 
 export default function (m) {
 
