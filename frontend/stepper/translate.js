@@ -49,16 +49,16 @@ export default function* (deps) {
   yield use('getSource');
 
   // Requested translation of given {source}.
-  yield defineAction('translate', 'Stepper.Translate');
+  yield defineAction('translate', 'Translate');
 
   // Started translation of {source}.
-  yield defineAction('translateStart', 'Stepper.Translate.Start');
+  yield defineAction('translateStarted', 'Translate.Started');
 
   // Succeeded translating {source} to {syntaxTree}.
-  yield defineAction('translateSucceeded', 'Stepper.Translate.Succeeded');
+  yield defineAction('translateSucceeded', 'Translate.Succeeded');
 
   // Failed to translate {source} with {error}.
-  yield defineAction('translateFailed', 'Stepper.Translate.Failed');
+  yield defineAction('translateFailed', 'Translate.Failed');
 
   yield defineSelector('getTranslateState', state =>
     state.get('translate')
@@ -77,7 +77,7 @@ export default function* (deps) {
   function* translateSource (action) {
     const sourceState = yield select(deps.getSource);
     const source = Document.toString(sourceState.get('document'));
-    yield put({type: deps.translateStart, source});
+    yield put({type: deps.translateStarted, source});
     let response, syntaxTree, error;
     try {
       response = yield call(asyncRequestJson, '/translate', {source});

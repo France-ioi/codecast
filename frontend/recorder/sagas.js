@@ -53,7 +53,7 @@ export default function* (deps) {
     'recorderStop', 'recorderStopping', 'recorderStopped',
     'sourceSelect', 'sourceEdit', 'sourceScroll',
     'inputSelect', 'inputEdit', 'inputScroll',
-    'translateStart', 'translateSucceeded', 'translateFailed',
+    'translateStarted', 'translateSucceeded', 'translateFailed',
     'stepperStep', 'stepperProgress', 'stepperIdle', 'stepperInterrupt', 'stepperRestart', 'stepperExit'
   );
 
@@ -323,7 +323,7 @@ export default function* (deps) {
 
   yield addSaga(function* watchTranslateStart () {
     while (true) {
-      const {source} = yield take(deps.translateStart);
+      const {source} = yield take(deps.translateStarted);
       yield put(recordEventAction(['stepper.translate', source]));
     }
   });
