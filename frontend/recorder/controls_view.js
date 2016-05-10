@@ -3,15 +3,24 @@ import React from 'react';
 import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-export default function (m) {
+import {use, defineSelector, defineView} from '../utils/linker';
 
-  m.selector('RecorderControls', function (state, props) {
+export default function* (deps) {
+
+  yield use(
+    'getStepperState',
+    'recorderStop',
+    'stepperStep', 'stepperInterrupt', 'stepperRestart', 'stepperExit',
+    'translate'
+  );
+
+  yield defineSelector('RecorderControlsSelector', function (state, props) {
     const recorder = state.get('recorder');
     const recorderState = recorder.get('state');
     const isRecording = recorderState === 'recording';
     const elapsed = Math.round(recorder.get('elapsed') / 1000) || 0;
     const eventCount = recorder.get('events').count();
-    const stepper = m.selectors.getStepperState(state);
+    const stepper = deps.getStepperState(state);
     const haveStepper = !!stepper;
     const stepperState = haveStepper && stepper.get('state');
     const isStepping = stepperState !== 'idle';
@@ -21,53 +30,50 @@ export default function (m) {
     return {isRecording, elapsed, eventCount, haveStepper, isStepping, canStep};
   });
 
-  m.view('RecorderControls', EpicComponent(self => {
-
-    const {actions} = m;
+  yield defineView('RecorderControls', 'RecorderControlsSelector', EpicComponent(self => {
 
     const onPauseRecording = function () {
       // TODO
     };
 
     const onStopRecording = function () {
-      self.props.dispatch({type: actions.recorderStop});
+      self.props.dispatch({type: deps.recorderStop});
     };
 
     const onStepExpr = function () {
-      self.props.dispatch({type: actions.stepperStep, mode: 'expr'});
+      self.props.dispatch({type: deps.stepperStep, mode: 'expr'});
     };
 
     const onStepInto = function () {
-      self.props.dispatch({type: actions.stepperStep, mode: 'into'});
+      self.props.dispatch({type: deps.stepperStep, mode: 'into'});
     };
 
     const onStepOut = function () {
-      self.props.dispatch({type: actions.stepperStep, mode: 'out'});
+      self.props.dispatch({type: deps.stepperStep, mode: 'out'});
     };
 
     const onStepOver = function () {
-      self.props.dispatch({type: actions.stepperStep, mode: 'over'});
+      self.props.dispatch({type: deps.stepperStep, mode: 'over'});
     };
 
     const onInterrupt = function () {
-      self.props.dispatch({type: actions.stepperInterrupt});
+      self.props.dispatch({type: deps.stepperInterrupt});
     };
 
     const onRestart = function () {
-      self.props.dispatch({type: actions.stepperRestart});
+      self.props.dispatch({type: deps.stepperRestart});
     };
 
     const onEdit = function () {
-      self.props.dispatch({type: actions.stepperExit});
+      self.props.dispatch({type: deps.stepperExit});
     };
 
     const onTranslate = function () {
-      self.props.dispatch({type: actions.translate});
+      self.props.dispatch({type: deps.translate});
     };
 
     self.render = function () {
       const {isRecording, elapsed, eventCount, haveStepper, isStepping, canStep} = self.props;
-      console.log('canStep', canStep);
       return (
         <div className="pane pane-controls">
           <p>

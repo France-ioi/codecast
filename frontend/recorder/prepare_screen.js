@@ -5,29 +5,32 @@ import React from 'react';
 import {Button, Nav, NavDropdown, MenuItem} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
+import {use, defineAction, defineSelector, defineView, addReducer, addSaga} from '../utils/linker';
 import Document from '../utils/document';
 import Editor from '../utils/editor';
 
 const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
 
-export default function (m) {
+export default function* (deps) {
 
-  m.action('prepareScreenInit', 'Prepare.Init');
-  m.action('prepareScreenSourceInit', 'Prepare.Source.Init');
-  m.action('prepareScreenSourceEdit', 'Prepare.Source.Edit');
-  m.action('prepareScreenSourceSelect', 'Prepare.Source.Select');
-  m.action('prepareScreenSourceScroll', 'Prepare.Source.Scroll');
-  m.action('prepareScreenExampleSelected', 'Prepare.Example.Selected');
+  yield use('homeNewRecording', 'switchToScreen', 'recorderStart');
 
-  m.selector('getPreparedSource', state =>
+  yield defineAction('prepareScreenInit', 'Prepare.Init');
+  yield defineAction('prepareScreenSourceInit', 'Prepare.Source.Init');
+  yield defineAction('prepareScreenSourceEdit', 'Prepare.Source.Edit');
+  yield defineAction('prepareScreenSourceSelect', 'Prepare.Source.Select');
+  yield defineAction('prepareScreenSourceScroll', 'Prepare.Source.Scroll');
+  yield defineAction('prepareScreenExampleSelected', 'Prepare.Example.Selected');
+
+  yield defineSelector('getPreparedSource', state =>
     state.getIn(['prepare', 'source'])
   );
 
-  m.selector('getPreparedInput', state =>
+  yield defineSelector('getPreparedInput', state =>
     state.getIn(['prepare', 'input'])
   );
 
-  m.reducer('prepareScreenInit', function (state, action) {
+  yield addReducer('prepareScreenInit', function (state, action) {
     const examples = state.getIn(['prepare', 'examples']);
     const initialDocument = Document.fromString(examples[0].source);
     const initialSource = Immutable.Map({
@@ -45,21 +48,21 @@ export default function (m) {
       .set('input', initialInput));
   });
 
-  m.reducer('prepareScreenSourceInit', function (state, action) {
+  yield addReducer('prepareScreenSourceInit', function (state, action) {
     return state.setIn(['prepare', 'source', 'editor'], action.editor);
   });
 
-  m.reducer('prepareScreenSourceEdit', function (state, action) {
+  yield addReducer('prepareScreenSourceEdit', function (state, action) {
     const prevSource = state.getIn(['prepare', 'source', 'document']);
     const source = Document.applyDelta(prevSource, action.delta);
     return state.setIn(['prepare', 'source', 'document'], source);
   });
 
-  m.reducer('prepareScreenSourceSelect', function (state, action) {
+  yield addReducer('prepareScreenSourceSelect', function (state, action) {
     return state.setIn(['prepare', 'source', 'selection'], action.selection);
   });
 
-  m.reducer('prepareScreenSourceScroll', function (state, action) {
+  yield addReducer('prepareScreenSourceScroll', function (state, action) {
     return state.setIn(['prepare', 'source', 'scrollTop'], action.scrollTop);
   });
 
@@ -67,20 +70,20 @@ export default function (m) {
   // calls editor.reset which triggers edit/select events that will update the
   // state.
 
-  m.saga(function* watchNewRecording () {
+  yield addSaga(function* watchNewRecording () {
     // XXX move to home screen?
     while (true) {
-      yield take(m.actions.homeNewRecording);
-      yield put({type: m.actions.prepareScreenInit});
-      yield put({type: m.actions.switchToScreen, screen: 'prepare'});
+      yield take(deps.homeNewRecording);
+      yield put({type: deps.prepareScreenInit});
+      yield put({type: deps.switchToScreen, screen: 'prepare'});
     }
   });
 
-  m.saga(function* watchSourceInit () {
+  yield addSaga(function* watchSourceInit () {
     while (true) {
-      const {editor} = yield take(m.actions.prepareScreenSourceInit);
+      const {editor} = yield take(deps.prepareScreenSourceInit);
       if (editor) {
-        const source = yield select(m.selectors.getPreparedSource);
+        const source = yield select(deps.getPreparedSource);
         const text = Document.toString(source.get('document'));
         const selection = source.get('selection');
         editor.reset(text, selection);
@@ -88,10 +91,10 @@ export default function (m) {
     }
   });
 
-  m.saga(function* watchExampleSelected () {
+  yield addSaga(function* watchExampleSelected () {
     while (true) {
-      const {example} = yield take(m.actions.prepareScreenExampleSelected);
-      const source = yield select(m.selectors.getPreparedSource);
+      const {example} = yield take(deps.prepareScreenExampleSelected);
+      const source = yield select(deps.getPreparedSource);
       const editor = source.get('editor');
       if (editor) {
         const text = example.source;
@@ -101,36 +104,36 @@ export default function (m) {
     }
   });
 
-  m.selector('PrepareScreen', function (state, props) {
+  yield defineSelector('PrepareScreenSelector', function (state, props) {
     const examples = state.getIn(['prepare', 'examples']);
     return {examples};
   });
 
-  m.view('PrepareScreen', EpicComponent(self => {
+  yield defineView('PrepareScreen', 'PrepareScreenSelector', EpicComponent(self => {
 
     const onSourceInit = function (editor) {
-      self.props.dispatch({type: m.actions.prepareScreenSourceInit, editor});
+      self.props.dispatch({type: deps.prepareScreenSourceInit, editor});
     };
 
     const onSourceEdit = function (delta) {
-      self.props.dispatch({type: m.actions.prepareScreenSourceEdit, delta});
+      self.props.dispatch({type: deps.prepareScreenSourceEdit, delta});
     };
 
     const onSourceSelect = function (selection) {
-      self.props.dispatch({type: m.actions.prepareScreenSourceSelect, selection});
+      self.props.dispatch({type: deps.prepareScreenSourceSelect, selection});
     };
 
     const onSourceScroll = function (scrollTop) {
-      self.props.dispatch({type: m.actions.prepareScreenSourceScroll, scrollTop});
+      self.props.dispatch({type: deps.prepareScreenSourceScroll, scrollTop});
     };
 
     const onSelectExample = function (event, i) {
       const example = self.props.examples[i];
-      self.props.dispatch({type: m.actions.prepareScreenExampleSelected, example});
+      self.props.dispatch({type: deps.prepareScreenExampleSelected, example});
     };
 
     const onStartRecording = function () {
-      self.props.dispatch({type: m.actions.recorderStart});
+      self.props.dispatch({type: deps.recorderStart});
     };
 
     self.render = function () {

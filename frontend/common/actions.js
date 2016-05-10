@@ -1,25 +1,27 @@
 
-export default function (m) {
+import {defineAction} from '../utils/linker';
 
-// Sent when the application initializes.
-m.action('init', 'System.Init')
+export default function* () {
 
-// Sent when a generic error has occurred.
-m.action('error', 'System.Error');
+  // Sent when the application initializes.
+  yield defineAction('init', 'System.Init')
 
-// Switch to the specified screen.
-m.action('switchToScreen', 'System.SwitchToScreen');
+  // Sent when a generic error has occurred.
+  yield defineAction('error', 'System.Error');
 
-// TODO: generalize source, input into an editor service
+  // Switch to the specified screen.
+  yield defineAction('switchToScreen', 'System.SwitchToScreen');
 
-m.action('sourceInit', 'Source.Init');
-m.action('sourceEdit', 'Source.Edit');
-m.action('sourceSelect', 'Source.Select');
-m.action('sourceScroll', 'Source.Scroll');
+  // TODO: generalize source, input into an editor service
 
-m.action('inputInit', 'Input.Init');
-m.action('inputEdit', 'Input.Edit');
-m.action('inputSelect', 'Input.Select');
-m.action('inputScroll', 'Input.Scroll');
+  yield defineAction('sourceInit', 'Source.Init');
+  yield defineAction('sourceEdit', 'Source.Edit');
+  yield defineAction('sourceSelect', 'Source.Select');
+  yield defineAction('sourceScroll', 'Source.Scroll');
+
+  yield defineAction('inputInit', 'Input.Init');
+  yield defineAction('inputEdit', 'Input.Edit');
+  yield defineAction('inputSelect', 'Input.Select');
+  yield defineAction('inputScroll', 'Input.Scroll');
 
 };

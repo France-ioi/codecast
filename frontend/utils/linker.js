@@ -1,48 +1,41 @@
 /*
 
-This file contains a linker for redux/redux-saga components.
+This file contains a linker for bundles of (redux) actions and reducers,
+(redux-saga) selectors and sagas, and (React) views.
 
-It implements a framework that maintains flat namespaces for actions,
-selectors, and views.
+A bundle is implemented as a generator that yields linker steps to:
 
-Each action is defined either as a string (which is used as its type) or an
-object which must contain a 'type' property.  The object form allows an action
-descriptor to document the use of the action.
+  - include another bundle;
+  - declare the use of dependencies defined by other bundles;
+  - define an action, selector, or view;
+  - add an action reducer or a saga
 
-Selectors are functions that extract values from the global state.  A selector
-must run quickly and should hence avoid non-trivial computations.
+A bundle's generator function takes as its single argument an object which
+the linker populates with the definitions made or used by the bundle.
+A shared flat namespace is used for actions, selectors, and views.
 
-Each component provides a number of named action reducers, the name of an
-action reducer name matching an action name (not type).
+Actions are redux actions and have string values.
+
+Selectors are cheap functions that take the global state and extract a limited
+view of it.  A selector may be defined in terms of other selectors, and may
+also be used in action reducers and sagas.
+
 Multiple action reducers for the same action are currently not supported (an
 exception is thrown at link time), but they could be composed in link order.
 
-Each component provides a saga factory, which is given the linked actions and
-selectors maps and must return a list of sagas.
-
-Finally, each component provides a views factory, which is given the linked
-actions and views maps and must return (view name → React component) map.
-If a selector match the view name, the React component is connected to the
+If a selector match the name of a view name, the view is connected to the
 store using the selector.
-
-XXX To improve component specifications, components should list the actions,
-    selectors, and views that they depend on.
-    They could then be passed a linker where safe proxies allow access to only
-    the items that have been declared as dependencies.
 
 */
 
-
 import {createStore, applyMiddleware, compose} from 'redux';
 import createSagaMiddleware from 'redux-saga';
-import flatten from 'lodash/flatten';
 import Immutable from 'immutable';
 import {connect} from 'react-redux';
 
 function makeSafeProxy (obj, onError) {
   function safeGet(target, property) {
     if (property in target) {
-      // console.log('action', property);
       return target[property];
     } else {
       return onError(target, property);
@@ -51,135 +44,197 @@ function makeSafeProxy (obj, onError) {
   return new Proxy(obj, {get: safeGet});
 }
 
-export default function link (specs) {
+export function include (bundle) {
+  return {type: 'include', bundle};
+};
 
-  // action key → action type
-  const actions = makeSafeProxy({}, onMissingAction);
+export function use (...names) {
+  return {type: 'use', names};
+};
 
-  // action type → action key
-  const keyForActionType = {};
+export function defineAction (name, action) {
+  return {type: 'defineAction', name, action};
+};
 
-  // action key → action reducer
+export function defineSelector (name, selector) {
+  return {type: 'defineSelector', name, selector};
+};
+
+export function defineView (name, selector, view) {
+  if (view === undefined) {
+    view = selector;
+    selector = undefined;
+  }
+  return {type: 'defineView', name, view, selector};
+};
+
+// Add an action reducer.
+export function addReducer (name, reducer) {
+  return {type: 'addReducer', name, reducer};
+};
+
+export function addSaga (saga) {
+  return {type: 'addSaga', saga};
+};
+
+export function addEnhancer (enhancer) {
+  return {type: 'addEnhancer', enhancer};
+};
+
+export function link (rootBundle) {
+
+  // name → value
+  const scope = {};
+
+  // name → type
+  const typeMap = {};
+
+  // action type → action name
+  const nameForActionType = {};
+
+  // action name → action reducer
   const reducerMap = {};
-
-  const selectors = makeSafeProxy({}, onMissingSelector);
 
   const sagas = [];
 
   const enhancers = [];
 
+  // Reducer linking is deferred until all actions have been defined.
+  const reducerQueue = [];
+
+  // 'use' directives are queued and dependency objects are populated after
+  // all definitions have taken effect.
+  const useQueue = [];
+
   // View linking is defered until all selectors have been added.
   const viewQueue = [];
 
-  // view key → React component (connected if selector with same key)
-  const views = makeSafeProxy({}, onMissingView);
+  const linkErrors = [];
 
-  const linker = {
-    actions,
-    selectors,
-    views,
-    action: addAction,
-    selector: addSelector,
-    reducer: addReducer,
-    saga: addSaga,
-    view: addView,
-    enhancer: addEnhancer,
-    include: include
-  };
-
-  function onMissingAction (target, property) {
-    throw `undefined action ${property}`;
+  function undeclaredDependencyError (target, property) {
+    throw new Error(`use of undeclared dependency ${property}`);
   }
 
-  function onMissingSelector (target, property) {
-    throw `undefined selector ${property}`;
+  function include_ (bundle) {
+    const deps = makeSafeProxy({}, undeclaredDependencyError);
+    const it = bundle(deps);
+    let result = it.next();
+    while (!result.done) {
+      interpretDirective(result.value, deps);
+      result = it.next();
+    }
   }
 
-  function onMissingView (target, property) {
-    throw `undefined view ${property}`;
+  function defineAction_ (name, action) {
+    if (name in scope) {
+      throw new Error(`linker conflict on ${name}`);
+    }
+    if (action in nameForActionType) {
+      throw `action type conflict: ${action}`;
+    }
+    scope[name] = action;
+    typeMap[name] = 'action';
+    nameForActionType[action] = name;
   }
 
-  function addAction (key, type_) {
-    if (typeof type_ === 'object') {
-      type_ = object.type;
+  function defineSelector_ (name, selector) {
+    if (name in scope) {
+      throw new Error(`linker conflict on ${name}`);
     }
-    if (key in actions) {
-      throw `action key conflict: ${key}`;
-    }
-    if (type_ in keyForActionType) {
-      throw `action type conflict: ${key}`;
-    }
-    actions[key] = type_;
-    keyForActionType[type_] = key;
-    return linker;
+    scope[name] = selector;
+    typeMap[name] = 'selector';
   }
 
-  function addSelector (key, selector) {
-    if (key in selectors) {
-      throw `selector conflict: ${key}`;
+  function addReducer_ (name, reducer) {
+    if (!(name in scope)) {
+      throw new Error(`reducer for undefined action ${name}`);
     }
-    selectors[key] = selector;
-    return linker;
-  }
-
-  function addReducer (key, reducer) {
-    // TODO: if key is a function, install it as a global reducer hook.
-    if (!(key in actions)) {
-      console.warn(`reducer: no such action ${key}`);
-      return;
+    if (typeMap[name] !== 'action') {
+      throw new Error(`reducer for non-action ${name}`);
     }
-    const actionType = actions[key];
+    const actionType = scope[name];
     if (actionType in reducerMap) {
-      // TODO: compose the reducers
-      console.warn(`reducer: duplicate reducer for ${key}`);
+      const prevReducer = reducerMap[actionType];
+      reducerMap[actionType] = function (state, action) {
+        return reducer(prevReducer(state, action), action);
+      };
     } else {
       reducerMap[actionType] = reducer;
     }
-    return linker;
   }
 
-  function addSaga (saga) {
-    sagas.push(saga);
-    return linker;
-  }
-
-  function addView (key, view) {
-    viewQueue.push([key, view]);
-    return linker;
-  }
-
-  function linkView (key, view) {
-    view = key in selectors ? connect(selectors[key])(view) : view;
-    if (key in views) {
-      throw `view key conflict: ${key}`;
-    } else {
-      views[key] = view;
+  function interpretDirective (dir, deps) {
+    switch (dir.type) {
+      case 'include':
+        include_(dir.bundle);
+        break;
+      case 'use':
+        useQueue.push([deps, dir.names]);
+        break;
+      case 'defineAction':
+        defineAction_(dir.name, dir.action);
+        useQueue.push([deps, dir.name]);
+        break;
+      case 'defineSelector':
+        defineSelector_(dir.name, dir.selector);
+        useQueue.push([deps, dir.name]);
+        break;
+      case 'defineView':
+        viewQueue.push(dir);
+        useQueue.push([deps, dir.name]);
+        break;
+      case 'addReducer':
+        reducerQueue.push(dir);
+        break;
+      case 'addSaga':
+        sagas.push(dir.saga);
+        break;
+      case 'addEnhancer':
+        enhancers.push(dir.enhancer);
+        break;
+      default:
+        throw `unhandled link directive type ${dir.type}`;
     }
   }
 
-  function addEnhancer (enhancer) {
-    enhancers.push(enhancer);
-    return linker;
-  }
-
-  // Apply the specs to the linker.  The specs will declaratively add
-  // actions, selectors, reducers, sagas, views, and enhancers.
-  function include (specs) {
-    if (typeof specs === 'function') {
-      specs(linker);
-    } else if (Array.isArray(specs)) {
-      specs.forEach(include);
+  function provide (deps, name) {
+    if (name in scope) {
+      deps[name] = scope[name];
     } else {
-      throw new Error(`invalid argument to linker#include: ${specs.toString()}`);
+      throw new Error(`undefined dependency: ${name}`);
     }
-    return linker;
   }
 
-  include(specs);
-  viewQueue.forEach(function (args) {
-    linkView(...args);
+  include_(rootBundle);
+
+  // Define reducers.
+  reducerQueue.forEach(function (dir) {
+    addReducer_(dir.name, dir.reducer);
   });
 
+  // Define and connect views.
+  viewQueue.forEach(function (dir) {
+    let {name, selector, view} = dir;
+    if (selector in scope) {
+      view = connect(scope[selector])(view);
+    }
+    scope[name] = view;
+    typeMap[name] = 'view';
+  });
+
+  // Provide dependencies.
+  useQueue.forEach(function (item) {
+    const deps = item[0];
+    if (typeof item[1] === 'string') {
+      provide(deps, item[1]);
+    } else if (Array.isArray(item[1])) {
+      item[1].forEach(name => provide(deps, name));
+    } else {
+      throw new Error('invalid use');
+    }
+  });
+
+  // Build the reducer.
   const reducer = function (state, action) {
     // TODO: add support for reducer hooks
     if (action.type in reducerMap) {
@@ -188,12 +243,12 @@ export default function link (specs) {
     return state;
   }
 
-  let enhancer = applyMiddleware(createSagaMiddleware.apply(null, flatten(sagas)));
+  let enhancer = applyMiddleware(createSagaMiddleware.apply(null, sagas));
   enhancers.forEach(function (other) {
     enhancer = compose(enhancer, other);
   });
 
   const store = createStore(reducer, null, enhancer);
 
-  return {actions, selectors, views, store};
+  return {store, scope};
 };

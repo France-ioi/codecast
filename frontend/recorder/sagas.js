@@ -2,6 +2,7 @@
 import {take, put, call, race, select} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
+import {use, addSaga} from '../utils/linker';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import Document from '../utils/document';
 import {spawnWorker, callWorker, killWorker} from '../utils/worker_utils';
@@ -41,13 +42,24 @@ function delay(ms) {
   });
 }
 
-export default function (m) {
+export default function* (deps) {
 
-  const {actions, selectors} = m;
+  yield use(
+    'error', 'switchToRecordScreen',
+    'getRecorderState', 'getPreparedSource', 'getPreparedInput',
+    'recorderPrepare', 'recorderPreparing', 'recorderReady',
+    'recorderAddEvent', 'recorderTick',
+    'recorderStart', 'recorderStarting', 'recorderStarted',
+    'recorderStop', 'recorderStopping', 'recorderStopped',
+    'sourceSelect', 'sourceEdit', 'sourceScroll',
+    'inputSelect', 'inputEdit', 'inputScroll',
+    'translateStart', 'translateSucceeded', 'translateFailed',
+    'stepperStep', 'stepperProgress', 'stepperIdle', 'stepperInterrupt', 'stepperRestart', 'stepperExit'
+  );
 
   function recordEventAction (payload) {
     return {
-      type: actions.recorderAddEvent,
+      type: deps.recorderAddEvent,
       timestamp: window.performance.now(),
       payload
     };
@@ -56,7 +68,7 @@ export default function (m) {
   function* recorderPrepare () {
     try {
       // Clean up any previous audioContext and worker.
-      const recorder = yield select(selectors.getRecorderState);
+      const recorder = yield select(deps.getRecorderState);
       let context = recorder.get('context');
       if (context) {
         const oldContext = recorder.get('audioContext');
@@ -70,11 +82,11 @@ export default function (m) {
         // TODO: put an action to clean up the old context, in case
         //       the saga fails before recorderReady is sent.
       }
-      yield put({type: actions.recorderPreparing, progress: 'start'});
+      yield put({type: deps.recorderPreparing, progress: 'start'});
       // Attempt to obtain an audio stream.  The async call will complete once
       // the user has granted permission to use the microphone.
       const stream = yield call(getAudioStream);
-      yield put({type: actions.recorderPreparing, progress: 'stream_ok'});
+      yield put({type: deps.recorderPreparing, progress: 'stream_ok'});
       // Create the AudioContext, connect the nodes, and suspend the audio
       // context until we actually start recording.
       const audioContext = new AudioContext();
@@ -88,10 +100,10 @@ export default function (m) {
       analyser.fftSize = 1024;
       scriptProcessor.connect(audioContext.destination);
       yield call(suspendAudioContext, audioContext);
-      yield put({type: actions.recorderPreparing, progress: 'audio_ok'});
+      yield put({type: deps.recorderPreparing, progress: 'audio_ok'});
       // Set up a worker to hold and encode the buffers.
       const worker = yield call(spawnWorker, audioWorkerUrl);
-      yield put({type: actions.recorderPreparing, progress: 'worker_ok'});
+      yield put({type: deps.recorderPreparing, progress: 'worker_ok'});
       // Initialize the worker.
       yield call(callWorker, worker, {
         command: "init",
@@ -99,7 +111,7 @@ export default function (m) {
           sampleRate: audioContext.sampleRate
         }
       });
-      yield put({type: actions.recorderPreparing, progress: 'worker_init_ok'});
+      yield put({type: deps.recorderPreparing, progress: 'worker_init_ok'});
       // Set up the ScriptProcessor to divert all buffers to the worker.
       const vumeterElement = document.getElementById('vumeter');
       if (vumeterElement) {
@@ -130,25 +142,25 @@ export default function (m) {
       //      the browser from garbage-collection the node (which seems to
       //      occur even though the node is still connected).
       context = {audioContext, worker, scriptProcessor};
-      yield put({type: actions.recorderReady, context});
+      yield put({type: deps.recorderReady, context});
     } catch (error) {
       // XXX send a specialized event and allow retrying recorderPrepare
-      yield put({type: actions.error, source: 'recorderPrepare', error});
+      yield put({type: deps.error, source: 'recorderPrepare', error});
     }
   }
 
   function* recorderStart () {
     try {
       // The user clicked the "start recording" button.
-      const recorder = yield select(selectors.getRecorderState);
+      const recorder = yield select(deps.getRecorderState);
       if (recorder.get('state') !== 'ready') {
         console.log('not ready', recorder);
         return;
       }
-      const source = yield select(selectors.getPreparedSource);
-      const input = yield select(selectors.getPreparedInput);
+      const source = yield select(deps.getPreparedSource);
+      const input = yield select(deps.getPreparedInput);
       // Signal that the recorder is starting.
-      yield put({type: actions.recorderStarting});
+      yield put({type: deps.recorderStarting});
       // Resume the audio context to start recording audio buffers.
       const context = recorder.get('context');
       // Race with timeout, in case the audio device is busy.
@@ -164,7 +176,7 @@ export default function (m) {
       }
       // Save the start time and signal that recording has started.
       const startTime = window.performance.now();
-      yield put({type: actions.recorderStarted, startTime});
+      yield put({type: deps.recorderStarted, startTime});
       yield put(recordEventAction(['start', {
         version: RECORDING_FORMAT_VERSION,
         source: {
@@ -178,20 +190,20 @@ export default function (m) {
           scrollTop: input.get('scrollTop')
         }
       }]));
-      yield put({type: actions.switchToRecordScreen, source, input});
+      yield put({type: deps.switchToRecordScreen, source, input});
     } catch (error) {
       // XXX generic error
-      yield put({type: actions.error, source: 'recorderStart', error});
+      yield put({type: deps.error, source: 'recorderStart', error});
     }
   }
 
   function* recorderStop () {
     try {
-      let recorder = yield select(selectors.getRecorderState);
+      let recorder = yield select(deps.getRecorderState);
       if (recorder.get('state') !== 'recording')
         return;
       // Signal that the recorder is stopping.
-      yield put({type: actions.recorderStopping});
+      yield put({type: deps.recorderStopping});
       // Suspend the audio context to stop recording audio buffers.
       const context = recorder.get('context');
       const audioContext = context.get('audioContext');
@@ -202,69 +214,69 @@ export default function (m) {
       const worker = context.get('worker');
       const audioResult = yield call(callWorker, worker, {command: "finishRecording"});
       // Package the events blob and an URL.
-      recorder = yield select(selectors.getRecorderState);
+      recorder = yield select(deps.getRecorderState);
       const events = recorder.get('events');
       const eventsBlob = new Blob([JSON.stringify(events.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
       const eventsUrl = URL.createObjectURL(eventsBlob);
       // Signal that the recorder has stopped.
       yield put({
-        type: actions.recorderStopped,
+        type: deps.recorderStopped,
         audioUrl: audioResult.url,
         eventsUrl: eventsUrl
       });
     } catch (error) {
       // XXX generic error
-      yield put({type: actions.error, source: 'recorderStop', error});
+      yield put({type: deps.error, source: 'recorderStop', error});
     }
   }
 
-  m.saga(function* watchRecorderPrepare () {
+  yield addSaga(function* watchRecorderPrepare () {
     while (true) {
-      yield take(actions.recorderPrepare);
+      yield take(deps.recorderPrepare);
       yield call(recorderPrepare);
     }
   });
 
-  m.saga(function* recorderTicker () {
+  yield addSaga(function* recorderTicker () {
     while (true) {
-      yield take(actions.recorderStarted);
+      yield take(deps.recorderStarted);
       while (true) {
         const outcome = yield race({
           tick: call(delay, 1000),
-          stopped: take(actions.recorderStopped)
+          stopped: take(deps.recorderStopped)
         });
         if ('stopped' in outcome)
           break;
         const now = window.performance.now();
-        yield put({type: actions.recorderTick, now});
+        yield put({type: deps.recorderTick, now});
       }
     }
   });
 
-  m.saga(function* watchRecorderStart () {
+  yield addSaga(function* watchRecorderStart () {
     while (true) {
-      yield take(actions.recorderStart);
+      yield take(deps.recorderStart);
       yield call(recorderStart);
     }
   });
 
-  m.saga(function* watchRecorderStop () {
+  yield addSaga(function* watchRecorderStop () {
     while (true) {
-      yield take(actions.recorderStop);
+      yield take(deps.recorderStop);
       yield call(recorderStop);
     }
   });
 
-  m.saga(function* watchSourceSelect () {
+  yield addSaga(function* watchSourceSelect () {
     while (true) {
-      const {selection} = yield take(actions.sourceSelect);
+      const {selection} = yield take(deps.sourceSelect);
       yield put(recordEventAction(['source.select', Document.compressRange(selection)]));
     }
   });
 
-  m.saga(function* watchSourceEdit () {
+  yield addSaga(function* watchSourceEdit () {
     while (true) {
-      const {delta} = yield take(actions.sourceEdit);
+      const {delta} = yield take(deps.sourceEdit);
       const {start, end} = delta;
       const range = {start, end};
       if (delta.action === 'insert') {
@@ -275,23 +287,23 @@ export default function (m) {
     }
   });
 
-  m.saga(function* watchSourceScroll () {
+  yield addSaga(function* watchSourceScroll () {
     while (true) {
-      const {scrollTop, firstVisibleRow} = yield take(actions.sourceScroll);
+      const {scrollTop, firstVisibleRow} = yield take(deps.sourceScroll);
       yield put(recordEventAction(['source.scroll', scrollTop, firstVisibleRow]));
     }
   });
 
-  m.saga(function* watchInputSelect () {
+  yield addSaga(function* watchInputSelect () {
     while (true) {
-      const {selection} = yield take(actions.inputSelect);
+      const {selection} = yield take(deps.inputSelect);
       yield put(recordEventAction(['input.select', Document.compressRange(selection)]));
     }
   });
 
-  m.saga(function* watchInputEdit () {
+  yield addSaga(function* watchInputEdit () {
     while (true) {
-      const {delta} = yield take(actions.inputEdit);
+      const {delta} = yield take(deps.inputEdit);
       const {start, end} = delta;
       const range = {start, end};
       if (delta.action === 'insert') {
@@ -302,74 +314,74 @@ export default function (m) {
     }
   });
 
-  m.saga(function* watchInputScroll () {
+  yield addSaga(function* watchInputScroll () {
     while (true) {
-      const {scrollTop, firstVisibleRow} = yield take(actions.inputScroll);
+      const {scrollTop, firstVisibleRow} = yield take(deps.inputScroll);
       yield put(recordEventAction(['input.scroll', scrollTop, firstVisibleRow]));
     }
   });
 
-  m.saga(function* watchTranslateStart () {
+  yield addSaga(function* watchTranslateStart () {
     while (true) {
-      const {source} = yield take(actions.translateStart);
+      const {source} = yield take(deps.translateStart);
       yield put(recordEventAction(['stepper.translate', source]));
     }
   });
 
-  m.saga(function* watchTranslateSuccess () {
+  yield addSaga(function* watchTranslateSuccess () {
     while (true) {
-      const {response} = yield take(actions.translateSucceeded);
+      const {response} = yield take(deps.translateSucceeded);
       yield put(recordEventAction(['stepper.translateSuccess', response]));
     }
   });
 
-  m.saga(function* watchTranslateFailure () {
+  yield addSaga(function* watchTranslateFailure () {
     while (true) {
-      const {response} = yield take(actions.translateFailed);
+      const {response} = yield take(deps.translateFailed);
       yield put(recordEventAction(['stepper.translateFailure', response]));
     }
   });
 
-  m.saga(function* watchStepperStep () {
+  yield addSaga(function* watchStepperStep () {
     while (true) {
-      const {mode} = yield take(actions.stepperStep);
+      const {mode} = yield take(deps.stepperStep);
       yield put(recordEventAction(['stepper.' + mode]));
     }
   });
 
-  m.saga(function* watchStepperProgress () {
+  yield addSaga(function* watchStepperProgress () {
     while (true) {
-      const {context} = yield take(actions.stepperProgress);
+      const {context} = yield take(deps.stepperProgress);
       // CONSIDER: record control node id and step
       yield put(recordEventAction(['stepper.progress', context.stepCounter]));
     }
   });
 
-  m.saga(function* watchStepperIdle () {
+  yield addSaga(function* watchStepperIdle () {
     while (true) {
-      const {context} = yield take(actions.stepperIdle);
+      const {context} = yield take(deps.stepperIdle);
       // CONSIDER: record control node id and step
       yield put(recordEventAction(['stepper.idle', context.stepCounter]));
     }
   });
 
-  m.saga(function* watchStepperInterrupt () {
+  yield addSaga(function* watchStepperInterrupt () {
     while (true) {
-      yield take(actions.stepperInterrupt);
+      yield take(deps.stepperInterrupt);
       yield put(recordEventAction(['stepper.interrupt']));
     }
   });
 
-  m.saga(function* watchStepperRestart () {
+  yield addSaga(function* watchStepperRestart () {
     while (true) {
-      yield take(actions.stepperRestart);
+      yield take(deps.stepperRestart);
       yield put(recordEventAction(['stepper.restart']));
     }
   });
 
-  m.saga(function* watchStepperExit () {
+  yield addSaga(function* watchStepperExit () {
     while (true) {
-      yield take(actions.stepperExit);
+      yield take(deps.stepperExit);
       yield put(recordEventAction(['stepper.exit']));
     }
   });

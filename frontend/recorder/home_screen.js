@@ -3,27 +3,30 @@ import React from 'react';
 import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 import {take, put} from 'redux-saga/effects';
+import {use, defineAction, defineSelector, defineView, addSaga} from '../utils/linker';
 
-export default function (m) {
+export default function* (deps) {
 
-  m.action('homeNewRecording', 'Home.NewRecording');
+  yield defineAction('homeNewRecording', 'Home.NewRecording');
 
-  m.saga(function* watchNewRecording () {
+  yield use('homeNewRecording', 'prepareScreenInit', 'switchToScreen');
+
+  yield addSaga(function* watchNewRecording () {
     while (true) {
-      yield take(m.actions.homeNewRecording);
-      yield put({type: m.actions.prepareScreenInit});
-      yield put({type: m.actions.switchToScreen, screen: 'prepare'});
+      yield take(deps.homeNewRecording);
+      yield put({type: deps.prepareScreenInit});
+      yield put({type: deps.switchToScreen, screen: 'prepare'});
     }
   });
 
-  m.selector('HomeScreen', function (state, props) {
+  yield defineSelector('HomeScreenSelector', function (state, props) {
     return {};
   });
 
-  m.view('HomeScreen', EpicComponent(self => {
+  yield defineView('HomeScreen', 'HomeScreenSelector', EpicComponent(self => {
 
     const onNewRecording = function () {
-      self.props.dispatch({type: m.actions.homeNewRecording});
+      self.props.dispatch({type: deps.homeNewRecording});
     };
 
     self.render = function () {

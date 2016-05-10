@@ -3,45 +3,67 @@ import React from 'react';
 import {Panel} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
+import {use, defineSelector, defineView} from '../utils/linker';
 import Editor from '../utils/editor';
 import Terminal from '../utils/terminal';
 
-export default function (m) {
+// Actions: name start with an action verb
+// Selectors: name start with get
+// Reducers: match action names
+// Sagas: unnamed
+// Views: name starts with an upper case letter
 
-  const {actions, views} = m;
+export default function* (deps) {
 
-  m.view('MainView', EpicComponent(self => {
+  yield use(
+    'getTranslateState', 'getStepperState',
+    'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
+    'inputInit', 'inputEdit', 'inputSelect', 'inputScroll',
+    'StackView', 'DirectivesPane');
+
+  yield defineSelector('MainViewSelector', function (state, props) {
+    const translate = deps.getTranslateState(state);
+    const diagnostics = translate && translate.get('diagnostics');
+    const stepper = deps.getStepperState(state);
+    const haveStepper = !!stepper;
+    const stepperState = haveStepper && stepper.get('state');
+    const stepperDisplay = haveStepper && stepper.get('display');
+    const terminal = haveStepper && stepperDisplay.terminal;
+    return {diagnostics, haveStepper, terminal};
+  });
+
+  yield defineView('MainView', 'MainViewSelector', EpicComponent(self => {
 
     const onSourceInit = function (editor) {
-      self.props.dispatch({type: actions.sourceInit, editor});
+      self.props.dispatch({type: deps.sourceInit, editor});
     };
 
     const onSourceSelect = function (selection) {
-      self.props.dispatch({type: actions.sourceSelect, selection});
+      self.props.dispatch({type: deps.sourceSelect, selection});
     };
 
     const onSourceEdit = function (delta) {
-      self.props.dispatch({type: actions.sourceEdit, delta});
+      self.props.dispatch({type: deps.sourceEdit, delta});
     };
 
     const onSourceScroll = function (scrollTop, firstVisibleRow) {
-      self.props.dispatch({type: actions.sourceScroll, scrollTop, firstVisibleRow});
+      self.props.dispatch({type: deps.sourceScroll, scrollTop, firstVisibleRow});
     };
 
     const onInputInit = function (editor) {
-      self.props.dispatch({type: actions.inputInit, editor});
+      self.props.dispatch({type: deps.inputInit, editor});
     };
 
     const onInputSelect = function (selection) {
-      self.props.dispatch({type: actions.inputSelect, selection});
+      self.props.dispatch({type: deps.inputSelect, selection});
     };
 
     const onInputEdit = function (delta) {
-      self.props.dispatch({type: actions.inputEdit, delta});
+      self.props.dispatch({type: deps.inputEdit, delta});
     };
 
     const onInputScroll = function (scrollTop, firstVisibleRow) {
-      self.props.dispatch({type: actions.inputScroll, scrollTop, firstVisibleRow});
+      self.props.dispatch({type: deps.inputScroll, scrollTop, firstVisibleRow});
     };
 
     self.render = function () {
@@ -51,7 +73,7 @@ export default function (m) {
           <div className="row">
             <div className="col-md-3">
               <Panel header="Variables">
-                {<views.StackView height='280px'/>}
+                {<deps.StackView height='280px'/>}
               </Panel>
             </div>
             <div className="col-md-9">
@@ -68,7 +90,7 @@ export default function (m) {
               </Panel>
             </div>}
             <div className="col-md-12">
-              <views.DirectivesPane/>
+              <deps.DirectivesPane/>
               <Panel header="Entrée/Sortie">
                 <div className="row">
                   <div className="col-md-6">

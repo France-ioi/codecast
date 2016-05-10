@@ -2,9 +2,13 @@
 import React from 'react';
 import EpicComponent from 'epic-component';
 
-export default function (m) {
+import {use, defineView} from '../utils/linker';
 
-  m.view('RecordScreen', EpicComponent(self => {
+export default function* (deps) {
+
+  yield use('RecorderControls', 'MainView');
+
+  yield defineView('RecordScreen', EpicComponent(self => {
 
     const recordingPanel = function () {
       return (
@@ -20,10 +24,10 @@ export default function (m) {
         <div>
           <div className="row">
             <div className="col-md-12">
-              <m.views.RecorderControls/>
+              <deps.RecorderControls/>
             </div>
           </div>
-          <m.views.MainView/>
+          <deps.MainView/>
         </div>
       );
     };

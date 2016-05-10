@@ -16,7 +16,7 @@ import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
 import '../common/style.css!';
 
-import link from '../utils/linker';
+import {link, include, addReducer, addEnhancer} from '../utils/linker';
 import DevTools from '../utils/dev_tools';
 
 import stepperComponent from '../stepper/index';
@@ -33,24 +33,24 @@ import RecordScreen from './record_screen';
 import App from './app_view';
 import examples from './examples'
 
-const {store, actions, views} = link(function (m) {
+const {store, scope} = link(function* () {
 
-  m.include(stepperComponent);
-  m.include(commonComponent);
-  m.include(homeScreenComponent);
-  m.include(prepareScreenComponent);
-  m.include(saveScreenComponent);
-  m.include(recorderActions);
-  m.include(recorderSelectors);
-  m.include(recorderReducers);
-  m.include(recorderSagas);
-  m.include(RecorderControls);
-  m.include(RecordScreen);
-  m.include(App);
+  yield include(stepperComponent);
+  yield include(commonComponent);
+  yield include(homeScreenComponent);
+  yield include(prepareScreenComponent);
+  yield include(saveScreenComponent);
+  yield include(recorderActions);
+  yield include(recorderSelectors);
+  yield include(recorderReducers);
+  yield include(recorderSagas);
+  yield include(RecorderControls);
+  yield include(RecordScreen);
+  yield include(App);
 
-  m.enhancer(DevTools.instrument());
+  yield addEnhancer(DevTools.instrument());
 
-  m.reducer('init', _ => Immutable.Map({
+  yield addReducer('init', _ => Immutable.Map({
     screen: 'home',
     home: Immutable.Map({
       screen: Immutable.Map({})
@@ -60,8 +60,8 @@ const {store, actions, views} = link(function (m) {
 
 });
 
-store.dispatch({type: actions.init});
-store.dispatch({type: actions.recorderPrepare});
+store.dispatch({type: scope.init});
+store.dispatch({type: scope.recorderPrepare});
 
 const container = document.getElementById('react-container');
-ReactDOM.render(<Provider store={store}><views.App/></Provider>, container);
+ReactDOM.render(<Provider store={store}><scope.App/></Provider>, container);

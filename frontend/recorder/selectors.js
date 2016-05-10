@@ -1,9 +1,11 @@
 
 import Immutable from 'immutable';
 
-export default function (m) {
+import {defineSelector} from '../utils/linker';
 
-  m.selector('getRecorderState', state =>
+export default function* () {
+
+  yield defineSelector('getRecorderState', state =>
     state.get('recorder', Immutable.Map())
   );
 

@@ -1,23 +1,24 @@
 
-import {takeLatest} from 'redux-saga';
 import {take, put, call, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 
-import Document from '../utils/document';
-import {asyncRequestJson} from '../utils/api';
+import {use, addSaga} from '../utils/linker';
 
-import {loadTranslated} from './translate';
 import * as runtime from './runtime';
 
-export default function (m) {
+function delay(ms) {  // XXX move to utils
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
+}
 
-  const {actions, selectors} = m;
+export default function* (deps) {
 
-  function delay(ms) {
-    return new Promise(function (resolve) {
-      setTimeout(resolve, ms);
-    });
-  }
+  yield use(
+    'getStepperState', 'getStepperInterrupted', 'stepperInterrupted',
+    'stepperRestart', 'stepperStep', 'stepperStart', 'stepperProgress', 'stepperIdle',
+    'getSource', 'getInput', 'translateSucceeded'
+  );
 
   /* XXX Use a different terminology for the stepper context (just below)
          and the recorder context ({audioContext, worker, scriptProcessor}).
@@ -59,48 +60,13 @@ export default function (m) {
   }
 
   function* updateSelection () {
-    const source = yield select(selectors.getSource);
+    const source = yield select(deps.getSource);
     const editor = source.get('editor');
     if (editor) {
-      const stepper = yield select(selectors.getStepperState);
+      const stepper = yield select(deps.getStepperState);
       const stepperState = stepper.get('display');
       const range = runtime.getNodeRange(stepperState);
       editor.setSelection(range);
-    }
-  }
-
-  function* translateSource (action) {
-    const sourceState = yield select(selectors.getSource);
-    const source = Document.toString(sourceState.get('document'));
-    yield put({type: actions.translateStart, source});
-    let response, result, error;
-    try {
-      response = yield call(asyncRequestJson, '/translate', {source});
-      result = loadTranslated(source, response.ast);
-    } catch (ex) {
-      error = ex.toString();
-    }
-    let {diagnostics} = response;
-    if (diagnostics) {
-      // Sanitize the server-provided HTML.
-      const el = document.createElement('div');
-      el.innerHtml = `<pre>${diagnostics}</pre>`;
-      diagnostics = {__html: el.innerHtml};
-    }
-    if (result) {
-      yield put({type: actions.translateSucceeded, response, diagnostics});
-    } else {
-      yield put({type: actions.translateFailed, response, diagnostics, error});
-      return;
-    }
-    try {
-      const inputState = yield select(selectors.getInput);
-      const input = Document.toString(inputState.get('document'));
-      const stepperState = runtime.start(result.syntaxTree, {input});
-      yield put({type: actions.stepperRestart, stepperState});
-      yield call(updateSelection);
-    } catch (error) {
-      yield put({type: actions.error, source: 'translate', error});
     }
   }
 
@@ -122,14 +88,14 @@ export default function (m) {
       if (now >= context.timeLimit) {
         // Reset the time limit and put a Progress event.
         context.timeLimit = window.performance.now() + 20;
-        yield put({type: actions.stepperProgress, context: viewContext(context)});
+        yield put({type: deps.stepperProgress, context: viewContext(context)});
         yield call(updateSelection);
         // Yield until the next tick (XXX consider requestAnimationFrame).
         yield call(delay, 0);
         // Stop prematurely if interrupted.
-        const interrupted = yield select(selectors.getStepperInterrupted);
+        const interrupted = yield select(deps.getStepperInterrupted);
         if (interrupted) {
-          yield put({type: actions.stepperInterrupted});
+          yield put({type: deps.stepperInterrupted});
           context.interrupted = true;
           return;
         }
@@ -206,9 +172,9 @@ export default function (m) {
   }
 
   function* startStepper (mode) {
-    const stepper = yield select(selectors.getStepperState);
+    const stepper = yield select(deps.getStepperState);
     if (stepper.get('state') === 'starting') {
-      yield put({type: actions.stepperStart});
+      yield put({type: deps.stepperStart});
       const context = buildContext(stepper.get('current'));
       try {
         switch (mode) {
@@ -228,21 +194,29 @@ export default function (m) {
       } catch (error) {
         console.log(error); // XXX
       }
-      yield put({type: actions.stepperIdle, context: viewContext(context)});
+      yield put({type: deps.stepperIdle, context: viewContext(context)});
       yield call(updateSelection);
     }
   }
 
-  m.saga(function* watchTranslate () {
-    // It is safe to use takeLatest here.  A previous pending call
-    // will be cancelled and its effects so far overwritten by a
-    // new call.
-    yield* takeLatest(actions.translate, translateSource);
+  yield addSaga(function* watchTranslateSucceeded () {
+    while (true) {
+      const {syntaxTree} = yield take(deps.translateSucceeded);
+      try {
+        const inputState = yield select(deps.getInput);
+        const input = Document.toString(inputState.get('document'));
+        const stepperState = runtime.start(syntaxTree, {input});
+        yield put({type: deps.stepperRestart, stepperState});
+        yield call(updateSelection);
+      } catch (error) {
+        yield put({type: deps.error, source: 'translate', error});
+      }
+    }
   });
 
-  m.saga(function* watchStepperStep () {
+  yield addSaga(function* watchStepperStep () {
     while (true) {
-      const {mode} = yield take(actions.stepperStep);
+      const {mode} = yield take(deps.stepperStep);
       yield call(startStepper, mode);
     }
   });
