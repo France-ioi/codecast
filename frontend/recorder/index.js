@@ -23,8 +23,13 @@ import stepperComponent from '../stepper/index';
 import commonComponent from '../common/index';
 import homeScreenComponent from './home_screen';
 import prepareScreenComponent from './prepare_screen';
-import recordScreenComponent from './record_screen/index';
 import saveScreenComponent from './save_screen';
+import recorderActions from './actions';
+import recorderSelectors from './selectors';
+import recorderReducers from './reducers';
+import recorderSagas from './sagas';
+import RecorderControls from './controls_view';
+import RecordScreen from './record_screen';
 import App from './app_view';
 import examples from './examples'
 
@@ -34,8 +39,13 @@ const {store, actions, views} = link(function (m) {
   m.include(commonComponent);
   m.include(homeScreenComponent);
   m.include(prepareScreenComponent);
-  m.include(recordScreenComponent);
   m.include(saveScreenComponent);
+  m.include(recorderActions);
+  m.include(recorderSelectors);
+  m.include(recorderReducers);
+  m.include(recorderSagas);
+  m.include(RecorderControls);
+  m.include(RecordScreen);
   m.include(App);
 
   m.enhancer(DevTools.instrument());

@@ -1,4 +1,6 @@
 
+// XXX This file is currently not used, and event names are outdated.
+
 import React from 'react';
 import EpicComponent from 'epic-component';
 
