@@ -8,6 +8,11 @@ export default function (m) {
 
   const {views} = m;
 
+  m.selector('App', function (state, props) {
+    const screen = state.get('screen');
+    return {screen};
+  });
+
   m.view('App', EpicComponent(self => {
 
     self.render = function () {

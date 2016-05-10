@@ -21,11 +21,6 @@ export default function (m) {
     state.get('save')
   );
 
-  m.selector('App', function (state, props) {
-    const screen = state.get('screen');
-    return {screen};
-  });
-
   m.selector('HomeScreen', function (state, props) {
     return {};
   });
