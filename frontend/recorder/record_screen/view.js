@@ -4,8 +4,6 @@ import EpicComponent from 'epic-component';
 
 export default function (m) {
 
-  const {actions, views} = m;
-
   m.view('RecordScreen', EpicComponent(self => {
 
     const recordingPanel = function () {
@@ -22,10 +20,10 @@ export default function (m) {
         <div>
           <div className="row">
             <div className="col-md-12">
-              <views.RecorderControls/>
+              <m.views.RecorderControls/>
             </div>
           </div>
-          <views.MainView/>
+          <m.views.MainView/>
         </div>
       );
     };

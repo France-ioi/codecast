@@ -25,7 +25,6 @@ import homeScreenComponent from './home_screen/index';
 import prepareScreenComponent from './prepare_screen/index';
 import recordScreenComponent from './record_screen/index';
 import saveScreenComponent from './save_screen/index';
-import selectors from './selectors'
 import App from './app_view';
 import examples from './examples'
 
@@ -37,12 +36,10 @@ const {store, actions, views} = link(function (m) {
   m.include(prepareScreenComponent);
   m.include(recordScreenComponent);
   m.include(saveScreenComponent);
-  m.include(selectors);
   m.include(App);
 
   m.enhancer(DevTools.instrument());
 
-  m.action('recorderPrepare', 'Recorder.Prepare');
   m.reducer('init', _ => Immutable.Map({
     screen: 'home',
     home: Immutable.Map({

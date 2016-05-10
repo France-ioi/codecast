@@ -1,6 +1,9 @@
 
 export default function (m) {
 
+  // Sent when the application starts to prepare the recorder's resources.
+  m.action('recorderPrepare', 'Recorder.Prepare');
+
   // Sent by a saga when the recorder has initialized and switches
   // to the record screen.
   m.action('switchToRecordScreen', 'Recorder.Switch');

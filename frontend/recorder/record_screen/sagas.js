@@ -101,27 +101,30 @@ export default function (m) {
       });
       yield put({type: actions.recorderPreparing, progress: 'worker_init_ok'});
       // Set up the ScriptProcessor to divert all buffers to the worker.
-      const vumeterData = new Uint8Array(analyser.frequencyBinCount);
-      const canvasContext = document.getElementById('vumeter').getContext("2d");
-      scriptProcessor.onaudioprocess = function (event) {
-        if (canvasContext) {
-          // Get analyser data and update vumeter.
-          analyser.getByteFrequencyData(vumeterData);
-          let sum = 0, i;
-          for (i = 0; i < vumeterData.length; i++) {
-            sum += vumeterData[i];
+      const vumeterElement = document.getElementById('vumeter');
+      if (vumeterElement) {
+        const canvasContext = document.getElementById('vumeter').getContext("2d");
+        const vumeterData = new Uint8Array(analyser.frequencyBinCount);
+        scriptProcessor.onaudioprocess = function (event) {
+          if (canvasContext) {
+            // Get analyser data and update vumeter.
+            analyser.getByteFrequencyData(vumeterData);
+            let sum = 0, i;
+            for (i = 0; i < vumeterData.length; i++) {
+              sum += vumeterData[i];
+            }
+            const average = sum / vumeterData.length;
+            canvasContext.fillStyle = '#dddddd';
+            canvasContext.fillRect(0, 0, 10, 100);
+            canvasContext.fillStyle = '#00ff00';
+            canvasContext.fillRect(0, 100 - average, 10, 100);
           }
-          const average = sum / vumeterData.length;
-          canvasContext.fillStyle = '#dddddd';
-          canvasContext.fillRect(0, 0, 10, 100);
-          canvasContext.fillStyle = '#00ff00';
-          canvasContext.fillRect(0, 100 - average, 10, 100);
-        }
-        // Post buffers to worker.
-        const ch0 = event.inputBuffer.getChannelData(0);
-        const ch1 = event.inputBuffer.getChannelData(1);
-        worker.postMessage({command: "record", buffer: [ch0, ch1]});
-      };
+          // Post buffers to worker.
+          const ch0 = event.inputBuffer.getChannelData(0);
+          const ch1 = event.inputBuffer.getChannelData(1);
+          worker.postMessage({command: "record", buffer: [ch0, ch1]});
+        };
+      }
       // Signal that the recorder is ready to start, storing the new context.
       // /!\  Chrome: store a reference to the scriptProcessor node to prevent
       //      the browser from garbage-collection the node (which seems to

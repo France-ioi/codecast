@@ -16,6 +16,10 @@ export default function (m) {
     }
   });
 
+  m.selector('HomeScreen', function (state, props) {
+    return {};
+  });
+
   m.view('HomeScreen', EpicComponent(self => {
 
     const onNewRecording = function () {
