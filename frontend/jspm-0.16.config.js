@@ -63,7 +63,7 @@ System.config({
     "redux-devtools": "npm:redux-devtools@3.2.0",
     "redux-devtools-dock-monitor": "npm:redux-devtools-dock-monitor@1.1.1",
     "redux-devtools-log-monitor": "npm:redux-devtools-log-monitor@1.0.11",
-    "redux-saga": "npm:redux-saga@0.9.5",
+    "redux-saga": "npm:redux-saga@0.10.2",
     "sprintf-js": "npm:sprintf-js@1.0.3",
     "superagent": "npm:superagent@1.8.3",
     "text": "github:systemjs/plugin-text@0.0.7",
@@ -870,7 +870,8 @@ System.config({
       "react-redux": "npm:react-redux@4.4.5",
       "redux": "npm:redux@3.5.2"
     },
-    "npm:redux-saga@0.9.5": {
+    "npm:redux-saga@0.10.2": {
+      "buffer": "github:jspm/nodelibs-buffer@0.1.0",
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
     "npm:redux@3.5.2": {

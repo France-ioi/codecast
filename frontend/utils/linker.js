@@ -30,8 +30,11 @@ store using the selector.
 
 import {createStore, applyMiddleware, compose} from 'redux';
 import createSagaMiddleware from 'redux-saga';
-import Immutable from 'immutable';
+import {call, cancelled, fork} from 'redux-saga/effects';
 import {connect} from 'react-redux';
+import Immutable from 'immutable';
+
+import delay from './delay';
 
 function makeSafeProxy (obj, onError) {
   function safeGet(target, property) {
@@ -243,12 +246,31 @@ export function link (rootBundle) {
     return state;
   }
 
-  let enhancer = applyMiddleware(createSagaMiddleware.apply(null, sagas));
+  const sagaMiddleware = createSagaMiddleware();
+  let enhancer = applyMiddleware(sagaMiddleware);
   enhancers.forEach(function (other) {
     enhancer = compose(enhancer, other);
   });
 
+  // Create the store.
   const store = createStore(reducer, null, enhancer);
+
+  // Start the sagas.
+  function* rootSaga () {
+    for (let i = 0; i < sagas.length; i += 1) {
+      yield fork(sagas[i]);
+    }
+    try {
+      while (true) {
+        yield call(delay, 1000);
+      }
+    } finally {
+      if (yield cancelled()) {
+        console.log('sagas have crashed');
+      }
+    }
+  }
+  sagaMiddleware.run(rootSaga);
 
   return {store, scope};
 };
