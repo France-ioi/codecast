@@ -257,9 +257,7 @@ export function link (rootBundle) {
 
   // Start the sagas.
   function* rootSaga () {
-    for (let i = 0; i < sagas.length; i += 1) {
-      yield fork(sagas[i]);
-    }
+    yield sagas.map(fork);
     try {
       while (true) {
         yield call(delay, 1000);
@@ -270,7 +268,10 @@ export function link (rootBundle) {
       }
     }
   }
-  sagaMiddleware.run(rootSaga);
 
-  return {store, scope};
+  function start () {
+    sagaMiddleware.run(rootSaga);
+  }
+
+  return {store, scope, start};
 };
