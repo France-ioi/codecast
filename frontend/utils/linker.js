@@ -30,11 +30,10 @@ store using the selector.
 
 import {createStore, applyMiddleware, compose} from 'redux';
 import createSagaMiddleware from 'redux-saga';
+import {delay} from 'redux-saga';
 import {call, cancelled, fork} from 'redux-saga/effects';
 import {connect} from 'react-redux';
 import Immutable from 'immutable';
-
-import delay from './delay';
 
 function makeSafeProxy (obj, onError) {
   function safeGet(target, property) {

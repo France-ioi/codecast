@@ -1,4 +1,5 @@
 
+import {delay} from 'redux-saga';
 import {take, put, call, race, select} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
@@ -36,11 +37,6 @@ function resumeAudioContext (audioContext) {
   return audioContext.resume();
 }
 
-function delay(ms) {
-  return new Promise(function (resolve) {
-    setTimeout(resolve, ms);
-  });
-}
 
 export default function* (deps) {
 

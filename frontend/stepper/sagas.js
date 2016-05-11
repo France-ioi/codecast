@@ -1,16 +1,11 @@
 
+import {delay} from 'redux-saga';
 import {take, put, call, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 
 import {use, addSaga} from '../utils/linker';
 
 import * as runtime from './runtime';
-
-function delay(ms) {  // XXX move to utils
-  return new Promise(function (resolve) {
-    setTimeout(resolve, ms);
-  });
-}
 
 export default function* (deps) {
 

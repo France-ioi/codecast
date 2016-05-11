@@ -1,4 +1,5 @@
 
+import {delay} from 'redux-saga';
 import {take, put, call, race, fork, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 import request from 'superagent';
@@ -25,12 +26,6 @@ export default function* (deps) {
   );
 
   // pause, resume audio
-
-  function delay (ms) {
-    return new Promise(function (resolve) {
-      setTimeout(resolve, ms);
-    });
-  }
 
   function getJson (path) {
     return new Promise(function (resolve, reject) {
