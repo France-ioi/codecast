@@ -4,14 +4,25 @@ import * as C from 'persistent-c';
 import request from 'superagent';
 import Immutable from 'immutable';
 
-import {RECORDING_FORMAT_VERSION} from '../common/version';
-import Document from '../common/document';
-import {loadTranslated, getRangeFromOffsets} from '../stepper/translate';
+import {use, addSaga} from '../utils/linker';
+
+import {RECORDING_FORMAT_VERSION} from '../version';
+import Document from '../utils/document';
+import {addNodeRanges} from '../stepper/translate';
 import * as runtime from '../stepper/runtime';
 
-export default function (actions, selectors) {
+export default function* (deps) {
 
-  const {getPlayerState} = selectors;
+  yield use(
+    'error',
+    'playerPrepare', 'playerPreparing', 'playerReady',
+    'playerStart', 'playerStarting', 'playerStarted',
+    'playerPause', 'playerPausing', 'playerPaused',
+    'playerResume', 'playerResuming', 'playerResumed',
+    'playerStop', 'playerStopping', 'playerStopped',
+    'playerTick',
+    'getPlayerState'
+  );
 
   // pause, resume audio
 
@@ -74,18 +85,18 @@ export default function (actions, selectors) {
 
   // Map (second → index in state liste)
   // List of states sorted by timestamp
-  // State shape: {source: {document, selection}, translated, stepper}
+  // State shape: {source: {document, selection}, syntaxTree, stepper}
 
   function* playerPrepare (action) {
     const {audioUrl, eventsUrl} = action;
     try {
       // Check that the player is idle.
-      const player = yield select(getPlayerState);
+      const player = yield select(deps.getPlayerState);
       if (player.get('state') !== 'idle') {
         return;
       }
       // Emit a Preparing action.
-      yield put({type: actions.playerPreparing});
+      yield put({type: deps.playerPreparing});
       // TODO: Clean up any old resources
       // Create the audio player and start buffering.
       const audio = new Audio();
@@ -96,64 +107,64 @@ export default function (actions, selectors) {
       // Compute the future state after every event.
       const states = yield call(computeStates, events);
       // TODO: watch audioElement.buffered?
-      yield put({type: actions.playerReady, audio, events, states});
+      yield put({type: deps.playerReady, audio, events, states});
       yield call(setCurrent, states[0]);
     } catch (error) {
-      yield put({type: actions.error, source: 'playerPrepare', error});
+      yield put({type: deps.error, source: 'playerPrepare', error});
     }
   }
 
   function* playerStart () {
     try {
-      const player = yield select(getPlayerState);
+      const player = yield select(deps.getPlayerState);
       if (player.get('state') !== 'ready')
         return;
-      yield put({type: actions.playerStarting});
+      yield put({type: deps.playerStarting});
       // TODO: Find the state immediately before current audio position, put that state.
       player.get('audio').play();
-      yield put({type: actions.playerStarted});
+      yield put({type: deps.playerStarted});
     } catch (error) {
-      yield put({type: actions.error, source: 'playerStart', error});
+      yield put({type: deps.error, source: 'playerStart', error});
     }
   }
 
   function* playerPause () {
     try {
-      const player = yield select(getPlayerState);
+      const player = yield select(deps.getPlayerState);
       if (player.get('state') !== 'playing')
         return;
-      yield put({type: actions.playerPausing});
+      yield put({type: deps.playerPausing});
       player.get('audio').pause();
-      yield put({type: actions.playerPaused});
+      yield put({type: deps.playerPaused});
     } catch (error) {
-      yield put({type: actions.error, source: 'playerPause', error});
+      yield put({type: deps.error, source: 'playerPause', error});
     }
   }
 
   function* playerResume () {
     try {
-      const player = yield select(getPlayerState);
+      const player = yield select(deps.getPlayerState);
       if (player.get('state') !== 'paused')
         return;
-      yield put({type: actions.playerResuming});
+      yield put({type: deps.playerResuming});
       player.get('audio').play();
-      yield put({type: actions.playerResumed});
+      yield put({type: deps.playerResumed});
     } catch (error) {
-      yield put({type: actions.error, source: 'playerResume', error});
+      yield put({type: deps.error, source: 'playerResume', error});
     }
   }
 
   function* playerStop () {
     try {
-      const player = yield select(getPlayerState);
+      const player = yield select(deps.getPlayerState);
       if (player.get('state') !== 'playing')
         return;
       // Signal that the player is stopping.
-      yield put({type: actions.playerStopping});
+      yield put({type: deps.playerStopping});
       // TODO: Stop the audio player.
-      yield put({type: actions.playerStopped});
+      yield put({type: deps.playerStopped});
     } catch (error) {
-      yield put({type: actions.error, source: 'playerStop', error});
+      yield put({type: deps.error, source: 'playerStop', error});
     }
   }
 
@@ -234,9 +245,11 @@ export default function (actions, selectors) {
             // New style with diagnostics, data is an object.
             syntaxTree = event[2].ast;
           }
+          // addNodeRanges destructively updates syntaxTree, which fine.
+          addNodeRanges(source, syntaxTree);
           state = state
             .delete('translate')
-            .set('translated', loadTranslated(source, syntaxTree));
+            .set('syntaxTree', syntaxTree);
           break;
         }
         case 'stepper.translateFailure': case 'translateFailure': {
@@ -247,12 +260,12 @@ export default function (actions, selectors) {
         }
         case 'stepper.exit': case 'translateClear': {
           state = state
-            .delete('translated')
+            .delete('syntaxTree')
             .delete('stepper');
           break;
         }
         case 'stepper.restart': case 'stepperRestart': {
-          const syntaxTree = state.get('translated').syntaxTree;
+          const syntaxTree = state.get('syntaxTree');
           const input = state.get('input') && Document.toString(state.get('input').get('document'));
           const stepperState = C.clearMemoryLog(runtime.start(syntaxTree, {input}));
           state = state.set('stepper', stepperState).set('stepCounter', 0);
@@ -316,43 +329,43 @@ export default function (actions, selectors) {
       .set('stepCounter', stepCounter);
   }
 
-  function* watchPlayerPrepare () {
+  yield addSaga(function* watchPlayerPrepare () {
     while (true) {
-      const action = yield take(actions.playerPrepare);
+      const action = yield take(deps.playerPrepare);
       yield call(playerPrepare, action);
     }
-  }
+  });
 
-  function* watchPlayerStart () {
+  yield addSaga(function* watchPlayerStart () {
     while (true) {
-      yield take(actions.playerStart);
+      yield take(deps.playerStart);
       yield call(playerStart);
     }
-  }
+  });
 
-  function* watchPlayerPause () {
+  yield addSaga(function* watchPlayerPause () {
     while (true) {
-      yield take(actions.playerPause);
+      yield take(deps.playerPause);
       yield call(playerPause);
     }
-  }
+  });
 
-  function* watchPlayerResume () {
+  yield addSaga(function* watchPlayerResume () {
     while (true) {
-      yield take(actions.playerResume);
+      yield take(deps.playerResume);
       yield call(playerResume);
     }
-  }
+  });
 
-  function* watchPlayerStop () {
+  yield addSaga(function* watchPlayerStop () {
     while (true) {
-      yield take(actions.playerStop);
+      yield take(deps.playerStop);
       yield call(playerStop);
     }
-  }
+  });
 
   function* setCurrent (state) {
-    const player = yield select(getPlayerState);
+    const player = yield select(deps.getPlayerState);
     const sourceEditor = player.getIn(['source', 'editor']);
     if (sourceEditor) {
       const source = state.state.get('source');
@@ -365,20 +378,20 @@ export default function (actions, selectors) {
       const text = Document.toString(input.get('document'));
       inputEditor.reset(text, input.get('selection'));
     }
-    yield put({type: actions.playerTick, current: state});
+    yield put({type: deps.playerTick, current: state});
   }
 
-  function* playerTick () {
+  yield addSaga(function* playerTick () {
     while (true) {
-      yield take(actions.playerStarted);
+      yield take(deps.playerStarted);
       play_loop: while (true) {
         const outcome = yield race({
           tick: call(delay, 20),
-          stopped: take(actions.playerStopping)
+          stopped: take(deps.playerStopping)
         });
         if ('stopped' in outcome)
           break;
-        const player = yield select(getPlayerState);
+        const player = yield select(deps.getPlayerState);
         const audio = player.get('audio');
         const audioTime = Math.round(audio.currentTime * 1000);
         const prevState = player.get('current');
@@ -431,30 +444,20 @@ export default function (actions, selectors) {
                 break;
               case 'stepper.idle': case 'stepper.progress': case 'stepIdle': case 'stepProgress': {
                 const stepper = state.get('stepper');
-                const translated = state.get('translated');
                 const range = runtime.getNodeRange(stepper);
                 sourceEditor.setSelection(range);
                 break;
               }
               case 'end':
                 // May never be reached if the audio is a little bit shorter.
-                yield put({type: actions.playerTick, current: nextState});
+                yield put({type: deps.playerTick, current: nextState});
                 break play_loop;
             }
           }
-          yield put({type: actions.playerTick, current: nextState});
+          yield put({type: deps.playerTick, current: nextState});
         }
       }
     }
-  }
-
-  return [
-    watchPlayerPrepare,
-    watchPlayerStart,
-    watchPlayerPause,
-    watchPlayerResume,
-    watchPlayerStop,
-    playerTick
-  ];
+  });
 
 };

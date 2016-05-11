@@ -1,15 +1,10 @@
 
-export * from '../common/selectors';
-export * from '../stepper/selectors';
+import {defineSelector} from '../utils/linker';
 
-export function getPlayerState (state) {
-  return state.get('player');
-};
+export default function* () {
 
-export function App (state, props) {
-  const player = state.get('player');
-  const lastError = state.get('lastError');
-  const playerState = player.get('state');
-  const current = player.get('current');
-  return {lastError, playerState, current};
+  yield defineSelector('getPlayerState', state =>
+    state.get('player')
+  );
+
 };

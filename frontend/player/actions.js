@@ -1,19 +1,25 @@
 
-export const playerPrepare = 'Player.Prepare';
-export const playerPreparing = 'Player.Preparing';
-export const playerReady = 'Player.Ready';
-export const playerSourceInit = 'Player.Source.Init';
-export const playerInputInit = 'Player.Input.Init';
-export const playerStart = 'Player.Start';
-export const playerStarting = 'Player.Starting';
-export const playerStarted = 'Player.Started';
-export const playerStop = 'Player.Stop';
-export const playerStopping = 'Player.Stopping';
-export const playerStopped = 'Player.Stopped';
-export const playerPause = 'Player.Pause';
-export const playerPausing = 'Player.Pausing';
-export const playerPaused = 'Player.Paused';
-export const playerResume = 'Player.Resume';
-export const playerResuming = 'Player.Resuming';
-export const playerResumed = 'Player.Resumed';
-export const playerTick = 'Player.Tick';
+import {defineAction} from '../utils/linker';
+
+export default function* () {
+
+  yield defineAction('playerPrepare', 'Player.Prepare');
+  yield defineAction('playerPreparing', 'Player.Preparing');
+  yield defineAction('playerReady', 'Player.Ready');
+  yield defineAction('playerSourceInit', 'Player.Source.Init');
+  yield defineAction('playerInputInit', 'Player.Input.Init');
+  yield defineAction('playerStart', 'Player.Start');
+  yield defineAction('playerStarting', 'Player.Starting');
+  yield defineAction('playerStarted', 'Player.Started');
+  yield defineAction('playerStop', 'Player.Stop');
+  yield defineAction('playerStopping', 'Player.Stopping');
+  yield defineAction('playerStopped', 'Player.Stopped');
+  yield defineAction('playerPause', 'Player.Pause');
+  yield defineAction('playerPausing', 'Player.Pausing');
+  yield defineAction('playerPaused', 'Player.Paused');
+  yield defineAction('playerResume', 'Player.Resume');
+  yield defineAction('playerResuming', 'Player.Resuming');
+  yield defineAction('playerResumed', 'Player.Resumed');
+  yield defineAction('playerTick', 'Player.Tick');
+
+};

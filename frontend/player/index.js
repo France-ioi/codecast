@@ -17,61 +17,42 @@ import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
 import '../common/style.css!';
 
-import link from '../common/linker';
+import {link, include, addReducer} from '../utils/linker';
 
-import * as commonActions from '../common/actions';
-import * as stepperActions from '../stepper/actions';
-import * as playerActions from './actions';
-
-import * as commonReducers from '../common/reducers';
-import * as stepperReducers from '../stepper/reducers';
-import * as playerReducers from './reducers';
-
-import commonSagas from '../common/sagas';
-import stepperSagas from '../stepper/sagas';
+import stepperComponent from '../stepper/index';
+import commonComponent from '../common/index';
+import playerActions from './actions';
+import playerSelectors from './selectors';
+import playerReducers from './reducers';
 import playerSagas from './sagas';
+import App from './app_view';
 
-import StackViewFactory from '../stepper/stack_view';
-import DirectivesPaneFactory from '../stepper/directives_pane';
-import AppFactory from './app_view';
+const {store, scope} = link(function* () {
 
-import * as selectors from './selectors';
+  yield include(stepperComponent);
+  yield include(commonComponent);
+  yield include(playerActions);
+  yield include(playerSelectors);
+  yield include(playerReducers);
+  yield include(playerSagas);
+  yield include(App);
 
-const {actionTypes, store, views} = link({
-  actionMaps: [
-    commonActions,
-    stepperActions,
-    playerActions
-  ],
-  reducerMaps: [
-    commonReducers,
-    stepperReducers,
-    playerReducers
-  ],
-  sagaFactories: [
-    commonSagas,
-    stepperSagas,
-    playerSagas
-  ],
-  viewFactories: {
-    App: AppFactory,
-    DirectivesPane: DirectivesPaneFactory,
-    StackView: StackViewFactory
-  },
-  selectors,
-  initialState: Immutable.Map({
+  yield addReducer('init', _ => Immutable.Map({
     player: Immutable.Map({
       state: 'idle'
     })
-  })
+  }));
+
 });
 
+store.dispatch({type: scope.init});
+
 const container = document.getElementById('react-container');
-ReactDOM.render(<Provider store={store}><views.App/></Provider>, container);
+ReactDOM.render(<Provider store={store}><scope.App/></Provider>, container);
 
 const qs = queryString.parse(window.location.search);
 store.dispatch({
-  type: actionTypes.playerPrepare,
+  type: scope.playerPrepare,
   audioUrl: `https://fioi-recordings.s3.amazonaws.com/uploads/${qs.id}.mp3`,
   eventsUrl: `https://fioi-recordings.s3.amazonaws.com/uploads/${qs.id}.json`
 });
