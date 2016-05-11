@@ -33,7 +33,7 @@ import RecordScreen from './record_screen';
 import App from './app_view';
 import examples from './examples'
 
-const {store, scope} = link(function* () {
+const {store, scope, start} = link(function* () {
 
   yield include(stepperComponent);
   yield include(commonComponent);
@@ -61,6 +61,7 @@ const {store, scope} = link(function* () {
 });
 
 store.dispatch({type: scope.init});
+start();
 store.dispatch({type: scope.recorderPrepare});
 
 const container = document.getElementById('react-container');
