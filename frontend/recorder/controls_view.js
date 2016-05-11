@@ -9,8 +9,7 @@ export default function* (deps) {
 
   yield use(
     'recorderStop',
-    'stepperStep', 'stepperInterrupt', 'stepperRestart', 'stepperExit',
-    'translate', 'StepperControls', 'FullscreenButton'
+    'StepperControls', 'FullscreenButton'
   );
 
   yield defineSelector('RecorderControlsSelector', function (state, props) {
@@ -25,27 +24,12 @@ export default function* (deps) {
 
   yield defineView('RecorderControls', 'RecorderControlsSelector', EpicComponent(self => {
 
+    const onStopRecording = function () {
+      self.props.dispatch({type: deps.recorderStop});
+    };
+
     const onPauseRecording = function () {
       // TODO
-    };
-
-    const onStopRecording = function () {
-      self.props.dispatch({type: deps.recorderStop});  // XXX
-    };
-
-    // Player
-
-    const onStartPlayback = function () {
-      const {playerState} = self.props;
-      if (playerState === 'ready') {
-        self.props.dispatch({type: deps.playerStart});
-      } else if (playerState === 'paused') {
-        self.props.dispatch({type: deps.playerResume});
-      }
-    };
-
-    const onPausePlayback = function () {
-      self.props.dispatch({type: deps.playerPause});
     };
 
     self.render = function () {
