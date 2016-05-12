@@ -39,7 +39,7 @@ System.config({
     "babel-plugin-transform-decorators-legacy": "npm:babel-plugin-transform-decorators-legacy@1.3.4",
     "babel-runtime": "npm:babel-runtime@5.8.38",
     "bootstrap": "github:twbs/bootstrap@3.3.6",
-    "brace": "npm:brace@0.7.0",
+    "brace": "npm:brace@0.8.0",
     "classnames": "npm:classnames@2.2.4",
     "clean-css": "npm:clean-css@3.4.12",
     "core-js": "npm:core-js@1.2.6",
@@ -245,12 +245,6 @@ System.config({
     },
     "npm:bn.js@4.11.3": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0"
-    },
-    "npm:brace@0.7.0": {
-      "buffer": "github:jspm/nodelibs-buffer@0.1.0",
-      "process": "github:jspm/nodelibs-process@0.1.2",
-      "systemjs-json": "github:systemjs/plugin-json@0.1.2",
-      "w3c-blob": "npm:w3c-blob@0.0.1"
     },
     "npm:brace@0.8.0": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",

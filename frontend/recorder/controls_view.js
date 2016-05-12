@@ -14,8 +14,8 @@ export default function* (deps) {
 
   yield defineSelector('RecorderControlsSelector', function (state, props) {
     const recorder = state.get('recorder');
-    const recorderState = recorder.get('state');
-    const isRecording = recorderState === 'recording';
+    const status = recorder.get('status');
+    const isRecording = status === 'recording';
     const elapsed = Math.round(recorder.get('elapsed') / 1000) || 0;
     const eventCount = recorder.get('events').count();
     return {isRecording, elapsed, eventCount};

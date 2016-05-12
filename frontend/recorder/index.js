@@ -35,6 +35,14 @@ import examples from './examples'
 
 const {store, scope, start} = link(function* () {
 
+  yield addReducer('init', _ => Immutable.Map({
+    screen: 'home',
+    home: Immutable.Map({
+      screen: Immutable.Map({})
+    }),
+    prepare: Immutable.Map({examples})
+  }));
+
   yield include(stepperComponent);
   yield include(commonComponent);
   yield include(homeScreenComponent);
@@ -49,14 +57,6 @@ const {store, scope, start} = link(function* () {
   yield include(App);
 
   yield addEnhancer(DevTools.instrument());
-
-  yield addReducer('init', _ => Immutable.Map({
-    screen: 'home',
-    home: Immutable.Map({
-      screen: Immutable.Map({})
-    }),
-    prepare: Immutable.Map({examples})
-  }));
 
 });
 

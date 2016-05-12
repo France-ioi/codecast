@@ -8,6 +8,12 @@ export const Editor = EpicComponent(self => {
 
   let editor, editorNode, selection = null;
 
+  function toRange (selection) {
+    return new Range(
+      selection.start.row, selection.start.column,
+      selection.end.row, selection.end.column);
+  }
+
   const refEditor = function (node) {
     editorNode = node;
   };
@@ -32,12 +38,24 @@ export const Editor = EpicComponent(self => {
       return;
     selection = selection_;
     if (selection && selection.start && selection.end) {
-      editor.selection.setRange(new Range(
-        selection.start.row, selection.start.column,
-        selection.end.row, selection.end.column));
+      editor.selection.setRange(toRange(selection));
     } else {
       editor.selection.setRange(new Range(0, 0, 0, 0));
     }
+  };
+
+  let marker = null;
+  const highlight = function (range) {
+    if (editor) {
+      const session = editor.session;
+      if (marker) {
+        session.removeMarker(marker);
+      }
+      if (range) {
+        marker = session.addMarker(toRange(range), "code-highlight", "text");
+      }
+    }
+    // setSelection(range);
   };
 
   /*
@@ -49,6 +67,7 @@ export const Editor = EpicComponent(self => {
   const onSelectionChanged = function () {
     if (willUpdateSelection)
       return;
+    // const isUserChange = editor.curOp && editor.curOp.command.name;
     willUpdateSelection = true;
     window.requestAnimationFrame(function () {
       willUpdateSelection = false;
@@ -65,11 +84,12 @@ export const Editor = EpicComponent(self => {
     self.props.onEdit(edit)
   };
 
-  const reset = function (value, selection) {
+  const reset = function (value, selection, scrollTop) {
     if (!editor)
       return;
     editor.setValue(value);
     setSelection(selection);
+    editor.session.setScrollTop(scrollTop);
   };
 
   const applyDeltas = function (deltas) {
@@ -90,31 +110,35 @@ export const Editor = EpicComponent(self => {
     }
   };
 
+  const getSelectionRange = function () {
+    return editor && editor.getSelectionRange();
+  }
+
   let lastScrollTop = 0;
 
   self.componentDidMount = function () {
     editor = ace.edit(editorNode);
+    const session = editor.getSession();
     editor.$blockScrolling = Infinity;
-    // WORKAROUND: disable autocomplete
-    editor.setBehavioursEnabled(false);
+    // editor.setBehavioursEnabled(false);
     editor.setTheme(`ace/theme/${self.props.theme||'github'}`);
-    editor.getSession().setMode(`ace/mode/${self.props.mode||'text'}`);
+    session.setMode(`ace/mode/${self.props.mode||'text'}`);
     // editor.setOptions({minLines: 25, maxLines: 50});
     editor.setReadOnly(self.props.readOnly);
     const {onInit, onSelect, onEdit, onScroll} = self.props;
     if (typeof onInit === 'function') {
-      const api = {reset, applyDeltas, setSelection, focus, setScrollTop};
+      const api = {reset, applyDeltas, setSelection, focus, setScrollTop, getSelectionRange, highlight};
       onInit(api);
     }
     if (typeof onSelect === 'function') {
-      editor.selection.addEventListener("changeCursor", onSelectionChanged, true);
-      editor.selection.addEventListener("changeSelection", onSelectionChanged, true);
+      session.selection.on("changeCursor", onSelectionChanged, true);
+      session.selection.on("changeSelection", onSelectionChanged, true);
     }
     if (typeof onEdit === 'function') {
-      editor.session.doc.on("change", onTextChanged, true);
+      session.on("change", onTextChanged);
     }
     editor.renderer.on("afterRender", function (e) {
-      const scrollTop = editor.session.getScrollTop();
+      const scrollTop = editor.getSession().getScrollTop();
       if (lastScrollTop !== scrollTop) {
         lastScrollTop = scrollTop;
         if (typeof onScroll === 'function') {

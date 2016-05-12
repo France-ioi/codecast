@@ -6,8 +6,6 @@ export default function* () {
   yield defineAction('playerPrepare', 'Player.Prepare');
   yield defineAction('playerPreparing', 'Player.Preparing');
   yield defineAction('playerReady', 'Player.Ready');
-  yield defineAction('playerSourceInit', 'Player.Source.Init');
-  yield defineAction('playerInputInit', 'Player.Input.Init');
   yield defineAction('playerStart', 'Player.Start');
   yield defineAction('playerStarting', 'Player.Starting');
   yield defineAction('playerStarted', 'Player.Started');

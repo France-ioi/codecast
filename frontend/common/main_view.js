@@ -16,7 +16,7 @@ import Terminal from '../utils/terminal';
 export default function* (deps) {
 
   yield use(
-    'getTranslateState', 'getStepperState',
+    'getTranslateState', 'getStepperDisplay',
     'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
     'inputInit', 'inputEdit', 'inputSelect', 'inputScroll',
     'StackView', 'DirectivesPane');
@@ -24,10 +24,8 @@ export default function* (deps) {
   yield defineSelector('MainViewSelector', function (state, props) {
     const translate = deps.getTranslateState(state);
     const diagnostics = translate && translate.get('diagnostics');
-    const stepper = deps.getStepperState(state);
-    const haveStepper = !!stepper;
-    const stepperState = haveStepper && stepper.get('state');
-    const stepperDisplay = haveStepper && stepper.get('display');
+    const stepperDisplay = deps.getStepperDisplay(state);
+    const haveStepper = !!stepperDisplay;
     const terminal = haveStepper && stepperDisplay.terminal;
     return {diagnostics, haveStepper, terminal};
   });

@@ -118,19 +118,19 @@ export default function* (deps) {
       return (
         <div>
           <p>
-            <Button onClick={onUpload} disabled={busy || done}>
+            <Input type="text" label="URL évènements" readOnly value={eventsUrl}/>
+          </p>
+          <p>
+            <Input type="text" label="URL audio" readOnly value={audioUrl}/>
+          </p>
+          <p>
+            <Button onClick={onUpload} disabled={busy || done} bsStyle={done ? 'default' : 'primary'}>
               {busy
                 ? <i className="fa fa-spin fa-spinner"/>
                 : (done
                     ? <i className="fa fa-check"/>
                     : <i className="fa fa-floppy-o"/>)}
             </Button>
-          </p>
-          <p>
-            <Input type="text" label="URL évènements" readOnly value={eventsUrl}/>
-          </p>
-          <p>
-            <Input type="text" label="URL audio" readOnly value={audioUrl}/>
           </p>
           {prepare === 'pending' && <p>Préparation de l'enregistrement…</p>}
           {uploadEvents === 'pending' && <p>Envoi des évènements en cours…</p>}

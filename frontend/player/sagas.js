@@ -1,4 +1,8 @@
 
+// An instant has shape {t, eventIndex, state},
+// where state is an Immutable Map of shape {source, input, syntaxTree, stepper, stepperInitial}
+// where source and input are buffer models (of shape {document, selection, scrollTop}).
+
 import {delay} from 'redux-saga';
 import {take, put, call, race, fork, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
@@ -9,7 +13,8 @@ import {use, addSaga} from '../utils/linker';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
 import Document from '../utils/document';
-import {addNodeRanges} from '../stepper/translate';
+import {translateClear, translateStarted, translateSucceeded, translateFailed} from '../stepper/translate';
+import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress} from '../stepper/reducers';
 import * as runtime from '../stepper/runtime';
 
 export default function* (deps) {
@@ -22,7 +27,10 @@ export default function* (deps) {
     'playerResume', 'playerResuming', 'playerResumed',
     'playerStop', 'playerStopping', 'playerStopped',
     'playerTick',
-    'getPlayerState'
+    'getPlayerState',
+    'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset',
+    'sourceReset', 'sourceModelSelect', 'sourceModelEdit', 'sourceModelScroll', 'sourceHighlight',
+    'inputReset', 'inputModelSelect', 'inputModelEdit', 'inputModelScroll'
   );
 
   // pause, resume audio
@@ -60,59 +68,60 @@ export default function* (deps) {
     }
   }
 
-  const findState = function (states, time) {
-    let low = 0, high = states.length;
+  const findInstant = function (instants, time) {
+    let low = 0, high = instants.length;
     while (low + 1 < high) {
       const mid = (low + high) / 2 | 0;
-      const state = states[mid];
+      const state = instants[mid];
       if (state.t <= time) {
         low = mid;
       } else {
         high = mid;
       }
     }
-    return states[low];
+    let instant = instants[low];
+    if (instant) {
+      while (low + 1 < instants.length) {
+        const nextInstant = instants[low + 1];
+        if (nextInstant.t !== instant.t)
+          break;
+        low += 1;
+      }
+    }
+    return instants[low];
   };
 
   //
   // Sagas (generators)
   //
 
-  // Map (second → index in state liste)
-  // List of states sorted by timestamp
-  // State shape: {source: {document, selection}, syntaxTree, stepper}
-
   function* playerPrepare (action) {
     const {audioUrl, eventsUrl} = action;
-    try {
-      // Check that the player is idle.
-      const player = yield select(deps.getPlayerState);
-      if (player.get('state') !== 'idle') {
-        return;
-      }
-      // Emit a Preparing action.
-      yield put({type: deps.playerPreparing});
-      // TODO: Clean up any old resources
-      // Create the audio player and start buffering.
-      const audio = new Audio();
-      audio.src = audioUrl;
-      // TODO: audio.onended = ...
-      // Download the events URL
-      const events = yield call(getJson, eventsUrl);
-      // Compute the future state after every event.
-      const states = yield call(computeStates, events);
-      // TODO: watch audioElement.buffered?
-      yield put({type: deps.playerReady, audio, events, states});
-      yield call(setCurrent, states[0]);
-    } catch (error) {
-      yield put({type: deps.error, source: 'playerPrepare', error});
+    // Check that the player is idle.
+    const player = yield select(deps.getPlayerState);
+    if (player.get('status') !== 'idle') {
+      return;
     }
+    // Emit a Preparing action.
+    yield put({type: deps.playerPreparing});
+    // TODO: Clean up any old resources
+    // Create the audio player and start buffering.
+    const audio = new Audio();
+    audio.src = audioUrl;
+    // TODO: audio.onended = ...
+    // Download the events URL
+    const events = yield call(getJson, eventsUrl);
+    // Compute the future state after every event.
+    const instants = yield call(computeInstants, events);
+    // TODO: watch audioElement.buffered?
+    yield put({type: deps.playerReady, audio, events, instants});
+    yield call(resetToInstant, instants[0]);
   }
 
   function* playerStart () {
     try {
       const player = yield select(deps.getPlayerState);
-      if (player.get('state') !== 'ready')
+      if (player.get('status') !== 'ready')
         return;
       yield put({type: deps.playerStarting});
       // TODO: Find the state immediately before current audio position, put that state.
@@ -126,10 +135,15 @@ export default function* (deps) {
   function* playerPause () {
     try {
       const player = yield select(deps.getPlayerState);
-      if (player.get('state') !== 'playing')
+      if (player.get('status') !== 'playing')
         return;
       yield put({type: deps.playerPausing});
       player.get('audio').pause();
+      // Call resetToInstant to bring the global state in line with the current
+      // state.  This is required in particular for the editors that have
+      // been updated incrementally by sending them events without updating
+      // the global state.
+      yield call(resetToInstant, player.get('current'));
       yield put({type: deps.playerPaused});
     } catch (error) {
       yield put({type: deps.error, source: 'playerPause', error});
@@ -139,7 +153,7 @@ export default function* (deps) {
   function* playerResume () {
     try {
       const player = yield select(deps.getPlayerState);
-      if (player.get('state') !== 'paused')
+      if (player.get('status') !== 'paused')
         return;
       yield put({type: deps.playerResuming});
       player.get('audio').play();
@@ -152,7 +166,7 @@ export default function* (deps) {
   function* playerStop () {
     try {
       const player = yield select(deps.getPlayerState);
-      if (player.get('state') !== 'playing')
+      if (player.get('status') !== 'playing')
         return;
       // Signal that the player is stopping.
       yield put({type: deps.playerStopping});
@@ -163,40 +177,44 @@ export default function* (deps) {
     }
   }
 
-  function* computeStates (events) {
+  function* computeInstants (events) {
     // TODO: avoid hogging the CPU, emit progress events.
     let state = null;
-    let states = [];
+    let context = null;
+    let instants = [];
     for (let pos = 0; pos < events.length; pos += 1) {
       const event = events[pos];
       const t = event[0];
       switch (event[1]) {
         case 'start': {
           const init = event[2];
-          // TODO: semver check on init.version
-          state = Immutable.Map({
-            source: Immutable.Map({
-              document: Document.fromString(init.source.document),
-              selection: Document.expandRange(init.source.selection),
-              scrollTop: init.source.scrollTop || 0
-            }),
-            input: init.input ? Immutable.Map({
-              document: Document.fromString(init.input.document),
-              selection: Document.expandRange(init.input.selection),
-              scrollTop: init.input.scrollTop || 0
-            }) : Immutable.Map({
-              document: Document.fromString(''),
-              selection: Document.expandRange([0,0,0,0]),
-              scrollTop: 0
-            })
+          const sourceModel = Immutable.Map({
+            document: Document.fromString(init.source.document),
+            selection: Document.expandRange(init.source.selection),
+            scrollTop: init.source.scrollTop || 0
           });
+          const inputModel = Immutable.Map({
+            document: Document.fromString(init.input ? init.input.document : ''),
+            selection: Document.expandRange(init.input ? init.input.selection : [0,0,0,0]),
+            scrollTop: (init.input && init.input.scrollTop) || 0
+          });
+          const translateModel = translateClear();
+          const stepperModel = stepperClear();
+          state = Immutable.Map({
+            source: sourceModel,
+            input: inputModel,
+            translate: translateModel,
+            stepper: stepperModel
+          })
           break;
         }
         case 'source.select': case 'select': {
+          // XXX use reducer imported from common/buffers
           state = state.setIn(['source', 'selection'], Document.expandRange(event[2]));
           break;
         }
         case 'source.insert': case 'source.delete': case 'insert': case 'delete': {
+          // XXX use reducer imported from common/buffers
           const delta = eventToDelta(event);
           if (delta) {
             state = state.updateIn(['source', 'document'], document =>
@@ -205,14 +223,17 @@ export default function* (deps) {
           break;
         }
         case 'source.scroll': {
+          // XXX use reducer imported from common/buffers
           state = state.setIn(['source', 'scrollTop'], event[2]);
           break;
         }
         case 'input.select': {
+          // XXX use reducer imported from common/buffers
           state = state.setIn(['input', 'selection'], Document.expandRange(event[2]));
           break;
         }
         case 'input.insert': case 'input.delete': {
+          // XXX use reducer imported from common/buffers
           const delta = eventToDelta(event);
           if (delta) {
             state = state.updateIn(['input', 'document'], document =>
@@ -221,74 +242,53 @@ export default function* (deps) {
           break;
         }
         case 'input.scroll': {
+          // XXX use reducer imported from common/buffers
           state = state.setIn(['input', 'scrollTop'], event[2]);
           break;
         }
-        case 'stepper.translate': case 'translate': {
-          // TODO: check that Document.toString(source.document) === event[2]
-          state = state.set('translate', event[2]);
+        case 'stepper.translate': {
+          const action = {source: event[2]};
+          state = state.update('translate', st => translateStarted(st, action));
           break;
         }
-        case 'stepper.translateSuccess': case 'translateSuccess': {
-          const source = state.get('translate');
-          const data = event[2];
-          let syntaxTree;
-          if (Array.isArray(event[2])) {
-            // Old style without diagnostics, data is the syntax tree.
-            syntaxTree = data;
-          } else {
-            // New style with diagnostics, data is an object.
-            syntaxTree = event[2].ast;
-          }
-          // addNodeRanges destructively updates syntaxTree, which fine.
-          addNodeRanges(source, syntaxTree);
-          state = state
-            .delete('translate')
-            .set('syntaxTree', syntaxTree);
+        case 'stepper.translateSuccess': {
+          const action = {diagnostics: event[2].diagnostics, syntaxTree: event[2].ast};
+          state = state.update('translate', st => translateSucceeded(st, action));
           break;
         }
         case 'stepper.translateFailure': case 'translateFailure': {
-          state = state
-            .delete('translate')
-            .set('translateError', event[2]);
+          const action = {diagnostics: event[2].diagnostics, error: event[2].error};
+          state = state.update('translate', st => translateFailure(st, action));
           break;
         }
-        case 'stepper.exit': case 'translateClear': {
+        case 'stepper.exit': {
           state = state
-            .delete('syntaxTree')
-            .delete('stepper');
+            .update('translate', translateClear)
+            .update('stepper', stepperClear);
           break;
         }
-        case 'stepper.restart': case 'stepperRestart': {
-          const syntaxTree = state.get('syntaxTree');
-          const input = state.get('input') && Document.toString(state.get('input').get('document'));
+        case 'stepper.restart': {
+          const syntaxTree = state.getIn(['translate', 'syntaxTree']);
+          const input = state.get('input') && Document.toString(state.getIn(['input', 'document']));
           const stepperState = C.clearMemoryLog(runtime.start(syntaxTree, {input}));
-          state = state.set('stepper', stepperState).set('stepCounter', 0);
+          const action = {stepperState};
+          state = state.update('stepper', st => stepperRestart(st, action));
           break;
         }
-        case 'stepper.expr': case 'stepExpr': {
-          state = beginStep(state, 'expr');
+        case 'stepper.step': {
+          const mode = event[2];
+          state = state.update('stepper', st => stepperStarted(st, {mode}));
+          context = beginStep(state.getIn(['stepper', 'current']));
           break;
         }
-        case 'stepper.into': case 'stepInto': {
-          state = beginStep(state, 'into');
+        case 'stepper.idle': {
+          context = runToStep(context, event[2]);
+          state = state.update('stepper', st => stepperIdle(st, {context}));
           break;
         }
-        case 'stepper.out': {
-          state = beginStep(state, 'out');
-          break;
-        }
-        case 'stepper.over': {
-          state = beginStep(state, 'over');
-          break;
-        }
-        case 'stepper.idle': case 'stepIdle': {
-          state = runToStep(state, event[2]);
-          state = state.delete('pendingStep');
-          break;
-        }
-        case 'stepper.progress': case 'stepProgress': {
-          state = runToStep(state, event[2]);
+        case 'stepper.progress': {
+          context = runToStep(context, event[2]);
+          state = state.update('stepper', st => stepperProgress(st, {context}));
           break;
         }
         case 'end': {
@@ -300,34 +300,35 @@ export default function* (deps) {
           break;
         }
       }
-      states.push({t, eventIndex: pos, state});
+      instants.push({t, eventIndex: pos, state});
     }
-    return states;
+    return instants;
   }
 
-  function beginStep(state, step) {
-    return state
-      .set('pendingStep', step)
-      .set('stepCounter', 0)
-      .update('stepper', C.clearMemoryLog);
+  function beginStep (state) {
+    return {
+      state: C.clearMemoryLog(state),
+      stepCounter: 0
+    };
   }
 
-  function runToStep (state, targetStepCounter) {
-    let stepperState = state.get('stepper');
-    let stepCounter = state.get('stepCounter');
+  function runToStep (context, targetStepCounter) {
+    let {state, stepCounter} = context;
     while (stepCounter < targetStepCounter) {
-      stepperState = C.step(stepperState, runtime.options);
+      state = C.step(state, runtime.options);
       stepCounter += 1;
     }
-    return state
-      .set('stepper', stepperState)
-      .set('stepCounter', stepCounter);
+    return {state, stepCounter};
   }
 
   yield addSaga(function* watchPlayerPrepare () {
     while (true) {
       const action = yield take(deps.playerPrepare);
-      yield call(playerPrepare, action);
+      try {
+        yield call(playerPrepare, action);
+      } catch (error) {
+        yield put({type: deps.error, source: 'playerPrepare', error});
+      }
     }
   });
 
@@ -359,29 +360,24 @@ export default function* (deps) {
     }
   });
 
-  function* setCurrent (state) {
+  function* resetToInstant (instant) {
+    const {state} = instant;
     const player = yield select(deps.getPlayerState);
-    const sourceEditor = player.getIn(['source', 'editor']);
-    if (sourceEditor) {
-      const source = state.state.get('source');
-      const text = Document.toString(source.get('document'));
-      sourceEditor.reset(text, source.get('selection'));
-    }
-    const inputEditor = player.getIn(['input', 'editor']);
-    if (inputEditor) {
-      const input = state.state.get('input');
-      const text = Document.toString(input.get('document'));
-      inputEditor.reset(text, input.get('selection'));
-    }
-    yield put({type: deps.playerTick, current: state});
+    yield put({type: deps.sourceReset, model: state.get('source')});
+    yield put({type: deps.inputReset, model: state.get('input')});
+    const stepperState = state.get('stepper');
+    yield put({type: deps.stepperReset, state: stepperState});
+    // TODO: restore translate too
+    yield put({type: deps.playerTick, current: instant});
   }
 
   yield addSaga(function* playerTick () {
     while (true) {
       yield take(deps.playerStarted);
-      play_loop: while (true) {
+      let atEnd = false;
+      while (!atEnd) {
         const outcome = yield race({
-          tick: call(delay, 20),
+          tick: call(delay, 50),
           stopped: take(deps.playerStopping)
         });
         if ('stopped' in outcome)
@@ -389,67 +385,62 @@ export default function* (deps) {
         const player = yield select(deps.getPlayerState);
         const audio = player.get('audio');
         const audioTime = Math.round(audio.currentTime * 1000);
-        const prevState = player.get('current');
-        const states = player.get('states');
-        const nextState = findState(states, audioTime);
-        if (nextState.eventIndex < prevState.eventIndex) {
+        const prevInstant = player.get('current');
+        const instants = player.get('instants');
+        const nextInstant = findInstant(instants, audioTime);
+        if (prevInstant === nextInstant) {
+          // Fast path, no change.
+          continue;
+        } else if (nextInstant.eventIndex < prevInstant.eventIndex) {
           // Event index jumped backwards.
-          console.log("<< seek", nextState.t);
-          yield call(setCurrent, nextState);
-        } else if (nextState.t > prevState.t + 1000 && prevState.eventIndex + 10 < nextState.eventIndex) {
+          console.log("<< seek", nextInstant.t);
+          yield call(resetToInstant, nextInstant);
+        } else if (nextInstant.t > prevInstant.t + 1000 && prevInstant.eventIndex + 10 < nextInstant.eventIndex) {
           // Time between last state and new state jumped by more than 1 second,
           // and there are more than 10 events to replay.
-          console.log("seek >>", nextState.t);
-          yield call(setCurrent, nextState);
+          console.log("seek >>", nextInstant.t);
+          yield call(resetToInstant, nextInstant);
         } else {
+          // Play incremental events between prevInstant (exclusive) and
+          // nextInstant (inclusive).
           // Small time delta, attempt to replay events.
           const events = player.get('events');
-          const sourceEditor = player.getIn(['source', 'editor']);
-          const inputEditor = player.getIn(['input', 'editor']);
           // XXX Assumption: 1-to-1 correspondance between indexes in
-          //                 events and states: states[pos] is the state
+          //                 events and instants: instants[pos] is the state
           //                 immediately after replaying events[pos],
-          //                 and pos === states[pos].eventIndex
-          for (let pos = prevState.eventIndex; pos < nextState.eventIndex; pos += 1) {
-            // console.log(event);
+          //                 and pos === instants[pos].eventIndex
+          for (let pos = prevInstant.eventIndex + 1; pos <= nextInstant.eventIndex; pos += 1) {
             const event = events[pos];
-            if (pos >= states.length) {
-              // Ticked past last state, stop ticking.
-              break play_loop;
-            }
-            const state = states[pos].state;  // state reached after event is replayed
             switch (event[1]) {
-              case 'source.select': case 'select':
-                sourceEditor.setSelection(Document.expandRange(event[2]))
+              case 'source.select':
+                yield put({type: deps.sourceModelSelect, selection: Document.expandRange(event[2])});
                 break;
-              case 'source.insert': case 'source.delete': case 'insert': case 'delete':
-                sourceEditor.applyDeltas([eventToDelta(event)]);
+              case 'source.insert': case 'source.delete':
+                yield put({type: deps.sourceModelEdit, delta: eventToDelta(event)});
                 break;
               case 'source.scroll':
-                sourceEditor.setScrollTop(event[2]);
+                yield put({type: deps.sourceModelScroll, scrollTop: event[2]});
                 break;
               case 'input.select':
-                inputEditor.setSelection(Document.expandRange(event[2]))
+                yield put({type: deps.inputModelSelect, selection: Document.expandRange(event[2])});
                 break;
               case 'input.insert': case 'input.delete':
-                inputEditor.applyDeltas([eventToDelta(event)]);
+                yield put({type: deps.inputModelEdit, delta: eventToDelta(event)});
                 break;
               case 'input.scroll':
-                inputEditor.setScrollTop(event[2]);
+                yield put({type: deps.inputModelScroll, scrollTop: event[2]});
                 break;
-              case 'stepper.idle': case 'stepper.progress': case 'stepIdle': case 'stepProgress': {
-                const stepper = state.get('stepper');
-                const range = runtime.getNodeRange(stepper);
-                sourceEditor.setSelection(range);
-                break;
-              }
               case 'end':
-                // May never be reached if the audio is a little bit shorter.
-                yield put({type: deps.playerTick, current: nextState});
-                break play_loop;
+                atEnd = true;
+                break;
             }
+            yield put({type: deps.playerTick, current: nextInstant});
+            const state = nextInstant.state;  // state reached after event is replayed
+            const stepperState = state.get('stepper');
+            yield put({type: deps.stepperReset, state: stepperState});
+            const range = runtime.getNodeRange(stepperState.get('display'));
+            yield put({type: deps.sourceHighlight, range});
           }
-          yield put({type: deps.playerTick, current: nextState});
         }
       }
     }

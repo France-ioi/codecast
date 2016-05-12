@@ -25,9 +25,16 @@ import playerActions from './actions';
 import playerSelectors from './selectors';
 import playerReducers from './reducers';
 import playerSagas from './sagas';
+import PlayerControls from './controls';
 import App from './app_view';
 
-const {store, scope} = link(function* () {
+const {store, scope, start} = link(function* () {
+
+  yield addReducer('init', _ => Immutable.Map({
+    player: Immutable.Map({
+      status: 'idle'
+    })
+  }));
 
   yield include(stepperComponent);
   yield include(commonComponent);
@@ -35,17 +42,13 @@ const {store, scope} = link(function* () {
   yield include(playerSelectors);
   yield include(playerReducers);
   yield include(playerSagas);
+  yield include(PlayerControls);
   yield include(App);
-
-  yield addReducer('init', _ => Immutable.Map({
-    player: Immutable.Map({
-      state: 'idle'
-    })
-  }));
 
 });
 
 store.dispatch({type: scope.init});
+start();
 
 const container = document.getElementById('react-container');
 ReactDOM.render(<Provider store={store}><scope.App/></Provider>, container);

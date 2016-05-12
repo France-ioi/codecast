@@ -1,6 +1,8 @@
 
 import Immutable from 'immutable';
 
+export const blank = new Immutable.List();
+
 export const fromString = function (text) {
   return new Immutable.List(text.split('\n'));
 };
@@ -64,4 +66,6 @@ export const expandRange = function (range) {
   }
 };
 
-export default {fromString, toString, applyDelta, compressRange, expandRange};
+export default {
+  blank, fromString, toString, applyDelta, compressRange, expandRange
+};

@@ -10,9 +10,11 @@ import * as runtime from './runtime';
 export default function* (deps) {
 
   yield use(
-    'getStepperState', 'getStepperInterrupted', 'stepperInterrupted',
-    'stepperRestart', 'stepperStep', 'stepperStart', 'stepperProgress', 'stepperIdle',
-    'getSource', 'getInput', 'translateSucceeded'
+    'getStepperState', 'getStepperDisplay', 'getStepperInterrupted',
+    'stepperInterrupted',
+    'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle',
+    'translateSucceeded', 'getTranslateState',
+    'getInputModel', 'sourceHighlight'
   );
 
   /* XXX Use a different terminology for the stepper context (just below)
@@ -28,16 +30,14 @@ export default function* (deps) {
       startTime,
       timeLimit: startTime + 20,
       stepCounter: 0,
-      running: true,
-      effects: []
+      running: true
     };
   }
 
   function viewContext (context) {
     // Returns a persistent view of the context.
-    const {state, startTime, stepCounter, running, effects} = context;
-    const elapsed = window.performance.now() - context.startTime;
-    return {state, elapsed, stepCounter, effects};
+    const {state, stepCounter} = context;
+    return {state, stepCounter};
   }
 
   function singleStep (context, stopCond) {
@@ -55,14 +55,9 @@ export default function* (deps) {
   }
 
   function* updateSelection () {
-    const source = yield select(deps.getSource);
-    const editor = source.get('editor');
-    if (editor) {
-      const stepper = yield select(deps.getStepperState);
-      const stepperState = stepper.get('display');
-      const range = runtime.getNodeRange(stepperState);
-      editor.setSelection(range);
-    }
+    const stepperState = yield select(deps.getStepperDisplay);
+    const range = runtime.getNodeRange(stepperState);
+    yield put({type: deps.sourceHighlight, range});
   }
 
   function* stepUntil (context, stopCond) {
@@ -168,8 +163,9 @@ export default function* (deps) {
 
   function* startStepper (mode) {
     const stepper = yield select(deps.getStepperState);
-    if (stepper.get('state') === 'starting') {
-      yield put({type: deps.stepperStart});
+    if (stepper.get('status') === 'starting') {
+      console.log('put stepperStarted');
+      yield put({type: deps.stepperStarted, mode});
       const context = buildContext(stepper.get('current'));
       try {
         switch (mode) {
@@ -189,22 +185,27 @@ export default function* (deps) {
       } catch (error) {
         console.log(error); // XXX
       }
+      console.log('put stepperIdle');
       yield put({type: deps.stepperIdle, context: viewContext(context)});
       yield call(updateSelection);
     }
   }
 
   yield addSaga(function* watchTranslateSucceeded () {
+    // Start the stepper when source code has been translated successfully.
     while (true) {
-      const {syntaxTree} = yield take(deps.translateSucceeded);
+      yield take(deps.translateSucceeded);
       try {
-        const inputState = yield select(deps.getInput);
-        const input = Document.toString(inputState.get('document'));
-        const stepperState = runtime.start(syntaxTree, {input});
+        // Get the syntax tree from the store so that we get the version where
+        // each node has a range attribute.
+        const translate = yield select(deps.getTranslateState);
+        const inputModel = yield select(deps.getInputModel);
+        const input = Document.toString(inputModel.get('document'));
+        const stepperState = runtime.start(translate.get('syntaxTree'), {input});
         yield put({type: deps.stepperRestart, stepperState});
         yield call(updateSelection);
       } catch (error) {
-        yield put({type: deps.error, source: 'translate', error});
+        yield put({type: deps.error, source: 'stepper', error});
       }
     }
   });

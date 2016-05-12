@@ -141,3 +141,9 @@ body#app, #app h1, #app h2, #app h3 {
   overflow: hidden;
   max-height: 12px;
 }
+
+.code-highlight {
+  position: absolute;
+  background: rgba(100,200,100,0.5);
+  z-index: 20;
+}
