@@ -9,7 +9,7 @@ export default function* (deps) {
 
   yield use(
     'playerStart', 'playerPause', 'playerResume', 'getPlayerState',
-    'StepperControls'
+    'StepperControls', 'FullscreenButton'
   );
 
   yield defineSelector('PlayerControlsSelector', function (state, props) {
@@ -51,6 +51,7 @@ export default function* (deps) {
               <i className="fa fa-pause"/>
             </Button>}
           <deps.StepperControls/>
+          <deps.FullscreenButton/>
           <p>{status}{' '}{t}</p>
         </div>
       );
