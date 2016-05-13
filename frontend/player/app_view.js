@@ -12,7 +12,7 @@ export default function* (deps) {
 
     self.render = function () {
       return (
-        <div>
+        <div className="container">
           <div className="row">
             <div className="col-md-12">
               <deps.PlayerControls/>
