@@ -64,6 +64,12 @@ export default function* (deps) {
       self.props.dispatch({type: deps.inputScroll, scrollTop, firstVisibleRow});
     };
 
+    const inputOutputHeader = (
+      <div className="row">
+        <div className="col-md-6">Entrée</div>
+        <div className="col-md-6">Sortie</div>
+      </div>);
+
     self.render = function () {
       const {diagnostics, haveStepper, terminal} = self.props;
       return (
@@ -89,7 +95,7 @@ export default function* (deps) {
             </div>}
             <div className="col-md-12">
               <deps.DirectivesPane/>
-              <Panel header="Entrée/Sortie">
+              <Panel header={inputOutputHeader}>
                 <div className="row">
                   <div className="col-md-6">
                     <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect} onScroll={onInputScroll}
