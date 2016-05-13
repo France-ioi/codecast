@@ -51,6 +51,10 @@ app.get('/player', function (req, res) {
   res.render('player', {development: isDevelopment});
 });
 
+app.get('/sandbox', function (req, res) {
+  res.render('sandbox', {development: isDevelopment});
+});
+
 app.post('/upload', function (req, res) {
   const id = Date.now().toString();
   const base = `uploads/${id}`;
