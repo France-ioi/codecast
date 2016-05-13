@@ -3,6 +3,9 @@ import {defineAction} from '../utils/linker';
 
 export default function* () {
 
+  // Switch to the specified screen.
+  yield defineAction('switchToScreen', 'System.SwitchToScreen');
+
   // Sent when the application starts to prepare the recorder's resources.
   yield defineAction('recorderPrepare', 'Recorder.Prepare');
 

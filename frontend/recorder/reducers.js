@@ -20,6 +20,10 @@ import {addReducer} from '../utils/linker';
 
 export default function* () {
 
+  yield addReducer('switchToScreen', function (state, action) {
+    return state.set('screen', action.screen);
+  });
+
   yield addReducer('recorderPreparing', function (state, action) {
     const {progress} = action;
     return state.set('recorder', Immutable.Map({status: 'preparing', progress}));
