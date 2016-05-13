@@ -36,6 +36,10 @@ export default function* (deps) {
       .set('duration', duration)));
   });
 
+  yield addReducer('playerAudioError', function (state, action) {
+    return state.setIn(['player', 'status'], 'broken');
+  });
+
   yield addReducer('playerStarting', function (state, action) {
     return state.setIn(['player', 'status'], 'starting');
   });
@@ -79,6 +83,24 @@ export default function* (deps) {
     return state.update('player', player => player
       .set('current', current)
       .set('audioTime', audioTime));
+  });
+
+  yield addReducer('playerSeek', function (state, action) {
+    const {audioTime} = action;
+    return state.update('player', player => player
+      .set('seekTo', audioTime));
+  });
+
+  yield addReducer('playerSeeked', function (state, action) {
+    // action shape: {type, current, audioTime}
+    const {current, seekTo} = action;
+    return state.update('player', function (player) {
+      // Only delete seekTo if it matches the time seeked to.
+      if (player.get('seekTo') === seekTo) {
+        player = player.delete('seekTo');
+      }
+      return player.set('current', current).set('audioTime', seekTo);
+    });
   });
 
 };

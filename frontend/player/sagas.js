@@ -27,8 +27,8 @@ export default function* (deps) {
     'playerPause', 'playerPausing', 'playerPaused',
     'playerResume', 'playerResuming', 'playerResumed',
     'playerStop', 'playerStopping', 'playerStopped',
-    'playerTick', 'playerSeek',
-    'playerAudioReady',
+    'playerTick', 'playerSeek', 'playerSeeked',
+    'playerAudioReady', 'playerAudioError',
     'getPlayerState',
     'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset',
     'sourceReset', 'sourceModelSelect', 'sourceModelEdit', 'sourceModelScroll', 'sourceHighlight',
@@ -404,15 +404,6 @@ export default function* (deps) {
     yield put({type: deps.playerTick, current: instant});
   }
 
-  yield addSaga(function* watchPlayerSeek () {
-    while (true) {
-      const {audioTime} = yield take(deps.playerSeek);
-      const player = yield select(deps.getPlayerState);
-      const audio = player.get('audio');
-      audio.currentTime = audioTime / 1000;
-    }
-  });
-
   yield addSaga(function* playerTick () {
     while (true) {
       yield take(deps.playerReady);
@@ -424,10 +415,29 @@ export default function* (deps) {
         if ('stopped' in outcome)
           break;
         const player = yield select(deps.getPlayerState);
-        const audio = player.get('audio');
-        const audioTime = Math.round(audio.currentTime * 1000);
-        const prevInstant = player.get('current');
         const instants = player.get('instants');
+        // Process a pending seek.
+        const seekTo = player.get('seekTo');
+        if (seekTo) {
+          const instant = findInstant(instants, seekTo);
+          yield call(resetToInstant, instant);
+          audio.currentTime = seekTo / 1000;
+          yield put({type: deps.playerSeeked, current: instant, seekTo});
+          continue;
+        }
+        // If playing, replay the events from the current state to the next.
+        const status = player.get('status');
+        if (status !== 'playing') {
+          continue;
+        }
+        let ended = false;
+        const audio = player.get('audio');
+        let audioTime = Math.round(audio.currentTime * 1000);
+        if (audio.ended) {
+          audioTime = player.get('duration');
+          ended = true;
+        }
+        const prevInstant = player.get('current');
         const nextInstant = findInstant(instants, audioTime);
         if (nextInstant.eventIndex < prevInstant.eventIndex) {
           // Event index jumped backwards.
@@ -468,6 +478,10 @@ export default function* (deps) {
               case 'input.scroll':
                 yield put({type: deps.inputModelScroll, scrollTop: event[2]});
                 break;
+              case 'end':
+                ended = true;
+                audioTime = player.get('duration');
+                break;
             }
           }
           yield put({type: deps.playerTick, current: nextInstant, audioTime});
@@ -476,6 +490,12 @@ export default function* (deps) {
           yield put({type: deps.stepperReset, state: stepperState});
           const range = runtime.getNodeRange(stepperState.get('display'));
           yield put({type: deps.sourceHighlight, range});
+          if (ended) {
+            audio.pause();
+            audio.currentTime = audio.duration;
+            console.log('pause', audioTime, audio.currentTime, nextInstant);
+            yield put({type: deps.playerPaused});
+          }
         }
       }
     }
