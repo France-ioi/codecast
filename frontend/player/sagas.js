@@ -441,12 +441,10 @@ export default function* (deps) {
         const nextInstant = findInstant(instants, audioTime);
         if (nextInstant.eventIndex < prevInstant.eventIndex) {
           // Event index jumped backwards.
-          console.log("<< seek", nextInstant.t);
           yield call(resetToInstant, nextInstant);
         } else if (nextInstant.t > prevInstant.t + 1000 && prevInstant.eventIndex + 10 < nextInstant.eventIndex) {
           // Time between last state and new state jumped by more than 1 second,
           // and there are more than 10 events to replay.
-          console.log("seek >>", nextInstant.t);
           yield call(resetToInstant, nextInstant);
         } else {
           // Play incremental events between prevInstant (exclusive) and
@@ -493,7 +491,6 @@ export default function* (deps) {
           if (ended) {
             audio.pause();
             audio.currentTime = audio.duration;
-            console.log('pause', audioTime, audio.currentTime, nextInstant);
             yield put({type: deps.playerPaused});
           }
         }
