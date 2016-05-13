@@ -64,13 +64,14 @@ body#app, #app h1, #app h2, #app h3 {
 }
 
 .terminal {
-  padding: 4px;
+  margin: 4px;
   line-height: 16px;
+  background: #222;
 }
 .terminal-line {
   background: black;
   color: #C80;
-  width: 320px;
+  width: 480px; /* 60 columns * 8px */
   min-height: 1em;
   white-space: pre;
 }
