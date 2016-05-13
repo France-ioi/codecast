@@ -415,9 +415,8 @@ export default function* (deps) {
 
   yield addSaga(function* playerTick () {
     while (true) {
-      let atEnd = false;
-      while (!atEnd) {
       yield take(deps.playerReady);
+      while (true) {  // XXX should be 'not stopped' condition
         const outcome = yield race({
           tick: call(delay, 50),
           stopped: take(deps.playerStopping)
@@ -468,9 +467,6 @@ export default function* (deps) {
                 break;
               case 'input.scroll':
                 yield put({type: deps.inputModelScroll, scrollTop: event[2]});
-                break;
-              case 'end':
-                atEnd = true;
                 break;
             }
           }
