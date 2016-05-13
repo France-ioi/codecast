@@ -44,11 +44,12 @@ export default function* (deps) {
             <i className="fa fa-pause"/>
           </Button>}
           <deps.FullscreenButton/>
-          {' '}
-          <span><i className="fa fa-clock-o"/> {elapsed}s</span>
-          {' '}
-          <span><i className="fa fa-bolt"/> {eventCount}</span>
           <deps.StepperControls enabled={true}/>
+          <p>
+            <span><i className="fa fa-clock-o"/> {elapsed}s</span>
+            {' '}
+            <span><i className="fa fa-bolt"/> {eventCount}</span>
+          </p>
         </div>
       );
     };

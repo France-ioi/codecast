@@ -175,3 +175,6 @@ body#app, #app h1, #app h2, #app h3 {
 .pane-controls > * {
   float: left;
 }
+.pane-controls p {
+    margin: 7px 7px;
+}
