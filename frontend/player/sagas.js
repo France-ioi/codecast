@@ -415,9 +415,9 @@ export default function* (deps) {
 
   yield addSaga(function* playerTick () {
     while (true) {
-      yield take(deps.playerStarted);
       let atEnd = false;
       while (!atEnd) {
+      yield take(deps.playerReady);
         const outcome = yield race({
           tick: call(delay, 50),
           stopped: take(deps.playerStopping)
