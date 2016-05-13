@@ -36,7 +36,7 @@ export default function* (deps) {
       // recorder
       const {isRecording, elapsed, eventCount} = self.props;
       return (
-        <div className="pane pane-controls">
+        <div className="pane pane-controls clearfix">
           <Button onClick={onStopRecording} disabled={!isRecording}>
             <i className="fa fa-stop"/>
           </Button>

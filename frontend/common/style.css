@@ -172,6 +172,9 @@ body#app, #app h1, #app h2, #app h3 {
   z-index: 20;
 }
 
+.pane-controls {
+  margin-bottom: 6px;
+}
 .pane-controls > * {
   float: left;
 }
