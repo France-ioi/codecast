@@ -416,6 +416,7 @@ export default function* (deps) {
           break;
         const player = yield select(deps.getPlayerState);
         const instants = player.get('instants');
+        const audio = player.get('audio');
         // Process a pending seek.
         const seekTo = player.get('seekTo');
         if (seekTo) {
@@ -431,7 +432,6 @@ export default function* (deps) {
           continue;
         }
         let ended = false;
-        const audio = player.get('audio');
         let audioTime = Math.round(audio.currentTime * 1000);
         if (audio.ended) {
           audioTime = player.get('duration');
