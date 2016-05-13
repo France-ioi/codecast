@@ -17,6 +17,7 @@ import {translateClear, translateStarted, translateSucceeded, translateFailed} f
 import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress} from '../stepper/reducers';
 import * as runtime from '../stepper/runtime';
 
+
 export default function* (deps) {
 
   yield use(
@@ -26,7 +27,7 @@ export default function* (deps) {
     'playerPause', 'playerPausing', 'playerPaused',
     'playerResume', 'playerResuming', 'playerResumed',
     'playerStop', 'playerStopping', 'playerStopped',
-    'playerTick',
+    'playerTick', 'playerSeek',
     'playerAudioReady',
     'getPlayerState',
     'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset',
@@ -402,6 +403,15 @@ export default function* (deps) {
     // TODO: restore translate too
     yield put({type: deps.playerTick, current: instant});
   }
+
+  yield addSaga(function* watchPlayerSeek () {
+    while (true) {
+      const {audioTime} = yield take(deps.playerSeek);
+      const player = yield select(deps.getPlayerState);
+      const audio = player.get('audio');
+      audio.currentTime = audioTime / 1000;
+    }
+  });
 
   yield addSaga(function* playerTick () {
     while (true) {
