@@ -28,7 +28,6 @@ store using the selector.
 
 */
 
-import {production} from '@system-env';
 import {createStore, applyMiddleware, compose} from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import {delay} from 'redux-saga';
@@ -37,7 +36,10 @@ import {connect} from 'react-redux';
 import Immutable from 'immutable';
 
 function makeSafeProxy (obj, onError) {
-  function safeGet(target, property) {
+  if (typeof Proxy !== 'function') {
+    return obj;
+  }
+  const safeGet = function (target, property) {
     if (property in target) {
       return target[property];
     } else {
@@ -119,7 +121,7 @@ export function link (rootBundle) {
   }
 
   function include_ (bundle) {
-    const deps = production ? {} : makeSafeProxy({}, undeclaredDependencyError);
+    const deps = makeSafeProxy({}, undeclaredDependencyError);
     const it = bundle(deps);
     let result = it.next();
     while (!result.done) {
