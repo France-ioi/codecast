@@ -17,14 +17,26 @@ export default function* (deps) {
   );
 
   yield defineSelector('StepperControlsSelector', function (state, props) {
+    const {enabled} = props;
     const stepper = deps.getStepperState(state);
     const status = stepper && stepper.get('status');
-    const isCompiled = status !== 'clear';
-    const isStepping = isCompiled && status !== 'idle';
+    const isTranslated = status !== 'clear';
+    const showExit = isTranslated;
+    const canExit = enabled && isTranslated;
+    const showTranslate = !isTranslated;
+    const canTranslate = enabled && !isTranslated;
+    const isStepping = isTranslated && status !== 'idle';
     const current = stepper && stepper.get('current');
     const {control} = current || {};
-    const canStep = !!(!isStepping && control && control.node);
-    return {isCompiled, isStepping, canStep};
+    const haveNode = control && control.node;
+    const canRestart = enabled && !isStepping;
+    const canStep = enabled && !isStepping && haveNode;
+    const canInterrupt = enabled && isStepping;
+    return {
+      showExit, canExit,
+      showTranslate, canTranslate,
+      canRestart, canStep, canInterrupt
+    };
   });
 
   yield defineView('StepperControls', 'StepperControlsSelector', EpicComponent(self => {
@@ -62,17 +74,17 @@ export default function* (deps) {
     };
 
     self.render = function () {
-      const {isCompiled, isStepping, canStep} = self.props;
+      const p = self.props;
       return (
         <div>
-          <Button onClick={onStepExpr} disabled={!canStep}>step expr</Button>
-          <Button onClick={onStepInto} disabled={!canStep}>step into</Button>
-          <Button onClick={onStepOut} disabled={!canStep}>step out</Button>
-          <Button onClick={onStepOver} disabled={!canStep}>step over</Button>
-          <Button onClick={onInterrupt} disabled={!isStepping}>interrompre</Button>
-          <Button onClick={onRestart} disabled={isStepping}>recommencer</Button>
-          {isCompiled && <Button onClick={onEdit}>éditer</Button>}
-          {isCompiled || <Button onClick={onTranslate} bsStyle='primary'>compiler</Button>}
+          <Button onClick={onStepExpr} disabled={!p.canStep}>step expr</Button>
+          <Button onClick={onStepInto} disabled={!p.canStep}>step into</Button>
+          <Button onClick={onStepOut} disabled={!p.canStep}>step out</Button>
+          <Button onClick={onStepOver} disabled={!p.canStep}>step over</Button>
+          <Button onClick={onInterrupt} disabled={!p.canInterrupt}>interrompre</Button>
+          <Button onClick={onRestart} disabled={!p.canRestart}>recommencer</Button>
+          {p.showExit && <Button onClick={onEdit} disabled={!p.canExit}>éditer</Button>}
+          {p.showTranslate && <Button onClick={onTranslate} disabled={!p.canTranslate} bsStyle='primary'>compiler</Button>}
         </div>
       );
     };
