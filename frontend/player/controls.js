@@ -40,6 +40,7 @@ export default function* (deps) {
       const canStartPlayback = /ready|paused/.test(status);
       const showPausePlayback = /playing|pausing/.test(status);
       const canPausePlayback = status === 'playing';
+      const canStep = status === 'paused';
       return (
         <div className="pane pane-controls">
           {showStartPlayback &&
@@ -50,7 +51,7 @@ export default function* (deps) {
             <Button onClick={onPausePlayback} enabled={canPausePlayback}>
               <i className="fa fa-pause"/>
             </Button>}
-          <deps.StepperControls/>
+          <deps.StepperControls enabled={canStep}/>
           <deps.FullscreenButton/>
           <p>{status}{' '}{t}</p>
         </div>
