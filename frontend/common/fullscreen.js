@@ -48,7 +48,6 @@ export default function* (deps) {
     };
     self.render = function () {
       const {enabled, active} = self.props;
-      console.log('fullscreen', enabled && 'enabled', active && 'active');
       return (
         <Button onClick={active ? onLeaveFullscreen : onEnterFullscreen} disabled={!enabled}>
           <i className={active ? "fa fa-compress" : "fa fa-expand"}/>
@@ -61,7 +60,6 @@ export default function* (deps) {
     const elem = window.document;
     function onFullscreenChange () {
       const isFullscreen = !!(elem.fullscreenElement || elem.msFullscreenElement || elem.mozFullScreenElement || elem.webkitFullscreenElement);
-      console.log('change', isFullscreen);
       listener(isFullscreen ? 'on' : 'off');
     }
     function onFullscreenError () {
@@ -89,7 +87,6 @@ export default function* (deps) {
     yield put({type: deps.fullscreenEnabled, enabled: isFullscreenEnabled});
     while (true) {
       let event = yield take(fullscreenMonitorChannel);
-      console.log('event', event);
       switch (event) {
         case 'on':
           yield put({type: deps.enterFullscreenSucceeded});

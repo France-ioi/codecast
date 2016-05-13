@@ -164,7 +164,6 @@ export default function* (deps) {
   function* startStepper (mode) {
     const stepper = yield select(deps.getStepperState);
     if (stepper.get('status') === 'starting') {
-      console.log('put stepperStarted');
       yield put({type: deps.stepperStarted, mode});
       const context = buildContext(stepper.get('current'));
       try {
@@ -185,7 +184,6 @@ export default function* (deps) {
       } catch (error) {
         console.log(error); // XXX
       }
-      console.log('put stepperIdle');
       yield put({type: deps.stepperIdle, context: viewContext(context)});
       yield call(updateSelection);
     }
