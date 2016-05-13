@@ -28,6 +28,7 @@ store using the selector.
 
 */
 
+import {production} from '@system-env';
 import {createStore, applyMiddleware, compose} from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import {delay} from 'redux-saga';
@@ -118,7 +119,7 @@ export function link (rootBundle) {
   }
 
   function include_ (bundle) {
-    const deps = makeSafeProxy({}, undeclaredDependencyError);
+    const deps = production ? {} : makeSafeProxy({}, undeclaredDependencyError);
     const it = bundle(deps);
     let result = it.next();
     while (!result.done) {
