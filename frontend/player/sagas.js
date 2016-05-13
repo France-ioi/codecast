@@ -27,6 +27,7 @@ export default function* (deps) {
     'playerResume', 'playerResuming', 'playerResumed',
     'playerStop', 'playerStopping', 'playerStopped',
     'playerTick',
+    'playerAudioReady',
     'getPlayerState',
     'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset',
     'sourceReset', 'sourceModelSelect', 'sourceModelEdit', 'sourceModelScroll', 'sourceHighlight',
@@ -95,6 +96,35 @@ export default function* (deps) {
   // Sagas (generators)
   //
 
+  function waitForAudio (audio, timeout) {
+    return new Promise(function (resolve, reject) {
+      let timer;
+      function onCanPlay () {
+        audio.pause();
+        audio.removeEventListener('canplay', onCanPlay);
+        timer && clearTimeout(timer);
+        resolve();
+      };
+      audio.addEventListener('canplay', onCanPlay);
+      if (timeout) {
+        timer = setTimeout(function () {
+          audio.removeEventListener('canplay', onCanPlay);
+          reject();
+        }, timeout);
+      }
+    });
+  }
+
+  function* watchAudioCanPlay (audio) {
+    try {
+      yield call(waitForAudio, audio, 3000);
+      const duration = Math.round(audio.duration * 1000);
+      yield put({type: deps.playerAudioReady, duration});
+    } catch (ex) {
+      yield put({type: deps.playerAudioError});
+    }
+  }
+
   function* playerPrepare (action) {
     const {audioUrl, eventsUrl} = action;
     // Check that the player is idle.
@@ -104,17 +134,19 @@ export default function* (deps) {
     }
     // Emit a Preparing action.
     yield put({type: deps.playerPreparing});
-    // TODO: Clean up any old resources
-    // Create the audio player and start buffering.
-    const audio = new Audio();
+    // Make the media player load the audio
+    // Start and immediately pause the audio to cause it to start loading,
+    // while monitoring the 'canplay' event in a background saga.
+    const audio = player.get('audio');
     audio.src = audioUrl;
-    // TODO: audio.onended = ...
-    // Download the events URL
+    audio.load();
+    yield fork(watchAudioCanPlay, audio);
+    audio.play();
+    // While the audio is buffering, download the events URL,
     const events = yield call(getJson, eventsUrl);
-    // Compute the future state after every event.
+    // and compute the future state after every event.
     const instants = yield call(computeInstants, events);
-    // TODO: watch audioElement.buffered?
-    yield put({type: deps.playerReady, audio, events, instants});
+    yield put({type: deps.playerReady, events, instants});
     yield call(resetToInstant, instants[0]);
   }
 
@@ -388,10 +420,7 @@ export default function* (deps) {
         const prevInstant = player.get('current');
         const instants = player.get('instants');
         const nextInstant = findInstant(instants, audioTime);
-        if (prevInstant === nextInstant) {
-          // Fast path, no change.
-          continue;
-        } else if (nextInstant.eventIndex < prevInstant.eventIndex) {
+        if (nextInstant.eventIndex < prevInstant.eventIndex) {
           // Event index jumped backwards.
           console.log("<< seek", nextInstant.t);
           yield call(resetToInstant, nextInstant);
@@ -434,13 +463,13 @@ export default function* (deps) {
                 atEnd = true;
                 break;
             }
-            yield put({type: deps.playerTick, current: nextInstant});
-            const state = nextInstant.state;  // state reached after event is replayed
-            const stepperState = state.get('stepper');
-            yield put({type: deps.stepperReset, state: stepperState});
-            const range = runtime.getNodeRange(stepperState.get('display'));
-            yield put({type: deps.sourceHighlight, range});
           }
+          yield put({type: deps.playerTick, current: nextInstant, audioTime});
+          const state = nextInstant.state;  // state reached after event is replayed
+          const stepperState = state.get('stepper');
+          yield put({type: deps.stepperReset, state: stepperState});
+          const range = runtime.getNodeRange(stepperState.get('display'));
+          yield put({type: deps.sourceHighlight, range});
         }
       }
     }

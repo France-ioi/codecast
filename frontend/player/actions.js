@@ -5,6 +5,7 @@ export default function* () {
 
   yield defineAction('playerPrepare', 'Player.Prepare');
   yield defineAction('playerPreparing', 'Player.Preparing');
+  yield defineAction('playerAudioReady', 'Player.AudioReady');
   yield defineAction('playerReady', 'Player.Ready');
   yield defineAction('playerStart', 'Player.Start');
   yield defineAction('playerStarting', 'Player.Starting');
@@ -19,5 +20,6 @@ export default function* () {
   yield defineAction('playerResuming', 'Player.Resuming');
   yield defineAction('playerResumed', 'Player.Resumed');
   yield defineAction('playerTick', 'Player.Tick');
+  yield defineAction('playerSeek', 'Player.Seek');
 
 };

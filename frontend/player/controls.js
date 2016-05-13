@@ -2,21 +2,24 @@
 import React from 'react';
 import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
+import Slider from 'rc-slider';
 
 import {use, defineSelector, defineView} from '../utils/linker';
 
 export default function* (deps) {
 
   yield use(
-    'playerStart', 'playerPause', 'playerResume', 'getPlayerState',
+    'playerStart', 'playerPause', 'playerResume', 'playerSeek',
+    'getPlayerState',
     'StepperControls', 'FullscreenButton'
   );
 
   yield defineSelector('PlayerControlsSelector', function (state, props) {
     const player = deps.getPlayerState(state);
     const status = player.get('status');
-    const current = player.get('current');
-    return {status, t: current && current.t};
+    const audioTime = player.get('audioTime');
+    const duration = player.get('duration');
+    return {status, audioTime, duration};
   });
 
   yield defineView('PlayerControls', 'PlayerControlsSelector', EpicComponent(self => {
@@ -34,8 +37,16 @@ export default function* (deps) {
       self.props.dispatch({type: deps.playerPause});
     };
 
+    const onSeek = function (audioTime) {
+      self.props.dispatch({type: deps.playerSeek, audioTime});
+    };
+
+    const timeFormatter = function (t) {
+      return Math.round(t / 1000) + 's';
+    };
+
     self.render = function () {
-      const {status, t} = self.props;
+      const {status, audioTime, duration} = self.props;
       const showStartPlayback = /preparing|starting|ready|paused/.test(status);
       const canStartPlayback = /ready|paused/.test(status);
       const showPausePlayback = /playing|pausing/.test(status);
@@ -51,9 +62,12 @@ export default function* (deps) {
             <Button onClick={onPausePlayback} enabled={canPausePlayback}>
               <i className="fa fa-pause"/>
             </Button>}
+          <div style={{width: '240px', height: '4px', margin: '15px 20px'}}>
+            <Slider tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek} />
+          </div>
           <deps.StepperControls enabled={canStep}/>
           <deps.FullscreenButton/>
-          <p>{status}{' '}{t}</p>
+          {false && <p>{status}{' '}{audioTime}{' / '}{duration}</p>}
         </div>
       );
     };

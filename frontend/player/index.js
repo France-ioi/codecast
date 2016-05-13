@@ -15,6 +15,7 @@ import 'brace/theme/github';
 
 import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
+import 'rc-slider/assets/index.css!';
 import '../common/style.css!';
 
 import {link, include, addReducer} from '../utils/linker';
@@ -32,7 +33,8 @@ const {store, scope, start} = link(function* () {
 
   yield addReducer('init', _ => Immutable.Map({
     player: Immutable.Map({
-      status: 'idle'
+      status: 'idle',
+      audio: new Audio()
     })
   }));
 

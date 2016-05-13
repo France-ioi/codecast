@@ -14,14 +14,26 @@ export default function* (deps) {
     return state.setIn(['player', 'status'], 'preparing');
   });
 
+  function updateStatus (player) {
+    if (player.get('events') && player.get('duration')) {
+      player = player.set('status', 'ready');
+    }
+    return player;
+  }
+
   yield addReducer('playerReady', function (state, action) {
     const {audio, events, instants} = action;
-    return state.update('player', player => player
-      .set('status', 'ready')
-      .set('audio', audio)
+    return state.update('player', player => updateStatus(player
       .set('events', events)
       .set('instants', instants)
-      .set('current', instants[0]));
+      .set('current', instants[0])));
+  });
+
+  yield addReducer('playerAudioReady', function (state, action) {
+    const {duration} = action;
+    return state.update('player', player => updateStatus(player
+      .set('audioTime', 0)
+      .set('duration', duration)));
   });
 
   yield addReducer('playerStarting', function (state, action) {
@@ -62,8 +74,11 @@ export default function* (deps) {
   });
 
   yield addReducer('playerTick', function (state, action) {
-    // action shape: {type, current: {t, eventIndex, state}}
-    return state.setIn(['player', 'current'], action.current);
+    // action shape: {type, current: {t, eventIndex, state}, audioTime}
+    const {current, audioTime} = action;
+    return state.update('player', player => player
+      .set('current', current)
+      .set('audioTime', audioTime));
   });
 
 };
