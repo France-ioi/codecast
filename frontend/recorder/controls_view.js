@@ -48,7 +48,7 @@ export default function* (deps) {
           <span><i className="fa fa-clock-o"/> {elapsed}s</span>
           {' '}
           <span><i className="fa fa-bolt"/> {eventCount}</span>
-          <deps.StepperControls/>
+          <deps.StepperControls enabled={true}/>
         </div>
       );
     };
