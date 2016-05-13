@@ -9,7 +9,4 @@ export default function* () {
   // Sent when a generic error has occurred.
   yield defineAction('error', 'System.Error');
 
-  // Switch to the specified screen.
-  yield defineAction('switchToScreen', 'System.SwitchToScreen');
-
 };
