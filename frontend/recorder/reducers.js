@@ -20,13 +20,6 @@ import {addReducer} from '../utils/linker';
 
 export default function* () {
 
-  yield addReducer('switchToRecordScreen', function (state, action) {
-    // XXX copy source, input from prepare screen in a saga.
-    return state.set('screen', 'record')
-                .set('source', Immutable.Map({model: Immutable.Map(action.source)}))
-                .set('input', Immutable.Map({model: Immutable.Map(action.input)}));
-  });
-
   yield addReducer('recorderPreparing', function (state, action) {
     const {progress} = action;
     return state.set('recorder', Immutable.Map({status: 'preparing', progress}));

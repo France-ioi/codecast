@@ -41,8 +41,8 @@ function resumeAudioContext (audioContext) {
 export default function* (deps) {
 
   yield use(
-    'error', 'switchToRecordScreen',
-    'getRecorderState', 'getPreparedSource', 'getPreparedInput',
+    'error', 'switchToScreen',
+    'getRecorderState', 'getSourceModel', 'getInputModel',
     'recorderPrepare', 'recorderPreparing', 'recorderReady',
     'recorderAddEvent', 'recorderTick',
     'recorderStart', 'recorderStarting', 'recorderStarted',
@@ -145,8 +145,8 @@ export default function* (deps) {
         console.log('not ready', recorder);
         return;
       }
-      const source = yield select(deps.getPreparedSource);
-      const input = yield select(deps.getPreparedInput);
+      const sourceModel = yield select(deps.getSourceModel);
+      const inputModel = yield select(deps.getInputModel);
       // Signal that the recorder is starting.
       yield put({type: deps.recorderStarting});
       // Resume the audio context to start recording audio buffers.
@@ -167,17 +167,17 @@ export default function* (deps) {
       yield call(recordEvent, [0, 'start', {
         version: RECORDING_FORMAT_VERSION,
         source: {
-          document: Document.toString(source.get('document')),
-          selection: Document.compressRange(source.get('selection')),
-          scrollTop: source.get('scrollTop')
+          document: Document.toString(sourceModel.get('document')),
+          selection: Document.compressRange(sourceModel.get('selection')),
+          scrollTop: sourceModel.get('scrollTop')
         },
         input: {
-          document: Document.toString(input.get('document')),
-          selection: Document.compressRange(input.get('selection')),
-          scrollTop: input.get('scrollTop')
+          document: Document.toString(inputModel.get('document')),
+          selection: Document.compressRange(inputModel.get('selection')),
+          scrollTop: inputModel.get('scrollTop')
         }
       }]);
-      yield put({type: deps.switchToRecordScreen, source, input});
+      yield put({type: deps.switchToScreen, screen: 'record'});
     } catch (error) {
       // XXX generic error
       yield put({type: deps.error, source: 'recorderStart', error});
@@ -360,8 +360,10 @@ export default function* (deps) {
     });
     const pattern = Object.keys(recorderMap);
     while (true) {
-      // Wait for the recorder to be ready.
+      // Wait for the recorder to be ready, grab the context.
       const {context} = yield take(deps.recorderReady);
+      // Wait for recording to actually start.
+      yield take(deps.recorderStarted);
       // Start buffering actions.
       const channel = yield actionChannel(pattern);
       while (true) {

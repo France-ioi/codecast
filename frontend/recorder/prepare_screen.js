@@ -1,6 +1,5 @@
-
 import Immutable from 'immutable';
-import {take, put, select} from 'redux-saga/effects';
+import {take, put, select, call} from 'redux-saga/effects';
 import React from 'react';
 import {Button, Nav, NavDropdown, MenuItem} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
@@ -13,119 +12,60 @@ const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
 
 export default function* (deps) {
 
-  yield use('homeNewRecording', 'switchToScreen', 'recorderStart');
+  yield use(
+    'homeNewRecording', 'switchToScreen', 'recorderStart',
+    'sourceReset', 'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
+    'inputReset', 'inputInit', 'inputEdit', 'inputSelect', 'inputScroll'
+  );
 
   yield defineAction('prepareScreenInit', 'Prepare.Init');
-  yield defineAction('prepareScreenSourceInit', 'Prepare.Source.Init');
-  yield defineAction('prepareScreenSourceEdit', 'Prepare.Source.Edit');
-  yield defineAction('prepareScreenSourceSelect', 'Prepare.Source.Select');
-  yield defineAction('prepareScreenSourceScroll', 'Prepare.Source.Scroll');
   yield defineAction('prepareScreenExampleSelected', 'Prepare.Example.Selected');
 
-  yield defineSelector('getPreparedSource', state =>
-    state.getIn(['prepare', 'source'])
-  );
-
-  yield defineSelector('getPreparedInput', state =>
-    state.getIn(['prepare', 'input'])
-  );
-
-  yield addReducer('prepareScreenInit', function (state, action) {
-    const examples = state.getIn(['prepare', 'examples']);
-    const initialDocument = Document.fromString(examples[0].source);
-    const initialSource = Immutable.Map({
-      document: initialDocument,
-      selection: startOfBuffer,
-      scrollTop: 0
-    });
-    const initialInput = Immutable.Map({
-      document: Document.fromString(""),
-      selection: startOfBuffer,
-      scrollTop: 0
-    });
-    return state.update('prepare', prepare => prepare
-      .set('source', initialSource)
-      .set('input', initialInput));
-  });
-
-  yield addReducer('prepareScreenSourceInit', function (state, action) {
-    return state.setIn(['prepare', 'source', 'editor'], action.editor);
-  });
-
-  yield addReducer('prepareScreenSourceEdit', function (state, action) {
-    const prevSource = state.getIn(['prepare', 'source', 'document']);
-    const source = Document.applyDelta(prevSource, action.delta);
-    return state.setIn(['prepare', 'source', 'document'], source);
-  });
-
-  yield addReducer('prepareScreenSourceSelect', function (state, action) {
-    return state.setIn(['prepare', 'source', 'selection'], action.selection);
-  });
-
-  yield addReducer('prepareScreenSourceScroll', function (state, action) {
-    return state.setIn(['prepare', 'source', 'scrollTop'], action.scrollTop);
-  });
+  function getExamples (state) {
+    return state.getIn(['prepare', 'examples']);
+  }
 
   // No reducer for prepareScreenExampleSelected, the saga watchExampleSelected
   // calls editor.reset which triggers edit/select events that will update the
   // state.
 
   yield addSaga(function* watchNewRecording () {
-    // XXX move to home screen?
     while (true) {
       yield take(deps.homeNewRecording);
-      yield put({type: deps.prepareScreenInit});
+      const examples = yield select(getExamples);
+      yield call(loadExample, examples[0]);
       yield put({type: deps.switchToScreen, screen: 'prepare'});
     }
   });
 
-  yield addSaga(function* watchSourceInit () {
-    while (true) {
-      const {editor} = yield take(deps.prepareScreenSourceInit);
-      if (editor) {
-        const source = yield select(deps.getPreparedSource);
-        const text = Document.toString(source.get('document'));
-        const selection = source.get('selection');
-        editor.reset(text, selection);
-      }
-    }
-  });
+  function* loadExample (example) {
+    const sourceModel = Immutable.Map({
+      document: Document.fromString(example.source),
+      selection: example.selection || startOfBuffer,
+      scrollTop: example.scrollTop || 0
+    });
+    yield put({type: deps.sourceReset, model: sourceModel});
+    const inputModel = Immutable.Map({
+      document: Document.fromString(example.input || ""),
+      selection: startOfBuffer,
+      scrollTop: 0
+    });
+    yield put({type: deps.inputReset, model: inputModel});
+  }
 
   yield addSaga(function* watchExampleSelected () {
     while (true) {
       const {example} = yield take(deps.prepareScreenExampleSelected);
-      const source = yield select(deps.getPreparedSource);
-      const editor = source.get('editor');
-      if (editor) {
-        const text = example.source;
-        const selection = example.selection || {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
-        editor.reset(text, selection);
-      }
+      yield call(loadExample, example);
     }
   });
 
   yield defineSelector('PrepareScreenSelector', function (state, props) {
-    const examples = state.getIn(['prepare', 'examples']);
+    const examples = getExamples(state);
     return {examples};
   });
 
   yield defineView('PrepareScreen', 'PrepareScreenSelector', EpicComponent(self => {
-
-    const onSourceInit = function (editor) {
-      self.props.dispatch({type: deps.prepareScreenSourceInit, editor});
-    };
-
-    const onSourceEdit = function (delta) {
-      self.props.dispatch({type: deps.prepareScreenSourceEdit, delta});
-    };
-
-    const onSourceSelect = function (selection) {
-      self.props.dispatch({type: deps.prepareScreenSourceSelect, selection});
-    };
-
-    const onSourceScroll = function (scrollTop) {
-      self.props.dispatch({type: deps.prepareScreenSourceScroll, scrollTop});
-    };
 
     const onSelectExample = function (event, i) {
       const example = self.props.examples[i];
@@ -134,6 +74,38 @@ export default function* (deps) {
 
     const onStartRecording = function () {
       self.props.dispatch({type: deps.recorderStart});
+    };
+
+    const onSourceInit = function (editor) {
+      self.props.dispatch({type: deps.sourceInit, editor});
+    };
+
+    const onSourceEdit = function (delta) {
+      self.props.dispatch({type: deps.sourceEdit, delta});
+    };
+
+    const onSourceSelect = function (selection) {
+      self.props.dispatch({type: deps.sourceSelect, selection});
+    };
+
+    const onSourceScroll = function (scrollTop) {
+      self.props.dispatch({type: deps.sourceScroll, scrollTop});
+    };
+
+    const onInputInit = function (editor) {
+      self.props.dispatch({type: deps.inputInit, editor});
+    };
+
+    const onInputEdit = function (delta) {
+      self.props.dispatch({type: deps.inputEdit, delta});
+    };
+
+    const onInputSelect = function (selection) {
+      self.props.dispatch({type: deps.inputSelect, selection});
+    };
+
+    const onInputScroll = function (scrollTop) {
+      self.props.dispatch({type: deps.inputScroll, scrollTop});
     };
 
     self.render = function () {
@@ -167,8 +139,12 @@ export default function* (deps) {
                   sont aussi conservées.
                 </p>
                 <Editor
-                  onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect}
-                  width='100%' height='336px' mode='c_cpp'/>
+                  onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} onScroll={onInputScroll}
+                  mode='c_cpp' width='100%' height='280px' />
+                <p>Entrée :</p>
+                <Editor
+                  onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect} onScroll={onInputScroll}
+                  mode='c_cpp' width='100%' height='168px' />
               </div>
             </div>
           </div>
