@@ -1,6 +1,29 @@
 @import url(https://fonts.googleapis.com/css?family=Inconsolata:400,700);
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700);
 
+@font-face {
+  font-family: 'fioi';
+  src: url('./fioi.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+.fi {
+  display: inline-block;
+  font: normal normal normal 14px/1 'fioi';
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.fi-step-over:before {
+  content: "\e000";
+}
+.fi-step-into:before {
+  content: "\e001";
+}
+.fi-step-out:before {
+  content: "\e002";
+}
+
 body#app, #app h1, #app h2, #app h3 {
   font: 14px/normal 'Open Sans';
 }

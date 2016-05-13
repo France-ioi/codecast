@@ -78,9 +78,15 @@ export default function* (deps) {
       return (
         <div>
           <Button onClick={onStepExpr} disabled={!p.canStep}>step expr</Button>
-          <Button onClick={onStepInto} disabled={!p.canStep}>step into</Button>
-          <Button onClick={onStepOut} disabled={!p.canStep}>step out</Button>
-          <Button onClick={onStepOver} disabled={!p.canStep}>step over</Button>
+          <Button onClick={onStepInto} disabled={!p.canStep}>
+            <i className="fi fi-step-into"/>
+          </Button>
+          <Button onClick={onStepOut} disabled={!p.canStep}>
+            <i className="fi fi-step-out"/>
+          </Button>
+          <Button onClick={onStepOver} disabled={!p.canStep}>
+            <i className="fi fi-step-over"/>
+          </Button>
           <Button onClick={onInterrupt} disabled={!p.canInterrupt}>interrompre</Button>
           <Button onClick={onRestart} disabled={!p.canRestart}>recommencer</Button>
           {p.showExit && <Button onClick={onEdit} disabled={!p.canExit}>éditer</Button>}
