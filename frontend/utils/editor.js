@@ -6,7 +6,7 @@ const Range = ace.acequire('ace/range').Range;
 
 export const Editor = EpicComponent(self => {
 
-  let editor, editorNode, selection = null;
+  let editor, editorNode, selection = null, marker = null, mute = false;
 
   function toRange (selection) {
     return new Range(
@@ -33,31 +33,6 @@ export const Editor = EpicComponent(self => {
     return samePosition(s1.start, s2.start) && samePosition(s1.end, s2.end);
   };
 
-  const setSelection = function (selection_) {
-    if (!editor || sameSelection(selection, selection_))
-      return;
-    selection = selection_;
-    if (selection && selection.start && selection.end) {
-      editor.selection.setRange(toRange(selection));
-    } else {
-      editor.selection.setRange(new Range(0, 0, 0, 0));
-    }
-  };
-
-  let marker = null;
-  const highlight = function (range) {
-    if (editor) {
-      const session = editor.session;
-      if (marker) {
-        session.removeMarker(marker);
-      }
-      if (range) {
-        marker = session.addMarker(toRange(range), "code-highlight", "text");
-      }
-    }
-    // setSelection(range);
-  };
-
   /*
     Performance fix: Ace fires many redundant selection events, so we wait
     until the next animation frame before querying the selection and firing
@@ -65,8 +40,9 @@ export const Editor = EpicComponent(self => {
   */
   let willUpdateSelection = false;
   const onSelectionChanged = function () {
-    if (willUpdateSelection)
+    if (mute || willUpdateSelection) {
       return;
+    }
     // const isUserChange = editor.curOp && editor.curOp.command.name;
     willUpdateSelection = true;
     window.requestAnimationFrame(function () {
@@ -80,22 +56,53 @@ export const Editor = EpicComponent(self => {
   };
 
   const onTextChanged = function (edit) {
+    if (mute) {
+      return;
+    }
     // The callback must not trigger a rendering of the Editor.
     self.props.onEdit(edit)
   };
 
-  const reset = function (value, selection, scrollTop) {
-    if (!editor)
+  const onAfterRender = function () {
+    if (mute) {
       return;
-    editor.setValue(value);
-    setSelection(selection);
-    editor.session.setScrollTop(scrollTop);
+    }
+    const scrollTop = editor.getSession().getScrollTop();
+    if (lastScrollTop !== scrollTop) {
+      lastScrollTop = scrollTop;
+      if (typeof onScroll === 'function') {
+        const firstVisibleRow = editor.getFirstVisibleRow();
+        onScroll(scrollTop, firstVisibleRow);
+      }
+    }
+  };
+
+  const wrapModelToEditor = function (cb) {
+    if (!editor) {
+      return;
+    }
+    mute = true;
+    try {
+      cb();
+    } finally {
+      mute = false;
+    }
+  };
+
+  const reset = function (value, selection, scrollTop) {
+    wrapModelToEditor(function () {
+      editor.setValue(value);
+      // Work-around for strange ACE behavior?
+      selection = null;
+      setSelection(selection);
+      editor.session.setScrollTop(scrollTop);
+    });
   };
 
   const applyDeltas = function (deltas) {
-    if (!editor)
-      return;
-    editor.session.doc.applyDeltas(deltas);
+    wrapModelToEditor(function () {
+      editor.session.doc.applyDeltas(deltas);
+    });
   };
 
   const focus = function () {
@@ -105,14 +112,39 @@ export const Editor = EpicComponent(self => {
   };
 
   const setScrollTop = function (top) {
-    if (editor) {
+    wrapModelToEditor(function () {
       editor.session.setScrollTop(top);
-    }
+    });
+  };
+
+  const setSelection = function (selection_) {
+    wrapModelToEditor(function () {
+      if (sameSelection(selection, selection_))
+        return;
+      selection = selection_;
+      if (selection && selection.start && selection.end) {
+        editor.selection.setRange(toRange(selection));
+      } else {
+        editor.selection.setRange(new Range(0, 0, 0, 0));
+      }
+    });
+  };
+
+  const highlight = function (range) {
+    wrapModelToEditor(function () {
+      const session = editor.session;
+      if (marker) {
+        session.removeMarker(marker);
+      }
+      if (range) {
+        marker = session.addMarker(toRange(range), "code-highlight", "text");
+      }
+    });
   };
 
   const getSelectionRange = function () {
     return editor && editor.getSelectionRange();
-  }
+  };
 
   let lastScrollTop = 0;
 
@@ -137,16 +169,7 @@ export const Editor = EpicComponent(self => {
     if (typeof onEdit === 'function') {
       session.on("change", onTextChanged);
     }
-    editor.renderer.on("afterRender", function (e) {
-      const scrollTop = editor.getSession().getScrollTop();
-      if (lastScrollTop !== scrollTop) {
-        lastScrollTop = scrollTop;
-        if (typeof onScroll === 'function') {
-          const firstVisibleRow = editor.getFirstVisibleRow();
-          onScroll(scrollTop, firstVisibleRow);
-        }
-      }
-    });
+    editor.renderer.on("afterRender", onAfterRender);
   };
 
   self.componentWillReceiveProps = function (nextProps) {
