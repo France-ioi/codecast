@@ -48,7 +48,6 @@ const {store, scope, start} = link(function* () {
   yield include(prepareScreenComponent);
   yield include(saveScreenComponent);
   yield include(recorderActions);
-  yield include(recorderSelectors);
   yield include(recorderReducers);
   yield include(recorderSagas);
   yield include(RecorderControls);
