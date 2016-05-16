@@ -15,8 +15,8 @@ import 'brace/theme/github';
 
 import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
-import 'rc-slider/assets/index.css!';
 import '../common/style.css!';
+import '../common/slider.css!';
 
 import {link, include, addReducer} from '../utils/linker';
 

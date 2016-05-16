@@ -62,8 +62,10 @@ export default function* (deps) {
             <Button onClick={onPausePlayback} enabled={canPausePlayback}>
               <i className="fa fa-pause"/>
             </Button>}
-          <div style={{width: '240px', height: '4px', margin: '15px 20px'}}>
-            <Slider tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek} />
+          <div className="player-slider-container">
+            <Slider prefixCls="player-slider" tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek}>
+              <div className="player-slider-background"/>
+            </Slider>
           </div>
           <deps.StepperControls enabled={canStep}/>
           <deps.FullscreenButton/>
