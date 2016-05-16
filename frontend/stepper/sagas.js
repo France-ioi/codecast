@@ -14,7 +14,8 @@ export default function* (deps) {
     'stepperInterrupted',
     'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle',
     'translateSucceeded', 'getTranslateState',
-    'getInputModel', 'sourceHighlight'
+    'getInputModel', 'sourceHighlight',
+    'error'
   );
 
   /* XXX Use a different terminology for the stepper context (just below)
