@@ -146,7 +146,14 @@ export function link (rootBundle) {
     if (name in scope) {
       throw new Error(`linker conflict on ${name}`);
     }
-    scope[name] = selector;
+    scope[name] = function () {
+      try {
+        return selector.apply(null, arguments);
+      } catch (ex) {
+        console.log(`selector ${name} threw an exception`, ex);
+        return {};
+      }
+    };
     typeMap[name] = 'selector';
   }
 
@@ -214,6 +221,9 @@ export function link (rootBundle) {
 
   // Define reducers.
   reducerQueue.forEach(function (dir) {
+    if (typeMap[dir.name] !== 'action') {
+      throw new Error(`invalid reducer target ${dir.name}`);
+    }
     addReducer_(dir.name, dir.reducer);
   });
 
@@ -243,7 +253,12 @@ export function link (rootBundle) {
   const reducer = function (state, action) {
     // TODO: add support for reducer hooks
     if (action.type in reducerMap) {
-      state = reducerMap[action.type](state, action);
+      try {
+        state = reducerMap[action.type](state, action);
+      } catch (ex) {
+        console.log('exception in reducer', action, state, ex);
+        state = state.set('error', ex);
+      }
     }
     return state;
   }
@@ -257,18 +272,17 @@ export function link (rootBundle) {
   // Create the store.
   const store = createStore(reducer, null, enhancer);
 
+  function* runSaga (saga) {
+    try {
+      yield call(saga);
+    } catch (ex) {
+      console.log(`saga ${saga.name} has exited`, ex);
+    }
+  }
+
   // Start the sagas.
   function* rootSaga () {
-    yield sagas.map(fork);
-    try {
-      while (true) {
-        yield call(delay, 1000);
-      }
-    } finally {
-      if (yield cancelled()) {
-        console.log('sagas have crashed');
-      }
-    }
+    yield sagas.map(saga => fork(runSaga, saga));
   }
 
   function start () {
