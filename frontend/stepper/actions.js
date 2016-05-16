@@ -6,7 +6,7 @@ export default function* (deps) {
   // Sent when the stepper's state is initialized.
   yield defineAction('stepperRestart', 'Stepper.Restart');
 
-  // Restore a state or computed saved.
+  // Restore a saved or computed state.
   yield defineAction('stepperReset', 'Stepper.Reset');
 
   // Sent when the user requested stepping in a given mode.
