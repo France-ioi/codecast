@@ -13,7 +13,7 @@ import {use, addSaga} from '../utils/linker';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
 import Document from '../utils/document';
-import {translateClear, translateStarted, translateSucceeded, translateFailed, translateClearDiagnonstics} from '../stepper/translate';
+import {translateClear, translateStarted, translateSucceeded, translateFailed, translateClearDiagnostics} from '../stepper/translate';
 import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress} from '../stepper/reducers';
 import * as runtime from '../stepper/runtime';
 
@@ -30,6 +30,7 @@ export default function* (deps) {
     'playerTick', 'playerSeek', 'playerSeeked',
     'playerAudioReady', 'playerAudioError',
     'getPlayerState',
+    'translateReset',
     'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset',
     'sourceReset', 'sourceModelSelect', 'sourceModelEdit', 'sourceModelScroll', 'sourceHighlight',
     'inputReset', 'inputModelSelect', 'inputModelEdit', 'inputModelScroll'
@@ -294,8 +295,8 @@ export default function* (deps) {
           state = state.update('translate', st => translateFailure(st, action));
           break;
         }
-        case 'stepper.clearDiagnostics': {
-          state = state.update('translate', st => translateClearDiagnonstics(st, {}));
+        case 'translate.clearDiagnostics': {
+          state = state.update('translate', st => translateClearDiagnostics(st, {}));
           break;
         }
         case 'stepper.exit': {
@@ -402,9 +403,10 @@ export default function* (deps) {
     const player = yield select(deps.getPlayerState);
     yield put({type: deps.sourceReset, model: state.get('source')});
     yield put({type: deps.inputReset, model: state.get('input')});
+    const translateState = state.get('translate');
+    yield put({type: deps.translateReset, state: translateState});
     const stepperState = state.get('stepper');
     yield put({type: deps.stepperReset, state: stepperState});
-    // TODO: restore translate too
     yield put({type: deps.playerTick, current: instant});
   }
 
