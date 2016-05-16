@@ -1,12 +1,15 @@
 
 import React from 'react';
 import classnames from 'classnames';
+import {Alert} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 import {readValue} from 'persistent-c';
 
-import {defineSelector, defineView} from '../utils/linker';
+import {use, defineSelector, defineView} from '../utils/linker';
 
-export default function* () {
+export default function* (deps) {
+
+  yield use('stepperExit');
 
   yield defineSelector('StackViewSelector', function (state, props) {
     return {state: state.getIn(['stepper', 'display'])};
@@ -226,6 +229,10 @@ export default function* () {
       );
     };
 
+    const onExit = function () {
+      self.props.dispatch({type: deps.stepperExit});
+    };
+
     self.render = function () {
       /* TODO: take effects since previous step as a prop */
       const {state, height} = self.props;
@@ -233,6 +240,16 @@ export default function* () {
         return (
           <div className="stack-view" style={{height: height||'100%'}}>
             <p>Programme arrêté.</p>
+          </div>
+        );
+      }
+      if (state.error) {
+        return (
+          <div className="stack-view" style={{height: height||'100%'}}>
+            <Alert bsStyle="danger" onDismiss={onExit}>
+              <h4>Erreur</h4>
+              <p>{state.error.toString()}</p>
+            </Alert>
           </div>
         );
       }
