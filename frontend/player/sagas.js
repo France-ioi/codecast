@@ -149,7 +149,7 @@ export default function* (deps) {
     // and compute the future state after every event.
     const instants = yield call(computeInstants, events);
     yield put({type: deps.playerReady, events, instants});
-    yield call(resetToInstant, instants[0]);
+    yield call(resetToInstant, instants[0], 0);
   }
 
   function* playerStart () {
@@ -172,12 +172,14 @@ export default function* (deps) {
       if (player.get('status') !== 'playing')
         return;
       yield put({type: deps.playerPausing});
-      player.get('audio').pause();
+      const audio = player.get('audio');
+      audio.pause();
+      const audioTime = Math.round(audio.currentTime * 1000);
       // Call resetToInstant to bring the global state in line with the current
       // state.  This is required in particular for the editors that have
       // been updated incrementally by sending them events without updating
       // the global state.
-      yield call(resetToInstant, player.get('current'));
+      yield call(resetToInstant, player.get('current'), audioTime);
       yield put({type: deps.playerPaused});
     } catch (error) {
       yield put({type: deps.error, source: 'playerPause', error});
@@ -398,16 +400,19 @@ export default function* (deps) {
     }
   });
 
-  function* resetToInstant (instant) {
+  function* resetToInstant (instant, audioTime, quick) {
     const {state} = instant;
-    const player = yield select(deps.getPlayerState);
-    yield put({type: deps.sourceReset, model: state.get('source')});
-    yield put({type: deps.inputReset, model: state.get('input')});
+    if (!quick) {
+      yield put({type: deps.sourceReset, model: state.get('source')});
+      yield put({type: deps.inputReset, model: state.get('input')});
+    }
     const translateState = state.get('translate');
     yield put({type: deps.translateReset, state: translateState});
     const stepperState = state.get('stepper');
     yield put({type: deps.stepperReset, state: stepperState});
-    yield put({type: deps.playerTick, current: instant});
+    const range = runtime.getNodeRange(stepperState.get('display'));
+    yield put({type: deps.sourceHighlight, range});
+    yield put({type: deps.playerTick, audioTime, current: instant});
   }
 
   yield addSaga(function* playerTick () {
@@ -427,7 +432,7 @@ export default function* (deps) {
         const seekTo = player.get('seekTo');
         if (seekTo) {
           const instant = findInstant(instants, seekTo);
-          yield call(resetToInstant, instant);
+          yield call(resetToInstant, instant, seekTo);
           audio.currentTime = seekTo / 1000;
           yield put({type: deps.playerSeeked, current: instant, seekTo});
           continue;
@@ -447,11 +452,11 @@ export default function* (deps) {
         const nextInstant = findInstant(instants, audioTime);
         if (nextInstant.eventIndex < prevInstant.eventIndex) {
           // Event index jumped backwards.
-          yield call(resetToInstant, nextInstant);
+          yield call(resetToInstant, nextInstant, audioTime);
         } else if (nextInstant.t > prevInstant.t + 1000 && prevInstant.eventIndex + 10 < nextInstant.eventIndex) {
           // Time between last state and new state jumped by more than 1 second,
           // and there are more than 10 events to replay.
-          yield call(resetToInstant, nextInstant);
+          yield call(resetToInstant, nextInstant, audioTime);
         } else {
           // Play incremental events between prevInstant (exclusive) and
           // nextInstant (inclusive).
@@ -488,12 +493,7 @@ export default function* (deps) {
                 break;
             }
           }
-          yield put({type: deps.playerTick, current: nextInstant, audioTime});
-          const state = nextInstant.state;  // state reached after event is replayed
-          const stepperState = state.get('stepper');
-          yield put({type: deps.stepperReset, state: stepperState});
-          const range = runtime.getNodeRange(stepperState.get('display'));
-          yield put({type: deps.sourceHighlight, range});
+          yield call(resetToInstant, nextInstant, audioTime);
           if (ended) {
             audio.pause();
             audio.currentTime = audio.duration;
