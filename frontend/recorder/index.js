@@ -25,7 +25,7 @@ import homeScreenComponent from './home_screen';
 import prepareScreenComponent from './prepare_screen';
 import saveScreenComponent from './save_screen';
 import recorderActions from './actions';
-import recorderReducers from './reducers';
+import recorderStore from './store';
 import recorderSagas from './sagas';
 import RecorderControls from './controls_view';
 import RecordScreen from './record_screen';
@@ -48,7 +48,7 @@ const {store, scope, start} = link(function* () {
   yield include(prepareScreenComponent);
   yield include(saveScreenComponent);
   yield include(recorderActions);
-  yield include(recorderReducers);
+  yield include(recorderStore);
   yield include(recorderSagas);
   yield include(RecorderControls);
   yield include(RecordScreen);
