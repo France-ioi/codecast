@@ -23,6 +23,8 @@ import {link, use, addReducer, include, defineView} from '../utils/linker';
 import stepperComponent from '../stepper/index';
 import commonComponent from '../common/index';
 
+const qs = queryString.parse(window.location.search);
+
 const {store, scope, start} = link(function* (deps) {
   yield addReducer('init', _ => Immutable.Map());
   yield include(stepperComponent);
@@ -47,9 +49,8 @@ const {store, scope, start} = link(function* (deps) {
   }));
 });
 store.dispatch({type: scope.init});
+store.dispatch({type: scope.sourceLoad, text: qs.source||''});
 start();
 
 const container = document.getElementById('react-container');
 ReactDOM.render(<Provider store={store}><scope.App/></Provider>, container);
-
-// TODO: API to set source, input
