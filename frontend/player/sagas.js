@@ -13,7 +13,7 @@ import {use, addSaga} from '../utils/linker';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
 import Document from '../utils/document';
-import {translateClear, translateStarted, translateSucceeded, translateFailed} from '../stepper/translate';
+import {translateClear, translateStarted, translateSucceeded, translateFailed, translateClearDiagnonstics} from '../stepper/translate';
 import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress} from '../stepper/reducers';
 import * as runtime from '../stepper/runtime';
 
@@ -292,6 +292,10 @@ export default function* (deps) {
         case 'stepper.translateFailure': case 'translateFailure': {
           const action = {diagnostics: event[2].diagnostics, error: event[2].error};
           state = state.update('translate', st => translateFailure(st, action));
+          break;
+        }
+        case 'stepper.clearDiagnostics': {
+          state = state.update('translate', st => translateClearDiagnonstics(st, {}));
           break;
         }
         case 'stepper.exit': {

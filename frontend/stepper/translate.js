@@ -97,6 +97,10 @@ export function translateFailed (state, action) {
     .set('diagnosticsHtml', toHtml(diagnostics));
 };
 
+export function translateClearDiagnostics (state, action) {
+  return state.delete('diagnostics').delete('diagnosticsHtml');
+};
+
 export default function* (deps) {
 
   yield use('init', 'getSourceModel');
@@ -115,6 +119,10 @@ export default function* (deps) {
 
   // Failed to translate {source} with {error}.
   yield defineAction('translateFailed', 'Translate.Failed');
+
+  // Clear the diagnostics (compilation errors and warnings) returned
+  // by the last translate operation.
+  yield defineAction('translateClearDiagnostics', 'Translate.ClearDiagnostics');
 
   yield defineSelector('getTranslateState', state =>
     state.get('translate')
@@ -142,6 +150,10 @@ export default function* (deps) {
 
   yield addReducer('translateFailed', function (state, action) {
     return state.update('translate', st => translateFailed(st, action));
+  });
+
+  yield addReducer('translateClearDiagnostics', function (state, action) {
+    return state.update('translate', st => translateClearDiagnostics(st, action));
   });
 
   function* translateSource (source) {

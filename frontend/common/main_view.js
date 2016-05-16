@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {Panel} from 'react-bootstrap';
+import {Button, Panel} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
@@ -19,7 +19,9 @@ export default function* (deps) {
     'getTranslateState', 'getStepperDisplay',
     'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
     'inputInit', 'inputEdit', 'inputSelect', 'inputScroll',
-    'StackView', 'DirectivesPane');
+    'translateClearDiagnostics',
+    'StackView', 'DirectivesPane'
+  );
 
   yield defineSelector('MainViewSelector', function (state, props) {
     const translate = deps.getTranslateState(state);
@@ -64,11 +66,25 @@ export default function* (deps) {
       self.props.dispatch({type: deps.inputScroll, scrollTop, firstVisibleRow});
     };
 
+    const onClearDiagnostics = function () {
+      self.props.dispatch({type: deps.translateClearDiagnostics});
+    };
+
     const inputOutputHeader = (
       <div className="row">
         <div className="col-md-6">Entrée</div>
         <div className="col-md-6">Sortie</div>
       </div>);
+
+    const diagnosticsPanelHeader = (
+      <div>
+        <div className="pull-right">
+          <Button className="close" onClick={onClearDiagnostics}>×</Button>
+        </div>
+        <span>Messages</span>
+      </div>
+    );
+
 
     self.render = function () {
       const {diagnostics, haveStepper, terminal} = self.props;
@@ -89,7 +105,7 @@ export default function* (deps) {
           </div>
           <div className="row">
             {diagnostics && <div className="col-md-12">
-              <Panel header="Messages">
+              <Panel header={diagnosticsPanelHeader}>
                 <div dangerouslySetInnerHTML={diagnostics}/>
               </Panel>
             </div>}

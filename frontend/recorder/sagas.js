@@ -49,7 +49,7 @@ export default function* (deps) {
     'recorderStop', 'recorderStopping', 'recorderStopped',
     'sourceSelect', 'sourceEdit', 'sourceScroll',
     'inputSelect', 'inputEdit', 'inputScroll',
-    'translateStarted', 'translateSucceeded', 'translateFailed',
+    'translateStarted', 'translateSucceeded', 'translateFailed', 'translateClearDiagnostics',
     'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperInterrupt', 'stepperRestart', 'stepperExit'
   );
 
@@ -318,6 +318,9 @@ export default function* (deps) {
   recorders.translateFailed = function* (t, action) {
     const {response} = action;
     yield call(recordEvent, [t, 'stepper.translateFailure', response]);
+
+  recorders.translateClearDiagnostics = function* (t, action) {
+    yield call(recordEvent, [t, 'translate.clearDiagnostics']);
   };
 
   recorders.stepperStarted = function* (t, action) {
