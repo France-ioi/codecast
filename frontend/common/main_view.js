@@ -7,12 +7,6 @@ import {use, defineSelector, defineView} from '../utils/linker';
 import Editor from '../utils/editor';
 import Terminal from '../utils/terminal';
 
-// Actions: name start with an action verb
-// Selectors: name start with get
-// Reducers: match action names
-// Sagas: unnamed
-// Views: name starts with an upper case letter
-
 export default function* (deps) {
 
   yield use(
