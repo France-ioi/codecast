@@ -212,7 +212,7 @@ export default function* (deps) {
     }
   });
 
-  // XXX missing saga watchInputModelSelect
+  // XXX missing saga watchInputModel*
 
   function resetEditor (editor, model) {
     try {
