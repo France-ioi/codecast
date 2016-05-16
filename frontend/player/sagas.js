@@ -279,17 +279,17 @@ export default function* (deps) {
           state = state.setIn(['input', 'scrollTop'], event[2]);
           break;
         }
-        case 'stepper.translate': {
+        case 'stepper.translate': case 'translate.start': {
           const action = {source: event[2]};
           state = state.update('translate', st => translateStarted(st, action));
           break;
         }
-        case 'stepper.translateSuccess': {
+        case 'stepper.translateSuccess': case 'translate.success': {
           const action = {diagnostics: event[2].diagnostics, syntaxTree: event[2].ast};
           state = state.update('translate', st => translateSucceeded(st, action));
           break;
         }
-        case 'stepper.translateFailure': case 'translateFailure': {
+        case 'stepper.translateFailure': case 'translate.failure': {
           const action = {diagnostics: event[2].diagnostics, error: event[2].error};
           state = state.update('translate', st => translateFailure(st, action));
           break;

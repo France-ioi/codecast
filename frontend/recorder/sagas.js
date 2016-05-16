@@ -307,17 +307,17 @@ export default function* (deps) {
 
   recorders.translateStarted = function* (t, action) {
     const {source} = action;
-    yield call(recordEvent, [t, 'stepper.translate', source]);
+    yield call(recordEvent, [t, 'translate.start', source]);
   };
 
   recorders.translateSucceeded = function* (t, action) {
     const {response} = action;
-    yield call(recordEvent, [t, 'stepper.translateSuccess', response]);
+    yield call(recordEvent, [t, 'translate.success', response]);
   };
 
   recorders.translateFailed = function* (t, action) {
     const {response} = action;
-    yield call(recordEvent, [t, 'stepper.translateFailure', response]);
+    yield call(recordEvent, [t, 'translate.failure', response]);
   };
 
   recorders.translateClearDiagnostics = function* (t, action) {
