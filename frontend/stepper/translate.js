@@ -18,7 +18,7 @@ import {take, put, call, select} from 'redux-saga/effects';
 
 import {use, defineAction, defineSelector, addReducer, addSaga, defineView} from '../utils/linker';
 import {asyncRequestJson} from '../utils/api';
-import Document from '../utils/document';
+import Document from '../buffers/document';
 
 const addNodeRanges = function (source, syntaxTree) {
   // Compute line offsets.

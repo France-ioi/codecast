@@ -12,7 +12,7 @@ import Immutable from 'immutable';
 import {use, addSaga} from '../utils/linker';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
-import Document from '../utils/document';
+import Document from '../buffers/document';
 import {translateClear, translateStarted, translateSucceeded, translateFailed, translateClearDiagnostics} from '../stepper/translate';
 import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress} from '../stepper/reducers';
 import * as runtime from '../stepper/runtime';

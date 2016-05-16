@@ -7,7 +7,7 @@ import {defineAction, include} from '../utils/linker';
 
 import MainView from './main_view';
 import fullscreen  from './fullscreen';
-import buffers from './buffers';
+import buffers from '../buffers/index';
 import errors from './errors';
 
 export default function* () {

@@ -4,7 +4,7 @@ import {Button, Panel} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
-import Editor from '../utils/editor';
+import Editor from '../buffers/editor';
 import Terminal from '../utils/terminal';
 
 export default function* (deps) {

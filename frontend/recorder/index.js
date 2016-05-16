@@ -25,7 +25,6 @@ import homeScreenComponent from './home_screen';
 import prepareScreenComponent from './prepare_screen';
 import saveScreenComponent from './save_screen';
 import recorderActions from './actions';
-import recorderSelectors from './selectors';
 import recorderReducers from './reducers';
 import recorderSagas from './sagas';
 import RecorderControls from './controls_view';

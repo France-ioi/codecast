@@ -36,7 +36,7 @@ import {take, select} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
 import {defineAction, defineSelector, addReducer, addSaga} from '../utils/linker';
-import Document from '../utils/document';
+import Document from './document';
 
 const blankModel = Immutable.Map({
   document: Document.blank,
@@ -48,6 +48,7 @@ const blankModel = Immutable.Map({
 export default function* (deps) {
 
   yield defineAction('sourceInit', 'Source.Init');
+  yield defineAction('sourceLoad', 'Source.Load');
   yield defineAction('sourceReset', 'Source.Reset');
   yield defineAction('sourceEdit', 'Source.Edit');
   yield defineAction('sourceSelect', 'Source.Select');
@@ -89,6 +90,14 @@ export default function* (deps) {
 
   yield addReducer('sourceInit', function (state, action) {
     return state.setIn(['source', 'editor'], action.editor);
+  });
+
+  yield addReducer('sourceLoad', function (state, action) {
+    return state.setIn(['source', 'model'], Immutable.Map({
+      document: Document.fromString(action.text),
+      selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
+      scrollTop: 0
+    }));
   });
 
   yield addReducer('sourceReset', function (state, action) {

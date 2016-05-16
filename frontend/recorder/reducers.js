@@ -1,7 +1,7 @@
 
 import Immutable from 'immutable';
 
-import {addReducer} from '../utils/linker';
+import {addReducer, defineSelector} from '../utils/linker';
 
 /*
 
@@ -23,6 +23,10 @@ export default function* () {
   yield addReducer('switchToScreen', function (state, action) {
     return state.set('screen', action.screen);
   });
+
+  yield defineSelector('getRecorderState', state =>
+    state.get('recorder', Immutable.Map())
+  );
 
   yield addReducer('recorderPreparing', function (state, action) {
     const {progress} = action;

@@ -5,7 +5,7 @@ import Immutable from 'immutable';
 
 import {use, addSaga} from '../utils/linker';
 import {RECORDING_FORMAT_VERSION} from '../version';
-import Document from '../utils/document';
+import Document from '../buffers/document';
 import {spawnWorker, callWorker, killWorker} from '../utils/worker_utils';
 
 // XXX worker URL should use SystemJS baseURL?
