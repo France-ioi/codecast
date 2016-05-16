@@ -237,7 +237,7 @@ export default function* (deps) {
 
     self.render = function () {
       const {state} = self.props;
-      if (!state) {
+      if (!state || state.error) {
         return false;
       }
       try {
