@@ -3,18 +3,21 @@
   (recorder, player, sandbox).
 */
 
-import {include} from '../utils/linker';
+import {defineAction, include} from '../utils/linker';
 
-import actions from './actions';
-import sagas from './sagas';
 import MainView from './main_view';
 import fullscreen  from './fullscreen';
 import buffers from './buffers';
+import errors from './errors';
 
 export default function* () {
-  yield include(actions);
-  yield include(sagas);
+
+  // Sent when the application initializes.
+  yield defineAction('init', 'System.Init')
+
   yield include(MainView);
   yield include(fullscreen);
   yield include(buffers);
+  yield include(errors);
+
 };
