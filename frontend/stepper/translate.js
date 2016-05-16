@@ -168,7 +168,7 @@ export default function* (deps) {
       error = ex.toString();
     }
     const {diagnostics} = response;
-    if (!error) {
+    if (syntaxTree) {
       yield put({type: deps.translateSucceeded, response, diagnostics, syntaxTree});
     } else {
       yield put({type: deps.translateFailed, response, diagnostics, error});

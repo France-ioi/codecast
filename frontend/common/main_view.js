@@ -25,7 +25,7 @@ export default function* (deps) {
 
   yield defineSelector('MainViewSelector', function (state, props) {
     const translate = deps.getTranslateState(state);
-    const diagnostics = translate && translate.get('diagnostics');
+    const diagnostics = translate && translate.get('diagnosticsHtml');
     const stepperDisplay = deps.getStepperDisplay(state);
     const haveStepper = !!stepperDisplay;
     const terminal = haveStepper && stepperDisplay.terminal;
