@@ -30,7 +30,7 @@ import recorderSagas from './sagas';
 import RecorderControls from './controls_view';
 import RecordScreen from './record_screen';
 import App from './app_view';
-import examples from './examples'
+import examples from '../common/examples';
 
 const {store, scope, start} = link(function* () {
 
@@ -38,8 +38,7 @@ const {store, scope, start} = link(function* () {
     screen: 'home',
     home: Immutable.Map({
       screen: Immutable.Map({})
-    }),
-    prepare: Immutable.Map({examples})
+    })
   }));
 
   yield include(stepperComponent);

@@ -1,76 +1,36 @@
-import Immutable from 'immutable';
-import {take, put, select, call} from 'redux-saga/effects';
+
+import {take, put} from 'redux-saga/effects';
 import React from 'react';
-import {Button, Nav, NavDropdown, MenuItem} from 'react-bootstrap';
+import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import {use, defineAction, defineSelector, defineView, addReducer, addSaga} from '../utils/linker';
-import Document from '../buffers/document';
+import {use, defineAction, defineSelector, defineView, addSaga} from '../utils/linker';
 import Editor from '../buffers/editor';
-
-const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
 
 export default function* (deps) {
 
   yield use(
     'homeNewRecording', 'switchToScreen', 'recorderStart',
-    'sourceReset', 'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
-    'inputReset', 'inputInit', 'inputEdit', 'inputSelect', 'inputScroll'
+    'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
+    'inputInit', 'inputEdit', 'inputSelect', 'inputScroll',
+    'ExamplePicker', 'exampleSelected'
   );
 
   yield defineAction('prepareScreenInit', 'Prepare.Init');
-  yield defineAction('prepareScreenExampleSelected', 'Prepare.Example.Selected');
-
-  function getExamples (state) {
-    return state.getIn(['prepare', 'examples']);
-  }
-
-  // No reducer for prepareScreenExampleSelected, the saga watchExampleSelected
-  // calls editor.reset which triggers edit/select events that will update the
-  // state.
 
   yield addSaga(function* watchNewRecording () {
     while (true) {
       yield take(deps.homeNewRecording);
-      const examples = yield select(getExamples);
-      yield call(loadExample, examples[0]);
+      yield put({type: deps.exampleSelected, example: 0});
       yield put({type: deps.switchToScreen, screen: 'prepare'});
     }
   });
 
-  function* loadExample (example) {
-    const sourceModel = Immutable.Map({
-      document: Document.fromString(example.source),
-      selection: example.selection || startOfBuffer,
-      scrollTop: example.scrollTop || 0
-    });
-    yield put({type: deps.sourceReset, model: sourceModel});
-    const inputModel = Immutable.Map({
-      document: Document.fromString(example.input || ""),
-      selection: startOfBuffer,
-      scrollTop: 0
-    });
-    yield put({type: deps.inputReset, model: inputModel});
-  }
-
-  yield addSaga(function* watchExampleSelected () {
-    while (true) {
-      const {example} = yield take(deps.prepareScreenExampleSelected);
-      yield call(loadExample, example);
-    }
-  });
-
   yield defineSelector('PrepareScreenSelector', function (state, props) {
-    const examples = getExamples(state);
-    return {examples};
+    return {};
   });
 
   yield defineView('PrepareScreen', 'PrepareScreenSelector', EpicComponent(self => {
-
-    const onSelectExample = function (event, i) {
-      const example = self.props.examples[i];
-      self.props.dispatch({type: deps.prepareScreenExampleSelected, example});
-    };
 
     const onStartRecording = function () {
       self.props.dispatch({type: deps.recorderStart});
@@ -109,7 +69,6 @@ export default function* (deps) {
     };
 
     self.render = function () {
-      const {examples} = self.props;
       return (
         <div>
           <div className="row">
@@ -128,11 +87,7 @@ export default function* (deps) {
             <div className="col-md-12">
               <div className="pane pane-source">
                 <h2>Source C initial</h2>
-                <Nav bsStyle="pills" className="pull-right">
-                  <NavDropdown title="Exemples" id="nav-examples">
-                    {examples.map((example, i) => <MenuItem key={i} eventKey={i} onSelect={onSelectExample}>{example.title}</MenuItem>)}
-                  </NavDropdown>
-                </Nav>
+                <deps.ExamplePicker/>
                 <p>
                   Cet éditeur contient le code source avec lequel démarre
                   l'enregistrement.  La position du curseur et la sélection

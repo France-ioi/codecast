@@ -9,6 +9,7 @@ import MainView from './main_view';
 import fullscreen  from './fullscreen';
 import buffers from '../buffers/index';
 import errors from './errors';
+import examples from './examples';
 
 export default function* () {
 
@@ -19,5 +20,6 @@ export default function* () {
   yield include(fullscreen);
   yield include(buffers);
   yield include(errors);
+  yield include(examples);
 
 };

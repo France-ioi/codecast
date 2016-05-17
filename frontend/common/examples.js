@@ -1,5 +1,14 @@
 
-export default [
+import Immutable from 'immutable';
+import {take, put, select, call} from 'redux-saga/effects';
+import React from 'react';
+import {Nav, NavDropdown, MenuItem} from 'react-bootstrap';
+import EpicComponent from 'epic-component';
+
+import {use, defineAction, defineSelector, defineView, addReducer, addSaga} from '../utils/linker';
+import Document from '../buffers/document';
+
+const examples = [
 
   {
     title: "demo",
@@ -145,3 +154,70 @@ export default [
   // TODO: add example for a?b:c
 
 ];
+
+const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
+
+export default function* (deps) {
+
+  yield use('sourceReset', 'inputReset');
+
+  yield defineAction('exampleSelected', 'Example.Selected');
+
+  yield addReducer('init', state => state.set('examples', examples));
+
+  yield defineSelector('getExamples', function (state) {
+    return state.getIn(['examples']);
+  });
+
+  function* loadExample (example) {
+    const sourceModel = Immutable.Map({
+      document: Document.fromString(example.source),
+      selection: example.selection || startOfBuffer,
+      scrollTop: example.scrollTop || 0
+    });
+    yield put({type: deps.sourceReset, model: sourceModel});
+    const inputModel = Immutable.Map({
+      document: Document.fromString(example.input || ""),
+      selection: startOfBuffer,
+      scrollTop: 0
+    });
+    yield put({type: deps.inputReset, model: inputModel});
+  }
+
+  yield addSaga(function* watchExampleSelected () {
+    while (true) {
+      let {example} = yield take(deps.exampleSelected);
+      if (typeof example === 'number') {
+        let examples = yield select(deps.getExamples);
+        example = examples[example];
+      }
+      yield call(loadExample, example);
+    }
+  });
+
+  yield defineSelector('ExamplePickerSelector', function (state, props) {
+    const examples = deps.getExamples(state);
+    return {examples};
+  });
+
+  yield defineView('ExamplePicker', 'ExamplePickerSelector', EpicComponent(self => {
+
+    const onSelectExample = function (event, i) {
+      const example = self.props.examples[i];
+      self.props.dispatch({type: deps.exampleSelected, example});
+    };
+
+    self.render = function () {
+      const {examples} = self.props;
+      return (
+        <Nav bsStyle="pills" className="pull-right">
+          <NavDropdown title="Exemples" id="nav-examples">
+            {examples.map((example, i) => <MenuItem key={i} eventKey={i} onSelect={onSelectExample}>{example.title}</MenuItem>)}
+          </NavDropdown>
+        </Nav>
+      );
+    };
+
+  }));
+
+};
