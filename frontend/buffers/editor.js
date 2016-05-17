@@ -136,7 +136,7 @@ export const Editor = EpicComponent(self => {
       if (marker) {
         session.removeMarker(marker);
       }
-      if (range) {
+      if (range && range.start && range.end) {
         marker = session.addMarker(toRange(range), "code-highlight", "text");
       }
     });
