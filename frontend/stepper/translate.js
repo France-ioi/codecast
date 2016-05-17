@@ -128,6 +128,10 @@ export default function* (deps) {
     state.get('translate')
   );
 
+  yield defineSelector('isTranslated', function (state) {
+    return /busy|done/.test(getTranslateStatus(state));
+  });
+
   function getTranslateStatus (state) {
     return state.getIn(['translate', 'status']);
   }
