@@ -56,6 +56,7 @@ const {store, scope, start} = link(function* (deps) {
 });
 store.dispatch({type: scope.init});
 store.dispatch({type: scope.sourceLoad, text: qs.source||''});
+store.dispatch({type: scope.inputLoad, text: qs.input||''});
 start();
 
 const container = document.getElementById('react-container');
