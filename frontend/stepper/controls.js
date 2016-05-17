@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {Button} from 'react-bootstrap';
+import {Button, ButtonGroup} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
@@ -76,21 +76,23 @@ export default function* (deps) {
     self.render = function () {
       const p = self.props;
       return (
-        <div>
-          <Button onClick={onStepExpr} disabled={!p.canStep}>step expr</Button>
-          <Button onClick={onStepInto} disabled={!p.canStep}>
-            <i className="fi fi-step-into"/>
-          </Button>
-          <Button onClick={onStepOut} disabled={!p.canStep}>
-            <i className="fi fi-step-out"/>
-          </Button>
-          <Button onClick={onStepOver} disabled={!p.canStep}>
-            <i className="fi fi-step-over"/>
-          </Button>
-          <Button onClick={onInterrupt} disabled={!p.canInterrupt}>interrompre</Button>
-          <Button onClick={onRestart} disabled={!p.canRestart}>recommencer</Button>
-          {p.showExit && <Button onClick={onEdit} disabled={!p.canExit}>éditer</Button>}
-          {p.showTranslate && <Button onClick={onTranslate} disabled={!p.canTranslate} bsStyle='primary'>compiler</Button>}
+        <div className="controls controls-stepper">
+          <ButtonGroup>
+            <Button onClick={onStepExpr} disabled={!p.canStep}>step expr</Button>
+            <Button onClick={onStepInto} disabled={!p.canStep}>
+              <i className="fi fi-step-into"/>
+            </Button>
+            <Button onClick={onStepOut} disabled={!p.canStep}>
+              <i className="fi fi-step-out"/>
+            </Button>
+            <Button onClick={onStepOver} disabled={!p.canStep}>
+              <i className="fi fi-step-over"/>
+            </Button>
+            <Button onClick={onInterrupt} disabled={!p.canInterrupt}>interrompre</Button>
+            <Button onClick={onRestart} disabled={!p.canRestart}>recommencer</Button>
+            {p.showExit && <Button onClick={onEdit} disabled={!p.canExit}>éditer</Button>}
+            {p.showTranslate && <Button onClick={onTranslate} disabled={!p.canTranslate} bsStyle='primary'>compiler</Button>}
+          </ButtonGroup>
         </div>
       );
     };

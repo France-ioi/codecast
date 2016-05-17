@@ -187,3 +187,10 @@ body#app, #app h1, #app h2, #app h3 {
 .pane-controls p {
     margin: 7px 7px;
 }
+
+.controls-stepper {
+  margin: 0 10px;
+}
+.controls-stepper button.btn-default {
+    background: #f0f0f0;
+}
