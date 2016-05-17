@@ -10,8 +10,8 @@ export default function* (deps) {
 
   yield use(
     'playerStart', 'playerPause', 'playerResume', 'playerSeek',
-    'getPlayerState',
-    'StepperControls', 'FullscreenButton'
+    'getPlayerState', 'isTranslated',
+    'StepperControls', 'ExamplePicker', 'FullscreenButton'
   );
 
   yield defineSelector('PlayerControlsSelector', function (state, props) {
@@ -19,7 +19,8 @@ export default function* (deps) {
     const status = player.get('status');
     const audioTime = player.get('audioTime');
     const duration = player.get('duration');
-    return {status, audioTime, duration};
+    const isTranslated = deps.isTranslated(state);
+    return {status, audioTime, duration, isTranslated};
   });
 
   yield defineView('PlayerControls', 'PlayerControlsSelector', EpicComponent(self => {
@@ -41,12 +42,18 @@ export default function* (deps) {
       self.props.dispatch({type: deps.playerSeek, audioTime});
     };
 
-    const timeFormatter = function (t) {
-      return Math.round(t / 1000) + 's';
+    const zeroPad2 = function (n) {
+      return ('0'+n).substring(-2);
+    };
+    const timeFormatter = function (ms) {
+      let s = Math.round(ms / 1000);
+      const m = Math.floor(s / 60);
+      s -= m * 60;
+      return zeroPad2(m) + ':' + zeroPad2(s);
     };
 
     self.render = function () {
-      const {status, audioTime, duration} = self.props;
+      const {status, audioTime, duration, isTranslated} = self.props;
       const showStartPlayback = /preparing|starting|ready|paused/.test(status);
       const canStartPlayback = /ready|paused/.test(status);
       const showPausePlayback = /playing|pausing/.test(status);
@@ -62,14 +69,23 @@ export default function* (deps) {
             <Button onClick={onPausePlayback} enabled={canPausePlayback}>
               <i className="fa fa-pause"/>
             </Button>}
+          <p>
+            <i className="fa fa-clock-o"/>
+            {' '}
+            {timeFormatter(audioTime)}
+            {' / '}
+            {timeFormatter(duration)}
+          </p>
           <div className="player-slider-container">
             <Slider prefixCls="player-slider" tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek}>
               <div className="player-slider-background"/>
             </Slider>
           </div>
           <deps.StepperControls enabled={canStep}/>
-          <deps.FullscreenButton/>
-          {false && <p>{status}{' '}{audioTime}{' / '}{duration}</p>}
+          <div className="pull-right">
+            <deps.FullscreenButton/>
+            <deps.ExamplePicker disabled={isTranslated}/>
+          </div>
         </div>
       );
     };

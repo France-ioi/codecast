@@ -21,8 +21,6 @@ import DevTools from '../utils/dev_tools';
 
 import stepperComponent from '../stepper/index';
 import commonComponent from '../common/index';
-import homeScreenComponent from './home_screen';
-import prepareScreenComponent from './prepare_screen';
 import saveScreenComponent from './save_screen';
 import recorderActions from './actions';
 import recorderStore from './store';
@@ -34,17 +32,10 @@ import examples from '../common/examples';
 
 const {store, scope, start} = link(function* () {
 
-  yield addReducer('init', _ => Immutable.Map({
-    screen: 'home',
-    home: Immutable.Map({
-      screen: Immutable.Map({})
-    })
-  }));
+  yield addReducer('init', _ => Immutable.Map({screen: 'record'}));
 
   yield include(stepperComponent);
   yield include(commonComponent);
-  yield include(homeScreenComponent);
-  yield include(prepareScreenComponent);
   yield include(saveScreenComponent);
   yield include(recorderActions);
   yield include(recorderStore);

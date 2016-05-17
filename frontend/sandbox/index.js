@@ -18,7 +18,7 @@ import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
 import '../common/style.css!';
 
-import {link, use, addReducer, include, defineView} from '../utils/linker';
+import {link, use, addReducer, include, defineSelector, defineView} from '../utils/linker';
 
 import stepperComponent from '../stepper/index';
 import commonComponent from '../common/index';
@@ -29,9 +29,14 @@ const {store, scope, start} = link(function* (deps) {
   yield addReducer('init', _ => Immutable.Map());
   yield include(stepperComponent);
   yield include(commonComponent);
-  yield use('StepperControls', 'FullscreenButton', 'MainView', 'ExamplePicker');
-  yield defineView('App', EpicComponent(self => {
+  yield use('StepperControls', 'FullscreenButton', 'MainView', 'ExamplePicker', 'isTranslated');
+  yield defineSelector('AppSelector', function (state) {
+    const isTranslated = deps.isTranslated(state);
+    return {isTranslated};
+  });
+  yield defineView('App', 'AppSelector', EpicComponent(self => {
     self.render = function () {
+      const {isTranslated} = self.props;
       return (
         <div className="container">
           <div className="row">
@@ -39,7 +44,7 @@ const {store, scope, start} = link(function* (deps) {
               <div className="pane pane-controls clearfix">
                 <deps.StepperControls enabled={true}/>
                 <deps.FullscreenButton/>
-                <deps.ExamplePicker/>
+                <deps.ExamplePicker disabled={isTranslated}/>
               </div>
             </div>
           </div>

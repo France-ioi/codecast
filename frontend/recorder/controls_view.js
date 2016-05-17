@@ -8,21 +8,30 @@ import {use, defineSelector, defineView} from '../utils/linker';
 export default function* (deps) {
 
   yield use(
-    'recorderStop',
-    'StepperControls', 'FullscreenButton'
+    'recorderStart', 'recorderStop',
+    'isTranslated',
+    'StepperControls', 'ExamplePicker', 'FullscreenButton'
   );
 
   yield defineSelector('RecorderControlsSelector', function (state, props) {
     const recorder = state.get('recorder');
     const status = recorder.get('status');
+    const canStart = status === 'ready';
+    const canStop = status === 'recording';
+    const canPause = false;
     const isRecording = status === 'recording';
-    const elapsed = Math.round(recorder.get('elapsed') / 1000) || 0;
-    const eventCount = recorder.get('events').count();
-    return {isRecording, elapsed, eventCount};
+    const elapsed = recorder.get('elapsed') || 0;
+    const events = recorder.get('events');
+    const eventCount = events && events.count();
+    const isTranslated = deps.isTranslated(state);
+    return {canStart, canStop, canPause, isRecording, isTranslated, elapsed, eventCount};
   });
 
-
   yield defineView('RecorderControls', 'RecorderControlsSelector', EpicComponent(self => {
+
+    const onStartRecording = function () {
+      self.props.dispatch({type: deps.recorderStart});
+    };
 
     const onStopRecording = function () {
       self.props.dispatch({type: deps.recorderStop});
@@ -32,24 +41,48 @@ export default function* (deps) {
       // TODO
     };
 
+    const zeroPad2 = function (n) {
+      return ('0'+n).substring(-2);
+    };
+    const timeFormatter = function (ms) {
+      let s = Math.round(ms / 1000);
+      const m = Math.floor(s / 60);
+      s -= m * 60;
+      return zeroPad2(m) + ':' + zeroPad2(s);
+    };
+
     self.render = function () {
-      // recorder
-      const {isRecording, elapsed, eventCount} = self.props;
+      const {canStart, canStop, canPause, isRecording, isTranslated, elapsed} = self.props;
       return (
         <div className="pane pane-controls clearfix">
-          <Button onClick={onStopRecording} disabled={!isRecording}>
-            <i className="fa fa-stop"/>
-          </Button>
-          {false && <Button onClick={onPauseRecording} disabled={!isRecording}>
-            <i className="fa fa-pause"/>
-          </Button>}
-          <deps.FullscreenButton/>
-          <deps.StepperControls enabled={true}/>
-          <p>
-            <span><i className="fa fa-clock-o"/> {elapsed}s</span>
-            {' '}
-            <span><i className="fa fa-bolt"/> {eventCount}</span>
-          </p>
+          <div className="pane pane-controls pull-right">
+            <deps.ExamplePicker disabled={isRecording}/>
+            <deps.FullscreenButton/>
+          </div>
+          <div className="controls controls-recorder">
+            {canStart &&
+              <div>
+                <Button onClick={onStartRecording} className="float-left">
+                  <i className="fa fa-circle" style={{color: '#a01'}}/>
+                  </Button>
+                {" démarrer un enregistrement"}
+              </div>}
+            {canStop &&
+              <Button onClick={onStopRecording}>
+                <i className="fa fa-stop"/>
+              </Button>}
+            {canPause &&
+              <Button onClick={onPauseRecording}>
+                <i className="fa fa-pause"/>
+              </Button>}
+            {isRecording &&
+              <p>
+                <i className="fa fa-clock-o"/>
+                {' '}
+                {timeFormatter(elapsed)}
+              </p>}
+          </div>
+          <deps.StepperControls enabled={isRecording}/>
         </div>
       );
     };

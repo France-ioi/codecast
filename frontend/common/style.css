@@ -188,6 +188,9 @@ body#app, #app h1, #app h2, #app h3 {
     margin: 7px 7px;
 }
 
+.controls-recorder > * {
+  float: left;
+}
 .controls-stepper {
   margin: 0 10px;
 }

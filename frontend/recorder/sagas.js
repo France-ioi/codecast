@@ -228,6 +228,7 @@ export default function* (deps) {
   });
 
   yield addSaga(function* recorderTicker () {
+    const {context} = yield take(deps.recorderReady);
     while (true) {
       yield take(deps.recorderStarted);
       while (true) {
@@ -237,7 +238,8 @@ export default function* (deps) {
         });
         if ('stopped' in outcome)
           break;
-        const elapsed = 0; // XXX
+        const elapsed = Math.round(context.audioContext.currentTime * 1000);
+        console.log('elapsed', elapsed);
         yield put({type: deps.recorderTick, elapsed});
       }
     }

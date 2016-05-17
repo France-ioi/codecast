@@ -7,10 +7,7 @@ import DevTools from '../utils/dev_tools';
 
 export default function* (deps) {
 
-  yield use(
-    'ErrorView',
-    'HomeScreen', 'PrepareScreen', 'RecordScreen', 'SaveScreen'
-  );
+  yield use('ErrorView', 'RecordScreen', 'SaveScreen');
 
   yield defineSelector('AppSelector', function (state, props) {
     const screen = state.get('screen');
@@ -24,8 +21,6 @@ export default function* (deps) {
       return (
         <div className="container">
           <deps.ErrorView/>
-          {screen === 'home' && <deps.HomeScreen/>}
-          {screen === 'prepare' && <deps.PrepareScreen/>}
           {screen === 'record' && <deps.RecordScreen/>}
           {screen === 'save' && <deps.SaveScreen/>}
           {false && <DevTools/>}
