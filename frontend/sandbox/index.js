@@ -29,7 +29,7 @@ const {store, scope, start} = link(function* (deps) {
   yield addReducer('init', _ => Immutable.Map());
   yield include(stepperComponent);
   yield include(commonComponent);
-  yield use('StepperControls', 'FullscreenButton', 'MainView');
+  yield use('StepperControls', 'FullscreenButton', 'MainView', 'ExamplePicker');
   yield defineView('App', EpicComponent(self => {
     self.render = function () {
       return (
@@ -39,6 +39,7 @@ const {store, scope, start} = link(function* (deps) {
               <div className="pane pane-controls clearfix">
                 <deps.StepperControls enabled={true}/>
                 <deps.FullscreenButton/>
+                <deps.ExamplePicker/>
               </div>
             </div>
           </div>
