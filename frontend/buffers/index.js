@@ -59,6 +59,7 @@ export default function* (deps) {
   yield defineAction('sourceHighlight', 'Source.Highlight');
 
   yield defineAction('inputInit', 'Input.Init');
+  yield defineAction('inputLoad', 'Input.Load');
   yield defineAction('inputReset', 'Input.Reset');
   yield defineAction('inputEdit', 'Input.Edit');
   yield defineAction('inputSelect', 'Input.Select');
@@ -124,6 +125,14 @@ export default function* (deps) {
 
   yield addReducer('inputReset', function (state, action) {
     return state.setIn(['input', 'model'], action.model);
+  });
+
+  yield addReducer('inputLoad', function (state, action) {
+    return state.setIn(['input', 'model'], Immutable.Map({
+      document: Document.fromString(action.text),
+      selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
+      scrollTop: 0
+    }));
   });
 
   yield addReducer('inputEdit', function (state, action) {
