@@ -55,12 +55,16 @@ const ShowArray = EpicComponent(self => {
     // TODO: cursors
     const renderArrayElem = function (elem, i) {
       const {value, cursors, prevCursors} = elem;
+      const elemClasses = [
+        "constantArray-elemView",
+        elem.last && "constantArray-lastElem"
+      ];
       const valueClasses = [
         "constantArray-elemValue",
         value.load !== undefined && 'value-loaded'
       ];
       return (
-        <div className="constantArray-elemView" key={i}>
+        <div className={classnames(elemClasses)} key={i}>
           <div className="value-changed">
             {value.prevValue && value.prevValue.toString()}
           </div>
@@ -161,7 +165,7 @@ export default function* (deps) {
                 ptr.address += elemType.size;
               }
               // Add an extra empty element.
-              elems.push({value: {}, cursors: [], prevCursors: []});
+              elems.push({value: {}, cursors: [], prevCursors: [], last: true});
               // Cursors?
               if (byName.cursors && byName.cursors[0] === 'list') {
                 const cursorIdents = byName.cursors[1].map(getIdent);

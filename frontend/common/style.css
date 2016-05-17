@@ -136,6 +136,12 @@ body#app, #app h1, #app h2, #app h3 {
   float: left;
   width: 64px;
   border: 1px solid black;
+}
+.constantArray-lastElem {
+  border: 1px solid #bbb;
+  background: #e8e8e8;
+}
+.constantArray-elemView, .constantArray-lastElem {
   border-left: 0;
 }
 .constantArray-elemView:first-child {
