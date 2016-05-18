@@ -294,7 +294,7 @@ export default function* (deps) {
         }
         case 'stepper.translateFailure': case 'translate.failure': {
           const action = {diagnostics: event[2].diagnostics, error: event[2].error};
-          state = state.update('translate', st => translateFailure(st, action));
+          state = state.update('translate', st => translateFailed(st, action));
           break;
         }
         case 'translate.clearDiagnostics': {
