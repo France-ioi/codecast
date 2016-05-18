@@ -78,7 +78,9 @@ export default function* (deps) {
       return (
         <div className="controls controls-stepper">
           <ButtonGroup>
-            <Button onClick={onStepExpr} disabled={!p.canStep}>step expr</Button>
+            <Button onClick={onStepExpr} disabled={!p.canStep}>
+              <i className="fi fi-step-expr"/>
+            </Button>
             <Button onClick={onStepInto} disabled={!p.canStep}>
               <i className="fi fi-step-into"/>
             </Button>
@@ -88,11 +90,17 @@ export default function* (deps) {
             <Button onClick={onStepOver} disabled={!p.canStep}>
               <i className="fi fi-step-over"/>
             </Button>
-            <Button onClick={onInterrupt} disabled={!p.canInterrupt}>interrompre</Button>
-            <Button onClick={onRestart} disabled={!p.canRestart}>recommencer</Button>
+            <Button onClick={onInterrupt} disabled={!p.canInterrupt}>
+              <i className="fi fi-interrupt"/>
+            </Button>
+            <Button onClick={onRestart} disabled={!p.canRestart}>
+              <i className="fi fi-restart"/>
+            </Button>
+          </ButtonGroup>
+          <div>
             {p.showExit && <Button onClick={onEdit} disabled={!p.canExit}>éditer</Button>}
             {p.showTranslate && <Button onClick={onTranslate} disabled={!p.canTranslate} bsStyle='primary'>compiler</Button>}
-          </ButtonGroup>
+          </div>
         </div>
       );
     };

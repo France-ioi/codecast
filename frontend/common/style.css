@@ -23,6 +23,15 @@
 .fi-step-out:before {
   content: "\e002";
 }
+.fi-step-expr:before {
+  content: "\e003";
+}
+.fi-interrupt:before {
+  content: "\e004";
+}
+.fi-restart:before {
+  content: "\e005";
+}
 
 body#app, #app h1, #app h2, #app h3 {
   font: 14px/normal 'Open Sans';
