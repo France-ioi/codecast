@@ -43,7 +43,7 @@ export default function* (deps) {
     };
 
     const zeroPad2 = function (n) {
-      return ('0'+n).substring(-2);
+      return ('0'+n).substring(-2, 2);
     };
     const timeFormatter = function (ms) {
       let s = Math.round(ms / 1000);
