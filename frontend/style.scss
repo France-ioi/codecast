@@ -156,9 +156,9 @@ body#app, #app h1, #app h2, #app h3 {
   border-left: 1px solid black;
 }
 .constantArray-elemView > * {
-  height: 20px;
   overflow: hidden;
   text-align: center;
+  height: 20px;
 }
 
 .value-loaded {
@@ -241,5 +241,12 @@ body#app, #app h1, #app h2, #app h3 {
   }
   .nav-examples > li > a {
     padding: 2px 3px;
+  }
+  .constantArray-elemView {
+    font-size: 10px;
+    width: 45px;
+  }
+  .constantArray-elemView > * {
+    height: 14px;
   }
 }
