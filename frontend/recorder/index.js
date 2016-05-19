@@ -14,7 +14,7 @@ import 'brace/theme/github';
 
 import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
-import '../common/style.css!';
+import '../style.scss!';
 
 import {link, include, addReducer, addEnhancer} from '../utils/linker';
 import DevTools from '../utils/dev_tools';

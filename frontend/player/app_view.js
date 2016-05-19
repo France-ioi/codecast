@@ -14,7 +14,7 @@ export default function* (deps) {
       return (
         <div className="container">
           <div className="row">
-            <div className="col-md-12">
+            <div className="col-sm-12">
               <deps.PlayerControls/>
             </div>
           </div>

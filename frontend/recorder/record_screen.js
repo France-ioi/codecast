@@ -13,7 +13,7 @@ export default function* (deps) {
     const recordingPanel = function () {
       return (
         <div className="row">
-          <div className="col-md-12">
+          <div className="col-sm-12">
             <p>Encodage en cours, veuillez patienter.</p>
           </div>
         </div>);
@@ -23,7 +23,7 @@ export default function* (deps) {
       return (
         <div>
           <div className="row">
-            <div className="col-md-12">
+            <div className="col-sm-12">
               <deps.RecorderControls/>
             </div>
           </div>

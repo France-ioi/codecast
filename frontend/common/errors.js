@@ -46,7 +46,7 @@ export default function* (deps) {
       }
       return (
         <div className="row">
-          <div className="col-md-12">
+          <div className="col-sm-12">
             <Alert bsStyle="danger" onDismiss={onClearError}>
               <h4>Une erreur est survenue !</h4>
               <p>{error.toString()}</p>

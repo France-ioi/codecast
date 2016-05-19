@@ -16,7 +16,7 @@ import 'brace/theme/github';
 
 import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
-import '../common/style.css!';
+import '../style.scss!';
 
 import {link, use, addReducer, include, defineSelector, defineView} from '../utils/linker';
 
@@ -40,7 +40,7 @@ const {store, scope, start} = link(function* (deps) {
       return (
         <div className="container">
           <div className="row">
-            <div className="col-md-12">
+            <div className="col-sm-12">
               <div className="pane pane-controls clearfix">
                 <deps.StepperControls enabled={true}/>
                 <deps.FullscreenButton/>

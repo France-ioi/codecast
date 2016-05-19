@@ -19,6 +19,7 @@
     "configFile": "frontend/jspm-0.16.config.js",
     "dependencies": {
       "bootstrap": "github:twbs/bootstrap@^3.3.6",
+      "bootstrap-sass": "npm:bootstrap-sass@^3.3.6",
       "brace": "npm:brace@^0.7.0",
       "classnames": "npm:classnames@^2.2.3",
       "epic-component": "npm:epic-component@^0.2.0",
@@ -41,6 +42,7 @@
       "redux-devtools-dock-monitor": "npm:redux-devtools-dock-monitor@^1.1.0",
       "redux-devtools-log-monitor": "npm:redux-devtools-log-monitor@^1.0.5",
       "redux-saga": "npm:redux-saga@^0.10.2",
+      "scss": "github:mobilexag/plugin-sass@^0.4.3",
       "sprintf-js": "npm:sprintf-js@^1.0.3",
       "superagent": "npm:superagent@^1.8.2",
       "text": "github:systemjs/plugin-text@^0.0.7"

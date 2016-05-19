@@ -66,8 +66,8 @@ export default function* (deps) {
 
     const inputOutputHeader = (
       <div className="row">
-        <div className="col-md-6">Entrée</div>
-        <div className="col-md-6">Sortie</div>
+        <div className="col-sm-6">Entrée</div>
+        <div className="col-sm-6">Sortie</div>
       </div>);
 
     const diagnosticsPanelHeader = (
@@ -85,12 +85,12 @@ export default function* (deps) {
       return (
         <div>
           <div className="row">
-            <div className="col-md-3">
+            <div className="col-sm-3">
               <Panel header="Variables">
                 {<deps.StackView height='280px'/>}
               </Panel>
             </div>
-            <div className="col-md-9">
+            <div className="col-sm-9">
               <Panel header="Source">
                 <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} onScroll={onSourceScroll}
                         readOnly={haveStepper} mode='c_cpp' width='100%' height='280px' />
@@ -98,23 +98,21 @@ export default function* (deps) {
             </div>
           </div>
           <div className="row">
-            {diagnostics && <div className="col-md-12">
+            {diagnostics && <div className="col-sm-12">
               <Panel header={diagnosticsPanelHeader}>
                 <div dangerouslySetInnerHTML={diagnostics}/>
               </Panel>
             </div>}
-            <div className="col-md-12">
+            <div className="col-sm-12">
               <deps.DirectivesPane/>
               <Panel header={inputOutputHeader}>
                 <div className="row">
-                  <div className="col-md-6">
+                  <div className="col-sm-6">
                     <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect} onScroll={onInputScroll}
                             readOnly={haveStepper} mode='text' width='100%' height='168px' />
                   </div>
-                  <div className="col-md-6">
-                    {terminal
-                      ? <Terminal terminal={terminal}/>
-                      : <p>Programme arrêté, pas de sortie à afficher.</p>}
+                  <div className="col-sm-6">
+                    <Terminal terminal={terminal}/>
                   </div>
                 </div>
               </Panel>
