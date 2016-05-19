@@ -42,9 +42,11 @@ const {store, scope, start} = link(function* (deps) {
           <div className="row">
             <div className="col-sm-12">
               <div className="pane pane-controls clearfix">
+                <div className="pane-controls-right">
+                  <deps.ExamplePicker disabled={isTranslated}/>
+                  <deps.FullscreenButton/>
+                </div>
                 <deps.StepperControls enabled={true}/>
-                <deps.FullscreenButton/>
-                <deps.ExamplePicker disabled={isTranslated}/>
               </div>
             </div>
           </div>

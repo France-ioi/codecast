@@ -55,7 +55,7 @@ export default function* (deps) {
       const {canStart, canStop, canPause, isRecording, isTranslated, elapsed} = self.props;
       return (
         <div className="pane pane-controls clearfix">
-          <div className="pane pane-controls pull-right">
+          <div className="pane-controls-right">
             <deps.ExamplePicker disabled={isRecording}/>
             <deps.FullscreenButton/>
           </div>

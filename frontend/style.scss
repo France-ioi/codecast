@@ -192,7 +192,13 @@ body#app, #app h1, #app h2, #app h3 {
 .pane-controls > * {
   float: left;
 }
-.pane-controls p {
+.pane-controls > .pane-controls-right {
+  float: right;
+}
+.pane-controls > .pane-controls-right > * {
+  float: left;
+}
+.pane-controls > p {
     margin: 7px 7px;
 }
 
@@ -220,5 +226,20 @@ body#app, #app h1, #app h2, #app h3 {
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 5px;
+  }
+  .pane-controls button.btn {
+    padding: 3px 8px;
+  }
+  .pane-controls > p {
+    font-size: 12px;
+    margin: 5px 5px;
+  }
+  .player-slider {
+    width: 180px;
+    height: 27px;
+    margin: 0px 12px;
+  }
+  .nav-examples > li > a {
+    padding: 2px 3px;
   }
 }

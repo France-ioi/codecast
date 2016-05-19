@@ -60,7 +60,11 @@ export default function* (deps) {
       const canPausePlayback = status === 'playing';
       const canStep = status === 'paused';
       return (
-        <div className="pane pane-controls">
+        <div className="pane pane-controls clearfix">
+          <div className="pane-controls-right">
+            <deps.ExamplePicker disabled={isTranslated}/>
+            <deps.FullscreenButton/>
+          </div>
           {showStartPlayback &&
             <Button onClick={onStartPlayback} enabled={canStartPlayback}>
               <i className="fa fa-play"/>
@@ -82,10 +86,6 @@ export default function* (deps) {
             </Slider>
           </div>
           <deps.StepperControls enabled={canStep}/>
-          <div className="pull-right">
-            <deps.FullscreenButton/>
-            <deps.ExamplePicker disabled={isTranslated}/>
-          </div>
         </div>
       );
     };
