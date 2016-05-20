@@ -55,7 +55,7 @@ export default function* (deps) {
     return true;
   }
 
-  function* updateSelection () {
+  function* updateSourceHighlighting () {
     const stepperState = yield select(deps.getStepperDisplay);
     const range = runtime.getNodeRange(stepperState);
     yield put({type: deps.sourceHighlight, range});
@@ -80,7 +80,7 @@ export default function* (deps) {
         // Reset the time limit and put a Progress event.
         context.timeLimit = window.performance.now() + 20;
         yield put({type: deps.stepperProgress, context: viewContext(context)});
-        yield call(updateSelection);
+        yield call(updateSourceHighlighting);
         // Yield until the next tick (XXX consider requestAnimationFrame).
         yield call(delay, 0);
         // Stop prematurely if interrupted.
@@ -186,7 +186,7 @@ export default function* (deps) {
         console.log(error); // XXX
       }
       yield put({type: deps.stepperIdle, context: viewContext(context)});
-      yield call(updateSelection);
+      yield call(updateSourceHighlighting);
     }
   }
 
@@ -202,7 +202,7 @@ export default function* (deps) {
         const input = Document.toString(inputModel.get('document'));
         const stepperState = runtime.start(translate.get('syntaxTree'), {input});
         yield put({type: deps.stepperRestart, stepperState});
-        yield call(updateSelection);
+        yield call(updateSourceHighlighting);
       } catch (error) {
         yield put({type: deps.error, source: 'stepper', error});
       }
