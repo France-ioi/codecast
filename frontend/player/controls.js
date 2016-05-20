@@ -65,15 +65,17 @@ export default function* (deps) {
             <deps.ExamplePicker disabled={isTranslated}/>
             <deps.FullscreenButton/>
           </div>
-          {showStartPlayback &&
-            <Button onClick={onStartPlayback} enabled={canStartPlayback}>
-              <i className="fa fa-play"/>
-            </Button>}
-          {showPausePlayback &&
-            <Button onClick={onPausePlayback} enabled={canPausePlayback}>
-              <i className="fa fa-pause"/>
-            </Button>}
-          <p>
+          <div className="player-controls-playback">
+            {showStartPlayback &&
+                <Button onClick={onStartPlayback} enabled={canStartPlayback}>
+                  <i className="fa fa-play"/>
+                </Button>}
+            {showPausePlayback &&
+              <Button onClick={onPausePlayback} enabled={canPausePlayback}>
+                <i className="fa fa-pause"/>
+              </Button>}
+          </div>
+          <p className="player-controls-times">
             <i className="fa fa-clock-o"/>
             {' '}
             {timeFormatter(audioTime)}

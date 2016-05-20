@@ -43,6 +43,9 @@ $grid-gutter-width: 6px;
   content: "\e005";
 }
 
+body#app {
+  background: none transparent;
+}
 body#app, #app h1, #app h2, #app h3 {
   font-size: 14px;
   font-weight: normal;
@@ -199,7 +202,7 @@ body#app, #app h1, #app h2, #app h3 {
 .pane-controls > .pane-controls-right > * {
   float: left;
 }
-.pane-controls > p {
+.pane-controls p {
     margin: 7px 7px;
 }
 
@@ -212,16 +215,26 @@ body#app, #app h1, #app h2, #app h3 {
 .controls-stepper button.btn-default {
     background: #f0f0f0;
 }
-
-@media (min-width: $screen-xs-min) and (max-width: $screen-xs-max) {
-  body {
-    background: #FEE;
-  }
+.controls-stepper-execution {
+  width: 179px;
 }
+.controls-stepper-execution p {
+  text-align: center;
+}
+.controls-translate button {
+  width: 85px;
+  text-align: center;
+}
+.player-controls-playback button {
+  width: 40px;
+  text-align: center;
+}
+.player-controls-times {
+  width: 120px;
+  text-align: center;
+}
+
 @media (min-width: $screen-sm-min) and (max-width: $screen-sm-max) {
-  body {
-    background: #EFE;
-  }
   #app pre, #app .ace_editor, .terminal, .stack-view {
     font-size: 10px;
   }
@@ -231,7 +244,7 @@ body#app, #app h1, #app h2, #app h3 {
   .pane-controls button.btn {
     padding: 3px 8px;
   }
-  .pane-controls > p {
+  .pane-controls p {
     font-size: 12px;
     margin: 5px 5px;
   }
@@ -239,6 +252,15 @@ body#app, #app h1, #app h2, #app h3 {
     width: 180px;
     height: 27px;
     margin: 0px 12px;
+  }
+  .player-controls-playback button {
+    width: 30px;
+  }
+  .controls-translate button {
+    width: 80px;
+  }
+  .player-controls-times {
+    width: 90px;
   }
   .nav-examples > li > a {
     padding: 3px 5px;
