@@ -493,7 +493,7 @@ export default function* (deps) {
                 break;
             }
           }
-          yield call(resetToInstant, nextInstant, audioTime);
+          yield call(resetToInstant, nextInstant, audioTime, true);
           if (ended) {
             audio.pause();
             audio.currentTime = audio.duration;
