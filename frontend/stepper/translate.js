@@ -108,6 +108,9 @@ export default function* (deps) {
   // Requested translation of given {source}.
   yield defineAction('translate', 'Translate');
 
+  // Clear the 'translate' state.
+  yield defineAction('translateClear', 'Translate.Clear');
+
   // Reset the 'translate' state.
   yield defineAction('translateReset', 'Translate.Reset');
 
@@ -137,6 +140,10 @@ export default function* (deps) {
   }
 
   yield addReducer('init', function (state, action) {
+    return state.set('translate', translateClear());
+  });
+
+  yield addReducer('translateClear', function (state, action) {
     return state.set('translate', translateClear());
   });
 

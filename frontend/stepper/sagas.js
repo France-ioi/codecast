@@ -12,8 +12,8 @@ export default function* (deps) {
   yield use(
     'getStepperState', 'getStepperDisplay', 'getStepperInterrupted',
     'stepperInterrupted',
-    'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle',
-    'translateSucceeded', 'getTranslateState',
+    'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperExit',
+    'translateSucceeded', 'getTranslateState', 'translateClear',
     'getInputModel', 'sourceHighlight',
     'error'
   );
@@ -224,5 +224,13 @@ export default function* (deps) {
     }
   });
 
+
+  yield addSaga(function* watchStepperExit () {
+    // Clear the translate state when the stepper is exited.
+    while (true) {
+      yield take(deps.stepperExit);
+      yield put({type: deps.translateClear});
+    }
+  });
 
 };
