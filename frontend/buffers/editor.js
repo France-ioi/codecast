@@ -89,12 +89,12 @@ export const Editor = EpicComponent(self => {
     }
   };
 
-  const reset = function (value, selection, scrollTop) {
+  const reset = function (value, selection_, scrollTop) {
     wrapModelToEditor(function () {
       editor.setValue(value);
       // Work-around for strange ACE behavior?
       selection = null;
-      setSelection(selection);
+      setSelection(selection_);
       editor.session.setScrollTop(scrollTop);
       // Clear a previously set marker, if any.
       if (marker) {
@@ -124,8 +124,9 @@ export const Editor = EpicComponent(self => {
 
   const setSelection = function (selection_) {
     wrapModelToEditor(function () {
-      if (sameSelection(selection, selection_))
+      if (sameSelection(selection, selection_)) {
         return;
+      }
       selection = selection_;
       if (selection && selection.start && selection.end) {
         editor.selection.setRange(toRange(selection));
