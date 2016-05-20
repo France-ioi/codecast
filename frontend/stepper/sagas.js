@@ -216,4 +216,13 @@ export default function* (deps) {
     }
   });
 
+  yield addSaga(function* watchStepperRestart () {
+    // Clear the highlighting when the stepper is restarted.
+    while (true) {
+      yield take(deps.stepperRestart);
+      yield call(updateSourceHighlighting);
+    }
+  });
+
+
 };
