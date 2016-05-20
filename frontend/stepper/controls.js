@@ -20,19 +20,20 @@ export default function* (deps) {
     const {enabled} = props;
     const stepper = deps.getStepperState(state);
     const status = stepper && stepper.get('status');
-    const isTranslated = status !== 'clear';
-    const showExit = isTranslated;
-    const canExit = enabled && isTranslated;
-    const showTranslate = !isTranslated;
-    const canTranslate = enabled && !isTranslated;
-    const isStepping = isTranslated && status !== 'idle';
+    const haveContext = status !== 'clear';
+    const showExit = haveContext;
+    const canExit = enabled && haveContext;
+    const showTranslate = !haveContext;
+    const canTranslate = enabled && !haveContext;
+    const isStepping = haveContext && status !== 'idle';
     const current = stepper && stepper.get('current');
     const {control} = current || {};
     const haveNode = control && control.node;
-    const canRestart = enabled && !isStepping;
+    const canRestart = canExit && !isStepping;
     const canStep = enabled && !isStepping && haveNode;
     const canInterrupt = enabled && isStepping;
     return {
+      haveContext,
       showExit, canExit,
       showTranslate, canTranslate,
       canRestart, canStep, canInterrupt
@@ -77,7 +78,7 @@ export default function* (deps) {
       const p = self.props;
       return (
         <div className="controls controls-stepper">
-          <ButtonGroup>
+          {p.haveContext && <ButtonGroup className="controls-stepper-execution">
             <Button onClick={onStepExpr} disabled={!p.canStep}>
               <i className="fi fi-step-expr"/>
             </Button>
@@ -96,8 +97,11 @@ export default function* (deps) {
             <Button onClick={onRestart} disabled={!p.canRestart}>
               <i className="fi fi-restart"/>
             </Button>
-          </ButtonGroup>
-          <div>
+          </ButtonGroup>}
+          {p.haveContext || <div className="controls-stepper-execution">
+            <p>Édition en cours</p>
+          </div>}
+          <div className="controls-translate">
             {p.showExit && <Button onClick={onEdit} disabled={!p.canExit}>éditer</Button>}
             {p.showTranslate && <Button onClick={onTranslate} disabled={!p.canTranslate} bsStyle='primary'>compiler</Button>}
           </div>
