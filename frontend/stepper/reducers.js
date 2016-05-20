@@ -71,7 +71,7 @@ export default function* () {
   });
 
   yield addReducer('stepperExit', function (state, action) {
-    return state.set('stepper', Immutable.Map({status: 'clear'}));
+    return state.set('stepper', stepperClear());
   });
 
   yield addReducer('stepperStep', function (state, action) {
