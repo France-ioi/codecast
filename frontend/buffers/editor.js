@@ -96,6 +96,11 @@ export const Editor = EpicComponent(self => {
       selection = null;
       setSelection(selection);
       editor.session.setScrollTop(scrollTop);
+      // Clear a previously set marker, if any.
+      if (marker) {
+        editor.session.removeMarker(marker);
+        marker = null;
+      }
     });
   };
 
@@ -135,6 +140,7 @@ export const Editor = EpicComponent(self => {
       const session = editor.session;
       if (marker) {
         session.removeMarker(marker);
+        marker = null;
       }
       if (range && range.start && range.end) {
         marker = session.addMarker(toRange(range), "code-highlight", "text");
