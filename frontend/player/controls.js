@@ -58,7 +58,7 @@ export default function* (deps) {
       const canStartPlayback = /ready|paused/.test(status);
       const showPausePlayback = /playing|pausing/.test(status);
       const canPausePlayback = status === 'playing';
-      const canStep = status === 'paused';
+      const canStep = /ready|paused/.test(status);
       return (
         <div className="pane pane-controls clearfix">
           <div className="pane-controls-right">
