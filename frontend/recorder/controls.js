@@ -59,7 +59,7 @@ export default function* (deps) {
             {isRecording || <deps.ExamplePicker/>}
             <deps.FullscreenButton/>
           </div>
-          <div className="controls controls-recorder">
+          <div className="controls controls-main">
             {canStart &&
               <div>
                 <Button onClick={onStartRecording} className="float-left">

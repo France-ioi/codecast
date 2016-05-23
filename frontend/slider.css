@@ -2,7 +2,6 @@
 .player-slider-container {
 }
 .player-slider {
-  width: 240px;
   height: 34px; /* 15px + 4px + 15px */
   margin: 0px 20px;
   position: relative;

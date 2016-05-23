@@ -65,27 +65,29 @@ export default function* (deps) {
             {isTranslated || <deps.ExamplePicker/>}
             <deps.FullscreenButton/>
           </div>
-          <div className="player-controls-playback">
-            {showStartPlayback &&
-                <Button onClick={onStartPlayback} enabled={canStartPlayback}>
-                  <i className="fa fa-play"/>
+          <div className="controls controls-main">
+            <div className="player-controls-playback">
+              {showStartPlayback &&
+                  <Button onClick={onStartPlayback} enabled={canStartPlayback}>
+                    <i className="fa fa-play"/>
+                  </Button>}
+              {showPausePlayback &&
+                <Button onClick={onPausePlayback} enabled={canPausePlayback}>
+                  <i className="fa fa-pause"/>
                 </Button>}
-            {showPausePlayback &&
-              <Button onClick={onPausePlayback} enabled={canPausePlayback}>
-                <i className="fa fa-pause"/>
-              </Button>}
-          </div>
-          <p className="player-controls-times">
-            <i className="fa fa-clock-o"/>
-            {' '}
-            {timeFormatter(audioTime)}
-            {' / '}
-            {timeFormatter(duration)}
-          </p>
-          <div className="player-slider-container">
-            <Slider prefixCls="player-slider" tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek}>
-              <div className="player-slider-background"/>
-            </Slider>
+            </div>
+            <p className="player-controls-times">
+              <i className="fa fa-clock-o"/>
+              {' '}
+              {timeFormatter(audioTime)}
+              {' / '}
+              {timeFormatter(duration)}
+            </p>
+            <div className="player-slider-container">
+              <Slider prefixCls="player-slider" tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek}>
+                <div className="player-slider-background"/>
+              </Slider>
+            </div>
           </div>
           <deps.StepperControls enabled={canStep}/>
         </div>

@@ -7,6 +7,7 @@ $screen-sm-min: 800px;   // sm: format FUN
 $container-sm: $screen-sm-min;
 $screen-md-min: 1024px;  // md: format normal
 $grid-gutter-width: 6px;
+$nav-link-padding: 7px 12px;
 
 @import 'jspm:bootstrap-sass/assets/stylesheets/bootstrap';
 
@@ -209,6 +210,10 @@ body#app, #app h1, #app h2, #app h3 {
 .controls > * {
   float: left;
 }
+.controls-main {
+  height: 34px;
+  width: 460px;
+}
 .controls-stepper {
   margin: 0 10px;
 }
@@ -230,6 +235,9 @@ body#app, #app h1, #app h2, #app h3 {
   width: 120px;
   text-align: center;
 }
+.player-slider {
+  width: 240px;
+}
 
 @media (min-width: $screen-sm-min) and (max-width: $screen-sm-max) {
   #app pre, #app .ace_editor, .terminal, .stack-view {
@@ -245,10 +253,9 @@ body#app, #app h1, #app h2, #app h3 {
     font-size: 12px;
     margin: 5px 5px;
   }
-  .player-slider {
-    width: 180px;
+  .controls-main {
     height: 27px;
-    margin: 0px 12px;
+    width: 345px;
   }
   .player-controls-playback button {
     width: 30px;
@@ -261,6 +268,11 @@ body#app, #app h1, #app h2, #app h3 {
   }
   .player-controls-times {
     width: 90px;
+  }
+  .player-slider {
+    width: 180px;
+    height: 27px;
+    margin: 0px 12px;
   }
   .nav-examples > li > a {
     padding: 3px 5px;

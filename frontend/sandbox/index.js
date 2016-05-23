@@ -46,6 +46,8 @@ const {store, scope, start} = link(function* (deps) {
                   {isTranslated || <deps.ExamplePicker/>}
                   <deps.FullscreenButton/>
                 </div>
+                <div className="controls controls-main">
+                </div>
                 <deps.StepperControls enabled={true}/>
               </div>
             </div>
