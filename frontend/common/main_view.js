@@ -83,16 +83,21 @@ export default function* (deps) {
     self.render = function () {
       const {diagnostics, haveStepper, terminal} = self.props;
       const editorRowHeight = '300px';
+      const sourcePanelHeader = (
+        <span>
+          {'Source'}
+          {haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
+        </span>);
       return (
         <div>
           <div className="row">
             <div className="col-sm-3">
-              <Panel header="Variables">
+              <Panel header={<span>Variables</span>}>
                 {<deps.StackView height={editorRowHeight}/>}
               </Panel>
             </div>
             <div className="col-sm-9">
-              <Panel header="Source">
+              <Panel header={sourcePanelHeader}>
                 <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} onScroll={onSourceScroll}
                         readOnly={haveStepper} mode='c_cpp' width='100%' height={editorRowHeight} />
               </Panel>
