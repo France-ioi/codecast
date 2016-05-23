@@ -25,7 +25,7 @@ import saveScreenComponent from './save_screen';
 import recorderActions from './actions';
 import recorderStore from './store';
 import recorderSagas from './sagas';
-import RecorderControls from './controls_view';
+import RecorderControls from './controls';
 import RecordScreen from './record_screen';
 import App from './app_view';
 import examples from '../common/examples';
