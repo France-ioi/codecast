@@ -9,13 +9,13 @@ XXX Currently the code for 'source' and 'input' is duplicated, this should
 
 The model for a buffer is an Immutable Map of this shape:
 
-  {document, selection, scrollTop}
+  {document, selection, firstVisibleRow}
 
 where
 
-  - document is an Immutable List of the document's lines,
+  - document is an Immutable List of the document's lines
   - selection is a JS object of shape {start:{row,column},end:{row,column}}
-  - scrollTop is a number of pixels.
+  - firstVisibleRow is the number of the first row visible in the editor's view
 
 The 'init' action is sent when the editor view is created/destroyed.
   A reducer saves a reference to the view in the global state.
@@ -41,7 +41,7 @@ import Document from './document';
 const blankModel = Immutable.Map({
   document: Document.blank,
   selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
-  scrollTop: 0
+  firstVisibleRow: 0
 });
 
 
@@ -97,7 +97,7 @@ export default function* (deps) {
     return state.setIn(['source', 'model'], Immutable.Map({
       document: Document.fromString(action.text),
       selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
-      scrollTop: 0
+      firstVisibleRow: 0
     }));
   });
 
@@ -116,7 +116,7 @@ export default function* (deps) {
   });
 
   yield addReducer('sourceScroll', function (state, action) {
-    return state.setIn(['source', 'model', 'scrollTop'], action.scrollTop);
+    return state.setIn(['source', 'model', 'firstVisibleRow'], action.firstVisibleRow);
   });
 
   yield addReducer('inputInit', function (state, action) {
@@ -131,7 +131,7 @@ export default function* (deps) {
     return state.setIn(['input', 'model'], Immutable.Map({
       document: Document.fromString(action.text),
       selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
-      scrollTop: 0
+      firstVisibleRow: 0
     }));
   });
 
@@ -146,7 +146,7 @@ export default function* (deps) {
   });
 
   yield addReducer('inputScroll', function (state, action) {
-    return state.setIn(['input', 'model', 'scrollTop'], action.scrollTop);
+    return state.setIn(['input', 'model', 'firstVisibleRow'], action.firstVisibleRow);
   });
 
   yield addSaga(function* watchSourceInit () {
@@ -222,10 +222,10 @@ export default function* (deps) {
 
   yield addSaga(function *watchSourceModelScroll () {
     while (true) {
-      const {scrollTop} = yield take(deps.sourceModelScroll);
+      const {firstVisibleRow} = yield take(deps.sourceModelScroll);
       const editor = yield select(getSourceEditor);
       if (editor) {
-        sourceEditor.setScrollTop(scrollTop);
+        editor.scrollToLine(firstVisibleRow);
       }
     }
   });
@@ -236,8 +236,8 @@ export default function* (deps) {
     try {
       const text = Document.toString(model.get('document'));
       const selection = model.get('selection');
-      const scrollTop = model.get('scrollTop');
-      editor.reset(text, selection, scrollTop);
+      const firstVisibleRow = model.get('firstVisibleRow');
+      editor.reset(text, selection, firstVisibleRow);
     } catch (error) {
       console.log('failed to update editor view with model', error);
     }

@@ -40,8 +40,8 @@ export default function* (deps) {
       self.props.dispatch({type: deps.sourceEdit, delta});
     };
 
-    const onSourceScroll = function (scrollTop, firstVisibleRow) {
-      self.props.dispatch({type: deps.sourceScroll, scrollTop, firstVisibleRow});
+    const onSourceScroll = function (firstVisibleRow) {
+      self.props.dispatch({type: deps.sourceScroll, firstVisibleRow});
     };
 
     const onInputInit = function (editor) {
@@ -56,8 +56,8 @@ export default function* (deps) {
       self.props.dispatch({type: deps.inputEdit, delta});
     };
 
-    const onInputScroll = function (scrollTop, firstVisibleRow) {
-      self.props.dispatch({type: deps.inputScroll, scrollTop, firstVisibleRow});
+    const onInputScroll = function (firstVisibleRow) {
+      self.props.dispatch({type: deps.inputScroll, firstVisibleRow});
     };
 
     const onClearDiagnostics = function () {

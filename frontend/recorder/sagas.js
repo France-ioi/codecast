@@ -169,12 +169,12 @@ export default function* (deps) {
         source: {
           document: Document.toString(sourceModel.get('document')),
           selection: Document.compressRange(sourceModel.get('selection')),
-          scrollTop: sourceModel.get('scrollTop')
+          firstVisibleRow: sourceModel.get('firstVisibleRow')
         },
         input: {
           document: Document.toString(inputModel.get('document')),
           selection: Document.compressRange(inputModel.get('selection')),
-          scrollTop: inputModel.get('scrollTop')
+          firstVisibleRow: inputModel.get('firstVisibleRow')
         }
       }]);
       yield put({type: deps.switchToScreen, screen: 'record'});
@@ -202,7 +202,9 @@ export default function* (deps) {
       yield call(suspendAudioContext, audioContext);
       // Obtain the URL to the audio object from the worker.
       const worker = context.get('worker');
-      const audioResult = yield call(callWorker, worker, {command: "finishRecording"});
+      const {key, mp3, wav} = yield call(callWorker, worker, {command: "finishRecording", options: {mp3: true, wav: true}});
+      const mp3Url = URL.createObjectURL(mp3);
+      const wavUrl = URL.createObjectURL(wav);
       // Package the events blob and an URL.
       recorder = yield select(deps.getRecorderState);
       const events = recorder.get('events');
@@ -211,7 +213,8 @@ export default function* (deps) {
       // Signal that the recorder has stopped.
       yield put({
         type: deps.recorderStopped,
-        audioUrl: audioResult.url,
+        audioUrl: mp3Url,
+        wavAudioUrl: wavUrl,
         eventsUrl: eventsUrl
       });
     } catch (error) {
@@ -282,8 +285,8 @@ export default function* (deps) {
   };
 
   recorders.sourceScroll = function* (t, action) {
-    const {scrollTop, firstVisibleRow} = action;
-    yield call(recordEvent, [t, 'source.scroll', scrollTop, firstVisibleRow]);
+    const {firstVisibleRow} = action;
+    yield call(recordEvent, [t, 'source.scroll', firstVisibleRow]);
   };
 
   recorders.inputSelect = function* (t, action) {
@@ -303,8 +306,8 @@ export default function* (deps) {
   };
 
   recorders.inputScroll = function* (t, action) {
-    const {scrollTop, firstVisibleRow} = action;
-    yield call(recordEvent, [t, 'input.scroll', scrollTop, firstVisibleRow]);
+    const {firstVisibleRow} = action;
+    yield call(recordEvent, [t, 'input.scroll', firstVisibleRow]);
   };
 
   recorders.translateStarted = function* (t, action) {

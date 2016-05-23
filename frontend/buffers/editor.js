@@ -6,7 +6,13 @@ const Range = ace.acequire('ace/range').Range;
 
 export const Editor = EpicComponent(self => {
 
-  let editor, editorNode, selection = null, marker = null, mute = false;
+  let editor;
+  let editorNode;
+  let selection = null;
+  let marker = null;
+  let mute = false;
+  let scrollTop = 0;
+  let firstVisibleRow = 0;
 
   function toRange (selection) {
     return new Range(
@@ -67,12 +73,17 @@ export const Editor = EpicComponent(self => {
     if (mute) {
       return;
     }
-    const scrollTop = editor.getSession().getScrollTop();
-    if (lastScrollTop !== scrollTop) {
-      lastScrollTop = scrollTop;
+    const scrollTop_ = editor.getSession().getScrollTop();
+    const firstVisibleRow_ = editor.getFirstVisibleRow();
+    if (scrollTop !== scrollTop_) {
+      scrollTop = scrollTop_;
+      const {onScroll} = self.props;
       if (typeof onScroll === 'function') {
-        const firstVisibleRow = editor.getFirstVisibleRow();
-        onScroll(scrollTop, firstVisibleRow);
+        const firstVisibleRow_ = editor.getFirstVisibleRow();
+        if (firstVisibleRow !== firstVisibleRow_) {
+          firstVisibleRow = firstVisibleRow_;
+          onScroll(firstVisibleRow_);
+        }
       }
     }
   };
@@ -89,13 +100,14 @@ export const Editor = EpicComponent(self => {
     }
   };
 
-  const reset = function (value, selection_, scrollTop) {
+  const reset = function (value, selection_, firstVisibleRow_) {
     wrapModelToEditor(function () {
       editor.setValue(value);
       // Work-around for strange ACE behavior?
       selection = null;
       setSelection(selection_);
-      editor.session.setScrollTop(scrollTop);
+      editor.scrollToLine(firstVisibleRow_);
+      firstVisibleRow = firstVisibleRow_;
       // Clear a previously set marker, if any.
       if (marker) {
         editor.session.removeMarker(marker);
@@ -116,9 +128,10 @@ export const Editor = EpicComponent(self => {
     editor.focus();
   };
 
-  const setScrollTop = function (top) {
+  const scrollToLine = function (firstVisibleRow_) {
     wrapModelToEditor(function () {
-      editor.session.setScrollTop(top);
+      editor.scrollToLine(firstVisibleRow_);
+      firstVisibleRow_ = firstVisibleRow;
     });
   };
 
@@ -153,8 +166,6 @@ export const Editor = EpicComponent(self => {
     return editor && editor.getSelectionRange();
   };
 
-  let lastScrollTop = 0;
-
   self.componentDidMount = function () {
     editor = ace.edit(editorNode);
     const session = editor.getSession();
@@ -166,7 +177,7 @@ export const Editor = EpicComponent(self => {
     editor.setReadOnly(self.props.readOnly);
     const {onInit, onSelect, onEdit, onScroll} = self.props;
     if (typeof onInit === 'function') {
-      const api = {reset, applyDeltas, setSelection, focus, setScrollTop, getSelectionRange, highlight};
+      const api = {reset, applyDeltas, setSelection, focus, scrollToLine, getSelectionRange, highlight};
       onInit(api);
     }
     if (typeof onSelect === 'function') {

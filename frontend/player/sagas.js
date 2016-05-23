@@ -1,7 +1,7 @@
 
 // An instant has shape {t, eventIndex, state},
 // where state is an Immutable Map of shape {source, input, syntaxTree, stepper, stepperInitial}
-// where source and input are buffer models (of shape {document, selection, scrollTop}).
+// where source and input are buffer models (of shape {document, selection, firstVisibleRow}).
 
 import {delay} from 'redux-saga';
 import {take, put, call, race, fork, select} from 'redux-saga/effects';
@@ -227,12 +227,12 @@ export default function* (deps) {
           const sourceModel = Immutable.Map({
             document: Document.fromString(init.source.document),
             selection: Document.expandRange(init.source.selection),
-            scrollTop: init.source.scrollTop || 0
+            firstVisibleRow: init.source.firstVisibleRow || 0
           });
           const inputModel = Immutable.Map({
             document: Document.fromString(init.input ? init.input.document : ''),
             selection: Document.expandRange(init.input ? init.input.selection : [0,0,0,0]),
-            scrollTop: (init.input && init.input.scrollTop) || 0
+            firstVisibleRow: (init.input && init.input.firstVisibleRow) || 0
           });
           const translateModel = translateClear();
           const stepperModel = stepperClear();
@@ -260,7 +260,7 @@ export default function* (deps) {
         }
         case 'source.scroll': {
           // XXX use reducer imported from common/buffers
-          state = state.setIn(['source', 'scrollTop'], event[2]);
+          state = state.setIn(['source', 'firstVisibleRow'], event[2]);
           break;
         }
         case 'input.select': {
@@ -279,7 +279,7 @@ export default function* (deps) {
         }
         case 'input.scroll': {
           // XXX use reducer imported from common/buffers
-          state = state.setIn(['input', 'scrollTop'], event[2]);
+          state = state.setIn(['input', 'firstVisibleRow'], event[2]);
           break;
         }
         case 'stepper.translate': case 'translate.start': {
@@ -402,7 +402,9 @@ export default function* (deps) {
 
   function* resetToInstant (instant, audioTime, quick) {
     const {state} = instant;
+    console.log('reset', quick ? 'quick' : 'slow');
     if (!quick) {
+      console.log('source', JSON.stringify(state.get('source')));
       yield put({type: deps.sourceReset, model: state.get('source')});
       yield put({type: deps.inputReset, model: state.get('input')});
     }
@@ -476,7 +478,7 @@ export default function* (deps) {
                 yield put({type: deps.sourceModelEdit, delta: eventToDelta(event)});
                 break;
               case 'source.scroll':
-                yield put({type: deps.sourceModelScroll, scrollTop: event[2]});
+                yield put({type: deps.sourceModelScroll, firstVisibleRow: event[2]});
                 break;
               case 'input.select':
                 yield put({type: deps.inputModelSelect, selection: Document.expandRange(event[2])});
@@ -485,7 +487,7 @@ export default function* (deps) {
                 yield put({type: deps.inputModelEdit, delta: eventToDelta(event)});
                 break;
               case 'input.scroll':
-                yield put({type: deps.inputModelScroll, scrollTop: event[2]});
+                yield put({type: deps.inputModelScroll, firstVisibleRow: event[2]});
                 break;
               case 'end':
                 ended = true;

@@ -173,13 +173,13 @@ export default function* (deps) {
     const sourceModel = Immutable.Map({
       document: Document.fromString(example.source),
       selection: example.selection || startOfBuffer,
-      scrollTop: example.scrollTop || 0
+      firstVisibleRow: example.firstVisibleRow || 0
     });
     yield put({type: deps.sourceReset, model: sourceModel});
     const inputModel = Immutable.Map({
       document: Document.fromString(example.input || ""),
       selection: startOfBuffer,
-      scrollTop: 0
+      firstVisibleRow: 0
     });
     yield put({type: deps.inputReset, model: inputModel});
   }
