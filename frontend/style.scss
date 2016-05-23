@@ -155,7 +155,7 @@ body#app, #app h1, #app h2, #app h3 {
 }
 .constantArray-lastElem {
   border: 1px solid #bbb;
-  background: #e8e8e8;
+  background-color: #e8e8e8;
 }
 .constantArray-elemView, .constantArray-lastElem {
   border-left: 0;
@@ -190,7 +190,7 @@ body#app, #app h1, #app h2, #app h3 {
 
 .code-highlight {
   position: absolute;
-  background: rgba(100,200,100,0.5);
+  background-color: rgba(100,200,100,0.5);
   z-index: 20;
 }
 
