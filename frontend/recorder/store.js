@@ -68,6 +68,7 @@ export default function* () {
       .set('screen', 'save')
       .set('save', Immutable.Map({
         audioUrl: action.audioUrl,
+        wavAudioUrl: action.wavAudioUrl,
         eventsUrl: action.eventsUrl
       }));
   });

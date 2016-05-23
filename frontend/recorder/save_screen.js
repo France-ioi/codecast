@@ -55,7 +55,6 @@ export default function* (deps) {
   });
 
   yield addReducer('saveScreenUploadSucceeded', function (state, action) {
-    // TODO: set recording id or URL.
     return state.update('save', save => save
       .set('busy', false).set('done', true).set('playerUrl', action.url));
   });
@@ -101,7 +100,7 @@ export default function* (deps) {
   yield defineSelector('SaveScreenSelector', function (state, props) {
     const save = state.get('save')
     const result = {};
-    ['audioUrl', 'eventsUrl', 'playerUrl', 'busy', 'done', 'prepare', 'uploadEvents', 'uploadAudio', 'error'].forEach(function (key) {
+    ['audioUrl', 'wavAudioUrl', 'eventsUrl', 'playerUrl', 'busy', 'done', 'prepare', 'uploadEvents', 'uploadAudio', 'error'].forEach(function (key) {
       result[key] = save.get(key);
     })
     return result;
@@ -114,7 +113,7 @@ export default function* (deps) {
     };
 
     self.render = function () {
-      const {audioUrl, eventsUrl, playerUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = self.props;
+      const {audioUrl, wavAudioUrl, eventsUrl, playerUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = self.props;
       return (
         <div>
           <p>
@@ -123,6 +122,9 @@ export default function* (deps) {
           <p>
             <Input type="text" label="URL audio" readOnly value={audioUrl}/>
           </p>
+          {wavAudioUrl && <p>
+            <Input type="text" label="URL audio (wav)" readOnly value={wavAudioUrl}/>
+          </p>}
           <p>
             <Button onClick={onUpload} disabled={busy || done} bsStyle={done ? 'default' : 'primary'}>
               {busy

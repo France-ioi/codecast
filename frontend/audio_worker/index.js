@@ -24,9 +24,8 @@ var chunksR = [];
 // Configured sample rate, stored in the WAV files produced.
 var recordingSampleRate;
 
-// Map each WAV file URL to its samples, in order to assemble a new file
-// from multiple recordings.
-var recordings = {};
+// Array of individual recordings (objects of shape {channels}).
+var recordings = [];
 
 // Respond to a null message with a null message to indicate that the worker
 // loaded successfully.
@@ -48,16 +47,12 @@ function messageHandler (e) {
         record(e.data.buffer);
         break;
       case "finishRecording":
-        var url = finishRecording();
-        sendResponse(e, {url: url});
-        break;
-      case "combineRecordings":
-        var result = combineRecordings(e.data.recordings, e.data.options);
+        var result = finishRecording(e.data.options);
         sendResponse(e, result);
         break;
-      case "getRecording":
-        var recording = recordings[e.data.recording];
-        sendResponse(e, recording && recording.wav);
+      case "combineRecordings":
+        var result = combineRecordings(e.data.indices, e.data.options);
+        sendResponse(e, result);
         break;
       case "clearRecordings":
         clearRecordings();
@@ -85,49 +80,59 @@ function record (input) {
 }
 
 function clearRecordings () {
-  for (var url in recordings) {
-    var recording = recordings[url];
-    if ('url' in recording)
-      URL.revokeObjectURL(recording.url);
-  }
-  recordings = {};
+  recordings = [];
 }
 
-function finishRecording () {
-  var samplesL = combineChunks(chunksL);
+function encodeChannels (channels, options) {
+  var result, encodingOptions;
+  result = {key: recordings.length};
+  recordings.push({channels: channels});
+  if (options.wav) {
+    if (typeof options.wav === 'object') {
+      encodingOptions = options.wav;
+    } else {
+      encodingOptions = {
+        numChannels: 1,
+        sampleSize: 1,
+        sampleRate: recordingSampleRate
+      };
+    }
+    result.wav = encodeWav(channels, encodingOptions);
+  }
+  if (options.mp3) {
+    if (typeof options.mp3 === 'object') {
+      encodingOptions = options.mp3;
+    } else {
+      encodingOptions = {sampleRate: recordingSampleRate};
+    }
+    result.mp3 = encodeMP3(channels, encodingOptions);
+  }
+  return result;
+}
+
+function finishRecording (options) {
+  var samplesL, samplesR;
+  samplesL = combineChunks(chunksL);
   chunksL = [];
-  var samplesR = combineChunks(chunksR);
+  samplesR = combineChunks(chunksR);
   chunksR = [];
-  var channels = [samplesL, samplesR];
-  if (false ) {
-    var encodingOptions = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
-    var wav = encodeWav(channels, encodingOptions);
-    var url = URL.createObjectURL(wav);
-    recordings[url] = {wav: wav, url: url, channels: channels};
-  } else {
-    var mp3 = encodeMP3(channels, {sampleRate: recordingSampleRate});
-    var url = URL.createObjectURL(mp3);
-    recordings[url] = {mp3: mp3, url: url, channels: channels};
-  }
-  return url;
+  return encodeChannels([samplesL, samplesR], options);
 }
 
-function combineRecordings (urls, options) {
+function combineRecordings (keys, options) {
   // Combine the interleaved samples from the listed recordings.
   var chunksL = [], chunksR = [];
   for (var i = 0; i < urls.length; i += 1) {
-    var url = urls[i];
-    if (url in recordings) {
-      var recording = recordings[url];
+    var key = keys[i];
+    if (recordings[key]) {
+      var recording = recordings[key];
       chunksL.push(recording.channels[0]);
       chunksR.push(recording.channels[1]);
     }
   }
   var samplesL = combineChunks(chunksL);
   var samplesR = combineChunks(chunksR);
-  var channels = [samplesL, samplesR];
-  var wav = encodeWav(channels, options);
-  return {wav: wav};
+  return encodeChannels([samplesL, samplesR], options);
 }
 
 function averageSamples (channels) {
