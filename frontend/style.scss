@@ -212,11 +212,8 @@ body#app, #app h1, #app h2, #app h3 {
 .controls-stepper {
   margin: 0 10px;
 }
-.controls-stepper button.btn-default {
-    background: #f0f0f0;
-}
 .controls-stepper-execution {
-  width: 179px;
+  width: 227px;
 }
 .controls-stepper-execution p {
   text-align: center;
@@ -255,6 +252,9 @@ body#app, #app h1, #app h2, #app h3 {
   }
   .player-controls-playback button {
     width: 30px;
+  }
+  .controls-stepper-execution {
+    width: 179px;
   }
   .controls-translate button {
     width: 80px;
