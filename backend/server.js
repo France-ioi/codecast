@@ -43,7 +43,7 @@ Object.keys(staticAssets).forEach(function (key) {
 
 app.use(bodyParser.json());
 
-app.get('/', function (req, res) {
+app.get('/recorder', function (req, res) {
   res.render('index', {development: isDevelopment});
 });
 
@@ -51,7 +51,7 @@ app.get('/player', function (req, res) {
   res.render('player', {development: isDevelopment});
 });
 
-app.get('/sandbox', function (req, res) {
+app.get('/', function (req, res) {
   res.render('sandbox', {development: isDevelopment});
 });
 
