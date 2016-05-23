@@ -13,6 +13,8 @@ export default function* (deps) {
     'stepperInterrupt',
     'stepperRestart',
     'stepperExit',
+    'stepperUndo',
+    'stepperRedo',
     'translate'
   );
 
@@ -32,11 +34,14 @@ export default function* (deps) {
     const canRestart = canExit && !isStepping;
     const canStep = enabled && !isStepping && haveNode;
     const canInterrupt = enabled && isStepping;
+    const canUndo = !stepper.get('undo').isEmpty();
+    const canRedo = !stepper.get('redo').isEmpty();
     return {
       haveContext,
       showExit, canExit,
       showTranslate, canTranslate,
-      canRestart, canStep, canInterrupt
+      canRestart, canStep, canInterrupt,
+      canUndo, canRedo
     };
   });
 
@@ -70,6 +75,14 @@ export default function* (deps) {
       self.props.dispatch({type: deps.stepperExit});
     };
 
+    const onUndo = function () {
+      self.props.dispatch({type: deps.stepperUndo});
+    };
+
+    const onRedo = function () {
+      self.props.dispatch({type: deps.stepperRedo});
+    };
+
     const onTranslate = function () {
       self.props.dispatch({type: deps.translate});
     };
@@ -96,6 +109,12 @@ export default function* (deps) {
             </Button>
             <Button onClick={onRestart} disabled={!p.canRestart} title="restart">
               <i className="fi fi-restart"/>
+            </Button>
+            <Button onClick={onUndo} disabled={!p.canUndo} title="undo">
+              <i className="fa fa-rotate-left"/>
+            </Button>
+            <Button onClick={onRedo} disabled={!p.canRedo} title="redo">
+              <i className="fa fa-rotate-right"/>
             </Button>
           </ButtonGroup>}
           {p.haveContext || <div className="controls-stepper-execution">

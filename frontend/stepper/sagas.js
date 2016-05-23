@@ -12,7 +12,7 @@ export default function* (deps) {
   yield use(
     'getStepperState', 'getStepperDisplay', 'getStepperInterrupted',
     'stepperInterrupted',
-    'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperExit',
+    'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperExit', 'stepperUndo', 'stepperRedo',
     'translateSucceeded', 'getTranslateState', 'translateClear',
     'getInputModel', 'sourceHighlight',
     'error'
@@ -219,7 +219,7 @@ export default function* (deps) {
   yield addSaga(function* watchStepperRestart () {
     // Clear the highlighting when the stepper is restarted.
     while (true) {
-      yield take(deps.stepperRestart);
+      yield take([deps.stepperRestart, deps.stepperUndo, deps.stepperRedo]);
       yield call(updateSourceHighlighting);
     }
   });
