@@ -5,7 +5,7 @@ import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
 import Editor from '../buffers/editor';
-import Terminal from '../utils/terminal';
+import {TermView} from '../stepper/terminal';
 
 export default function* (deps) {
 
@@ -118,7 +118,13 @@ export default function* (deps) {
                             readOnly={haveStepper} mode='text' width='100%' height='150px' />
                   </div>
                   <div className="col-sm-6">
-                    <Terminal terminal={terminal}/>
+                    {terminal
+                      ? <TermView buffer={terminal}/>
+                      : <div className="terminal">
+                          <div className="terminal-placeholder">
+                            {"Programme arrêté, pas de sortie à afficher."}
+                          </div>
+                        </div>}
                   </div>
                 </div>
               </Panel>

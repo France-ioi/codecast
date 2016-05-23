@@ -97,10 +97,13 @@ body#app, #app h1, #app h2, #app h3 {
 .terminal {
   margin: 4px;
   line-height: 16px;
-  background: #222;
+  background-color: #222;
+}
+.terminal-cursor {
+  background-color: #888;
 }
 .terminal-line, .terminal-placeholder {
-  background: black;
+  background-color: black;
   width: 480px; /* 60 columns * 8px */
   min-height: 1em;
   white-space: pre;

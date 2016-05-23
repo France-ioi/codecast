@@ -1,13 +1,13 @@
 
 import * as C from 'persistent-c';
-import {TermBuffer} from 'epic-vt';
 import {sprintf} from 'sprintf-js';
 import Immutable from 'immutable';
 
+import {TermBuffer, writeString} from './terminal';
 import applyScanfEffect from './scanf';
 
 const applyWriteEffect = function (state, effect) {
-  state.terminal = state.terminal.write(effect[1]);
+  state.terminal = writeString(state.terminal, effect[1]);
 };
 
 export const options = function (effects) {
