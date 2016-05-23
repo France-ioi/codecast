@@ -79,22 +79,22 @@ export default function* (deps) {
       return (
         <div className="controls controls-stepper">
           {p.haveContext && <ButtonGroup className="controls-stepper-execution">
-            <Button onClick={onStepExpr} disabled={!p.canStep}>
+            <Button onClick={onStepExpr} disabled={!p.canStep} title="next expression">
               <i className="fi fi-step-expr"/>
             </Button>
-            <Button onClick={onStepInto} disabled={!p.canStep}>
+            <Button onClick={onStepInto} disabled={!p.canStep} title="step into">
               <i className="fi fi-step-into"/>
             </Button>
-            <Button onClick={onStepOut} disabled={!p.canStep}>
+            <Button onClick={onStepOut} disabled={!p.canStep} title="step out">
               <i className="fi fi-step-out"/>
             </Button>
-            <Button onClick={onStepOver} disabled={!p.canStep}>
+            <Button onClick={onStepOver} disabled={!p.canStep} title="step over">
               <i className="fi fi-step-over"/>
             </Button>
-            <Button onClick={onInterrupt} disabled={!p.canInterrupt}>
+            <Button onClick={onInterrupt} disabled={!p.canInterrupt} title="interrupt">
               <i className="fi fi-interrupt"/>
             </Button>
-            <Button onClick={onRestart} disabled={!p.canRestart}>
+            <Button onClick={onRestart} disabled={!p.canRestart} title="restart">
               <i className="fi fi-restart"/>
             </Button>
           </ButtonGroup>}
