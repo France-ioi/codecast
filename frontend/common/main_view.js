@@ -82,18 +82,19 @@ export default function* (deps) {
 
     self.render = function () {
       const {diagnostics, haveStepper, terminal} = self.props;
+      const editorRowHeight = '300px';
       return (
         <div>
           <div className="row">
             <div className="col-sm-3">
               <Panel header="Variables">
-                {<deps.StackView height='280px'/>}
+                {<deps.StackView height={editorRowHeight}/>}
               </Panel>
             </div>
             <div className="col-sm-9">
               <Panel header="Source">
                 <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} onScroll={onSourceScroll}
-                        readOnly={haveStepper} mode='c_cpp' width='100%' height='280px' />
+                        readOnly={haveStepper} mode='c_cpp' width='100%' height={editorRowHeight} />
               </Panel>
             </div>
           </div>
@@ -109,7 +110,7 @@ export default function* (deps) {
                 <div className="row">
                   <div className="col-sm-6">
                     <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect} onScroll={onInputScroll}
-                            readOnly={haveStepper} mode='text' width='100%' height='168px' />
+                            readOnly={haveStepper} mode='text' width='100%' height='150px' />
                   </div>
                   <div className="col-sm-6">
                     <Terminal terminal={terminal}/>
