@@ -62,7 +62,7 @@ export default function* (deps) {
       return (
         <div className="pane pane-controls clearfix">
           <div className="pane-controls-right">
-            <deps.ExamplePicker disabled={isTranslated}/>
+            {isTranslated || <deps.ExamplePicker/>}
             <deps.FullscreenButton/>
           </div>
           <div className="player-controls-playback">
