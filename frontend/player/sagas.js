@@ -402,9 +402,7 @@ export default function* (deps) {
 
   function* resetToInstant (instant, audioTime, quick) {
     const {state} = instant;
-    console.log('reset', quick ? 'quick' : 'slow');
     if (!quick) {
-      console.log('source', JSON.stringify(state.get('source')));
       yield put({type: deps.sourceReset, model: state.get('source')});
       yield put({type: deps.inputReset, model: state.get('input')});
     }
