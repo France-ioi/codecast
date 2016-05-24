@@ -64,11 +64,26 @@ export default function* (deps) {
       self.props.dispatch({type: deps.translateClearDiagnostics});
     };
 
-    const inputOutputHeader = (
-      <div className="row">
-        <div className="col-sm-6">Entrée</div>
-        <div className="col-sm-6">Sortie</div>
-      </div>);
+    const renderSourcePanelHeader = function () {
+      return (
+        <span>
+          {'Source'}
+          {self.props.haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
+        </span>
+      );
+    };
+
+    const renderInputOutputHeader = function () {
+      return (
+        <div className="row">
+          <div className="col-sm-6">
+            {'Entrée'}
+            {self.props.haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
+          </div>
+          <div className="col-sm-6">Sortie</div>
+        </div>
+      );
+    };
 
     const diagnosticsPanelHeader = (
       <div>
@@ -79,15 +94,9 @@ export default function* (deps) {
       </div>
     );
 
-
     self.render = function () {
       const {diagnostics, haveStepper, terminal} = self.props;
       const editorRowHeight = '300px';
-      const sourcePanelHeader = (
-        <span>
-          {'Source'}
-          {haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
-        </span>);
       return (
         <div>
           <div className="row">
@@ -97,7 +106,7 @@ export default function* (deps) {
               </Panel>
             </div>
             <div className="col-sm-9">
-              <Panel header={sourcePanelHeader}>
+              <Panel header={renderSourcePanelHeader()}>
                 <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} onScroll={onSourceScroll}
                         readOnly={haveStepper} mode='c_cpp' width='100%' height={editorRowHeight} />
               </Panel>
@@ -111,7 +120,7 @@ export default function* (deps) {
             </div>}
             <div className="col-sm-12">
               <deps.DirectivesPane/>
-              <Panel header={inputOutputHeader}>
+              <Panel header={renderInputOutputHeader()}>
                 <div className="row">
                   <div className="col-sm-6">
                     <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect} onScroll={onInputScroll}
