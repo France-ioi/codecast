@@ -67,6 +67,7 @@ export default function* (deps) {
   yield defineAction('inputModelEdit', 'Input.Model.Edit');
   yield defineAction('inputModelSelect', 'Input.Model.Select');
   yield defineAction('inputModelScroll', 'Input.Model.Scroll');
+  yield defineAction('inputHighlight', 'Input.Highlight');
 
   yield defineSelector('getSourceModel', function (state) {
     return state.getIn(['source', 'model']);
@@ -209,7 +210,6 @@ export default function* (deps) {
     }
   });
 
-
   yield addSaga(function *watchSourceModelEdit () {
     while (true) {
       const {delta, deltas} = yield take(deps.sourceModelEdit);
@@ -230,7 +230,45 @@ export default function* (deps) {
     }
   });
 
-  // XXX missing saga watchInputModel*
+  yield addSaga(function *watchInputModelSelect () {
+    while (true) {
+      const {selection} = yield take(deps.inputModelSelect);
+      const editor = yield select(getInputEditor);
+      if (editor) {
+        editor.setSelection(selection);
+      }
+    }
+  });
+
+  yield addSaga(function *watchInputHighlight () {
+    while (true) {
+      const {range} = yield take(deps.inputHighlight);
+      const editor = yield select(getInputEditor);
+      if (editor) {
+        editor.highlight(range);
+      }
+    }
+  });
+
+  yield addSaga(function *watchInputModelEdit () {
+    while (true) {
+      const {delta, deltas} = yield take(deps.inputModelEdit);
+      const editor = yield select(getInputEditor);
+      if (editor) {
+        editor.applyDeltas(deltas || [delta]);
+      }
+    }
+  });
+
+  yield addSaga(function *watchInputModelScroll () {
+    while (true) {
+      const {firstVisibleRow} = yield take(deps.inputModelScroll);
+      const editor = yield select(getInputEditor);
+      if (editor) {
+        editor.scrollToLine(firstVisibleRow);
+      }
+    }
+  });
 
   function resetEditor (editor, model) {
     try {
