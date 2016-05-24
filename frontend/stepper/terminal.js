@@ -110,7 +110,7 @@ export const writeNewline = function (buffer) {
     const width = buffer.get('width');
     const attrs = buffer.get('attrs');
     const blankCell = Immutable.Map({char: ' ', attrs});
-    const blankLine = Immutable.List(Array(this.width).fill(blankCell));
+    const blankLine = Immutable.List(Array(width).fill(blankCell));
     buffer = buffer.update('lines', lines => lines.shift().push(blankLine));
     line = height - 1;
   }
