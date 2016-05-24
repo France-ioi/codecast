@@ -430,7 +430,7 @@ export default function* (deps) {
         const audio = player.get('audio');
         // Process a pending seek.
         const seekTo = player.get('seekTo');
-        if (seekTo) {
+        if (typeof seekTo === 'number') {
           const instant = findInstant(instants, seekTo);
           yield call(resetToInstant, instant, seekTo);
           audio.currentTime = seekTo / 1000;
