@@ -63,7 +63,7 @@ export const start = function (syntaxTree, options) {
     const context = {decls, builtins: builtins};
     let state = C.start(context);
     state.terminal = new TermBuffer({lines: 10, width: 60});
-    if (options.input) {
+    if (typeof options.input === 'string') {
       const inputStr = options.input.trim();
       const input = inputStr.length === 0 ? [] : options.input.split(/[\s]+/);
       state.input = Immutable.List(input);
