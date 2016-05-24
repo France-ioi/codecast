@@ -5,6 +5,7 @@ import * as C from 'persistent-c';
 
 import {use, addSaga} from '../utils/linker';
 
+import Document from '../buffers/document';
 import * as runtime from './runtime';
 
 export default function* (deps) {
