@@ -42,7 +42,6 @@
       "redux-devtools-log-monitor": "npm:redux-devtools-log-monitor@^1.0.5",
       "redux-saga": "npm:redux-saga@^0.10.2",
       "scss": "github:mobilexag/plugin-sass@^0.4.3",
-      "sprintf-js": "npm:sprintf-js@^1.0.3",
       "superagent": "npm:superagent@^1.8.2",
       "text": "github:systemjs/plugin-text@^0.0.7"
     },

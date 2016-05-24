@@ -1,9 +1,9 @@
 
 import * as C from 'persistent-c';
-import {sprintf} from 'sprintf-js';
 import Immutable from 'immutable';
 
 import {TermBuffer, writeString} from './terminal';
+import {sprintf} from './printf';
 import applyScanfEffect from './scanf';
 
 const applyWriteEffect = function (state, effect) {
@@ -27,25 +27,8 @@ export const options = function (effects) {
   };
 }(C.defaultEffects);
 
-const unboxValue = function (state, value) {
-  if (value.type.kind === 'scalar') {
-    return value.number;
-  }
-  if (value.type.kind === 'pointer') {
-    if (value.type.pointee.repr === 'char') {
-      // A char* is interpreted as as string, which is not always correct (%p).
-      return C.readString(state.memory, value);
-    }
-  }
-  return '(not implemented)';
-};
-
 const printf = function (state, cont, values) {
-  // Unbox each argument's value (only scalars are supported).
-  const args = values.slice(1).map(v => unboxValue(state, v));
-  // XXX Match sprintf interface.
-  args[0] = args[0].replace('%lu', '%u');
-  const str = sprintf.apply(null, args);
+  const str = sprintf(state, values);
   const result = str.length;
   return {control: cont, effects: [['write', str]], result, seq: 'expr'};
 };
