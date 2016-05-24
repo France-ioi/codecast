@@ -96,14 +96,16 @@ const scanValue = function (state, format, ref) {
 };
 
 export default function (state, effect) {
-  const args = effect[1];
-  const formats = C.readString(state.memory, args[1]).split(/[\s]+/);
-  const refs = args.slice(2);
   let pos = 0;
-  while (pos < formats.length && pos < refs.length && state.input.size !== 0) {
-    if (!scanValue(state, formats[pos], refs[pos]))
-      break;
-    pos += 1;
+  if (state.input) {
+    const args = effect[1];
+    const formats = C.readString(state.memory, args[1]).split(/[\s]+/);
+    const refs = args.slice(2);
+    while (pos < formats.length && pos < refs.length && state.input.size !== 0) {
+      if (!scanValue(state, formats[pos], refs[pos]))
+        break;
+      pos += 1;
+    }
   }
   state.direction = 'up';
   state.result = new C.IntegralValue(C.scalarTypes['int'], pos);
