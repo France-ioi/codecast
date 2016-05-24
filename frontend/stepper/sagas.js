@@ -231,6 +231,7 @@ export default function* (deps) {
     while (true) {
       yield take(deps.stepperExit);
       yield put({type: deps.translateClear});
+      yield call(updateSourceHighlighting);
     }
   });
 
