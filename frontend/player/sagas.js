@@ -14,7 +14,7 @@ import {use, addSaga} from '../utils/linker';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import Document from '../buffers/document';
 import {translateClear, translateStarted, translateSucceeded, translateFailed, translateClearDiagnostics} from '../stepper/translate';
-import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress} from '../stepper/reducers';
+import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress, stepperUndo, stepperRedo} from '../stepper/reducers';
 import * as runtime from '../stepper/runtime';
 
 
@@ -332,6 +332,14 @@ export default function* (deps) {
         case 'stepper.progress': {
           context = runToStep(context, event[2]);
           state = state.update('stepper', st => stepperProgress(st, {context}));
+          break;
+        }
+        case 'stepper.undo': {
+          state = state.update('stepper', st => stepperUndo(st));
+          break;
+        }
+        case 'stepper.redo': {
+          state = state.update('stepper', st => stepperRedo(st));
           break;
         }
         case 'end': {
