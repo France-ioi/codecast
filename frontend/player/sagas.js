@@ -192,7 +192,10 @@ export default function* (deps) {
       if (player.get('status') !== 'paused')
         return;
       yield put({type: deps.playerResuming});
-      player.get('audio').play();
+      const audio = player.get('audio');
+      const audioTime = Math.round(audio.currentTime * 1000);
+      yield call(resetToInstant, player.get('current'), audioTime);
+      audio.play();
       yield put({type: deps.playerResumed});
     } catch (error) {
       yield put({type: deps.error, source: 'playerResume', error});
