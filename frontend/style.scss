@@ -68,7 +68,7 @@ body#app, #app h1, #app h2, #app h3 {
 }
 
 #app pre, #app .ace_editor, .terminal, .stack-view {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: normal;
   font-family: $font-family-monospace;
 }
@@ -244,7 +244,7 @@ body#app, #app h1, #app h2, #app h3 {
 
 @media (min-width: $screen-sm-min) and (max-width: $screen-sm-max) {
   #app pre, #app .ace_editor, .terminal, .stack-view {
-    font-size: 10px;
+    font-size: 12px;
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 5px;
