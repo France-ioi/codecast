@@ -50,7 +50,8 @@ export default function* (deps) {
     'sourceSelect', 'sourceEdit', 'sourceScroll',
     'inputSelect', 'inputEdit', 'inputScroll',
     'translateStarted', 'translateSucceeded', 'translateFailed', 'translateClearDiagnostics',
-    'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperInterrupt', 'stepperRestart', 'stepperExit'
+    'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperInterrupt', 'stepperRestart', 'stepperExit',
+    'stepperUndo', 'stepperRedo'
   );
 
   function* recorderPrepare () {
@@ -352,6 +353,14 @@ export default function* (deps) {
 
   recorders.stepperRestart = function* (t, action) {
     yield call(recordEvent, [t, 'stepper.restart']);
+  };
+
+  recorders.stepperUndo = function* (t, action) {
+    yield call(recordEvent, [t, 'stepper.undo']);
+  };
+
+  recorders.stepperRedo = function* (t, action) {
+    yield call(recordEvent, [t, 'stepper.redo']);
   };
 
   recorders.stepperExit = function* (t, action) {
