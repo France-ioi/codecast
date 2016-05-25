@@ -496,7 +496,10 @@ export default function* (deps) {
                 break;
             }
           }
-          yield call(resetToInstant, nextInstant, audioTime, true);
+          // Perform a quick reset, unless playback has ended, in which case
+          // we want a full reset to also update the editors' models.
+          const quick = !ended;
+          yield call(resetToInstant, nextInstant, audioTime, quick);
           if (ended) {
             audio.pause();
             audio.currentTime = audio.duration;
