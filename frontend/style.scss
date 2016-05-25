@@ -207,7 +207,7 @@ body#app, #app h1, #app h2, #app h3 {
   float: left;
 }
 .pane-controls p {
-    margin: 7px 7px;
+    margin: 7px 0;
 }
 
 .controls > * {
@@ -215,7 +215,7 @@ body#app, #app h1, #app h2, #app h3 {
 }
 .controls-main {
   height: 34px;
-  width: 460px;
+  width: 440px;
 }
 .controls-stepper {
   margin: 0 10px;
