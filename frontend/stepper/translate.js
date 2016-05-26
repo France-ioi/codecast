@@ -15,20 +15,47 @@ Shape of the 'translate' state:
 
 import Immutable from 'immutable';
 import {take, put, call, select} from 'redux-saga/effects';
+import {TextEncoder} from 'text-encoding-utf-8';
 
 import {use, defineAction, defineSelector, addReducer, addSaga, defineView} from '../utils/linker';
 import {asyncRequestJson} from '../utils/api';
 import Document from '../buffers/document';
 
 const addNodeRanges = function (source, syntaxTree) {
-  // Compute line offsets.
-  const lineOffsets = [];
-  let offset = 0;
-  source.split('\n').forEach(function (line) {
-    lineOffsets.push(offset);
-    offset += line.length + 1;
-  });
-  lineOffsets.push(source.length);
+  // Assign a {row, column} position to each byte offset in the source.
+  // The UTF-8 encoding indicates the byte length of each character, so we could
+  // use it to maintain a counter of how many bytes to skip before incrementing
+  // the column number, thus:
+  //     0xxxxxxx  single-byte character, increment column
+  //     110xxxxx  start of 2-bytes sequence, set counter to 1
+  //     1110xxxx  start of 3-bytes sequence, set counter to 2
+  //     11110xxx  start of 4-bytes sequence, set counter to 3
+  //     10xxxxxx  decrement counter, if it goes to 0 then increment column
+  // However, because we do not need meaningful position for byte offsets that
+  // do not start a character, it is simpler to increment the column on the
+  // first byte of every character (bit patterns 0xxxxxxx and 11xxxxxx), and
+  // to store a null position for the other bytes (bit pattern 10xxxxxx).
+  const encoder = new TextEncoder('utf-8');
+  const bytesArray = encoder.encode(source);
+  const bytesLen = bytesArray.length;
+  const positions = [];
+  let row = 0, column = 0, pos = {row, column};
+  for (let bytePos = 0; bytePos < bytesLen; bytePos++) {
+    const byte = bytesArray[bytePos];
+    if ((byte & 0b11000000) === 0b10000000) {
+      positions.push(null);
+    } else {
+      positions.push(pos);
+      if (byte === 10) {
+        row += 1;
+        column = 0;
+      } else {
+        column += 1;
+      }
+      pos = {row, column};
+    }
+  }
+  positions.push(pos);
   // Compute each node's range.
   function traverse (node) {
     const newNode = node.slice();
@@ -36,8 +63,8 @@ const addNodeRanges = function (source, syntaxTree) {
     newNode[1] = {
       ...attrs,
       range: {
-        start: getPositionFromOffset(lineOffsets, attrs.begin),
-        end: getPositionFromOffset(lineOffsets, attrs.end)
+        start: positions[attrs.begin],
+        end: positions[attrs.end]
       }
     };
     newNode[2] = node[2].map(traverse);

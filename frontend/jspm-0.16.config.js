@@ -74,6 +74,7 @@ System.config({
     "sprintf-js": "npm:sprintf-js@1.0.3",
     "superagent": "npm:superagent@1.8.3",
     "text": "github:systemjs/plugin-text@0.0.7",
+    "text-encoding-utf-8": "npm:text-encoding-utf-8@1.0.1",
     "github:jspm/nodelibs-assert@0.1.0": {
       "assert": "npm:assert@1.4.0"
     },
