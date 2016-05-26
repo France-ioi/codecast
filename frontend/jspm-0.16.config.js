@@ -10,15 +10,15 @@ System.config({
     ],
     "blacklist": []
   },
-  sassPluginOptions: {
-    "sassOptions": {
-      precision: 8
-    }
-  },
   paths: {
     "github:*": "jspm_packages/github/*",
     "npm:*": "jspm_packages/npm/*",
     "fioi-recorder": "src/main.js"
+  },
+  sassPluginOptions: {
+    "sassOptions": {
+      "precision": 8
+    }
   },
 
   meta: {
