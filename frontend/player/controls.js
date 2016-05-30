@@ -68,11 +68,11 @@ export default function* (deps) {
           <div className="controls controls-main">
             <div className="player-controls-playback">
               {showStartPlayback &&
-                  <Button onClick={onStartPlayback} enabled={canStartPlayback}>
+                  <Button onClick={onStartPlayback} enabled={canStartPlayback} title="lecture des explications">
                     <i className="fa fa-play"/>
                   </Button>}
               {showPausePlayback &&
-                <Button onClick={onPausePlayback} enabled={canPausePlayback}>
+                <Button onClick={onPausePlayback} enabled={canPausePlayback} title="pause des explications">
                   <i className="fa fa-pause"/>
                 </Button>}
             </div>

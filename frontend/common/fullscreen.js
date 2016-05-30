@@ -48,8 +48,9 @@ export default function* (deps) {
     };
     self.render = function () {
       const {enabled, active} = self.props;
+      const tooltip = active ? "sortie de plein-écran" : "plein écran";
       return (
-        <Button onClick={active ? onLeaveFullscreen : onEnterFullscreen} disabled={!enabled}>
+        <Button onClick={active ? onLeaveFullscreen : onEnterFullscreen} disabled={!enabled} title={tooltip}>
           <i className={active ? "fa fa-compress" : "fa fa-expand"}/>
         </Button>
       );

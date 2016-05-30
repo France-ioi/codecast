@@ -210,7 +210,7 @@ export default function* (deps) {
     self.render = function () {
       const {examples, disabled} = self.props;
       return (
-        <Nav bsStyle="pills" className="nav-examples">
+        <Nav bsStyle="pills" className="nav-examples" title="exemples">
           <NavDropdown title={<i className="fa fa-cubes"/>} disabled={disabled} pullRight={true}>
             {examples.map((example, i) => <MenuItem key={i} eventKey={i} onSelect={onSelectExample}>{example.title}</MenuItem>)}
           </NavDropdown>
