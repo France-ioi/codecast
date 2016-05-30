@@ -119,7 +119,12 @@ export default function* (deps) {
 
   function* watchAudioCanPlay (audio) {
     try {
-      yield call(waitForAudio, audio, 3000);
+      // Some browsers, including Chrome, do not load audio (and send the
+      // canplay event) unless the window is visible, which results in
+      // background tabs failing to load.  The timeout is disabled and we
+      // have to wait indefinitely for the autio to load.
+      const timeout = false;
+      yield call(waitForAudio, audio, timeout);
       const duration = Math.round(audio.duration * 1000);
       yield put({type: deps.playerAudioReady, duration});
     } catch (ex) {
