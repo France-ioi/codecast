@@ -112,7 +112,7 @@ export function translateSucceeded (state, action) {
     .set('status', 'done')
     .set('syntaxTree', addNodeRanges(source, syntaxTree))
     .set('diagnostics', diagnostics)
-    .set('diagnosticsHtml', toHtml(diagnostics));
+    .set('diagnosticsHtml', diagnostics && toHtml(diagnostics));
 };
 
 export function translateFailed (state, action) {
