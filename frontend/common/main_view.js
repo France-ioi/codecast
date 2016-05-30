@@ -24,7 +24,7 @@ export default function* (deps) {
     const haveStepper = !!stepperDisplay;
     const terminal = haveStepper && stepperDisplay.terminal;
     const readOnly = haveStepper || props.preventInput;
-    return {diagnostics, readOnly, terminal};
+    return {diagnostics, haveStepper, readOnly, terminal};
   });
 
   yield defineView('MainView', 'MainViewSelector', EpicComponent(self => {
