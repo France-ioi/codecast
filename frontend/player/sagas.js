@@ -158,8 +158,12 @@ export default function* (deps) {
       if (player.get('status') !== 'ready')
         return;
       yield put({type: deps.playerStarting});
-      // TODO: Find the state immediately before current audio position, put that state.
-      player.get('audio').play();
+      // Reset to current instant, in case the user made changes before
+      // starting playback.
+      const audio = player.get('audio');
+      const audioTime = Math.round(audio.currentTime * 1000);
+      yield call(resetToInstant, player.get('current'), audioTime);
+      audio.play();
       yield put({type: deps.playerStarted});
     } catch (error) {
       yield put({type: deps.error, source: 'playerStart', error});
@@ -192,6 +196,8 @@ export default function* (deps) {
       if (player.get('status') !== 'paused')
         return;
       yield put({type: deps.playerResuming});
+      // Reset to current instant, in case the user made changes while
+      // playback was paused.
       const audio = player.get('audio');
       const audioTime = Math.round(audio.currentTime * 1000);
       yield call(resetToInstant, player.get('current'), audioTime);
