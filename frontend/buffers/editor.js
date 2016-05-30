@@ -1,5 +1,6 @@
 
 import React from 'react';
+import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import * as ace from 'brace';
 const Range = ace.acequire('ace/range').Range;
@@ -205,8 +206,14 @@ export const Editor = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {width, height} = self.props;
-    return <div ref={refEditor} style={{width: width, height: height}}></div>
+    const {width, height, readOnly} = self.props;
+    return (
+      <div className="editor" style={{width: width, height: height}}>
+        <div className="editor-frame" ref={refEditor}/>
+        <div className={classnames(['editor-shield', readOnly && 'editor-shield-up'])}
+          title="le programme ne peut pas être modifié pendant qu'il s'exécute"/>
+      </div>
+    );
   };
 
 });
