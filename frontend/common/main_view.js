@@ -23,7 +23,8 @@ export default function* (deps) {
     const stepperDisplay = deps.getStepperDisplay(state);
     const haveStepper = !!stepperDisplay;
     const terminal = haveStepper && stepperDisplay.terminal;
-    return {diagnostics, haveStepper, terminal};
+    const readOnly = haveStepper || props.preventInput;
+    return {diagnostics, readOnly, terminal};
   });
 
   yield defineView('MainView', 'MainViewSelector', EpicComponent(self => {
@@ -95,7 +96,7 @@ export default function* (deps) {
     );
 
     self.render = function () {
-      const {diagnostics, haveStepper, terminal} = self.props;
+      const {diagnostics, readOnly, terminal} = self.props;
       const editorRowHeight = '300px';
       return (
         <div>
@@ -108,7 +109,7 @@ export default function* (deps) {
             <div className="col-sm-9">
               <Panel header={renderSourcePanelHeader()}>
                 <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} onScroll={onSourceScroll}
-                        readOnly={haveStepper} mode='c_cpp' width='100%' height={editorRowHeight} />
+                        readOnly={readOnly} mode='c_cpp' width='100%' height={editorRowHeight} />
               </Panel>
             </div>
           </div>
@@ -124,7 +125,7 @@ export default function* (deps) {
                 <div className="row">
                   <div className="col-sm-6">
                     <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect} onScroll={onInputScroll}
-                            readOnly={haveStepper} mode='text' width='100%' height='150px' />
+                            readOnly={readOnly} mode='text' width='100%' height='150px' />
                   </div>
                   <div className="col-sm-6">
                     {terminal
