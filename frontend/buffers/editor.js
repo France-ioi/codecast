@@ -206,11 +206,11 @@ export const Editor = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {width, height, readOnly} = self.props;
+    const {width, height, shield} = self.props;
     return (
       <div className="editor" style={{width: width, height: height}}>
         <div className="editor-frame" ref={refEditor}/>
-        <div className={classnames(['editor-shield', readOnly && 'editor-shield-up'])}
+        <div className={classnames(['editor-shield', shield && 'editor-shield-up'])}
           title="le programme ne peut pas être modifié pendant qu'il s'exécute"/>
       </div>
     );
