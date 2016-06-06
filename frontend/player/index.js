@@ -52,7 +52,7 @@ const qs = queryString.parse(window.location.search);
 const stepperOptions = {};
 (qs.stepperControls||'').split(',').forEach(function (controlStr) {
   // No prefix to highlight, '-' to disable.
-  const m = /^-?(.*)$/.exec(controlStr);
+  const m = /^(-)?(.*)$/.exec(controlStr);
   if (m) {
     stepperOptions[m[2]] = m[1] || '+';
   }
