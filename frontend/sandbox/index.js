@@ -21,9 +21,7 @@ import '../style.scss!';
 import {link, use, addReducer, include, defineSelector, defineView} from '../utils/linker';
 
 import stepperComponent from '../stepper/index';
-import commonComponent from '../common/index';
-
-const qs = queryString.parse(window.location.search);
+import {default as commonComponent, interpretQueryString} from '../common/index';
 
 const {store, scope, start} = link(function* (deps) {
   yield addReducer('init', _ => Immutable.Map());
@@ -58,9 +56,11 @@ const {store, scope, start} = link(function* (deps) {
     };
   }));
 });
+
+const qs = queryString.parse(window.location.search);
+
 store.dispatch({type: scope.init});
-store.dispatch({type: scope.sourceLoad, text: qs.source||''});
-store.dispatch({type: scope.inputLoad, text: qs.input||''});
+interpretQueryString(store, scope, qs);
 start();
 
 const container = document.getElementById('react-container');

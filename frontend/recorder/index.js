@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
 import Immutable from 'immutable';
+import queryString from 'query-string';
 
 import 'brace';
 // For jspm bundle-sfx, ensure that jspm-0.16.config.js has a meta entry
@@ -20,7 +21,7 @@ import {link, include, addReducer, addEnhancer} from '../utils/linker';
 import DevTools from '../utils/dev_tools';
 
 import stepperComponent from '../stepper/index';
-import commonComponent from '../common/index';
+import {default as commonComponent, interpretQueryString} from '../common/index';
 import saveScreenComponent from './save_screen';
 import recorderActions from './actions';
 import recorderStore from './store';
@@ -48,7 +49,10 @@ const {store, scope, start} = link(function* () {
 
 });
 
+const qs = queryString.parse(window.location.search);
+
 store.dispatch({type: scope.init});
+interpretQueryString(store, scope, qs);
 start();
 store.dispatch({type: scope.recorderPrepare});
 

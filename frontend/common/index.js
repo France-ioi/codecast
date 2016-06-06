@@ -23,3 +23,23 @@ export default function* () {
   yield include(examples);
 
 };
+
+export const interpretQueryString = function (store, scope, qs) {
+  const stepperOptions = {};
+  (qs.stepperControls||'').split(',').forEach(function (controlStr) {
+    // No prefix to highlight, '-' to disable.
+    const m = /^(-)?(.*)$/.exec(controlStr);
+    if (m) {
+      stepperOptions[m[2]] = m[1] || '+';
+    }
+  });
+  store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
+
+  if ('source' in qs) {
+    store.dispatch({type: scope.sourceLoad, text: qs.source||''});
+  }
+
+  if ('input' in qs) {
+    store.dispatch({type: scope.inputLoad, text: qs.input||''});
+  }
+};

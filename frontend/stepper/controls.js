@@ -94,7 +94,8 @@ export default function* (deps) {
     };
 
     const btnDisabled = function (which) {
-      if (self.props.options.get(which) === '-') {
+      const {options} = self.props;
+      if (options && options.get(which) === '-') {
         return true;
       }
       switch (which) {

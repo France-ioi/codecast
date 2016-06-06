@@ -20,7 +20,7 @@ import '../slider.css!';
 import {link, include, addReducer} from '../utils/linker';
 
 import stepperComponent from '../stepper/index';
-import commonComponent from '../common/index';
+import {default as commonComponent, interpretQueryString} from '../common/index';
 import playerActions from './actions';
 import playerSelectors from './selectors';
 import playerReducers from './reducers';
@@ -49,17 +49,9 @@ const {store, scope, start} = link(function* () {
 });
 
 const qs = queryString.parse(window.location.search);
-const stepperOptions = {};
-(qs.stepperControls||'').split(',').forEach(function (controlStr) {
-  // No prefix to highlight, '-' to disable.
-  const m = /^(-)?(.*)$/.exec(controlStr);
-  if (m) {
-    stepperOptions[m[2]] = m[1] || '+';
-  }
-});
 
 store.dispatch({type: scope.init});
-store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
+interpretQueryString(store, scope, qs);
 start();
 
 const container = document.getElementById('react-container');
