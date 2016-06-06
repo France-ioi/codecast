@@ -242,6 +242,15 @@ body#app, #app h1, #app h2, #app h3 {
   width: 240px;
 }
 
+@media (min-width: $screen-md-min) and (max-width: $screen-md-max) {
+  #app pre, #app .ace_editor, .terminal, .stack-view {
+    font-size: 14px;
+  }
+  .terminal-line, .terminal-placeholder {
+    width: 60 * 7px;
+  }
+}
+
 @media (min-width: $screen-sm-min) and (max-width: $screen-sm-max) {
   #app pre, #app .ace_editor, .terminal, .stack-view {
     font-size: 12px;
