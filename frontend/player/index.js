@@ -48,13 +48,23 @@ const {store, scope, start} = link(function* () {
 
 });
 
+const qs = queryString.parse(window.location.search);
+const stepperOptions = {};
+(qs.stepperControls||'').split(',').forEach(function (controlStr) {
+  // No prefix to highlight, '-' to disable.
+  const m = /^-?(.*)$/.exec(controlStr);
+  if (m) {
+    stepperOptions[m[2]] = m[1] || '+';
+  }
+});
+
 store.dispatch({type: scope.init});
+store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 start();
 
 const container = document.getElementById('react-container');
 ReactDOM.render(<Provider store={store}><scope.App/></Provider>, container);
 
-const qs = queryString.parse(window.location.search);
 store.dispatch({
   type: scope.playerPrepare,
   audioUrl: `https://fioi-recordings.s3.amazonaws.com/uploads/${qs.id}.mp3`,

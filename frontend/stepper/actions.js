@@ -32,4 +32,6 @@ export default function* (deps) {
   yield defineAction('stepperUndo', 'Stepper.Undo');
   yield defineAction('stepperRedo', 'Stepper.Redo');
 
+  yield defineAction('stepperConfigure', 'Stepper.Configure');
+
 };

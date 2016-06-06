@@ -7,6 +7,10 @@ export default function* () {
     state.get('stepper')
   );
 
+  yield defineSelector('getStepperOptions', state =>
+    state.get('stepper.options')
+  );
+
   yield defineSelector('getStepperDisplay', state =>
     state.getIn(['stepper', 'display'])
   );

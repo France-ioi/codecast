@@ -22,7 +22,7 @@ import Immutable from 'immutable';
 
 import {addReducer} from '../utils/linker';
 
-export const stepperClear = function (state, action) {
+export const stepperClear = function (state) {
   return Immutable.Map({
     status: 'clear',
     undo: Immutable.List(),
@@ -109,7 +109,7 @@ export default function* () {
   });
 
   yield addReducer('stepperExit', function (state, action) {
-    return state.set('stepper', stepperClear());
+    return state.update('stepper', st => stepperClear(st));
   });
 
   yield addReducer('stepperStep', function (state, action) {
@@ -150,6 +150,11 @@ export default function* () {
 
   yield addReducer('stepperRedo', function (state, action) {
     return state.update('stepper', st => stepperRedo(st, action));
+  });
+
+  yield addReducer('stepperConfigure', function (state, action) {
+    const {options} = action;
+    return state.set('stepper.options', Immutable.Map(options));
   });
 
 };

@@ -9,6 +9,7 @@ export default function* (deps) {
 
   yield use(
     'getStepperState',
+    'getStepperOptions',
     'stepperStep',
     'stepperInterrupt',
     'stepperRestart',
@@ -21,6 +22,7 @@ export default function* (deps) {
   yield defineSelector('StepperControlsSelector', function (state, props) {
     const {enabled} = props;
     const stepper = deps.getStepperState(state);
+    const options = deps.getStepperOptions(state);
     const status = stepper && stepper.get('status');
     const haveContext = status !== 'clear';
     const showExit = haveContext;
@@ -41,7 +43,7 @@ export default function* (deps) {
       showExit, canExit,
       showTranslate, canTranslate,
       canRestart, canStep, canInterrupt,
-      canUndo, canRedo
+      canUndo, canRedo, options
     };
   });
 
@@ -87,33 +89,56 @@ export default function* (deps) {
       self.props.dispatch({type: deps.translate});
     };
 
+    const btnStyle = function (which) {
+      return self.props.options.get(which) === '+' ? 'primary' : 'default';
+    };
+
+    const btnDisabled = function (which) {
+      if (self.props.options.get(which) === '-') {
+        return true;
+      }
+      switch (which) {
+        case 'interrupt':
+          return !self.props.canInterrupt;
+        case 'restart':
+          return !self.props.canRestart;
+        case 'undo':
+          return !self.props.canUndo;
+        case 'redo':
+          return !self.props.canRedo;
+        case 'expr': case 'into': case 'out': case 'over':
+          return !self.props.canStep;
+      }
+      return false;
+    };
+
     self.render = function () {
       const p = self.props;
       return (
         <div className="controls controls-stepper">
           {p.haveContext && <ButtonGroup className="controls-stepper-execution">
-            <Button onClick={onStepExpr} disabled={!p.canStep} title="next expression">
+            <Button onClick={onStepExpr} disabled={btnDisabled('expr')} bsStyle={btnStyle('expr')} title="next expression">
               <i className="fi fi-step-expr"/>
             </Button>
-            <Button onClick={onStepInto} disabled={!p.canStep} title="step into">
+            <Button onClick={onStepInto} disabled={btnDisabled('into')} bsStyle={btnStyle('into')} title="step into">
               <i className="fi fi-step-into"/>
             </Button>
-            <Button onClick={onStepOut} disabled={!p.canStep} title="step out">
+            <Button onClick={onStepOut} disabled={btnDisabled('out')} bsStyle={btnStyle('out')} title="step out">
               <i className="fi fi-step-out"/>
             </Button>
-            <Button onClick={onStepOver} disabled={!p.canStep} title="step over">
+            <Button onClick={onStepOver} disabled={btnDisabled('over')} bsStyle={btnStyle('over')} title="step over">
               <i className="fi fi-step-over"/>
             </Button>
-            <Button onClick={onInterrupt} disabled={!p.canInterrupt} title="interrupt">
+            <Button onClick={onInterrupt} disabled={btnDisabled('interrupt')} bsStyle={btnStyle('interrupt')} title="interrupt">
               <i className="fi fi-interrupt"/>
             </Button>
-            <Button onClick={onRestart} disabled={!p.canRestart} title="restart">
+            <Button onClick={onRestart} disabled={btnDisabled('restart')} bsStyle={btnStyle('restart')} title="restart">
               <i className="fi fi-restart"/>
             </Button>
-            <Button onClick={onUndo} disabled={!p.canUndo} title="undo">
+            <Button onClick={onUndo} disabled={btnDisabled('undo')} bsStyle={btnStyle('undo')} title="undo">
               <i className="fa fa-rotate-left"/>
             </Button>
-            <Button onClick={onRedo} disabled={!p.canRedo} title="redo">
+            <Button onClick={onRedo} disabled={btnDisabled('redo')} bsStyle={btnStyle('redo')} title="redo">
               <i className="fa fa-rotate-right"/>
             </Button>
           </ButtonGroup>}
