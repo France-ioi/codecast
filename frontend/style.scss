@@ -104,7 +104,7 @@ body#app, #app h1, #app h2, #app h3 {
 }
 .terminal-line, .terminal-placeholder {
   background-color: black;
-  width: 480px; /* 60 columns * 8px */
+  width: 540px; /* 60 columns * 9px */
   min-height: 1em;
   white-space: pre;
 }
@@ -247,7 +247,7 @@ body#app, #app h1, #app h2, #app h3 {
     font-size: 12px;
   }
   .terminal-line, .terminal-placeholder {
-    width: 60 * 5px;
+    width: 60 * 6px;
   }
   .pane-controls button.btn {
     padding: 3px 8px;
