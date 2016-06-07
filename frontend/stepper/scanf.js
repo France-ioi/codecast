@@ -88,7 +88,7 @@ const scanValue = function (state, format, ref) {
       return scanIntegralValue(state, ref, 'char', parseChar);
     case '%f':
       return scanFloatingValue(state, ref, 'float');
-    case '%g':
+    case '%lf':
       return scanFloatingValue(state, ref, 'double');
     case '%s':
       return scanString(state, ref);
