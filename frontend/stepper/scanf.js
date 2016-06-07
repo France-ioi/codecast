@@ -39,6 +39,7 @@ const scanIntegralValue = function (state, ref, typeName, func) {
   }
   state.input = state.input.shift();
   state.memory = C.writeValue(state.memory, ref, value);
+  state.memoryLog = state.memoryLog.push(['store', ref, value]);
   return true;
 };
 
