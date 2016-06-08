@@ -32,7 +32,7 @@ const examples = [
 
   {
     title: "opérateurs unaires",
-    source: "#include <stdio.h>\nint main() {\n  int a = 3, *b;\n  printf(\"%i\\n\", +a);\n  printf(\"%i\\n\", -a);\n  printf(\"%i\\n\", !a);\n  printf(\"%i\\n\", ~a);\n  b = &a;\n  printf(\"%i\\n\", *b);\n  printf(\"%i\\n\", sizeof(a));\n}\n"
+    source: "#include <stdio.h>\nint main() {\n  int a = 3, *b;\n  printf(\"%i\\n\", +a);\n  printf(\"%i\\n\", -a);\n  printf(\"%i\\n\", !a);\n  printf(\"%i\\n\", ~a);\n  b = &a;\n  printf(\"%i\\n\", *b);\n  printf(\"%lu\\n\", sizeof(a));\n}\n"
   },
 
   {
@@ -117,26 +117,14 @@ const examples = [
 
   {
     title: "factorielle",
-    source: "int main (int argc, char** argv) {\n    //! showVar(b)\n    int b = 1;\n    for (int a = 1; a < 1000000; a += 1) {\n        b = b * a;\n        printf(\"%d\\n\", b);\n    }\n    return 1;\n}\n",
+    source: "#include <stdio.h>\nint main (int argc, char** argv) {\n    //! showVar(b)\n    int b = 1;\n    for (int a = 1; a < 1000000; a += 1) {\n        b = b * a;\n        printf(\"%d\\n\", b);\n    }\n    return 1;\n}\n",
     selection: {start: {row: 2, column: 24}, end: {row: 2, column: 31}}
-  },
-
-  {
-    title: "listes d'initialisation",
-    source: [
-      "// Cet exemple n'est pas encore géré par l'évaluateur pas-à-pas",
-      "#include <stdio.h>",
-      "int main() {",
-      "    int a[] = {1, 2};",
-      "    int * b = a;",
-      "    return 0;",
-      "}"
-    ].join('\n')
   },
 
   {
     title: "fibonacci",
     source: [
+      "#include <stdio.h>",
       "int fibo(int n) {",
       "   if (n == 0)",
       "       return 0;",
@@ -149,6 +137,19 @@ const examples = [
       "int main() {",
       "     int n = 15;",
       "     printf(\"fibo(%d) = %d\\n\", n, fibo(n));",
+      "}"
+    ].join('\n')
+  },
+
+  {
+    title: "listes d'initialisation",
+    source: [
+      "// Cet exemple n'est pas encore géré par l'évaluateur pas-à-pas",
+      "#include <stdio.h>",
+      "int main() {",
+      "    int a[] = {1, 2};",
+      "    int * b = a;",
+      "    return 0;",
       "}"
     ].join('\n')
   }
