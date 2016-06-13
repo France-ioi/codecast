@@ -13,15 +13,15 @@ const re = {
   sign: /^[\+\-]/
 };
 
-const formatCache = {};
+const formatCache = new Map();
 
 export const sprintf = function (state, values) {
   // [printf, fmt, args...]
   const fmt = C.readString(state.memory, values[1]);
-  if (!(fmt in formatCache && formatCache.hasOwnProperty(fmt))) {
-    formatCache[fmt] = parseFormat(fmt);
+  if (!formatCache.has(fmt)) {
+    formatCache.set(fmt, parseFormat(fmt));
   }
-  return applyFormat(state, formatCache[fmt], values);
+  return applyFormat(state, formatCache.get(fmt), values);
 }
 
 function parseFormat (fmt) {
@@ -74,16 +74,10 @@ function applyFormat (state, ops, values) {
     }
 
     let precision = op.precision;
-    let prefix = '', suffix = '';
+    let prefix = '', suffix = '', sign = '';
 
     if (op.specifier === 's') {
-      /*
-        For %s, the precision is the maximum number of characters to be printed.
-        By default all characters are printed until the ending null character
-        is encountered.
-      */
-      // TODO: pass op.precision to arg
-      arg = C.readString(state.memory, arg /* op.precision */);
+      arg = C.readString(state.memory, arg, op.precision);
       if (precision !== null) {
         arg = arg.substring(0, precision);
       }
@@ -94,7 +88,9 @@ function applyFormat (state, ops, values) {
     switch (op.specifier) {
       case "d":
       case "i":
+        sign = (arg.number >= 0) ? "+" : "-";
         arg = zeroFill(arg.number.toString(), precision);
+        arg = arg.replace(re.sign, "");
         break;
       case "u":
         arg = arg.number >>> 0;
@@ -107,21 +103,21 @@ function applyFormat (state, ops, values) {
         }
         arg = zeroFill(arg.toString(8), precision);
         break;
-      case "x":
+      case "x": case 'X':
         arg = arg.number >>> 0;
         if (op.decorate && arg !== 0) {
           prefix = '0x';
         }
         arg = zeroFill(arg.toString(16), precision);
         break;
-      case "f":
-        arg = arg.number.toFixed(precision || 6);
-        if (op.decorate) {
-          suffix = '.';
+      case "f": case 'F': case "e": case 'E':
+        sign = (arg.number >= 0) ? "+" : "-";
+        if (/[fF]/.test(op.specifier)) {
+          arg = arg.number.toFixed(precision || 6);
+        } else {
+          arg = arg.number.toExponential(precision || 6);
         }
-        break;
-      case "e":
-        arg = arg.number.toExponential(precision || 6);
+        arg = arg.replace(re.sign, "");
         if (op.decorate) {
           suffix = '.';
         }
@@ -133,14 +129,13 @@ function applyFormat (state, ops, values) {
     console.log('arg', typeof arg, arg);
 
     // Extract the sign.
-    const sign = (arg >= 0) ? "+" : "-";
     arg = arg.replace(re.sign, "");
 
     // Justify.
     arg = justify(op, arg, sign, prefix, suffix);
 
     // Uppercase.
-    if (/XFE/.test(op)) {
+    if (/[XFE]/.test(op)) {
       arg = arg.toUpperCase();
     }
 
