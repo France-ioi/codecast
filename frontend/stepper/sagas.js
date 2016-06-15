@@ -95,6 +95,14 @@ export default function* (deps) {
     }
   }
 
+  function* stepExpr (context) {
+    // Take a first step.
+    if (singleStep(context)) {
+      // then stop when we enter the next expression.
+      yield call(stepUntil, context, state => C.intoNextExpr(state));
+    }
+  }
+
   function* stepInto (context) {
     // Take a first step.
     if (singleStep(context)) {
@@ -105,38 +113,17 @@ export default function* (deps) {
     }
   }
 
-  function* stepExpr (context) {
-    // Take a first step.
-    if (singleStep(context)) {
-      // then stop when we enter the next expression.
-      yield call(stepUntil, context, state => (
-        C.intoNextExpr(state) || state.control.return));
-    }
-  }
-
   function* stepOut (context) {
     // The program must be running.
     if (!context.state.control) {
       return;
     }
-    // If stopped on a return, take a single step.
-    if (context.state.control.return) {
-      if (!singleStep(context)) {
-        return;
-      }
-    }
-    // Find the closest return continuation.
-    const refReturn = findNextReturn(context);
-    // Step until that continuation is reached.
-    yield call(stepUntil, context, state => state.control === refReturn);
-  }
-
-  function findNextReturn (context) {
-    let control = context.state.control;
-    while (control && !control.return) {
-      control = control.cont;
-    }
-    return control;
+    // Find the closest function scope.
+    const refScope = context.state.scope;
+    const funcScope = C.findClosestFunctionScope(refScope);
+    console.log('stop', funcScope.parent);
+    // Step until execution reach that scope's parent.
+    yield call(stepUntil, context, state => state.scope === funcScope.parent);
   }
 
   function* stepOver (context) {
@@ -147,20 +134,10 @@ export default function* (deps) {
       // Step until out of the current statement but not inside a nested
       // function call.
       yield call(stepUntil, context, state =>
-        notInNestedCall(state.scope, refScope) && C.outOfCurrentStmt(state));
+        C.outOfCurrentStmt(state) && C.notInNestedCall(state.scope, refScope));
       // Step into the next statement.
       yield call(stepUntil, context, C.intoNextStmt);
     }
-  }
-
-  function notInNestedCall (scope, refScope) {
-    while (scope.key >= refScope.key) {
-      if (scope.kind === 'function') {
-        return false;
-      }
-      scope = scope.parent;
-    }
-    return true;
   }
 
   function* startStepper (mode) {
@@ -186,6 +163,7 @@ export default function* (deps) {
       } catch (error) {
         console.log(error); // XXX
       }
+      console.log('after', mode, context);
       yield put({type: deps.stepperIdle, context: viewContext(context)});
       yield call(updateSourceHighlighting);
     }
@@ -230,6 +208,7 @@ export default function* (deps) {
     // Clear the translate state when the stepper is exited.
     while (true) {
       yield take(deps.stepperExit);
+      // TODO: if running, interrupt stepper and wait until idle
       yield put({type: deps.translateClear});
       yield call(updateSourceHighlighting);
     }

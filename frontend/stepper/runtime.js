@@ -12,11 +12,15 @@ const applyWriteEffect = function (state, effect) {
 
 export const options = function (effects) {
   const applyEnterEffect = function (state, effect) {
-    const node = effect[2];
+    const node = effect[1];
     effects.enter(state, effect);
     const scope = state.scope;
     scope.directives = node[1].directives || [];
   };
+  // Some 'leave' effects are omitted (in particular when a function returns
+  // from nested compound statements) which unfortunately makes it useless for
+  // tracking directives going out of scope.
+  // Perhaps make persistent-c always generate all 'leave' effects?
   return {
     effectHandlers: {
       ...effects,

@@ -7,6 +7,10 @@ import {inspectPointer, pointerType, PointerValue} from 'persistent-c';
 
 import {defineSelector, defineView} from '../utils/linker';
 
+const getIdent = function (expr) {
+  return expr[0] === 'ident' && expr[1];
+};
+
 const renderType = function (type, prec) {
   switch (type.kind) {
     case 'scalar':
@@ -56,11 +60,11 @@ const ShowArray = EpicComponent(self => {
     const renderArrayElem = function (elem, i) {
       const {value, cursors, prevCursors} = elem;
       const elemClasses = [
-        "constantArray-elemView",
-        elem.last && "constantArray-lastElem"
+        "array-elemView",
+        elem.last && "array-lastElem"
       ];
       const valueClasses = [
-        "constantArray-elemValue",
+        "array-elemValue",
         value.load !== undefined && 'value-loaded'
       ];
       return (
@@ -71,7 +75,7 @@ const ShowArray = EpicComponent(self => {
           <div className={classnames(valueClasses)}>
             {value.value && value.value.toString()}
           </div>
-          <div className="constantArray-cursors">
+          <div className="array-cursors">
             {cursors && cursors.map(c => <span key={c}>{c}</span>)}
             {prevCursors && prevCursors.map(c => <span key={c} className="value-changed">{c}</span>)}
           </div>
@@ -79,8 +83,8 @@ const ShowArray = EpicComponent(self => {
       );
     };
     const header = (
-      <div className="constantArray-decl">
-        <span className="constantArray-type">{renderType(elemType, 0)}</span>
+      <div className="array-decl">
+        <span className="array-type">{renderType(elemType, 0)}</span>
         {' '}
         <span className="variable-name">{name}</span>
         {'['}
@@ -88,8 +92,8 @@ const ShowArray = EpicComponent(self => {
         {'] ='}
       </div>);
     return (
-      <Panel className="constantArray-view" header={header}>
-        <div className="constantArray-elems clearfix">
+      <Panel className="array-view" header={header}>
+        <div className="array-elems clearfix">
           {elems.map(renderArrayElem)}
         </div>
       </Panel>
@@ -105,129 +109,12 @@ export default function* (deps) {
 
   yield defineView('DirectivesPane', 'DirectivesPaneSelector', EpicComponent(self => {
 
-    const getIdent = function (expr) {
-      return expr[0] === 'ident' && expr[1];
-    };
-
-    const prepareDirective = function (directive, scope, index, decls, state) {
-      let key, kind, byPos, byName;
-      if (Array.isArray(directive)) {
-        // Old style [kind, byPos, byName]
-        key = `${scope.key}.${index}`;
-        kind = directive[0];
-        byPos = directive[1];
-        byName = directive[2];
-      } else {
-        // Modern style {key, kind, byPos, byName}
-        key = directive.key;
-        kind = directive.kind;
-        byPos = directive.byPos;
-        byName = directive.byName;
-      }
-      const result = {key, kind};
-      switch (kind) {
-        case 'showVar':
-          {
-            const ident = result.name = getIdent(byPos[0]);
-            if (!ident) {
-              result.error = 'invalid variable name';
-              break;
-            }
-            const varScope = decls[ident];
-            if (varScope) {
-              result.value = inspectPointer(varScope.ref, state);
-            }
-            break;
-          }
-        case 'showArray':
-          {
-            const ident = result.name = getIdent(byPos[0]);
-            const varScope = decls[ident];
-            if (varScope) {
-              // Expect varScope.ref to be a pointer to a constant array.
-              if (varScope.ref.type.kind !== 'pointer') {
-                result.error = 'reference is not a pointer';
-                break;
-              }
-              const varType = varScope.ref.type.pointee;
-              if (varType.kind !== 'constant array') {
-                result.error = 'expected a reference to a constant array';
-              }
-              // Extract the array's address, element type and count.
-              const address = result.address = varScope.ref.address;
-              const elemType = result.elemType = varType.elem;
-              const elemCount = result.elemCount = varType.count.toInteger();
-              // Inspect each array element.
-              const elems = result.elems = [];
-              const ptr = new PointerValue(pointerType(elemType), address);
-              for (let elemIndex = 0; elemIndex < elemCount; elemIndex += 1) {
-                elems.push({value: inspectPointer(ptr, state), cursors: [], prevCursors: []});
-                ptr.address += elemType.size;
-              }
-              // Add an extra empty element.
-              elems.push({value: {}, cursors: [], prevCursors: [], last: true});
-              // Cursors?
-              if (byName.cursors && byName.cursors[0] === 'list') {
-                const cursorIdents = byName.cursors[1].map(getIdent);
-                cursorIdents.forEach(function (cursorIdent) {
-                  const cursorScope = decls[cursorIdent];
-                  if (cursorScope) {
-                    const cursorValue = inspectPointer(cursorScope.ref, state);
-                    const cursorPos = cursorValue.value.toInteger();
-                    if (cursorPos >= 0 && cursorPos <= elemCount) {
-                      elems[cursorPos].cursors.push(cursorIdent);
-                    }
-                    if (cursorValue.prevValue) {
-                      const cursorPrevPos = cursorValue.prevValue.toInteger();
-                      if (cursorPrevPos >= 0 && cursorPrevPos <= elemCount) {
-                        elems[cursorPrevPos].prevCursors.push(cursorIdent);
-                      }
-                    }
-                  }
-                })
-              }
-            }
-            break;
-          }
-        default:
-          result.error = `unknown directive ${kind}`;
-          return
-      }
-      return result;
-    };
-
-    const getViews = function (state) {
-      const views = [];
-      let decls = {};
-      let scope = state.scope;
-      while (scope) {
-        switch (scope.kind) {
-          case 'param':
-          case 'vardecl':
-            {
-              const name = scope.decl.name;
-              if (!(name in decls)) {
-                decls[scope.decl.name] = scope;
-              }
-            }
-            break;
-          case 'function':
-            scope.directives.forEach((directive, i) => views.push(prepareDirective(directive, scope, i, decls, state)));
-            decls = {};
-            break;
-          case 'block':
-            scope.directives.forEach((directive, i) => views.push(prepareDirective(directive, scope, i, decls, state)));
-            break;
-        }
-        scope = scope.parent;
-      }
-      return views;
-    };
-
     const Components = {
       showVar: ShowVar,
       showArray: ShowArray
     };
+
+    // XXX
 
     const renderView = function (view) {
       const {key, kind} = view;
@@ -240,12 +127,13 @@ export default function* (deps) {
     };
 
     self.render = function () {
-      const {state} = self.props;
+      const {state, views} = self.props;
       if (!state || state.error) {
         return false;
       }
+      return false; // temporarily disabled
+      /*
       try {
-        const views = getViews(state);
         return <div className="directive-pane">{views.map(renderView)}</div>;
       } catch (err) {
         return (
@@ -254,6 +142,7 @@ export default function* (deps) {
           </div>
         );
       }
+      */
     };
 
   }));

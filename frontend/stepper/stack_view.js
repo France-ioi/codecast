@@ -3,9 +3,9 @@ import React from 'react';
 import classnames from 'classnames';
 import {Alert} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
-import {readValue} from 'persistent-c';
 
 import {use, defineSelector, defineView} from '../utils/linker';
+import {analyseState, viewFrame} from './analysis';
 
 export default function* (deps) {
 
@@ -15,216 +15,118 @@ export default function* (deps) {
     return {state: state.getIn(['stepper', 'display'])};
   });
 
-  yield defineView('StackView', 'StackViewSelector', EpicComponent(self => {
+  const StackView = EpicComponent(self => {
 
-    const refsIntersect = function (ref1, ref2) {
-      const base1 = ref1.address, limit1 = base1 + ref1.type.pointee.size - 1;
-      const base2 = ref2.address, limit2 = base2 + ref2.type.pointee.size - 1;
-      const result = (base1 <= base2) ? (base2 <= limit1) : (base1 <= limit2);
-      return result;
+    const parensIf = function (cond, elem) {
+      return cond ? <span>{'('}{elem}{')'}</span> : elem;
     };
 
-    const getScopeRef = function (scope, state) {
-      const {key, ref, decl} = scope;
-      const {memoryLog, memory, oldMemory} = state;
-      const {name} = decl;
-      const {type, address} = ref;
-      const result = {key, name, type: type.pointee};
-      if (type.pointee.kind === 'constant array') {
-        return result;
-      }
-      result.value = readValue(memory, ref);
-      try {
-        memoryLog.forEach(function (entry, i) {
-          if (refsIntersect(ref, entry[1])) {
-            if (entry[0] === 'load') {
-              if (result.load === undefined) {
-                result.load = i;
-              }
-            } else if (entry[0] === 'store') {
-              if (result.store === undefined) {
-                result.store = i;
-                result.prevValue = readValue(oldMemory, ref);
-              }
-            }
-          }
-        });
-      } catch (err) {
-        result.error = err;
-      }
-      return result;
-    };
-
-    const getFrames = function (state) {
-      const frames = [];
-      let blocks = [];
-      let decls = [];
-      let params = [];
-      let scope = state.scope;
-      let isReturn = state.control && state.control.return;
-      let isTopFrame = !isReturn;
-      let depth = 0;
-      while (scope) {
-        switch (scope.kind) {
-          case 'function':
-            if (depth <= 10) {
-              frames.push({
-                scope: scope,
-                name: scope.block[2][0][1].identifier,
-                params: params,
-                blocks: isTopFrame && blocks,
-                retVal: isReturn && state.result,
-                isTop: isTopFrame
-              });
-            }
-            isTopFrame = isReturn;
-            isReturn = false;
-            depth += 1;
-            params = [];
-            blocks = [];
-            break;
-          case 'param':
-            if (depth <= 10) {
-              params.unshift(getScopeRef(scope, state));
-            }
-            break;
-          case 'block':
-            if (isTopFrame && !isReturn) {
-              blocks.unshift({
-                scope: scope,
-                decls: decls
-              });
-              decls = [];
-            }
-            break;
-          case 'vardecl':
-            if (isTopFrame && !isReturn) {
-              decls.unshift(getScopeRef(scope, state));
-            }
-            break;
-        }
-        scope = scope.parent;
-      }
-      if (depth > 10) {
-        frames.push({ellipsis: true, depth: depth});
-      }
-      return frames;
-    };
-
-    const renderType = function (type, prec) {
+    const renderDecl = function (type, subject, prec) {
+      // XXX handle precedence, •[]/•() bind tighter than *•
+      // i.e. int *a[]   declares a as array of pointer to int
+      //      int (*a)[] declares a as pointer to array of int
       switch (type.kind) {
-        case 'scalar':
-          return type.repr;
+        case 'function':
+          // TODO: add params
+          return renderDecl(type.result, <span>{parensIf(prec > 0, subject)}{'()'}</span>, 0);
         case 'pointer':
-          return renderType(type.pointee, 1) + '*';
+          return renderDecl(type.pointee, <span>{'*'}{subject}</span>, 1);
+        case 'array':
+          return renderDecl(type.elem, <span>{parensIf(prec > 0, subject)}{'['}{type.count && type.count.toString()}{']'}</span>, 0);
+        case 'scalar':
+          return <span>{type.repr}{' '}{subject}</span>;
+        default:
+          return type.kind.toString();
       }
-      return type.toString();
     };
 
     const renderValue = function (value) {
-      if (value === undefined)
-        return 'undefined';
+      if (value === null)
+        return 'void';
       return value.toString();
     };
 
-    const renderDecl = function (decl) {
+    const renderFunctionCall = function (func, args) {
+      const argCount = args.length;
       return (
-        <div className="scope-decl">
-          <span>{renderType(decl.type, 0)}</span>
-          {' '}
-          <span>{decl.name}</span>
-          {decl.value && ' = '}
-          {decl.value && <span className={classnames([decl.load !== undefined && 'scope-decl-load'])}>{renderValue(decl.value)}</span>}
-          {decl.prevValue && <span className="scope-decl-prevValue">{renderValue(decl.prevValue)}</span>}
-        </div>
-      );
-    };
-
-    const renderFrameHeader = function (frame) {
-      const {isTop, name, params} = frame;
-      const paramCount = params.length;
-      return (
-        <div className={classnames(["scope-function-title", isTop && "scope-function-top"])}>
-          {name}
+        <span>
+          {func.name}
           {'('}
           <span>
-            {params.map(function (decl, i) {
+            {args.map(function (value, i) {
               return (
                 <span key={i}>
-                  {renderValue(decl.value)}
-                  {i + 1 < paramCount && ', '}
+                  {renderValue(value)}
+                  {i + 1 < argCount && ', '}
                 </span>
               );
             })}
           </span>
           {')'}
+        </span>
+      );
+    };
+
+    const renderFunctionHeader = function (view) {
+      const {func, args} = view;
+      return (
+        <div className={classnames(["scope-function-title", false && "scope-function-top"])}>
+          {renderFunctionCall(func, args)}
         </div>
       );
     };
 
-    const renderFrameParams = function (frame) {
-      if (!frame.isTop){
-        return false;
-      }
+    const renderFunctionLocals = function (locals) {
       return (
-        <div className="scope-function-params">
+        <div className="scope-function-blocks">
           <ul>
-            {frame.params.map(function (decl) {
-              return <li key={decl.key}>{renderDecl(decl)}</li>;
-            })}
+          {locals.map(function (view) {
+            const {name, type, value} = view;
+            const subject = <span title={ref && '0x'+ref.address.toString(16)}>{name}</span>;
+            const ref = value && value.ref;
+            return (
+              <li key={name}>
+                <div className="scope-decl">
+                  <span>{renderDecl(type, subject, 0)}</span>
+                  {value && ' = '}
+                  {value &&
+                    <span className={classnames([typeof value.load === 'number' && 'scope-decl-load'])}>
+                      {renderValue(value.current)}
+                    </span>}
+                  {value && value.previous &&
+                    <span className="scope-decl-prevValue">
+                      {renderValue(value.previous)}
+                    </span>}
+                </div>
+              </li>
+            );
+          })}
           </ul>
         </div>
       );
     };
 
-    const renderFrameBlocks = function (frame) {
-      const {blocks} = frame;
-      if (!frame.blocks){
-        return false;
-      }
+    const renderFrame = function (view) {
+      // {func, args, locals}
       return (
-        <div className="scope-function-blocks">
-          {blocks.map(function (block) {
-            const {decls, scope} = block;
-            if (decls.length === 0) {
-              return false;
-            }
-            return (
-              <div key={scope.key}>
-                <ul>
-                  {decls.map(function (decl) {
-                    return <li key={decl.key}>{renderDecl(decl)}</li>;
-                  })}
-                </ul>
-              </div>);
-          })}
+        <div>
+          {renderFunctionHeader(view)}
+          {view.locals && renderFunctionLocals(view.locals)}
         </div>
       );
     };
 
-    const renderFrame = function (state, frame) {
-      if (frame.ellipsis) {
-        return (
-          <div key={key} className="scope-ellipsis">
-            {'… ('}
-            {frame.depth}
-            {')'}
-          </div>
-        );
-      }
-      const key = frame.scope.key;
+    const renderCallReturn = function (callReturn) {
+      const {func, args, result} = callReturn;
+      const argCount = args.length;
       return (
-        <div key={key} className="scope-function">
-          {renderFrameHeader(frame)}
-          {renderFrameParams(frame)}
-          {frame.retVal &&
-            <div className="scope-function-return">
-              <i className="fa fa-long-arrow-right"/>
-              <span className="scope-function-retval">
-                {renderValue(frame.retVal)}
-              </span>
-            </div>}
-          {renderFrameBlocks(frame)}
+        <div className="scope-function-return">
+          {renderFunctionCall(func, args)}
+          {' '}
+          <i className="fa fa-long-arrow-right"/>
+          <span className="scope-function-retval">
+            {renderValue(result)}
+          </span>
         </div>
       );
     };
@@ -235,17 +137,17 @@ export default function* (deps) {
 
     self.render = function () {
       /* TODO: take effects since previous step as a prop */
-      const {state, height} = self.props;
+      const {state, height, firstVisible, maxVisible, firstExpanded, maxExpanded} = self.props;
       if (!state) {
         return (
-          <div className="stack-view" style={{height: height||'100%'}}>
+          <div className="stack-view" style={{height}}>
             <p>Programme arrêté.</p>
           </div>
         );
       }
       if (state.error) {
         return (
-          <div className="stack-view" style={{height: height||'100%'}}>
+          <div className="stack-view" style={{height}}>
             <Alert bsStyle="danger" onDismiss={onExit}>
               <h4>Erreur</h4>
               <p>{state.error.toString()}</p>
@@ -253,15 +155,38 @@ export default function* (deps) {
           </div>
         );
       }
-      const frames = getFrames(state);
+      const {frames, callReturn} = analyseState(state);
+      const beyondVisible = Math.min(frames.size, firstVisible + maxVisible);
+      const tailCount = frames.size - beyondVisible;
+      const views = frames.reverse().slice(firstVisible, beyondVisible).map(function (frame, depth) {
+        const locals = depth >= firstExpanded && depth < maxExpanded;
+        return viewFrame(state, frame, {locals});
+      });
       return (
-        <div className="stack-view" style={{height: height||'100%'}}>
-          {frames.map(frame => renderFrame(state, frame))}
+        <div className="stack-view" style={{height}}>
+          {callReturn && renderCallReturn(callReturn)}
+          {firstVisible > 0 && <div key='tail' className="scope-ellipsis">
+            {'… +'}{firstVisible}
+          </div>}
+          {views.map(view => renderFrame(view))}
+          {tailCount > 0 && <div key='tail' className="scope-ellipsis">
+            {'… +'}{tailCount}
+          </div>}
           <div className="stack-bottom" />
         </div>
       );
     };
 
-  }));
+  });
+
+  StackView.defaultProps = {
+    height: '100%',
+    firstVisible: 0,
+    maxVisible: 10,
+    firstExpanded: 0,
+    maxExpanded: 1
+  };
+
+  yield defineView('StackView', 'StackViewSelector', StackView);
 
 };

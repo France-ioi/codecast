@@ -121,6 +121,9 @@ body#app, #app h1, #app h2, #app h3 {
   top: 10px;
 }
 
+.stack-view {
+  overflow-y: auto;
+}
 .stack-view .scope-decl-load {
   font-weight: bold;
 }
@@ -130,9 +133,6 @@ body#app, #app h1, #app h2, #app h3 {
 }
 .stack-view .scope-function-top {
   font-weight: bold;
-}
-.stack-view .scope-function-return {
-  padding-left: 24px;
 }
 .stack-view .scope-function-retval {
   display: inline-block;
@@ -145,25 +145,25 @@ body#app, #app h1, #app h2, #app h3 {
   border: 2px;
 }
 
-.constantArray-elems {
+.array-elems {
   margin: 2px;
 }
-.constantArray-elemView {
+.array-elemView {
   float: left;
   width: 64px;
   border: 1px solid black;
 }
-.constantArray-lastElem {
+.array-lastElem {
   border: 1px solid #bbb;
   background-color: #e8e8e8;
 }
-.constantArray-elemView, .constantArray-lastElem {
+.array-elemView, .array-lastElem {
   border-left: 0;
 }
-.constantArray-elemView:first-child {
+.array-elemView:first-child {
   border-left: 1px solid black;
 }
-.constantArray-elemView > * {
+.array-elemView > * {
   overflow: hidden;
   text-align: center;
   height: 20px;
@@ -289,11 +289,11 @@ body#app, #app h1, #app h2, #app h3 {
   .nav-examples > li > a {
     padding: 3px 5px;
   }
-  .constantArray-elemView {
+  .array-elemView {
     font-size: 10px;
     width: 45px;
   }
-  .constantArray-elemView > * {
+  .array-elemView > * {
     height: 14px;
   }
 }
