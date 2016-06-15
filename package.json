@@ -22,13 +22,13 @@
       "bootstrap-sass": "npm:bootstrap-sass@^3.3.6",
       "brace": "npm:brace@^0.7.0",
       "classnames": "npm:classnames@^2.2.3",
-      "epic-component": "npm:epic-component@^0.2.0",
+      "epic-component": "npm:epic-component@0.3.1",
       "eventemitter2": "npm:eventemitter2@^1.0.0",
       "font-awesome": "npm:font-awesome@^4.5.0",
       "immutable": "npm:immutable@^3.7.6",
       "lamejs": "npm:lamejs@^1.0.0",
       "lodash": "npm:lodash@^4.6.1",
-      "persistent-c": "npm:persistent-c@5.7.0",
+      "persistent-c": "npm:persistent-c@^5.7.0",
       "query-string": "npm:query-string@^4.1.0",
       "rc-slider": "npm:rc-slider@^3.6.0",
       "react": "npm:react@^15.0.1",
@@ -69,6 +69,7 @@
     }
   },
   "devDependencies": {
+    "babel-preset-es2015": "^6.9.0",
     "jspm": "^0.16.31"
   },
   "dependencies": {
