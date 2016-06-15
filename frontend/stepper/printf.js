@@ -126,7 +126,6 @@ function applyFormat (state, ops, values) {
         arg = (arg.number >>> 0).toString(16);
         break;
     }
-    console.log('arg', typeof arg, arg);
 
     // Extract the sign.
     arg = arg.replace(re.sign, "");
