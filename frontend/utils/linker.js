@@ -91,14 +91,14 @@ export function link (rootBundle) {
   // name → value
   const scope = {};
 
-  // name → type
-  const typeMap = {};
+  // Map(name → type)
+  const typeMap = new Map();
 
-  // action type → action name
-  const nameForActionType = {};
+  // Map(action type → action name)
+  const nameForActionType = new Map();
 
   // action name → action reducer
-  const reducerMap = {};
+  const reducerMap = new Map();
 
   const sagas = [];
 
@@ -134,12 +134,12 @@ export function link (rootBundle) {
     if (name in scope) {
       throw new Error(`linker conflict on ${name}`);
     }
-    if (action in nameForActionType) {
+    if (nameForActionType.has(action)) {
       throw `action type conflict: ${action}`;
     }
     scope[name] = action;
-    typeMap[name] = 'action';
-    nameForActionType[action] = name;
+    typeMap.set(name, 'action');
+    nameForActionType.set(action, name);
   }
 
   function defineSelector_ (name, selector) {
@@ -154,24 +154,24 @@ export function link (rootBundle) {
         return {};
       }
     };
-    typeMap[name] = 'selector';
+    typeMap.set(name, 'selector');
   }
 
   function addReducer_ (name, reducer) {
     if (!(name in scope)) {
       throw new Error(`reducer for undefined action ${name}`);
     }
-    if (typeMap[name] !== 'action') {
+    if (typeMap.get(name) !== 'action') {
       throw new Error(`reducer for non-action ${name}`);
     }
     const actionType = scope[name];
-    if (actionType in reducerMap) {
-      const prevReducer = reducerMap[actionType];
-      reducerMap[actionType] = function (state, action) {
+    if (reducerMap.has(actionType)) {
+      const prevReducer = reducerMap.get(actionType);
+      reducerMap.set(actionType, function (state, action) {
         return reducer(prevReducer(state, action), action);
-      };
+      });
     } else {
-      reducerMap[actionType] = reducer;
+      reducerMap.set(actionType, reducer);
     }
   }
 
@@ -221,7 +221,7 @@ export function link (rootBundle) {
 
   // Define reducers.
   reducerQueue.forEach(function (dir) {
-    if (typeMap[dir.name] !== 'action') {
+    if (typeMap.get(dir.name) !== 'action') {
       throw new Error(`invalid reducer target ${dir.name}`);
     }
     addReducer_(dir.name, dir.reducer);
@@ -234,7 +234,7 @@ export function link (rootBundle) {
       view = connect(scope[selector])(view);
     }
     scope[name] = view;
-    typeMap[name] = 'view';
+    typeMap.set(name, 'view');
   });
 
   // Provide dependencies.
@@ -252,9 +252,9 @@ export function link (rootBundle) {
   // Build the reducer.
   const reducer = function (state, action) {
     // TODO: add support for reducer hooks
-    if (action.type in reducerMap) {
+    if (reducerMap.has(action.type)) {
       try {
-        state = reducerMap[action.type](state, action);
+        state = reducerMap.get(action.type)(state, action);
       } catch (ex) {
         console.log('exception in reducer', action, state, ex);
         state = state.set('error', ex);
