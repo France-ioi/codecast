@@ -1,30 +1,21 @@
 
-/*
-
-  In global state, view options:
-    - map(view name → view state)
-
-  In reducer, view props:
-    - stepper state → map(view name → view data)
-
-  In render:
-    - (view state, view data) → {Component, props}
-
-Return value: state.control && state.control.return && state.result
-
-*/
-
 import Immutable from 'immutable';
 import {readValue} from 'persistent-c';
 
-export const analyseState = function (state) {
-  const {frames, directives} = analyseScope(state.scope);
+export const StackFrame = Immutable.Record({
+  scope: null, key: null, func: null, args: null,
+  localNames: Immutable.List(),
+  localMap: Immutable.Map()
+});
+
+export const analyseState = function (core) {
+  const {frames, directives} = analyseScope(core.scope);
   const result = {frames, directives};
-  if (state.direction === 'out') {
+  if (core.direction === 'out') {
     result.callReturn = {
-      func: state.control.values[0],
-      args: state.control.values.slice(1),
-      result: state.result
+      func: core.control.values[0],
+      args: core.control.values.slice(1),
+      result: core.result
     };
   }
   return result;
@@ -46,14 +37,7 @@ const analyseScope = function (scope) {
     case 'function': {
       const func = scope.values[0];
       const args = scope.values.slice(1);
-      frames = frames.push(Immutable.Map({
-        scope: scope,
-        key: scope.key,
-        func,
-        args,
-        localNames: Immutable.List(),
-        localMap: Immutable.Map()
-      }));
+      frames = frames.push(StackFrame({scope: scope, func, args}));
       break;
     }
     case 'variable': {
@@ -81,8 +65,9 @@ const analyseScope = function (scope) {
   return {frames, directives};
 };
 
-export const viewFrame = function (state, frame, options) {
+export const viewFrame = function (core, frame, options) {
   const view = {
+    key: frame.get('scope').key,
     func: frame.get('func'),
     args: frame.get('args')
   };
@@ -91,29 +76,29 @@ export const viewFrame = function (state, frame, options) {
     const locals = view.locals = [];
     frame.get('localNames').forEach(function (name) {
       const {type, ref} = localMap.get(name);
-      locals.push(viewVariable(state, name, type, ref));
+      locals.push(viewVariable(core, name, type, ref));
     });
   }
   return view;
 };
 
-const viewVariable = function (state, name, type, ref) {
+const viewVariable = function (core, name, type, ref) {
   const result = {name, type};
   try {
     if (type.kind === 'array') {
       // TODO: display the first elements of an array (if its size is known)
       return result;
     }
-    result.value = viewRef(state, ref);
+    result.value = viewRef(core, ref);
   } catch (err) {
     result.error = err;
   }
   return result;
 };
 
-const viewRef = function (state, ref) {
-  const result = {ref: ref, current: readValue(state.memory, ref)}
-  state.memoryLog.forEach(function (entry, i) {
+const viewRef = function (core, ref) {
+  const result = {ref: ref, current: readValue(core.memory, ref)}
+  core.memoryLog.forEach(function (entry, i) {
     if (refsIntersect(ref, entry[1])) {
       if (entry[0] === 'load') {
         if (result.load === undefined) {
@@ -122,7 +107,7 @@ const viewRef = function (state, ref) {
       } else if (entry[0] === 'store') {
         if (result.store === undefined) {
           result.store = i;
-          result.previous = readValue(state.oldMemory, ref);
+          result.previous = readValue(core.oldMemory, ref);
         }
       }
     }
@@ -143,7 +128,7 @@ const getIdent = function (expr) {
   return expr[0] === 'ident' && expr[1];
 };
 
-const prepareDirective = function (directive, scope, index, decls, state) {
+const prepareDirective = function (directive, scope, index, decls, core) {
   if (Array.isArray(directive)) {
     const key = `${scope.key}.${index}`;
     directive = {key, kind: directive[0], byPos: directive[1], byName: directive[2]}
@@ -160,7 +145,7 @@ const prepareDirective = function (directive, scope, index, decls, state) {
         }
         const varScope = decls[ident];
         if (varScope) {
-          result.value = inspectPointer(varScope.ref, state);
+          result.value = inspectPointer(varScope.ref, core);
         }
         break;
       }
@@ -186,7 +171,7 @@ const prepareDirective = function (directive, scope, index, decls, state) {
           const elems = result.elems = [];
           const ptr = new PointerValue(pointerType(elemType), address);
           for (let elemIndex = 0; elemIndex < elemCount; elemIndex += 1) {
-            elems.push({value: inspectPointer(ptr, state), cursors: [], prevCursors: []});
+            elems.push({value: inspectPointer(ptr, core), cursors: [], prevCursors: []});
             ptr.address += elemType.size;
           }
           // Add an extra empty element.
@@ -197,7 +182,7 @@ const prepareDirective = function (directive, scope, index, decls, state) {
             cursorIdents.forEach(function (cursorIdent) {
               const cursorScope = decls[cursorIdent];
               if (cursorScope) {
-                const cursorValue = inspectPointer(cursorScope.ref, state);
+                const cursorValue = inspectPointer(cursorScope.ref, core);
                 const cursorPos = cursorValue.value.toInteger();
                 if (cursorPos >= 0 && cursorPos <= elemCount) {
                   elems[cursorPos].cursors.push(cursorIdent);
@@ -221,11 +206,11 @@ const prepareDirective = function (directive, scope, index, decls, state) {
   return result;
 };
 
-const getViews = function (state) {
+const getViews = function (core) {
   const views = [];
   const directives = {};
   let decls = {};
-  let scope = state.scope;
+  let scope = core.scope;
   while (scope) {
     if ('decl' in scope) {
       // param or vardecl
@@ -235,7 +220,7 @@ const getViews = function (state) {
       }
     }
     if ('directives' in scope) {
-        scope.directives.forEach((directive, i) => views.push(prepareDirective(directive, scope, i, decls, state)));
+        scope.directives.forEach((directive, i) => views.push(prepareDirective(directive, scope, i, decls, core)));
     }
     if (scope.kind === 'function') {
         decls = {};

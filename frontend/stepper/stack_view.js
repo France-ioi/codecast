@@ -1,18 +1,35 @@
 
 import React from 'react';
 import classnames from 'classnames';
-import {Alert} from 'react-bootstrap';
+import {Alert, Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
-import {analyseState, viewFrame} from './analysis';
+import {viewFrame} from './analysis';
 
 export default function* (deps) {
 
-  yield use('stepperExit');
+  yield use('stepperExit', 'stepperStackUp', 'stepperStackDown');
 
   yield defineSelector('StackViewSelector', function (state, props) {
-    return {state: state.getIn(['stepper', 'display'])};
+    const stepperState = state.getIn(['stepper', 'display']);
+    if (!stepperState) {
+      return {};
+    }
+    const {core, analysis, controls} = stepperState;
+    const {maxVisible} = props;
+    const stackControls = controls.get('stack');
+    const focusDepth = stackControls.get('focusDepth', 0);
+    const firstVisible = Math.max(0, focusDepth - 5);
+    return {
+      focusDepth,
+      core,
+      analysis,
+      controls: stackControls,
+      firstVisible,
+      firstExpanded: focusDepth - firstVisible,
+      maxExpanded: 1
+    };
   });
 
   const StackView = EpicComponent(self => {
@@ -22,12 +39,9 @@ export default function* (deps) {
     };
 
     const renderDecl = function (type, subject, prec) {
-      // XXX handle precedence, •[]/•() bind tighter than *•
-      // i.e. int *a[]   declares a as array of pointer to int
-      //      int (*a)[] declares a as pointer to array of int
       switch (type.kind) {
         case 'function':
-          // TODO: add params
+          // TODO: print param types?
           return renderDecl(type.result, <span>{parensIf(prec > 0, subject)}{'()'}</span>, 0);
         case 'pointer':
           return renderDecl(type.pointee, <span>{'*'}{subject}</span>, 1);
@@ -107,16 +121,20 @@ export default function* (deps) {
     };
 
     const renderFrame = function (view) {
-      // {func, args, locals}
+      // {key, func, args, locals}
       return (
-        <div>
+        <div key={view.key} className={classnames(['stack-frame', view.focus && 'stack-frame-focused'])}>
           {renderFunctionHeader(view)}
           {view.locals && renderFunctionLocals(view.locals)}
         </div>
       );
     };
 
-    const renderCallReturn = function (callReturn) {
+    const renderCallReturn = function () {
+      const {callReturn} = self.props;
+      if (!callReturn) {
+        return false;
+      }
       const {func, args, result} = callReturn;
       const argCount = args.length;
       return (
@@ -135,43 +153,61 @@ export default function* (deps) {
       self.props.dispatch({type: deps.stepperExit});
     };
 
+    const onStackUp = function () {
+      self.props.dispatch({type: deps.stepperStackUp});
+    };
+
+    const onStackDown = function () {
+      self.props.dispatch({type: deps.stepperStackDown});
+    };
+
     self.render = function () {
-      /* TODO: take effects since previous step as a prop */
-      const {state, height, firstVisible, maxVisible, firstExpanded, maxExpanded} = self.props;
-      if (!state) {
+      const {core, height} = self.props;
+      if (!core) {
         return (
           <div className="stack-view" style={{height}}>
             <p>Programme arrêté.</p>
           </div>
         );
       }
-      if (state.error) {
+      if (core.error) {
         return (
           <div className="stack-view" style={{height}}>
             <Alert bsStyle="danger" onDismiss={onExit}>
               <h4>Erreur</h4>
-              <p>{state.error.toString()}</p>
+              <p>{core.error.toString()}</p>
             </Alert>
           </div>
         );
       }
-      const {frames, callReturn} = analyseState(state);
+      const {controls, analysis, focusDepth, firstVisible, firstExpanded, maxVisible, maxExpanded} = self.props;
+      const {frames} = analysis;
       const beyondVisible = Math.min(frames.size, firstVisible + maxVisible);
       const tailCount = frames.size - beyondVisible;
       const views = frames.reverse().slice(firstVisible, beyondVisible).map(function (frame, depth) {
-        const locals = depth >= firstExpanded && depth < maxExpanded;
-        return viewFrame(state, frame, {locals});
+        const focus = depth >= firstExpanded && depth < firstExpanded + maxExpanded;
+        const view = viewFrame(core, frame, {locals: focus});
+        view.focus = focus;
+        return view;
       });
       return (
         <div className="stack-view" style={{height}}>
-          {callReturn && renderCallReturn(callReturn)}
-          {firstVisible > 0 && <div key='tail' className="scope-ellipsis">
-            {'… +'}{firstVisible}
-          </div>}
-          {views.map(view => renderFrame(view))}
-          {tailCount > 0 && <div key='tail' className="scope-ellipsis">
-            {'… +'}{tailCount}
-          </div>}
+          <Button onClick={onStackUp} title="navigate up the stack">
+            <i className="fa fa-arrow-up"/>
+          </Button>
+          <Button onClick={onStackDown} title="navigate down the stack">
+            <i className="fa fa-arrow-down"/>
+          </Button>
+          {renderCallReturn()}
+          {firstVisible > 0 &&
+            <div key='tail' className="scope-ellipsis">
+              {'… +'}{firstVisible}
+            </div>}
+          {views.map(renderFrame)}
+          {tailCount > 0 &&
+            <div key='tail' className="scope-ellipsis">
+              {'… +'}{tailCount}
+            </div>}
           <div className="stack-bottom" />
         </div>
       );

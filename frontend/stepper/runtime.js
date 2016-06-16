@@ -10,17 +10,20 @@ const applyWriteEffect = function (state, effect) {
   state.terminal = writeString(state.terminal, effect[1]);
 };
 
-export const options = function (effects) {
+const stepperOptions = function (effects) {
   const applyEnterEffect = function (state, effect) {
-    const node = effect[1];
     effects.enter(state, effect);
-    const scope = state.scope;
+    // XXX store directives in state.directives rather than state.core.scope.
+    const node = effect[1];
+    const scope = state.core.scope;
     scope.directives = node[1].directives || [];
   };
   // Some 'leave' effects are omitted (in particular when a function returns
   // from nested compound statements) which unfortunately makes it useless for
   // tracking directives going out of scope.
   // Perhaps make persistent-c always generate all 'leave' effects?
+  // Alternatively, make 'leave' effects discard all directives that lives in
+  // a scope whose key is greater than the new scope's key.
   return {
     effectHandlers: {
       ...effects,
@@ -41,41 +44,53 @@ const scanf = function (state, cont, values) {
   return {control: cont, effects: [['scanf', values]], seq: 'expr'};
 };
 
-export const builtins = {printf, scanf};
+const builtins = {printf, scanf};
 
 export const start = function (syntaxTree, options) {
   try {
     options = options || {};
     const decls = syntaxTree[2];
-    const context = {decls, builtins: builtins};
-    let state = C.start(context);
+    // Core setup.
+    const state = {core: C.start({decls, builtins})};
+    // Terminal setup.
     state.terminal = new TermBuffer({lines: 10, width: 60});
+    // Input setup.
     if (typeof options.input === 'string') {
       const inputStr = options.input.trim();
       const input = inputStr.length === 0 ? [] : options.input.split(/[\s]+/);
       state.input = Immutable.List(input);
     }
-    state = stepIntoUserCode(state);
-    return state;
+    return stepIntoUserCode(state);
   } catch (ex) {
     return {error: ex};
   }
 };
 
-export const stepIntoUserCode = function (stepperState) {
-  while (stepperState.control && !stepperState.control.node[1].begin) {
-    stepperState = C.step(stepperState, options);
-  }
-  return stepperState;
+export const step = function (state) {
+  return C.step(state, stepperOptions);
 };
 
-export const getNodeRange = function (stepper) {
-  if (!stepper) {
+export const stepIntoUserCode = function (state) {
+  while (state.core.control && !state.core.control.node[1].begin) {
+    state = step(state);
+  }
+  return state;
+};
+
+export const getNodeRange = function (state) {
+  if (!state) {
     return null;
   }
-  const {control} = stepper;
+  const {control} = state.core;
   if (!control || !control.node) {
     return null;
   }
-  return control.node[1].range;
+  const focusDepth = state.controls.getIn(['stack','focusDepth']);
+  if (focusDepth === 0) {
+    return control.node[1].range;
+  } else {
+    const {frames} = state.analysis;
+    const frame = frames.get(frames.size - focusDepth);
+    return frame.get('scope').cont.node[1].range;
+  }
 };

@@ -18,22 +18,21 @@
     "main": "frontend/main.js",
     "configFile": "frontend/jspm-0.16.config.js",
     "dependencies": {
-      "bootstrap": "github:twbs/bootstrap@^3.3.6",
       "bootstrap-sass": "npm:bootstrap-sass@^3.3.6",
       "brace": "npm:brace@^0.7.0",
       "classnames": "npm:classnames@^2.2.3",
-      "epic-component": "npm:epic-component@0.3.1",
+      "epic-component": "npm:epic-component@^0.3.1",
       "eventemitter2": "npm:eventemitter2@^1.0.0",
       "font-awesome": "npm:font-awesome@^4.5.0",
       "immutable": "npm:immutable@^3.7.6",
-      "lamejs": "npm:lamejs@^1.0.0",
+      "lamejs": "npm:lamejs@^1.1.0",
       "lodash": "npm:lodash@^4.6.1",
-      "persistent-c": "npm:persistent-c@^5.7.0",
+      "persistent-c": "npm:persistent-c@^8.0.0",
       "query-string": "npm:query-string@^4.1.0",
       "rc-slider": "npm:rc-slider@^3.6.0",
-      "react": "npm:react@^15.0.1",
+      "react": "npm:react@^15.1.0",
       "react-ace": "npm:react-ace@^3.2.0",
-      "react-bootstrap": "npm:react-bootstrap@^0.28.4",
+      "react-bootstrap": "npm:react-bootstrap@^0.29.4",
       "react-dom": "npm:react-dom@^15.0.1",
       "react-redux": "npm:react-redux@^4.4.1",
       "redux": "npm:redux@^3.3.1",
@@ -54,7 +53,7 @@
       "css": "github:systemjs/plugin-css@^0.1.20"
     },
     "overrides": {
-      "npm:react@15.0.1": {
+      "npm:react@15.1.0": {
         "main": "lib/React.js",
         "format": "cjs"
       },

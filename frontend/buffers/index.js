@@ -7,7 +7,7 @@ XXX Currently the code for 'source' and 'input' is duplicated, this should
     this is done with the Editor component ../utils/editor.js which is passed
     callbacks that fire the appropriate actions.
 
-The model for a buffer is an Immutable Map of this shape:
+The model for a buffer is an Immutable Record of this shape:
 
   {document, selection, firstVisibleRow}
 
@@ -38,12 +38,13 @@ import Immutable from 'immutable';
 import {defineAction, defineSelector, addReducer, addSaga} from '../utils/linker';
 import Document from './document';
 
-const blankModel = Immutable.Map({
+export const DocumentModel = Immutable.Record({
   document: Document.blank,
   selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
   firstVisibleRow: 0
 });
 
+export const BufferState = Immutable.Record({model: DocumentModel(), editor: null});
 
 export default function* (deps) {
 
@@ -86,8 +87,8 @@ export default function* (deps) {
   }
 
   yield addReducer('init', state => state
-    .set('source', Immutable.Map({model: blankModel, editor: null}))
-    .set('input', Immutable.Map({model: blankModel, editor: null}))
+    .set('source', BufferState())
+    .set('input', BufferState())
   );
 
   yield addReducer('sourceInit', function (state, action) {
@@ -95,7 +96,7 @@ export default function* (deps) {
   });
 
   yield addReducer('sourceLoad', function (state, action) {
-    return state.setIn(['source', 'model'], Immutable.Map({
+    return state.setIn(['source', 'model'], DocumentModel({
       document: Document.fromString(action.text),
       selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
       firstVisibleRow: 0
@@ -129,7 +130,7 @@ export default function* (deps) {
   });
 
   yield addReducer('inputLoad', function (state, action) {
-    return state.setIn(['input', 'model'], Immutable.Map({
+    return state.setIn(['input', 'model'], DocumentModel({
       document: Document.fromString(action.text),
       selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
       firstVisibleRow: 0

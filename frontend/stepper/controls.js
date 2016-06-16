@@ -30,8 +30,8 @@ export default function* (deps) {
     const showTranslate = !haveContext;
     const canTranslate = enabled && !haveContext;
     const isStepping = haveContext && status !== 'idle';
-    const current = stepper && stepper.get('current');
-    const {control} = current || {};
+    const current = stepper && stepper.get('current', {});
+    const {control} = current.core || {};
     const haveNode = control && control.node;
     const canRestart = canExit && !isStepping;
     const canStep = enabled && !isStepping && haveNode;

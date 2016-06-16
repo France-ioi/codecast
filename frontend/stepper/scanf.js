@@ -38,8 +38,8 @@ const scanIntegralValue = function (state, ref, typeName, func) {
     return false;
   }
   state.input = state.input.shift();
-  state.memory = C.writeValue(state.memory, ref, value);
-  state.memoryLog = state.memoryLog.push(['store', ref, value]);
+  state.core.memory = C.writeValue(state.core.memory, ref, value);
+  state.core.memoryLog = state.core.memoryLog.push(['store', ref, value]);
   return true;
 };
 
@@ -54,7 +54,7 @@ const scanFloatingValue = function (state, ref, typeName) {
   }
   const value = new C.FloatingValue(C.scalarTypes[typeName], rawValue);
   state.input = state.input.shift();
-  state.memory = C.writeValue(state.memory, ref, value);
+  state.core.memory = C.writeValue(state.core.memory, ref, value);
   return true;
 };
 
@@ -65,7 +65,7 @@ const scanString = function (state, ref) {
   const string = state.input.first();
   state.input = state.input.shift();
   const value = C.stringValue(string);
-  state.memory = C.writeValue(state.memory, ref, value);
+  state.core.memory = C.writeValue(state.core.memory, ref, value);
   return true;
 };
 
@@ -97,17 +97,18 @@ const scanValue = function (state, format, ref) {
 };
 
 export default function (state, effect) {
+  const {core, input} = state;
   let pos = 0;
-  if (state.input) {
+  if (input) {
     const args = effect[1];
-    const formats = C.readString(state.memory, args[1]).split(/[\s]+/);
+    const formats = C.readString(core.memory, args[1]).split(/[\s]+/);
     const refs = args.slice(2);
-    while (pos < formats.length && pos < refs.length && state.input.size !== 0) {
+    while (pos < formats.length && pos < refs.length && input.size !== 0) {
       if (!scanValue(state, formats[pos], refs[pos]))
         break;
       pos += 1;
     }
   }
-  state.direction = 'up';
-  state.result = new C.IntegralValue(C.scalarTypes['int'], pos);
+  core.direction = 'up';
+  core.result = new C.IntegralValue(C.scalarTypes['int'], pos);
 };

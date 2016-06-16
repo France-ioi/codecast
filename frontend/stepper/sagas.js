@@ -2,11 +2,13 @@
 import {delay} from 'redux-saga';
 import {take, put, call, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
+import Immutable from 'immutable';
 
 import {use, addSaga} from '../utils/linker';
 
 import Document from '../buffers/document';
 import * as runtime from './runtime';
+import {analyseState} from './analysis';
 
 export default function* (deps) {
 
@@ -14,6 +16,7 @@ export default function* (deps) {
     'getStepperState', 'getStepperDisplay', 'getStepperInterrupted',
     'stepperInterrupted',
     'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperExit', 'stepperUndo', 'stepperRedo',
+    'stepperStackUp', 'stepperStackDown',
     'translateSucceeded', 'getTranslateState', 'translateClear',
     'getInputModel', 'sourceHighlight',
     'error'
@@ -28,7 +31,7 @@ export default function* (deps) {
   function buildContext (state) {
     const startTime = window.performance.now();
     return {
-      state: C.clearMemoryLog(state),
+      state: {...state, core: C.clearMemoryLog(state.core), analysis: null},
       startTime,
       timeLimit: startTime + 20,
       stepCounter: 0,
@@ -38,28 +41,24 @@ export default function* (deps) {
 
   function viewContext (context) {
     // Returns a persistent view of the context.
+    // The state is enriched with the core's analysis.
     const {state, stepCounter} = context;
+    state.analysis = analyseState(state.core);
     return {state, stepCounter};
   }
 
   function singleStep (context, stopCond) {
     const {running, state} = context;
-    if (!running || state.error || !state.control) {
+    if (!running || state.error || !state.core.control) {
       context.running = false;
       return false;
     }
-    if (stopCond && stopCond(state)) {
+    if (stopCond && stopCond(state.core)) {
       return false;
     }
-    context.state = C.step(state, runtime.options);
+    context.state = runtime.step(state);
     context.stepCounter += 1;
     return true;
-  }
-
-  function* updateSourceHighlighting () {
-    const stepperState = yield select(deps.getStepperDisplay);
-    const range = runtime.getNodeRange(stepperState);
-    yield put({type: deps.sourceHighlight, range});
   }
 
   function* stepUntil (context, stopCond) {
@@ -81,7 +80,6 @@ export default function* (deps) {
         // Reset the time limit and put a Progress event.
         context.timeLimit = window.performance.now() + 20;
         yield put({type: deps.stepperProgress, context: viewContext(context)});
-        yield call(updateSourceHighlighting);
         // Yield until the next tick (XXX consider requestAnimationFrame).
         yield call(delay, 0);
         // Stop prematurely if interrupted.
@@ -99,7 +97,7 @@ export default function* (deps) {
     // Take a first step.
     if (singleStep(context)) {
       // then stop when we enter the next expression.
-      yield call(stepUntil, context, state => C.intoNextExpr(state));
+      yield call(stepUntil, context, core => C.intoNextExpr(core));
     }
   }
 
@@ -115,26 +113,25 @@ export default function* (deps) {
 
   function* stepOut (context) {
     // The program must be running.
-    if (!context.state.control) {
+    if (!context.state.core.control) {
       return;
     }
     // Find the closest function scope.
-    const refScope = context.state.scope;
+    const refScope = context.state.core.scope;
     const funcScope = C.findClosestFunctionScope(refScope);
-    console.log('stop', funcScope.parent);
     // Step until execution reach that scope's parent.
-    yield call(stepUntil, context, state => state.scope === funcScope.parent);
+    yield call(stepUntil, context, core => core.scope === funcScope.parent);
   }
 
   function* stepOver (context) {
     // Remember the current scope.
-    const refScope = context.state.scope;
+    const refScope = context.state.core.scope;
     // Take a first step.
     if (singleStep(context)) {
       // Step until out of the current statement but not inside a nested
       // function call.
-      yield call(stepUntil, context, state =>
-        C.outOfCurrentStmt(state) && C.notInNestedCall(state.scope, refScope));
+      yield call(stepUntil, context, core =>
+        C.outOfCurrentStmt(core) && C.notInNestedCall(core.scope, refScope));
       // Step into the next statement.
       yield call(stepUntil, context, C.intoNextStmt);
     }
@@ -163,9 +160,7 @@ export default function* (deps) {
       } catch (error) {
         console.log(error); // XXX
       }
-      console.log('after', mode, context);
       yield put({type: deps.stepperIdle, context: viewContext(context)});
-      yield call(updateSourceHighlighting);
     }
   }
 
@@ -180,8 +175,9 @@ export default function* (deps) {
         const inputModel = yield select(deps.getInputModel);
         const input = Document.toString(inputModel.get('document'));
         const stepperState = runtime.start(translate.get('syntaxTree'), {input});
+        stepperState.controls = Immutable.Map({stack: Immutable.Map({focusDepth: 0})});
+        stepperState.analysis = analyseState(stepperState.core);
         yield put({type: deps.stepperRestart, stepperState});
-        yield call(updateSourceHighlighting);
       } catch (error) {
         yield put({type: deps.error, source: 'stepper', error});
       }
@@ -196,10 +192,17 @@ export default function* (deps) {
   });
 
   yield addSaga(function* watchStepperRestart () {
-    // Clear the highlighting when the stepper is restarted.
+    // This saga updates the highlighting of the active source code.
     while (true) {
-      yield take([deps.stepperRestart, deps.stepperUndo, deps.stepperRedo]);
-      yield call(updateSourceHighlighting);
+      yield take([
+        deps.stepperProgress, deps.stepperIdle, deps.stepperRestart,
+        deps.stepperUndo, deps.stepperRedo,
+        deps.stepperStackUp, deps.stepperStackDown,
+        deps.translateClear
+      ]);
+      const stepperState = yield select(deps.getStepperDisplay);
+      const range = runtime.getNodeRange(stepperState);
+      yield put({type: deps.sourceHighlight, range});
     }
   });
 
@@ -210,7 +213,6 @@ export default function* (deps) {
       yield take(deps.stepperExit);
       // TODO: if running, interrupt stepper and wait until idle
       yield put({type: deps.translateClear});
-      yield call(updateSourceHighlighting);
     }
   });
 

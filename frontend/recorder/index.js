@@ -13,7 +13,6 @@ import 'brace/worker/javascript';
 import 'brace/mode/c_cpp';
 import 'brace/theme/github';
 
-import 'bootstrap/css/bootstrap.min.css!';
 import 'font-awesome/css/font-awesome.min.css!';
 import '../style.scss!';
 

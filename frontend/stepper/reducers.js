@@ -157,4 +157,29 @@ export default function* () {
     return state.set('stepper.options', Immutable.Map(options));
   });
 
+  yield addReducer('stepperStackUp', function (state, action) {
+    return state.updateIn(['stepper', 'display'], function (stepperState) {
+      let {controls} = stepperState;
+      const focusDepth = controls.getIn(['stack', 'focusDepth']);
+      if (focusDepth > 0) {
+        controls = controls.setIn(['stack', 'focusDepth'], focusDepth - 1);
+        stepperState = {...stepperState, controls};
+      }
+      return stepperState;
+    });
+  });
+
+  yield addReducer('stepperStackDown', function (state, action) {
+    return state.updateIn(['stepper', 'display'], function (stepperState) {
+      let {controls} = stepperState;
+      const stackDepth = stepperState.analysis.frames.size;
+      const focusDepth = controls.getIn(['stack', 'focusDepth']);
+      if (focusDepth + 1 < stackDepth) {
+        controls = controls.setIn(['stack', 'focusDepth'], focusDepth + 1);
+        stepperState = {...stepperState, controls};
+      }
+      return stepperState;
+    });
+  });
+
 };

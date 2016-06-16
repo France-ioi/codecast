@@ -13,6 +13,7 @@ import {use, addSaga} from '../utils/linker';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
 import Document from '../buffers/document';
+import {DocumentModel} from '../buffers/index';
 import {translateClear, translateStarted, translateSucceeded, translateFailed, translateClearDiagnostics} from '../stepper/translate';
 import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress, stepperUndo, stepperRedo} from '../stepper/reducers';
 import * as runtime from '../stepper/runtime';
@@ -238,12 +239,12 @@ export default function* (deps) {
       switch (event[1]) {
         case 'start': {
           const init = event[2];
-          const sourceModel = Immutable.Map({
+          const sourceModel = DocumentModel({
             document: Document.fromString(init.source.document),
             selection: Document.expandRange(init.source.selection),
             firstVisibleRow: init.source.firstVisibleRow || 0
           });
-          const inputModel = Immutable.Map({
+          const inputModel = DocumentModel({
             document: Document.fromString(init.input ? init.input.document : ''),
             selection: Document.expandRange(init.input ? init.input.selection : [0,0,0,0]),
             firstVisibleRow: (init.input && init.input.firstVisibleRow) || 0

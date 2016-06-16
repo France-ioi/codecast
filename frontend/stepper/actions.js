@@ -34,4 +34,7 @@ export default function* (deps) {
 
   yield defineAction('stepperConfigure', 'Stepper.Configure');
 
+  yield defineAction('stepperStackUp', 'Stepper.Stack.Up');
+  yield defineAction('stepperStackDown', 'Stepper.Stack.Down');
+
 };

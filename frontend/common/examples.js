@@ -229,7 +229,7 @@ export default function* (deps) {
 
   yield defineView('ExamplePicker', 'ExamplePickerSelector', EpicComponent(self => {
 
-    const onSelectExample = function (event, i) {
+    const onSelectExample = function (i) {
       const example = self.props.examples[i];
       self.props.dispatch({type: deps.exampleSelected, example});
     };

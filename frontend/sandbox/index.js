@@ -14,7 +14,8 @@ import 'brace/worker/javascript';
 import 'brace/mode/c_cpp';
 import 'brace/theme/github';
 
-import 'bootstrap/css/bootstrap.min.css!';
+// Import font-awesome css here rather than in style.scss due to
+// https://github.com/mobilexag/plugin-sass/blob/master/src/sass-builder.js#49
 import 'font-awesome/css/font-awesome.min.css!';
 import '../style.scss!';
 

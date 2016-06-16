@@ -28,6 +28,10 @@ icanon mode:
 
 */
 
+export const Cursor = Immutable.Record({line: 0, column: 0});
+export const Attrs = Immutable.Record({});
+export const Cell = Immutable.Record({char: ' ', attrs: Attrs()});
+
 export const TermView = EpicComponent(self => {
   self.render = function () {
     const {buffer} = self.props;
@@ -56,12 +60,12 @@ export const TermBuffer = function (options) {
   options = options || {};
   const width = options.width || 80;
   const height = options.lines || 24;
-  const cursor = Immutable.Map({line: 0, column: 0});
-  const attrs = Immutable.Map();
-  const blankCell = Immutable.Map({char: ' ', attrs});
+  const cursor = Cursor({line: 0, column: 0});
+  const attrs = Attrs();
+  const blankCell = Cell({char: ' ', attrs});
   const blankLine = Immutable.List(Array(width).fill(blankCell));
   const lines = Immutable.List(Array(height).fill(blankLine));
-  return Immutable.Map({width, height, cursor, attrs, lines});
+  return Immutable.Map({width, height, cursor, attrs, lines}); // TODO: turn this into a Record
 };
 
 export const writeString = function (buffer, str) {
@@ -88,7 +92,7 @@ export const writeChar = function (buffer, char) {
   const line = cursor.get('line');
   let column = cursor.get('column');
   const attrs = buffer.get('attrs');
-  const cell = Immutable.Map({char, attrs});
+  const cell = Cell({char, attrs});
   buffer = buffer.setIn(['lines', line, column], cell);
 
   column += 1;
@@ -109,7 +113,7 @@ export const writeNewline = function (buffer) {
   if (line === height) {
     const width = buffer.get('width');
     const attrs = buffer.get('attrs');
-    const blankCell = Immutable.Map({char: ' ', attrs});
+    const blankCell = Cell({char: ' ', attrs});
     const blankLine = Immutable.List(Array(width).fill(blankCell));
     buffer = buffer.update('lines', lines => lines.shift().push(blankLine));
     line = height - 1;
