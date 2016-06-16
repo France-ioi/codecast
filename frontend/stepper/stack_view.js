@@ -96,8 +96,8 @@ export default function* (deps) {
           <ul>
           {locals.map(function (view) {
             const {name, type, value} = view;
-            const subject = <span title={ref && '0x'+ref.address.toString(16)}>{name}</span>;
             const ref = value && value.ref;
+            const subject = <span title={ref && '0x'+ref.address.toString(16)}>{name}</span>;
             return (
               <li key={name}>
                 <div className="scope-decl">
