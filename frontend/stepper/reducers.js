@@ -94,6 +94,31 @@ export const stepperRedo = function (state, action) {
     .set('undo', state.get('undo').unshift(current));
 };
 
+export const stepperStackUp = function (state, action) {
+  return state.update('display', function (stepperState) {
+    let {controls} = stepperState;
+    const focusDepth = controls.getIn(['stack', 'focusDepth']);
+    if (focusDepth > 0) {
+      controls = controls.setIn(['stack', 'focusDepth'], focusDepth - 1);
+      stepperState = {...stepperState, controls};
+    }
+    return stepperState;
+  });
+};
+
+export const stepperStackDown = function (state, action) {
+  return state.update('display', function (stepperState) {
+    let {controls} = stepperState;
+    const stackDepth = stepperState.analysis.frames.size;
+    const focusDepth = controls.getIn(['stack', 'focusDepth']);
+    if (focusDepth + 1 < stackDepth) {
+      controls = controls.setIn(['stack', 'focusDepth'], focusDepth + 1);
+      stepperState = {...stepperState, controls};
+    }
+    return stepperState;
+  });
+};
+
 export default function* () {
 
   yield addReducer('init', function (state, action) {
@@ -158,28 +183,11 @@ export default function* () {
   });
 
   yield addReducer('stepperStackUp', function (state, action) {
-    return state.updateIn(['stepper', 'display'], function (stepperState) {
-      let {controls} = stepperState;
-      const focusDepth = controls.getIn(['stack', 'focusDepth']);
-      if (focusDepth > 0) {
-        controls = controls.setIn(['stack', 'focusDepth'], focusDepth - 1);
-        stepperState = {...stepperState, controls};
-      }
-      return stepperState;
-    });
+    return state.update('stepper', st => stepperStackUp(st, action));
   });
 
   yield addReducer('stepperStackDown', function (state, action) {
-    return state.updateIn(['stepper', 'display'], function (stepperState) {
-      let {controls} = stepperState;
-      const stackDepth = stepperState.analysis.frames.size;
-      const focusDepth = controls.getIn(['stack', 'focusDepth']);
-      if (focusDepth + 1 < stackDepth) {
-        controls = controls.setIn(['stack', 'focusDepth'], focusDepth + 1);
-        stepperState = {...stepperState, controls};
-      }
-      return stepperState;
-    });
+    return state.update('stepper', st => stepperStackDown(st, action));
   });
 
 };

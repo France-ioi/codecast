@@ -15,7 +15,7 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 import Document from '../buffers/document';
 import {DocumentModel} from '../buffers/index';
 import {translateClear, translateStarted, translateSucceeded, translateFailed, translateClearDiagnostics} from '../stepper/translate';
-import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress, stepperUndo, stepperRedo} from '../stepper/reducers';
+import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress, stepperUndo, stepperRedo, stepperStackUp, stepperStackDown} from '../stepper/reducers';
 import * as runtime from '../stepper/runtime';
 
 
@@ -352,6 +352,14 @@ export default function* (deps) {
         }
         case 'stepper.redo': {
           state = state.update('stepper', st => stepperRedo(st));
+          break;
+        }
+        case 'stepper.stack.up': {
+          state = state.update('stepper', st => stepperStackUp(st));
+          break;
+        }
+        case 'stepper.stack.down': {
+          state = state.update('stepper', st => stepperStackDown(st));
           break;
         }
         case 'end': {
