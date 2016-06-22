@@ -123,13 +123,6 @@ body#app, #app h1, #app h2, #app h3 {
 .stack-view {
   overflow-y: auto;
 }
-.stack-view .scope-decl-load {
-  font-weight: bold;
-}
-.stack-view .scope-decl-prevValue {
-  text-decoration: line-through;
-  padding-left: 0.5em;
-}
 .stack-view .scope-function-top {
   font-weight: bold;
 }
@@ -145,6 +138,14 @@ body#app, #app h1, #app h2, #app h3 {
 }
 .stack-frame-focused {
   background-color: #eee;
+}
+
+.value .value-load {
+  font-weight: bold;
+}
+.value .value-previous {
+  text-decoration: line-through;
+  padding-left: 0.5em;
 }
 
 .array-elems {

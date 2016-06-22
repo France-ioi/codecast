@@ -6,6 +6,7 @@ import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
 import {viewFrame} from './analysis';
+import {renderDecl, renderValue, renderStoredValue, renderCall} from './view_utils';
 
 export default function* (deps) {
 
@@ -34,58 +35,11 @@ export default function* (deps) {
 
   const StackView = EpicComponent(self => {
 
-    const parensIf = function (cond, elem) {
-      return cond ? <span>{'('}{elem}{')'}</span> : elem;
-    };
-
-    const renderDecl = function (type, subject, prec) {
-      switch (type.kind) {
-        case 'function':
-          // TODO: print param types?
-          return renderDecl(type.result, <span>{parensIf(prec > 0, subject)}{'()'}</span>, 0);
-        case 'pointer':
-          return renderDecl(type.pointee, <span>{'*'}{subject}</span>, 1);
-        case 'array':
-          return renderDecl(type.elem, <span>{parensIf(prec > 0, subject)}{'['}{type.count && type.count.toString()}{']'}</span>, 0);
-        case 'scalar':
-          return <span>{type.repr}{' '}{subject}</span>;
-        default:
-          return type.kind.toString();
-      }
-    };
-
-    const renderValue = function (value) {
-      if (value === null)
-        return 'void';
-      return value.toString();
-    };
-
-    const renderFunctionCall = function (func, args) {
-      const argCount = args.length;
-      return (
-        <span>
-          {func.name}
-          {'('}
-          <span>
-            {args.map(function (value, i) {
-              return (
-                <span key={i}>
-                  {renderValue(value)}
-                  {i + 1 < argCount && ', '}
-                </span>
-              );
-            })}
-          </span>
-          {')'}
-        </span>
-      );
-    };
-
     const renderFunctionHeader = function (view) {
       const {func, args} = view;
       return (
         <div className={classnames(["scope-function-title", false && "scope-function-top"])}>
-          {renderFunctionCall(func, args)}
+          {renderCall(func, args)}
         </div>
       );
     };
@@ -102,15 +56,7 @@ export default function* (deps) {
               <li key={name}>
                 <div className="scope-decl">
                   <span>{renderDecl(type, subject, 0)}</span>
-                  {value && ' = '}
-                  {value &&
-                    <span className={classnames([typeof value.load === 'number' && 'scope-decl-load'])}>
-                      {renderValue(value.current)}
-                    </span>}
-                  {value && value.previous &&
-                    <span className="scope-decl-prevValue">
-                      {renderValue(value.previous)}
-                    </span>}
+                  {value && <span>{' = '}{renderStoredValue(value)}</span>}
                 </div>
               </li>
             );
@@ -139,7 +85,7 @@ export default function* (deps) {
       const argCount = args.length;
       return (
         <div className="scope-function-return">
-          {renderFunctionCall(func, args)}
+          {renderCall(func, args)}
           {' '}
           <i className="fa fa-long-arrow-right"/>
           <span className="scope-function-retval">

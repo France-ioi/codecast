@@ -97,6 +97,13 @@ const viewVariable = function (core, name, type, ref) {
 };
 
 const viewRef = function (core, ref) {
+  // Produce a 'stored value' object whose shape is {ref, current, previous,
+  // load, store}, where:
+  //   - 'ref' holds the value's reference (a pointer value)
+  //   - 'current' holds the current value
+  //   - 'load' holds the smallest rank of a load in the memory log
+  //   - 'store' holds the greatest rank of a store in the memory log
+  //   - 'previous' holds the previous value (if 'store' is defined)
   const result = {ref: ref, current: readValue(core.memory, ref)}
   core.memoryLog.forEach(function (entry, i) {
     if (refsIntersect(ref, entry[1])) {
@@ -105,13 +112,13 @@ const viewRef = function (core, ref) {
           result.load = i;
         }
       } else if (entry[0] === 'store') {
-        if (result.store === undefined) {
-          result.store = i;
-          result.previous = readValue(core.oldMemory, ref);
-        }
+        result.store = i;
       }
     }
   });
+  if ('store' in result) {
+    result.previous = readValue(core.oldMemory, ref);
+  }
   return result;
 };
 
