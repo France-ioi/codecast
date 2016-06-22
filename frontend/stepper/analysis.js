@@ -1,6 +1,6 @@
 
 import Immutable from 'immutable';
-import {readValue} from 'persistent-c';
+import {readValue, pointerType, PointerValue} from 'persistent-c';
 
 export const StackFrame = Immutable.Record({
   scope: null, key: null, func: null, args: null,
@@ -76,35 +76,53 @@ export const viewFrame = function (core, frame, options) {
     const locals = view.locals = [];
     frame.get('localNames').forEach(function (name) {
       const {type, ref} = localMap.get(name);
-      locals.push(viewVariable(core, name, type, ref));
+      // XXX type and ref.type are assumed identical
+      console.log('type === ref.type?', type === ref.type);
+      locals.push(viewVariable(core, name, type, ref.address));
     });
   }
   return view;
 };
 
-const viewVariable = function (core, name, type, ref) {
-  const result = {name, type};
-  try {
-    if (type.kind === 'array') {
-      // TODO: display the first elements of an array (if its size is known)
-      return result;
-    }
-    result.value = viewRef(core, ref);
-  } catch (err) {
-    result.error = err;
-  }
-  return result;
+const viewVariable = function (core, name, type, address) {
+  return {
+    name,
+    type,
+    address,
+    value: viewStoredValue(core, pointerType(type), address)
+  };
 };
 
-const viewRef = function (core, ref) {
-  // Produce a 'stored value' object whose shape is {ref, current, previous,
-  // load, store}, where:
+const viewStoredValue = function (core, refType, address) {
+  const type = refType.pointee;
+  if (type.kind === 'array') {
+    const {elem, count} = type;
+    return viewStoredArray(core, pointerType(elem), count, address);
+  }
+  return viewStoredScalar(core, refType, address);
+};
+
+const viewStoredArray = function (core, elemRefType, elemCount, address) {
+  const elemSize = elemRefType.pointee.size;
+  const elems = [];
+  for (let elemIndex = 0; elemIndex < elemCount; elemIndex += 1) {
+    elems.push({index: elemIndex, value: viewStoredValue(core, elemRefType, address)});
+    address += elemSize;
+  }
+  return {kind: 'array', count: elemCount, elems};
+};
+
+const viewStoredScalar = function (core, refType, address) {
+  // Produce a 'stored scalar value' object whose shape is
+  //   {ref, current, previous, load, store}
+  // where:
   //   - 'ref' holds the value's reference (a pointer value)
   //   - 'current' holds the current value
   //   - 'load' holds the smallest rank of a load in the memory log
   //   - 'store' holds the greatest rank of a store in the memory log
   //   - 'previous' holds the previous value (if 'store' is defined)
-  const result = {ref: ref, current: readValue(core.memory, ref)}
+  const ref = new PointerValue(refType, address);
+  const result = {kind: 'scalar', ref: ref, current: readValue(core.memory, ref)}
   core.memoryLog.forEach(function (entry, i) {
     if (refsIntersect(ref, entry[1])) {
       if (entry[0] === 'load') {

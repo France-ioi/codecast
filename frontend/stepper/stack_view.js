@@ -6,7 +6,7 @@ import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
 import {viewFrame} from './analysis';
-import {renderDecl, renderValue, renderStoredValue, renderCall} from './view_utils';
+import {renderVarDecl, renderValue, renderCall} from './view_utils';
 
 export default function* (deps) {
 
@@ -49,15 +49,9 @@ export default function* (deps) {
         <div className="scope-function-blocks">
           <ul>
           {locals.map(function (view) {
-            const {name, type, value} = view;
-            const ref = value && value.ref;
-            const subject = <span title={ref && '0x'+ref.address.toString(16)}>{name}</span>;
             return (
-              <li key={name}>
-                <div className="scope-decl">
-                  <span>{renderDecl(type, subject, 0)}</span>
-                  {value && <span>{' = '}{renderStoredValue(value)}</span>}
-                </div>
+              <li key={view.name}>
+                {renderVarDecl(view)}
               </li>
             );
           })}

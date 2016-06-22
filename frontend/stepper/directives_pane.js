@@ -6,46 +6,20 @@ import EpicComponent from 'epic-component';
 import {inspectPointer, pointerType, PointerValue} from 'persistent-c';
 
 import {defineSelector, defineView} from '../utils/linker';
-
-const getIdent = function (expr) {
-  return expr[0] === 'ident' && expr[1];
-};
-
-const renderType = function (type, prec) {
-  switch (type.kind) {
-    case 'scalar':
-      return type.repr;
-    case 'pointer':
-      return renderType(type.pointee, 1) + '*';
-  }
-  return type.toString();
-};
-
-const renderValue = function (view) {
-  const classes = [view.load !== undefined && 'value-loaded'];
-  return (
-    <span className="value">
-      <span className={classnames(classes)}>{view.value.toString()}</span>
-      {view.prevValue && <span className="value-changed">{view.prevValue.toString()}</span>}
-    </span>
-  );
-};
+import {renderVarDecl, renderStoredValue} from './view_utils';
 
 const ShowVar = EpicComponent(self => {
   self.render = function () {
-    const {view} = self.props;
-    const {name, value} = view;
-    if (!value) {
-      return <p>{name} not in scope</p>;
-    }
-    const header = (
-      <span>
-        <span className="variable-type">{renderType(value.type, 0)}</span>
-        {' '}
-        <span className="variable-name">{name}</span>
-        {' = '}
-      </span>);
-    return <Panel className="variable-decl" header={header}>{renderValue(value)}</Panel>;
+    const {name, view} = self.props;
+    const header = `show variable ${name}`;
+    return (
+      <Panel className="directive directive-ShowVar" header={header}>
+        {view
+          ? renderVarDecl(view)
+          : <p>not in scope</p>
+        }
+      </Panel>
+    );
   };
 });
 
