@@ -6,7 +6,7 @@ import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
 import {viewFrame} from './analysis';
-import {renderVarDecl, renderValue, renderCall} from './view_utils';
+import {renderValue, VarDecl, FunctionCall} from './view_utils';
 
 export default function* (deps) {
 
@@ -35,26 +35,22 @@ export default function* (deps) {
 
   const StackView = EpicComponent(self => {
 
-    const renderFunctionHeader = function (view) {
+    const renderFrameHeader = function (view) {
       const {func, args} = view;
       return (
         <div className={classnames(["scope-function-title", false && "scope-function-top"])}>
-          {renderCall(func, args)}
+          <FunctionCall func={func} args={args}/>
         </div>
       );
     };
 
-    const renderFunctionLocals = function (locals) {
+    const renderFrameLocals = function (decls) {
       return (
         <div className="scope-function-blocks">
           <ul>
-          {locals.map(function (view) {
-            return (
-              <li key={view.name}>
-                {renderVarDecl(view)}
-              </li>
-            );
-          })}
+          {decls.map(decl =>
+            <li key={decl.name}><VarDecl {...decl}/></li>
+          )}
           </ul>
         </div>
       );
@@ -62,10 +58,11 @@ export default function* (deps) {
 
     const renderFrame = function (view) {
       // {key, func, args, locals}
+      const {key, locals} = view;
       return (
-        <div key={view.key} className={classnames(['stack-frame', view.focus && 'stack-frame-focused'])}>
-          {renderFunctionHeader(view)}
-          {view.locals && renderFunctionLocals(view.locals)}
+        <div key={key} className={classnames(['stack-frame', view.focus && 'stack-frame-focused'])}>
+          {renderFrameHeader(view)}
+          {locals && renderFrameLocals(locals)}
         </div>
       );
     };
@@ -79,7 +76,7 @@ export default function* (deps) {
       const argCount = args.length;
       return (
         <div className="scope-function-return">
-          {renderCall(func, args)}
+          <FunctionCall func={func} args={args}/>
           {' '}
           <i className="fa fa-long-arrow-right"/>
           <span className="scope-function-retval">

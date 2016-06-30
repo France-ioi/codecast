@@ -1,16 +1,24 @@
+/*
+
+A `Stored Value` can have one of these shapes:
+  {kind: 'scalar', ref, current, previous, load, store}
+  {kind: 'array', count, cells: [{index, address, content}]}
+
+*/
 
 import Immutable from 'immutable';
-import {readValue, pointerType, PointerValue} from 'persistent-c';
+import * as C from 'persistent-c';
 
 export const StackFrame = Immutable.Record({
   scope: null, key: null, func: null, args: null,
   localNames: Immutable.List(),
-  localMap: Immutable.Map()
+  localMap: Immutable.Map(),
+  directives: Immutable.List()
 });
 
 export const analyseState = function (core) {
-  const {frames, directives} = analyseScope(core.scope);
-  const result = {frames, directives};
+  const frames = analyseScope(core.scope);
+  const result = {frames};
   if (core.direction === 'out') {
     result.callReturn = {
       func: core.control.values[0],
@@ -18,7 +26,7 @@ export const analyseState = function (core) {
       result: core.result
     };
   }
-  return result;
+  return Object.freeze(result);
 };
 
 /*
@@ -27,17 +35,27 @@ export const analyseState = function (core) {
 */
 const analyseScope = function (scope) {
   if (!scope) {
-    return {
-      frames: Immutable.List(),
-      directives: Immutable.Map()
-    };
+    return Immutable.List()
   }
-  let {frames, directives} = analyseScope(scope.parent);
+  let frames = analyseScope(scope.parent);
+  // 'function' and 'block' scopes have directives,
+  // 'function' scopes clears the active directives.
   switch (scope.kind) {
     case 'function': {
       const func = scope.values[0];
       const args = scope.values.slice(1);
-      frames = frames.push(StackFrame({scope: scope, func, args}));
+      frames = frames.push(StackFrame({
+        scope: scope,
+        key: scope.key,
+        func,
+        args,
+        directives: Immutable.List(scope.directives)
+      }));
+      break;
+    }
+    case 'block': {
+      frames = frames.updateIn([frames.size - 1, 'directives'], directives =>
+        directives.concat(scope.directives));
       break;
     }
     case 'variable': {
@@ -59,10 +77,7 @@ const analyseScope = function (scope) {
       break;
     }
   }
-  if ('directives' in scope) {
-    // TODO
-  }
-  return {frames, directives};
+  return frames;
 };
 
 export const viewFrame = function (core, frame, options) {
@@ -76,43 +91,32 @@ export const viewFrame = function (core, frame, options) {
     const locals = view.locals = [];
     frame.get('localNames').forEach(function (name) {
       const {type, ref} = localMap.get(name);
-      // XXX type and ref.type are assumed identical
-      console.log('type === ref.type?', type === ref.type);
+      // type and ref.type.pointee are assumed identical
       locals.push(viewVariable(core, name, type, ref.address));
     });
   }
   return view;
 };
 
-const viewVariable = function (core, name, type, address) {
+export const viewVariable = function (core, name, type, address) {
   return {
     name,
     type,
     address,
-    value: viewStoredValue(core, pointerType(type), address)
+    value: readValue(core, C.pointerType(type), address)
   };
 };
 
-const viewStoredValue = function (core, refType, address) {
+export const readValue = function (core, refType, address) {
   const type = refType.pointee;
   if (type.kind === 'array') {
     const {elem, count} = type;
-    return viewStoredArray(core, pointerType(elem), count, address);
+    return readArray(core, C.pointerType(elem), count, address);
   }
-  return viewStoredScalar(core, refType, address);
+  return readScalar(core, refType, address);
 };
 
-const viewStoredArray = function (core, elemRefType, elemCount, address) {
-  const elemSize = elemRefType.pointee.size;
-  const elems = [];
-  for (let elemIndex = 0; elemIndex < elemCount; elemIndex += 1) {
-    elems.push({index: elemIndex, value: viewStoredValue(core, elemRefType, address)});
-    address += elemSize;
-  }
-  return {kind: 'array', count: elemCount, elems};
-};
-
-const viewStoredScalar = function (core, refType, address) {
+const readScalar = function (core, refType, address) {
   // Produce a 'stored scalar value' object whose shape is
   //   {ref, current, previous, load, store}
   // where:
@@ -121,8 +125,8 @@ const viewStoredScalar = function (core, refType, address) {
   //   - 'load' holds the smallest rank of a load in the memory log
   //   - 'store' holds the greatest rank of a store in the memory log
   //   - 'previous' holds the previous value (if 'store' is defined)
-  const ref = new PointerValue(refType, address);
-  const result = {kind: 'scalar', ref: ref, current: readValue(core.memory, ref)}
+  const ref = new C.PointerValue(refType, address);
+  const result = {kind: 'scalar', ref: ref, current: C.readValue(core.memory, ref)}
   core.memoryLog.forEach(function (entry, i) {
     if (refsIntersect(ref, entry[1])) {
       if (entry[0] === 'load') {
@@ -135,9 +139,53 @@ const viewStoredScalar = function (core, refType, address) {
     }
   });
   if ('store' in result) {
-    result.previous = readValue(core.oldMemory, ref);
+    result.previous = C.readValue(core.oldMemory, ref);
   }
   return result;
+};
+
+export const readArray = function (core, elemRefType, elemCount, address) {
+  const elemSize = elemRefType.pointee.size;
+  const cells = [];
+  for (let index = 0; index < elemCount; index += 1) {
+    const content = readValue(core, elemRefType, address);
+    cells.push({index, address, content});
+    address += elemSize;
+  }
+  return {kind: 'array', count: elemCount, cells};
+};
+
+export const readArrayWithCursors = function (core, elemRefType, elemCount, address, cursorDecls) {
+  // Start like readArray, but add cursors and prevCursors to each cell.
+  const elemSize = elemRefType.pointee.size;
+  const cells = [];
+  for (let index = 0; index < elemCount; index += 1) {
+    const content = readValue(core, elemRefType, address);
+    cells.push({index, address, content, cursors: [], prevCursors: []});
+    address += elemSize;
+  }
+  // Add the cell immediately past the end of the array, which is valid for a
+  // cursor to reference.
+  cells.push({content: {}, cursors: [], prevCursors: [], last: true});
+  // Use cursors to annotate the cells.
+  cursorDecls.forEach(function (cursor) {
+    const {value, name} = cursor;
+    if (value.kind !== 'scalar') {
+      // Ignore non-scalar cursors.
+      return;
+    }
+    const cursorPos = value.current.toInteger();
+    if (cursorPos >= 0 && cursorPos <= elemCount) {
+      cells[cursorPos].cursors.push(name);
+    }
+    if ('store' in value) {
+      const cursorPrevPos = value.previous.toInteger();
+      if (cursorPrevPos >= 0 && cursorPrevPos <= elemCount) {
+        cells[cursorPrevPos].prevCursors.push(name);
+      }
+    }
+  });
+  return {kind: 'array', count: elemCount, cells, cursors: cursorDecls};
 };
 
 const refsIntersect = function (ref1, ref2) {
@@ -146,113 +194,3 @@ const refsIntersect = function (ref1, ref2) {
   const result = (base1 <= base2) ? (base2 <= limit1) : (base1 <= limit2);
   return result;
 };
-
-/*
-
-const getIdent = function (expr) {
-  return expr[0] === 'ident' && expr[1];
-};
-
-const prepareDirective = function (directive, scope, index, decls, core) {
-  if (Array.isArray(directive)) {
-    const key = `${scope.key}.${index}`;
-    directive = {key, kind: directive[0], byPos: directive[1], byName: directive[2]}
-  }
-  let {key, kind, byPos, byName} = directive;
-  const result = {key, kind};
-  switch (kind) {
-    case 'showVar':
-      {
-        const ident = result.name = getIdent(byPos[0]);
-        if (!ident) {
-          result.error = 'invalid variable name';
-          break;
-        }
-        const varScope = decls[ident];
-        if (varScope) {
-          result.value = inspectPointer(varScope.ref, core);
-        }
-        break;
-      }
-    case 'showArray':
-      {
-        const ident = result.name = getIdent(byPos[0]);
-        const varScope = decls[ident];
-        if (varScope) {
-          // Expect varScope.ref to be a pointer to an array.
-          if (varScope.ref.type.kind !== 'pointer') {
-            result.error = 'reference is not a pointer';
-            break;
-          }
-          const varType = varScope.ref.type.pointee;
-          if (varType.kind !== 'array') {
-            result.error = 'expected a reference to an array';
-          }
-          // Extract the array's address, element type and count.
-          const address = result.address = varScope.ref.address;
-          const elemType = result.elemType = varType.elem;
-          const elemCount = result.elemCount = varType.count.toInteger();
-          // Inspect each array element.
-          const elems = result.elems = [];
-          const ptr = new PointerValue(pointerType(elemType), address);
-          for (let elemIndex = 0; elemIndex < elemCount; elemIndex += 1) {
-            elems.push({value: inspectPointer(ptr, core), cursors: [], prevCursors: []});
-            ptr.address += elemType.size;
-          }
-          // Add an extra empty element.
-          elems.push({value: {}, cursors: [], prevCursors: [], last: true});
-          // Cursors?
-          if (byName.cursors && byName.cursors[0] === 'list') {
-            const cursorIdents = byName.cursors[1].map(getIdent);
-            cursorIdents.forEach(function (cursorIdent) {
-              const cursorScope = decls[cursorIdent];
-              if (cursorScope) {
-                const cursorValue = inspectPointer(cursorScope.ref, core);
-                const cursorPos = cursorValue.value.toInteger();
-                if (cursorPos >= 0 && cursorPos <= elemCount) {
-                  elems[cursorPos].cursors.push(cursorIdent);
-                }
-                if (cursorValue.prevValue) {
-                  const cursorPrevPos = cursorValue.prevValue.toInteger();
-                  if (cursorPrevPos >= 0 && cursorPrevPos <= elemCount) {
-                    elems[cursorPrevPos].prevCursors.push(cursorIdent);
-                  }
-                }
-              }
-            })
-          }
-        }
-        break;
-      }
-    default:
-      result.error = `unknown directive ${kind}`;
-      return
-  }
-  return result;
-};
-
-const getViews = function (core) {
-  const views = [];
-  const directives = {};
-  let decls = {};
-  let scope = core.scope;
-  while (scope) {
-    if ('decl' in scope) {
-      // param or vardecl
-      const name = scope.decl.name;
-      if (!(name in decls)) {
-        decls[scope.decl.name] = scope;
-      }
-    }
-    if ('directives' in scope) {
-        scope.directives.forEach((directive, i) => views.push(prepareDirective(directive, scope, i, decls, core)));
-    }
-    if (scope.kind === 'function') {
-        decls = {};
-    }
-    scope = scope.parent;
-  }
-  return views;
-};
-
-*/

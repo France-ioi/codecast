@@ -43,7 +43,9 @@ export default function* (deps) {
     // Returns a persistent view of the context.
     // The state is enriched with the core's analysis.
     const {state, stepCounter} = context;
-    state.analysis = analyseState(state.core);
+    if (state.core) {
+      state.analysis = analyseState(state.core);
+    }
     return {state, stepCounter};
   }
 

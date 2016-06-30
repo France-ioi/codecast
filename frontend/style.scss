@@ -140,43 +140,38 @@ body#app, #app h1, #app h2, #app h3 {
   background-color: #eee;
 }
 
-.value .value-load {
+.value-load {
   font-weight: bold;
 }
-.value .value-previous {
+.value-previous {
   text-decoration: line-through;
+}
+span + .value-previous {
   padding-left: 0.5em;
 }
 
-.array-elems {
+.array-cells {
   margin: 2px;
 }
-.array-elemView {
+.array-cell {
   float: left;
   width: 64px;
   border: 1px solid black;
 }
-.array-lastElem {
+.array-lastCell {
   border: 1px solid #bbb;
   background-color: #e8e8e8;
 }
-.array-elemView, .array-lastElem {
+.array-cell, .array-lastCell {
   border-left: 0;
 }
-.array-elemView:first-child {
+.array-cell:first-child {
   border-left: 1px solid black;
 }
-.array-elemView > * {
+.array-cell > * {
   overflow: hidden;
   text-align: center;
   height: 20px;
-}
-
-.value-loaded {
-  font-weight: bold;
-}
-.value-changed {
-  text-decoration: line-through;
 }
 
 .dev-EventsPanel {
@@ -292,11 +287,11 @@ body#app, #app h1, #app h2, #app h3 {
   .nav-examples > li > a {
     padding: 3px 5px;
   }
-  .array-elemView {
+  .array-cell {
     font-size: 10px;
     width: 45px;
   }
-  .array-elemView > * {
+  .array-cell > * {
     height: 14px;
   }
 }

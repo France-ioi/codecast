@@ -6,74 +6,62 @@ import EpicComponent from 'epic-component';
 import {inspectPointer, pointerType, PointerValue} from 'persistent-c';
 
 import {defineSelector, defineView} from '../utils/linker';
-import {renderVarDecl, renderStoredValue} from './view_utils';
+import {VarDecl, StoredValue, Array1D} from './view_utils';
+import {viewVariable, readArrayWithCursors} from './analysis';
 
-const ShowVar = EpicComponent(self => {
-  self.render = function () {
-    const {name, view} = self.props;
-    const header = `show variable ${name}`;
-    return (
-      <Panel className="directive directive-ShowVar" header={header}>
-        {view
-          ? renderVarDecl(view)
-          : <p>not in scope</p>
-        }
-      </Panel>
-    );
-  };
-});
+const getIdent = function (expr) {
+  return expr[0] === 'ident' && expr[1];
+};
 
-const ShowArray = EpicComponent(self => {
-  self.render = function () {
-    const {view} = self.props;
-    const {name, elemType, elemCount, elems} = view;
-    if (!elems) {
-      return <p>{name} not in scope</p>;
-    }
-    // TODO: cursors
-    const renderArrayElem = function (elem, i) {
-      const {value, cursors, prevCursors} = elem;
-      const elemClasses = [
-        "array-elemView",
-        elem.last && "array-lastElem"
-      ];
-      const valueClasses = [
-        "array-elemValue",
-        value.load !== undefined && 'value-loaded'
-      ];
-      return (
-        <div className={classnames(elemClasses)} key={i}>
-          <div className="value-changed">
-            {value.prevValue && value.prevValue.toString()}
-          </div>
-          <div className={classnames(valueClasses)}>
-            {value.value && value.value.toString()}
-          </div>
-          <div className="array-cursors">
-            {cursors && cursors.map(c => <span key={c}>{c}</span>)}
-            {prevCursors && prevCursors.map(c => <span key={c} className="value-changed">{c}</span>)}
-          </div>
-        </div>
-      );
-    };
-    const header = (
-      <div className="array-decl">
-        <span className="array-type">{renderType(elemType, 0)}</span>
-        {' '}
-        <span className="variable-name">{name}</span>
-        {'['}
-        {elemCount}
-        {'] ='}
-      </div>);
-    return (
-      <Panel className="array-view" header={header}>
-        <div className="array-elems clearfix">
-          {elems.map(renderArrayElem)}
-        </div>
-      </Panel>
-    );
-  };
-});
+const showVar = function (directive, controls, frames, context) {
+  const {byPos} = directive;
+  const frame = frames[0];
+  const localMap = frame.get('localMap');
+  const name = getIdent(byPos[0]);
+  if (!localMap.has(name)) {
+    return <p>{name}{" not in scope"}</p>;
+  }
+  const {type, ref} = localMap.get(name);
+  const decl = viewVariable(context.core, name, type, ref.address);
+  return <VarDecl {...decl} />;
+};
+
+const showArray = function (directive, controls, frames, context) {
+  const {core} = context;
+  // 'name' is the first positional argument
+  const {byName, byPos} = directive;
+  const {cursors} = byName;
+  const name = getIdent(byPos[0]);
+  // Use the topmost frame.
+  const frame = frames[0];
+  const localMap = frame.get('localMap');
+  if (!localMap.has(name)) {
+    return <p>{name}{" not in scope"}</p>;
+  }
+  const {type, ref} = localMap.get(name);
+  // Expect an array declaration.
+  if (type.kind !== 'array') {
+    return <p>{"value is not an array"}</p>;
+  }
+  // Inspect cursors.
+  const cursorDecls = [];
+  if ('list' === cursors[0]) {
+    cursors[1].forEach(function (cursor) {
+      const name = getIdent(cursor);
+      if (localMap.has(name)) {
+        const {type, ref} = localMap.get(name);
+        const decl = viewVariable(core, name, type, ref.address);
+        cursorDecls.push(decl);
+      }
+    });
+  }
+  const address = ref.address;
+  const elemType = type.elem;
+  const elemCount = type.count.toInteger();
+  const {cells} = readArrayWithCursors(
+    core, pointerType(elemType), elemCount, address, cursorDecls);
+  return <Array1D cells={cells}/>
+};
 
 export default function* (deps) {
 
@@ -83,40 +71,57 @@ export default function* (deps) {
 
   yield defineView('DirectivesPane', 'DirectivesPaneSelector', EpicComponent(self => {
 
-    const Components = {
-      showVar: ShowVar,
-      showArray: ShowArray
-    };
+    const directiveViewDict = {showVar, showArray};
 
-    // XXX
-
-    const renderView = function (view) {
-      const {key, kind} = view;
-      const Component = Components[kind];
-      return (
-        <div key={key} className="directive-view clearfix">
-          {Component ? <Component view={view}/> : <Panel>Bad component {kind}</Panel>}
-        </div>
-      );
+    const collectDirectives = function (frames, focusDepth) {
+      const dirOrder = [];
+      const dirFrames = {};
+      // Frames are collected in reverse order, so that the directive's render
+      // function should use frames[0] to access the innermost frame.
+      for (let depth = frames.size - 1 - focusDepth; depth >= 0; depth -= 1) {
+        const frame = frames.get(depth);
+        const directives = frame.get('directives');
+        directives.forEach(function (directive) {
+          const {key} = directive;
+          if (key in dirFrames) {
+            dirFrames[key].push(frame);
+          } else {
+            dirOrder.push(directive);
+            dirFrames[key] = [frame];
+          }
+        })
+      }
+      return {dirOrder, dirFrames};
     };
 
     self.render = function () {
-      const {state, views} = self.props;
-      if (!state || state.error) {
+      const {state} = self.props;
+      if (!state || !state.analysis) {
         return false;
       }
-      return false; // temporarily disabled
-      /*
-      try {
-        return <div className="directive-pane">{views.map(renderView)}</div>;
-      } catch (err) {
+      const {core, analysis, controls} = state;
+      // Traverse all stack frames to collect directive instances.
+      const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
+      const {dirOrder, dirFrames} = collectDirectives(analysis.frames, focusDepth);
+      const context = {core};
+      const renderDirective = function (directive, frames) {
+        const {key, kind} = directive;
+        const func = directiveViewDict[kind];
         return (
-          <div className="directive-pane">
-            <pre>{err.toString()}</pre>
+          <div key={key} className='directive-view clearfix'>
+            {typeof func === 'function'
+              ? <Panel className="directive" header={key}>
+                  {func(directive, controls.get(key), frames, context)}
+                </Panel>
+              : <Panel header={`undefined view kind ${kind}`}/>}
           </div>
         );
-      }
-      */
+      };
+      return (
+        <div className='directive-pane'>
+          {dirOrder.map(directive => renderDirective(directive, dirFrames[directive.key]))}
+        </div>
+      );
     };
 
   }));

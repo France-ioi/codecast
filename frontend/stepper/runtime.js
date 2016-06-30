@@ -24,10 +24,17 @@ const stepperOptions = function (effects) {
   // Perhaps make persistent-c always generate all 'leave' effects?
   // Alternatively, make 'leave' effects discard all directives that lives in
   // a scope whose key is greater than the new scope's key.
+  const applyCallEffect = function (state, effect) {
+    effects.call(state, effect);
+    const node = effect[2][0].decl;
+    const scope = state.core.scope;
+    scope.directives = node[1].directives || [];
+  };
   return {
     effectHandlers: {
       ...effects,
       write: applyWriteEffect,
+      call: applyCallEffect,
       enter: applyEnterEffect,
       scanf: applyScanfEffect
     }
