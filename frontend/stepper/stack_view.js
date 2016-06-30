@@ -68,7 +68,7 @@ export default function* (deps) {
     };
 
     const renderCallReturn = function () {
-      const {callReturn} = self.props;
+      const {callReturn} = self.props.analysis;
       if (!callReturn) {
         return false;
       }
