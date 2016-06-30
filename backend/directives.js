@@ -131,7 +131,8 @@ module.exports.enrichSyntaxTree = function (source, ast) {
         }
         if (functionNode) {
           // For the first block inside a function, attach the directives
-          // to the function instead of the block.
+          // to the function instead of the block.  This is to allow the
+          // directives to inspect arguments.
           functionNode[1].directives = directives;
           functionNode = undefined;
         } else {
