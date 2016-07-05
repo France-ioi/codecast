@@ -52,7 +52,7 @@ const examples = [
 
   {
     title: "opérateurs relationnels",
-    source: "#include <stdio.h>\nint main() {\n  int a = 1, b = 2;\n  if (a == a) printf(\" a == a\\n\");\n  if (a != b) printf(\" a != b\\n\");\n  if (a < b) printf(\" a < a\\n\");\n  if (a <= a) printf(\" a <= a\\n\");\n  if (b > a) printf(\" b > a\\n\");\n  if (b >= b) printf(\" b >= b\\n\");\n}\n"
+    source: "#include <stdio.h>\nint main() {\n  int a = 1, b = 2;\n  if (a == a) printf(\" a == a\\n\");\n  if (a != b) printf(\" a != b\\n\");\n  if (a < b) printf(\" a < b\\n\");\n  if (a <= a) printf(\" a <= a\\n\");\n  if (b > a) printf(\" b > a\\n\");\n  if (b >= b) printf(\" b >= b\\n\");\n}\n"
   },
 
   {
@@ -144,11 +144,11 @@ const examples = [
   {
     title: "listes d'initialisation",
     source: [
-      "// Cet exemple n'est pas encore géré par l'évaluateur pas-à-pas",
       "#include <stdio.h>",
       "int main() {",
       "    int a[] = {1, 2};",
       "    int * b = a;",
+      "    printf(\"%d %d\\n\", *b, b[1]);",
       "    return 0;",
       "}"
     ].join('\n')
@@ -174,6 +174,33 @@ const examples = [
       "    char *(*(**foo[3][2])())[];",
       "",
       "    return 0;",
+      "}"
+    ].join('\n')
+  },
+
+  {
+    title: "variables globales",
+    source: [
+      "#include <stdio.h>",
+      "int a = 1;",
+      "int b = 2;",
+      "int main() {",
+      "    printf(\"&a = %p  &b = %p\\n\", &a, &b);",
+      "    printf(\"a = %d\\n\", a);",
+      "    a += 1;",
+      "    printf(\"a = %d\\n\", a);",
+      "}"
+    ].join('\n')
+  },
+
+  {
+    title: "init. tableau 2D global",
+    source: [
+      "#include <stdio.h>",
+      "int a[][2] = {{1, 2}, {3, 4}};",
+      "int main() {",
+      "    printf(\"%d %d\\n\", a[0][0], a[0][1]);",
+      "    printf(\"%d %d\\n\", a[1][0], a[1][1]);",
       "}"
     ].join('\n')
   }
