@@ -123,7 +123,8 @@ function applyFormat (state, ops, values) {
         }
         break;
       case "p":
-        arg = (arg.number >>> 0).toString(16);
+        // arg is assumed to be a PointerValue
+        arg = (arg.address >>> 0).toString(16);
         break;
     }
 
