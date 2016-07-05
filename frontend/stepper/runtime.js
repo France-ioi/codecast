@@ -54,28 +54,22 @@ const scanf = function (state, cont, values) {
 const builtins = {printf, scanf};
 
 export const start = function (syntaxTree, options) {
-  try {
-    options = options || {};
-    const decls = syntaxTree[2];
-    // Core setup.
-    const state = {core: C.start({decls, builtins})};
-    // Terminal setup.
-    state.terminal = new TermBuffer({lines: 10, width: 60});
-    // Input setup.
-    if (typeof options.input === 'string') {
-      const inputStr = options.input.trim();
-      const input = inputStr.length === 0 ? [] : options.input.split(/[\s]+/);
-      state.input = Immutable.List(input);
-    }
-    return stepIntoUserCode(state);
-  } catch (ex) {
-    return {error: ex};
+  options = options || {};
+  const decls = syntaxTree[2];
+  // Core setup.
+  const state = C.start({decls, builtins, options: stepperOptions});
+  // Terminal setup.
+  state.terminal = new TermBuffer({lines: 10, width: 60});
+  // Input setup.
+  if (typeof options.input === 'string') {
+    const inputStr = options.input.trim();
+    const input = inputStr.length === 0 ? [] : options.input.split(/[\s]+/);
+    state.input = Immutable.List(input);
   }
+  return stepIntoUserCode(state);
 };
 
-export const step = function (state) {
-  return C.step(state, stepperOptions);
-};
+export const step = C.step;
 
 export const stepIntoUserCode = function (state) {
   while (state.core.control && !state.core.control.node[1].begin) {
