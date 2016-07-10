@@ -57,7 +57,7 @@ System.config({
     "immutable": "npm:immutable@3.8.1",
     "lamejs": "npm:lamejs@1.1.0",
     "lodash": "npm:lodash@4.12.0",
-    "persistent-c": "npm:persistent-c@9.0.1",
+    "persistent-c": "npm:persistent-c@9.1.0",
     "query-string": "npm:query-string@4.1.0",
     "rc-slider": "npm:rc-slider@3.6.0",
     "react": "npm:react@15.1.0",
@@ -647,7 +647,7 @@ System.config({
       "process": "github:jspm/nodelibs-process@0.1.2",
       "systemjs-json": "github:systemjs/plugin-json@0.1.2"
     },
-    "npm:persistent-c@9.0.1": {
+    "npm:persistent-c@9.1.0": {
       "child_process": "github:jspm/nodelibs-child_process@0.1.0",
       "immutable": "npm:immutable@3.8.1",
       "text-encoding-utf-8": "npm:text-encoding-utf-8@1.0.1"
