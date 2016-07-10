@@ -6,7 +6,7 @@ import EpicComponent from 'epic-component';
 import {inspectPointer, pointerType, PointerValue} from 'persistent-c';
 
 import {defineSelector, defineView} from '../utils/linker';
-import {VarDecl, StoredValue, Array1D} from './view_utils';
+import {VarDecl, StoredValue, Array1D, Array1DSvg} from './view_utils';
 import {viewVariable, readArrayWithCursors} from './analysis';
 
 const getIdent = function (expr) {
@@ -60,7 +60,7 @@ const showArray = function (directive, controls, frames, context) {
   const elemCount = type.count.toInteger();
   const {cells} = readArrayWithCursors(
     core, pointerType(elemType), elemCount, address, cursorDecls);
-  return <Array1D cells={cells}/>
+  return <Array1DSvg cells={cells}/>
 };
 
 export default function* (deps) {
