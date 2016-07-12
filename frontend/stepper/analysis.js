@@ -110,8 +110,8 @@ export const viewVariable = function (core, name, type, address) {
 export const readValue = function (core, refType, address) {
   const type = refType.pointee;
   if (type.kind === 'array') {
-    const {elem, count} = type;
-    return readArray(core, C.pointerType(elem), count, address);
+    const cells = readArray1D(core, type, address);
+    return {kind: 'array', count: type.count, cells};
   }
   return readScalar(core, refType, address);
 };
@@ -144,48 +144,18 @@ const readScalar = function (core, refType, address) {
   return result;
 };
 
-export const readArray = function (core, elemRefType, elemCount, address) {
-  const elemSize = elemRefType.pointee.size;
+export const readArray1D = function (core, arrayType, address) {
+  const elemCount = arrayType.count.toInteger();
+  const elemType = arrayType.elem;
+  const elemSize = elemType.size;
+  const elemRefType = C.pointerType(elemType);
   const cells = [];
   for (let index = 0; index < elemCount; index += 1) {
     const content = readValue(core, elemRefType, address);
     cells.push({index, address, content});
     address += elemSize;
   }
-  return {kind: 'array', count: elemCount, cells};
-};
-
-export const readArrayWithCursors = function (core, elemRefType, elemCount, address, cursorDecls) {
-  // Start like readArray, but add cursors and prevCursors to each cell.
-  const elemSize = elemRefType.pointee.size;
-  const cells = [];
-  for (let index = 0; index < elemCount; index += 1) {
-    const content = readValue(core, elemRefType, address);
-    cells.push({index, address, content, cursors: [], prevCursors: []});
-    address += elemSize;
-  }
-  // Add the cell immediately past the end of the array, which is valid for a
-  // cursor to reference.
-  cells.push({content: {}, cursors: [], prevCursors: [], last: true});
-  // Use cursors to annotate the cells.
-  cursorDecls.forEach(function (cursor) {
-    const {value, name} = cursor;
-    if (value.kind !== 'scalar') {
-      // Ignore non-scalar cursors.
-      return;
-    }
-    const cursorPos = value.current.toInteger();
-    if (cursorPos >= 0 && cursorPos <= elemCount) {
-      cells[cursorPos].cursors.push(name);
-    }
-    if ('store' in value) {
-      const cursorPrevPos = value.previous.toInteger();
-      if (cursorPrevPos >= 0 && cursorPrevPos <= elemCount) {
-        cells[cursorPrevPos].prevCursors.push(name);
-      }
-    }
-  });
-  return {kind: 'array', count: elemCount, cells, cursors: cursorDecls};
+  return cells;
 };
 
 const refsIntersect = function (ref1, ref2) {

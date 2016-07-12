@@ -6,8 +6,9 @@ import EpicComponent from 'epic-component';
 import {inspectPointer, pointerType, PointerValue} from 'persistent-c';
 
 import {defineSelector, defineView} from '../utils/linker';
-import {VarDecl, StoredValue, Array1D, Array1DSvg} from './view_utils';
-import {viewVariable, readArrayWithCursors} from './analysis';
+import {VarDecl, StoredValue} from './view_utils';
+import {Array1D} from './array1d';
+import {viewVariable, readArray1D} from './analysis';
 
 const getIdent = function (expr) {
   return expr[0] === 'ident' && expr[1];
@@ -43,24 +44,39 @@ const showArray = function (directive, controls, frames, context) {
   if (type.kind !== 'array') {
     return <p>{"value is not an array"}</p>;
   }
+  const cells = readArray1D(core, type, ref.address);
   // Inspect cursors.
-  const cursorDecls = [];
-  if ('list' === cursors[0]) {
+  const cursorMap = [];
+  if (cursors && 'list' === cursors[0]) {
+    const elemCount = type.count;
     cursors[1].forEach(function (cursor) {
       const name = getIdent(cursor);
       if (localMap.has(name)) {
         const {type, ref} = localMap.get(name);
         const decl = viewVariable(core, name, type, ref.address);
-        cursorDecls.push(decl);
+        const cursorPos = decl.value.current.toInteger();
+        if (cursorPos >= 0 && cursorPos <= elemCount) {
+          const cursor = {name};
+          if ('store' in decl.value) {
+            const cursorPrevPos = decl.value.previous.toInteger();
+            if (cursorPrevPos >= 0 && cursorPrevPos <= elemCount) {
+              cursor.prev = cursorPrevPos;
+            }
+          }
+          if (!(cursorPos in cursorMap)) {
+            cursorMap[cursorPos] = [];
+          }
+          cursorMap[cursorPos].push(cursor);
+        }
       }
     });
   }
-  const address = ref.address;
-  const elemType = type.elem;
-  const elemCount = type.count.toInteger();
-  const {cells} = readArrayWithCursors(
-    core, pointerType(elemType), elemCount, address, cursorDecls);
-  return <Array1DSvg cells={cells}/>
+  // Include an empty cell just past the end of the array.
+  const tailCell = {
+    index: type.count.toInteger(),
+    address: ref.address + type.size
+  };
+  return <Array1D cells={cells} tailCell={tailCell} cursors={cursorMap}/>;
 };
 
 export default function* (deps) {
