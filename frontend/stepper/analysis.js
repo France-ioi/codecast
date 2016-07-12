@@ -158,6 +158,28 @@ export const readArray1D = function (core, arrayType, address) {
   return cells;
 };
 
+export const readArray2D = function (core, arrayType, address) {
+  const rowCount = arrayType.elemCount.toInteger();
+  const rowType = arrayType.elem;
+  const rowSize = rowType.size;
+  const colCount = rowType.elemCount.toInteger();
+  const cellType = rowType.elem;
+  const cellSize = cellType.size;
+  const cellRefType = C.pointerType(cellType);
+  const rows = [];
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+    const row = [];
+    const rowAddress = address + rowIndex * rowSize;
+    for (let colIndex = 0; colIndex < colCount; colIndex += 1) {
+      const cellAddress = rowAddress + colIndex * cellSize;
+      const cell = readValue(core, cellRefType, cellAddress);
+      row.push({index: colIndex, address: cellAddress, content: cell});
+    }
+    rows.push({index: rowIndex, address: rowAddress, content: row});
+  }
+  return rows;
+};
+
 const refsIntersect = function (ref1, ref2) {
   const base1 = ref1.address, limit1 = base1 + ref1.type.pointee.size - 1;
   const base2 = ref2.address, limit2 = base2 + ref2.type.pointee.size - 1;
