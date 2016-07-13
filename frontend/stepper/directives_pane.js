@@ -8,7 +8,8 @@ import {inspectPointer, pointerType, PointerValue} from 'persistent-c';
 import {defineSelector, defineView} from '../utils/linker';
 import {VarDecl, StoredValue} from './view_utils';
 import {Array1D} from './array1d';
-import {viewVariable, readArray1D} from './analysis';
+import {Array2D} from './array2d';
+import {viewVariable} from './analysis';
 
 const getIdent = function (expr) {
   return expr[0] === 'ident' && expr[1];
@@ -28,55 +29,7 @@ const showVar = function (directive, controls, frames, context) {
 };
 
 const showArray = function (directive, controls, frames, context) {
-  const {core} = context;
-  // 'name' is the first positional argument
-  const {byName, byPos} = directive;
-  const {cursors} = byName;
-  const name = getIdent(byPos[0]);
-  // Use the topmost frame.
-  const frame = frames[0];
-  const localMap = frame.get('localMap');
-  if (!localMap.has(name)) {
-    return <p>{name}{" not in scope"}</p>;
-  }
-  const {type, ref} = localMap.get(name);
-  // Expect an array declaration.
-  if (type.kind !== 'array') {
-    return <p>{"value is not an array"}</p>;
-  }
-  const cells = readArray1D(core, type, ref.address);
-  // Inspect cursors.
-  const cursorMap = [];
-  if (cursors && 'list' === cursors[0]) {
-    const elemCount = type.count;
-    cursors[1].forEach(function (cursor) {
-      const name = getIdent(cursor);
-      if (localMap.has(name)) {
-        const {type, ref} = localMap.get(name);
-        const decl = viewVariable(core, name, type, ref.address);
-        const cursorPos = decl.value.current.toInteger();
-        if (cursorPos >= 0 && cursorPos <= elemCount) {
-          const cursor = {name};
-          if ('store' in decl.value) {
-            const cursorPrevPos = decl.value.previous.toInteger();
-            if (cursorPrevPos >= 0 && cursorPrevPos <= elemCount) {
-              cursor.prev = cursorPrevPos;
-            }
-          }
-          if (!(cursorPos in cursorMap)) {
-            cursorMap[cursorPos] = [];
-          }
-          cursorMap[cursorPos].push(cursor);
-        }
-      }
-    });
-  }
-  // Include an empty cell just past the end of the array.
-  const tailCell = {
-    index: type.count.toInteger(),
-    address: ref.address + type.size
-  };
-  return <Array1D cells={cells} tailCell={tailCell} cursors={cursorMap}/>;
+  return <Array1D directive={directive} controls={controls} frames={frames} context={context}/>;
 };
 
 export default function* (deps) {
