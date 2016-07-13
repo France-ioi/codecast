@@ -249,7 +249,7 @@ export const ShowVar = EpicComponent(self => {
     }
     const {type, ref} = localMap.get(name);
     const value = readValue(context.core, C.pointerType(type), ref.address);
-    return <VarDecl name={name} type={type} address={address} value={value} />;
+    return <VarDecl name={name} type={type} address={ref.address} value={value} />;
   };
 
 });
