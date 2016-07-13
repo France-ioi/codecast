@@ -3,7 +3,6 @@ import React from 'react';
 import {Panel} from 'react-bootstrap';
 import classnames from 'classnames';
 import EpicComponent from 'epic-component';
-import {inspectPointer, pointerType, PointerValue} from 'persistent-c';
 
 import {use, defineSelector, defineView} from '../utils/linker';
 import {ShowVar} from './utils';

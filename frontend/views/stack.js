@@ -3,6 +3,7 @@ import React from 'react';
 import classnames from 'classnames';
 import {Alert, Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
+import Immutable from 'immutable';
 
 import {use, defineSelector, defineView} from '../utils/linker';
 import {viewFrame, renderValue, VarDecl, FunctionCall} from './utils';
@@ -19,7 +20,7 @@ export default function* (deps) {
     const {core, analysis, controls} = stepperState;
     const {maxVisible} = props;
     const stackControls = controls.get('stack');
-    const focusDepth = stackControls.get('focusDepth', 0);
+    const focusDepth = stackControls ? stackControls.get('focusDepth', 0) : 0;
     const firstVisible = Math.max(0, focusDepth - 5);
     return {
       focusDepth,

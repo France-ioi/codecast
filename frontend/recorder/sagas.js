@@ -51,7 +51,7 @@ export default function* (deps) {
     'inputSelect', 'inputEdit', 'inputScroll',
     'translateStarted', 'translateSucceeded', 'translateFailed', 'translateClearDiagnostics',
     'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperInterrupt', 'stepperRestart', 'stepperExit',
-    'stepperUndo', 'stepperRedo', 'stepperStackUp', 'stepperStackDown'
+    'stepperUndo', 'stepperRedo', 'stepperStackUp', 'stepperStackDown', 'stepperViewControlsChanged'
   );
 
   function* recorderPrepare () {
@@ -373,6 +373,11 @@ export default function* (deps) {
 
   recorders.stepperStackDown = function* (t, action) {
     yield call(recordEvent, [t, 'stepper.stack.down']);
+  };
+
+  recorders.stepperViewControlsChanged = function* (t, action) {
+    const {key, update} = action;
+    yield call(recordEvent, [t, 'stepper.view.update', key, update]);
   };
 
   recorders.recorderStopping = function* (t, action) {

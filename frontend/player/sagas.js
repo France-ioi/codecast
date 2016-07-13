@@ -15,7 +15,7 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 import Document from '../buffers/document';
 import {DocumentModel} from '../buffers/index';
 import {translateClear, translateStarted, translateSucceeded, translateFailed, translateClearDiagnostics} from '../stepper/translate';
-import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress, stepperUndo, stepperRedo, stepperStackUp, stepperStackDown} from '../stepper/reducers';
+import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress, stepperUndo, stepperRedo, stepperStackUp, stepperStackDown, stepperViewControlsChanged} from '../stepper/reducers';
 import * as runtime from '../stepper/runtime';
 
 
@@ -325,7 +325,8 @@ export default function* (deps) {
         case 'stepper.restart': {
           const syntaxTree = state.getIn(['translate', 'syntaxTree']);
           const input = state.get('input') && Document.toString(state.getIn(['input', 'document']));
-          const stepperState = C.clearMemoryLog(runtime.start(syntaxTree, {input}));
+          const stepperState = runtime.start(syntaxTree, {input});
+          stepperState.core = C.clearMemoryLog(stepperState.core);
           const action = {stepperState};
           state = state.update('stepper', st => stepperRestart(st, action));
           break;
@@ -362,6 +363,12 @@ export default function* (deps) {
           state = state.update('stepper', st => stepperStackDown(st));
           break;
         }
+        case 'stepper.view.update': {
+          const key = event[2];
+          const update = event[3];
+          state = state.update('stepper', st => stepperViewControlsChanged(st, {key, update}));
+          break;
+        }
         case 'end': {
           state = state.set('stopped', true);
           break;
@@ -378,7 +385,10 @@ export default function* (deps) {
 
   function beginStep (state) {
     return {
-      state: C.clearMemoryLog(state),
+      state: {
+        ...state,
+        core: C.clearMemoryLog(state.core)
+      },
       stepCounter: 0
     };
   }

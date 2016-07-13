@@ -24,16 +24,20 @@ import {addReducer} from '../utils/linker';
 import {analyseState, collectDirectives} from './analysis';
 
 const enrichStepperState = function (stepperState) {
+  stepperState = {...stepperState};
+  if (!('controls' in stepperState)) {
+    stepperState.controls = Immutable.Map();
+  }
   const {core, controls} = stepperState;
   if (!core) {
     return stepperState;
   }
-  const analysis = analyseState(core);
+  const analysis = stepperState.analysis = analyseState(core);
   const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
-  const directives = collectDirectives(analysis.frames, focusDepth);
+  stepperState.directives = collectDirectives(analysis.frames, focusDepth);
   // TODO? initialize controls for each directive added,
-  //       clear controls for each directive removed.
-  return {...stepperState, analysis, directives};
+  //       clear controls for each directive removed (except 'stack').
+  return stepperState;
 };
 
 export const stepperClear = function (state) {

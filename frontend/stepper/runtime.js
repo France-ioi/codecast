@@ -86,7 +86,7 @@ export const getNodeRange = function (state) {
   if (!control || !control.node) {
     return null;
   }
-  const focusDepth = state.controls.getIn(['stack','focusDepth']);
+  const focusDepth = state.controls.getIn(['stack','focusDepth'], 0);
   if (focusDepth === 0) {
     return control.node[1].range;
   } else {
