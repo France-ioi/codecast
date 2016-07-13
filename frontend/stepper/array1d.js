@@ -1,6 +1,7 @@
 
 import React from 'react';
 import EpicComponent from 'epic-component';
+import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 
 import {viewVariable, readArray1D} from './analysis';
 import {renderValue} from './view_utils';
@@ -12,7 +13,7 @@ export const Array1D = EpicComponent(self => {
   const textBaseline = 5; // from bottom
   const arrowHeight = 20;
   const cellWidth = 28;
-  const cellHeight = 4 * textLineHeight + arrowHeight + 4;
+  const cellHeight = 4 * textLineHeight + arrowHeight;
 
   const getIdent = function (expr, noVal) {
     return expr[0] === 'ident' ? expr[1] : noVal;
@@ -91,7 +92,7 @@ export const Array1D = EpicComponent(self => {
     const y1 = baseline(1);
     const y2 = baseline(2);
     return (
-      <g key={index} transform={`translate(${5 + index * cellWidth},5)`} clipPath="url(#cell)">
+      <g key={index} transform={`translate(${index * cellWidth},0)`} clipPath="url(#cell)">
         {content && 'store' in content && <g>
           <text x={cellWidth/2} y={y0} textAnchor="middle" fill="#777">
             {renderValue(content.previous)}
@@ -116,20 +117,38 @@ export const Array1D = EpicComponent(self => {
     );
   };
 
+  const onViewChange = function (viewState) {
+    console.log('change', viewState);
+  };
+
+  const getViewState = function (controls) {
+    if (!controls) {
+      return ViewerHelper.getDefaultValue();
+    }
+    return controls.viewState;
+  };
+
   self.render = function () {
+    const {controls} = self.props;
     const {error, cells, tailCell, cursorMap} = extractView();
     if (error) {
       return <div className='clearfix'>{error}</div>;
     }
+    const viewState = getViewState(self.props.controls);
+    console.log('render', viewState);
     return (
-      <div className='clearfix'>
-        <svg width="100%" viewBox={`0 0 1000 ${cellHeight}`} version="1.1" xmlns="http://www.w3.org/2000/svg">
-          <clipPath id="cell">
-              <rect x="0" y="0" width={cellWidth} height={cellHeight} stroke-width="5"/>
-          </clipPath>
-          {cells.map(cell => renderColumn(cell, cursorMap[cell.index]))}
-          {tailCell && renderColumn(tailCell, cursorMap[tailCell.index])}
-        </svg>
+      <div className='clearfix' style={{padding: '2px'}}>
+        <div style={{width: '100%', height: cellHeight+'px'}}>
+          <ViewerResponsive value={viewState} onChange={onViewChange} background='transparent'>
+            <svg width="1000" height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
+              <clipPath id="cell">
+                  <rect x="0" y="0" width={cellWidth} height={cellHeight} stroke-width="5"/>
+              </clipPath>
+              {cells.map(cell => renderColumn(cell, cursorMap[cell.index]))}
+              {tailCell && renderColumn(tailCell, cursorMap[tailCell.index])}
+            </svg>
+          </ViewerResponsive>
+        </div>
       </div>
     );
   };
