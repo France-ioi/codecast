@@ -109,14 +109,14 @@ export const Array1D = EpicComponent(self => {
   };
 
   const onViewChange = function (event) {
-    console.log('change', event.value);
+    const {value} = event;
+    const update = {viewState: value};
+    self.props.onChange(self.props.directive, update);
   };
 
   const getViewState = function (controls) {
-    if (!controls) {
-      return ViewerHelper.getDefaultValue();
-    }
-    return controls.viewState;
+    const viewState = controls && controls.get('viewState');
+    return viewState || ViewerHelper.getDefaultValue();
   };
 
   self.render = function () {
@@ -126,7 +126,6 @@ export const Array1D = EpicComponent(self => {
       return <div className='clearfix'>{error}</div>;
     }
     const viewState = getViewState(self.props.controls);
-    console.log('render', viewState);
     return (
       <div className='clearfix' style={{padding: '2px'}}>
         <div style={{width: '100%', height: (cellHeight/2)+'px'}}>

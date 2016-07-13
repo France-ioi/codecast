@@ -31,6 +31,8 @@ const enrichStepperState = function (stepperState) {
   const analysis = analyseState(core);
   const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
   const directives = collectDirectives(analysis.frames, focusDepth);
+  // TODO? initialize controls for each directive added,
+  //       clear controls for each directive removed.
   return {...stepperState, analysis, directives};
 };
 
@@ -140,6 +142,26 @@ export const stepperStackDown = function (state, action) {
   });
 };
 
+export const stepperViewControlsChanged = function (state, action) {
+  const {key, update} = action;
+  return state.update('display', function (stepperState) {
+    let {controls} = stepperState;
+    if (controls.has(key)) {
+      controls = controls.update(key, function (viewControls) {
+        // Do not use viewControls.merge as it applies Immutable.fromJS
+        // to all values.
+        Object.keys(update).forEach(function (name) {
+          viewControls = viewControls.set(name, update[name]);
+        });
+        return viewControls;
+      });
+    } else {
+      controls = controls.set(key, Immutable.Map(update));
+    }
+    return {...stepperState, controls};
+  });
+};
+
 export default function* () {
 
   yield addReducer('init', function (state, action) {
@@ -209,6 +231,10 @@ export default function* () {
 
   yield addReducer('stepperStackDown', function (state, action) {
     return state.update('stepper', st => stepperStackDown(st, action));
+  });
+
+  yield addReducer('stepperViewControlsChanged', function (state, action) {
+    return state.update('stepper', st => stepperViewControlsChanged(st, action));
   });
 
 };

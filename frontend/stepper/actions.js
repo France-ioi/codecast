@@ -36,5 +36,6 @@ export default function* (deps) {
 
   yield defineAction('stepperStackUp', 'Stepper.Stack.Up');
   yield defineAction('stepperStackDown', 'Stepper.Stack.Down');
+  yield defineAction('stepperViewControlsChanged', 'Stepper.View.ControlsChanged');
 
 };

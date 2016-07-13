@@ -5,12 +5,14 @@ import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import {inspectPointer, pointerType, PointerValue} from 'persistent-c';
 
-import {defineSelector, defineView} from '../utils/linker';
+import {use, defineSelector, defineView} from '../utils/linker';
 import {ShowVar} from './utils';
 import {Array1D} from './array1d';
 import {Array2D} from './array2d';
 
 export default function* (deps) {
+
+  yield use('stepperViewControlsChanged');
 
   yield defineSelector('DirectivesPaneSelector', function (state, props) {
     return {state: state.getIn(['stepper', 'display'])};
@@ -19,6 +21,11 @@ export default function* (deps) {
   yield defineView('DirectivesPane', 'DirectivesPaneSelector', EpicComponent(self => {
 
     const directiveViewDict = {showVar: ShowVar, showArray: Array1D};
+
+    const onControlsChange = function (directive, update) {
+      const {key} = directive;
+      self.props.dispatch({type: deps.stepperViewControlsChanged, key, update});
+    };
 
     self.render = function () {
       const {state} = self.props;
@@ -32,13 +39,13 @@ export default function* (deps) {
       const renderDirective = function (directive) {
         const {key, kind} = directive;
         const View = directiveViewDict[kind];
-        console.log('render', key, kind, View);
         return (
           <div key={key} className='directive-view clearfix'>
             <Panel className="directive" header={key}>
               {View
                 ? <View directive={directive} controls={controls.get(key)}
-                        frames={framesMap[key]} context={context} />
+                        frames={framesMap[key]} context={context}
+                        onChange={onControlsChange} />
                 : <p>{`undefined view kind ${kind}`}</p>}
             </Panel>
           </div>
