@@ -128,7 +128,7 @@ export const Array1D = EpicComponent(self => {
     const viewState = getViewState(self.props.controls);
     return (
       <div className='clearfix' style={{padding: '2px'}}>
-        <div style={{width: '100%', height: (cellHeight/2)+'px'}}>
+        <div style={{width: '100%', height: cellHeight+'px'}}>
           <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent'>
             <svg width="1000" height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
               <clipPath id="cell">
