@@ -60,10 +60,11 @@ System.config({
     "persistent-c": "npm:persistent-c@9.1.0",
     "query-string": "npm:query-string@4.1.0",
     "rc-slider": "npm:rc-slider@3.6.0",
-    "react": "npm:react@15.1.0",
+    "react": "npm:react@15.2.1",
     "react-bootstrap": "npm:react-bootstrap@0.29.4",
-    "react-dom": "npm:react-dom@15.1.0",
+    "react-dom": "npm:react-dom@15.2.1",
     "react-redux": "npm:react-redux@4.4.5",
+    "react-svg-pan-zoom": "npm:react-svg-pan-zoom@1.3.3",
     "redux": "npm:redux@3.5.2",
     "redux-devtools": "npm:redux-devtools@3.2.0",
     "redux-devtools-dock-monitor": "npm:redux-devtools-dock-monitor@1.1.1",
@@ -468,7 +469,7 @@ System.config({
       "iconv-lite": "npm:iconv-lite@0.4.13"
     },
     "npm:epic-component@0.3.1": {
-      "react": "npm:react@15.1.0"
+      "react": "npm:react@15.2.1"
     },
     "npm:evp_bytestokey@1.0.0": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0",
@@ -719,6 +720,9 @@ System.config({
       "shallowequal": "npm:shallowequal@0.2.2",
       "util-deprecate": "npm:util-deprecate@1.0.2"
     },
+    "npm:react-addons-update@15.2.1": {
+      "react": "npm:react@15.2.1"
+    },
     "npm:react-bootstrap@0.29.4": {
       "babel-runtime": "npm:babel-runtime@5.8.38",
       "classnames": "npm:classnames@2.2.5",
@@ -727,25 +731,30 @@ System.config({
       "keycode": "npm:keycode@2.1.2",
       "lodash-compat": "npm:lodash-compat@3.10.2",
       "process": "github:jspm/nodelibs-process@0.1.2",
-      "react": "npm:react@15.1.0",
-      "react-dom": "npm:react-dom@15.1.0",
+      "react": "npm:react@15.2.1",
+      "react-dom": "npm:react-dom@15.2.1",
       "react-overlays": "npm:react-overlays@0.6.3",
       "react-prop-types": "npm:react-prop-types@0.3.2",
       "uncontrollable": "npm:uncontrollable@3.3.1",
       "warning": "npm:warning@2.1.0"
     },
+    "npm:react-dimensions@1.3.0": {
+      "element-resize-event": "npm:element-resize-event@2.0.5",
+      "react": "npm:react@15.2.1",
+      "react-dom": "npm:react-dom@15.2.1"
+    },
     "npm:react-dock@0.2.3": {
       "lodash.debounce": "npm:lodash.debounce@3.1.1",
       "object-assign": "npm:object-assign@4.0.1",
-      "react": "npm:react@15.1.0"
+      "react": "npm:react@15.2.1"
     },
-    "npm:react-dom@15.1.0": {
-      "react": "npm:react@15.1.0"
+    "npm:react-dom@15.2.1": {
+      "react": "npm:react@15.2.1"
     },
     "npm:react-json-tree@0.6.8": {
       "babel-plugin-transform-runtime": "npm:babel-plugin-transform-runtime@6.7.5",
       "babel-runtime": "npm:babel-runtime@6.6.1",
-      "react": "npm:react@15.1.0",
+      "react": "npm:react@15.2.1",
       "react-mixin": "npm:react-mixin@1.7.0",
       "react-pure-render": "npm:react-pure-render@1.0.2"
     },
@@ -756,8 +765,8 @@ System.config({
     "npm:react-overlays@0.6.3": {
       "classnames": "npm:classnames@2.2.5",
       "dom-helpers": "npm:dom-helpers@2.4.0",
-      "react": "npm:react@15.1.0",
-      "react-dom": "npm:react-dom@15.1.0",
+      "react": "npm:react@15.2.1",
+      "react-dom": "npm:react-dom@15.2.1",
       "react-prop-types": "npm:react-prop-types@0.2.2",
       "warning": "npm:warning@2.1.0"
     },
@@ -773,10 +782,19 @@ System.config({
       "lodash": "npm:lodash@4.12.0",
       "loose-envify": "npm:loose-envify@1.2.0",
       "process": "github:jspm/nodelibs-process@0.1.2",
-      "react": "npm:react@15.1.0",
+      "react": "npm:react@15.2.1",
       "redux": "npm:redux@3.5.2"
     },
-    "npm:react@15.1.0": {
+    "npm:react-svg-pan-zoom@1.3.3": {
+      "path": "github:jspm/nodelibs-path@0.1.0",
+      "process": "github:jspm/nodelibs-process@0.1.2",
+      "react": "npm:react@15.2.1",
+      "react-addons-update": "npm:react-addons-update@15.2.1",
+      "react-dimensions": "npm:react-dimensions@1.3.0",
+      "react-dom": "npm:react-dom@15.2.1",
+      "transformation-matrix-js": "npm:transformation-matrix-js@2.6.5"
+    },
+    "npm:react@15.2.1": {
       "fbjs": "npm:fbjs@0.8.3",
       "loose-envify": "npm:loose-envify@1.2.0",
       "object-assign": "npm:object-assign@4.1.0",
@@ -817,14 +835,14 @@ System.config({
     "npm:redux-devtools-dock-monitor@1.1.1": {
       "babel-runtime": "npm:babel-runtime@6.6.1",
       "parse-key": "npm:parse-key@0.2.1",
-      "react": "npm:react@15.1.0",
+      "react": "npm:react@15.2.1",
       "react-dock": "npm:react-dock@0.2.3",
       "react-pure-render": "npm:react-pure-render@1.0.2",
       "redux-devtools": "npm:redux-devtools@3.2.0"
     },
     "npm:redux-devtools-log-monitor@1.0.11": {
       "lodash.debounce": "npm:lodash.debounce@4.0.6",
-      "react": "npm:react@15.1.0",
+      "react": "npm:react@15.2.1",
       "react-json-tree": "npm:react-json-tree@0.6.8",
       "react-pure-render": "npm:react-pure-render@1.0.2",
       "redux-devtools": "npm:redux-devtools@3.2.0",
@@ -835,7 +853,7 @@ System.config({
     },
     "npm:redux-devtools@3.2.0": {
       "lodash": "npm:lodash@4.12.0",
-      "react": "npm:react@15.1.0",
+      "react": "npm:react@15.2.1",
       "react-redux": "npm:react-redux@4.4.5",
       "redux": "npm:redux@3.5.2"
     },
@@ -933,7 +951,7 @@ System.config({
     "npm:uncontrollable@3.3.1": {
       "invariant": "npm:invariant@2.2.1",
       "process": "github:jspm/nodelibs-process@0.1.2",
-      "react": "npm:react@15.1.0"
+      "react": "npm:react@15.2.1"
     },
     "npm:url@0.10.3": {
       "assert": "github:jspm/nodelibs-assert@0.1.0",
