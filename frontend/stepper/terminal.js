@@ -1,7 +1,3 @@
-
-import React from 'react';
-import EpicComponent from 'epic-component';
-import classnames from 'classnames';
 import Immutable from 'immutable';
 
 /*
@@ -28,33 +24,11 @@ icanon mode:
 
 */
 
+
 export const Cursor = Immutable.Record({line: 0, column: 0});
 export const Attrs = Immutable.Record({});
 export const Cell = Immutable.Record({char: ' ', attrs: Attrs()});
 
-export const TermView = EpicComponent(self => {
-  self.render = function () {
-    const {buffer} = self.props;
-    const cursor = buffer.get('cursor');
-    const ci = cursor.get('line'), cj = cursor.get('column');
-    return (
-      <div className="terminal">
-        {buffer.get('lines').map(function (line, i) {
-          return (
-            <div key={i} className="terminal-line">
-              {line.map(function (cell, j) {
-                if (i == ci && j == cj) {
-                  return <span key={j} className="terminal-cursor">{cell.get('char')}</span>;
-                }
-                return <span key={j}>{cell.get('char')}</span>;
-              })}
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-});
 
 export const TermBuffer = function (options) {
   options = options || {};
@@ -122,5 +96,3 @@ export const writeNewline = function (buffer) {
   buffer = buffer.set('cursor', cursor);
   return buffer;
 };
-
-export default TermBuffer;

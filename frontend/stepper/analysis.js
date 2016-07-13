@@ -80,109 +80,23 @@ const analyseScope = function (scope) {
   return frames;
 };
 
-export const viewFrame = function (core, frame, options) {
-  const view = {
-    key: frame.get('scope').key,
-    func: frame.get('func'),
-    args: frame.get('args')
-  };
-  if (options.locals) {
-    const localMap = frame.get('localMap');
-    const locals = view.locals = [];
-    frame.get('localNames').forEach(function (name) {
-      const {type, ref} = localMap.get(name);
-      // type and ref.type.pointee are assumed identical
-      locals.push(viewVariable(core, name, type, ref.address));
-    });
-  }
-  return view;
-};
-
-export const viewVariable = function (core, name, type, address) {
-  return {
-    name,
-    type,
-    address,
-    value: readValue(core, C.pointerType(type), address)
-  };
-};
-
-export const readValue = function (core, refType, address) {
-  const type = refType.pointee;
-  if (type.kind === 'array') {
-    const cells = readArray1D(core, type, address);
-    return {kind: 'array', count: type.count, cells};
-  }
-  return readScalar(core, refType, address);
-};
-
-const readScalar = function (core, refType, address) {
-  // Produce a 'stored scalar value' object whose shape is
-  //   {ref, current, previous, load, store}
-  // where:
-  //   - 'ref' holds the value's reference (a pointer value)
-  //   - 'current' holds the current value
-  //   - 'load' holds the smallest rank of a load in the memory log
-  //   - 'store' holds the greatest rank of a store in the memory log
-  //   - 'previous' holds the previous value (if 'store' is defined)
-  const ref = new C.PointerValue(refType, address);
-  const result = {kind: 'scalar', ref: ref, current: C.readValue(core.memory, ref)}
-  core.memoryLog.forEach(function (entry, i) {
-    if (refsIntersect(ref, entry[1])) {
-      if (entry[0] === 'load') {
-        if (result.load === undefined) {
-          result.load = i;
-        }
-      } else if (entry[0] === 'store') {
-        result.store = i;
+export const collectDirectives = function (frames, focusDepth) {
+  const ordered = [];
+  const framesMap = {};
+  // Frames are collected in reverse order, so that the directive's render
+  // function should use frames[key][0] to access the innermost frame.
+  for (let depth = frames.size - 1 - focusDepth; depth >= 0; depth -= 1) {
+    const frame = frames.get(depth);
+    const directives = frame.get('directives');
+    directives.forEach(function (directive) {
+      const {key} = directive;
+      if (key in framesMap) {
+        framesMap[key].push(frame);
+      } else {
+        ordered.push(directive);
+        framesMap[key] = [frame];
       }
-    }
-  });
-  if ('store' in result) {
-    result.previous = C.readValue(core.oldMemory, ref);
+    })
   }
-  return result;
-};
-
-export const readArray1D = function (core, arrayType, address) {
-  const elemCount = arrayType.count.toInteger();
-  const elemType = arrayType.elem;
-  const elemSize = elemType.size;
-  const elemRefType = C.pointerType(elemType);
-  const cells = [];
-  for (let index = 0; index < elemCount; index += 1) {
-    const content = readValue(core, elemRefType, address);
-    cells.push({index, address, content});
-    address += elemSize;
-  }
-  return cells;
-};
-
-export const readArray2D = function (core, arrayType, address) {
-  const rowCount = arrayType.elemCount.toInteger();
-  const rowType = arrayType.elem;
-  const rowSize = rowType.size;
-  const colCount = rowType.elemCount.toInteger();
-  const cellType = rowType.elem;
-  const cellSize = cellType.size;
-  const cellRefType = C.pointerType(cellType);
-  const rows = [];
-  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
-    const row = [];
-    const rowAddress = address + rowIndex * rowSize;
-    for (let colIndex = 0; colIndex < colCount; colIndex += 1) {
-      const cellAddress = rowAddress + colIndex * cellSize;
-      const cell = readValue(core, cellRefType, cellAddress);
-      row.push({index: colIndex, address: cellAddress, content: cell});
-    }
-    rows.push({index: rowIndex, address: rowAddress, content: row});
-  }
-  return rows;
-};
-
-const refsIntersect = function (ref1, ref2) {
-  const base1 = ref1.address, limit1 = base1 + ref1.type.pointee.size - 1;
-  const base2 = ref2.address, limit2 = base2 + ref2.type.pointee.size - 1;
-  const result = (base1 <= base2) ? (base2 <= limit1) : (base1 <= limit2);
-  return result;
+  return {ordered, framesMap};
 };

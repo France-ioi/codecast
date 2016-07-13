@@ -3,8 +3,7 @@ import React from 'react';
 import EpicComponent from 'epic-component';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 
-import {viewVariable, readArray1D} from './analysis';
-import {renderValue} from './view_utils';
+import {getIdent, getList, viewVariable, readArray1D, renderValue} from './utils';
 
 export const Array1D = EpicComponent(self => {
 
@@ -14,14 +13,6 @@ export const Array1D = EpicComponent(self => {
   const arrowHeight = 20;
   const cellWidth = 28;
   const cellHeight = 4 * textLineHeight + arrowHeight;
-
-  const getIdent = function (expr, noVal) {
-    return expr[0] === 'ident' ? expr[1] : noVal;
-  };
-
-  const getList = function (expr, noVal) {
-    return expr[0] === 'list' ? expr[1] : noVal;
-  };
 
   const extractView = function () {
     const {directive, controls, frames, context} = self.props;
@@ -117,8 +108,8 @@ export const Array1D = EpicComponent(self => {
     );
   };
 
-  const onViewChange = function (viewState) {
-    console.log('change', viewState);
+  const onViewChange = function (event) {
+    console.log('change', event.value);
   };
 
   const getViewState = function (controls) {
@@ -138,11 +129,11 @@ export const Array1D = EpicComponent(self => {
     console.log('render', viewState);
     return (
       <div className='clearfix' style={{padding: '2px'}}>
-        <div style={{width: '100%', height: cellHeight+'px'}}>
-          <ViewerResponsive value={viewState} onChange={onViewChange} background='transparent'>
+        <div style={{width: '100%', height: (cellHeight/2)+'px'}}>
+          <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent'>
             <svg width="1000" height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
               <clipPath id="cell">
-                  <rect x="0" y="0" width={cellWidth} height={cellHeight} stroke-width="5"/>
+                  <rect x="0" y="0" width={cellWidth} height={cellHeight} strokeWidth="5"/>
               </clipPath>
               {cells.map(cell => renderColumn(cell, cursorMap[cell.index]))}
               {tailCell && renderColumn(tailCell, cursorMap[tailCell.index])}

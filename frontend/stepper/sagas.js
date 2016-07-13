@@ -8,7 +8,6 @@ import {use, addSaga} from '../utils/linker';
 
 import Document from '../buffers/document';
 import * as runtime from './runtime';
-import {analyseState} from './analysis';
 
 export default function* (deps) {
 
@@ -31,7 +30,7 @@ export default function* (deps) {
   function buildContext (state) {
     const startTime = window.performance.now();
     return {
-      state: {...state, core: C.clearMemoryLog(state.core), analysis: null},
+      state: {...state, core: C.clearMemoryLog(state.core)},
       startTime,
       timeLimit: startTime + 20,
       stepCounter: 0,
@@ -41,11 +40,7 @@ export default function* (deps) {
 
   function viewContext (context) {
     // Returns a persistent view of the context.
-    // The state is enriched with the core's analysis.
     const {state, stepCounter} = context;
-    if (state.core) {
-      state.analysis = analyseState(state.core);
-    }
     return {state, stepCounter};
   }
 
@@ -178,7 +173,6 @@ export default function* (deps) {
         const input = Document.toString(inputModel.get('document'));
         const stepperState = runtime.start(translate.get('syntaxTree'), {input});
         stepperState.controls = Immutable.Map({stack: Immutable.Map({focusDepth: 0})});
-        stepperState.analysis = analyseState(stepperState.core);
         yield put({type: deps.stepperRestart, stepperState});
       } catch (error) {
         yield put({type: deps.error, source: 'stepper', error});

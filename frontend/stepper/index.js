@@ -7,8 +7,7 @@ import reducers from './reducers';
 import sagas from './sagas';
 import translate from './translate';
 import StepperControls from './controls';
-import StackView from './stack_view';
-import DirectivesPane from './directives_pane';
+import views from '../views/index';
 
 export default function* () {
   yield include(actions);
@@ -17,6 +16,5 @@ export default function* () {
   yield include(sagas);
   yield include(translate);
   yield include(StepperControls);
-  yield include(StackView);
-  yield include(DirectivesPane);
+  yield include(views);
 };

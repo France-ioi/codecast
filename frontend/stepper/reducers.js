@@ -21,6 +21,18 @@ The stepper's state has the following shape:
 import Immutable from 'immutable';
 
 import {addReducer} from '../utils/linker';
+import {analyseState, collectDirectives} from './analysis';
+
+const enrichStepperState = function (stepperState) {
+  const {core, controls} = stepperState;
+  if (!core) {
+    return stepperState;
+  }
+  const analysis = analyseState(core);
+  const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
+  const directives = collectDirectives(analysis.frames, focusDepth);
+  return {...stepperState, analysis, directives};
+};
 
 export const stepperClear = function (state) {
   return Immutable.Map({
@@ -39,7 +51,12 @@ export const stepperStarted = function (state, action) {
 };
 
 export const stepperRestart = function (state, action) {
-  const stepperState = action.stepperState || state.get('initial');
+  let stepperState = action.stepperState;
+  if (stepperState) {
+    stepperState = enrichStepperState(stepperState);
+  } else {
+    stepperState = state.get('initial');
+  }
   return Immutable.Map({
     status: 'idle',
     initial: stepperState,
@@ -52,7 +69,7 @@ export const stepperRestart = function (state, action) {
 
 export const stepperIdle = function (state, action) {
   // Set new current state, also set it for display, and go back to idle.
-  const stepperState = action.context.state;
+  const stepperState = enrichStepperState(action.context.state);
   return state
     .set('current', stepperState)
     .set('display', stepperState)
@@ -62,7 +79,7 @@ export const stepperIdle = function (state, action) {
 
 export const stepperProgress = function (state, action) {
   // Set new current state, also set it for display, and go back to idle.
-  const stepperState = action.context.state;
+  const stepperState = enrichStepperState(action.context.state);
   return state.set('display', stepperState);
 };
 
@@ -96,11 +113,13 @@ export const stepperRedo = function (state, action) {
 
 export const stepperStackUp = function (state, action) {
   return state.update('display', function (stepperState) {
-    let {controls} = stepperState;
-    const focusDepth = controls.getIn(['stack', 'focusDepth']);
+    let {controls, analysis} = stepperState;
+    let focusDepth = controls.getIn(['stack', 'focusDepth']);
     if (focusDepth > 0) {
-      controls = controls.setIn(['stack', 'focusDepth'], focusDepth - 1);
-      stepperState = {...stepperState, controls};
+      focusDepth -= 1;
+      controls = controls.setIn(['stack', 'focusDepth'], focusDepth);
+      const directives = collectDirectives(analysis.frames, focusDepth);
+      stepperState = {...stepperState, controls, directives};
     }
     return stepperState;
   });
@@ -108,12 +127,14 @@ export const stepperStackUp = function (state, action) {
 
 export const stepperStackDown = function (state, action) {
   return state.update('display', function (stepperState) {
-    let {controls} = stepperState;
-    const stackDepth = stepperState.analysis.frames.size;
-    const focusDepth = controls.getIn(['stack', 'focusDepth']);
+    let {controls, analysis} = stepperState;
+    const stackDepth = analysis.frames.size;
+    let focusDepth = controls.getIn(['stack', 'focusDepth']);
     if (focusDepth + 1 < stackDepth) {
-      controls = controls.setIn(['stack', 'focusDepth'], focusDepth + 1);
-      stepperState = {...stepperState, controls};
+      focusDepth += 1;
+      controls = controls.setIn(['stack', 'focusDepth'], focusDepth);
+      const directives = collectDirectives(analysis.frames, focusDepth);
+      stepperState = {...stepperState, controls, directives};
     }
     return stepperState;
   });

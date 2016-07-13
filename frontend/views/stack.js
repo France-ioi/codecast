@@ -5,8 +5,7 @@ import {Alert, Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
-import {viewFrame} from './analysis';
-import {renderValue, VarDecl, FunctionCall} from './view_utils';
+import {viewFrame, renderValue, VarDecl, FunctionCall} from './utils';
 
 export default function* (deps) {
 

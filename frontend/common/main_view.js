@@ -5,7 +5,6 @@ import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
 import Editor from '../buffers/editor';
-import {TermView} from '../stepper/terminal';
 
 export default function* (deps) {
 
@@ -14,7 +13,7 @@ export default function* (deps) {
     'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
     'inputInit', 'inputEdit', 'inputSelect', 'inputScroll',
     'translateClearDiagnostics',
-    'StackView', 'DirectivesPane'
+    'StackView', 'DirectivesPane', 'TerminalView'
   );
 
   yield defineSelector('MainViewSelector', function (state, props) {
@@ -129,7 +128,7 @@ export default function* (deps) {
                   </div>
                   <div className="col-sm-6">
                     {terminal
-                      ? <TermView buffer={terminal}/>
+                      ? <deps.TerminalView buffer={terminal}/>
                       : <div className="terminal">
                           <div className="terminal-placeholder">
                             {"Programme arrêté, pas de sortie à afficher."}
