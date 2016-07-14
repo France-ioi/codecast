@@ -87,7 +87,6 @@ export const readArray1D = function (core, arrayType, address) {
 };
 
 export const readArray2D = function (core, arrayType, address) {
-  console.log('readArray2D', arrayType);
   const rowCount = arrayType.count.toInteger();
   const rowType = arrayType.elem;
   const rowSize = rowType.size;

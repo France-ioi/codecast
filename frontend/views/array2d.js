@@ -120,18 +120,17 @@ export const Array2D = EpicComponent(self => {
   };
 
   const onViewChange = function (event) {
-    const {value} = event;
-    const update = {viewState: value};
+    const update = {viewState: event.value};
     self.props.onChange(self.props.directive, update);
   };
 
-  const getViewState = function (controls) {
+  const getViewState = function () {
+    const {controls} = self.props;
     const viewState = controls && controls.get('viewState');
     return viewState || ViewerHelper.getDefaultValue();
   };
 
   self.render = function () {
-    const {controls} = self.props;
     const view = extractView();
     if (view.error) {
       return <div className='clearfix'>{view.error}</div>;
@@ -139,7 +138,7 @@ export const Array2D = EpicComponent(self => {
     const {rows, rowCount, colCount} = view;
     const height = gridTop + rowCount * cellHeight;
     const width = gridLeft + colCount * cellWidth;
-    const viewState = getViewState(self.props.controls);
+    const viewState = getViewState();
     return (
       <div className='clearfix' style={{padding: '2px'}}>
         <div style={{width: '100%', height: '200px'}}>
