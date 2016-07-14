@@ -143,7 +143,7 @@ export const Array2D = EpicComponent(self => {
       <div className='clearfix' style={{padding: '2px'}}>
         <div style={{width: '100%', height: '200px'}}>
           <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
-            <svg width="100%" viewBox={`0 0 ${width} ${height}`} version="1.1" xmlns="http://www.w3.org/2000/svg">
+            <svg width={width} height={height} version="1.1" xmlns="http://www.w3.org/2000/svg">
               <clipPath id="cell">
                   <rect x="0" y="0" width={cellWidth} height={cellHeight} strokeWidth="5"/>
               </clipPath>
