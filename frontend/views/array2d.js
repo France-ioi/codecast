@@ -14,8 +14,14 @@ export const Array2D = EpicComponent(self => {
   const cellHeight = 2 * textLineHeight + 3;
   const gridLeft = 50;
   const gridTop = 50;
+  const gridBorderLeft = 5;
+  const gridBorderTop = 5;
   const gridStroke = "#777";
-  const gridStrokeWidth = "3";
+  const gridStrokeWidth = "1";
+
+  // left offset: big enough to fit a cursor with 10 characters
+  // top offset: 2 line (cursors) + arrow + 1 line (column index)
+  // directive named argument to set view height
 
   const extractView = function () {
     const {directive, controls, frames, context} = self.props;
@@ -107,16 +113,34 @@ export const Array2D = EpicComponent(self => {
   };
 
   const drawGrid = function (rowCount, colCount) {
-    const lines = [];
+    const elements = [];
+    // Horizontal lines
     const x1 = gridLeft, x2 = x1 + colCount * cellWidth;
     for (let i = 0, y = gridTop; i <= rowCount; i += 1, y += cellHeight) {
-      lines.push(<line x1={x1} x2={x2} y1={y} y2={y} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
+      elements.push(<line x1={x1} x2={x2} y1={y} y2={y} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
     }
+    // Vertical lines
     const y1 = gridTop, y2 = y1 + rowCount * cellHeight;
     for (let j = 0, x = gridLeft; j <= colCount; j += 1, x += cellWidth) {
-      lines.push(<line x1={x} x2={x} y1={y1} y2={y2} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
+      elements.push(<line x1={x} x2={x} y1={y1} y2={y2} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
     }
-    return <g>{lines}</g>;
+    // Row labels
+    let y = gridTop + (cellHeight + textLineHeight) / 2 - textBaseline;
+    let x = gridLeft - gridBorderLeft;
+    for (let i = 0; i < rowCount; i += 1, y += cellHeight) {
+      elements.push(
+        <text x={x} y={y} textAnchor="end" fill="#777">{i}</text>
+      );
+    }
+    // Column labels
+    x = gridLeft + cellWidth / 2;
+    y = gridTop - gridBorderTop - textBaseline;
+    for (let i = 0; i < rowCount; i += 1, x += cellWidth) {
+      elements.push(
+        <text x={x} y={y} textAnchor="middle" fill="#777">{i}</text>
+      );
+    }
+    return <g>{elements}</g>;
   };
 
   const onViewChange = function (event) {
