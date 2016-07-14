@@ -10,9 +10,10 @@ export const Array1D = EpicComponent(self => {
   // @11px, line height 17, offset 12
   const textLineHeight = 17;
   const textBaseline = 5; // from bottom
-  const arrowHeight = 20;
+  const minArrowHeight = 20;
   const cellWidth = 28;
-  const cellHeight = 4 * textLineHeight + arrowHeight;
+  const cursorRows = 2;
+  const cellHeight = (3 + cursorRows) * textLineHeight + minArrowHeight;
 
   const extractView = function () {
     const {directive, controls, frames, context} = self.props;
@@ -35,7 +36,7 @@ export const Array1D = EpicComponent(self => {
     const cells = readArray1D(core, type, ref.address);
     // Inspect cursors.
     const elemCount = type.count;
-    const cursorMap = [];
+    const cellInfoMap = [];
     cursors.forEach(function (cursorName) {
       if (localMap.has(cursorName)) {
         const {type, ref} = localMap.get(cursorName);
@@ -49,19 +50,35 @@ export const Array1D = EpicComponent(self => {
               cursor.prev = cursorPrevPos;
             }
           }
-          if (!(cursorPos in cursorMap)) {
-            cursorMap[cursorPos] = [];
+          if (!(cursorPos in cellInfoMap)) {
+            cellInfoMap[cursorPos] = {};
           }
-          cursorMap[cursorPos].push(cursor);
+          const cellInfos = cellInfoMap[cursorPos];
+          if (!('cursors' in cellInfos)) {
+            cellInfos.cursors = [];
+          }
+          cellInfos.cursors.push(cursor);
         }
       }
     });
+    // Stagger the displayed cursors.
+    let nextStaggerPos, cursorRow = 0;
+    for (let cursorPos in cellInfoMap) {
+      // /!\ comparison between number and string
+      if (nextStaggerPos == cursorPos) {
+        cursorRow = (cursorRow + 1) % cursorRows;
+      } else {
+        cursorRow = 0;
+      }
+      nextStaggerPos = parseInt(cursorPos) + 1;
+      cellInfoMap[cursorPos].cursorRow = cursorRow;
+    }
     // Include an empty cell just past the end of the array.
     const tailCell = {
       index: type.count.toInteger(),
       address: ref.address + type.size
     };
-    return {cells, tailCell, cursorMap};
+    return {cells, tailCell, cellInfoMap};
   };
 
   const baseline = function (i) {
@@ -76,32 +93,41 @@ export const Array1D = EpicComponent(self => {
     return `${x0},${y0} ${x0-dx1},${y0+dy1} ${x0-dx2},${y0+dy1} ${x0-dx2},${y0+dy2} ${x0+dx2},${y0+dy2} ${x0+dx2},${y0+dy1} ${x0+dx1},${y0+dy1} ${x0},${y0}`;
   }
 
-  const renderColumn = function (cell, cursors) {
+  const renderColumn = function (cell, infos) {
     const {index, address, content} = cell;
     const y0 = baseline(0);
     const y0a = y0 - (textLineHeight - textBaseline) / 3;
     const y1 = baseline(1);
     const y2 = baseline(2);
+    let cursorsY, arrowTop, arrowHeight, fillColor = 'transparent';
+    if (infos && infos.cursors) {
+      cursorsY = baseline(3 + infos.cursorRow) + minArrowHeight;
+      arrowTop = textLineHeight * 3;
+      arrowHeight = cursorsY - textLineHeight - y2;
+      fillColor = '#eef';
+    }
     return (
-      <g key={index} transform={`translate(${index * cellWidth},0)`} clipPath="url(#cell)">
-        {content && 'store' in content && <g>
-          <text x={cellWidth/2} y={y0} textAnchor="middle" fill="#777">
-            {renderValue(content.previous)}
-          </text>
-          <line x1={2} x2={cellWidth-2} y1={y0a} y2={y0a} stroke="#777" strokeWidth="2"/>
-        </g>}
-        {content && <g>
-          <rect x="0" y={textLineHeight} width={cellWidth} height={textLineHeight} stroke="black" fill={cursors ? '#eef' : 'transparent'} strokeWidth="1"/>
-          <text x={cellWidth/2} y={y1} textAnchor="middle">
-            {renderValue(content.current)}
-          </text>
-        </g>}
-        <text x={cellWidth/2} y={y2} textAnchor="middle" fill="#777">{index}</text>
-        {cursors &&
+      <g key={index} transform={`translate(${index * cellWidth},0)`}>
+        <g clipPath="url(#cell)">
+          {content && 'store' in content && <g>
+            <text x={cellWidth/2} y={y0} textAnchor="middle" fill="#777">
+              {renderValue(content.previous)}
+            </text>
+            <line x1={2} x2={cellWidth-2} y1={y0a} y2={y0a} stroke="#777" strokeWidth="2"/>
+          </g>}
+          {content && <g>
+            <rect x="0" y={textLineHeight} width={cellWidth} height={textLineHeight} stroke="black" fill={fillColor} strokeWidth="1"/>
+            <text x={cellWidth/2} y={y1} textAnchor="middle">
+              {renderValue(content.current)}
+            </text>
+          </g>}
+          <text x={cellWidth/2} y={y2} textAnchor="middle" fill="#777">{index}</text>
+        </g>
+        {infos &&
           <g>
-            <polygon points={arrowPoints(cellWidth/2, textLineHeight * 3, 6, arrowHeight)}/>
-            <text x={cellWidth/2} y={cellHeight - textBaseline} textAnchor="middle">
-              {cursors.map(cursor => cursor.name).join(' ')}
+            <polygon points={arrowPoints(cellWidth/2, arrowTop, 6, arrowHeight)}/>
+            <text x={cellWidth/2} y={cursorsY} textAnchor="middle">
+              {infos.cursors.map(cursor => cursor.name).join(',')}
             </text>
           </g>}
       </g>
@@ -121,7 +147,7 @@ export const Array1D = EpicComponent(self => {
 
   self.render = function () {
     const {controls} = self.props;
-    const {error, cells, tailCell, cursorMap} = extractView();
+    const {error, cells, tailCell, cellInfoMap} = extractView();
     if (error) {
       return <div className='clearfix'>{error}</div>;
     }
@@ -132,10 +158,10 @@ export const Array1D = EpicComponent(self => {
           <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent'>
             <svg width={cellWidth * tailCell.index} height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
               <clipPath id="cell">
-                  <rect x="0" y="0" width={cellWidth} height={cellHeight} strokeWidth="5"/>
+                  <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight} strokeWidth="5"/>
               </clipPath>
-              {cells.map(cell => renderColumn(cell, cursorMap[cell.index]))}
-              {tailCell && renderColumn(tailCell, cursorMap[tailCell.index])}
+              {cells.map(cell => renderColumn(cell, cellInfoMap[cell.index]))}
+              {tailCell && renderColumn(tailCell, cellInfoMap[tailCell.index])}
             </svg>
           </ViewerResponsive>
         </div>
