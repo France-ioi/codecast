@@ -19,7 +19,11 @@ export default function* (deps) {
 
   yield defineView('DirectivesPane', 'DirectivesPaneSelector', EpicComponent(self => {
 
-    const directiveViewDict = {showVar: ShowVar, showArray: Array1D};
+    const directiveViewDict = {
+      showVar: ShowVar,
+      showArray: Array1D,
+      showArray2D: Array2D
+    };
 
     const onControlsChange = function (directive, update) {
       const {key} = directive;

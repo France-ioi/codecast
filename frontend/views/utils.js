@@ -87,10 +87,11 @@ export const readArray1D = function (core, arrayType, address) {
 };
 
 export const readArray2D = function (core, arrayType, address) {
-  const rowCount = arrayType.elemCount.toInteger();
+  console.log('readArray2D', arrayType);
+  const rowCount = arrayType.count.toInteger();
   const rowType = arrayType.elem;
   const rowSize = rowType.size;
-  const colCount = rowType.elemCount.toInteger();
+  const colCount = rowType.count.toInteger();
   const cellType = rowType.elem;
   const cellSize = cellType.size;
   const cellRefType = C.pointerType(cellType);
@@ -229,10 +230,16 @@ export const FunctionCall = EpicComponent(self => {
 });
 
 export const getIdent = function (expr, noVal) {
+  if (!expr) {
+    return noVal;
+  }
   return expr[0] === 'ident' ? expr[1] : noVal;
 };
 
 export const getList = function (expr, noVal) {
+  if (!expr) {
+    return noVal;
+  }
   return expr[0] === 'list' ? expr[1] : noVal;
 };
 

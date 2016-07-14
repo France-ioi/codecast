@@ -11,6 +11,23 @@ import Document from '../buffers/document';
 const examples = [
 
   {
+    title: "tableau 2D",
+    source: [
+      "#include <stdio.h>",
+      "int main() {",
+      "    //! showArray2D(a, rowCursors=[i], colCursors=[j])",
+      "    int a[][2] = {{1, 2}, {3, 4}}, b, i = 0, j = 1;",
+      "    b = a[0][0];",
+      "    a[0][0] = a[0][1];",
+      "    a[0][1] = a[1][1];",
+      "    a[1][1] = a[1][0];",
+      "    a[1][0] = b;",
+      "    return 0;",
+      "}"
+    ].join('\n')
+  },
+
+  {
     title: "demo",
     source: [
       "#include <stdio.h>",
