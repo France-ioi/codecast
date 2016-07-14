@@ -23,6 +23,7 @@ export const Array1D = EpicComponent(self => {
     const cursors = getList(byName.cursors, []).map(getIdent);
     const name = getIdent(byPos[0]);
     // Use the topmost frame.
+    // TODO: look in globals if frames.length === 0
     const frame = frames[0];
     const localMap = frame.get('localMap');
     if (!localMap.has(name)) {
