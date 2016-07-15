@@ -8,8 +8,6 @@ import {addReducer, defineSelector} from '../utils/linker';
   shape of state.recorder:
   {
     status: /preparing|ready|starting|start_failed|stopping/,
-    source: {document, selection},
-    stepper: {state, compute, display},
     timeOffset,
     lastEventTime,
     events: [[timestamp, ...payload]],

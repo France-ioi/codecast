@@ -451,7 +451,7 @@ export default function* (deps) {
     yield put({type: deps.translateReset, state: translateState});
     const stepperState = state.get('stepper');
     yield put({type: deps.stepperReset, state: stepperState});
-    const range = runtime.getNodeRange(stepperState.get('display'));
+    const range = runtime.getNodeRange(deps.getStepperDisplay(state));
     yield put({type: deps.sourceHighlight, range});
     yield put({type: deps.playerTick, audioTime, current: instant});
   }

@@ -10,10 +10,10 @@ import {viewFrame, renderValue, VarDecl, FunctionCall} from './utils';
 
 export default function* (deps) {
 
-  yield use('stepperExit', 'stepperStackUp', 'stepperStackDown');
+  yield use('stepperExit', 'stepperStackUp', 'stepperStackDown', 'getStepperDisplay');
 
   yield defineSelector('StackViewSelector', function (state, props) {
-    const stepperState = state.getIn(['stepper', 'display']);
+    const stepperState = deps.getStepperDisplay(state);
     if (!stepperState) {
       return {};
     }

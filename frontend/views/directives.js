@@ -11,10 +11,10 @@ import {Array2D} from './array2d';
 
 export default function* (deps) {
 
-  yield use('stepperViewControlsChanged');
+  yield use('stepperViewControlsChanged', 'getStepperDisplay');
 
   yield defineSelector('DirectivesPaneSelector', function (state, props) {
-    return {state: state.getIn(['stepper', 'display'])};
+    return {state: deps.getStepperDisplay(state)};
   });
 
   yield defineView('DirectivesPane', 'DirectivesPaneSelector', EpicComponent(self => {

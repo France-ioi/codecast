@@ -12,7 +12,7 @@ export default function* () {
   );
 
   yield defineSelector('getStepperDisplay', state =>
-    state.getIn(['stepper', 'display'])
+    state.getIn(['stepper', 'current'])
   );
 
   yield defineSelector('getStepperInterrupted', state =>

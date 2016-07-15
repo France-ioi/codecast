@@ -6,15 +6,12 @@ The stepper's state has the following shape:
     status: /clear|idle|starting|running/,
     mode: /expr|into|out|over/,
     initial: {...},
-    current: {...},
-    display: {...}
+    current: {...}
   }
 
   The 'initial' state is the one restored by a 'restart' action.
-  The 'current' state is the state from which the step* actions start.
-  The 'display' state is the state to be displayed to the user (which is
-  the same as the 'current' state, except during steps long enough to emit
-  'progress' actions).
+  The 'current' state is the state from which the step* actions start,
+  and also the state to be displayed to the user.
 
 */
 
@@ -67,26 +64,24 @@ export const stepperRestart = function (state, action) {
     status: 'idle',
     initial: stepperState,
     current: stepperState,
-    display: stepperState,
     undo: state.get('undo'),
     redo: Immutable.List()
   });
 };
 
 export const stepperIdle = function (state, action) {
-  // Set new current state, also set it for display, and go back to idle.
+  // Set new current state and go back to idle.
   const stepperState = enrichStepperState(action.context.state);
   return state
     .set('current', stepperState)
-    .set('display', stepperState)
     .set('status', 'idle')
     .delete('mode');
 };
 
 export const stepperProgress = function (state, action) {
-  // Set new current state, also set it for display, and go back to idle.
+  // Set new current state and go back to idle.
   const stepperState = enrichStepperState(action.context.state);
-  return state.set('display', stepperState);
+  return state.set('current', stepperState);
 };
 
 export const stepperUndo = function (state, action) {
@@ -98,7 +93,6 @@ export const stepperUndo = function (state, action) {
   const stepperState = undo.first();
   return state
     .set('current', stepperState)
-    .set('display', stepperState)
     .set('undo', undo.shift())
     .set('redo', state.get('redo').unshift(current));
 };
@@ -112,13 +106,12 @@ export const stepperRedo = function (state, action) {
   const current = state.get('current');
   return state
     .set('current', stepperState)
-    .set('display', stepperState)
     .set('redo', redo.shift())
     .set('undo', state.get('undo').unshift(current));
 };
 
 export const stepperStackUp = function (state, action) {
-  return state.update('display', function (stepperState) {
+  return state.update('current', function (stepperState) {
     let {controls, analysis} = stepperState;
     let focusDepth = controls.getIn(['stack', 'focusDepth']);
     if (focusDepth > 0) {
@@ -132,7 +125,7 @@ export const stepperStackUp = function (state, action) {
 };
 
 export const stepperStackDown = function (state, action) {
-  return state.update('display', function (stepperState) {
+  return state.update('current', function (stepperState) {
     let {controls, analysis} = stepperState;
     const stackDepth = analysis.frames.size;
     let focusDepth = controls.getIn(['stack', 'focusDepth']);
@@ -148,7 +141,7 @@ export const stepperStackDown = function (state, action) {
 
 export const stepperViewControlsChanged = function (state, action) {
   const {key, update} = action;
-  return state.update('display', function (stepperState) {
+  return state.update('current', function (stepperState) {
     let {controls} = stepperState;
     if (controls.has(key)) {
       controls = controls.update(key, function (viewControls) {
