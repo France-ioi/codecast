@@ -18,6 +18,8 @@ export const Array2D = EpicComponent(self => {
   const gridBorderTop = 5;
   const gridStroke = "#777";
   const gridStrokeWidth = "1";
+  const colNumWidth = 20;
+
 
   // left offset: big enough to fit a cursor with 10 characters
   // top offset: 2 line (cursors) + arrow + 1 line (column index)
@@ -143,6 +145,36 @@ export const Array2D = EpicComponent(self => {
     return <g>{elements}</g>;
   };
 
+  const drawRowCursors = function (count, infoMap) {
+    const elements = [];
+    const x = gridLeft - gridBorderLeft - colNumWidth; // + arrow
+    let y = gridTop + (cellHeight + textLineHeight) / 2 - textBaseline;
+    for (let i = 0; i < count; i += 1, y += cellHeight) {
+      if (infoMap[i]) {
+        const label = infoMap[i].cursors.map(cursor => cursor.name).join(',');
+        elements.push(
+          <text x={x} y={y} textAnchor="end" fill="#777">{label}</text>
+        );
+      }
+    }
+    return <g>{elements}</g>;
+  };
+
+  const drawColCursors = function (count, infoMap) {
+    const elements = [];
+    let x = gridLeft + cellWidth / 2;
+    const y = gridTop - gridBorderTop - textLineHeight - textBaseline; // + arrow
+    for (let j = 0; j < count; j += 1, x += cellWidth) {
+      if (infoMap[j]) {
+        const label = infoMap[j].cursors.map(cursor => cursor.name).join(',');
+        elements.push(
+          <text x={x} y={y} textAnchor="middle" fill="#777">{label}</text>
+        );
+      }
+    }
+    return <g>{elements}</g>;
+  };
+
   const onViewChange = function (event) {
     const update = {viewState: event.value};
     self.props.onChange(self.props.directive, update);
@@ -159,7 +191,7 @@ export const Array2D = EpicComponent(self => {
     if (view.error) {
       return <div className='clearfix'>{view.error}</div>;
     }
-    const {rows, rowCount, colCount} = view;
+    const {rows, rowCount, colCount, rowInfoMap, colInfoMap} = view;
     const height = gridTop + rowCount * cellHeight;
     const width = gridLeft + colCount * cellWidth;
     const viewState = getViewState();
@@ -171,9 +203,9 @@ export const Array2D = EpicComponent(self => {
               <clipPath id="cell">
                   <rect x="0" y="0" width={cellWidth} height={cellHeight} strokeWidth="5"/>
               </clipPath>
+              {drawRowCursors(rowCount, rowInfoMap)}
+              {drawColCursors(colCount, colInfoMap)}
               {drawGrid(rowCount, colCount)}
-              <text x={10} y={textLineHeight * 1 - textBaseline} textAnchor="right" fill="#777">row labels and cursors</text>
-              <text x={10} y={textLineHeight * 2 - textBaseline} textAnchor="right" fill="#777">col labels and cursors</text>
               {rows.map(row => drawRow(view, row))}
             </svg>
           </ViewerResponsive>
