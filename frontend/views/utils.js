@@ -258,6 +258,13 @@ export const getIdent = function (expr, noVal) {
   return expr[0] === 'ident' ? expr[1] : noVal;
 };
 
+export const getNumber = function (expr, noVal) {
+  if (!expr) {
+    return noVal;
+  }
+  return expr[0] === 'number' ? expr[1] : noVal;
+};
+
 export const getList = function (expr, noVal) {
   if (!expr) {
     return noVal;

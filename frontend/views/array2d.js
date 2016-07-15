@@ -3,7 +3,7 @@ import React from 'react';
 import EpicComponent from 'epic-component';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 
-import {getIdent, getList, viewVariable, readArray2D, renderValue} from './utils';
+import {getIdent, getNumber, getList, viewVariable, readArray2D, renderValue} from './utils';
 
 export const Array2D = EpicComponent(self => {
 
@@ -37,6 +37,7 @@ export const Array2D = EpicComponent(self => {
     const varName = getIdent(byPos[0]);
     const rowCursors = getList(byName.rowCursors, []).map(getIdent);
     const colCursors = getList(byName.colCursors, []).map(getIdent);
+    const height = getNumber(byName.height, 'auto');
     // Look for the variable in the topmost frame.
     // TODO: look in globals if frames.length === 0
     const frame = frames[0];
@@ -57,7 +58,7 @@ export const Array2D = EpicComponent(self => {
       readCursor(cursorName, rowCount, localMap, core, rowInfoMap));
     colCursors.forEach(cursorName =>
       readCursor(cursorName, colCount, localMap, core, colInfoMap));
-    return {rows, rowCount, colCount, rowInfoMap, colInfoMap};
+    return {rows, rowCount, colCount, rowInfoMap, colInfoMap, height};
   };
 
   const readCursor = function (cursorName, elemCount, localMap, core, infoMap) {
@@ -209,15 +210,16 @@ export const Array2D = EpicComponent(self => {
     if (view.error) {
       return <div className='clearfix'>{view.error}</div>;
     }
-    const {rowCount, colCount, rowInfoMap, colInfoMap} = view;
-    const height = gridTop + rowCount * cellHeight;
-    const width = gridLeft + colCount * cellWidth;
+    const {rowCount, colCount, rowInfoMap, colInfoMap, height} = view;
+    const svgHeight = gridLeft + colCount * cellWidth;
+    const svgWidth = gridLeft + colCount * cellWidth;
+    const divHeight = (height === 'auto' ? svgHeight : height) + 'px';
     const viewState = getViewState();
     return (
       <div className='clearfix' style={{padding: '2px'}}>
-        <div style={{width: '100%', height: '200px'}}>
+        <div style={{width: '100%', height: divHeight}}>
           <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
-            <svg width={width} height={height} version="1.1" xmlns="http://www.w3.org/2000/svg">
+            <svg width={svgWidth} height={svgHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
               <clipPath id="cell">
                   <rect x="0" y="0" width={cellWidth} height={cellHeight}/>
               </clipPath>
