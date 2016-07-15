@@ -11,17 +11,30 @@ import Document from '../buffers/document';
 const examples = [
 
   {
-    title: "tableau 2D",
+    title: "multiplication de matrices",
     source: [
       "#include <stdio.h>",
       "int main() {",
-      "    //! showArray2D(a, rowCursors=[i], colCursors=[j])",
-      "    int a[][2] = {{1, 2}, {3, 4}}, b, i = 0, j = 1;",
-      "    b = a[0][0];",
-      "    a[0][0] = a[0][1];",
-      "    a[0][1] = a[1][1];",
-      "    a[1][1] = a[1][0];",
-      "    a[1][0] = b;",
+      "    //! A = showArray2D(A, rowCursors=[i], colCursors=[k])",
+      "    //! B = showArray2D(B, rowCursors=[k], colCursors=[j])",
+      "    //! C = showArray2D(C, rowCursors=[i], colCursors=[j])",
+      "    double A[2][2] = {{0.866, -0.500}, {0.500, 0.866}};",
+      "    double B[2][2] = {{0.500, -0.866}, {0.866, 0.500}};",
+      "    double C[2][2];",
+      "    for (int i = 0; i < 2; i++) {",
+      "        for (int j = 0; j < 2; j++) {",
+      "            C[i][j] = 0;",
+      "            for (int k = 0; k < 2; k++) {",
+      "                C[i][j] += A[i][k] * B[k][j];",
+      "            }",
+      "        }",
+      "    }",
+      "    for (int i = 0; i < 2; i++) {",
+      "        for (int j = 0; j < 2; j++) {",
+      "            printf(\"%.3f \", C[i][j]);",
+      "        }",
+      "        printf(\"\\n\");",
+      "    }",
       "    return 0;",
       "}"
     ].join('\n')
