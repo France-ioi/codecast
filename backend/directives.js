@@ -13,13 +13,17 @@ var rbrack = lexeme(PR(']'));
 var equals = lexeme(PR('='));
 var coma = lexeme(PR(','));
 var ident = lexeme(PR(/[a-zA-Z_-][a-zA-Z0-9_-]*/));
+var number = lexeme(PR(/-?\d*\.?\d+?/));
 var identExpr = ident.map(function (match) {
   return ['ident', match];
+});
+var numberExpr = number.map(function (match) {
+  return ['number', parseFloat(match)];
 });
 var listExpr = PR.seq(lbrack, PR.repeatSeparated(() => expr, coma, {min:0}).optional(), rbrack).map(function (match) {
   return ['list', match[1] || []];
 });
-var expr = PR.alt(identExpr, listExpr);
+var expr = PR.alt(identExpr, numberExpr, listExpr);
 var directiveArgByPos = expr.map(function (match) {
   return {value: match};
 });
