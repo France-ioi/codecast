@@ -7,13 +7,16 @@ import {getIdent, getList, viewVariable, readArray2D, renderValue} from './utils
 
 export const Array2D = EpicComponent(self => {
 
-  const textLineHeight = 17;
+  const textLineHeight = 18;
   const textBaseline = 5; // from bottom
   const strikeThroughHeight = 5; // from baseline
+  const textArrowHeight = 4; // from baseline to arrow point
+  const textArrowSpacing = 2;
+  const arrowSize = 15;
   const cellWidth = 50;
   const cellHeight = 2 * textLineHeight + 3;
-  const gridLeft = 50;
-  const gridTop = 50;
+  const gridLeft = textLineHeight * 4 + arrowSize;
+  const gridTop = textLineHeight * 3 + arrowSize;
   const gridBorderLeft = 5;
   const gridBorderTop = 5;
   const gridStroke = "#777";
@@ -106,6 +109,23 @@ export const Array2D = EpicComponent(self => {
     );
   };
 
+  const computeArrowPoints = function (p) {
+    const dx1 = arrowSize / 3;
+    const dy1 = arrowSize / 3;
+    const dx2 = arrowSize / 15;
+    const dy2 = arrowSize;
+    return [p(0,0), p(-dx1,dy1), p(-dx2,dy1), p(-dx2,dy2), p(dx2,dy2), p(dx2,dy1), p(dx1,dy1), p(0,0)].join(' ');
+  };
+  const arrowPoints = {
+    up:    computeArrowPoints((dx,dy) => `${+dx},${+dy}`),
+    down:  computeArrowPoints((dx,dy) => `${+dx},${-dy}`),
+    left:  computeArrowPoints((dx,dy) => `${+dy},${+dx}`),
+    right: computeArrowPoints((dx,dy) => `${-dy},${+dx}`)
+  };
+  const drawArrow = function (x, y, dir, style) {
+    return <polygon points={arrowPoints[dir]} transform={`translate(${x},${y})`} {...style} />;
+  };
+
   const drawRow = function (view, row) {
     return (
       <g>
@@ -152,9 +172,8 @@ export const Array2D = EpicComponent(self => {
     for (let i = 0; i < count; i += 1, y += cellHeight) {
       if (infoMap[i]) {
         const label = infoMap[i].cursors.map(cursor => cursor.name).join(',');
-        elements.push(
-          <text x={x} y={y} textAnchor="end" fill="#777">{label}</text>
-        );
+        elements.push(drawArrow(x, y - textArrowHeight, 'right'));
+        elements.push(<text x={x - (textArrowSpacing + arrowSize)} y={y} textAnchor="end" fill="#777">{label}</text>);
       }
     }
     return <g>{elements}</g>;
@@ -167,9 +186,8 @@ export const Array2D = EpicComponent(self => {
     for (let j = 0; j < count; j += 1, x += cellWidth) {
       if (infoMap[j]) {
         const label = infoMap[j].cursors.map(cursor => cursor.name).join(',');
-        elements.push(
-          <text x={x} y={y} textAnchor="middle" fill="#777">{label}</text>
-        );
+        elements.push(drawArrow(x, y, 'down'));
+        elements.push(<text x={x} y={y - (textBaseline + textArrowSpacing + arrowSize)} textAnchor="middle" fill="#777">{label}</text>);
       }
     }
     return <g>{elements}</g>;
