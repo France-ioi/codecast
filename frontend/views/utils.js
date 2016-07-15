@@ -38,7 +38,7 @@ export const viewVariable = function (core, name, type, address) {
 export const readValue = function (core, refType, address) {
   const type = refType.pointee;
   if (type.kind === 'array') {
-    const cells = readArray1D(core, type, address);
+    const cells = readArray(core, type, address, 3);
     return {kind: 'array', count: type.count, cells};
   }
   return readScalar(core, refType, address);
@@ -71,6 +71,26 @@ const readScalar = function (core, refType, address) {
   }
   return result;
 };
+
+export const readArray = function (core, arrayType, address, limit) {
+  const elemCount = arrayType.count.toInteger();
+  const elemRead = typeof limit === 'number' ? Math.min(limit, elemCount) : elemCount;
+  const elemType = arrayType.elem;
+  const elemSize = elemType.size;
+  const elemRefType = C.pointerType(elemType);
+  const cells = [];
+  let index;
+  for (index = 0; index < elemRead; index += 1) {
+    const content = readValue(core, elemRefType, address);
+    cells.push({index, address, content});
+    address += elemSize;
+  }
+  if (elemCount > elemRead) {
+    cells.push({index, address, content: {kind: 'ellipsis'}});
+  }
+  return cells;
+};
+
 
 export const readArray1D = function (core, arrayType, address) {
   const elemCount = arrayType.count.toInteger();
@@ -133,6 +153,9 @@ export const StoredValue = EpicComponent(self => {
 
   self.render = function () {
     const {value} = self.props;
+    if (value.kind === 'ellipsis') {
+      return <span className='value value-ellipsis'>{'…'}</span>;
+    }
     if (value.kind === 'scalar') {
       // Value shape is {ref, current, previous, load, store}, see analysis.js for
       // details.
