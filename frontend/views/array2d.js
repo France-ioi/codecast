@@ -13,7 +13,7 @@ export const Array2D = EpicComponent(self => {
   const textArrowHeight = 4; // from baseline to arrow point
   const textArrowSpacing = 2;
   const arrowSize = 15;
-  const cellWidth = 50;
+  const cellWidth = 60;  // to fit a negative double
   const cellHeight = 2 * textLineHeight + 3;
   const gridLeft = textLineHeight * 4 + arrowSize;
   const gridTop = textLineHeight * 3 + arrowSize;
@@ -87,28 +87,6 @@ export const Array2D = EpicComponent(self => {
     infos.cursors.push(cursor);
   };
 
-  const drawCell = function (view, rowIndex, cell) {
-    const colIndex = cell.index;
-    const {content} = cell;
-    const x = gridLeft + (colIndex + 0.5) * cellWidth;
-    const y1 = gridTop + rowIndex * cellHeight + textLineHeight * 1 - textBaseline;
-    const y1a = y1 - strikeThroughHeight;
-    const y2 = gridTop + rowIndex * cellHeight + textLineHeight * 2 - textBaseline;
-    return (
-      <g>
-        {content && 'store' in content && <g>
-          <text x={x} y={y1} textAnchor="middle" fill="#777">
-            {renderValue(content.previous)}
-          </text>
-          <line x1={x - cellWidth / 2 + 5} x2={x + cellWidth / 2 - 5} y1={y1a} y2={y1a} stroke="#777" strokeWidth="2"/>
-        </g>}
-        <text x={x} y={y2} textAnchor="middle" fill="#000">
-          {renderValue(content.current)}
-        </text>
-      </g>
-    );
-  };
-
   const computeArrowPoints = function (p) {
     const dx1 = arrowSize / 3;
     const dy1 = arrowSize / 3;
@@ -126,12 +104,34 @@ export const Array2D = EpicComponent(self => {
     return <polygon points={arrowPoints[dir]} transform={`translate(${x},${y})`} {...style} />;
   };
 
-  const drawRow = function (view, row) {
-    return (
-      <g>
-        {row.content.map(cell => drawCell(view, row.index, cell))}
-      </g>
-    );
+  const drawCells = function (view) {
+    const {rows, rowCount, colCount} = view;
+    const elements = [];
+    rows.forEach(function (row) {
+      const rowIndex = row.index;
+      const y1 = textLineHeight * 1 - textBaseline;
+      const y1a = y1 - strikeThroughHeight;
+      const y2 = textLineHeight * 2 - textBaseline;
+      row.content.forEach(function (cell) {
+        const colIndex = cell.index;
+        const {content} = cell;
+        const x = 0.5 * cellWidth;
+        elements.push(
+          <g transform={`translate(${colIndex * cellWidth},${rowIndex * cellHeight})`} clipPath="url(#cell)">
+            {content && 'store' in content && <g>
+              <text x={x} y={y1} textAnchor="middle" fill="#777">
+                {renderValue(content.previous)}
+              </text>
+              <line x1={5} x2={cellWidth - 5} y1={y1a} y2={y1a} stroke="#777" strokeWidth="1"/>
+            </g>}
+            <text x={x} y={y2} textAnchor="middle" fill="#000">
+              {renderValue(content.current)}
+            </text>
+          </g>
+        );
+      });
+    });
+    return <g transform={`translate(${gridLeft},${gridTop})`}>{elements}</g>;
   };
 
   const drawGrid = function (rowCount, colCount) {
@@ -209,7 +209,7 @@ export const Array2D = EpicComponent(self => {
     if (view.error) {
       return <div className='clearfix'>{view.error}</div>;
     }
-    const {rows, rowCount, colCount, rowInfoMap, colInfoMap} = view;
+    const {rowCount, colCount, rowInfoMap, colInfoMap} = view;
     const height = gridTop + rowCount * cellHeight;
     const width = gridLeft + colCount * cellWidth;
     const viewState = getViewState();
@@ -219,13 +219,13 @@ export const Array2D = EpicComponent(self => {
           <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
             <svg width={width} height={height} version="1.1" xmlns="http://www.w3.org/2000/svg">
               <clipPath id="cell">
-                  <rect x="0" y="0" width={cellWidth} height={cellHeight} strokeWidth="5"/>
+                  <rect x="0" y="0" width={cellWidth} height={cellHeight}/>
               </clipPath>
               <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
                 {drawRowCursors(rowCount, rowInfoMap)}
                 {drawColCursors(colCount, colInfoMap)}
                 {drawGrid(rowCount, colCount)}
-                {rows.map(row => drawRow(view, row))}
+                {drawCells(view)}
               </g>
             </svg>
           </ViewerResponsive>
