@@ -203,10 +203,12 @@ export const Array2D = EpicComponent(self => {
               <clipPath id="cell">
                   <rect x="0" y="0" width={cellWidth} height={cellHeight} strokeWidth="5"/>
               </clipPath>
-              {drawRowCursors(rowCount, rowInfoMap)}
-              {drawColCursors(colCount, colInfoMap)}
-              {drawGrid(rowCount, colCount)}
-              {rows.map(row => drawRow(view, row))}
+              <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
+                {drawRowCursors(rowCount, rowInfoMap)}
+                {drawColCursors(colCount, colInfoMap)}
+                {drawGrid(rowCount, colCount)}
+                {rows.map(row => drawRow(view, row))}
+              </g>
             </svg>
           </ViewerResponsive>
         </div>

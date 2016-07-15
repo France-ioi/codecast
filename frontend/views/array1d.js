@@ -7,8 +7,8 @@ import {getIdent, getList, viewVariable, readArray1D, renderValue} from './utils
 
 export const Array1D = EpicComponent(self => {
 
-  // @11px, line height 17, offset 12
-  const textLineHeight = 17;
+  // @11px, line height 15, offset 12
+  const textLineHeight = 18;
   const textBaseline = 5; // from bottom
   const minArrowHeight = 20;
   const cellWidth = 28;
@@ -161,8 +161,10 @@ export const Array1D = EpicComponent(self => {
               <clipPath id="cell">
                   <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight} strokeWidth="5"/>
               </clipPath>
-              {cells.map(cell => renderColumn(cell, cellInfoMap[cell.index]))}
-              {tailCell && renderColumn(tailCell, cellInfoMap[tailCell.index])}
+              <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
+                {cells.map(cell => renderColumn(cell, cellInfoMap[cell.index]))}
+                {tailCell && renderColumn(tailCell, cellInfoMap[tailCell.index])}
+              </g>
             </svg>
           </ViewerResponsive>
         </div>
