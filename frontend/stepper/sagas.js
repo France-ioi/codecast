@@ -30,12 +30,21 @@ export default function* (deps) {
   function buildContext (state) {
     const startTime = window.performance.now();
     return {
-      state: {...state, core: C.clearMemoryLog(state.core)},
+      state: {
+        ...state,
+        core: C.clearMemoryLog(state.core),
+        controls: resetControls(state.controls)
+      },
       startTime,
       timeLimit: startTime + 20,
       stepCounter: 0,
       running: true
     };
+  }
+
+  function resetControls (controls) {
+    // Reset the controls before a step is started.
+    return controls.setIn(['stack', 'focusDepth'], 0);
   }
 
   function viewContext (context) {
