@@ -14,7 +14,9 @@ export default function* (deps) {
   yield use('stepperViewControlsChanged', 'getStepperDisplay');
 
   yield defineSelector('DirectivesPaneSelector', function (state, props) {
-    return {state: deps.getStepperDisplay(state)};
+    const stepperState = deps.getStepperDisplay(state);
+    const scale = state.get('scale');
+    return {state: stepperState, scale};
   });
 
   yield defineView('DirectivesPane', 'DirectivesPaneSelector', EpicComponent(self => {
@@ -31,7 +33,7 @@ export default function* (deps) {
     };
 
     self.render = function () {
-      const {state} = self.props;
+      const {state, scale} = self.props;
       if (!state || !state.analysis) {
         return false;
       }
@@ -48,7 +50,7 @@ export default function* (deps) {
               {View
                 ? <View directive={directive} controls={controls.get(key)}
                         frames={framesMap[key]} context={context}
-                        onChange={onControlsChange} />
+                        onChange={onControlsChange} scale={scale} />
                 : <p>{`undefined view kind ${kind}`}</p>}
             </Panel>
           </div>
