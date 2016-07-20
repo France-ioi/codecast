@@ -22,8 +22,29 @@ export const Array2D = EpicComponent(self => {
   const gridStroke = "#777";
   const gridStrokeWidth = "1";
   const colNumWidth = 20;
-  const cursorBgOpacity = "0.4";
 
+  const highlightColors = [
+    {fg: '#2196F3', bg: '#BBDEFB', name: 'blue'},
+    {fg: '#4CAF50', bg: '#C8E6C9', name: 'green'},
+    {fg: '#F44336', bg: '#FFCDD2', name: 'red'},
+    {fg: '#00BCD4', bg: '#B2EBF2', name: 'cyan'},
+    {fg: '#FFEB3B', bg: '#FFF9C4', name: 'yellow'},
+    {fg: '#9C27B0', bg: '#E1BEE7', name: 'purple'},
+    {fg: '#FF9800', bg: '#FFE0B2', name: 'orange'},
+    {fg: '#9E9E9E', bg: '#F5F5F5', name: 'grey'},
+    {fg: '#03A9F4', bg: '#B3E5FC', name: 'light blue'},
+    {fg: '#8BC34A', bg: '#DCEDC8', name: 'light green'},
+    {fg: '#E91E63', bg: '#F8BBD0', name: 'pink'},
+    {fg: '#009688', bg: '#B2DFDB', name: 'teal'},
+    {fg: '#FFC107', bg: '#FFECB3', name: 'amber'},
+    {fg: '#673AB7', bg: '#D1C4E9', name: 'deep purple'},
+    {fg: '#FF5722', bg: '#FFCCBC', name: 'deep orange'},
+    {fg: '#607D8B', bg: '#CFD8DC', name: 'blue grey'},
+    {fg: '#795548', bg: '#D7CCC8', name: 'brown'},
+    {fg: '#CDDC39', bg: '#F0F4C3', name: 'lime'},
+    {fg: '#3F51B5', bg: '#C5CAE9', name: 'indigo'}
+  ];
+  const noColor = {fg: '#777777', bg: '#F0F0F0', name: 'light gray'};
 
   // left offset: big enough to fit a cursor with 10 characters
   // top offset: 2 line (cursors) + arrow + 1 line (column index)
@@ -54,15 +75,15 @@ export const Array2D = EpicComponent(self => {
     const rows = readArray2D(core, type, ref.address);
     // Inspect cursors.
     const rowCount = type.count, colCount = type.elem.count;
-    const rowInfoMap = [], colInfoMap = [];
+    const rowInfoMap = [], colInfoMap = [], cursors = [];
     rowCursors.forEach(cursorName =>
-      readCursor(cursorName, rowCount, localMap, core, rowInfoMap));
+      readCursor(cursorName, rowCount, localMap, core, rowInfoMap, cursors));
     colCursors.forEach(cursorName =>
-      readCursor(cursorName, colCount, localMap, core, colInfoMap));
+      readCursor(cursorName, colCount, localMap, core, colInfoMap, cursors));
     return {rows, rowCount, colCount, rowInfoMap, colInfoMap, height};
   };
 
-  const readCursor = function (cursorName, elemCount, localMap, core, infoMap) {
+  const readCursor = function (cursorName, elemCount, localMap, core, infoMap, cursors) {
     if (!localMap.has(cursorName)) {
       return;
     }
@@ -72,7 +93,8 @@ export const Array2D = EpicComponent(self => {
     if (cursorPos < 0 || cursorPos > elemCount) {
       return;
     }
-    const cursor = {name: cursorName, color: {bg: "#eee"}};
+    const cursor = {name: cursorName};
+    cursor.color = assignCursorColor(cursorName, cursors);
     if ('store' in decl.value) {
       const cursorPrevPos = decl.value.previous.toInteger();
       if (cursorPrevPos >= 0 && cursorPrevPos <= elemCount) {
@@ -87,6 +109,19 @@ export const Array2D = EpicComponent(self => {
       infos.cursors = [];
     }
     infos.cursors.push(cursor);
+  };
+
+  const assignCursorColor = function (name, cursors) {
+    const index = cursors.indexOf(name);
+    if (index !== -1) {
+      return highlightColors[index];
+    }
+    let color = noColor;
+    if (cursors.length < highlightColors.length) {
+      color = highlightColors[cursors.length];
+    }
+    cursors.push(name);
+    return color;
   };
 
   const computeArrowPoints = function (p) {
@@ -106,20 +141,22 @@ export const Array2D = EpicComponent(self => {
     return <polygon points={arrowPoints[dir]} transform={`translate(${x},${y})`} {...style} />;
   };
 
-  const drawCells = function (view) {
+  const drawCells = function (view, rowInfoMap, colInfoMap) {
     const {rows, rowCount, colCount} = view;
     const elements = [];
-    rows.forEach(function (row) {
+    rows.forEach(function (row, i) {
       const rowIndex = row.index;
       const y1 = textLineHeight * 1 - textBaseline;
       const y1a = y1 - strikeThroughHeight;
       const y2 = textLineHeight * 2 - textBaseline;
-      row.content.forEach(function (cell) {
+      row.content.forEach(function (cell, j) {
         const colIndex = cell.index;
         const {content} = cell;
         const x = 0.5 * cellWidth;
         elements.push(
           <g transform={`translate(${colIndex * cellWidth},${rowIndex * cellHeight})`} clipPath="url(#cell)">
+            {rowInfoMap[i] && colInfoMap[j] &&
+              <rect x={0} y={0} width={cellWidth} height={cellHeight} fill={noColor.bg}/>}
             {content && 'store' in content && <g>
               <text x={x} y={y1} textAnchor="middle" fill="#777">
                 {renderValue(content.previous)}
@@ -161,7 +198,7 @@ export const Array2D = EpicComponent(self => {
     y = gridTop - gridBorderTop - textBaseline;
     for (let i = 0; i < rowCount; i += 1, x += cellWidth) {
       elements.push(
-        <text x={x} y={y} textAnchor="middle" fill="#777">{i}</text>
+        <text x={x} y={y} textAnchor='middle' fill='#777'>{i}</text>
       );
     }
     return <g>{elements}</g>;
@@ -180,8 +217,8 @@ export const Array2D = EpicComponent(self => {
         const label = infoMap[i].cursors.map(cursor => cursor.name).join(',');
         const color = infoMap[i].cursors[0].color;
         elements.push(drawArrow(x0 + x1, y0 + y2, 'right'));
-        elements.push(<text x={x0 + x2} y={y0 + y1} textAnchor="end" fill="#777">{label}</text>);
-        elements.push(<rect x={x0} y={y0} width={cellWidth * colCount} height={cellHeight} fill={color.bg} fillOpacity={cursorBgOpacity}/>);
+        elements.push(<text x={x0 + x2} y={y0 + y1} textAnchor='end' fontWeight='bold' fill={color.fg}>{label}</text>);
+        elements.push(<rect x={x0} y={y0} width={cellWidth * colCount} height={cellHeight} fill={color.bg});
       }
     }
     return <g>{elements}</g>;
@@ -199,8 +236,8 @@ export const Array2D = EpicComponent(self => {
         const label = infoMap[j].cursors.map(cursor => cursor.name).join(',');
         const color = infoMap[j].cursors[0].color;
         elements.push(drawArrow(x0 + x1, y0 + y1, 'down'));
-        elements.push(<text x={x0 + x1} y={y0 + y2} textAnchor="middle" fill="#777">{label}</text>);
-        elements.push(<rect x={x0} y={y0} width={cellWidth} height={cellHeight * rowCount} fill={color.bg} fillOpacity={cursorBgOpacity}/>);
+        elements.push(<text x={x0 + x1} y={y0 + y2} textAnchor='middle' fontWeight='bold' fill={color.fg}>{label}</text>);
+        elements.push(<rect x={x0} y={y0} width={cellWidth} height={cellHeight * rowCount} fill={color.bg});
       }
     }
     return <g>{elements}</g>;
@@ -240,8 +277,8 @@ export const Array2D = EpicComponent(self => {
                 <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
                   {drawRowCursors(rowCount, colCount, rowInfoMap)}
                   {drawColCursors(colCount, rowCount, colInfoMap)}
+                  {drawCells(view, rowInfoMap, colInfoMap)}
                   {drawGrid(rowCount, colCount)}
-                  {drawCells(view)}
                 </g>
               </g>
             </svg>
