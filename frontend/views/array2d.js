@@ -218,7 +218,7 @@ export const Array2D = EpicComponent(self => {
         const color = infoMap[i].cursors[0].color;
         elements.push(drawArrow(x0 + x1, y0 + y2, 'right'));
         elements.push(<text x={x0 + x2} y={y0 + y1} textAnchor='end' fontWeight='bold' fill={color.fg}>{label}</text>);
-        elements.push(<rect x={x0} y={y0} width={cellWidth * colCount} height={cellHeight} fill={color.bg}>);
+        elements.push(<rect x={x0} y={y0} width={cellWidth * colCount} height={cellHeight} fill={color.bg}/>);
       }
     }
     return <g>{elements}</g>;
@@ -237,7 +237,7 @@ export const Array2D = EpicComponent(self => {
         const color = infoMap[j].cursors[0].color;
         elements.push(drawArrow(x0 + x1, y0 + y1, 'down'));
         elements.push(<text x={x0 + x1} y={y0 + y2} textAnchor='middle' fontWeight='bold' fill={color.fg}>{label}</text>);
-        elements.push(<rect x={x0} y={y0} width={cellWidth} height={cellHeight * rowCount} fill={color.bg}>);
+        elements.push(<rect x={x0} y={y0} width={cellWidth} height={cellHeight * rowCount} fill={color.bg}/>);
       }
     }
     return <g>{elements}</g>;
