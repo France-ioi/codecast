@@ -22,6 +22,7 @@ export const Array2D = EpicComponent(self => {
   const gridStroke = "#777";
   const gridStrokeWidth = "1";
   const colNumWidth = 20;
+  const cursorBgOpacity = "0.4";
 
 
   // left offset: big enough to fit a cursor with 10 characters
@@ -71,7 +72,7 @@ export const Array2D = EpicComponent(self => {
     if (cursorPos < 0 || cursorPos > elemCount) {
       return;
     }
-    const cursor = {name: cursorName};
+    const cursor = {name: cursorName, color: {bg: "#eee"}};
     if ('store' in decl.value) {
       const cursorPrevPos = decl.value.previous.toInteger();
       if (cursorPrevPos >= 0 && cursorPrevPos <= elemCount) {
@@ -166,29 +167,40 @@ export const Array2D = EpicComponent(self => {
     return <g>{elements}</g>;
   };
 
-  const drawRowCursors = function (count, infoMap) {
+  const drawRowCursors = function (rowCount, colCount, infoMap) {
     const elements = [];
-    const x = gridLeft - gridBorderLeft - colNumWidth; // + arrow
-    let y = gridTop + (cellHeight + textLineHeight) / 2 - textBaseline;
-    for (let i = 0; i < count; i += 1, y += cellHeight) {
+    const x0 = gridLeft;
+    const x1 = - gridBorderLeft - (textArrowSpacing + arrowSize);
+    const x2 = x1 - colNumWidth;
+    const y1 = (cellHeight + textLineHeight) / 2 - textBaseline;
+    const y2 = y1 - textArrowHeight;
+    let y0 = gridTop;
+    for (let i = 0; i < rowCount; i += 1, y0 += cellHeight) {
       if (infoMap[i]) {
         const label = infoMap[i].cursors.map(cursor => cursor.name).join(',');
-        elements.push(drawArrow(x, y - textArrowHeight, 'right'));
-        elements.push(<text x={x - (textArrowSpacing + arrowSize)} y={y} textAnchor="end" fill="#777">{label}</text>);
+        const color = infoMap[i].cursors[0].color;
+        elements.push(drawArrow(x0 + x1, y0 + y2, 'right'));
+        elements.push(<text x={x0 + x2} y={y0 + y1} textAnchor="end" fill="#777">{label}</text>);
+        elements.push(<rect x={x0} y={y0} width={cellWidth * colCount} height={cellHeight} fill={color.bg} fillOpacity={cursorBgOpacity}/>);
       }
     }
     return <g>{elements}</g>;
   };
 
-  const drawColCursors = function (count, infoMap) {
+  const drawColCursors = function (colCount, rowCount, infoMap) {
     const elements = [];
-    let x = gridLeft + cellWidth / 2;
-    const y = gridTop - gridBorderTop - textLineHeight - textBaseline; // + arrow
-    for (let j = 0; j < count; j += 1, x += cellWidth) {
+    let x0 = gridLeft;
+    const y0 = gridTop;
+    const x1 = cellWidth / 2;
+    const y1 = - gridBorderTop - textLineHeight - textBaseline; // + arrow
+    const y2 = y1 - (textBaseline + textArrowSpacing + arrowSize);
+    for (let j = 0; j < colCount; j += 1, x0 += cellWidth) {
       if (infoMap[j]) {
         const label = infoMap[j].cursors.map(cursor => cursor.name).join(',');
-        elements.push(drawArrow(x, y, 'down'));
-        elements.push(<text x={x} y={y - (textBaseline + textArrowSpacing + arrowSize)} textAnchor="middle" fill="#777">{label}</text>);
+        const color = infoMap[j].cursors[0].color;
+        elements.push(drawArrow(x0 + x1, y0 + y1, 'down'));
+        elements.push(<text x={x0 + x1} y={y0 + y2} textAnchor="middle" fill="#777">{label}</text>);
+        elements.push(<rect x={x0} y={y0} width={cellWidth} height={cellHeight * rowCount} fill={color.bg} fillOpacity={cursorBgOpacity}/>);
       }
     }
     return <g>{elements}</g>;
@@ -226,8 +238,8 @@ export const Array2D = EpicComponent(self => {
                   <rect x="0" y="0" width={cellWidth} height={cellHeight}/>
                 </clipPath>
                 <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
-                  {drawRowCursors(rowCount, rowInfoMap)}
-                  {drawColCursors(colCount, colInfoMap)}
+                  {drawRowCursors(rowCount, colCount, rowInfoMap)}
+                  {drawColCursors(colCount, rowCount, colInfoMap)}
                   {drawGrid(rowCount, colCount)}
                   {drawCells(view)}
                 </g>
