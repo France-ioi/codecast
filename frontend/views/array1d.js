@@ -137,6 +137,8 @@ export const Array1D = EpicComponent(self => {
 
   const onViewChange = function (event) {
     const {value} = event;
+    // Prevent vertical panning.
+    value.matrix.f = 0;
     const update = {viewState: value};
     self.props.onChange(self.props.directive, update);
   };
