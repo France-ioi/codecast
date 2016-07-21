@@ -162,6 +162,11 @@ span + .value-previous {
   padding-left: 0.5em;
 }
 
+.vardecl {
+  overflow: hidden;
+  max-height: 2 * $line-height-lg;
+}
+
 .array-cells {
   margin: 2px;
 }
@@ -260,6 +265,9 @@ span + .value-previous {
   .terminal-line, .terminal-placeholder {
     width: 60 * 7px;
   }
+  .vardecl {
+    max-height: 2 * $line-height-md;
+  }
 }
 
 .size-sm {
@@ -300,6 +308,9 @@ span + .value-previous {
   }
   .nav-examples > li > a {
     padding: 3px 5px;
+  }
+  .vardecl {
+    max-height: 2 * $line-height-sm;
   }
   .array-cell {
     font-size: 10px;
