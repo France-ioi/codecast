@@ -3,9 +3,20 @@
 
 $font-family-sans-serif: 'Open Sans';
 $font-family-monospace: 'Inconsolata';
-$screen-sm-min: 800px;   // sm: format FUN
+
+$screen-lg-min: 1200px;  // lg: normal/wide format
+$font-size-lg: 18px;
+$line-height-lg: 25px;
+
+$screen-md-min: 1024px;  // md: narrow format
+$font-size-md: 14px;
+$line-height-md: 20px;
+
+$screen-sm-min: 800px;   // sm: FUN format
+$font-size-sm: 12px;
+$line-height-sm: 17px;
+
 $container-sm: $screen-sm-min;
-$screen-md-min: 1024px;  // md: format normal
 $grid-gutter-width: 6px;
 $nav-link-padding: 7px 12px;
 
@@ -67,7 +78,8 @@ body#app, #app h1, #app h2, #app h3 {
 }
 
 #app pre, #app .ace_editor, .terminal, .stack-view {
-  font-size: 18px;
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
   font-weight: normal;
   font-family: $font-family-monospace;
 }
@@ -242,7 +254,8 @@ span + .value-previous {
 
 .size-md {
   #app pre, #app .ace_editor, .terminal, .stack-view {
-    font-size: 14px;
+    font-size: $font-size-md;
+    line-height: $line-height-md;
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 7px;
@@ -251,7 +264,8 @@ span + .value-previous {
 
 .size-sm {
   #app pre, #app .ace_editor, .terminal, .stack-view {
-    font-size: 12px;
+    font-size: $font-size-sm;
+    line-height: $line-height-sm;
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 6px;
