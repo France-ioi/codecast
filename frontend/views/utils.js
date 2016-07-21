@@ -27,19 +27,23 @@ export const viewFrame = function (core, frame, options) {
 };
 
 export const viewVariable = function (core, name, type, address) {
+  const context = {scalars: 0, maxScalars: 15};
   return {
     name,
     type,
     address,
-    value: readValue(core, C.pointerType(type), address)
+    value: readValue(core, C.pointerType(type), address, context)
   };
 };
 
-export const readValue = function (core, refType, address) {
+export const readValue = function (core, refType, address, context) {
   const type = refType.pointee;
   if (type.kind === 'array') {
-    const cells = readArray(core, type, address, 3);
+    const cells = readArray(core, type, address, context);
     return {kind: 'array', count: type.count, cells};
+  }
+  if (context) {
+    context.scalars += 1;
   }
   return readScalar(core, refType, address);
 };
@@ -72,20 +76,23 @@ const readScalar = function (core, refType, address) {
   return result;
 };
 
-export const readArray = function (core, arrayType, address, limit) {
+export const readArray = function (core, arrayType, address, context) {
   const elemCount = arrayType.count.toInteger();
-  const elemRead = typeof limit === 'number' ? Math.min(limit, elemCount) : elemCount;
   const elemType = arrayType.elem;
   const elemSize = elemType.size;
   const elemRefType = C.pointerType(elemType);
   const cells = [];
   let index;
-  for (index = 0; index < elemRead; index += 1) {
-    const content = readValue(core, elemRefType, address);
+  for (index = 0; index < elemCount; index += 1) {
+    const content = readValue(core, elemRefType, address, context);
     cells.push({index, address, content});
     address += elemSize;
+    if (context && context.scalars >= context.maxScalars) {
+      break;
+    }
   }
-  if (elemCount > elemRead) {
+  if (index < elemCount) {
+    index += 1;
     cells.push({index, address, content: {kind: 'ellipsis'}});
   }
   return cells;
@@ -284,7 +291,9 @@ export const ShowVar = EpicComponent(self => {
       return <p>{name}{" not in scope"}</p>;
     }
     const {type, ref} = localMap.get(name);
-    const value = readValue(context.core, C.pointerType(type), ref.address);
+    const value = readValue(
+      context.core, C.pointerType(type), ref.address,
+      {scalars: 0, maxScalars: 100});
     return <VarDecl name={name} type={type} address={ref.address} value={value} />;
   };
 
