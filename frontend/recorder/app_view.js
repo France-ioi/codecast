@@ -10,16 +10,17 @@ export default function* (deps) {
   yield use('ErrorView', 'RecordScreen', 'SaveScreen');
 
   yield defineSelector('AppSelector', function (state, props) {
+    const size = state.get('size');
     const screen = state.get('screen');
-    return {screen};
+    return {size, screen};
   });
 
   yield defineView('App', 'AppSelector', EpicComponent(self => {
 
     self.render = function () {
-      const {screen} = self.props;
+      const {size, screen} = self.props;
       return (
-        <div className="container">
+        <div className={`container size-${size}`}>
           <deps.ErrorView/>
           {screen === 'record' && <deps.RecordScreen/>}
           {screen === 'save' && <deps.SaveScreen/>}

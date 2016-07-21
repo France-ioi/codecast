@@ -9,18 +9,19 @@ export default function* (deps) {
   yield use('PlayerControls', 'MainView', 'getPlayerState');
 
   yield defineSelector('AppSelector', function (state, props) {
+    const size = state.get('size');
     const player = deps.getPlayerState(state);
     const status = player.get('status');
     const preventInput = !/ready|paused/.test(status);
-    return {preventInput};
+    return {preventInput, size};
   });
 
   yield defineView('App', 'AppSelector', EpicComponent(self => {
 
     self.render = function () {
-      const {preventInput} = self.props;
+      const {preventInput, size} = self.props;
       return (
-        <div className="container">
+        <div className={`container size-${size}`}>
           <div className="row">
             <div className="col-sm-12">
               <deps.PlayerControls/>

@@ -31,13 +31,14 @@ const {store, scope, start} = link(function* (deps) {
   yield use('StepperControls', 'FullscreenButton', 'MainView', 'ExamplePicker', 'isTranslated');
   yield defineSelector('AppSelector', function (state) {
     const isTranslated = deps.isTranslated(state);
-    return {isTranslated};
+    const size = state.get('size');
+    return {isTranslated, size};
   });
   yield defineView('App', 'AppSelector', EpicComponent(self => {
     self.render = function () {
-      const {isTranslated} = self.props;
+      const {isTranslated, size} = self.props;
       return (
-        <div className="container">
+        <div className={`container size-${size}`}>
           <div className="row">
             <div className="col-sm-12">
               <div className="pane pane-controls clearfix">
