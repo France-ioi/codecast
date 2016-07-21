@@ -240,7 +240,7 @@ span + .value-previous {
   width: 240px;
 }
 
-@media (min-width: $screen-md-min) and (max-width: $screen-md-max) {
+.size-md {
   #app pre, #app .ace_editor, .terminal, .stack-view {
     font-size: 14px;
   }
@@ -249,7 +249,7 @@ span + .value-previous {
   }
 }
 
-@media (min-width: $screen-sm-min) and (max-width: $screen-sm-max) {
+.size-sm {
   #app pre, #app .ace_editor, .terminal, .stack-view {
     font-size: 12px;
   }
