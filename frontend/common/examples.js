@@ -102,7 +102,7 @@ const examples = [
 
   {
     title: "tableau 1D",
-    source: "#include <stdio.h>\nint main() {\n    //! showArray(a, cursors=[i,n])\n    int i, n = 8;\n    int a[n];\n    a[0] = 1;\n    for (i = 1; i < n; i++) {\n        a[i] = a[i - 1] * 2;\n    }\n    for (i = 0; i < n; i++) {\n        printf(\"a[%i] = %i\\n\", i, a[i]);\n    }\n}\n"
+    source: "#include <stdio.h>\nint main() {\n    //! showArray(a, cursors=[i,n], n=8)\n    int i, n = 12;\n    int a[n];\n    a[0] = 1;\n    for (i = 1; i < n; i++) {\n        a[i] = a[i - 1] * 2;\n    }\n    for (i = 0; i < n; i++) {\n        printf(\"a[%i] = %i\\n\", i, a[i]);\n    }\n}\n"
   },
 
   {
