@@ -55,8 +55,10 @@ System.config({
     "eventemitter2": "npm:eventemitter2@1.0.3",
     "font-awesome": "npm:font-awesome@4.6.1",
     "immutable": "npm:immutable@3.8.1",
+    "js-data-structures": "npm:js-data-structures@1.0.9",
     "lamejs": "npm:lamejs@1.1.0",
     "lodash": "npm:lodash@4.12.0",
+    "node-range": "npm:node-range@0.1.0",
     "persistent-c": "npm:persistent-c@9.1.0",
     "query-string": "npm:query-string@4.1.0",
     "rc-slider": "npm:rc-slider@3.6.0",
@@ -111,7 +113,7 @@ System.config({
       "path-browserify": "npm:path-browserify@0.0.0"
     },
     "github:jspm/nodelibs-process@0.1.2": {
-      "process": "npm:process@0.11.5"
+      "process": "npm:process@0.11.6"
     },
     "github:jspm/nodelibs-querystring@0.1.0": {
       "querystring": "npm:querystring@0.2.0"
@@ -560,6 +562,11 @@ System.config({
     "npm:js-base64@2.1.9": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.0"
     },
+    "npm:js-data-structures@1.0.9": {
+      "@tyriar/binary-heap": "npm:@tyriar/binary-heap@1.0.3",
+      "@tyriar/binomial-heap": "npm:@tyriar/binomial-heap@1.0.2",
+      "@tyriar/fibonacci-heap": "npm:@tyriar/fibonacci-heap@1.0.7"
+    },
     "npm:lamejs@1.1.0": {
       "use-strict": "npm:use-strict@1.0.1"
     },
@@ -620,6 +627,9 @@ System.config({
       "util": "github:jspm/nodelibs-util@0.1.0",
       "zlib": "github:jspm/nodelibs-zlib@0.1.0"
     },
+    "npm:node-range@0.1.0": {
+      "process": "github:jspm/nodelibs-process@0.1.2"
+    },
     "npm:os-browserify@0.1.2": {
       "os": "github:jspm/nodelibs-os@0.1.0"
     },
@@ -664,7 +674,7 @@ System.config({
     "npm:process-nextick-args@1.0.7": {
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
-    "npm:process@0.11.5": {
+    "npm:process@0.11.6": {
       "assert": "github:jspm/nodelibs-assert@0.1.0",
       "fs": "github:jspm/nodelibs-fs@0.1.2",
       "vm": "github:jspm/nodelibs-vm@0.1.0"
