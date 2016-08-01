@@ -7,6 +7,7 @@ import React from 'react';
 import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import * as C from 'persistent-c';
+import range from 'node-range';
 
 export const viewFrame = function (core, frame, options) {
   const view = {
@@ -99,17 +100,27 @@ export const readArray = function (core, arrayType, address, context) {
 };
 
 
-export const readArray1D = function (core, arrayType, address) {
+export const readArray1D = function (core, arrayType, address, selection) {
   const elemCount = arrayType.count.toInteger();
   const elemType = arrayType.elem;
   const elemSize = elemType.size;
   const elemRefType = C.pointerType(elemType);
   const cells = [];
-  for (let index = 0; index < elemCount; index += 1) {
-    const content = readValue(core, elemRefType, address);
-    cells.push({index, address, content});
-    address += elemSize;
+  if (selection === undefined) {
+    selection = range(0, elemCount);
   }
+  selection.forEach(function (index, position) {
+    if (index === '…') {
+      cells.push({position, ellipsis: true});
+    } else {
+      const elemAddress = address + index * elemSize;
+      const cell = {position, index, address: elemAddress};
+      if (index >= 0 && index < elemCount) {
+        cell.content = readValue(core, elemRefType, elemAddress);
+      }
+      cells.push(cell);
+    }
+  });
   return cells;
 };
 
