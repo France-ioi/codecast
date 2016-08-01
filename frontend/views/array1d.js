@@ -3,13 +3,12 @@ import React from 'react';
 import EpicComponent from 'epic-component';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 
-import {getIdent, getList, viewVariable, readArray1D, renderValue} from './utils';
+import {getIdent, getNumber, getList, viewVariable, readArray1D, renderValue} from './utils';
 import {ArrayViewBuilder} from './array_utils';
 
 export const Array1D = EpicComponent(self => {
 
   // @11px, line height 15, offset 12
-  const maxVisibleCells = 6; // 40;
   const textLineHeight = 18;
   const textBaseline = 5; // from bottom
   const minArrowHeight = 20;
@@ -32,6 +31,7 @@ export const Array1D = EpicComponent(self => {
     // 'name' is the first positional argument
     const {byName, byPos} = directive;
     const cursorNames = getList(byName.cursors, []).map(getIdent);
+    const maxVisibleCells = getNumber(byName.n, 40);
     const name = getIdent(byPos[0]);
     // Use the topmost frame.
     // TODO: look in globals if frames.length === 0
@@ -190,7 +190,7 @@ export const Array1D = EpicComponent(self => {
       <div className='clearfix' style={{padding: '2px'}}>
         <div style={{width: '100%', height: cellHeight+'px'}}>
           <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
-            <svg width={cellWidth * maxVisibleCells} height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
+            <svg width={cellWidth * cells.length} height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
               <clipPath id="cell">
                 <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight} strokeWidth="5"/>
               </clipPath>
