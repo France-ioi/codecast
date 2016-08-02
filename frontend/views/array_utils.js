@@ -54,7 +54,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
          cell = cells[index] = {index, points: 0, rank: 0};
       }
       // Add points to the cell.
-      cell.points += points;
+      cell.points = Math.max(cell.points, points);
       // Keep track of the greatest rank, if provided.
       if (rank !== undefined) {
          cell.rank = Math.max(cell.rank, rank);
