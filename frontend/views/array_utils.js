@@ -1,5 +1,8 @@
 
+import * as C from 'persistent-c';
 import {FibonacciHeap} from 'js-data-structures';
+
+import {readScalarBasic} from './utils';
 
 /*
 
@@ -54,7 +57,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
       cell.points += points;
       // Keep track of the greatest rank, if provided.
       if (rank !== undefined) {
-         cell.rank = Maths.max(cell.rank, rank);
+         cell.rank = Math.max(cell.rank, rank);
       }
    }
 
@@ -198,4 +201,66 @@ const compareHeapNodes = function (a, b) {
       return 1;
    }
    return 0;
+};
+
+export const getArrayMapper1D = function (arrayRef) {
+   const arrayType = arrayRef.type.pointee;
+   const arrayBase = arrayRef.address;
+   const arrayLimit = arrayBase + arrayType.size - 1;
+   const elemSize = arrayType.elem.size;
+   return function (ref, callback) {
+      // Skip if [array] < [ref]
+      const {address, type} = ref;
+      if (arrayLimit < address) return;
+      // Skip if [ref] < [array]
+      const refLimit = address + type.pointee.size - 1;
+      if (refLimit < arrayBase) return;
+      // Clip ref to within array region.
+      const startAddress = Math.max(arrayBase, address);
+      let index = Math.floor((startAddress - arrayBase) / elemSize);
+      const endAddress = Math.min(arrayLimit, refLimit);
+      let elemLimit = arrayBase + (index + 1) * elemSize - 1;
+      while (elemLimit <= endAddress) {
+         callback(index);
+         index += 1;
+         elemLimit += elemSize;
+      }
+   };
+};
+
+// Read an 1D array of scalars.
+export const readArray1D = function (core, arrayType, address, selection, mops) {
+  const elemCount = arrayType.count.toInteger();
+  const elemType = arrayType.elem;
+  const elemSize = elemType.size;
+  const elemRefType = C.pointerType(elemType);
+  // TODO: check that elemType is scalar
+  const cells = [];
+  if (selection === undefined) {
+    selection = range(0, elemCount);
+  }
+  selection.forEach(function (index, position) {
+    if (index === '…') {
+      cells.push({position, gap: true});
+    } else {
+      const elemAddress = address + index * elemSize;
+      const cell = {position, index, address: elemAddress};
+      if (index >= 0 && index < elemCount) {
+        const content = readScalarBasic(core, elemRefType, elemAddress);
+        if (index in mops) {
+          const mop = mops[index];
+          if ('load' in mop) {
+            content.load = mop.load;
+          }
+          if ('store' in mop) {
+            content.store = mop.store;
+            content.previous = C.readValue(core.oldMemory, content.ref);
+          }
+        }
+        cell.content = content;
+      }
+      cells.push(cell);
+    }
+  });
+  return cells;
 };

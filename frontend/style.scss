@@ -335,3 +335,37 @@ span + .value-previous {
   top: 0;
   left: 0;
 }
+
+svg {
+
+  g {
+    font-family: "Open-Sans";
+    font-size: 13px;
+  }
+
+  text.current-content, text.previous-content {
+    text-anchor: middle;
+  }
+  text.previous-content {
+    fill: #777;
+  }
+  line.previous-content {
+    stroke: #777;
+    stroke-width: 2;
+  }
+
+  .array1d-grid {
+    text.index {
+      text-anchor: middle;
+      fill: #777;
+    }
+    line {
+      stroke: #777;
+      stroke-width: 1;
+    }
+    line.gap {
+      stroke-dasharray: 3, 3;
+    }
+  }
+
+}

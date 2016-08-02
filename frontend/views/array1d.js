@@ -1,10 +1,11 @@
 
 import React from 'react';
 import EpicComponent from 'epic-component';
+import classnames from 'classnames';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 
-import {getIdent, getNumber, getList, viewVariable, readArray1D, renderValue} from './utils';
-import {ArrayViewBuilder} from './array_utils';
+import {getIdent, getNumber, getList, viewVariable, renderValue} from './utils';
+import {ArrayViewBuilder, getArrayMapper1D, readArray1D} from './array_utils';
 
 export const Array1D = EpicComponent(self => {
 
@@ -15,12 +16,10 @@ export const Array1D = EpicComponent(self => {
   const cursorRows = 2;
   const cellWidth = 28;
   const cellHeight = (3 + cursorRows) * textLineHeight + minArrowHeight;
-  const gridStroke = "#777";
-  const gridStrokeWidth = "1";
   const pointsByKind = {
     cursor: 300,
-    write: 100,
-    read: 50,
+    store: 100,
+    load: 50,
     first: 25,
     last: 20
   };
@@ -49,7 +48,31 @@ export const Array1D = EpicComponent(self => {
     const builder = new ArrayViewBuilder(maxVisibleCells, elemCount);
     builder.addMarker(0, pointsByKind.first);
     builder.addMarker(elemCount, pointsByKind.last);
-    // Inspect cursors.
+    // Go through the memory log, translate memory-operation references into
+    // array cells indexes, and save the cell load/store operations in mopMap.
+    const mopMap = [];
+    const forEachCell = getArrayMapper1D(ref);
+    core.memoryLog.forEach(function (entry, i) {
+      const op = entry[0]; // 'load' or 'store'
+      forEachCell(entry[1], function (index) {
+        let cellOps;
+        if (index in mopMap) {
+          cellOps = mopMap[index];
+        } else {
+          cellOps = mopMap[index] = {};
+        }
+        cellOps[op] = i; // the greatest memory log index is used as rank
+      });
+    });
+    mopMap.forEach(function (ops, index) {
+      if ('load' in ops) {
+        builder.addMarker(index, pointsByKind.load, ops.load);
+      }
+      if ('store' in ops) {
+        builder.addMarker(index, pointsByKind.store, ops.store);
+      }
+    });
+    // Inspect cursors and add markers.
     const cursorMap = {};
     cursorNames.forEach(function (cursorName) {
       if (localMap.has(cursorName)) {
@@ -75,7 +98,7 @@ export const Array1D = EpicComponent(self => {
     });
     // Read the selected cells.
     const selection = builder.getSelection();
-    const cells = readArray1D(core, type, ref.address, selection);
+    const cells = readArray1D(core, type, ref.address, selection, mopMap);
     // Build the array of displayed cursors, staggering them to minimize overlap.
     const cursors = [];
     let nextStaggerCol, cursorRow = 0;
@@ -110,40 +133,43 @@ export const Array1D = EpicComponent(self => {
 
   const drawGrid = function (cells) {
     const elements = [];
-    // Horizontal lines
-    const x1 = cells.length * cellWidth;
-    const y1 = textLineHeight * 1, y2 = textLineHeight * 2;
-    elements.push(<line key='h1' x1={0} x2={x1} y1={y1} y2={y1} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
-    elements.push(<line key='h2' x1={0} x2={x1} y1={y2} y2={y2} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
-    // Vertical lines
-    for (let i = 0, x = 0; i <= cells.length; i += 1, x += cellWidth) {
-      elements.push(<line key={`v${i}`} x1={x} x2={x} y1={y1} y2={y2} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
-    }
-    //  Column labels
+    // Column labels and horizontal lines
+    const y1 = textLineHeight * 1;
+    const y2 = textLineHeight * 2;
     const y3 = baseline(2);
     for (let i = 0, x = 0; i < cells.length; i += 1, x += cellWidth) {
-      elements.push(<text key={`l${i}`} x={x + cellWidth / 2} y={y3} textAnchor='middle' fill='#777'>{cells[i].index}</text>);
+      const cell = cells[i];
+      const className = classnames(['h', cell.gap && 'gap']);
+      elements.push(<text key={`l${i}`} x={x + cellWidth / 2} y={y3} className="index">{cell.index}</text>);
+      elements.push(<line key={`ht${i}`} x1={x} x2={x + cellWidth} y1={y1} y2={y1} className={className} />);
+      elements.push(<line key={`hb${i}`} x1={x} x2={x + cellWidth} y1={y2} y2={y2} className={className} />);
     }
-    return <g>{elements}</g>;
+    // Vertical lines
+    for (let i = 0, x = 0; i <= cells.length; i += 1, x += cellWidth) {
+      elements.push(<line key={`v${i}`} x1={x} x2={x} y1={y1} y2={y2} className="v" />);
+    }
+    return <g className="array1d-grid">{elements}</g>;
   };
 
-  const drawCell = function (cell) {
-    const {position, index, address, content, ellipsis} = cell;
+  const drawCell = function (cell, i) {
+    if (cell.gap) {
+      return;
+    }
+    const {position, index, address, content} = cell;
     const y0 = baseline(0);
     const y0a = y0 - (textLineHeight - textBaseline) / 3;
     const y1 = baseline(1);
     return (
-      <g key={index} transform={`translate(${position * cellWidth},0)`} clipPath="url(#cell)">
+      <g key={`C${index}`} transform={`translate(${position * cellWidth},0)`} clipPath="url(#cell)">
         {content && 'previous' in content &&
           <g>
-            <text x={cellWidth/2} y={y0} textAnchor="middle" fill="#777">
+            <text x={cellWidth/2} y={y0} className="previous-content">
               {renderValue(content.previous)}
             </text>
-            <line x1={2} x2={cellWidth-2} y1={y0a} y2={y0a} stroke="#777" strokeWidth="2"/>
+            <line x1={2} x2={cellWidth-2} y1={y0a} y2={y0a} callName="previous-content"/>
           </g>}
-        <text x={cellWidth/2} y={y1} textAnchor="middle">
+        <text x={cellWidth/2} y={y1} className="current-content">
           {content && renderValue(content.current)}
-          {ellipsis && '…'}
         </text>
       </g>
     );
@@ -156,7 +182,7 @@ export const Array1D = EpicComponent(self => {
     const cursorsY = baseline(3) + arrowHeight;
     const fillColor = '#eef';
     return (
-      <g key={index} transform={`translate(${col * cellWidth},0)`}>
+      <g key={`c${index}`} transform={`translate(${col * cellWidth},0)`}>
         <polygon points={arrowPoints(cellWidth/2, arrowTop, 6, arrowHeight)}/>
         <text x={cellWidth/2} y={cursorsY} textAnchor="middle">
           {cursors.map(cursor => cursor.name).join(',')}
@@ -192,13 +218,11 @@ export const Array1D = EpicComponent(self => {
           <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
             <svg width={cellWidth * cells.length} height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
               <clipPath id="cell">
-                <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight} strokeWidth="5"/>
+                <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight}/>
               </clipPath>
-              <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
-                {cursors.map(drawCursor)}
-                {cells.map(drawCell)}
-                {drawGrid(cells)}
-              </g>
+              {cursors.map(drawCursor)}
+              {cells.map(drawCell)}
+              {drawGrid(cells)}
             </svg>
           </ViewerResponsive>
         </div>

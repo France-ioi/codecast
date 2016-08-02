@@ -49,19 +49,30 @@ export const readValue = function (core, refType, address, context) {
   return readScalar(core, refType, address);
 };
 
-const readScalar = function (core, refType, address) {
-  // Produce a 'stored scalar value' object whose shape is
-  //   {ref, current, previous, load, store}
+export const readScalarBasic = function (core, refType, address) {
+  // Produce a 'basic stored scalar value' object whose shape is
+  //   {kind, ref, current}
   // where:
+  //   - 'kind' is always 'scalar'
   //   - 'ref' holds the value's reference (a pointer value)
   //   - 'current' holds the current value
+  const kind = 'scalar';
+  const ref = new C.PointerValue(refType, address);
+  const current = C.readValue(core.memory, ref);
+  return {kind, ref, current};
+};
+
+export const readScalar = function (core, refType, address) {
+  // Produce a 'stored scalar value' object whose shape is
+  //   {kind, ref, current, previous, load, store}
+  // where:
+  //   - 'kind', 'ref', 'current' are as returned by readScalarBasic
   //   - 'load' holds the smallest rank of a load in the memory log
   //   - 'store' holds the greatest rank of a store in the memory log
   //   - 'previous' holds the previous value (if 'store' is defined)
-  const ref = new C.PointerValue(refType, address);
-  const result = {kind: 'scalar', ref: ref, current: C.readValue(core.memory, ref)}
+  const result = readScalarBasic(core, refType, address);
   core.memoryLog.forEach(function (entry, i) {
-    if (refsIntersect(ref, entry[1])) {
+    if (refsIntersect(result.ref, entry[1])) {
       if (entry[0] === 'load') {
         if (result.load === undefined) {
           result.load = i;
@@ -72,7 +83,7 @@ const readScalar = function (core, refType, address) {
     }
   });
   if ('store' in result) {
-    result.previous = C.readValue(core.oldMemory, ref);
+    result.previous = C.readValue(core.oldMemory, result.ref);
   }
   return result;
 };
@@ -100,30 +111,6 @@ export const readArray = function (core, arrayType, address, context) {
 };
 
 
-export const readArray1D = function (core, arrayType, address, selection) {
-  const elemCount = arrayType.count.toInteger();
-  const elemType = arrayType.elem;
-  const elemSize = elemType.size;
-  const elemRefType = C.pointerType(elemType);
-  const cells = [];
-  if (selection === undefined) {
-    selection = range(0, elemCount);
-  }
-  selection.forEach(function (index, position) {
-    if (index === '…') {
-      cells.push({position, ellipsis: true});
-    } else {
-      const elemAddress = address + index * elemSize;
-      const cell = {position, index, address: elemAddress};
-      if (index >= 0 && index < elemCount) {
-        cell.content = readValue(core, elemRefType, elemAddress);
-      }
-      cells.push(cell);
-    }
-  });
-  return cells;
-};
-
 export const readArray2D = function (core, arrayType, address) {
   const rowCount = arrayType.count.toInteger();
   const rowType = arrayType.elem;
@@ -146,7 +133,7 @@ export const readArray2D = function (core, arrayType, address) {
   return rows;
 };
 
-const refsIntersect = function (ref1, ref2) {
+export const refsIntersect = function (ref1, ref2) {
   const base1 = ref1.address, limit1 = base1 + ref1.type.pointee.size - 1;
   const base2 = ref2.address, limit2 = base2 + ref2.type.pointee.size - 1;
   const result = (base1 <= base2) ? (base2 <= limit1) : (base1 <= limit2);
