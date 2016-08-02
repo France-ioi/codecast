@@ -15,9 +15,9 @@ const examples = [
     source: [
       "#include <stdio.h>",
       "int main() {",
-      "    //! A = showArray2D(A, rowCursors=[i], colCursors=[k], height=100)",
-      "    //! B = showArray2D(B, rowCursors=[k], colCursors=[j], height=100)",
-      "    //! C = showArray2D(C, rowCursors=[i], colCursors=[j])",
+      "    //! A = showArray2D(A, rowCursors=[i], colCursors=[k])",
+      "    //! B = showArray2D(B, rowCursors=[k], colCursors=[j])",
+      "    //! C = showArray2D(C, rowCursors=[i], colCursors=[j], height=200)",
       "    double A[2][2] = {{0.866, -0.500}, {0.500, 0.866}};",
       "    double B[2][2] = {{0.500, -0.866}, {0.866, 0.500}};",
       "    double C[2][2];",
