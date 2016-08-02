@@ -148,7 +148,7 @@ export const Array1D = EpicComponent(self => {
     for (let i = 0, x = 0; i <= cells.length; i += 1, x += cellWidth) {
       elements.push(<line key={`v${i}`} x1={x} x2={x} y1={y1} y2={y2} className="v" />);
     }
-    return <g className="array1d-grid">{elements}</g>;
+    return <g className="grid">{elements}</g>;
   };
 
   const drawCell = function (cell, i) {
@@ -162,11 +162,11 @@ export const Array1D = EpicComponent(self => {
     return (
       <g key={`C${index}`} transform={`translate(${position * cellWidth},0)`} clipPath="url(#cell)">
         {content && 'previous' in content &&
-          <g>
-            <text x={cellWidth/2} y={y0} className="previous-content">
+          <g className="previous-content">
+            <text x={cellWidth/2} y={y0}>
               {renderValue(content.previous)}
             </text>
-            <line x1={2} x2={cellWidth-2} y1={y0a} y2={y0a} callName="previous-content"/>
+            <line x1={2} x2={cellWidth-2} y1={y0a} y2={y0a}/>
           </g>}
         <text x={cellWidth/2} y={y1} className="current-content">
           {content && renderValue(content.current)}
@@ -220,9 +220,11 @@ export const Array1D = EpicComponent(self => {
               <clipPath id="cell">
                 <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight}/>
               </clipPath>
-              {cursors.map(drawCursor)}
-              {cells.map(drawCell)}
-              {drawGrid(cells)}
+              <g className="array1d">
+                {cursors.map(drawCursor)}
+                {cells.map(drawCell)}
+                {drawGrid(cells)}
+              </g>
             </svg>
           </ViewerResponsive>
         </div>

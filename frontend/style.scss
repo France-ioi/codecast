@@ -338,33 +338,28 @@ span + .value-previous {
 
 svg {
 
-  g {
-    font-family: "Open-Sans";
-    font-size: 13px;
-  }
+  font-family: "Open Sans";
+  font-size: 13px;
 
-  text.current-content, text.previous-content {
-    text-anchor: middle;
-  }
-  text.previous-content {
-    fill: #777;
-  }
-  line.previous-content {
-    stroke: #777;
-    stroke-width: 2;
-  }
-
-  .array1d-grid {
-    text.index {
+  .array1d {
+    text.index, text.current-content, .previous-content text {
       text-anchor: middle;
+    }
+    text.index, .previous-content text {
       fill: #777;
     }
-    line {
+    .previous-content line {
       stroke: #777;
-      stroke-width: 1;
+      stroke-width: 2;
     }
-    line.gap {
-      stroke-dasharray: 3, 3;
+    .grid {
+      line {
+        stroke: #777;
+        stroke-width: 1;
+      }
+      line.gap {
+        stroke-dasharray: 3, 3;
+      }
     }
   }
 
