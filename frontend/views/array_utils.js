@@ -200,6 +200,12 @@ const compareHeapNodes = function (a, b) {
    if (cellA.rank < cellB.rank) {
       return 1;
    }
+   if (cellA.index < cellB.index) {
+      return -1;
+   }
+   if (cellA.index > cellB.index) {
+      return 1;
+   }
    return 0;
 };
 
