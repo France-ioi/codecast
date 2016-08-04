@@ -72,7 +72,7 @@ export const start = function (syntaxTree, options) {
 export const step = C.step;
 
 export const stepIntoUserCode = function (state) {
-  while (state.core.control && !state.core.control.node[1].begin) {
+  while (!state.error && state.core.control && !state.core.control.node[1].begin) {
     state = step(state);
   }
   return state;

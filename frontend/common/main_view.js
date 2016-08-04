@@ -12,7 +12,7 @@ export default function* (deps) {
     'getTranslateState', 'getStepperDisplay',
     'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
     'inputInit', 'inputEdit', 'inputSelect', 'inputScroll',
-    'translateClearDiagnostics',
+    'translateClearDiagnostics', 'stepperExit',
     'StackView', 'DirectivesPane', 'TerminalView'
   );
 
@@ -22,8 +22,9 @@ export default function* (deps) {
     const stepperDisplay = deps.getStepperDisplay(state);
     const haveStepper = !!stepperDisplay;
     const terminal = haveStepper && stepperDisplay.terminal;
+    const error = haveStepper && stepperDisplay.error;
     const readOnly = haveStepper || props.preventInput;
-    return {diagnostics, haveStepper, readOnly, terminal};
+    return {diagnostics, haveStepper, readOnly, terminal, error};
   });
 
   yield defineView('MainView', 'MainViewSelector', EpicComponent(self => {
@@ -64,6 +65,10 @@ export default function* (deps) {
       self.props.dispatch({type: deps.translateClearDiagnostics});
     };
 
+    const onStepperExit = function () {
+      self.props.dispatch({type: deps.stepperExit});
+    };
+
     const renderSourcePanelHeader = function () {
       return (
         <span>
@@ -94,8 +99,17 @@ export default function* (deps) {
       </div>
     );
 
+    const stepperErrorPanelHeader = (
+      <div>
+        <div className="pull-right">
+          <Button className="close" onClick={onStepperExit}>×</Button>
+        </div>
+        <span>Erreur</span>
+      </div>
+    );
+
     self.render = function () {
-      const {diagnostics, readOnly, preventInput, terminal} = self.props;
+      const {diagnostics, readOnly, preventInput, terminal, error} = self.props;
       const editorRowHeight = '300px';
       return (
         <div>
@@ -114,8 +128,13 @@ export default function* (deps) {
           </div>
           <div className="row">
             {diagnostics && <div className="col-sm-12">
-              <Panel header={diagnosticsPanelHeader}>
+              <Panel header={diagnosticsPanelHeader} bsStyle="danger">
                 <div dangerouslySetInnerHTML={diagnostics}/>
+              </Panel>
+            </div>}
+            {error && <div className="col-sm-12">
+              <Panel header={stepperErrorPanelHeader} bsStyle="danger">
+                {error}
               </Panel>
             </div>}
             <div className="col-sm-12">
