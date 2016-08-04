@@ -3,7 +3,6 @@ import React from 'react';
 import classnames from 'classnames';
 import {Alert, Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
-import Immutable from 'immutable';
 
 import {use, defineSelector, defineView} from '../utils/linker';
 import {viewFrame, renderValue, VarDecl, FunctionCall} from './utils';
