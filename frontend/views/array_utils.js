@@ -243,9 +243,11 @@ export const readArray1D = function (core, arrayType, address, selection, mops) 
   // TODO: check that elemType is scalar
   const cells = [];
   if (selection === undefined) {
-    selection = range(0, elemCount);
+    selection = range(0, elemCount + 1);
   }
   selection.forEach(function (index, position) {
+    if (position === undefined)
+      position = index;
     if (index === '…') {
       cells.push({position, gap: true});
     } else {

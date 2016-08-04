@@ -336,6 +336,11 @@ span + .value-previous {
   left: 0;
 }
 
+.directive-title {
+  /* reserve space for the btn-xs buttons */
+  line-height: 22px;
+}
+
 svg {
 
   font-family: "Open Sans";

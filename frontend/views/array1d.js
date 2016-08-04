@@ -3,6 +3,7 @@ import React from 'react';
 import EpicComponent from 'epic-component';
 import classnames from 'classnames';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
+import range from 'node-range';
 
 import {getIdent, getNumber, getList, viewVariable, renderValue} from './utils';
 import {ArrayViewBuilder, getArrayMapper1D, readArray1D} from './array_utils';
@@ -24,7 +25,11 @@ export const Array1D = EpicComponent(self => {
     last: 20
   };
 
-  const extractView = function () {
+  //
+  // View model preparation
+  //
+
+  const extractView = function (fullView) {
     const {directive, controls, frames, context} = self.props;
     const {core} = context;
     // 'name' is the first positional argument
@@ -45,35 +50,44 @@ export const Array1D = EpicComponent(self => {
       return {error: <p>{"value is not an array"}</p>};
     }
     const elemCount = type.count.toInteger();
-    const builder = new ArrayViewBuilder(maxVisibleCells, elemCount);
-    builder.addMarker(0, pointsByKind.first);
-    builder.addMarker(elemCount, pointsByKind.last);
+    const cellOps = getCellOps(core, ref);
+    const cursorMap = getCursorMap(cursorNames, elemCount, core, localMap);
+    const selection =
+      fullView
+        ? range(0, elemCount + 1)
+        : getSelection(maxVisibleCells, elemCount, cellOps, cursorMap);
+    const cells = readArray1D(core, type, ref.address, selection, cellOps);
+    const cursors = getCursors(selection, cursorMap);
+    return {cells, cursors};
+  };
+
+  // Returns a map keyed by cell index, and whose values are objects giving
+  // the greatest rank in the memory log of a 'load' or 'store' operation.
+  const getCellOps = function (core, ref) {
     // Go through the memory log, translate memory-operation references into
-    // array cells indexes, and save the cell load/store operations in mopMap.
-    const mopMap = [];
+    // array cells indexes, and save the cell load/store operations in cellOps.
+    const cellOps = [];
     const forEachCell = getArrayMapper1D(ref);
     core.memoryLog.forEach(function (entry, i) {
       const op = entry[0]; // 'load' or 'store'
       forEachCell(entry[1], function (index) {
         let cellOps;
-        if (index in mopMap) {
-          cellOps = mopMap[index];
+        if (index in cellOps) {
+          cellOps = cellOps[index];
         } else {
-          cellOps = mopMap[index] = {};
+          cellOps = cellOps[index] = {};
         }
         cellOps[op] = i; // the greatest memory log index is used as rank
       });
     });
-    mopMap.forEach(function (ops, index) {
-      if ('load' in ops) {
-        builder.addMarker(index, pointsByKind.load, ops.load);
-      }
-      if ('store' in ops) {
-        builder.addMarker(index, pointsByKind.store, ops.store);
-      }
-    });
-    // Inspect cursors and add markers.
-    const cursorMap = {};
+    return cellOps;
+  };
+
+  // Returns a map keyed by cell index, and whose values are objects of shape
+  // {index, cursors}, where cursors lists the cursor names pointing to the
+  // cell.
+  const getCursorMap =  function (cursorNames, elemCount, core, localMap) {
+    const cursorMap = [];
     cursorNames.forEach(function (cursorName) {
       if (localMap.has(cursorName)) {
         const {type, ref} = localMap.get(cursorName);
@@ -92,17 +106,42 @@ export const Array1D = EpicComponent(self => {
             cursorMap[cursorPos] = {index: cursorPos, cursors: [], row: 0};
           }
           cursorMap[cursorPos].cursors.push(cursor);
-          builder.addMarker(cursorPos, pointsByKind.cursor);
         }
       }
     });
-    // Read the selected cells.
-    const selection = builder.getSelection();
-    const cells = readArray1D(core, type, ref.address, selection, mopMap);
-    // Build the array of displayed cursors, staggering them to minimize overlap.
+    return cursorMap;
+  };
+
+  // Returns an array of up to maxVisibleCells indices between 0 and elemCount
+  // (inclusive), prioritizing cells that have memory operations or cursors.
+  const getSelection = function (maxVisibleCells, elemCount, cellOps, cursorMap) {
+    const builder = new ArrayViewBuilder(maxVisibleCells, elemCount);
+    builder.addMarker(0, pointsByKind.first);
+    builder.addMarker(elemCount, pointsByKind.last);
+    cellOps.forEach(function (ops, index) {
+      if ('load' in ops) {
+        builder.addMarker(index, pointsByKind.load, ops.load);
+      }
+      if ('store' in ops) {
+        builder.addMarker(index, pointsByKind.store, ops.store);
+      }
+    });
+    cursorMap.forEach(function (cursor, cursorPos) {
+      builder.addMarker(cursorPos, pointsByKind.cursor);
+    });
+    return builder.getSelection();
+  };
+
+  // Returns an array of cursor objects within the selection.
+  // Each cursor is modified to contain a 'col' field giving its position in
+  // the selection, and a 'row' field such that adjacent cursors in the result
+  // are on a different row.
+  const getCursors = function (selection, cursorMap) {
     const cursors = [];
     let nextStaggerCol, cursorRow = 0;
     selection.forEach(function (index, col) {
+      if (col === undefined)
+        col = index;
       if (index in cursorMap) {
         const cursor = cursorMap[index];
         if (col === nextStaggerCol) {
@@ -116,8 +155,12 @@ export const Array1D = EpicComponent(self => {
         cursors.push(cursor);
       }
     });
-    return {cells, cursors};
+    return cursors;
   };
+
+  //
+  // Rendering
+  //
 
   const baseline = function (i) {
     return textLineHeight * (i + 1) - textBaseline;
@@ -201,34 +244,37 @@ export const Array1D = EpicComponent(self => {
   };
 
   const getViewState = function (controls) {
-    const viewState = controls && controls.get('viewState');
+    const viewState = controls.get('viewState');
     return viewState || ViewerHelper.getDefaultValue();
   };
 
   self.render = function () {
-    const {controls} = self.props;
-    const {error, cells, cursors} = extractView();
+    const {Frame, controls} = self.props;
+    const fullView = controls.get('fullView');
+    const {error, cells, cursors} = extractView(fullView);
     if (error) {
-      return <div className='clearfix'>{error}</div>;
+      return <Frame {...self.props}>{error}</Frame>;
     }
-    const viewState = getViewState(self.props.controls);
+    const viewState = getViewState(controls);
     return (
-      <div className='clearfix' style={{padding: '2px'}}>
-        <div style={{width: '100%', height: cellHeight+'px'}}>
-          <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
-            <svg width={cellWidth * cells.length} height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
-              <clipPath id="cell">
-                <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight}/>
-              </clipPath>
-              <g className="array1d">
-                {cursors.map(drawCursor)}
-                {cells.map(drawCell)}
-                {drawGrid(cells)}
-              </g>
-            </svg>
-          </ViewerResponsive>
+      <Frame {...self.props} hasFullView>
+        <div className='clearfix' style={{padding: '2px'}}>
+          <div style={{width: '100%', height: cellHeight+'px'}}>
+            <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
+              <svg width={cellWidth * cells.length} height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <clipPath id="cell">
+                  <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight}/>
+                </clipPath>
+                <g className="array1d">
+                  {cursors.map(drawCursor)}
+                  {cells.map(drawCell)}
+                  {drawGrid(cells)}
+                </g>
+              </svg>
+            </ViewerResponsive>
+          </div>
         </div>
-      </div>
+      </Frame>
     );
   };
 

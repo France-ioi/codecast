@@ -1,8 +1,9 @@
 
 import React from 'react';
-import {Panel} from 'react-bootstrap';
+import {Panel, Button} from 'react-bootstrap';
 import classnames from 'classnames';
 import EpicComponent from 'epic-component';
+import Immutable from 'immutable';
 
 import {use, defineSelector, defineView} from '../utils/linker';
 import {ShowVar} from './utils';
@@ -17,6 +18,41 @@ export default function* (deps) {
     const stepperState = deps.getStepperDisplay(state);
     const scale = state.get('scale');
     return {state: stepperState, scale};
+  });
+
+  const DirectiveFrame = EpicComponent(self => {
+
+    const onToggleFullView = function () {
+      const {controls} = self.props;
+      const update = {fullView: !controls.get('fullView')};
+      self.props.onChange(self.props.directive, update);
+    };
+
+    self.render = function () {
+      const {directive, controls, title, hasFullView} = self.props;
+      const {key} = directive;
+      const fullView = controls.get('fullView');
+      const header = (
+        <div className="directive-header">
+          <div className="pull-right">
+            {hasFullView &&
+              <Button onClick={onToggleFullView} bsSize="xs">
+                {fullView ? 'min' : 'max'}
+              </Button>}
+          </div>
+          <div className="directive-title">
+            {title || key}
+          </div>
+        </div>);
+      return (
+        <div key={key} className='directive-view clearfix'>
+          <Panel className="directive" header={header}>
+            {self.props.children}
+          </Panel>
+        </div>
+      );
+    };
+
   });
 
   yield defineView('DirectivesPane', 'DirectivesPaneSelector', EpicComponent(self => {
@@ -44,17 +80,13 @@ export default function* (deps) {
       const renderDirective = function (directive) {
         const {key, kind} = directive;
         const View = directiveViewDict[kind];
+        if (!View) {
+          return <Directive key={key} title={`undefined view kind ${kind}`}/>;
+        }
         return (
-          <div key={key} className='directive-view clearfix'>
-            <Panel className="directive" header={key}>
-              {View
-                ? <View directive={directive} controls={controls.get(key)}
-                        frames={framesMap[key]} context={context}
-                        onChange={onControlsChange} scale={scale} />
-                : <p>{`undefined view kind ${kind}`}</p>}
-            </Panel>
-          </div>
-        );
+          <View Frame={DirectiveFrame} directive={directive} controls={controls.get(key, Immutable.Map())}
+            frames={framesMap[key]} context={context}
+            onChange={onControlsChange} scale={scale} />);
       };
       return (
         <div className='directive-pane'>
