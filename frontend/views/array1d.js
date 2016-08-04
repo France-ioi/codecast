@@ -50,37 +50,37 @@ export const Array1D = EpicComponent(self => {
       return {error: <p>{"value is not an array"}</p>};
     }
     const elemCount = type.count.toInteger();
-    const cellOps = getCellOps(core, ref);
+    const cellOpsMap = getCellOpsMap(core, ref);
     const cursorMap = getCursorMap(cursorNames, elemCount, core, localMap);
     const selection =
       fullView
         ? range(0, elemCount + 1)
-        : getSelection(maxVisibleCells, elemCount, cellOps, cursorMap);
-    const cells = readArray1D(core, type, ref.address, selection, cellOps);
+        : getSelection(maxVisibleCells, elemCount, cellOpsMap, cursorMap);
+    const cells = readArray1D(core, type, ref.address, selection, cellOpsMap);
     const cursors = getCursors(selection, cursorMap);
     return {cells, cursors};
   };
 
   // Returns a map keyed by cell index, and whose values are objects giving
   // the greatest rank in the memory log of a 'load' or 'store' operation.
-  const getCellOps = function (core, ref) {
+  const getCellOpsMap = function (core, ref) {
     // Go through the memory log, translate memory-operation references into
     // array cells indexes, and save the cell load/store operations in cellOps.
-    const cellOps = [];
+    const cellOpsMap = [];
     const forEachCell = getArrayMapper1D(ref);
     core.memoryLog.forEach(function (entry, i) {
       const op = entry[0]; // 'load' or 'store'
       forEachCell(entry[1], function (index) {
         let cellOps;
-        if (index in cellOps) {
-          cellOps = cellOps[index];
+        if (index in cellOpsMap) {
+          cellOps = cellOpsMap[index];
         } else {
-          cellOps = cellOps[index] = {};
+          cellOps = cellOpsMap[index] = {};
         }
         cellOps[op] = i; // the greatest memory log index is used as rank
       });
     });
-    return cellOps;
+    return cellOpsMap;
   };
 
   // Returns a map keyed by cell index, and whose values are objects of shape
@@ -114,11 +114,11 @@ export const Array1D = EpicComponent(self => {
 
   // Returns an array of up to maxVisibleCells indices between 0 and elemCount
   // (inclusive), prioritizing cells that have memory operations or cursors.
-  const getSelection = function (maxVisibleCells, elemCount, cellOps, cursorMap) {
+  const getSelection = function (maxVisibleCells, elemCount, cellOpsMap, cursorMap) {
     const builder = new ArrayViewBuilder(maxVisibleCells, elemCount);
     builder.addMarker(0, pointsByKind.first);
     builder.addMarker(elemCount, pointsByKind.last);
-    cellOps.forEach(function (ops, index) {
+    cellOpsMap.forEach(function (ops, index) {
       if ('load' in ops) {
         builder.addMarker(index, pointsByKind.load, ops.load);
       }
