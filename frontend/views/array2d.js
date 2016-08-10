@@ -268,7 +268,7 @@ export const Array2D = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {scale} = self.props;
+    const {Frame, scale} = self.props;
     const view = extractView();
     if (view.error) {
       return <div className='clearfix'>{view.error}</div>;
@@ -279,25 +279,27 @@ export const Array2D = EpicComponent(self => {
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
     const viewState = getViewState();
     return (
-      <div className='clearfix' style={{padding: '2px'}}>
-        <div style={{width: '100%', height: divHeight}}>
-          <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
-            <svg width={svgWidth} height={svgHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
-              <g transform={`scale(${scale})`}>
-                <clipPath id="cell">
-                  <rect x="0" y="0" width={cellWidth} height={cellHeight}/>
-                </clipPath>
-                <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
-                  {drawRowCursors(rowCount, colCount, rowInfoMap)}
-                  {drawColCursors(colCount, rowCount, colInfoMap)}
-                  {drawCells(view, rowInfoMap, colInfoMap)}
-                  {drawGrid(rowCount, colCount)}
+      <Frame {...self.props} hasFullView>
+        <div className='clearfix' style={{padding: '2px'}}>
+          <div style={{width: '100%', height: divHeight}}>
+            <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
+              <svg width={svgWidth} height={svgHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
+                <g transform={`scale(${scale})`}>
+                  <clipPath id="cell">
+                    <rect x="0" y="0" width={cellWidth} height={cellHeight}/>
+                  </clipPath>
+                  <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
+                    {drawRowCursors(rowCount, colCount, rowInfoMap)}
+                    {drawColCursors(colCount, rowCount, colInfoMap)}
+                    {drawCells(view, rowInfoMap, colInfoMap)}
+                    {drawGrid(rowCount, colCount)}
+                  </g>
                 </g>
-              </g>
-            </svg>
-          </ViewerResponsive>
+              </svg>
+            </ViewerResponsive>
+          </div>
         </div>
-      </div>
+      </Frame>
     );
   };
 
