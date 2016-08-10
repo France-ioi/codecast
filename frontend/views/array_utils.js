@@ -2,7 +2,108 @@
 import * as C from 'persistent-c';
 import {FibonacciHeap} from 'js-data-structures';
 
-import {readScalarBasic} from './utils';
+import {readScalarBasic, viewVariable} from './utils';
+
+/**
+
+  extractView(core, frame, name, options) looks up `name` in `frame` and
+  builds a view depending on the `options` given.
+
+  TODO: look up in in globals if `name` not defined in `frame`.
+
+  The return value is an object of shape {cells, cursors} where `cells`
+  is an array in which each element is either a cell-content object or the
+  string '…' to indicate a gap in a sequence of indexes.
+
+  A cell-content object has the following shape:
+
+    {
+      position,
+      index,
+      address,
+      content: {
+        kind,
+        ref,
+        current,
+        load?,
+        store?,
+        previous?
+      }
+    }
+
+  - `position` is the index in `cells`
+  - `index` is the index in the array
+  - `address` is the address of the array cell
+  - `content` is the stored-value, in which:
+    - `kind` is always 'scalar'
+    - `ref` is a reference (pointer object) to the cell
+    - `current` is the current persistent-c value of the cell
+    - `load` if present is the rank of the most recent memory operation
+             in the memory log that loads from the cell
+    - `store` if present is the rank of the most recent memory operation
+              in the memory log that writes to the cell
+    - `previous` is the persistent-c value of the cell at the start of the
+                 memory log, if it contains any store operation that overlaps
+                 with the cell
+
+  If `options` contains a `cursorNames` property (array of strings representing
+  variable names in the current `frame`), the `cursors` property in the result
+  is an array of cursor objects of this shape:
+
+    {cursors, index, row, col}
+
+  where
+
+    `index`   is the index of the cursors the array
+    `cursors` is a list of the cursor names at the given index
+    `col`     is the position of the cursor in `cells`
+    `row`     is such that adjacent cursors are on different rows
+              (up to `options.cursorRows` rows are used)
+
+*/
+export const extractView = function (core, frame, name, options) {
+  // Normalize options.
+  const {fullView} = options;
+  let {cursorNames, cursorRows, maxVisibleCells, pointsByKind} = options;
+  if (cursorNames === undefined) {
+    cursorNames = [];
+  }
+  if (cursorRows === undefined) {
+    cursorRows = 2;
+  }
+  if (maxVisibleCells === undefined) {
+    maxVisibleCells = 40;
+  }
+  if (pointsByKind === undefined) {
+    pointsByKind = {
+      cursor: 300,
+      store: 100,
+      load: 50,
+      first: 25,
+      last: 20
+    };
+  }
+  // TODO: look up `name` in globals if frames.length === 0
+  const localMap = frame.get('localMap');
+  if (!localMap.has(name)) {
+    return {error: `${name} not in scope`};
+  }
+  const {type, ref} = localMap.get(name);
+  // Expect an array declaration.
+  if (type.kind !== 'array') {
+    return {error: "value is not an array"};
+  }
+  const elemCount = type.count.toInteger();
+  const cellOpsMap = getCellOpsMap(core, ref);
+  const cursorMap = getCursorMap(cursorNames, elemCount, core, localMap);
+  const selection =
+    fullView
+      ? range(0, elemCount + 1)
+      : getSelection(maxVisibleCells, elemCount, cellOpsMap, cursorMap, pointsByKind);
+  const cells = readArray1D(core, type, ref.address, selection, cellOpsMap);
+  const cursors = getCursors(selection, cursorMap, cursorRows);
+  return {cells, cursors};
+};
 
 /*
 
@@ -26,15 +127,6 @@ import {readScalarBasic} from './utils';
 
 */
 export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
-
-   // Number of points given to each marker kind.
-   this.pointsByKind = {
-      cursor: 300,
-      write: 100,
-      read: 50,
-      first: 25,
-      last: 20
-   };
 
    // The spread is the number of cells around a marker which receive extra
    // points.
@@ -272,3 +364,101 @@ export const readArray1D = function (core, arrayType, address, selection, mops) 
   });
   return cells;
 };
+
+// Returns a map keyed by cell index, and whose values are objects giving
+// the greatest rank in the memory log of a 'load' or 'store' operation.
+const getCellOpsMap = function (core, ref) {
+  // Go through the memory log, translate memory-operation references into
+  // array cells indexes, and save the cell load/store operations in cellOps.
+  const cellOpsMap = [];
+  const forEachCell = getArrayMapper1D(ref);
+  core.memoryLog.forEach(function (entry, i) {
+    const op = entry[0]; // 'load' or 'store'
+    forEachCell(entry[1], function (index) {
+      let cellOps;
+      if (index in cellOpsMap) {
+        cellOps = cellOpsMap[index];
+      } else {
+        cellOps = cellOpsMap[index] = {};
+      }
+      cellOps[op] = i; // the greatest memory log index is used as rank
+    });
+  });
+  return cellOpsMap;
+};
+
+// Returns a map keyed by cell index, and whose values are objects of shape
+// {index, cursors}, where cursors lists the cursor names pointing to the
+// cell.
+const getCursorMap =  function (cursorNames, elemCount, core, localMap) {
+  const cursorMap = [];
+  cursorNames.forEach(function (cursorName) {
+    if (localMap.has(cursorName)) {
+      const {type, ref} = localMap.get(cursorName);
+      const decl = viewVariable(core, cursorName, type, ref.address);
+      const cursorPos = decl.value.current.toInteger();
+      if (cursorPos >= 0 && cursorPos <= elemCount) {
+        const cursor = {name: cursorName};
+        if ('store' in decl.value) {
+          const cursorPrevPos = decl.value.previous.toInteger();
+          if (cursorPrevPos >= 0 && cursorPrevPos <= elemCount) {
+            cursor.prev = cursorPrevPos;
+          }
+        }
+        // Add cursor to position's cursors list.
+        if (!(cursorPos in cursorMap)) {
+          cursorMap[cursorPos] = {index: cursorPos, cursors: [], row: 0};
+        }
+        cursorMap[cursorPos].cursors.push(cursor);
+      }
+    }
+  });
+  return cursorMap;
+};
+
+// Returns an array of up to maxVisibleCells indices between 0 and elemCount
+// (inclusive), prioritizing cells that have memory operations or cursors.
+const getSelection = function (maxVisibleCells, elemCount, cellOpsMap, cursorMap, pointsByKind) {
+  const builder = new ArrayViewBuilder(maxVisibleCells, elemCount);
+  builder.addMarker(0, pointsByKind.first);
+  builder.addMarker(elemCount, pointsByKind.last);
+  cellOpsMap.forEach(function (ops, index) {
+    if ('load' in ops) {
+      builder.addMarker(index, pointsByKind.load, ops.load);
+    }
+    if ('store' in ops) {
+      builder.addMarker(index, pointsByKind.store, ops.store);
+    }
+  });
+  cursorMap.forEach(function (cursor, cursorPos) {
+    builder.addMarker(cursorPos, pointsByKind.cursor);
+  });
+  return builder.getSelection();
+};
+
+// Returns an array of cursor objects within the selection.
+// Each cursor is modified to contain a 'col' field giving its position in
+// the selection, and a 'row' field such that adjacent cursors in the result
+// are on a different row.
+const getCursors = function (selection, cursorMap, cursorRows) {
+  const cursors = [];
+  let nextStaggerCol, cursorRow = 0;
+  selection.forEach(function (index, col) {
+    if (col === undefined)
+      col = index;
+    if (index in cursorMap) {
+      const cursor = cursorMap[index];
+      if (col === nextStaggerCol) {
+        cursorRow = (cursorRow + 1) % cursorRows;
+      } else {
+        cursorRow = 0;
+      }
+      nextStaggerCol = col + 1;
+      cursor.col = col;
+      cursor.row = cursorRow;
+      cursors.push(cursor);
+    }
+  });
+  return cursors;
+};
+
