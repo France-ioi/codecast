@@ -280,7 +280,7 @@ export const getList = function (expr, noVal) {
 export const ShowVar = EpicComponent(self => {
 
   self.render = function () {
-    const {directive, controls, frames, context} = self.props;
+    const {Frame, directive, controls, frames, context} = self.props;
     const {byPos} = directive;
     const name = getIdent(byPos[0]);
     const frame = frames[0];
@@ -292,7 +292,11 @@ export const ShowVar = EpicComponent(self => {
     const value = readValue(
       context.core, C.pointerType(type), ref.address,
       {scalars: 0, maxScalars: 100});
-    return <VarDecl name={name} type={type} address={ref.address} value={value} />;
+    return (
+      <Frame {...self.props}>
+        <VarDecl name={name} type={type} address={ref.address} value={value} />
+      </Frame>
+    );
   };
 
 });
