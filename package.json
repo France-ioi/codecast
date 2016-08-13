@@ -77,8 +77,8 @@
     "ansi-to-html": "^0.4.1",
     "body-parser": "^1.15.0",
     "express": "^4.13.4",
-    "jade": "^1.11.0",
     "packrattle": "^4.1.0",
+    "pug": "^2.0.0-beta5",
     "s3-browser-direct-upload": "^0.1.2"
   }
 }

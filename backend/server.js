@@ -13,7 +13,7 @@ const AnsiToHtml = require('ansi-to-html');
 const upload = require('./upload');
 const directives = require('./directives');
 
-app.set('view engine', 'jade');
+app.set('view engine', 'pug');
 app.set('views', path.join(rootDir, 'backend', 'views'));
 
 const isDevelopment = process.env.NODE_ENV !== 'production';
