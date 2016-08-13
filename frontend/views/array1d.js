@@ -28,7 +28,7 @@ export const Array1D = EpicComponent(self => {
     const dy1 = height / 3;
     const dy2 = height;
     return `${x0},${y0} ${x0-dx1},${y0+dy1} ${x0-dx2},${y0+dy1} ${x0-dx2},${y0+dy2} ${x0+dx2},${y0+dy2} ${x0+dx2},${y0+dy1} ${x0+dx1},${y0+dy1} ${x0},${y0}`;
-  }
+  };
 
   const drawGrid = function (cells) {
     const elements = [];
