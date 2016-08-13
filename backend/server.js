@@ -75,6 +75,7 @@ app.post('/translate', function (req, res) {
   const cp = spawn('./c-to-json', {env: env});
   const chunks = [];
   const errorChunks = [];
+  let errorSent = false;
   cp.stdout.on('data', function (chunk) {
     chunks.push(chunk);
   });
@@ -86,14 +87,9 @@ app.post('/translate', function (req, res) {
     res.json({error: err.toString()});
   });
   cp.stdin.write(source, function (err) {
-    if (err) {
-      errorSent = true;
-      res.json({error: err.toString()});
-    } else {
-      cp.stdin.end();
-    }
+    if (err) return;
+    cp.stdin.end();
   });
-  let errorSent = false;
   cp.on('close', function (code) {
     if (errorSent)
       return;
