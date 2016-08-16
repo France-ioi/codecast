@@ -111,11 +111,12 @@ export const Array1D = EpicComponent(self => {
     const name = getIdent(byPos[0]);
     const cursorNames = getList(byName.cursors, []).map(getIdent);
     const maxVisibleCells = getNumber(byName.n, 40);
+    const dim = getNumber(byName.dim);
     // The first element of `frames` is the topmost frame containing the
     // directive.
     const {error, cells, cursors} = extractView(
       context.core, frames[0], name,
-      {fullView, cursorNames, maxVisibleCells});
+      {dim, fullView, cursorNames, maxVisibleCells});
     if (error) {
       return <Frame {...self.props}>{error}</Frame>;
     }
