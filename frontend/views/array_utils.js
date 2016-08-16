@@ -65,6 +65,7 @@ export const extractView = function (core, frame, name, options) {
   // Normalize options.
   const {fullView} = options;
   let {cursorNames, cursorRows, maxVisibleCells, pointsByKind} = options;
+  let elemCount = options.dim;
   if (cursorNames === undefined) {
     cursorNames = [];
   }
@@ -89,18 +90,32 @@ export const extractView = function (core, frame, name, options) {
     return {error: `${name} not in scope`};
   }
   const {type, ref} = localMap.get(name);
-  // Expect an array declaration.
-  if (type.kind !== 'array') {
-    return {error: "value is not an array"};
+  let address, elemType;
+  if (type.kind === 'array') {
+    // Array variable.
+    elemType = type.elem;
+    address = ref.address;
+    if (elemCount === undefined) {
+      elemCount = type.count.toInteger();
+    }
+  } else if (type.kind === 'pointer') {
+    // Pointer variable.
+    elemType = type.pointee;
+    address = C.readValue(core.memory, ref).address;
+    if (elemCount === undefined) {
+      // Make up a sensible elemCount.
+      elemCount = Math.floor(128 / type.pointee.size);
+    }
+  } else {
+    return {error: "variable is neither an array nor a pointer"};
   }
-  const elemCount = type.count.toInteger();
-  const cellOpsMap = getCellOpsMap(core, ref);
-  const cursorMap = getCursorMap(cursorNames, elemCount, core, localMap);
+  const cellOpsMap = getCellOpsMap(core, address, elemCount, elemType.size);
+  const cursorMap = getCursorMap(core, cursorNames, elemCount, localMap);
   const selection =
     fullView
       ? range(0, elemCount + 1)
       : getSelection(maxVisibleCells, elemCount, cellOpsMap, cursorMap, pointsByKind);
-  const cells = readArray1D(core, type, ref.address, selection, cellOpsMap);
+  const cells = readArray1D(core, address, elemType, elemCount, selection, cellOpsMap);
   const cursors = getCursors(selection, cursorMap, cursorRows);
   return {cells, cursors};
 };
@@ -301,11 +316,8 @@ const compareHeapNodes = function (a, b) {
    return 0;
 };
 
-export const getArrayMapper1D = function (arrayRef) {
-   const arrayType = arrayRef.type.pointee;
-   const arrayBase = arrayRef.address;
-   const arrayLimit = arrayBase + arrayType.size - 1;
-   const elemSize = arrayType.elem.size;
+export const getArrayMapper1D = function (arrayBase, elemCount, elemSize) {
+   const arrayLimit = arrayBase + (elemCount * elemSize) - 1;
    return function (ref, callback) {
       // Skip if [array] < [ref]
       const {address, type} = ref;
@@ -327,9 +339,7 @@ export const getArrayMapper1D = function (arrayRef) {
 };
 
 // Read an 1D array of scalars.
-export const readArray1D = function (core, arrayType, address, selection, mops) {
-  const elemCount = arrayType.count.toInteger();
-  const elemType = arrayType.elem;
+export const readArray1D = function (core, arrayBase, elemType, elemCount, selection, mops) {
   const elemSize = elemType.size;
   const elemRefType = C.pointerType(elemType);
   // TODO: check that elemType is scalar
@@ -343,7 +353,7 @@ export const readArray1D = function (core, arrayType, address, selection, mops) 
     if (index === '…') {
       cells.push({position, gap: true});
     } else {
-      const elemAddress = address + index * elemSize;
+      const elemAddress = arrayBase + index * elemSize;
       const cell = {position, index, address: elemAddress};
       if (index >= 0 && index < elemCount) {
         const content = readScalarBasic(core, elemRefType, elemAddress);
@@ -367,11 +377,11 @@ export const readArray1D = function (core, arrayType, address, selection, mops) 
 
 // Returns a map keyed by cell index, and whose values are objects giving
 // the greatest rank in the memory log of a 'load' or 'store' operation.
-const getCellOpsMap = function (core, ref) {
+const getCellOpsMap = function (core, address, elemCount, elemSize) {
   // Go through the memory log, translate memory-operation references into
   // array cells indexes, and save the cell load/store operations in cellOps.
   const cellOpsMap = [];
-  const forEachCell = getArrayMapper1D(ref);
+  const forEachCell = getArrayMapper1D(address, elemCount, elemSize);
   core.memoryLog.forEach(function (entry, i) {
     const op = entry[0]; // 'load' or 'store'
     forEachCell(entry[1], function (index) {
@@ -390,7 +400,7 @@ const getCellOpsMap = function (core, ref) {
 // Returns a map keyed by cell index, and whose values are objects of shape
 // {index, cursors}, where cursors lists the cursor names pointing to the
 // cell.
-const getCursorMap =  function (cursorNames, elemCount, core, localMap) {
+const getCursorMap =  function (core, cursorNames, elemCount, localMap) {
   const cursorMap = [];
   cursorNames.forEach(function (cursorName) {
     if (localMap.has(cursorName)) {
