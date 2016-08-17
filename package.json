@@ -29,7 +29,7 @@
       "lamejs": "npm:lamejs@^1.1.0",
       "lodash": "npm:lodash@^4.6.1",
       "node-range": "npm:node-range@^0.1.0",
-      "persistent-c": "npm:persistent-c@^9.2.1",
+      "persistent-c": "npm:persistent-c@^9.2.2",
       "query-string": "npm:query-string@^4.1.0",
       "rc-slider": "npm:rc-slider@^3.6.0",
       "react": "npm:react@^15.1.0",
