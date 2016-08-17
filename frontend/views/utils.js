@@ -263,11 +263,32 @@ export const getIdent = function (expr, noVal) {
   return expr[0] === 'ident' ? expr[1] : noVal;
 };
 
-export const getNumber = function (expr, noVal) {
+export const getNumber = function (expr, options) {
+  let noVal;
+  if (typeof options === 'object') {
+    noVal = options.noVal;
+  } else {
+    noVal = options;
+    options = {};
+  }
   if (!expr) {
     return noVal;
   }
-  return expr[0] === 'number' ? expr[1] : noVal;
+  if (expr[0] === 'number') {
+    return expr[1];
+  }
+  const core = options.core;
+  const frame = options.frame;
+  if (expr[0] === 'ident' && core && frame) {
+    const decl = frame.get('localMap').get(expr[1]);
+    if (decl && decl.type.kind === 'scalar') {
+      const value = C.readValue(core.memory, decl.ref);
+      if (value) {
+        return value.toInteger();
+      }
+    }
+  }
+  return noVal;
 };
 
 export const getList = function (expr, noVal) {
