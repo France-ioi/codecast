@@ -30,7 +30,7 @@ export default function* (deps) {
     'playerStop', 'playerStopping', 'playerStopped',
     'playerTick', 'playerSeek', 'playerSeeked',
     'playerAudioReady', 'playerAudioError',
-    'getPlayerState',
+    'getPlayerState', 'getStepperDisplay',
     'translateReset',
     'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset',
     'sourceReset', 'sourceModelSelect', 'sourceModelEdit', 'sourceModelScroll', 'sourceHighlight',
