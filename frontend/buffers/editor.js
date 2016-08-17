@@ -158,7 +158,10 @@ export const Editor = EpicComponent(self => {
         marker = null;
       }
       if (range && range.start && range.end) {
+        // Add (and save) the marker.
         marker = session.addMarker(toRange(range), "code-highlight", "text");
+        // Also scroll so that the line is visible.
+        editor.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
       }
     });
   };
