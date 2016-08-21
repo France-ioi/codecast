@@ -96,8 +96,12 @@ export const extractView = function (core, frame, name, options) {
     // Array variable.
     elemType = type.elem;
     address = ref.address;
-    if (elemCount === undefined) {
+    if (elemCount === undefined && type.count !== undefined) {
       elemCount = type.count.toInteger();
+    }
+    if (elemCount === undefined) {
+      // Make up a sensible elemCount.
+      elemCount = Math.floor(128 / type.elem.size);
     }
   } else if (type.kind === 'pointer') {
     // Pointer variable.
