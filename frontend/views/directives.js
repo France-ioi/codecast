@@ -9,6 +9,7 @@ import {use, defineSelector, defineView} from '../utils/linker';
 import {ShowVar} from './utils';
 import {Array1D} from './array1d';
 import {Array2D} from './array2d';
+import {SortView} from './sort';
 
 export default function* (deps) {
 
@@ -60,7 +61,8 @@ export default function* (deps) {
     const directiveViewDict = {
       showVar: ShowVar,
       showArray: Array1D,
-      showArray2D: Array2D
+      showArray2D: Array2D,
+      showSort: SortView
     };
 
     const onControlsChange = function (directive, update) {

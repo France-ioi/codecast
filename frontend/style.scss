@@ -368,4 +368,19 @@ svg {
     }
   }
 
+  .sort-view {
+    .bar rect {
+      fill: #f0f0f0;
+      stroke: #777;
+      stroke-width: 0.5;
+    }
+    text.current-content, .previous-content text, text.index, .cursor text.names {
+      text-anchor: middle;
+    }
+    .previous-content line {
+      stroke: #777;
+      stroke-width: 2;
+    }
+  }
+
 }
