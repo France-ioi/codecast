@@ -274,7 +274,7 @@ export const Array2D = EpicComponent(self => {
       return <div className='clearfix'>{view.error}</div>;
     }
     const {rowCount, colCount, rowInfoMap, colInfoMap, height} = view;
-    const svgHeight = gridLeft + colCount * cellWidth;
+    const svgHeight = gridTop + rowCount * cellHeight;
     const svgWidth = gridLeft + colCount * cellWidth;
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
     const viewState = getViewState();
