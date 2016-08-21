@@ -7,7 +7,6 @@ import React from 'react';
 import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import * as C from 'persistent-c';
-import range from 'node-range';
 
 export const viewFrame = function (core, frame, options) {
   const view = {

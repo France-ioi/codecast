@@ -1,6 +1,7 @@
 
 import * as C from 'persistent-c';
 import {FibonacciHeap} from 'js-data-structures';
+import range from 'node-range';
 
 import {readScalarBasic, viewVariable} from './utils';
 
