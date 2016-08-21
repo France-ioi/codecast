@@ -88,6 +88,10 @@ export const readScalar = function (core, refType, address) {
 };
 
 export const readArray = function (core, arrayType, address, context) {
+  if (arrayType.count === undefined) {
+    // Array of unknown size
+    return [{index: 0, address, content: {kind: 'ellipsis'}}];
+  }
   const elemCount = arrayType.count.toInteger();
   const elemType = arrayType.elem;
   const elemSize = elemType.size;
