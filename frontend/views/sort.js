@@ -24,6 +24,13 @@ export const SortView = EpicComponent(self => {
   const cursorRows = 2;
   const minArrowHeight = 20;
 
+  const getValueClass = function (content) {
+    return (
+      'store' in content ? 'store' :
+      'load' in content ? 'load' :
+      'default');
+  };
+
   const drawBar = function (cell, i) {
     const {position, index, address, content, gap} = cell;
     const w1 = barWidth + barSpacing;        // w1: total bar width
@@ -41,13 +48,14 @@ export const SortView = EpicComponent(self => {
         </g>
       );
     }
+    const rectClass = getValueClass(content);
     const y3 = y1 - textBaseline - barPaddingBottom;
     const y4 = y3 - textLineHeight;
     const h1 = barHeight * content.current.toInteger() / this.maxValue; // y3: bar height based on value
     const h2 = (textLineHeight - textBaseline) / 3 // strike-through height from line
     return (
       <g key={`C${index}`} className="bar" transform={`translate(${x0},${y0})`}>
-        <rect x="0" y={y1 - h1} width={barWidth} height={h1} />
+        <rect className={rectClass} x="0" y={y1 - h1} width={barWidth} height={h1} />
         <text x={x1} y={y5} className="index">{index}</text>
         <g clipPath="url(#barClipping)">
           {'previous' in content &&
@@ -92,7 +100,7 @@ export const SortView = EpicComponent(self => {
     const y0 = marginTop + barHeight * number / this.maxValue;
     const y1 = y0 + textBaseline;
     return (
-      <g key={`t-${name}`} className="threshold">
+      <g key={`t-${name}`} className={classnames(["threshold", getValueClass(value)])}>
         <line className="value" x1={x0} x2={x1} y1={y0} y2={y0}/>
         <text className="name" x={x2} y={y1}>{name}</text>
       </g>

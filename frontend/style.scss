@@ -371,6 +371,8 @@ svg {
   .sort-view {
     .bar rect {
       fill: #f0f0f0;
+      &.load { fill: #DCEDC8; }
+      &.store { fill: #FFCDD2; }
       stroke: #777;
       stroke-width: 0.5;
     }
@@ -390,6 +392,10 @@ svg {
         stroke: #444;
         stroke-width: 1;
       }
+      &.load text { fill: #8BC34A; }
+      &.load line { stroke: #8BC34A; }
+      &.store text { fill: #F44336; }
+      &.store line { stroke: #F44336; }
     }
   }
 
