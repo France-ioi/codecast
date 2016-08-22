@@ -23,7 +23,7 @@ const examples = [
       "}",
       "",
       "void quick_sort (int size, int array[], int left, int right) {",
-      "    //! quicksort = showSort(array, cursors=[left, right, i, j], dim=size)",
+      "    //! quicksort = showSort(array, cursors=[left, right, i, j], dim=size, thresholds=[pivot])",
       "    if (right <= left)",
       "        return;",
       "    int pivot = array[right];",

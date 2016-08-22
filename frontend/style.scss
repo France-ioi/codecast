@@ -381,6 +381,16 @@ svg {
       stroke: #777;
       stroke-width: 2;
     }
+    .threshold {
+      text.name {
+        fill: #444;
+        text-anchor: end;
+      }
+      line.value {
+        stroke: #444;
+        stroke-width: 1;
+      }
+    }
   }
 
 }

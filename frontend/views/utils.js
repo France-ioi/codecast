@@ -26,6 +26,18 @@ export const viewFrame = function (core, frame, options) {
   return view;
 };
 
+export const viewVariables = function (core, frame, names) {
+  const localMap = frame.get('localMap');
+  const decls = [];
+  names.forEach(function (name) {
+    if (localMap.has(name)) {
+      const {type, ref} = localMap.get(name);
+      decls.push(viewVariable(core, name, type, ref.address));
+    }
+  });
+  return decls;
+};
+
 export const viewVariable = function (core, name, type, address) {
   const context = {scalars: 0, maxScalars: 15};
   return {

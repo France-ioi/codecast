@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 import range from 'node-range';
 
-import {getIdent, getNumber, getList, renderValue, arrowPoints} from './utils';
+import {getIdent, getNumber, getList, viewVariables, renderValue, arrowPoints} from './utils';
 import {extractView} from './array_utils';
 
 export const SortView = EpicComponent(self => {
@@ -17,6 +17,8 @@ export const SortView = EpicComponent(self => {
   const barSpacing = 4;
   const barPaddingBottom = 3;
   const barMarginBottom = 2;
+  const thresholdMarginRight = 5;
+  const thresholdLineExt = 3;
   const textLineHeight = 18;
   const textBaseline = 5;
   const cursorRows = 2;
@@ -78,6 +80,25 @@ export const SortView = EpicComponent(self => {
     );
   };
 
+  const drawThreshold = function (decl) {
+    const {name, value} = decl;
+    const {kind, current} = value;
+    if (!(kind === 'scalar' && 'number' in current))
+      return false;
+    const {number} = current;
+    const x0 = marginLeft - thresholdLineExt;
+    const x1 = marginLeft + (barWidth + barSpacing) * this.nbCells + thresholdLineExt;
+    const x2 = marginLeft - thresholdMarginRight;
+    const y0 = marginTop + barHeight * number / this.maxValue;
+    const y1 = y0 + textBaseline;
+    return (
+      <g key={`t-${name}`} className="threshold">
+        <line className="value" x1={x0} x2={x1} y1={y0} y2={y0}/>
+        <text className="name" x={x2} y={y1}>{name}</text>
+      </g>
+    );
+  };
+
   const onViewChange = function (event) {
     const {value} = event;
     // Prevent vertical panning.
@@ -93,6 +114,7 @@ export const SortView = EpicComponent(self => {
 
   self.render = function () {
     const {Frame, controls, directive, frames, context, scale} = self.props;
+    const {core} = context;
     const topFrame = frames[0];
     // Controls
     //   - fullView: read and render all cells
@@ -107,30 +129,38 @@ export const SortView = EpicComponent(self => {
     //   - height: height in pixels (auto if unspecified)
     const {byName, byPos} = directive;
     const name = getIdent(byPos[0]);
-    const dim = getNumber(byName.dim, {core: context.core, frame: topFrame});
+    const getOptions = {core: core, frame: topFrame};
+    const dim = getNumber(byName.dim, getOptions);
+    const thNames = getList(byName.thresholds, []).map(getIdent);
     const cursorNames = getList(byName.cursors, []).map(getIdent);
     const maxVisibleCells = getNumber(byName.n, 40);
     const height = getNumber(byName.height, 'auto');
     const {error, cells, cursors} = extractView(
-      context.core, topFrame, name,
+      core, topFrame, name,
       {dim, fullView, cursorNames, maxVisibleCells, cursorRows});
+    const thresholds = viewVariables(core, topFrame, thNames);
+    console.log('thresholds', thresholds);
     if (error) {
       return <Frame {...self.props}>{error}</Frame>;
     }
     const viewState = getViewState(controls);
-    const svgWidth = marginLeft + (barWidth + barSpacing) * cells.length;
+    const nbCells = cells.length;
+    const svgWidth = marginLeft + (barWidth + barSpacing) * nbCells;
     const svgHeight = marginTop + barHeight + barMarginBottom + textLineHeight + minArrowHeight + textLineHeight * cursorRows;
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
     // Find the largest cell value.
     let maxValue = 0;
     cells.forEach(function (cell) {
       if (cell.content) {
-        const value = cell.content.current.toInteger();
-        if (value > maxValue)
-          maxValue = value;
+        const {kind, current} = cell.content;
+        if (kind === 'scalar' && 'number' in current) {
+          const value = current.number;
+          if (value > maxValue)
+            maxValue = value;
+        }
       }
     });
-    const drawBarOptions = {maxValue};
+    const renderContext = {maxValue, nbCells};
     return (
       <Frame {...self.props} hasFullView>
         <div className='clearfix' style={{padding: '2px'}}>
@@ -141,8 +171,9 @@ export const SortView = EpicComponent(self => {
                   <rect x="0" y="0" width={barWidth} height={barHeight}/>
                 </clipPath>
                 <g className="sort-view">
-                  {cells.map(drawBar.bind(drawBarOptions))}
+                  {cells.map(drawBar.bind(renderContext))}
                   {cursors.map(drawCursor)}
+                  {thresholds.map(drawThreshold.bind(renderContext))}
                 </g>
               </svg>
             </ViewerResponsive>
