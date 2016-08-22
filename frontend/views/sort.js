@@ -139,7 +139,6 @@ export const SortView = EpicComponent(self => {
       core, topFrame, name,
       {dim, fullView, cursorNames, maxVisibleCells, cursorRows});
     const thresholds = viewVariables(core, topFrame, thNames);
-    console.log('thresholds', thresholds);
     if (error) {
       return <Frame {...self.props}>{error}</Frame>;
     }
