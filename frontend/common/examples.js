@@ -11,6 +11,11 @@ import Document from '../buffers/document';
 const examples = [
 
   {
+    title: "affichage de la mémoire",
+    source: "#include <stdio.h>\nint main() {\n  //! showMemory(a=[i,j])\n  int i = 0, j = 1, *k = &j;\n  *k = 3;\n  printf(\"i = %i, j = %i\\n\", i, j);\n  {\n    int i = 1;\n    j = 2;\n    printf(\"i = %i, j = %i\\n\", i, j);\n  }\n  printf(\"i = %i, j = %i\\n\", i, j);\n}\n"
+  },
+
+  {
     title: "quicksort",
     source: [
       "#include <stdio.h>",
