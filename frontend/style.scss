@@ -399,4 +399,26 @@ svg {
     }
   }
 
+  .memory-view {
+    .grid text, .cell text {
+      font-family: monospace;
+    }
+    .cell text {
+      text-anchor: middle;
+    }
+    .cell .previous-value line {
+      stroke: #777;
+      stroke-width: 2;
+    }
+    .grid {
+      line {
+        stroke: #777;
+        stroke-width: 1;
+      }
+      line.gap {
+        stroke-dasharray: 3, 3;
+      }
+    }
+  }
+
 }
