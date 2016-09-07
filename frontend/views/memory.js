@@ -20,6 +20,8 @@ and has these additional properties:
 
 import React from 'react';
 import EpicComponent from 'epic-component';
+import Slider from 'rc-slider';
+import {Button} from 'react-bootstrap';
 import classnames from 'classnames';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 import range from 'node-range';
@@ -39,6 +41,26 @@ const formatAddress = function (address) {
 
 const formatByte = function (byte) {
   return (byte | 0x100).toString(16).substring(1).toUpperCase();
+};
+
+const extractView = function (core, options) {
+  const {memory} = core;
+  const {columns} = options;
+  const maxAddress = memory.size;
+  let startAddress = options.startAddress;
+  if (startAddress + columns >= maxAddress) {
+    startAddress = maxAddress - columns;
+  }
+  const cells = [];
+  for (let column = 0; column < columns; column += 1) {
+    const address = startAddress + column;
+    const current = memory.get(address);
+    cells.push({column, address, current});
+  }
+  // {column: 0, address: 0, current: 0x00},
+  // {column: 8, gap: true},
+  // {column: 12, address: 65532, current: 0x01, load: 0, store: 1, previous: 0x00},
+  return {cells};
 };
 
 export const MemoryView = EpicComponent(self => {
@@ -115,6 +137,27 @@ export const MemoryView = EpicComponent(self => {
     return viewState || ViewerHelper.getDefaultValue();
   };
 
+  const onShiftLeft = function (event) {
+    let startAddress = self.props.controls.get('startAddress', 0);
+    startAddress = Math.max(0, startAddress - 32);
+    self.props.onChange(self.props.directive, {startAddress});
+  };
+
+  const onShiftRight = function (event) {
+    let startAddress = self.props.controls.get('startAddress', 0);
+    startAddress = Math.min(self.props.context.core.memory.size - 1, startAddress + 32);
+    self.props.onChange(self.props.directive, {startAddress});
+  };
+
+  const onSeek = function (startAddress) {
+    const current = self.props.controls.get('startAddress', 0);
+    // Clear the LSB.
+    startAddress = startAddress ^ (startAddress & 0xFF);
+    // Preserve the current 16-bit alignment.
+    startAddress |= current & 0xF0;
+    self.props.onChange(self.props.directive, {startAddress});
+  };
+
   const onViewChange = function (event) {
     const {value} = event;
     // Prevent vertical panning.
@@ -130,45 +173,39 @@ export const MemoryView = EpicComponent(self => {
     //   - fullView: read and render all visible bytes
     const fullView = controls.get('fullView');
     const viewState = getViewState(controls);
+    const startAddress = controls.get('startAddress', 0);
+    const maxAddress = self.props.context.core.memory.size;
     // Directive arguments
     //   - a: list of variable names (pointers) to display as cursors
     //   - b: list of variable names (pointers or arrays) to display on
     //        additional lines
+    //   - height: set view height in pixels
     const {byName, byPos} = directive;
     const a = getList(byName.thresholds, []).map(getIdent);
     const b = getList(byName.cursors, []).map(getIdent);
     const height = getNumber(byName.height, 'auto');
-
-    /*
-    const {error, cells, cursors, data} = extractView(
-      core, topFrame, name,
-      {dim, fullView, cursorNames, maxVisibleCells, cursorRows});
-    */
-    const cells = [
-      {column: 0, address: 0, current: 0x00},
-      {column: 1, address: 1, current: 0x00},
-      {column: 2, address: 2, current: 0x00},
-      {column: 3, address: 3, current: 0x00},
-      {column: 4, address: 4, current: 0x00},
-      {column: 5, address: 5, current: 0x00},
-      {column: 6, address: 6, current: 0x00},
-      {column: 7, address: 7, current: 0x00},
-      {column: 8, gap: true},
-      {column: 9, address: 65529, current: 0x00},
-      {column: 10, address: 65530, current: 0x00},
-      {column: 11, address: 65531, current: 0x00},
-      {column: 12, address: 65532, current: 0x01, load: 0, store: 1, previous: 0x00},
-      {column: 13, address: 65533, current: 0x00, load: 0, store: 1, previous: 0x00},
-      {column: 14, address: 65534, current: 0x00, load: 0, store: 1, previous: 0x00},
-      {column: 15, address: 65535, current: 0x00, load: 0, store: 1, previous: 0x00}
-    ];
+    // Extract the view-model.
+    const {cells} = extractView(core, {startAddress, columns: 32});
     const nbCells = cells.length;
     const svgWidth = marginLeft + cellWidth * nbCells;
     const svgHeight = marginTop + cellTopPadding + cellHeight;
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
-    const renderContext = {};
     return (
       <Frame {...self.props} hasFullView>
+        <div className="memory-controls directive-controls">
+          <p className="start-address"><tt>{formatAddress(startAddress)}</tt></p>
+          <div className="memory-slider-container" style={{width: '400px'}}>
+            <Slider prefixCls="memory-slider" tipFormatter={null} value={startAddress} min={0} max={maxAddress} onChange={onSeek}>
+              <div className="memory-slider-background"/>
+            </Slider>
+          </div>
+          <Button onClick={onShiftLeft} title="shift view to the left">
+            <i className="fa fa-arrow-left"/>
+          </Button>
+          <Button onClick={onShiftRight} title="shift view to the right">
+            <i className="fa fa-arrow-right"/>
+          </Button>
+        </div>
         <div className='clearfix' style={{padding: '2px'}}>
           <div style={{width: '100%', height: divHeight}}>
             <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
