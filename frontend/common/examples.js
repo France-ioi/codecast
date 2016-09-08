@@ -12,7 +12,21 @@ const examples = [
 
   {
     title: "affichage de la mémoire",
-    source: "#include <stdio.h>\nint main() {\n  //! showMemory(a=[i,j])\n  int i = 0, j = 1, *k = &j;\n  *k = 3;\n  printf(\"i = %i, j = %i\\n\", i, j);\n  {\n    int i = 1;\n    j = 2;\n    printf(\"i = %i, j = %i\\n\", i, j);\n  }\n  printf(\"i = %i, j = %i\\n\", i, j);\n}\n"
+    source: [
+      "#include <stdio.h>",
+      "int main() {",
+      "  //! showMemory(a=[i,j], cursors=[k], start=65504)",
+      "  int i = 0, j = 1, *k = &j;",
+      "  *k = 3;",
+      "  printf(\"i = %i, j = %i\\n\", i, j);",
+      "  {",
+      "    int i = 1;",
+      "    j = 2;",
+      "    printf(\"i = %i, j = %i\\n\", i, j);",
+      "  }",
+      "  printf(\"i = %i, j = %i\\n\", i, j);",
+      "}"
+    ].join('\n')
   },
 
   {

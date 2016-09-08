@@ -26,7 +26,8 @@ import classnames from 'classnames';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 import range from 'node-range';
 
-import {getNumber, getIdent, getList} from './utils';
+import {getNumber, getIdent, getList, arrowPoints} from './utils';
+import {getCursorMap, getCursors} from './array_utils';
 
 const rotate = function (a, x, y) {
   const a1 = a * Math.PI / 180;
@@ -58,7 +59,7 @@ const addCellMemoryOps = function (memoryLog, cell) {
   });
 };
 
-const extractView = function (core, options) {
+const extractView = function (core, localMap, options) {
   const {memory, memoryLog, oldMemory} = core;
   const {columns} = options;
   const maxAddress = memory.size;
@@ -66,6 +67,7 @@ const extractView = function (core, options) {
   if (startAddress + columns >= maxAddress) {
     startAddress = maxAddress - columns;
   }
+  const endAddress = startAddress + columns - 1;
   const cells = [];
   for (let column = 0; column < columns; column += 1) {
     const address = startAddress + column;
@@ -77,10 +79,15 @@ const extractView = function (core, options) {
     }
     cells.push(cell);
   }
-  // {column: 0, address: 0, current: 0x00},
-  // {column: 8, gap: true},
-  // {column: 12, address: 65532, current: 0x01, load: 0, store: 1, previous: 0x00},
-  return {cells};
+  // Build the cursor views.
+  const cursorMap = getCursorMap(
+    core, options.cursorNames, startAddress, endAddress, localMap);
+  const cursors = getCursors(
+    range(startAddress, endAddress), cursorMap, options.cursorRows);
+  cursors.forEach(function (cursor) {
+    cursor.column = cursor.index - startAddress;
+  });
+  return {cells, cursors};
 };
 
 export const MemoryView = EpicComponent(self => {
@@ -94,7 +101,10 @@ export const MemoryView = EpicComponent(self => {
   const marginLeft = 10;
   const marginTop = 10 + addressSize.y;
   const cellTopPadding = 4;
+  const gridBottomMargin = 4;
   const nBytesShown = 32;
+  const minArrowHeight = 20;
+  const cursorRows = 2;
 
   const baseline = function (i) {
     return textLineHeight * (i + 1) - textBaseline;
@@ -129,7 +139,7 @@ export const MemoryView = EpicComponent(self => {
     return <g className='grid'>{elements}</g>;
   };
 
-  const drawCell = function (cell, i) {
+  const drawCellContent = function (cell) {
     if (cell.gap)
       return false;
     const x0 = cellWidth / 2;
@@ -150,6 +160,34 @@ export const MemoryView = EpicComponent(self => {
         <text x={x0} y={y1} className={cellClasses}>
           {formatByte(current)}
         </text>
+      </g>
+    );
+  };
+
+  const drawCell = function (cell) {
+    const {column, address} = cell;
+    const x0 = marginLeft + column * cellWidth;
+    const y0 = marginTop + cellTopPadding;
+    return (
+      <g className='cell' key={`0x${address}`} transform={`translate(${x0},${y0})`} clipPath='url(#cell)'>
+        {drawCellContent(cell)}
+      </g>
+    );
+  };
+
+  const drawCursor = function (cursor) {
+    const {column, row, cursors} = cursor;
+    const x0 = marginLeft + column * cellWidth;
+    const y0 = marginTop + cellTopPadding + cellHeight + gridBottomMargin; // XXX + extra lines
+    const arrowHeight = minArrowHeight + row * textLineHeight;
+    const x1 = cellWidth / 2;
+    const y1 = arrowHeight + textLineHeight - textBaseline;
+    const fillColor = '#eef';
+    const label = cursors.map(cursor => cursor.name).join(',');
+    return (
+      <g key={`c${column}`} transform={`translate(${x0},${y0})`} className='cursor'>
+        <polygon points={arrowPoints(cellWidth/2, 0, 6, arrowHeight)}/>
+        <text x={x1} y={y1}>{label}</text>
       </g>
     );
   };
@@ -193,27 +231,37 @@ export const MemoryView = EpicComponent(self => {
 
   self.render = function () {
     const {Frame, controls, directive, frames, context, scale} = self.props;
+    const localMap = frames[0].get('localMap');
     const {core} = context;
     // Controls
     //   - fullView: read and render all visible bytes
     const fullView = controls.get('fullView');
     const viewState = getViewState(controls);
-    const startAddress = controls.get('startAddress', 0);
-    const maxAddress = self.props.context.core.memory.size;
     // Directive arguments
-    //   - a: list of variable names (pointers) to display as cursors
+    //   - cursors: list of variable names (pointers) to display as cursors
     //   - b: list of variable names (pointers or arrays) to display on
     //        additional lines
     //   - height: set view height in pixels
     const {byName, byPos} = directive;
     const a = getList(byName.thresholds, []).map(getIdent);
-    const b = getList(byName.cursors, []).map(getIdent);
+    const cursorNames = getList(byName.cursors, []).map(getIdent);
     const height = getNumber(byName.height, 'auto');
+    const startAddress = controls.get('startAddress', getNumber(byName.start, 0));
     // Extract the view-model.
-    const {cells} = extractView(core, {startAddress, columns: nBytesShown});
+    const maxAddress = self.props.context.core.memory.size;
+    const {cells, cursors} = extractView(
+      core,
+      localMap,
+      {
+        startAddress,
+        columns: nBytesShown,
+        cursorNames,
+        cursorRows
+      });
     const nbCells = cells.length;
     const svgWidth = marginLeft + cellWidth * nbCells;
-    const svgHeight = marginTop + cellTopPadding + cellHeight;
+    const svgHeight = marginTop + cellTopPadding + cellHeight +
+      gridBottomMargin + minArrowHeight + cursorRows * textLineHeight;
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
     return (
       <Frame {...self.props} hasFullView>
@@ -237,18 +285,8 @@ export const MemoryView = EpicComponent(self => {
               <svg width={svgWidth} height={svgHeight} version='1.1' xmlns='http://www.w3.org/2000/svg'>
                 <g className="memory-view">
                   {drawGrid(cells)}
-                  <g className='cells'>
-                    {cells.map(function (cell) {
-                      const {column, address} = cell;
-                      const x0 = marginLeft + column * cellWidth;
-                      const y0 = marginTop + cellTopPadding;
-                      return (
-                        <g className='cell' key={`0x${address}`} transform={`translate(${x0},${y0})`} clipPath='url(#cell)'>
-                          {drawCell(cell)}
-                        </g>
-                      );
-                    })}
-                  </g>
+                  <g className='cells'>{cells.map(drawCell)}</g>
+                  <g className='cursors'>{cursors.map(drawCursor)}</g>
                 </g>
               </svg>
             </ViewerResponsive>
