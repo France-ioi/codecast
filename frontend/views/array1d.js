@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 import range from 'node-range';
 
-import {getIdent, getNumber, getList, renderValue} from './utils';
+import {getIdent, getNumber, getList, renderValue, arrowPoints} from './utils';
 import {extractView} from './array_utils';
 
 export const Array1D = EpicComponent(self => {
@@ -20,14 +20,6 @@ export const Array1D = EpicComponent(self => {
 
   const baseline = function (i) {
     return textLineHeight * (i + 1) - textBaseline;
-  };
-
-  const arrowPoints = function (x0, y0, width, height) {
-    const dx1 = width;
-    const dx2 = width / 5;
-    const dy1 = height / 3;
-    const dy2 = height;
-    return `${x0},${y0} ${x0-dx1},${y0+dy1} ${x0-dx2},${y0+dy1} ${x0-dx2},${y0+dy2} ${x0+dx2},${y0+dy2} ${x0+dx2},${y0+dy1} ${x0+dx1},${y0+dy1} ${x0},${y0}`;
   };
 
   const drawGrid = function (cells) {

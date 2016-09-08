@@ -452,6 +452,9 @@ svg {
         stroke-dasharray: 3, 3;
       }
     }
+    .cursor text {
+      text-anchor: middle;
+    }
   }
 
 }

@@ -115,7 +115,7 @@ export const extractView = function (core, frame, name, options) {
     return {error: "variable is neither an array nor a pointer"};
   }
   const cellOpsMap = getCellOpsMap(core, address, elemCount, elemType.size);
-  const cursorMap = getCursorMap(core, cursorNames, elemCount, localMap);
+  const cursorMap = getCursorMap(core, cursorNames, 0, elemCount, localMap);
   const selection =
     fullView
       ? range(0, elemCount + 1)
@@ -405,18 +405,19 @@ const getCellOpsMap = function (core, address, elemCount, elemSize) {
 // Returns a map keyed by cell index, and whose values are objects of shape
 // {index, cursors}, where cursors lists the cursor names pointing to the
 // cell.
-const getCursorMap =  function (core, cursorNames, elemCount, localMap) {
+// Only cursors whose value is in the range [minVal, maxVal] are included.
+export const getCursorMap =  function (core, cursorNames, minVal, maxVal, localMap) {
   const cursorMap = [];
   cursorNames.forEach(function (cursorName) {
     if (localMap.has(cursorName)) {
       const {type, ref} = localMap.get(cursorName);
       const decl = viewVariable(core, cursorName, type, ref.address);
       const cursorPos = decl.value.current.toInteger();
-      if (cursorPos >= 0 && cursorPos <= elemCount) {
+      if (cursorPos >= minVal && cursorPos <= maxVal) {
         const cursor = {name: cursorName};
         if ('store' in decl.value) {
           const cursorPrevPos = decl.value.previous.toInteger();
-          if (cursorPrevPos >= 0 && cursorPrevPos <= elemCount) {
+          if (cursorPrevPos >= minVal && cursorPrevPos <= maxVal) {
             cursor.prev = cursorPrevPos;
           }
         }
@@ -455,7 +456,7 @@ const getSelection = function (maxVisibleCells, elemCount, cellOpsMap, cursorMap
 // Each cursor is modified to contain a 'col' field giving its position in
 // the selection, and a 'row' field such that adjacent cursors in the result
 // are on a different row.
-const getCursors = function (selection, cursorMap, cursorRows) {
+export const getCursors = function (selection, cursorMap, cursorRows) {
   const cursors = [];
   let nextStaggerCol, cursorRow = 0;
   selection.forEach(function (index, col) {

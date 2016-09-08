@@ -82,10 +82,13 @@ export default function* (deps) {
       const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
       const context = {core};
       const renderDirective = function (directive) {
+        if (directive[0] === 'error') {
+          return <p>{'Error: '}{JSON.stringify(directive[1])}</p>;
+        }
         const {key, kind} = directive;
         const View = directiveViewDict[kind];
         if (!View) {
-          return <Directive key={key} title={`undefined view kind ${kind}`}/>;
+          return <p>{'Error: undefined view kind '}{kind}</p>;
         }
         return (
           <View Frame={DirectiveFrame} directive={directive} controls={controls.get(key, Immutable.Map())}
