@@ -58,6 +58,7 @@ export const start = function (syntaxTree, options) {
   const decls = syntaxTree[2];
   // Core setup.
   const state = C.start({decls, builtins, options: stepperOptions});
+  state.core = C.clearMemoryLog(state.core);
   // Terminal setup.
   state.terminal = new TermBuffer({lines: 10, width: 60});
   // Input setup.
