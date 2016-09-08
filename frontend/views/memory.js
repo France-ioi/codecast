@@ -43,8 +43,23 @@ const formatByte = function (byte) {
   return (byte | 0x100).toString(16).substring(1).toUpperCase();
 };
 
+const addCellMemoryOps = function (memoryLog, cell) {
+  const {address} = cell;
+  memoryLog.forEach(function (entry, i) {
+    const ref = entry[1];
+    const base = ref.address;
+    if (base <= address) {
+      const limit = ref.address + ref.type.pointee.size - 1;
+      if (address <= limit) {
+        const op = entry[0]
+        cell[op] = i;
+      }
+    }
+  });
+};
+
 const extractView = function (core, options) {
-  const {memory} = core;
+  const {memory, memoryLog, oldMemory} = core;
   const {columns} = options;
   const maxAddress = memory.size;
   let startAddress = options.startAddress;
@@ -55,7 +70,12 @@ const extractView = function (core, options) {
   for (let column = 0; column < columns; column += 1) {
     const address = startAddress + column;
     const current = memory.get(address);
-    cells.push({column, address, current});
+    const cell = {column, address, current};
+    addCellMemoryOps(memoryLog, cell);
+    if ('store' in cell) {
+      cell.previous = oldMemory.get(address);
+    }
+    cells.push(cell);
   }
   // {column: 0, address: 0, current: 0x00},
   // {column: 8, gap: true},
