@@ -94,6 +94,7 @@ export const MemoryView = EpicComponent(self => {
   const marginLeft = 10;
   const marginTop = 10 + addressSize.y;
   const cellTopPadding = 4;
+  const nBytesShown = 32;
 
   const baseline = function (i) {
     return textLineHeight * (i + 1) - textBaseline;
@@ -159,14 +160,14 @@ export const MemoryView = EpicComponent(self => {
   };
 
   const onShiftLeft = function (event) {
-    let startAddress = self.props.controls.get('startAddress', 0);
-    startAddress = Math.max(0, startAddress - 32);
+    let startAddress = self.props.controls.get('startAddress', 0) - 32;
+    startAddress = Math.max(0, startAddress);
     self.props.onChange(self.props.directive, {startAddress});
   };
 
   const onShiftRight = function (event) {
-    let startAddress = self.props.controls.get('startAddress', 0);
-    startAddress = Math.min(self.props.context.core.memory.size - 1, startAddress + 32);
+    let startAddress = self.props.controls.get('startAddress', 0) + 32;
+    startAddress = Math.min(self.props.context.core.memory.size - nBytesShown, startAddress);
     self.props.onChange(self.props.directive, {startAddress});
   };
 
@@ -176,6 +177,9 @@ export const MemoryView = EpicComponent(self => {
     startAddress = startAddress ^ (startAddress & 0xFF);
     // Preserve the current 16-bit alignment.
     startAddress |= current & 0xF0;
+    // Clip to valid range.
+    startAddress = Math.max(0, startAddress);
+    startAddress = Math.min(self.props.context.core.memory.size - nBytesShown, startAddress);
     self.props.onChange(self.props.directive, {startAddress});
   };
 
@@ -206,7 +210,7 @@ export const MemoryView = EpicComponent(self => {
     const b = getList(byName.cursors, []).map(getIdent);
     const height = getNumber(byName.height, 'auto');
     // Extract the view-model.
-    const {cells} = extractView(core, {startAddress, columns: 32});
+    const {cells} = extractView(core, {startAddress, columns: nBytesShown});
     const nbCells = cells.length;
     const svgWidth = marginLeft + cellWidth * nbCells;
     const svgHeight = marginTop + cellTopPadding + cellHeight;
