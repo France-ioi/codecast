@@ -136,6 +136,7 @@ export const MemoryView = EpicComponent(self => {
     const {column, index, current, load, store, previous} = cell;
     const y0 = baseline(0);
     const h1 = (textLineHeight - textBaseline) / 3;
+    const cellClasses = classnames(['current-value', 'load' in cell && 'value-load']);
     return (
       <g className='byte'>
         {typeof store === 'number' &&
@@ -145,7 +146,7 @@ export const MemoryView = EpicComponent(self => {
             </text>
             <line x1={2} x2={cellWidth-2} y1={y0-h1} y2={y0-h1}/>
           </g>}
-        <text x={x0} y={y1} className='current-value'>
+        <text x={x0} y={y1} className={cellClasses}>
           {formatByte(current)}
         </text>
       </g>
