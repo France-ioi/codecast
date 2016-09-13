@@ -167,6 +167,7 @@ export const MemoryView = EpicComponent(self => {
   const addressSize = rotate(addressAngle, 40, textLineHeight)
   const marginLeft = 10;
   const marginTop = 10;
+  const cellMargin = 4;
   const nBytesShown = 32;
   const minArrowHeight = 20;
   const cursorRows = 2;
@@ -197,38 +198,50 @@ export const MemoryView = EpicComponent(self => {
     return <g className='labels'>{elements}</g>;
   };
 
-  const drawGrid = function (view) {
-    const {cells, extraRows} = view;
+  const GridDrawer = function (y0) {
+    let rx;  // right border not drawn
+    let finalEndCol;
     const elements = [];
     const x0 = marginLeft;
-    const y1 = view.layout.bytesTop;  // cell top border
-    const y2 = y1 + cellHeight;       // cell bottom border
-    let x2;
+    const y1 = y0 + cellHeight;
+    return {
+      drawCellBorder: function (startCol, endCol) {
+        const lx = x0 + startCol * cellWidth;
+        rx = x0 + endCol * cellWidth;
+        finalEndCol = endCol;
+        elements.push(<line key={`v${startCol}`} x1={lx} x2={lx} y1={y0} y2={y1} className="v" />);
+        elements.push(<line key={`ht${startCol}`} x1={lx} x2={rx} y1={y0} y2={y0} className="h" />);
+        elements.push(<line key={`hb${startCol}`} x1={lx} x2={rx} y1={y1} y2={y1} className="h" />);
+      },
+      finalize: function () {
+        if (finalEndCol !== undefined) {
+          elements.push(<line key={`v${finalEndCol}`} x1={rx} x2={rx} y1={y0} y2={y1} className="v" />);
+        }
+        return elements;
+      }
+    };
+  };
+
+  const drawGrid = function (view) {
+    const {cells, extraRows} = view;
+    const grids = [];
+    // Bytes grid
+    const gd = GridDrawer(view.layout.bytesTop);
     for (let i = 0; i < cells.length; i += 1) {
-      const cell = cells[i];
-      const {column} = cell;
-      const x1 = x0 + column * cellWidth;
-      // Vertical line on the left.
-      elements.push(<line key={`v${i}`} x1={x1} x2={x1} y1={y1} y2={y2} className="v" />);
-      x2 = x1 + cellWidth; // assume cells are contiguous
-      // Top and bottom horizontal lines.
-      const className = classnames(['h', cell.gap && 'gap']);
-      elements.push(<line key={`ht${i}`} x1={x1} x2={x2} y1={y1} y2={y1} className={className} />);
-      elements.push(<line key={`hb${i}`} x1={x1} x2={x2} y1={y2} y2={y2} className={className} />);
+      const {address} = cells[i];
+      gd.drawCellBorder(address, address + 1);
     }
-    // Vertical line on the right of the last element.
-    elements.push(<line key={`v${cells.length}`} x1={x2} x2={x2} y1={y1} y2={y2} className="v" />);
+    grids.push(<g className='bytes'>{gd.finalize()}</g>);
+    // Extra rows grid
     extraRows.forEach(function (extraRow, i) {
       const {cells, size} = extraRow;
-      const y = view.layout.extraRowsTop + i * cellHeight;
-      const cx = size * cellWidth;
-      const cy = cellHeight;
+      const gd = GridDrawer(view.layout.extraRowsTop + i * (cellHeight + cellMargin));
       cells.forEach(function (cell, j) {
-        const x = x0 + cell.address * cellWidth;
-        elements.push(<rect key={`x${i}.${j}`} x={x} y={y} width={cx} height={cy} className="extra" />);
+        gd.drawCellBorder(cell.address, cell.address + size);
       });
+      grids.push(<g className={`extras-${i}`}>{gd.finalize()}</g>);
     });
-    return <g className='grid'>{elements}</g>;
+    return <g className='grid'>{grids}</g>;
   };
 
   const drawCell = function (cell) {
@@ -396,7 +409,7 @@ export const MemoryView = EpicComponent(self => {
     layout.cursorsTop = marginTop;
     layout.labelsTop = layout.cursorsTop + layout.cursorsHeight;
     layout.bytesTop = layout.labelsTop + marginTop + layout.labelsHeight;
-    layout.extraRowsTop = layout.bytesTop + layout.bytesHeight;
+    layout.extraRowsTop = layout.bytesTop + layout.bytesHeight + cellMargin;
     layout.bottom = layout.extraRowsTop + layout.extraRowsHeight;
     const svgWidth = marginLeft + cellWidth * maxAddress;
     const svgHeight = layout.bottom;
