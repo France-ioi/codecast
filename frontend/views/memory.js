@@ -161,12 +161,12 @@ export const MemoryView = EpicComponent(self => {
   const textLineHeight = 18;
   const textBaseline = 5;
   const cellWidth = 32;
-  const cellHeight = 2 * textLineHeight;
+  const cellPadding = 4;
+  const cellHeight = cellPadding * 2 + textLineHeight * 2;
   const addressAngle = 60;
   const addressSize = rotate(addressAngle, 40, textLineHeight)
   const marginLeft = 10;
   const marginTop = 10;
-  const cellTopPadding = 4;
   const nBytesShown = 32;
   const minArrowHeight = 20;
   const cursorRows = 2;
@@ -198,12 +198,11 @@ export const MemoryView = EpicComponent(self => {
   };
 
   const drawGrid = function (view) {
-    const {cells} = view;
+    const {cells, extraRows} = view;
     const elements = [];
     const x0 = marginLeft;
-    const y0 = view.layout.bytesTop;
-    const y1 = y0 + cellTopPadding;     // cell top border
-    const y2 = y1 + textLineHeight * 2; // cell bottom border
+    const y1 = view.layout.bytesTop;  // cell top border
+    const y2 = y1 + cellHeight;       // cell bottom border
     let x2;
     for (let i = 0; i < cells.length; i += 1) {
       const cell = cells[i];
@@ -219,6 +218,16 @@ export const MemoryView = EpicComponent(self => {
     }
     // Vertical line on the right of the last element.
     elements.push(<line key={`v${cells.length}`} x1={x2} x2={x2} y1={y1} y2={y2} className="v" />);
+    extraRows.forEach(function (extraRow, i) {
+      const {cells, size} = extraRow;
+      const y = view.layout.extraRowsTop + i * cellHeight;
+      const cx = size * cellWidth;
+      const cy = cellHeight;
+      cells.forEach(function (cell, j) {
+        const x = x0 + cell.address * cellWidth;
+        elements.push(<rect key={`x${i}.${j}`} x={x} y={y} width={cx} height={cy} className="extra" />);
+      });
+    });
     return <g className='grid'>{elements}</g>;
   };
 
@@ -227,7 +236,7 @@ export const MemoryView = EpicComponent(self => {
       return false;
     const {column, address} = cell;
     const x0 = marginLeft + column * cellWidth;
-    const y0 = this.layout.bytesTop + cellTopPadding;
+    const y0 = this.layout.bytesTop + cellPadding;
     return (
       <g className='cell' key={`0x${address}`} transform={`translate(${x0},${y0})`} clipPath='url(#cell)'>
         {drawCellContent(cell, 'byte', cellWidth, formatByte)}
@@ -280,7 +289,7 @@ export const MemoryView = EpicComponent(self => {
     const {size, cells} = row;
     const elements = [];
     const x0 = marginLeft;
-    const y0 = this.layout.extraRowsTop + i * cellHeight + cellTopPadding;
+    const y0 = this.layout.extraRowsTop + i * cellHeight + cellPadding;
     const width = size * cellWidth;
     cells.forEach(function (cell) {
       const {address} = cell;
