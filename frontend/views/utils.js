@@ -60,7 +60,7 @@ export const readValue = function (core, refType, address, context) {
   return readScalar(core, refType, address);
 };
 
-export const readScalarBasic = function (core, refType, address) {
+export const readScalarBasic = function (memory, refType, address) {
   // Produce a 'basic stored scalar value' object whose shape is
   //   {kind, ref, current}
   // where:
@@ -69,7 +69,7 @@ export const readScalarBasic = function (core, refType, address) {
   //   - 'current' holds the current value
   const kind = 'scalar';
   const ref = new C.PointerValue(refType, address);
-  const current = C.readValue(core.memory, ref);
+  const current = C.readValue(memory, ref);
   return {kind, ref, current};
 };
 
@@ -81,7 +81,7 @@ export const readScalar = function (core, refType, address) {
   //   - 'load' holds the smallest rank of a load in the memory log
   //   - 'store' holds the greatest rank of a store in the memory log
   //   - 'previous' holds the previous value (if 'store' is defined)
-  const result = readScalarBasic(core, refType, address);
+  const result = readScalarBasic(core.memory, refType, address);
   core.memoryLog.forEach(function (entry, i) {
     if (refsIntersect(result.ref, entry[1])) {
       if (entry[0] === 'load') {

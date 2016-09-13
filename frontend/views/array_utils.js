@@ -361,7 +361,7 @@ export const readArray1D = function (core, arrayBase, elemType, elemCount, selec
       const elemAddress = arrayBase + index * elemSize;
       const cell = {position, index, address: elemAddress};
       if (index >= 0 && index < elemCount) {
-        const content = readScalarBasic(core, elemRefType, elemAddress);
+        const content = readScalarBasic(core.memory, elemRefType, elemAddress);
         if (index in mops) {
           const mop = mops[index];
           if ('load' in mop) {

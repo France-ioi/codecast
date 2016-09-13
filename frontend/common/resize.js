@@ -32,6 +32,13 @@ export default function* (deps) {
     }
   });
 
+  const sizeToScale = {
+    xs: 0.5,
+    sm: 0.75,
+    md: 0.9,
+    lg: 1
+  };
+
   // Make windowResized update the global state 'size'.
   yield addReducer('windowResized', function (state, action) {
     const {width, height} = action;
@@ -39,7 +46,7 @@ export default function* (deps) {
       width <  800 ? 'xs' :
       width < 1024 ? 'sm' :
       width < 1200 ? 'md' : 'lg';
-    const scale = width < 1024 ? 0.75 : 1;
+    const scale = sizeToScale[size];
     return state.set('size', size).set('scale', scale);
   });
 

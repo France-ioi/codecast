@@ -15,7 +15,7 @@ const examples = [
     source: [
       "#include <stdio.h>",
       "int main() {",
-      "  //! showMemory(a=[i,j], cursors=[k], start=65504)",
+      "  //! showMemory(direct=[i], cursors=[k], start=65504)",
       "  int i = 0, j = 1, *k = &j;",
       "  *k = 3;",
       "  printf(\"i = %i, j = %i\\n\", i, j);",
@@ -25,6 +25,7 @@ const examples = [
       "    printf(\"i = %i, j = %i\\n\", i, j);",
       "  }",
       "  printf(\"i = %i, j = %i\\n\", i, j);",
+      "  return 0;",
       "}"
     ].join('\n')
   },
