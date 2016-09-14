@@ -62,7 +62,7 @@ const extractView = function (core, localMap, options) {
   const byteOps = []; // spare array of {load,store} objects
   for (let address = startAddress; address <= endAddress; address += 1) {
     const current = memory.get(address);
-    const cell = {column: address, address, current};
+    const cell = {column: address, address, size: 1, current};
     const ops = saveByteMemoryOps(byteOps, memoryLog, address);
     cell.load = ops.load;
     if (ops.store !== undefined) {
@@ -71,6 +71,7 @@ const extractView = function (core, localMap, options) {
     }
     cells.push(cell);
   }
+  const bytes = {startAddress, endAddress, cells};
   // Build the cursor views.
   const cursorMap = getCursorMap(
     core, options.cursorNames, startAddress, endAddress, localMap);
@@ -80,6 +81,8 @@ const extractView = function (core, localMap, options) {
     // cursor.column = cursor.index - startAddress;
     cursor.column = cursor.index;
   });
+  // Build the variables view.
+  const variables = viewVariables(core, byteOps, startAddress, endAddress);
   // Build the extra-type views.
   const extraRows = [];
   options.directNames.forEach(function (name) {
@@ -90,7 +93,7 @@ const extractView = function (core, localMap, options) {
       }
     }
   });
-  return {cells, byteOps, cursors, extraRows};
+  return {byteOps, bytes, cursors, variables, extraRows};
 };
 
 /* Add to `byteOps` an object describing the latest the memory load/store
@@ -134,26 +137,62 @@ const getByteRangeOps = function (byteOps, start, end) {
 };
 
 const viewExtraCells = function (core, byteOps, ref, startAddress, endAddress) {
-  const {memory, oldMemory} = core;
   const refType = ref.type;
   const {size} = refType.pointee;
+  // Align `startAddress` with `ref`.
   const alignment = ref.address % size;
-  // Realign start address.
   startAddress -= startAddress % size - alignment;
   const cells = [];
   for (let address = startAddress; address + size - 1 <= endAddress; address += size) {
     const valRef = {...ref, address};
-    const current = C.readValue(memory, valRef);
-    const ops = getByteRangeOps(byteOps, address, address + size - 1);
-    const cell = {address, current};
-    cell.load = ops.load;
-    if (ops.store !== undefined) {
-      cell.store = ops.store;
-      cell.previous = C.readValue(oldMemory, valRef);
-    }
+    const cell = viewValue(core, byteOps, valRef);
     cells.push(cell);
   }
   return {size, cells};
+};
+
+const viewVariables = function (core, byteOps, startAddress, endAddress) {
+  const cells = [];
+  const {memory, oldMemory} = core;
+  let {scope} = core;
+  while (scope && scope.limit <= endAddress) {
+    const {limit, kind} = scope;
+    if (limit >= startAddress) {
+      switch (kind) {
+        case 'variable': {
+          const {name, ref, type} = scope;
+          const {address} = ref;
+          const {size} = type;
+          const cell = viewValue(core, byteOps, ref);
+          cell.name = name;
+          cells.push(cell);
+          break;
+        }
+        case 'block':
+          cells.push({sep: 'block', address: limit});
+          break;
+        case 'function':
+          cells.push({sep: 'function', address: limit});
+          break;
+      }
+    }
+    scope = scope.parent;
+  }
+  return {cells};
+};
+
+const viewValue = function (core, byteOps, ref) {
+  const {address} = ref;
+  const {size} = ref.type.pointee;
+  const current = C.readValue(core.memory, ref);
+  const cell = {address, size, current};
+  const ops = getByteRangeOps(byteOps, address, address + size - 1);
+  cell.load = ops.load;
+  if (ops.store !== undefined) {
+    cell.store = ops.store;
+    cell.previous = C.readValue(core.oldMemory, ref);
+  }
+  return cell;
 };
 
 export const MemoryView = EpicComponent(self => {
@@ -172,12 +211,8 @@ export const MemoryView = EpicComponent(self => {
   const minArrowHeight = 20;
   const cursorRows = 2;
 
-  const baseline = function (i) {
-    return textLineHeight * (i + 1) - textBaseline;
-  };
-
   const drawLabels = function (view) {
-    const {cells} = view;
+    const {cells} = view.bytes;
     const elements = [];
     const x0 = marginLeft;
     const y0 = view.layout.labelsTop + addressSize.y;
@@ -201,7 +236,8 @@ export const MemoryView = EpicComponent(self => {
   const GridDrawer = function (y0) {
     let rx;  // right border not drawn
     let finalEndCol;
-    const elements = [];
+    const hs = [], vs = [];
+    const ccs = {};
     const x0 = marginLeft;
     const y1 = y0 + cellHeight;
     return {
@@ -209,13 +245,28 @@ export const MemoryView = EpicComponent(self => {
         const lx = x0 + startCol * cellWidth;
         rx = x0 + endCol * cellWidth;
         finalEndCol = endCol;
-        elements.push(<line key={`v${startCol}`} x1={lx} x2={lx} y1={y0} y2={y1} className="v" />);
-        elements.push(<line key={`ht${startCol}`} x1={lx} x2={rx} y1={y0} y2={y0} className="h" />);
-        elements.push(<line key={`hb${startCol}`} x1={lx} x2={rx} y1={y1} y2={y1} className="h" />);
+        vs.push({key: `v${startCol}`, x: lx, y1: y0, y2: y1});
+        hs.push({key: `ht${startCol}`, x1: lx, x2: rx, y: y0});
+        hs.push({key: `hb${startCol}`, x1: lx, x2: rx, y: y1});
+      },
+      setClassName: function (col, className) {
+        ccs[`v${col}`] = className;
       },
       finalize: function () {
+        // Add the right border of the last cell.
         if (finalEndCol !== undefined) {
-          elements.push(<line key={`v${finalEndCol}`} x1={rx} x2={rx} y1={y0} y2={y1} className="v" />);
+          vs.push({key: `v${finalEndCol}`, x: rx, y1: y0, y2: y1});
+        }
+        // Render the horizontal and vertical elements.
+        const elements = [];
+        for (let i = 0; i < hs.length; i += 1) {
+          const {key, x1, x2, y} = hs[i];
+          elements.push(<line key={key} x1={x1} x2={x2} y1={y} y2={y} className='h' />);
+        }
+        for (let i = 0; i < vs.length; i += 1) {
+          const {key, x, y1, y2} = vs[i];
+          const className = classnames(['v', ccs[key]]);
+          elements.push(<line key={key} x1={x} x2={x} y1={y1} y2={y2} className={className} />);
         }
         return elements;
       }
@@ -223,15 +274,26 @@ export const MemoryView = EpicComponent(self => {
   };
 
   const drawGrid = function (view) {
-    const {cells, extraRows} = view;
+    const {bytes, variables, extraRows} = view;
     const grids = [];
     // Bytes grid
-    const gd = GridDrawer(view.layout.bytesTop);
-    for (let i = 0; i < cells.length; i += 1) {
-      const {address} = cells[i];
-      gd.drawCellBorder(address, address + 1);
+    const gd1 = GridDrawer(view.layout.bytesTop);
+    for (let i = 0; i < bytes.cells.length; i += 1) {
+      const {address} = bytes.cells[i];
+      gd1.drawCellBorder(address, address + 1);
     }
-    grids.push(<g className='bytes'>{gd.finalize()}</g>);
+    grids.push(<g className='bytes'>{gd1.finalize()}</g>);
+    // Variables grid
+    const gd2 = GridDrawer(view.layout.variablesTop);
+    for (let i = 0; i < variables.cells.length; i += 1) {
+      const cell = variables.cells[i];
+      if (cell.sep) {
+        gd2.setClassName(cell.address, cell.sep);
+      } else {
+        gd2.drawCellBorder(cell.address, cell.address + cell.size);
+      }
+    }
+    grids.push(<g className='variables'>{gd2.finalize()}</g>);
     // Extra rows grid
     extraRows.forEach(function (extraRow, i) {
       const {cells, size} = extraRow;
@@ -249,19 +311,62 @@ export const MemoryView = EpicComponent(self => {
       return false;
     const {column, address} = cell;
     const x0 = marginLeft + column * cellWidth;
-    const y0 = this.layout.bytesTop + cellPadding;
+    const y0 = this.layout.bytesTop;
     return (
       <g className='cell' key={`0x${address}`} transform={`translate(${x0},${y0})`} clipPath='url(#cell)'>
-        {drawCellContent(cell, 'byte', cellWidth, formatByte)}
+        {drawCellContent(cell, 'byte', formatByte)}
       </g>
     );
   };
 
-  const drawCellContent = function (cell, className, width, format) {
-    const {current, load, store, previous} = cell;
+  const drawVariables = function (view) {
+    const {layout, variables} = view;
+    const {cells} = variables;
+    const elements = [];
+    const x0 = marginLeft;
+    const y0 = layout.variablesTop;
+    const y1 = cellHeight + cellMargin + textLineHeight - textBaseline;
+    cells.forEach(function (cell) {
+      if (!cell.sep) {
+        const {address, size, name} = cell;
+        const x = x0 + address * cellWidth;
+        const x1 = size * cellWidth / 2;
+        elements.push(
+          <g className='cell' key={`0x${address}`} transform={`translate(${x},${y0})`}>
+            {drawCellContent(cell, 'variable', renderValue)}
+            <text x={x1} y={y1}>{name}</text>
+          </g>
+        );
+      }
+    });
+    return <g className='variables'>{elements}</g>;
+  };
+
+  const drawExtraRow = function (row, i) {
+    const {size, cells} = row;
+    const elements = [];
+    const x0 = marginLeft;
+    const y0 = this.layout.extraRowsTop + i * cellHeight;
+    const width = size * cellWidth;
+    cells.forEach(function (cell) {
+      const {address} = cell;
+      const x = x0 + address * cellWidth;
+      // TODO: clip cell using clipPath='url(#extras`${i}`)'
+      elements.push(
+        <g className='cell' key={`0x${address}`} transform={`translate(${x},${y0})`}>
+          {drawCellContent(cell, 'extra', renderValue)}
+        </g>
+      );
+    });
+    return <g className='extraRow'>{elements}</g>;
+  };
+
+  const drawCellContent = function (cell, className, format) {
+    const {current, size, load, store, previous} = cell;
+    const width = size * cellWidth;
     const x0 = width / 2;
-    const y0 = baseline(0);
-    const y1 = baseline(1);
+    const y0 = cellPadding + textLineHeight - textBaseline;
+    const y1 = y0 + textLineHeight;
     const h1 = (textLineHeight - textBaseline) / 3;
     const currentClasses = classnames(['current-value', load !== undefined && 'value-load']);
     return (
@@ -296,25 +401,6 @@ export const MemoryView = EpicComponent(self => {
         <polygon points={arrowPoints(cellWidth/2, y2, 6, -arrowHeight)}/>
       </g>
     );
-  };
-
-  const drawExtraRow = function (row, i) {
-    const {size, cells} = row;
-    const elements = [];
-    const x0 = marginLeft;
-    const y0 = this.layout.extraRowsTop + i * cellHeight + cellPadding;
-    const width = size * cellWidth;
-    cells.forEach(function (cell) {
-      const {address} = cell;
-      const x = x0 + address * cellWidth;
-      // TODO: clip cell using clipPath='url(#extras`${i}`)'
-      elements.push(
-        <g className='cell' key={`0x${address}`} transform={`translate(${x},${y0})`}>
-          {drawCellContent(cell, 'extra', width, renderValue)}
-        </g>
-      );
-    });
-    return <g className='extraRow'>{elements}</g>;
   };
 
   const onShiftLeft = function (event) {
@@ -405,11 +491,13 @@ export const MemoryView = EpicComponent(self => {
     layout.cursorsHeight = cursorRows * textLineHeight + minArrowHeight;
     layout.labelsHeight = addressSize.y;
     layout.bytesHeight = cellHeight;
+    layout.variablesHeight = cellHeight + textLineHeight;
     layout.extraRowsHeight = (directNames.length + indirectNames.length) * cellHeight;
     layout.cursorsTop = marginTop;
     layout.labelsTop = layout.cursorsTop + layout.cursorsHeight;
     layout.bytesTop = layout.labelsTop + marginTop + layout.labelsHeight;
-    layout.extraRowsTop = layout.bytesTop + layout.bytesHeight + cellMargin;
+    layout.variablesTop = layout.bytesTop + layout.bytesHeight + cellMargin;
+    layout.extraRowsTop = layout.variablesTop + layout.variablesHeight + cellMargin * 2;
     layout.bottom = layout.extraRowsTop + layout.extraRowsHeight;
     const svgWidth = marginLeft + cellWidth * maxAddress;
     const svgHeight = layout.bottom;
@@ -437,8 +525,9 @@ export const MemoryView = EpicComponent(self => {
                 <g className='memory-view'>
                   {drawGrid(view)}
                   {drawLabels(view)}
-                  <g className='cells'>{view.cells.map(drawCell.bind(view))}</g>
                   <g className='cursors'>{view.cursors.map(drawCursor.bind(view))}</g>
+                  <g className='cells'>{view.bytes.cells.map(drawCell.bind(view))}</g>
+                  {drawVariables(view)}
                   <g className='extraRows'>{view.extraRows.map(drawExtraRow.bind(view))}</g>
                 </g>
               </svg>

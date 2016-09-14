@@ -454,6 +454,12 @@ svg {
       line.gap {
         stroke-dasharray: 3, 3;
       }
+      line.v.block, line.v.function {
+        stroke-width: 3;
+      }
+      line.v.block {
+        stroke-dasharray: 5 4;
+      }
     }
     .cursor text {
       text-anchor: middle;
