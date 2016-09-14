@@ -460,6 +460,12 @@ svg {
       line.v.block {
         stroke-dasharray: 5 4;
       }
+      line.v.function {
+        stroke-dasharray: none;
+      }
+      line.v.sp {
+        stroke: #00f;
+      }
     }
     .cursor text {
       text-anchor: middle;

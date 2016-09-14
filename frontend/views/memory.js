@@ -155,6 +155,10 @@ const viewVariables = function (core, byteOps, startAddress, endAddress) {
   const cells = [];
   const {memory, oldMemory} = core;
   let {scope} = core;
+  // Materialize the stack pointer.
+  if (scope) {
+    cells.push({sep: 'sp', address: scope.limit});
+  }
   while (scope && scope.limit <= endAddress) {
     const {limit, kind} = scope;
     if (limit >= startAddress) {
@@ -249,8 +253,13 @@ export const MemoryView = EpicComponent(self => {
         hs.push({key: `ht${startCol}`, x1: lx, x2: rx, y: y0});
         hs.push({key: `hb${startCol}`, x1: lx, x2: rx, y: y1});
       },
-      setClassName: function (col, className) {
-        ccs[`v${col}`] = className;
+      addClassName: function (col, className) {
+        const key = `v${col}`;
+        if (key in ccs) {
+          ccs[key] = ccs[key] + ' ' + className;
+        } else {
+          ccs[key] = className;
+        }
       },
       finalize: function () {
         // Add the right border of the last cell.
@@ -288,7 +297,7 @@ export const MemoryView = EpicComponent(self => {
     for (let i = 0; i < variables.cells.length; i += 1) {
       const cell = variables.cells[i];
       if (cell.sep) {
-        gd2.setClassName(cell.address, cell.sep);
+        gd2.addClassName(cell.address, cell.sep);
       } else {
         gd2.drawCellBorder(cell.address, cell.address + cell.size);
       }
