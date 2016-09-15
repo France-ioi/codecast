@@ -137,13 +137,13 @@ const maxDefinedRank = function (r1, r2) {
 
 const getByteRangeOps = function (byteOps, start, end) {
   let load, store;
-  range(start, end).forEach(function (address) {
+  for (let address = start; address <= end; address += 1) {
     const ops = byteOps[address];
     if (ops) {
       load = maxDefinedRank(load, ops.load);
       store = maxDefinedRank(store, ops.store);
     }
-  });
+  }
   return {load, store};
 };
 
