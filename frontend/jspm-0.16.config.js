@@ -40,6 +40,7 @@ System.config({
   },
 
   map: {
+    "adt": "npm:adt@0.7.2",
     "babel": "npm:babel-core@5.8.38",
     "babel-plugin-transform-decorators-legacy": "npm:babel-plugin-transform-decorators-legacy@1.3.4",
     "babel-runtime": "npm:babel-runtime@5.8.38",

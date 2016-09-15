@@ -18,6 +18,7 @@
     "main": "frontend/main.js",
     "configFile": "frontend/jspm-0.16.config.js",
     "dependencies": {
+      "adt": "npm:adt@^0.7.2",
       "bootstrap-sass": "npm:bootstrap-sass@^3.3.6",
       "brace": "npm:brace@^0.7.0",
       "classnames": "npm:classnames@^2.2.3",
