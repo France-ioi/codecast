@@ -26,9 +26,20 @@ import classnames from 'classnames';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 import range from 'node-range';
 import * as C from 'persistent-c';
+import adt from 'adt';
 
 import {getNumber, getIdent, getList, arrowPoints, renderValue} from './utils';
 import {getCursorMap, getCursors} from './array_utils';
+
+const List = adt.data(function () {
+  return {
+    Nil: null,
+    Cons: {
+      head: adt.any,
+      tail: adt.only(this)
+    }
+  };
+});
 
 const rotate = function (a, x, y) {
   const a1 = a * Math.PI / 180;
@@ -47,13 +58,13 @@ const formatByte = function (byte) {
 
 const extractView = function (core, localMap, options) {
   const {memory, memoryLog, oldMemory} = core;
-  const {columns} = options;
+  const {nBytesShown, cursorRows} = options;
   const maxAddress = memory.size;
   let startAddress = Math.floor(options.startAddress);
-  if (startAddress + columns >= maxAddress) {
-    startAddress = maxAddress - columns;
+  if (startAddress + nBytesShown >= maxAddress) {
+    startAddress = maxAddress - nBytesShown;
   }
-  let endAddress = startAddress + columns - 1;
+  let endAddress = startAddress + nBytesShown - 1;
   // Show 1 extra cell if address has a floating part.
   if (options.startAddress !== startAddress) {
     endAddress += 1;
@@ -82,7 +93,7 @@ const extractView = function (core, localMap, options) {
     cursor.column = cursor.index;
   });
   // Build the variables view.
-  const variables = viewVariables(core, byteOps, startAddress, endAddress);
+  const variables = viewVariables(core, byteOps, startAddress, endAddress, options);
   // Build the extra-type views.
   const extraRows = [];
   options.directNames.forEach(function (name) {
@@ -93,7 +104,7 @@ const extractView = function (core, localMap, options) {
       }
     }
   });
-  return {byteOps, bytes, cursors, variables, extraRows};
+  return {byteOps, bytes, cursors, cursorRows, variables, extraRows};
 };
 
 /* Add to `byteOps` an object describing the latest the memory load/store
@@ -151,7 +162,8 @@ const viewExtraCells = function (core, byteOps, ref, startAddress, endAddress) {
   return {size, cells};
 };
 
-const viewVariables = function (core, byteOps, startAddress, endAddress) {
+const viewVariables = function (core, byteOps, startAddress, endAddress, options) {
+  const {varRows} = options;
   const cells = [];
   const {memory, oldMemory} = core;
   let {scope} = core;
@@ -159,30 +171,80 @@ const viewVariables = function (core, byteOps, startAddress, endAddress) {
   if (scope) {
     cells.push({sep: 'sp', address: scope.limit});
   }
+  // Go up the stack until we find an area that contains startAddress.
+  while (scope && scope.limit < startAddress) {
+    const {type} = scope;
+    if (type && scope.limit + type.size >= startAddress) {
+      break;
+    }
+    scope = scope.parent;
+  }
+  // View cells until a stack area starts past endAddress.
   while (scope && scope.limit <= endAddress) {
     const {limit, kind} = scope;
-    if (limit >= startAddress) {
-      switch (kind) {
-        case 'variable': {
-          const {name, ref, type} = scope;
-          const {address} = ref;
-          const {size} = type;
-          const cell = viewValue(core, byteOps, ref);
-          cell.name = name;
-          cells.push(cell);
-          break;
-        }
-        case 'block':
-          cells.push({sep: 'block', address: limit});
-          break;
-        case 'function':
-          cells.push({sep: 'function', address: limit});
-          break;
+    switch (kind) {
+      case 'variable': {
+        viewVariable(cells, core, byteOps, startAddress, endAddress, scope);
+        break;
       }
+      case 'block':
+        cells.push({sep: 'block', address: limit});
+        break;
+      case 'function':
+        cells.push({sep: 'function', address: limit});
+        break;
     }
     scope = scope.parent;
   }
   return {cells};
+};
+
+const viewVariable = function (cells, core, byteOps, startAddress, endAddress, scope) {
+  const {name, ref} = scope;
+  for (let value of allValuesInRange(List.Nil, ref.type, ref.address, startAddress, endAddress)) {
+    const cell = viewValue(core, byteOps, value.ref);
+    cell.name = formatLabel(name, value.path);
+    cells.push(cell);
+  }
+};
+
+const formatLabel = function (name, path) {
+  const elems = [name];
+  while (!path.isNil) {
+    const elem = path.get(0);
+    if (typeof elem === 'number') {
+      elems.push(`[${elem}]`);
+    } else if (typeof elem === 'string') {
+      elems.push(`.${elem}`);
+    } else {
+      elems.push('?');
+    }
+    path = path.get(1);
+  }
+  return elems.join('');
+};
+
+const allValuesInRange = function* (path, refType, address, startAddress, endAddress) {
+  const type = refType.pointee;
+  const size = type.size;
+  if (type.kind === 'scalar' || type.kind === 'pointer') {
+    if (startAddress <= address && address + size - 1 <= endAddress) {
+      const ref = new C.PointerValue(refType, address);
+      yield {ref, path};
+    }
+  }
+  if (type.kind === 'array') {
+    const elemType = type.elem;
+    const elemTypePtr = C.pointerType(elemType);
+    const firstIndex = Math.floor((address - Math.max(startAddress, address)) / elemType.size);
+    const lastIndex = Math.floor((Math.min(endAddress, address + size - 1) - address) / elemType.size);
+    for (let index = firstIndex; index <= lastIndex; index += 1) {
+      yield* allValuesInRange(
+        List.Cons(index, path),
+        elemTypePtr, address + index * elemType.size,
+        startAddress, endAddress);
+    }
+  }
 };
 
 const viewValue = function (core, byteOps, ref) {
@@ -213,7 +275,6 @@ export const MemoryView = EpicComponent(self => {
   const cellMargin = 4;
   const nBytesShown = 32;
   const minArrowHeight = 20;
-  const cursorRows = 2;
 
   const drawLabels = function (view) {
     const {cells} = view.bytes;
@@ -395,6 +456,7 @@ export const MemoryView = EpicComponent(self => {
   };
 
   const drawCursor = function (cursor) {
+    const {cursorRows} = this;
     const {column, row, cursors} = cursor;
     const x0 = marginLeft + column * cellWidth;
     const y0 = this.layout.cursorsTop;
@@ -410,6 +472,25 @@ export const MemoryView = EpicComponent(self => {
         <polygon points={arrowPoints(cellWidth/2, y2, 6, -arrowHeight)}/>
       </g>
     );
+  };
+
+  const getStartAddress = function () {
+    let address = self.props.controls.get('startAddress');
+    if (address === undefined) {
+      address = getNumber(self.props.directive.byName.start, 0);
+    }
+    return address;
+  };
+
+  const getViewState = function (startAddress) {
+    const {scale, controls, directive} = self.props;
+    const x = -startAddress * cellWidth * scale;
+    return {
+      matrix: {a: scale, b: 0, c: 0, d: scale, e: x, f: 0},
+      mode: controls.get('mode', 'idle'),
+      startX: controls.get('startX'),
+      startY: controls.get('startY')
+    };
   };
 
   const onShiftLeft = function (event) {
@@ -436,14 +517,6 @@ export const MemoryView = EpicComponent(self => {
     self.props.onChange(self.props.directive, {startAddress});
   };
 
-  const getStartAddress = function () {
-    let address = self.props.controls.get('startAddress');
-    if (address === undefined) {
-      address = getNumber(self.props.directive.byName.start, 0);
-    }
-    return address;
-  };
-
   const onViewChange = function (event) {
     const {mode, startX, startY, matrix} = event.value;
     const {directive, scale} = self.props;
@@ -451,17 +524,6 @@ export const MemoryView = EpicComponent(self => {
     const startAddress = Math.min(maxAddress, Math.max(0, -matrix.e / (cellWidth * scale)));
     const update = {mode, startX, startY, startAddress};
     self.props.onChange(directive, update);
-  };
-
-  const getViewState = function (startAddress) {
-    const {scale, controls, directive} = self.props;
-    const x = -startAddress * cellWidth * scale;
-    return {
-      matrix: {a: scale, b: 0, c: 0, d: scale, e: x, f: 0},
-      mode: controls.get('mode', 'idle'),
-      startX: controls.get('startX'),
-      startY: controls.get('startY')
-    };
   };
 
   self.render = function () {
@@ -476,8 +538,11 @@ export const MemoryView = EpicComponent(self => {
     const {byName, byPos} = directive;
     const directNames = getList(byName.direct, []).map(getIdent);
     const indirectNames = getList(byName.indirect, []).map(getIdent);
+    const varRows = getNumber(byName.varRows, 1);
     const cursorNames = getList(byName.cursors, []).map(getIdent);
+    const cursorRows = getNumber(byName.cursorRows, 1);
     const height = getNumber(byName.height, 'auto');
+    const nBytesShown = getNumber(byName.bytes, 32);
     // Controls
     //   - fullView: read and render all visible bytes
     const fullView = controls.get('fullView');
@@ -490,7 +555,8 @@ export const MemoryView = EpicComponent(self => {
       localMap,
       {
         startAddress,
-        columns: nBytesShown,
+        nBytesShown,
+        varRows,
         cursorNames,
         cursorRows,
         directNames,
