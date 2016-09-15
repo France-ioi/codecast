@@ -20,7 +20,7 @@ const examples = [
       "int main() {",
       "    //! showMemory(direct=[i], indirect=[p], cursors=[k], start=65504)",
       "    int i = 0, j = 1, *k = &j;",
-      "    int a[4] = {0,1,2,3};",
+      "    int a[2][2] = {0,1,2,3};",
       "    char * p = (char*)k;",
       "    *k = 3;",
       "    show(i, j);",

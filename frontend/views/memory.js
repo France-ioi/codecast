@@ -209,18 +209,19 @@ const viewVariable = function (cells, core, byteOps, startAddress, endAddress, s
 };
 
 const formatLabel = function (name, path) {
-  const elems = [name];
+  const elems = [];
   while (!path.isNil) {
     const elem = path.get(0);
     if (typeof elem === 'number') {
-      elems.push(`[${elem}]`);
+      elems.unshift(`[${elem}]`);
     } else if (typeof elem === 'string') {
-      elems.push(`.${elem}`);
+      elems.unshift(`.${elem}`);
     } else {
-      elems.push('?');
+      elems.unshift('?');
     }
     path = path.get(1);
   }
+  elems.unshift(name);
   return elems.join('');
 };
 
