@@ -104,6 +104,15 @@ const extractView = function (core, localMap, options) {
       }
     }
   });
+  options.indirectNames.forEach(function (name) {
+    if (localMap.has(name)) {
+      const {type, ref} = localMap.get(name);
+      if (type.kind === 'pointer') {
+        const value = C.readValue(core.memory, ref);
+        extraRows.push(viewExtraCells(core, byteOps, value, startAddress, endAddress));
+      }
+    }
+  });
   return {byteOps, bytes, cursors, cursorRows, variables, extraRows};
 };
 
