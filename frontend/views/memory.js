@@ -554,8 +554,6 @@ export const MemoryView = EpicComponent(self => {
     const height = getNumber(byName.height, 'auto');
     const nBytesShown = getNumber(byName.bytes, 32);
     // Controls
-    //   - fullView: read and render all visible bytes
-    const fullView = controls.get('fullView');
     const startAddress = getStartAddress();
     const viewState = getViewState(startAddress);
     // Extract the view-model.
@@ -587,7 +585,7 @@ export const MemoryView = EpicComponent(self => {
     const svgHeight = layout.bottom;
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
     return (
-      <Frame {...self.props} hasFullView>
+      <Frame {...self.props}>
         <div className="memory-controls directive-controls">
           <p className="start-address"><tt>{formatAddress(startAddress)}</tt></p>
           <div className="memory-slider-container" style={{width: '400px'}}>
