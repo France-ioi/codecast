@@ -18,7 +18,7 @@ const examples = [
       "    printf(\"i = %i, j = %i\\n\", i, j);",
       "}",
       "int main() {",
-      "    //! showMemory(direct=[i], indirect=[p], cursors=[k], start=65504)",
+      "    //! showMemory(extras=[i,*p], cursors=[k], start=65504)",
       "    int i = 0, j = 1, *k = &j;",
       "    int a[2][2] = {0,1,2,3};",
       "    char * p = (char*)k;",

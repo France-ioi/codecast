@@ -1,37 +1,48 @@
 var PR = require('packrattle');
 
-var whitespace = PR(/[ \t]+/).optional().drop();
+const g = module.exports.grammar = {};
+
+g.whitespace = PR(/[ \t]+/).optional().drop();
+
 function lexeme(p) {
-  return PR.seq(p, whitespace).map(function (match) {
+  return PR.seq(p, g.whitespace).map(function (match) {
     return match[0][0];
   });
 }
-var lparen = lexeme(PR('('));
-var rparen = lexeme(PR(')'));
-var lbrack = lexeme(PR('['));
-var rbrack = lexeme(PR(']'));
-var equals = lexeme(PR('='));
-var coma = lexeme(PR(','));
-var ident = lexeme(PR(/[a-zA-Z_-][a-zA-Z0-9_-]*/));
-var number = lexeme(PR(/-?\d*\.?\d+?/));
-var identExpr = ident.map(function (match) {
+
+g.lparen = lexeme(PR('('));
+g.rparen = lexeme(PR(')'));
+g.lbrack = lexeme(PR('['));
+g.rbrack = lexeme(PR(']'));
+g.equals = lexeme(PR('='));
+g.star = lexeme(PR('*'));
+g.coma = lexeme(PR(','));
+g.ident = lexeme(PR(/[a-zA-Z_-][a-zA-Z0-9_-]*/));
+g.number = lexeme(PR(/(-?\d*\.?\d+?)|(0[Xx][0-9a-fA-F]+)/));
+g.identExpr = g.ident.map(function (match) {
   return ['ident', match];
 });
-var numberExpr = number.map(function (match) {
+g.numberExpr = g.number.map(function (match) {
+  if (/^0[Xx]/.test(match)) {
+    return ['number', parseInt(match)];
+  }
   return ['number', parseFloat(match)];
 });
-var listExpr = PR.seq(lbrack, PR.repeatSeparated(() => expr, coma, {min:0}).optional(), rbrack).map(function (match) {
+g.listExpr = PR.seq(g.lbrack, PR.repeatSeparated(() => g.expr, g.coma, {min:0}).optional(), g.rbrack).map(function (match) {
   return ['list', match[1] || []];
 });
-var expr = PR.alt(identExpr, numberExpr, listExpr);
-var directiveArgByPos = expr.map(function (match) {
+g.derefExpr = PR.seq(g.star, () => g.expr).map(function (match) {
+  return ['deref', match[1]];
+});
+g.expr = PR.alt(g.identExpr, g.numberExpr, g.listExpr, g.derefExpr);
+g.directiveArgByPos = g.expr.map(function (match) {
   return {value: match};
 });
-var directiveArgByName = PR.seq(ident, equals, expr).map(function (match) {
+g.directiveArgByName = PR.seq(g.ident, g.equals, g.expr).map(function (match) {
   return {name: match[0], value: match[2]};
 });
-var directiveArg = PR.alt(directiveArgByName, directiveArgByPos);
-var directiveArgs = PR.repeatSeparated(directiveArg, coma, {min:0}).map(function (match) {
+g.directiveArg = PR.alt(g.directiveArgByName, g.directiveArgByPos);
+g.directiveArgs = PR.repeatSeparated(g.directiveArg, g.coma, {min:0}).map(function (match) {
   var byPos = [], byName = {};
   match.forEach(function (arg) {
     if ('name' in arg) {
@@ -42,17 +53,14 @@ var directiveArgs = PR.repeatSeparated(directiveArg, coma, {min:0}).map(function
   });
   return {byName, byPos};
 });
-var directiveAssignment = PR.seq(ident, equals).map(function (match) {
+g.directiveAssignment = PR.seq(g.ident, g.equals).map(function (match) {
   return match[0];
 });
-var directive = PR.seq(directiveAssignment.optional(), ident, lparen, directiveArgs.optional(), rparen).map(function (match) {
+g.directive = PR.seq(g.directiveAssignment.optional(), g.ident, g.lparen, g.directiveArgs.optional(), g.rparen).map(function (match) {
   var key = match[0];
   var kind = match[1];
   var args = match[3] || {byPos: [], byName: {}};
   return {key: key, kind: kind, byPos: args.byPos, byName: args.byName};
-});
-var directiveParser = PR.seq(whitespace, directive).map(function (match) {
-  return match[0];
 });
 
 var computeLineOffsets = function (lines) {
@@ -99,8 +107,8 @@ var isDirective = function (line) {
 };
 
 var parseDirective = function (line) {
-  var str = /^\s*\/\/!(.*)\s*$/.exec(line)[1];
-  return directiveParser.run(str);
+  var str = /^\s*\/\/!\s*(.*)\s*$/.exec(line)[1];
+  return g.directive.run(str);
 };
 
 module.exports.enrichSyntaxTree = function (source, ast) {

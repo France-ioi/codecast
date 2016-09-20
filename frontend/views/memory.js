@@ -96,26 +96,27 @@ const extractView = function (core, localMap, options) {
   const variables = viewVariables(core, byteOps, startAddress, endAddress, options);
   // Build the extra-type views.
   const extraRows = [];
-  options.directNames.forEach(function (name) {
-    if (localMap.has(name)) {
-      const {type, ref} = localMap.get(name);
-      if (type.kind === 'scalar' || type.kind === 'pointer') {
-        extraRows.push(viewExtraCells(core, byteOps, ref, startAddress, endAddress));
-      }
-    }
-  });
-  options.indirectNames.forEach(function (name) {
-    if (localMap.has(name)) {
-      const {type, ref} = localMap.get(name);
-      if (type.kind === 'pointer') {
-        const value = C.readValue(core.memory, ref);
-        extraRows.push(viewExtraCells(core, byteOps, value, startAddress, endAddress));
-      }
+  options.extraExprs.forEach(function (expr) {
+    const ref = evalRefExpr(core, localMap, expr);
+    if (ref && /^(scalar|pointer)$/.test(ref.type.pointee.kind)) {
+      const row = viewExtraCells(core, byteOps, ref, startAddress, endAddress);
+      extraRows.push(row);
     }
   });
   return {byteOps, bytes, cursors, cursorRows, variables, extraRows};
 };
 
+const evalRefExpr = function (core, localMap, expr) {
+  if (expr[0] === 'ident') {
+    const decl = localMap.get(expr[1]);
+    return decl && decl.ref;
+  }
+  if (expr[0] === 'deref') {
+    const ref = evalRefExpr(core, localMap, expr[1]);
+    console.log('deref', ref);
+    return ref && ref.type.pointee.kind === 'pointer' && C.readValue(core.memory, ref);
+  }
+};
 /* Add to `byteOps` an object describing the latest the memory load/store
    operation in `memoryLog` for the byte at `address`.
    Ideally the representation of the memoryLog would allow a more efficient
@@ -546,8 +547,7 @@ export const MemoryView = EpicComponent(self => {
     //        additional lines
     //   - height: set view height in pixels
     const {byName, byPos} = directive;
-    const directNames = getList(byName.direct, []).map(getIdent);
-    const indirectNames = getList(byName.indirect, []).map(getIdent);
+    const extraExprs = getList(byName.extras, []);
     const varRows = getNumber(byName.varRows, 1);
     const cursorNames = getList(byName.cursors, []).map(getIdent);
     const cursorRows = getNumber(byName.cursorRows, 1);
@@ -569,15 +569,14 @@ export const MemoryView = EpicComponent(self => {
         varRows,
         cursorNames,
         cursorRows,
-        directNames,
-        indirectNames
+        extraExprs
       });
     const layout = view.layout = {};
     layout.cursorsHeight = cursorRows * textLineHeight + minArrowHeight;
     layout.labelsHeight = addressSize.y;
     layout.bytesHeight = cellHeight;
     layout.variablesHeight = cellHeight + textLineHeight;
-    layout.extraRowsHeight = (directNames.length + indirectNames.length) * cellHeight;
+    layout.extraRowsHeight = extraExprs.length * cellHeight;
     layout.cursorsTop = marginTop;
     layout.labelsTop = layout.cursorsTop + layout.cursorsHeight;
     layout.bytesTop = layout.labelsTop + marginTop + layout.labelsHeight;
