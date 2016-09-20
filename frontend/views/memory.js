@@ -283,6 +283,7 @@ export const MemoryView = EpicComponent(self => {
   const addressSize = rotate(addressAngle, 40, textLineHeight)
   const marginLeft = 10;
   const marginTop = 10;
+  const marginBottom = 10;
   const cellMargin = 4;
   const nBytesShown = 32;
   const minArrowHeight = 20;
@@ -573,14 +574,14 @@ export const MemoryView = EpicComponent(self => {
     layout.cursorsHeight = cursorRows * textLineHeight + minArrowHeight;
     layout.labelsHeight = addressSize.y;
     layout.bytesHeight = cellHeight;
-    layout.variablesHeight = cellHeight + textLineHeight;
-    layout.extraRowsHeight = extraExprs.length * cellHeight;
+    layout.variablesHeight = cellMargin + cellHeight + textLineHeight;
+    layout.extraRowsHeight = (cellHeight + cellMargin) * extraExprs.length;
     layout.cursorsTop = marginTop;
     layout.labelsTop = layout.cursorsTop + layout.cursorsHeight;
     layout.bytesTop = layout.labelsTop + marginTop + layout.labelsHeight;
-    layout.variablesTop = layout.bytesTop + layout.bytesHeight + cellMargin;
-    layout.extraRowsTop = layout.variablesTop + layout.variablesHeight + cellMargin * 2;
-    layout.bottom = layout.extraRowsTop + layout.extraRowsHeight;
+    layout.variablesTop = layout.bytesTop + layout.bytesHeight;
+    layout.extraRowsTop = layout.variablesTop + layout.variablesHeight;
+    layout.bottom = layout.extraRowsTop + layout.extraRowsHeight - cellMargin + marginBottom;
     const svgWidth = marginLeft + cellWidth * maxAddress;
     const svgHeight = layout.bottom;
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
