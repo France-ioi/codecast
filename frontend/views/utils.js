@@ -155,6 +155,61 @@ export const refsIntersect = function (ref1, ref2) {
   return result;
 };
 
+/**
+  Evaluator for expressions found in directives.
+  If asRef is false, the (scalar) value of expr (in the given context) is
+  returned.
+  If asRef is true, expr is interpreted as an l-value and its address
+  is returned.
+  If any error occurs, an Error is thrown.
+*/
+export const evalExpr = function (core, localMap, expr, asRef) {
+  if (expr[0] === 'ident') {
+    const name = expr[1];
+    const decl = localMap.get(name);
+    if (!decl) {
+      throw new Error(`reference to undefined variable ${name}`);
+    }
+    const {ref} = decl;
+    if (asRef) {
+      const valueType = ref.type.pointee;
+      if (valueType.kind === 'array') {
+        // A array reference decays to a pointer to its first element.
+        return new C.PointerValue(C.decayedType(valueType), ref.address);
+      }
+      return ref;
+    }
+    return C.readValue(core.memory, ref);
+  }
+  if (expr[0] === 'deref') {
+    const ref = evalExpr(core, localMap, expr[1], false);
+    if (!ref || ref.type.kind !== 'pointer') {
+      throw new Error('attempt to dereference non-pointer value');
+    }
+    return asRef ? ref : C.readValue(core.memory, ref);
+  }
+  if (expr[0] === 'subscript') {
+    const baseRef = evalExpr(core, localMap, expr[1], true);
+    const index = evalExpr(core, localMap, expr[2], false);
+    if (index.type.kind !== 'scalar') {
+      throw new Error('use of non-scalar subscript index');
+    }
+    const address = baseRef.address + baseRef.type.pointee.size * index.toInteger();
+    const ref = new C.PointerValue(baseRef.type, address);
+    return asRef ? ref : C.readValue(core.memory, ref);
+  }
+  if (asRef) {
+    throw new Error('attempt to take address of non-lvalue');
+  }
+  if (expr[0] === 'number') {
+    return new C.IntegralValue(C.scalarType['int'], expr[1] | 0);
+  }
+  if (expr[0] === 'addrOf') {
+    return evalExpr(core, localMap, expr[1], true);
+  }
+  throw new Error('unsupported expression');
+};
+
 const parensIf = function (cond, elem) {
   return cond ? <span>{'('}{elem}{')'}</span> : elem;
 };

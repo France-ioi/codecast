@@ -140,12 +140,12 @@ export const SortView = EpicComponent(self => {
     const getOptions = {core: core, frame: topFrame};
     const dim = getNumber(byName.dim, getOptions);
     const thNames = getList(byName.thresholds, []).map(getIdent);
-    const cursorNames = getList(byName.cursors, []).map(getIdent);
+    const cursorExprs = getList(byName.cursors, []);
     const maxVisibleCells = getNumber(byName.n, 40);
     const height = getNumber(byName.height, 'auto');
     const {error, cells, cursors} = extractView(
       core, topFrame, name,
-      {dim, fullView, cursorNames, maxVisibleCells, cursorRows});
+      {dim, fullView, cursorExprs, maxVisibleCells, cursorRows});
     const thresholds = viewVariables(core, topFrame, thNames);
     if (error) {
       return <Frame {...self.props}>{error}</Frame>;

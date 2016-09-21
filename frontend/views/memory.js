@@ -28,7 +28,7 @@ import range from 'node-range';
 import * as C from 'persistent-c';
 import adt from 'adt';
 
-import {getNumber, getIdent, getList, arrowPoints, renderValue} from './utils';
+import {getNumber, getIdent, getList, arrowPoints, renderValue, evalExpr} from './utils';
 import {getCursorMap, getCursors} from './array_utils';
 
 const List = adt.data(function () {
@@ -85,7 +85,7 @@ const extractView = function (core, localMap, options) {
   const bytes = {startAddress, endAddress, cells};
   // Build the cursor views.
   const cursorMap = getCursorMap(
-    core, options.cursorNames, startAddress, endAddress, localMap);
+    core, localMap, options.cursorExprs, startAddress, endAddress);
   const cursors = getCursors(
     range(startAddress, endAddress), cursorMap, options.cursorRows);
   cursors.forEach(function (cursor) {
@@ -97,26 +97,20 @@ const extractView = function (core, localMap, options) {
   // Build the extra-type views.
   const extraRows = [];
   options.extraExprs.forEach(function (expr) {
-    const ref = evalRefExpr(core, localMap, expr);
-    if (ref && /^(scalar|pointer)$/.test(ref.type.pointee.kind)) {
-      const row = viewExtraCells(core, byteOps, ref, startAddress, endAddress);
-      extraRows.push(row);
+    try {
+      const ref = evalExpr(core, localMap, expr, true);
+      if (ref && /^(scalar|pointer)$/.test(ref.type.pointee.kind)) {
+        const row = viewExtraCells(core, byteOps, ref, startAddress, endAddress);
+        extraRows.push(row);
+      }
+    } catch (ex) {
+      // TODO: add errors to view somehow
+      console.log('failed to evaluate extra expression', expr, ex);
     }
   });
   return {byteOps, bytes, cursors, cursorRows, variables, extraRows};
 };
 
-const evalRefExpr = function (core, localMap, expr) {
-  if (expr[0] === 'ident') {
-    const decl = localMap.get(expr[1]);
-    return decl && decl.ref;
-  }
-  if (expr[0] === 'deref') {
-    const ref = evalRefExpr(core, localMap, expr[1]);
-    console.log('deref', ref);
-    return ref && ref.type.pointee.kind === 'pointer' && C.readValue(core.memory, ref);
-  }
-};
 /* Add to `byteOps` an object describing the latest the memory load/store
    operation in `memoryLog` for the byte at `address`.
    Ideally the representation of the memoryLog would allow a more efficient
@@ -550,7 +544,7 @@ export const MemoryView = EpicComponent(self => {
     const {byName, byPos} = directive;
     const extraExprs = getList(byName.extras, []);
     const varRows = getNumber(byName.varRows, 1);
-    const cursorNames = getList(byName.cursors, []).map(getIdent);
+    const cursorExprs = getList(byName.cursors, []);
     const cursorRows = getNumber(byName.cursorRows, 1);
     const height = getNumber(byName.height, 'auto');
     const nBytesShown = getNumber(byName.bytes, 32);
@@ -566,7 +560,7 @@ export const MemoryView = EpicComponent(self => {
         startAddress,
         nBytesShown,
         varRows,
-        cursorNames,
+        cursorExprs,
         cursorRows,
         extraExprs
       });

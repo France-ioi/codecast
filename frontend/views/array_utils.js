@@ -3,7 +3,7 @@ import * as C from 'persistent-c';
 import {FibonacciHeap} from 'js-data-structures';
 import range from 'node-range';
 
-import {readScalarBasic, viewVariable} from './utils';
+import {readScalarBasic, evalExpr, viewVariable} from './utils';
 
 /**
 
@@ -47,8 +47,8 @@ import {readScalarBasic, viewVariable} from './utils';
                  memory log, if it contains any store operation that overlaps
                  with the cell
 
-  If `options` contains a `cursorNames` property (array of strings representing
-  variable names in the current `frame`), the `cursors` property in the result
+  If `options` contains a `cursorExprs` property (array of expressions evaluated
+  in the context of the current `frame`), the `cursors` property in the result
   is an array of cursor objects of this shape:
 
     {cursors, index, row, col}
@@ -65,10 +65,10 @@ import {readScalarBasic, viewVariable} from './utils';
 export const extractView = function (core, frame, name, options) {
   // Normalize options.
   const {fullView} = options;
-  let {cursorNames, cursorRows, maxVisibleCells, pointsByKind} = options;
+  let {cursorExprs, cursorRows, maxVisibleCells, pointsByKind} = options;
   let elemCount = options.dim;
-  if (cursorNames === undefined) {
-    cursorNames = [];
+  if (cursorExprs === undefined) {
+    cursorExprs = [];
   }
   if (cursorRows === undefined) {
     cursorRows = 2;
@@ -115,7 +115,7 @@ export const extractView = function (core, frame, name, options) {
     return {error: "variable is neither an array nor a pointer"};
   }
   const cellOpsMap = getCellOpsMap(core, address, elemCount, elemType.size);
-  const cursorMap = getCursorMap(core, cursorNames, 0, elemCount, localMap);
+  const cursorMap = getCursorMap(core, localMap, cursorExprs, 0, elemCount);
   const selection =
     fullView
       ? range(0, elemCount + 1)
@@ -406,27 +406,25 @@ const getCellOpsMap = function (core, address, elemCount, elemSize) {
 // {index, cursors}, where cursors lists the cursor names pointing to the
 // cell.
 // Only cursors whose value is in the range [minVal, maxVal] are included.
-export const getCursorMap =  function (core, cursorNames, minVal, maxVal, localMap) {
+export const getCursorMap =  function (core, localMap, cursorExprs, minVal, maxVal) {
   const cursorMap = [];
-  cursorNames.forEach(function (cursorName) {
-    if (localMap.has(cursorName)) {
-      const {type, ref} = localMap.get(cursorName);
-      const decl = viewVariable(core, cursorName, type, ref.address);
-      const cursorPos = decl.value.current.toInteger();
+  cursorExprs.forEach(function (expr) {
+    try {
+      const cursorValue = evalExpr(core, localMap, expr);
+      const cursorLabel = JSON.stringify(expr); // TODO: replace
+      const cursorPos = cursorValue.toInteger();
       if (cursorPos >= minVal && cursorPos <= maxVal) {
-        const cursor = {name: cursorName};
-        if ('store' in decl.value) {
-          const cursorPrevPos = decl.value.previous.toInteger();
-          if (cursorPrevPos >= minVal && cursorPrevPos <= maxVal) {
-            cursor.prev = cursorPrevPos;
-          }
-        }
-        // Add cursor to position's cursors list.
+        const cursor = {name: cursorLabel};
+        // We currently do not attempt to find the previous value of the cursor
+        // (and when it changed).  This would requires support from evalExpr.
         if (!(cursorPos in cursorMap)) {
           cursorMap[cursorPos] = {index: cursorPos, cursors: [], row: 0};
         }
         cursorMap[cursorPos].cursors.push(cursor);
       }
+    } catch (ex) {
+      // TODO: return errors somehow
+      console.log('failed to evaluate cursor expression', expr, ex);
     }
   });
   return cursorMap;

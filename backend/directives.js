@@ -16,25 +16,39 @@ g.lbrack = lexeme(PR('['));
 g.rbrack = lexeme(PR(']'));
 g.equals = lexeme(PR('='));
 g.star = lexeme(PR('*'));
+g.ampersand = lexeme(PR('&'));
 g.coma = lexeme(PR(','));
 g.ident = lexeme(PR(/[a-zA-Z_-][a-zA-Z0-9_-]*/));
 g.number = lexeme(PR(/(-?\d*\.?\d+?)|(0[Xx][0-9a-fA-F]+)/));
-g.identExpr = g.ident.map(function (match) {
-  return ['ident', match];
-});
+
 g.numberExpr = g.number.map(function (match) {
   if (/^0[Xx]/.test(match)) {
     return ['number', parseInt(match)];
   }
   return ['number', parseFloat(match)];
 });
+g.identExpr = g.ident.map(function (match) {
+  return ['ident', match];
+});
+g.parensExpr = PR.seq(g.lparen, () => g.expr, g.rparen).map(function (match) {
+  return match[1];
+});
+g.subscriptExpr = PR.seq(() => g.expr1, g.lbrack, () => g.expr, g.rbrack).map(function (match) {
+  return ['subscript', match[0], match[2]];
+});
+g.expr1 = PR.alt(g.numberExpr, g.identExpr, g.parensExpr, g.subscriptExpr);
+
 g.listExpr = PR.seq(g.lbrack, PR.repeatSeparated(() => g.expr, g.coma, {min:0}).optional(), g.rbrack).map(function (match) {
   return ['list', match[1] || []];
 });
 g.derefExpr = PR.seq(g.star, () => g.expr).map(function (match) {
   return ['deref', match[1]];
 });
-g.expr = PR.alt(g.identExpr, g.numberExpr, g.listExpr, g.derefExpr);
+g.addrOfExpr = PR.seq(g.ampersand, () => g.expr).map(function (match) {
+  return ['addrOf', match[1]];
+});
+g.expr = PR.alt(g.listExpr, g.derefExpr, g.addrOfExpr, g.expr1);
+
 g.directiveArgByPos = g.expr.map(function (match) {
   return {value: match};
 });
