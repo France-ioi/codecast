@@ -170,33 +170,32 @@ export const evalExpr = function (core, localMap, expr, asRef) {
     if (!decl) {
       throw new Error(`reference to undefined variable ${name}`);
     }
-    const {ref} = decl;
-    if (asRef) {
-      const valueType = ref.type.pointee;
-      if (valueType.kind === 'array') {
-        // A array reference decays to a pointer to its first element.
-        return new C.PointerValue(C.decayedType(valueType), ref.address);
-      }
-      return ref;
-    }
-    return C.readValue(core.memory, ref);
+    return evalRef(core, decl.ref, asRef);
   }
   if (expr[0] === 'deref') {
     const ref = evalExpr(core, localMap, expr[1], false);
-    if (!ref || ref.type.kind !== 'pointer') {
+    if (ref.type.kind !== 'pointer') {
       throw new Error('attempt to dereference non-pointer value');
     }
-    return asRef ? ref : C.readValue(core.memory, ref);
+    return evalRef(core, ref, asRef);
   }
   if (expr[0] === 'subscript') {
-    const baseRef = evalExpr(core, localMap, expr[1], true);
+    const arrayRef = evalExpr(core, localMap, expr[1], false);
+    if (arrayRef.type.kind !== 'pointer') {
+      throw new Error('attempt to subscript non-pointer');
+    }
     const index = evalExpr(core, localMap, expr[2], false);
     if (index.type.kind !== 'scalar') {
-      throw new Error('use of non-scalar subscript index');
+      throw new Error('attempt to subscript with non-scalar index');
     }
-    const address = baseRef.address + baseRef.type.pointee.size * index.toInteger();
-    const ref = new C.PointerValue(baseRef.type, address);
-    return asRef ? ref : C.readValue(core.memory, ref);
+    const elemType = arrayRef.type.pointee;
+    const address = arrayRef.address + elemType.size * index.toInteger();
+    const ref = C.makeRef(elemType, address);
+    if (asRef || elemType.kind === 'array') {
+      return ref;
+    } else {
+      return C.readValue(core.memory, ref);
+    }
   }
   if (asRef) {
     throw new Error('attempt to take address of non-lvalue');
@@ -208,6 +207,44 @@ export const evalExpr = function (core, localMap, expr, asRef) {
     return evalExpr(core, localMap, expr[1], true);
   }
   throw new Error('unsupported expression');
+};
+
+const strParensIf = function (cond, str) {
+  return cond ? `(${str})` : str;
+};
+
+const evalRef = function (core, ref, asRef) {
+  if (asRef) {
+    return ref;
+  } else {
+    const valueType = ref.type.pointee;
+    if (valueType.kind === 'array') {
+      return C.makeRef(valueType, ref.address);
+    } else {
+      return C.readValue(core.memory, ref);
+    }
+  }
+};
+
+export const stringifyExpr = function (expr, precedence) {
+  if (expr[0] === 'parens') {
+    return strParensIf(true, stringifyExpr(expr[1], 0));
+  }
+  if (expr[0] === 'ident' || expr[0] === 'number') {
+    return expr[1].toString();
+  }
+  if (expr[0] === 'deref') {
+    return strParensIf(precedence > 1, `*${stringifyExpr(expr[1], 1)}`);
+  }
+  if (expr[0] === 'subscript') {
+    return strParensIf(
+      precedence > 2,
+      `${stringifyExpr(expr[1], 2)}[${stringifyExpr(expr[2], 0)}]`);
+  }
+  if (expr[0] === 'addrOf') {
+    return `&${stringifyExpr(expr[1], 0)}`;
+  }
+  return JSON.stringify(expr);
 };
 
 const parensIf = function (cond, elem) {

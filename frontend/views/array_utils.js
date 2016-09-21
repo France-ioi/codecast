@@ -3,7 +3,7 @@ import * as C from 'persistent-c';
 import {FibonacciHeap} from 'js-data-structures';
 import range from 'node-range';
 
-import {readScalarBasic, evalExpr, viewVariable} from './utils';
+import {readScalarBasic, stringifyExpr, evalExpr, viewVariable} from './utils';
 
 /**
 
@@ -411,7 +411,7 @@ export const getCursorMap =  function (core, localMap, cursorExprs, minVal, maxV
   cursorExprs.forEach(function (expr) {
     try {
       const cursorValue = evalExpr(core, localMap, expr);
-      const cursorLabel = JSON.stringify(expr); // TODO: replace
+      const cursorLabel = stringifyExpr(expr, 0);
       const cursorPos = cursorValue.toInteger();
       if (cursorPos >= minVal && cursorPos <= maxVal) {
         const cursor = {name: cursorLabel};
