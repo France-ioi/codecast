@@ -168,6 +168,12 @@ export const evalExpr = function (core, localMap, expr, asRef) {
     const name = expr[1];
     const decl = localMap.get(name);
     if (!decl) {
+      if (name in core.globalMap) {
+        const value = core.globalMap[name];
+        if (value instanceof C.PointerValue) {
+          return evalRef(core, value, asRef);
+        }
+      }
       throw new Error(`reference to undefined variable ${name}`);
     }
     return evalRef(core, decl.ref, asRef);

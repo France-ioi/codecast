@@ -172,7 +172,7 @@ const viewExtraCells = function (core, byteOps, ref, startAddress, endAddress) {
 const viewVariables = function (core, byteOps, startAddress, endAddress, options) {
   const {varRows} = options;
   const cells = [];
-  const {memory, oldMemory} = core;
+  const {memory, globalMap} = core;
   let {scope} = core;
   // Materialize the stack pointer.
   if (scope) {
@@ -191,7 +191,8 @@ const viewVariables = function (core, byteOps, startAddress, endAddress, options
     const {limit, kind} = scope;
     switch (kind) {
       case 'variable': {
-        viewVariable(cells, core, byteOps, startAddress, endAddress, scope);
+        const {name, ref} = scope;
+        viewVariable(cells, core, byteOps, startAddress, endAddress, name, ref);
         break;
       }
       case 'block':
@@ -203,11 +204,18 @@ const viewVariables = function (core, byteOps, startAddress, endAddress, options
     }
     scope = scope.parent;
   }
+  Object.keys(globalMap).forEach(function (name) {
+    // Values in globalMap are BuiltinValue and PointerValue, and we only
+    // care about pointers.
+    const value = globalMap[name];
+    if (value instanceof C.PointerValue) {
+      viewVariable(cells, core, byteOps, startAddress, endAddress, name, value);
+    }
+  });
   return {cells};
 };
 
-const viewVariable = function (cells, core, byteOps, startAddress, endAddress, scope) {
-  const {name, ref} = scope;
+const viewVariable = function (cells, core, byteOps, startAddress, endAddress, name, ref) {
   for (let value of allValuesInRange(List.Nil, ref.type, ref.address, startAddress, endAddress)) {
     const cell = viewValue(core, byteOps, value.ref);
     cell.name = formatLabel(name, value.path);
@@ -243,14 +251,19 @@ const allValuesInRange = function* (path, refType, address, startAddress, endAdd
   }
   if (type.kind === 'array') {
     const elemType = type.elem;
+    const elemCount = type.count.toInteger();
     const elemTypePtr = C.pointerType(elemType);
-    const firstIndex = Math.floor((address - Math.max(startAddress, address)) / elemType.size);
-    const lastIndex = Math.floor((Math.min(endAddress, address + size - 1) - address) / elemType.size);
-    for (let index = firstIndex; index <= lastIndex; index += 1) {
-      yield* allValuesInRange(
-        List.Cons(index, path),
-        elemTypePtr, address + index * elemType.size,
-        startAddress, endAddress);
+    let firstIndex = Math.floor((startAddress - address) / elemType.size);
+    let lastIndex = Math.floor((endAddress - address) / elemType.size);
+    if (firstIndex < elemCount && lastIndex >= 0) {
+      firstIndex = Math.max(firstIndex, 0);
+      lastIndex = Math.min(lastIndex, elemCount - 1);
+      for (let index = firstIndex; index <= lastIndex; index += 1) {
+        yield* allValuesInRange(
+          List.Cons(index, path),
+          elemTypePtr, address + index * elemType.size,
+          startAddress, endAddress);
+      }
     }
   }
 };
