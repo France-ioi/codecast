@@ -436,3 +436,27 @@ export const arrowPoints = function (x0, y0, width, height) {
   const dy2 = height;
   return `${x0},${y0} ${x0-dx1},${y0+dy1} ${x0-dx2},${y0+dy1} ${x0-dx2},${y0+dy2} ${x0+dx2},${y0+dy2} ${x0+dx2},${y0+dy1} ${x0+dx1},${y0+dy1} ${x0},${y0}`;
 };
+
+export const highlightColors = [
+  {fg: '#2196F3', bg: '#BBDEFB', name: 'blue'},
+  {fg: '#4CAF50', bg: '#C8E6C9', name: 'green'},
+  {fg: '#F44336', bg: '#FFCDD2', name: 'red'},
+  {fg: '#00BCD4', bg: '#B2EBF2', name: 'cyan'},
+  {fg: '#FFEB3B', bg: '#FFF9C4', name: 'yellow'},
+  {fg: '#9C27B0', bg: '#E1BEE7', name: 'purple'},
+  {fg: '#FF9800', bg: '#FFE0B2', name: 'orange'},
+  {fg: '#9E9E9E', bg: '#F5F5F5', name: 'grey'},
+  {fg: '#03A9F4', bg: '#B3E5FC', name: 'light blue'},
+  {fg: '#8BC34A', bg: '#DCEDC8', name: 'light green'},
+  {fg: '#E91E63', bg: '#F8BBD0', name: 'pink'},
+  {fg: '#009688', bg: '#B2DFDB', name: 'teal'},
+  {fg: '#FFC107', bg: '#FFECB3', name: 'amber'},
+  {fg: '#673AB7', bg: '#D1C4E9', name: 'deep purple'},
+  {fg: '#FF5722', bg: '#FFCCBC', name: 'deep orange'},
+  {fg: '#607D8B', bg: '#CFD8DC', name: 'blue grey'},
+  {fg: '#795548', bg: '#D7CCC8', name: 'brown'},
+  {fg: '#CDDC39', bg: '#F0F4C3', name: 'lime'},
+  {fg: '#3F51B5', bg: '#C5CAE9', name: 'indigo'}
+];
+
+export const noColor = {fg: '#777777', bg: '#F0F0F0', name: 'light gray'};

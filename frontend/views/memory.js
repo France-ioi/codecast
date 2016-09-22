@@ -28,7 +28,9 @@ import range from 'node-range';
 import * as C from 'persistent-c';
 import adt from 'adt';
 
-import {getNumber, getIdent, getList, arrowPoints, renderValue, evalExpr} from './utils';
+import {
+  getNumber, getIdent, getList, arrowPoints, renderValue, evalExpr,
+  highlightColors} from './utils';
 import {getCursorMap, getCursors} from './array_utils';
 
 const List = adt.data(function () {
@@ -88,9 +90,10 @@ const extractView = function (core, localMap, options) {
     core, localMap, options.cursorExprs, startAddress, endAddress);
   const cursors = getCursors(
     range(startAddress, endAddress), cursorMap, options.cursorRows);
-  cursors.forEach(function (cursor) {
+  cursors.forEach(function (cursor, i) {
     // cursor.column = cursor.index - startAddress;
     cursor.column = cursor.index;
+    cursor.color = highlightColors[i] || noColor;
   });
   // Build the variables view.
   const variables = viewVariables(core, byteOps, startAddress, endAddress, options);
@@ -307,7 +310,7 @@ export const MemoryView = EpicComponent(self => {
   const GridDrawer = function (y0) {
     let rx;  // right border not drawn
     let finalEndCol;
-    const hs = [], vs = [];
+    const hs = [], vs = [], rs = [];
     const ccs = {};
     const x0 = marginLeft;
     const y1 = y0 + cellHeight;
@@ -319,6 +322,11 @@ export const MemoryView = EpicComponent(self => {
         vs.push({key: `v${startCol}`, x: lx, y1: y0, y2: y1});
         hs.push({key: `ht${startCol}`, x1: lx, x2: rx, y: y0});
         hs.push({key: `hb${startCol}`, x1: lx, x2: rx, y: y1});
+      },
+      fillCellBackground: function (startCol, endCol, color) {
+        const x = x0 + startCol * cellWidth;
+        const w = (endCol - startCol) * cellWidth;
+        rs.push({key: `r${startCol}`, x, w, color});
       },
       addClassName: function (col, className) {
         const key = `v${col}`;
@@ -335,6 +343,10 @@ export const MemoryView = EpicComponent(self => {
         }
         // Render the horizontal and vertical elements.
         const elements = [];
+        for (let i = 0; i < rs.length; i += 1) {
+          const {key, x, w, color} = rs[i];
+          elements.push(<rect key={key} x={x} y={y0} width={w} height={cellHeight} fill={color}/>);
+        }
         for (let i = 0; i < hs.length; i += 1) {
           const {key, x1, x2, y} = hs[i];
           elements.push(<line key={key} x1={x1} x2={x2} y1={y} y2={y} className='h' />);
@@ -354,6 +366,9 @@ export const MemoryView = EpicComponent(self => {
     const grids = [];
     // Bytes grid
     const gd1 = GridDrawer(view.layout.bytesTop);
+    view.cursors.forEach(function (cursor) {
+      gd1.fillCellBackground(cursor.column, cursor.column + 1, cursor.color.bg);
+    });
     for (let i = 0; i < bytes.cells.length; i += 1) {
       const {address} = bytes.cells[i];
       gd1.drawCellBorder(address, address + 1);
@@ -463,7 +478,7 @@ export const MemoryView = EpicComponent(self => {
 
   const drawCursor = function (cursor) {
     const {cursorRows} = this;
-    const {column, row, cursors} = cursor;
+    const {column, row, color, cursors} = cursor;
     const x0 = marginLeft + column * cellWidth;
     const y0 = this.layout.cursorsTop;
     const arrowHeight = minArrowHeight + (cursorRows - row - 1) * textLineHeight;
@@ -474,7 +489,7 @@ export const MemoryView = EpicComponent(self => {
     const label = cursors.map(cursor => cursor.name).join(',');
     return (
       <g key={`c${column}`} transform={`translate(${x0},${y0})`} className='cursor'>
-        <text x={x1} y={y1}>{label}</text>
+        <text x={x1} y={y1} fill={color.fg}>{label}</text>
         <polygon points={arrowPoints(cellWidth/2, y2, 6, -arrowHeight)}/>
       </g>
     );

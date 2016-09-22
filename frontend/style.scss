@@ -444,10 +444,7 @@ svg {
       stroke-width: 2;
     }
     .grid {
-      rect {
-        fill: none;
-      }
-      line, rect.extra {
+      line {
         stroke: #777;
         stroke-width: 1;
       }
