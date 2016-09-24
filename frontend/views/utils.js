@@ -126,28 +126,6 @@ export const readArray = function (core, arrayType, address, context) {
 };
 
 
-export const readArray2D = function (core, arrayType, address) {
-  const rowCount = arrayType.count.toInteger();
-  const rowType = arrayType.elem;
-  const rowSize = rowType.size;
-  const colCount = rowType.count.toInteger();
-  const cellType = rowType.elem;
-  const cellSize = cellType.size;
-  const cellRefType = C.pointerType(cellType);
-  const rows = [];
-  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
-    const row = [];
-    const rowAddress = address + rowIndex * rowSize;
-    for (let colIndex = 0; colIndex < colCount; colIndex += 1) {
-      const cellAddress = rowAddress + colIndex * cellSize;
-      const cell = readValue(core, cellRefType, cellAddress);
-      row.push({index: colIndex, address: cellAddress, content: cell});
-    }
-    rows.push({index: rowIndex, address: rowAddress, content: row});
-  }
-  return rows;
-};
-
 export const refsIntersect = function (ref1, ref2) {
   const base1 = ref1.address, limit1 = base1 + ref1.type.pointee.size - 1;
   const base2 = ref2.address, limit2 = base2 + ref2.type.pointee.size - 1;
@@ -198,6 +176,7 @@ export const evalExpr = function (core, localMap, expr, asRef) {
     const address = arrayRef.address + elemType.size * index.toInteger();
     const ref = C.makeRef(elemType, address);
     if (asRef || elemType.kind === 'array') {
+      console.log('subscript', arrayRef, index, ref);
       return ref;
     } else {
       return C.readValue(core.memory, ref);
@@ -435,12 +414,22 @@ export const ShowVar = EpicComponent(self => {
 
 });
 
-export const arrowPoints = function (x0, y0, width, height) {
-  const dx1 = width;
-  const dx2 = width / 5;
-  const dy1 = height / 3;
-  const dy2 = height;
-  return `${x0},${y0} ${x0-dx1},${y0+dy1} ${x0-dx2},${y0+dy1} ${x0-dx2},${y0+dy2} ${x0+dx2},${y0+dy2} ${x0+dx2},${y0+dy1} ${x0+dx1},${y0+dy1} ${x0},${y0}`;
+const computeArrowPoints = function (p, headSize, tailSize) {
+  const dx1 = headSize;
+  const dy1 = headSize;
+  const dx2 = headSize / 5;
+  const dy2 = tailSize;
+  return [p(0,0), p(-dx1,dy1), p(-dx2,dy1), p(-dx2,dy2), p(dx2,dy2), p(dx2,dy1), p(dx1,dy1), p(0,0)].join(' ');
+};
+const arrowDirFunc = {
+  up:    (dx,dy) => `${+dx},${+dy}`,
+  down:  (dx,dy) => `${+dx},${-dy}`,
+  left:  (dx,dy) => `${+dy},${+dx}`,
+  right: (dx,dy) => `${-dy},${+dx}`
+};
+export const renderArrow = function (x, y, dir, headSize, tailSize, style) {
+  const ps = computeArrowPoints(arrowDirFunc[dir], headSize, tailSize);
+  return <polygon points={ps} transform={`translate(${x},${y})`} {...style} />;
 };
 
 export const highlightColors = [

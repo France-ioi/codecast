@@ -379,9 +379,27 @@ svg {
   font-family: "Open Sans";
   font-size: 13px;
 
+  /* Common to all directives */
+  .grid {
+    line {
+      stroke: #777;
+      stroke-width: 1;
+    }
+    line.gap {
+      stroke-dasharray: 3, 3;
+    }
+    rect.cell        { fill: none; }
+    rect.cell-store  { fill: #FFCDD2; }
+    rect.cell-load   { fill: #DCEDC8; }
+    rect.cell-cursor { fill: #EEEEEE; }
+  }
+
   .array1d {
-    text.index, text.current-content, .previous-content text {
+    text.index, text.current-content, .previous-content text, .cursors text {
       text-anchor: middle;
+    }
+    .cursors text {
+      font-weight: bold;
     }
     text.index, .previous-content text {
       fill: #777;
@@ -390,15 +408,11 @@ svg {
       stroke: #777;
       stroke-width: 2;
     }
-    .grid {
-      line {
-        stroke: #777;
-        stroke-width: 1;
-      }
-      line.gap {
-        stroke-dasharray: 3, 3;
-      }
-    }
+  }
+
+  .array2d {
+    .col-cursors text {text-anchor: middle; font-weight: bold;}
+    .row-cursors text {text-anchor: end; font-weight: bold;}
   }
 
   .sort-view {

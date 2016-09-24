@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 import range from 'node-range';
 
-import {getIdent, getNumber, getList, renderValue, arrowPoints} from './utils';
+import {getIdent, getNumber, getList, renderValue, renderArrow} from './utils';
 import {extractView} from './array_utils';
 
 export const Array1D = EpicComponent(self => {
@@ -13,16 +13,30 @@ export const Array1D = EpicComponent(self => {
   // @11px, line height 15, offset 12
   const textLineHeight = 18;
   const textBaseline = 5; // from bottom
+  const arrowWidth = 6;
   const minArrowHeight = 20;
   const cursorRows = 2;
-  const cellWidth = 28;
   const cellHeight = (3 + cursorRows) * textLineHeight + minArrowHeight;
 
   const baseline = function (i) {
     return textLineHeight * (i + 1) - textBaseline;
   };
 
-  const drawGrid = function (cells) {
+  const getCellClasses = function (cell, cursor) {
+    const {content} = cell;
+    if (content) {
+      if ('store' in content)
+        return "cell cell-store";
+      if ('load' in content)
+        return "cell cell-load";
+    }
+    if (cursor)
+      return "cell cell-cursor";
+    return "cell";
+  };
+
+  const drawGrid = function (view) {
+    const {cells, cursorMap, cellWidth} = view;
     const elements = [];
     // Column labels and horizontal lines
     const y1 = textLineHeight * 1;
@@ -30,10 +44,17 @@ export const Array1D = EpicComponent(self => {
     const y3 = baseline(2);
     for (let i = 0, x = 0; i < cells.length; i += 1, x += cellWidth) {
       const cell = cells[i];
-      const className = classnames(['h', cell.gap && 'gap']);
-      elements.push(<text key={`l${i}`} x={x + cellWidth / 2} y={y3} className="index">{cell.index}</text>);
-      elements.push(<line key={`ht${i}`} x1={x} x2={x + cellWidth} y1={y1} y2={y1} className={className} />);
-      elements.push(<line key={`hb${i}`} x1={x} x2={x + cellWidth} y1={y2} y2={y2} className={className} />);
+      const cursor = cursorMap[cell.index];
+      const hLineCls = classnames(['h', cell.gap && 'gap']);
+      const cellClasses = getCellClasses(cell, cursor);
+      elements.push(
+        <g key={`h${i}`}>
+          <text x={x + cellWidth / 2} y={y3} className="index">{cell.index}</text>
+          <rect x={x} y={y1} width={cellWidth} height={textLineHeight} className={cellClasses}/>
+          <line x1={x} x2={x + cellWidth} y1={y1} y2={y1} className={hLineCls} className="t" />
+          <line x1={x} x2={x + cellWidth} y1={y2} y2={y2} className={hLineCls} className="b" />
+        </g>
+      );
     }
     // Vertical lines
     for (let i = 0, x = 0; i <= cells.length; i += 1, x += cellWidth) {
@@ -46,6 +67,7 @@ export const Array1D = EpicComponent(self => {
     if (cell.gap) {
       return;
     }
+    const {cellWidth} = this;
     const {position, index, address, content} = cell;
     const y0 = baseline(0);
     const y0a = y0 - (textLineHeight - textBaseline) / 3;
@@ -67,18 +89,17 @@ export const Array1D = EpicComponent(self => {
   };
 
   const drawCursor = function (cursor) {
-    const {index, cursors, col, row} = cursor;
+    const {cellWidth} = this;
+    const {index, labels, col, row} = cursor;
     const arrowTop = textLineHeight * 3;
     const arrowHeight = minArrowHeight + row * textLineHeight;
     const cursorsY = baseline(3) + arrowHeight;
-    const fillColor = '#eef';
     return (
       <g key={`c${index}`} transform={`translate(${col * cellWidth},0)`}>
-        <polygon points={arrowPoints(cellWidth/2, arrowTop, 6, arrowHeight)}/>
-        <text x={cellWidth/2} y={cursorsY} textAnchor="middle">
-          {cursors.map(cursor => cursor.name).join(',')}
+        {renderArrow(cellWidth / 2, arrowTop, 'up', arrowWidth, arrowHeight)}
+        <text x={cellWidth/2} y={cursorsY}>
+          {labels.join(',')}
         </text>
-        <rect x="0" y={textLineHeight} width={cellWidth} height={textLineHeight} fill={fillColor}/>
       </g>
     );
   };
@@ -103,30 +124,34 @@ export const Array1D = EpicComponent(self => {
     const {byName, byPos} = directive;
     const name = getIdent(byPos[0]);
     const cursorExprs = getList(byName.cursors, []);
+    const cellWidth = getNumber(byName.cw, 28);
     const maxVisibleCells = getNumber(byName.n, 40);
     const dim = getNumber(byName.dim, {core: context.core, frame: topFrame});
     // The first element of `frames` is the topmost frame containing the
     // directive.
-    const {error, cells, cursors} = extractView(
-      context.core, topFrame, name,
-      {dim, fullView, cursorExprs, maxVisibleCells});
-    if (error) {
-      return <Frame {...self.props}>{error}</Frame>;
+    const view = {dim, fullView, cursorExprs, cellWidth, maxVisibleCells};
+    Object.assign(view, extractView(context.core, topFrame, name, view));
+    if (view.error) {
+      return <Frame {...self.props}>{view.error}</Frame>;
     }
-    const viewState = getViewState(controls);
+    const viewState = getViewState(controls)
     return (
       <Frame {...self.props} hasFullView>
         <div className='clearfix' style={{padding: '2px'}}>
           <div style={{width: '100%', height: cellHeight+'px'}}>
             <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
-              <svg width={cellWidth * cells.length} height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
+              <svg width={cellWidth * view.cells.length} height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
                 <clipPath id="cell">
                   <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight}/>
                 </clipPath>
                 <g className="array1d">
-                  {cursors.map(drawCursor)}
-                  {cells.map(drawCell)}
-                  {drawGrid(cells)}
+                  {drawGrid(view)}
+                  <g className="cursors">
+                    {view.cursorMap.map(drawCursor.bind(view))}
+                  </g>
+                  <g className="cells">
+                    {view.cells.map(drawCell.bind(view))}
+                  </g>
                 </g>
               </svg>
             </ViewerResponsive>
