@@ -16,6 +16,12 @@ and has these additional properties:
   - store: rank of latest store operation in memory log, if present;
   - previous: previous byte content, if present.
 
+Document:
+- bytes
+- variables
+- extras
+- cursors
+
 */
 
 import React from 'react';
@@ -29,9 +35,9 @@ import * as C from 'persistent-c';
 import adt from 'adt';
 
 import {
-  getNumber, getIdent, getList, arrowPoints, renderValue, evalExpr,
+  getNumber, getIdent, getList, renderArrow, renderValue, evalExpr,
   highlightColors} from './utils';
-import {getCursorMap, getCursors} from './array_utils';
+import {getCursorMap, finalizeCursors} from './array_utils';
 
 const List = adt.data(function () {
   return {
@@ -87,14 +93,11 @@ const extractView = function (core, localMap, options) {
   const bytes = {startAddress, endAddress, cells};
   // Build the cursor views.
   const cursorMap = getCursorMap(
-    core, localMap, options.cursorExprs, startAddress, endAddress);
-  const cursors = getCursors(
-    range(startAddress, endAddress), cursorMap, options.cursorRows);
-  cursors.forEach(function (cursor, i) {
-    // cursor.column = cursor.index - startAddress;
-    cursor.column = cursor.index;
-    cursor.color = highlightColors[i] || noColor;
-  });
+    core, localMap, options.cursorExprs, {
+      minIndex: startAddress, maxIndex: endAddress,
+      address: 0, cellSize: 1
+    });
+  finalizeCursors(range(startAddress, endAddress), cursorMap, options.cursorRows);
   // Build the variables view.
   const variables = viewVariables(core, byteOps, startAddress, endAddress, options);
   // Build the extra-type views.
@@ -111,7 +114,7 @@ const extractView = function (core, localMap, options) {
       console.log('failed to evaluate extra expression', expr, ex);
     }
   });
-  return {byteOps, bytes, cursors, cursorRows, variables, extraRows};
+  return {byteOps, bytes, cursorMap, cursorRows, variables, extraRows};
 };
 
 /* Add to `byteOps` an object describing the latest the memory load/store
@@ -336,12 +339,12 @@ export const MemoryView = EpicComponent(self => {
         hs.push({key: `ht${startCol}`, x1: lx, x2: rx, y: y0});
         hs.push({key: `hb${startCol}`, x1: lx, x2: rx, y: y1});
       },
-      fillCellBackground: function (startCol, endCol, color) {
+      fillCellBackground: function (startCol, endCol, className) {
         const x = x0 + startCol * cellWidth;
         const w = (endCol - startCol) * cellWidth;
-        rs.push({key: `r${startCol}`, x, w, color});
+        rs.push({key: `r${startCol}`, x, w, className});
       },
-      addClassName: function (col, className) {
+      addCellClassName: function (col, className) {
         const key = `v${col}`;
         if (key in ccs) {
           ccs[key] = ccs[key] + ' ' + className;
@@ -357,8 +360,8 @@ export const MemoryView = EpicComponent(self => {
         // Render the horizontal and vertical elements.
         const elements = [];
         for (let i = 0; i < rs.length; i += 1) {
-          const {key, x, w, color} = rs[i];
-          elements.push(<rect key={key} x={x} y={y0} width={w} height={cellHeight} fill={color}/>);
+          const {key, x, w, className} = rs[i];
+          elements.push(<rect key={key} x={x} y={y0} width={w} height={cellHeight} className={className}/>);
         }
         for (let i = 0; i < hs.length; i += 1) {
           const {key, x1, x2, y} = hs[i];
@@ -374,17 +377,30 @@ export const MemoryView = EpicComponent(self => {
     };
   };
 
+  const getCellClasses = function (cell, cursor) {
+    if (cell) {
+      if (cell.store !== undefined)
+        return "cell cell-store";
+      if (cell.load !== undefined)
+        return "cell cell-load";
+    }
+    if (cursor)
+      return "cell cell-cursor";
+    return "cell";
+  };
+
   const drawGrid = function (view) {
-    const {bytes, variables, extraRows} = view;
+    const {bytes, variables, extraRows, cursorMap} = view;
     const grids = [];
     // Bytes grid
     const gd1 = GridDrawer(view.layout.bytesTop);
-    view.cursors.forEach(function (cursor) {
-      gd1.fillCellBackground(cursor.column, cursor.column + 1, cursor.color.bg);
-    });
     for (let i = 0; i < bytes.cells.length; i += 1) {
-      const {address} = bytes.cells[i];
+      const cell = bytes.cells[i];
+      const {address} = cell;
       gd1.drawCellBorder(address, address + 1);
+      const cursor = cursorMap[address];
+      const classes = getCellClasses(cell, cursor)
+      gd1.fillCellBackground(address, address + 1, classes);
     }
     grids.push(<g className='bytes'>{gd1.finalize()}</g>);
     // Variables grid
@@ -392,7 +408,7 @@ export const MemoryView = EpicComponent(self => {
     for (let i = 0; i < variables.cells.length; i += 1) {
       const cell = variables.cells[i];
       if (cell.sep) {
-        gd2.addClassName(cell.address, cell.sep);
+        gd2.addCellClassName(cell.address, cell.sep);
       } else {
         gd2.drawCellBorder(cell.address, cell.address + cell.size);
       }
@@ -491,19 +507,18 @@ export const MemoryView = EpicComponent(self => {
 
   const drawCursor = function (cursor) {
     const {cursorRows} = this;
-    const {column, row, color, cursors} = cursor;
-    const x0 = marginLeft + column * cellWidth;
+    const {index, row, color, labels} = cursor;
+    const x0 = marginLeft + index * cellWidth;
     const y0 = this.layout.cursorsTop;
     const arrowHeight = minArrowHeight + (cursorRows - row - 1) * textLineHeight;
     const x1 = cellWidth / 2;
     const y1 = row * textLineHeight + textLineHeight - textBaseline;
     const y2 = cursorRows * textLineHeight + minArrowHeight;
     const fillColor = '#eef';
-    const label = cursors.map(cursor => cursor.name).join(',');
     return (
-      <g key={`c${column}`} transform={`translate(${x0},${y0})`} className='cursor'>
-        <text x={x1} y={y1} fill={color.fg}>{label}</text>
-        <polygon points={arrowPoints(cellWidth/2, y2, 6, -arrowHeight)}/>
+      <g key={`c${index}`} transform={`translate(${x0},${y0})`} className='cursor'>
+        <text x={x1} y={y1}>{labels.join(",")}</text>
+        {renderArrow(cellWidth / 2, y2, 'down', 6, arrowHeight)}
       </g>
     );
   };
@@ -630,7 +645,7 @@ export const MemoryView = EpicComponent(self => {
                 <g className='memory-view'>
                   {drawGrid(view)}
                   {drawLabels(view)}
-                  <g className='cursors'>{view.cursors.map(drawCursor.bind(view))}</g>
+                  <g className='cursors'>{view.cursorMap.map(drawCursor.bind(view))}</g>
                   <g className='cells'>{view.bytes.cells.map(drawCell.bind(view))}</g>
                   {drawVariables(view)}
                   <g className='extraRows'>{view.extraRows.map(drawExtraRow.bind(view))}</g>
