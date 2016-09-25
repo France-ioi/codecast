@@ -100,8 +100,8 @@ export const SortView = EpicComponent(self => {
     const y1 = y0 + textBaseline;
     return (
       <g key={`t-${i}`} className="threshold">
-        <line className="value" x1={x0} x2={x1} y1={y0} y2={y0}/>
-        <text className="label" x={x2} y={y1}>{label}</text>
+        <line x1={x0} x2={x1} y1={y0} y2={y0}/>
+        <text x={x2} y={y1}>{label}</text>
       </g>
     );
   };
