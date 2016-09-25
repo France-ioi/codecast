@@ -109,7 +109,6 @@ export const extractView = function (core, frame, refExpr, options) {
   if (ref.type.kind !== 'pointer') {
     return {error: `expression ${stringifyExpr(refExpr)} is not a pointer`};
   }
-  console.log('array ref', ref, elemCount);
   if (elemCount === undefined) {
     if ('orig' in ref.type) {
       // The array size can be obtained from the original type.
