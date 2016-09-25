@@ -68,13 +68,14 @@ const extractView = function (core, localMap, options) {
   const {memory, memoryLog, oldMemory} = core;
   const {nBytesShown, cursorRows} = options;
   const maxAddress = memory.size;
-  let startAddress = Math.floor(options.startAddress);
+  const centerAddress = Math.floor(options.centerAddress);
+  let startAddress = centerAddress - nBytesShown / 2;
   if (startAddress + nBytesShown >= maxAddress) {
     startAddress = maxAddress - nBytesShown;
   }
   let endAddress = startAddress + nBytesShown - 1;
   // Show 1 extra cell if address has a floating part.
-  if (options.startAddress !== startAddress) {
+  if (options.centerAddress !== centerAddress) {
     endAddress += 1;
   }
   const cells = [];
@@ -97,7 +98,7 @@ const extractView = function (core, localMap, options) {
       minIndex: startAddress, maxIndex: endAddress,
       address: 0, cellSize: 1
     });
-  finalizeCursors(range(startAddress, endAddress), cursorMap, options.cursorRows);
+  finalizeCursors(range(startAddress, endAddress + 1), cursorMap, options.cursorRows);
   // Build the variables view.
   const variables = viewVariables(core, byteOps, startAddress, endAddress, options);
   // Build the extra-type views.
@@ -110,8 +111,7 @@ const extractView = function (core, localMap, options) {
         extraRows.push(row);
       }
     } catch (ex) {
-      // TODO: add errors to view somehow
-      console.log('failed to evaluate extra expression', expr, ex);
+      //console.log('failed to evaluate extra expression', expr, ex);
     }
   });
   return {byteOps, bytes, cursorMap, cursorRows, variables, extraRows};
@@ -283,6 +283,42 @@ const viewValue = function (core, byteOps, ref) {
     cell.previous = C.readValue(core.oldMemory, ref);
   }
   return cell;
+};
+
+const allMarkers = function* (core, localMap, cursorExprs) {
+  const {memoryLog, globalMap} = core;
+  // Cursors
+  for (let expr of cursorExprs) {
+    try {
+      const value = evalExpr(core, localMap, expr, false);
+      if (value.type.kind === 'pointer') {
+        yield {kind: 'cursor', address: value.address};
+      }
+    } catch (ex) {
+      // skip
+    }
+  }
+  // Memory log (load, store)
+  for (let entry of memoryLog) {
+    const kind = entry[0];
+    const ref = entry[1];
+    yield {kind, address: ref.address};
+  }
+  // Globals
+  for (let name of Object.keys(globalMap)) {
+    const value = globalMap[name];
+    if ('address' in value) {
+      yield {kind: 'global', address: value};
+    }
+  }
+  // Stack: function boundaries
+  let scope = core.scope;
+  while (scope) {
+    if (scope.kind === 'function') {
+      yield {kind: scope.kind, address: scope.limit};
+    }
+    scope = scope.parent;
+  }
 };
 
 export const MemoryView = EpicComponent(self => {
@@ -523,15 +559,24 @@ export const MemoryView = EpicComponent(self => {
     );
   };
 
-  const getStartAddress = function () {
-    let address = self.props.controls.get('startAddress');
+  const getCenterAddress = function () {
+    let address = self.props.controls.get('centerAddress');
     if (address === undefined) {
-      address = getNumber(self.props.directive.byName.start, 0);
+      address = getNumber(self.props.directive.byName.start, nBytesShown / 2);
     }
     return address;
   };
 
-  const getViewState = function (startAddress) {
+  const clipCenterAddress = function (address) {
+    address -= nBytesShown / 2;
+    address = Math.max(0, address);
+    address = Math.min(self.props.context.core.memory.size - nBytesShown, address);
+    address += nBytesShown / 2;
+    return address;
+  };
+
+  const getViewState = function (centerAddress) {
+    const startAddress = centerAddress - nBytesShown / 2;
     const {scale, controls, directive} = self.props;
     const x = -startAddress * cellWidth * scale;
     return {
@@ -543,35 +588,70 @@ export const MemoryView = EpicComponent(self => {
   };
 
   const onShiftLeft = function (event) {
-    let startAddress = self.props.controls.get('startAddress', 0) - 32;
-    startAddress = Math.max(0, startAddress);
-    self.props.onChange(self.props.directive, {startAddress});
+    const {directive, frames, context} = self.props;
+    const {core} = context;
+    const localMap = frames[0].get('localMap');
+    const cursorExprs = getList(directive.byName.cursors, []);
+    // Pretend currentAddress is just past the left of the visible area.
+    const currentAddress = getCenterAddress() - nBytesShown / 2;
+    let nextAddress;
+    let maxAddress = currentAddress;
+    for (let marker of allMarkers(core, localMap, cursorExprs)) {
+      const {kind, address} = marker;
+      if (address < currentAddress && (nextAddress === undefined || address > nextAddress)) {
+        nextAddress = address;
+      }
+      if (address > maxAddress) {
+        maxAddress = address;
+      }
+    }
+    if (nextAddress === undefined) {
+      nextAddress = maxAddress;
+    }
+    nextAddress = clipCenterAddress(nextAddress);
+    self.props.onChange(self.props.directive, {centerAddress: nextAddress});
   };
 
   const onShiftRight = function (event) {
-    let startAddress = self.props.controls.get('startAddress', 0) + 32;
-    startAddress = Math.min(self.props.context.core.memory.size - nBytesShown, startAddress);
-    self.props.onChange(self.props.directive, {startAddress});
+    const {directive, frames, context} = self.props;
+    const {core} = context;
+    const localMap = frames[0].get('localMap');
+    const cursorExprs = getList(directive.byName.cursors, []);
+    // Pretend currentAddress is just past the right of the visible area.
+    const currentAddress = getCenterAddress() + nBytesShown / 2;
+    let nextAddress;
+    let minAddress = currentAddress;
+    for (let marker of allMarkers(core, localMap, cursorExprs)) {
+      const {kind, address} = marker;
+      if (currentAddress < address && (nextAddress === undefined || address < nextAddress)) {
+        nextAddress = address;
+      }
+      if (address < minAddress) {
+        minAddress = address;
+      }
+    }
+    if (nextAddress === undefined) {
+      nextAddress = minAddress;
+    }
+    nextAddress = clipCenterAddress(nextAddress);
+    self.props.onChange(self.props.directive, {centerAddress: nextAddress});
   };
 
-  const onSeek = function (startAddress) {
-    const current = self.props.controls.get('startAddress', 0);
+  const onSeek = function (centerAddress) {
     // Clear the LSB.
-    startAddress = startAddress ^ (startAddress & 0xFF);
+    centerAddress = centerAddress ^ (centerAddress & 0xFF);
     // Preserve the current 16-bit alignment.
-    startAddress |= current & 0xF0;
+    centerAddress |= getCenterAddress() & 0xF0;
     // Clip to valid range.
-    startAddress = Math.max(0, startAddress);
-    startAddress = Math.min(self.props.context.core.memory.size - nBytesShown, startAddress);
-    self.props.onChange(self.props.directive, {startAddress});
+    centerAddress = clipCenterAddress(centerAddress);
+    self.props.onChange(self.props.directive, {centerAddress});
   };
 
   const onViewChange = function (event) {
     const {mode, startX, startY, matrix} = event.value;
     const {directive, scale} = self.props;
-    const maxAddress = self.props.context.core.memory.size - nBytesShown;
-    const startAddress = Math.min(maxAddress, Math.max(0, -matrix.e / (cellWidth * scale)));
-    const update = {mode, startX, startY, startAddress};
+    const centerAddress = clipCenterAddress(-matrix.e / (cellWidth * scale) + nBytesShown / 2);
+    const update = {mode, startX, startY, centerAddress};
     self.props.onChange(directive, update);
   };
 
@@ -592,15 +672,15 @@ export const MemoryView = EpicComponent(self => {
     const height = getNumber(byName.height, 'auto');
     const nBytesShown = getNumber(byName.bytes, 32);
     // Controls
-    const startAddress = getStartAddress();
-    const viewState = getViewState(startAddress);
+    const centerAddress = getCenterAddress();
+    const viewState = getViewState(centerAddress);
     // Extract the view-model.
     const maxAddress = self.props.context.core.memory.size;
     const view = extractView(
       core,
       localMap,
       {
-        startAddress,
+        centerAddress,
         nBytesShown,
         varRows,
         cursorExprs,
@@ -625,9 +705,8 @@ export const MemoryView = EpicComponent(self => {
     return (
       <Frame {...self.props}>
         <div className="memory-controls directive-controls">
-          <p className="start-address"><tt>{formatAddress(startAddress)}</tt></p>
           <div className="memory-slider-container" style={{width: '400px'}}>
-            <Slider prefixCls="memory-slider" tipFormatter={null} value={startAddress} min={0} max={maxAddress} onChange={onSeek}>
+            <Slider prefixCls="memory-slider" tipFormatter={null} value={centerAddress} min={0} max={maxAddress} onChange={onSeek}>
               <div className="memory-slider-background"/>
             </Slider>
           </div>
