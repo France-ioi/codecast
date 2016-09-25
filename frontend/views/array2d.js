@@ -62,9 +62,9 @@ export const Array2D = EpicComponent(self => {
 
   const getCellClasses = function (content, rowCursor, colCursor) {
     if (content) {
-      if ('store' in content)
+      if (content.store !== undefined)
         return "cell cell-store";
-      if ('load' in content)
+      if (content.load !== undefined)
         return "cell cell-load";
     }
     if (rowCursor || colCursor)
