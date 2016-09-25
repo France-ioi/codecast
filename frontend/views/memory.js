@@ -83,6 +83,9 @@ const extractView = function (core, localMap, options) {
   for (let address = startAddress; address <= endAddress; address += 1) {
     const current = memory.get(address);
     const cell = {column: address, address, size: 1, current};
+    if (address === centerAddress) {
+      cell.center = true;
+    }
     const ops = saveByteMemoryOps(byteOps, memoryLog, address);
     cell.load = ops.load;
     if (ops.store !== undefined) {
@@ -345,12 +348,12 @@ export const MemoryView = EpicComponent(self => {
     const dx1 = cellWidth / 2 - addressSize.x / 2; // address label x offset
     for (let i = 0; i < cells.length; i += 1) {
       const cell = cells[i];
-      const {column, address} = cell;
+      const {column, address, center} = cell;
       const x1 = x0 + column * cellWidth;
       // Top and bottom horizontal lines.
       if (address !== undefined) {
         elements.push(
-          <text key={address} transform={`translate(${x1+dx1},${y0}) rotate(${-addressAngle})`}>
+          <text key={address} transform={`translate(${x1+dx1},${y0}) rotate(${-addressAngle})`} className={center && 'center'}>
             {formatAddress(address)}
           </text>
         );

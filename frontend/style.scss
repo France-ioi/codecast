@@ -454,11 +454,14 @@ svg {
   }
 
   .memory-view {
-    .grid text, .cell text {
+    .labels text, .cell text {
       font-family: monospace;
     }
     .cell text {
       text-anchor: middle;
+    }
+    .labels text.center {
+      font-weight: bold;
     }
     .cell .previous-value line {
       stroke: #777;
