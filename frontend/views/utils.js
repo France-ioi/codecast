@@ -26,18 +26,6 @@ export const viewFrame = function (core, frame, options) {
   return view;
 };
 
-export const viewVariables = function (core, frame, names) {
-  const localMap = frame.get('localMap');
-  const decls = [];
-  names.forEach(function (name) {
-    if (localMap.has(name)) {
-      const {type, ref} = localMap.get(name);
-      decls.push(viewVariable(core, name, type, ref.address));
-    }
-  });
-  return decls;
-};
-
 export const viewVariable = function (core, name, type, address) {
   const context = {scalars: 0, maxScalars: 15};
   return {
@@ -176,7 +164,6 @@ export const evalExpr = function (core, localMap, expr, asRef) {
     const address = arrayRef.address + elemType.size * index.toInteger();
     const ref = C.makeRef(elemType, address);
     if (asRef || elemType.kind === 'array') {
-      console.log('subscript', arrayRef, index, ref);
       return ref;
     } else {
       return C.readValue(core.memory, ref);
@@ -186,7 +173,7 @@ export const evalExpr = function (core, localMap, expr, asRef) {
     throw new Error('attempt to take address of non-lvalue');
   }
   if (expr[0] === 'number') {
-    return new C.IntegralValue(C.scalarType['int'], expr[1] | 0);
+    return new C.IntegralValue(C.scalarTypes['int'], expr[1] | 0);
   }
   if (expr[0] === 'addrOf') {
     return evalExpr(core, localMap, expr[1], true);
@@ -194,12 +181,13 @@ export const evalExpr = function (core, localMap, expr, asRef) {
   throw new Error('unsupported expression');
 };
 
-const strParensIf = function (cond, str) {
-  return cond ? `(${str})` : str;
-};
-
 const evalRef = function (core, ref, asRef) {
   if (asRef) {
+    if (ref.type.pointee.kind === 'array') {
+      // Taking the address of an array, returns a decayed pointer to the array.
+      // Perhaps this should be already be done in persistent-c?
+      return C.makeRef(ref.type.pointee, ref.address);
+    }
     return ref;
   } else {
     const valueType = ref.type.pointee;
@@ -211,7 +199,12 @@ const evalRef = function (core, ref, asRef) {
   }
 };
 
+const strParensIf = function (cond, str) {
+  return cond ? `(${str})` : str;
+};
+
 export const stringifyExpr = function (expr, precedence) {
+  precedence = precedence || 0;
   if (expr[0] === 'parens') {
     return strParensIf(true, stringifyExpr(expr[1], 0));
   }
@@ -230,6 +223,21 @@ export const stringifyExpr = function (expr, precedence) {
     return `&${stringifyExpr(expr[1], 0)}`;
   }
   return JSON.stringify(expr);
+};
+
+export const viewExprs = function (core, frame, exprs) {
+  const localMap = frame.get('localMap');
+  const views = [];
+  exprs.forEach(function (expr) {
+    const label = stringifyExpr(expr, 0);
+    try {
+      const value = evalExpr(core, localMap, expr, false);
+      views.push({label, value});
+    } catch (ex) {
+      views.push({label, error: ex.toString});
+    }
+  });
+  return views;
 };
 
 const parensIf = function (cond, elem) {
