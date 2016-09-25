@@ -88,9 +88,9 @@ const examples = [
     source: [
       "#include <stdio.h>",
       "int main() {",
-      "    //! A = showArray2D(A, rowCursors=[i], colCursors=[k])",
-      "    //! B = showArray2D(B, rowCursors=[k], colCursors=[j])",
-      "    //! C = showArray2D(C, rowCursors=[i], colCursors=[j], height=200)",
+      "    //! A = showArray2D(A, rowCursors=[i], colCursors=[k], width=.33)",
+      "    //! B = showArray2D(B, rowCursors=[k], colCursors=[j], width=.33)",
+      "    //! C = showArray2D(C, rowCursors=[i], colCursors=[j], width=.33)",
       "    double A[2][2] = {{0.866, -0.500}, {0.500, 0.866}};",
       "    double B[2][2] = {{0.500, -0.866}, {0.866, 0.500}};",
       "    double C[2][2];",

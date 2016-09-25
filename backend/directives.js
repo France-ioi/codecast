@@ -19,7 +19,7 @@ g.star = lexeme(PR('*'));
 g.ampersand = lexeme(PR('&'));
 g.coma = lexeme(PR(','));
 g.ident = lexeme(PR(/[a-zA-Z_-][a-zA-Z0-9_-]*/));
-g.number = lexeme(PR(/(-?\d*\.?\d+?)|(0[Xx][0-9a-fA-F]+)/));
+g.number = lexeme(PR(/(-?\d*\.?\d*)|(0[Xx][0-9a-fA-F]+)/));
 
 g.numberExpr = g.number.map(function (match) {
   if (/^0[Xx]/.test(match)) {

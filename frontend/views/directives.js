@@ -34,6 +34,11 @@ export default function* (deps) {
       const {directive, controls, title, hasFullView} = self.props;
       const {key} = directive;
       const fullView = controls.get('fullView');
+      const style = {};
+      const width = directive.byName['width'];
+      if (width && width[0] === 'number') {
+        style.width = `${width[1]*100}%`;
+      }
       const header = (
         <div className="directive-header">
           <div className="pull-right">
@@ -47,7 +52,7 @@ export default function* (deps) {
           </div>
         </div>);
       return (
-        <div key={key} className='directive-view clearfix'>
+        <div key={key} className='directive-view' style={style}>
           <Panel className="directive" header={header}>
             {self.props.children}
           </Panel>
@@ -96,7 +101,7 @@ export default function* (deps) {
             onChange={onControlsChange} scale={scale} />);
       };
       return (
-        <div className='directive-pane'>
+        <div className='directive-pane clearfix'>
           {ordered.map(renderDirective)}
         </div>
       );
