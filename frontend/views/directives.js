@@ -34,7 +34,7 @@ export default function* (deps) {
       const {directive, controls, title, hasFullView} = self.props;
       const {key} = directive;
       const fullView = controls.get('fullView');
-      const style = {};
+      const style = {width: '100%'};
       const width = directive.byName['width'];
       if (width && width[0] === 'number') {
         style.width = `${width[1]*100}%`;
