@@ -10,25 +10,25 @@ export const extractView = function (core, frame, refExpr, view) {
   try {
     ref = evalExpr(core, localMap, refExpr, false);
   } catch (ex) {
-    return {error: `Expression ${stringifyExpr(refExpr)} has no value (${ex})`};
+    return {error: `expression ${stringifyExpr(refExpr)} has no value (${ex})`};
   }
   // By the array-value decaying rule, ref should be a pointer.
   if (ref.type.kind !== 'pointer') {
-    return {error: `Expression ${stringifyExpr(refExpr)} is not a pointer`};
+    return {error: `expression ${stringifyExpr(refExpr)} is not a pointer`};
   }
   const arrayType = ref.type.orig;
   if (arrayType === undefined || arrayType.kind !== 'array') {
-    return {error: `Expression ${stringifyExpr(refExpr)} is not an array`};
+    return {error: `expression ${stringifyExpr(refExpr)} is not an array`};
   }
   const rowCount = arrayType.count.toInteger();
   const rowType = arrayType.elem;
   if (rowType.kind !== 'array') {
-    return {error: `Expression ${stringifyExpr(refExpr)} is not a 2D array`};
+    return {error: `expression ${stringifyExpr(refExpr)} is not a 2D array`};
   }
   const colCount = rowType.count.toInteger();
   const cellType = rowType.elem;
   if (!/^(scalar|pointer)$/.test(cellType.kind)) {
-    return {error: `Elements of 2D array ${stringifyExpr(refExpr)} have an unsupported`};
+    return {error: `elements of 2D array ${stringifyExpr(refExpr)} have an unsupported type`};
   }
   // Read the cells.
   const rows = readArray2D(core, arrayType, ref.address, rowCount, colCount, cellType);

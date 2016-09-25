@@ -122,15 +122,15 @@ export const Array1D = EpicComponent(self => {
     const topFrame = frames[0];
     const fullView = controls.get('fullView');
     const {byName, byPos} = directive;
-    const name = getIdent(byPos[0]);
+    const expr = byPos[0];
     const cursorExprs = getList(byName.cursors, []);
     const cellWidth = getNumber(byName.cw, 28);
     const maxVisibleCells = getNumber(byName.n, 40);
-    const dim = getNumber(byName.dim, {core: context.core, frame: topFrame});
+    const {dim} = byName;
     // The first element of `frames` is the topmost frame containing the
     // directive.
-    const view = {dim, fullView, cursorExprs, cellWidth, maxVisibleCells};
-    Object.assign(view, extractView(context.core, topFrame, name, view));
+    const view = {dimExpr: dim, fullView, cursorExprs, cellWidth, maxVisibleCells};
+    Object.assign(view, extractView(context.core, topFrame, expr, view));
     if (view.error) {
       return <Frame {...self.props}>{view.error}</Frame>;
     }

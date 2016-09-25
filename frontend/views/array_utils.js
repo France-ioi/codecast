@@ -62,11 +62,11 @@ import {readScalar, readScalarBasic, stringifyExpr, evalExpr, viewVariable} from
               (up to `options.cursorRows` rows are used)
 
 */
-export const extractView = function (core, frame, name, options) {
+export const extractView = function (core, frame, refExpr, options) {
+  const localMap = frame.get('localMap');
   // Normalize options.
-  const {fullView} = options;
+  const {fullView, dimExpr} = options;
   let {cursorExprs, cursorRows, maxVisibleCells, pointsByKind} = options;
-  let elemCount = options.dim;
   if (cursorExprs === undefined) {
     cursorExprs = [];
   }
@@ -85,39 +85,48 @@ export const extractView = function (core, frame, name, options) {
       last: 20
     };
   }
-  // TODO: look up `name` in globals if frames.length === 0
-  const localMap = frame.get('localMap');
-  if (!localMap.has(name)) {
-    return {error: `${name} not in scope`};
+  // Evaluate `dimExpr` if given.
+  let elemCount;
+  if (dimExpr) {
+    try {
+      const dimVal = evalExpr(core, localMap, dimExpr, false);
+      if (dimVal.type.kind !== 'scalar') {
+        return {error: `invalid value for dimension ${stringifyExpr(dimExpr)}`};
+      }
+      elemCount = dimVal.toInteger();
+    } catch (ex) {
+      return {error: `dimension ${stringifyExpr(dimExpr)} has no value (${ex})`};
+    }
   }
-  const {type, ref} = localMap.get(name);
-  let address, elemType;
-  if (type.kind === 'array') {
-    // Array variable.
-    elemType = type.elem;
-    address = ref.address;
-    if (elemCount === undefined && type.count !== undefined) {
-      elemCount = type.count.toInteger();
+  // Evaluate the array expression `expr`.
+  let ref;
+  try {
+    ref = evalExpr(core, localMap, refExpr, false);
+  } catch (ex) {
+    return {error: `expression ${stringifyExpr(refExpr)} has no value (${ex})`};
+  }
+  // By the array-value decaying rule, ref should be a pointer.
+  if (ref.type.kind !== 'pointer') {
+    return {error: `expression ${stringifyExpr(refExpr)} is not a pointer`};
+  }
+  console.log('array ref', ref, elemCount);
+  if (elemCount === undefined) {
+    if ('orig' in ref.type) {
+      // The array size can be obtained from the original type.
+      elemCount = ref.type.orig.count.toInteger();
+    } else {
+      return {error: `dimension of ${stringifyExpr(refExpr)} is unknown`};
     }
-    if (elemCount === undefined) {
-      // Make up a sensible elemCount.
-      elemCount = Math.floor(128 / type.elem.size);
-    }
-  } else if (type.kind === 'pointer') {
-    // Pointer variable.
-    elemType = type.pointee;
-    address = C.readValue(core.memory, ref).address;
-    if (elemCount === undefined) {
-      // Make up a sensible elemCount.
-      elemCount = Math.floor(128 / type.pointee.size);
-    }
-  } else {
-    return {error: "variable is neither an array nor a pointer"};
+  }
+  const address = ref.address;
+  const elemType = ref.type.pointee;
+  if (!/^(scalar|pointer)$/.test(elemType.kind)) {
+    return {error: `elements of array ${stringifyExpr(refExpr)} have an unsupported type`};
   }
   const cellOpsMap = getOpsArray1D(core, address, elemCount, elemType.size);
   const cursorMap = getCursorMap(
     core, localMap, cursorExprs,
-    {minIndex: 0, maxIndex: elemCount, address: address, cellSize: elemType.size});
+    {minIndex: 0, maxIndex: elemCount, address, cellSize: elemType.size});
   const selection =
     fullView
       ? range(0, elemCount + 1)

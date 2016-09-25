@@ -13,7 +13,7 @@ export const Array2D = EpicComponent(self => {
   const strikeThroughHeight = 5; // from baseline
   const textArrowHeight = 4; // from baseline to arrow point
   const textArrowSpacing = 2;
-  const arrowHeadSize = 3;
+  const arrowHeadSize = 6;
   const arrowTailSize = 15;
   const cellWidth = 60;  // to fit a negative double
   const cellHeight = 2 * textLineHeight + 3;
@@ -29,7 +29,7 @@ export const Array2D = EpicComponent(self => {
   // left offset: big enough to fit a cursor with 10 characters
   // top offset: 2 line (cursors) + arrow + 1 line (column index)
   // directive named argument to set view height
- 
+
   const drawCells = function (view) {
     const {rows, rowCount, colCount, rowInfoMap, colInfoMap} = view;
     const elements = [];
