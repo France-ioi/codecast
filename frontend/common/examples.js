@@ -15,7 +15,7 @@ const examples = [
     source: [
       "#include <stdlib.h>",
       "int main() {",
-      "    //! showMemory(start=256)",
+      "    //! showMemory(start=272)",
       "    int * p = malloc(4 * sizeof(int));",
       "    int * q = malloc(1 * sizeof(int));",
       "    free(q);",
