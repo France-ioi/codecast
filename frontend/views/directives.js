@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {Panel, Button} from 'react-bootstrap';
+import {Panel, Button, Navbar, Nav, NavItem} from 'react-bootstrap';
 import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import Immutable from 'immutable';
@@ -77,6 +77,22 @@ export default function* (deps) {
       self.props.dispatch({type: deps.stepperViewControlsChanged, key, update});
     };
 
+    const toggleView = function (key) {
+      const controls = self.props.state.controls.get(key, Immutable.Map());
+      const update = {hide: !controls.get('hide', false)};
+      self.props.dispatch({type: deps.stepperViewControlsChanged, key, update});
+    };
+
+    const renderDirectiveButton = function (directive) {
+      const controls = self.props.state.controls.get(directive.key, Immutable.Map());
+      const hide = controls.get('hide', false);
+      return (
+        <NavItem eventKey={directive.key} active={!hide}>
+          {directive.key}
+        </NavItem>
+      );
+    };
+
     self.render = function () {
       const {state, scale} = self.props;
       if (!state || !state.analysis) {
@@ -86,23 +102,39 @@ export default function* (deps) {
       const {ordered, framesMap} = directives;
       const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
       const context = {core};
+
       const renderDirective = function (directive) {
+        const {key, kind} = directive;
+        const directiveControls = controls.get(key, Immutable.Map());
+        const hide = directiveControls.get('hide', false);
+        if (hide) {
+          return false;
+        }
         if (directive[0] === 'error') {
           return <p>{'Error: '}{JSON.stringify(directive[1])}</p>;
         }
-        const {key, kind} = directive;
         const View = directiveViewDict[kind];
         if (!View) {
           return <p>{'Error: undefined view kind '}{kind}</p>;
         }
         return (
-          <View Frame={DirectiveFrame} directive={directive} controls={controls.get(key, Immutable.Map())}
+          <View Frame={DirectiveFrame} directive={directive} controls={directiveControls}
             frames={framesMap[key]} context={context}
             onChange={onControlsChange} scale={scale} />);
       };
+
       return (
-        <div className='directive-pane clearfix'>
-          {ordered.map(renderDirective)}
+        <div className='directive-group'>
+          <div className='directive-bar'>
+            <Navbar>
+              <Nav onSelect={toggleView} bsStyle='pills'>
+                {ordered.map(renderDirectiveButton)}
+              </Nav>
+            </Navbar>
+          </div>
+          <div className='directive-pane clearfix'>
+            {ordered.map(renderDirective)}
+          </div>
         </div>
       );
     };
