@@ -558,7 +558,6 @@ export const MemoryView = EpicComponent(self => {
     cells.forEach(function (cell) {
       const {address} = cell;
       const x = x0 + address * cellWidth;
-      // TODO: clip cell using clipPath='url(#extras`${i}`)'
       elements.push(
         <g className='cell' key={`0x${address}`} transform={`translate(${x},${y0})`}>
           {drawCellContent(cell, 'extra', renderValue)}
