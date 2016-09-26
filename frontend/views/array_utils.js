@@ -492,13 +492,14 @@ const getSelection = function (maxVisibleCells, elemCount, cellOpsMap, cursorMap
 // the selection, and a 'row' field such that adjacent cursors are on a
 // different row (up to `cursorRows` rows are used).
 export const finalizeCursors = function (selection, cursorMap, cursorRows) {
+  const staggerAll = true; // XXX could be an option
   let nextStaggerCol, cursorRow = 0;
   selection.forEach(function (index, col) {
     if (col === undefined)
       col = index;
     if (index in cursorMap) {
       const cursor = cursorMap[index];
-      if (col === nextStaggerCol) {
+      if (staggerAll || col === nextStaggerCol) {
         cursorRow = (cursorRow + 1) % cursorRows;
       } else {
         cursorRow = 0;
