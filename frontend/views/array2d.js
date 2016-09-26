@@ -124,7 +124,6 @@ export const Array2D = EpicComponent(self => {
     const y2 = y1 - textArrowHeight;
     for (let i in infoMap) {
       const cursor = infoMap[i];
-      console.log('row cursor', cursor);
       const y0 = gridTop + cellHeight * cursor.index;
       const label = cursor.labels.join(',');
       elements.push(renderArrow(x0 + x1, y0 + y2, 'right', arrowHeadSize, arrowTailSize));
@@ -141,7 +140,6 @@ export const Array2D = EpicComponent(self => {
     const y2 = y1 - (textBaseline + textArrowSpacing + arrowTailSize);
     for (let j in infoMap) {
       const cursor = infoMap[j];
-      console.log('col cursor', cursor);
       const x0 = gridLeft + cellWidth * cursor.index;
       const label = cursor.labels.join(',');
       const y3 = cursor.row * textLineHeight;
