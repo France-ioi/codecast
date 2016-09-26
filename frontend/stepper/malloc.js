@@ -85,18 +85,25 @@ export const heapInit = function (core, stackBytes) {
   return {...core, memory};
 };
 
+export const enumerateHeapBlocks = function* (core) {
+  const {memory} = core;
+  let block = getFirstBlock(core);
+  while (block) {
+    yield block;
+    block = getBlock(memory, block.next);
+  }
+};
+
 export const malloc = function (core, cont, values) {
   const {memory} = core;
   const effects = [];
   const nBytes = values[1].toInteger();
   let result = nullPointer;
-  let block = getFirstBlock(core);
-  while (block) {
+  for (let block of enumerateHeapBlocks(core)) {
     if (canAllocate(block, nBytes)) {
       result = allocateBlock(effects, block, nBytes);
       break;
     }
-    block = getBlock(memory, block.next);
   }
   return {control: cont, result, effects}
 };
@@ -110,16 +117,14 @@ export const free = function (core, cont, values) {
   const {memory} = core;
   const effects = [];
   const address = values[1].address;
-  let block = getFirstBlock(core);
   let prev;
-  while (block) {
-    const next = getBlock(memory, block.next);
+  for (let block of enumerateHeapBlocks(core)) {
     if (block.start === address) {
+      const next = getBlock(memory, block.next);
       freeBlock(effects, block, prev, next);
       break;
     }
     prev = block;
-    block = next;
   }
   return {control: cont, result: null, effects};
 };
