@@ -63,11 +63,11 @@ const allocateBlock = function (effects, block, nBytes) {
 const freeBlock = function (effects, block, prev, next) {
   let ref = block.ref;
   let size = block.size;
-  if (prev.free) {
+  if (prev && prev.free) {
     ref = prev.ref;
     size += prev.size;
   }
-  if (next.free) {
+  if (next && next.free) {
     size += next.size;
   }
   // The header is the size in bytes with the free bit (0) *set*.
