@@ -4,6 +4,7 @@ import Immutable from 'immutable';
 
 import {TermBuffer, writeString} from './terminal';
 import {sprintf} from './printf';
+import {heapInit, malloc, free} from './malloc';
 import {scanf, applyScanfEffect} from './scanf';
 
 const applyWriteEffect = function (state, effect) {
@@ -47,14 +48,16 @@ const printf = function (state, cont, values) {
   return {control: cont, effects: [['write', str]], result, seq: 'expr'};
 };
 
-const builtins = {printf, scanf};
+const builtins = {printf, scanf, malloc, free};
 
 export const start = function (syntaxTree, options) {
   options = options || {};
   const decls = syntaxTree[2];
   // Core setup.
+  const stackSize = 4096;
   const state = C.start({decls, builtins, options: stepperOptions});
   state.core = C.clearMemoryLog(state.core);
+  state.core = heapInit(state.core, stackSize);
   // Terminal setup.
   state.terminal = new TermBuffer({lines: 10, width: 60});
   // Input setup.
