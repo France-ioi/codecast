@@ -60,8 +60,8 @@ const freeBlock = function (effects, block, prev, next) {
   if (next.free) {
     size += next.size;
   }
-  // The header is the size in bytes with the free bit (0) clear.
-  effects.push(['store', ref, new C.IntegralValue(uint, size)]);
+  // The header is the size in bytes with the free bit (0) *set*.
+  effects.push(['store', ref, new C.IntegralValue(uint, size | 1)]);
 };
 
 export const heapInit = function (core, stackBytes) {
