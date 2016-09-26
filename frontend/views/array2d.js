@@ -173,7 +173,7 @@ export const Array2D = EpicComponent(self => {
     Object.assign(view, extractView(context.core, frames[0], expr, view));
     if (view.error) {
       return (
-        <Frame {...self.props} hasFullView>
+        <Frame {...self.props}>
           <div className='clearfix'>{view.error}</div>
         </Frame>);
     }
@@ -183,7 +183,7 @@ export const Array2D = EpicComponent(self => {
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
     const viewState = getViewState();
     return (
-      <Frame {...self.props} hasFullView>
+      <Frame {...self.props}>
         <div className='clearfix' style={{padding: '2px'}}>
           <div style={{width: '100%', height: divHeight}}>
             <ViewerResponsive tool='pan' value={viewState} onChange={onViewChange} background='transparent' specialKeys={[]}>
