@@ -38,6 +38,7 @@ import {
   getNumber, getIdent, getList, renderArrow, renderValue, evalExpr,
   highlightColors} from './utils';
 import {getCursorMap, finalizeCursors} from './array_utils';
+import {enumerateHeapBlocks} from '../stepper/malloc';
 
 const List = adt.data(function () {
   return {
@@ -117,7 +118,9 @@ const extractView = function (core, localMap, options) {
       //console.log('failed to evaluate extra expression', expr, ex);
     }
   });
-  return {byteOps, bytes, cursorMap, cursorRows, variables, extraRows};
+  // Add heap structure annotations to bytes.
+  const heapMap = viewHeapFlags(core, startAddress, endAddress);
+  return {byteOps, bytes, cursorMap, cursorRows, variables, extraRows, heapMap};
 };
 
 /* Add to `byteOps` an object describing the latest the memory load/store
@@ -324,6 +327,34 @@ const allMarkers = function* (core, localMap, cursorExprs) {
   }
 };
 
+const viewHeapFlags = function (core, startAddress, endAddress) {
+  const heapMap = []; // sparse array
+  for (let block of enumerateHeapBlocks(core)) {
+    const {start, end} = block;
+    if (start <= endAddress && end >= startAddress) {
+      // Mark header area bytes
+      for (let address = block.ref.address; address < start; address += 1) {
+        heapMap[address] = 16;
+      }
+      // Mark data area bytes
+      const viewStart = Math.max(start, startAddress);
+      const viewEnd = Math.min(end, endAddress);
+      const defaultFlag = block.free ? 3 : 1;
+      for (let address = viewStart; address <= viewEnd; address += 1) {
+        let flags = defaultFlag;
+        if (address === start) {
+          flags |= 4;
+        }
+        if (address === end) {
+          flags |= 8;
+        }
+        heapMap[address] = flags;
+      }
+    }
+  }
+  return heapMap;
+};
+
 export const MemoryView = EpicComponent(self => {
 
   const textLineHeight = 18;
@@ -416,20 +447,37 @@ export const MemoryView = EpicComponent(self => {
     };
   };
 
-  const getCellClasses = function (cell, cursor) {
-    if (cell) {
-      if (cell.store !== undefined)
-        return "cell cell-store";
-      if (cell.load !== undefined)
-        return "cell cell-load";
+  const setCellClasses = function (view) {
+    const {bytes, cursorMap, heapMap} = view;
+    for (let cell of bytes.cells) {
+      const {address, store, load} = cell;
+      const cursor = cursorMap[address];
+      const heapFlags = heapMap[address];
+      const classes = ['cell'];
+      if (store !== undefined) {
+        classes.push('cell-store');
+      }
+      if (load !== undefined) {
+        classes.push('cell-load');
+      }
+      if (cursor) {
+        classes.push("cell-cursor");
+      }
+      if (heapFlags !== undefined) {
+        classes.push("cell-heap");
+        if (heapFlags & 16) {
+          classes.push('cell-heap-header');
+        }
+        if (heapFlags & 2) {
+          classes.push('cell-heap-free');
+        }
+      }
+      cell.classes = classnames(classes);
     }
-    if (cursor)
-      return "cell cell-cursor";
-    return "cell";
   };
 
   const drawGrid = function (view) {
-    const {bytes, variables, extraRows, cursorMap} = view;
+    const {bytes, variables, extraRows, cursorMap, heapMap} = view;
     const grids = [];
     // Bytes grid
     const gd1 = GridDrawer(view.layout.bytesTop);
@@ -437,9 +485,7 @@ export const MemoryView = EpicComponent(self => {
       const cell = bytes.cells[i];
       const {address} = cell;
       gd1.drawCellBorder(address, address + 1);
-      const cursor = cursorMap[address];
-      const classes = getCellClasses(cell, cursor)
-      gd1.fillCellBackground(address, address + 1, classes);
+      gd1.fillCellBackground(address, address + 1, cell.classes);
     }
     grids.push(<g className='bytes'>{gd1.finalize()}</g>);
     // Variables grid
@@ -472,7 +518,7 @@ export const MemoryView = EpicComponent(self => {
     const x0 = marginLeft + column * cellWidth;
     const y0 = this.layout.bytesTop;
     return (
-      <g className='cell' key={`0x${address}`} transform={`translate(${x0},${y0})`} clipPath='url(#cell)'>
+      <g className={cell.classes} key={`0x${address}`} transform={`translate(${x0},${y0})`} clipPath='url(#cell)'>
         {drawCellContent(cell, 'byte', formatByte)}
       </g>
     );
@@ -690,6 +736,8 @@ export const MemoryView = EpicComponent(self => {
         cursorRows,
         extraExprs
       });
+    // The objects in view.bytes are mutated to add the 'classes' property.
+    setCellClasses(view);
     const layout = view.layout = {};
     layout.cursorsHeight = cursorRows * textLineHeight + minArrowHeight;
     layout.labelsHeight = addressSize.y;
@@ -728,7 +776,7 @@ export const MemoryView = EpicComponent(self => {
                   {drawGrid(view)}
                   {drawLabels(view)}
                   <g className='cursors'>{view.cursorMap.map(drawCursor.bind(view))}</g>
-                  <g className='cells'>{view.bytes.cells.map(drawCell.bind(view))}</g>
+                  <g className='bytes'>{view.bytes.cells.map(drawCell.bind(view))}</g>
                   {drawVariables(view)}
                   <g className='extraRows'>{view.extraRows.map(drawExtraRow.bind(view))}</g>
                 </g>

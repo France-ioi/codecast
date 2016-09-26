@@ -395,10 +395,10 @@ svg {
     line.gap {
       stroke-dasharray: 3, 3;
     }
-    rect.cell        { fill: none; }
-    rect.cell-store  { fill: #FFCDD2; }
-    rect.cell-load   { fill: #DCEDC8; }
-    rect.cell-cursor { fill: #EEEEEE; }
+    rect.cell           { fill: none;    }
+    rect.cell-cursor    { fill: #EEEEEE; }
+    rect.cell-load      { fill: #DCEDC8; }
+    rect.cell-store     { fill: #FFCDD2; }
   }
 
   .array1d {
@@ -487,6 +487,17 @@ svg {
       line.v.sp {
         stroke: #00f;
       }
+      /* need to repeat the generic rules to get the priorities right */
+      rect.cell             { fill: none;    }
+      rect.cell-heap-header { fill: #F8F8F8; }
+      rect.cell-heap-free   { fill: #F8F8F8; }
+      rect.cell-cursor      { fill: #EEEEEE; }
+      rect.cell-load        { fill: #DCEDC8; }
+      rect.cell-store       { fill: #FFCDD2; }
+    }
+    .bytes {
+      .cell-heap-header text { fill: #555; }
+      .cell-heap-free text { fill: #888; }
     }
     .cursor text {
       text-anchor: middle;
