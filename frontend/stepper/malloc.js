@@ -9,6 +9,15 @@ const headerSize = 4;
 
 const nullPointer = new C.PointerValue(voidPtr, 0);
 
+/*
+Block properties:
+  - ref: reference to the block header
+  - next: reference to the header of the next block
+  - size: raw block size, including header and data areas
+  - free: boolean indicating if block is free (true) or allocated (false)
+  - start: address of the first byte of the block's data area
+  - end: address of the last byte of the block's data area
+*/
 const getBlock = function (memory, ref) {
   const header = C.readValue(memory, ref).toInteger();
   const size = header & ~3;
@@ -17,8 +26,9 @@ const getBlock = function (memory, ref) {
   }
   const free = 0 !== (header & 1);
   const start = ref.address + headerSize;
+  const end = ref.address + size - 1;
   const next = new C.PointerValue(uintPtr, ref.address + size);
-  return {ref, free, size, start, next};
+  return {ref, free, start, end, size, next};
 };
 
 const getFirstBlock = function (core) {
