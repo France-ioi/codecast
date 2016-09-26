@@ -293,6 +293,8 @@ const viewValue = function (core, byteOps, ref) {
 
 const allMarkers = function* (core, localMap, cursorExprs) {
   const {memoryLog, globalMap} = core;
+  // XXX The initial heap start is a constant in persistent-c.
+  yield {kind: 'start', address: 0x100};
   // Cursors
   for (let expr of cursorExprs) {
     try {
