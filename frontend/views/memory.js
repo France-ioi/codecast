@@ -639,6 +639,7 @@ export const MemoryView = EpicComponent(self => {
   };
 
   const onShiftLeft = function (event) {
+    const fallThrough = false; // XXX could be an option
     const {directive, frames, context} = self.props;
     const {core} = context;
     const localMap = frames[0].get('localMap');
@@ -656,14 +657,17 @@ export const MemoryView = EpicComponent(self => {
         maxAddress = address;
       }
     }
-    if (nextAddress === undefined) {
+    if (fallThrough && nextAddress === undefined) {
       nextAddress = maxAddress;
     }
-    nextAddress = clipCenterAddress(nextAddress);
-    self.props.onChange(self.props.directive, {centerAddress: nextAddress});
+    if (nextAddress !== undefined) {
+      nextAddress = clipCenterAddress(nextAddress);
+      self.props.onChange(self.props.directive, {centerAddress: nextAddress});
+    }
   };
 
   const onShiftRight = function (event) {
+    const fallThrough = false; // XXX could be an option
     const {directive, frames, context} = self.props;
     const {core} = context;
     const localMap = frames[0].get('localMap');
@@ -681,11 +685,13 @@ export const MemoryView = EpicComponent(self => {
         minAddress = address;
       }
     }
-    if (nextAddress === undefined) {
+    if (fallThrough && nextAddress === undefined) {
       nextAddress = minAddress;
     }
-    nextAddress = clipCenterAddress(nextAddress);
-    self.props.onChange(self.props.directive, {centerAddress: nextAddress});
+    if (nextAddress !== undefined) {
+      nextAddress = clipCenterAddress(nextAddress);
+      self.props.onChange(self.props.directive, {centerAddress: nextAddress});
+    }
   };
 
   const onSeek = function (centerAddress) {
