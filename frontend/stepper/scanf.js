@@ -96,7 +96,7 @@ const scanValue = function (state, format, ref) {
   return false;
 };
 
-export default function (state, effect) {
+export const applyScanfEffect = function (state, effect) {
   const {core, input} = state;
   let pos = 0;
   if (input) {
@@ -111,4 +111,8 @@ export default function (state, effect) {
   }
   core.direction = 'up';
   core.result = new C.IntegralValue(C.scalarTypes['int'], pos);
+};
+
+export const scanf = function (state, cont, values) {
+  return {control: cont, effects: [['scanf', values]], seq: 'expr'};
 };

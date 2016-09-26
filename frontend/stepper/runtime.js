@@ -4,7 +4,7 @@ import Immutable from 'immutable';
 
 import {TermBuffer, writeString} from './terminal';
 import {sprintf} from './printf';
-import applyScanfEffect from './scanf';
+import {scanf, applyScanfEffect} from './scanf';
 
 const applyWriteEffect = function (state, effect) {
   state.terminal = writeString(state.terminal, effect[1]);
@@ -45,10 +45,6 @@ const printf = function (state, cont, values) {
   const str = sprintf(state, values);
   const result = str.length;
   return {control: cont, effects: [['write', str]], result, seq: 'expr'};
-};
-
-const scanf = function (state, cont, values) {
-  return {control: cont, effects: [['scanf', values]], seq: 'expr'};
 };
 
 const builtins = {printf, scanf};
