@@ -173,11 +173,13 @@ body#app, #app h1, #app h2, #app h3 {
   top: -1px;
   right: -1px;
 }
+.stack-controls .btn-group {
+  vertical-align: top;
+}
 .stack-controls button {
   height: 22px;
   margin: 0;
   padding: 0px 10px;
-  vertical-align: top;
 }
 
 .value-load {
@@ -383,9 +385,11 @@ span + .value-previous {
   right: -1px;
 }
 
+.memory-controls .btn-group {
+  vertical-align: top;
+}
 .memory-controls button {
     padding: 3px 12px;
-    vertical-align: top;
 }
 .memory-controls .start-address {
   display: inline-block;

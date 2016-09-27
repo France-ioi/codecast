@@ -1,7 +1,7 @@
 
 import React from 'react';
 import classnames from 'classnames';
-import {Alert, Button} from 'react-bootstrap';
+import {Alert, Button, ButtonGroup} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
@@ -129,12 +129,14 @@ export default function* (deps) {
       return (
         <div className="stack-view" style={{height}}>
           <div className="stack-controls">
-            <Button onClick={onStackUp} title="navigate up the stack">
-              <i className="fa fa-arrow-up"/>
-            </Button>
-            <Button onClick={onStackDown} title="navigate down the stack">
-              <i className="fa fa-arrow-down"/>
-            </Button>
+            <ButtonGroup>
+              <Button onClick={onStackUp} title="navigate up the stack">
+                <i className="fa fa-arrow-up"/>
+              </Button>
+              <Button onClick={onStackDown} title="navigate down the stack">
+                <i className="fa fa-arrow-down"/>
+              </Button>
+            </ButtonGroup>
           </div>
           {renderCallReturn()}
           {firstVisible > 0 &&

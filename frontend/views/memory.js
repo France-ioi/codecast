@@ -27,7 +27,7 @@ Document:
 import React from 'react';
 import EpicComponent from 'epic-component';
 import Slider from 'rc-slider';
-import {Button} from 'react-bootstrap';
+import {Button, ButtonGroup} from 'react-bootstrap';
 import classnames from 'classnames';
 import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 import range from 'node-range';
@@ -768,12 +768,14 @@ export const MemoryView = EpicComponent(self => {
               <div className="memory-slider-background"/>
             </Slider>
           </div>
-          <Button onClick={onShiftLeft} title="shift view to the left">
-            <i className="fa fa-arrow-left"/>
-          </Button>
-          <Button onClick={onShiftRight} title="shift view to the right">
-            <i className="fa fa-arrow-right"/>
-          </Button>
+          <ButtonGroup>
+            <Button onClick={onShiftLeft} title="shift view to the left">
+              <i className="fa fa-arrow-left"/>
+            </Button>
+            <Button onClick={onShiftRight} title="shift view to the right">
+              <i className="fa fa-arrow-right"/>
+            </Button>
+          </ButtonGroup>
         </div>
         <div className='clearfix' style={{padding: '2px'}}>
           <div style={{width: '100%', height: divHeight}}>
