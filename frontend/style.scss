@@ -86,8 +86,19 @@ body#app, #app h1, #app h2, #app h3 {
 #app ul {
   margin-bottom: 2px;
 }
+#app ul.nav {
+  margin: 2px 0;
+}
+#app pre {
+  background: inherit;
+  border: none;
+}
 
+// Override bootstrap style
 #app .panel {
+  position: relative;
+}
+#app .panel, #app .navbar {
   margin-bottom: 6px;
   border-radius: 0;
 }
@@ -99,10 +110,16 @@ body#app, #app h1, #app h2, #app h3 {
   padding: 0;
   min-height: 14px;
 }
-
-#app pre {
-  background: inherit;
-  border: none;
+#app ul.nav {
+  margin: 2px 0;
+}
+#app .navbar {
+  min-height: 28px;
+}
+#app .navbar-nav > li > a {
+  padding: 1px 4px;
+  min-width: 48px;
+  text-align: center;
 }
 
 .terminal {
@@ -150,6 +167,17 @@ body#app, #app h1, #app h2, #app h3 {
 }
 .stack-frame-focused {
   background-color: #eee;
+}
+.stack-controls {
+  position: absolute;
+  top: -1px;
+  right: -1px;
+}
+.stack-controls button {
+  height: 22px;
+  margin: 0;
+  padding: 0px 10px;
+  vertical-align: top;
 }
 
 .value-load {
@@ -341,6 +369,7 @@ span + .value-previous {
   overflow: hidden;
 }
 .directive-view > .directive {
+  position: relative;
   margin-right: 5px;
 }
 .directive-title {
@@ -349,8 +378,19 @@ span + .value-previous {
 }
 .directive-controls {
   text-align: right;
+  position: absolute;
+  top: -1px;
+  right: -1px;
 }
 
+.memory-controls button {
+    padding: 3px 12px;
+    vertical-align: top;
+}
+.memory-controls .start-address {
+  display: inline-block;
+  vertical-align: top;
+}
 .memory-slider-container {
   margin: 0 24px;
   height: 32px;
@@ -375,10 +415,6 @@ span + .value-previous {
   border: solid 1px #bbb;
   background-color: #ddd;
   z-index: 2;
-}
-.memory-controls .start-address {
-  display: inline-block;
-  vertical-align: top;
 }
 
 svg {

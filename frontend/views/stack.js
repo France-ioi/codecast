@@ -128,12 +128,14 @@ export default function* (deps) {
       });
       return (
         <div className="stack-view" style={{height}}>
-          <Button onClick={onStackUp} title="navigate up the stack">
-            <i className="fa fa-arrow-up"/>
-          </Button>
-          <Button onClick={onStackDown} title="navigate down the stack">
-            <i className="fa fa-arrow-down"/>
-          </Button>
+          <div className="stack-controls">
+            <Button onClick={onStackUp} title="navigate up the stack">
+              <i className="fa fa-arrow-up"/>
+            </Button>
+            <Button onClick={onStackDown} title="navigate down the stack">
+              <i className="fa fa-arrow-down"/>
+            </Button>
+          </div>
           {renderCallReturn()}
           {firstVisible > 0 &&
             <div key='tail' className="scope-ellipsis">
