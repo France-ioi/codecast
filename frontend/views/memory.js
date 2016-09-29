@@ -179,7 +179,6 @@ const viewExtraCells = function (core, byteOps, ref, startAddress, endAddress) {
 };
 
 const viewVariables = function (core, byteOps, startAddress, endAddress, options) {
-  const {varRows} = options;
   const cells = [];
   const {memory, globalMap} = core;
   let {scope} = core;
@@ -715,17 +714,10 @@ export const MemoryView = EpicComponent(self => {
     const {Frame, controls, directive, frames, context, scale} = self.props;
     const localMap = frames[0].get('localMap');
     const {core} = context;
-    // Directive arguments
-    //   - cursors: list of variable names (pointers) to display as cursors
-    //   - vars: list of variable names (pointers or arrays) to display on
-    //        additional lines
-    //   - height: set view height in pixels
     const {byName, byPos} = directive;
     const extraExprs = getList(byName.extras, []);
-    const varRows = getNumber(byName.varRows, 1);
     const cursorExprs = getList(byName.cursors, []);
     const cursorRows = getNumber(byName.cursorRows, 1);
-    const height = getNumber(byName.height, 'auto');
     const nBytesShown = getNumber(byName.bytes, 32);
     // Controls
     const centerAddress = getCenterAddress();
@@ -738,7 +730,6 @@ export const MemoryView = EpicComponent(self => {
       {
         centerAddress,
         nBytesShown,
-        varRows,
         cursorExprs,
         cursorRows,
         extraExprs
@@ -759,7 +750,7 @@ export const MemoryView = EpicComponent(self => {
     layout.bottom = layout.extraRowsTop + layout.extraRowsHeight - cellMargin + marginBottom;
     const svgWidth = marginLeft + cellWidth * maxAddress;
     const svgHeight = layout.bottom;
-    const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
+    const divHeight = (svgHeight * scale) + 'px';
     return (
       <Frame {...self.props}>
         <div className="memory-controls directive-controls">
