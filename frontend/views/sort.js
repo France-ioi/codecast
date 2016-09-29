@@ -12,6 +12,7 @@ export const SortView = EpicComponent(self => {
 
   const marginLeft = 100;
   const marginTop = 4;
+  const marginBottom = 4;
   const barWidth = 24;
   const barHeight = 100;
   const barSpacing = 4;
@@ -21,7 +22,6 @@ export const SortView = EpicComponent(self => {
   const thresholdLineExt = 3;
   const textLineHeight = 18;
   const textBaseline = 5;
-  const cursorRows = 2;
   const minArrowHeight = 20;
 
   const getValueClass = function (content) {
@@ -141,6 +141,7 @@ export const SortView = EpicComponent(self => {
     const getOptions = {core: core, frame: topFrame};
     const thExprs = getList(byName.thresholds, []);
     const cursorExprs = getList(byName.cursors, []);
+    const cursorRows = getNumber(byName.cursorRows, 1);
     const maxVisibleCells = getNumber(byName.n, 40);
     const height = getNumber(byName.height, 'auto');
     const view = {dimExpr: dim, fullView, cursorExprs, maxVisibleCells, cursorRows};
@@ -152,7 +153,7 @@ export const SortView = EpicComponent(self => {
     view.nbCells = view.cells.length;
     const viewState = getViewState(controls);
     const svgWidth = marginLeft + (barWidth + barSpacing) * view.nbCells;
-    const svgHeight = marginTop + barHeight + barMarginBottom + textLineHeight + minArrowHeight + textLineHeight * cursorRows;
+    const svgHeight = marginTop + barHeight + barMarginBottom + textLineHeight + minArrowHeight + textLineHeight * cursorRows + marginBottom;
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
     // Find the largest cell value.
     let maxValue = 0;

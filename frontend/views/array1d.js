@@ -15,8 +15,6 @@ export const Array1D = EpicComponent(self => {
   const textBaseline = 5; // from bottom
   const arrowWidth = 6;
   const minArrowHeight = 20;
-  const cursorRows = 2;
-  const cellHeight = (3 + cursorRows) * textLineHeight + minArrowHeight;
 
   const baseline = function (i) {
     return textLineHeight * (i + 1) - textBaseline;
@@ -124,12 +122,17 @@ export const Array1D = EpicComponent(self => {
     const {byName, byPos} = directive;
     const expr = byPos[0];
     const cursorExprs = getList(byName.cursors, []);
+    const cursorRows = getNumber(byName.cursorRows, 1);
+    const cellHeight = (3 + cursorRows) * textLineHeight + minArrowHeight;
     const cellWidth = getNumber(byName.cw, 28);
     const maxVisibleCells = getNumber(byName.n, 40);
     const {dim} = byName;
     // The first element of `frames` is the topmost frame containing the
     // directive.
-    const view = {dimExpr: dim, fullView, cursorExprs, cellWidth, maxVisibleCells};
+    const view = {
+      dimExpr: dim, cursorExprs, cursorRows, maxVisibleCells,
+      fullView, cellHeight, cellWidth
+    };
     Object.assign(view, extractView(context.core, topFrame, expr, view));
     if (view.error) {
       return <Frame {...self.props}>{view.error}</Frame>;
