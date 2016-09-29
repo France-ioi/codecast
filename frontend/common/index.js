@@ -27,7 +27,12 @@ export default function* () {
 };
 
 export const interpretQueryString = function (store, scope, qs) {
-  const stepperOptions = {};
+  const stepperOptions = {
+    showStepper: true,
+    showStack: true,
+    showViews: true,
+    showIO: true
+  };
   (qs.stepperControls||'').split(',').forEach(function (controlStr) {
     // No prefix to highlight, '-' to disable.
     const m = /^(-)?(.*)$/.exec(controlStr);
@@ -35,6 +40,21 @@ export const interpretQueryString = function (store, scope, qs) {
       stepperOptions[m[2]] = m[1] || '+';
     }
   });
+  if ('noStepper' in qs) {
+    stepperOptions.showStepper = false;
+    stepperOptions.showStack = false;
+    stepperOptions.showViews = false;
+    stepperOptions.showIO = false;
+  }
+  if ('noStack' in qs) {
+    stepperOptions.showStack = false;
+  }
+  if ('noViews' in qs) {
+    stepperOptions.showViews = false;
+  }
+  if ('noIO' in qs) {
+    stepperOptions.showIO = false;
+  }
   store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
   if ('source' in qs) {

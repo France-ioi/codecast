@@ -9,7 +9,7 @@ import Editor from '../buffers/editor';
 export default function* (deps) {
 
   yield use(
-    'getTranslateState', 'getStepperDisplay',
+    'getTranslateState', 'getStepperDisplay', 'getStepperOptions',
     'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
     'inputInit', 'inputEdit', 'inputSelect', 'inputScroll',
     'translateClearDiagnostics', 'stepperExit',
@@ -24,7 +24,8 @@ export default function* (deps) {
     const terminal = haveStepper && stepperDisplay.terminal;
     const error = haveStepper && stepperDisplay.error;
     const readOnly = haveStepper || props.preventInput;
-    return {diagnostics, haveStepper, readOnly, terminal, error};
+    const options = deps.getStepperOptions(state);
+    return {diagnostics, haveStepper, readOnly, terminal, error, options};
   });
 
   yield defineView('MainView', 'MainViewSelector', EpicComponent(self => {
@@ -109,17 +110,20 @@ export default function* (deps) {
     );
 
     self.render = function () {
-      const {diagnostics, readOnly, preventInput, terminal, error} = self.props;
+      const {diagnostics, readOnly, preventInput, terminal, error, options} = self.props;
+      const showStack = options.get('showStack');
+      const showViews = options.get('showViews');
+      const showIO = options.get('showIO');
       const editorRowHeight = '300px';
       return (
         <div>
           <div className="row">
-            <div className="col-sm-3">
+            {showStack && <div className="col-sm-3">
               <Panel header={<span>Variables</span>}>
                 {<deps.StackView height={editorRowHeight}/>}
               </Panel>
-            </div>
-            <div className="col-sm-9">
+            </div>}
+            <div className={showStack ? "col-sm-9" : "col-sm-12"}>
               <Panel header={renderSourcePanelHeader()}>
                 <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} onScroll={onSourceScroll}
                         readOnly={readOnly} shield={preventInput} mode='c_cpp' width='100%' height={editorRowHeight} />
@@ -138,8 +142,8 @@ export default function* (deps) {
               </Panel>
             </div>}
             <div className="col-sm-12">
-              <deps.DirectivesPane/>
-              <Panel header={renderInputOutputHeader()}>
+              {showViews && <deps.DirectivesPane/>}
+              {showIO && <Panel header={renderInputOutputHeader()}>
                 <div className="row">
                   <div className="col-sm-6">
                     <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect} onScroll={onInputScroll}
@@ -155,7 +159,7 @@ export default function* (deps) {
                         </div>}
                   </div>
                 </div>
-              </Panel>
+              </Panel>}
             </div>
           </div>
         </div>

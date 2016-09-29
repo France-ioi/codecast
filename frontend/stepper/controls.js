@@ -115,6 +115,9 @@ export default function* (deps) {
 
     self.render = function () {
       const p = self.props;
+      const showStepper = p.options.get('showStepper');
+      if (!showStepper)
+        return false;
       return (
         <div className="controls controls-stepper">
           {p.haveContext && <ButtonGroup className="controls-stepper-execution">
