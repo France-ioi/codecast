@@ -162,8 +162,6 @@ export const Array2D = EpicComponent(self => {
 
   self.render = function () {
     const {Frame, scale, directive, frames, context} = self.props;
-    // Positional arguments: [varName]
-    // Named arguments: {rowCursor, colCursors, height}
     const {byName, byPos} = directive;
     const expr = byPos[0];
     const rowCursors = getList(byName.rowCursors, []);

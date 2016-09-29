@@ -127,14 +127,6 @@ export const SortView = EpicComponent(self => {
     // Controls
     //   - fullView: read and render all cells
     const fullView = controls.get('fullView');
-    // Directive arguments
-    //   - name of variable to display (array or pointer)
-    //   - dim: number of array cells (automatic for constant arrays)
-    //   - n: maximum number of visible cells when fullView is off,
-    //        using priorities to omit the least important cells
-    //   - cursors: list of cursor variable names
-    //   - thresholds: list of threshold variable names
-    //   - height: height in pixels (auto if unspecified)
     const {byName, byPos} = directive;
     const expr = byPos[0];
     const {dim} = byName;
