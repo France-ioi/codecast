@@ -83,8 +83,9 @@ export default function* (deps) {
       yield call(uploadBlob, response.audio, audioBlob);
       yield put({type: deps.saveScreenAudioUploaded, url: response.audio.public_url});
       // Signal completion.
-      const baseUrl = document.location.toString().replace(/\/recorder$/, '/player');
-      const playerUrl = `${baseUrl}?id=${response.id}`;
+      const baseUrl = document.location.toString().replace(/\/recorder/, '/player');
+      const sep = baseUrl.indexOf('?') === -1 ? '?' : '&';
+      const playerUrl = `${baseUrl}${sep}id=${response.id}`;
       yield put({type: deps.saveScreenUploadSucceeded, url: playerUrl});
     } catch (error) {
       yield put({type: deps.saveScreenUploadFailed, error});
