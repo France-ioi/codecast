@@ -611,7 +611,7 @@ export const MemoryView = EpicComponent(self => {
   const getCenterAddress = function () {
     let address = self.props.controls.get('centerAddress');
     if (address === undefined) {
-      address = getNumber(self.props.directive.byName.start, nBytesShown / 2);
+      address = clipCenterAddress(getNumber(self.props.directive.byName.start, nBytesShown / 2));
     }
     return address;
   };
