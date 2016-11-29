@@ -369,7 +369,6 @@ export const MemoryView = EpicComponent(self => {
   const marginTop = 10;
   const marginBottom = 10;
   const cellMargin = 4;
-  const nBytesShown = 32;
   const minArrowHeight = 20;
 
   const drawLabels = function (view) {
@@ -609,14 +608,16 @@ export const MemoryView = EpicComponent(self => {
   };
 
   const getCenterAddress = function () {
+    const nBytesShown = getBytesShown();
     let address = self.props.controls.get('centerAddress');
     if (address === undefined) {
-      address = clipCenterAddress(getNumber(self.props.directive.byName.start, nBytesShown / 2));
+      address = clipCenterAddress(getNumber(self.props.directive.byName.start, nBytesShown / 2), nBytesShown);
     }
     return address;
   };
 
   const clipCenterAddress = function (address) {
+    const nBytesShown = getBytesShown();
     address -= nBytesShown / 2;
     address = Math.max(0, address);
     address = Math.min(self.props.context.core.memory.size - nBytesShown, address);
@@ -625,6 +626,7 @@ export const MemoryView = EpicComponent(self => {
   };
 
   const getViewState = function (centerAddress) {
+    const nBytesShown = getBytesShown();
     const startAddress = centerAddress - nBytesShown / 2;
     const {scale, controls, directive} = self.props;
     const x = -startAddress * cellWidth * scale;
@@ -643,6 +645,7 @@ export const MemoryView = EpicComponent(self => {
     const localMap = frames[0].get('localMap');
     const cursorExprs = getList(directive.byName.cursors, []);
     // Pretend currentAddress is just past the left of the visible area.
+    const nBytesShown = getBytesShown();
     const currentAddress = getCenterAddress() - nBytesShown / 2;
     let nextAddress;
     let maxAddress = currentAddress;
@@ -671,6 +674,7 @@ export const MemoryView = EpicComponent(self => {
     const localMap = frames[0].get('localMap');
     const cursorExprs = getList(directive.byName.cursors, []);
     // Pretend currentAddress is just past the right of the visible area.
+    const nBytesShown = getBytesShown();
     const currentAddress = getCenterAddress() + nBytesShown / 2;
     let nextAddress;
     let minAddress = currentAddress;
@@ -705,9 +709,14 @@ export const MemoryView = EpicComponent(self => {
   const onViewChange = function (event) {
     const {mode, startX, startY, matrix} = event.value;
     const {directive, scale} = self.props;
+    const nBytesShown = getBytesShown();
     const centerAddress = clipCenterAddress(-matrix.e / (cellWidth * scale) + nBytesShown / 2);
     const update = {mode, startX, startY, centerAddress};
     self.props.onChange(directive, update);
+  };
+
+  const getBytesShown = function () {
+    return getNumber(self.props.directive.byName.bytes, 32);
   };
 
   self.render = function () {
@@ -718,7 +727,7 @@ export const MemoryView = EpicComponent(self => {
     const extraExprs = getList(byName.extras, []);
     const cursorExprs = getList(byName.cursors, []);
     const cursorRows = getNumber(byName.cursorRows, 1);
-    const nBytesShown = getNumber(byName.bytes, 32);
+    const nBytesShown = getBytesShown();
     // Controls
     const centerAddress = getCenterAddress();
     const viewState = getViewState(centerAddress);
