@@ -728,6 +728,7 @@ export const MemoryView = EpicComponent(self => {
     const cursorExprs = getList(byName.cursors, []);
     const cursorRows = getNumber(byName.cursorRows, 1);
     const nBytesShown = getBytesShown();
+    const widthFactor = getNumber(byName.width, 1);
     // Controls
     const centerAddress = getCenterAddress();
     const viewState = getViewState(centerAddress);
@@ -763,7 +764,7 @@ export const MemoryView = EpicComponent(self => {
     return (
       <Frame {...self.props}>
         <div className="memory-controls directive-controls">
-          <div className="memory-slider-container" style={{width: '400px'}}>
+          <div className="memory-slider-container" style={{width: `${Math.round(400 * widthFactor)}px`}}>
             <Slider prefixCls="memory-slider" tipFormatter={null} value={centerAddress} min={0} max={maxAddress} onChange={onSeek}>
               <div className="memory-slider-background"/>
             </Slider>
