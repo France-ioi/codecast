@@ -43,7 +43,7 @@ const canAllocate = function (block, nBytes) {
 const allocateBlock = function (effects, block, nBytes) {
   // Align the block on a 4-byte boundary.
   nBytes = (nBytes + 3) & ~3;
-  const netSize = headerSize + nBytes;
+  let netSize = headerSize + nBytes;
   // Can the block be split?
   if (block.size > netSize + headerSize) {
     // Write a header for the (new) next block.
@@ -52,7 +52,8 @@ const allocateBlock = function (effects, block, nBytes) {
     const nextHeader = (block.size - netSize) | 1;
     effects.push(['store', nextRef, new C.IntegralValue(uint, nextHeader)]);
   } else {
-    nBytes = block.size;
+    // Do not split the block, simply clear its free bit.
+    netSize = block.size;
   }
   // The new header is the size in bytes with the free bit (0) clear.
   const newHeader = netSize;
