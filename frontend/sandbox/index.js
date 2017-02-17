@@ -16,8 +16,8 @@ import 'brace/theme/github';
 
 // Import font-awesome css here rather than in style.scss due to
 // https://github.com/mobilexag/plugin-sass/blob/master/src/sass-builder.js#49
-import 'font-awesome/css/font-awesome.min.css!';
-import '../style.scss!';
+import 'font-awesome/css/font-awesome.min.css';
+import '../style.scss';
 
 import {link, use, addReducer, include, defineSelector, defineView} from '../utils/linker';
 

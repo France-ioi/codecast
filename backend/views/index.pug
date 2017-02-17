@@ -5,12 +5,5 @@ head(lang='fr')
 body(id='app')
   div(id='react-container')
     p Chargement en cours, merci de patienter...
-  if development
-    script(type='text/javascript', src='jspm_packages/system.src.js')
-    script(type='text/javascript', src='src/jspm-0.16.config.js')
-    script(type='text/javascript', src='assets/babel-bundle.js')
-    script(type='text/javascript', src='assets/dependency-bundle.js')
-    script(type='text/javascript').
-      SystemJS.import('src/recorder/index.js');
-  else
-    script(type='text/javascript', src='assets/recorder.js')
+  script(type='text/javascript', src='build/vendor.js')
+  script(type='text/javascript', src='build/recorder.js')

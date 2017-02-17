@@ -13,8 +13,8 @@ import 'brace/worker/javascript';
 import 'brace/mode/c_cpp';
 import 'brace/theme/github';
 
-import 'font-awesome/css/font-awesome.min.css!';
-import '../style.scss!';
+import 'font-awesome/css/font-awesome.min.css';
+import '../style.scss';
 
 import {link, include, addReducer, addEnhancer} from '../utils/linker';
 import DevTools from '../utils/dev_tools';

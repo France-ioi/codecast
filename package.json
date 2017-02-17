@@ -14,72 +14,56 @@
   "bugs": {
     "url": "https://github.com/France-ioi/fioi-editor2/issues"
   },
-  "jspm": {
-    "main": "frontend/main.js",
-    "configFile": "frontend/jspm-0.16.config.js",
-    "dependencies": {
-      "adt": "npm:adt@^0.7.2",
-      "bootstrap-sass": "npm:bootstrap-sass@^3.3.6",
-      "brace": "npm:brace@^0.7.0",
-      "classnames": "npm:classnames@^2.2.3",
-      "epic-component": "npm:epic-component@^0.3.1",
-      "eventemitter2": "npm:eventemitter2@^1.0.0",
-      "font-awesome": "npm:font-awesome@^4.5.0",
-      "immutable": "npm:immutable@^3.7.6",
-      "js-data-structures": "npm:js-data-structures@^1.0.9",
-      "lamejs": "npm:lamejs@^1.1.0",
-      "lodash": "npm:lodash@^4.6.1",
-      "node-range": "npm:node-range@^0.1.0",
-      "persistent-c": "npm:persistent-c@^9.4.1",
-      "query-string": "npm:query-string@^4.1.0",
-      "rc-slider": "npm:rc-slider@^3.6.0",
-      "react": "npm:react@^15.1.0",
-      "react-bootstrap": "npm:react-bootstrap@^0.29.4",
-      "react-dom": "npm:react-dom@^15.0.1",
-      "react-redux": "npm:react-redux@^4.4.1",
-      "react-svg-pan-zoom": "npm:react-svg-pan-zoom@^1.3.3",
-      "redux": "npm:redux@^3.3.1",
-      "redux-devtools": "npm:redux-devtools@^3.1.1",
-      "redux-devtools-dock-monitor": "npm:redux-devtools-dock-monitor@^1.1.0",
-      "redux-devtools-log-monitor": "npm:redux-devtools-log-monitor@^1.0.5",
-      "redux-saga": "npm:redux-saga@^0.10.2",
-      "scss": "github:mobilexag/plugin-sass@^0.4.3",
-      "superagent": "npm:superagent@^1.8.2",
-      "text": "github:systemjs/plugin-text@^0.0.7",
-      "text-encoding-utf-8": "npm:text-encoding-utf-8@^1.0.1"
-    },
-    "devDependencies": {
-      "babel": "npm:babel-core@^5.8.24",
-      "babel-runtime": "npm:babel-runtime@^5.8.24",
-      "clean-css": "npm:clean-css@^3.4.10",
-      "core-js": "npm:core-js@^1.1.4",
-      "css": "github:systemjs/plugin-css@^0.1.20"
-    },
-    "overrides": {
-      "npm:react@15.1.0": {
-        "main": "lib/React.js",
-        "format": "cjs"
-      },
-      "npm:lamejs@1.1.0": {
-        "main": "lame.all.js",
-        "format": "global",
-        "shim": {
-          "exports": "lamejs",
-          "dependencies": []
-        }
-      }
-    }
-  },
-  "devDependencies": {
-    "babel-preset-es2015": "^6.9.0",
-    "jspm": "^0.16.31"
+  "scripts": {
+    "start": "node backend/server.js",
+    "build": "NODE_ENV=production webpack --progress --colors --display-modules"
   },
   "dependencies": {
+    "adt": "^0.7.2",
     "ansi-to-html": "^0.4.1",
+    "babel-core": "^6.23.1",
+    "babel-loader": "^6.3.2",
+    "babel-plugin-transform-object-rest-spread": "^6.23.0",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-react": "^6.23.0",
     "body-parser": "^1.15.0",
+    "bootstrap-sass": "^3.3.7",
+    "brace": "^0.9.1",
+    "classnames": "^2.2.5",
+    "css-loader": "^0.26.1",
+    "epic-component": "^1.1.2",
+    "eventemitter2": "^3.0.0",
     "express": "^4.13.4",
+    "file-loader": "^0.10.0",
+    "font-awesome": "^4.7.0",
+    "immutable": "^3.8.1",
+    "js-data-structures": "^1.1.2",
+    "lamejs": "^1.1.0",
+    "lodash": "^4.17.4",
+    "node-range": "^0.1.0",
     "packrattle": "^4.1.0",
+    "persistent-c": "^9.4.1",
     "pug": "^2.0.0-beta5",
-    "s3-browser-direct-upload": "^0.1.2"
+    "query-string": "^4.3.2",
+    "rc-slider": "^6.1.0",
+    "react": "^15.4.2",
+    "react-bootstrap": "^0.30.7",
+    "react-dom": "^15.4.2",
+    "react-redux": "^5.0.2",
+    "react-svg-pan-zoom": "^2.4.5",
+    "redux": "^3.6.0",
+    "redux-saga": "^0.14.3",
+    "s3-browser-direct-upload": "^0.1.2",
+    "style-loader": "^0.13.1",
+    "superagent": "^3.4.4",
+    "text-encoding-utf-8": "^1.0.1",
+    "url-loader": "^0.5.7",
+    "webpack": "^2.2.1",
+    "webpack-dev-middleware": "^1.10.0"
+  },
+  "devDependencies": {
+    "node-sass": "^4.5.0",
+    "sass-loader": "^6.0.1"
   }
 }

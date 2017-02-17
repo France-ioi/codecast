@@ -19,27 +19,22 @@ app.set('views', path.join(rootDir, 'backend', 'views'));
 const isDevelopment = process.env.NODE_ENV !== 'production';
 console.log(`running in ${isDevelopment ? 'development' : 'production'} mode`);
 
-const staticAssets = {
-  jspm_packages: {},
-  src: {
-    enabled: isDevelopment,
-    path: 'frontend'
-  },
-  assets: {}
-};
-Object.keys(staticAssets).forEach(function (key) {
-  const options = staticAssets[key];
-  if ('enabled' in options && !options.enabled) {
-    return;
-  }
-  const urlPath = '/' + key;
-  let fullPath = 'path' in options ? options.path : key;
-  if (!fullPath.startsWith('/')) {
-    fullPath = path.join(rootDir, fullPath)
-  }
-  console.log('static', urlPath, fullPath);
-  app.use(urlPath, express.static(fullPath));
-});
+if (isDevelopment) {
+  // Development route: /build is managed by webpack
+  const webpack = require('webpack');
+  const webpackDevMiddleware = require('webpack-dev-middleware');
+  const webpackConfig = require('../webpack.config.js');
+  const compiler = webpack(webpackConfig);
+  app.use('/build', webpackDevMiddleware(compiler, {
+    stats: {
+      colors: true,
+      chunks: false
+    }
+  }));
+} else {
+  // Production route: /build serves static files in build/
+  app.use('/build', express.static(path.join(rootDir, 'build')));
+}
 
 app.use(bodyParser.json());
 

@@ -20,7 +20,8 @@ $container-sm: $screen-sm-min;
 $grid-gutter-width: 6px;
 $nav-link-padding: 7px 12px;
 
-@import 'jspm:bootstrap-sass/assets/stylesheets/bootstrap';
+$bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
+@import '~bootstrap-sass/assets/stylesheets/bootstrap';
 
 @font-face {
   font-family: 'fioi';
