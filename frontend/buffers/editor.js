@@ -192,6 +192,10 @@ export const Editor = EpicComponent(self => {
       session.on("change", onTextChanged);
     }
     editor.renderer.on("afterRender", onAfterRender);
+    /* Force a resize, the editor will not work properly otherwise. */
+    setTimeout(function () {
+      editor.resize(true);
+    }, 0);
   };
 
   self.componentWillReceiveProps = function (nextProps) {
