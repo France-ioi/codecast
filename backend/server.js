@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const https = require('https');
+const http = require('http');
 const express = require('express');
 const bodyParser = require('body-parser');
 const spawn = require('child_process').spawn;
@@ -116,10 +116,5 @@ app.post('/translate', function (req, res) {
 
 });
 
-// Creating the server in plain or TLS mode (TLS mode is the default)
-const options = {
-  key: fs.readFileSync(path.join(rootDir, 'config/server.key')),
-  cert: fs.readFileSync(path.join(rootDir, 'config/server.crt'))
-};
-const server = https.createServer(options, app);
-server.listen(process.env.HTTP2_PORT || 8001);
+const server = http.createServer(app);
+server.listen(process.env.PORT);
