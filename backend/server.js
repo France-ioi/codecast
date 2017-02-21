@@ -36,6 +36,9 @@ if (isDevelopment) {
   app.use('/build', express.static(path.join(rootDir, 'build')));
 }
 
+/* Serve static assets. */
+app.use('/assets', express.static(path.join(rootDir, 'assets')));
+
 app.use(bodyParser.json());
 
 app.get('/recorder', function (req, res) {
