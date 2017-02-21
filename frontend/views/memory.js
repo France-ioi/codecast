@@ -80,7 +80,7 @@ const extractView = function (core, localMap, options) {
     endAddress += 1;
   }
   const cells = [];
-  const byteOps = []; // spare array of {load,store} objects
+  const byteOps = []; // sparse array of {load,store} objects
   for (let address = startAddress; address <= endAddress; address += 1) {
     const current = memory.get(address);
     const cell = {column: address, address, size: 1, current};
