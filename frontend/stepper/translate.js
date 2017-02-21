@@ -198,7 +198,7 @@ export default function* (deps) {
     yield put({type: deps.translateStarted, source});
     let response, syntaxTree, error;
     try {
-      response = yield call(asyncRequestJson, '/translate', {source});
+      response = yield call(asyncRequestJson, 'translate', {source});
       if (response.ast) {
         syntaxTree = response.ast;
       }

@@ -70,7 +70,7 @@ export default function* (deps) {
       // from the server.
       yield put({type: deps.saveScreenPreparing});
       const save = yield select(yield deps.getSaveState);
-      const response = yield call(asyncRequestJson, '/upload', {/*title*/});
+      const response = yield call(asyncRequestJson, 'upload', {/*title*/});
       yield put({type: deps.saveScreenPrepared});
       // Upload the events file.
       yield put({type: deps.saveScreenEventsUploading});
