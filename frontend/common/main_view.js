@@ -5,6 +5,7 @@ import EpicComponent from 'epic-component';
 
 import {use, defineSelector, defineView} from '../utils/linker';
 import Editor from '../buffers/editor';
+import {writeString} from '../stepper/terminal';
 
 export default function* (deps) {
 
@@ -13,7 +14,8 @@ export default function* (deps) {
     'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
     'inputInit', 'inputEdit', 'inputSelect', 'inputScroll',
     'translateClearDiagnostics', 'stepperExit',
-    'StackView', 'DirectivesPane', 'TerminalView'
+    'StackView', 'DirectivesPane', 'TerminalView',
+    'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
   );
 
   yield defineSelector('MainViewSelector', function (state, props) {
@@ -21,7 +23,11 @@ export default function* (deps) {
     const diagnostics = translate && translate.get('diagnosticsHtml');
     const stepperDisplay = deps.getStepperDisplay(state);
     const haveStepper = !!stepperDisplay;
-    const terminal = haveStepper && stepperDisplay.terminal;
+    let terminal;
+    if (haveStepper) {
+      terminal = stepperDisplay.terminal;
+      terminal = writeString(terminal, stepperDisplay.inputBuffer)
+    }
     const error = haveStepper && stepperDisplay.error;
     const readOnly = haveStepper || props.preventInput;
     const options = deps.getStepperOptions(state);
@@ -91,6 +97,16 @@ export default function* (deps) {
       );
     };
 
+    function onTermChar (key) {
+      self.props.dispatch({type: deps.terminalInputKey, key});
+    }
+    function onTermBS () {
+      self.props.dispatch({type: deps.terminalInputBackspace});
+    }
+    function onTermEnter () {
+      self.props.dispatch({type: deps.terminalInputEnter});
+    }
+
     const diagnosticsPanelHeader = (
       <div>
         <div className="pull-right">
@@ -151,7 +167,7 @@ export default function* (deps) {
                   </div>
                   <div className="col-sm-6">
                     {terminal
-                      ? <deps.TerminalView buffer={terminal}/>
+                      ? <deps.TerminalView buffer={terminal} onKeyPress={onTermChar} onBackspace={onTermBS} onEnter={onTermEnter} />
                       : <div className="terminal">
                           <div className="terminal-placeholder">
                             {"Programme arrêté, pas de sortie à afficher."}

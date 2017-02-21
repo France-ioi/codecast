@@ -8,6 +8,7 @@ import sagas from './sagas';
 import translate from './translate';
 import StepperControls from './controls';
 import views from '../views/index';
+import TerminalInputBundle from './terminal_input';
 
 export default function* () {
   yield include(actions);
@@ -17,4 +18,5 @@ export default function* () {
   yield include(translate);
   yield include(StepperControls);
   yield include(views);
+  yield include(TerminalInputBundle);
 };

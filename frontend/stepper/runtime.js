@@ -61,11 +61,13 @@ export const start = function (syntaxTree, options) {
   // Terminal setup.
   state.terminal = new TermBuffer({lines: 10, width: 60});
   // Input setup.
+  let input = [];
   if (typeof options.input === 'string') {
     const inputStr = options.input.trim();
-    const input = inputStr.length === 0 ? [] : options.input.split(/[\s]+/);
-    state.input = Immutable.List(input);
+    input = inputStr.length === 0 ? [] : options.input.split(/[\s]+/);
   }
+  state.input = Immutable.List(input);
+  state.inputBuffer = "";
   return stepIntoUserCode(state);
 };
 

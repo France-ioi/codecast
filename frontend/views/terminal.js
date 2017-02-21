@@ -10,12 +10,50 @@ import {defineView} from '../utils/linker';
 // the buffer being passed as a prop.
 
 export const TermView = EpicComponent(self => {
+
+  let terminalElement;
+
+  function refTerminal (element) {
+    terminalElement = element;
+  }
+
+  function onKeyDown (event) {
+    event.stopPropagation();
+    terminalElement.focus();
+    let block = false;
+    switch (event.keyCode) {
+    case 8:
+      block = true;
+      self.props.onBackspace();
+      break;
+    case 13:
+      block = true;
+      self.props.onEnter();
+      break;
+    }
+    if (block) {
+      event.preventDefault();
+    }
+  }
+
+  function onKeyUp (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+
+  function onKeyPress (event) {
+    event.stopPropagation();
+    event.preventDefault();
+    // console.log('press', event.key, event.keyCode);
+    self.props.onKeyPress(event.key);
+  }
+
   self.render = function () {
     const {buffer} = self.props;
     const cursor = buffer.get('cursor');
     const ci = cursor.get('line'), cj = cursor.get('column');
     return (
-      <div className="terminal">
+      <div ref={refTerminal} className="terminal" tabIndex="1" onKeyDown={onKeyDown} onKeyUp={onKeyUp} onKeyPress={onKeyPress}>
         {buffer.get('lines').map(function (line, i) {
           return (
             <div key={i} className="terminal-line">
