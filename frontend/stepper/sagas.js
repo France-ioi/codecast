@@ -53,7 +53,7 @@ export default function* (deps) {
     return {state, stepCounter};
   }
 
-  function singleStep (context, stopCond) {
+  function* singleStep (context, stopCond) {
     const {running, state} = context;
     if (!running || state.error || !state.core.control) {
       context.running = false;
@@ -62,7 +62,23 @@ export default function* (deps) {
     if (stopCond && stopCond(state.core)) {
       return false;
     }
-    context.state = runtime.step(state);
+    let newState;
+    do {
+      newState = runtime.step(state);
+      if (newState.iowait) {
+        context.iowait = true;
+        /* Dispatch a progress action to update the display. */
+        yield put({type: deps.stepperProgress, context: viewContext(context)});
+        /* Block until more input is made available before retrying. */
+        yield call(waitForInput, context);
+        if (context.interrupted) {
+          /* If interrupted while waiting, abort the step. */
+          return false;
+        }
+        continue;
+      }
+    } while (false);
+    context.state = newState;
     context.stepCounter += 1;
     return true;
   }
@@ -76,7 +92,7 @@ export default function* (deps) {
       // Execute up to 100 steps, or until the stop condition (or end of the
       // program, or an error condition) is met.
       for (let stepCount = 100; stepCount !== 0; stepCount -= 1) {
-        if (!singleStep(context, stopCond)) {
+        if (!(yield call(singleStep, context, stopCond))) {
           return;
         }
       }
@@ -101,7 +117,7 @@ export default function* (deps) {
 
   function* stepExpr (context) {
     // Take a first step.
-    if (singleStep(context)) {
+    if (yield call(singleStep, context)) {
       // then stop when we enter the next expression.
       yield call(stepUntil, context, core => C.intoNextExpr(core));
     }
@@ -109,7 +125,7 @@ export default function* (deps) {
 
   function* stepInto (context) {
     // Take a first step.
-    if (singleStep(context)) {
+    if (yield call(singleStep, context)) {
       // Step out of the current statement.
       yield call(stepUntil, context, C.outOfCurrentStmt);
       // Step into the next statement.
@@ -133,7 +149,7 @@ export default function* (deps) {
     // Remember the current scope.
     const refScope = context.state.core.scope;
     // Take a first step.
-    if (singleStep(context)) {
+    if (yield call(singleStep, context)) {
       // Step until out of the current statement but not inside a nested
       // function call.
       yield call(stepUntil, context, core =>
@@ -168,6 +184,11 @@ export default function* (deps) {
       }
       yield put({type: deps.stepperIdle, context: viewContext(context)});
     }
+  }
+
+  function* waitForInput (context) {
+    context.iowait = false;
+    /* context.interrupted = true; */
   }
 
   yield addSaga(function* watchTranslateSucceeded () {

@@ -11,6 +11,18 @@ import Document from '../buffers/document';
 const examples = [
 
   {
+    title: "scanf",
+    source: [
+      "#include <stdio.h>",
+      "int main() {",
+      "    int a, n;",
+      "    n = scanf(\"%d\", &a);",
+      "    return 0;",
+      "}"
+    ].join('\n')
+  },
+
+  {
     title: "allocation dynamique",
     source: [
       "#include <stdlib.h>",

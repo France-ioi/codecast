@@ -60,13 +60,9 @@ export const start = function (syntaxTree, options) {
   state.core = heapInit(state.core, stackSize);
   // Terminal setup.
   state.terminal = new TermBuffer({lines: 10, width: 60});
-  // Input setup.
-  let input = [];
-  if (typeof options.input === 'string') {
-    const inputStr = options.input.trim();
-    input = inputStr.length === 0 ? [] : options.input.split(/[\s]+/);
-  }
-  state.input = Immutable.List(input);
+  /* Input setup. */
+  state.inputPos = 0;
+  state.input = (options.input || "").trimRight() + "\n";
   state.inputBuffer = "";
   return stepIntoUserCode(state);
 };
