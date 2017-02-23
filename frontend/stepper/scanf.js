@@ -156,7 +156,7 @@ export const applyScanfEffect = function (state, effect) {
     console.log(ex);
     if (ex.expected !== undefined && ex.position.index === input.length) {
       console.log('Parser reached end of input');
-      core.iowait = true;
+      state.iowait = true;
       return;
     }
   }
