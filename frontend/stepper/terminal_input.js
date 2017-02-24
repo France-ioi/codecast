@@ -24,11 +24,11 @@ export default function* (deps) {
 
   yield addReducer('terminalInputEnter', function (state, action) {
     return state.update('stepper', stepper => stepper.update('current', function (stepper) {
-      const values = stepper.inputBuffer.split(/[\s]+/);
+      const inputLine = stepper.inputBuffer + '\n';
       return {...stepper,
         inputBuffer: "",
-        input: stepper.input.push(...values),
-        terminal: writeString(stepper.terminal, stepper.inputBuffer + '\n')
+        input: stepper.input + inputLine,
+        terminal: writeString(stepper.terminal, inputLine)
       };
     }));
   });

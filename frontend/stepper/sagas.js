@@ -62,22 +62,17 @@ export default function* (deps) {
     if (stopCond && stopCond(state.core)) {
       return false;
     }
-    let newState;
-    do {
-      newState = runtime.step(state);
-      if (newState.iowait) {
-        context.iowait = true;
-        /* Dispatch a progress action to update the display. */
-        yield put({type: deps.stepperProgress, context: viewContext(context)});
-        /* Block until more input is made available before retrying. */
-        yield call(waitForInput, context);
-        if (context.interrupted) {
-          /* If interrupted while waiting, abort the step. */
-          return false;
-        }
-        continue;
+    let newState = runtime.step(state);
+    while (newState.iowait) {
+      /* Block until more input is made available before retrying. */
+      yield call(waitForInput, context);
+      if (context.interrupted) {
+        /* If interrupted while waiting, abort the step. */
+        return false;
       }
-    } while (false);
+      /* Retry the blocking step using the updated state. */
+      newState = runtime.step(context.state);
+    }
     context.state = newState;
     context.stepCounter += 1;
     return true;
@@ -186,9 +181,18 @@ export default function* (deps) {
     }
   }
 
+  yield use('terminalInputEnter');
   function* waitForInput (context) {
+    /* Dispatch a progress action to update the display. */
+    yield put({type: deps.stepperProgress, context: viewContext(context)});
+    /* TODO: focus the terminal */
+    /* Wait for a new line to be entered. */
+    yield take(deps.terminalInputEnter);
+    /* XXX use selector to update context.state from stepper state */
+    context.state = yield select(deps.getStepperDisplay);
+    /* Clear iowait from the context. */
     context.iowait = false;
-    /* context.interrupted = true; */
+    /* TODO: context.interrupted = true; */
   }
 
   yield addSaga(function* watchTranslateSucceeded () {

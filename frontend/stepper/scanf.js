@@ -153,11 +153,11 @@ export const applyScanfEffect = function (state, effect) {
     /* Run the parser on the input stream. */
     var {actions, position} = P.runStream(parser, inputStream, context);
   } catch (ex) {
-    console.log(ex);
     if (ex.expected !== undefined && ex.position.index === input.length) {
-      console.log('Parser reached end of input');
       state.iowait = true;
       return;
+    } else {
+      console.log('TODO — scanf exception', ex);
     }
   }
   /* Update the position in the input stream. */
