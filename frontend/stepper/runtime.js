@@ -4,6 +4,7 @@ import Immutable from 'immutable';
 
 import {TermBuffer, writeString} from './terminal';
 import {sprintf} from './printf';
+import {printf} from './printf';
 import {heapInit, malloc, free} from './malloc';
 import {scanf, applyScanfEffect} from './scanf';
 
@@ -41,12 +42,6 @@ const stepperOptions = function (effects) {
     }
   };
 }(C.defaultEffects);
-
-const printf = function (state, cont, values) {
-  const str = sprintf(state, values);
-  const result = str.length;
-  return {control: cont, effects: [['write', str]], result, seq: 'expr'};
-};
 
 const builtins = {printf, scanf, malloc, free};
 

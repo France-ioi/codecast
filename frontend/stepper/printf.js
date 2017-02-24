@@ -15,6 +15,12 @@ const re = {
 
 const formatCache = new Map();
 
+export const printf = function (state, cont, values) {
+  const str = sprintf(state, values);
+  const result = new C.IntegralValue(C.scalarTypes['int'], str.length);
+  return {control: cont, effects: [['write', str]], result, seq: 'expr'};
+};
+
 export const sprintf = function (state, values) {
   // [printf, fmt, args...]
   const fmt = C.readString(state.memory, values[1]);
