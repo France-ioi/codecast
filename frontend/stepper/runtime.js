@@ -2,15 +2,12 @@
 import * as C from 'persistent-c';
 import Immutable from 'immutable';
 
-import {TermBuffer, writeString} from './terminal';
-import {sprintf} from './printf';
+import {TermBuffer} from './terminal';
+import {putchar, applyWriteEffect} from './write';
 import {printf} from './printf';
 import {heapInit, malloc, free} from './malloc';
 import {scanf, applyScanfEffect} from './scanf';
-
-const applyWriteEffect = function (state, effect) {
-  state.terminal = writeString(state.terminal, effect[1]);
-};
+import {getchar, applyGetcharEffect} from './getchar';
 
 const stepperOptions = function (effects) {
   const applyEnterEffect = function (state, effect) {
@@ -38,12 +35,13 @@ const stepperOptions = function (effects) {
       write: applyWriteEffect,
       call: applyCallEffect,
       enter: applyEnterEffect,
-      scanf: applyScanfEffect
+      scanf: applyScanfEffect,
+      getchar: applyGetcharEffect
     }
   };
 }(C.defaultEffects);
 
-const builtins = {printf, scanf, malloc, free};
+const builtins = {printf, scanf, malloc, free, getchar, putchar};
 
 export const start = function (syntaxTree, options) {
   options = options || {};
