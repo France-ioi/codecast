@@ -187,13 +187,16 @@ export default function* (deps) {
     yield put({type: deps.stepperProgress, context: viewContext(context)});
     /* Transfer focus to the terminal. */
     yield put({type: deps.terminalFocus});
+    /* XXX TODO: also wait for deps.getStepperInterrupted =>
+       context.iowait = false;
+       context.interrupted = true;
+     */
     /* Wait for a new line to be entered. */
     yield take(deps.terminalInputEnter);
     /* XXX use selector to update context.state from stepper state */
     context.state = yield select(deps.getStepperDisplay);
     /* Clear iowait from the context. */
     context.iowait = false;
-    /* TODO: context.interrupted = true; */
   }
 
   yield addSaga(function* watchTranslateSucceeded () {
