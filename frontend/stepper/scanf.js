@@ -25,46 +25,6 @@ function applySign (sign, value) {
   return sign === '-' ? (-value) : value;
 }
 
-function parseChar (str) {
-  return str[0].charCodeAt(0) & 0xff;
-}
-
-const p_nextArg = (
-  P.bind(P.getState, state =>
-    state.argPos >= state.args.length
-      ? P.fail('insufficient arguments')
-      : P.next(P.setState({...state, argPos: state.argPos + 1}),
-          P.always(state.args[state.argPos]))));
-
-function p_integral (typeName, parser) {
-  return (
-    P.bind(parser, rawValue =>
-    P.bind(p_nextArg, ref =>
-    P.always(function (state) {
-      writeValue(state, ref, new C.IntegralValue(C.scalarTypes[typeName], rawValue));
-    }))));
-}
-
-function p_floating (typeName, parser) {
-  return (
-    P.bind(parser, rawValue =>
-    P.bind(p_nextArg, ref =>
-    P.always(function (state) {
-      writeValue(state, ref, new C.FloatingValue(C.scalarTypes[typeName], rawValue));
-    }))));
-}
-
-const scanString = function (state, ref) {
-  if (state.input.size === 0) {
-    return false;
-  }
-  const string = state.input.first();
-  state.input = state.input.shift();
-  const value = C.stringValue(string);
-  state.core.memory = C.writeValue(state.core.memory, ref, value);
-  return true;
-};
-
 /* Join all elements from the stream argument into a string. */
 function join (s) {
   return stream.toArray(s).join('');
@@ -113,25 +73,70 @@ const p_fmt_i =
 const p_fmt_u =
   P.bind(p_prefixedInt, digits =>
   P.always(parsePrefixedUint(digits)));
+const p_fmt_s =
+  P.many1(PT.noneOf("\t\r\n ")).map(join);
+const p_fmt_c = P.anyToken
+
+const p_nextArg = (
+  P.bind(P.getState, state =>
+    state.argPos >= state.args.length
+      ? P.fail('insufficient arguments')
+      : P.next(P.setState({...state, argPos: state.argPos + 1}),
+          P.always(state.args[state.argPos]))));
+
+function p_integral (typeName, parser) {
+  return (
+    P.bind(parser, rawValue =>
+    P.bind(p_nextArg, ref =>
+    P.always(function (state) {
+      writeValue(state, ref, new C.IntegralValue(C.scalarTypes[typeName], rawValue));
+    }))));
+}
+
+function p_floating (typeName, parser) {
+  return (
+    P.bind(parser, rawValue =>
+    P.bind(p_nextArg, ref =>
+    P.always(function (state) {
+      writeValue(state, ref, new C.FloatingValue(C.scalarTypes[typeName], rawValue));
+    }))));
+}
+
+const p_string =
+  P.bind(p_fmt_s, string =>
+  P.bind(p_nextArg, ref =>
+  P.always(function (state) {
+    writeValue(state, ref, new C.stringValue(string))
+  })));
+
+const p_char =
+  P.bind(p_fmt_c, char =>
+  P.bind(p_nextArg, ref =>
+  P.always(function (state) {
+    const charCode = char.charCodeAt(0) & 0xff;
+    writeValue(state, ref, new C.IntegralValue(C.scalarTypes["char"], charCode));
+  })));
 
 function getFormatParser (format) {
   switch (format) {
   case '%d':
-    return p_integral('int', p_fmt_d);
+    return P.next(p_beginSpace, p_integral('int', p_fmt_d));
   case '%x':
-    return p_integral('int', p_fmt_x);
+    return P.next(p_beginSpace, p_integral('int', p_fmt_x));
   case '%o':
-    return p_integral('int', p_fmt_o);
+    return P.next(p_beginSpace, p_integral('int', p_fmt_o));
   case '%i':
-    return p_integral('int', p_fmt_i);
+    return P.next(p_beginSpace, p_integral('int', p_fmt_i));
   case '%u':
-    return p_integral('unsigned int', p_fmt_u);
+    return P.next(p_beginSpace, p_integral('unsigned int', p_fmt_u));
   case '%f':
-    return p_floating('float', p_fmt_f);
+    return P.next(p_beginSpace, p_floating('float', p_fmt_f));
   case '%lf':
-    return p_floating('double', p_fmt_f);
-  // case '%c': return scanIntegralValue(context, 'char', parseChar);
-  // case '%s': return scanString(context);
+    return P.next(p_beginSpace, p_floating('double', p_fmt_f));
+  case '%c':
+    return p_char;
+  case '%s':
+    return P.next(p_beginSpace, p_string);
   default:
     throw new Error(`bad format specifier ${format}`);
   }
@@ -142,7 +147,7 @@ export const applyScanfEffect = function (state, effect) {
   const args = effect[1];
   const formats = C.readString(core.memory, args[1]).split(/[\s]+/);
   const parsers = formats.map(getFormatParser);
-  const p_actions = P.next(p_beginSpace, P.enumerationa(parsers.map(p => P_first(p, p_beginSpace))));
+  const p_actions = P.enumerationa(parsers);
   const parser =
     P.bind(p_actions, actions =>
     P.bind(P.getPosition, position =>
@@ -153,7 +158,7 @@ export const applyScanfEffect = function (state, effect) {
     /* Run the parser on the input stream. */
     var {actions, position} = P.runStream(parser, inputStream, context);
   } catch (ex) {
-    if (ex.expected !== undefined && ex.position.index === input.length) {
+    if (ex.position.index === input.length) {
       state.iowait = true;
       return;
     } else {
