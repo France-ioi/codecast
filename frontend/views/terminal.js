@@ -15,6 +15,9 @@ export const TermView = EpicComponent(self => {
 
   function refTerminal (element) {
     terminalElement = element;
+    self.props.onInit(element && {
+      focus: () => element.focus()
+    });
   }
 
   function onKeyDown (event) {

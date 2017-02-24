@@ -15,7 +15,7 @@ export default function* (deps) {
     'inputInit', 'inputEdit', 'inputSelect', 'inputScroll',
     'translateClearDiagnostics', 'stepperExit',
     'StackView', 'DirectivesPane', 'TerminalView',
-    'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
+    'terminalInit', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
   );
 
   yield defineSelector('MainViewSelector', function (state, props) {
@@ -97,6 +97,9 @@ export default function* (deps) {
       );
     };
 
+    function onTermInit (iface) {
+      self.props.dispatch({type: deps.terminalInit, iface});
+    }
     function onTermChar (key) {
       self.props.dispatch({type: deps.terminalInputKey, key});
     }
@@ -167,7 +170,7 @@ export default function* (deps) {
                   </div>
                   <div className="col-sm-6">
                     {terminal
-                      ? <deps.TerminalView buffer={terminal} onKeyPress={onTermChar} onBackspace={onTermBS} onEnter={onTermEnter} />
+                      ? <deps.TerminalView buffer={terminal} onInit={onTermInit} onKeyPress={onTermChar} onBackspace={onTermBS} onEnter={onTermEnter} />
                       : <div className="terminal">
                           <div className="terminal-placeholder">
                             {"Programme arrêté, pas de sortie à afficher."}

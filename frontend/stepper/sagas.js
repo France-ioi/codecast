@@ -17,7 +17,7 @@ export default function* (deps) {
     'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperExit', 'stepperUndo', 'stepperRedo',
     'stepperStackUp', 'stepperStackDown',
     'translateSucceeded', 'getTranslateState', 'translateClear',
-    'getInputModel', 'sourceHighlight',
+    'getInputModel', 'sourceHighlight', 'terminalFocus',
     'error'
   );
 
@@ -185,7 +185,8 @@ export default function* (deps) {
   function* waitForInput (context) {
     /* Dispatch a progress action to update the display. */
     yield put({type: deps.stepperProgress, context: viewContext(context)});
-    /* TODO: focus the terminal */
+    /* Transfer focus to the terminal. */
+    yield put({type: deps.terminalFocus});
     /* Wait for a new line to be entered. */
     yield take(deps.terminalInputEnter);
     /* XXX use selector to update context.state from stepper state */
