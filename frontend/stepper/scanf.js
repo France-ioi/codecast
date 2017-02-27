@@ -152,13 +152,14 @@ export const applyScanfEffect = function (state, effect) {
     P.bind(p_actions, actions =>
     P.bind(P.getPosition, position =>
     P.always({actions, position})));
-  const inputStream = stream.from(input.slice(inputPos)); // XXX start stream at offset inputPos
+  const unreadInput = input.slice(inputPos);
+  const inputStream = stream.from(unreadInput); // XXX start stream at offset inputPos
   const context = {args: args.slice(2), argPos: 0};
   try {
     /* Run the parser on the input stream. */
     var {actions, position} = P.runStream(parser, inputStream, context);
   } catch (ex) {
-    if (ex.position.index === input.length) {
+    if (ex.position.index === unreadInput.length) {
       state.iowait = true;
       return;
     } else {
