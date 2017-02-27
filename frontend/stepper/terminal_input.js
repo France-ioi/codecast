@@ -26,28 +26,39 @@ export default function* (deps) {
   });
 
   yield addReducer('terminalInputKey', function (state, action) {
-    const {key} = action;
-    return state.update('stepper', stepper => stepper.update('current', function (stepper) {
-      return {...stepper, inputBuffer: stepper.inputBuffer + key};
-    }));
+    return state.update('stepper', st => terminalInputKey(st, action));
   });
 
   yield addReducer('terminalInputBackspace', function (state, action) {
-    const {key} = action;
-    return state.update('stepper', stepper => stepper.update('current', function (stepper) {
-      return {...stepper, inputBuffer: stepper.inputBuffer.slice(0, -1)};
-    }));
+    return state.update('stepper', st => terminalInputBackspace(st));
   });
 
   yield addReducer('terminalInputEnter', function (state, action) {
-    return state.update('stepper', stepper => stepper.update('current', function (stepper) {
-      const inputLine = stepper.inputBuffer + '\n';
-      return {...stepper,
-        inputBuffer: "",
-        input: stepper.input + inputLine,
-        terminal: writeString(stepper.terminal, inputLine)
-      };
-    }));
+    return state.update('stepper', st => terminalInputEnter(st));
   });
 
+};
+
+export function terminalInputKey (state, action) {
+  const {key} = action;
+  return state.update('current', function (stepper) {
+    return {...stepper, inputBuffer: stepper.inputBuffer + key};
+  });
+};
+
+export function terminalInputBackspace (state) {
+  return state.update('current', function (stepper) {
+    return {...stepper, inputBuffer: stepper.inputBuffer.slice(0, -1)};
+  });
+};
+
+export function terminalInputEnter (state) {
+  return state.update('current', function (stepper) {
+    const inputLine = stepper.inputBuffer + '\n';
+    return {...stepper,
+      inputBuffer: "",
+      input: stepper.input + inputLine,
+      terminal: writeString(stepper.terminal, inputLine)
+    };
+  });
 };

@@ -51,7 +51,8 @@ export default function* (deps) {
     'inputSelect', 'inputEdit', 'inputScroll',
     'translateStarted', 'translateSucceeded', 'translateFailed', 'translateClearDiagnostics',
     'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperInterrupt', 'stepperRestart', 'stepperExit',
-    'stepperUndo', 'stepperRedo', 'stepperStackUp', 'stepperStackDown', 'stepperViewControlsChanged'
+    'stepperUndo', 'stepperRedo', 'stepperStackUp', 'stepperStackDown', 'stepperViewControlsChanged',
+    'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
   );
 
   function* recorderPrepare () {
@@ -382,6 +383,16 @@ export default function* (deps) {
 
   recorders.recorderStopping = function* (t, action) {
     yield call(recordEvent, [t, 'end']);
+  };
+
+  recorders.terminalInputKey = function* (t, action) {
+    yield call(recordEvent, [t, 'terminal.key', action.key]);
+  };
+  recorders.terminalInputBackspace = function* (t, action) {
+    yield call(recordEvent, [t, 'terminal.backspace']);
+  };
+  recorders.terminalInputEnter = function* (t, action) {
+    yield call(recordEvent, [t, 'terminal.enter']);
   };
 
   yield addSaga(function* recordEvents () {

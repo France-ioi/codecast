@@ -369,6 +369,19 @@ export default function* (deps) {
           state = state.update('stepper', st => stepperViewControlsChanged(st, {key, update}));
           break;
         }
+        case 'terminal.key': {
+          const key = event[1];
+          state = state.update('stepper', st => terminalInputKey(st, {key}));
+          break;
+        }
+        case 'terminal.backspace': {
+          state = state.update('stepper', st => terminalInputBackspace(st));
+          break;
+        }
+        case 'terminal.enter': {
+          state = state.update('stepper', st => terminalInputEnter(st));
+          break;
+        }
         case 'end': {
           state = state.set('stopped', true);
           break;
