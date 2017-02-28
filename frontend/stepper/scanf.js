@@ -160,14 +160,15 @@ export const applyScanfEffect = function (state, effect) {
     var {actions, position} = P.runStream(parser, inputStream, context);
   } catch (ex) {
     if (ex.position.index === unreadInput.length) {
-      state.iowait = true;
+      state.isWaitingOnInput = true;
       return;
     } else {
       console.log('TODO — scanf exception', ex);
     }
   }
-  /* Update the position in the input stream. */
-  state.inputPos += position;
+  /* Update the position in the input stream.
+     /!\ bennu returns the position as a string. */
+  state.inputPos += parseInt(position);
   /* Perform the actions returned by parsing. */
   let result = 0;
   if (actions) {

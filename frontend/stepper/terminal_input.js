@@ -7,6 +7,7 @@ export default function* (deps) {
 
   yield defineAction('terminalInit', 'Terminal.Init');
   yield defineAction('terminalFocus', 'Terminal.Focus');
+  yield defineAction('terminalInputNeeded', 'Terminal.Input.Needed');
   yield defineAction('terminalInputKey', 'Terminal.Input.Key');
   yield defineAction('terminalInputBackspace', 'Terminal.Input.Backspace');
   yield defineAction('terminalInputEnter', 'Terminal.Input.Enter');
@@ -25,6 +26,10 @@ export default function* (deps) {
     });
   });
 
+  yield addReducer('terminalInputNeeded', function (state, action) {
+    return state.update('stepper', st => terminalInputNeeded(st, action));
+  })
+
   yield addReducer('terminalInputKey', function (state, action) {
     return state.update('stepper', st => terminalInputKey(st, action));
   });
@@ -37,6 +42,12 @@ export default function* (deps) {
     return state.update('stepper', st => terminalInputEnter(st));
   });
 
+};
+
+export function terminalInputNeeded (state, action) {
+  return state.update('current', function (stepper) {
+    return {...stepper, isWaitingOnInput: true};
+  });
 };
 
 export function terminalInputKey (state, action) {
@@ -58,7 +69,8 @@ export function terminalInputEnter (state) {
     return {...stepper,
       inputBuffer: "",
       input: stepper.input + inputLine,
-      terminal: writeString(stepper.terminal, inputLine)
+      terminal: writeString(stepper.terminal, inputLine),
+      isWaitingOnInput: false
     };
   });
 };

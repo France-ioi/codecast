@@ -17,7 +17,7 @@ export default function* (deps) {
     'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperExit', 'stepperUndo', 'stepperRedo',
     'stepperStackUp', 'stepperStackDown',
     'translateSucceeded', 'getTranslateState', 'translateClear',
-    'getInputModel', 'sourceHighlight', 'terminalFocus',
+    'getInputModel', 'sourceHighlight', 'terminalFocus', 'terminalInputNeeded',
     'error'
   );
 
@@ -54,7 +54,7 @@ export default function* (deps) {
   }
 
   function* singleStep (context, stopCond) {
-    const {running, state} = context;
+    let {running, state} = context;
     if (!running || state.error || !state.core.control) {
       context.running = false;
       return false;
@@ -63,15 +63,22 @@ export default function* (deps) {
       return false;
     }
     let newState = runtime.step(state);
-    while (newState.iowait) {
-      /* Block until more input is made available before retrying. */
-      yield call(waitForInput, context);
-      if (context.interrupted) {
-        /* If interrupted while waiting, abort the step. */
-        return false;
-      }
-      /* Retry the blocking step using the updated state. */
-      newState = runtime.step(context.state);
+    if (newState.isWaitingOnInput) {
+      /* Execution of the step could not complete and newState must not be used. */
+      newState = null;
+      /* Dispatch a progress action so the display shows the blocking step. */
+      yield put({type: deps.stepperProgress, context: viewContext(context)});
+      do {
+        /* Block until more input is made available before retrying. */
+        yield call(waitForInput, context);
+        if (context.interrupted) {
+          /* If interrupted while waiting, abort the step.
+             Interactive input (added to context.state) is preserved. */
+          return false;
+        }
+        /* Retry the blocking step using the updated state. */
+        newState = runtime.step(context.state);
+      } while (newState.isWaitingOnInput);
     }
     context.state = newState;
     context.stepCounter += 1;
@@ -183,20 +190,17 @@ export default function* (deps) {
 
   yield use('terminalInputEnter');
   function* waitForInput (context) {
-    /* Dispatch a progress action to update the display. */
-    yield put({type: deps.stepperProgress, context: viewContext(context)});
+    /* Set the isWaitingOnInput flag on the state. */
+    yield put({type: deps.terminalInputNeeded});
     /* Transfer focus to the terminal. */
     yield put({type: deps.terminalFocus});
     /* XXX TODO: also wait for deps.getStepperInterrupted =>
-       context.iowait = false;
        context.interrupted = true;
      */
     /* Wait for a new line to be entered. */
     yield take(deps.terminalInputEnter);
-    /* XXX use selector to update context.state from stepper state */
+    /* Use selector to update context.state from stepper state */
     context.state = yield select(deps.getStepperDisplay);
-    /* Clear iowait from the context. */
-    context.iowait = false;
   }
 
   yield addSaga(function* watchTranslateSucceeded () {

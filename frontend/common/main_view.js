@@ -23,15 +23,19 @@ export default function* (deps) {
     const diagnostics = translate && translate.get('diagnosticsHtml');
     const stepperDisplay = deps.getStepperDisplay(state);
     const haveStepper = !!stepperDisplay;
-    let terminal;
+    let terminal, isWaitingOnInput;
     if (haveStepper) {
       terminal = stepperDisplay.terminal;
-      terminal = writeString(terminal, stepperDisplay.inputBuffer)
+      terminal = writeString(terminal, stepperDisplay.inputBuffer);
+      console.log('stepperDisplay', stepperDisplay);
+      isWaitingOnInput = stepperDisplay.isWaitingOnInput;
     }
     const error = haveStepper && stepperDisplay.error;
     const readOnly = haveStepper || props.preventInput;
     const options = deps.getStepperOptions(state);
-    return {diagnostics, haveStepper, readOnly, terminal, error, options};
+    return {
+      diagnostics, haveStepper, readOnly, terminal, error, options,
+      isWaitingOnInput};
   });
 
   yield defineView('MainView', 'MainViewSelector', EpicComponent(self => {
@@ -86,10 +90,13 @@ export default function* (deps) {
     };
 
     const renderInputOutputHeader = function () {
+      const {isWaitingOnInput} = self.props;
       return (
         <div className="row">
           <div className="col-sm-6">
             {'Entrée'}
+            {isWaitingOnInput &&
+              <i className="fa fa-hourglass-o"/>}
             {self.props.haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
           </div>
           <div className="col-sm-6">Sortie</div>

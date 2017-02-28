@@ -16,6 +16,7 @@ import Document from '../buffers/document';
 import {DocumentModel} from '../buffers/index';
 import {translateClear, translateStarted, translateSucceeded, translateFailed, translateClearDiagnostics} from '../stepper/translate';
 import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress, stepperUndo, stepperRedo, stepperStackUp, stepperStackDown, stepperViewControlsChanged} from '../stepper/reducers';
+import {terminalInputNeeded, terminalInputKey, terminalInputBackspace, terminalInputEnter} from '../stepper/terminal_input';
 import * as runtime from '../stepper/runtime';
 
 
@@ -367,6 +368,11 @@ export default function* (deps) {
           const key = event[2];
           const update = event[3];
           state = state.update('stepper', st => stepperViewControlsChanged(st, {key, update}));
+          break;
+        }
+        case 'terminal.wait': {
+          const key = event[1];
+          state = state.update('stepper', st => terminalInputNeeded(st));
           break;
         }
         case 'terminal.key': {

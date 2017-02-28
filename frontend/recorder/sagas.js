@@ -385,6 +385,9 @@ export default function* (deps) {
     yield call(recordEvent, [t, 'end']);
   };
 
+  recorders.terminalInputNeeded = function* (t, action) {
+    yield call(recordEvent, [t, 'terminal.wait']);
+  };
   recorders.terminalInputKey = function* (t, action) {
     yield call(recordEvent, [t, 'terminal.key', action.key]);
   };

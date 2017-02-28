@@ -3,7 +3,7 @@ import * as C from 'persistent-c';
 export const applyGetcharEffect = function (state, effect) {
   const {core, input, inputPos} = state;
   if (inputPos === input.length) {
-    state.iowait = true;
+    state.isWaitingOnInput = true;
     return;
   }
   state.inputPos += 1;
