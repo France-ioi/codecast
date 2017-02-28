@@ -27,7 +27,6 @@ export default function* (deps) {
     if (haveStepper) {
       terminal = stepperDisplay.terminal;
       terminal = writeString(terminal, stepperDisplay.inputBuffer);
-      console.log('stepperDisplay', stepperDisplay);
       isWaitingOnInput = stepperDisplay.isWaitingOnInput;
     }
     const error = haveStepper && stepperDisplay.error;
