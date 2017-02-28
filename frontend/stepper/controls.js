@@ -35,8 +35,8 @@ export default function* (deps) {
     const haveNode = control && control.node;
     const canRestart = canExit && !isStepping;
     const canStep = enabled && !isStepping && haveNode;
-    const canInterrupt = enabled && isStepping;
-    const canUndo = !stepper.get('undo').isEmpty();
+    const canInterrupt = enabled && isStepping /* Temporary: */ && !current.isWaitingOnInput;
+    const canUndo = !stepper.get('undo').isEmpty() && !isStepping;
     const canRedo = !stepper.get('redo').isEmpty();
     return {
       haveContext,
