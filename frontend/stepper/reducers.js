@@ -165,6 +165,14 @@ export default function* () {
     return state.set('stepper', stepperClear());
   });
 
+  yield addReducer('stepperTaskStarted', function (state, action) {
+    return state.set('stepperTask', action.task);
+  });
+
+  yield addReducer('stepperTaskCancelled', function (state, action) {
+    return state.set('stepperTask', null);
+  });
+
   yield addReducer('stepperRestart', function (state, action) {
     return state.update('stepper', st => stepperRestart(st, action));
   });

@@ -3,6 +3,12 @@ import {defineAction} from '../utils/linker';
 
 export default function* (deps) {
 
+  /* Sent when the stepper task is started */
+  yield defineAction('stepperTaskStarted', 'Stepper.Task.Started');
+
+  /* Sent when the stepper task is cancelled */
+  yield defineAction('stepperTaskCancelled', 'Stepper.Task.Cancelled');
+
   // Sent when the stepper's state is initialized.
   yield defineAction('stepperRestart', 'Stepper.Restart');
 

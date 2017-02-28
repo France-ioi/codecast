@@ -1,6 +1,6 @@
 
 import {delay} from 'redux-saga';
-import {take, put, call, select} from 'redux-saga/effects';
+import {takeEvery, takeLatest, take, put, call, select, cancel, fork} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 import Immutable from 'immutable';
 
@@ -13,6 +13,7 @@ export default function* (deps) {
 
   yield use(
     'getStepperState', 'getStepperDisplay', 'getStepperInterrupted',
+    'stepperTaskStarted', 'stepperTaskCancelled',
     'stepperInterrupted',
     'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperExit', 'stepperUndo', 'stepperRedo',
     'stepperStackUp', 'stepperStackDown',
@@ -205,9 +206,14 @@ export default function* (deps) {
 
   yield addSaga(function* watchTranslateSucceeded () {
     // Start the stepper when source code has been translated successfully.
-    while (true) {
-      yield take(deps.translateSucceeded);
+    yield takeLatest(deps.translateSucceeded, function* () {
       try {
+        /* Cancel the stepper task if still running. */
+        const oldTask = yield select(state => state.stepperTask);
+        if (oldTask) {
+          yield cancel(oldTask);
+          yield put({type: deps.stepperTaskCancelled});
+        }
         // Get the syntax tree from the store so that we get the version where
         // each node has a range attribute.
         const translate = yield select(deps.getTranslateState);
@@ -216,20 +222,21 @@ export default function* (deps) {
         const stepperState = runtime.start(translate.get('syntaxTree'), {input});
         stepperState.controls = Immutable.Map({stack: Immutable.Map({focusDepth: 0})});
         yield put({type: deps.stepperRestart, stepperState});
+        /* Start the new stepper task. */
+        const newTask = yield fork(stepperRootSaga);
+        yield put({type: deps.stepperTaskStarted, stepperState, task: newTask});
       } catch (error) {
         yield put({type: deps.error, source: 'stepper', error});
       }
-    }
+    });
   });
 
-  yield addSaga(function* watchStepperStep () {
-    while (true) {
-      const {mode} = yield take(deps.stepperStep);
-      yield call(startStepper, mode);
-    }
-  });
+  function* stepperRootSaga () {
+    yield takeEvery(deps.stepperStep, onStepperStep);
+    yield takeEvery(deps.stepperExit, onStepperExit);
+  }
 
-  yield addSaga(function* watchStepperRestart () {
+  yield addSaga(function* watchStepperActions () {
     // This saga updates the highlighting of the active source code.
     while (true) {
       yield take([
@@ -245,13 +252,17 @@ export default function* (deps) {
   });
 
 
-  yield addSaga(function* watchStepperExit () {
-    // Clear the translate state when the stepper is exited.
-    while (true) {
-      yield take(deps.stepperExit);
-      // TODO: if running, interrupt stepper and wait until idle
-      yield put({type: deps.translateClear});
-    }
-  });
+  function* onStepperStep (action) {
+    yield call(startStepper, action.mode);
+  }
+
+  function* onStepperExit () {
+    /* Cancel the stepper task. */
+    const stepperTask = yield select(state => state.get('stepperTask'));
+    yield cancel(stepperTask);
+    yield put({type: deps.stepperTaskCancelled});
+    /* Clear the translate state when the stepper is exited. */
+    yield put({type: deps.translateClear});
+  }
 
 };
