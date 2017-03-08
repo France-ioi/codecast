@@ -56,10 +56,10 @@ start();
 const container = document.getElementById('react-container');
 ReactDOM.render(<Provider store={store}><scope.App/></Provider>, container);
 
-const bucket = process.env['S3_BUCKET'];
+const getResourceUrl = store.getState().get('getResourceUrl');
 
 store.dispatch({
   type: scope.playerPrepare,
-  audioUrl: `https://${bucket}.s3.amazonaws.com/uploads/${qs.id}.mp3`,
-  eventsUrl: `https://${bucket}.s3.amazonaws.com/uploads/${qs.id}.json`
+  audioUrl: getResourceUrl(qs.id, 'mp3'),
+  eventsUrl: getResourceUrl(qs.id, 'json')
 });

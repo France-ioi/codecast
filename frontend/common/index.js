@@ -13,7 +13,8 @@ import examples from './examples';
 export default function (bundle) {
 
   // Sent when the application initializes.
-  bundle.defineAction('init', 'System.Init')
+  bundle.defineAction('init', 'System.Init');
+  bundle.defineAction('bucketChanged', 'Bucket.Changed');
 
   bundle.include(MainView);
   bundle.include(fullscreen);
@@ -21,6 +22,13 @@ export default function (bundle) {
   bundle.include(errors);
   bundle.include(resize);
   bundle.include(examples);
+
+  bundle.addReducer('bucketChanged', function (state, action) {
+    const {bucket} = action;
+    return state.set('getResourceUrl', function getResourceUrl (id, ext) {
+      return `https://${bucket}.s3.amazonaws.com/uploads/${id}.${ext}`;
+    });
+  });
 
 };
 
@@ -62,4 +70,7 @@ export const interpretQueryString = function (store, scope, qs) {
   if ('input' in qs) {
     store.dispatch({type: scope.inputLoad, text: qs.input||''});
   }
+
+  const bucket = qs.bucket || 'fioi-recordings';
+  store.dispatch({type: scope.bucketChanged, bucket});
 };
