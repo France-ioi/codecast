@@ -371,12 +371,11 @@ export default function* (deps) {
           break;
         }
         case 'terminal.wait': {
-          const key = event[1];
           state = state.update('stepper', st => terminalInputNeeded(st));
           break;
         }
         case 'terminal.key': {
-          const key = event[1];
+          const key = event[2];
           state = state.update('stepper', st => terminalInputKey(st, {key}));
           break;
         }
@@ -386,6 +385,8 @@ export default function* (deps) {
         }
         case 'terminal.enter': {
           state = state.update('stepper', st => terminalInputEnter(st));
+          /* Update the context so that the step completes with the added input */
+          context.state = state.getIn(['stepper', 'current']);
           break;
         }
         case 'end': {
