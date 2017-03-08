@@ -33,7 +33,8 @@ export default function (bundle, deps) {
     'translateReset',
     'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset',
     'sourceReset', 'sourceModelSelect', 'sourceModelEdit', 'sourceModelScroll', 'sourceHighlight',
-    'inputReset', 'inputModelSelect', 'inputModelEdit', 'inputModelScroll'
+    'inputReset', 'inputModelSelect', 'inputModelEdit', 'inputModelScroll',
+    'stepperEnabled', 'stepperDisabled'
   );
 
   // pause, resume audio
@@ -155,6 +156,8 @@ export default function (bundle, deps) {
     const instants = yield call(computeInstants, events);
     yield put({type: deps.playerReady, events, instants});
     yield call(resetToInstant, instants[0], 0);
+    /* The stepper is initially enabled (playback is paused). */
+    yield put({type: deps.stepperEnabled});
   }
 
   function* playerStart () {
@@ -162,6 +165,8 @@ export default function (bundle, deps) {
       const player = yield select(deps.getPlayerState);
       if (player.get('status') !== 'ready')
         return;
+      /* The stepper is disabled during playback. */
+      yield put({type: deps.stepperDisabled});
       yield put({type: deps.playerStarting});
       // Reset to current instant, in case the user made changes before
       // starting playback.
@@ -190,6 +195,8 @@ export default function (bundle, deps) {
       // the global state.
       yield call(resetToInstant, player.get('current'), audioTime);
       yield put({type: deps.playerPaused});
+      /* The stepper is enabled while playback is paused. */
+      yield put({type: deps.stepperEnabled});
     } catch (error) {
       yield put({type: deps.error, source: 'playerPause', error});
     }

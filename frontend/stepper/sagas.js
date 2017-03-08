@@ -206,12 +206,7 @@ export default function (bundle, deps) {
     // Start the stepper when source code has been translated successfully.
     yield takeLatest(deps.translateSucceeded, function* () {
       try {
-        /* Cancel the stepper task if still running. */
-        const oldTask = yield select(state => state.stepperTask);
-        if (oldTask) {
-          yield cancel(oldTask);
-          yield put({type: deps.stepperTaskCancelled});
-        }
+        yield put({type: deps.stepperDisabled});
         // Get the syntax tree from the store so that we get the version where
         // each node has a range attribute.
         const translate = yield select(deps.getTranslateState);
@@ -220,18 +215,34 @@ export default function (bundle, deps) {
         const stepperState = runtime.start(translate.get('syntaxTree'), {input});
         stepperState.controls = Immutable.Map({stack: Immutable.Map({focusDepth: 0})});
         yield put({type: deps.stepperRestart, stepperState});
-        /* Start the new stepper task. */
-        const newTask = yield fork(stepperRootSaga);
-        yield put({type: deps.stepperTaskStarted, stepperState, task: newTask});
+        yield put({type: deps.stepperEnabled});
       } catch (error) {
         yield put({type: deps.error, source: 'stepper', error});
       }
     });
   });
 
-  function* stepperRootSaga () {
-    yield takeEvery(deps.stepperStep, onStepperStep);
-    yield takeEvery(deps.stepperExit, onStepperExit);
+  bundle.defineAction('stepperEnabled', 'Stepper.Enabled');
+  bundle.defineAction('stepperDisabled', 'Stepper.Disabled');
+  bundle.addSaga(function* () {
+    yield takeLatest(deps.stepperEnabled, enableStepper);
+    yield takeLatest(deps.stepperDisabled, disableStepper);
+  });
+  function* enableStepper () {
+    /* Start the new stepper task. */
+    const newTask = yield fork(function* stepperRootSaga () {
+      yield takeEvery(deps.stepperStep, onStepperStep);
+      yield takeEvery(deps.stepperExit, onStepperExit);
+    });
+    yield put({type: deps.stepperTaskStarted, task: newTask});
+  }
+  function* disableStepper () {
+    /* Cancel the stepper task if still running. */
+    const oldTask = yield select(state => state.stepperTask);
+    if (oldTask) {
+      yield cancel(oldTask);
+      yield put({type: deps.stepperTaskCancelled});
+    }
   }
 
   bundle.addSaga(function* watchStepperActions () {
