@@ -55,7 +55,10 @@ export const start = function (syntaxTree, options) {
   state.terminal = new TermBuffer({lines: 10, width: 60});
   /* Input setup. */
   state.inputPos = 0;
-  state.input = (options.input || "").trimRight() + "\n";
+  state.input = (options.input || "").trimRight();
+  if (state.input.length !== 0) {
+    state.input = state.input + "\n";
+  }
   state.inputBuffer = "";
   return stepIntoUserCode(state);
 };
