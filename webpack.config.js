@@ -10,7 +10,8 @@ const config = module.exports = {
   },
   output: {
     path: path.join(__dirname, 'build'),
-    publicPath: '/build/'
+    publicPath: '/build/',
+    filename: '[name].js'
   },
   module: {
     loaders: [
