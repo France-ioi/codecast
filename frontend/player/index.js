@@ -56,7 +56,7 @@ start();
 const container = document.getElementById('react-container');
 ReactDOM.render(<Provider store={store}><scope.App/></Provider>, container);
 
-const bucket = process.env.['S3_BUCKET'];
+const bucket = process.env['S3_BUCKET'];
 
 store.dispatch({
   type: scope.playerPrepare,
