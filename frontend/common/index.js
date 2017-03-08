@@ -24,9 +24,12 @@ export default function (bundle) {
   bundle.include(examples);
 
   bundle.addReducer('bucketChanged', function (state, action) {
-    const {bucket} = action;
+    const {bucket, playerBaseUrl} = action;
     return state.set('getResourceUrl', function getResourceUrl (id, ext) {
       return `https://${bucket}.s3.amazonaws.com/uploads/${id}.${ext}`;
+    }).set('getPlayerUrl', function getPlayerUrl (id) {
+      const sep = playerBaseUrl.indexOf('?') === -1 ? '?' : '&';
+      return `${playerBaseUrl}${sep}bucket=${bucket}&id=${id}`;
     });
   });
 
@@ -72,5 +75,8 @@ export const interpretQueryString = function (store, scope, qs) {
   }
 
   const bucket = qs.bucket || 'fioi-recordings';
-  store.dispatch({type: scope.bucketChanged, bucket});
+  const playerBaseUrl = document.location.href.replace(
+    /\/recorder(\??[^/]*)$/, (_, qs) => `/player${qs}`);
+
+  store.dispatch({type: scope.bucketChanged, bucket, playerBaseUrl});
 };

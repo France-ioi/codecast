@@ -54,8 +54,10 @@ export default function (bundle, deps) {
   });
 
   bundle.addReducer('saveScreenUploadSucceeded', function (state, action) {
+    const getPlayerUrl = state.get('getPlayerUrl');
+    const playerUrl = getPlayerUrl(action.id);
     return state.update('save', save => save
-      .set('busy', false).set('done', true).set('playerUrl', action.url));
+      .set('busy', false).set('done', true).set('playerUrl', playerUrl));
   });
 
   bundle.addReducer('saveScreenUploadFailed', function (state, action) {
@@ -82,13 +84,7 @@ export default function (bundle, deps) {
       yield call(uploadBlob, response.audio, audioBlob);
       yield put({type: deps.saveScreenAudioUploaded, url: response.audio.public_url});
       // Signal completion.
-      const playerUrl = document.location.href.replace(
-        /\/recorder(\??[^/]*)$/, function (_, qs) {
-          return (qs.length === 0) ?
-            `/player?id=${response.id}` :
-            `/player${qs}&id=${response.id}`;
-          });
-      yield put({type: deps.saveScreenUploadSucceeded, url: playerUrl});
+      yield put({type: deps.saveScreenUploadSucceeded, id: response.id});
     } catch (error) {
       yield put({type: deps.saveScreenUploadFailed, error});
     }
