@@ -12,5 +12,5 @@ export const applyGetcharEffect = function (state, effect) {
 };
 
 export const getchar = function (state, cont, values) {
-  return {control: cont, effects: [['getchar', values]], seq: 'expr'};
+  return {control: cont, effects: [['getchar']], seq: 'expr'};
 };
