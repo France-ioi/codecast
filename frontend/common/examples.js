@@ -10,6 +10,19 @@ import Document from '../buffers/document';
 const examples = [
 
   {
+    title: "gets/puts",
+    source: [
+      "#include <stdio.h>",
+      "int main() {",
+      "    char str[16];",
+      "    gets(str);",
+      "    printf(\"[%s]\\n\", str);",
+      "    return 0;",
+      "}"
+    ].join('\n')
+  },
+
+  {
     title: "scanf",
     source: [
       "#include <stdio.h>",

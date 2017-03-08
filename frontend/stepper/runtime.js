@@ -8,6 +8,7 @@ import {printf} from './printf';
 import {heapInit, malloc, free} from './malloc';
 import {scanf, applyScanfEffect} from './scanf';
 import {getchar, applyGetcharEffect} from './getchar';
+import {gets, applyGetsEffect} from './gets';
 
 const stepperOptions = function (effects) {
   const applyEnterEffect = function (state, effect) {
@@ -36,12 +37,13 @@ const stepperOptions = function (effects) {
       call: applyCallEffect,
       enter: applyEnterEffect,
       scanf: applyScanfEffect,
-      getchar: applyGetcharEffect
+      getchar: applyGetcharEffect,
+      gets: applyGetsEffect
     }
   };
 }(C.defaultEffects);
 
-const builtins = {printf, scanf, malloc, free, getchar, putchar};
+const builtins = {printf, scanf, malloc, free, getchar, putchar, gets};
 
 export const start = function (syntaxTree, options) {
   options = options || {};
