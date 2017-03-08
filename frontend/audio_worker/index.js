@@ -15,7 +15,7 @@
 
 */
 
-const Lame = require('lamejs');
+import {Mp3Encoder} from './lame';
 
 // List of chunks for the current recording. Each chunk is a Float32Array.
 var chunksL = [];
@@ -253,7 +253,7 @@ var FIR_48k_24k = [0.5, 0.5]; // also try [0,1,0]
 
 function encodeMP3 (channels, options) {
   var outputRate = 128 /*kbps*/;
-  var encoder = new Lame.Mp3Encoder(channels.length, options.sampleRate, outputRate);
+  var encoder = new Mp3Encoder(channels.length, options.sampleRate, outputRate);
   var nSamples = channels[0].length;
   var sampleBlockSize = 1152;
   var outputBuffers = [];

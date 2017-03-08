@@ -41,7 +41,10 @@ const config = module.exports = {
     ]
   },
   resolve: {
-    extensions: ['.js']
+    extensions: ['.js'],
+		alias: {
+			'lamejs': 'lamejs/src/js/'
+		}
   },
   plugins: [
     new webpack.DefinePlugin({

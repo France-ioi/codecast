@@ -35,12 +35,9 @@ export function* callWorker (worker, message) {
   }
 };
 
-function asyncSpawnWorker (url) {
+function asyncSpawnWorker (Worker) {
   return new Promise(function (resolve, reject) {
-    if (typeof window.Worker !== 'function') {
-      return reject('Web Worker support is missing');
-    }
-    const worker = new Worker(url);
+    const worker = new Worker();
     worker.onerror = function (event) {
         worker.onerror = null;
         worker.onmessage = null;

@@ -12,7 +12,7 @@ import {spawnWorker, callWorker, killWorker} from '../utils/worker_utils';
 // import {workerUrlFromText} from '../../utils/worker_utils';
 // import audioWorkerText from '../../assets/audio_worker.js!text';
 // const audioWorkerUrl = workerUrlFromText(audioWorkerText);
-const audioWorkerUrl = '/assets/audio_worker.js';
+import AudioWorker from 'worker-loader?inline!../audio_worker';
 
 function getAudioStream () {
   const constraints = {audio: true};
@@ -92,7 +92,7 @@ export default function* (deps) {
       yield call(suspendAudioContext, audioContext);
       yield put({type: deps.recorderPreparing, progress: 'audio_ok'});
       // Set up a worker to hold and encode the buffers.
-      const worker = yield call(spawnWorker, audioWorkerUrl);
+      const worker = yield call(spawnWorker, AudioWorker);
       yield put({type: deps.recorderPreparing, progress: 'worker_ok'});
       // Initialize the worker.
       yield call(callWorker, worker, {
