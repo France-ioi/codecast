@@ -52,7 +52,7 @@ export default function* (deps) {
     'translateStarted', 'translateSucceeded', 'translateFailed', 'translateClearDiagnostics',
     'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperInterrupt', 'stepperRestart', 'stepperExit',
     'stepperUndo', 'stepperRedo', 'stepperStackUp', 'stepperStackDown', 'stepperViewControlsChanged',
-    'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
+    'terminalInputNeeded', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
   );
 
   function* recorderPrepare () {
