@@ -71,6 +71,8 @@ export const readScalar = function (core, refType, address) {
   //   - 'previous' holds the previous value (if 'store' is defined)
   const result = readScalarBasic(core.memory, refType, address);
   core.memoryLog.forEach(function (entry, i) {
+    /* FIXME: when ref is a pointer type, the length of the value written
+              to it should be used to decide if the ranges intersect */
     if (refsIntersect(result.ref, entry[1])) {
       if (entry[0] === 'load') {
         if (result.load === undefined) {
