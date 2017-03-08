@@ -3,7 +3,7 @@ import * as C from 'persistent-c';
 import Immutable from 'immutable';
 
 import {TermBuffer} from './terminal';
-import {putchar, applyWriteEffect} from './write';
+import {puts, putchar, applyWriteEffect} from './write';
 import {printf} from './printf';
 import {heapInit, malloc, free} from './malloc';
 import {scanf, applyScanfEffect} from './scanf';
@@ -43,7 +43,7 @@ const stepperOptions = function (effects) {
   };
 }(C.defaultEffects);
 
-const builtins = {printf, scanf, malloc, free, getchar, putchar, gets};
+const builtins = {printf, scanf, malloc, free, getchar, putchar, gets, puts};
 
 export const start = function (syntaxTree, options) {
   options = options || {};
