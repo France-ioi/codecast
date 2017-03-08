@@ -1,7 +1,7 @@
 
 import {take, put, call, select} from 'redux-saga/effects';
 import React from 'react';
-import {Button, Input} from 'react-bootstrap';
+import {Button, FormControl, ControlLabel, FormGroup} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import {defineAction, defineSelector, addReducer, addSaga, defineView} from '../utils/linker';
@@ -120,16 +120,20 @@ export default function* (deps) {
     self.render = function () {
       const {audioUrl, wavAudioUrl, eventsUrl, playerUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = self.props;
       return (
-        <div>
-          <p>
-            <Input type="text" label="URL évènements" readOnly value={eventsUrl}/>
-          </p>
-          <p>
-            <Input type="text" label="URL audio" readOnly value={audioUrl}/>
-          </p>
-          {wavAudioUrl && <p>
-            <Input type="text" label="URL audio (wav)" readOnly value={wavAudioUrl}/>
-          </p>}
+        <form>
+          <FormGroup controlId="eventsUrlInput">
+            <ControlLabel>{"URL évènements"}</ControlLabel>
+            <FormControl type="text" value={eventsUrl} readOnly/>
+          </FormGroup>
+          <FormGroup controlId="audioUrlInput">
+            <ControlLabel>{"URL audio"}</ControlLabel>
+            <FormControl type="text" value={audioUrl} readOnly/>
+          </FormGroup>
+          {wavAudioUrl &&
+            <FormGroup controlId="wavAudioUrlInput">
+              <ControlLabel>{"URL audio (wav)"}</ControlLabel>
+              <FormControl type="text" value={wavAudioUrl} readOnly/>
+            </FormGroup>}
           <p>
             <Button onClick={onUpload} disabled={busy || done} bsStyle={done ? 'default' : 'primary'}>
               {busy
@@ -143,12 +147,13 @@ export default function* (deps) {
           {uploadEvents === 'pending' && <p>Envoi des évènements en cours…</p>}
           {uploadAudio === 'pending' && <p>Envoi de l'audio en cours…</p>}
           {error && <p>Une erreur est survenue lors de l'enregistrement.</p>}
+          {done && <p>Enregistrement terminé !</p>}
           {done &&
-            <div>
-              <p>Enregistrement terminé !</p>
-              <Input type="text" label="Lien pour la lecture" readOnly value={playerUrl}/>
-            </div>}
-        </div>
+            <FormGroup controlId="playerUrlInput">
+              <ControlLabel>{"Lien pour la lecture"}</ControlLabel>
+              <FormControl type="text" value={playerUrl} readOnly/>
+            </FormGroup>}
+        </form>
       );
     };
 
