@@ -4,7 +4,6 @@ import * as C from 'persistent-c';
 export const applyGetsEffect = function (state, effect) {
   const {core, input, inputPos} = state;
   const nextNL = input.indexOf('\n', inputPos);
-  console.log("next", input, inputPos, nextNL);
   if (nextNL === -1) {
     state.isWaitingOnInput = true;
     return;
@@ -13,7 +12,6 @@ export const applyGetsEffect = function (state, effect) {
   state.inputPos = nextNL + 1;
   const ref = effect[1];
   const value = new C.stringValue(line);
-  console.log('ref', ref, value);
   state.core.memory = C.writeValue(core.memory, ref, value);
   state.core.memoryLog = state.core.memoryLog.push(['store', ref, value]);
   core.result = ref;
