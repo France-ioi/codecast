@@ -1,6 +1,4 @@
 
-import {include} from '../utils/linker';
-
 import actions from './actions';
 import selectors from './selectors';
 import reducers from './reducers';
@@ -10,13 +8,13 @@ import StepperControls from './controls';
 import views from '../views/index';
 import TerminalInputBundle from './terminal_input';
 
-export default function* () {
-  yield include(actions);
-  yield include(selectors);
-  yield include(reducers);
-  yield include(sagas);
-  yield include(translate);
-  yield include(StepperControls);
-  yield include(views);
-  yield include(TerminalInputBundle);
+export default function (bundle) {
+  bundle.include(actions);
+  bundle.include(selectors);
+  bundle.include(reducers);
+  bundle.include(sagas);
+  bundle.include(translate);
+  bundle.include(StepperControls);
+  bundle.include(views);
+  bundle.include(TerminalInputBundle);
 };

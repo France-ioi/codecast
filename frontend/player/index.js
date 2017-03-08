@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
 import Immutable from 'immutable';
 import queryString from 'query-string';
+import link from 'epic-linker';
 
 import 'brace';
 // For jspm bundle-sfx, ensure that jspm-0.16.config.js has a meta entry
@@ -17,8 +18,6 @@ import 'font-awesome/css/font-awesome.min.css';
 import '../style.scss';
 import '../slider.css';
 
-import {link, include, addReducer} from '../utils/linker';
-
 import stepperComponent from '../stepper/index';
 import {default as commonComponent, interpretQueryString} from '../common/index';
 import playerActions from './actions';
@@ -28,23 +27,23 @@ import playerSagas from './sagas';
 import PlayerControls from './controls';
 import App from './app_view';
 
-const {store, scope, start} = link(function* () {
+const {store, scope, start} = link(function (bundle) {
 
-  yield addReducer('init', _ => Immutable.Map({
+  bundle.addReducer('init', _ => Immutable.Map({
     player: Immutable.Map({
       status: 'idle',
       audio: new Audio()
     })
   }));
 
-  yield include(stepperComponent);
-  yield include(commonComponent);
-  yield include(playerActions);
-  yield include(playerSelectors);
-  yield include(playerReducers);
-  yield include(playerSagas);
-  yield include(PlayerControls);
-  yield include(App);
+  bundle.include(stepperComponent);
+  bundle.include(commonComponent);
+  bundle.include(playerActions);
+  bundle.include(playerSelectors);
+  bundle.include(playerReducers);
+  bundle.include(playerSagas);
+  bundle.include(PlayerControls);
+  bundle.include(App);
 
 });
 

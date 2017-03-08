@@ -5,7 +5,6 @@ import React from 'react';
 import {Nav, NavDropdown, MenuItem} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import {use, defineAction, defineSelector, defineView, addReducer, addSaga} from '../utils/linker';
 import Document from '../buffers/document';
 
 const examples = [
@@ -340,15 +339,15 @@ const examples = [
 
 const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield use('sourceReset', 'inputReset');
+  bundle.use('sourceReset', 'inputReset');
 
-  yield defineAction('exampleSelected', 'Example.Selected');
+  bundle.defineAction('exampleSelected', 'Example.Selected');
 
-  yield addReducer('init', state => state.set('examples', examples));
+  bundle.addReducer('init', state => state.set('examples', examples));
 
-  yield defineSelector('getExamples', function (state) {
+  bundle.defineSelector('getExamples', function (state) {
     return state.getIn(['examples']);
   });
 
@@ -367,7 +366,7 @@ export default function* (deps) {
     yield put({type: deps.inputReset, model: inputModel});
   }
 
-  yield addSaga(function* watchExampleSelected () {
+  bundle.addSaga(function* watchExampleSelected () {
     while (true) {
       let {example} = yield take(deps.exampleSelected);
       if (typeof example === 'number') {
@@ -378,12 +377,12 @@ export default function* (deps) {
     }
   });
 
-  yield defineSelector('ExamplePickerSelector', function (state, props) {
+  bundle.defineSelector('ExamplePickerSelector', function (state, props) {
     const examples = deps.getExamples(state);
     return {examples};
   });
 
-  yield defineView('ExamplePicker', 'ExamplePickerSelector', EpicComponent(self => {
+  bundle.defineView('ExamplePicker', 'ExamplePickerSelector', EpicComponent(self => {
 
     const onSelectExample = function (i) {
       const example = self.props.examples[i];

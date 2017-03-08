@@ -3,17 +3,15 @@ import React from 'react';
 import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import {use, defineSelector, defineView} from '../utils/linker';
+export default function (bundle, deps) {
 
-export default function* (deps) {
-
-  yield use(
+  bundle.use(
     'recorderStart', 'recorderStop',
     'isTranslated',
     'StepperControls', 'ExamplePicker', 'FullscreenButton'
   );
 
-  yield defineSelector('RecorderControlsSelector', function (state, props) {
+  bundle.defineSelector('RecorderControlsSelector', function (state, props) {
     const recorder = state.get('recorder');
     const status = recorder.get('status');
     const canStart = status === 'ready';
@@ -27,7 +25,7 @@ export default function* (deps) {
     return {canStart, canStop, canPause, isRecording, isTranslated, elapsed, eventCount};
   });
 
-  yield defineView('RecorderControls', 'RecorderControlsSelector', EpicComponent(self => {
+  bundle.defineView('RecorderControls', 'RecorderControlsSelector', EpicComponent(self => {
 
     const onStartRecording = function () {
       self.props.dispatch({type: deps.recorderStart});

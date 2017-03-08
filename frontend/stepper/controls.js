@@ -3,11 +3,9 @@ import React from 'react';
 import {Button, ButtonGroup} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import {use, defineSelector, defineView} from '../utils/linker';
+export default function (bundle, deps) {
 
-export default function* (deps) {
-
-  yield use(
+  bundle.use(
     'getStepperState',
     'getStepperOptions',
     'stepperStep',
@@ -19,7 +17,7 @@ export default function* (deps) {
     'translate'
   );
 
-  yield defineSelector('StepperControlsSelector', function (state, props) {
+  bundle.defineSelector('StepperControlsSelector', function (state, props) {
     const {enabled} = props;
     const stepper = deps.getStepperState(state);
     const options = deps.getStepperOptions(state);
@@ -47,7 +45,7 @@ export default function* (deps) {
     };
   });
 
-  yield defineView('StepperControls', 'StepperControlsSelector', EpicComponent(self => {
+  bundle.defineView('StepperControls', 'StepperControlsSelector', EpicComponent(self => {
 
     const onStepExpr = function () {
       self.props.dispatch({type: deps.stepperStep, mode: 'expr'});

@@ -4,36 +4,34 @@ import EpicComponent from 'epic-component';
 import {Alert} from 'react-bootstrap';
 import {take} from 'redux-saga/effects';
 
-import {use, addReducer, addSaga, defineAction, defineSelector, defineView} from '../utils/linker';
-
-export default function* (deps) {
+export default function (bundle, deps) {
 
   // Sent when a generic error has occurred.
-  yield defineAction('error', 'System.Error');
-  yield defineAction('clearError', 'System.Error.Clear');
+  bundle.defineAction('error', 'System.Error');
+  bundle.defineAction('clearError', 'System.Error.Clear');
 
   // Log errors to the console.
-  yield addSaga(function* watchError () {
+  bundle.addSaga(function* watchError () {
     while (true) {
       const action = yield take(deps.error);
       console.error(action.error);
     }
   });
 
-  yield addReducer('error', function (state, action) {
+  bundle.addReducer('error', function (state, action) {
     return state.set('error', action.error);
   });
 
-  yield addReducer('clearError', function (state, action) {
+  bundle.addReducer('clearError', function (state, action) {
     return state.delete('error');
   });
 
-  yield defineSelector('ErrorViewSelector', function (state, props) {
+  bundle.defineSelector('ErrorViewSelector', function (state, props) {
     const error = state.get('error');
     return {error};
   });
 
-  yield defineView('ErrorView', 'ErrorViewSelector', EpicComponent(self => {
+  bundle.defineView('ErrorView', 'ErrorViewSelector', EpicComponent(self => {
 
     const onClearError = function () {
       self.props.dispatch({type: 'clearError'});

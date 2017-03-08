@@ -1,9 +1,7 @@
 
-import {defineSelector} from '../utils/linker';
+export default function (bundle) {
 
-export default function* () {
-
-  yield defineSelector('getPlayerState', state =>
+  bundle.defineSelector('getPlayerState', state =>
     state.get('player')
   );
 

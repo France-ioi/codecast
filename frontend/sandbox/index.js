@@ -5,6 +5,7 @@ import EpicComponent from 'epic-component';
 import {Provider} from 'react-redux';
 import Immutable from 'immutable';
 import queryString from 'query-string';
+import link from 'epic-linker';
 
 import 'brace';
 // For jspm bundle-sfx, ensure that jspm-0.16.config.js has a meta entry
@@ -19,22 +20,20 @@ import 'brace/theme/github';
 import 'font-awesome/css/font-awesome.min.css';
 import '../style.scss';
 
-import {link, use, addReducer, include, defineSelector, defineView} from '../utils/linker';
-
 import stepperComponent from '../stepper/index';
 import {default as commonComponent, interpretQueryString} from '../common/index';
 
-const {store, scope, start} = link(function* (deps) {
-  yield addReducer('init', _ => Immutable.Map());
-  yield include(stepperComponent);
-  yield include(commonComponent);
-  yield use('StepperControls', 'FullscreenButton', 'MainView', 'ExamplePicker', 'isTranslated');
-  yield defineSelector('AppSelector', function (state) {
+const {store, scope, start} = link(function (bundle, deps) {
+  bundle.addReducer('init', _ => Immutable.Map());
+  bundle.include(stepperComponent);
+  bundle.include(commonComponent);
+  bundle.use('StepperControls', 'FullscreenButton', 'MainView', 'ExamplePicker', 'isTranslated');
+  bundle.defineSelector('AppSelector', function (state) {
     const isTranslated = deps.isTranslated(state);
     const size = state.get('size');
     return {isTranslated, size};
   });
-  yield defineView('App', 'AppSelector', EpicComponent(self => {
+  bundle.defineView('App', 'AppSelector', EpicComponent(self => {
     self.render = function () {
       const {isTranslated, size} = self.props;
       return (

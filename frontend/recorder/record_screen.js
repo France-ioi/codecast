@@ -2,13 +2,11 @@
 import React from 'react';
 import EpicComponent from 'epic-component';
 
-import {use, defineView} from '../utils/linker';
+export default function (bundle, deps) {
 
-export default function* (deps) {
+  bundle.use('RecorderControls', 'MainView');
 
-  yield use('RecorderControls', 'MainView');
-
-  yield defineView('RecordScreen', EpicComponent(self => {
+  bundle.defineView('RecordScreen', EpicComponent(self => {
 
     const recordingPanel = function () {
       return (

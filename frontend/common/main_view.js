@@ -3,13 +3,12 @@ import React from 'react';
 import {Button, Panel} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import {use, defineSelector, defineView} from '../utils/linker';
 import Editor from '../buffers/editor';
 import {writeString} from '../stepper/terminal';
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield use(
+  bundle.use(
     'getTranslateState', 'getStepperDisplay', 'getStepperOptions',
     'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
     'inputInit', 'inputEdit', 'inputSelect', 'inputScroll',
@@ -18,7 +17,7 @@ export default function* (deps) {
     'terminalInit', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
   );
 
-  yield defineSelector('MainViewSelector', function (state, props) {
+  bundle.defineSelector('MainViewSelector', function (state, props) {
     const translate = deps.getTranslateState(state);
     const diagnostics = translate && translate.get('diagnosticsHtml');
     const stepperDisplay = deps.getStepperDisplay(state);
@@ -37,7 +36,7 @@ export default function* (deps) {
       isWaitingOnInput};
   });
 
-  yield defineView('MainView', 'MainViewSelector', EpicComponent(self => {
+  bundle.defineView('MainView', 'MainViewSelector', EpicComponent(self => {
 
     const onSourceInit = function (editor) {
       self.props.dispatch({type: deps.sourceInit, editor});

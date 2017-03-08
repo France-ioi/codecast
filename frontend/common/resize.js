@@ -2,11 +2,9 @@
 import {eventChannel, buffers} from 'redux-saga';
 import {take, put} from 'redux-saga/effects';
 
-import {defineAction, addSaga, addReducer} from '../utils/linker';
+export default function (bundle, deps) {
 
-export default function* (deps) {
-
-  yield defineAction('windowResized', 'Window.Resized');
+  bundle.defineAction('windowResized', 'Window.Resized');
 
   // Event channel for resize events.
   // Only the most recent event is kept in the buffer.
@@ -25,7 +23,7 @@ export default function* (deps) {
   }, buffers.sliding(1));
 
   // Lift resize events into windowResized actions.
-  yield addSaga(function* monitorResize () {
+  bundle.addSaga(function* monitorResize () {
     while (true) {
       let {width, height} = yield take(resizeMonitorChannel);
       yield put({type: deps.windowResized, width, height});
@@ -40,7 +38,7 @@ export default function* (deps) {
   };
 
   // Make windowResized update the global state 'size'.
-  yield addReducer('windowResized', function (state, action) {
+  bundle.addReducer('windowResized', function (state, action) {
     const {width, height} = action;
     const size =
       width <  800 ? 'xs' :

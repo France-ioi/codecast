@@ -3,7 +3,6 @@ import {delay} from 'redux-saga';
 import {take, put, call, race, select, actionChannel} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
-import {use, addSaga} from '../utils/linker';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import Document from '../buffers/document';
 import {spawnWorker, callWorker, killWorker} from '../utils/worker_utils';
@@ -38,9 +37,9 @@ function resumeAudioContext (audioContext) {
 }
 
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield use(
+  bundle.use(
     'error', 'switchToScreen',
     'getRecorderState', 'getSourceModel', 'getInputModel',
     'recorderPrepare', 'recorderPreparing', 'recorderReady',
@@ -225,14 +224,14 @@ export default function* (deps) {
     }
   }
 
-  yield addSaga(function* watchRecorderPrepare () {
+  bundle.addSaga(function* watchRecorderPrepare () {
     while (true) {
       yield take(deps.recorderPrepare);
       yield call(recorderPrepare);
     }
   });
 
-  yield addSaga(function* recorderTicker () {
+  bundle.addSaga(function* recorderTicker () {
     const {context} = yield take(deps.recorderReady);
     while (true) {
       yield take(deps.recorderStarted);
@@ -250,14 +249,14 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function* watchRecorderStart () {
+  bundle.addSaga(function* watchRecorderStart () {
     while (true) {
       yield take(deps.recorderStart);
       yield call(recorderStart);
     }
   });
 
-  yield addSaga(function* watchRecorderStop () {
+  bundle.addSaga(function* watchRecorderStop () {
     while (true) {
       yield take(deps.recorderStop);
       yield call(recorderStop);
@@ -398,7 +397,7 @@ export default function* (deps) {
     yield call(recordEvent, [t, 'terminal.enter']);
   };
 
-  yield addSaga(function* recordEvents () {
+  bundle.addSaga(function* recordEvents () {
     const recorderMap = {};
     Object.keys(recorders).forEach(function (key) {
       recorderMap[deps[key]] = recorders[key];

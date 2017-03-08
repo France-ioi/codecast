@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
 import Immutable from 'immutable';
 import queryString from 'query-string';
+import link from 'epic-linker';
 
 import 'brace';
 // For jspm bundle-sfx, ensure that jspm-0.16.config.js has a meta entry
@@ -16,7 +17,6 @@ import 'brace/theme/github';
 import 'font-awesome/css/font-awesome.min.css';
 import '../style.scss';
 
-import {link, include, addReducer, addEnhancer} from '../utils/linker';
 import DevTools from '../utils/dev_tools';
 
 import stepperComponent from '../stepper/index';
@@ -30,21 +30,21 @@ import RecordScreen from './record_screen';
 import App from './app_view';
 import examples from '../common/examples';
 
-const {store, scope, start} = link(function* () {
+const {store, scope, start} = link(function (bundle) {
 
-  yield addReducer('init', _ => Immutable.Map({screen: 'record'}));
+  bundle.addReducer('init', _ => Immutable.Map({screen: 'record'}));
 
-  yield include(stepperComponent);
-  yield include(commonComponent);
-  yield include(saveScreenComponent);
-  yield include(recorderActions);
-  yield include(recorderStore);
-  yield include(recorderSagas);
-  yield include(RecorderControls);
-  yield include(RecordScreen);
-  yield include(App);
+  bundle.include(stepperComponent);
+  bundle.include(commonComponent);
+  bundle.include(saveScreenComponent);
+  bundle.include(recorderActions);
+  bundle.include(recorderStore);
+  bundle.include(recorderSagas);
+  bundle.include(RecorderControls);
+  bundle.include(RecordScreen);
+  bundle.include(App);
 
-  yield addEnhancer(DevTools.instrument());
+  bundle.addEnhancer(DevTools.instrument());
 
 });
 

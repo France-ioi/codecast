@@ -5,18 +5,17 @@ import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import Immutable from 'immutable';
 
-import {use, defineSelector, defineView} from '../utils/linker';
 import {ShowVar} from './utils';
 import {Array1D} from './array1d';
 import {Array2D} from './array2d';
 import {SortView} from './sort';
 import {MemoryView} from './memory';
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield use('stepperViewControlsChanged', 'getStepperDisplay');
+  bundle.use('stepperViewControlsChanged', 'getStepperDisplay');
 
-  yield defineSelector('DirectivesPaneSelector', function (state, props) {
+  bundle.defineSelector('DirectivesPaneSelector', function (state, props) {
     const stepperState = deps.getStepperDisplay(state);
     const scale = state.get('scale');
     return {state: stepperState, scale};
@@ -62,7 +61,7 @@ export default function* (deps) {
 
   });
 
-  yield defineView('DirectivesPane', 'DirectivesPaneSelector', EpicComponent(self => {
+  bundle.defineView('DirectivesPane', 'DirectivesPaneSelector', EpicComponent(self => {
 
     const directiveViewDict = {
       showVar: ShowVar,

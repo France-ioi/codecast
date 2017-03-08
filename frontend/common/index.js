@@ -3,8 +3,6 @@
   (recorder, player, sandbox).
 */
 
-import {defineAction, include} from '../utils/linker';
-
 import MainView from './main_view';
 import fullscreen  from './fullscreen';
 import buffers from '../buffers/index';
@@ -12,17 +10,17 @@ import errors from './errors';
 import resize from './resize';
 import examples from './examples';
 
-export default function* () {
+export default function (bundle) {
 
   // Sent when the application initializes.
-  yield defineAction('init', 'System.Init')
+  bundle.defineAction('init', 'System.Init')
 
-  yield include(MainView);
-  yield include(fullscreen);
-  yield include(buffers);
-  yield include(errors);
-  yield include(resize);
-  yield include(examples);
+  bundle.include(MainView);
+  bundle.include(fullscreen);
+  bundle.include(buffers);
+  bundle.include(errors);
+  bundle.include(resize);
+  bundle.include(examples);
 
 };
 

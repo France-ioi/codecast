@@ -4,14 +4,12 @@ import {takeEvery, takeLatest, take, put, call, select, cancel, fork} from 'redu
 import * as C from 'persistent-c';
 import Immutable from 'immutable';
 
-import {use, addSaga} from '../utils/linker';
-
 import Document from '../buffers/document';
 import * as runtime from './runtime';
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield use(
+  bundle.use(
     'getStepperState', 'getStepperDisplay', 'getStepperInterrupted',
     'stepperTaskStarted', 'stepperTaskCancelled',
     'stepperInterrupted',
@@ -189,7 +187,7 @@ export default function* (deps) {
     }
   }
 
-  yield use('terminalInputEnter');
+  bundle.use('terminalInputEnter');
   function* waitForInput (context) {
     /* Set the isWaitingOnInput flag on the state. */
     yield put({type: deps.terminalInputNeeded});
@@ -204,7 +202,7 @@ export default function* (deps) {
     context.state = yield select(deps.getStepperDisplay);
   }
 
-  yield addSaga(function* watchTranslateSucceeded () {
+  bundle.addSaga(function* watchTranslateSucceeded () {
     // Start the stepper when source code has been translated successfully.
     yield takeLatest(deps.translateSucceeded, function* () {
       try {
@@ -236,7 +234,7 @@ export default function* (deps) {
     yield takeEvery(deps.stepperExit, onStepperExit);
   }
 
-  yield addSaga(function* watchStepperActions () {
+  bundle.addSaga(function* watchStepperActions () {
     // This saga updates the highlighting of the active source code.
     while (true) {
       yield take([

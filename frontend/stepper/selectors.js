@@ -1,21 +1,19 @@
 
-import {defineSelector} from '../utils/linker';
+export default function (bundle) {
 
-export default function* () {
-
-  yield defineSelector('getStepperState', state =>
+  bundle.defineSelector('getStepperState', state =>
     state.get('stepper')
   );
 
-  yield defineSelector('getStepperOptions', state =>
+  bundle.defineSelector('getStepperOptions', state =>
     state.get('stepper.options')
   );
 
-  yield defineSelector('getStepperDisplay', state =>
+  bundle.defineSelector('getStepperDisplay', state =>
     state.getIn(['stepper', 'current'])
   );
 
-  yield defineSelector('getStepperInterrupted', state =>
+  bundle.defineSelector('getStepperInterrupted', state =>
     state.getIn(['stepper', 'interrupt'])
   );
 

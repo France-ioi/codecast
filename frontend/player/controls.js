@@ -4,17 +4,15 @@ import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 import Slider from 'rc-slider';
 
-import {use, defineSelector, defineView} from '../utils/linker';
+export default function (bundle, deps) {
 
-export default function* (deps) {
-
-  yield use(
+  bundle.use(
     'playerStart', 'playerPause', 'playerResume', 'playerSeek',
     'getPlayerState', 'isTranslated',
     'StepperControls', 'ExamplePicker', 'FullscreenButton'
   );
 
-  yield defineSelector('PlayerControlsSelector', function (state, props) {
+  bundle.defineSelector('PlayerControlsSelector', function (state, props) {
     const player = deps.getPlayerState(state);
     const status = player.get('status');
     const audioTime = player.get('audioTime');
@@ -23,7 +21,7 @@ export default function* (deps) {
     return {status, audioTime, duration, isTranslated};
   });
 
-  yield defineView('PlayerControls', 'PlayerControlsSelector', EpicComponent(self => {
+  bundle.defineView('PlayerControls', 'PlayerControlsSelector', EpicComponent(self => {
 
     const onStartPlayback = function () {
       const {status} = self.props;

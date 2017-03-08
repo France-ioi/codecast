@@ -4,62 +4,61 @@ import React from 'react';
 import {Button, FormControl, ControlLabel, FormGroup} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import {defineAction, defineSelector, addReducer, addSaga, defineView} from '../utils/linker';
 import {asyncRequestJson} from '../utils/api';
 import {getBlob, uploadBlob} from '../utils/blobs';
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield defineAction('saveScreenUploadStart', 'Save.Prepare.Start');
-  yield defineAction('saveScreenPreparing', 'Save.Prepare.Pending');
-  yield defineAction('saveScreenPrepared', 'Save.Prepare.Completed');
-  yield defineAction('saveScreenEventsUploading', 'Save.Events.Upload.Pending');
-  yield defineAction('saveScreenEventsUploaded', 'Save.Events.Upload.Success');
-  yield defineAction('saveScreenAudioUploading', 'Save.Audio.Upload.Pending');
-  yield defineAction('saveScreenAudioUploaded', 'Save.Audio.Upload.Success');
-  yield defineAction('saveScreenUploadSucceeded', 'Save.Success');
-  yield defineAction('saveScreenUploadFailed', 'Save.Failure');
+  bundle.defineAction('saveScreenUploadStart', 'Save.Prepare.Start');
+  bundle.defineAction('saveScreenPreparing', 'Save.Prepare.Pending');
+  bundle.defineAction('saveScreenPrepared', 'Save.Prepare.Completed');
+  bundle.defineAction('saveScreenEventsUploading', 'Save.Events.Upload.Pending');
+  bundle.defineAction('saveScreenEventsUploaded', 'Save.Events.Upload.Success');
+  bundle.defineAction('saveScreenAudioUploading', 'Save.Audio.Upload.Pending');
+  bundle.defineAction('saveScreenAudioUploaded', 'Save.Audio.Upload.Success');
+  bundle.defineAction('saveScreenUploadSucceeded', 'Save.Success');
+  bundle.defineAction('saveScreenUploadFailed', 'Save.Failure');
 
-  yield defineSelector('getSaveState', state =>
+  bundle.defineSelector('getSaveState', state =>
     state.get('save')
   );
 
-  yield addReducer('saveScreenUploadStart', function (state, action) {
+  bundle.addReducer('saveScreenUploadStart', function (state, action) {
     return state.setIn(['save', 'busy'], true);
   });
 
-  yield addReducer('saveScreenPreparing', function (state, action) {
+  bundle.addReducer('saveScreenPreparing', function (state, action) {
     return state.setIn(['save', 'prepare'], 'pending');
   });
 
-  yield addReducer('saveScreenPrepared', function (state, action) {
+  bundle.addReducer('saveScreenPrepared', function (state, action) {
     return state.setIn(['save', 'prepare'], 'done');
   });
 
-  yield addReducer('saveScreenEventsUploading', function (state, action) {
+  bundle.addReducer('saveScreenEventsUploading', function (state, action) {
     return state.setIn(['save', 'uploadEvents'], 'pending');
   });
 
-  yield addReducer('saveScreenEventsUploaded', function (state, action) {
+  bundle.addReducer('saveScreenEventsUploaded', function (state, action) {
     return state.update('save', save => save
       .set('uploadEvents', 'done').set('eventsUrl', action.url));
   });
 
-  yield addReducer('saveScreenAudioUploading', function (state, action) {
+  bundle.addReducer('saveScreenAudioUploading', function (state, action) {
     return state.setIn(['save', 'uploadAudio'], 'pending');
   });
 
-  yield addReducer('saveScreenAudioUploaded', function (state, action) {
+  bundle.addReducer('saveScreenAudioUploaded', function (state, action) {
     return state.update('save', save => save
       .set('uploadAudio', 'done').set('audioUrl', action.url));
   });
 
-  yield addReducer('saveScreenUploadSucceeded', function (state, action) {
+  bundle.addReducer('saveScreenUploadSucceeded', function (state, action) {
     return state.update('save', save => save
       .set('busy', false).set('done', true).set('playerUrl', action.url));
   });
 
-  yield addReducer('saveScreenUploadFailed', function (state, action) {
+  bundle.addReducer('saveScreenUploadFailed', function (state, action) {
     return state.update('save', save => save
       .set('busy', false).set('error', action.error));
   });
@@ -95,14 +94,14 @@ export default function* (deps) {
     }
   }
 
-  yield addSaga(function* watchUploadStart () {
+  bundle.addSaga(function* watchUploadStart () {
     while (true) {
       yield take(deps.saveScreenUploadStart);
       yield call(uploadRecording);
     }
   });
 
-  yield defineSelector('SaveScreenSelector', function (state, props) {
+  bundle.defineSelector('SaveScreenSelector', function (state, props) {
     const save = state.get('save')
     const result = {};
     ['audioUrl', 'wavAudioUrl', 'eventsUrl', 'playerUrl', 'busy', 'done', 'prepare', 'uploadEvents', 'uploadAudio', 'error'].forEach(function (key) {
@@ -111,7 +110,7 @@ export default function* (deps) {
     return result;
   });
 
-  yield defineView('SaveScreen', 'SaveScreenSelector', EpicComponent(self => {
+  bundle.defineView('SaveScreen', 'SaveScreenSelector', EpicComponent(self => {
 
     const onUpload = function () {
       self.props.dispatch({type: deps.saveScreenUploadStart});

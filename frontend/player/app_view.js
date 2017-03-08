@@ -2,13 +2,11 @@
 import React from 'react';
 import EpicComponent from 'epic-component';
 
-import {use, defineView, defineSelector} from '../utils/linker';
+export default function (bundle, deps) {
 
-export default function* (deps) {
+  bundle.use('PlayerControls', 'MainView', 'getPlayerState');
 
-  yield use('PlayerControls', 'MainView', 'getPlayerState');
-
-  yield defineSelector('AppSelector', function (state, props) {
+  bundle.defineSelector('AppSelector', function (state, props) {
     const size = state.get('size');
     const player = deps.getPlayerState(state);
     const status = player.get('status');
@@ -16,7 +14,7 @@ export default function* (deps) {
     return {preventInput, size};
   });
 
-  yield defineView('App', 'AppSelector', EpicComponent(self => {
+  bundle.defineView('App', 'AppSelector', EpicComponent(self => {
 
     self.render = function () {
       const {preventInput, size} = self.props;

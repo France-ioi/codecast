@@ -4,14 +4,13 @@ import classnames from 'classnames';
 import {Alert, Button, ButtonGroup} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import {use, defineSelector, defineView} from '../utils/linker';
 import {viewFrame, renderValue, VarDecl, FunctionCall} from './utils';
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield use('stepperExit', 'stepperStackUp', 'stepperStackDown', 'getStepperDisplay');
+  bundle.use('stepperExit', 'stepperStackUp', 'stepperStackDown', 'getStepperDisplay');
 
-  yield defineSelector('StackViewSelector', function (state, props) {
+  bundle.defineSelector('StackViewSelector', function (state, props) {
     const stepperState = deps.getStepperDisplay(state);
     if (!stepperState) {
       return {};
@@ -163,6 +162,6 @@ export default function* (deps) {
     maxExpanded: 1
   };
 
-  yield defineView('StackView', 'StackViewSelector', StackView);
+  bundle.defineView('StackView', 'StackViewSelector', StackView);
 
 };

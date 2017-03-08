@@ -17,7 +17,6 @@ import Immutable from 'immutable';
 import {take, put, call, select} from 'redux-saga/effects';
 import {TextEncoder} from 'text-encoding-utf-8';
 
-import {use, defineAction, defineSelector, addReducer, addSaga, defineView} from '../utils/linker';
 import {asyncRequestJson} from '../utils/api';
 import Document from '../buffers/document';
 
@@ -128,37 +127,37 @@ export function translateClearDiagnostics (state, action) {
   return state.delete('diagnostics').delete('diagnosticsHtml');
 };
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield use('init', 'getSourceModel');
+  bundle.use('init', 'getSourceModel');
 
   // Requested translation of given {source}.
-  yield defineAction('translate', 'Translate');
+  bundle.defineAction('translate', 'Translate');
 
   // Clear the 'translate' state.
-  yield defineAction('translateClear', 'Translate.Clear');
+  bundle.defineAction('translateClear', 'Translate.Clear');
 
   // Reset the 'translate' state.
-  yield defineAction('translateReset', 'Translate.Reset');
+  bundle.defineAction('translateReset', 'Translate.Reset');
 
   // Started translation of {source}.
-  yield defineAction('translateStarted', 'Translate.Started');
+  bundle.defineAction('translateStarted', 'Translate.Started');
 
   // Succeeded translating {source} to {syntaxTree}.
-  yield defineAction('translateSucceeded', 'Translate.Succeeded');
+  bundle.defineAction('translateSucceeded', 'Translate.Succeeded');
 
   // Failed to translate {source} with {error}.
-  yield defineAction('translateFailed', 'Translate.Failed');
+  bundle.defineAction('translateFailed', 'Translate.Failed');
 
   // Clear the diagnostics (compilation errors and warnings) returned
   // by the last translate operation.
-  yield defineAction('translateClearDiagnostics', 'Translate.ClearDiagnostics');
+  bundle.defineAction('translateClearDiagnostics', 'Translate.ClearDiagnostics');
 
-  yield defineSelector('getTranslateState', state =>
+  bundle.defineSelector('getTranslateState', state =>
     state.get('translate')
   );
 
-  yield defineSelector('isTranslated', function (state) {
+  bundle.defineSelector('isTranslated', function (state) {
     return /busy|done/.test(getTranslateStatus(state));
   });
 
@@ -166,31 +165,31 @@ export default function* (deps) {
     return state.getIn(['translate', 'status']);
   }
 
-  yield addReducer('init', function (state, action) {
+  bundle.addReducer('init', function (state, action) {
     return state.set('translate', translateClear());
   });
 
-  yield addReducer('translateClear', function (state, action) {
+  bundle.addReducer('translateClear', function (state, action) {
     return state.set('translate', translateClear());
   });
 
-  yield addReducer('translateReset', function (state, action) {
+  bundle.addReducer('translateReset', function (state, action) {
     return state.set('translate', action.state);
   });
 
-  yield addReducer('translateStarted', function (state, action) {
+  bundle.addReducer('translateStarted', function (state, action) {
     return state.update('translate', st => translateStarted(st, action));
   });
 
-  yield addReducer('translateSucceeded', function (state, action) {
+  bundle.addReducer('translateSucceeded', function (state, action) {
     return state.update('translate', st => translateSucceeded(st, action));
   });
 
-  yield addReducer('translateFailed', function (state, action) {
+  bundle.addReducer('translateFailed', function (state, action) {
     return state.update('translate', st => translateFailed(st, action));
   });
 
-  yield addReducer('translateClearDiagnostics', function (state, action) {
+  bundle.addReducer('translateClearDiagnostics', function (state, action) {
     return state.update('translate', st => translateClearDiagnostics(st, action));
   });
 
@@ -213,7 +212,7 @@ export default function* (deps) {
     }
   }
 
-  yield addSaga(function* watchTranslate () {
+  bundle.addSaga(function* watchTranslate () {
     while (true) {
       const action = yield take(deps.translate);
       const status = yield select(getTranslateStatus);

@@ -1,47 +1,45 @@
 
-import {defineAction} from '../utils/linker';
-
-export default function* (deps) {
+export default function (bundle, deps) {
 
   /* Sent when the stepper task is started */
-  yield defineAction('stepperTaskStarted', 'Stepper.Task.Started');
+  bundle.defineAction('stepperTaskStarted', 'Stepper.Task.Started');
 
   /* Sent when the stepper task is cancelled */
-  yield defineAction('stepperTaskCancelled', 'Stepper.Task.Cancelled');
+  bundle.defineAction('stepperTaskCancelled', 'Stepper.Task.Cancelled');
 
   // Sent when the stepper's state is initialized.
-  yield defineAction('stepperRestart', 'Stepper.Restart');
+  bundle.defineAction('stepperRestart', 'Stepper.Restart');
 
   // Restore a saved or computed state.
-  yield defineAction('stepperReset', 'Stepper.Reset');
+  bundle.defineAction('stepperReset', 'Stepper.Reset');
 
   // Sent when the user requested stepping in a given mode.
-  yield defineAction('stepperStep', 'Stepper.Step');
+  bundle.defineAction('stepperStep', 'Stepper.Step');
 
   // Sent when the stepper has started evaluating a step.
-  yield defineAction('stepperStarted', 'Stepper.Start');
+  bundle.defineAction('stepperStarted', 'Stepper.Start');
 
   // Sent when the stepper has been evaluating for a while without completing a step.
-  yield defineAction('stepperProgress', 'Stepper.Progress');
+  bundle.defineAction('stepperProgress', 'Stepper.Progress');
 
   // Sent when the stepper has completed a step and is idle again.
-  yield defineAction('stepperIdle', 'Stepper.Idle');
+  bundle.defineAction('stepperIdle', 'Stepper.Idle');
 
   // Sent when the user exits the stepper.
-  yield defineAction('stepperExit', 'Stepper.Exit');
+  bundle.defineAction('stepperExit', 'Stepper.Exit');
 
   // Sent when the user interrupts the stepper.
-  yield defineAction('stepperInterrupt', 'Stepper.Interrupt');
+  bundle.defineAction('stepperInterrupt', 'Stepper.Interrupt');
 
-  yield defineAction('stepperInterrupted', 'Stepper.Interrupted');
+  bundle.defineAction('stepperInterrupted', 'Stepper.Interrupted');
 
-  yield defineAction('stepperUndo', 'Stepper.Undo');
-  yield defineAction('stepperRedo', 'Stepper.Redo');
+  bundle.defineAction('stepperUndo', 'Stepper.Undo');
+  bundle.defineAction('stepperRedo', 'Stepper.Redo');
 
-  yield defineAction('stepperConfigure', 'Stepper.Configure');
+  bundle.defineAction('stepperConfigure', 'Stepper.Configure');
 
-  yield defineAction('stepperStackUp', 'Stepper.Stack.Up');
-  yield defineAction('stepperStackDown', 'Stepper.Stack.Down');
-  yield defineAction('stepperViewControlsChanged', 'Stepper.View.ControlsChanged');
+  bundle.defineAction('stepperStackUp', 'Stepper.Stack.Up');
+  bundle.defineAction('stepperStackDown', 'Stepper.Stack.Down');
+  bundle.defineAction('stepperViewControlsChanged', 'Stepper.View.ControlsChanged');
 
 };

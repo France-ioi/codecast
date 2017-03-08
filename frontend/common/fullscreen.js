@@ -5,41 +5,39 @@ import EpicComponent from 'epic-component';
 import {eventChannel, buffers} from 'redux-saga';
 import {take, put, select} from 'redux-saga/effects';
 
-import {defineAction, defineSelector, defineView, addReducer, addSaga} from '../utils/linker';
+export default function (bundle, deps) {
 
-export default function* (deps) {
+  bundle.defineAction('enterFullscreen', 'Fullscreen.Enter');
+  bundle.defineAction('enterFullscreenSucceeded', 'Fullscreen.Enter.Succeeded');
+  bundle.defineAction('enterFullscreenFailed', 'Fullscreen.Enter.Failed');
+  bundle.defineAction('leaveFullscreen', 'Fullscreen.Leave');
+  bundle.defineAction('leaveFullscreenSucceeded', 'Fullscreen.Leave.Succeeded');
+  bundle.defineAction('fullscreenEnabled', 'Fullscreen.Enabled');
 
-  yield defineAction('enterFullscreen', 'Fullscreen.Enter');
-  yield defineAction('enterFullscreenSucceeded', 'Fullscreen.Enter.Succeeded');
-  yield defineAction('enterFullscreenFailed', 'Fullscreen.Enter.Failed');
-  yield defineAction('leaveFullscreen', 'Fullscreen.Leave');
-  yield defineAction('leaveFullscreenSucceeded', 'Fullscreen.Leave.Succeeded');
-  yield defineAction('fullscreenEnabled', 'Fullscreen.Enabled');
-
-  yield addReducer('enterFullscreenSucceeded', function (state, action) {
+  bundle.addReducer('enterFullscreenSucceeded', function (state, action) {
     return state.setIn(['fullscreen', 'active'], true);
   });
 
-  yield addReducer('enterFullscreenFailed', function (state, action) {
+  bundle.addReducer('enterFullscreenFailed', function (state, action) {
     return state.setIn(['fullscreen', 'enabled'], false);
   });
 
-  yield addReducer('leaveFullscreenSucceeded', function (state, action) {
+  bundle.addReducer('leaveFullscreenSucceeded', function (state, action) {
     return state.setIn(['fullscreen', 'active'], false);
   });
 
-  yield addReducer('fullscreenEnabled', function (state, action) {
+  bundle.addReducer('fullscreenEnabled', function (state, action) {
     return state.setIn(['fullscreen', 'enabled'], action.enabled);
   });
 
-  yield defineSelector('FullscreenButtonSelector', function (state, props) {
+  bundle.defineSelector('FullscreenButtonSelector', function (state, props) {
     const fullscreen = state.get('fullscreen');
     const enabled = fullscreen.get('enabled');
     const active = fullscreen.get('active');
     return {enabled, active};
   });
 
-  yield defineView('FullscreenButton', 'FullscreenButtonSelector', EpicComponent(self => {
+  bundle.defineView('FullscreenButton', 'FullscreenButtonSelector', EpicComponent(self => {
     const onEnterFullscreen = function () {
       self.props.dispatch({type: deps.enterFullscreen});
     };
@@ -82,7 +80,7 @@ export default function* (deps) {
     }
   }, buffers.sliding(3));
 
-  yield addSaga(function* monitorFullscreen () {
+  bundle.addSaga(function* monitorFullscreen () {
     const elem = window.document;
     const isFullscreenEnabled = !!(elem.fullscreenEnabled || elem.msFullscreenEnabled || elem.mozFullScreenEnabled || elem.webkitFullscreenEnabled);
     yield put({type: deps.fullscreenEnabled, enabled: isFullscreenEnabled});
@@ -102,7 +100,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function* watchEnterFullscreen () {
+  bundle.addSaga(function* watchEnterFullscreen () {
     while (true) {
       yield take (deps.enterFullscreen);
       var elem = window.document.documentElement;
@@ -118,7 +116,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function* watchLeaveFullscreen () {
+  bundle.addSaga(function* watchLeaveFullscreen () {
     while (true) {
       yield take (deps.leaveFullscreen);
       var elem = window.document;

@@ -3,8 +3,6 @@ import React from 'react';
 import EpicComponent from 'epic-component';
 import classnames from 'classnames';
 
-import {defineView} from '../utils/linker';
-
 // TODO: add (and export through the linker) a higher-level component using a
 // selector to extract the currently displayed terminal instead of relying on
 // the buffer being passed as a prop.
@@ -74,8 +72,8 @@ export const TermView = EpicComponent(self => {
   };
 });
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield defineView('TerminalView', TermView);
+  bundle.defineView('TerminalView', TermView);
 
 };

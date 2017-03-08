@@ -1,27 +1,25 @@
 
-import {defineAction} from '../utils/linker';
+export default function (bundle) {
 
-export default function* () {
-
-  yield defineAction('playerPrepare', 'Player.Prepare');
-  yield defineAction('playerPreparing', 'Player.Preparing');
-  yield defineAction('playerAudioReady', 'Player.AudioReady');
-  yield defineAction('playerAudioError', 'Player.AudioError');
-  yield defineAction('playerReady', 'Player.Ready');
-  yield defineAction('playerStart', 'Player.Start');
-  yield defineAction('playerStarting', 'Player.Starting');
-  yield defineAction('playerStarted', 'Player.Started');
-  yield defineAction('playerStop', 'Player.Stop');
-  yield defineAction('playerStopping', 'Player.Stopping');
-  yield defineAction('playerStopped', 'Player.Stopped');
-  yield defineAction('playerPause', 'Player.Pause');
-  yield defineAction('playerPausing', 'Player.Pausing');
-  yield defineAction('playerPaused', 'Player.Paused');
-  yield defineAction('playerResume', 'Player.Resume');
-  yield defineAction('playerResuming', 'Player.Resuming');
-  yield defineAction('playerResumed', 'Player.Resumed');
-  yield defineAction('playerTick', 'Player.Tick');
-  yield defineAction('playerSeek', 'Player.Seek');
-  yield defineAction('playerSeeked', 'Player.Seeked');
+  bundle.defineAction('playerPrepare', 'Player.Prepare');
+  bundle.defineAction('playerPreparing', 'Player.Preparing');
+  bundle.defineAction('playerAudioReady', 'Player.AudioReady');
+  bundle.defineAction('playerAudioError', 'Player.AudioError');
+  bundle.defineAction('playerReady', 'Player.Ready');
+  bundle.defineAction('playerStart', 'Player.Start');
+  bundle.defineAction('playerStarting', 'Player.Starting');
+  bundle.defineAction('playerStarted', 'Player.Started');
+  bundle.defineAction('playerStop', 'Player.Stop');
+  bundle.defineAction('playerStopping', 'Player.Stopping');
+  bundle.defineAction('playerStopped', 'Player.Stopped');
+  bundle.defineAction('playerPause', 'Player.Pause');
+  bundle.defineAction('playerPausing', 'Player.Pausing');
+  bundle.defineAction('playerPaused', 'Player.Paused');
+  bundle.defineAction('playerResume', 'Player.Resume');
+  bundle.defineAction('playerResuming', 'Player.Resuming');
+  bundle.defineAction('playerResumed', 'Player.Resumed');
+  bundle.defineAction('playerTick', 'Player.Tick');
+  bundle.defineAction('playerSeek', 'Player.Seek');
+  bundle.defineAction('playerSeeked', 'Player.Seeked');
 
 };

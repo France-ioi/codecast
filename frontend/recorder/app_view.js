@@ -2,20 +2,19 @@
 import React from 'react';
 import EpicComponent from 'epic-component';
 
-import {use, defineSelector, defineView} from '../utils/linker';
 import DevTools from '../utils/dev_tools';
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield use('ErrorView', 'RecordScreen', 'SaveScreen');
+  bundle.use('ErrorView', 'RecordScreen', 'SaveScreen');
 
-  yield defineSelector('AppSelector', function (state, props) {
+  bundle.defineSelector('AppSelector', function (state, props) {
     const size = state.get('size');
     const screen = state.get('screen');
     return {size, screen};
   });
 
-  yield defineView('App', 'AppSelector', EpicComponent(self => {
+  bundle.defineView('App', 'AppSelector', EpicComponent(self => {
 
     self.render = function () {
       const {size, screen} = self.props;

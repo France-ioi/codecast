@@ -9,8 +9,6 @@ import * as C from 'persistent-c';
 import request from 'superagent';
 import Immutable from 'immutable';
 
-import {use, addSaga} from '../utils/linker';
-
 import {RECORDING_FORMAT_VERSION} from '../version';
 import Document from '../buffers/document';
 import {DocumentModel} from '../buffers/index';
@@ -20,9 +18,9 @@ import {terminalInputNeeded, terminalInputKey, terminalInputBackspace, terminalI
 import * as runtime from '../stepper/runtime';
 
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield use(
+  bundle.use(
     'error',
     'playerPrepare', 'playerPreparing', 'playerReady',
     'playerStart', 'playerStarting', 'playerStarted',
@@ -422,7 +420,7 @@ export default function* (deps) {
     return {state, stepCounter};
   }
 
-  yield addSaga(function* watchPlayerPrepare () {
+  bundle.addSaga(function* watchPlayerPrepare () {
     while (true) {
       const action = yield take(deps.playerPrepare);
       try {
@@ -433,28 +431,28 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function* watchPlayerStart () {
+  bundle.addSaga(function* watchPlayerStart () {
     while (true) {
       yield take(deps.playerStart);
       yield call(playerStart);
     }
   });
 
-  yield addSaga(function* watchPlayerPause () {
+  bundle.addSaga(function* watchPlayerPause () {
     while (true) {
       yield take(deps.playerPause);
       yield call(playerPause);
     }
   });
 
-  yield addSaga(function* watchPlayerResume () {
+  bundle.addSaga(function* watchPlayerResume () {
     while (true) {
       yield take(deps.playerResume);
       yield call(playerResume);
     }
   });
 
-  yield addSaga(function* watchPlayerStop () {
+  bundle.addSaga(function* watchPlayerStop () {
     while (true) {
       yield take(deps.playerStop);
       yield call(playerStop);
@@ -476,7 +474,7 @@ export default function* (deps) {
     yield put({type: deps.playerTick, audioTime, current: instant});
   }
 
-  yield addSaga(function* playerTick () {
+  bundle.addSaga(function* playerTick () {
     while (true) {
       yield take(deps.playerReady);
       while (true) {  // XXX should be 'not stopped' condition

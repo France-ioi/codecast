@@ -35,7 +35,6 @@ user interaction change the view.
 import {take, select} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
-import {defineAction, defineSelector, addReducer, addSaga} from '../utils/linker';
 import Document from './document';
 
 export const DocumentModel = Immutable.Record({
@@ -46,35 +45,35 @@ export const DocumentModel = Immutable.Record({
 
 export const BufferState = Immutable.Record({model: DocumentModel(), editor: null});
 
-export default function* (deps) {
+export default function (bundle, deps) {
 
-  yield defineAction('sourceInit', 'Source.Init');
-  yield defineAction('sourceLoad', 'Source.Load');
-  yield defineAction('sourceReset', 'Source.Reset');
-  yield defineAction('sourceEdit', 'Source.Edit');
-  yield defineAction('sourceSelect', 'Source.Select');
-  yield defineAction('sourceScroll', 'Source.Scroll');
-  yield defineAction('sourceModelEdit', 'Source.Model.Edit');
-  yield defineAction('sourceModelSelect', 'Source.Model.Select');
-  yield defineAction('sourceModelScroll', 'Source.Model.Scroll');
-  yield defineAction('sourceHighlight', 'Source.Highlight');
+  bundle.defineAction('sourceInit', 'Source.Init');
+  bundle.defineAction('sourceLoad', 'Source.Load');
+  bundle.defineAction('sourceReset', 'Source.Reset');
+  bundle.defineAction('sourceEdit', 'Source.Edit');
+  bundle.defineAction('sourceSelect', 'Source.Select');
+  bundle.defineAction('sourceScroll', 'Source.Scroll');
+  bundle.defineAction('sourceModelEdit', 'Source.Model.Edit');
+  bundle.defineAction('sourceModelSelect', 'Source.Model.Select');
+  bundle.defineAction('sourceModelScroll', 'Source.Model.Scroll');
+  bundle.defineAction('sourceHighlight', 'Source.Highlight');
 
-  yield defineAction('inputInit', 'Input.Init');
-  yield defineAction('inputLoad', 'Input.Load');
-  yield defineAction('inputReset', 'Input.Reset');
-  yield defineAction('inputEdit', 'Input.Edit');
-  yield defineAction('inputSelect', 'Input.Select');
-  yield defineAction('inputScroll', 'Input.Scroll');
-  yield defineAction('inputModelEdit', 'Input.Model.Edit');
-  yield defineAction('inputModelSelect', 'Input.Model.Select');
-  yield defineAction('inputModelScroll', 'Input.Model.Scroll');
-  yield defineAction('inputHighlight', 'Input.Highlight');
+  bundle.defineAction('inputInit', 'Input.Init');
+  bundle.defineAction('inputLoad', 'Input.Load');
+  bundle.defineAction('inputReset', 'Input.Reset');
+  bundle.defineAction('inputEdit', 'Input.Edit');
+  bundle.defineAction('inputSelect', 'Input.Select');
+  bundle.defineAction('inputScroll', 'Input.Scroll');
+  bundle.defineAction('inputModelEdit', 'Input.Model.Edit');
+  bundle.defineAction('inputModelSelect', 'Input.Model.Select');
+  bundle.defineAction('inputModelScroll', 'Input.Model.Scroll');
+  bundle.defineAction('inputHighlight', 'Input.Highlight');
 
-  yield defineSelector('getSourceModel', function (state) {
+  bundle.defineSelector('getSourceModel', function (state) {
     return state.getIn(['source', 'model']);
   });
 
-  yield defineSelector('getInputModel', function (state) {
+  bundle.defineSelector('getInputModel', function (state) {
     return state.getIn(['input', 'model']);
   });
 
@@ -86,16 +85,16 @@ export default function* (deps) {
     return state.getIn(['input', 'editor']);
   }
 
-  yield addReducer('init', state => state
+  bundle.addReducer('init', state => state
     .set('source', BufferState())
     .set('input', BufferState())
   );
 
-  yield addReducer('sourceInit', function (state, action) {
+  bundle.addReducer('sourceInit', function (state, action) {
     return state.setIn(['source', 'editor'], action.editor);
   });
 
-  yield addReducer('sourceLoad', function (state, action) {
+  bundle.addReducer('sourceLoad', function (state, action) {
     return state.setIn(['source', 'model'], DocumentModel({
       document: Document.fromString(action.text),
       selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
@@ -103,33 +102,33 @@ export default function* (deps) {
     }));
   });
 
-  yield addReducer('sourceReset', function (state, action) {
+  bundle.addReducer('sourceReset', function (state, action) {
     return state.setIn(['source', 'model'], action.model);
   });
 
-  yield addReducer('sourceEdit', function (state, action) {
+  bundle.addReducer('sourceEdit', function (state, action) {
     const prevSource = state.getIn(['source', 'model', 'document']);
     const source = Document.applyDelta(prevSource, action.delta);
     return state.setIn(['source', 'model', 'document'], source);
   });
 
-  yield addReducer('sourceSelect', function (state, action) {
+  bundle.addReducer('sourceSelect', function (state, action) {
     return state.setIn(['source', 'model', 'selection'], action.selection);
   });
 
-  yield addReducer('sourceScroll', function (state, action) {
+  bundle.addReducer('sourceScroll', function (state, action) {
     return state.setIn(['source', 'model', 'firstVisibleRow'], action.firstVisibleRow);
   });
 
-  yield addReducer('inputInit', function (state, action) {
+  bundle.addReducer('inputInit', function (state, action) {
     return state.setIn(['input', 'editor'], action.editor);
   });
 
-  yield addReducer('inputReset', function (state, action) {
+  bundle.addReducer('inputReset', function (state, action) {
     return state.setIn(['input', 'model'], action.model);
   });
 
-  yield addReducer('inputLoad', function (state, action) {
+  bundle.addReducer('inputLoad', function (state, action) {
     return state.setIn(['input', 'model'], DocumentModel({
       document: Document.fromString(action.text),
       selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
@@ -137,21 +136,21 @@ export default function* (deps) {
     }));
   });
 
-  yield addReducer('inputEdit', function (state, action) {
+  bundle.addReducer('inputEdit', function (state, action) {
     const prevInput = state.getIn(['input', 'model', 'document']);
     const input = Document.applyDelta(prevInput, action.delta);
     return state.setIn(['input', 'model', 'document'], input);
   });
 
-  yield addReducer('inputSelect', function (state, action) {
+  bundle.addReducer('inputSelect', function (state, action) {
     return state.setIn(['input', 'model', 'selection'], action.selection);
   });
 
-  yield addReducer('inputScroll', function (state, action) {
+  bundle.addReducer('inputScroll', function (state, action) {
     return state.setIn(['input', 'model', 'firstVisibleRow'], action.firstVisibleRow);
   });
 
-  yield addSaga(function* watchSourceInit () {
+  bundle.addSaga(function* watchSourceInit () {
     while (true) {
       const {editor} = yield take(deps.sourceInit);
       if (editor) {
@@ -161,7 +160,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function* watchInputInit () {
+  bundle.addSaga(function* watchInputInit () {
     while (true) {
       const {editor} = yield take(deps.inputInit);
       if (editor) {
@@ -171,7 +170,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function* watchSourceReset () {
+  bundle.addSaga(function* watchSourceReset () {
     while (true) {
       const {model} = yield take(deps.sourceReset);
       const editor = yield select(getSourceEditor);
@@ -181,7 +180,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function* watchInputReset () {
+  bundle.addSaga(function* watchInputReset () {
     while (true) {
       const {model} = yield take(deps.inputReset);
       const editor = yield select(getInputEditor);
@@ -191,7 +190,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function *watchSourceModelSelect () {
+  bundle.addSaga(function *watchSourceModelSelect () {
     while (true) {
       const {selection} = yield take(deps.sourceModelSelect);
       const editor = yield select(getSourceEditor);
@@ -201,7 +200,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function *watchSourceHighlight () {
+  bundle.addSaga(function *watchSourceHighlight () {
     while (true) {
       const {range} = yield take(deps.sourceHighlight);
       const editor = yield select(getSourceEditor);
@@ -211,7 +210,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function *watchSourceModelEdit () {
+  bundle.addSaga(function *watchSourceModelEdit () {
     while (true) {
       const {delta, deltas} = yield take(deps.sourceModelEdit);
       const editor = yield select(getSourceEditor);
@@ -221,7 +220,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function *watchSourceModelScroll () {
+  bundle.addSaga(function *watchSourceModelScroll () {
     while (true) {
       const {firstVisibleRow} = yield take(deps.sourceModelScroll);
       const editor = yield select(getSourceEditor);
@@ -231,7 +230,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function *watchInputModelSelect () {
+  bundle.addSaga(function *watchInputModelSelect () {
     while (true) {
       const {selection} = yield take(deps.inputModelSelect);
       const editor = yield select(getInputEditor);
@@ -241,7 +240,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function *watchInputHighlight () {
+  bundle.addSaga(function *watchInputHighlight () {
     while (true) {
       const {range} = yield take(deps.inputHighlight);
       const editor = yield select(getInputEditor);
@@ -251,7 +250,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function *watchInputModelEdit () {
+  bundle.addSaga(function *watchInputModelEdit () {
     while (true) {
       const {delta, deltas} = yield take(deps.inputModelEdit);
       const editor = yield select(getInputEditor);
@@ -261,7 +260,7 @@ export default function* (deps) {
     }
   });
 
-  yield addSaga(function *watchInputModelScroll () {
+  bundle.addSaga(function *watchInputModelScroll () {
     while (true) {
       const {firstVisibleRow} = yield take(deps.inputModelScroll);
       const editor = yield select(getInputEditor);

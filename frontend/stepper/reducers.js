@@ -17,7 +17,6 @@ The stepper's state has the following shape:
 
 import Immutable from 'immutable';
 
-import {addReducer} from '../utils/linker';
 import {analyseState, collectDirectives} from './analysis';
 
 const enrichStepperState = function (stepperState) {
@@ -159,33 +158,33 @@ export const stepperViewControlsChanged = function (state, action) {
   });
 };
 
-export default function* () {
+export default function (bundle) {
 
-  yield addReducer('init', function (state, action) {
+  bundle.addReducer('init', function (state, action) {
     return state.set('stepper', stepperClear());
   });
 
-  yield addReducer('stepperTaskStarted', function (state, action) {
+  bundle.addReducer('stepperTaskStarted', function (state, action) {
     return state.set('stepperTask', action.task);
   });
 
-  yield addReducer('stepperTaskCancelled', function (state, action) {
+  bundle.addReducer('stepperTaskCancelled', function (state, action) {
     return state.set('stepperTask', null);
   });
 
-  yield addReducer('stepperRestart', function (state, action) {
+  bundle.addReducer('stepperRestart', function (state, action) {
     return state.update('stepper', st => stepperRestart(st, action));
   });
 
-  yield addReducer('stepperReset', function (state, action) {
+  bundle.addReducer('stepperReset', function (state, action) {
     return state.set('stepper', action.state);
   });
 
-  yield addReducer('stepperExit', function (state, action) {
+  bundle.addReducer('stepperExit', function (state, action) {
     return state.update('stepper', st => stepperClear(st));
   });
 
-  yield addReducer('stepperStep', function (state, action) {
+  bundle.addReducer('stepperStep', function (state, action) {
     if (state.getIn(['stepper', 'status']) !== 'idle') {
       return state;
     } else {
@@ -193,19 +192,19 @@ export default function* () {
     }
   });
 
-  yield addReducer('stepperStarted', function (state, action) {
+  bundle.addReducer('stepperStarted', function (state, action) {
     return state.update('stepper', st => stepperStarted(st, action));
   });
 
-  yield addReducer('stepperProgress', function (state, action) {
+  bundle.addReducer('stepperProgress', function (state, action) {
     return state.update('stepper', st => stepperProgress(st, action));
   });
 
-  yield addReducer('stepperIdle', function (state, action) {
+  bundle.addReducer('stepperIdle', function (state, action) {
     return state.update('stepper', st => stepperIdle(st, action));
   });
 
-  yield addReducer('stepperInterrupt', function (state, action) {
+  bundle.addReducer('stepperInterrupt', function (state, action) {
     // Cannot interrupt while idle.
     if (state.getIn(['stepper', 'status']) === 'idle') {
       return state;
@@ -213,32 +212,32 @@ export default function* () {
     return state.setIn(['stepper', 'interrupt'], true);
   });
 
-  yield addReducer('stepperInterrupted', function (state, action) {
+  bundle.addReducer('stepperInterrupted', function (state, action) {
     return state.setIn(['stepper', 'interrupt'], false);
   });
 
-  yield addReducer('stepperUndo', function (state, action) {
+  bundle.addReducer('stepperUndo', function (state, action) {
     return state.update('stepper', st => stepperUndo(st, action));
   });
 
-  yield addReducer('stepperRedo', function (state, action) {
+  bundle.addReducer('stepperRedo', function (state, action) {
     return state.update('stepper', st => stepperRedo(st, action));
   });
 
-  yield addReducer('stepperConfigure', function (state, action) {
+  bundle.addReducer('stepperConfigure', function (state, action) {
     const {options} = action;
     return state.set('stepper.options', Immutable.Map(options));
   });
 
-  yield addReducer('stepperStackUp', function (state, action) {
+  bundle.addReducer('stepperStackUp', function (state, action) {
     return state.update('stepper', st => stepperStackUp(st, action));
   });
 
-  yield addReducer('stepperStackDown', function (state, action) {
+  bundle.addReducer('stepperStackDown', function (state, action) {
     return state.update('stepper', st => stepperStackDown(st, action));
   });
 
-  yield addReducer('stepperViewControlsChanged', function (state, action) {
+  bundle.addReducer('stepperViewControlsChanged', function (state, action) {
     return state.update('stepper', st => stepperViewControlsChanged(st, action));
   });
 
