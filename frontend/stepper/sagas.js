@@ -1,6 +1,6 @@
 
 import {delay} from 'redux-saga';
-import {takeEvery, takeLatest, take, put, call, select, cancel, fork} from 'redux-saga/effects';
+import {takeEvery, takeLatest, take, put, call, select, cancel, fork, race} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 import Immutable from 'immutable';
 
@@ -14,7 +14,7 @@ export default function (bundle, deps) {
     'stepperTaskStarted', 'stepperTaskCancelled',
     'stepperInterrupted',
     'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperExit', 'stepperUndo', 'stepperRedo',
-    'stepperStackUp', 'stepperStackDown',
+    'stepperStackUp', 'stepperStackDown', 'stepperInterrupt',
     'translateSucceeded', 'getTranslateState', 'translateClear',
     'getInputModel', 'sourceHighlight', 'terminalFocus', 'terminalInputNeeded',
     'error'
@@ -55,7 +55,6 @@ export default function (bundle, deps) {
   function* singleStep (context, stopCond) {
     let {running, state} = context;
     if (!running || state.error || !state.core.control) {
-      context.running = false;
       return false;
     }
     if (stopCond && stopCond(state.core)) {
@@ -94,6 +93,7 @@ export default function (bundle, deps) {
       // program, or an error condition) is met.
       for (let stepCount = 100; stepCount !== 0; stepCount -= 1) {
         if (!(yield call(singleStep, context, stopCond))) {
+          context.running = false;
           return;
         }
       }
@@ -109,6 +109,7 @@ export default function (bundle, deps) {
         const interrupted = yield select(deps.getStepperInterrupted);
         if (interrupted) {
           yield put({type: deps.stepperInterrupted});
+          context.running = false;
           context.interrupted = true;
           return;
         }
@@ -193,13 +194,17 @@ export default function (bundle, deps) {
     yield put({type: deps.terminalInputNeeded});
     /* Transfer focus to the terminal. */
     yield put({type: deps.terminalFocus});
-    /* XXX TODO: also wait for deps.getStepperInterrupted =>
-       context.interrupted = true;
-     */
-    /* Wait for a new line to be entered. */
-    yield take(deps.terminalInputEnter);
-    /* Use selector to update context.state from stepper state */
-    context.state = yield select(deps.getStepperDisplay);
+    const {inputEntered, interrupted} = yield (race({
+      inputEntered: take(deps.terminalInputEnter),
+      interrupted: take(deps.stepperInterrupt)
+    }));
+    if (inputEntered) {
+      /* Use selector to update context.state from stepper state */
+      context.state = yield select(deps.getStepperDisplay);
+    } else {
+      yield put({type: deps.stepperInterrupted});
+      context.interrupted = true;
+    }
   }
 
   bundle.addSaga(function* watchTranslateSucceeded () {
