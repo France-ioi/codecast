@@ -4,7 +4,7 @@ import {take, put, call, race, select, actionChannel} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
-import Document from '../buffers/document';
+import {compressRange} from '../buffers/document';
 import {spawnWorker, callWorker, killWorker} from '../utils/worker_utils';
 
 // XXX worker URL should use SystemJS baseURL?
@@ -41,13 +41,12 @@ export default function (bundle, deps) {
 
   bundle.use(
     'error', 'switchToScreen',
-    'getRecorderState', 'getSourceModel', 'getInputModel',
+    'getRecorderState',
     'recorderPrepare', 'recorderPreparing', 'recorderReady',
     'recorderAddEvent', 'recorderTick',
     'recorderStart', 'recorderStarting', 'recorderStarted',
     'recorderStop', 'recorderStopping', 'recorderStopped',
-    'sourceSelect', 'sourceEdit', 'sourceScroll',
-    'inputSelect', 'inputEdit', 'inputScroll',
+    'getBufferModel', 'bufferSelect', 'bufferEdit', 'bufferScroll',
     'translateStarted', 'translateSucceeded', 'translateFailed', 'translateClearDiagnostics',
     'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperInterrupt', 'stepperRestart', 'stepperExit',
     'stepperUndo', 'stepperRedo', 'stepperStackUp', 'stepperStackDown', 'stepperViewControlsChanged',
@@ -146,8 +145,8 @@ export default function (bundle, deps) {
         console.log('not ready', recorder);
         return;
       }
-      const sourceModel = yield select(deps.getSourceModel);
-      const inputModel = yield select(deps.getInputModel);
+      const sourceModel = yield select(deps.getBufferModel, 'source');
+      const inputModel = yield select(deps.getBufferModel, 'input');
       // Signal that the recorder is starting.
       yield put({type: deps.recorderStarting});
       // Resume the audio context to start recording audio buffers.
@@ -167,15 +166,17 @@ export default function (bundle, deps) {
       yield put({type: deps.recorderStarted});
       yield call(recordEvent, [0, 'start', {
         version: RECORDING_FORMAT_VERSION,
-        source: {
-          document: Document.toString(sourceModel.get('document')),
-          selection: Document.compressRange(sourceModel.get('selection')),
-          firstVisibleRow: sourceModel.get('firstVisibleRow')
-        },
-        input: {
-          document: Document.toString(inputModel.get('document')),
-          selection: Document.compressRange(inputModel.get('selection')),
-          firstVisibleRow: inputModel.get('firstVisibleRow')
+        buffers: {
+          source: {
+            document: sourceModel.get('document').toString(),
+            selection: compressRange(sourceModel.get('selection')),
+            firstVisibleRow: sourceModel.get('firstVisibleRow')
+          },
+          input: {
+            document: inputModel.get('document').toString(),
+            selection: compressRange(inputModel.get('selection')),
+            firstVisibleRow: inputModel.get('firstVisibleRow')
+          }
         }
       }]);
       yield put({type: deps.switchToScreen, screen: 'record'});
@@ -269,46 +270,25 @@ export default function (bundle, deps) {
 
   const recorders = {};
 
-  recorders.sourceSelect = function* (t, action) {
-    const {selection} = action;
-    yield call(recordEvent, [t, 'source.select', Document.compressRange(selection)]);
+  recorders.bufferSelect = function* (t, action) {
+    const {buffer, selection} = action;
+    yield call(recordEvent, [t, 'buffer.select', buffer, compressRange(selection)]);
   };
 
-  recorders.sourceEdit = function* (t, action) {
-    const {delta} = action;
+  recorders.bufferEdit = function* (t, action) {
+    const {buffer, delta} = action;
     const {start, end} = delta;
     const range = {start, end};
     if (delta.action === 'insert') {
-      yield call(recordEvent, [t, 'source.insert', Document.compressRange(range), delta.lines]);
+      yield call(recordEvent, [t, 'buffer.insert', buffer, compressRange(range), delta.lines]);
     } else {
-      yield call(recordEvent, [t, 'source.delete', Document.compressRange(range)]);
+      yield call(recordEvent, [t, 'buffer.delete', buffer, compressRange(range)]);
     }
   };
 
-  recorders.sourceScroll = function* (t, action) {
-    const {firstVisibleRow} = action;
-    yield call(recordEvent, [t, 'source.scroll', firstVisibleRow]);
-  };
-
-  recorders.inputSelect = function* (t, action) {
-    const {selection} = action;
-    yield call(recordEvent, [t, 'input.select', Document.compressRange(selection)]);
-  };
-
-  recorders.inputEdit = function* (t, action) {
-    const {delta} = action;
-    const {start, end} = delta;
-    const range = {start, end};
-    if (delta.action === 'insert') {
-      yield call(recordEvent, [t, 'input.insert', Document.compressRange(range), delta.lines]);
-    } else {
-      yield call(recordEvent, [t, 'input.delete', Document.compressRange(range)]);
-    }
-  };
-
-  recorders.inputScroll = function* (t, action) {
-    const {firstVisibleRow} = action;
-    yield call(recordEvent, [t, 'input.scroll', firstVisibleRow]);
+  recorders.bufferScroll = function* (t, action) {
+    const {buffer, firstVisibleRow} = action;
+    yield call(recordEvent, [t, 'buffer.scroll', buffer, firstVisibleRow]);
   };
 
   recorders.translateStarted = function* (t, action) {

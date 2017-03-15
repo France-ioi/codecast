@@ -3,18 +3,12 @@ import React from 'react';
 import {Button, Panel} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import Editor from '../buffers/editor';
-import {writeString} from '../stepper/terminal';
-
 export default function (bundle, deps) {
 
   bundle.use(
     'getTranslateState', 'getStepperDisplay', 'getStepperOptions',
-    'sourceInit', 'sourceEdit', 'sourceSelect', 'sourceScroll',
-    'inputInit', 'inputEdit', 'inputSelect', 'inputScroll',
     'translateClearDiagnostics', 'stepperExit',
-    'StackView', 'DirectivesPane', 'TerminalView',
-    'terminalInit', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
+    'BufferEditor', 'StackView', 'DirectivesPane', 'IOPane'
   );
 
   bundle.defineSelector('MainViewSelector', function (state, props) {
@@ -22,53 +16,13 @@ export default function (bundle, deps) {
     const diagnostics = translate && translate.get('diagnosticsHtml');
     const stepperDisplay = deps.getStepperDisplay(state);
     const haveStepper = !!stepperDisplay;
-    let terminal, isWaitingOnInput;
-    if (haveStepper) {
-      terminal = stepperDisplay.terminal;
-      terminal = writeString(terminal, stepperDisplay.inputBuffer);
-      isWaitingOnInput = stepperDisplay.isWaitingOnInput;
-    }
     const error = haveStepper && stepperDisplay.error;
     const readOnly = haveStepper || props.preventInput;
     const options = deps.getStepperOptions(state);
-    return {
-      diagnostics, haveStepper, readOnly, terminal, error, options,
-      isWaitingOnInput};
+    return {diagnostics, haveStepper, readOnly, error, options};
   });
 
   bundle.defineView('MainView', 'MainViewSelector', EpicComponent(self => {
-
-    const onSourceInit = function (editor) {
-      self.props.dispatch({type: deps.sourceInit, editor});
-    };
-
-    const onSourceSelect = function (selection) {
-      self.props.dispatch({type: deps.sourceSelect, selection});
-    };
-
-    const onSourceEdit = function (delta) {
-      self.props.dispatch({type: deps.sourceEdit, delta});
-    };
-
-    const onSourceScroll = function (firstVisibleRow) {
-      self.props.dispatch({type: deps.sourceScroll, firstVisibleRow});
-    };
-
-    const onInputInit = function (editor) {
-      self.props.dispatch({type: deps.inputInit, editor});
-    };
-
-    const onInputSelect = function (selection) {
-      self.props.dispatch({type: deps.inputSelect, selection});
-    };
-
-    const onInputEdit = function (delta) {
-      self.props.dispatch({type: deps.inputEdit, delta});
-    };
-
-    const onInputScroll = function (firstVisibleRow) {
-      self.props.dispatch({type: deps.inputScroll, firstVisibleRow});
-    };
 
     const onClearDiagnostics = function () {
       self.props.dispatch({type: deps.translateClearDiagnostics});
@@ -86,34 +40,6 @@ export default function (bundle, deps) {
         </span>
       );
     };
-
-    const renderInputOutputHeader = function () {
-      const {isWaitingOnInput} = self.props;
-      return (
-        <div className="row">
-          <div className="col-sm-6">
-            {'Entrée'}
-            {isWaitingOnInput &&
-              <i className="fa fa-hourglass-o"/>}
-            {self.props.haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
-          </div>
-          <div className="col-sm-6">Sortie</div>
-        </div>
-      );
-    };
-
-    function onTermInit (iface) {
-      self.props.dispatch({type: deps.terminalInit, iface});
-    }
-    function onTermChar (key) {
-      self.props.dispatch({type: deps.terminalInputKey, key});
-    }
-    function onTermBS () {
-      self.props.dispatch({type: deps.terminalInputBackspace});
-    }
-    function onTermEnter () {
-      self.props.dispatch({type: deps.terminalInputEnter});
-    }
 
     const diagnosticsPanelHeader = (
       <div>
@@ -134,7 +60,7 @@ export default function (bundle, deps) {
     );
 
     self.render = function () {
-      const {diagnostics, readOnly, preventInput, terminal, error, options} = self.props;
+      const {diagnostics, readOnly, preventInput, error, options} = self.props;
       const showStack = options.get('showStack');
       const showViews = options.get('showViews');
       const showIO = options.get('showIO');
@@ -149,8 +75,7 @@ export default function (bundle, deps) {
             </div>}
             <div className={showStack ? "col-sm-9" : "col-sm-12"}>
               <Panel header={renderSourcePanelHeader()}>
-                <Editor onInit={onSourceInit} onEdit={onSourceEdit} onSelect={onSourceSelect} onScroll={onSourceScroll}
-                        readOnly={readOnly} shield={preventInput} mode='c_cpp' width='100%' height={editorRowHeight} />
+                <deps.BufferEditor buffer='source' readOnly={readOnly} shield={preventInput} mode='c_cpp' width='100%' height={editorRowHeight} />
               </Panel>
             </div>
           </div>
@@ -167,23 +92,7 @@ export default function (bundle, deps) {
             </div>}
             <div className="col-sm-12">
               {showViews && <deps.DirectivesPane/>}
-              {showIO && <Panel header={renderInputOutputHeader()}>
-                <div className="row">
-                  <div className="col-sm-6">
-                    <Editor onInit={onInputInit} onEdit={onInputEdit} onSelect={onInputSelect} onScroll={onInputScroll}
-                            readOnly={readOnly} shield={preventInput} mode='text' width='100%' height='150px' />
-                  </div>
-                  <div className="col-sm-6">
-                    {terminal
-                      ? <deps.TerminalView buffer={terminal} onInit={onTermInit} onKeyPress={onTermChar} onBackspace={onTermBS} onEnter={onTermEnter} />
-                      : <div className="terminal">
-                          <div className="terminal-placeholder">
-                            {"Programme arrêté, pas de sortie à afficher."}
-                          </div>
-                        </div>}
-                  </div>
-                </div>
-              </Panel>}
+              {showIO && <deps.IOPane preventInput={preventInput}/>}
             </div>
           </div>
         </div>

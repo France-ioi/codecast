@@ -5,9 +5,26 @@ import React from 'react';
 import {Nav, NavDropdown, MenuItem} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
-import Document from '../buffers/document';
+import {documentFromString} from '../buffers/document';
 
 const examples = [
+
+  {
+    title: "scanf %lf %c",
+    source: [
+      "#include <stdio.h>",
+      "int main() {",
+      "    double d;",
+      "    char c;",
+      "    int r;",
+      "    r = scanf(\"%lf\", &d);",
+      "    r = scanf(\"%c\", &c);",
+      "    printf(\"|%lf| |%c|\", d, c);",
+      "    return 0;",
+      "}"
+    ].join('\n'),
+    input: "12 a"
+  },
 
   {
     title: "gets/puts",
@@ -354,7 +371,7 @@ const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
 
 export default function (bundle, deps) {
 
-  bundle.use('sourceReset', 'inputReset');
+  bundle.use('bufferReset', 'IOPaneModeChanged');
 
   bundle.defineAction('exampleSelected', 'Example.Selected');
 
@@ -366,17 +383,21 @@ export default function (bundle, deps) {
 
   function* loadExample (example) {
     const sourceModel = Immutable.Map({
-      document: Document.fromString(example.source),
+      document: documentFromString(example.source),
       selection: example.selection || startOfBuffer,
       firstVisibleRow: example.firstVisibleRow || 0
     });
-    yield put({type: deps.sourceReset, model: sourceModel});
+    yield put({type: deps.bufferReset, buffer: 'source', model: sourceModel});
     const inputModel = Immutable.Map({
-      document: Document.fromString(example.input || ""),
+      document: documentFromString(example.input || ""),
       selection: startOfBuffer,
       firstVisibleRow: 0
     });
-    yield put({type: deps.inputReset, model: inputModel});
+    yield put({type: deps.bufferReset, buffer: 'input', model: inputModel});
+    /* Force split mode if the example has an associated input. */
+    if (example.input) {
+      yield put({type: deps.IOPaneModeChanged, mode: 'split'});
+    }
   }
 
   bundle.addSaga(function* watchExampleSelected () {

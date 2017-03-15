@@ -152,6 +152,7 @@ export const applyScanfEffect = function (state, effect) {
     P.bind(p_actions, actions =>
     P.bind(P.getPosition, position =>
     P.always({actions, position})));
+  // XXX
   const unreadInput = input.slice(inputPos);
   const inputStream = stream.from(unreadInput); // XXX start stream at offset inputPos
   const context = {args: args.slice(2), argPos: 0};
@@ -160,11 +161,17 @@ export const applyScanfEffect = function (state, effect) {
     var {actions, position} = P.runStream(parser, inputStream, context);
   } catch (ex) {
     if (ex.position.index === unreadInput.length) {
-      state.isWaitingOnInput = true;
+      if (state.terminal) {
+        /* Interactive input */
+        state.isWaitingOnInput = true;
+      } else {
+        /* End of input */
+        core.result = new C.IntegralValue(C.scalarTypes['int'], -1);
+        core.direction = 'up';
+      }
       return;
-    } else {
-      console.log('TODO — scanf exception', ex);
     }
+    console.log('TODO — scanf exception', ex);
   }
   /* Update the position in the input stream.
      /!\ bennu returns the position as a string. */

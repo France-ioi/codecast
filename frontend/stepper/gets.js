@@ -1,11 +1,21 @@
 
 import * as C from 'persistent-c';
 
+const voidPtr = C.pointerType(C.voidType);
+const nullPointer = new C.PointerValue(voidPtr, 0);
+
 export const applyGetsEffect = function (state, effect) {
   const {core, input, inputPos} = state;
   const nextNL = input.indexOf('\n', inputPos);
   if (nextNL === -1) {
-    state.isWaitingOnInput = true;
+    if (state.terminal) {
+      /* Interactive input */
+      state.isWaitingOnInput = true;
+    } else {
+      /* End of input */
+      core.result = nullPointer;
+      core.direction = 'up';
+    }
     return;
   }
   const line = input.substring(inputPos, nextNL);

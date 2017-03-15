@@ -10,7 +10,7 @@ import request from 'superagent';
 import Immutable from 'immutable';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
-import Document from '../buffers/document';
+import {documentFromString, expandRange} from '../buffers/document';
 import {DocumentModel} from '../buffers/index';
 import {translateClear, translateStarted, translateSucceeded, translateFailed, translateClearDiagnostics} from '../stepper/translate';
 import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress, stepperUndo, stepperRedo, stepperStackUp, stepperStackDown, stepperViewControlsChanged} from '../stepper/reducers';
@@ -32,8 +32,7 @@ export default function (bundle, deps) {
     'getPlayerState', 'getStepperDisplay',
     'translateReset',
     'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset',
-    'sourceReset', 'sourceModelSelect', 'sourceModelEdit', 'sourceModelScroll', 'sourceHighlight',
-    'inputReset', 'inputModelSelect', 'inputModelEdit', 'inputModelScroll',
+    'bufferReset', 'bufferModelSelect', 'bufferModelEdit', 'bufferModelScroll', 'bufferHighlight',
     'stepperEnabled', 'stepperDisabled'
   );
 
@@ -54,13 +53,13 @@ export default function (bundle, deps) {
   };
 
   function eventToDelta (event) {
-    const range = Document.expandRange(event[2]);
+    const range = expandRange(event[3]);
     if (event[1].endsWith('insert')) {
       return {
         action: 'insert',
         start: range.start,
         end: range.end,
-        lines: event[3]
+        lines: event[4]
       };
     }
     if (event[1].endsWith('delete')) {
@@ -246,13 +245,13 @@ export default function (bundle, deps) {
         case 'start': {
           const init = event[2];
           const sourceModel = DocumentModel({
-            document: Document.fromString(init.source.document),
-            selection: Document.expandRange(init.source.selection),
+            document: documentFromString(init.source.document),
+            selection: expandRange(init.source.selection),
             firstVisibleRow: init.source.firstVisibleRow || 0
           });
           const inputModel = DocumentModel({
-            document: Document.fromString(init.input ? init.input.document : ''),
-            selection: Document.expandRange(init.input ? init.input.selection : [0,0,0,0]),
+            document: documentFromString(init.input ? init.input.document : ''),
+            selection: expandRange(init.input ? init.input.selection : [0,0,0,0]),
             firstVisibleRow: (init.input && init.input.firstVisibleRow) || 0
           });
           const translateModel = translateClear();
@@ -265,42 +264,23 @@ export default function (bundle, deps) {
           })
           break;
         }
-        case 'source.select': case 'select': {
+        case 'buffer.select': {
           // XXX use reducer imported from common/buffers
-          state = state.setIn(['source', 'selection'], Document.expandRange(event[2]));
+          state = state.setIn(['buffers', event[2], 'selection'], expandRange(event[3]));
           break;
         }
-        case 'source.insert': case 'source.delete': case 'insert': case 'delete': {
+        case 'buffer.insert': case 'buffer.delete': {
           // XXX use reducer imported from common/buffers
           const delta = eventToDelta(event);
           if (delta) {
-            state = state.updateIn(['source', 'document'], document =>
-              Document.applyDelta(document, delta));
+            state = state.updateIn(['buffers', event[2], 'document'],
+              doc => doc.applyDelta(delta));
           }
           break;
         }
-        case 'source.scroll': {
+        case 'buffer.scroll': {
           // XXX use reducer imported from common/buffers
-          state = state.setIn(['source', 'firstVisibleRow'], event[2]);
-          break;
-        }
-        case 'input.select': {
-          // XXX use reducer imported from common/buffers
-          state = state.setIn(['input', 'selection'], Document.expandRange(event[2]));
-          break;
-        }
-        case 'input.insert': case 'input.delete': {
-          // XXX use reducer imported from common/buffers
-          const delta = eventToDelta(event);
-          if (delta) {
-            state = state.updateIn(['input', 'document'], document =>
-              Document.applyDelta(document, delta));
-          }
-          break;
-        }
-        case 'input.scroll': {
-          // XXX use reducer imported from common/buffers
-          state = state.setIn(['input', 'firstVisibleRow'], event[2]);
+          state = state.setIn(['buffers', event[2], 'firstVisibleRow'], event[3]);
           break;
         }
         case 'stepper.translate': case 'translate.start': {
@@ -330,7 +310,7 @@ export default function (bundle, deps) {
         }
         case 'stepper.restart': {
           const syntaxTree = state.getIn(['translate', 'syntaxTree']);
-          const input = state.get('input') && Document.toString(state.getIn(['input', 'document']));
+          const input = state.get('input') && state.getIn(['input', 'document'].toString());
           const stepperState = runtime.start(syntaxTree, {input});
           stepperState.core = C.clearMemoryLog(stepperState.core);
           const action = {stepperState};
@@ -469,8 +449,8 @@ export default function (bundle, deps) {
   function* resetToInstant (instant, audioTime, quick) {
     const {state} = instant;
     if (!quick) {
-      yield put({type: deps.sourceReset, model: state.get('source')});
-      yield put({type: deps.inputReset, model: state.get('input')});
+      yield put({type: deps.bufferReset, buffer: 'source', model: state.get('source')});
+      yield put({type: deps.bufferReset, buffer: 'input', model: state.get('input')});
     }
     const translateState = state.get('translate');
     yield put({type: deps.translateReset, state: translateState});
@@ -535,23 +515,14 @@ export default function (bundle, deps) {
           for (let pos = prevInstant.eventIndex + 1; pos <= nextInstant.eventIndex; pos += 1) {
             const event = events[pos];
             switch (event[1]) {
-              case 'source.select':
-                yield put({type: deps.sourceModelSelect, selection: Document.expandRange(event[2])});
+              case 'buffer.select':
+                yield put({type: deps.bufferModelSelect, buffer: event[2], selection: expandRange(event[3])});
                 break;
-              case 'source.insert': case 'source.delete':
-                yield put({type: deps.sourceModelEdit, delta: eventToDelta(event)});
+              case 'buffer.insert': case 'buffer.delete':
+                yield put({type: deps.bufferModelEdit, buffer: event[2], delta: eventToDelta(event)});
                 break;
-              case 'source.scroll':
-                yield put({type: deps.sourceModelScroll, firstVisibleRow: event[2]});
-                break;
-              case 'input.select':
-                yield put({type: deps.inputModelSelect, selection: Document.expandRange(event[2])});
-                break;
-              case 'input.insert': case 'input.delete':
-                yield put({type: deps.inputModelEdit, delta: eventToDelta(event)});
-                break;
-              case 'input.scroll':
-                yield put({type: deps.inputModelScroll, firstVisibleRow: event[2]});
+              case 'buffer.scroll':
+                yield put({type: deps.bufferModelScroll, buffer: event[2], firstVisibleRow: event[3]});
                 break;
               case 'end':
                 ended = true;

@@ -4,7 +4,12 @@ import * as C from 'persistent-c';
 import {writeString} from './terminal';
 
 export const applyWriteEffect = function (state, effect) {
-  state.terminal = writeString(state.terminal, effect[1]);
+  const text = effect[1];
+  if (state.terminal) {
+    state.terminal = writeString(state.terminal, text);
+  } else {
+    state.output = state.output + text;
+  }
 };
 
 export const putchar = function (state, cont, values) {

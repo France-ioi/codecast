@@ -4,7 +4,7 @@ import {takeEvery, takeLatest, take, put, call, select, cancel, fork, race} from
 import * as C from 'persistent-c';
 import Immutable from 'immutable';
 
-import Document from '../buffers/document';
+import {documentFromString} from '../buffers/document';
 import * as runtime from './runtime';
 
 export default function (bundle, deps) {
@@ -16,7 +16,8 @@ export default function (bundle, deps) {
     'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperExit', 'stepperUndo', 'stepperRedo',
     'stepperStackUp', 'stepperStackDown', 'stepperInterrupt',
     'translateSucceeded', 'getTranslateState', 'translateClear',
-    'getInputModel', 'sourceHighlight', 'terminalFocus', 'terminalInputNeeded',
+    'getBufferModel', 'bufferHighlight', 'bufferReset', 'bufferEdit', 'bufferModelEdit', 'bufferModelSelect',
+    'terminalFocus', 'terminalInputNeeded',
     'error'
   );
 
@@ -215,12 +216,18 @@ export default function (bundle, deps) {
         // Get the syntax tree from the store so that we get the version where
         // each node has a range attribute.
         const translate = yield select(deps.getTranslateState);
-        const inputModel = yield select(deps.getInputModel);
-        const input = Document.toString(inputModel.get('document'));
-        const stepperState = runtime.start(translate.get('syntaxTree'), {input});
+        const options = {};
+        const ioPaneMode = yield select(state => state.get('ioPaneMode'));
+        if (ioPaneMode === 'terminal') {
+          options.terminal = true;
+        } else {
+          const inputModel = yield select(deps.getBufferModel, 'input');
+          options.input = inputModel.get('document').toString();
+        }
+        const stepperState = runtime.start(translate.get('syntaxTree'), options);
         stepperState.controls = Immutable.Map({stack: Immutable.Map({focusDepth: 0})});
+        yield put({type: deps.stepperEnabled, options});
         yield put({type: deps.stepperRestart, stepperState});
-        yield put({type: deps.stepperEnabled});
       } catch (error) {
         yield put({type: deps.error, source: 'stepper', error});
       }
@@ -233,11 +240,15 @@ export default function (bundle, deps) {
     yield takeLatest(deps.stepperEnabled, enableStepper);
     yield takeLatest(deps.stepperDisabled, disableStepper);
   });
-  function* enableStepper () {
+  function* enableStepper (action) {
     /* Start the new stepper task. */
     const newTask = yield fork(function* stepperRootSaga () {
       yield takeEvery(deps.stepperStep, onStepperStep);
       yield takeEvery(deps.stepperExit, onStepperExit);
+      yield fork(reflectToSource);
+      if (!action.options.terminal) {
+        yield fork(reflectToOutput);
+      }
     });
     yield put({type: deps.stepperTaskStarted, task: newTask});
   }
@@ -248,23 +259,58 @@ export default function (bundle, deps) {
       yield cancel(oldTask);
       yield put({type: deps.stepperTaskCancelled});
     }
+    /* Clear source highlighting. */
+    const startPos = {row: 0, column: 0};
+    yield put({type: deps.bufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
   }
 
-  bundle.addSaga(function* watchStepperActions () {
-    // This saga updates the highlighting of the active source code.
-    while (true) {
-      yield take([
-        deps.stepperProgress, deps.stepperIdle, deps.stepperRestart,
-        deps.stepperUndo, deps.stepperRedo,
-        deps.stepperStackUp, deps.stepperStackDown,
-        deps.translateClear
-      ]);
+  function* reflectToSource () {
+    /* Highlight the range of the current source fragment. */
+    yield takeLatest([
+      deps.stepperProgress, deps.stepperIdle, deps.stepperRestart,
+      deps.stepperUndo, deps.stepperRedo,
+      deps.stepperStackUp, deps.stepperStackDown
+    ], function* (action) {
       const stepperState = yield select(deps.getStepperDisplay);
       const range = runtime.getNodeRange(stepperState);
-      yield put({type: deps.sourceHighlight, range});
-    }
-  });
+      yield put({type: deps.bufferHighlight, buffer: 'source', range});
+    });
+  }
 
+  function* reflectToOutput () {
+    /* Incrementally text produced by the stepper to the output buffer. */
+    yield takeLatest([deps.stepperProgress, deps.stepperIdle], function* (action) {
+      const stepperState = yield select(deps.getStepperDisplay);
+      const outputModel = yield select(deps.getBufferModel, 'output');
+      const oldSize = outputModel.get('document').size();
+      const newSize = stepperState.output.length;
+      if (oldSize !== newSize) {
+        const outputDoc = outputModel.get('document');
+        const endCursor = outputDoc.endCursor();
+        const delta = {
+          action: 'insert',
+          start: endCursor,
+          end: endCursor,
+          lines: stepperState.output.substr(oldSize).split('\n')
+        };
+        /* Update the model to maintain length, new end cursor. */
+        yield put({type: deps.bufferEdit, buffer: 'output', delta});
+        const newEndCursor = yield select(state => deps.getBufferModel(state, 'output').get('document').endCursor());
+        /* Send the delta to the editor to add the new output. */
+        yield put({type: deps.bufferModelEdit, buffer: 'output', delta});
+        /* Move the cursor to the end of the buffer. */
+        yield put({type: deps.bufferModelSelect, buffer: 'output', selection: {start: newEndCursor, end: newEndCursor}});
+      }
+    });
+    /* Reset the output document. */
+    yield takeLatest([deps.stepperRestart, deps.stepperUndo, deps.stepperRedo], function* (action) {
+      const stepperState = yield select(deps.getStepperDisplay);
+      const outputModel = yield select(deps.getBufferModel, 'output');
+      const doc = documentFromString(stepperState.output);
+      const model = outputModel.set('document', doc);
+      yield put({type: deps.bufferReset, buffer: 'output', model});
+    });
+  }
 
   function* onStepperStep (action) {
     yield call(startStepper, action.mode);

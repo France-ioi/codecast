@@ -2,8 +2,15 @@ import * as C from 'persistent-c';
 
 export const applyGetcharEffect = function (state, effect) {
   const {core, input, inputPos} = state;
-  if (inputPos === input.length) {
-    state.isWaitingOnInput = true;
+  if (inputPos < input.length) {
+    if (state.terminal) {
+      /* Interactive input */
+      state.isWaitingOnInput = true;
+    } else {
+      /* End of input */
+      core.result = new C.IntegralValue(C.scalarTypes['int'], -1);
+      core.direction = 'up';
+    }
     return;
   }
   state.inputPos += 1;

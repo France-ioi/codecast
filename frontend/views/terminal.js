@@ -2,12 +2,11 @@
 import React from 'react';
 import EpicComponent from 'epic-component';
 import classnames from 'classnames';
+import {Panel} from 'react-bootstrap';
 
-// TODO: add (and export through the linker) a higher-level component using a
-// selector to extract the currently displayed terminal instead of relying on
-// the buffer being passed as a prop.
+import {writeString} from '../stepper/terminal';
 
-export const TermView = EpicComponent(self => {
+const TerminalView = EpicComponent(self => {
 
   let terminalElement;
 
@@ -74,6 +73,61 @@ export const TermView = EpicComponent(self => {
 
 export default function (bundle, deps) {
 
-  bundle.defineView('TerminalView', TermView);
+  bundle.use(
+    'getStepperDisplay',
+    'terminalInit', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
+  );
+
+  bundle.defineView('TerminalView', TerminalViewSelector, EpicComponent(self => {
+
+    function onTermInit (iface) {
+      self.props.dispatch({type: deps.terminalInit, iface});
+    }
+    function onTermChar (key) {
+      self.props.dispatch({type: deps.terminalInputKey, key});
+    }
+    function onTermBS () {
+      self.props.dispatch({type: deps.terminalInputBackspace});
+    }
+    function onTermEnter () {
+      self.props.dispatch({type: deps.terminalInputEnter});
+    }
+
+    const renderHeader = function () {
+      const {isWaitingOnInput} = self.props;
+      return (
+        <div className="row">
+          <div className="col-sm-12">
+            {'Terminal'}
+            {isWaitingOnInput &&
+              <i className="fa fa-hourglass-o"/>}
+          </div>
+        </div>
+      );
+    };
+
+    self.render = function () {
+      const {readOnly, preventInput, terminal} = self.props;
+      return (
+        <Panel header={renderHeader()}>
+          <div className="row">
+            <div className="col-sm-6">
+              <TerminalView buffer={terminal} onInit={onTermInit} onKeyPress={onTermChar} onBackspace={onTermBS} onEnter={onTermEnter} />
+            </div>
+          </div>
+        </Panel>
+      );
+    };
+
+  }));
+
+  function TerminalViewSelector (state, props) {
+    const stepper = deps.getStepperDisplay(state);
+    const haveStepper = !!stepper;
+    const readOnly = haveStepper || props.preventInput;
+    const terminal = writeString(stepper.terminal, stepper.inputBuffer);
+    const isWaitingOnInput = stepper.isWaitingOnInput;
+    return {readOnly, terminal, isWaitingOnInput};
+  }
 
 };

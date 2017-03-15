@@ -18,7 +18,6 @@ import {take, put, call, select} from 'redux-saga/effects';
 import {TextEncoder} from 'text-encoding-utf-8';
 
 import {asyncRequestJson} from '../utils/api';
-import Document from '../buffers/document';
 
 const addNodeRanges = function (source, syntaxTree) {
   // Assign a {row, column} position to each byte offset in the source.
@@ -129,7 +128,7 @@ export function translateClearDiagnostics (state, action) {
 
 export default function (bundle, deps) {
 
-  bundle.use('init', 'getSourceModel');
+  bundle.use('init', 'getBufferModel');
 
   // Requested translation of given {source}.
   bundle.defineAction('translate', 'Translate');
@@ -217,8 +216,8 @@ export default function (bundle, deps) {
       const action = yield take(deps.translate);
       const status = yield select(getTranslateStatus);
       if (status !== 'running') {
-        const sourceModel = yield select(deps.getSourceModel);
-        const source = Document.toString(sourceModel.get('document'));
+        const sourceModel = yield select(deps.getBufferModel, 'source');
+        const source = sourceModel.get('document').toString();
         yield call(translateSource, source);
       }
     }

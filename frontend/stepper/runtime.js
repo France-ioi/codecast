@@ -53,13 +53,18 @@ export const start = function (syntaxTree, options) {
   const state = C.start({decls, builtins, options: stepperOptions});
   state.core = C.clearMemoryLog(state.core);
   state.core = heapInit(state.core, stackSize);
-  // Terminal setup.
-  state.terminal = new TermBuffer({lines: 10, width: 60});
-  /* Input setup. */
-  state.inputPos = 0;
-  state.input = (options.input || "").trimRight();
-  if (state.input.length !== 0) {
-    state.input = state.input + "\n";
+  if (options.terminal) {
+    state.inputPos = 0;
+    state.input = "";
+    state.terminal = new TermBuffer({lines: 10, width: 80});
+  } else {
+    let input = (options.input || "").trimRight();
+    if (input.length !== 0) {
+      input = input + "\n";
+    }
+    state.inputPos = 0;
+    state.input = input;
+    state.output = "";
   }
   state.inputBuffer = "";
   return stepIntoUserCode(state);
