@@ -42,17 +42,20 @@ export default function (bundle, deps) {
 
   /* Options view */
 
-  bundle.defineAction('IOPaneModeChanged', 'IOPane.Mode.Changed');
-  bundle.addReducer('IOPaneModeChanged', function (state, action) {
-    const {mode} = action;
-    return state.set('ioPaneMode', mode);
+  bundle.defineAction('ioPaneModeChanged', 'IOPane.Mode.Changed');
+  bundle.addReducer('ioPaneModeChanged', function (state, action) {
+    return ioPaneModeChanged(state, action);
   });
+
+  bundle.defineSelector('getIoPaneMode', function (state) {
+    return state.get('ioPaneMode');
+  })
 
   bundle.defineView('IOPaneOptions', IOPaneOptionsSelector, EpicComponent(self => {
 
     function onModeChanged (event) {
       const mode = event.target.value;
-      self.props.dispatch({type: deps.IOPaneModeChanged, mode});
+      self.props.dispatch({type: deps.ioPaneModeChanged, mode});
     }
 
     const modeOptions = [
@@ -65,7 +68,7 @@ export default function (bundle, deps) {
       return (
         <Panel header={'Entrée/Sortie/Terminal'}>
           <div className="row">
-            <div className="col-sm-6">
+            <div className="col-sm-12">
               <form>
                 <label>
                   {"Input mechanism"}
@@ -75,10 +78,11 @@ export default function (bundle, deps) {
                   </select>
                 </label>
               </form>
-            </div>
-            <div className="col-sm-6">
               {mode === 'split' &&
-                <deps.BufferEditor buffer='input' mode='text' width='100%' height='150px' />}
+                <div>
+                  <p>Initial input:</p>
+                  <deps.BufferEditor buffer='input' mode='text' width='100%' height='150px' />
+                </div>}
             </div>
           </div>
         </Panel>
@@ -88,7 +92,7 @@ export default function (bundle, deps) {
   }));
 
   function IOPaneOptionsSelector (state) {
-    const mode = state.get('ioPaneMode');
+    const mode = deps.getIoPaneMode(state);
     return {mode};
   }
 
@@ -133,3 +137,8 @@ export default function (bundle, deps) {
   }
 
 };
+
+export function ioPaneModeChanged (state, action) {
+  const {mode} = action;
+  return state.set('ioPaneMode', mode);
+}

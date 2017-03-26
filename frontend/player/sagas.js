@@ -10,10 +10,11 @@ import request from 'superagent';
 import Immutable from 'immutable';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
-import {documentFromString, expandRange} from '../buffers/document';
+import {documentFromString, emptyDocument, expandRange} from '../buffers/document';
 import {DocumentModel} from '../buffers/index';
 import {translateClear, translateStarted, translateSucceeded, translateFailed, translateClearDiagnostics} from '../stepper/translate';
 import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress, stepperUndo, stepperRedo, stepperStackUp, stepperStackDown, stepperViewControlsChanged} from '../stepper/reducers';
+import {ioPaneModeChanged} from '../stepper/io_pane';
 import {terminalInputNeeded, terminalInputKey, terminalInputBackspace, terminalInputEnter} from '../stepper/terminal_input';
 import * as runtime from '../stepper/runtime';
 
@@ -29,11 +30,13 @@ export default function (bundle, deps) {
     'playerStop', 'playerStopping', 'playerStopped',
     'playerTick', 'playerSeek', 'playerSeeked',
     'playerAudioReady', 'playerAudioError',
+    'getStepperInit', 'buildStepperState',
     'getPlayerState', 'getStepperDisplay',
     'translateReset',
     'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset',
     'bufferReset', 'bufferModelSelect', 'bufferModelEdit', 'bufferModelScroll', 'bufferHighlight',
-    'stepperEnabled', 'stepperDisabled'
+    'stepperEnabled', 'stepperDisabled',
+    'ioPaneModeChanged'
   );
 
   // pause, resume audio
@@ -154,9 +157,7 @@ export default function (bundle, deps) {
     // and compute the future state after every event.
     const instants = yield call(computeInstants, events);
     yield put({type: deps.playerReady, events, instants});
-    yield call(resetToInstant, instants[0], 0);
-    /* The stepper is initially enabled (playback is paused). */
-    yield put({type: deps.stepperEnabled});
+    yield call(resetToInstant, instants[0], 0, true);
   }
 
   function* playerStart () {
@@ -171,7 +172,7 @@ export default function (bundle, deps) {
       // starting playback.
       const audio = player.get('audio');
       const audioTime = Math.round(audio.currentTime * 1000);
-      yield call(resetToInstant, player.get('current'), audioTime);
+      yield call(resetToInstant, player.get('current'), audioTime, true);
       audio.play();
       yield put({type: deps.playerStarted});
     } catch (error) {
@@ -191,11 +192,9 @@ export default function (bundle, deps) {
       // Call resetToInstant to bring the global state in line with the current
       // state.  This is required in particular for the editors that have
       // been updated incrementally by sending them events without updating
-      // the global state.
-      yield call(resetToInstant, player.get('current'), audioTime);
+      // the global state.  The stepper is enabled if applicable.
+      yield call(resetToInstant, player.get('current'), audioTime, true);
       yield put({type: deps.playerPaused});
-      /* The stepper is enabled while playback is paused. */
-      yield put({type: deps.stepperEnabled});
     } catch (error) {
       yield put({type: deps.error, source: 'playerPause', error});
     }
@@ -211,7 +210,7 @@ export default function (bundle, deps) {
       // playback was paused.
       const audio = player.get('audio');
       const audioTime = Math.round(audio.currentTime * 1000);
-      yield call(resetToInstant, player.get('current'), audioTime);
+      yield call(resetToInstant, player.get('current'), audioTime, true);
       audio.play();
       yield put({type: deps.playerResumed});
     } catch (error) {
@@ -244,43 +243,40 @@ export default function (bundle, deps) {
       switch (event[1]) {
         case 'start': {
           const init = event[2];
-          const sourceModel = DocumentModel({
-            document: documentFromString(init.source.document),
-            selection: expandRange(init.source.selection),
-            firstVisibleRow: init.source.firstVisibleRow || 0
-          });
-          const inputModel = DocumentModel({
-            document: documentFromString(init.input ? init.input.document : ''),
-            selection: expandRange(init.input ? init.input.selection : [0,0,0,0]),
-            firstVisibleRow: (init.input && init.input.firstVisibleRow) || 0
-          });
+          const sourceModel = loadBufferModel(init.buffers.source);
+          const inputModel = loadBufferModel(init.buffers.input);
+          const outputModel = DocumentModel();
           const translateModel = translateClear();
           const stepperModel = stepperClear();
           state = Immutable.Map({
-            source: sourceModel,
-            input: inputModel,
+            buffers: Immutable.Map({
+              source: Immutable.Map({model: sourceModel}),
+              input: Immutable.Map({model: inputModel}),
+              output: Immutable.Map({model: outputModel})
+            }),
+            ioPaneMode: init.ioPaneMode,
             translate: translateModel,
             stepper: stepperModel
-          })
+          });
           break;
         }
         case 'buffer.select': {
           // XXX use reducer imported from common/buffers
-          state = state.setIn(['buffers', event[2], 'selection'], expandRange(event[3]));
+          state = state.setIn(['buffers', event[2], 'model', 'selection'], expandRange(event[3]));
           break;
         }
         case 'buffer.insert': case 'buffer.delete': {
           // XXX use reducer imported from common/buffers
           const delta = eventToDelta(event);
           if (delta) {
-            state = state.updateIn(['buffers', event[2], 'document'],
+            state = state.updateIn(['buffers', event[2], 'model', 'document'],
               doc => doc.applyDelta(delta));
           }
           break;
         }
         case 'buffer.scroll': {
           // XXX use reducer imported from common/buffers
-          state = state.setIn(['buffers', event[2], 'firstVisibleRow'], event[3]);
+          state = state.setIn(['buffers', event[2], 'model', 'firstVisibleRow'], event[3]);
           break;
         }
         case 'stepper.translate': case 'translate.start': {
@@ -291,6 +287,8 @@ export default function (bundle, deps) {
         case 'stepper.translateSuccess': case 'translate.success': {
           const action = {diagnostics: event[2].diagnostics, syntaxTree: event[2].ast};
           state = state.update('translate', st => translateSucceeded(st, action));
+          // Clear the output buffer.
+          state = state.setIn(['buffers', 'output', 'model'], DocumentModel());
           break;
         }
         case 'stepper.translateFailure': case 'translate.failure': {
@@ -309,12 +307,9 @@ export default function (bundle, deps) {
           break;
         }
         case 'stepper.restart': {
-          const syntaxTree = state.getIn(['translate', 'syntaxTree']);
-          const input = state.get('input') && state.getIn(['input', 'document'].toString());
-          const stepperState = runtime.start(syntaxTree, {input});
-          stepperState.core = C.clearMemoryLog(stepperState.core);
-          const action = {stepperState};
-          state = state.update('stepper', st => stepperRestart(st, action));
+          const init = deps.getStepperInit(state);
+          const stepperState = deps.buildStepperState(state, init);
+          state = state.update('stepper', st => stepperRestart(st, {stepperState}));
           break;
         }
         case 'stepper.step': {
@@ -355,6 +350,11 @@ export default function (bundle, deps) {
           state = state.update('stepper', st => stepperViewControlsChanged(st, {key, update}));
           break;
         }
+        case 'ioPane.mode': {
+          const mode = event[2];
+          state = ioPaneModeChanged(state, {mode});
+          break;
+        }
         case 'terminal.wait': {
           state = state.update('stepper', st => terminalInputNeeded(st));
           break;
@@ -386,6 +386,14 @@ export default function (bundle, deps) {
       instants.push({t, eventIndex: pos, state});
     }
     return instants;
+  }
+
+  function loadBufferModel (dump) {
+    return DocumentModel({
+      document: documentFromString(dump.document),
+      selection: expandRange(dump.selection),
+      firstVisibleRow: dump.firstVisibleRow || 0
+    });
   }
 
   function beginStep (state) {
@@ -446,18 +454,32 @@ export default function (bundle, deps) {
     }
   });
 
-  function* resetToInstant (instant, audioTime, quick) {
+  function* resetToInstant (instant, audioTime, jump) {
+    // console.log('resetToInstant', instant.t, audioTime, jump);
     const {state} = instant;
-    if (!quick) {
-      yield put({type: deps.bufferReset, buffer: 'source', model: state.get('source')});
-      yield put({type: deps.bufferReset, buffer: 'input', model: state.get('input')});
+    if (jump) {
+      /* Disable the stepper. */
+      yield put({type: deps.stepperDisabled});
     }
+    /* Reset all buffers. */
+    for (let buffer of ['source', 'input', 'output']) {
+      const model = state.getIn(['buffers', buffer, 'model']);
+      yield put({type: deps.bufferReset, buffer, model, quiet: !jump});
+    }
+    /* Reset the stepper's state. */
     const translateState = state.get('translate');
     yield put({type: deps.translateReset, state: translateState});
     const stepperState = state.get('stepper');
     yield put({type: deps.stepperReset, state: stepperState});
+    const ioPaneMode = state.get('ioPaneMode');
+    yield put({type: deps.ioPaneModeChanged, mode: ioPaneMode});
+    if (jump && stepperState.get('status') === 'idle') {
+      /* Re-enable the stepper. */
+      const {options} = yield select(deps.getStepperInit);
+      yield put({type: deps.stepperEnabled, options});
+    }
     const range = runtime.getNodeRange(deps.getStepperDisplay(state));
-    yield put({type: deps.sourceHighlight, range});
+    yield put({type: deps.bufferHighlight, buffer: 'source', range});
     yield put({type: deps.playerTick, audioTime, current: instant});
   }
 
@@ -478,7 +500,7 @@ export default function (bundle, deps) {
         const seekTo = player.get('seekTo');
         if (typeof seekTo === 'number') {
           const instant = findInstant(instants, seekTo);
-          yield call(resetToInstant, instant, seekTo);
+          yield call(resetToInstant, instant, seekTo, true);
           audio.currentTime = seekTo / 1000;
           yield put({type: deps.playerSeeked, current: instant, seekTo});
           continue;
@@ -498,11 +520,11 @@ export default function (bundle, deps) {
         const nextInstant = findInstant(instants, audioTime);
         if (nextInstant.eventIndex < prevInstant.eventIndex) {
           // Event index jumped backwards.
-          yield call(resetToInstant, nextInstant, audioTime);
+          yield call(resetToInstant, nextInstant, audioTime, true);
         } else if (nextInstant.t > prevInstant.t + 1000 && prevInstant.eventIndex + 10 < nextInstant.eventIndex) {
           // Time between last state and new state jumped by more than 1 second,
           // and there are more than 10 events to replay.
-          yield call(resetToInstant, nextInstant, audioTime);
+          yield call(resetToInstant, nextInstant, audioTime, true);
         } else {
           // Play incremental events between prevInstant (exclusive) and
           // nextInstant (inclusive).
@@ -532,8 +554,7 @@ export default function (bundle, deps) {
           }
           // Perform a quick reset, unless playback has ended, in which case
           // we want a full reset to also update the editors' models.
-          const quick = !ended;
-          yield call(resetToInstant, nextInstant, audioTime, quick);
+          yield call(resetToInstant, nextInstant, audioTime, ended);
           if (ended) {
             audio.pause();
             audio.currentTime = audio.duration;

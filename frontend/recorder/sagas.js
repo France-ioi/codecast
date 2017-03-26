@@ -50,7 +50,8 @@ export default function (bundle, deps) {
     'translateStarted', 'translateSucceeded', 'translateFailed', 'translateClearDiagnostics',
     'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperInterrupt', 'stepperRestart', 'stepperExit',
     'stepperUndo', 'stepperRedo', 'stepperStackUp', 'stepperStackDown', 'stepperViewControlsChanged',
-    'terminalInputNeeded', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
+    'terminalInputNeeded', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter',
+    'getIoPaneMode', 'ioPaneModeChanged'
   );
 
   function* recorderPrepare () {
@@ -147,6 +148,19 @@ export default function (bundle, deps) {
       }
       const sourceModel = yield select(deps.getBufferModel, 'source');
       const inputModel = yield select(deps.getBufferModel, 'input');
+      const buffers = {
+        source: {
+          document: sourceModel.get('document').toString(),
+          selection: compressRange(sourceModel.get('selection')),
+          firstVisibleRow: sourceModel.get('firstVisibleRow')
+        },
+        input: {
+          document: inputModel.get('document').toString(),
+          selection: compressRange(inputModel.get('selection')),
+          firstVisibleRow: inputModel.get('firstVisibleRow')
+        }
+      };
+      const ioPaneMode = yield select(deps.getIoPaneMode);
       // Signal that the recorder is starting.
       yield put({type: deps.recorderStarting});
       // Resume the audio context to start recording audio buffers.
@@ -166,18 +180,8 @@ export default function (bundle, deps) {
       yield put({type: deps.recorderStarted});
       yield call(recordEvent, [0, 'start', {
         version: RECORDING_FORMAT_VERSION,
-        buffers: {
-          source: {
-            document: sourceModel.get('document').toString(),
-            selection: compressRange(sourceModel.get('selection')),
-            firstVisibleRow: sourceModel.get('firstVisibleRow')
-          },
-          input: {
-            document: inputModel.get('document').toString(),
-            selection: compressRange(inputModel.get('selection')),
-            firstVisibleRow: inputModel.get('firstVisibleRow')
-          }
-        }
+        ioPaneMode,
+        buffers
       }]);
       yield put({type: deps.switchToScreen, screen: 'record'});
     } catch (error) {
@@ -244,7 +248,6 @@ export default function (bundle, deps) {
         if ('stopped' in outcome)
           break;
         const elapsed = Math.round(context.audioContext.currentTime * 1000);
-        console.log('elapsed', elapsed);
         yield put({type: deps.recorderTick, elapsed});
       }
     }
@@ -364,6 +367,9 @@ export default function (bundle, deps) {
     yield call(recordEvent, [t, 'end']);
   };
 
+  recorders.ioPaneModeChanged = function* (t, action) {
+    yield call(recordEvent, [t, 'ioPane.mode', action.mode]);
+  };
   recorders.terminalInputNeeded = function* (t, action) {
     yield call(recordEvent, [t, 'terminal.wait']);
   };

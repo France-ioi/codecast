@@ -371,7 +371,7 @@ const startOfBuffer = {start: {row: 0, column: 0}, end: {row: 0, column: 0}};
 
 export default function (bundle, deps) {
 
-  bundle.use('bufferReset', 'IOPaneModeChanged');
+  bundle.use('bufferReset', 'ioPaneModeChanged');
 
   bundle.defineAction('exampleSelected', 'Example.Selected');
 
@@ -396,7 +396,7 @@ export default function (bundle, deps) {
     yield put({type: deps.bufferReset, buffer: 'input', model: inputModel});
     /* Force split mode if the example has an associated input. */
     if (example.input) {
-      yield put({type: deps.IOPaneModeChanged, mode: 'split'});
+      yield put({type: deps.ioPaneModeChanged, mode: 'split'});
     }
   }
 

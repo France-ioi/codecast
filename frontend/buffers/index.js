@@ -115,10 +115,12 @@ export default function (bundle, deps) {
       }
     });
     yield takeEvery(deps.bufferReset, function* (action) {
-      const {buffer, model} = action;
-      const editor = yield select(getBufferEditor, buffer);
-      if (editor) {
-        resetEditor(editor, model);
+      const {buffer, model, quiet} = action;
+      if (!quiet) {
+        const editor = yield select(getBufferEditor, buffer);
+        if (editor) {
+          resetEditor(editor, model);
+        }
       }
     });
     yield takeEvery(deps.bufferModelSelect, function* (action) {

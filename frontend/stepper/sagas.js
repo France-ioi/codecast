@@ -213,20 +213,9 @@ export default function (bundle, deps) {
     yield takeLatest(deps.translateSucceeded, function* () {
       try {
         yield put({type: deps.stepperDisabled});
-        // Get the syntax tree from the store so that we get the version where
-        // each node has a range attribute.
-        const translate = yield select(deps.getTranslateState);
-        const options = {};
-        const ioPaneMode = yield select(state => state.get('ioPaneMode'));
-        if (ioPaneMode === 'terminal') {
-          options.terminal = true;
-        } else {
-          const inputModel = yield select(deps.getBufferModel, 'input');
-          options.input = inputModel.get('document').toString();
-        }
-        const stepperState = runtime.start(translate.get('syntaxTree'), options);
-        stepperState.controls = Immutable.Map({stack: Immutable.Map({focusDepth: 0})});
-        yield put({type: deps.stepperEnabled, options});
+        const init = yield select(deps.getStepperInit);
+        const stepperState = yield select(deps.buildStepperState, init);
+        yield put({type: deps.stepperEnabled, options: init.options});
         yield put({type: deps.stepperRestart, stepperState});
       } catch (error) {
         yield put({type: deps.error, source: 'stepper', error});
@@ -234,35 +223,56 @@ export default function (bundle, deps) {
     });
   });
 
+  bundle.defineSelector('getStepperInit', function (state) {
+    const options = {};
+    const ioPaneMode = state.get('ioPaneMode');
+    if (ioPaneMode === 'terminal') {
+      options.terminal = true;
+    } else {
+      const inputModel = deps.getBufferModel(state, 'input');
+      options.input = inputModel.get('document').toString();
+    }
+    const syntaxTree = deps.getTranslateState(state).get('syntaxTree');
+    return {syntaxTree, options};
+  });
+
+  bundle.defineSelector('buildStepperState', function (state, action) {
+    const {syntaxTree, options} = action;
+    const stepperState = runtime.start(syntaxTree, options);
+    stepperState.controls = Immutable.Map({stack: Immutable.Map({focusDepth: 0})});
+    return stepperState;
+  });
+
   bundle.defineAction('stepperEnabled', 'Stepper.Enabled');
   bundle.defineAction('stepperDisabled', 'Stepper.Disabled');
   bundle.addSaga(function* () {
-    yield takeLatest(deps.stepperEnabled, enableStepper);
-    yield takeLatest(deps.stepperDisabled, disableStepper);
-  });
-  function* enableStepper (action) {
-    /* Start the new stepper task. */
-    const newTask = yield fork(function* stepperRootSaga () {
-      yield takeEvery(deps.stepperStep, onStepperStep);
-      yield takeEvery(deps.stepperExit, onStepperExit);
-      yield fork(reflectToSource);
-      if (!action.options.terminal) {
-        yield fork(reflectToOutput);
-      }
+    yield takeLatest(deps.stepperEnabled, function* enableStepper (action) {
+      /* Start the new stepper task. */
+      const newTask = yield fork(function* stepperRootSaga () {
+        console.log('stepper enabled', action.options);
+        yield takeEvery(deps.stepperStep, onStepperStep);
+        yield takeEvery(deps.stepperExit, onStepperExit);
+        yield fork(reflectToSource);
+        if (!action.options.terminal) {
+          yield fork(reflectToOutput);
+        }
+      });
+      yield put({type: deps.stepperTaskStarted, task: newTask});
     });
-    yield put({type: deps.stepperTaskStarted, task: newTask});
-  }
-  function* disableStepper () {
-    /* Cancel the stepper task if still running. */
-    const oldTask = yield select(state => state.stepperTask);
-    if (oldTask) {
-      yield cancel(oldTask);
-      yield put({type: deps.stepperTaskCancelled});
-    }
-    /* Clear source highlighting. */
-    const startPos = {row: 0, column: 0};
-    yield put({type: deps.bufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
-  }
+    yield takeLatest(deps.stepperDisabled, function* disableStepper () {
+      console.log('stepper disabled');
+      /* Cancel the stepper task if still running. */
+      const oldTask = yield select(state => state.stepperTask);
+      if (oldTask) {
+        yield cancel(oldTask);
+        console.log('stepper task cancelled');
+        yield put({type: deps.stepperTaskCancelled});
+      }
+      /* Clear source highlighting. */
+      const startPos = {row: 0, column: 0};
+      yield put({type: deps.bufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
+    });
+  });
 
   function* reflectToSource () {
     /* Highlight the range of the current source fragment. */
@@ -278,6 +288,7 @@ export default function (bundle, deps) {
   }
 
   function* reflectToOutput () {
+    console.log('reflectToOutput started');
     /* Incrementally text produced by the stepper to the output buffer. */
     yield takeLatest([deps.stepperProgress, deps.stepperIdle], function* (action) {
       const stepperState = yield select(deps.getStepperDisplay);
@@ -317,11 +328,10 @@ export default function (bundle, deps) {
   }
 
   function* onStepperExit () {
-    /* Cancel the stepper task. */
-    const stepperTask = yield select(state => state.get('stepperTask'));
-    yield cancel(stepperTask);
-    yield put({type: deps.stepperTaskCancelled});
-    /* Clear the translate state when the stepper is exited. */
+    console.log('onStepperExit');
+    /* Disabled the stepper. */
+    yield put({type: deps.stepperDisabled});
+    /* Clear the translate state. */
     yield put({type: deps.translateClear});
   }
 

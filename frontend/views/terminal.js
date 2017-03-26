@@ -111,7 +111,7 @@ export default function (bundle, deps) {
       return (
         <Panel header={renderHeader()}>
           <div className="row">
-            <div className="col-sm-6">
+            <div className="col-sm-12">
               <TerminalView buffer={terminal} onInit={onTermInit} onKeyPress={onTermChar} onBackspace={onTermBS} onEnter={onTermEnter} />
             </div>
           </div>

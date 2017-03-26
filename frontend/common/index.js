@@ -9,7 +9,6 @@ import buffers from '../buffers/index';
 import errors from './errors';
 import resize from './resize';
 import examples from './examples';
-import IOPane from './io_pane';
 
 export default function (bundle) {
 
@@ -23,7 +22,6 @@ export default function (bundle) {
   bundle.include(errors);
   bundle.include(resize);
   bundle.include(examples);
-  bundle.include(IOPane);
 
   bundle.addReducer('bucketChanged', function (state, action) {
     const {bucket, playerBaseUrl} = action;

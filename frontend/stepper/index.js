@@ -6,6 +6,7 @@ import sagas from './sagas';
 import translate from './translate';
 import StepperControls from './controls';
 import views from '../views/index';
+import IOPaneBundle from './io_pane';
 import TerminalInputBundle from './terminal_input';
 
 export default function (bundle) {
@@ -16,5 +17,6 @@ export default function (bundle) {
   bundle.include(translate);
   bundle.include(StepperControls);
   bundle.include(views);
+  bundle.include(IOPaneBundle);
   bundle.include(TerminalInputBundle);
 };

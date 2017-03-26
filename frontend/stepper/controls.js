@@ -34,8 +34,8 @@ export default function (bundle, deps) {
     const canRestart = canExit && !isStepping;
     const canStep = enabled && !isStepping && haveNode;
     const canInterrupt = enabled && isStepping;
-    const canUndo = !stepper.get('undo').isEmpty() && !isStepping;
-    const canRedo = !stepper.get('redo').isEmpty();
+    const canUndo = enabled && !stepper.get('undo').isEmpty() && !isStepping;
+    const canRedo = enabled && !stepper.get('redo').isEmpty();
     return {
       haveContext,
       showExit, canExit,
