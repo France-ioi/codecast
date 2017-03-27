@@ -59,8 +59,8 @@ export default function (bundle, deps) {
     }
 
     const modeOptions = [
-      {value: 'split', label: "Split input/output"},
-      {value: 'terminal', label: "Interactive terminal"}
+      {value: 'split', label: "Entrée/sortie séparés"},
+      {value: 'terminal', label: "Terminal interactif"}
     ];
 
     self.render = function () {
@@ -71,16 +71,16 @@ export default function (bundle, deps) {
             <div className="col-sm-12">
               <form>
                 <label>
-                  {"Input mechanism"}
+                  {"Mécanisme d'entrée/sortie : "}
                   <select value={mode} onChange={onModeChanged}>
-                    <option value='split'>{"Split input/output"}</option>
-                    <option value='terminal'>{"Interactive terminal"}</option>
+                    {modeOptions.map(p =>
+                      <option value={p.value}>{p.label}</option>)}
                   </select>
                 </label>
               </form>
               {mode === 'split' &&
                 <div>
-                  <p>Initial input:</p>
+                  <p>{"Entrée initiale : "}</p>
                   <deps.BufferEditor buffer='input' mode='text' width='100%' height='150px' />
                 </div>}
             </div>
