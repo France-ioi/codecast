@@ -513,9 +513,12 @@ export default function (bundle, deps) {
       /* Re-enable the stepper. */
       const {options} = yield select(deps.getStepperInit);
       yield put({type: deps.stepperEnabled, options});
-      if (instant.event[1] === 'terminal.wait' && stepperState.get('status') === 'running') {
-        /* Step to block on IO. */
-        yield put({type: deps.stepperStep, mode: 'into'});
+      if (stepperState.get('status') === 'running') {
+        const {isWaitingOnInput} = stepperState.get('current');
+        if (isWaitingOnInput) {
+          /* Step to block on IO. */
+          yield put({type: deps.stepperStep, mode: 'into'});
+        }
       }
     }
     const range = runtime.getNodeRange(deps.getStepperDisplay(state));
