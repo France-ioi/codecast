@@ -341,9 +341,7 @@ export default function (bundle, deps) {
           break;
         }
         case 'stepper.undo': {
-          console.log("before undo", t, state.getIn(['stepper', 'current']).output);
           state = state.update('stepper', st => stepperUndo(st));
-          console.log("after undo", state.getIn(['stepper', 'current']).output);
           if (state.get('ioPaneMode') === 'split') {
             state = syncOutputBuffer(state);
             instant.saga = syncOutputBufferSaga;
