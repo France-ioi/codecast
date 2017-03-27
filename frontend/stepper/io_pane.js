@@ -4,6 +4,8 @@ import {Panel} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 
 import Editor from '../buffers/editor';
+import {documentFromString} from '../buffers/document';
+import {DocumentModel} from '../buffers/index';
 
 export default function (bundle, deps) {
 
@@ -74,7 +76,7 @@ export default function (bundle, deps) {
                   {"Mécanisme d'entrée/sortie : "}
                   <select value={mode} onChange={onModeChanged}>
                     {modeOptions.map(p =>
-                      <option value={p.value}>{p.label}</option>)}
+                      <option key={p.value} value={p.value}>{p.label}</option>)}
                   </select>
                 </label>
               </form>
@@ -135,6 +137,20 @@ export default function (bundle, deps) {
     const {output} = stepper;
     return {output};
   }
+
+
+  bundle.defineSelector('getOutputBufferModel', function (state) {
+    const stepper = deps.getStepperDisplay(state);
+    const {output} = stepper;
+    const doc = documentFromString(output);
+    const endCursor = doc.endCursor();
+    const model = DocumentModel({
+      document: doc,
+      selection: {start: endCursor, end: endCursor},
+      firstVisibleRow: endCursor.row
+    });
+    return model;
+  });
 
 };
 

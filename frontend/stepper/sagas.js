@@ -4,7 +4,6 @@ import {takeEvery, takeLatest, take, put, call, select, cancel, fork, race} from
 import * as C from 'persistent-c';
 import Immutable from 'immutable';
 
-import {documentFromString} from '../buffers/document';
 import * as runtime from './runtime';
 
 export default function (bundle, deps) {
@@ -17,6 +16,7 @@ export default function (bundle, deps) {
     'stepperStackUp', 'stepperStackDown', 'stepperInterrupt',
     'translateSucceeded', 'getTranslateState', 'translateClear',
     'getBufferModel', 'bufferHighlight', 'bufferReset', 'bufferEdit', 'bufferModelEdit', 'bufferModelSelect',
+    'getOutputBufferModel',
     'terminalFocus', 'terminalInputNeeded',
     'error'
   );
@@ -285,7 +285,6 @@ export default function (bundle, deps) {
   }
 
   function* reflectToOutput () {
-    console.log('reflectToOutput started');
     /* Incrementally text produced by the stepper to the output buffer. */
     yield takeLatest([deps.stepperProgress, deps.stepperIdle], function* (action) {
       const stepperState = yield select(deps.getStepperDisplay);
@@ -311,11 +310,8 @@ export default function (bundle, deps) {
       }
     });
     /* Reset the output document. */
-    yield takeLatest([deps.stepperRestart, deps.stepperUndo, deps.stepperRedo], function* (action) {
-      const stepperState = yield select(deps.getStepperDisplay);
-      const outputModel = yield select(deps.getBufferModel, 'output');
-      const doc = documentFromString(stepperState.output);
-      const model = outputModel.set('document', doc);
+    yield takeEvery([deps.stepperRestart, deps.stepperUndo, deps.stepperRedo], function* () {
+      const model = yield select(deps.getOutputBufferModel);
       yield put({type: deps.bufferReset, buffer: 'output', model});
     });
   }

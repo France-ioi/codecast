@@ -84,13 +84,19 @@ export default function (bundle, deps) {
       self.props.dispatch({type: deps.terminalInit, iface});
     }
     function onTermChar (key) {
-      self.props.dispatch({type: deps.terminalInputKey, key});
+      if (!self.props.preventInput) {
+        self.props.dispatch({type: deps.terminalInputKey, key});
+      }
     }
     function onTermBS () {
-      self.props.dispatch({type: deps.terminalInputBackspace});
+      if (!self.props.preventInput) {
+        self.props.dispatch({type: deps.terminalInputBackspace});
+      }
     }
     function onTermEnter () {
-      self.props.dispatch({type: deps.terminalInputEnter});
+      if (!self.props.preventInput) {
+        self.props.dispatch({type: deps.terminalInputEnter});
+      }
     }
 
     const renderHeader = function () {

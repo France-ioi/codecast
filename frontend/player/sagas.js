@@ -36,7 +36,7 @@ export default function (bundle, deps) {
     'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset', 'stepperStep',
     'bufferReset', 'bufferModelSelect', 'bufferModelEdit', 'bufferModelScroll', 'bufferHighlight',
     'stepperEnabled', 'stepperDisabled',
-    'ioPaneModeChanged'
+    'ioPaneModeChanged', 'getOutputBufferModel'
   );
 
   // pause, resume audio
@@ -240,6 +240,7 @@ export default function (bundle, deps) {
     for (let pos = 0; pos < events.length; pos += 1) {
       const event = events[pos];
       const t = event[0];
+      const instant = {t, pos, event};
       switch (event[1]) {
         case 'start': {
           const init = event[2];
@@ -263,6 +264,9 @@ export default function (bundle, deps) {
         case 'buffer.select': {
           // XXX use reducer imported from common/buffers
           state = state.setIn(['buffers', event[2], 'model', 'selection'], expandRange(event[3]));
+          instant.saga = function* () {
+            yield put({type: deps.bufferModelSelect, buffer: event[2], selection: expandRange(event[3])});
+          };
           break;
         }
         case 'buffer.insert': case 'buffer.delete': {
@@ -271,12 +275,18 @@ export default function (bundle, deps) {
           if (delta) {
             state = state.updateIn(['buffers', event[2], 'model', 'document'],
               doc => doc.applyDelta(delta));
+            instant.saga = function* () {
+              yield put({type: deps.bufferModelEdit, buffer: event[2], delta: eventToDelta(event)});
+            };
           }
           break;
         }
         case 'buffer.scroll': {
           // XXX use reducer imported from common/buffers
           state = state.setIn(['buffers', event[2], 'model', 'firstVisibleRow'], event[3]);
+          instant.saga = function* () {
+            yield put({type: deps.bufferModelScroll, buffer: event[2], firstVisibleRow: event[3]});
+          };
           break;
         }
         case 'stepper.translate': case 'translate.start': {
@@ -287,8 +297,6 @@ export default function (bundle, deps) {
         case 'stepper.translateSuccess': case 'translate.success': {
           const action = {diagnostics: event[2].diagnostics, syntaxTree: event[2].ast};
           state = state.update('translate', st => translateSucceeded(st, action));
-          // Clear the output buffer.
-          state = state.setIn(['buffers', 'output', 'model'], DocumentModel());
           break;
         }
         case 'stepper.translateFailure': case 'translate.failure': {
@@ -310,6 +318,10 @@ export default function (bundle, deps) {
           const init = deps.getStepperInit(state);
           const stepperState = deps.buildStepperState(state, init);
           state = state.update('stepper', st => stepperRestart(st, {stepperState}));
+          if (state.get('ioPaneMode') === 'split') {
+            state = syncOutputBuffer(state);
+            instant.saga = syncOutputBufferSaga;
+          }
           break;
         }
         case 'stepper.step': {
@@ -329,11 +341,21 @@ export default function (bundle, deps) {
           break;
         }
         case 'stepper.undo': {
+          console.log("before undo", t, state.getIn(['stepper', 'current']).output);
           state = state.update('stepper', st => stepperUndo(st));
+          console.log("after undo", state.getIn(['stepper', 'current']).output);
+          if (state.get('ioPaneMode') === 'split') {
+            state = syncOutputBuffer(state);
+            instant.saga = syncOutputBufferSaga;
+          }
           break;
         }
         case 'stepper.redo': {
           state = state.update('stepper', st => stepperRedo(st));
+          if (state.get('ioPaneMode') === 'split') {
+            state = syncOutputBuffer(state);
+            instant.saga = syncOutputBufferSaga;
+          }
           break;
         }
         case 'stepper.stack.up': {
@@ -385,7 +407,8 @@ export default function (bundle, deps) {
           break;
         }
       }
-      instants.push({t, eventIndex: pos, event, state});
+      instant.state = state;
+      instants.push(instant);
     }
     return instants;
   }
@@ -396,6 +419,16 @@ export default function (bundle, deps) {
       selection: expandRange(dump.selection),
       firstVisibleRow: dump.firstVisibleRow || 0
     });
+  }
+
+  function syncOutputBuffer (state) {
+    const model = deps.getOutputBufferModel(state);
+    return state.setIn(['buffers', 'output', 'model'], model);
+  }
+
+  function* syncOutputBufferSaga (instant) {
+    const model = instant.state.getIn(['buffers', 'output', 'model']);
+    yield put({type: deps.bufferReset, buffer: 'output', model});
   }
 
   function beginStep (state) {
@@ -478,8 +511,7 @@ export default function (bundle, deps) {
     yield put({type: deps.stepperReset, state: stepperState});
     const ioPaneMode = state.get('ioPaneMode');
     yield put({type: deps.ioPaneModeChanged, mode: ioPaneMode});
-    console.log('jump', isPlaying, jump, stepperState.get('status'), instant);
-    if (!isPlaying && jump) { // XXX only if paused!
+    if (!isPlaying && jump) {
       /* Re-enable the stepper. */
       const {options} = yield select(deps.getStepperInit);
       yield put({type: deps.stepperEnabled, options});
@@ -528,10 +560,10 @@ export default function (bundle, deps) {
         }
         const prevInstant = player.get('current');
         const nextInstant = findInstant(instants, audioTime);
-        if (nextInstant.eventIndex < prevInstant.eventIndex) {
+        if (nextInstant.pos < prevInstant.pos) {
           // Event index jumped backwards.
           yield call(resetToInstant, nextInstant, audioTime, true);
-        } else if (nextInstant.t > prevInstant.t + 1000 && prevInstant.eventIndex + 10 < nextInstant.eventIndex) {
+        } else if (nextInstant.t > prevInstant.t + 1000 && prevInstant.pos + 10 < nextInstant.pos) {
           // Time between last state and new state jumped by more than 1 second,
           // and there are more than 10 events to replay.
           yield call(resetToInstant, nextInstant, audioTime, true);
@@ -540,26 +572,19 @@ export default function (bundle, deps) {
           // nextInstant (inclusive).
           // Small time delta, attempt to replay events.
           const events = player.get('events');
-          // XXX Assumption: 1-to-1 correspondance between indexes in
-          //                 events and instants: instants[pos] is the state
-          //                 immediately after replaying events[pos],
-          //                 and pos === instants[pos].eventIndex
-          for (let pos = prevInstant.eventIndex + 1; pos <= nextInstant.eventIndex; pos += 1) {
-            const event = events[pos];
-            switch (event[1]) {
-              case 'buffer.select':
-                yield put({type: deps.bufferModelSelect, buffer: event[2], selection: expandRange(event[3])});
-                break;
-              case 'buffer.insert': case 'buffer.delete':
-                yield put({type: deps.bufferModelEdit, buffer: event[2], delta: eventToDelta(event)});
-                break;
-              case 'buffer.scroll':
-                yield put({type: deps.bufferModelScroll, buffer: event[2], firstVisibleRow: event[3]});
-                break;
-              case 'end':
-                ended = true;
-                audioTime = player.get('duration');
-                break;
+          // Assumption: instants[pos] is the state immediately after replaying events[pos],
+          //             and pos === instants[pos].pos.
+          for (let pos = prevInstant.pos + 1; pos <= nextInstant.pos; pos += 1) {
+            const instant = instants[pos];
+            if (instant.saga) {
+              /* Keep in mind that the instant's saga runs *prior* to the call
+                 to resetToInstant below, and should not rely on the global
+                 state being accurate.  Instead, it should use `instant.state`. */
+              yield call(instant.saga, instant);
+            }
+            if (instant.event[1] === 'end') {
+              ended = true;
+              audioTime = player.get('duration');
             }
           }
           // Perform a quick reset, unless playback has ended, in which case
