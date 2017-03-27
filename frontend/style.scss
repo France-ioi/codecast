@@ -133,7 +133,6 @@ body#app, #app h1, #app h2, #app h3 {
 }
 .terminal-line, .terminal-placeholder {
   background-color: black;
-  width: 540px; /* 60 columns * 9px */
   min-height: 1em;
   white-space: pre;
 }

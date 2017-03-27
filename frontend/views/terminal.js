@@ -56,7 +56,7 @@ const TerminalView = EpicComponent(self => {
       <div ref={refTerminal} className="terminal" tabIndex="1" onKeyDown={onKeyDown} onKeyUp={onKeyUp} onKeyPress={onKeyPress}>
         {buffer.get('lines').map(function (line, i) {
           return (
-            <div key={i} className="terminal-line">
+            <div key={i} className="terminal-line" style={{width: '720px'}}>
               {line.map(function (cell, j) {
                 if (i == ci && j == cj) {
                   return <span key={j} className="terminal-cursor">{cell.get('char')}</span>;
