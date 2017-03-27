@@ -107,7 +107,7 @@ export default function (bundle, deps) {
             {'Entrée '}
             <i className="fa fa-lock"/>
           </div>
-          <div className="col-sm-6">Sortie</div>
+          <div className="col-sm-6">{"Sortie"}</div>
         </div>
       );
     };

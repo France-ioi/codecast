@@ -249,7 +249,6 @@ export default function (bundle, deps) {
     yield takeLatest(deps.stepperEnabled, function* enableStepper (action) {
       /* Start the new stepper task. */
       const newTask = yield fork(function* stepperRootSaga () {
-        console.log('stepper enabled', action.options);
         yield takeEvery(deps.stepperStep, onStepperStep);
         yield takeEvery(deps.stepperExit, onStepperExit);
         yield fork(reflectToSource);
@@ -260,12 +259,10 @@ export default function (bundle, deps) {
       yield put({type: deps.stepperTaskStarted, task: newTask});
     });
     yield takeLatest(deps.stepperDisabled, function* disableStepper () {
-      console.log('stepper disabled');
       /* Cancel the stepper task if still running. */
       const oldTask = yield select(state => state.stepperTask);
       if (oldTask) {
         yield cancel(oldTask);
-        console.log('stepper task cancelled');
         yield put({type: deps.stepperTaskCancelled});
       }
       /* Clear source highlighting. */
@@ -328,7 +325,6 @@ export default function (bundle, deps) {
   }
 
   function* onStepperExit () {
-    console.log('onStepperExit');
     /* Disabled the stepper. */
     yield put({type: deps.stepperDisabled});
     /* Clear the translate state. */
