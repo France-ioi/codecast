@@ -185,11 +185,9 @@ export default function (bundle) {
   });
 
   bundle.addReducer('stepperStep', function (state, action) {
-    if (state.getIn(['stepper', 'status']) !== 'idle') {
-      return state;
-    } else {
-      return state.setIn(['stepper', 'status'], 'starting');
-    }
+    /* No check for 'idle' status, the player must be able to step while
+       the status is 'running'. */
+    return state.setIn(['stepper', 'status'], 'starting');
   });
 
   bundle.addReducer('stepperStarted', function (state, action) {

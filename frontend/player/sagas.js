@@ -33,7 +33,7 @@ export default function (bundle, deps) {
     'getStepperInit', 'buildStepperState',
     'getPlayerState', 'getStepperDisplay',
     'translateReset',
-    'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset',
+    'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset', 'stepperStep',
     'bufferReset', 'bufferModelSelect', 'bufferModelEdit', 'bufferModelScroll', 'bufferHighlight',
     'stepperEnabled', 'stepperDisabled',
     'ioPaneModeChanged'
@@ -385,7 +385,7 @@ export default function (bundle, deps) {
           break;
         }
       }
-      instants.push({t, eventIndex: pos, state});
+      instants.push({t, eventIndex: pos, event, state});
     }
     return instants;
   }
@@ -457,10 +457,13 @@ export default function (bundle, deps) {
   });
 
   function* resetToInstant (instant, audioTime, jump) {
+    const player = yield select(deps.getPlayerState);
+    const isPlaying = player.get('status') === 'playing';
     // console.log('resetToInstant', instant.t, audioTime, jump);
     const {state} = instant;
-    if (jump) {
-      /* Disable the stepper. */
+    /* The stepper is already disabled if not paused. */
+    if (!isPlaying && jump) {
+      /* A jump occurred, disable the stepper to reset it below. */
       yield put({type: deps.stepperDisabled});
     }
     /* Reset all buffers. */
@@ -475,10 +478,15 @@ export default function (bundle, deps) {
     yield put({type: deps.stepperReset, state: stepperState});
     const ioPaneMode = state.get('ioPaneMode');
     yield put({type: deps.ioPaneModeChanged, mode: ioPaneMode});
-    if (jump && stepperState.get('status') === 'idle') {
+    console.log('jump', isPlaying, jump, stepperState.get('status'), instant);
+    if (!isPlaying && jump) { // XXX only if paused!
       /* Re-enable the stepper. */
       const {options} = yield select(deps.getStepperInit);
       yield put({type: deps.stepperEnabled, options});
+      if (instant.event[1] === 'terminal.wait' && stepperState.get('status') === 'running') {
+        /* Step to block on IO. */
+        yield put({type: deps.stepperStep, mode: 'into'});
+      }
     }
     const range = runtime.getNodeRange(deps.getStepperDisplay(state));
     yield put({type: deps.bufferHighlight, buffer: 'source', range});
