@@ -370,8 +370,10 @@ export default function (bundle, deps) {
         }
         case 'terminal.enter': {
           state = state.update('stepper', st => terminalInputEnter(st));
-          /* Update the context so that the step completes with the added input */
-          context.state = state.getIn(['stepper', 'current']);
+          if (context) {
+            /* Update the context so that the step completes with the added input */
+            context.state = state.getIn(['stepper', 'current']);
+          }
           break;
         }
         case 'end': {
