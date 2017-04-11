@@ -43,9 +43,9 @@ const config = module.exports = {
   },
   resolve: {
     extensions: ['.js'],
-		alias: {
-			'lamejs': 'lamejs/src/js/'
-		}
+    alias: {
+      'lamejs': 'lamejs/src/js/'
+    }
   },
   plugins: [
     new webpack.DefinePlugin({
@@ -58,7 +58,12 @@ const config = module.exports = {
     new webpack.optimize.CommonsChunkPlugin({
       name: "vendor",
       filename: "vendor.js",
-      minChunks: function (module) { return /node_modules/.test(module.resource); }
+      minChunks: function (module) {
+        if (/persistent-c/.test(module.resource)) {
+          return false;
+        }
+        return /node_modules/.test(module.resource);
+      }
     })
   ]
 };
