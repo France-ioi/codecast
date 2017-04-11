@@ -42,6 +42,10 @@ export const readValue = function (core, refType, address, context) {
     const cells = readArray(core, type, address, context);
     return {kind: 'array', count: type.count, cells};
   }
+  if (type.kind === 'record') {
+    const fields = readRecord(core, type, address, context);
+    return {kind: 'record', name: type.name, fields};
+  }
   if (context) {
     context.scalars += 1;
   }
@@ -113,6 +117,17 @@ export const readArray = function (core, arrayType, address, context) {
     cells.push({index, address, content: {kind: 'ellipsis'}});
   }
   return cells;
+};
+
+export const readRecord = function (core, recordType, address, context) {
+  const fields = [];
+  for (let fieldName of recordType.fields) {
+    const {offset, refType} = recordType.fieldMap[fieldName];
+    const fieldAddress = address + offset;
+    const content = readValue(core, refType, fieldAddress, context);
+    fields.push({name: fieldName, address: fieldAddress, content});
+  }
+  return fields;
 };
 
 
@@ -295,6 +310,23 @@ export const StoredValue = EpicComponent(self => {
         </span>
       );
     }
+    if (value.kind === 'record') {
+      const {fields} = value;
+      return (
+        <span className='value value-record'>
+          {'{'}
+          {fields.map((field, i) =>
+            <span key={field.name}>
+              <span className='value-record-field' title={field.name}>
+                <StoredValue value={field.content}/>
+              </span>
+              {i + 1 === fields.length || ', '}
+            </span>
+          )}
+          {'}'}
+        </span>
+      );
+    }
     return <span className='value'>{`unknown value kind ${value.kind}`}</span>;
   };
 
@@ -309,6 +341,8 @@ export const renderDeclType = function (type, subject, prec) {
       return renderDeclType(type.pointee, <span>{'*'}{subject}</span>, 1);
     case 'array':
       return renderDeclType(type.elem, <span>{parensIf(prec > 0, subject)}{'['}{type.count && type.count.toString()}{']'}</span>, 0);
+    case 'record':
+      return <span>{'struct'}{' '}{type.name}{' '}{subject}</span>;
     case 'scalar':
       return <span>{type.repr}{' '}{subject}</span>;
     default:
