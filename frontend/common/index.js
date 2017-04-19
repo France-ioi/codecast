@@ -74,6 +74,10 @@ export const interpretQueryString = function (store, scope, qs) {
     store.dispatch({type: scope.inputLoad, text: qs.input||''});
   }
 
+  if ('token' in qs) {
+    store.dispatch({type: scope.uploadTokenChanged, token: qs.token});
+  }
+
   const bucket = qs.bucket || 'fioi-recordings';
   const playerBaseUrl = document.location.href.replace(
     /\/recorder(\??[^/]*)$/, (_, qs) => `/player${qs}`);
