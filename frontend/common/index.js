@@ -14,7 +14,6 @@ export default function (bundle) {
 
   // Sent when the application initializes.
   bundle.defineAction('init', 'System.Init');
-  bundle.defineAction('bucketChanged', 'Bucket.Changed');
 
   bundle.include(MainView);
   bundle.include(fullscreen);
@@ -22,16 +21,6 @@ export default function (bundle) {
   bundle.include(errors);
   bundle.include(resize);
   bundle.include(examples);
-
-  bundle.addReducer('bucketChanged', function (state, action) {
-    const {bucket, playerBaseUrl} = action;
-    return state.set('getResourceUrl', function getResourceUrl (id, ext) {
-      return `https://${bucket}.s3.amazonaws.com/uploads/${id}.${ext}`;
-    }).set('getPlayerUrl', function getPlayerUrl (id) {
-      const sep = playerBaseUrl.indexOf('?') === -1 ? '?' : '&';
-      return `${playerBaseUrl}${sep}bucket=${bucket}&id=${id}`;
-    });
-  });
 
 };
 
@@ -78,9 +67,4 @@ export const interpretQueryString = function (store, scope, qs) {
     store.dispatch({type: scope.uploadTokenChanged, token: qs.token});
   }
 
-  const bucket = qs.bucket || 'fioi-recordings';
-  const playerBaseUrl = document.location.href.replace(
-    /\/recorder(\??[^/]*)$/, (_, qs) => `/player${qs}`);
-
-  store.dispatch({type: scope.bucketChanged, bucket, playerBaseUrl});
 };

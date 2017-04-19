@@ -56,10 +56,17 @@ start();
 const container = document.getElementById('react-container');
 ReactDOM.render(<Provider store={store}><scope.App/></Provider>, container);
 
-const getResourceUrl = store.getState().get('getResourceUrl');
-
-store.dispatch({
-  type: scope.playerPrepare,
-  audioUrl: getResourceUrl(qs.id, 'mp3'),
-  eventsUrl: getResourceUrl(qs.id, 'json')
-});
+if (qs.id) {
+  const getResourceUrl = store.getState().get('getResourceUrl');
+  store.dispatch({
+    type: scope.playerPrepare,
+    audioUrl: getResourceUrl(qs.id, 'mp3'),
+    eventsUrl: getResourceUrl(qs.id, 'json')
+  });
+} else if (qs.base) {
+  store.dispatch({
+    type: scope.playerPrepare,
+    audioUrl: `${qs.base}.mp3`,
+    eventsUrl: `${qs.base}.json`
+  });
+}

@@ -63,14 +63,16 @@ app.post('/upload', function (req, res) {
   getConfigByToken(req.params.token, function (err, config) {
     if (err) return json({error: err});
     const id = Date.now().toString();
-    const uploadPath = config.uploadPath || 'uploads';
-    const base = `${uploadPath}/${id}`;
+    const uploadPath = `${config.uploadPath||'uploads'}/${id}`;
+    const bucket = config.s3Bucket;
     const s3client = makeS3Client(config);
-    upload.getJsonUploadForm(s3client, config.s3Bucket, base, function (err, events) {
+    upload.getJsonUploadForm(s3client, bucket, uploadPath, function (err, events) {
       // if (err) ...
-      upload.getMp3UploadForm(base, function (err, audio) {
+      upload.getMp3UploadForm(s3client, bucket, uploadPath, function (err, audio) {
         // if (err) ...
-        res.json({id: id, events: events, audio: audio});
+        const baseUrl = `https://${bucket}.s3.amazonaws.com/${uploadPath}`;
+        const player_url = `${process.env.PLAYER_URL}?base=${encodeURIComponent(base)}`;
+        res.json({player_url, events: events, audio: audio});
       });
     });
   });
