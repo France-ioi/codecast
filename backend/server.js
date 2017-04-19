@@ -38,29 +38,40 @@ if (isDevelopment) {
 
 /* Serve static assets. */
 app.use('/assets', express.static(path.join(rootDir, 'assets')));
+function rebaseUrl (url) {
+  return `${process.env.BASE_URL}/${url}`;
+}
 
 app.use(bodyParser.json());
 
 app.get('/recorder', function (req, res) {
-  res.render('index', {development: isDevelopment});
+  getConfigByToken(req.query.token, function (err, config) {
+    if (err) return res.redirect(`${process.env.BASE_URL}/`);
+    res.render('index', {development: isDevelopment, rebaseUrl});
+  })
 });
 
 app.get('/player', function (req, res) {
-  res.render('player', {development: isDevelopment});
+  res.render('player', {development: isDevelopment, rebaseUrl});
 });
 
 app.get('/', function (req, res) {
-  res.render('sandbox', {development: isDevelopment});
+  res.render('sandbox', {development: isDevelopment, rebaseUrl});
 });
 
 app.post('/upload', function (req, res) {
-  const id = Date.now().toString();
-  const base = `uploads/${id}`;
-  upload.getJsonUploadForm(base, function (err, events) {
-    // if (err) ...
-    upload.getMp3UploadForm(base, function (err, audio) {
+  getConfigByToken(req.params.token, function (err, config) {
+    if (err) return json({error: err});
+    const id = Date.now().toString();
+    const uploadPath = config.uploadPath || 'uploads';
+    const base = `${uploadPath}/${id}`;
+    const s3client = makeS3Client(config);
+    upload.getJsonUploadForm(s3client, config.s3Bucket, base, function (err, events) {
       // if (err) ...
-      res.json({id: id, events: events, audio: audio});
+      upload.getMp3UploadForm(base, function (err, audio) {
+        // if (err) ...
+        res.json({id: id, events: events, audio: audio});
+      });
     });
   });
 });
@@ -118,3 +129,26 @@ app.post('/translate', function (req, res) {
 
 const server = http.createServer(app);
 server.listen(process.env.PORT);
+
+function getConfigByToken (token, callback) {
+  if (token === undefined) {
+    token = 'default';
+  }
+  fs.readFile('config.json', 'utf8', function (err, data) {
+    if (err) return res.json({error: err.toString()});
+    const configFile = JSON.parse(data);
+    const {configs, tokens} = configFile;
+    if (!(token in tokens)) {
+      return callback('bad token');
+    }
+    const config = {};
+    tokens[token].forEach(function (item) {
+      if (typeof item === 'object') {
+        Object.assign(config, item);
+      } else if (typeof item === 'string') {
+        Object.assign(config, configs[item]);
+      }
+    });
+    callback(null, config);
+  });
+}
