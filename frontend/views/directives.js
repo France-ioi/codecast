@@ -97,10 +97,10 @@ export default function (bundle, deps) {
       if (!state || !state.analysis) {
         return false;
       }
-      const {core, analysis, controls, directives} = state;
+      const {core, oldCore, analysis, controls, directives} = state;
       const {ordered, framesMap} = directives;
       const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
-      const context = {core};
+      const context = {core, oldCore};
 
       const renderDirective = function (directive) {
         const {key, kind} = directive;

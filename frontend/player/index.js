@@ -32,7 +32,7 @@ const {store, scope, start} = link(function (bundle) {
   bundle.addReducer('init', _ => Immutable.Map({
     player: Immutable.Map({
       status: 'idle',
-      audio: new Audio()
+      audio: document.createElement('video')
     })
   }));
 

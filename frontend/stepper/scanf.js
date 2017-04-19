@@ -89,7 +89,7 @@ function p_integral (typeName, parser) {
     P.bind(parser, rawValue =>
     P.bind(p_nextArg, ref =>
     P.always(function (state) {
-      writeValue(state, ref, new C.IntegralValue(C.scalarTypes[typeName], rawValue));
+      writeValue(state, ref, new C.IntegralValue(C.builtinTypes[typeName], rawValue));
     }))));
 }
 
@@ -98,7 +98,7 @@ function p_floating (typeName, parser) {
     P.bind(parser, rawValue =>
     P.bind(p_nextArg, ref =>
     P.always(function (state) {
-      writeValue(state, ref, new C.FloatingValue(C.scalarTypes[typeName], rawValue));
+      writeValue(state, ref, new C.FloatingValue(C.builtinTypes[typeName], rawValue));
     }))));
 }
 
@@ -114,7 +114,7 @@ const p_char =
   P.bind(p_nextArg, ref =>
   P.always(function (state) {
     const charCode = char.charCodeAt(0) & 0xff;
-    writeValue(state, ref, new C.IntegralValue(C.scalarTypes["char"], charCode));
+    writeValue(state, ref, new C.IntegralValue(C.builtinTypes["char"], charCode));
   })));
 
 function getFormatParser (format) {
@@ -166,7 +166,7 @@ export const applyScanfEffect = function (state, effect) {
         state.isWaitingOnInput = true;
       } else {
         /* End of input */
-        core.result = new C.IntegralValue(C.scalarTypes['int'], -1);
+        core.result = new C.IntegralValue(C.builtinTypes['int'], -1);
         core.direction = 'up';
       }
       return;
@@ -185,7 +185,7 @@ export const applyScanfEffect = function (state, effect) {
     }, actions);
   }
   core.direction = 'up';
-  core.result = new C.IntegralValue(C.scalarTypes['int'], result);
+  core.result = new C.IntegralValue(C.builtinTypes['int'], result);
 };
 
 export const scanf = function (state, cont, values) {

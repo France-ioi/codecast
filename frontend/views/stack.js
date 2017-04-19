@@ -15,14 +15,14 @@ export default function (bundle, deps) {
     if (!stepperState) {
       return {};
     }
-    const {core, analysis, controls} = stepperState;
+    const {core, oldCore, analysis, controls} = stepperState;
     const {maxVisible} = props;
     const stackControls = controls.get('stack');
     const focusDepth = stackControls ? stackControls.get('focusDepth', 0) : 0;
     const firstVisible = Math.max(0, focusDepth - 5);
     return {
       focusDepth,
-      core,
+      context: {core, oldCore},
       analysis,
       controls: stackControls,
       firstVisible,
@@ -97,14 +97,15 @@ export default function (bundle, deps) {
     };
 
     self.render = function () {
-      const {core, height} = self.props;
-      if (!core) {
+      const {context, height} = self.props;
+      if (!context) {
         return (
           <div className="stack-view" style={{height}}>
             <p>Programme arrêté.</p>
           </div>
         );
       }
+      const {core} = context;
       if (core.error) {
         return (
           <div className="stack-view" style={{height}}>
@@ -121,7 +122,7 @@ export default function (bundle, deps) {
       const tailCount = frames.size - beyondVisible;
       const views = frames.reverse().slice(firstVisible, beyondVisible).map(function (frame, depth) {
         const focus = depth >= firstExpanded && depth < firstExpanded + maxExpanded;
-        const view = viewFrame(core, frame, {locals: focus});
+        const view = viewFrame(context, frame, {locals: focus});
         view.focus = focus;
         return view;
       });

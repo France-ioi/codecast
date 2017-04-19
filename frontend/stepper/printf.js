@@ -17,7 +17,7 @@ const formatCache = new Map();
 
 export const printf = function (state, cont, values) {
   const str = sprintf(state, values);
-  const result = new C.IntegralValue(C.scalarTypes['int'], str.length);
+  const result = new C.IntegralValue(C.builtinTypes['int'], str.length);
   return {control: cont, effects: [['write', str]], result, seq: 'expr'};
 };
 
@@ -202,10 +202,10 @@ TODO: write a test suite
   const state = C.start({decls: []});
 
   const fmtVal = C.stringValue('>%f<');
-  const fmtRef = new C.PointerValue(C.pointerType(C.scalarTypes['char']), 0);
+  const fmtRef = new C.PointerValue(C.pointerType(C.builtinTypes['char']), 0);
   state.memory = C.writeValue(state.memory, fmtRef, fmtVal);
 
-  const int = C.scalarTypes['int'];
+  const int = C.builtinTypes['int'];
   const val = new C.FloatingValue(int, 3.3);
 
   console.log(sprintf(state, [null, fmtRef, val]));

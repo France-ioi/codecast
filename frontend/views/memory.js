@@ -65,8 +65,10 @@ const formatByte = function (byte) {
   return (byte | 0x100).toString(16).substring(1).toUpperCase();
 };
 
-const extractView = function (core, localMap, options) {
-  const {memory, memoryLog, oldMemory} = core;
+const extractView = function (context, localMap, options) {
+  const {core, oldCore} = context;
+  const {memory, memoryLog} = core;
+  const oldMemory = oldCore.memory;
   const {nBytesShown, cursorRows} = options;
   const maxAddress = memory.size;
   const centerAddress = Math.floor(options.centerAddress);
@@ -104,14 +106,14 @@ const extractView = function (core, localMap, options) {
     });
   finalizeCursors(range(startAddress, endAddress + 1), cursorMap, options.cursorRows);
   // Build the variables view.
-  const variables = viewVariables(core, byteOps, startAddress, endAddress, options);
+  const variables = viewVariables(context, byteOps, startAddress, endAddress, options);
   // Build the extra-type views.
   const extraRows = [];
   options.extraExprs.forEach(function (expr) {
     try {
       const ref = evalExpr(core, localMap, expr, true);
-      if (ref && /^(scalar|pointer)$/.test(ref.type.pointee.kind)) {
-        const row = viewExtraCells(core, byteOps, ref, startAddress, endAddress);
+      if (ref && /^(builtin|pointer)$/.test(ref.type.pointee.kind)) {
+        const row = viewExtraCells(context, byteOps, ref, startAddress, endAddress);
         extraRows.push(row);
       }
     } catch (ex) {
@@ -163,7 +165,7 @@ const getByteRangeOps = function (byteOps, start, end) {
   return {load, store};
 };
 
-const viewExtraCells = function (core, byteOps, ref, startAddress, endAddress) {
+const viewExtraCells = function (context, byteOps, ref, startAddress, endAddress) {
   const refType = ref.type;
   const {size} = refType.pointee;
   // Align `startAddress` with `ref`.
@@ -172,16 +174,16 @@ const viewExtraCells = function (core, byteOps, ref, startAddress, endAddress) {
   const cells = [];
   for (let address = startAddress; address + size - 1 <= endAddress; address += size) {
     const valRef = {...ref, address};
-    const cell = viewValue(core, byteOps, valRef);
+    const cell = viewValue(context, byteOps, valRef);
     cells.push(cell);
   }
   return {size, cells};
 };
 
-const viewVariables = function (core, byteOps, startAddress, endAddress, options) {
+const viewVariables = function (context, byteOps, startAddress, endAddress, options) {
   const cells = [];
-  const {memory, globalMap} = core;
-  let {scope} = core;
+  const {memory, globalMap} = context.core;
+  let {scope} = context.core;
   // Materialize the stack pointer.
   if (scope) {
     cells.push({sep: 'sp', address: scope.limit});
@@ -200,7 +202,7 @@ const viewVariables = function (core, byteOps, startAddress, endAddress, options
     switch (kind) {
       case 'variable': {
         const {name, ref} = scope;
-        viewVariable(cells, core, byteOps, startAddress, endAddress, name, ref);
+        viewVariable(cells, context, byteOps, startAddress, endAddress, name, ref);
         break;
       }
       case 'block':
@@ -217,15 +219,15 @@ const viewVariables = function (core, byteOps, startAddress, endAddress, options
     // care about pointers.
     const value = globalMap[name];
     if (value instanceof C.PointerValue) {
-      viewVariable(cells, core, byteOps, startAddress, endAddress, name, value);
+      viewVariable(cells, context, byteOps, startAddress, endAddress, name, value);
     }
   });
   return {cells};
 };
 
-const viewVariable = function (cells, core, byteOps, startAddress, endAddress, name, ref) {
+const viewVariable = function (cells, context, byteOps, startAddress, endAddress, name, ref) {
   for (let value of allValuesInRange(List.Nil, ref.type, ref.address, startAddress, endAddress)) {
-    const cell = viewValue(core, byteOps, value.ref);
+    const cell = viewValue(context, byteOps, value.ref);
     cell.name = formatLabel(name, value.path);
     cells.push(cell);
   }
@@ -251,7 +253,7 @@ const formatLabel = function (name, path) {
 const allValuesInRange = function* (path, refType, address, startAddress, endAddress) {
   const type = refType.pointee;
   const size = type.size;
-  if (type.kind === 'scalar' || type.kind === 'pointer') {
+  if (type.kind === 'builtin' || type.kind === 'pointer') {
     if (startAddress <= address && address + size - 1 <= endAddress) {
       const ref = new C.PointerValue(refType, address);
       yield {ref, path};
@@ -276,16 +278,17 @@ const allValuesInRange = function* (path, refType, address, startAddress, endAdd
   }
 };
 
-const viewValue = function (core, byteOps, ref) {
+const viewValue = function (context, byteOps, ref) {
+  const {core, oldCore} = context;
   const {address} = ref;
   const {size} = ref.type.pointee;
-  const current = C.readValue(core.memory, ref);
+  const current = C.readValue(core, ref);
   const cell = {address, size, current};
   const ops = getByteRangeOps(byteOps, address, address + size - 1);
   cell.load = ops.load;
   if (ops.store !== undefined) {
     cell.store = ops.store;
-    cell.previous = C.readValue(core.oldMemory, ref);
+    cell.previous = C.readValue(oldCore, ref);
   }
   return cell;
 };
@@ -722,7 +725,6 @@ export const MemoryView = EpicComponent(self => {
   self.render = function () {
     const {Frame, controls, directive, frames, context, scale} = self.props;
     const localMap = frames[0].get('localMap');
-    const {core} = context;
     const {byName, byPos} = directive;
     const extraExprs = getList(byName.extras, []);
     const cursorExprs = getList(byName.cursors, []);
@@ -733,9 +735,9 @@ export const MemoryView = EpicComponent(self => {
     const centerAddress = getCenterAddress();
     const viewState = getViewState(centerAddress);
     // Extract the view-model.
-    const maxAddress = self.props.context.core.memory.size;
+    const maxAddress = context.core.memory.size;
     const view = extractView(
-      core,
+      context,
       localMap,
       {
         centerAddress,

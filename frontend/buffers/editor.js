@@ -171,6 +171,7 @@ export const Editor = EpicComponent(self => {
   };
 
   self.componentDidMount = function () {
+    const {buffer} = self.props;
     editor = ace.edit(editorNode);
     const session = editor.getSession();
     editor.$blockScrolling = Infinity;
@@ -192,6 +193,8 @@ export const Editor = EpicComponent(self => {
       session.on("change", onTextChanged);
     }
     editor.renderer.on("afterRender", onAfterRender);
+    window.editors = window.editors || {};
+    window.editors[buffer] = editor;
     /* Force a resize, the editor will not work properly otherwise. */
     setTimeout(function () {
       editor.resize(true);

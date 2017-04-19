@@ -33,6 +33,7 @@ export default function (bundle, deps) {
       state: {
         ...state,
         core: C.clearMemoryLog(state.core),
+        oldCore: state.core,
         controls: resetControls(state.controls)
       },
       startTime,
@@ -61,7 +62,8 @@ export default function (bundle, deps) {
     if (stopCond && stopCond(state.core)) {
       return false;
     }
-    let newState = runtime.step(state);
+    const {core, effects} = C.step(state.core);
+
     if (newState.isWaitingOnInput) {
       /* Execution of the step could not complete and newState must not be used. */
       newState = null;

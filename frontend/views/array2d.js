@@ -168,7 +168,7 @@ export const Array2D = EpicComponent(self => {
     const colCursors = getList(byName.colCursors, []);
     const height = getNumber(byName.height, 'auto');
     const view = {rowCursors, colCursors, height};
-    Object.assign(view, extractView(context.core, frames[0], expr, view));
+    Object.assign(view, extractView(context, frames[0], expr, view));
     if (view.error) {
       return (
         <Frame {...self.props}>

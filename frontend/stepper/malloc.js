@@ -2,7 +2,7 @@
 import * as C from 'persistent-c';
 
 const voidPtr = C.pointerType(C.voidType);
-const uint = C.scalarTypes['unsigned int'];
+const uint = C.builtinTypes['unsigned int'];
 const uintPtr = C.pointerType(uint);
 const uintPtrPtr = C.pointerType(uintPtr);
 const headerSize = 4;
@@ -18,8 +18,8 @@ Block properties:
   - start: address of the first byte of the block's data area
   - end: address of the last byte of the block's data area
 */
-const getBlock = function (memory, ref) {
-  const header = C.readValue(memory, ref).toInteger();
+const getBlock = function (core, ref) {
+  const header = C.readValue(core, ref).toInteger();
   const size = header & ~3;
   if (size === 0) {
     return;
@@ -33,7 +33,7 @@ const getBlock = function (memory, ref) {
 
 const getFirstBlock = function (core) {
   const ref = new C.PointerValue(uintPtr, core.heapStart);
-  return getBlock(core.memory, ref);
+  return getBlock(core, ref);
 };
 
 const canAllocate = function (block, nBytes) {
@@ -76,22 +76,20 @@ const freeBlock = function (effects, block, prev, next) {
 };
 
 export const heapInit = function (core, stackBytes) {
-  let {memory, heapStart} = core;
+  const {heapStart} = core;
   const headerRef = new C.PointerValue(uintPtr, core.heapStart);
-  const header = new C.IntegralValue(uint, (memory.size - heapStart - stackBytes) | 1);
-  memory = C.writeValue(memory, headerRef, header);
-  const block = getBlock(memory, headerRef);
+  const header = new C.IntegralValue(uint, (core.memory.size - heapStart - stackBytes) | 1);
+  core.memory = C.writeValue(core.memory, headerRef, header);
+  const block = getBlock(core, headerRef);
   const terminator = new C.IntegralValue(uint, 0);
-  memory = C.writeValue(memory, block.next, terminator);
-  return {...core, memory};
+  core.memory = C.writeValue(core.memory, block.next, terminator);
 };
 
 export const enumerateHeapBlocks = function* (core) {
-  const {memory} = core;
   let block = getFirstBlock(core);
   while (block) {
     yield block;
-    block = getBlock(memory, block.next);
+    block = getBlock(core, block.next);
   }
 };
 
@@ -115,13 +113,12 @@ export const free = function (core, cont, values) {
   // * locate the block immediately before the freed block,
   //   so the blocks can be merged;
   // * performance is low priority.
-  const {memory} = core;
   const effects = [];
   const address = values[1].address;
   let prev;
   for (let block of enumerateHeapBlocks(core)) {
     if (block.start === address) {
-      const next = getBlock(memory, block.next);
+      const next = getBlock(core, block.next);
       freeBlock(effects, block, prev, next);
       break;
     }

@@ -183,6 +183,7 @@ export default function (bundle, deps) {
 
     const onScroll = function (firstVisibleRow) {
       const {dispatch, buffer} = self.props;
+      console.log('scroll', firstVisibleRow);
       dispatch({type: deps.bufferScroll, buffer, firstVisibleRow});
     };
 

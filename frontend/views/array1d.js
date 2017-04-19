@@ -133,7 +133,7 @@ export const Array1D = EpicComponent(self => {
       dimExpr: dim, cursorExprs, cursorRows, maxVisibleCells,
       fullView, cellHeight, cellWidth
     };
-    Object.assign(view, extractView(context.core, topFrame, expr, view));
+    Object.assign(view, extractView(context, topFrame, expr, view));
     if (view.error) {
       return <Frame {...self.props}>{view.error}</Frame>;
     }

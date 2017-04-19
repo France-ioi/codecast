@@ -3,11 +3,11 @@ import * as C from 'persistent-c';
 import {FibonacciHeap} from 'js-data-structures';
 import range from 'node-range';
 
-import {readScalar, readScalarBasic, stringifyExpr, evalExpr, viewVariable} from './utils';
+import {readScalarBasic, stringifyExpr, evalExpr, viewVariable} from './utils';
 
 /**
 
-  extractView(core, frame, name, options) looks up `name` in `frame` and
+  extractView(context, frame, name, options) looks up `name` in `frame` and
   builds a view depending on the `options` given.
 
   TODO: look up in in globals if `name` not defined in `frame`.
@@ -62,7 +62,8 @@ import {readScalar, readScalarBasic, stringifyExpr, evalExpr, viewVariable} from
               (up to `options.cursorRows` rows are used)
 
 */
-export const extractView = function (core, frame, refExpr, options) {
+export const extractView = function (context, frame, refExpr, options) {
+  const {core} = context;
   const localMap = frame.get('localMap');
   // Normalize options.
   const {fullView, dimExpr} = options;
@@ -90,7 +91,7 @@ export const extractView = function (core, frame, refExpr, options) {
   if (dimExpr) {
     try {
       const dimVal = evalExpr(core, localMap, dimExpr, false);
-      if (dimVal.type.kind !== 'scalar') {
+      if (dimVal.type.kind !== 'builtin') {
         return {error: `invalid value for dimension ${stringifyExpr(dimExpr)}`};
       }
       elemCount = dimVal.toInteger();
@@ -119,7 +120,7 @@ export const extractView = function (core, frame, refExpr, options) {
   }
   const address = ref.address;
   const elemType = ref.type.pointee;
-  if (!/^(scalar|pointer)$/.test(elemType.kind)) {
+  if (!/^(builtin|pointer)$/.test(elemType.kind)) {
     return {error: `elements of array ${stringifyExpr(refExpr)} have an unsupported type`};
   }
   const cellOpsMap = getOpsArray1D(core, address, elemCount, elemType.size);
@@ -130,7 +131,7 @@ export const extractView = function (core, frame, refExpr, options) {
     fullView
       ? range(0, elemCount + 1)
       : getSelection(maxVisibleCells, elemCount, cellOpsMap, cursorMap, pointsByKind);
-  const cells = readArray1D(core, address, elemType, elemCount, selection, cellOpsMap);
+  const cells = readArray1D(context, address, elemType, elemCount, selection, cellOpsMap);
   finalizeCursors(selection, cursorMap, cursorRows);
   return {cells, cursorMap};
 };
@@ -358,7 +359,8 @@ export const mapArray1D = function (arrayBase, elemCount, elemSize) {
 };
 
 // Read an 1D array of scalars.
-export const readArray1D = function (core, arrayBase, elemType, elemCount, selection, mops) {
+export const readArray1D = function (context, arrayBase, elemType, elemCount, selection, mops) {
+  const {core, oldCore} = context;
   const elemSize = elemType.size;
   const elemRefType = C.pointerType(elemType);
   // TODO: check that elemType is scalar
@@ -375,7 +377,7 @@ export const readArray1D = function (core, arrayBase, elemType, elemCount, selec
       const elemAddress = arrayBase + index * elemSize;
       const cell = {position, index, address: elemAddress};
       if (index >= 0 && index < elemCount) {
-        const content = readScalarBasic(core.memory, elemRefType, elemAddress);
+        const content = readScalarBasic(core, elemRefType, elemAddress);
         if (index in mops) {
           const mop = mops[index];
           if ('load' in mop) {
@@ -383,7 +385,7 @@ export const readArray1D = function (core, arrayBase, elemType, elemCount, selec
           }
           if ('store' in mop) {
             content.store = mop.store;
-            content.previous = C.readValue(core.oldMemory, content.ref);
+            content.previous = C.readValue(oldCore, content.ref);
           }
         }
         cell.content = content;
@@ -443,7 +445,7 @@ export const getCursorMap = function (core, localMap, cursorExprs, options) {
     }
     const cursorLabel = stringifyExpr(expr, 0);
     let index;
-    if (cursorValue.type.kind === 'scalar') {
+    if (cursorValue.type.kind === 'builtin') {
       index = cursorValue.toInteger();
     } else if (allowPointers && cursorValue.type.kind === 'pointer') {
       let offset = cursorValue.address - address;

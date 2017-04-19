@@ -8,51 +8,7 @@ import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import * as C from 'persistent-c';
 
-export const viewFrame = function (core, frame, options) {
-  const view = {
-    key: frame.get('scope').key,
-    func: frame.get('func'),
-    args: frame.get('args')
-  };
-  if (options.locals) {
-    const localMap = frame.get('localMap');
-    const locals = view.locals = [];
-    frame.get('localNames').forEach(function (name) {
-      const {type, ref} = localMap.get(name);
-      // type and ref.type.pointee are assumed identical
-      locals.push(viewVariable(core, name, type, ref.address));
-    });
-  }
-  return view;
-};
-
-export const viewVariable = function (core, name, type, address) {
-  const context = {scalars: 0, maxScalars: 15};
-  return {
-    name,
-    type,
-    address,
-    value: readValue(core, C.pointerType(type), address, context)
-  };
-};
-
-export const readValue = function (core, refType, address, context) {
-  const type = refType.pointee;
-  if (type.kind === 'array') {
-    const cells = readArray(core, type, address, context);
-    return {kind: 'array', count: type.count, cells};
-  }
-  if (type.kind === 'record') {
-    const fields = readRecord(core, type, address, context);
-    return {kind: 'record', name: type.name, fields};
-  }
-  if (context) {
-    context.scalars += 1;
-  }
-  return readScalar(core, refType, address);
-};
-
-export const readScalarBasic = function (memory, refType, address) {
+export const readScalarBasic = function (core, refType, address) {
   // Produce a 'basic stored scalar value' object whose shape is
   //   {kind, ref, current}
   // where:
@@ -61,11 +17,11 @@ export const readScalarBasic = function (memory, refType, address) {
   //   - 'current' holds the current value
   const kind = 'scalar';
   const ref = new C.PointerValue(refType, address);
-  const current = C.readValue(memory, ref);
+  const current = C.readValue(core, ref);
   return {kind, ref, current};
 };
 
-export const readScalar = function (core, refType, address) {
+export const readScalar = function (context, refType, address) {
   // Produce a 'stored scalar value' object whose shape is
   //   {kind, ref, current, previous, load, store}
   // where:
@@ -73,7 +29,8 @@ export const readScalar = function (core, refType, address) {
   //   - 'load' holds the smallest rank of a load in the memory log
   //   - 'store' holds the greatest rank of a store in the memory log
   //   - 'previous' holds the previous value (if 'store' is defined)
-  const result = readScalarBasic(core.memory, refType, address);
+  const {core, oldCore} = context;
+  const result = readScalarBasic(core, refType, address);
   core.memoryLog.forEach(function (entry, i) {
     /* FIXME: when ref is a pointer type, the length of the value written
               to it should be used to decide if the ranges intersect */
@@ -88,12 +45,28 @@ export const readScalar = function (core, refType, address) {
     }
   });
   if ('store' in result) {
-    result.previous = C.readValue(core.oldMemory, result.ref);
+    result.previous = C.readValue(oldCore, result.ref);
   }
   return result;
 };
 
-export const readArray = function (core, arrayType, address, context) {
+export const readValue = function (context, refType, address, limits) {
+  const type = refType.pointee;
+  if (type.kind === 'array') {
+    const cells = readArray(context, type, address, limits);
+    return {kind: 'array', count: type.count, cells};
+  }
+  if (type.kind === 'record') {
+    const fields = readRecord(context, type, address, limits);
+    return {kind: 'record', name: type.name, fields};
+  }
+  if (limits) {
+    limits.scalars += 1;
+  }
+  return readScalar(context, refType, address);
+};
+
+export const readArray = function (context, arrayType, address, limits) {
   if (arrayType.count === undefined) {
     // Array of unknown size
     return [{index: 0, address, content: {kind: 'ellipsis'}}];
@@ -105,10 +78,10 @@ export const readArray = function (core, arrayType, address, context) {
   const cells = [];
   let index;
   for (index = 0; index < elemCount; index += 1) {
-    const content = readValue(core, elemRefType, address, context);
+    const content = readValue(context, elemRefType, address, context);
     cells.push({index, address, content});
     address += elemSize;
-    if (context && context.scalars >= context.maxScalars) {
+    if (limits && limits.scalars >= limits.maxScalars) {
       break;
     }
   }
@@ -119,13 +92,19 @@ export const readArray = function (core, arrayType, address, context) {
   return cells;
 };
 
-export const readRecord = function (core, recordType, address, context) {
+export const readRecord = function (context, recordType, address, limits) {
   const fields = [];
   for (let fieldName of recordType.fields) {
     const {offset, refType} = recordType.fieldMap[fieldName];
     const fieldAddress = address + offset;
-    const content = readValue(core, refType, fieldAddress, context);
+    const content = readValue(context, refType, fieldAddress, limits);
     fields.push({name: fieldName, address: fieldAddress, content});
+    if (limits && limits.scalars >= limits.maxScalars) {
+      break;
+    }
+  }
+  if (fields.length < recordType.fields.length) {
+    fields.push({ellipsis: true});
   }
   return fields;
 };
@@ -174,8 +153,8 @@ export const evalExpr = function (core, localMap, expr, asRef) {
       throw new Error('attempt to subscript non-pointer');
     }
     const index = evalExpr(core, localMap, expr[2], false);
-    if (index.type.kind !== 'scalar') {
-      throw new Error('attempt to subscript with non-scalar index');
+    if (index.type.kind !== 'builtin') {
+      throw new Error('attempt to subscript with non-builtin index');
     }
     const elemType = arrayRef.type.pointee;
     const address = arrayRef.address + elemType.size * index.toInteger();
@@ -183,14 +162,14 @@ export const evalExpr = function (core, localMap, expr, asRef) {
     if (asRef || elemType.kind === 'array') {
       return ref;
     } else {
-      return C.readValue(core.memory, ref);
+      return C.readValue(core, ref);
     }
   }
   if (asRef) {
     throw new Error('attempt to take address of non-lvalue');
   }
   if (expr[0] === 'number') {
-    return new C.IntegralValue(C.scalarTypes['int'], expr[1] | 0);
+    return new C.IntegralValue(C.builtinTypes['int'], expr[1] | 0);
   }
   if (expr[0] === 'addrOf') {
     return evalExpr(core, localMap, expr[1], true);
@@ -211,7 +190,7 @@ const evalRef = function (core, ref, asRef) {
     if (valueType.kind === 'array') {
       return C.makeRef(valueType, ref.address);
     } else {
-      return C.readValue(core.memory, ref);
+      return C.readValue(core, ref);
     }
   }
 };
@@ -256,6 +235,36 @@ export const viewExprs = function (core, frame, exprs) {
   });
   return views;
 };
+
+export const viewFrame = function (context, frame, options) {
+  const view = {
+    key: frame.get('scope').key,
+    func: frame.get('func'),
+    args: frame.get('args')
+  };
+  if (options.locals) {
+    const localMap = frame.get('localMap');
+    const locals = view.locals = [];
+    frame.get('localNames').forEach(function (name) {
+      const {type, ref} = localMap.get(name);
+      // type and ref.type.pointee are assumed identical
+      locals.push(viewVariable(context, name, type, ref.address));
+    });
+  }
+  return view;
+};
+
+export const viewVariable = function (context, name, type, address) {
+  const limits = {scalars: 0, maxScalars: 15};
+  return {
+    name,
+    type,
+    address,
+    value: readValue(context, C.pointerType(type), address, limits)
+  };
+};
+
+//
 
 const parensIf = function (cond, elem) {
   return cond ? <span>{'('}{elem}{')'}</span> : elem;
@@ -417,8 +426,8 @@ export const getNumber = function (expr, options) {
   const frame = options.frame;
   if (expr[0] === 'ident' && core && frame) {
     const decl = frame.get('localMap').get(expr[1]);
-    if (decl && decl.type.kind === 'scalar') {
-      const value = C.readValue(core.memory, decl.ref);
+    if (decl && decl.type.kind === 'builtin') {
+      const value = C.readValue(core, decl.ref);
       if (value) {
         return value.toInteger();
       }
@@ -446,9 +455,8 @@ export const ShowVar = EpicComponent(self => {
       return <p>{name}{" not in scope"}</p>;
     }
     const {type, ref} = localMap.get(name);
-    const value = readValue(
-      context.core, C.pointerType(type), ref.address,
-      {scalars: 0, maxScalars: 100});
+    const limits = {scalars: 0, maxScalars: 100};
+    const value = readValue(context, C.pointerType(type), ref.address, limits);
     return (
       <Frame {...self.props}>
         <VarDecl name={name} type={type} address={ref.address} value={value} />

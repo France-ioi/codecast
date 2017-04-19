@@ -4,7 +4,8 @@ import * as C from 'persistent-c';
 import {readScalarBasic, stringifyExpr, evalExpr} from './utils';
 import {getCursorMap} from './array_utils';
 
-export const extractView = function (core, frame, refExpr, view) {
+export const extractView = function (context, frame, refExpr, view) {
+  const {core} = context;
   const localMap = frame.get('localMap');
   let ref;
   try {
@@ -31,7 +32,7 @@ export const extractView = function (core, frame, refExpr, view) {
     return {error: `elements of 2D array ${stringifyExpr(refExpr)} have an unsupported type`};
   }
   // Read the cells.
-  const rows = readArray2D(core, arrayType, ref.address, rowCount, colCount, cellType);
+  const rows = readArray2D(context, arrayType, ref.address, rowCount, colCount, cellType);
   // Inspect cursors.
   const rowInfoMap = getCursorMap(core, localMap, view.rowCursors,
     {
@@ -122,7 +123,8 @@ const getOpsArray2D = function (core, address, nRows, nCols, cellSize) {
 // a row with properties {index, address, content}, where `content` is array of
 // objects each representing a cell with keys {index,address,content},
 // where `content` is as the documented result of `readScalar`.
-const readArray2D = function (core, arrayType, address, rowCount, colCount, cellType) {
+const readArray2D = function (context, arrayType, address, rowCount, colCount, cellType) {
+  const {core, oldCore} = context;
   const cellSize = cellType.size;
   const mops = getOpsArray2D(core, address, rowCount, colCount, cellSize);
   const rowSize = colCount * cellSize;
@@ -133,7 +135,7 @@ const readArray2D = function (core, arrayType, address, rowCount, colCount, cell
     const rowAddress = address + rowIndex * rowSize;
     for (let colIndex = 0; colIndex < colCount; colIndex += 1) {
       const cellAddress = rowAddress + colIndex * cellSize;
-      const content = readScalarBasic(core.memory, cellRefType, cellAddress);
+      const content = readScalarBasic(core, cellRefType, cellAddress);
       const key = `${rowIndex},${colIndex}`;
       if (key in mops) {
         const mop = mops[key];
@@ -142,7 +144,7 @@ const readArray2D = function (core, arrayType, address, rowCount, colCount, cell
         }
         if ('store' in mop) {
           content.store = mop.store;
-          content.previous = C.readValue(core.oldMemory, content.ref);
+          content.previous = C.readValue(oldCore, content.ref);
         }
       }
       row.push({index: colIndex, address: cellAddress, key, content});
