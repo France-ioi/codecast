@@ -62,8 +62,8 @@ export default function (bundle, deps) {
     if (stopCond && stopCond(state.core)) {
       return false;
     }
-    const {core, effects} = C.step(state.core);
-
+    let newState = {...state};
+    const effects = yield call(runtime.sagaStep, newState);
     if (newState.isWaitingOnInput) {
       /* Execution of the step could not complete and newState must not be used. */
       newState = null;
@@ -78,7 +78,8 @@ export default function (bundle, deps) {
           return false;
         }
         /* Retry the blocking step using the updated state. */
-        newState = runtime.step(context.state);
+        newState = {...context.state};
+        yield call(runtime.sagaStep, newState);
       } while (newState.isWaitingOnInput);
     }
     context.state = newState;

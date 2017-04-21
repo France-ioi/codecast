@@ -1,7 +1,7 @@
 
 import * as C from 'persistent-c';
 
-const voidPtr = C.pointerType(C.voidType);
+const voidPtr = C.pointerType(C.builtinTypes['void']);
 const nullPointer = new C.PointerValue(voidPtr, 0);
 
 export const applyGetsEffect = function (state, effect) {

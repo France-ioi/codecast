@@ -38,18 +38,18 @@ export const start = function (syntaxTree, options) {
     state.output = "";
   }
   state.inputBuffer = "";
-  stepIntoUserCode(state, pureEffector);
+  stepIntoUserCode(state);
   return state;
 };
 
-export const pureStep = function (state) {
+export function pureStep (state) {
   const effects = C.step(state);
   for (var effect of effects) {
     pureEffector(state, effect);
   }
 };
 
-export const sagaStep = function* (state, effector) {
+export function* sagaStep (state, effector) {
   const effects = C.step(state);
   for (var effect of effects) {
     yield call(sagaEffector, state, effect);
@@ -57,7 +57,7 @@ export const sagaStep = function* (state, effector) {
 };
 
 const pureEffectHandlers = {
-  ...defaultEffectHandlers,
+  ...C.defaultEffectHandlers,
   write: applyWriteEffect,
   call: applyCallEffect,
   enter: applyEnterEffect,
@@ -67,7 +67,7 @@ const pureEffectHandlers = {
 };
 
 function applyEnterEffect (state, effect) {
-  defaultEffectHandlers.enter(state, effect);
+  C.defaultEffectHandlers.enter(state, effect);
   // XXX store directives in state.directives rather than state.core.scope.
   const node = effect[1];
   const scope = state.core.scope;
@@ -82,7 +82,7 @@ function applyEnterEffect (state, effect) {
    Alternatively, make 'leave' effects discard all directives that live in
    a scope whose key is greater than the new scope's key. */
 function applyCallEffect (state, effect) {
-  defaultEffectHandlers.call(state, effect);
+  C.defaultEffectHandlers.call(state, effect);
   const node = effect[2][0].decl;
   const scope = state.core.scope;
   scope.directives = node[1].directives || [];
@@ -108,11 +108,10 @@ function* sagaEffector (state, effect) {
   }
 }
 
-export const stepIntoUserCode = function (state, effector) {
+export const stepIntoUserCode = function (state) {
   while (!state.error && state.core.control && !state.core.control.node[1].begin) {
-    pureStep(state, effector);
+    pureStep(state, pureEffector);
   }
-  return state;
 };
 
 export const getNodeRange = function (state) {

@@ -1,7 +1,7 @@
 
 import * as C from 'persistent-c';
 
-const voidPtr = C.pointerType(C.voidType);
+const voidPtr = C.pointerType(C.builtinTypes['void']);
 const uint = C.builtinTypes['unsigned int'];
 const uintPtr = C.pointerType(uint);
 const uintPtrPtr = C.pointerType(uintPtr);

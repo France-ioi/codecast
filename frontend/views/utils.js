@@ -352,7 +352,7 @@ export const renderDeclType = function (type, subject, prec) {
       return renderDeclType(type.elem, <span>{parensIf(prec > 0, subject)}{'['}{type.count && type.count.toString()}{']'}</span>, 0);
     case 'record':
       return <span>{'struct'}{' '}{type.name}{' '}{subject}</span>;
-    case 'scalar':
+    case 'builtin':
       return <span>{type.repr}{' '}{subject}</span>;
     default:
       return `<invalid kind ${type.kind}>`;
