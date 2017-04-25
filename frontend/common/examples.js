@@ -38,7 +38,7 @@ const examples = [
       "    Serial.available();",
       "    return 0;",
       "}"
-    ].join('\n'),
+    ].join('\n')
   },
 
   {
@@ -59,7 +59,7 @@ const examples = [
       "  *r = 4;",
       "  return p.x + p.y;",
       "}"
-    ].join('\n'),
+    ].join('\n')
   },
 
   {
