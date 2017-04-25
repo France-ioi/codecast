@@ -10,7 +10,20 @@ import {documentFromString} from '../buffers/document';
 const examples = [
 
   {
-    title: "struct",
+    title: "arduino - delay",
+    source: [
+      "#include <stdio.h>",
+      "void __delay(int ms);",
+      "int main() {",
+      "   printf(\"hello, \");",
+      "   __delay(1000);",
+      "   printf(\"world! %i\\n\", (2 + 4) * 7);",
+      "}"
+    ].join('\n')
+  },
+
+  {
+    title: "struct + function pointer",
     source: [
       "struct serial_s {",
       "    int (*available)(void);",
