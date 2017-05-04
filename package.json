@@ -1,6 +1,6 @@
 {
   "name": "fioi-recorder",
-  "version": "0.1.0",
+  "version": "4.0.0",
   "description": "An editor component based on angular.js and Ace.",
   "homepage": "https://github.com/France-ioi/fioi-editor2",
   "authors": [
