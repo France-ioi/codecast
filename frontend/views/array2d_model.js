@@ -28,7 +28,7 @@ export const extractView = function (context, frame, refExpr, view) {
   }
   const colCount = rowType.count.toInteger();
   const cellType = rowType.elem;
-  if (!/^(scalar|pointer)$/.test(cellType.kind)) {
+  if (cellType.kind !== 'builtin') {
     return {error: `elements of 2D array ${stringifyExpr(refExpr)} have an unsupported type`};
   }
   // Read the cells.

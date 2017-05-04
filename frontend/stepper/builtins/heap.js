@@ -1,13 +1,10 @@
 
 import * as C from 'persistent-c';
 
-const voidPtr = C.pointerType(C.builtinTypes['void']);
 const uint = C.builtinTypes['unsigned int'];
 const uintPtr = C.pointerType(uint);
 const uintPtrPtr = C.pointerType(uintPtr);
 const headerSize = 4;
-
-const nullPointer = new C.PointerValue(voidPtr, 0);
 
 /*
 Block properties:
@@ -58,7 +55,7 @@ const allocateBlock = function (effects, block, nBytes) {
   // The new header is the size in bytes with the free bit (0) clear.
   const newHeader = netSize;
   effects.push(['store', block.ref, new C.IntegralValue(uint, newHeader)]);
-  return new C.PointerValue(voidPtr, block.start);
+  return new C.PointerValue(C.voidPtr, block.start);
 };
 
 const freeBlock = function (effects, block, prev, next) {
@@ -93,28 +90,30 @@ export const enumerateHeapBlocks = function* (core) {
   }
 };
 
-export const malloc = function (core, cont, values) {
-  const {memory} = core;
+export function* malloc (context, nBytes) {
+  const {core} = context.state;
+  nBytes = nBytes.toInteger();
   const effects = [];
-  const nBytes = values[1].toInteger();
-  let result = nullPointer;
+  let result = C.nullPointer;
   for (let block of enumerateHeapBlocks(core)) {
     if (canAllocate(block, nBytes)) {
       result = allocateBlock(effects, block, nBytes);
       break;
     }
   }
-  return {control: cont, result, effects}
+  yield* effects;
+  yield ['result', result];
 };
 
-export const free = function (core, cont, values) {
+export function* free (context, ref) {
   // The block chain is traversed for these reasons:
   // * prevent heap corruption;
   // * locate the block immediately before the freed block,
   //   so the blocks can be merged;
   // * performance is low priority.
+  const {core} = context.state;
   const effects = [];
-  const address = values[1].address;
+  const address = ref.address;
   let prev;
   for (let block of enumerateHeapBlocks(core)) {
     if (block.start === address) {
@@ -124,5 +123,5 @@ export const free = function (core, cont, values) {
     }
     prev = block;
   }
-  return {control: cont, result: null, effects};
+  yield* effects;
 };

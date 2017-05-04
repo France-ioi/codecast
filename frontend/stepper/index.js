@@ -8,6 +8,8 @@ import StepperControls from './controls';
 import views from '../views/index';
 import IOPaneBundle from './io_pane';
 import TerminalInputBundle from './terminal_input';
+import StartBundle from './start';
+import EffectsBundle from './effects';
 
 export default function (bundle) {
   bundle.include(actions);
@@ -19,4 +21,6 @@ export default function (bundle) {
   bundle.include(views);
   bundle.include(IOPaneBundle);
   bundle.include(TerminalInputBundle);
+  bundle.include(StartBundle);
+  bundle.include(EffectsBundle);
 };

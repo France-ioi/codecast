@@ -16,8 +16,7 @@ import {translateClear, translateStarted, translateSucceeded, translateFailed, t
 import {stepperClear, stepperRestart, stepperStarted, stepperIdle, stepperProgress, stepperUndo, stepperRedo, stepperStackUp, stepperStackDown, stepperViewControlsChanged} from '../stepper/reducers';
 import {ioPaneModeChanged} from '../stepper/io_pane';
 import {terminalInputNeeded, terminalInputKey, terminalInputBackspace, terminalInputEnter} from '../stepper/terminal_input';
-import * as runtime from '../stepper/runtime';
-
+import {start, beginStep, runToStep} from '../stepper/start';
 
 export default function (bundle, deps) {
 
@@ -36,7 +35,7 @@ export default function (bundle, deps) {
     'stepperIdle', 'stepperProgress', 'stepperExit', 'stepperReset', 'stepperStep',
     'bufferReset', 'bufferModelSelect', 'bufferModelEdit', 'bufferModelScroll', 'bufferHighlight',
     'stepperEnabled', 'stepperDisabled',
-    'ioPaneModeChanged', 'getOutputBufferModel'
+    'ioPaneModeChanged', 'getOutputBufferModel', 'getNodeRange'
   );
 
   // pause, resume audio
@@ -315,8 +314,8 @@ export default function (bundle, deps) {
           break;
         }
         case 'stepper.restart': {
-          const init = deps.getStepperInit(state);
-          const stepperState = deps.buildStepperState(state, init);
+          const {syntaxTree, options} = deps.getStepperInit(state);
+          const stepperState = deps.buildStepperState(syntaxTree, options);
           state = state.update('stepper', st => stepperRestart(st, {stepperState}));
           if (state.get('ioPaneMode') === 'split') {
             state = syncOutputBuffer(state);
@@ -327,16 +326,16 @@ export default function (bundle, deps) {
         case 'stepper.step': {
           const mode = event[2];
           state = state.update('stepper', st => stepperStarted(st, {mode}));
-          context = beginStep(state.getIn(['stepper', 'current']));
+          context = runtime.beginStep(state.getIn(['stepper', 'current']));
           break;
         }
         case 'stepper.idle': {
-          context = runToStep(context, event[2]);
+          context = runtime.runToStep(context, event[2]);
           state = state.update('stepper', st => stepperIdle(st, {context}));
           break;
         }
         case 'stepper.progress': {
-          context = runToStep(context, event[2]);
+          context = runtime.runToStep(context, event[2]);
           state = state.update('stepper', st => stepperProgress(st, {context}));
           break;
         }
@@ -429,25 +428,6 @@ export default function (bundle, deps) {
     yield put({type: deps.bufferReset, buffer: 'output', model});
   }
 
-  function beginStep (state) {
-    return {
-      state: {
-        ...state,
-        core: C.clearMemoryLog(state.core)
-      },
-      stepCounter: 0
-    };
-  }
-
-  function runToStep (context, targetStepCounter) {
-    let {state, stepCounter} = context;
-    while (stepCounter < targetStepCounter) {
-      state = C.step(state, runtime.options);
-      stepCounter += 1;
-    }
-    return {state, stepCounter};
-  }
-
   bundle.addSaga(function* watchPlayerPrepare () {
     while (true) {
       const action = yield take(deps.playerPrepare);
@@ -521,7 +501,7 @@ export default function (bundle, deps) {
         }
       }
     }
-    const range = runtime.getNodeRange(deps.getStepperDisplay(state));
+    const range = deps.getNodeRange(deps.getStepperDisplay(state));
     yield put({type: deps.bufferHighlight, buffer: 'source', range});
     yield put({type: deps.playerTick, audioTime, current: instant});
   }

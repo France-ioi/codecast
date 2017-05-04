@@ -15,20 +15,17 @@ const re = {
 
 const formatCache = new Map();
 
-export const printf = function (state, cont, values) {
-  const str = sprintf(state, values);
-  const result = new C.IntegralValue(C.builtinTypes['int'], str.length);
-  return {control: cont, effects: [['write', str]], result, seq: 'expr'};
-};
-
-export const sprintf = function (state, values) {
-  // [printf, fmt, args...]
-  const fmt = C.readString(state.memory, values[1]);
+export function* printf (context, fmtRef, ...args) {
+  const {core} = context.state;
+  const fmt = C.readString(core.memory, fmtRef);
   if (!formatCache.has(fmt)) {
     formatCache.set(fmt, parseFormat(fmt));
   }
-  return applyFormat(state, formatCache.get(fmt), values);
-}
+  const str = applyFormat(core, formatCache.get(fmt), args);
+  yield ['write', str];
+  const result = new C.IntegralValue(C.builtinTypes['int'], str.length);
+  yield ['result', result];
+};
 
 function parseFormat (fmt) {
   const ops = [];
@@ -61,9 +58,9 @@ function parseFormat (fmt) {
   return ops;
 };
 
-function applyFormat (state, ops, values) {
+function applyFormat (core, ops, args) {
   const output = [];
-  let cursor = 2;
+  let cursor = 0;
   for (let i = 0; i < ops.length; i++) {
     const op = ops[i];
 
@@ -72,7 +69,7 @@ function applyFormat (state, ops, values) {
       continue;
     }
 
-    let arg = values[cursor++];
+    let arg = args[cursor++];
 
     if (op.specifier === 'c') {
       output.push(String.fromCharCode(arg.toInteger()));
@@ -83,7 +80,7 @@ function applyFormat (state, ops, values) {
     let prefix = '', suffix = '', sign = '';
 
     if (op.specifier === 's') {
-      arg = C.readString(state.memory, arg, op.precision);
+      arg = C.readString(core.memory, arg, op.precision);
       if (precision !== null) {
         arg = arg.substring(0, precision);
       }
@@ -199,16 +196,16 @@ function justify (op, arg, sign, prefix, suffix) {
 TODO: write a test suite
 
 !function () {
-  const state = C.start({decls: []});
+  const core = C.start({decls: []});
 
   const fmtVal = C.stringValue('>%f<');
   const fmtRef = new C.PointerValue(C.pointerType(C.builtinTypes['char']), 0);
-  state.memory = C.writeValue(state.memory, fmtRef, fmtVal);
+  core.memory = C.writeValue(core.memory, fmtRef, fmtVal);
 
   const int = C.builtinTypes['int'];
   const val = new C.FloatingValue(int, 3.3);
 
-  console.log(sprintf(state, [null, fmtRef, val]));
+  console.log(sprintf({state: {core}}, [null, fmtRef, val]));
 
 }();
 */

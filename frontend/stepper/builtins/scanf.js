@@ -3,11 +3,6 @@ import * as C from 'persistent-c';
 import {parse as P, text as PT} from 'bennu';
 import {stream} from 'nu-stream';
 
-function writeValue(state, ref, value) {
-  state.core.memory = C.writeValue(state.core.memory, ref, value);
-  state.core.memoryLog = state.core.memoryLog.push(['store', ref, value]);
-}
-
 function parsePrefixedUint (str) {
   if (/^0[Xx]/.test(str)) {
     return parseInt(str.substr(2), 16);
@@ -35,7 +30,7 @@ function P_first (p, q) {
   return P.bind(p, v => P.next(q, P.always(v)));
 }
 
-const p_beginSpace = P.many(PT.space);
+const p_whitespace = P.many(PT.space);
 const p_sign = P.optional('+', PT.oneOf('+-'));
 const p_decdigits = P.many1(PT.digit).map(join);
 const p_hexdigits = P.many1(PT.oneOf('0123456789ABCDEFabcdef')).map(join);
@@ -88,8 +83,8 @@ function p_integral (typeName, parser) {
   return (
     P.bind(parser, rawValue =>
     P.bind(p_nextArg, ref =>
-    P.always(function (state) {
-      writeValue(state, ref, new C.IntegralValue(C.builtinTypes[typeName], rawValue));
+    P.always(function* (context) {
+      yield ['store', ref, new C.IntegralValue(C.builtinTypes[typeName], rawValue)];
     }))));
 }
 
@@ -97,97 +92,88 @@ function p_floating (typeName, parser) {
   return (
     P.bind(parser, rawValue =>
     P.bind(p_nextArg, ref =>
-    P.always(function (state) {
-      writeValue(state, ref, new C.FloatingValue(C.builtinTypes[typeName], rawValue));
+    P.always(function* (context) {
+      yield ['store', ref, new C.FloatingValue(C.builtinTypes[typeName], rawValue)];
     }))));
 }
 
 const p_string =
   P.bind(p_fmt_s, string =>
   P.bind(p_nextArg, ref =>
-  P.always(function (state) {
-    writeValue(state, ref, new C.stringValue(string))
+  P.always(function* (context) {
+    yield ['store', ref, new C.stringValue(string)];
   })));
 
 const p_char =
   P.bind(p_fmt_c, char =>
   P.bind(p_nextArg, ref =>
-  P.always(function (state) {
+  P.always(function* (context) {
     const charCode = char.charCodeAt(0) & 0xff;
-    writeValue(state, ref, new C.IntegralValue(C.builtinTypes["char"], charCode));
+    yield ['store', ref, new C.IntegralValue(C.builtinTypes["char"], charCode)];
   })));
 
 function getFormatParser (format) {
   switch (format) {
   case '%d':
-    return P.next(p_beginSpace, p_integral('int', p_fmt_d));
+    return P.next(p_whitespace, p_integral('int', p_fmt_d));
   case '%x':
-    return P.next(p_beginSpace, p_integral('int', p_fmt_x));
+    return P.next(p_whitespace, p_integral('int', p_fmt_x));
   case '%o':
-    return P.next(p_beginSpace, p_integral('int', p_fmt_o));
+    return P.next(p_whitespace, p_integral('int', p_fmt_o));
   case '%i':
-    return P.next(p_beginSpace, p_integral('int', p_fmt_i));
+    return P.next(p_whitespace, p_integral('int', p_fmt_i));
   case '%u':
-    return P.next(p_beginSpace, p_integral('unsigned int', p_fmt_u));
+    return P.next(p_whitespace, p_integral('unsigned int', p_fmt_u));
   case '%f':
-    return P.next(p_beginSpace, p_floating('float', p_fmt_f));
+    return P.next(p_whitespace, p_floating('float', p_fmt_f));
   case '%lf':
-    return P.next(p_beginSpace, p_floating('double', p_fmt_f));
+    return P.next(p_whitespace, p_floating('double', p_fmt_f));
   case '%c':
     return p_char;
   case '%s':
-    return P.next(p_beginSpace, p_string);
+    return P.next(p_whitespace, p_string);
   default:
     throw new Error(`bad format specifier ${format}`);
   }
 }
 
-export const applyScanfEffect = function (state, effect) {
-  const {core, input, inputPos} = state;
-  const args = effect[1];
-  const formats = C.readString(core.memory, args[1]).split(/[\s]+/);
+export function* scanf (context, fmtRef, ...args) {
+  const {core} = context.state;
+  const line = yield ['gets'];
+  if (line === null) {
+    yield ['result', new C.IntegralValue(C.builtinTypes['int'], -1)];
+    return;
+  }
+  const formats = C.readString(core.memory, fmtRef).split(/[\s]+/);
   const parsers = formats.map(getFormatParser);
-  const p_actions = P.enumerationa(parsers);
+  const p_actions = P_first(P.enumerationa(parsers), p_whitespace);
   const parser =
     P.bind(p_actions, actions =>
     P.bind(P.getPosition, position =>
     P.always({actions, position})));
   // XXX
-  const unreadInput = input.slice(inputPos);
-  const inputStream = stream.from(unreadInput); // XXX start stream at offset inputPos
-  const context = {args: args.slice(2), argPos: 0};
+  const inputStream = stream.from(line);
   try {
     /* Run the parser on the input stream. */
-    var {actions, position} = P.runStream(parser, inputStream, context);
+    var {actions, position} = P.runStream(parser, inputStream, {args, argPos: 0});
+    /* /!\ bennu returns the position as a string. */
+    position = parseInt(position);
   } catch (ex) {
-    if (ex.position.index === unreadInput.length) {
-      if (state.terminal) {
-        /* Interactive input */
-        state.isWaitingOnInput = true;
-      } else {
-        /* End of input */
-        core.result = new C.IntegralValue(C.builtinTypes['int'], -1);
-        core.direction = 'up';
-      }
-      return;
-    }
     console.log('TODO — scanf exception', ex);
   }
-  /* Update the position in the input stream.
-     /!\ bennu returns the position as a string. */
-  state.inputPos += parseInt(position);
+  /* Update the position in the input stream. */
+  if (line.length > position) {
+    yield ['ungets', line.length - position + 1]; /* +1 to unget the \n */
+  }
   /* Perform the actions returned by parsing. */
   let result = 0;
-  if (actions) {
-    stream.forEach(function (action) {
+  if (stream) {
+    while (!stream.isEmpty(actions)) {
+      const gen = stream.first(actions);
+      yield* gen(context);
       result += 1;
-      action(state);
-    }, actions);
+      actions = stream.rest(actions);
+    }
   }
-  core.direction = 'up';
-  core.result = new C.IntegralValue(C.builtinTypes['int'], result);
-};
-
-export const scanf = function (state, cont, values) {
-  return {control: cont, effects: [['scanf', values]], seq: 'expr'};
+  yield ['result', new C.IntegralValue(C.builtinTypes['int'], result)];
 };

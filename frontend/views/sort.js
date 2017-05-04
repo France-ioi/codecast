@@ -137,7 +137,7 @@ export const SortView = EpicComponent(self => {
     const maxVisibleCells = getNumber(byName.n, 40);
     const height = getNumber(byName.height, 'auto');
     const view = {dimExpr: dim, fullView, cursorExprs, maxVisibleCells, cursorRows};
-    Object.assign(view, extractView(core, topFrame, expr, view));
+    Object.assign(view, extractView(context, topFrame, expr, view));
     if (view.error) {
       return <Frame {...self.props}>{view.error}</Frame>;
     }
