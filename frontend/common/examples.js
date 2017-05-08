@@ -10,6 +10,41 @@ import {documentFromString} from '../buffers/document';
 const examples = [
 
   {
+    title: "Arduino - blink",
+    source: [
+      "#include <Arduino.h>",
+      "#include <stdio.h>",
+      "void __delay(int ms);",
+      "#define LED_PIN 0",
+      "void setup() {",
+      "    pinMode(LED_PIN, OUTPUT);",
+      "}",
+      "int level = LOW;",
+      "void loop() {",
+      "    digitalWrite(LED_PIN, level);",
+      "    level ^= HIGH;",
+      "    __delay(1000);",
+      "}",
+    ].join('\n')
+  },
+
+
+  {
+    title: "Arduino - loop",
+    source: [
+      "#include <Arduino.h>",
+      "#include <stdio.h>",
+      "void __delay(int ms);",
+      "void setup() {",
+      "}",
+      "void loop() {",
+      "   putchar('.');",
+      "   __delay(1000);",
+      "}"
+    ].join('\n')
+  },
+
+  {
     title: "arduino - delay",
     source: [
       "#include <stdio.h>",

@@ -8,7 +8,8 @@ export default function (bundle, deps) {
   bundle.use(
     'getTranslateState', 'getStepperDisplay', 'getStepperOptions',
     'translateClearDiagnostics', 'stepperExit',
-    'BufferEditor', 'StackView', 'DirectivesPane', 'IOPane'
+    'BufferEditor', 'StackView', 'DirectivesPane', 'IOPane',
+    'ArduinoConfigPanel', 'ArduinoPanel'
   );
 
   bundle.defineSelector('MainViewSelector', function (state, props) {
@@ -60,10 +61,11 @@ export default function (bundle, deps) {
     );
 
     self.render = function () {
-      const {diagnostics, readOnly, preventInput, error, options} = self.props;
+      const {diagnostics, readOnly, preventInput, error, options, haveStepper} = self.props;
       const showStack = options.get('showStack');
       const showViews = options.get('showViews');
       const showIO = options.get('showIO');
+      const arduinoEnabled = options.get('arduino');
       const editorRowHeight = '300px';
       return (
         <div>
@@ -79,17 +81,30 @@ export default function (bundle, deps) {
               </Panel>
             </div>
           </div>
-          <div className="row">
-            {diagnostics && <div className="col-sm-12">
+          {diagnostics && <div className="row">
+            <div className="col-sm-12">
               <Panel header={diagnosticsPanelHeader} bsStyle="danger">
                 <div dangerouslySetInnerHTML={diagnostics}/>
               </Panel>
-            </div>}
-            {error && <div className="col-sm-12">
+            </div>
+          </div>}
+          {error && <div className="row">
+            <div className="col-sm-12">
               <Panel header={stepperErrorPanelHeader} bsStyle="danger">
                 {error}
               </Panel>
-            </div>}
+            </div>
+          </div>}
+          {arduinoEnabled && <div className="row">
+            <div className="col-sm-12">
+              <Panel header={<span><i className="fa fa-microchip"/>{" arduino"}</span>}>
+                  {haveStepper
+                    ? <deps.ArduinoPanel/>
+                    : <deps.ArduinoConfigPanel/>}
+              </Panel>
+            </div>
+          </div>}
+          <div className="row">
             <div className="col-sm-12">
               {showViews && <deps.DirectivesPane/>}
               {showIO && <deps.IOPane preventInput={preventInput}/>}

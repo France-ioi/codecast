@@ -1,0 +1,37 @@
+
+.arduino-port {
+  float: left;
+  margin: 0 3px;
+  width: 32px;
+  overflow: hidden;
+}
+.arduino-port > * {
+  width: 100%;
+}
+.arduino-port-index, .arduino-port-digital, .arduino-port-analog {
+  display: block;
+  text-align: center;
+  border-radius: 8px;
+  line-height: 18px;
+  margin: 2px;
+}
+.arduino-port-index {
+  background-color: #0cc;
+}
+.arduino-port-digital {
+  background-color: #cc0;
+}
+.arduino-port-analog {
+  background-color: #0c0;
+}
+.arduino-slider {
+  width: 100px;
+  height: 100px;
+}
+
+.arduino-peripheral {
+  text-align: center;
+}
+.arduino-peri-led i {
+  font-size: 18px;
+}

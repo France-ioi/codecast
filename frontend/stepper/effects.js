@@ -10,8 +10,13 @@ import {delay} from 'redux-saga'
 import {take, put, call, race} from 'redux-saga/effects';
 
 import {TermBuffer, writeString} from './terminal';
-import builtins from './builtins/index';
 import {heapInit} from './builtins/heap';
+import defaultBuiltins from './builtins/index';
+import arduinoBuiltins from '../arduino/builtins';
+import addArduinoEffects from '../arduino/effects';
+
+/* TODO: conditional arduino builtins */
+const builtins = {...defaultBuiltins, ...arduinoBuiltins};
 
 export default function (bundle, deps) {
 
@@ -30,7 +35,7 @@ export default function (bundle, deps) {
         return;
       }
       /* Call the effect handler, feed the result back into the iterator. */
-      console.log('effect', value);
+      console.log('effect', value[0], value);
       const name = value[0];
       if (!effectHandlers.has(name)) {
         throw new Error(`unhandled effect ${name}`);
@@ -39,7 +44,7 @@ export default function (bundle, deps) {
     }
   }
 
-  const effectHandlers = new Map([
+  let effectHandlers = new Map([
     /* core effects */
     ['control', controlHandler],
     ['result', resultHandler],
@@ -58,6 +63,7 @@ export default function (bundle, deps) {
     ['ungets', ungetsHandler],
     ['builtin', builtinHandler],
   ]);
+  addArduinoEffects(effectHandlers);
 
   /* core effect handlers */
 

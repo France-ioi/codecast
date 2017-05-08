@@ -9,6 +9,7 @@ import buffers from '../buffers/index';
 import errors from './errors';
 import resize from './resize';
 import examples from './examples';
+import ArduinoBundle from '../arduino/index';
 
 export default function (bundle) {
 
@@ -22,6 +23,7 @@ export default function (bundle) {
   bundle.include(errors);
   bundle.include(resize);
   bundle.include(examples);
+  bundle.include(ArduinoBundle);
 
   bundle.addReducer('bucketChanged', function (state, action) {
     const {bucket, playerBaseUrl} = action;
@@ -40,7 +42,8 @@ export const interpretQueryString = function (store, scope, qs) {
     showStepper: true,
     showStack: true,
     showViews: true,
-    showIO: true
+    showIO: true,
+    arduino: true
   };
   (qs.stepperControls||'').split(',').forEach(function (controlStr) {
     // No prefix to highlight, '-' to disable.

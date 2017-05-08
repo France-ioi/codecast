@@ -4,8 +4,7 @@ import {takeEvery, takeLatest, take, put, call, select, cancel, fork, race} from
 import * as C from 'persistent-c';
 import Immutable from 'immutable';
 
-import {start} from './start';
-import builtins from './builtins/index';
+import {buildStepperState} from './start';
 
 export default function (bundle, deps) {
 
@@ -19,8 +18,8 @@ export default function (bundle, deps) {
     'getBufferModel', 'bufferHighlight', 'bufferReset', 'bufferEdit', 'bufferModelEdit', 'bufferModelSelect',
     'getOutputBufferModel', 'getNodeRange',
     'terminalFocus', 'terminalInputNeeded',
-    'error',
-    'buildStepperState', 'runEffects'
+    'error', 'runEffects',
+    'getArduinoInitialState'
   );
 
   bundle.addSaga(function* watchTranslateSucceeded () {
@@ -29,8 +28,8 @@ export default function (bundle, deps) {
       try {
         yield put({type: deps.stepperDisabled});
         const {syntaxTree, options} = yield select(deps.getStepperInit);
-        const stepperState = deps.buildStepperState(syntaxTree, options);
-        console.log('initial state', stepperState);
+        options.arduino = yield select(deps.getArduinoInitialState);
+        const stepperState = buildStepperState(syntaxTree, options);
         const runContext = {state: stepperState};
         yield call(stepIntoUserCode, runContext);
         yield put({type: deps.stepperEnabled, options});
