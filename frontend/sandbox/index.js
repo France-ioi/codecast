@@ -23,10 +23,10 @@ import '../style.scss';
 import stepperComponent from '../stepper/index';
 import {default as commonComponent, interpretQueryString} from '../common/index';
 
-const {store, scope, start} = link(function (bundle, deps) {
+const {store, scope, finalize, start} = link(function (bundle, deps) {
   bundle.addReducer('init', _ => Immutable.Map());
-  bundle.include(stepperComponent);
   bundle.include(commonComponent);
+  bundle.include(stepperComponent);
   bundle.use('StepperControls', 'FullscreenButton', 'MainView', 'ExamplePicker', 'isTranslated');
   bundle.defineSelector('AppSelector', function (state) {
     const isTranslated = deps.isTranslated(state);
@@ -60,6 +60,7 @@ const {store, scope, start} = link(function (bundle, deps) {
 
 const qs = queryString.parse(window.location.search);
 
+finalize(scope);
 store.dispatch({type: scope.init});
 interpretQueryString(store, scope, qs);
 start();

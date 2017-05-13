@@ -27,12 +27,12 @@ user interaction change the view.
 */
 
 
-import {take, takeEvery, select} from 'redux-saga/effects';
+import {call, take, takeEvery, select} from 'redux-saga/effects';
 import Immutable from 'immutable';
 import React from 'react';
 import EpicComponent from 'epic-component';
 
-import {emptyDocument, documentFromString} from './document';
+import {emptyDocument, documentFromString, compressRange, expandRange} from './document';
 import Editor from './editor';
 
 export const DocumentModel = Immutable.Record({
@@ -89,22 +89,25 @@ export default function (bundle, deps) {
     return state.setIn(['buffers', buffer, 'model'], model);
   });
 
-  bundle.addReducer('bufferEdit', function (state, action) {
+  bundle.addReducer('bufferEdit', bufferEdit);
+  function bufferEdit (state, action) {
     const {buffer, delta} = action;
     const oldDoc = state.getIn(['buffers', buffer, 'model', 'document']);
     const newDoc = oldDoc.applyDelta(delta);
     return state.setIn(['buffers', buffer, 'model', 'document'], newDoc);
-  });
+  }
 
-  bundle.addReducer('bufferSelect', function (state, action) {
+  bundle.addReducer('bufferSelect', bufferSelect);
+  function bufferSelect (state, action) {
     const {buffer, selection} = action;
     return state.setIn(['buffers', buffer, 'model', 'selection'], selection);
-  });
+  }
 
-  bundle.addReducer('bufferScroll', function (state, action) {
+  bundle.addReducer('bufferScroll', bufferScroll);
+  function bufferScroll (state, action) {
     const {buffer, firstVisibleRow} = action;
     return state.setIn(['buffers', buffer, 'model', 'firstVisibleRow'], firstVisibleRow);
-  });
+  }
 
   bundle.addSaga(function* watchBuffers () {
     yield takeEvery(deps.bufferInit, function* (action) {
@@ -197,4 +200,114 @@ export default function (bundle, deps) {
     return {};
   }
 
+  bundle.defer(function ({record, replay}) {
+    record.onStart(function* (init) {
+      const sourceModel = yield select(deps.getBufferModel, 'source');
+      const inputModel = yield select(deps.getBufferModel, 'input');
+      init.buffers = {
+        source: {
+          document: sourceModel.get('document').toString(),
+          selection: compressRange(sourceModel.get('selection')),
+          firstVisibleRow: sourceModel.get('firstVisibleRow')
+        },
+        input: {
+          document: inputModel.get('document').toString(),
+          selection: compressRange(inputModel.get('selection')),
+          firstVisibleRow: inputModel.get('firstVisibleRow')
+        }
+      };
+    });
+    record.on('bufferSelect', function* (addEvent, action) {
+      const {buffer, selection} = action;
+      yield call(addEvent, 'buffer.select', buffer, compressRange(selection));
+    });
+    record.on('bufferEdit', function* (addEvent, action) {
+      const {buffer, delta} = action;
+      const {start, end} = delta;
+      const range = {start, end};
+      if (delta.action === 'insert') {
+        yield call(addEvent, 'buffer.insert', buffer, compressRange(range), delta.lines);
+      } else {
+        yield call(addEvent, 'buffer.delete', buffer, compressRange(range));
+      }
+    });
+    record.on('bufferScroll', function* (addEvent, action) {
+      const {buffer, firstVisibleRow} = action;
+      yield call(addEvent, 'buffer.scroll', buffer, firstVisibleRow);
+    });
+    replay.on('start', function (context, event, instant) {
+      const init = event[2];
+      const sourceModel = loadBufferModel(init.buffers.source);
+      const inputModel = loadBufferModel(init.buffers.input);
+      const outputModel = DocumentModel();
+      context.state = context.state.set('buffers',
+        Immutable.Map({
+          source: Immutable.Map({model: sourceModel}),
+          input: Immutable.Map({model: inputModel}),
+          output: Immutable.Map({model: outputModel})
+        }));
+    });
+    replay.on('buffer.select', function (context, event, instant) {
+      // XXX use reducer imported from common/buffers
+      const buffer = event[2];
+      const selection = expandRange(event[3]);
+      context.state = bufferSelect(context.state, {buffer, selection});
+      instant.saga = function* () {
+        yield put({type: deps.bufferModelSelect, buffer, selection});
+      };
+    });
+    replay.on(['buffer.insert', 'buffer.delete'], function (context, event, instant) {
+      // XXX use reducer imported from common/buffers
+      const buffer = event[2];
+      const range = expandRange(event[3]);
+      let delta;
+      if (event[1].endsWith('insert')) {
+        delta = {
+          action: 'insert',
+          start: range.start,
+          end: range.end,
+          lines: event[4]
+        };
+      } else if (event[1].endsWith('delete')) {
+        delta = {
+          action: 'remove',
+          start: range.start,
+          end: range.end
+        };
+      }
+      if (delta) {
+        context.state = bufferEdit(context.state, {buffer, delta});
+        instant.saga = function* () {
+          yield put({type: deps.bufferModelEdit, buffer, delta});
+        };
+      }
+    });
+    replay.on('buffer.scroll', function (context, event, instant) {
+      // XXX use reducer imported from common/buffers
+      const buffer = event[2];
+      const firstVisibleRow = event[3];
+      context.state = bufferScroll(context.state, {buffer, firstVisibleRow});
+      instant.saga = function* () {
+        yield put({type: deps.bufferModelScroll, buffer, firstVisibleRow});
+      };
+    });
+    replay.onReset(function* (instant) {
+      /* Reset all buffers. */
+      for (let buffer of ['source', 'input', 'output']) {
+        const model = instant.state.getIn(['buffers', buffer, 'model']);
+        yield put({type: deps.bufferReset, buffer, model, quiet: !jump});
+      }
+      const range = deps.getNodeRange(deps.getStepperDisplay(state)); /* XXX */
+      yield put({type: deps.bufferHighlight, buffer: 'source', range});
+    });
+  });
+
 };
+
+function loadBufferModel (dump) {
+  return DocumentModel({
+    document: documentFromString(dump.document),
+    selection: expandRange(dump.selection),
+    firstVisibleRow: dump.firstVisibleRow || 0
+  });
+}

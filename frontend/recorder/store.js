@@ -74,9 +74,4 @@ export default function (bundle) {
     return state.setIn(['recorder', 'elapsed'], elapsed);
   });
 
-  bundle.addReducer('recorderAddEvent', function (state, action) {
-    const {event} = action;
-    return state.updateIn(['recorder', 'events'], events => events.push(event));
-  });
-
 };

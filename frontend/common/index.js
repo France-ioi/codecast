@@ -10,8 +10,15 @@ import errors from './errors';
 import resize from './resize';
 import examples from './examples';
 import ArduinoBundle from '../arduino/index';
+import ReplayBundle from '../player/replay';
+import RecordBundle from '../recorder/record';
 
 export default function (bundle) {
+
+  /* These bundle must be included early to allow other bundles to register
+     replay/record handlers. */
+  bundle.include(ReplayBundle);
+  bundle.include(RecordBundle);
 
   // Sent when the application initializes.
   bundle.defineAction('init', 'System.Init');

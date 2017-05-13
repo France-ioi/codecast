@@ -47,7 +47,4 @@ export default function (bundle) {
   // Sent every second while recording.
   bundle.defineAction('recorderTick', 'Recorder.Tick');
 
-  // Add an event to the current recording.
-  bundle.defineAction('recorderAddEvent', 'Recorder.AddEvent');
-
 };

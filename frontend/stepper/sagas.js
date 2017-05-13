@@ -9,15 +9,13 @@ import {buildStepperState} from './start';
 export default function (bundle, deps) {
 
   bundle.use(
-    'getStepperState', 'getStepperDisplay', 'getStepperInterrupted',
+    'getStepperState', 'getStepperDisplay',
     'stepperTaskStarted', 'stepperTaskCancelled',
-    'stepperInterrupted',
     'stepperRestart', 'stepperStep', 'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperExit', 'stepperUndo', 'stepperRedo',
-    'stepperStackUp', 'stepperStackDown', 'stepperInterrupt',
+    'stepperStackUp', 'stepperStackDown',
     'translateSucceeded', 'getTranslateState', 'translateClear',
     'getBufferModel', 'bufferHighlight', 'bufferReset', 'bufferEdit', 'bufferModelEdit', 'bufferModelSelect',
     'getOutputBufferModel', 'getNodeRange',
-    'terminalFocus', 'terminalInputNeeded',
     'error', 'runEffects',
     'getArduinoInitialState'
   );

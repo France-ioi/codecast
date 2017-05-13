@@ -152,6 +152,31 @@ export default function (bundle, deps) {
     return model;
   });
 
+  bundle.defer(function ({record, replay}) {
+
+    record.onStart(function* (init) {
+      init.ioPaneMode = yield select(deps.getIoPaneMode)
+    });
+    replay.on('start', function (context, event, instant) {
+      const init = event[2];
+      context.state = context.state.set('ioPaneMode', init.ioPaneMode);
+    });
+
+    record.on('ioPaneModeChanged', function* (addEvent, action) {
+      yield call(addEvent, 'ioPane.mode', action.mode);
+    });
+    replay.on('ioPane.mode', function (context, event, instant) {
+      const mode = event[2];
+      context.state = ioPaneModeChanged(context.state, {mode});
+    });
+
+    replay.onReset(function* (instant) {
+      const ioPaneMode = state.get('ioPaneMode');
+      yield put({type: deps.ioPaneModeChanged, mode: ioPaneMode});
+    });
+
+  });
+
 };
 
 export function ioPaneModeChanged (state, action) {

@@ -28,14 +28,13 @@ import recorderSagas from './sagas';
 import RecorderControls from './controls';
 import RecordScreen from './record_screen';
 import App from './app_view';
-import examples from '../common/examples';
 
-const {store, scope, start} = link(function (bundle) {
+const {store, scope, finalize, start} = link(function (bundle) {
 
   bundle.addReducer('init', _ => Immutable.Map({screen: 'record'}));
 
-  bundle.include(stepperComponent);
   bundle.include(commonComponent);
+  bundle.include(stepperComponent);
   bundle.include(saveScreenComponent);
   bundle.include(recorderActions);
   bundle.include(recorderStore);
@@ -50,6 +49,7 @@ const {store, scope, start} = link(function (bundle) {
 
 const qs = queryString.parse(window.location.search);
 
+finalize({});
 store.dispatch({type: scope.init});
 interpretQueryString(store, scope, qs);
 start();

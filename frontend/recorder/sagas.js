@@ -4,7 +4,6 @@ import {take, put, call, race, select, actionChannel} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
-import {compressRange} from '../buffers/document';
 import {spawnWorker, callWorker, killWorker} from '../utils/worker_utils';
 
 // XXX worker URL should use SystemJS baseURL?
@@ -43,7 +42,7 @@ export default function (bundle, deps) {
     'error', 'switchToScreen',
     'getRecorderState',
     'recorderPrepare', 'recorderPreparing', 'recorderReady',
-    'recorderAddEvent', 'recorderTick',
+    'recorderTick',
     'recorderStart', 'recorderStarting', 'recorderStarted',
     'recorderStop', 'recorderStopping', 'recorderStopped',
     'getBufferModel', 'bufferSelect', 'bufferEdit', 'bufferScroll',
@@ -146,21 +145,6 @@ export default function (bundle, deps) {
         console.log('not ready', recorder);
         return;
       }
-      const sourceModel = yield select(deps.getBufferModel, 'source');
-      const inputModel = yield select(deps.getBufferModel, 'input');
-      const buffers = {
-        source: {
-          document: sourceModel.get('document').toString(),
-          selection: compressRange(sourceModel.get('selection')),
-          firstVisibleRow: sourceModel.get('firstVisibleRow')
-        },
-        input: {
-          document: inputModel.get('document').toString(),
-          selection: compressRange(inputModel.get('selection')),
-          firstVisibleRow: inputModel.get('firstVisibleRow')
-        }
-      };
-      const ioPaneMode = yield select(deps.getIoPaneMode);
       // Signal that the recorder is starting.
       yield put({type: deps.recorderStarting});
       // Resume the audio context to start recording audio buffers.
@@ -178,11 +162,10 @@ export default function (bundle, deps) {
       }
       // Signal that recording has started.
       yield put({type: deps.recorderStarted});
-      yield call(recordEvent, [0, 'start', {
-        version: RECORDING_FORMAT_VERSION,
-        ioPaneMode,
-        buffers
-      }]);
+      /* Record the 'start' event */
+      const init = {version: RECORDING_FORMAT_VERSION};
+      yield call(record.start, init);
+      yield call(recordEvent, [0, 'start', init]);
       yield put({type: deps.switchToScreen, screen: 'record'});
     } catch (error) {
       // XXX generic error
@@ -267,121 +250,14 @@ export default function (bundle, deps) {
     }
   });
 
-  function* recordEvent (event) {
-    yield put({type: deps.recorderAddEvent, event});
-  };
-
-  const recorders = {};
-
-  recorders.bufferSelect = function* (t, action) {
-    const {buffer, selection} = action;
-    yield call(recordEvent, [t, 'buffer.select', buffer, compressRange(selection)]);
-  };
-
-  recorders.bufferEdit = function* (t, action) {
-    const {buffer, delta} = action;
-    const {start, end} = delta;
-    const range = {start, end};
-    if (delta.action === 'insert') {
-      yield call(recordEvent, [t, 'buffer.insert', buffer, compressRange(range), delta.lines]);
-    } else {
-      yield call(recordEvent, [t, 'buffer.delete', buffer, compressRange(range)]);
-    }
-  };
-
-  recorders.bufferScroll = function* (t, action) {
-    const {buffer, firstVisibleRow} = action;
-    yield call(recordEvent, [t, 'buffer.scroll', buffer, firstVisibleRow]);
-  };
-
-  recorders.translateStarted = function* (t, action) {
-    const {source} = action;
-    yield call(recordEvent, [t, 'translate.start', source]);
-  };
-
-  recorders.translateSucceeded = function* (t, action) {
-    const {response} = action;
-    yield call(recordEvent, [t, 'translate.success', response]);
-  };
-
-  recorders.translateFailed = function* (t, action) {
-    const {response} = action;
-    yield call(recordEvent, [t, 'translate.failure', response]);
-  };
-
-  recorders.translateClearDiagnostics = function* (t, action) {
-    yield call(recordEvent, [t, 'translate.clearDiagnostics']);
-  };
-
-  recorders.stepperStarted = function* (t, action) {
-    const {mode} = action;
-    yield call(recordEvent, [t, 'stepper.step', mode]);
-  };
-
-  recorders.stepperProgress = function* (t, action) {
-    const {context} = action;
-    // CONSIDER: record control node id and step
-    yield call(recordEvent, [t, 'stepper.progress', context.stepCounter]);
-  };
-
-  recorders.stepperIdle = function* (t, action) {
-    const {context} = action;
-    // CONSIDER: record control node id and step
-    yield call(recordEvent, [t, 'stepper.idle', context.stepCounter]);
-  };
-
-  recorders.stepperInterrupt = function* (t, action) {
-    yield call(recordEvent, [t, 'stepper.interrupt']);
-  };
-
-  recorders.stepperRestart = function* (t, action) {
-    yield call(recordEvent, [t, 'stepper.restart']);
-  };
-
-  recorders.stepperUndo = function* (t, action) {
-    yield call(recordEvent, [t, 'stepper.undo']);
-  };
-
-  recorders.stepperRedo = function* (t, action) {
-    yield call(recordEvent, [t, 'stepper.redo']);
-  };
-
-  recorders.stepperExit = function* (t, action) {
-    yield call(recordEvent, [t, 'stepper.exit']);
-  };
-
-  recorders.stepperStackUp = function* (t, action) {
-    yield call(recordEvent, [t, 'stepper.stack.up']);
-  };
-
-  recorders.stepperStackDown = function* (t, action) {
-    yield call(recordEvent, [t, 'stepper.stack.down']);
-  };
-
-  recorders.stepperViewControlsChanged = function* (t, action) {
-    const {key, update} = action;
-    yield call(recordEvent, [t, 'stepper.view.update', key, update]);
-  };
-
-  recorders.recorderStopping = function* (t, action) {
-    yield call(recordEvent, [t, 'end']);
-  };
-
-  recorders.ioPaneModeChanged = function* (t, action) {
-    yield call(recordEvent, [t, 'ioPane.mode', action.mode]);
-  };
-  recorders.terminalInputNeeded = function* (t, action) {
-    yield call(recordEvent, [t, 'terminal.wait']);
-  };
-  recorders.terminalInputKey = function* (t, action) {
-    yield call(recordEvent, [t, 'terminal.key', action.key]);
-  };
-  recorders.terminalInputBackspace = function* (t, action) {
-    yield call(recordEvent, [t, 'terminal.backspace']);
-  };
-  recorders.terminalInputEnter = function* (t, action) {
-    yield call(recordEvent, [t, 'terminal.enter']);
-  };
+  bundle.defer(function ({record, replay}) {
+    record.on('recorderStopping', function* (addEvent, action) {
+      yield call(addEvent, 'end');
+    });
+    replay.on('end', function (context, event, instant) {
+      context.state = context.state.set('stopped', true); /* XXX: does not belong here */
+    });
+  });
 
   bundle.addSaga(function* recordEvents () {
     const recorderMap = {};
@@ -398,8 +274,7 @@ export default function (bundle, deps) {
       const channel = yield actionChannel(pattern);
       while (true) {
         const action = yield take(channel);
-        const timestamp = Math.round(context.audioContext.currentTime * 1000);
-        yield call(recorderMap[action.type], timestamp, action);
+        yield call(deps.record.recordAction, action);
         if (action.type === deps.recorderStopping) {
           channel.close();
           break;

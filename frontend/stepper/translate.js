@@ -19,113 +19,6 @@ import {TextEncoder} from 'text-encoding-utf-8';
 
 import {asyncRequestJson} from '../utils/api';
 
-const addNodeRanges = function (source, syntaxTree) {
-  // Assign a {row, column} position to each byte offset in the source.
-  // The UTF-8 encoding indicates the byte length of each character, so we could
-  // use it to maintain a counter of how many bytes to skip before incrementing
-  // the column number, thus:
-  //     0xxxxxxx  single-byte character, increment column
-  //     110xxxxx  start of 2-bytes sequence, set counter to 1
-  //     1110xxxx  start of 3-bytes sequence, set counter to 2
-  //     11110xxx  start of 4-bytes sequence, set counter to 3
-  //     10xxxxxx  decrement counter, if it goes to 0 then increment column
-  // However, because we do not need meaningful position for byte offsets that
-  // do not start a character, it is simpler to increment the column on the
-  // first byte of every character (bit patterns 0xxxxxxx and 11xxxxxx), and
-  // to store a null position for the other bytes (bit pattern 10xxxxxx).
-  const encoder = new TextEncoder('utf-8');
-  const bytesArray = encoder.encode(source);
-  const bytesLen = bytesArray.length;
-  const positions = [];
-  let row = 0, column = 0, pos = {row, column};
-  for (let bytePos = 0; bytePos < bytesLen; bytePos++) {
-    const byte = bytesArray[bytePos];
-    if ((byte & 0b11000000) === 0b10000000) {
-      positions.push(null);
-    } else {
-      positions.push(pos);
-      if (byte === 10) {
-        row += 1;
-        column = 0;
-      } else {
-        column += 1;
-      }
-      pos = {row, column};
-    }
-  }
-  positions.push(pos);
-  // Compute each node's range.
-  function traverse (node) {
-    const newNode = node.slice();
-    const attrs = node[1];
-    newNode[1] = {
-      ...attrs,
-      range: {
-        start: positions[attrs.begin],
-        end: positions[attrs.end]
-      }
-    };
-    newNode[2] = node[2].map(traverse);
-    return newNode;
-  }
-  return traverse(syntaxTree);
-};
-
-const getPositionFromOffset = function (lineOffsets, offset) {
-  if (typeof offset !== 'number') {
-    return null;
-  }
-  let iLeft = 0, iRight = lineOffsets.length;
-  while (iLeft + 1 < iRight) {
-    const iMiddle = (iLeft + iRight) / 2 |0;
-    const middle = lineOffsets[iMiddle];
-    if (offset < middle)
-      iRight = iMiddle;
-    if (middle <= offset)
-      iLeft = iMiddle;
-  }
-  return {row: iLeft, column: offset - lineOffsets[iLeft]};
-};
-
-const toHtml = function (content) {
-  // Sanitize and wrap html content.
-  const el = document.createElement('div');
-  el.innerHtml = `<pre>${content}</pre>`;
-  return {__html: el.innerHtml};
-};
-
-export function translateClear (state, action) {
-  return Immutable.Map({status: 'clear'});
-}
-
-export function translateStarted (state, action) {
-  const {source} = action;
-  return state.set('status', 'running').set('source', source);
-}
-
-export function translateSucceeded (state, action) {
-  const {syntaxTree, diagnostics} = action;
-  const source = state.get('source');
-  return state
-    .set('status', 'done')
-    .set('syntaxTree', addNodeRanges(source, syntaxTree))
-    .set('diagnostics', diagnostics)
-    .set('diagnosticsHtml', diagnostics && toHtml(diagnostics));
-};
-
-export function translateFailed (state, action) {
-  const {error, diagnostics} = action;
-  return state
-    .set('status', 'error')
-    .set('error', error)
-    .set('diagnostics', diagnostics)
-    .set('diagnosticsHtml', toHtml(diagnostics));
-};
-
-export function translateClearDiagnostics (state, action) {
-  return state.delete('diagnostics').delete('diagnosticsHtml');
-};
-
 export default function (bundle, deps) {
 
   bundle.use('init', 'getBufferModel');
@@ -223,4 +116,163 @@ export default function (bundle, deps) {
     }
   });
 
+  bundle.defer(function ({record, replay}) {
+
+    record.on('translateStarted', function* (addEvent, action) {
+      const {source} = action;
+      yield call(addEvent, 'translate.start', source);
+    });
+    replay.on(['stepper.translate', 'translate.start'], function (context, event, instant) {
+      const action = {source: event[2]};
+      context.state = context.state.update('translate', st => translateStarted(st, action));
+    });
+
+    record.on('translateSucceeded', function* (addEvent, action) {
+      const {response} = action;
+      yield call(addEvent, 'translate.success', response);
+    });
+    replay.on('translate.success', function (context, event, instant) {
+      const action = {diagnostics: event[2].diagnostics, syntaxTree: event[2].ast};
+      context.state = context.state.update('translate', st => translateSucceeded(st, action));
+    });
+
+    record.on('translateFailed', function* (addEvent, action) {
+      const {response} = action;
+      yield call(addEvent, 'translate.failure', response);
+    });
+    replay.on('translate.failure', function (context, event, instant) {
+      const action = {diagnostics: event[2].diagnostics, error: event[2].error};
+      context.state = context.state.update('translate', st => translateFailed(st, action));
+    });
+
+    record.on('translateClearDiagnostics', function* (addEvent, action) {
+      yield call(addEvent, 'translate.clearDiagnostics');
+    });
+    replay.on('translate.clearDiagnostics', function (context, event, instant) {
+      context.state = context.state.update('translate', st => translateClearDiagnostics(st, {}));
+    });
+
+    replay.on('start', function (context, event, instant) {
+      const translateModel = translateClear();
+      context.state = context.state.set('translate', translateModel);
+    });
+
+    replay.on('stepper.exit', function (context, event, instant) {
+      context.state = context.state.update('translate', translateClear);
+    });
+
+    replay.onReset(function* (instant) {
+      const translateState = state.get('translate');
+      yield put({type: deps.translateReset, state: translateState});
+    })
+
+  });
+
+};
+
+const addNodeRanges = function (source, syntaxTree) {
+  // Assign a {row, column} position to each byte offset in the source.
+  // The UTF-8 encoding indicates the byte length of each character, so we could
+  // use it to maintain a counter of how many bytes to skip before incrementing
+  // the column number, thus:
+  //     0xxxxxxx  single-byte character, increment column
+  //     110xxxxx  start of 2-bytes sequence, set counter to 1
+  //     1110xxxx  start of 3-bytes sequence, set counter to 2
+  //     11110xxx  start of 4-bytes sequence, set counter to 3
+  //     10xxxxxx  decrement counter, if it goes to 0 then increment column
+  // However, because we do not need meaningful position for byte offsets that
+  // do not start a character, it is simpler to increment the column on the
+  // first byte of every character (bit patterns 0xxxxxxx and 11xxxxxx), and
+  // to store a null position for the other bytes (bit pattern 10xxxxxx).
+  const encoder = new TextEncoder('utf-8');
+  const bytesArray = encoder.encode(source);
+  const bytesLen = bytesArray.length;
+  const positions = [];
+  let row = 0, column = 0, pos = {row, column};
+  for (let bytePos = 0; bytePos < bytesLen; bytePos++) {
+    const byte = bytesArray[bytePos];
+    if ((byte & 0b11000000) === 0b10000000) {
+      positions.push(null);
+    } else {
+      positions.push(pos);
+      if (byte === 10) {
+        row += 1;
+        column = 0;
+      } else {
+        column += 1;
+      }
+      pos = {row, column};
+    }
+  }
+  positions.push(pos);
+  // Compute each node's range.
+  function traverse (node) {
+    const newNode = node.slice();
+    const attrs = node[1];
+    newNode[1] = {
+      ...attrs,
+      range: {
+        start: positions[attrs.begin],
+        end: positions[attrs.end]
+      }
+    };
+    newNode[2] = node[2].map(traverse);
+    return newNode;
+  }
+  return traverse(syntaxTree);
+};
+
+const getPositionFromOffset = function (lineOffsets, offset) {
+  if (typeof offset !== 'number') {
+    return null;
+  }
+  let iLeft = 0, iRight = lineOffsets.length;
+  while (iLeft + 1 < iRight) {
+    const iMiddle = (iLeft + iRight) / 2 |0;
+    const middle = lineOffsets[iMiddle];
+    if (offset < middle)
+      iRight = iMiddle;
+    if (middle <= offset)
+      iLeft = iMiddle;
+  }
+  return {row: iLeft, column: offset - lineOffsets[iLeft]};
+};
+
+const toHtml = function (content) {
+  // Sanitize and wrap html content.
+  const el = document.createElement('div');
+  el.innerHtml = `<pre>${content}</pre>`;
+  return {__html: el.innerHtml};
+};
+
+function translateClear (state, action) {
+  return Immutable.Map({status: 'clear'});
+}
+
+function translateStarted (state, action) {
+  const {source} = action;
+  return state.set('status', 'running').set('source', source);
+}
+
+function translateSucceeded (state, action) {
+  const {syntaxTree, diagnostics} = action;
+  const source = state.get('source');
+  return state
+    .set('status', 'done')
+    .set('syntaxTree', addNodeRanges(source, syntaxTree))
+    .set('diagnostics', diagnostics)
+    .set('diagnosticsHtml', diagnostics && toHtml(diagnostics));
+};
+
+function translateFailed (state, action) {
+  const {error, diagnostics} = action;
+  return state
+    .set('status', 'error')
+    .set('error', error)
+    .set('diagnostics', diagnostics)
+    .set('diagnosticsHtml', toHtml(diagnostics));
+};
+
+function translateClearDiagnostics (state, action) {
+  return state.delete('diagnostics').delete('diagnosticsHtml');
 };

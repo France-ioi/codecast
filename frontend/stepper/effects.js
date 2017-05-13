@@ -162,28 +162,4 @@ export default function (bundle, deps) {
     yield call(runEffects, context, iterator);
   }
 
-  /*
-
-  export function beginStep (state) {
-    return {
-      state: {
-        ...state,
-        core: C.clearMemoryLog(state.core)
-      },
-      stepCounter: 0
-    };
-  }
-
-  export function runToStep (context, targetStepCounter) {
-    let {state, stepCounter} = context;
-    while (stepCounter < targetStepCounter) {
-      for (var effect of C.step(state)) {
-        pureEffector(state, effect);
-      }
-      stepCounter += 1;
-    }
-    return {state, stepCounter};
-  };
-  */
-
 };

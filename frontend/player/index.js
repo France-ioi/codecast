@@ -27,7 +27,7 @@ import playerSagas from './sagas';
 import PlayerControls from './controls';
 import App from './app_view';
 
-const {store, scope, start} = link(function (bundle) {
+const {store, scope, finalize, start} = link(function (bundle) {
 
   bundle.addReducer('init', _ => Immutable.Map({
     player: Immutable.Map({
@@ -36,8 +36,8 @@ const {store, scope, start} = link(function (bundle) {
     })
   }));
 
-  bundle.include(stepperComponent);
   bundle.include(commonComponent);
+  bundle.include(stepperComponent);
   bundle.include(playerActions);
   bundle.include(playerSelectors);
   bundle.include(playerReducers);
@@ -48,7 +48,7 @@ const {store, scope, start} = link(function (bundle) {
 });
 
 const qs = queryString.parse(window.location.search);
-
+finalize({});
 store.dispatch({type: scope.init});
 interpretQueryString(store, scope, qs);
 start();

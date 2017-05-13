@@ -40,11 +40,12 @@ export default function (bundle, deps) {
     return state.setIn(['arduino', 'ports'], Immutable.List(dump.ports));
   });
 
-  bundle.addReducer('arduinoPortChanged', function (state, action) {
+  bundle.addReducer('arduinoPortChanged', arduinoPortChanged);
+  function arduinoPortChanged (state, action) {
     const {index, changes} = action;
     const oldValue = state.getIn(['arduino', 'ports', index]);
     return state.setIn(['arduino', 'ports', index], {...oldValue, ...changes, changed: true});
-  });
+  }
 
   bundle.defineView('ArduinoPanel', ArduinoPanelSelector, EpicComponent(self => {
 
@@ -75,6 +76,7 @@ export default function (bundle, deps) {
 
   const PortDisplay = EpicComponent(self => {
     function onButtonToggle () {
+      /* XXX */
     }
     function onSliderChange () {
     }
@@ -228,6 +230,17 @@ export default function (bundle, deps) {
       );
     };
   });
+
+
+  function registerReplayEventHandlers (replay) {
+    replay.on('arduino.port.changed', function (context, event, instant) {
+      const index = event[2];
+      const changes = event[3];
+      context.state = context.state.update('arduino', st => arduinoPortChanged(st, {index, changes}));
+    });
+    replay.on('arduino.port.event', function (context, event, instant) {
+    });
+  }
 
 };
 

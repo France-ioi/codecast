@@ -41,28 +41,83 @@ export default function (bundle, deps) {
     return state.update('stepper', st => terminalInputEnter(st));
   });
 
+
+  bundle.defer(function ({record, replay}) {
+
+    record.on('terminalInputNeeded', function* (addEvent, action) {
+      yield call(addEvent, 'terminal.wait');
+    });
+    replay.on('terminal.wait', function (context, event, instant) {
+      context.state = context.state.update('stepper', st => terminalInputNeeded(st));
+    });
+
+    record.on('terminalInputKey', function* (addEvent, action) {
+      yield call(addEvent, 'terminal.key', action.key);
+    });
+    replay.on('terminal.key', function (context, event, instant) {
+      const key = event[2];
+      context.state = context.state.update('stepper', st => terminalInputKey(st, {key}));
+    });
+
+    record.on('terminalInputBackspace', function* (addEvent, action) {
+      yield call(addEvent, 'terminal.backspace');
+    });
+    replay.on('terminal.backspace', function (context, event, instant) {
+      context.state = context.state.update('stepper', st => terminalInputBackspace(st));
+    });
+
+    record.on('terminalInputEnter', function* (addEvent, action) {
+      yield call(addEvent, 'terminal.enter');
+    });
+    replay.on('terminal.enter', function (context, event, instant) {
+      context.state = context.state.update('stepper', st => terminalInputEnter(st));
+      if (context.run) {
+        /* Update the run-context so that the step completes with the added input */
+        /* TODO: is this still necessary? */
+        context.run.state = context.state.getIn(['stepper', 'current']);
+      }
+    });
+
+    replay.on(['stepper.restart', 'stepper.undo', 'stepper.redo'], function (context, event, instant) {
+      if (context.state.get('ioPaneMode') === 'split') {
+        context.state = syncOutputBuffer(context.state); /* TODO: avoid this by
+          making sure the output buffer model is keyt consistent */
+        instant.saga = syncOutputBufferSaga;
+      }
+    });
+
+  });
+  function syncOutputBuffer (state) {
+    const model = deps.getOutputBufferModel(state);
+    return state.setIn(['buffers', 'output', 'model'], model);
+  }
+  function* syncOutputBufferSaga (instant) {
+    const model = instant.state.getIn(['buffers', 'output', 'model']);
+    yield put({type: deps.bufferReset, buffer: 'output', model});
+  }
+
 };
 
-export function terminalInputNeeded (state, action) {
+function terminalInputNeeded (state, action) {
   return state.update('current', function (stepper) {
     return {...stepper, isWaitingOnInput: true};
   });
 };
 
-export function terminalInputKey (state, action) {
+function terminalInputKey (state, action) {
   const {key} = action;
   return state.update('current', function (stepper) {
     return {...stepper, inputBuffer: stepper.inputBuffer + key};
   });
 };
 
-export function terminalInputBackspace (state) {
+function terminalInputBackspace (state) {
   return state.update('current', function (stepper) {
     return {...stepper, inputBuffer: stepper.inputBuffer.slice(0, -1)};
   });
 };
 
-export function terminalInputEnter (state) {
+function terminalInputEnter (state) {
   return state.update('current', function (stepper) {
     const inputLine = stepper.inputBuffer + '\n';
     return {...stepper,
