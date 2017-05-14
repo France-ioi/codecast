@@ -5,23 +5,16 @@ import {Button, FormControl, ControlLabel, FormGroup} from 'react-bootstrap';
 import Slider from 'rc-slider';
 import Immutable from 'immutable';
 import range from 'node-range';
+import update from 'immutability-helper';
+
+import './style.scss';
 
 export default function (bundle, deps) {
 
-  bundle.use(
-    'getStepperState',
-  );
+  bundle.use('getStepperDisplay');
 
   bundle.defineAction('arduinoConfigured', 'Arduino.Configured');
   bundle.defineAction('arduinoPortChanged', 'Arduino.Port.Changed');
-
-  bundle.defineSelector('getArduinoInitialState', function (state) {
-    const ports = state.getIn(['arduino', 'ports']).toArray().map(function (port) {
-      const {index} = port;
-      return {index, dir: 0, input: 0, output: 0, pullUp: false};
-    });
-    return {ports};
-  });
 
   bundle.addReducer('init', function (state, action) {
     return state.setIn(['arduino', 'ports'], Immutable.List(range(0,19).map(index => {
@@ -69,7 +62,7 @@ export default function (bundle, deps) {
   }));
 
   function ArduinoPanelSelector (state, props) {
-    const stepper = deps.getStepperState(state).get('current');
+    const stepper = deps.getStepperDisplay(state);
     const ports = state.getIn(['arduino', 'ports']);
     return {ports, state: stepper.ports};
   }
@@ -232,28 +225,63 @@ export default function (bundle, deps) {
   });
 
 
-  function registerReplayEventHandlers (replay) {
-    replay.on('arduino.port.changed', function (context, event, instant) {
+  bundle.defer(function ({recordApi, replayApi, stepperApi}) {
+
+    recordApi.on(deps.arduinoPortChanged, function* (addEvent, action) {
+      const {index, changes} = action;
+      yield call(addEvent, 'arduino.port.changed', index, changes);
+    });
+    replayApi.on('arduino.port.changed', function (context, event, instant) {
       const index = event[2];
       const changes = event[3];
       context.state = context.state.update('arduino', st => arduinoPortChanged(st, {index, changes}));
     });
-    replay.on('arduino.port.event', function (context, event, instant) {
+
+    /* TODO: record user interaction w/ arduino peripherals */
+    replayApi.on('arduino.port.event', function (context, event, instant) {
     });
-  }
+
+    stepperApi.addOptions(function (options, state) {
+      const ports = state.getIn(['arduino', 'ports']).toArray().map(function (port) {
+        const {index} = port;
+        return {index, dir: 0, input: 0, output: 0, pullUp: false};
+      });
+      options.arduino = {ports};
+    });
+
+    stepperApi.onInit(function (state) {
+      const {options} = state;
+      state.ports = options.arduino.ports;
+    });
+
+    stepperApi.addBuiltin('pinMode', function* pinModeBuiltin (context, pin, dir) {
+      yield ['pinMode', pin, dir];
+    });
+    stepperApi.onEffect('pinMode', function* pinModeEffect (context, pin, dir) {
+      const port = context.state.ports[pin];
+      context.state.ports[pin] = {...port, dir: dir.toInteger()};
+    });
+
+    stepperApi.addBuiltin('digitalWrite', function* digitalWriteBuiltin (context, pin, level) {
+      yield ['digitalWrite', pin, level];
+    });
+    stepperApi.onEffect('digitalWrite', function* digitalWriteEffect (context, pin, level) {
+      const ports = context.state;
+      const port = ports[pin];
+      context.state = update(context.state,
+        {ports: {[pin]: {output: {$set: level.toInteger()}}}});
+    });
+
+    stepperApi.addBuiltin('digitalRead', function* digitalReadBuiltin (context, pin) {
+      const level = yield ['digitalRead', pin];
+      yield ['result', new C.IntegralValue(C.builtinTypes['int'], level)];
+    });
+    stepperApi.onEffect('digitalRead', function* digitalReadEffect (context, pin) {
+      return context.state.ports[pin].input;
+    });
+
+    // TODO: analogRead
+
+  })
 
 };
-
-/*
-
-pinMode(pin, INPUT, OUTPUT)
-  set pinDir[pin]
-digitalWrite(pin, LOW ou HIGH)
-  set pinLevel[pin] to 0 or 1
-digitalRead(pin)
-  return pinLevel[pin] >= 0.5
-analogRead(pin)
-  return pinLevel[pin] * 255
-analogWrite(pin, value) (pas demandé)
-
-*/

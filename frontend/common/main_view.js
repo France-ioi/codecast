@@ -6,24 +6,23 @@ import EpicComponent from 'epic-component';
 export default function (bundle, deps) {
 
   bundle.use(
-    'getTranslateState', 'getStepperDisplay', 'getStepperOptions',
+    'getTranslateDiagnostics', 'getStepperDisplay', 'getStepperOptions',
     'translateClearDiagnostics', 'stepperExit',
     'BufferEditor', 'StackView', 'DirectivesPane', 'IOPane',
     'ArduinoConfigPanel', 'ArduinoPanel'
   );
 
-  bundle.defineSelector('MainViewSelector', function (state, props) {
-    const translate = deps.getTranslateState(state);
-    const diagnostics = translate && translate.get('diagnosticsHtml');
+  function MainViewSelector (state, props) {
+    const diagnostics = deps.getTranslateDiagnostics(state);
     const stepperDisplay = deps.getStepperDisplay(state);
     const haveStepper = !!stepperDisplay;
     const error = haveStepper && stepperDisplay.error;
     const readOnly = haveStepper || props.preventInput;
     const options = deps.getStepperOptions(state);
     return {diagnostics, haveStepper, readOnly, error, options};
-  });
+  }
 
-  bundle.defineView('MainView', 'MainViewSelector', EpicComponent(self => {
+  bundle.defineView('MainView', MainViewSelector, EpicComponent(self => {
 
     const onClearDiagnostics = function () {
       self.props.dispatch({type: deps.translateClearDiagnostics});

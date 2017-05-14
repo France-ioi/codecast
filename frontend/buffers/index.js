@@ -27,7 +27,7 @@ user interaction change the view.
 */
 
 
-import {call, take, takeEvery, select} from 'redux-saga/effects';
+import {call, put, takeEvery, select} from 'redux-saga/effects';
 import Immutable from 'immutable';
 import React from 'react';
 import EpicComponent from 'epic-component';
@@ -200,8 +200,8 @@ export default function (bundle, deps) {
     return {};
   }
 
-  bundle.defer(function ({record, replay}) {
-    record.onStart(function* (init) {
+  bundle.defer(function ({recordApi, replayApi}) {
+    recordApi.onStart(function* (init) {
       const sourceModel = yield select(deps.getBufferModel, 'source');
       const inputModel = yield select(deps.getBufferModel, 'input');
       init.buffers = {
@@ -217,11 +217,11 @@ export default function (bundle, deps) {
         }
       };
     });
-    record.on('bufferSelect', function* (addEvent, action) {
+    recordApi.on(deps.bufferSelect, function* (addEvent, action) {
       const {buffer, selection} = action;
       yield call(addEvent, 'buffer.select', buffer, compressRange(selection));
     });
-    record.on('bufferEdit', function* (addEvent, action) {
+    recordApi.on(deps.bufferEdit, function* (addEvent, action) {
       const {buffer, delta} = action;
       const {start, end} = delta;
       const range = {start, end};
@@ -231,11 +231,11 @@ export default function (bundle, deps) {
         yield call(addEvent, 'buffer.delete', buffer, compressRange(range));
       }
     });
-    record.on('bufferScroll', function* (addEvent, action) {
+    recordApi.on(deps.bufferScroll, function* (addEvent, action) {
       const {buffer, firstVisibleRow} = action;
       yield call(addEvent, 'buffer.scroll', buffer, firstVisibleRow);
     });
-    replay.on('start', function (context, event, instant) {
+    replayApi.on('start', function (context, event, instant) {
       const init = event[2];
       const sourceModel = loadBufferModel(init.buffers.source);
       const inputModel = loadBufferModel(init.buffers.input);
@@ -247,7 +247,7 @@ export default function (bundle, deps) {
           output: Immutable.Map({model: outputModel})
         }));
     });
-    replay.on('buffer.select', function (context, event, instant) {
+    replayApi.on('buffer.select', function (context, event, instant) {
       // XXX use reducer imported from common/buffers
       const buffer = event[2];
       const selection = expandRange(event[3]);
@@ -256,7 +256,7 @@ export default function (bundle, deps) {
         yield put({type: deps.bufferModelSelect, buffer, selection});
       };
     });
-    replay.on(['buffer.insert', 'buffer.delete'], function (context, event, instant) {
+    replayApi.on(['buffer.insert', 'buffer.delete'], function (context, event, instant) {
       // XXX use reducer imported from common/buffers
       const buffer = event[2];
       const range = expandRange(event[3]);
@@ -282,7 +282,7 @@ export default function (bundle, deps) {
         };
       }
     });
-    replay.on('buffer.scroll', function (context, event, instant) {
+    replayApi.on('buffer.scroll', function (context, event, instant) {
       // XXX use reducer imported from common/buffers
       const buffer = event[2];
       const firstVisibleRow = event[3];
@@ -291,13 +291,13 @@ export default function (bundle, deps) {
         yield put({type: deps.bufferModelScroll, buffer, firstVisibleRow});
       };
     });
-    replay.onReset(function* (instant) {
+    replayApi.onReset(function* (instant, quick) {
       /* Reset all buffers. */
       for (let buffer of ['source', 'input', 'output']) {
         const model = instant.state.getIn(['buffers', buffer, 'model']);
-        yield put({type: deps.bufferReset, buffer, model, quiet: !jump});
+        yield put({type: deps.bufferReset, buffer, model, quiet: quick});
       }
-      const range = deps.getNodeRange(deps.getStepperDisplay(state)); /* XXX */
+      const {range} = instant;
       yield put({type: deps.bufferHighlight, buffer: 'source', range});
     });
   });

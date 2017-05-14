@@ -47,34 +47,46 @@ app.use(bodyParser.json());
 app.get('/recorder', function (req, res) {
   getConfigByToken(req.query.token, function (err, config) {
     if (err) return res.redirect(`${process.env.BASE_URL}/`);
-    res.render('index', {development: isDevelopment, rebaseUrl});
+    res.render('index', {
+      development: isDevelopment,
+      rebaseUrl,
+      options: {start: 'recorder'}
+    });
   })
 });
 
 app.get('/player', function (req, res) {
-  res.render('player', {development: isDevelopment, rebaseUrl});
+  const audioUrl = `${req.query.base}.mp3`;
+  const eventsUrl = `${req.query.base}.json`;
+  res.render('index', {
+    development: isDevelopment,
+    rebaseUrl,
+    options: {start: 'player', audioUrl, eventsUrl}
+  });
 });
 
 app.get('/', function (req, res) {
-  res.render('sandbox', {development: isDevelopment, rebaseUrl});
+  res.render('index', {
+    development: isDevelopment,
+    rebaseUrl,
+    options: {start: 'sandbox'}
+  });
 });
 
 app.post('/upload', function (req, res) {
-console.log('upload', JSON.stringify(req.body));
   getConfigByToken(req.body.token, function (err, config) {
     if (err) return res.json({error: err});
     const id = Date.now().toString();
     const uploadPath = `${config.uploadPath||'uploads'}/${id}`;
     const bucket = config.s3Bucket;
-console.log('config', config);
     const s3client = upload.makeS3Client(config);
     upload.getJsonUploadForm(s3client, bucket, uploadPath, function (err, events) {
-      // if (err) ...
+      if (err) return res.json({error: err.toString()});
       upload.getMp3UploadForm(s3client, bucket, uploadPath, function (err, audio) {
-        // if (err) ...
+        if (err) return res.json({error: err.toString()});
         const baseUrl = `https://${bucket}.s3.amazonaws.com/${uploadPath}`;
         const player_url = `${process.env.PLAYER_URL}?base=${encodeURIComponent(baseUrl)}`;
-        res.json({player_url, events: events, audio: audio});
+        res.json({player_url, events, audio});
       });
     });
   });
@@ -149,12 +161,9 @@ function getConfigByToken (token, callback) {
     }
     const config = {};
     tokens[token].forEach(function (item) {
-console.log('item', item);
       if (typeof item === 'object') {
-console.log('MERGE', JSON.stringify(item));
         Object.assign(config, item);
       } else if (typeof item === 'string') {
-console.log('MERGE', JSON.stringify(configs[item]));
         Object.assign(config, configs[item]);
       }
     });

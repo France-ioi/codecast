@@ -3,7 +3,6 @@ import {delay} from 'redux-saga';
 import {take, put, call, race, select, actionChannel} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
-import {RECORDING_FORMAT_VERSION} from '../version';
 import {spawnWorker, callWorker, killWorker} from '../utils/worker_utils';
 
 // XXX worker URL should use SystemJS baseURL?
@@ -12,45 +11,15 @@ import {spawnWorker, callWorker, killWorker} from '../utils/worker_utils';
 // const audioWorkerUrl = workerUrlFromText(audioWorkerText);
 import AudioWorker from 'worker-loader?inline!../audio_worker';
 
-function getAudioStream () {
-  const constraints = {audio: true};
-  if (typeof navigator.mediaDevices === 'object' &&
-      typeof navigator.mediaDevices.getUserMedia === 'function') {
-    // Use modern API returning a promise.
-    return navigator.mediaDevices.getUserMedia(constraints);
-  } else {
-    // Use deprecated API taking two callbacks.
-    const getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-    return new Promise(function (resolve, reject) {
-      getUserMedia.call(navigator, constraints, resolve, reject);
-    });
-  }
-}
-
-function suspendAudioContext (audioContext) {
-  return audioContext.suspend();
-}
-
-function resumeAudioContext (audioContext) {
-  return audioContext.resume();
-}
-
-
 export default function (bundle, deps) {
 
   bundle.use(
-    'error', 'switchToScreen',
+    'error', 'recordApi', 'switchToScreen',
     'getRecorderState',
     'recorderPrepare', 'recorderPreparing', 'recorderReady',
     'recorderTick',
     'recorderStart', 'recorderStarting', 'recorderStarted',
-    'recorderStop', 'recorderStopping', 'recorderStopped',
-    'getBufferModel', 'bufferSelect', 'bufferEdit', 'bufferScroll',
-    'translateStarted', 'translateSucceeded', 'translateFailed', 'translateClearDiagnostics',
-    'stepperStarted', 'stepperProgress', 'stepperIdle', 'stepperInterrupt', 'stepperRestart', 'stepperExit',
-    'stepperUndo', 'stepperRedo', 'stepperStackUp', 'stepperStackDown', 'stepperViewControlsChanged',
-    'terminalInputNeeded', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter',
-    'getIoPaneMode', 'ioPaneModeChanged'
+    'recorderStop', 'recorderStopping', 'recorderStopped'
   );
 
   function* recorderPrepare () {
@@ -163,9 +132,7 @@ export default function (bundle, deps) {
       // Signal that recording has started.
       yield put({type: deps.recorderStarted});
       /* Record the 'start' event */
-      const init = {version: RECORDING_FORMAT_VERSION};
-      yield call(record.start, init);
-      yield call(recordEvent, [0, 'start', init]);
+      yield call(deps.recordApi.start);
       yield put({type: deps.switchToScreen, screen: 'record'});
     } catch (error) {
       // XXX generic error
@@ -250,37 +217,36 @@ export default function (bundle, deps) {
     }
   });
 
-  bundle.defer(function ({record, replay}) {
-    record.on('recorderStopping', function* (addEvent, action) {
+  bundle.defer(function ({recordApi, replayApi}) {
+    recordApi.on(deps.recorderStopping, function* (addEvent, action) {
       yield call(addEvent, 'end');
     });
-    replay.on('end', function (context, event, instant) {
+    replayApi.on('end', function (context, event, instant) {
       context.state = context.state.set('stopped', true); /* XXX: does not belong here */
     });
   });
 
-  bundle.addSaga(function* recordEvents () {
-    const recorderMap = {};
-    Object.keys(recorders).forEach(function (key) {
-      recorderMap[deps[key]] = recorders[key];
-    });
-    const pattern = Object.keys(recorderMap);
-    while (true) {
-      // Wait for the recorder to be ready, grab the context.
-      const {context} = yield take(deps.recorderReady);
-      // Wait for recording to actually start.
-      yield take(deps.recorderStarted);
-      // Start buffering actions.
-      const channel = yield actionChannel(pattern);
-      while (true) {
-        const action = yield take(channel);
-        yield call(deps.record.recordAction, action);
-        if (action.type === deps.recorderStopping) {
-          channel.close();
-          break;
-        }
-      }
-    }
-  });
-
 };
+
+function getAudioStream () {
+  const constraints = {audio: true};
+  if (typeof navigator.mediaDevices === 'object' &&
+      typeof navigator.mediaDevices.getUserMedia === 'function') {
+    // Use modern API returning a promise.
+    return navigator.mediaDevices.getUserMedia(constraints);
+  } else {
+    // Use deprecated API taking two callbacks.
+    const getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+    return new Promise(function (resolve, reject) {
+      getUserMedia.call(navigator, constraints, resolve, reject);
+    });
+  }
+}
+
+function suspendAudioContext (audioContext) {
+  return audioContext.suspend();
+}
+
+function resumeAudioContext (audioContext) {
+  return audioContext.resume();
+}

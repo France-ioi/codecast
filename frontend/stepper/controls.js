@@ -17,35 +17,48 @@ export default function (bundle, deps) {
     'translate'
   );
 
-  bundle.defineSelector('StepperControlsSelector', function (state, props) {
+  function StepperControlsSelector (state, props) {
     const {enabled} = props;
-    const stepper = deps.getStepperState(state);
     const options = deps.getStepperOptions(state);
-    const status = stepper && stepper.get('status');
-    const haveContext = status !== 'clear';
-    const showExit = haveContext;
-    const canExit = enabled && haveContext;
-    const showTranslate = !haveContext;
-    const canTranslate = enabled && !haveContext;
-    const isStepping = haveContext && status !== 'idle';
-    const current = stepper && stepper.get('current', {});
-    const {control} = current.core || {};
-    const haveNode = control && control.node;
-    const canRestart = canExit && !isStepping;
-    const canStep = enabled && !isStepping && haveNode;
-    const canInterrupt = enabled && isStepping;
-    const canUndo = enabled && !stepper.get('undo').isEmpty() && !isStepping;
-    const canRedo = enabled && !stepper.get('redo').isEmpty();
+    let showTranslate, showControls, showExit;
+    let canTranslate, canExit, canRestart, canStep, canInterrupt, canUndo, canRedo;
+    const stepper = deps.getStepperState(state);
+    if (stepper) {
+      const status = stepper.get('status');
+      if (status === 'clear') {
+        showTranslate = true;
+        canTranslate = enabled;
+      } else if (status === 'idle') {
+        showExit = true;
+        showControls = true;
+        canExit = enabled;
+        const current = stepper.get('current', {});
+        if (current && current.core) {
+          const {control} = current.core;
+          canStep = !!control.node;
+          canRestart = enabled;
+          canUndo = enabled && !stepper.get('undo').isEmpty();
+          canRedo = enabled && !stepper.get('redo').isEmpty();
+        }
+      } else if (status === 'starting') {
+        showExit = true;
+        showControls = true;
+      } else if (status === 'running') {
+        showExit = true;
+        showControls = true;
+        canInterrupt = enabled;
+      }
+    }
     return {
-      haveContext,
+      showControls,
       showExit, canExit,
       showTranslate, canTranslate,
       canRestart, canStep, canInterrupt,
       canUndo, canRedo, options
     };
-  });
+  }
 
-  bundle.defineView('StepperControls', 'StepperControlsSelector', EpicComponent(self => {
+  bundle.defineView('StepperControls', StepperControlsSelector, EpicComponent(self => {
 
     const onStepExpr = function () {
       self.props.dispatch({type: deps.stepperStep, mode: 'expr'});
@@ -118,7 +131,7 @@ export default function (bundle, deps) {
         return false;
       return (
         <div className="controls controls-stepper">
-          {p.haveContext && <ButtonGroup className="controls-stepper-execution">
+          {p.showControls && <ButtonGroup className="controls-stepper-execution">
             <Button onClick={onStepExpr} disabled={btnDisabled('expr')} bsStyle={btnStyle('expr')} title="next expression">
               <i className="fi fi-step-expr"/>
             </Button>
@@ -144,7 +157,7 @@ export default function (bundle, deps) {
               <i className="fa fa-rotate-right"/>
             </Button>
           </ButtonGroup>}
-          {p.haveContext || <div className="controls-stepper-execution">
+          {p.showControls || <div className="controls-stepper-execution">
             <p>Édition en cours</p>
           </div>}
           <div className="controls-translate">

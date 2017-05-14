@@ -1,45 +1,47 @@
+/* Replay API */
 
 import {call} from 'redux-saga/effects';
 
 export default function (bundle) {
 
-  const replay = {};
-  bundle.defineValue('replay', replay);
+  const replayApi = {};
+  bundle.defineValue('replayApi', replayApi);
 
-  /* For each event a number of handlers can be registered.
-     When an event is replayed, Each handler */
+  /* For each event a number of sagas can be registered.
+     When an event is replayed, each saga is called in order to update
+     the context). */
   const eventHandlers = new Map();
-  replay.on = function (keys, handler) {
+  replayApi.on = function (keys, saga) {
     if (typeof keys === 'string') {
       keys = [keys];
     }
     for (var key of keys) {
-      let handlers;
+      let sagas;
       if (eventHandlers.has(key)) {
-        handlers = eventHandlers.get(key);
+        sagas = eventHandlers.get(key);
       } else {
-        handlers = [];
-        eventHandlers.set(key, handlers);
+        sagas = [];
+        eventHandlers.set(key, sagas);
       }
-      handlers.push(handler);
+      sagas.push(saga);
     }
   };
-  replay.applyEvent = function (key, context, event, instant) {
-    const funcs = replay.handlers.get(key, []);
+  replayApi.applyEvent = function* (key, context, event, instant) {
+    const funcs = eventHandlers.get(key, []);
     for (var func of funcs) {
-      func(context, event, instant);
+      yield call(func, context, event, instant);
     }
   };
 
   /* A number of sagas can be registered to run when the player needs to
      reset the state to a specific instant. */
   const resetSagas = [];
-  replay.onReset = function (saga) {
+  replayApi.onReset = function (saga) {
     resetSagas.push(saga);
   };
-  replay.reset = function* (instant) {
+  replayApi.reset = function* (instant, quick) {
     for (var saga of resetSagas) {
-      yield call(saga, instant);
+      yield call(saga, instant, quick);
     }
   };
 

@@ -16,13 +16,9 @@ import RecordBundle from '../recorder/record';
 export default function (bundle) {
 
   /* These bundle must be included early to allow other bundles to register
-     replay/record handlers. */
+     replay/record handlers in their deferred callbacks. */
   bundle.include(ReplayBundle);
   bundle.include(RecordBundle);
-
-  // Sent when the application initializes.
-  bundle.defineAction('init', 'System.Init');
-  bundle.defineAction('bucketChanged', 'Bucket.Changed');
 
   bundle.include(MainView);
   bundle.include(fullscreen);
@@ -32,61 +28,4 @@ export default function (bundle) {
   bundle.include(examples);
   bundle.include(ArduinoBundle);
 
-  bundle.addReducer('bucketChanged', function (state, action) {
-    const {bucket, playerBaseUrl} = action;
-    return state.set('getResourceUrl', function getResourceUrl (id, ext) {
-      return `https://${bucket}.s3.amazonaws.com/uploads/${id}.${ext}`;
-    }).set('getPlayerUrl', function getPlayerUrl (id) {
-      const sep = playerBaseUrl.indexOf('?') === -1 ? '?' : '&';
-      return `${playerBaseUrl}${sep}bucket=${bucket}&id=${id}`;
-    });
-  });
-
-};
-
-export const interpretQueryString = function (store, scope, qs) {
-  const stepperOptions = {
-    showStepper: true,
-    showStack: true,
-    showViews: true,
-    showIO: true,
-    arduino: true
-  };
-  (qs.stepperControls||'').split(',').forEach(function (controlStr) {
-    // No prefix to highlight, '-' to disable.
-    const m = /^(-)?(.*)$/.exec(controlStr);
-    if (m) {
-      stepperOptions[m[2]] = m[1] || '+';
-    }
-  });
-  if ('noStepper' in qs) {
-    stepperOptions.showStepper = false;
-    stepperOptions.showStack = false;
-    stepperOptions.showViews = false;
-    stepperOptions.showIO = false;
-  }
-  if ('noStack' in qs) {
-    stepperOptions.showStack = false;
-  }
-  if ('noViews' in qs) {
-    stepperOptions.showViews = false;
-  }
-  if ('noIO' in qs) {
-    stepperOptions.showIO = false;
-  }
-  store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
-
-  if ('source' in qs) {
-    store.dispatch({type: scope.sourceLoad, text: qs.source||''});
-  }
-
-  if ('input' in qs) {
-    store.dispatch({type: scope.inputLoad, text: qs.input||''});
-  }
-
-  const bucket = qs.bucket || 'fioi-recordings';
-  const playerBaseUrl = document.location.href.replace(
-    /\/recorder(\??[^/]*)$/, (_, qs) => `/player${qs}`);
-
-  store.dispatch({type: scope.bucketChanged, bucket, playerBaseUrl});
 };

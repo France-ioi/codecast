@@ -14,39 +14,66 @@ Shape of the 'translate' state:
 */
 
 import Immutable from 'immutable';
-import {take, put, call, select} from 'redux-saga/effects';
+import {takeLatest, put, call, select} from 'redux-saga/effects';
 import {TextEncoder} from 'text-encoding-utf-8';
 
 import {asyncRequestJson} from '../utils/api';
 
 export default function (bundle, deps) {
 
-  bundle.use('init', 'getBufferModel');
+  bundle.use('getBufferModel');
+
+  bundle.addReducer('init', function (state, action) {
+    return state.set('translate', translateClear());
+  });
 
   // Requested translation of given {source}.
   bundle.defineAction('translate', 'Translate');
 
   // Clear the 'translate' state.
   bundle.defineAction('translateClear', 'Translate.Clear');
+  bundle.addReducer('translateClear', function (state, action) {
+    return state.set('translate', translateClear());
+  });
 
   // Reset the 'translate' state.
   bundle.defineAction('translateReset', 'Translate.Reset');
+  bundle.addReducer('translateReset', function (state, action) {
+    return state.set('translate', action.state);
+  });
 
   // Started translation of {source}.
   bundle.defineAction('translateStarted', 'Translate.Started');
+  bundle.addReducer('translateStarted', function (state, action) {
+    return state.update('translate', st => translateStarted(st, action));
+  });
 
   // Succeeded translating {source} to {syntaxTree}.
   bundle.defineAction('translateSucceeded', 'Translate.Succeeded');
+  bundle.addReducer('translateSucceeded', function (state, action) {
+    return state.update('translate', st => translateSucceeded(st, action));
+  });
 
   // Failed to translate {source} with {error}.
   bundle.defineAction('translateFailed', 'Translate.Failed');
+  bundle.addReducer('translateFailed', function (state, action) {
+    return state.update('translate', st => translateFailed(st, action));
+  });
+
 
   // Clear the diagnostics (compilation errors and warnings) returned
   // by the last translate operation.
   bundle.defineAction('translateClearDiagnostics', 'Translate.ClearDiagnostics');
+  bundle.addReducer('translateClearDiagnostics', function (state, action) {
+    return state.update('translate', st => translateClearDiagnostics(st, action));
+  });
 
-  bundle.defineSelector('getTranslateState', state =>
-    state.get('translate')
+  bundle.defineSelector('getTranslateDiagnostics', state =>
+    state.get(['translate', 'diagnosticsHtml'])
+  );
+
+  bundle.defineSelector('getSyntaxTree', state =>
+    state.getIn(['translate', 'syntaxTree'])
   );
 
   bundle.defineSelector('isTranslated', function (state) {
@@ -57,32 +84,12 @@ export default function (bundle, deps) {
     return state.getIn(['translate', 'status']);
   }
 
-  bundle.addReducer('init', function (state, action) {
-    return state.set('translate', translateClear());
-  });
-
-  bundle.addReducer('translateClear', function (state, action) {
-    return state.set('translate', translateClear());
-  });
-
-  bundle.addReducer('translateReset', function (state, action) {
-    return state.set('translate', action.state);
-  });
-
-  bundle.addReducer('translateStarted', function (state, action) {
-    return state.update('translate', st => translateStarted(st, action));
-  });
-
-  bundle.addReducer('translateSucceeded', function (state, action) {
-    return state.update('translate', st => translateSucceeded(st, action));
-  });
-
-  bundle.addReducer('translateFailed', function (state, action) {
-    return state.update('translate', st => translateFailed(st, action));
-  });
-
-  bundle.addReducer('translateClearDiagnostics', function (state, action) {
-    return state.update('translate', st => translateClearDiagnostics(st, action));
+  bundle.addSaga(function* watchTranslate () {
+    yield takeLatest(deps.translate, function* (action) {
+      const sourceModel = yield select(deps.getBufferModel, 'source');
+      const source = sourceModel.get('document').toString();
+      yield call(translateSource, source);
+    });
   });
 
   function* translateSource (source) {
@@ -104,67 +111,55 @@ export default function (bundle, deps) {
     }
   }
 
-  bundle.addSaga(function* watchTranslate () {
-    while (true) {
-      const action = yield take(deps.translate);
-      const status = yield select(getTranslateStatus);
-      if (status !== 'running') {
-        const sourceModel = yield select(deps.getBufferModel, 'source');
-        const source = sourceModel.get('document').toString();
-        yield call(translateSource, source);
-      }
-    }
-  });
+  bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 
-  bundle.defer(function ({record, replay}) {
-
-    record.on('translateStarted', function* (addEvent, action) {
+    recordApi.on(deps.translateStarted, function* (addEvent, action) {
       const {source} = action;
       yield call(addEvent, 'translate.start', source);
     });
-    replay.on(['stepper.translate', 'translate.start'], function (context, event, instant) {
+    replayApi.on(['stepper.translate', 'translate.start'], function (context, event, instant) {
       const action = {source: event[2]};
       context.state = context.state.update('translate', st => translateStarted(st, action));
     });
 
-    record.on('translateSucceeded', function* (addEvent, action) {
+    recordApi.on(deps.translateSucceeded, function* (addEvent, action) {
       const {response} = action;
       yield call(addEvent, 'translate.success', response);
     });
-    replay.on('translate.success', function (context, event, instant) {
+    replayApi.on('translate.success', function (context, event, instant) {
       const action = {diagnostics: event[2].diagnostics, syntaxTree: event[2].ast};
       context.state = context.state.update('translate', st => translateSucceeded(st, action));
     });
 
-    record.on('translateFailed', function* (addEvent, action) {
+    recordApi.on(deps.translateFailed, function* (addEvent, action) {
       const {response} = action;
       yield call(addEvent, 'translate.failure', response);
     });
-    replay.on('translate.failure', function (context, event, instant) {
+    replayApi.on('translate.failure', function (context, event, instant) {
       const action = {diagnostics: event[2].diagnostics, error: event[2].error};
       context.state = context.state.update('translate', st => translateFailed(st, action));
     });
 
-    record.on('translateClearDiagnostics', function* (addEvent, action) {
+    recordApi.on(deps.translateClearDiagnostics, function* (addEvent, action) {
       yield call(addEvent, 'translate.clearDiagnostics');
     });
-    replay.on('translate.clearDiagnostics', function (context, event, instant) {
+    replayApi.on('translate.clearDiagnostics', function (context, event, instant) {
       context.state = context.state.update('translate', st => translateClearDiagnostics(st, {}));
     });
 
-    replay.on('start', function (context, event, instant) {
+    replayApi.on('start', function (context, event, instant) {
       const translateModel = translateClear();
       context.state = context.state.set('translate', translateModel);
     });
 
-    replay.on('stepper.exit', function (context, event, instant) {
+    replayApi.on('stepper.exit', function (context, event, instant) {
       context.state = context.state.update('translate', translateClear);
     });
 
-    replay.onReset(function* (instant) {
-      const translateState = state.get('translate');
+    replayApi.onReset(function* (instant) {
+      const translateState = instant.state.get('translate');
       yield put({type: deps.translateReset, state: translateState});
-    })
+    });
 
   });
 

@@ -1,4 +1,4 @@
-/*
+/* XXX to be integrated using stepper API
 
 A `Stored Value` can have one of these shapes:
   {kind: 'scalar', ref, current, previous, load, store}

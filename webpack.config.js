@@ -4,9 +4,7 @@ const SRC = path.resolve(__dirname, "frontend");
 
 const config = module.exports = {
   entry: {
-    player: './frontend/player/index.js',
-    sandbox: './frontend/sandbox/index.js',
-    recorder: './frontend/recorder/index.js'
+    index: './frontend/index.js'
   },
   output: {
     path: path.join(__dirname, 'build'),

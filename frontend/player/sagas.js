@@ -14,7 +14,7 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 export default function (bundle, deps) {
 
   bundle.use(
-    'error', 'replay',
+    'error', 'replayApi',
     'playerPrepare', 'playerPreparing', 'playerReady',
     'playerStart', 'playerStarting', 'playerStarted',
     'playerPause', 'playerPausing', 'playerPaused',
@@ -22,13 +22,8 @@ export default function (bundle, deps) {
     'playerStop', 'playerStopping', 'playerStopped',
     'playerTick', 'playerSeek', 'playerSeeked',
     'playerAudioReady', 'playerAudioError',
-    'getStepperInit',
-    'getPlayerState', 'getStepperDisplay',
-    'translateReset',
-    'stepperReset', 'stepperStep',
-    'bufferReset', 'bufferHighlight',
-    'stepperEnabled', 'stepperDisabled',
-    'getOutputBufferModel', 'getNodeRange'
+    'getPlayerState',
+    'stepperStep', 'stepperEnabled', 'stepperDisabled'
   );
 
   // pause, resume audio
@@ -117,9 +112,8 @@ export default function (bundle, deps) {
     }
     // Emit a Preparing action.
     yield put({type: deps.playerPreparing});
-    // Make the media player load the audio
-    // Start and immediately pause the audio to cause it to start loading,
-    // while monitoring the 'canplay' event in a background saga.
+    /* Attempt to force the media player to preload the audio.
+       Start playing to force loading and pause in the 'canplay' event. */
     const audio = player.get('audio');
     audio.src = audioUrl;
     audio.load();
@@ -128,9 +122,9 @@ export default function (bundle, deps) {
     // While the audio is buffering, download the events URL,
     const events = yield call(getJson, eventsUrl);
     // and compute the future state after every event.
-    const instants = computeInstants(events);
+    const instants = yield call(computeInstants, events);
     yield put({type: deps.playerReady, events, instants});
-    yield call(resetToInstant, instants[0], 0, true);
+    yield call(resetToInstant, instants[0], 0, false);
   }
 
   function* playerStart () {
@@ -145,7 +139,7 @@ export default function (bundle, deps) {
       // starting playback.
       const audio = player.get('audio');
       const audioTime = Math.round(audio.currentTime * 1000);
-      yield call(resetToInstant, player.get('current'), audioTime, true);
+      yield call(resetToInstant, player.get('current'), audioTime, false);
       audio.play();
       yield put({type: deps.playerStarted});
     } catch (error) {
@@ -166,7 +160,7 @@ export default function (bundle, deps) {
       // state.  This is required in particular for the editors that have
       // been updated incrementally by sending them events without updating
       // the global state.  The stepper is enabled if applicable.
-      yield call(resetToInstant, player.get('current'), audioTime, true);
+      yield call(resetToInstant, player.get('current'), audioTime, false);
       yield put({type: deps.playerPaused});
     } catch (error) {
       yield put({type: deps.error, source: 'playerPause', error});
@@ -183,7 +177,7 @@ export default function (bundle, deps) {
       // playback was paused.
       const audio = player.get('audio');
       const audioTime = Math.round(audio.currentTime * 1000);
-      yield call(resetToInstant, player.get('current'), audioTime, true);
+      yield call(resetToInstant, player.get('current'), audioTime, false);
       audio.play();
       yield put({type: deps.playerResumed});
     } catch (error) {
@@ -205,10 +199,10 @@ export default function (bundle, deps) {
     }
   }
 
-  function computeInstants (events) {
+  function* computeInstants (events) {
     // TODO: avoid hogging the CPU, emit progress events.
     const context = {
-      state: null,
+      state: Immutable.Map(),
       run: null,
       instants: []
     };
@@ -217,19 +211,20 @@ export default function (bundle, deps) {
       const t = event[0];
       const key = event[1]
       const instant = {t, pos, event};
-      deps.replay.applyEvent(key, context, event, instant);
+      yield call(deps.replayApi.applyEvent, key, context, event, instant);
       instant.state = context.state;
-      instants.push(instant);
+      context.instants.push(instant);
     }
-    return instants;
+    return context.instants;
   }
 
   bundle.addSaga(function* watchPlayerPrepare () {
     while (true) {
-      const action = yield take(deps.playerPrepare);
       try {
+        const action = yield take(deps.playerPrepare);
         yield call(playerPrepare, action);
       } catch (error) {
+        console.log('playerPrepare failed', error);
         yield put({type: deps.error, source: 'playerPrepare', error});
       }
     }
@@ -263,32 +258,35 @@ export default function (bundle, deps) {
     }
   });
 
-  function* resetToInstant (instant, audioTime, jump) {
-    /* TODO: break up */
+  /* A quick reset avoids disabling and re-enabling the stepper (which restarts
+     the stepper task). */
+  function* resetToInstant (instant, audioTime, quick) {
     const player = yield select(deps.getPlayerState);
     const isPlaying = player.get('status') === 'playing';
-    // console.log('resetToInstant', instant.t, audioTime, jump);
     const {state} = instant;
     /* The stepper is already disabled if not paused. */
-    if (!isPlaying && jump) {
+    if (!isPlaying && !quick) {
       /* A jump occurred, disable the stepper to reset it below. */
       yield put({type: deps.stepperDisabled});
     }
-    replayEmitter.reset(instant);
-    if (!isPlaying && jump) {
+    /* Restore the instant's global state. XXX why not `audioTime: instant.t` */
+    yield put({type: deps.playerTick, audioTime, current: instant});
+    /* Call the registered reset-sagas to update any non-redux state. */
+    yield call(deps.replayApi.reset, instant, quick);
+    if (!isPlaying && !quick) {
       /* Re-enable the stepper. */
-      const {options} = yield select(deps.getStepperInit);
+      const options = {};
+      stepperApi.collectOptions(options, state);
       yield put({type: deps.stepperEnabled, options});
-      if (stepperState.get('status') === 'running') {
-        /* XXX */
-        const {isWaitingOnInput} = stepperState.get('current');
+      /* If the stepper was running and blocking on input, do a "step-into" to
+         restore the blocked-on-I/O state. */
+      if (instant.state.get('status') === 'running') {
+        const {isWaitingOnInput} = instant.state.get('current');
         if (isWaitingOnInput) {
-          /* Step to block on IO. */
           yield put({type: deps.stepperStep, mode: 'into'});
         }
       }
     }
-    yield put({type: deps.playerTick, audioTime, current: instant});
   }
 
   bundle.addSaga(function* playerTick () {
@@ -353,9 +351,8 @@ export default function (bundle, deps) {
               audioTime = player.get('duration');
             }
           }
-          // Perform a quick reset, unless playback has ended, in which case
-          // we want a full reset to also update the editors' models.
-          yield call(resetToInstant, nextInstant, audioTime, ended);
+          // Perform a quick reset unless playback has ended.
+          yield call(resetToInstant, nextInstant, audioTime, !ended);
           if (ended) {
             audio.pause();
             audio.currentTime = audio.duration;

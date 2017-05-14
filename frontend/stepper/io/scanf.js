@@ -137,7 +137,7 @@ function getFormatParser (format) {
   }
 }
 
-export function* scanf (context, fmtRef, ...args) {
+export function* scanfBuiltin (context, fmtRef, ...args) {
   const {core} = context.state;
   const line = yield ['gets'];
   if (line === null) {

@@ -1,6 +1,6 @@
 extern void setup();
 extern void loop();
-extern void __delay(int ms);
+extern void delay(int ms);
 
 /* TODO: typedef unsigned char uint8_t */
 #define uint8_t unsigned char
@@ -50,7 +50,7 @@ int main(void) {
   setup();
   for (;;) {
     loop();
-    __delay(50); /* __throttle(50); */
+    delay(50); /* __throttle(50); */
   }
   return 0;
 }

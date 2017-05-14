@@ -6,15 +6,7 @@ export default function (bundle, deps) {
 
   bundle.use('PlayerControls', 'MainView', 'getPlayerState');
 
-  bundle.defineSelector('AppSelector', function (state, props) {
-    const size = state.get('size');
-    const player = deps.getPlayerState(state);
-    const status = player.get('status');
-    const preventInput = !/ready|paused/.test(status);
-    return {preventInput, size};
-  });
-
-  bundle.defineView('App', 'AppSelector', EpicComponent(self => {
+  bundle.defineView('PlayerApp', PlayerAppSelector, EpicComponent(self => {
 
     self.render = function () {
       const {preventInput, size} = self.props;
@@ -31,5 +23,13 @@ export default function (bundle, deps) {
     };
 
   }));
+
+  function PlayerAppSelector (state, props) {
+    const size = state.get('size');
+    const player = deps.getPlayerState(state);
+    const status = player.get('status');
+    const preventInput = !/ready|paused/.test(status);
+    return {preventInput, size};
+  }
 
 };

@@ -72,7 +72,7 @@ const freeBlock = function (effects, block, prev, next) {
   effects.push(['store', ref, new C.IntegralValue(uint, size | 1)]);
 };
 
-export const heapInit = function (core, stackBytes) {
+function heapInit (core, stackBytes) {
   const {heapStart} = core;
   const headerRef = new C.PointerValue(uintPtr, core.heapStart);
   const header = new C.IntegralValue(uint, (core.memory.size - heapStart - stackBytes) | 1);
@@ -90,7 +90,7 @@ export const enumerateHeapBlocks = function* (core) {
   }
 };
 
-export function* malloc (context, nBytes) {
+function* mallocBuiltin (context, nBytes) {
   const {core} = context.state;
   nBytes = nBytes.toInteger();
   const effects = [];
@@ -105,7 +105,7 @@ export function* malloc (context, nBytes) {
   yield ['result', result];
 };
 
-export function* free (context, ref) {
+function* freeBuiltin (context, ref) {
   // The block chain is traversed for these reasons:
   // * prevent heap corruption;
   // * locate the block immediately before the freed block,
@@ -124,4 +124,15 @@ export function* free (context, ref) {
     prev = block;
   }
   yield* effects;
+};
+
+export default function (bundle, deps) {
+  bundle.defer(function ({stepperApi}) {
+    stepperApi.onInit(function (state) {
+      const {core, options} = state;
+      heapInit(core, options.stackSize);
+    });
+    stepperApi.addBuiltin('malloc', mallocBuiltin);
+    stepperApi.addBuiltin('free', freeBuiltin);
+  });
 };

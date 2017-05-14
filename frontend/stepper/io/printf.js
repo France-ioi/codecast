@@ -15,7 +15,7 @@ const re = {
 
 const formatCache = new Map();
 
-export function* printf (context, fmtRef, ...args) {
+export function* printfBuiltin (context, fmtRef, ...args) {
   const {core} = context.state;
   const fmt = C.readString(core.memory, fmtRef);
   if (!formatCache.has(fmt)) {

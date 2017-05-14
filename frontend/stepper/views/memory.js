@@ -38,7 +38,7 @@ import {
   getNumber, getIdent, getList, renderArrow, renderValue, evalExpr,
   highlightColors} from './utils';
 import {getCursorMap, finalizeCursors} from './array_utils';
-import {enumerateHeapBlocks} from '../stepper/builtins/heap';
+import {enumerateHeapBlocks} from '..//heap';
 
 const List = adt.data(function () {
   return {

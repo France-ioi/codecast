@@ -10,11 +10,31 @@ import {documentFromString} from '../buffers/document';
 const examples = [
 
   {
+    title: "Arduino - blink 2 LEDs",
+    source: [
+      "#include <Arduino.h>",
+      "#include <stdio.h>",
+      "#define RED_LED_PIN 0",
+      "#define GRN_LED_PIN 1",
+      "void setup() {",
+      "    pinMode(RED_LED_PIN, OUTPUT);",
+      "    pinMode(GRN_LED_PIN, OUTPUT);",
+      "}",
+      "int level = LOW;",
+      "void loop() {",
+      "    digitalWrite(GRN_LED_PIN, level);",
+      "    digitalWrite(RED_LED_PIN, level ^ HIGH);",
+      "    level ^= HIGH;",
+      "    delay(1000);",
+      "}",
+    ].join('\n')
+  },
+
+  {
     title: "Arduino - blink",
     source: [
       "#include <Arduino.h>",
       "#include <stdio.h>",
-      "void __delay(int ms);",
       "#define LED_PIN 0",
       "void setup() {",
       "    pinMode(LED_PIN, OUTPUT);",
@@ -23,23 +43,21 @@ const examples = [
       "void loop() {",
       "    digitalWrite(LED_PIN, level);",
       "    level ^= HIGH;",
-      "    __delay(1000);",
+      "    delay(1000);",
       "}",
     ].join('\n')
   },
-
 
   {
     title: "Arduino - loop",
     source: [
       "#include <Arduino.h>",
       "#include <stdio.h>",
-      "void __delay(int ms);",
       "void setup() {",
       "}",
       "void loop() {",
       "   putchar('.');",
-      "   __delay(1000);",
+      "   delay(1000);",
       "}"
     ].join('\n')
   },
@@ -48,10 +66,9 @@ const examples = [
     title: "arduino - delay",
     source: [
       "#include <stdio.h>",
-      "void __delay(int ms);",
       "int main() {",
       "   printf(\"hello, \");",
-      "   __delay(1000);",
+      "   delay(1000);",
       "   printf(\"world! %i\\n\", (2 + 4) * 7);",
       "}"
     ].join('\n')

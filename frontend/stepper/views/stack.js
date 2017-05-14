@@ -3,12 +3,21 @@ import React from 'react';
 import classnames from 'classnames';
 import {Alert, Button, ButtonGroup} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
+import Immutable from 'immutable';
 
 import {viewFrame, renderValue, VarDecl, FunctionCall} from './utils';
 
 export default function (bundle, deps) {
 
   bundle.use('stepperExit', 'stepperStackUp', 'stepperStackDown', 'getStepperDisplay');
+
+  bundle.defer(function ({stepperApi}) {
+    stepperApi.onInit(function (state) {
+      state.controls = Immutable.Map({
+        stack: Immutable.Map({focusDepth: 0})
+      });
+    });
+  });
 
   bundle.defineSelector('StackViewSelector', function (state, props) {
     const stepperState = deps.getStepperDisplay(state);
