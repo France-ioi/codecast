@@ -221,8 +221,8 @@ export default function (bundle, deps) {
     recordApi.on(deps.recorderStopping, function* (addEvent, action) {
       yield call(addEvent, 'end');
     });
-    replayApi.on('end', function (context, event, instant) {
-      context.state = context.state.set('stopped', true); /* XXX: does not belong here */
+    replayApi.on('end', function* (context, event, instant) {
+      context.state = context.state.set('stopped', true);
     });
   });
 

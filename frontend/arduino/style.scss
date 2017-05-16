@@ -4,6 +4,7 @@
   margin: 0 3px;
   width: 32px;
   overflow: hidden;
+  text-align: center;
 }
 .arduino-port > * {
   width: 100%;
@@ -29,9 +30,6 @@
   height: 100px;
 }
 
-.arduino-peripheral {
-  text-align: center;
-}
 .arduino-peri-led i {
   font-size: 18px;
 }

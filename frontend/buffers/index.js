@@ -235,7 +235,7 @@ export default function (bundle, deps) {
       const {buffer, firstVisibleRow} = action;
       yield call(addEvent, 'buffer.scroll', buffer, firstVisibleRow);
     });
-    replayApi.on('start', function (context, event, instant) {
+    replayApi.on('start', function* (context, event, instant) {
       const init = event[2];
       const sourceModel = loadBufferModel(init.buffers.source);
       const inputModel = loadBufferModel(init.buffers.input);
@@ -247,7 +247,7 @@ export default function (bundle, deps) {
           output: Immutable.Map({model: outputModel})
         }));
     });
-    replayApi.on('buffer.select', function (context, event, instant) {
+    replayApi.on('buffer.select', function* (context, event, instant) {
       // XXX use reducer imported from common/buffers
       const buffer = event[2];
       const selection = expandRange(event[3]);
@@ -256,7 +256,7 @@ export default function (bundle, deps) {
         yield put({type: deps.bufferModelSelect, buffer, selection});
       };
     });
-    replayApi.on(['buffer.insert', 'buffer.delete'], function (context, event, instant) {
+    replayApi.on(['buffer.insert', 'buffer.delete'], function* (context, event, instant) {
       // XXX use reducer imported from common/buffers
       const buffer = event[2];
       const range = expandRange(event[3]);
@@ -282,7 +282,7 @@ export default function (bundle, deps) {
         };
       }
     });
-    replayApi.on('buffer.scroll', function (context, event, instant) {
+    replayApi.on('buffer.scroll', function* (context, event, instant) {
       // XXX use reducer imported from common/buffers
       const buffer = event[2];
       const firstVisibleRow = event[3];

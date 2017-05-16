@@ -14,7 +14,7 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 export default function (bundle, deps) {
 
   bundle.use(
-    'error', 'replayApi',
+    'error', 'replayApi', 'stepperApi',
     'playerPrepare', 'playerPreparing', 'playerReady',
     'playerStart', 'playerStarting', 'playerStarted',
     'playerPause', 'playerPausing', 'playerPaused',
@@ -122,9 +122,13 @@ export default function (bundle, deps) {
     // While the audio is buffering, download the events URL,
     const events = yield call(getJson, eventsUrl);
     // and compute the future state after every event.
-    const instants = yield call(computeInstants, events);
-    yield put({type: deps.playerReady, events, instants});
-    yield call(resetToInstant, instants[0], 0, false);
+    try {
+      const instants = yield call(computeInstants, events);
+      yield put({type: deps.playerReady, events, instants});
+      yield call(resetToInstant, instants[0], 0, false);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   function* playerStart () {
@@ -200,12 +204,14 @@ export default function (bundle, deps) {
   }
 
   function* computeInstants (events) {
-    // TODO: avoid hogging the CPU, emit progress events.
     const context = {
       state: Immutable.Map(),
       run: null,
       instants: []
     };
+    /* CONSIDER: create a redux store, use the replayApi to convert each event
+       to an action that is dispatched to the store (which must have an
+       appropriate reducer) plus an optional saga to be called during playback. */
     for (let pos = 0; pos < events.length; pos += 1) {
       const event = events[pos];
       const t = event[0];
@@ -214,6 +220,7 @@ export default function (bundle, deps) {
       yield call(deps.replayApi.applyEvent, key, context, event, instant);
       instant.state = context.state;
       context.instants.push(instant);
+      /* TODO: avoid hogging the CPU, emit a progress event every second. */
     }
     return context.instants;
   }
@@ -261,6 +268,7 @@ export default function (bundle, deps) {
   /* A quick reset avoids disabling and re-enabling the stepper (which restarts
      the stepper task). */
   function* resetToInstant (instant, audioTime, quick) {
+    console.log('reset', instant, audioTime, quick);
     const player = yield select(deps.getPlayerState);
     const isPlaying = player.get('status') === 'playing';
     const {state} = instant;
@@ -275,9 +283,7 @@ export default function (bundle, deps) {
     yield call(deps.replayApi.reset, instant, quick);
     if (!isPlaying && !quick) {
       /* Re-enable the stepper. */
-      const options = {};
-      stepperApi.collectOptions(options, state);
-      yield put({type: deps.stepperEnabled, options});
+      yield put({type: deps.stepperEnabled});
       /* If the stepper was running and blocking on input, do a "step-into" to
          restore the blocked-on-I/O state. */
       if (instant.state.get('status') === 'running') {
@@ -339,6 +345,7 @@ export default function (bundle, deps) {
           // Assumption: instants[pos] is the state immediately after replaying events[pos],
           //             and pos === instants[pos].pos.
           for (let pos = prevInstant.pos + 1; pos <= nextInstant.pos; pos += 1) {
+            console.log('incremental', instant);
             const instant = instants[pos];
             if (instant.saga) {
               /* Keep in mind that the instant's saga runs *prior* to the call

@@ -6,8 +6,6 @@ import {call, fork, put} from 'redux-saga/effects';
 export default function (bundle, deps) {
 
   const stepperApi = {
-    addOptions, /* (callback) */
-    collectOptions, /* (options, state) */
     onInit, /* (callback) */
     onEffect, /* (name, handler) */
     addBuiltin, /* (name, handler) */
@@ -22,6 +20,7 @@ export default function (bundle, deps) {
     stepInto, /* (runContext) */
     stepOut, /* (runContext) */
     stepOver, /* (runContext) */
+    runToStep, /* (runContext, stepCounter) */
   };
   bundle.defineValue('stepperApi', stepperApi);
 
@@ -33,42 +32,26 @@ export default function (bundle, deps) {
   const effectHandlers = new Map();
   const builtinHandlers = new Map();
 
-  /* Register a function to collect configuration data from the state when the
-     stepper starts. */
-  function addOptions (callback) {
-    optionCallbacks.push(callback);
-  }
-
-  /* Run all the registered configuration collection functions. */
-  function collectOptions (options, state) {
-    for (var callback of optionCallbacks) {
-      callback(options, state);
-    }
-  }
-
-  /* Register a function to collect configuration data from the state when the
-     stepper starts. */
+  /* Register a setup callback for the stepper's initial state. */
   function onInit (callback) {
     initCallbacks.push(callback);
   }
 
   /* Build a stepper state from the given init data. */
-  function* buildState (syntaxTree, options) {
-    /* Set up the core. */
-    const core0 = C.makeCore(options.memorySize);
-    /* Execute declarations and copy strings into memory */
-    const core1 = {...core0};
-    const decls = syntaxTree[2];
-    C.execDecls(core1, decls);
-    /* Set up the call to the main function. */
-    C.setupCall(core1, options.entry);
-    const state = {core: core1, oldCore: core0, options};
-    /* Call all the init callbacks. */
+  function* buildState (globalState) {
+    /* Call all the init callbacks. Pass the global state so the player can
+       build stepper states without having to install the pre-computed state
+       into the store. */
+    const stepperState = {};
     for (var callback of initCallbacks) {
-      callback(state);
+      callback(stepperState, globalState);
     }
     /* Run until in user code */
-    const runContext = {state};
+    const runContext = {
+      state: stepperState,
+      interactive: false,
+      stepCounter: 0
+    };
     while (true) {
       if (!(yield call(singleStep, runContext, inUserCode))) {
         break;
@@ -153,6 +136,7 @@ export default function (bundle, deps) {
   }
 
   function* singleStep (runContext, stopCond) {
+    console.log('singleStep', runContext);
     let {state} = runContext;
     if (!state.core.control) {
       return false;
@@ -234,6 +218,23 @@ export default function (bundle, deps) {
       // Step into the next statement.
       yield call(stepUntil, runContext, C.intoNextStmt);
     }
+  }
+
+  function* runToStep (context, targetStepCounter) {
+    let {state, stepCounter} = context;
+    const stepContext = {
+      state: {...state, core: {...state.core}},
+      interactive: false
+    };
+    while (stepCounter < targetStepCounter) {
+      const effects = C.step(state.core);
+      yield call (stepperApi.runEffects, stepContext, effects[Symbol.iterator]());
+      stepCounter += 1;
+    }
+    return {
+      state: stepContext.state,
+      stepCounter
+    };
   }
 
 };

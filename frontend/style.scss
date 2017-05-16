@@ -55,6 +55,10 @@ $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
   content: "\e005";
 }
 
+.clickable {
+  cursor: pointer;
+}
+
 body#app {
   background: none transparent;
 }

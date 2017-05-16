@@ -74,14 +74,14 @@ export default function (bundle, deps) {
     recordApi.on(deps.terminalInputNeeded, function* (addEvent, action) {
       yield call(addEvent, 'terminal.wait');
     });
-    replayApi.on('terminal.wait', function (context, event, instant) {
+    replayApi.on('terminal.wait', function* (context, event, instant) {
       context.state = terminalInputNeeded(state);
     });
 
     recordApi.on(deps.terminalInputKey, function* (addEvent, action) {
       yield call(addEvent, 'terminal.key', action.key);
     });
-    replayApi.on('terminal.key', function (context, event, instant) {
+    replayApi.on('terminal.key', function* (context, event, instant) {
       const key = event[2];
       context.state = terminalInputKey(context.state, {key});
     });
@@ -89,14 +89,14 @@ export default function (bundle, deps) {
     recordApi.on(deps.terminalInputBackspace, function* (addEvent, action) {
       yield call(addEvent, 'terminal.backspace');
     });
-    replayApi.on('terminal.backspace', function (context, event, instant) {
+    replayApi.on('terminal.backspace', function* (context, event, instant) {
       context.state = terminalInputBackspace(context.state);
     });
 
     recordApi.on(deps.terminalInputEnter, function* (addEvent, action) {
       yield call(addEvent, 'terminal.enter');
     });
-    replayApi.on('terminal.enter', function (context, event, instant) {
+    replayApi.on('terminal.enter', function* (context, event, instant) {
       context.state = terminalInputEnter(context.state);
       if (context.run) {
         /* Update the run-context so that the step completes with the added input */

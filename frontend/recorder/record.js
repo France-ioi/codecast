@@ -1,4 +1,15 @@
-/* Record API */
+/*
+  Record API
+
+  Workflow:
+
+  - onStart callbacks populate an 'init' object (recorded in the start event)
+    to take a snapshot of the state when recording starts
+
+  - each redux action can be associated with a saga to add events to the
+    recording
+
+*/
 
 import {put, take, call, actionChannel} from 'redux-saga/effects';
 
@@ -42,27 +53,31 @@ export default function (bundle, deps) {
 
   bundle.use('recorderReady', 'recorderStarted')
   bundle.addSaga(function* recordEvents () {
-    const pattern = Object.keys(actionHandlers);
+    const pattern = Array.from(actionHandlers.keys());
     while (true) {
       // Wait for the recorder to be ready, grab the context.
       const {context} = yield take(deps.recorderReady);
       // Wait for recording to actually start.
       yield take(deps.recorderStarted);
+      console.log('recorderStarted');
       // Start buffering actions.
       const channel = yield actionChannel(pattern);
-      while (true) {
+      let done = false;
+      while (!done) {
         const action = yield take(channel);
+        console.log('recording', action);
         const timestamp = Math.round(context.audioContext.currentTime * 1000);
         function* addEvent (name, ...args) {
           const event = [timestamp, name, ...args];
+          console.log('addEvent', event);
           yield put({type: deps.recorderAddEvent, event});
+          if (name === 'end') {
+            done = true;
+          }
         }
-        yield call(recordHandlers.get(action.type), addEvent, action);
-        if (action.type === deps.recorderStopping) {
-          channel.close();
-          break;
-        }
+        yield call(actionHandlers.get(action.type), addEvent, action);
       }
+      channel.close();
     }
   });
 

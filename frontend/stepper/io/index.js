@@ -8,12 +8,13 @@ import * as C from 'persistent-c';
 import Editor from '../../buffers/editor';
 import {documentFromString} from '../../buffers/document';
 import {DocumentModel} from '../../buffers/index';
-import {writeString} from './terminal';
+import {TermBuffer, writeString, default as TerminalBundle} from './terminal';
 import {printfBuiltin} from './printf';
 import {scanfBuiltin} from './scanf';
 
 export default function (bundle, deps) {
 
+  bundle.include(TerminalBundle);
   bundle.use(
     'TerminalView', 'BufferEditor',
     'getStepperDisplay', 'stepperProgress', 'stepperIdle',
@@ -148,8 +149,7 @@ export default function (bundle, deps) {
     return {output};
   }
 
-  /* TODO: move reflectToOutput code here */
-  bundle.defineSelector('getOutputBufferModel', function (state) {
+  function getOutputBufferModel (state) {
     const stepper = deps.getStepperDisplay(state);
     const {output} = stepper;
     const doc = documentFromString(output);
@@ -160,66 +160,61 @@ export default function (bundle, deps) {
       firstVisibleRow: endCursor.row
     });
     return model;
-  });
+  }
 
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 
     recordApi.onStart(function* (init) {
       init.ioPaneMode = yield select(deps.getIoPaneMode)
     });
-    replayApi.on('start', function (context, event, instant) {
-      const init = event[2];
-      context.state = context.state.set('ioPaneMode', init.ioPaneMode);
-    });
-
-    recordApi.on(deps.ioPaneModeChanged, function* (addEvent, action) {
-      yield call(addEvent, 'ioPane.mode', action.mode);
-    });
-    replayApi.on('ioPane.mode', function (context, event, instant) {
-      const mode = event[2];
-      context.state = ioPaneModeChanged(context.state, {mode});
-    });
-
-    replayApi.on(['stepper.restart', 'stepper.undo', 'stepper.redo'], function (context, event, instant) {
-      if (context.state.get('ioPaneMode') === 'split') {
-        context.state = syncOutputBuffer(context.state); /* TODO: avoid this by
-          making sure the output buffer model is kept consistent */
-        instant.saga = syncOutputBufferSaga;
-      }
-    });
-
     replayApi.onReset(function* (instant) {
       const ioPaneMode = instant.state.get('ioPaneMode');
       yield put({type: deps.ioPaneModeChanged, mode: ioPaneMode});
     });
 
-    stepperApi.addOptions(function (options, state) {
-      const ioPaneMode = state.get('ioPaneMode');
-      if (ioPaneMode === 'terminal') {
-        options.terminal = true; /* TODO: store terminal size? */
-      } else {
-        const inputModel = deps.getBufferModel(state, 'input');
-        options.input = inputModel.get('document').toString();
-      }
+    recordApi.on(deps.ioPaneModeChanged, function* (addEvent, action) {
+      yield call(addEvent, 'ioPane.mode', action.mode);
+    });
+    replayApi.on('ioPane.mode', function* (context, event, instant) {
+      const mode = event[2];
+      context.state = ioPaneModeChanged(context.state, {mode});
     });
 
+    replayApi.on(['stepper.restart', 'stepper.undo', 'stepper.redo'], function* (context, event, instant) {
+      if (context.state.get('ioPaneMode') === 'split') {
+        context.state = syncOutputBuffer(context.state); /* TODO: avoid this by
+          making sure the output buffer model is kept consistent at every step?
+          This would require stepper effects to be able to modify the global
+          state (currently they can only alter the stepper state). */
+        instant.saga = syncOutputBufferSaga;
+      }
+    });
+    function syncOutputBuffer (state) {
+      const model = getOutputBufferModel(state);
+      return state.setIn(['buffers', 'output', 'model'], model);
+    }
+    function* syncOutputBufferSaga (instant) {
+      const model = instant.state.getIn(['buffers', 'output', 'model']);
+      yield put({type: deps.bufferReset, buffer: 'output', model});
+    }
+
     /* Set up the terminal or input. */
-    stepperApi.onInit(function (state) {
-      const {options} = state;
-      if (options.terminal) {
-        state.inputPos = 0;
-        state.input = "";
-        state.terminal = new TermBuffer({lines: 10, width: 80});
+    stepperApi.onInit(function (stepperState, globalState) {
+      const ioPaneMode = globalState.get('ioPaneMode');
+      stepperState.inputPos = 0;
+      if (ioPaneMode === 'terminal') {
+        stepperState.input = "";
+        stepperState.terminal = new TermBuffer({lines: 10, width: 80});
+        stepperState.inputBuffer = "";
       } else {
-        let input = (options.input || "").trimRight();
+        const inputModel = deps.getBufferModel(globalState, 'input');
+        let input = inputModel.get('document').toString().trimRight();
         if (input.length !== 0) {
           input = input + "\n";
         }
-        state.inputPos = 0;
-        state.input = input;
-        state.output = "";
+        stepperState.input = input;
+        stepperState.output = "";
       }
-      state.inputBuffer = "";
     });
 
     stepperApi.addBuiltin('printf', printfBuiltin);
@@ -246,6 +241,11 @@ export default function (bundle, deps) {
       } else {
         state.output = state.output + text;
       }
+      /* TODO: update the output buffer model - this needs to alter the
+               (computed) global state. */
+      /* TODO: if interactive, append the new text to the output buffer */
+      /* Currently this is done by reflectToOutput (interactively) and
+         syncOutputBuffer/syncOutputBufferSaga (non-interactively). */
     });
 
     stepperApi.addBuiltin('gets', function* getsBuiltin (context, ref) {
@@ -302,55 +302,50 @@ export default function (bundle, deps) {
       context.state.inputPos -= count;
     });
 
+    /* Monitor actions that may need to update the output buffer.
+       Currently this is done in an awkward way because stepper effects cannot
+       modify the global state. So the effect modifies the 'output' property
+       of the stepper state, and the saga below detect changes and pushes them
+       to the global state and to the editor.
+       This mechanism could by simplified by by having the 'write' effect
+       directly alter the global state & push the change to the editor. */
     stepperApi.addSaga(function* (options) {
       if (!options.terminal) {
         yield call(reflectToOutput);
       }
     });
+    function* reflectToOutput () {
+      /* Incrementally add text produced by the stepper to the output buffer. */
+      yield takeLatest([deps.stepperProgress, deps.stepperIdle], function* (action) {
+        const stepperState = yield select(deps.getStepperDisplay);
+        const outputModel = yield select(deps.getBufferModel, 'output');
+        const oldSize = outputModel.get('document').size();
+        const newSize = stepperState.output.length;
+        if (oldSize !== newSize) {
+          const outputDoc = outputModel.get('document');
+          const endCursor = outputDoc.endCursor();
+          const delta = {
+            action: 'insert',
+            start: endCursor,
+            end: endCursor,
+            lines: stepperState.output.substr(oldSize).split('\n')
+          };
+          /* Update the model to maintain length, new end cursor. */
+          yield put({type: deps.bufferEdit, buffer: 'output', delta});
+          const newEndCursor = yield select(state => deps.getBufferModel(state, 'output').get('document').endCursor());
+          /* Send the delta to the editor to add the new output. */
+          yield put({type: deps.bufferModelEdit, buffer: 'output', delta});
+          /* Move the cursor to the end of the buffer. */
+          yield put({type: deps.bufferModelSelect, buffer: 'output', selection: {start: newEndCursor, end: newEndCursor}});
+        }
+      });
+      /* Reset the output document. */
+      yield takeEvery([deps.stepperRestart, deps.stepperUndo, deps.stepperRedo], function* () {
+        const model = yield select(getOutputBufferModel);
+        yield put({type: deps.bufferReset, buffer: 'output', model});
+      });
+    }
 
   });
-
-  function* reflectToOutput () {
-    /* Incrementally add text produced by the stepper to the output buffer. */
-    /* TODO: move this code into io/buffers */
-    yield takeLatest([deps.stepperProgress, deps.stepperIdle], function* (action) {
-      const stepperState = yield select(deps.getStepperDisplay);
-      const outputModel = yield select(deps.getBufferModel, 'output');
-      const oldSize = outputModel.get('document').size();
-      const newSize = stepperState.output.length;
-      if (oldSize !== newSize) {
-        const outputDoc = outputModel.get('document');
-        const endCursor = outputDoc.endCursor();
-        const delta = {
-          action: 'insert',
-          start: endCursor,
-          end: endCursor,
-          lines: stepperState.output.substr(oldSize).split('\n')
-        };
-        /* Update the model to maintain length, new end cursor. */
-        yield put({type: deps.bufferEdit, buffer: 'output', delta});
-        const newEndCursor = yield select(state => deps.getBufferModel(state, 'output').get('document').endCursor());
-        /* Send the delta to the editor to add the new output. */
-        yield put({type: deps.bufferModelEdit, buffer: 'output', delta});
-        /* Move the cursor to the end of the buffer. */
-        yield put({type: deps.bufferModelSelect, buffer: 'output', selection: {start: newEndCursor, end: newEndCursor}});
-      }
-    });
-    /* Reset the output document. */
-    yield takeEvery([deps.stepperRestart, deps.stepperUndo, deps.stepperRedo], function* () {
-      const model = yield select(deps.getOutputBufferModel);
-      yield put({type: deps.bufferReset, buffer: 'output', model});
-    });
-  }
-
-  function syncOutputBuffer (state) {
-    const model = deps.getOutputBufferModel(state);
-    return state.setIn(['buffers', 'output', 'model'], model);
-  }
-
-  function* syncOutputBufferSaga (instant) {
-    const model = instant.state.getIn(['buffers', 'output', 'model']);
-    yield put({type: deps.bufferReset, buffer: 'output', model});
-  }
 
 };

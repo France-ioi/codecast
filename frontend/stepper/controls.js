@@ -2,6 +2,7 @@
 import React from 'react';
 import {Button, ButtonGroup} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
+import * as C from 'persistent-c';
 
 export default function (bundle, deps) {
 
@@ -21,7 +22,7 @@ export default function (bundle, deps) {
     const {enabled} = props;
     const options = deps.getStepperOptions(state);
     let showTranslate, showControls, showExit;
-    let canTranslate, canExit, canRestart, canStep, canInterrupt, canUndo, canRedo;
+    let canTranslate, canExit, canRestart, canStep, canStepOut, canInterrupt, canUndo, canRedo;
     const stepper = deps.getStepperState(state);
     if (stepper) {
       const status = stepper.get('status');
@@ -34,8 +35,9 @@ export default function (bundle, deps) {
         canExit = enabled;
         const current = stepper.get('current', {});
         if (current && current.core) {
-          const {control} = current.core;
-          canStep = !!control.node;
+          const {control, scope} = current.core;
+          canStepOut = !!C.findClosestFunctionScope(scope);
+          canStep = control && !!control.node;
           canRestart = enabled;
           canUndo = enabled && !stepper.get('undo').isEmpty();
           canRedo = enabled && !stepper.get('redo').isEmpty();
@@ -49,13 +51,14 @@ export default function (bundle, deps) {
         canInterrupt = enabled;
       }
     }
-    return {
+    const result = {
       showControls,
       showExit, canExit,
       showTranslate, canTranslate,
-      canRestart, canStep, canInterrupt,
+      canRestart, canStep, canStepOut, canInterrupt,
       canUndo, canRedo, options
     };
+    return result;
   }
 
   bundle.defineView('StepperControls', StepperControlsSelector, EpicComponent(self => {
@@ -105,28 +108,30 @@ export default function (bundle, deps) {
     };
 
     const btnDisabled = function (which) {
-      const {options} = self.props;
-      if (options && options.get(which) === '-') {
+      const p = self.props;
+      if (p.options && p.options.get(which) === '-') {
         return true;
       }
       switch (which) {
         case 'interrupt':
-          return !self.props.canInterrupt;
+          return !p.canInterrupt;
         case 'restart':
-          return !self.props.canRestart;
+          return !p.canRestart;
         case 'undo':
-          return !self.props.canUndo;
+          return !p.canUndo;
         case 'redo':
-          return !self.props.canRedo;
-        case 'expr': case 'into': case 'out': case 'over':
-          return !self.props.canStep;
+          return !p.canRedo;
+        case 'expr': case 'into': case 'over':
+          return !p.canStep;
+        case 'out':
+          return !(p.canStep && p.canStepOut);
       }
       return false;
     };
 
     self.render = function () {
       const p = self.props;
-      const showStepper = p.options.get('showStepper');
+      const showStepper = p.options && p.options.get('showStepper');
       if (!showStepper)
         return false;
       return (
