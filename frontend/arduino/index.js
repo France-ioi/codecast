@@ -19,7 +19,7 @@ import {Button, FormControl, ControlLabel, FormGroup} from 'react-bootstrap';
 import Slider from 'rc-slider';
 import range from 'node-range';
 import update from 'immutability-helper';
-import {call} from 'redux-saga/effects';
+import {call, select} from 'redux-saga/effects';
 
 import './style.scss';
 
@@ -272,7 +272,7 @@ export default function (bundle, deps) {
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 
     recordApi.onStart(function* (init) {
-      init.arduino = yield(state => state.get('arduino'));
+      init.arduino = yield select(state => state.get('arduino'));
     });
     replayApi.on('start', function* (context, event, instant) {
       const {arduino} = event[2];
