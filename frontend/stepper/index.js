@@ -395,8 +395,7 @@ export default function (bundle, deps) {
       yield call(addEvent, 'stepper.restart');
     });
     replayApi.on('stepper.restart', function* (context, event, instant) {
-      const {syntaxTree, options} = deps.getStepperInit(context.state);
-      const stepperState = deps.buildStepperState(syntaxTree, options);
+      const stepperState = yield call(deps.stepperApi.buildState, context.state);
       context.state = stepperRestart(context.state, {stepperState});
     });
 
