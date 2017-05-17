@@ -86,9 +86,10 @@ export default function (bundle, deps) {
 
   // Restore a saved or computed state.
   bundle.defineAction('stepperReset', 'Stepper.Reset');
-  bundle.addReducer('stepperReset', function (state, action) {
+  bundle.addReducer('stepperReset', stepperReset);
+  function stepperReset (state, action) {
     return state.set('stepper', action.state);
-  });
+  }
 
   // Sent when the user requested stepping in a given mode.
   bundle.defineAction('stepperStep', 'Stepper.Step');
