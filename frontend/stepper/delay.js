@@ -28,6 +28,8 @@ export default function (bundle, deps) {
       if (interrupted) {
         throw 'interrupted';
       }
+      /* TODO: update context.state from global state to avoid discarding
+               user interaction */
     });
 
   });
