@@ -122,13 +122,9 @@ export default function (bundle, deps) {
     // While the audio is buffering, download the events URL,
     const events = yield call(getJson, eventsUrl);
     // and compute the future state after every event.
-    try {
-      const instants = yield call(computeInstants, events);
-      yield put({type: deps.playerReady, events, instants});
-      yield call(resetToInstant, instants[0], 0, false);
-    } catch (err) {
-      console.log(err);
-    }
+    const instants = yield call(computeInstants, events);
+    yield put({type: deps.playerReady, events, instants});
+    yield call(resetToInstant, instants[0], 0, false);
   }
 
   function* playerStart () {
@@ -212,6 +208,7 @@ export default function (bundle, deps) {
     /* CONSIDER: create a redux store, use the replayApi to convert each event
        to an action that is dispatched to the store (which must have an
        appropriate reducer) plus an optional saga to be called during playback. */
+    console.log('computeInstants starting')
     for (let pos = 0; pos < events.length; pos += 1) {
       const event = events[pos];
       const t = event[0];
@@ -222,6 +219,7 @@ export default function (bundle, deps) {
       context.instants.push(instant);
       /* TODO: avoid hogging the CPU, emit a progress event every second. */
     }
+    console.log('computeInstants done')
     return context.instants;
   }
 
@@ -268,7 +266,6 @@ export default function (bundle, deps) {
   /* A quick reset avoids disabling and re-enabling the stepper (which restarts
      the stepper task). */
   function* resetToInstant (instant, audioTime, quick) {
-    console.log('reset', instant, audioTime, quick);
     const player = yield select(deps.getPlayerState);
     const isPlaying = player.get('status') === 'playing';
     const {state} = instant;
@@ -345,7 +342,6 @@ export default function (bundle, deps) {
           // Assumption: instants[pos] is the state immediately after replaying events[pos],
           //             and pos === instants[pos].pos.
           for (let pos = prevInstant.pos + 1; pos <= nextInstant.pos; pos += 1) {
-            console.log('incremental', instant);
             const instant = instants[pos];
             if (instant.saga) {
               /* Keep in mind that the instant's saga runs *prior* to the call

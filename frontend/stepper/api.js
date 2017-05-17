@@ -6,21 +6,18 @@ import {call, fork, put} from 'redux-saga/effects';
 export default function (bundle, deps) {
 
   const stepperApi = {
-    onInit, /* (callback) */
+    onInit, /* add a (stepperState, globalState) init callback */
+    buildState, /* build (globalState) */
+    addSaga, /* (saga) */
     onEffect, /* (name, handler) */
     addBuiltin, /* (name, handler) */
-    addSaga, /* (saga) */
-    buildState, /* (syntaxTree, options) */
-    rootSaga, /* () */
-    runEffects, /* (context, iterator) */
-    runBuiltin, /* (context, name, ...args) */
-    stepUntil, /* (runContext, stopCond) */
-    singleStep, /* (runContext, stopCond) */
-    stepExpr, /* (runContext) */
-    stepInto, /* (runContext) */
-    stepOut, /* (runContext) */
-    stepOver, /* (runContext) */
-    runToStep, /* (runContext, stepCounter) */
+    makeContext, /* state → context */
+    runToStep, /* function (context, stepCounter) → context */
+    rootSaga, /* function* (options) */
+    stepExpr, /* function* (context) → context */
+    stepInto, /* function* (context) → context */
+    stepOut, /* function* (context) → context */
+    stepOver, /* function* (context) → context */
   };
   bundle.defineValue('stepperApi', stepperApi);
 
@@ -38,7 +35,7 @@ export default function (bundle, deps) {
   }
 
   /* Build a stepper state from the given init data. */
-  function* buildState (globalState) {
+  function buildState (globalState) {
     /* Call all the init callbacks. Pass the global state so the player can
        build stepper states without having to install the pre-computed state
        into the store. */
@@ -47,17 +44,15 @@ export default function (bundle, deps) {
       callback(stepperState, globalState);
     }
     /* Run until in user code */
-    const runContext = {
+    const context = {
       state: stepperState,
       interactive: false,
       stepCounter: 0
     };
-    while (true) {
-      if (!(yield call(singleStep, runContext, inUserCode))) {
-        break;
-      }
+    while (!inUserCode(context.state.core)) {
+      computeSingleStep(context);
     }
-    return runContext.state;
+    return context.state;
   }
 
   /* Register a saga to run inside the stepper task. */
@@ -72,28 +67,12 @@ export default function (bundle, deps) {
     }
   }
 
-  /* Register a saga that implements an effect. */
+  /* An effect is a generator that may alter the context/state/core, and
+     yield further effects. */
   function onEffect (name, handler) {
     /* TODO: guard against duplicate effects? allow multiple handlers for a
              single effect? */
     effectHandlers.set(name, handler);
-  }
-
-  /* Run all effects produced by a given iterator. */
-  function* runEffects (context, iterator) {
-    while (true) {
-      /* Pull the next effect from the builtin's iterator. */
-      const {done, value} = iterator.next(context.arg);
-      if (done) {
-        return;
-      }
-      /* Call the effect handler, feed the result back into the iterator. */
-      const name = value[0];
-      if (!effectHandlers.has(name)) {
-        throw new Error(`unhandled effect ${name}`);
-      }
-      context.arg = yield call(effectHandlers.get(name), context, ...value.slice(1));
-    }
   }
 
   /* Register a builtin. A builtin is a generator that yields effects. */
@@ -102,142 +81,233 @@ export default function (bundle, deps) {
     builtinHandlers.set(name, handler);
   }
 
-  /* Run a builtin and all the effects it yields. */
-  function* runBuiltin (context, name, ...args) {
-    if (!builtinHandlers.has(name)) {
-      throw new Error(`unknown builtin ${name}`);
-    }
-    const iterator = builtinHandlers.get(name)(context, ...args);
-    yield call(stepperApi.runEffects, context, iterator);
-  };
+  function makeContext (state) {
+    return {
+      state: {
+        ...state,
+        core: C.clearMemoryLog(state.core)
+      },
+      stepCounter: 0
+    };
+  }
 
-  function* stepUntil (runContext, stopCond) {
+  function copyContext (context) {
+    const {state} = context;
+    const {core} = state;
+    return {
+      ...context,
+      state: {...state, core: {...core}}
+    };
+  }
+
+/*
+  // This could be a good idea:
+  function freezeContext (context) {
+    Object.freeze(context.state.core);
+    Object.freeze(context.state);
+    Object.freeze(context);
+  }
+*/
+
+  function computeEffects (context, iterator) {
+    let lastResult;
+    while (true) {
+      /* Pull the next effect from the builtin's iterator. */
+      const {done, value} = iterator.next(lastResult);
+      if (done) {
+        return value;
+      }
+      /* Call the effect handler, feed the result back into the iterator. */
+      console.log('effect', value[0], value);
+      const name = value[0];
+      if (name === 'interact') {
+        lastResult = false;
+      } else if (name === 'builtin') {
+        const builtin = value[1];
+        lastResult = computeEffects(context, builtinHandlers.get(builtin)(context, ...value.slice(2)));
+      } else {
+        if (!effectHandlers.has(name)) {
+          throw new Error(`unhandled effect ${name}`);
+        }
+        lastResult = computeEffects(context, effectHandlers.get(name)(context, ...value.slice(1)));
+      }
+    }
+  }
+
+  /* Mutate the context to advance execution by a single step. */
+  function computeSingleStep (context) {
+    const effects = C.step(context.state.core);
+    if (effects) {
+      computeEffects(context, effects[Symbol.iterator]());
+    }
+    context.stepCounter += 1;
+  }
+
+  function runToStep (context, targetStepCounter) {
+    if (context.stepCounter === targetStepCounter) {
+      return context;
+    }
+    if (targetStepCounter < context.stepCounter) {
+      throw new Error(`runToStep cannot go from step ${context.stepCounter} to ${targetStepCounter}`);
+    }
+    context = copyContext(context);
+    while (context.stepCounter < targetStepCounter) {
+      computeSingleStep(context);
+    }
+    return context;
+  }
+
+  function* executeEffects (context, iterator) {
+    let lastResult;
+    while (true) {
+      /* Pull the next effect from the builtin's iterator. */
+      const {done, value} = iterator.next(lastResult);
+      if (done) {
+        return value;
+      }
+      const name = value[0];
+      if (name === 'interact') {
+        /* Interact effects run an interruptible saga. A progress action is
+           emitted first so that an up-to-date state gets displayed. */
+        yield put({type: deps.stepperProgress, context});
+        const {completed, interrupted} = yield (race({
+          completed: call(value[1], context, ...value.slice(2)),
+          interrupted: take(deps.stepperInterrupt)
+        }));
+        if (interrupted) {
+          throw 'interrupted';
+        }
+        /* TODO: update context.state from the global state to avoid discarding
+           the effects of user interaction */
+        context.state = yield select(deps.getStepperDisplay);
+        lastResult = completed;
+      } else if (name === 'builtin') {
+        const builtin = value[1];
+        if (!builtinHandlers.has(name)) {
+          throw new Error(`unknown builtin ${builtin}`);
+        }
+        lastResult = yield* executeEffects(context,
+          builtinHandlers.get(builtin)(context, ...value.slice(2)));
+      } else {
+        /* Call the effect handler, feed the result back into the iterator. */
+        if (!effectHandlers.has(name)) {
+          throw new Error(`unhandled effect ${name}`);
+        }
+        lastResult = yield* executeEffects(context,
+          effectHandlers.get(name)(context, ...value.slice(1)));
+      }
+    }
+  }
+
+  function* executeSingleStep (context) {
+    if (isStuck(context.state.core)) {
+      return;
+    }
+    const effects = C.step(context.state.core);
+    while (true) {
+      try {
+        const newContext = copyContext(context);
+        yield* executeEffects(newContext, effects[Symbol.iterator]());
+        newContext.stepCounter += 1;
+        return newContext;
+      } catch (ex) {
+        if (ex === 'retry') {
+          /* Retry the effects on the updated state. */
+          context.state = yield select(deps.getStepperDisplay);
+          continue;
+        }
+        /* Stop on interrupt or any other error. */
+        return;
+      }
+    }
+  }
+
+  function* stepUntil (context, stopCond) {
+    var timeLimit = window.performance.now();
     while (true) {
       /* Execute up to 100 steps (until the stop condition is met, the end of
          the program, an error condition, or an interrupted effect) */
-      for (let stepCount = 100; stepCount !== 0; stepCount -= 1) {
-        if (!(yield call(singleStep, runContext, stopCond))) {
-          return;
+      for (var stepCount = 100; stepCount !== 0; stepCount -= 1) {
+        if (isStuck(context.state.core) || stopCond(context.state.core)) {
+          break;
         }
+        var newContext = yield* executeSingleStep(context);
+        if (!newContext) {
+          return context;
+        }
+        context = newContext;
       }
-      /* TODO: return if Interrupt button clicked. */
-      // Has the time limit for the current run passed?
-      if (runContext.interactive) {
-        const now = window.performance.now();
-        if (now >= runContext.timeLimit) {
-          // Reset the time limit and put a Progress event.
-          runContext.timeLimit = window.performance.now() + 20;
-          yield put({type: deps.stepperProgress, context: runContext}); // XXX
-          // Yield until the next tick (XXX consider requestAnimationFrame).
-          yield call(delay, 0);
-        }
+      /* Has the time limit for the current run passed? */
+      var now = window.performance.now();
+      if (now >= timeLimit) {
+        // Reset the time limit and put a Progress event.
+        timeLimit = window.performance.now() + 20;
+        yield put({type: deps.stepperProgress, context});
+        // Yield until the next tick (XXX consider requestAnimationFrame).
+        yield call(delay, 0);
       }
     }
+    return context;
   }
 
-  function* singleStep (runContext, stopCond) {
-    console.log('singleStep', runContext);
-    let {state} = runContext;
-    if (!state.core.control) {
-      return false;
-    }
-    if (stopCond && stopCond(state.core)) {
-      return false;
-    }
-    const effects = C.step(state.core);
-    while (true) {
-      /* Make a mutable step-context. */
-      const stepContext = {
-        state: {...state, core: {...state.core}},
-        interactive: runContext.interactive
-      };
-      try {
-        /* Run the effects to update the step-context. */
-        yield call (stepperApi.runEffects, stepContext, effects[Symbol.iterator]());
-      } catch (ex) {
-        if (runContext.interactive) {
-          if (ex === 'interrupted') {
-            /* When interrupted, all effects are discarded. */
-            runContext.interrupted = true;
-            return false;
-          }
-          if (ex === 'retry') {
-            /* Retry the effects on the updated state. */
-            stepContext.state = yield select(deps.getStepperDisplay);
-            continue;
-          }
-        }
-        throw ex; /* TODO: handle error */
-      }
-      /* Commit the changes to the state. */
-      runContext.state = stepContext.state;
-      runContext.stepCounter += 1;
-      return true;
-    }
-  }
-
-  function* stepExpr (runContext) {
+  function* stepExpr (context) {
     // Take a first step.
-    if (yield call(singleStep, runContext)) {
-      // then stop when we enter the next expression.
-      yield call(stepUntil, runContext, core => C.intoNextExpr(core));
+    let newContext = yield call(executeSingleStep, context);
+    if (newContext) {
+      context = newContext;
+      // Step into the next expression.
+      context = yield call(stepUntil, context, C.intoNextExpr);
     }
+    return context;
   }
 
-  function* stepInto (runContext) {
+  function* stepInto (context) {
     // Take a first step.
-    if (yield call(singleStep, runContext)) {
+    let newContext = yield call(executeSingleStep, context);
+    if (newContext) {
+      context = newContext;
       // Step out of the current statement.
-      yield call(stepUntil, runContext, C.outOfCurrentStmt);
+      context = yield call(stepUntil, context, C.outOfCurrentStmt);
       // Step into the next statement.
-      yield call(stepUntil, runContext, C.intoNextStmt);
+      context = yield call(stepUntil, context, C.intoNextStmt);
     }
+    return context;
   }
 
-  function* stepOut (runContext) {
+  function* stepOut (context) {
     // The program must be running.
-    if (!runContext.state.core.control) {
-      return;
+    if (!isStuck(context.state.core)) {
+      // Find the closest function scope.
+      const refScope = context.state.core.scope;
+      const funcScope = C.findClosestFunctionScope(refScope);
+      // Step until execution reach that scope's parent.
+      context = yield call(stepUntil, context, core => core.scope === funcScope.parent);
     }
-    // Find the closest function scope.
-    const refScope = runContext.state.core.scope;
-    const funcScope = C.findClosestFunctionScope(refScope);
-    // Step until execution reach that scope's parent.
-    yield call(stepUntil, runContext, core => core.scope === funcScope.parent);
+    return context;
   }
 
-  function* stepOver (runContext) {
+  function* stepOver (context) {
     // Remember the current scope.
-    const refScope = runContext.state.core.scope;
+    const refScope = context.state.core.scope;
     // Take a first step.
-    if (yield call(singleStep, runContext)) {
+    let newContext = yield call(executeSingleStep, context);
+    if (newContext) {
+      newContext = context;
       // Step until out of the current statement but not inside a nested
       // function call.
-      yield call(stepUntil, runContext, core =>
+      context = yield call(stepUntil, context, core =>
         C.outOfCurrentStmt(core) && C.notInNestedCall(core.scope, refScope));
       // Step into the next statement.
-      yield call(stepUntil, runContext, C.intoNextStmt);
+      context = yield call(stepUntil, context, C.intoNextStmt);
     }
-  }
-
-  function* runToStep (context, targetStepCounter) {
-    let {state, stepCounter} = context;
-    const stepContext = {
-      state: {...state, core: {...state.core}},
-      interactive: false
-    };
-    while (stepCounter < targetStepCounter) {
-      const effects = C.step(state.core);
-      yield call (stepperApi.runEffects, stepContext, effects[Symbol.iterator]());
-      stepCounter += 1;
-    }
-    return {
-      state: stepContext.state,
-      stepCounter
-    };
+    return context;
   }
 
 };
+
+function isStuck (core) {
+  return !!core.control;
+}
 
 function inUserCode (core) {
   return !!core.control.node[1].begin;

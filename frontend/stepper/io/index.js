@@ -175,17 +175,22 @@ export default function (bundle, deps) {
     recordApi.on(deps.ioPaneModeChanged, function* (addEvent, action) {
       yield call(addEvent, 'ioPane.mode', action.mode);
     });
-    replayApi.on('ioPane.mode', function* (context, event, instant) {
+    replayApi.on('ioPane.mode', function (context, event, instant) {
       const mode = event[2];
       context.state = ioPaneModeChanged(context.state, {mode});
     });
 
-    replayApi.on(['stepper.restart', 'stepper.undo', 'stepper.redo'], function* (context, event, instant) {
+    replayApi.on(['stepper.restart', 'stepper.undo', 'stepper.redo'], function (context, event, instant) {
       if (context.state.get('ioPaneMode') === 'split') {
-        context.state = syncOutputBuffer(context.state); /* TODO: avoid this by
-          making sure the output buffer model is kept consistent at every step?
-          This would require stepper effects to be able to modify the global
-          state (currently they can only alter the stepper state). */
+        /* Consider: pushing updates from the stepper state to the output buffer
+           in the global state adds complexity.  Three options:
+           (1) dispatch a recorded 'buffer' action when the output changes, so
+               that a buffer event updates the model during replay;
+           (2) get the stepper to update the buffer in the global state somehow;
+           (3) make the output editor fetch its model from the stepper state.
+           It is not clear which option is best.
+        */
+        context.state = syncOutputBuffer(context.state);
         instant.saga = syncOutputBufferSaga;
       }
     });

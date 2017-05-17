@@ -58,12 +58,6 @@ export default function (bundle, deps) {
       C.effects.doVardecl(context.state.core, name, type, init);
     });
 
-    stepperApi.onEffect('progress', function* progressHandler (context) {
-      yield put({type: deps.stepperProgress, context});
-    });
-
-    stepperApi.onEffect('builtin', stepperApi.runBuiltin);
-
   });
 
 };

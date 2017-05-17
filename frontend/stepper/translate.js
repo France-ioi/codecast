@@ -114,7 +114,7 @@ export default function (bundle, deps) {
 
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 
-    replayApi.on('start', function* (context, event, instant) {
+    replayApi.on('start', function (context, event, instant) {
       const translateModel = translateClear();
       context.state = translateReset(context.state, {state: translateModel});
     });
@@ -123,7 +123,7 @@ export default function (bundle, deps) {
       const {source} = action;
       yield call(addEvent, 'translate.start', source);
     });
-    replayApi.on(['stepper.translate', 'translate.start'], function* (context, event, instant) {
+    replayApi.on(['stepper.translate', 'translate.start'], function (context, event, instant) {
       const action = {source: event[2]};
       context.state = context.state.update('translate', st => translateStarted(st, action));
     });
@@ -132,7 +132,7 @@ export default function (bundle, deps) {
       const {response} = action;
       yield call(addEvent, 'translate.success', response);
     });
-    replayApi.on('translate.success', function* (context, event, instant) {
+    replayApi.on('translate.success', function (context, event, instant) {
       const action = {diagnostics: event[2].diagnostics, syntaxTree: event[2].ast};
       context.state = context.state.update('translate', st => translateSucceeded(st, action));
     });
@@ -141,7 +141,7 @@ export default function (bundle, deps) {
       const {response} = action;
       yield call(addEvent, 'translate.failure', response);
     });
-    replayApi.on('translate.failure', function* (context, event, instant) {
+    replayApi.on('translate.failure', function (context, event, instant) {
       const action = {diagnostics: event[2].diagnostics, error: event[2].error};
       context.state = context.state.update('translate', st => translateFailed(st, action));
     });
@@ -149,11 +149,11 @@ export default function (bundle, deps) {
     recordApi.on(deps.translateClearDiagnostics, function* (addEvent, action) {
       yield call(addEvent, 'translate.clearDiagnostics');
     });
-    replayApi.on('translate.clearDiagnostics', function* (context, event, instant) {
+    replayApi.on('translate.clearDiagnostics', function (context, event, instant) {
       context.state = context.state.update('translate', st => translateClearDiagnostics(st, {}));
     });
 
-    replayApi.on('stepper.exit', function* (context, event, instant) {
+    replayApi.on('stepper.exit', function (context, event, instant) {
       context.state = context.state.update('translate', translateClear);
     });
 

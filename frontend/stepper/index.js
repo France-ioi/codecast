@@ -46,7 +46,8 @@ export default function (bundle, deps) {
 
   bundle.use(
     'error', 'stepperApi',
-    'translateSucceeded', 'getSyntaxTree', 'translateClear', 'bufferHighlight'
+    'translateSucceeded', 'getSyntaxTree', 'translateClear', 'bufferHighlight',
+    'recorderStopping'
   );
 
   bundle.addReducer('init', function (state, action) {
@@ -311,6 +312,14 @@ export default function (bundle, deps) {
     });
   });
 
+  bundle.addSaga(function* () {
+    /* Disable the stepper when recording stops. */
+    yield takeEvery(deps.recorderStopping, function* () {
+      yield put({type: deps.stepperInterrupt});
+      yield put({type: deps.stepperDisabled});
+    });
+  });
+
   function* onStepperStep (action) {
     const {mode} = action;
     const stepper = yield select(deps.getStepperState);
@@ -373,7 +382,7 @@ export default function (bundle, deps) {
     recordApi.onStart(function* (init) {
       /* TODO: store stepper options in init */
     });
-    replayApi.on('start', function* (context, event, instant) {
+    replayApi.on('start', function (context, event, instant) {
       /* TODO: restore stepper options from event[2] */
       const state = stepperClear();
       context.state = stepperReset(context.state, {state});
@@ -387,15 +396,15 @@ export default function (bundle, deps) {
     recordApi.on(deps.stepperExit, function* (addEvent, action) {
       yield call(addEvent, 'stepper.exit');
     });
-    replayApi.on('stepper.exit', function* (context, event, instant) {
+    replayApi.on('stepper.exit', function (context, event, instant) {
       context.state = stepperExit(context.state);
     });
 
     recordApi.on(deps.stepperRestart, function* (addEvent, action) {
       yield call(addEvent, 'stepper.restart');
     });
-    replayApi.on('stepper.restart', function* (context, event, instant) {
-      const stepperState = yield call(deps.stepperApi.buildState, context.state);
+    replayApi.on('stepper.restart', function (context, event, instant) {
+      const stepperState = deps.stepperApi.buildState(context.state);
       context.state = stepperRestart(context.state, {stepperState});
     });
 
@@ -403,27 +412,19 @@ export default function (bundle, deps) {
       const {mode} = action;
       yield call(addEvent, 'stepper.step', mode);
     });
-    replayApi.on('stepper.step', function* (context, event, instant) {
+    replayApi.on('stepper.step', function (context, event, instant) {
       const mode = event[2];
-      context.run = beginStep(context.state.getIn(['stepper', 'current']));
       context.state = stepperStarted(context.state, {mode});
+      const stepperState = deps.getStepperDisplay(context.state);
+      context.run = stepperApi.makeContext(stepperState);
     });
-    function beginStep (state) {
-      return {
-        state: {
-          ...state,
-          core: C.clearMemoryLog(state.core)
-        },
-        stepCounter: 0
-      };
-    }
 
     recordApi.on(deps.stepperIdle, function* (addEvent, action) {
       const {context} = action;
       yield call(addEvent, 'stepper.idle', context.stepCounter);
     });
-    replayApi.on('stepper.idle', function* (context, event, instant) {
-      context.run = yield call(stepperApi.runToStep, context.run, event[2]);
+    replayApi.on('stepper.idle', function (context, event, instant) {
+      context.run = stepperApi.runToStep(context.run, event[2]);
       context.state = stepperIdle(context.state, {context: context.run});
       instant.range = getNodeRange(deps.getStepperDisplay(context.state));
     });
@@ -432,36 +433,37 @@ export default function (bundle, deps) {
       const {context} = action;
       yield call(addEvent, 'stepper.progress', context.stepCounter);
     });
-    replayApi.on('stepper.progress', function* (context, event, instant) {
-      context.run = yield call(stepperApi.runToStep, context.run, event[2]);
+    replayApi.on('stepper.progress', function (context, event, instant) {
+      context.run = stepperApi.runToStep(context.run, event[2]);
       context.state = stepperProgress(context.state, {context: context.run});
+      instant.range = getNodeRange(deps.getStepperDisplay(context.state));
     });
 
     recordApi.on(deps.stepperUndo, function* (addEvent, action) {
       yield call(addEvent, 'stepper.undo');
     });
-    replayApi.on('stepper.undo', function* (context, event, instant) {
+    replayApi.on('stepper.undo', function (context, event, instant) {
       context.state = stepperUndo(context.state);
     });
 
     recordApi.on(deps.stepperRedo, function* (addEvent, action) {
       yield call(addEvent, 'stepper.redo');
     });
-    replayApi.on('stepper.redo', function* (context, event, instant) {
+    replayApi.on('stepper.redo', function (context, event, instant) {
       context.state = stepperRedo(context.state);
     });
 
     recordApi.on(deps.stepperStackUp, function* (addEvent, action) {
       yield call(addEvent, 'stepper.stack.up');
     });
-    replayApi.on('stepper.stack.up', function* (context, event, instant) {
+    replayApi.on('stepper.stack.up', function (context, event, instant) {
       context.state = stepperStackUp(context.state);
     });
 
     recordApi.on(deps.stepperStackDown, function* (addEvent, action) {
       yield call(addEvent, 'stepper.stack.down');
     });
-    replayApi.on('stepper.stack.down', function* (context, event, instant) {
+    replayApi.on('stepper.stack.down', function (context, event, instant) {
       context.state = stepperStackDown(context.state);
     });
 
@@ -470,7 +472,7 @@ export default function (bundle, deps) {
       const {key, update} = action;
       yield call(addEvent, 'stepper.view.update', key, update);
     });
-    replayApi.on('stepper.view.update', function* (context, event, instant) {
+    replayApi.on('stepper.view.update', function (context, event, instant) {
       const key = event[2];
       const update = event[3];
       context.state = stepperViewControlsChanged(context.state, {key, update});
