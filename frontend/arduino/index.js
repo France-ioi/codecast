@@ -9,7 +9,7 @@ In the global state:
 
 In the stepper state:
 - stepperState.ports[portNumber] →
-    {direction, output, pullUp, input}
+    {direction, output, input}
 
 */
 
@@ -19,6 +19,7 @@ import {Button, FormControl, ControlLabel, FormGroup} from 'react-bootstrap';
 import Slider from 'rc-slider';
 import range from 'node-range';
 import update from 'immutability-helper';
+import {call} from 'redux-saga/effects';
 
 import './style.scss';
 
@@ -146,9 +147,13 @@ export default function (bundle, deps) {
 
   const PortDisplay = EpicComponent(self => {
     function onChange (changes) {
+      const {index} = self.props;
+      console.log('onChange', index, changes);
+      self.props.dispatch({type: deps.arduinoPortChanged, index, changes});
     }
     function onButtonToggle () {
-      /* change the stepper[current].ports.[index].input */
+      const input = 1 ^ self.props.state.input;
+      onChange({input: {$set: input}});
     }
     function onSliderChange () {
     }
@@ -168,7 +173,9 @@ export default function (bundle, deps) {
             </div>}
           {peripheral.type === 'button' &&
             <div className="arduino-peri-button clickable" onClick={onButtonToggle}>
-              <i className="fa fa-caret-down"/>
+              {state.input === 0
+                ? <i className="fa fa-caret-down"/>
+                : <i className="fa fa-caret-up"/>}
             </div>}
           {peripheral.type === 'slider' &&
             <div>{"TODO"}</div>}
@@ -294,7 +301,7 @@ export default function (bundle, deps) {
 
     stepperApi.onInit(function (stepperState, globalState) {
       stepperState.ports = range(0, NPorts-1).map(function (index) {
-        return {dir: 0, output: 0, pullUp: false};
+        return {dir: 0, output: 0, input: 0};
       });
     });
 
