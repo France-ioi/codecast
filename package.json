@@ -34,7 +34,7 @@
     "classnames": "^2.2.5",
     "css-loader": "^0.26.1",
     "epic-component": "^1.1.2",
-    "epic-linker": "^4.0.0",
+    "epic-linker": "^4.1.0",
     "eventemitter2": "^3.0.0",
     "express": "^4.13.4",
     "file-loader": "^0.10.0",
