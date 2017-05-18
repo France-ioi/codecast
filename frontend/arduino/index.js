@@ -20,7 +20,7 @@ import classnames from 'classnames';
 import Slider from 'rc-slider';
 import range from 'node-range';
 import update from 'immutability-helper';
-import {call, select} from 'redux-saga/effects';
+import {call, select, put} from 'redux-saga/effects';
 
 import './style.scss';
 
@@ -273,6 +273,10 @@ export default function (bundle, deps) {
     replayApi.on('start', function (context, event, instant) {
       const {arduino} = event[2];
       context.state = arduinoReset(context.state, {state: arduino});
+    });
+    replayApi.onReset(function* (instant) {
+      const arduinoState = instant.state.get('arduino');
+      yield put({type: deps.arduinoReset, state: arduinoState});
     });
 
     recordApi.on(deps.arduinoPortConfigured, function* (addEvent, action) {
