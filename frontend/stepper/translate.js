@@ -70,7 +70,7 @@ export default function (bundle, deps) {
   });
 
   bundle.defineSelector('getTranslateDiagnostics', state =>
-    state.get(['translate', 'diagnosticsHtml'])
+    state.getIn(['translate', 'diagnosticsHtml'])
   );
 
   bundle.defineSelector('getSyntaxTree', state =>
