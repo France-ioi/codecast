@@ -1,189 +1,19 @@
-
 .player-slider-container {
+  background-color: #f8f8f8;
 }
-.player-slider {
+.player-slider-container .rc-slider {
   height: 34px; /* 15px + 4px + 15px */
   margin: 0px 20px;
   position: relative;
 }
-.player-slider * {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+.player-slider-container .rc-slider-rail,
+.player-slider-container .rc-slider-track {
+  margin-top: 10px;
 }
-.player-slider-track, .player-slider-background {
-  position: absolute;
-  left: 0;
-  height: 4px;
-  border-radius: 6px;
-  margin-top: 15px;
+.player-slider-container .rc-slider-handle {
+  margin-top: 5px;
 }
-.player-slider-track {
+.player-slider-container .rc-slider-track {
   background-color: #abe2fb;
   z-index: 1;
-}
-.player-slider-background {
-  background-color: #e9e9e9;
-  width: 100%;
-}
-.player-slider-handle {
-  position: absolute;
-  margin-left: -7px;
-  margin-top: 10px; /* 15px + -5px */
-  width: 14px;
-  height: 14px;
-  cursor: pointer;
-  border-radius: 50%;
-  border: solid 2px #96dbfa;
-  background-color: #fff;
-  z-index: 2;
-}
-
-.player-slider-tooltip-zoom-down-enter,
-.player-slider-tooltip-zoom-down-appear {
-  -webkit-animation-duration: .3s;
-          animation-duration: .3s;
-  -webkit-animation-fill-mode: both;
-          animation-fill-mode: both;
-  display: block !important;
-  -webkit-animation-play-state: paused;
-          animation-play-state: paused;
-}
-.player-slider-tooltip-zoom-down-leave {
-  -webkit-animation-duration: .3s;
-          animation-duration: .3s;
-  -webkit-animation-fill-mode: both;
-          animation-fill-mode: both;
-  display: block !important;
-  -webkit-animation-play-state: paused;
-          animation-play-state: paused;
-}
-.player-slider-tooltip-zoom-down-enter.player-slider-tooltip-zoom-down-enter-active,
-.player-slider-tooltip-zoom-down-appear.player-slider-tooltip-zoom-down-appear-active {
-  -webkit-animation-name: rcSliderTooltipZoomDownIn;
-          animation-name: rcSliderTooltipZoomDownIn;
-  -webkit-animation-play-state: running;
-          animation-play-state: running;
-}
-.player-slider-tooltip-zoom-down-leave.player-slider-tooltip-zoom-down-leave-active {
-  -webkit-animation-name: rcSliderTooltipZoomDownOut;
-          animation-name: rcSliderTooltipZoomDownOut;
-  -webkit-animation-play-state: running;
-          animation-play-state: running;
-}
-.player-slider-tooltip-zoom-down-enter,
-.player-slider-tooltip-zoom-down-appear {
-  -webkit-transform: scale(0, 0);
-          transform: scale(0, 0);
-  -webkit-animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
-          animation-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
-}
-.player-slider-tooltip-zoom-down-leave {
-  -webkit-animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
-          animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
-}
-@-webkit-keyframes rcSliderTooltipZoomDownIn {
-  0% {
-    opacity: 0;
-    -webkit-transform-origin: 50% 100%;
-            transform-origin: 50% 100%;
-    -webkit-transform: scale(0, 0);
-            transform: scale(0, 0);
-  }
-  100% {
-    -webkit-transform-origin: 50% 100%;
-            transform-origin: 50% 100%;
-    -webkit-transform: scale(1, 1);
-            transform: scale(1, 1);
-  }
-}
-@keyframes rcSliderTooltipZoomDownIn {
-  0% {
-    opacity: 0;
-    -webkit-transform-origin: 50% 100%;
-            transform-origin: 50% 100%;
-    -webkit-transform: scale(0, 0);
-            transform: scale(0, 0);
-  }
-  100% {
-    -webkit-transform-origin: 50% 100%;
-            transform-origin: 50% 100%;
-    -webkit-transform: scale(1, 1);
-            transform: scale(1, 1);
-  }
-}
-@-webkit-keyframes rcSliderTooltipZoomDownOut {
-  0% {
-    -webkit-transform-origin: 50% 100%;
-            transform-origin: 50% 100%;
-    -webkit-transform: scale(1, 1);
-            transform: scale(1, 1);
-  }
-  100% {
-    opacity: 0;
-    -webkit-transform-origin: 50% 100%;
-            transform-origin: 50% 100%;
-    -webkit-transform: scale(0, 0);
-            transform: scale(0, 0);
-  }
-}
-@keyframes rcSliderTooltipZoomDownOut {
-  0% {
-    -webkit-transform-origin: 50% 100%;
-            transform-origin: 50% 100%;
-    -webkit-transform: scale(1, 1);
-            transform: scale(1, 1);
-  }
-  100% {
-    opacity: 0;
-    -webkit-transform-origin: 50% 100%;
-            transform-origin: 50% 100%;
-    -webkit-transform: scale(0, 0);
-            transform: scale(0, 0);
-  }
-}
-.player-tooltip {
-  position: absolute;
-  left: -9999px;
-  top: -9999px;
-  z-index: 4;
-  visibility: visible;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-}
-.player-tooltip * {
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-}
-.player-tooltip-hidden {
-  display: none;
-}
-.player-tooltip-placement-top {
-  padding: 4px 0 8px 0;
-}
-.player-tooltip-inner {
-  padding: 6px 2px;
-  min-width: 24px;
-  height: 24px;
-  font-size: 12px;
-  line-height: 1;
-  color: #fff;
-  text-align: center;
-  text-decoration: none;
-  background-color: #6c6c6c;
-  border-radius: 6px;
-  box-shadow: 0 0 4px #d9d9d9;
-}
-.player-tooltip-arrow {
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-color: transparent;
-  border-style: solid;
-}
-.player-tooltip-placement-top .player-tooltip-arrow {
-  bottom: 4px;
-  left: 50%;
-  margin-left: -4px;
-  border-width: 4px 4px 0;
-  border-top-color: #6c6c6c;
 }

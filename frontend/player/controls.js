@@ -82,8 +82,7 @@ export default function (bundle, deps) {
               {timeFormatter(duration)}
             </p>
             <div className="player-slider-container">
-              <Slider prefixCls="player-slider" tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek}>
-                <div className="player-slider-background"/>
+              <Slider tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek}>
               </Slider>
             </div>
           </div>

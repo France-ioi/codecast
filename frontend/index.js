@@ -11,6 +11,8 @@ import 'brace/worker/javascript';
 import 'brace/mode/c_cpp';
 import 'brace/theme/github';
 import 'font-awesome/css/font-awesome.min.css';
+import 'rc-slider/dist/rc-slider.css';
+import './slider.css';
 import './style.scss';
 
 import stepperComponent from './stepper/index';
