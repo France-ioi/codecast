@@ -208,7 +208,6 @@ export default function (bundle, deps) {
     /* CONSIDER: create a redux store, use the replayApi to convert each event
        to an action that is dispatched to the store (which must have an
        appropriate reducer) plus an optional saga to be called during playback. */
-    console.log('computeInstants starting')
     for (let pos = 0; pos < events.length; pos += 1) {
       const event = events[pos];
       const t = event[0];
@@ -219,7 +218,6 @@ export default function (bundle, deps) {
       context.instants.push(instant);
       /* TODO: avoid hogging the CPU, emit a progress event every second. */
     }
-    console.log('computeInstants done')
     return context.instants;
   }
 
