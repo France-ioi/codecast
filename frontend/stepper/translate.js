@@ -98,17 +98,13 @@ export default function (bundle, deps) {
     let response, syntaxTree, error;
     try {
       response = yield call(asyncRequestJson, 'translate', {source});
-      if (response.ast) {
-        syntaxTree = response.ast;
-      }
     } catch (ex) {
-      error = ex.toString();
+      response = {error: ex.toString()};
     }
-    const {diagnostics} = response;
-    if (syntaxTree) {
-      yield put({type: deps.translateSucceeded, response, diagnostics, syntaxTree});
+    if (response.ast) {
+      yield put({type: deps.translateSucceeded, response});
     } else {
-      yield put({type: deps.translateFailed, response, diagnostics, error});
+      yield put({type: deps.translateFailed, response, error});
     }
   }
 
@@ -133,7 +129,7 @@ export default function (bundle, deps) {
       yield call(addEvent, 'translate.success', response);
     });
     replayApi.on('translate.success', function (context, event, instant) {
-      const action = {diagnostics: event[2].diagnostics, syntaxTree: event[2].ast};
+      const action = {response: event[2]};
       context.state = context.state.update('translate', st => translateSucceeded(st, action));
     });
 
@@ -142,7 +138,7 @@ export default function (bundle, deps) {
       yield call(addEvent, 'translate.failure', response);
     });
     replayApi.on('translate.failure', function (context, event, instant) {
-      const action = {diagnostics: event[2].diagnostics, error: event[2].error};
+      const action = {response: event[2]};
       context.state = context.state.update('translate', st => translateFailed(st, action));
     });
 
@@ -229,12 +225,12 @@ const getPositionFromOffset = function (lineOffsets, offset) {
   return {row: iLeft, column: offset - lineOffsets[iLeft]};
 };
 
-const toHtml = function (content) {
+function toHtml (content) {
   // Sanitize and wrap html content.
   const el = document.createElement('div');
   el.innerHtml = `<pre>${content}</pre>`;
   return {__html: el.innerHtml};
-};
+}
 
 function translateClear (state, action) {
   return Immutable.Map({status: 'clear'});
@@ -246,24 +242,24 @@ function translateStarted (state, action) {
 }
 
 function translateSucceeded (state, action) {
-  const {syntaxTree, diagnostics} = action;
+  const {ast, diagnostics} = action.response;
   const source = state.get('source');
   return state
     .set('status', 'done')
-    .set('syntaxTree', addNodeRanges(source, syntaxTree))
+    .set('syntaxTree', addNodeRanges(source, ast))
     .set('diagnostics', diagnostics)
     .set('diagnosticsHtml', diagnostics && toHtml(diagnostics));
-};
+}
 
 function translateFailed (state, action) {
-  const {error, diagnostics} = action;
+  const {error, diagnostics} = action.response;
   return state
     .set('status', 'error')
     .set('error', error)
     .set('diagnostics', diagnostics)
     .set('diagnosticsHtml', toHtml(diagnostics));
-};
+}
 
 function translateClearDiagnostics (state, action) {
   return state.delete('diagnostics').delete('diagnosticsHtml');
-};
+}
