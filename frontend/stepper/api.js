@@ -119,7 +119,6 @@ export default function (bundle, deps) {
         return value;
       }
       /* Call the effect handler, feed the result back into the iterator. */
-      console.log('effect', value[0], value);
       const name = value[0];
       if (name === 'interact') {
         lastResult = false;
