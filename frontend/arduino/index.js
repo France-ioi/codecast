@@ -21,6 +21,7 @@ import Slider from 'rc-slider';
 import range from 'node-range';
 import update from 'immutability-helper';
 import {call, select, put} from 'redux-saga/effects';
+import * as C from 'persistent-c';
 
 import './style.scss';
 
