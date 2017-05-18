@@ -143,7 +143,6 @@ export default function (bundle, deps) {
   const PortDisplay = EpicComponent(self => {
     function onChange (changes) {
       const {index} = self.props;
-      console.log('onChange', index, changes);
       self.props.dispatch({type: deps.arduinoPortChanged, index, changes});
     }
     function onButtonToggle () {
@@ -272,7 +271,6 @@ export default function (bundle, deps) {
       init.arduino = yield select(state => state.get('arduino'));
     });
     replayApi.on('start', function (context, event, instant) {
-      console.log('[arduino] replay start', context, event);
       const {arduino} = event[2];
       context.state = arduinoReset(context.state, {state: arduino});
     });
