@@ -267,10 +267,6 @@ export default function (bundle, deps) {
     state.getIn(['stepper', 'current'])
   );
 
-  bundle.defineSelector('getStepperInterrupted', state =>
-    state.getIn(['stepper', 'interrupt'])
-  );
-
   /* Start the stepper when source code has been translated successfully. */
   bundle.addSaga(function* watchTranslateSucceeded () {
     yield takeLatest(deps.translateSucceeded, function* () {
@@ -341,8 +337,13 @@ export default function (bundle, deps) {
             context = yield call(deps.stepperApi.stepOver, context);
             break;
         }
-      } catch (error) {
-        console.log(error); // XXX
+      } catch (ex) {
+        if (ex.context) {
+          context = ex.context;
+        }
+        if (ex.condition === 'error') {
+          console.log('TODO', ex);
+        }
       }
       yield put({type: deps.stepperIdle, context});
     }

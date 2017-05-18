@@ -151,7 +151,8 @@ export default function (bundle, deps) {
       return context;
     }
     if (targetStepCounter < context.stepCounter) {
-      throw new Error(`runToStep cannot go from step ${context.stepCounter} to ${targetStepCounter}`);
+      // TODO: throw new Error(`runToStep cannot go from step ${context.stepCounter} to ${targetStepCounter}`);
+      return context;
     }
     context = copyContext(context);
     while (context.stepCounter < targetStepCounter) {
@@ -219,8 +220,10 @@ export default function (bundle, deps) {
           context.state = yield select(deps.getStepperDisplay);
           continue;
         }
-        /* Stop on interrupt or any other error. */
-        throw ex;
+        if (ex === 'interrupt') {
+          throw {condition: 'interrupted', context};
+        }
+        throw {condition: 'error', details: ex, context: newContext};
       }
     }
   }
