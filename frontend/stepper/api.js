@@ -1,7 +1,7 @@
 
 import * as C from 'persistent-c';
 import {delay} from 'redux-saga'
-import {call, fork, put} from 'redux-saga/effects';
+import {call, fork, put, race, select, take} from 'redux-saga/effects';
 
 export default function (bundle, deps) {
 
@@ -21,7 +21,7 @@ export default function (bundle, deps) {
   };
   bundle.defineValue('stepperApi', stepperApi);
 
-  bundle.use('stepperProgress', 'getStepperDisplay');
+  bundle.use('stepperProgress', 'stepperInterrupt', 'getStepperDisplay');
 
   const optionCallbacks = [];
   const initCallbacks = [];
@@ -85,7 +85,8 @@ export default function (bundle, deps) {
     return {
       state: {
         ...state,
-        core: C.clearMemoryLog(state.core)
+        core: C.clearMemoryLog(state.core),
+        oldCore: state.core
       },
       stepCounter: 0
     };
@@ -124,6 +125,9 @@ export default function (bundle, deps) {
         lastResult = false;
       } else if (name === 'builtin') {
         const builtin = value[1];
+        if (!builtinHandlers.has(builtin)) {
+          throw new Error(`unknown builtin ${builtin}`);
+        }
         lastResult = computeEffects(context, builtinHandlers.get(builtin)(context, ...value.slice(2)));
       } else {
         if (!effectHandlers.has(name)) {
@@ -183,7 +187,7 @@ export default function (bundle, deps) {
         lastResult = completed;
       } else if (name === 'builtin') {
         const builtin = value[1];
-        if (!builtinHandlers.has(name)) {
+        if (!builtinHandlers.has(builtin)) {
           throw new Error(`unknown builtin ${builtin}`);
         }
         lastResult = yield* executeEffects(context,
@@ -217,7 +221,7 @@ export default function (bundle, deps) {
           continue;
         }
         /* Stop on interrupt or any other error. */
-        return;
+        throw ex;
       }
     }
   }
@@ -229,7 +233,7 @@ export default function (bundle, deps) {
          the program, an error condition, or an interrupted effect) */
       for (var stepCount = 100; stepCount !== 0; stepCount -= 1) {
         if (isStuck(context.state.core) || stopCond(context.state.core)) {
-          break;
+          return context;
         }
         var newContext = yield* executeSingleStep(context);
         if (!newContext) {
@@ -247,7 +251,6 @@ export default function (bundle, deps) {
         yield call(delay, 0);
       }
     }
-    return context;
   }
 
   function* stepExpr (context) {
@@ -306,7 +309,7 @@ export default function (bundle, deps) {
 };
 
 function isStuck (core) {
-  return !!core.control;
+  return !core.control;
 }
 
 function inUserCode (core) {

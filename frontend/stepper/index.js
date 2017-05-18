@@ -325,27 +325,32 @@ export default function (bundle, deps) {
     const stepper = yield select(deps.getStepperState);
     if (stepper.get('status') === 'starting') {
       yield put({type: deps.stepperStarted, mode});
-      const runContext = buildRunContext(stepper.get('current'));
+      let context = makeContext(stepper.get('current'));
       try {
         switch (mode) {
           case 'into':
-            yield call(deps.stepperApi.stepInto, runContext);
+            context = yield call(deps.stepperApi.stepInto, context);
             break;
           case 'expr':
-            yield call(deps.stepperApi.stepExpr, runContext);
+            context = yield call(deps.stepperApi.stepExpr, context);
             break;
           case 'out':
-            yield call(deps.stepperApi.stepOut, runContext);
+            context = yield call(deps.stepperApi.stepOut, context);
             break;
           case 'over':
-            yield call(deps.stepperApi.stepOver, runContext);
+            context = yield call(deps.stepperApi.stepOver, context);
             break;
         }
       } catch (error) {
         console.log(error); // XXX
       }
-      yield put({type: deps.stepperIdle, context: runContext});
+      yield put({type: deps.stepperIdle, context});
     }
+  }
+  function makeContext (state) {
+    const context = deps.stepperApi.makeContext(state)
+    context.state.controls = resetControls(state.controls);
+    return context;
   }
 
   function* onStepperExit () {
@@ -353,23 +358,6 @@ export default function (bundle, deps) {
     yield put({type: deps.stepperDisabled});
     /* Clear the translate state. */
     yield put({type: deps.translateClear});
-  }
-
-  /* A run-context is an object that is mutated as a saga steps through nodes. */
-  function buildRunContext (state) {
-    const startTime = window.performance.now();
-    return {
-      state: {
-        ...state,
-        core: C.clearMemoryLog(state.core),
-        oldCore: state.core,
-        controls: resetControls(state.controls)
-      },
-      interactive: true,
-      startTime,
-      timeLimit: startTime + 20,
-      stepCounter: 0
-    };
   }
 
   function resetControls (controls) {
