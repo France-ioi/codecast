@@ -180,7 +180,7 @@ export default function (bundle, deps) {
           interrupted: take(deps.stepperInterrupt)
         }));
         if (interrupted) {
-          throw 'interrupted';
+          throw 'interrupt';
         }
         /* TODO: update context.state from the global state to avoid discarding
            the effects of user interaction */
