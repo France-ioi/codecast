@@ -14,6 +14,7 @@ export default function (bundle, deps) {
     makeContext, /* state → context */
     runToStep, /* function (context, stepCounter) → context */
     rootSaga, /* function* (options) */
+    run, /* function* (context) → context */
     stepExpr, /* function* (context) → context */
     stepInto, /* function* (context) → context */
     stepOut, /* function* (context) → context */
@@ -253,6 +254,11 @@ export default function (bundle, deps) {
         yield call(delay, 0);
       }
     }
+  }
+
+  function* run (context) {
+    context = yield call(stepUntil, context, isStuck);
+    return context;
   }
 
   function* stepExpr (context) {
