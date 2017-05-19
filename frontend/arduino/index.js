@@ -333,6 +333,59 @@ export default function (bundle, deps) {
       return context.state.ports[pin].input | 0;
     });
 
+    stepperApi.addBuiltin('Serial_print', function* (context, value, base) {
+      const str = stringifyValue(context.state.core, value, base);
+      yield ['write', str];
+    });
+
+    stepperApi.addBuiltin('Serial_println', function* (context, value, base) {
+      const str = stringifyValue(context.state.core, value, base) + '\n';
+      yield ['write', str];
+    });
+
   })
 
 };
+
+function stringifyValue (core, value, base) {
+  if (!value) {
+    return '';
+  }
+  let str;
+  switch (value.type.kind) {
+  case 'pointer':
+    str = C.readString(core.memory, value);
+    break;
+  case 'builtin':
+    switch (value.type.repr) {
+      case 'char':
+        str = String.fromCharCode(value.number)
+        break;
+      case 'unsigned char':
+      case 'unsigned short':
+      case 'unsigned int':
+      case 'unsigned long':
+        str = value.toInteger().toString(base.toInteger());
+        break;
+      case 'int': case 'short': case 'long': {
+        let intVal = value.toInteger();
+        if (intVal < 0) {
+          intVal = - intVal;
+          str = '-';
+        } else {
+          str = '';
+        }
+        str = str + intVal.toString(base.toInteger());
+        break;
+      }
+      case 'double': case 'float': default:
+        str = value.toString();
+        break;
+    }
+    break;
+  default:
+    console.log('handle type', value.type.kind);
+    str = value.toString();
+  }
+  return str;
+}

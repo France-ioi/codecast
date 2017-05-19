@@ -12,6 +12,7 @@ const AnsiToHtml = require('ansi-to-html');
 
 const upload = require('./upload');
 const directives = require('./directives');
+const Arduino = require('./arduino');
 
 app.set('view engine', 'pug');
 app.set('views', path.join(rootDir, 'backend', 'views'));
@@ -125,8 +126,9 @@ app.post('/translate', function (req, res) {
         res.json({diagnostics: convert.toHtml(errorChunks.join(''))});
       } else {
         try {
-          const ast = JSON.parse(chunks.join(''));
+          let ast = JSON.parse(chunks.join(''));
           const convert = new AnsiToHtml();
+          ast = Arduino.transform(ast); // XXX make conditional
           directives.enrichSyntaxTree(source, ast);
           res.json({ast: ast, diagnostics: convert.toHtml(errorChunks.join(''))});
         } catch (err) {

@@ -4,6 +4,7 @@ extern void delay(int ms);
 
 /* TODO: typedef unsigned char uint8_t */
 #define uint8_t unsigned char
+#define size_t unsigned int
 
 #define HIGH 0x1
 #define LOW  0x0
@@ -45,6 +46,41 @@ int digitalRead(uint8_t);
 int analogRead(uint8_t);
 void analogWrite(uint8_t, int);
 */
+
+extern size_t Serial_print ();
+extern size_t Serial_println ();
+
+#define DEC 10
+#define HEX 16
+#define OCT 8
+#define BIN 2
+
+struct Serial_s {
+  int available(void);
+  size_t write(uint8_t);
+  size_t write(const char *str);
+  size_t write(const uint8_t *buffer, size_t size);
+  size_t write(const char *buffer, size_t size);
+  size_t print(const char[]);
+  size_t print(char);
+  size_t print(unsigned char, int = DEC);
+  size_t print(int, int = DEC);
+  size_t print(unsigned int, int = DEC);
+  size_t print(long, int = DEC);
+  size_t print(unsigned long, int = DEC);
+  size_t print(double, int = 2);
+  size_t println(const char[]);
+  size_t println(char);
+  size_t println(unsigned char, int = DEC);
+  size_t println(int, int = DEC);
+  size_t println(unsigned int, int = DEC);
+  size_t println(long, int = DEC);
+  size_t println(unsigned long, int = DEC);
+  size_t println(double, int = 2);
+  size_t println(void);
+};
+
+struct Serial_s Serial;
 
 int main(void) {
   setup();
