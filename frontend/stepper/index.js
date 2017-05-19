@@ -345,7 +345,7 @@ export default function (bundle, deps) {
           context = ex.context;
         }
         if (ex.condition === 'error') {
-          console.log('TODO', ex);
+          context.state.error = stringifyError(ex.details);
         }
       }
       yield put({type: deps.stepperIdle, context});
@@ -555,4 +555,14 @@ function getNodeRange (state) {
     const frame = frames.get(frames.size - focusDepth);
     return frame.get('scope').cont.node[1].range;
   }
+}
+
+function stringifyError (error) {
+  if (process.env.NODE_ENV === 'production') {
+    return error.toString();
+  }
+  if (error.stack) {
+    return error.stack.toString();
+  }
+  return JSON.stringify(error);
 }

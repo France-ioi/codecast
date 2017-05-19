@@ -90,7 +90,7 @@ export default function (bundle, deps) {
           {error && <div className="row">
             <div className="col-sm-12">
               <Panel header={stepperErrorPanelHeader} bsStyle="danger">
-                {error}
+                <pre>{error}</pre>
               </Panel>
             </div>
           </div>}

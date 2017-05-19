@@ -224,7 +224,7 @@ export default function (bundle, deps) {
         if (ex === 'interrupt') {
           throw {condition: 'interrupted', context};
         }
-        throw {condition: 'error', details: ex, context: newContext};
+        throw {condition: 'error', details: ex, context};
       }
     }
   }
