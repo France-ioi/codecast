@@ -89,24 +89,22 @@ export default function (bundle, deps) {
     yield takeLatest(deps.translate, function* (action) {
       const sourceModel = yield select(deps.getBufferModel, 'source');
       const source = sourceModel.get('document').toString();
-      yield call(translateSource, source);
+      const mode = 'arduino';
+      yield put({type: deps.translateStarted, source});
+      let response, syntaxTree, error;
+      try {
+        response = yield call(asyncRequestJson, 'translate', {source, mode});
+      } catch (ex) {
+        response = {error: ex.toString()};
+      }
+      if (response.ast) {
+        yield put({type: deps.translateSucceeded, response});
+      } else {
+        yield put({type: deps.translateFailed, response, error});
+      }
     });
   });
 
-  function* translateSource (source) {
-    yield put({type: deps.translateStarted, source});
-    let response, syntaxTree, error;
-    try {
-      response = yield call(asyncRequestJson, 'translate', {source});
-    } catch (ex) {
-      response = {error: ex.toString()};
-    }
-    if (response.ast) {
-      yield put({type: deps.translateSucceeded, response});
-    } else {
-      yield put({type: deps.translateFailed, response, error});
-    }
-  }
 
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 

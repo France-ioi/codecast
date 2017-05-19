@@ -95,9 +95,12 @@ app.post('/upload', function (req, res) {
 
 app.post('/translate', function (req, res) {
   const env = {};
-  Object.assign(env, process.env);
   env.SYSROOT = path.join(rootDir, 'sysroot');
-  const source = req.body.source;
+  const {source, mode} = req.body;
+  if (mode === 'arduino') {
+    env.SOURCE_WRAPPER = "wrappers/Arduino";
+  }
+  console.log('env', JSON.stringify(env));
   const cp = spawn('./c-to-json', {env: env});
   //env.LD_LIBRARY_PATH = path.join(rootDir, 'lib');
   const chunks = [];
@@ -128,7 +131,9 @@ app.post('/translate', function (req, res) {
         try {
           let ast = JSON.parse(chunks.join(''));
           const convert = new AnsiToHtml();
-          ast = Arduino.transform(ast); // XXX make conditional
+          if (mode === 'arduino') {
+            ast = Arduino.transform(ast);
+          }
           directives.enrichSyntaxTree(source, ast);
           res.json({ast: ast, diagnostics: convert.toHtml(errorChunks.join(''))});
         } catch (err) {
