@@ -15,7 +15,8 @@ export default function (bundle, deps) {
     'stepperExit',
     'stepperUndo',
     'stepperRedo',
-    'translate'
+    'translate',
+    'isStepperInterrupting'
   );
 
   function StepperControlsSelector (state, props) {
@@ -48,7 +49,7 @@ export default function (bundle, deps) {
       } else if (status === 'running') {
         showExit = true;
         showControls = true;
-        canInterrupt = enabled;
+        canInterrupt = enabled && !deps.isStepperInterrupting(state);
       }
     }
     const result = {

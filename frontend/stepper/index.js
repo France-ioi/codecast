@@ -148,12 +148,16 @@ export default function (bundle, deps) {
     if (state.getIn(['stepper', 'status']) === 'idle') {
       return state;
     }
-    return state.setIn(['stepper', 'interrupt'], true);
+    return state.setIn(['stepper', 'interrupting'], true);
   });
 
   bundle.defineAction('stepperInterrupted', 'Stepper.Interrupted');
   bundle.addReducer('stepperInterrupted', function (state, action) {
-    return state.setIn(['stepper', 'interrupt'], false);
+    return state.setIn(['stepper', 'interrupting'], false);
+  });
+
+  bundle.defineSelector('isStepperInterrupting', function (state) {
+    return state.getIn(['stepper', 'interrupting'], false);
   });
 
   bundle.defineAction('stepperUndo', 'Stepper.Undo');
@@ -343,6 +347,9 @@ export default function (bundle, deps) {
       } catch (ex) {
         if (ex.context) {
           context = ex.context;
+        }
+        if (ex.condition === 'interrupted') {
+          yield put({type: deps.stepperInterrupted});
         }
         if (ex.condition === 'error') {
           context.state.error = stringifyError(ex.details);

@@ -22,7 +22,9 @@ export default function (bundle, deps) {
   };
   bundle.defineValue('stepperApi', stepperApi);
 
-  bundle.use('stepperProgress', 'stepperInterrupt', 'getStepperDisplay');
+  bundle.use(
+    'stepperProgress', 'stepperInterrupt', 'getStepperDisplay',
+    'isStepperInterrupting');
 
   const optionCallbacks = [];
   const initCallbacks = [];
@@ -252,6 +254,10 @@ export default function (bundle, deps) {
           return context;
         }
         context = newContext;
+      }
+      /* Has the stepper been interrupted (while running code in a tight loop)? */
+      if (yield select(deps.isStepperInterrupting)) {
+        throw {condition: 'interrupted', context};
       }
       /* Has the time limit for the current run passed? */
       var now = window.performance.now();
