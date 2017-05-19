@@ -231,11 +231,20 @@ export default function (bundle, deps) {
 
   function* stepUntil (context, stopCond) {
     var timeLimit = window.performance.now();
+    var core;
+    var stop = false;
     while (true) {
       /* Execute up to 100 steps (until the stop condition is met, the end of
          the program, an error condition, or an interrupted effect) */
       for (var stepCount = 100; stepCount !== 0; stepCount -= 1) {
-        if (isStuck(context.state.core) || stopCond(context.state.core)) {
+        core = context.state.core;
+        if (isStuck(core)) {
+          return context;
+        }
+        if (!stop && stopCond(core)) {
+          stop = true;
+        }
+        if (inUserCode(core) && stop) {
           return context;
         }
         var newContext = yield* executeSingleStep(context);
