@@ -10,10 +10,27 @@ import {documentFromString} from '../buffers/document';
 const examples = [
 
   {
+    title: "Arduino - Serial.println",
+    source: [
+      "void setup() {",
+      "}",
+      "void loop() {",
+      "    Serial.print(\"Hello, \");",
+      "    Serial.println(\"world!\");",
+      "    Serial.println('1');",
+      "    Serial.println(2);",
+      "    Serial.println(31, HEX);",
+      "    Serial.println(14, DEC);",
+      "    Serial.println(55, OCT);",
+      "    Serial.println(42, BIN);",
+      "}",
+    ].join('\n'),
+    mode: 'arduino'
+  },
+
+  {
     title: "Arduino - blink 2 LEDs",
     source: [
-      "#include <Arduino.h>",
-      "#include <stdio.h>",
       "#define RED_LED_PIN 0",
       "#define GRN_LED_PIN 1",
       "void setup() {",
@@ -27,14 +44,13 @@ const examples = [
       "    level ^= HIGH;",
       "    delay(1000);",
       "}",
-    ].join('\n')
+    ].join('\n'),
+    mode: 'arduino'
   },
 
   {
     title: "Arduino - blink",
     source: [
-      "#include <Arduino.h>",
-      "#include <stdio.h>",
       "#define LED_PIN 0",
       "void setup() {",
       "    pinMode(LED_PIN, OUTPUT);",
@@ -45,33 +61,21 @@ const examples = [
       "    level ^= HIGH;",
       "    delay(1000);",
       "}",
-    ].join('\n')
+    ].join('\n'),
+    mode: 'arduino'
   },
 
   {
     title: "Arduino - loop",
     source: [
-      "#include <Arduino.h>",
-      "#include <stdio.h>",
       "void setup() {",
       "}",
       "void loop() {",
       "   putchar('.');",
       "   delay(1000);",
       "}"
-    ].join('\n')
-  },
-
-  {
-    title: "arduino - delay",
-    source: [
-      "#include <stdio.h>",
-      "int main() {",
-      "   printf(\"hello, \");",
-      "   delay(1000);",
-      "   printf(\"world! %i\\n\", (2 + 4) * 7);",
-      "}"
-    ].join('\n')
+    ].join('\n'),
+    mode: 'arduino'
   },
 
   {
