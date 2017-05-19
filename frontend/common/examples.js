@@ -71,7 +71,7 @@ const examples = [
       "void setup() {",
       "}",
       "void loop() {",
-      "   putchar('.');",
+      "   Serial.print('.');",
       "   delay(1000);",
       "}"
     ].join('\n'),
