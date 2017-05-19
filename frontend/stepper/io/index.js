@@ -23,7 +23,7 @@ export default function (bundle, deps) {
   );
 
   bundle.addReducer('init', function (state) {
-    return state.set('ioPaneMode', 'split');
+    return state.set('ioPaneMode', 'terminal');
   });
 
   bundle.defineView('IOPane', IOPaneSelector, EpicComponent(self => {
