@@ -231,7 +231,7 @@ export default function (bundle, deps) {
     });
 
     stepperApi.addBuiltin('puts', function* putsBuiltin (context, strRef) {
-      const str = C.readString(context.state.memory, strRef) + '\n';
+      const str = C.readString(context.state.core.memory, strRef) + '\n';
       yield ['write', str];
       const result = new C.IntegralValue(C.builtinTypes['int'], 0);
       yield ['result', result];
