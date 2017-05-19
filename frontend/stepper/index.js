@@ -324,6 +324,9 @@ export default function (bundle, deps) {
       let context = makeContext(stepper.get('current'));
       try {
         switch (mode) {
+          case 'run':
+            context = yield call(deps.stepperApi.run, context);
+            break;
           case 'into':
             context = yield call(deps.stepperApi.stepInto, context);
             break;

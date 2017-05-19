@@ -63,6 +63,10 @@ export default function (bundle, deps) {
 
   bundle.defineView('StepperControls', StepperControlsSelector, EpicComponent(self => {
 
+    const onStepRun = function () {
+      self.props.dispatch({type: deps.stepperStep, mode: 'run'});
+    };
+
     const onStepExpr = function () {
       self.props.dispatch({type: deps.stepperStep, mode: 'expr'});
     };
@@ -121,7 +125,7 @@ export default function (bundle, deps) {
           return !p.canUndo;
         case 'redo':
           return !p.canRedo;
-        case 'expr': case 'into': case 'over':
+        case 'run': case 'expr': case 'into': case 'over':
           return !p.canStep;
         case 'out':
           return !(p.canStep && p.canStepOut);
@@ -129,6 +133,7 @@ export default function (bundle, deps) {
       return false;
     };
 
+    const controlsWidth = `${36*9+16}px`;
     self.render = function () {
       const p = self.props;
       const showStepper = p.options && p.options.get('showStepper');
@@ -136,7 +141,10 @@ export default function (bundle, deps) {
         return false;
       return (
         <div className="controls controls-stepper">
-          {p.showControls && <ButtonGroup className="controls-stepper-execution">
+          {p.showControls && <ButtonGroup className="controls-stepper-execution" style={{width: controlsWidth}}>
+            <Button onClick={onStepRun} disabled={btnDisabled('run')} bsStyle={btnStyle('run')} title="run">
+              <i className="fa fa-play"/>
+            </Button>
             <Button onClick={onStepExpr} disabled={btnDisabled('expr')} bsStyle={btnStyle('expr')} title="next expression">
               <i className="fi fi-step-expr"/>
             </Button>
