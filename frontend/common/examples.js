@@ -10,7 +10,7 @@ import {documentFromString} from '../buffers/document';
 const examples = [
 
   {
-    title: "Arduino - Serial.println",
+    title: "Serial.print",
     source: [
       "void setup() {",
       "}",
@@ -29,7 +29,7 @@ const examples = [
   },
 
   {
-    title: "Arduino - blink 2 LEDs",
+    title: "blink (2 LEDs)",
     source: [
       "#define RED_LED_PIN 0",
       "#define GRN_LED_PIN 1",
@@ -49,7 +49,7 @@ const examples = [
   },
 
   {
-    title: "Arduino - blink",
+    title: "blink",
     source: [
       "#define LED_PIN 0",
       "void setup() {",
@@ -66,7 +66,7 @@ const examples = [
   },
 
   {
-    title: "Arduino - loop",
+    title: "heartbeat",
     source: [
       "void setup() {",
       "}",
@@ -520,12 +520,14 @@ export default function (bundle, deps) {
     }
   });
 
-  bundle.defineSelector('ExamplePickerSelector', function (state, props) {
-    const examples = deps.getExamples(state);
+  function ExamplePickerSelector (state, props) {
+    let examples = deps.getExamples(state);
+    const mode = state.get('mode');
+    examples = examples.filter(ex => ex.mode === mode);
     return {examples};
-  });
+  }
 
-  bundle.defineView('ExamplePicker', 'ExamplePickerSelector', EpicComponent(self => {
+  bundle.defineView('ExamplePicker', ExamplePickerSelector, EpicComponent(self => {
 
     const onSelectExample = function (i) {
       const example = self.props.examples[i];
