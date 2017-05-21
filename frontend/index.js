@@ -94,6 +94,11 @@ Codecast.start = function (options) {
     store.dispatch({type: scope.inputLoad, text: qs.input||''});
   }
 
+  /* Set token from URL -- TODO: change this mechanism */
+  if ('token' in qs) {
+    store.dispatch({type: scope.uploadTokenChanged, token: qs.token});
+  }
+
   /* Run the sagas */
   start();
 

@@ -64,13 +64,22 @@ export default function (bundle, deps) {
       .set('busy', false).set('error', action.error));
   });
 
+  bundle.defineAction('uploadTokenChanged', 'Save.UploadToken.Changed');
+  bundle.addReducer('uploadTokenChanged', function (state, {token}) {
+    return state.set('uploadToken', token);
+  });
+  function getUploadToken (state) {
+    return state.get('uploadToken');
+  }
+
   function* uploadRecording () {
     try {
       // Step 1: prepare the upload by getting the S3 form parameters
       // from the server.
       yield put({type: deps.saveScreenPreparing});
-      const save = yield select(yield deps.getSaveState);
-      const response = yield call(asyncRequestJson, 'upload', {/*title*/});
+      const save = yield select(deps.getSaveState);
+      const token = yield select(getUploadToken);
+      const response = yield call(asyncRequestJson, 'upload', {token});
       yield put({type: deps.saveScreenPrepared});
       // Upload the events file.
       yield put({type: deps.saveScreenEventsUploading});
