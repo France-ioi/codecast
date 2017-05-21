@@ -126,10 +126,19 @@ export default function (bundle, deps) {
         );
       }
       const {controls, analysis, focusDepth, firstVisible, firstExpanded, maxVisible, maxExpanded} = self.props;
-      const {frames} = analysis;
+      let {frames} = analysis;
+      /* Hide frames that have no position in user code. */
+      frames = frames.filter(function (frame) {
+        if (!frame.get('func').body[1].range) {
+          return false;
+        }
+        return true;
+      });
+      /* Display the frames in reverse order (top of the stack last). */
+      frames = frames.reverse();
       const beyondVisible = Math.min(frames.size, firstVisible + maxVisible);
       const tailCount = frames.size - beyondVisible;
-      const views = frames.reverse().slice(firstVisible, beyondVisible).map(function (frame, depth) {
+      const views = frames.slice(firstVisible, beyondVisible).map(function (frame, depth) {
         const focus = depth >= firstExpanded && depth < firstExpanded + maxExpanded;
         const view = viewFrame(context, frame, {locals: focus});
         view.focus = focus;
