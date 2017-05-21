@@ -40,6 +40,7 @@ export default function (bundle, deps) {
 
   function IOPaneSelector (state, props) {
     const stepper = deps.getStepperDisplay(state);
+    const canSelectMode = false; /* TODO: false if mode is arduino */
     let mode = 'options';
     if (stepper) {
       if (stepper.terminal) {
@@ -48,7 +49,7 @@ export default function (bundle, deps) {
         mode = 'split';
       }
     }
-    return {mode};
+    return {mode, canSelectMode};
   }
 
   /* Options view */
@@ -77,12 +78,13 @@ export default function (bundle, deps) {
     ];
 
     self.render = function () {
-      const {mode} = self.props;
+      const {canSelectMode, mode} = self.props;
       return (
-        <Panel header={'Entrée/Sortie/Terminal'}>
+        <Panel header={
+          canSelectMode ? 'Entrée/Sortie/Terminal' : 'Terminal'}>
           <div className="row">
             <div className="col-sm-12">
-              <form>
+              {canSelectMode && <form>
                 <label>
                   {"Mécanisme d'entrée/sortie : "}
                   <select value={mode} onChange={onModeChanged}>
@@ -90,7 +92,7 @@ export default function (bundle, deps) {
                       <option key={p.value} value={p.value}>{p.label}</option>)}
                   </select>
                 </label>
-              </form>
+              </form>}
               {mode === 'split' &&
                 <div>
                   <p>{"Entrée initiale : "}</p>
