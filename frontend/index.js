@@ -45,6 +45,8 @@ Codecast.start = function (options) {
 
   store.dispatch({type: scope.init});
 
+  store.dispatch({type: scope.modeChanged, mode: 'arduino'});
+
   const qs = queryString.parse(window.location.search);
 
   const stepperOptions = {

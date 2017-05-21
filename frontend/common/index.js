@@ -20,6 +20,11 @@ export default function (bundle) {
   bundle.include(ReplayBundle);
   bundle.include(RecordBundle);
 
+  bundle.defineAction('modeChanged', 'Mode.Changed');
+  bundle.addReducer('modeChanged', function (state, action) {
+    return state.set('mode', action.mode);
+  });
+
   bundle.include(MainView);
   bundle.include(fullscreen);
   bundle.include(buffers);
