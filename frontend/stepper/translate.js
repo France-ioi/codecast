@@ -194,13 +194,9 @@ const addNodeRanges = function (source, syntaxTree) {
   function traverse (node) {
     const newNode = node.slice();
     const attrs = node[1];
-    newNode[1] = {
-      ...attrs,
-      range: {
-        start: positions[attrs.begin],
-        end: positions[attrs.end]
-      }
-    };
+    const {begin, end} = attrs;
+    const range = begin && end && {start: positions[begin], end: positions[end]};
+    newNode[1] = {...attrs, range};
     newNode[2] = node[2].map(traverse);
     return newNode;
   }
