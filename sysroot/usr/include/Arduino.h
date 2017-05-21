@@ -49,6 +49,7 @@ void analogWrite(uint8_t, int);
 
 extern size_t Serial_print ();
 extern size_t Serial_println ();
+extern void Serial_write (uint8_t);
 
 #define DEC 10
 #define HEX 16
@@ -58,9 +59,11 @@ extern size_t Serial_println ();
 struct Serial_s {
   int available(void);
   size_t write(uint8_t);
+/* TODO
   size_t write(const char *str);
   size_t write(const uint8_t *buffer, size_t size);
   size_t write(const char *buffer, size_t size);
+*/
   size_t print(const char[]);
   size_t print(char);
   size_t print(unsigned char, int = DEC);

@@ -343,6 +343,10 @@ export default function (bundle, deps) {
       yield ['write', str];
     });
 
+    stepperApi.addBuiltin('Serial_write', function* (context, value) {
+      yield ['write', String.fromCharCode(value.toInteger())];
+    });
+
   })
 
 };
