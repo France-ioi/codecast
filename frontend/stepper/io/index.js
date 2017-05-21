@@ -167,6 +167,11 @@ export default function (bundle, deps) {
     recordApi.onStart(function* (init) {
       init.ioPaneMode = yield select(deps.getIoPaneMode)
     });
+    replayApi.on('start', function (context, event, instant) {
+      const {ioPaneMode} = event[2];
+      context.state = ioPaneModeChanged(context.state, {mode: ioPaneMode});
+    });
+
     replayApi.onReset(function* (instant) {
       const ioPaneMode = instant.state.get('ioPaneMode');
       yield put({type: deps.ioPaneModeChanged, mode: ioPaneMode});
