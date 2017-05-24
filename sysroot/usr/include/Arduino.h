@@ -42,10 +42,8 @@ extern void delay(int ms);
 void pinMode(uint8_t, uint8_t);
 void digitalWrite(uint8_t, uint8_t);
 int digitalRead(uint8_t);
-/*
 int analogRead(uint8_t);
-void analogWrite(uint8_t, int);
-*/
+/* void analogWrite(uint8_t, int); */
 
 extern size_t Serial_print ();
 extern size_t Serial_println ();
