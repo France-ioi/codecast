@@ -10,6 +10,21 @@ import {documentFromString} from '../buffers/document';
 const examples = [
 
   {
+    title: "analogRead",
+    source: [
+      "void setup() {",
+      "    pinMode(14, INPUT);",
+      "}",
+      "void loop() {",
+      "   int n = analogRead(14);",
+      "   Serial.println(n);",
+      "   delay(1000);",
+      "}",
+    ].join('\n'),
+    mode: 'arduino'
+  },
+
+  {
     title: "Serial.print",
     source: [
       "void setup() {",
