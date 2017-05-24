@@ -66,6 +66,7 @@ export default function (bundle, deps) {
       const showIO = options.get('showIO');
       const arduinoEnabled = options.get('arduino');
       const editorRowHeight = '300px';
+      const mode = arduinoEnabled ? 'arduino' : 'c_cpp';
       return (
         <div>
           <div className="row">
@@ -76,7 +77,7 @@ export default function (bundle, deps) {
             </div>}
             <div className={showStack ? "col-sm-9" : "col-sm-12"}>
               <Panel header={renderSourcePanelHeader()}>
-                <deps.BufferEditor buffer='source' readOnly={readOnly} shield={preventInput} mode='c_cpp' width='100%' height={editorRowHeight} />
+                <deps.BufferEditor buffer='source' readOnly={readOnly} shield={preventInput} mode={mode} width='100%' height={editorRowHeight} />
               </Panel>
             </div>
           </div>
