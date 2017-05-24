@@ -91,22 +91,3 @@ int main(void) {
   }
   return 0;
 }
-
-/*
-
-TODO: from HardwareSerial.h
-
-Serial.available()
-  return inputPos !== input.length
-Serial.begin(frequency)
-  nop
-char Serial.read()
-  effect getchar
-Serial.write(char)
-  effect write
-Serial.print(“text”)
-  effect write, arg has dynamic type
-Serial.print(integer)
-Serial.println(“text”)
-Serial.println(integer)
-*/
