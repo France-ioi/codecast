@@ -9,6 +9,7 @@ import link from 'epic-linker';
 import 'brace';
 import 'brace/worker/javascript';
 import 'brace/mode/c_cpp';
+import './arduino/ace';
 import 'brace/theme/github';
 import 'font-awesome/css/font-awesome.min.css';
 import 'rc-slider/dist/rc-slider.css';
