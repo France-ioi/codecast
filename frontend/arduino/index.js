@@ -25,6 +25,10 @@ import * as C from 'persistent-c';
 
 import './style.scss';
 
+const PINMODE_INPUT = 0;
+const PINMODE_OUTPUT = 1;
+const PINMODE_INPUT_PULLUP = 2;
+
 export default function (bundle, deps) {
 
   bundle.use('getStepperDisplay');
@@ -155,7 +159,9 @@ export default function (bundle, deps) {
     self.render = function () {
       const {index, defn, config, state} = self.props;
       const {peripheral} = config;
-      const level = state.dir === 0 ? 'Z' : (state.output === 0 ? '0' : '1');
+      const level = state.direction === PINMODE_INPUT
+        ? (state.output === 1 ? <strong>{'Z'}</strong> : 'Z')
+        : (state.output === 0 ? '0' : '1');
       return (
         <div className='arduino-port'>
           <PortHeader defn={defn} brief/>
@@ -301,36 +307,78 @@ export default function (bundle, deps) {
     });
 
     stepperApi.onInit(function (stepperState, globalState) {
+      const arduinoState = globalState.get('arduino');
       stepperState.ports = range(0, NPorts-1).map(function (index) {
-        return {dir: 0, output: 0, input: 0};
+        /* Copy peripheral config on stepper init. */
+        const peripheral = arduinoState.ports[index];
+        return {direction: 0, output: 0, input: 0, peripheral};
       });
     });
 
-    stepperApi.addBuiltin('pinMode', function* pinModeBuiltin (context, pin, dir) {
-      yield ['pinMode', pin, dir];
+    stepperApi.addBuiltin('pinMode', function* pinModeBuiltin (context, pin, mode) {
+      yield ['pinMode', pin.toInteger(), mode.toInteger()];
     });
-    stepperApi.onEffect('pinMode', function* pinModeEffect (context, pin, dir) {
-      const port = context.state.ports[pin];
+    stepperApi.onEffect('pinMode', function* pinModeEffect (context, pin, mode) {
+      let {direction, output} = context.state.ports[pin];
+      switch (mode) {
+        case PINMODE_INPUT:
+          direction = 0;
+          break;
+        case PINMODE_OUTPUT:
+          direction = 1;
+          break;
+        case PINMODE_INPUT_PULLUP:
+          direction = 0;
+          output = 1;
+          break;
+      }
       context.state = update(context.state,
-        {ports: {[pin]: {dir: {$set: dir.toInteger()}}}});
+        {ports: {[pin]: {
+          direction: {$set: direction},
+          output: {$set: output}
+        }}});
     });
 
     stepperApi.addBuiltin('digitalWrite', function* digitalWriteBuiltin (context, pin, level) {
-      yield ['digitalWrite', pin, level];
+      yield ['digitalWrite', pin.toInteger(), level.toInteger()];
     });
     stepperApi.onEffect('digitalWrite', function* digitalWriteEffect (context, pin, level) {
-      const ports = context.state;
-      const port = ports[pin];
+      const port = context.state.ports[pin];
       context.state = update(context.state,
-        {ports: {[pin]: {output: {$set: level.toInteger()}}}});
+        {ports: {[pin]: {
+          output: {$set: level}
+        }}});
     });
 
     stepperApi.addBuiltin('digitalRead', function* digitalReadBuiltin (context, pin) {
-      const level = yield ['digitalRead', pin];
+      const level = yield ['digitalRead', pin.toInteger()];
       yield ['result', new C.IntegralValue(C.builtinTypes['int'], level)];
     });
     stepperApi.onEffect('digitalRead', function* digitalReadEffect (context, pin) {
-      return context.state.ports[pin].input | 0;
+      const port = context.state[pin];
+      if (port.direction === 1) {
+        /* Pin configured as output, read driver level. */
+        return port.output;
+      }
+      /* TODO: read peripheral */
+      return (context.state.ports[pin].input >= 0.8) ? 1 : 0;
+    });
+
+    stepperApi.addBuiltin('analogRead', function* analogReadBuiltin (context, pin) {
+      const level = yield ['analogRead', pin.toInteger()];
+      yield ['result', new C.IntegralValue(C.builtinTypes['int'], level)];
+    });
+    stepperApi.onEffect('analogRead', function* analogReadEffect (context, pin) {
+      const port = context.state.ports[pin];
+      if (port.direction === 1) {
+        /* Pin configured as output, read 0. */
+        return 0;
+      }
+      if (port.peripheral.type === 'slider') {
+        return Math.round(port.input * 1023);
+      }
+      /* Assume no peripheral connected, read pull-up. */
+      return (port.output === 1 ? 1023 : 0);
     });
 
     stepperApi.addBuiltin('Serial_print', function* (context, value, base) {
