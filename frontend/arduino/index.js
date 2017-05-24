@@ -14,10 +14,10 @@ In the stepper state:
 */
 
 import React from 'react';
+import PropTypes from 'prop-types';
 import EpicComponent from 'epic-component';
 import {Button, FormControl, ControlLabel, FormGroup} from 'react-bootstrap';
 import classnames from 'classnames';
-import Slider from 'rc-slider';
 import range from 'node-range';
 import update from 'immutability-helper';
 import {call, select, put} from 'redux-saga/effects';
@@ -77,22 +77,31 @@ export default function (bundle, deps) {
       update(stepper, {ports: {[index]: changes}}));
   }
 
+  bundle.defineAction('arduinoPortSelected', 'Arduino.Port.Selected');
+  bundle.addReducer('arduinoPortSelected', arduinoPortSelected)
+  function arduinoPortSelected (state, action) {
+    const {index} = action;
+    return state.updateIn(['stepper', 'current'], stepper =>
+      update(stepper, {selectedPort: {$set: index}}));
+  }
+
   function ArduinoPanelSelector (state, props) {
     const arduinoState = state.get('arduino');
     const portDefns = PortDefns; /* should depend on arduinoState.hardware */
     const portConfigs = arduinoState.ports;
-    let portStates;
+    let portStates, selectedPort;
     const stepperState = deps.getStepperDisplay(state);
     if (stepperState) {
       portStates = stepperState.ports;
+      selectedPort = stepperState.selectedPort;
     }
-    return {portStates, portConfigs, portDefns};
+    return {portConfigs, portDefns, portStates, selectedPort};
   }
 
   bundle.defineView('ArduinoPanel', ArduinoPanelSelector, EpicComponent(self => {
 
     self.render = function () {
-      const {portStates, portConfigs, portDefns, preventInput, dispatch} = self.props;
+      const {portConfigs, portDefns, portStates, selectedPort, preventInput, dispatch} = self.props;
       if (!portStates) {
         return (
           <form>
@@ -112,10 +121,13 @@ export default function (bundle, deps) {
               const state = portStates[index];
               return (
                 <PortDisplay key={index} index={index} defn={defn} config={config} state={state}
+                  selected={selectedPort === index}
                   dispatch={dispatch} preventInput={preventInput} />
               );
             })}
           </div>
+          {selectedPort !== undefined && <SelectedPortPanel index={selectedPort} dispatch={dispatch} preventInput={preventInput}
+            defn={portDefns[selectedPort]} config={portConfigs[selectedPort]} state={portStates[selectedPort]} />}
         </form>
       );
     };
@@ -147,23 +159,32 @@ export default function (bundle, deps) {
 
   const PortDisplay = EpicComponent(self => {
     function onChange (changes) {
-      const {index} = self.props;
-      self.props.dispatch({type: deps.arduinoPortChanged, index, changes});
+      const {index, preventInput} = self.props;
+      if (!preventInput) {
+        self.props.dispatch({type: deps.arduinoPortChanged, index, changes});
+      }
     }
     function onButtonToggle () {
       const input = 1 ^ self.props.state.input;
       onChange({input: {$set: input}});
     }
-    function onSliderChange () {
+    function onSelect () {
+      let {index, preventInput, selected} = self.props;
+      if (!preventInput) {
+        self.props.dispatch({
+          type: deps.arduinoPortSelected,
+          index: selected ? undefined : index
+        });
+      }
     }
     self.render = function () {
-      const {index, defn, config, state} = self.props;
+      const {index, defn, config, state, selected} = self.props;
       const {peripheral} = config;
       const level = state.direction === PINMODE_INPUT
         ? (state.output === 1 ? <strong>{'Z'}</strong> : 'Z')
         : (state.output === 0 ? '0' : '1');
       return (
-        <div className='arduino-port'>
+        <div className={classnames(['arduino-port', selected && 'arduino-port-selected'])}>
           <PortHeader defn={defn} brief/>
           <div className='arduino-port-level'>{level}</div>
           {peripheral.type === 'LED' &&
@@ -179,7 +200,9 @@ export default function (bundle, deps) {
                 : <i className="fa fa-caret-up"/>}
             </div>}
           {peripheral.type === 'slider' &&
-            <div>{"TODO"}</div>}
+            <div className="arduino-slider" onClick={onSelect}>
+              {Math.round(state.input * 1023)}
+            </div>}
         </div>
       );
     };
@@ -199,7 +222,7 @@ export default function (bundle, deps) {
     };
   });
 
-  const peripheralTypes = ['none', 'LED', 'button', 'slider'];
+  const peripheralTypes = ['none', 'slider', 'LED', 'button'];
   const ledColors = ['red', 'amber', 'yellow', 'green', 'blue', 'white'];
   const peripheralDefault = {
     none: {type: 'none'},
@@ -257,20 +280,51 @@ export default function (bundle, deps) {
             </Button>
           </div>
           {value.type === 'none' &&
-            <p>none</p>}
+            <p>—</p>}
           {value.type === 'LED' &&
             <div className={classnames(['arduino-peri-led', readOnly || 'clickable'])} onClick={onSelectNextLedColor}>
               {"LED"}
               <i className='fa fa-circle' style={{color:colorToCss[value.color]}}/>
             </div>}
           {value.type === 'button' &&
-            <p>button</p>}
+            <p>BTN</p>}
           {value.type === 'slider' &&
-            <p>slider</p>}
+            <p>POT</p>}
         </div>
       );
     };
   });
+
+  const SelectedPortPanel = EpicComponent(self => {
+    function onChange (changes) {
+      const {index, preventInput} = self.props;
+      if (!preventInput) {
+        self.props.dispatch({type: deps.arduinoPortChanged, index, changes});
+      }
+    }
+    function onSliderChanged (event) {
+      onChange({input: {$set: event.currentTarget.value / 1023}});
+    }
+    function renderSlider () {
+      const value = Math.round(self.props.state.input * 1023);
+      return (
+        <div>
+          <input type="number" value={value} onChange={onSliderChanged}/>
+          <input type="range" value={value} min={0} max={1023} onChange={onSliderChanged}/>
+        </div>
+      );
+    }
+    self.render = function () {
+      const {index, state} = self.props;
+      return (
+        <div className="arduino-port-panel">
+          <p>Port {index}</p>
+          {state.peripheral.type === 'slider' && renderSlider()}
+        </div>
+      );
+    };
+  });
+
 
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 
@@ -306,11 +360,20 @@ export default function (bundle, deps) {
       context.state = arduinoPortChanged(context.state, {index, changes});
     });
 
+    recordApi.on(deps.arduinoPortSelected, function* (addEvent, action) {
+      const {index} = action;
+      yield call(addEvent, 'arduino.port.selected', index);
+    });
+    replayApi.on('arduino.port.selected', function (context, event, instant) {
+      const index = event[2];
+      context.state = arduinoPortSelected(context.state, {index});
+    });
+
     stepperApi.onInit(function (stepperState, globalState) {
       const arduinoState = globalState.get('arduino');
       stepperState.ports = range(0, NPorts-1).map(function (index) {
         /* Copy peripheral config on stepper init. */
-        const peripheral = arduinoState.ports[index];
+        const {peripheral} = arduinoState.ports[index];
         return {direction: 0, output: 0, input: 0, peripheral};
       });
     });

@@ -1,10 +1,23 @@
-
+.arduino-ports {
+  overflow: hidden;
+  float: left;
+}
+.arduino-port-panel {
+  overflow: hidden;
+  margin: 0 10px;
+}
+.arduino-ports, .arduino-port-panel {
+  min-height: 80px;
+}
 .arduino-port {
   float: left;
   margin: 0 3px;
   width: 32px;
   overflow: hidden;
   text-align: center;
+}
+.arduino-port-selected {
+  background: #eee;
 }
 .arduino-port > * {
   width: 100%;
@@ -16,6 +29,10 @@
   line-height: 18px;
   margin: 2px;
 }
+.arduino-slider {
+  font-size: 80%;
+  cursor: pointer;
+}
 .arduino-port-index {
   background-color: #0cc;
 }
@@ -24,10 +41,6 @@
 }
 .arduino-port-analog {
   background-color: #0c0;
-}
-.arduino-slider {
-  width: 100px;
-  height: 100px;
 }
 
 .arduino-peri-led i {
