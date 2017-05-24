@@ -1,0 +1,15 @@
+{
+  "configs": {
+    "base": {
+      "s3AccessKeyId": "@@ACCESS_KEY_ID@@",
+      "s3SecretAccessKey": "@@SECRET_ACCESS_KEY@@",
+      "s3Region": "@@REGION@@",
+      "s3Bucket": "@@BUCKET@@"
+    }
+  },
+  "tokens": {
+    "default": [
+      "base", {"uploadPath": "uploads"}
+    ]
+  }
+}
