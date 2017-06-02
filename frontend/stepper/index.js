@@ -423,6 +423,9 @@ export default function (bundle, deps) {
       yield call(addEvent, 'stepper.idle', context.stepCounter);
     });
     replayApi.on('stepper.idle', function (context, event, instant) {
+      /* Update the state with the current displayed state, to make user
+         interactions observable by the stepper. */
+      context.run.state = deps.getStepperDisplay(context.state);
       context.run = stepperApi.runToStep(context.run, event[2]);
       context.state = stepperIdle(context.state, {context: context.run});
       instant.range = getNodeRange(deps.getStepperDisplay(context.state));
@@ -433,6 +436,9 @@ export default function (bundle, deps) {
       yield call(addEvent, 'stepper.progress', context.stepCounter);
     });
     replayApi.on('stepper.progress', function (context, event, instant) {
+      /* Update the state with the current displayed state, to make user
+         interactions observable by the stepper. */
+      context.run.state = deps.getStepperDisplay(context.state);
       context.run = stepperApi.runToStep(context.run, event[2]);
       context.state = stepperProgress(context.state, {context: context.run});
       instant.range = getNodeRange(deps.getStepperDisplay(context.state));
