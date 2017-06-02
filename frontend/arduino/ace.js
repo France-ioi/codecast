@@ -12,28 +12,23 @@ var CstyleBehaviour = acequire("ace/mode/behaviour/cstyle").CstyleBehaviour;
 var CStyleFoldMode = acequire("ace/mode/folding/cstyle").FoldMode;
 
 function ArduinoHighlightRules () {
-    this.$rules = {
-        start: [{
-            include: "#special_block"
-        }, {
-            include: "source.c++"
-        }, {
-            token: "constant.c++.arduino",
-            regex: /\b(?:HIGH|LOW|INPUT|OUTPUT|DEC|BIN|HEX|OCT|BYTE|PI|HALF_PI|TWO_PI|LSBFIRST|MSBFIRST|CHANGE|FALLING|RISING|DEFAULT|EXTERNAL|INTERNAL|INTERNAL1V1|INTERNAL2V56|null)\b/
-        }, {
-            token: "storage.c++.arduino",
-            regex: /\b(?:boolean|byte|word)\b/
-        }, {
-            token: "support.function.c++.arduino",
-            regex: /\b(?:abs|acos|asin|atan|atan2|ceil|constrain|cos|degrees|exp|floor|log|map|max|min|radians|random|randomSeed|round|sin|sq|sqrt|tan|bitRead|bitWrite|bitSet|bitClear|bit|highByte|lowByte|analogReference|analogRead|analogWrite|attachInterrupt|detachInterrupt|delay|delayMicroseconds|digitalWrite|digitalRead|interrupts|millis|micros|noInterrupts|noTone|pinMode|pulseIn|shiftOut|tone|begin|end|read|print|println|available|flush|setup|loop)\b/
-        }, {
-            token: "support.class.c++.arduino",
-            regex: /\bSerial\d?\b/
-        }, {
-            token: "storage.modifier.c++.arduino",
-            regex: /\b(?:private|protected|public)/
-        }]
-    };
+    this.$rules = new c_cppHighlightRules().getRules();
+    this.$rules.start.unshift({
+        token: "constant.c++.arduino",
+        regex: /\b(?:HIGH|LOW|INPUT|OUTPUT|DEC|BIN|HEX|OCT|BYTE|PI|HALF_PI|TWO_PI|LSBFIRST|MSBFIRST|CHANGE|FALLING|RISING|DEFAULT|EXTERNAL|INTERNAL|INTERNAL1V1|INTERNAL2V56|null)\b/
+    }, {
+        token: "storage.c++.arduino",
+        regex: /\b(?:boolean|byte|word)\b/
+    }, {
+        token: "support.function.c++.arduino",
+        regex: /\b(?:abs|acos|asin|atan|atan2|ceil|constrain|cos|degrees|exp|floor|log|map|max|min|radians|random|randomSeed|round|sin|sq|sqrt|tan|bitRead|bitWrite|bitSet|bitClear|bit|highByte|lowByte|analogReference|analogRead|analogWrite|attachInterrupt|detachInterrupt|delay|delayMicroseconds|digitalWrite|digitalRead|interrupts|millis|micros|noInterrupts|noTone|pinMode|pulseIn|shiftOut|tone|begin|end|read|print|println|available|flush|setup|loop)\b/
+    }, {
+        token: "support.class.c++.arduino",
+        regex: /\bSerial\d?\b/
+    }, {
+        token: "storage.modifier.c++.arduino",
+        regex: /\b(?:private|protected|public)/
+    });
     this.normalizeRules();
 };
 ArduinoHighlightRules.metaData = {
