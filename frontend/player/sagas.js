@@ -307,7 +307,7 @@ export default function (bundle, deps) {
         const seekTo = player.get('seekTo');
         if (typeof seekTo === 'number') {
           const instant = findInstant(instants, seekTo);
-          yield call(resetToInstant, instant, seekTo, true);
+          yield call(resetToInstant, instant, seekTo, false);
           audio.currentTime = seekTo / 1000;
           yield put({type: deps.playerSeeked, current: instant, seekTo});
           continue;
