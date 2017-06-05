@@ -60,7 +60,7 @@ export default function (bundle, deps) {
     );
 
     self.render = function () {
-      const {diagnostics, readOnly, preventInput, error, options} = self.props;
+      const {diagnostics, readOnly, preventInput, haveStepper, error, options} = self.props;
       const showStack = options.get('showStack');
       const showViews = options.get('showViews');
       const showIO = options.get('showIO');
@@ -97,7 +97,12 @@ export default function (bundle, deps) {
           </div>}
           {arduinoEnabled && <div className="row">
             <div className="col-sm-12">
-              <Panel header={<span><i className="fa fa-microchip"/>{" arduino"}</span>}>
+              <Panel header={
+                <span>
+                  <i className="fa fa-microchip"/>
+                  {" Arduino"}
+                  {haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
+                </span>}>
                 <deps.ArduinoPanel preventInput={preventInput}/>
               </Panel>
             </div>
