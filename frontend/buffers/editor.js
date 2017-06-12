@@ -193,6 +193,17 @@ export const Editor = EpicComponent(self => {
       session.on("change", onTextChanged);
     }
     editor.renderer.on("afterRender", onAfterRender);
+    editor.commands.addCommand({
+      name: "escape",
+      bindKey: {
+        win: "Esc",
+        mac: "Esc",
+        sender: "htmleditor"
+      },
+      exec: function (editor) {
+        editor.blur();
+      }
+    });
     /* // Export ACE editors for debugging purposes:
     window.editors = window.editors || {};
     window.editors[buffer] = editor; */
