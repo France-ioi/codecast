@@ -52,7 +52,7 @@ const config = module.exports = {
       }
     }),
     new webpack.optimize.OccurrenceOrderPlugin(),
-    new webpack.NoErrorsPlugin(),
+    new webpack.NoEmitOnErrorsPlugin(),
     new webpack.optimize.CommonsChunkPlugin({
       name: "vendor",
       filename: "vendor.js",
