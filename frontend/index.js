@@ -1,4 +1,9 @@
 
+import 'es5-shim';
+import 'es6-shim';
+import 'array.prototype.fill'; // Array.prototype.fill
+import 'es6-symbol/implement'; // Symbol.iterator
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';

@@ -22,6 +22,7 @@
     "@tyriar/fibonacci-heap": "^1.0.10",
     "adt": "^0.7.2",
     "ansi-to-html": "^0.4.1",
+    "array.prototype.fill": "^1.0.2",
     "babel-core": "^6.23.1",
     "babel-loader": "^6.3.2",
     "babel-plugin-transform-object-rest-spread": "^6.23.0",
@@ -36,6 +37,9 @@
     "css-loader": "^0.26.1",
     "epic-component": "^1.1.2",
     "epic-linker": "^4.1.0",
+    "es5-shim": "^4.5.9",
+    "es6-shim": "^0.35.3",
+    "es6-symbol": "^3.1.1",
     "eventemitter2": "^3.0.0",
     "express": "^4.13.4",
     "file-loader": "^0.10.0",
@@ -71,5 +75,6 @@
     "webpack": "^2.2.1",
     "webpack-dev-middleware": "^1.10.0",
     "worker-loader": "^0.8.0"
-  }
+  },
+  "false": {}
 }
