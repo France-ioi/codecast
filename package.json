@@ -19,6 +19,7 @@
     "build": "NODE_ENV=production webpack --progress --colors --display-modules"
   },
   "dependencies": {
+    "@tyriar/fibonacci-heap": "^1.0.10",
     "adt": "^0.7.2",
     "ansi-to-html": "^0.4.1",
     "babel-core": "^6.23.1",
@@ -41,7 +42,6 @@
     "font-awesome": "^4.7.0",
     "immutability-helper": "^2.2.0",
     "immutable": "^3.8.1",
-    "js-data-structures": "^1.1.2",
     "lamejs": "^1.1.0",
     "lodash": "^4.17.4",
     "node-range": "^0.1.0",
