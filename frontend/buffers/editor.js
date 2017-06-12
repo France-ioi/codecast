@@ -193,8 +193,9 @@ export const Editor = EpicComponent(self => {
       session.on("change", onTextChanged);
     }
     editor.renderer.on("afterRender", onAfterRender);
+    /* // Export ACE editors for debugging purposes:
     window.editors = window.editors || {};
-    window.editors[buffer] = editor;
+    window.editors[buffer] = editor; */
     /* Force a resize, the editor will not work properly otherwise. */
     setTimeout(function () {
       editor.resize(true);
