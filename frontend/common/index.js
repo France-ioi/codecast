@@ -8,6 +8,7 @@ import fullscreen  from './fullscreen';
 import buffers from '../buffers/index';
 import errors from './errors';
 import resize from './resize';
+import MenuBundle from './menu';
 import examples from './examples';
 import ArduinoBundle from '../arduino/index';
 import ReplayBundle from '../player/replay';
@@ -30,6 +31,7 @@ export default function (bundle) {
   bundle.include(buffers);
   bundle.include(errors);
   bundle.include(resize);
+  bundle.include(MenuBundle);
   bundle.include(examples);
   bundle.include(ArduinoBundle);
 
