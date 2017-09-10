@@ -345,6 +345,7 @@ export default function (bundle, deps) {
             break;
         }
       } catch (ex) {
+        console.log('caught', ex);
         if (ex.context) {
           context = ex.context;
         }
