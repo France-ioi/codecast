@@ -59,17 +59,14 @@ export default function (bundle, deps) {
       const {context} = yield take(deps.recorderReady);
       // Wait for recording to actually start.
       yield take(deps.recorderStarted);
-      console.log('recorderStarted');
       // Start buffering actions.
       const channel = yield actionChannel(pattern);
       let done = false;
       while (!done) {
         const action = yield take(channel);
-        console.log('recording', action);
         const timestamp = Math.round(context.audioContext.currentTime * 1000);
         function* addEvent (name, ...args) {
           const event = [timestamp, name, ...args];
-          console.log('addEvent', event);
           yield put({type: deps.recorderAddEvent, event});
           if (name === 'end') {
             done = true;
