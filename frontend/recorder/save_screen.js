@@ -106,8 +106,9 @@ export default function (bundle, deps) {
   });
 
   bundle.defineSelector('SaveScreenSelector', function (state, props) {
+    const getMessage = state.get('getMessage');
     const save = state.get('save')
-    const result = {};
+    const result = {getMessage};
     ['audioUrl', 'wavAudioUrl', 'eventsUrl', 'playerUrl', 'busy', 'done', 'prepare', 'uploadEvents', 'uploadAudio', 'error'].forEach(function (key) {
       result[key] = save.get(key);
     })
@@ -121,7 +122,7 @@ export default function (bundle, deps) {
     };
 
     self.render = function () {
-      const {audioUrl, wavAudioUrl, eventsUrl, playerUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = self.props;
+      const {getMessage, audioUrl, wavAudioUrl, eventsUrl, playerUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = self.props;
       return (
         <form>
           <FormGroup controlId="eventsUrlInput">
@@ -146,14 +147,14 @@ export default function (bundle, deps) {
                     : <i className="fa fa-floppy-o"/>)}
             </Button>
           </p>
-          {prepare === 'pending' && <p>Préparation de l'enregistrement…</p>}
-          {uploadEvents === 'pending' && <p>Envoi des évènements en cours…</p>}
-          {uploadAudio === 'pending' && <p>Envoi de l'audio en cours…</p>}
-          {error && <p>Une erreur est survenue lors de l'enregistrement.</p>}
-          {done && <p>Enregistrement terminé !</p>}
+          {prepare === 'pending' && <p>{getMessage('PREPARING_RECORDING')}</p>}
+          {uploadEvents === 'pending' && <p>{getMessage('UPLOADING_EVENTS')}</p>}
+          {uploadAudio === 'pending' && <p>{getMessage('UPLOADING_AUDIO')}</p>}
+          {error && <p>{getMessage('UPLOADING_ERROR')}</p>}
+          {done && <p>{getMessage('UPLOADING_COMPLETE')}</p>}
           {done &&
             <FormGroup controlId="playerUrlInput">
-              <ControlLabel>{"Lien pour la lecture"}</ControlLabel>
+              <ControlLabel>{getMessage('PLAYBACK_LINK')}</ControlLabel>
               <FormControl type="text" value={playerUrl} readOnly/>
             </FormGroup>}
         </form>

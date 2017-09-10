@@ -12,6 +12,7 @@ export default function (bundle, deps) {
   );
 
   bundle.defineSelector('RecorderControlsSelector', function (state, props) {
+    const getMessage = state.get('getMessage');
     const recorder = state.get('recorder');
     const status = recorder.get('status');
     const canStart = status === 'ready';
@@ -22,7 +23,7 @@ export default function (bundle, deps) {
     const events = recorder.get('events');
     const eventCount = events && events.count();
     const isTranslated = deps.isTranslated(state);
-    return {canStart, canStop, canPause, isRecording, isTranslated, elapsed, eventCount};
+    return {getMessage, canStart, canStop, canPause, isRecording, isTranslated, elapsed, eventCount};
   });
 
   bundle.defineView('RecorderControls', 'RecorderControlsSelector', EpicComponent(self => {
@@ -50,7 +51,7 @@ export default function (bundle, deps) {
     };
 
     self.render = function () {
-      const {canStart, canStop, canPause, isRecording, isTranslated, elapsed} = self.props;
+      const {getMessage, canStart, canStop, canPause, isRecording, isTranslated, elapsed} = self.props;
       return (
         <div className="pane pane-controls clearfix">
           <div className="pane-controls-right">
@@ -62,8 +63,8 @@ export default function (bundle, deps) {
               <div>
                 <Button onClick={onStartRecording} className="float-left">
                   <i className="fa fa-circle" style={{color: '#a01'}}/>
-                  </Button>
-                {" démarrer un enregistrement"}
+                </Button>
+                {" "}{getMessage('START_RECORDING')}
               </div>}
             {canStop &&
               <Button onClick={onStopRecording}>

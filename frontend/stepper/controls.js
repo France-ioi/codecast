@@ -21,6 +21,7 @@ export default function (bundle, deps) {
 
   function StepperControlsSelector (state, props) {
     const {enabled} = props;
+    const getMessage = state.get('getMessage');
     const options = deps.getStepperOptions(state);
     let showTranslate, showControls, showExit;
     let canTranslate, canExit, canRestart, canStep, canStepOut, canInterrupt, canUndo, canRedo;
@@ -53,6 +54,7 @@ export default function (bundle, deps) {
       }
     }
     const result = {
+      getMessage,
       showControls,
       showExit, canExit,
       showTranslate, canTranslate,
@@ -140,43 +142,44 @@ export default function (bundle, deps) {
       const showStepper = p.options && p.options.get('showStepper');
       if (!showStepper)
         return false;
+      const {getMessage} = self.props;
       return (
         <div className="controls controls-stepper">
           {p.showControls && <ButtonGroup className="controls-stepper-execution" style={{width: controlsWidth}}>
-            <Button onClick={onStepRun} disabled={btnDisabled('run')} bsStyle={btnStyle('run')} title="run">
+            <Button onClick={onStepRun} disabled={btnDisabled('run')} bsStyle={btnStyle('run')} title={getMessage('CONTROL_RUN')}>
               <i className="fa fa-play"/>
             </Button>
-            <Button onClick={onStepExpr} disabled={btnDisabled('expr')} bsStyle={btnStyle('expr')} title="next expression">
+            <Button onClick={onStepExpr} disabled={btnDisabled('expr')} bsStyle={btnStyle('expr')} title={getMessage('CONTROL_EXPR')}>
               <i className="fi fi-step-expr"/>
             </Button>
-            <Button onClick={onStepInto} disabled={btnDisabled('into')} bsStyle={btnStyle('into')} title="step into">
+            <Button onClick={onStepInto} disabled={btnDisabled('into')} bsStyle={btnStyle('into')} title={getMessage('CONTROL_INTO')}>
               <i className="fi fi-step-into"/>
             </Button>
-            <Button onClick={onStepOut} disabled={btnDisabled('out')} bsStyle={btnStyle('out')} title="step out">
+            <Button onClick={onStepOut} disabled={btnDisabled('out')} bsStyle={btnStyle('out')} title={getMessage('CONTROL_OUT')}>
               <i className="fi fi-step-out"/>
             </Button>
-            <Button onClick={onStepOver} disabled={btnDisabled('over')} bsStyle={btnStyle('over')} title="step over">
+            <Button onClick={onStepOver} disabled={btnDisabled('over')} bsStyle={btnStyle('over')} title={getMessage('CONTROL_OVER')}>
               <i className="fi fi-step-over"/>
             </Button>
-            <Button onClick={onInterrupt} disabled={btnDisabled('interrupt')} bsStyle={btnStyle('interrupt')} title="interrupt">
+            <Button onClick={onInterrupt} disabled={btnDisabled('interrupt')} bsStyle={btnStyle('interrupt')} title={getMessage('CONTROL_INTERRUPT')}>
               <i className="fi fi-interrupt"/>
             </Button>
-            <Button onClick={onRestart} disabled={btnDisabled('restart')} bsStyle={btnStyle('restart')} title="restart">
+            <Button onClick={onRestart} disabled={btnDisabled('restart')} bsStyle={btnStyle('restart')} title={getMessage('CONTROL_RESTART')}>
               <i className="fi fi-restart"/>
             </Button>
-            <Button onClick={onUndo} disabled={btnDisabled('undo')} bsStyle={btnStyle('undo')} title="undo">
+            <Button onClick={onUndo} disabled={btnDisabled('undo')} bsStyle={btnStyle('undo')} title={getMessage('CONTROL_UNDO')}>
               <i className="fa fa-rotate-left"/>
             </Button>
-            <Button onClick={onRedo} disabled={btnDisabled('redo')} bsStyle={btnStyle('redo')} title="redo">
+            <Button onClick={onRedo} disabled={btnDisabled('redo')} bsStyle={btnStyle('redo')} title={getMessage('CONTROL_REDO')}>
               <i className="fa fa-rotate-right"/>
             </Button>
           </ButtonGroup>}
           {p.showControls || <div className="controls-stepper-execution">
-            <p>Édition en cours</p>
+            <p>{getMessage('EDITING')}</p>
           </div>}
           <div className="controls-translate">
-            {p.showExit && <Button onClick={onEdit} disabled={!p.canExit}>éditer</Button>}
-            {p.showTranslate && <Button onClick={onTranslate} disabled={!p.canTranslate} bsStyle='primary'>compiler</Button>}
+            {p.showExit && <Button onClick={onEdit} disabled={!p.canExit}>{getMessage('EDIT')}</Button>}
+            {p.showTranslate && <Button onClick={onTranslate} disabled={!p.canTranslate} bsStyle='primary'>{getMessage('COMPILE')}</Button>}
           </div>
         </div>
       );

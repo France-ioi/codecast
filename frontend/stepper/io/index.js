@@ -73,12 +73,12 @@ export default function (bundle, deps) {
     }
 
     const modeOptions = [
-      {value: 'split', label: "Entrée/sortie séparés"},
-      {value: 'terminal', label: "Terminal interactif"}
+      {value: 'split', label: 'IOPANE_MODE_SPLIT'},
+      {value: 'terminal', label: 'IOPANE_MODE_INTERACTIVE'}
     ];
 
     self.render = function () {
-      const {canSelectMode, mode} = self.props;
+      const {getMessage, canSelectMode, mode} = self.props;
       return (
         <Panel header={
           canSelectMode ? 'Entrée/Sortie/Terminal' : 'Terminal'}>
@@ -86,16 +86,16 @@ export default function (bundle, deps) {
             <div className="col-sm-12">
               {canSelectMode && <form>
                 <label>
-                  {"Mécanisme d'entrée/sortie : "}
+                  {getMessage('IOPANE_MODE')}{" "}
                   <select value={mode} onChange={onModeChanged}>
                     {modeOptions.map(p =>
-                      <option key={p.value} value={p.value}>{p.label}</option>)}
+                      <option key={p.value} value={p.value}>{getMessage(p.label)}</option>)}
                   </select>
                 </label>
               </form>}
               {mode === 'split' &&
                 <div>
-                  <p>{"Entrée initiale : "}</p>
+                  <p>{getMessage('IOPANE_INITIAL_INPUT')}</p>
                   <deps.BufferEditor buffer='input' mode='text' width='100%' height='150px' />
                 </div>}
             </div>
@@ -107,8 +107,9 @@ export default function (bundle, deps) {
   }));
 
   function IOPaneOptionsSelector (state) {
+    const getMessage = state.get('getMessage');
     const mode = deps.getIoPaneMode(state);
-    return {mode};
+    return {getMessage, mode};
   }
 
   /* Split input/output view */

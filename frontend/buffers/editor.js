@@ -228,12 +228,12 @@ export const Editor = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {width, height, shield} = self.props;
+    const {width, height, shield, getMessage} = self.props;
     return (
       <div className="editor" style={{width: width, height: height}}>
         <div className="editor-frame" ref={refEditor}/>
         <div className={classnames(['editor-shield', shield && 'editor-shield-up'])}
-          title="le programme ne peut pas être modifié pendant qu'il s'exécute"/>
+          title={getMessage('PROGRAM_CANNOT_BE_MODIFIED_WHILE_RUNNING')}/>
       </div>
     );
   };

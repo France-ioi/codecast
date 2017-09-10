@@ -27,8 +27,9 @@ export default function (bundle, deps) {
   });
 
   bundle.defineSelector('ErrorViewSelector', function (state, props) {
+    const getMessage = state.get('getMessage');
     const error = state.get('error');
-    return {error};
+    return {getMessage, error};
   });
 
   bundle.defineView('ErrorView', 'ErrorViewSelector', EpicComponent(self => {
@@ -38,7 +39,7 @@ export default function (bundle, deps) {
     };
 
     self.render = function () {
-      const {error} = self.props;
+      const {error, getMessage} = self.props;
       if (!error) {
         return false;
       }
@@ -46,7 +47,7 @@ export default function (bundle, deps) {
         <div className="row">
           <div className="col-sm-12">
             <Alert bsStyle="danger" onDismiss={onClearError}>
-              <h4>Une erreur est survenue !</h4>
+              <h4>{getMessage('AN_ERROR_OCCURRED')}</h4>
               <p>{error.toString()}</p>
             </Alert>
           </div>

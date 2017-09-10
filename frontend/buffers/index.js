@@ -186,7 +186,6 @@ export default function (bundle, deps) {
 
     const onScroll = function (firstVisibleRow) {
       const {dispatch, buffer} = self.props;
-      console.log('scroll', firstVisibleRow);
       dispatch({type: deps.bufferScroll, buffer, firstVisibleRow});
     };
 
@@ -197,7 +196,8 @@ export default function (bundle, deps) {
   }));
 
   function BufferEditorSelector (state, props) {
-    return {};
+    const getMessage = state.get('getMessage');
+    return {getMessage};
   }
 
   bundle.defer(function ({recordApi, replayApi}) {

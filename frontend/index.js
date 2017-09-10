@@ -27,6 +27,7 @@ import {default as commonComponent, interpretQueryString} from './common/index';
 import SandboxBundle from './sandbox/index';
 import RecorderBundle from './recorder/index';
 import PlayerBundle from './player/index';
+import LangBundle from './lang/index';
 
 const {store, scope, finalize, start} = link(function (bundle, deps) {
 
@@ -38,6 +39,7 @@ const {store, scope, finalize, start} = link(function (bundle, deps) {
   bundle.include(SandboxBundle);
   bundle.include(RecorderBundle);
   bundle.include(PlayerBundle);
+  bundle.include(LangBundle);
 
   // bundle.addEnhancer(DevTools.instrument());
 
@@ -50,6 +52,7 @@ const Codecast = window.Codecast = {store, scope};
 Codecast.start = function (options) {
 
   store.dispatch({type: scope.init});
+  store.dispatch({type: scope.setLanguage, language: 'fr-FR'});
 
   store.dispatch({type: scope.modeChanged, mode: 'arduino'});
 

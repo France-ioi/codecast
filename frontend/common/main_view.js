@@ -13,13 +13,14 @@ export default function (bundle, deps) {
   );
 
   function MainViewSelector (state, props) {
+    const getMessage = state.get('getMessage');
     const diagnostics = deps.getTranslateDiagnostics(state);
     const stepperDisplay = deps.getStepperDisplay(state);
     const haveStepper = !!stepperDisplay;
     const error = haveStepper && stepperDisplay.error;
     const readOnly = haveStepper || props.preventInput;
     const options = deps.getStepperOptions(state);
-    return {diagnostics, haveStepper, readOnly, error, options};
+    return {diagnostics, haveStepper, readOnly, error, options, getMessage};
   }
 
   bundle.defineView('MainView', MainViewSelector, EpicComponent(self => {
@@ -33,45 +34,44 @@ export default function (bundle, deps) {
     };
 
     const renderSourcePanelHeader = function () {
+      const {haveStepper, getMessage} = self.props;
       return (
         <span>
-          {'Source'}
-          {self.props.haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
+          {getMessage('SOURCE')}
+          {haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
         </span>
       );
     };
 
-    const diagnosticsPanelHeader = (
-      <div>
-        <div className="pull-right">
-          <Button className="close" onClick={onClearDiagnostics}>×</Button>
-        </div>
-        <span>Messages</span>
-      </div>
-    );
-
-    const stepperErrorPanelHeader = (
-      <div>
-        <div className="pull-right">
-          <Button className="close" onClick={onStepperExit}>×</Button>
-        </div>
-        <span>Erreur</span>
-      </div>
-    );
-
     self.render = function () {
-      const {diagnostics, readOnly, preventInput, haveStepper, error, options} = self.props;
+      const {diagnostics, readOnly, preventInput, haveStepper, error, options, getMessage} = self.props;
       const showStack = options.get('showStack');
       const showViews = options.get('showViews');
       const showIO = options.get('showIO');
       const arduinoEnabled = options.get('arduino');
       const editorRowHeight = '300px';
       const mode = arduinoEnabled ? 'arduino' : 'c_cpp';
+      const diagnosticsPanelHeader = (
+        <div>
+          <div className="pull-right">
+            <Button className="close" onClick={onClearDiagnostics}>×</Button>
+          </div>
+          <span>{getMessage('MESSAGES')}</span>
+        </div>
+      );
+      const stepperErrorPanelHeader = (
+        <div>
+          <div className="pull-right">
+            <Button className="close" onClick={onStepperExit}>×</Button>
+          </div>
+          <span>{getMessage('ERROR')}</span>
+        </div>
+      );
       return (
         <div>
           <div className="row">
             {showStack && <div className="col-sm-3">
-              <Panel header={<span>Variables</span>}>
+              <Panel header={<span>{getMessage('VARIABLES')}</span>}>
                 {<deps.StackView height={editorRowHeight}/>}
               </Panel>
             </div>}

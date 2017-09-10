@@ -38,7 +38,7 @@ import {
   getNumber, getIdent, getList, renderArrow, renderValue, evalExpr,
   highlightColors} from './utils';
 import {getCursorMap, finalizeCursors} from './array_utils';
-import {enumerateHeapBlocks} from '..//heap';
+import {enumerateHeapBlocks} from '../heap';
 
 const List = adt.data(function () {
   return {
@@ -723,7 +723,7 @@ export const MemoryView = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {Frame, controls, directive, frames, context, scale} = self.props;
+    const {Frame, controls, directive, frames, context, scale, getMessage} = self.props;
     const localMap = frames[0].get('localMap');
     const {byName, byPos} = directive;
     const extraExprs = getList(byName.extras, []);
@@ -772,10 +772,10 @@ export const MemoryView = EpicComponent(self => {
             </Slider>
           </div>
           <ButtonGroup>
-            <Button onClick={onShiftLeft} title="shift view to the left">
+            <Button onClick={onShiftLeft} title={getMessage('MEMORY_SHIFT_VIEW_LEFT')}>
               <i className="fa fa-arrow-left"/>
             </Button>
-            <Button onClick={onShiftRight} title="shift view to the right">
+            <Button onClick={onShiftRight} title={getMessage('MEMORY_SHIFT_VIEW_RIGHT')}>
               <i className="fa fa-arrow-right"/>
             </Button>
           </ButtonGroup>

@@ -15,11 +15,12 @@ export default function (bundle, deps) {
 
   bundle.use('stepperViewControlsChanged', 'getStepperDisplay');
 
-  bundle.defineSelector('DirectivesPaneSelector', function (state, props) {
+  function DirectivesPaneSelector (state, props) {
+    const getMessage = state.get('getMessage');
     const stepperState = deps.getStepperDisplay(state);
     const scale = state.get('scale');
-    return {state: stepperState, scale};
-  });
+    return {state: stepperState, scale, getMessage};
+  }
 
   const DirectiveFrame = EpicComponent(self => {
 
@@ -61,7 +62,7 @@ export default function (bundle, deps) {
 
   });
 
-  bundle.defineView('DirectivesPane', 'DirectivesPaneSelector', EpicComponent(self => {
+  bundle.defineView('DirectivesPane', DirectivesPaneSelector, EpicComponent(self => {
 
     const directiveViewDict = {
       showVar: ShowVar,
@@ -93,7 +94,7 @@ export default function (bundle, deps) {
     };
 
     self.render = function () {
-      const {state, scale} = self.props;
+      const {state, scale, getMessage} = self.props;
       if (!state || !state.analysis) {
         return false;
       }
@@ -119,7 +120,7 @@ export default function (bundle, deps) {
         return (
           <View Frame={DirectiveFrame} directive={directive} controls={directiveControls}
             frames={framesMap[key]} context={context}
-            onChange={onControlsChange} scale={scale} />);
+            onChange={onControlsChange} scale={scale} getMessage={getMessage} />);
       };
 
       return (

@@ -287,9 +287,9 @@ export default function (bundle, deps) {
               <i className='fa fa-circle' style={{color:colorToCss[value.color]}}/>
             </div>}
           {value.type === 'button' &&
-            <p>BTN</p>}
+            <p>{"BTN"}</p>}
           {value.type === 'slider' &&
-            <p>POT</p>}
+            <p>{"POT"}</p>}
         </div>
       );
     };

@@ -13,12 +13,13 @@ export default function (bundle, deps) {
   );
 
   bundle.defineSelector('PlayerControlsSelector', function (state, props) {
+    const getMessage = state.get('getMessage');
     const player = deps.getPlayerState(state);
     const status = player.get('status');
     const audioTime = player.get('audioTime');
     const duration = player.get('duration');
     const isTranslated = deps.isTranslated(state);
-    return {status, audioTime, duration, isTranslated};
+    return {getMessage, status, audioTime, duration, isTranslated};
   });
 
   bundle.defineView('PlayerControls', 'PlayerControlsSelector', EpicComponent(self => {
@@ -51,7 +52,7 @@ export default function (bundle, deps) {
     };
 
     self.render = function () {
-      const {status, audioTime, duration, isTranslated} = self.props;
+      const {status, audioTime, duration, isTranslated, getMessage} = self.props;
       const showStartPlayback = /preparing|starting|ready|paused/.test(status);
       const canStartPlayback = /ready|paused/.test(status);
       const showPausePlayback = /playing|pausing/.test(status);
@@ -66,11 +67,13 @@ export default function (bundle, deps) {
           <div className="controls controls-main">
             <div className="player-controls-playback">
               {showStartPlayback &&
-                  <Button onClick={onStartPlayback} disabled={!canStartPlayback} title="lecture des explications">
+                  <Button onClick={onStartPlayback} disabled={!canStartPlayback}
+                    title={getMessage('START_PLAYBACK')}>
                     <i className="fa fa-play"/>
                   </Button>}
               {showPausePlayback &&
-                <Button onClick={onPausePlayback} disabled={!canPausePlayback} title="pause des explications">
+                <Button onClick={onPausePlayback} disabled={!canPausePlayback}
+                  title={getMessage('PAUSE_PLAYBACK')}>
                   <i className="fa fa-pause"/>
                 </Button>}
             </div>

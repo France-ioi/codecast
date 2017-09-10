@@ -31,10 +31,11 @@ export default function (bundle, deps) {
   });
 
   bundle.defineSelector('FullscreenButtonSelector', function (state, props) {
+    const getMessage = state.get('getMessage');
     const fullscreen = state.get('fullscreen');
     const enabled = fullscreen.get('enabled');
     const active = fullscreen.get('active');
-    return {enabled, active};
+    return {enabled, active, getMessage};
   });
 
   bundle.defineView('FullscreenButton', 'FullscreenButtonSelector', EpicComponent(self => {
@@ -45,8 +46,8 @@ export default function (bundle, deps) {
       self.props.dispatch({type: deps.leaveFullscreen});
     };
     self.render = function () {
-      const {enabled, active} = self.props;
-      const tooltip = active ? "sortie de plein-écran" : "plein écran";
+      const {enabled, active, getMessage} = self.props;
+      const tooltip = getMessage(active ? 'EXIT_FULLSCREEN' : 'FULLSCREEN');
       return (
         <Button onClick={active ? onLeaveFullscreen : onEnterFullscreen} disabled={!enabled} title={tooltip}>
           <i className={active ? "fa fa-compress" : "fa fa-expand"}/>

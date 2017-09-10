@@ -6,18 +6,23 @@ export default function (bundle, deps) {
 
   bundle.use('RecorderControls', 'MainView');
 
-  bundle.defineView('RecordScreen', EpicComponent(self => {
+  function RecordScreenSelector (state, props) {
+    const getMessage = state.get('getMessage');
+    return {getMessage};
+  }
 
-    const recordingPanel = function () {
-      return (
-        <div className="row">
-          <div className="col-sm-12">
-            <p>Encodage en cours, veuillez patienter.</p>
-          </div>
-        </div>);
-    };
+  bundle.defineView('RecordScreen', RecordScreenSelector, EpicComponent(self => {
 
     self.render = function () {
+      const {getMessage} = self.props;
+      if (false) {  // TODO: test if encoding
+        return (
+          <div className="row">
+            <div className="col-sm-12">
+              <p>{getMessage('ENCODING_IN_PROGRESS')}</p>
+            </div>
+          </div>);
+      }
       return (
         <div>
           <div className="row">
