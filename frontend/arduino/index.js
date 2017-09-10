@@ -376,6 +376,7 @@ export default function (bundle, deps) {
         const {peripheral} = arduinoState.ports[index];
         return {direction: 0, output: 0, input: 0, peripheral};
       });
+      stepperState.serial = {speed: false};
     });
 
     stepperApi.addBuiltin('pinMode', function* pinModeBuiltin (context, pin, mode) {
@@ -444,18 +445,32 @@ export default function (bundle, deps) {
       return (port.output === 1 ? 1023 : 0);
     });
 
+    stepperApi.addBuiltin('Serial_begin', function* (context, speed) {
+      yield ['serialBegin', speed.toInteger()];
+    });
+    stepperApi.onEffect('serialBegin', function* (context, speed) {
+      context.state = update(context.state,
+        {serial: {speed: {$set: speed}}});
+    });
+
     stepperApi.addBuiltin('Serial_print', function* (context, value, base) {
       const str = stringifyValue(context.state.core, value, base);
-      yield ['write', str];
+      if (context.state.serial.speed) {
+        yield ['write', str];
+      }
     });
 
     stepperApi.addBuiltin('Serial_println', function* (context, value, base) {
       const str = stringifyValue(context.state.core, value, base) + '\n';
-      yield ['write', str];
+      if (context.state.serial.speed) {
+        yield ['write', str];
+      }
     });
 
     stepperApi.addBuiltin('Serial_write', function* (context, value) {
-      yield ['write', String.fromCharCode(value.toInteger())];
+      if (context.state.serial.speed) {
+        yield ['write', String.fromCharCode(value.toInteger())];
+      }
     });
 
   })

@@ -45,6 +45,7 @@ int digitalRead(uint8_t);
 int analogRead(uint8_t);
 /* void analogWrite(uint8_t, int); */
 
+extern void Serial_begin (unsigned);
 extern size_t Serial_print ();
 extern size_t Serial_println ();
 extern void Serial_write (uint8_t);
@@ -55,6 +56,7 @@ extern void Serial_write (uint8_t);
 #define BIN 2
 
 struct Serial_s {
+  void begin(unsigned speed);
   int available(void);
   size_t write(uint8_t);
 /* TODO
