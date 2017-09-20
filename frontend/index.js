@@ -46,7 +46,7 @@ const {store, scope, finalize, start} = link(function (bundle, deps) {
 
   // bundle.addEnhancer(DevTools.instrument());
 
-}/*, {reduxSaga: {sagaMonitor}*/});
+}/*, {reduxSaga: {sagaMonitor}}*/);
 finalize(scope);
 
 /* In-browser API */
