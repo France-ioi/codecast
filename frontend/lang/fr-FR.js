@@ -38,4 +38,6 @@ module.exports = {
   CONTROL_REDO: "refaire",
   PROGRAM_STOPPED: "Programme arrêté.",
   MENU_TOOLTIP: "Réglages",
+  'LANGUAGE:': "Langue : ",
+  'LOAD_EXAMPLE:': "Charger un exemple : ",
 };

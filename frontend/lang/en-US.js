@@ -37,5 +37,7 @@ module.exports = {
   CONTROL_UNDO: "undo",
   CONTROL_REDO: "redo",
   PROGRAM_STOPPED: "Program stopped.",
-  MENU_TOOLTIP: "Settigns",
+  MENU_TOOLTIP: "Settings",
+  'LANGUAGE:': "Language: ",
+  'LOAD_EXAMPLE:': "Load example: ",
 };

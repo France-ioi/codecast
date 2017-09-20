@@ -24,7 +24,7 @@ export default function (bundle, deps) {
           <ButtonGroup>
             <deps.FullscreenButton/>
             <Portal closeOnEsc closeOnOutsideClick openByClickOn={menuButton}>
-              <MenuPopup dispatch={dispatch} canSelectExample={!isTranslated}/>
+              <MenuPopup getMessage={getMessage} dispatch={dispatch} canSelectExample={!isTranslated}/>
             </Portal>
           </ButtonGroup>
         </div>
@@ -34,7 +34,7 @@ export default function (bundle, deps) {
 
   class MenuPopup extends React.PureComponent {
     render() {
-      const {canSelectExample} = this.props;
+      const {getMessage, canSelectExample} = this.props;
       return (
         <div className='menu-popup' onClick={this.close}>
           <div className='menu-popup-inset' onClick={this.stopPropagation}>
@@ -44,12 +44,12 @@ export default function (bundle, deps) {
               </Button>
             </div>
             <div>
-              {"Langue : "}
+              {getMessage('LANGUAGE:')}
               <button type='button' className='btn' data-language='fr-FR' onClick={this.onSetLanguage}>{"fr-FR"}</button>
               <button type='button' className='btn' data-language='en-US' onClick={this.onSetLanguage}>{"en-US"}</button>
             </div>
             <div>
-              {"Charger un exemple : "}
+              {getMessage('LOAD_EXAMPLE:')}
               <deps.ExamplePicker disabled={!canSelectExample} onSelect={this.onSelectExample} />
             </div>
           </div>
