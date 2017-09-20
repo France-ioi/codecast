@@ -40,7 +40,6 @@ export default function (bundle, deps) {
 
   function IOPaneSelector (state, props) {
     const stepper = deps.getStepperDisplay(state);
-    const canSelectMode = false; /* TODO: false if mode is arduino */
     let mode = 'options';
     if (stepper) {
       if (stepper.terminal) {
@@ -49,7 +48,7 @@ export default function (bundle, deps) {
         mode = 'split';
       }
     }
-    return {mode, canSelectMode};
+    return {mode};
   }
 
   /* Options view */
@@ -109,7 +108,9 @@ export default function (bundle, deps) {
   function IOPaneOptionsSelector (state) {
     const getMessage = state.get('getMessage');
     const mode = deps.getIoPaneMode(state);
-    return {getMessage, mode};
+    /* Arduino mode cannot select IO mode. */
+    const canSelectMode = state.get('mode') !== 'arduino';
+    return {getMessage, mode, canSelectMode};
   }
 
   /* Split input/output view */
