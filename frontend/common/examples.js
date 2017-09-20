@@ -4,6 +4,7 @@ import {take, put, select, call} from 'redux-saga/effects';
 import React from 'react';
 import {Nav, NavDropdown, MenuItem} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
+import Select from 'react-select';
 
 import {documentFromString} from '../buffers/document';
 
@@ -543,24 +544,19 @@ export default function (bundle, deps) {
     return {examples};
   }
 
-  bundle.defineView('ExamplePicker', ExamplePickerSelector, EpicComponent(self => {
+  bundle.defineView('ExamplePicker', ExamplePickerSelector, class ExamplePicker extends React.PureComponent {
 
-    const onSelectExample = function (i) {
-      const example = self.props.examples[i];
-      self.props.dispatch({type: deps.exampleSelected, example});
+    render () {
+      const {examples, disabled} = this.props;
+      const exampleOptions = examples.map((example) =>
+        ({label: example.title, value: example}));
+      return <Select options={exampleOptions} onChange={this.onSelect} clearableValue={false} />;
+    }
+
+    onSelect = (option) => {
+      this.props.onSelect(option.value);
     };
 
-    self.render = function () {
-      const {examples, disabled} = self.props;
-      return (
-        <Nav bsStyle="pills" className="nav-examples" title="exemples">
-          <NavDropdown title={<i className="fa fa-cubes"/>} disabled={disabled} pullRight={true}>
-            {examples.map((example, i) => <MenuItem key={i} eventKey={i} onSelect={onSelectExample}>{example.title}</MenuItem>)}
-          </NavDropdown>
-        </Nav>
-      );
-    };
-
-  }));
+  });
 
 };

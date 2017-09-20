@@ -13,6 +13,7 @@ import examples from './examples';
 import ArduinoBundle from '../arduino/index';
 import ReplayBundle from '../player/replay';
 import RecordBundle from '../recorder/record';
+import 'react-select/dist/react-select.css';
 
 export default function (bundle) {
 

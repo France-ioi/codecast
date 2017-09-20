@@ -7,6 +7,8 @@ import 'es6-symbol/implement'; // Symbol.iterator
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
+import {applyMiddleware} from 'redux';
+import createSagaMiddleware from 'redux-saga';
 import Immutable from 'immutable';
 import queryString from 'query-string';
 import link from 'epic-linker';
@@ -21,6 +23,7 @@ import 'rc-slider/dist/rc-slider.css';
 import './slider.css';
 import './style.scss';
 
+import sagaMonitor from './sagaMonitor';
 import stepperComponent from './stepper/index';
 import {default as commonComponent, interpretQueryString} from './common/index';
 
@@ -43,7 +46,7 @@ const {store, scope, finalize, start} = link(function (bundle, deps) {
 
   // bundle.addEnhancer(DevTools.instrument());
 
-});
+}, {reduxSaga: {sagaMonitor}});
 finalize(scope);
 
 /* In-browser API */
@@ -51,8 +54,10 @@ const Codecast = window.Codecast = {store, scope};
 
 Codecast.start = function (options) {
 
+  const {language} = window.localStorage;
+
   store.dispatch({type: scope.init});
-  store.dispatch({type: scope.setLanguage, language: 'fr-FR'});
+  store.dispatch({type: scope.setLanguage, language: language || navigator.language});
 
   store.dispatch({type: scope.modeChanged, mode: 'arduino'});
 
