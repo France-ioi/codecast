@@ -36,4 +36,6 @@ module.exports = {
   CONTROL_RESTART: "redémarrer",
   CONTROL_UNDO: "annuler",
   CONTROL_REDO: "refaire",
+  PROGRAM_STOPPED: "Programme arrêté.",
+  MENU_TOOLTIP: "Réglages",
 };

@@ -36,4 +36,6 @@ module.exports = {
   CONTROL_RESTART: "restart",
   CONTROL_UNDO: "undo",
   CONTROL_REDO: "redo",
+  PROGRAM_STOPPED: "Program stopped.",
+  MENU_TOOLTIP: "Settigns",
 };

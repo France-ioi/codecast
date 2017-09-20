@@ -20,9 +20,10 @@ export default function (bundle, deps) {
   });
 
   bundle.defineSelector('StackViewSelector', function (state, props) {
+    const getMessage = state.get('getMessage');
     const stepperState = deps.getStepperDisplay(state);
     if (!stepperState) {
-      return {};
+      return {getMessage};
     }
     const {core, oldCore, analysis, controls} = stepperState;
     const {maxVisible} = props;
@@ -30,6 +31,7 @@ export default function (bundle, deps) {
     const focusDepth = stackControls ? stackControls.get('focusDepth', 0) : 0;
     const firstVisible = Math.max(0, focusDepth - 5);
     return {
+      getMessage,
       focusDepth,
       context: {core, oldCore},
       analysis,
@@ -106,11 +108,11 @@ export default function (bundle, deps) {
     };
 
     self.render = function () {
-      const {context, height} = self.props;
+      const {context, height, getMessage} = self.props;
       if (!context) {
         return (
           <div className="stack-view" style={{height}}>
-            <p>Programme arrêté.</p>
+            <p>{getMessage('PROGRAM_STOPPED')}</p>
           </div>
         );
       }
