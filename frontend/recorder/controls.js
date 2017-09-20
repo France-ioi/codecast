@@ -7,8 +7,8 @@ export default function (bundle, deps) {
 
   bundle.use(
     'recorderStart', 'recorderStop',
-    'isTranslated',
-    'StepperControls', 'ExamplePicker', 'FullscreenButton'
+    'isTranslated', 'Menu',
+    'StepperControls',
   );
 
   bundle.defineSelector('RecorderControlsSelector', function (state, props) {
@@ -55,8 +55,7 @@ export default function (bundle, deps) {
       return (
         <div className="pane pane-controls clearfix">
           <div className="pane-controls-right">
-            {isRecording || <deps.ExamplePicker/>}
-            <deps.FullscreenButton/>
+            <deps.Menu/>
           </div>
           <div className="controls controls-main">
             {canStart &&

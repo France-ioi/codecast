@@ -8,8 +8,8 @@ export default function (bundle, deps) {
 
   bundle.use(
     'playerStart', 'playerPause', 'playerResume', 'playerSeek',
-    'getPlayerState', 'isTranslated',
-    'StepperControls', 'ExamplePicker', 'FullscreenButton'
+    'getPlayerState',
+    'StepperControls', 'Menu'
   );
 
   bundle.defineSelector('PlayerControlsSelector', function (state, props) {
@@ -52,7 +52,7 @@ export default function (bundle, deps) {
     };
 
     self.render = function () {
-      const {status, audioTime, duration, isTranslated, getMessage} = self.props;
+      const {status, audioTime, duration, getMessage} = self.props;
       const showStartPlayback = /preparing|starting|ready|paused/.test(status);
       const canStartPlayback = /ready|paused/.test(status);
       const showPausePlayback = /playing|pausing/.test(status);
@@ -61,8 +61,7 @@ export default function (bundle, deps) {
       return (
         <div className="pane pane-controls clearfix">
           <div className="pane-controls-right">
-            {isTranslated || <deps.ExamplePicker/>}
-            <deps.FullscreenButton/>
+            <deps.Menu/>
           </div>
           <div className="controls controls-main">
             <div className="player-controls-playback">
