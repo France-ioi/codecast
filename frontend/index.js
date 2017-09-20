@@ -59,7 +59,7 @@ Codecast.start = function (options) {
   store.dispatch({type: scope.init});
   store.dispatch({type: scope.setLanguage, language: language || navigator.language});
 
-  store.dispatch({type: scope.modeChanged, mode: 'arduino'});
+  // store.dispatch({type: scope.modeChanged, mode: 'arduino'});
 
   const qs = queryString.parse(window.location.search);
 
@@ -68,7 +68,7 @@ Codecast.start = function (options) {
     showStack: true,
     showViews: true,
     showIO: true,
-    arduino: true
+    // arduino: true,
   };
   (qs.stepperControls||'').split(',').forEach(function (controlStr) {
     // No prefix to highlight, '-' to disable.

@@ -89,7 +89,7 @@ export default function (bundle, deps) {
     yield takeLatest(deps.translate, function* (action) {
       const sourceModel = yield select(deps.getBufferModel, 'source');
       const source = sourceModel.get('document').toString();
-      const mode = 'arduino';
+      const mode = 'unix'; // 'arduino'
       yield put({type: deps.translateStarted, source});
       let response, syntaxTree, error;
       try {
