@@ -23,7 +23,7 @@ import 'rc-slider/dist/rc-slider.css';
 import './slider.css';
 import './style.scss';
 
-import sagaMonitor from './sagaMonitor';
+// import sagaMonitor from './sagaMonitor';
 import stepperComponent from './stepper/index';
 import {default as commonComponent, interpretQueryString} from './common/index';
 
@@ -46,7 +46,7 @@ const {store, scope, finalize, start} = link(function (bundle, deps) {
 
   // bundle.addEnhancer(DevTools.instrument());
 
-}, {reduxSaga: {sagaMonitor}});
+}/*, {reduxSaga: {sagaMonitor}*/});
 finalize(scope);
 
 /* In-browser API */
