@@ -7,8 +7,7 @@ export default function (bundle, deps) {
 
   bundle.use(
     'recorderStart', 'recorderStop',
-    'isTranslated', 'Menu',
-    'StepperControls',
+    'Menu', 'StepperControls',
   );
 
   bundle.defineSelector('RecorderControlsSelector', function (state, props) {
@@ -21,9 +20,8 @@ export default function (bundle, deps) {
     const isRecording = status === 'recording';
     const elapsed = recorder.get('elapsed') || 0;
     const events = recorder.get('events');
-    const eventCount = events && events.count();
-    const isTranslated = deps.isTranslated(state);
-    return {getMessage, canStart, canStop, canPause, isRecording, isTranslated, elapsed, eventCount};
+    // const eventCount = events && events.count();
+    return {getMessage, canStart, canStop, canPause, isRecording, elapsed};
   });
 
   bundle.defineView('RecorderControls', 'RecorderControlsSelector', EpicComponent(self => {
@@ -51,7 +49,7 @@ export default function (bundle, deps) {
     };
 
     self.render = function () {
-      const {getMessage, canStart, canStop, canPause, isRecording, isTranslated, elapsed} = self.props;
+      const {getMessage, canStart, canStop, canPause, isRecording, elapsed} = self.props;
       return (
         <div className="pane pane-controls clearfix">
           <div className="pane-controls-right">

@@ -18,8 +18,7 @@ export default function (bundle, deps) {
     const status = player.get('status');
     const audioTime = player.get('audioTime');
     const duration = player.get('duration');
-    const isTranslated = deps.isTranslated(state);
-    return {getMessage, status, audioTime, duration, isTranslated};
+    return {getMessage, status, audioTime, duration};
   });
 
   bundle.defineView('PlayerControls', 'PlayerControlsSelector', EpicComponent(self => {
