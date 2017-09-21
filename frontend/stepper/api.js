@@ -91,6 +91,7 @@ export default function (bundle, deps) {
         core: C.clearMemoryLog(state.core),
         oldCore: state.core
       },
+      interactive: true,
       stepCounter: 0
     };
   }

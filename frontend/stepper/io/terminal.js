@@ -50,7 +50,7 @@ export default function (bundle, deps) {
   bundle.defineAction('terminalInputBackspace', 'Terminal.Input.Backspace');
   bundle.addReducer('terminalInputBackspace', terminalInputBackspace);
   function terminalInputBackspace (state) {
-    return state.update('current', function (stepper) {
+    return state.updateIn(['stepper', 'current'], function (stepper) {
       return {...stepper, inputBuffer: stepper.inputBuffer.slice(0, -1)};
     });
   };
@@ -58,7 +58,7 @@ export default function (bundle, deps) {
   bundle.defineAction('terminalInputEnter', 'Terminal.Input.Enter');
   bundle.addReducer('terminalInputEnter', terminalInputEnter);
   function terminalInputEnter (state) {
-    return state.update('current', function (stepper) {
+    return state.updateIn(['stepper', 'current'], function (stepper) {
       const inputLine = stepper.inputBuffer + '\n';
       return {...stepper,
         inputBuffer: "",

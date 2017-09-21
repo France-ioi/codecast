@@ -2,7 +2,8 @@
 import React from 'react';
 import {Panel} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
-import {select, call, put} from 'redux-saga/effects';
+import {select, call, put, race, take, takeLatest, takeEvery} from 'redux-saga/effects';
+
 import * as C from 'persistent-c';
 
 import Editor from '../../buffers/editor';
@@ -16,8 +17,9 @@ export default function (bundle, deps) {
 
   bundle.include(TerminalBundle);
   bundle.use(
-    'TerminalView', 'BufferEditor',
-    'getStepperDisplay', 'stepperProgress', 'stepperIdle',
+    'TerminalView', 'terminalInputNeeded', 'terminalInputEnter', 'terminalFocus',
+    'BufferEditor',
+    'getStepperDisplay', 'stepperProgress', 'stepperIdle', 'stepperInterrupt',
     'stepperRestart', 'stepperUndo', 'stepperRedo',
     'getBufferModel', 'bufferReset', 'bufferEdit', 'bufferModelEdit', 'bufferModelSelect'
   );
@@ -294,18 +296,20 @@ export default function (bundle, deps) {
           /* non-interactive, end of input */
           return null;
         }
-        /* Set the isWaitingOnInput flag on the state. */
-        yield put({type: deps.terminalInputNeeded});
-        /* Transfer focus to the terminal. */
-        yield put({type: deps.terminalFocus});
-        const {interrupted} = yield (race({
-          completed: take(deps.terminalInputEnter),
-          interrupted: take(deps.stepperInterrupt)
-        }));
-        if (interrupted) {
-          throw 'interrupted';
-        }
-        throw 'retry';
+        yield ['interact', function* () {
+          /* Set the isWaitingOnInput flag on the state. */
+          yield put({type: deps.terminalInputNeeded});
+          /* Transfer focus to the terminal. */
+          yield put({type: deps.terminalFocus});
+          const {interrupted} = yield race({
+            completed: take(deps.terminalInputEnter),
+            interrupted: take(deps.stepperInterrupt)
+          });
+          if (interrupted) {
+            throw 'interrupted';
+          }
+          throw 'retry';
+        }];
       }
       const line = input.substring(inputPos, nextNL);
       state.inputPos = nextNL + 1;
