@@ -4,32 +4,32 @@ import * as C from 'persistent-c';
 import {readScalarBasic, stringifyExpr, evalExpr} from './utils';
 import {getCursorMap} from './array_utils';
 
-export const extractView = function (context, frame, refExpr, view) {
+export const extractView = function (context, frame, refExpr, view, getMessage) {
   const {core} = context;
   const localMap = frame.get('localMap');
   let ref;
   try {
     ref = evalExpr(core, localMap, refExpr, false);
   } catch (ex) {
-    return {error: `expression ${stringifyExpr(refExpr)} has no value (${ex})`};
+    return {error: getMessage('ARRAY2D_EXPR_NOVAL').format({dim: stringifyExpr(refExpr), ex: getMessage.format(ex)})};
   }
   // By the array-value decaying rule, ref should be a pointer.
   if (ref.type.kind !== 'pointer') {
-    return {error: `expression ${stringifyExpr(refExpr)} is not a pointer`};
+    return {error: getMessage('ARRAY2D_EXPR_NOPTR').format({dim: stringifyExpr(refExpr)})};
   }
   const arrayType = ref.type.orig;
   if (arrayType === undefined || arrayType.kind !== 'array') {
-    return {error: `expression ${stringifyExpr(refExpr)} is not an array`};
+    return {error: getMessage('ARRAY2D_EXPR_NOARR').format({dim: stringifyExpr(refExpr)})};
   }
   const rowCount = arrayType.count.toInteger();
   const rowType = arrayType.elem;
   if (rowType.kind !== 'array') {
-    return {error: `expression ${stringifyExpr(refExpr)} is not a 2D array`};
+    return {error: getMessage('ARRAY2D_EXPR_NOT2D').format({dim: stringifyExpr(refExpr)})};
   }
   const colCount = rowType.count.toInteger();
   const cellType = rowType.elem;
   if (cellType.kind !== 'builtin') {
-    return {error: `elements of 2D array ${stringifyExpr(refExpr)} have an unsupported type`};
+    return {error: getMessage('ARRAY2D_ELT_UNSUP').format({dim: stringifyExpr(refExpr)})};
   }
   // Read the cells.
   const rows = readArray2D(context, arrayType, ref.address, rowCount, colCount, cellType);

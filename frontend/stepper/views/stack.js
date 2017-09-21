@@ -121,7 +121,7 @@ export default function (bundle, deps) {
         return (
           <div className="stack-view" style={{height}}>
             <Alert bsStyle="danger" onDismiss={onExit}>
-              <h4>Erreur</h4>
+              <h4>{getMessage('ERROR')}</h4>
               <p>{core.error.toString()}</p>
             </Alert>
           </div>

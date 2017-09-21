@@ -116,7 +116,7 @@ export const Array1D = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {Frame, controls, directive, frames, context} = self.props;
+    const {Frame, controls, directive, frames, context, getMessage} = self.props;
     const topFrame = frames[0];
     const fullView = controls.get('fullView');
     const {byName, byPos} = directive;
@@ -131,7 +131,7 @@ export const Array1D = EpicComponent(self => {
     // directive.
     const view = {
       dimExpr: dim, cursorExprs, cursorRows, maxVisibleCells,
-      fullView, cellHeight, cellWidth
+      fullView, cellHeight, cellWidth, getMessage
     };
     Object.assign(view, extractView(context, topFrame, expr, view));
     if (view.error) {

@@ -13,7 +13,7 @@ const Message = {
   },
   format: function (...args) {
     if (!this._f) {
-      this._f = new IntlMessageFormat(this._m, language);
+      this._f = new IntlMessageFormat(this._m, this._l);
     }
     return this._f.format(...args);
   },
@@ -36,12 +36,29 @@ export default function (bundle, deps) {
   bundle.addReducer('setLanguage', function (state, {language}) {
     if (!Messages[language]) language = 'en-US';
     window.localStorage.language = language;
+    const localizedMessage = Object.create(Message,
+        {_l: {writable: false, configurable: false, value: language}});
     const getMessage = memoize(function (message) {
       const value = Messages[language][message] || `L:${message}`;
-      return Object.create(Message,
+      return Object.create(localizedMessage,
         {_m: {writable: false, configurable: false, value}});
     });
+    getMessage.format = function (value) {
+      console.log('getMessage.format', value);
+      if (value instanceof Error && value.name === 'LocalizedError') {
+        return getMessage(value.message).format(value.args);
+      }
+      return getMessage(value.toString());
+    }
     return state.set('getMessage', getMessage);
   });
 
+};
+
+export class LocalizedError extends Error {
+  constructor (message, args) {
+    super(message);
+    this.name = 'LocalizedError';
+    this.args = args;
+  }
 };

@@ -161,13 +161,13 @@ export const Array2D = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {Frame, scale, directive, frames, context} = self.props;
+    const {Frame, scale, directive, frames, context, getMessage} = self.props;
     const {byName, byPos} = directive;
     const expr = byPos[0];
     const rowCursors = getList(byName.rowCursors, []);
     const colCursors = getList(byName.colCursors, []);
     const height = getNumber(byName.height, 'auto');
-    const view = {rowCursors, colCursors, height};
+    const view = {rowCursors, colCursors, height, getMessage};
     Object.assign(view, extractView(context, frames[0], expr, view));
     if (view.error) {
       return (

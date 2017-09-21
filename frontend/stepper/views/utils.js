@@ -8,6 +8,8 @@ import classnames from 'classnames';
 import EpicComponent from 'epic-component';
 import * as C from 'persistent-c';
 
+import {LocalizedError} from '../../lang/index';
+
 export const readScalarBasic = function (core, refType, address) {
   // Produce a 'basic stored scalar value' object whose shape is
   //   {kind, ref, current}
@@ -136,25 +138,25 @@ export const evalExpr = function (core, localMap, expr, asRef) {
           return evalRef(core, value, asRef);
         }
       }
-      throw new Error(`reference to undefined variable ${name}`);
+      throw new LocalizedError('EVAL_REF_UNDEF_VAR', {name});
     }
     return evalRef(core, decl.ref, asRef);
   }
   if (expr[0] === 'deref') {
     const ref = evalExpr(core, localMap, expr[1], false);
     if (ref.type.kind !== 'pointer') {
-      throw new Error('attempt to dereference non-pointer value');
+      throw new LocalizedError('EVAL_DEREF_NONPTR');
     }
     return evalRef(core, ref, asRef);
   }
   if (expr[0] === 'subscript') {
     const arrayRef = evalExpr(core, localMap, expr[1], false);
     if (arrayRef.type.kind !== 'pointer') {
-      throw new Error('attempt to subscript non-pointer');
+      throw new LocalizedError('EVAL_SUBSC_NONPTR');
     }
     const index = evalExpr(core, localMap, expr[2], false);
     if (index.type.kind !== 'builtin') {
-      throw new Error('attempt to subscript with non-builtin index');
+      throw new LocalizedError('EVAL_SUBSC_NONBLT');
     }
     const elemType = arrayRef.type.pointee;
     const address = arrayRef.address + elemType.size * index.toInteger();
@@ -166,7 +168,7 @@ export const evalExpr = function (core, localMap, expr, asRef) {
     }
   }
   if (asRef) {
-    throw new Error('attempt to take address of non-lvalue');
+    throw new LocalizedError('EVAL_ADDR_NONLVAL');
   }
   if (expr[0] === 'number') {
     return new C.IntegralValue(C.builtinTypes['int'], expr[1] | 0);
@@ -174,7 +176,7 @@ export const evalExpr = function (core, localMap, expr, asRef) {
   if (expr[0] === 'addrOf') {
     return evalExpr(core, localMap, expr[1], true);
   }
-  throw new Error('unsupported expression');
+  throw new LocalizedError('EVAL_UNSUP_EXPR');
 };
 
 const evalRef = function (core, ref, asRef) {

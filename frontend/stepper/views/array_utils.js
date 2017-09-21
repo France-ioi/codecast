@@ -67,7 +67,7 @@ export const extractView = function (context, frame, refExpr, options) {
   const localMap = frame.get('localMap');
   // Normalize options.
   const {fullView, dimExpr} = options;
-  let {cursorExprs, cursorRows, maxVisibleCells, pointsByKind} = options;
+  let {cursorExprs, cursorRows, maxVisibleCells, pointsByKind, getMessage} = options;
   if (cursorExprs === undefined) {
     cursorExprs = [];
   }
@@ -92,11 +92,11 @@ export const extractView = function (context, frame, refExpr, options) {
     try {
       const dimVal = evalExpr(core, localMap, dimExpr, false);
       if (dimVal.type.kind !== 'builtin') {
-        return {error: `invalid value for dimension ${stringifyExpr(dimExpr)}`};
+        return {error: getMessage('ARRAY1D_DIM_INVALID').format({dim: stringifyExpr(dimExpr)})};
       }
       elemCount = dimVal.toInteger();
     } catch (ex) {
-      return {error: `dimension ${stringifyExpr(dimExpr)} has no value (${ex})`};
+      return {error: getMessage('ARRAY1D_DIM_NOVAL').format({dim: stringifyExpr(dimExpr), ex: getMessage.format(ex)})};
     }
   }
   // Evaluate the array expression `expr`.
@@ -104,24 +104,24 @@ export const extractView = function (context, frame, refExpr, options) {
   try {
     ref = evalExpr(core, localMap, refExpr, false);
   } catch (ex) {
-    return {error: `expression ${stringifyExpr(refExpr)} has no value (${ex})`};
+    return {error: getMessage('ARRAY1D_EXPR_NOVAL').format({expr: stringifyExpr(refExpr), ex: getMessage.format(ex)})};
   }
   // By the array-value decaying rule, ref should be a pointer.
   if (ref.type.kind !== 'pointer') {
-    return {error: `expression ${stringifyExpr(refExpr)} is not a pointer`};
+    return {error: getMessage('ARRAY1D_EXPR_NOPTR').format({expr: stringifyExpr(refExpr)})};
   }
   if (elemCount === undefined) {
     if ('orig' in ref.type) {
       // The array size can be obtained from the original type.
       elemCount = ref.type.orig.count.toInteger();
     } else {
-      return {error: `dimension of ${stringifyExpr(refExpr)} is unknown`};
+      return {error: getMessage('ARRAY1D_DIM_UNK').format({expr: stringifyExpr(refExpr)})};
     }
   }
   const address = ref.address;
   const elemType = ref.type.pointee;
   if (!/^(builtin|pointer)$/.test(elemType.kind)) {
-    return {error: `elements of array ${stringifyExpr(refExpr)} have an unsupported type`};
+    return {error: getMessage('ARRAY1D_ELT_UNSUP').format({expr: stringifyExpr(refExpr)})};
   }
   const cellOpsMap = getOpsArray1D(core, address, elemCount, elemType.size);
   const cursorMap = getCursorMap(
