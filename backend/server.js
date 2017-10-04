@@ -97,11 +97,13 @@ app.post('/translate', function (req, res) {
   const env = {};
   env.SYSROOT = path.join(rootDir, 'sysroot');
   const {source, mode} = req.body;
+  let compiler = './c-to-json.c';
   if (mode === 'arduino') {
+    compiler = './c-to-json.c++';
     env.SOURCE_WRAPPER = "wrappers/Arduino";
   }
   console.log('env', JSON.stringify(env));
-  const cp = spawn('./c-to-json', {env: env});
+  const cp = spawn(compiler, {env: env});
   //env.LD_LIBRARY_PATH = path.join(rootDir, 'lib');
   const chunks = [];
   const errorChunks = [];
