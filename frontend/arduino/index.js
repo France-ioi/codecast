@@ -419,7 +419,7 @@ export default function (bundle, deps) {
       yield ['result', new C.IntegralValue(C.builtinTypes['int'], level)];
     });
     stepperApi.onEffect('digitalRead', function* digitalReadEffect (context, pin) {
-      const port = context.state[pin];
+      const port = context.state.ports[pin];
       if (port.direction === 1) {
         /* Pin configured as output, read driver level. */
         return port.output;
