@@ -1,4 +1,29 @@
 {
+  "database": {
+    "host": "@@MYSQL_HOST@@",
+    "user": "@@MYSQL_USER@2",
+    "password": "@@MYSQL_PASSWORD@@",
+    "database": "@@MYSQL_DATABASE@@"
+  },
+  "auth": {
+    "@@AUTH_PROVIDER_NAME@@": {
+      "oauth2": {
+        "clientId": "@@OAUTH2_CLIENT_ID@@",
+        "clientSecret": "@@OAUTH2_CLIENT_SECRET@@",
+        "accessTokenUri": "@@OAUTH2_ACCESS_TOKEN_URI@@",
+        "authorizationUri": "@@OAUTH2_AUTHORIZATION_URI@@",
+        "redirectUri": "@@OAUTH2_CALLBACK_URI@@",
+        "scopes": ["codecast"]
+      },
+      "identityProviderUri": "@@IDENTITY_PROVIDER_URI@@"
+    }
+  },
+  "session": {
+    "secret": "@@RANDOM_SESSION_SECRET@@",
+    "resave": false,
+    "saveUninitialized": true,
+    "cookie": {"secure": true, "maxAge": 604800}
+  },
   "configs": {
     "base": {
       "s3AccessKeyId": "@@ACCESS_KEY_ID@@",
