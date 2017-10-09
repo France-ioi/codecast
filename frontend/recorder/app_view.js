@@ -1,15 +1,15 @@
 
 import React from 'react';
-import EpicComponent from 'epic-component';
+import {Button} from 'react-bootstrap';
 
 export default function (bundle, deps) {
 
-  bundle.use('ErrorView', 'RecordScreen', 'SaveScreen');
+  bundle.use('ErrorView', 'LoginScreen', 'RecordScreen', 'SaveScreen');
 
-  bundle.defineView('RecorderApp', RecorderAppSelector, EpicComponent(self => {
-
-    self.render = function () {
-      const {size, screen} = self.props;
+  bundle.defineView('RecorderApp', RecorderAppSelector, class RecorderApp extends React.PureComponent {
+    render () {
+      const {user, size, screen} = this.props;
+      if (!user) return <deps.LoginScreen/>;
       return (
         <div className={`container size-${size}`}>
           <deps.ErrorView/>
@@ -20,12 +20,13 @@ export default function (bundle, deps) {
       );
     };
 
-  }));
+  });
 
   function RecorderAppSelector (state, props) {
+    const user = state.get('user');
     const size = state.get('size');
     const screen = state.get('screen');
-    return {size, screen};
+    return {user, size, screen};
   }
 
 };

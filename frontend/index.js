@@ -35,7 +35,8 @@ import LangBundle from './lang/index';
 const {store, scope, finalize, start} = link(function (bundle, deps) {
 
   bundle.defineAction('init', 'System.Init');
-  bundle.addReducer('init', _ => Immutable.Map({}));
+  bundle.addReducer('init', (_state, {payload: {baseUrl, authProviders}}) =>
+    Immutable.Map({baseUrl, authProviders}));
 
   bundle.include(commonComponent);
   bundle.include(stepperComponent);
@@ -106,6 +107,11 @@ Codecast.start = function (options) {
     store.dispatch({type: scope.inputLoad, text: options.input||''});
   } else if ('input' in qs) {
     store.dispatch({type: scope.inputLoad, text: qs.input||''});
+  }
+
+  /* Start already logged in. */
+  if ('user' in options) {
+    store.dispatch({type: scope.loginFeedback, payload: {user: options.user}});
   }
 
   /* Set token from URL -- TODO: change this mechanism */

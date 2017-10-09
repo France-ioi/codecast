@@ -1,6 +1,5 @@
 
 import React from 'react';
-import EpicComponent from 'epic-component';
 
 export default function (bundle, deps) {
 
@@ -11,17 +10,17 @@ export default function (bundle, deps) {
     return {getMessage};
   }
 
-  bundle.defineView('RecordScreen', RecordScreenSelector, EpicComponent(self => {
-
-    self.render = function () {
-      const {getMessage} = self.props;
+  bundle.defineView('RecordScreen', RecordScreenSelector, class RecordScreen extends React.PureComponent {
+    render () {
+      const {getMessage} = this.props;
       if (false) {  // TODO: test if encoding
         return (
           <div className="row">
             <div className="col-sm-12">
               <p>{getMessage('ENCODING_IN_PROGRESS')}</p>
             </div>
-          </div>);
+          </div>
+        );
       }
       return (
         <div>
@@ -33,8 +32,7 @@ export default function (bundle, deps) {
           <deps.MainView/>
         </div>
       );
-    };
-
-  }));
+    }
+  });
 
 };

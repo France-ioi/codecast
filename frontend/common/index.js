@@ -35,5 +35,7 @@ export default function (bundle) {
   bundle.include(MenuBundle);
   bundle.include(examples);
   bundle.include(ArduinoBundle);
+  bundle.include(require('./login'));
+  bundle.include(require('./client_api'));
 
 };

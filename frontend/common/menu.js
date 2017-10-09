@@ -5,14 +5,17 @@ import Portal from 'react-portal';
 
 export default function (bundle, deps) {
 
-  bundle.use('FullscreenButton', 'ExamplePicker', 'isTranslated', 'setLanguage', 'exampleSelected');
+  bundle.use(
+    'FullscreenButton', 'LogoutButton',
+    'ExamplePicker', 'isTranslated', 'setLanguage', 'exampleSelected',
+  );
 
   bundle.defineAction('menuOpened', 'Menu.Opened');
   bundle.defineAction('menuClosed', 'Menu.Closed');
 
   bundle.addReducer('init', state => state.set('menu', {}));
 
-  bundle.defineView('Menu', MenuSelector, class Menu extends React.PureComponent {
+  class Menu extends React.PureComponent {
     render () {
       const {isOpen, dispatch, isTranslated, getMessage} = this.props;
       const menuButton =
@@ -23,6 +26,7 @@ export default function (bundle, deps) {
         <div id='menu'>
           <ButtonGroup>
             <deps.FullscreenButton/>
+            <deps.LogoutButton/>
             <Portal closeOnEsc closeOnOutsideClick openByClickOn={menuButton}>
               <MenuPopup getMessage={getMessage} dispatch={dispatch} canSelectExample={!isTranslated}/>
             </Portal>
@@ -30,7 +34,8 @@ export default function (bundle, deps) {
         </div>
       );
     }
-  });
+  }
+  bundle.defineView('Menu', MenuSelector, Menu);
 
   class MenuPopup extends React.PureComponent {
     render() {

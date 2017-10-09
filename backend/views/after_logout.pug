@@ -1,0 +1,13 @@
+doctype html
+head(lang='fr')
+  meta(charset='utf-8')
+  title codecast - signed out
+body
+  script
+    | if (window.opener) {
+    |   window.opener.postMessage(JSON.stringify(!{JSON.stringify({dispatch: {type: 'Logout.Feedback'}})}), window.location.origin);
+    if logoutUri
+      | window.location.href = !{JSON.stringify(logoutUri)};
+    else
+      | window.close();
+    | }

@@ -15,14 +15,14 @@ const directives = require('./directives');
 const Arduino = require('./arduino');
 const oauth = require('./oauth');
 
-const isDevelopment = process.env.NODE_ENV !== 'production';
-console.log(`running in ${isDevelopment ? 'development' : 'production'} mode`);
-
 function buildApp (config, callback) {
 
   const app = express();
 
-  // Default implementation
+  // Default implementations
+  config.initHook = function (req, init, callback) {
+    callback(null, init);
+  };
   config.getUserConfig = function (req, callback) {
     let {token} = req.query;
     if (token === undefined) {
@@ -41,12 +41,12 @@ function buildApp (config, callback) {
       }
     });
     callback(null, result);
-  }
+  };
 
   app.set('view engine', 'pug');
   app.set('views', path.join(rootDir, 'backend', 'views'));
 
-  if (isDevelopment) {
+  if (config.isDevelopment) {
     // Development route: /build is managed by webpack
     const webpack = require('webpack');
     const webpackDevMiddleware = require('webpack-dev-middleware');
@@ -83,30 +83,30 @@ function addBackendRoutes (app, config) {
 
   app.get('/', function (req, res) {
     res.render('index', {
-      development: isDevelopment,
+      development: config.isDevelopment,
       rebaseUrl: config.rebaseUrl,
-      options: {start: 'sandbox'}
+      options: {start: 'sandbox', baseUrl: process.env.BASE_URL}
     });
   });
 
   app.get('/recorder', function (req, res) {
-    config.getUserConfig(req, function (err, userConfig) {
-      if (err) return res.redirect(`${process.env.BASE_URL}/`);
+    config.initHook(req, {start: 'recorder', baseUrl: process.env.BASE_URL}, function (err, init) {
+      if (err) return res.send(`Error: ${err.toString()}`);
       res.render('index', {
-        development: isDevelopment,
+        development: config.isDevelopment,
         rebaseUrl: config.rebaseUrl,
-        options: {start: 'recorder', userConfig},
+        options: init,
       });
-    })
+    });
   });
 
   app.get('/player', function (req, res) {
     const audioUrl = `${req.query.base}.mp3`;
     const eventsUrl = `${req.query.base}.json`;
     res.render('index', {
-      development: isDevelopment,
+      development: config.isDevelopment,
       rebaseUrl: config.rebaseUrl,
-      options: {start: 'player', audioUrl, eventsUrl}
+      options: {start: 'player', baseUrl: process.env.BASE_URL, audioUrl, eventsUrl}
     });
   });
 
@@ -193,6 +193,8 @@ function addBackendRoutes (app, config) {
 fs.readFile('config.json', 'utf8', function (err, data) {
   if (err) return res.json({error: err.toString()});
   const config = JSON.parse(data);
+  config.isDevelopment = process.env.NODE_ENV !== 'production';
+  console.log(`running in ${config.isDevelopment ? 'development' : 'production'} mode`);
   buildApp(config, function (err, app) {
     if (err) {
       console.log("app failed to start", err);

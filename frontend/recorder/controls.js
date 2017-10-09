@@ -7,10 +7,10 @@ export default function (bundle, deps) {
 
   bundle.use(
     'recorderStart', 'recorderStop',
-    'Menu', 'StepperControls',
+    'Menu', 'StepperControls'
   );
 
-  bundle.defineSelector('RecorderControlsSelector', function (state, props) {
+  function RecorderControlsSelector (state, props) {
     const getMessage = state.get('getMessage');
     const recorder = state.get('recorder');
     const status = recorder.get('status');
@@ -22,34 +22,12 @@ export default function (bundle, deps) {
     const events = recorder.get('events');
     // const eventCount = events && events.count();
     return {getMessage, canStart, canStop, canPause, isRecording, elapsed};
-  });
+  }
 
-  bundle.defineView('RecorderControls', 'RecorderControlsSelector', EpicComponent(self => {
+  class RecorderControls extends React.PureComponent {
 
-    const onStartRecording = function () {
-      self.props.dispatch({type: deps.recorderStart});
-    };
-
-    const onStopRecording = function () {
-      self.props.dispatch({type: deps.recorderStop});
-    };
-
-    const onPauseRecording = function () {
-      // TODO
-    };
-
-    const zeroPad2 = function (n) {
-      return ('0'+n).slice(-2);
-    };
-    const timeFormatter = function (ms) {
-      let s = Math.round(ms / 1000);
-      const m = Math.floor(s / 60);
-      s -= m * 60;
-      return zeroPad2(m) + ':' + zeroPad2(s);
-    };
-
-    self.render = function () {
-      const {getMessage, canStart, canStop, canPause, isRecording, elapsed} = self.props;
+    render () {
+      const {getMessage, canStart, canStop, canPause, isRecording, elapsed} = this.props;
       return (
         <div className="pane pane-controls clearfix">
           <div className="pane-controls-right">
@@ -58,17 +36,17 @@ export default function (bundle, deps) {
           <div className="controls controls-main">
             {canStart &&
               <div>
-                <Button onClick={onStartRecording} className="float-left">
+                <Button onClick={this.onStartRecording} className="float-left">
                   <i className="fa fa-circle" style={{color: '#a01'}}/>
                 </Button>
                 {" "}{getMessage('START_RECORDING')}
               </div>}
             {canStop &&
-              <Button onClick={onStopRecording}>
+              <Button onClick={this.onStopRecording}>
                 <i className="fa fa-stop"/>
               </Button>}
             {canPause &&
-              <Button onClick={onPauseRecording}>
+              <Button onClick={this.onPauseRecording}>
                 <i className="fa fa-pause"/>
               </Button>}
             {isRecording &&
@@ -81,8 +59,28 @@ export default function (bundle, deps) {
           <deps.StepperControls enabled={isRecording}/>
         </div>
       );
+    }
+    onStartRecording = () => {
+      this.props.dispatch({type: deps.recorderStart});
     };
-
-  }));
+    onStopRecording = () => {
+      this.props.dispatch({type: deps.recorderStop});
+    };
+    onPauseRecording = () => {
+      // TODO
+    };
+  }
+  bundle.defineView('RecorderControls', RecorderControlsSelector, RecorderControls);
 
 };
+
+function zeroPad2 (n) {
+  return ('0'+n).slice(-2);
+}
+
+function timeFormatter (ms) {
+  let s = Math.round(ms / 1000);
+  const m = Math.floor(s / 60);
+  s -= m * 60;
+  return zeroPad2(m) + ':' + zeroPad2(s);
+}
