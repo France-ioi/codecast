@@ -130,15 +130,14 @@ function addBackendRoutes (app, config) {
   });
 
   app.post('/translate', function (req, res) {
-    const env = {};
+    const env = {LANGUAGE: 'c'};
     env.SYSROOT = path.join(rootDir, 'sysroot');
     const {source, mode} = req.body;
-    let compiler = './c-to-json.c';
     if (mode === 'arduino') {
-      compiler = './c-to-json.c++';
       env.SOURCE_WRAPPER = "wrappers/Arduino";
+      env.LANGUAGE = 'c++';
     }
-    const cp = spawn(compiler, {env: env});
+    const cp = spawn('./c-to-json', {env: env});
     //env.LD_LIBRARY_PATH = path.join(rootDir, 'lib');
     const chunks = [];
     const errorChunks = [];
