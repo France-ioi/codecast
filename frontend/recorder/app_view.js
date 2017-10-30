@@ -8,11 +8,12 @@ export default function (bundle, deps) {
 
   bundle.defineView('RecorderApp', RecorderAppSelector, class RecorderApp extends React.PureComponent {
     render () {
-      const {user, size, screen} = this.props;
-      if (!user) return <deps.LoginScreen/>;
+      let {user, size, screen} = this.props;
+      if (!user) screen = 'login';
       return (
         <div className={`container size-${size}`}>
           <deps.ErrorView/>
+          {screen === 'login' && <deps.LoginScreen/>}
           {screen === 'record' && <deps.RecordScreen/>}
           {screen === 'save' && <deps.SaveScreen/>}
           <canvas id="vumeter" width="10" height="100"></canvas>
