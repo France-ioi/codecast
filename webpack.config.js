@@ -1,6 +1,9 @@
+const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const SRC = path.resolve(__dirname, "frontend");
+
+const jsonConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 
 const config = module.exports = {
   entry: {
@@ -8,7 +11,7 @@ const config = module.exports = {
   },
   output: {
     path: path.join(__dirname, 'build'),
-    publicPath: '/build/',
+    publicPath: path.join(jsonConfig.mountPath, 'build/'),
     filename: '[name].js'
   },
   module: {
