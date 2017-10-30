@@ -66,7 +66,7 @@ function buildApp (config, callback) {
   /* Serve static assets. */
   app.use('/assets', express.static(path.join(rootDir, 'assets')));
   config.rebaseUrl = function (url) {
-    return `${process.env.BASE_URL}/${url}`;
+    return `${config.baseUrl}/${url}`;
   }
 
   app.use(bodyParser.json());
@@ -85,12 +85,12 @@ function addBackendRoutes (app, config) {
     res.render('index', {
       development: config.isDevelopment,
       rebaseUrl: config.rebaseUrl,
-      options: {start: 'sandbox', baseUrl: process.env.BASE_URL}
+      options: {start: 'sandbox', baseUrl: config.baseUrl}
     });
   });
 
   app.get('/recorder', function (req, res) {
-    config.initHook(req, {start: 'recorder', baseUrl: process.env.BASE_URL}, function (err, init) {
+    config.initHook(req, {start: 'recorder', baseUrl: config.baseUrl}, function (err, init) {
       if (err) return res.send(`Error: ${err.toString()}`);
       res.render('index', {
         development: config.isDevelopment,
@@ -106,7 +106,7 @@ function addBackendRoutes (app, config) {
     res.render('index', {
       development: config.isDevelopment,
       rebaseUrl: config.rebaseUrl,
-      options: {start: 'player', baseUrl: process.env.BASE_URL, audioUrl, eventsUrl}
+      options: {start: 'player', baseUrl: config.baseUrl, audioUrl, eventsUrl}
     });
   });
 
@@ -122,7 +122,7 @@ function addBackendRoutes (app, config) {
         upload.getMp3UploadForm(s3client, bucket, uploadPath, function (err, audio) {
           if (err) return res.json({error: err.toString()});
           const baseUrl = `https://${bucket}.s3.amazonaws.com/${uploadPath}`;
-          const player_url = `${process.env.PLAYER_URL}?base=${encodeURIComponent(baseUrl)}`;
+          const player_url = `${config.playerUrl}?base=${encodeURIComponent(baseUrl)}`;
           res.json({player_url, events, audio});
         });
       });
@@ -194,12 +194,21 @@ fs.readFile('config.json', 'utf8', function (err, data) {
   const config = JSON.parse(data);
   config.isDevelopment = process.env.NODE_ENV !== 'production';
   console.log(`running in ${config.isDevelopment ? 'development' : 'production'} mode`);
+  if (!config.playerUrl) {
+    config.playerUrl = `${config.baseUrl}/player`;
+  }
   buildApp(config, function (err, app) {
     if (err) {
       console.log("app failed to start", err);
       process.exit(1);
     }
+    if (config.mountPath) {
+      console.log(`mounting app at ${config.mountPath}`);
+      const rootApp = express();
+      rootApp.use(config.mountPath, app);
+      app = rootApp;
+    }
     const server = http.createServer(app);
-    server.listen(process.env.PORT);
+    server.listen(config.port);
   });
 });
