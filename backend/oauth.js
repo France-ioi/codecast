@@ -61,8 +61,6 @@ module.exports = function (app, config, callback) {
     });
   });
 
-  config.db = mysql.createConnection(config.database);
-
   function getOauthConfig (provider) {
     let authConfig = config.auth[provider];
     if (!authConfig) {
@@ -92,21 +90,25 @@ module.exports = function (app, config, callback) {
   };
 
   config.getUserConfig = function (req, callback) {
-    if (!identity) {
-      // TODO: return guest user config
-      return callback(null, {});
-    }
-    const q = `SELECT value FROM user_configs WHERE user_id = '${identity.idUser}' LIMIT 1`;
-    config.db.connect(function (err) {
+    const db = mysql.createConnection(config.database);
+    const {identity} = req.session;
+    const idUser = identity ? identity.idUser : 0;
+    const q = `SELECT value FROM user_configs WHERE user_id = '${idUser}' LIMIT 1`;
+    db.connect(function (err) {
       if (err) return callback(err);
-      config.db.query(q, function (error, results, fields) {
-        if (error || results.length !== 1) return callback('database error');
+      db.query(q, function (error, results, fields) {
+        if (error || results.length !== 1) {
+          db.end();
+          return callback('database error');
+        }
         let userConfig;
         try {
           userConfig = JSON.parse(results[0].value);
         } catch (ex) {
+          db.end();
           return callback('parse error');
         }
+        db.end();
         callback(null, userConfig);
       });
     });
