@@ -1,6 +1,6 @@
 
 import {delay} from 'redux-saga';
-import {take, put, call, race, select, actionChannel} from 'redux-saga/effects';
+import {take, takeEvery, put, call, race, select, actionChannel} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
 import {spawnWorker, callWorker, killWorker} from '../utils/worker_utils';
@@ -19,7 +19,9 @@ export default function (bundle, deps) {
     'recorderPrepare', 'recorderPreparing', 'recorderReady',
     'recorderTick',
     'recorderStart', 'recorderStarting', 'recorderStarted',
-    'recorderStop', 'recorderStopping', 'recorderStopped'
+    'recorderPause', 'recorderPausing', 'recorderPaused',
+    'recorderStop', 'recorderStopping', 'recorderStopped',
+    'playerPrepare', 'playerReady'
   );
 
   function* recorderPrepare () {
@@ -179,6 +181,38 @@ export default function (bundle, deps) {
     }
   }
 
+  function* recorderPause () {
+    try {
+      let recorder = yield select(deps.getRecorderState);
+      if (recorder.get('status') !== 'recording') {
+        return;
+      }
+      // Signal that the recorder is pausing.
+      yield put({type: deps.recorderPausing});
+      const context = recorder.get('context');
+      const audioContext = context.get('audioContext');
+      yield call(suspendAudioContext, audioContext);
+      // Obtain the URL to a (WAV-encoded) audio object from the worker.
+      const worker = context.get('worker');
+      const {wav} = yield call(callWorker, worker, {command: "pauseRecording", options: {wav: true}});
+      const audioUrl = URL.createObjectURL(wav);
+      console.log(`audio ${audioUrl}`);
+      // Get a URL for events.
+      const events = recorder.get('events');
+      const eventsBlob = new Blob([JSON.stringify(events.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
+      const eventsUrl = URL.createObjectURL(eventsBlob);
+      console.log(`events ${eventsUrl}`);
+      // Prepare the player to use the audio and event streams, wait till ready.
+      yield put({type: deps.playerPrepare, audioUrl, eventsUrl});
+      yield take(deps.playerReady);
+      // Signal that the recorder is paused.
+      yield put({type: deps.recorderPaused});
+    } catch (error) {
+      // XXX generic error
+      yield put({type: deps.error, source: 'recorderPause', error});
+    }
+  }
+
   bundle.addSaga(function* watchRecorderPrepare () {
     while (true) {
       yield take(deps.recorderPrepare);
@@ -203,18 +237,10 @@ export default function (bundle, deps) {
     }
   });
 
-  bundle.addSaga(function* watchRecorderStart () {
-    while (true) {
-      yield take(deps.recorderStart);
-      yield call(recorderStart);
-    }
-  });
-
-  bundle.addSaga(function* watchRecorderStop () {
-    while (true) {
-      yield take(deps.recorderStop);
-      yield call(recorderStop);
-    }
+  bundle.addSaga(function* watchRecorderActions () {
+    yield takeEvery(deps.recorderStart, recorderStart);
+    yield takeEvery(deps.recorderStop, recorderStop);
+    yield takeEvery(deps.recorderPause, recorderPause);
   });
 
   bundle.defer(function ({recordApi, replayApi}) {

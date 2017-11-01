@@ -44,6 +44,12 @@ export default function (bundle) {
   // Sent has stopped and the recorder is ready to start a new recording.
   bundle.defineAction('recorderStopped', 'Recorder.Stopped');
 
+  // Sent to acknowledge a recorder Pause action.
+  bundle.defineAction('recorderPausing', 'Recorder.Pausing');
+
+  // Sent when recording is effectively paused.
+  bundle.defineAction('recorderPaused', 'Recorder.Paused');
+
   // Sent every second while recording.
   bundle.defineAction('recorderTick', 'Recorder.Tick');
 

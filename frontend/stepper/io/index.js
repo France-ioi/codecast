@@ -80,9 +80,9 @@ export default function (bundle, deps) {
 
     self.render = function () {
       const {getMessage, canSelectMode, mode} = self.props;
+      const headerTitle = getMessage(canSelectMode ? 'IOPANE_SELECT_TERMINAL_TITLE' : 'IOPANE_FORCED_TERMINAL_TITLE');
       return (
-        <Panel header={
-          canSelectMode ? 'Entrée/Sortie/Terminal' : 'Terminal'}>
+        <Panel header={headerTitle}>
           <div className="row">
             <div className="col-sm-12">
               {canSelectMode && <form>

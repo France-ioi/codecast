@@ -4,6 +4,7 @@ const webpack = require('webpack');
 const SRC = path.resolve(__dirname, "frontend");
 
 const jsonConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'));
+const publicPath = path.join(jsonConfig.mountPath, 'build/');
 
 const config = module.exports = {
   entry: {
@@ -11,7 +12,7 @@ const config = module.exports = {
   },
   output: {
     path: path.join(__dirname, 'build'),
-    publicPath: path.join(jsonConfig.mountPath, 'build/'),
+    publicPath: publicPath,
     filename: '[name].js'
   },
   module: {
@@ -30,11 +31,14 @@ const config = module.exports = {
       },
       {
         test: /\.scss$/,
-        loader: 'style-loader!css-loader!sass-loader'
+        loader: 'style-loader!css-loader!resolve-url-loader!sass-loader?sourceMap'
       },
       {
         test: /\.(eot|svg|ttf|woff(2)?)(\?v=\d+\.\d+\.\d+)?/,
-        loader: 'file-loader?name=fonts/[name].[ext]'
+        loader: 'file-loader?name=fonts/[name].[ext]',
+        options: {
+          publicPath
+        }
       },
       {
         test: /\.(ico|gif|png|jpg|jpeg|svg)$/,
@@ -70,7 +74,9 @@ const config = module.exports = {
 };
 
 if (process.env.NODE_ENV !== 'production') {
-  config.devtool = 'eval'; // inline-source-map
+  // config.devtool = 'eval';
+  // config.devtool = inline-source-map;
+  config.devtool = 'inline-source-map';
 } else {
   config.plugins.push(new webpack.optimize.UglifyJsPlugin({
     compress: {

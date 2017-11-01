@@ -1,12 +1,13 @@
 
 import React from 'react';
-import {Button} from 'react-bootstrap';
+import {Button, ButtonGroup} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
+import Slider from 'rc-slider';
 
 export default function (bundle, deps) {
 
   bundle.use(
-    'recorderStart', 'recorderStop',
+    'recorderStart', 'recorderStop', 'recorderPause', 'playerSeek',
     'Menu', 'StepperControls'
   );
 
@@ -14,60 +15,89 @@ export default function (bundle, deps) {
     const getMessage = state.get('getMessage');
     const recorder = state.get('recorder');
     const status = recorder.get('status');
-    const canStart = status === 'ready';
-    const canStop = status === 'recording';
-    const canPause = false;
-    const isRecording = status === 'recording';
-    const elapsed = recorder.get('elapsed') || 0;
-    const events = recorder.get('events');
+    const isPlayback = status === 'paused';
+    let canRecord, canPlay, canPause, canStop, canStep, position, duration;
+    if (isPlayback) {
+      const player = state.get('player');
+      const playerStatus = player.get('status');
+      canPlay = canStop = canRecord = canStep = playerStatus === 'paused';
+      canPause = playerStatus === 'playing';
+      position = player.get('audioTime');
+      duration = player.get('duration');
+    } else {
+      canRecord = /ready|paused/.test(status);
+      canPlay = status === 'paused';
+      canPause = canStep = status === 'recording';
+      canStop = /recording|paused/.test(status);
+      position = duration = recorder.get('elapsed') || 0;
+    }
+    // const events = recorder.get('events');
     // const eventCount = events && events.count();
-    return {getMessage, canStart, canStop, canPause, isRecording, elapsed};
+    return {getMessage, canRecord, canPlay, canPause, canStop, canStep, isPlayback, position, duration};
   }
 
   class RecorderControls extends React.PureComponent {
 
     render () {
-      const {getMessage, canStart, canStop, canPause, isRecording, elapsed} = this.props;
+      const {getMessage, canRecord, canPlay, canPause, canStop, canStep, isPlayback, position, duration} = this.props;
       return (
         <div className="pane pane-controls clearfix">
           <div className="pane-controls-right">
             <deps.Menu/>
           </div>
           <div className="controls controls-main">
-            {canStart &&
-              <div>
-                <Button onClick={this.onStartRecording} className="float-left">
-                  <i className="fa fa-circle" style={{color: '#a01'}}/>
-                </Button>
-                {" "}{getMessage('START_RECORDING')}
-              </div>}
-            {canStop &&
-              <Button onClick={this.onStopRecording}>
-                <i className="fa fa-stop"/>
-              </Button>}
-            {canPause &&
-              <Button onClick={this.onPauseRecording}>
+            <ButtonGroup>
+              <Button onClick={this.onStartRecording} className="float-left" disabled={!canRecord}
+                title={getMessage('START_RECORDING')}>
+                <i className="fa fa-circle" style={{color: '#a01'}}/>
+              </Button>
+              <Button onClick={this.onPauseRecording} disabled={!canPause}>
                 <i className="fa fa-pause"/>
-              </Button>}
-            {isRecording &&
-              <p>
-                <i className="fa fa-clock-o"/>
-                {' '}
-                {timeFormatter(elapsed)}
-              </p>}
+              </Button>
+              <Button onClick={this.onStartPlayback} disabled={!canPlay}
+                title={getMessage('START_PLAYBACK')}>
+                <i className="fa fa-play"/>
+              </Button>
+              <Button onClick={this.onStopRecording} disabled={!canStop}>
+                <i className="fa fa-stop"/>
+              </Button>
+            </ButtonGroup>
+            {isPlayback
+              ? <p>
+                  <i className="fa fa-clock-o"/>
+                  {' '}
+                  {timeFormatter(position)}
+                </p>
+              : <p className="player-controls-times">
+                  <i className="fa fa-clock-o"/>
+                  {' '}
+                  {timeFormatter(position)}
+                  {' / '}
+                  {timeFormatter(duration)}
+                </p>}
+            {isPlayback &&
+              <Slider tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down"
+                value={position} min={0} max={duration} onChange={this.onSeek}>
+              </Slider>}
           </div>
-          <deps.StepperControls enabled={isRecording}/>
+          <deps.StepperControls enabled={canStep}/>
         </div>
       );
     }
     onStartRecording = () => {
       this.props.dispatch({type: deps.recorderStart});
     };
+    onStartPlayback = () => {
+      store.dispatch({type: scope.recorderReplay});
+    };
     onStopRecording = () => {
       this.props.dispatch({type: deps.recorderStop});
     };
     onPauseRecording = () => {
-      // TODO
+      this.props.dispatch({type: deps.recorderPause});
+    };
+    onSeek = (audioTime) => {
+      self.props.dispatch({type: deps.playerSeek, audioTime});
     };
   }
   bundle.defineView('RecorderControls', RecorderControlsSelector, RecorderControls);

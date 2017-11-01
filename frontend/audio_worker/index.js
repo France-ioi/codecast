@@ -46,6 +46,10 @@ function messageHandler (e) {
       case "record":
         record(e.data.buffer);
         break;
+      case "pauseRecording":
+        var result = pauseRecording(e.data.options);
+        sendResponse(e, result);
+        break;
       case "finishRecording":
         var result = finishRecording(e.data.options);
         sendResponse(e, result);
@@ -84,9 +88,7 @@ function clearRecordings () {
 }
 
 function encodeChannels (channels, options) {
-  var result, encodingOptions;
-  result = {key: recordings.length};
-  recordings.push({channels: channels});
+  var result = {}, encodingOptions;
   if (options.wav) {
     if (typeof options.wav === 'object') {
       encodingOptions = options.wav;
@@ -110,13 +112,21 @@ function encodeChannels (channels, options) {
   return result;
 }
 
-function finishRecording (options) {
+function getChannels () {
   var samplesL, samplesR;
   samplesL = combineChunks(chunksL);
   chunksL = [];
   samplesR = combineChunks(chunksR);
   chunksR = [];
-  return encodeChannels([samplesL, samplesR], options);
+  return [samplesL, samplesR];
+}
+
+function finishRecording (options) {
+  var channels = getChannels();
+  var result = encodeChannels(channels, options);
+  recordings.push({channels: channels});
+  result.key = recordings.length;
+  return result;
 }
 
 function combineRecordings (keys, options) {

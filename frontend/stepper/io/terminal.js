@@ -5,7 +5,7 @@ import React from 'react';
 import EpicComponent from 'epic-component';
 import classnames from 'classnames';
 import {Panel} from 'react-bootstrap';
-import {takeEvery, select} from 'redux-saga/effects';
+import {takeEvery, select, call} from 'redux-saga/effects';
 
 export default function (bundle, deps) {
 
@@ -75,7 +75,7 @@ export default function (bundle, deps) {
       yield call(addEvent, 'terminal.wait');
     });
     replayApi.on('terminal.wait', function (context, event, instant) {
-      context.state = terminalInputNeeded(state);
+      context.state = terminalInputNeeded(context.state);
     });
 
     recordApi.on(deps.terminalInputKey, function* (addEvent, action) {

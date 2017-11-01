@@ -69,6 +69,14 @@ export default function (bundle) {
       }));
   });
 
+  bundle.addReducer('recorderPausing', (state, action) =>
+    state.setIn(['recorder', 'status'], 'pausing')
+  );
+
+  bundle.addReducer('recorderPaused', (state, action) =>
+    state.setIn(['recorder', 'status'], 'paused')
+  );
+
   bundle.addReducer('recorderTick', function (state, action) {
     const {elapsed} = action;
     return state.setIn(['recorder', 'elapsed'], elapsed);
