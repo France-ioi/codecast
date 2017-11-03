@@ -31,7 +31,12 @@ export default function (bundle) {
 
   bundle.addReducer('recorderReady', function (state, action) {
     const {context} = action;
-    return state.set('recorder', Immutable.Map({status: 'ready', context: Immutable.Map(context)}));
+    return state.set('recorder', Immutable.Map({
+      status: 'ready',
+      context: Immutable.Map(context),
+      audioRef: 0,
+      eventRef: 0
+    }));
   });
 
   bundle.addReducer('recorderStarting', function (state, action) {

@@ -11,7 +11,7 @@
 
 */
 
-import {put, take, call, actionChannel} from 'redux-saga/effects';
+import {put, take, call, select, actionChannel} from 'redux-saga/effects';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
 
@@ -55,7 +55,10 @@ export default function (bundle, deps) {
   // Truncate the event stream at the given position (milliseconds).
   bundle.defineAction('recorderTruncate', 'Recorder.Truncate');
   bundle.addReducer('recorderTruncate', function (state, {payload: {position}}) {
-    return state.updateIn(['recorder', 'events'], events => truncateEvents(events, position));
+    return state.update('recorder', recorder => recorder
+      .update('events', events => truncateEvents(events, position))
+      .set('eventRef', position)
+    );
   });
 
   function truncateEvents (events, timestamp) {
@@ -100,9 +103,11 @@ export default function (bundle, deps) {
       let done = false;
       while (!done) {
         const action = yield take(channel);
+        const offset = yield select(st =>
+          st.getIn(['recorder', 'eventRef']) - st.getIn(['recorder', 'audioRef']));
         const timestamp = Math.round(context.audioContext.currentTime * 1000);
         function* addEvent (name, ...args) {
-          const event = [timestamp, name, ...args];
+          const event = [timestamp + offset, name, ...args];
           yield put({type: deps.recorderAddEvent, event});
           if (name === 'end') {
             done = true;

@@ -64,7 +64,7 @@ export default function (bundle, deps) {
       analyser.smoothingTimeConstant = 0.8;
       analyser.fftSize = 1024;
       scriptProcessor.connect(audioContext.destination);
-      yield call(suspendAudioContext, audioContext);
+      yield call(() => audioContext.suspend());
       yield put({type: deps.recorderPreparing, progress: 'audio_ok'});
       // Set up a worker to hold and encode the buffers.
       const worker = yield call(spawnWorker, AudioWorker);
@@ -126,18 +126,7 @@ export default function (bundle, deps) {
       // Signal that the recorder is starting.
       yield put({type: deps.recorderStarting});
       // Resume the audio context to start recording audio buffers.
-      const context = recorder.get('context');
-      // Race with timeout, in case the audio device is busy.
-      const outcome = yield race({
-        resumed: call(resumeAudioContext, context.get('audioContext')),
-        timeout: call(delay, 1000)
-      });
-      if ('timeout' in outcome) {
-        // XXX We call recorderPrepare to attempt to fix the issue and abort
-        //     the start, ideally we should put an action to notify the user.
-        yield call(recorderPrepare);
-        return;
-      }
+      yield call(resumeAudioContext, recorder.get('context'));
       // Signal that recording has started.
       yield put({type: deps.recorderStarted});
       /* Record the 'start' event */
@@ -161,8 +150,7 @@ export default function (bundle, deps) {
       const context = recorder.get('context');
       if (recorderStatus === 'recording') {
         /* Suspend the audio context to stop recording audio buffers. */
-        const audioContext = context.get('audioContext');
-        yield call(suspendAudioContext, audioContext);
+        yield call(suspendAudioContext, context);
       }
       if (recorderStatus === 'paused') {
         /* When stopping while paused, the recording is truncated at the
@@ -204,8 +192,7 @@ export default function (bundle, deps) {
       // Signal that the recorder is pausing.
       yield put({type: deps.recorderPausing});
       const context = recorder.get('context');
-      const audioContext = context.get('audioContext');
-      yield call(suspendAudioContext, audioContext);
+      yield call(suspendAudioContext, context);
       // Obtain the URL to a (WAV-encoded) audio object from the worker.
       const worker = context.get('worker');
       const {wav} = yield call(callWorker, worker, {command: "pauseRecording", options: {wav: true}});
@@ -252,17 +239,11 @@ export default function (bundle, deps) {
       /* Truncate the recording at the current playback position. */
       yield call(truncateRecording, player.get('audioTime'));
       /* Resume the audio context to resume recording audio buffers. */
-      const outcome = yield race({
-        resumed: call(resumeAudioContext, recorder.getIn(['context', 'audioContext'])),
-        timeout: call(delay, 1000)
-      });
-      if ('timeout' in outcome) {
-        throw new Error('resumeAudioContext timed out');
-        return;
-      }
+      yield call(resumeAudioContext, recorder.get('context'));
       // Signal that recording has resumed.
       yield put({type: deps.recorderResumed});
     } catch (error) {
+      // XXX generic error
       yield put({type: deps.error, source: 'recorderResume', error});
     }
   }
@@ -272,6 +253,38 @@ export default function (bundle, deps) {
     yield call(callWorker, worker, {command: 'truncateRecording', payload: {position: timestamp}});
     yield put({type: deps.recorderTruncate, payload: {position: timestamp}});
   }
+
+  function* resumeAudioContext (context) {
+    /* Race with timeout, in case the audio device is busy. */
+    const audioContext = context.get('audioContext');
+    const outcome = yield race({
+      resumed: call(() => audioContext.resume()),
+      timeout: call(delay, 1000)
+    });
+    if ('timeout' in outcome) {
+      throw new Error('audio device is busy');
+      /* Consider calling recorderPrepare to fix the issue?
+         yield call(recorderPrepare);
+       */
+    }
+    const timestamp = Math.round(audioContext.currentTime * 1000);
+    console.log('audioContextResumed', timestamp);
+    yield put({type: deps.audioContextResumed, payload: {timestamp}})
+  }
+  bundle.defineAction('audioContextResumed', 'Recorder.AudioContext.Resumed');
+  bundle.addReducer('audioContextResumed', (state, {payload: {timestamp}}) =>
+    state.setIn(['recorder', 'audioRef'], timestamp));
+
+  function* suspendAudioContext (context) {
+    const audioContext = context.get('audioContext');
+    yield call(() => audioContext.suspend());
+    const timestamp = Math.round(audioContext.currentTime * 1000);
+    yield put({type: deps.audioContextSuspended, payload: {timestamp}})
+  }
+  bundle.defineAction('audioContextSuspended', 'Recorder.AudioContext.Suspended');
+  bundle.addReducer('audioContextSuspended', (state, {payload: {timestamp}}) =>
+    state.updateIn(['recorder', 'eventRef'],
+      eventRef => eventRef + timestamp));
 
   bundle.addSaga(function* watchRecorderPrepare () {
     while (true) {
@@ -325,12 +338,4 @@ function getAudioStream () {
       getUserMedia.call(navigator, constraints, resolve, reject);
     });
   }
-}
-
-function suspendAudioContext (audioContext) {
-  return audioContext.suspend();
-}
-
-function resumeAudioContext (audioContext) {
-  return audioContext.resume();
 }
