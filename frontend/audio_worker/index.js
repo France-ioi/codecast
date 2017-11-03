@@ -335,7 +335,7 @@ function encodeWav (channels, options) {
   var samples = options.numChannels == 2 ? interleaveSamples(channels) : averageSamples(channels);
 
   var blockAlignment = options.numChannels * options.sampleSize;
-  var dataByteCount = samples.length * blockAlignment;
+  var dataByteCount = samples.length * options.sampleSize;
   var buffer = new ArrayBuffer(44 + dataByteCount);
   var view = new DataView(buffer);
 
