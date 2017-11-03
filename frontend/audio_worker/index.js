@@ -91,8 +91,8 @@ function encodeChannels (channels, options) {
       encodingOptions = options.wav;
     } else {
       encodingOptions = {
-        numChannels: 1,
-        sampleSize: 1,
+        numChannels: 2,
+        sampleSize: 2,
         sampleRate: recordingSampleRate
       };
     }
@@ -298,9 +298,6 @@ function encodeWav (channels, options) {
   // options.numChannels: 1 (mono), 2 (stereo)
   // options.sampleSize: 1 (8-bit), 2 (16-bit)
   // options.sampleRate: recordingSampleRate / {1,2,3,4,6}
-
-  /* Select max quality if no options provided. */
-  options = options || {numChannels: 2, sampleSize: 2, sampleRate: recordingSampleRate};
 
   // Downsample.
   var div = recordingSampleRate / options.sampleRate;
