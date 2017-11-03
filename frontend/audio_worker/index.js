@@ -299,13 +299,8 @@ function encodeWav (channels, options) {
   // options.sampleSize: 1 (8-bit), 2 (16-bit)
   // options.sampleRate: recordingSampleRate / {1,2,3,4,6}
 
-  // Select sensible options if not provided.
-  if (!options) {
-    if (recordingSampleRate == 48000)
-      options = {numChannels: 1, sampleSize: 2, sampleRate: 8000};
-    else
-      options = {numChannels: 1, sampleSize: 1, sampleRate: recordingSampleRate};
-  }
+  /* Select max quality if no options provided. */
+  options = options || {numChannels: 2, sampleSize: 2, sampleRate: recordingSampleRate};
 
   // Downsample.
   var div = recordingSampleRate / options.sampleRate;
