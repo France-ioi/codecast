@@ -120,7 +120,7 @@ export const SortView = EpicComponent(self => {
   };
 
   self.render = function () {
-    const {Frame, controls, directive, frames, context, scale} = self.props;
+    const {Frame, controls, directive, frames, context, scale, getMessage} = self.props;
     const {core} = context;
     const topFrame = frames[0];
     const localMap = topFrame.get('localMap');
@@ -136,7 +136,7 @@ export const SortView = EpicComponent(self => {
     const cursorRows = getNumber(byName.cursorRows, 1);
     const maxVisibleCells = getNumber(byName.n, 40);
     const height = getNumber(byName.height, 'auto');
-    const view = {dimExpr: dim, fullView, cursorExprs, maxVisibleCells, cursorRows};
+    const view = {dimExpr: dim, fullView, cursorExprs, maxVisibleCells, cursorRows, getMessage};
     Object.assign(view, extractView(context, topFrame, expr, view));
     if (view.error) {
       return <Frame {...self.props}>{view.error}</Frame>;

@@ -4,44 +4,45 @@ import * as C from 'persistent-c';
 import {readScalarBasic, stringifyExpr, evalExpr} from './utils';
 import {getCursorMap} from './array_utils';
 
-export const extractView = function (context, frame, refExpr, view, getMessage) {
+export const extractView = function (context, frame, refExpr, options) {
+  const {getMessage} = options;
   const {core} = context;
   const localMap = frame.get('localMap');
   let ref;
   try {
     ref = evalExpr(core, localMap, refExpr, false);
   } catch (ex) {
-    return {error: getMessage('ARRAY2D_EXPR_NOVAL').format({dim: stringifyExpr(refExpr), ex: getMessage.format(ex)})};
+    return {error: getMessage('ARRAY2D_EXPR_NOVAL').format({expr: stringifyExpr(refExpr), ex})};
   }
   // By the array-value decaying rule, ref should be a pointer.
   if (ref.type.kind !== 'pointer') {
-    return {error: getMessage('ARRAY2D_EXPR_NOPTR').format({dim: stringifyExpr(refExpr)})};
+    return {error: getMessage('ARRAY2D_EXPR_NOPTR').format({expr: stringifyExpr(refExpr)})};
   }
   const arrayType = ref.type.orig;
   if (arrayType === undefined || arrayType.kind !== 'array') {
-    return {error: getMessage('ARRAY2D_EXPR_NOARR').format({dim: stringifyExpr(refExpr)})};
+    return {error: getMessage('ARRAY2D_EXPR_NOARR').format({expr: stringifyExpr(refExpr)})};
   }
   const rowCount = arrayType.count.toInteger();
   const rowType = arrayType.elem;
   if (rowType.kind !== 'array') {
-    return {error: getMessage('ARRAY2D_EXPR_NOT2D').format({dim: stringifyExpr(refExpr)})};
+    return {error: getMessage('ARRAY2D_EXPR_NOT2D').format({expr: stringifyExpr(refExpr)})};
   }
   const colCount = rowType.count.toInteger();
   const cellType = rowType.elem;
   if (cellType.kind !== 'builtin') {
-    return {error: getMessage('ARRAY2D_ELT_UNSUP').format({dim: stringifyExpr(refExpr)})};
+    return {error: getMessage('ARRAY2D_ELT_UNSUP').format({expr: stringifyExpr(refExpr)})};
   }
   // Read the cells.
   const rows = readArray2D(context, arrayType, ref.address, rowCount, colCount, cellType);
   // Inspect cursors.
-  const rowInfoMap = getCursorMap(core, localMap, view.rowCursors,
+  const rowInfoMap = getCursorMap(core, localMap, options.rowCursors,
     {
       minIndex: 0,
       maxIndex: rowCount + 1,
       address: ref.address,
       cellSize: rowType.size
     });
-  const colInfoMap = getCursorMap(core, localMap, view.colCursors,
+  const colInfoMap = getCursorMap(core, localMap, options.colCursors,
     {
       minIndex: 0,
       maxIndex: colCount + 1,
