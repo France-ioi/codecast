@@ -364,4 +364,11 @@ export default function (bundle, deps) {
     }
   });
 
+  bundle.defineAction('playerClear', 'Player.Clear');
+  bundle.addReducer('playerClear', state =>
+    state.set('player', Immutable.Map({
+      status: 'idle',
+      audio: document.createElement('video')
+    })));
+
 };

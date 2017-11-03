@@ -124,6 +124,9 @@ Codecast.start = function (options) {
 
   let App = scope.SandboxApp;
 
+  /* recorder and player */
+  store.dispatch({type: scope.playerClear});
+
   if (options.start === 'recorder') {
     store.dispatch({type: scope.switchToScreen, screen: 'record'});
     store.dispatch({type: scope.recorderPrepare});
