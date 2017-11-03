@@ -7,7 +7,7 @@ import Slider from 'rc-slider';
 export default function (bundle, deps) {
 
   bundle.use(
-    'recorderStart', 'recorderStop', 'recorderPause',
+    'recorderStart', 'recorderStop', 'recorderPause', 'recorderResume',
     'playerStart', 'playerPause', 'playerResume', 'playerSeek',
     'getRecorderState', 'getPlayerState',
     'Menu', 'StepperControls'
@@ -97,7 +97,12 @@ export default function (bundle, deps) {
       );
     }
     onStartRecording = () => {
-      this.props.dispatch({type: deps.recorderStart});
+      const {recorderStatus} = this.props;
+      if (recorderStatus === 'ready') {
+        this.props.dispatch({type: deps.recorderStart});
+      } else {
+        this.props.dispatch({type: deps.recorderResume});
+      }
     };
     onPause = () => {
       const {recorderStatus, playerStatus} = this.props;
