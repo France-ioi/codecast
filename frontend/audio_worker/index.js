@@ -24,9 +24,6 @@ var chunksR = [];
 // Configured sample rate, stored in the WAV files produced.
 var recordingSampleRate;
 
-// Array of individual recordings (objects of shape {channels}).
-var recordings = [];
-
 // Respond to a null message with a null message to indicate that the worker
 // loaded successfully.
 self.onmessage = function (e) {
@@ -47,20 +44,16 @@ function messageHandler (e) {
         record(e.data.buffer);
         break;
       case "pauseRecording":
-        var result = pauseRecording(e.data.options);
-        sendResponse(e, result);
+        sendResponse(e, pauseRecording(e.data.options));
+        break;
+      case "truncateRecording":
+        sendResponse(e, truncateRecording(e.data.payload));
         break;
       case "finishRecording":
-        var result = finishRecording(e.data.options);
-        sendResponse(e, result);
+        sendResponse(e, finishRecording(e.data.options));
         break;
-      case "combineRecordings":
-        var result = combineRecordings(e.data.indices, e.data.options);
-        sendResponse(e, result);
-        break;
-      case "clearRecordings":
-        clearRecordings();
-        sendResponse(e, {});
+      case "release":
+        sendResponse(e, releaseResources());
         break;
     }
   } catch (error) {
@@ -81,14 +74,18 @@ function init (config) {
 function record (input) {
   chunksL.push(input[0]);
   chunksR.push(input[1]);
+  console.log('chunk', input[0].length, chunksL.length, chunksR.length);
 }
 
-function clearRecordings () {
-  recordings = [];
+function releaseResources () {
+  chunksL = [];
+  chunksR = [];
+  return null;
 }
 
 function encodeChannels (channels, options) {
   var result = {}, encodingOptions;
+  result.duration = channels[0].length / recordingSampleRate; /* seconds */
   if (options.wav) {
     if (typeof options.wav === 'object') {
       encodingOptions = options.wav;
@@ -115,34 +112,45 @@ function encodeChannels (channels, options) {
 function getChannels () {
   var samplesL, samplesR;
   samplesL = combineChunks(chunksL);
-  chunksL = [];
   samplesR = combineChunks(chunksR);
-  chunksR = [];
   return [samplesL, samplesR];
+}
+
+function pauseRecording (options) {
+  var channels = getChannels();
+  return encodeChannels(channels, options);
 }
 
 function finishRecording (options) {
   var channels = getChannels();
-  var result = encodeChannels(channels, options);
-  recordings.push({channels: channels});
-  result.key = recordings.length;
-  return result;
+  return encodeChannels(channels, options);
 }
 
-function combineRecordings (keys, options) {
-  // Combine the interleaved samples from the listed recordings.
-  var chunksL = [], chunksR = [];
-  for (var i = 0; i < urls.length; i += 1) {
-    var key = keys[i];
-    if (recordings[key]) {
-      var recording = recordings[key];
-      chunksL.push(recording.channels[0]);
-      chunksR.push(recording.channels[1]);
+function truncateRecording ({position: millis}) {
+  const truncPos = Math.round(millis * recordingSampleRate / 1000);
+  let chunkStart = 0, iChunk = 0;
+  while (iChunk < chunksL.length) {
+    const chunkEnd = chunkStart + chunksL[iChunk].length;
+    if (chunkEnd < truncPos) {
+      iChunk += 1;
+      chunkStart = chunkEnd;
+      continue;
     }
+    // Trim current chunk if needed.
+    const posInChunk = truncPos - chunkStart;
+    if (posInChunk < chunksL.length) {
+      chunksL[iChunk] = chunksL[iChunk].slice(0, posInChunk);
+      chunksR[iChunk] = chunksR[iChunk].slice(0, posInChunk);
+    }
+    // Trim immediately past current cunk.
+    chunksL.splice(iChunk + 1);
+    chunksR.splice(iChunk + 1);
+    return {
+      sampleCount: chunkStart + chunksL[iChunk].length,
+      truncated: true
+    };
   }
-  var samplesL = combineChunks(chunksL);
-  var samplesR = combineChunks(chunksR);
-  return encodeChannels([samplesL, samplesR], options);
+  return {sampleCount: chunkStart, truncated: false};
 }
 
 function averageSamples (channels) {
@@ -180,8 +188,9 @@ function interleaveSamples (channels) {
 
 function combineChunks (chunks) {
   var totalLength = 0;
-  for (var i = 0; i < chunks.length; i++)
+  for (var i = 0; i < chunks.length; i++) {
     totalLength += chunks[i].length;
+  }
   var result = new Float32Array(totalLength);
   var offset = 0;
   for (i = 0; i < chunks.length; i++) {

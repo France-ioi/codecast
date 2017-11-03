@@ -51,6 +51,42 @@ export default function (bundle, deps) {
     return state.updateIn(['recorder', 'events'], events => events.push(event));
   });
 
+
+  // Truncate the event stream at the given position (milliseconds).
+  bundle.defineAction('recorderTruncate', 'Recorder.Truncate');
+  bundle.addReducer('recorderTruncate', function (state, {payload: {position}}) {
+    return state.updateIn(['recorder', 'events'], events => truncateEvents(events, position));
+  });
+
+  function truncateEvents (events, timestamp) {
+    const index = findEventIndex(events, timestamp);
+    console.log('truncateEvents', timestamp, index, events);
+    return events.slice(0, index);
+  }
+
+  function findEventIndex (events, timestamp) {
+    let low = 0, high = events.size;
+    while (low + 1 < high) {
+      const mid = (low + high) / 2 | 0;
+      const event = events.get(mid);
+      if (event[0] <= timestamp) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    let event = events.get(low);
+    if (event) {
+      while (low + 1 < events.size) {
+        const nextEvent = events.get(low + 1);
+        if (nextEvent[0] !== event[0])
+          break;
+        low += 1;
+      }
+    }
+    return low;
+  }
+
   bundle.use('recorderReady', 'recorderStarted')
   bundle.addSaga(function* recordEvents () {
     const pattern = Array.from(actionHandlers.keys());

@@ -1,4 +1,9 @@
 
+/* TODO: figure out why the 'end' event seems to be inserted when the recording
+         is paused, not when the recording is actually stopped
+         => because 'end' is added by recorderStopping
+*/
+
 import {delay} from 'redux-saga';
 import {take, takeEvery, put, call, race, select, actionChannel} from 'redux-saga/effects';
 import Immutable from 'immutable';
@@ -14,13 +19,14 @@ import AudioWorker from 'worker-loader?inline!../audio_worker';
 export default function (bundle, deps) {
 
   bundle.use(
-    'error', 'recordApi', 'switchToScreen',
-    'getRecorderState',
+    'error', 'recordApi',
+    'getRecorderState', 'getPlayerState',
     'recorderPrepare', 'recorderPreparing', 'recorderReady',
     'recorderTick',
     'recorderStart', 'recorderStarting', 'recorderStarted',
     'recorderPause', 'recorderPausing', 'recorderPaused',
     'recorderStop', 'recorderStopping', 'recorderStopped',
+    'recorderTruncate',
     'playerPrepare', 'playerReady'
   );
 
@@ -112,7 +118,16 @@ export default function (bundle, deps) {
     try {
       // The user clicked the "start recording" button.
       const recorder = yield select(deps.getRecorderState);
-      if (recorder.get('status') !== 'ready') {
+      const recorderStatus = recorder.get('status');
+      if (recorderStatus === 'paused') {
+        /* TODO: truncate recording at playback position, then restart
+                 recording: resumeAudioContext, put recorderResumed,
+                 skip recording a start event, perhaps record a mark
+                 event instead.  */
+        console.log('not implemented');
+        return;
+      }
+      if (recorderStatus !== 'ready') {
         console.log('not ready', recorder);
         return;
       }
@@ -135,7 +150,6 @@ export default function (bundle, deps) {
       yield put({type: deps.recorderStarted});
       /* Record the 'start' event */
       yield call(deps.recordApi.start);
-      yield put({type: deps.switchToScreen, screen: 'record'});
     } catch (error) {
       // XXX generic error
       yield put({type: deps.error, source: 'recorderStart', error});
@@ -145,27 +159,36 @@ export default function (bundle, deps) {
   function* recorderStop () {
     try {
       let recorder = yield select(deps.getRecorderState);
-      if (recorder.get('status') !== 'recording') {
+      let recorderStatus = recorder.get('status');
+      if (!/recording|paused/.test(recorderStatus)) {
+        /* Stop request in invalid state. */
         return;
       }
-      // Signal that the recorder is stopping.
+      /* Signal that the recorder is stopping. */
       yield put({type: deps.recorderStopping});
-      // The recorderStopping action appends the 'end' action to the events
-      // stream.  Do this before pausing the audio to ensure that the 'end'
-      // event occurs before the end of the audio stream, so that playback
-      // always goes past the 'end' event.
-      // Suspend the audio context to stop recording audio buffers.
       const context = recorder.get('context');
-      const audioContext = context.get('audioContext');
-      yield call(suspendAudioContext, audioContext);
-      // Obtain the URL to the audio object from the worker.
       const worker = context.get('worker');
-      const {key, mp3, wav} = yield call(callWorker, worker, {command: "finishRecording", options: {mp3: true, wav: true}});
+      if (recorderStatus === 'recording') {
+        /* Suspend the audio context to stop recording audio buffers. */
+        const audioContext = context.get('audioContext');
+        yield call(suspendAudioContext, audioContext);
+      }
+      if (recorderStatus === 'paused') {
+        /* When stopping while paused, the recording is truncated at the
+           playback position */
+        const audioTime = yield select(state => deps.getPlayerState(state).get('audioTime'));
+        yield call(callWorker, worker, {command: 'truncateRecording', payload: {position: audioTime}});
+        yield put({type: deps.recorderTruncate, payload: {position: audioTime}});
+      }
+      /* Encode the audio track. */
+      const {mp3, wav, duration} = yield call(callWorker, worker, {command: 'finishRecording', options: {mp3: true, wav: true}});
       const mp3Url = URL.createObjectURL(mp3);
       const wavUrl = URL.createObjectURL(wav);
-      // Package the events blob and an URL.
+      /* Package the events track. */
       recorder = yield select(deps.getRecorderState);
-      const events = recorder.get('events');
+       /* Ensure the 'end' event occurs before the end of the audio track. */
+      const endTime = Math.floor(duration * 1000);
+      const events = recorder.get('events').push([endTime, 'end']);
       const eventsBlob = new Blob([JSON.stringify(events.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
       const eventsUrl = URL.createObjectURL(eventsBlob);
       // Signal that the recorder has stopped.
@@ -244,9 +267,6 @@ export default function (bundle, deps) {
   });
 
   bundle.defer(function ({recordApi, replayApi}) {
-    recordApi.on(deps.recorderStopping, function* (addEvent, action) {
-      yield call(addEvent, 'end');
-    });
     replayApi.on('end', function (context, event, instant) {
       context.state = context.state.set('stopped', true);
     });

@@ -7,39 +7,50 @@ import Slider from 'rc-slider';
 export default function (bundle, deps) {
 
   bundle.use(
-    'recorderStart', 'recorderStop', 'recorderPause', 'playerSeek',
+    'recorderStart', 'recorderStop', 'recorderPause',
+    'playerStart', 'playerPause', 'playerResume', 'playerSeek',
+    'getRecorderState', 'getPlayerState',
     'Menu', 'StepperControls'
   );
 
   function RecorderControlsSelector (state, props) {
     const getMessage = state.get('getMessage');
-    const recorder = state.get('recorder');
-    const status = recorder.get('status');
-    const isPlayback = status === 'paused';
-    let canRecord, canPlay, canPause, canStop, canStep, position, duration;
+    const recorder = deps.getRecorderState(state);
+    const recorderStatus = recorder.get('status');
+    const isPlayback = recorderStatus === 'paused';
+    let canRecord, canPlay, canPause, canStop, canStep, position, duration, playerStatus, playPause;
     if (isPlayback) {
-      const player = state.get('player');
-      const playerStatus = player.get('status');
-      canPlay = canStop = canRecord = canStep = playerStatus === 'paused';
+      const player = deps.getPlayerState(state);
+      playerStatus = player.get('status');
+      // Pause button shows us only while playing.
+      playPause = playerStatus === 'playing' ? 'pause' : 'play';
+      // Buttons are enabled only in stable states.
+      canPlay = canStop = canRecord = canStep = /ready|paused/.test(playerStatus);
       canPause = playerStatus === 'playing';
       position = player.get('audioTime');
       duration = player.get('duration');
     } else {
-      canRecord = /ready|paused/.test(status);
-      canPlay = status === 'paused';
-      canPause = canStep = status === 'recording';
-      canStop = /recording|paused/.test(status);
+      canRecord = /ready|paused/.test(recorderStatus);
+      canStop = /recording|paused/.test(recorderStatus);
+      canPlay = recorderStatus === 'paused';
+      canPause = canStep = recorderStatus === 'recording';
       position = duration = recorder.get('elapsed') || 0;
+      playPause = 'pause';
     }
     // const events = recorder.get('events');
     // const eventCount = events && events.count();
-    return {getMessage, canRecord, canPlay, canPause, canStop, canStep, isPlayback, position, duration};
+    return {
+      getMessage,
+      recorderStatus, playerStatus, isPlayback, playPause,
+      canRecord, canPlay, canPause, canStop, canStep,
+      position, duration
+    };
   }
 
   class RecorderControls extends React.PureComponent {
 
     render () {
-      const {getMessage, canRecord, canPlay, canPause, canStop, canStep, isPlayback, position, duration} = this.props;
+      const {getMessage, canRecord, canPlay, canPause, canStop, canStep, isPlayback, playPause, position, duration} = this.props;
       return (
         <div className="pane pane-controls clearfix">
           <div className="pane-controls-right">
@@ -51,29 +62,30 @@ export default function (bundle, deps) {
                 title={getMessage('START_RECORDING')}>
                 <i className="fa fa-circle" style={{color: '#a01'}}/>
               </Button>
-              <Button onClick={this.onPauseRecording} disabled={!canPause}>
-                <i className="fa fa-pause"/>
-              </Button>
-              <Button onClick={this.onStartPlayback} disabled={!canPlay}
-                title={getMessage('START_PLAYBACK')}>
-                <i className="fa fa-play"/>
-              </Button>
               <Button onClick={this.onStopRecording} disabled={!canStop}>
                 <i className="fa fa-stop"/>
               </Button>
+              {playPause === 'play'
+                ? <Button onClick={this.onStartPlayback} disabled={!canPlay}
+                    title={getMessage('START_PLAYBACK')}>
+                    <i className="fa fa-play"/>
+                  </Button>
+                : <Button onClick={this.onPause} disabled={!canPause}>
+                    <i className="fa fa-pause"/>
+                  </Button>}
             </ButtonGroup>
             {isPlayback
-              ? <p>
-                  <i className="fa fa-clock-o"/>
-                  {' '}
-                  {timeFormatter(position)}
-                </p>
-              : <p className="player-controls-times">
+              ? <p className="player-controls-times">
                   <i className="fa fa-clock-o"/>
                   {' '}
                   {timeFormatter(position)}
                   {' / '}
                   {timeFormatter(duration)}
+                </p>
+              : <p>
+                  <i className="fa fa-clock-o"/>
+                  {' '}
+                  {timeFormatter(position)}
                 </p>}
             {isPlayback &&
               <Slider tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down"
@@ -87,17 +99,27 @@ export default function (bundle, deps) {
     onStartRecording = () => {
       this.props.dispatch({type: deps.recorderStart});
     };
+    onPause = () => {
+      const {recorderStatus, playerStatus} = this.props;
+      if (recorderStatus === 'recording') {
+        this.props.dispatch({type: deps.recorderPause});
+      } else if (playerStatus === 'playing') {
+        this.props.dispatch({type: deps.playerPause});
+      }
+    };
     onStartPlayback = () => {
-      store.dispatch({type: scope.recorderReplay});
+      const {playerStatus} = this.props;
+      if (playerStatus === 'ready') {
+        this.props.dispatch({type: deps.playerStart});
+      } else if (playerStatus === 'paused') {
+        this.props.dispatch({type: deps.playerResume});
+      }
     };
     onStopRecording = () => {
       this.props.dispatch({type: deps.recorderStop});
     };
-    onPauseRecording = () => {
-      this.props.dispatch({type: deps.recorderPause});
-    };
     onSeek = (audioTime) => {
-      self.props.dispatch({type: deps.playerSeek, audioTime});
+      this.props.dispatch({type: deps.playerSeek, audioTime});
     };
   }
   bundle.defineView('RecorderControls', RecorderControlsSelector, RecorderControls);
