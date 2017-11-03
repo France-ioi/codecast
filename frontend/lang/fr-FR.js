@@ -25,6 +25,8 @@ module.exports = {
   IOPANE_MODE_SPLIT: "Entrée/sortie séparés",
   IOPANE_MODE_INTERACTIVE: "Terminal interactif",
   IOPANE_INITIAL_INPUT: "Entrée initiale :",
+  IOPANE_SELECT_TERMINAL_TITLE: "Terminal",
+  IOPANE_FORCED_TERMINAL_TITLE: "Entrée/Sortie/Terminal",
   MEMORY_SHIFT_VIEW_LEFT: "défiler la vue vers la gauche",
   MEMORY_SHIFT_VIEW_RIGHT: "défiler la vue vers la droite",
   CONTROL_RUN: "exécuter",
