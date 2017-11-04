@@ -487,7 +487,9 @@ export default function (bundle, deps) {
     recordApi.on(deps.stepperInterrupt, function* (addEvent, action) {
       yield call(addEvent, 'stepper.interrupt');
     });
-    /* stepper.interrupt does nothing during replayApi. */
+    replayApi.on('stepper.interrupt', function (context, event, instant) {
+      /* stepper.interrupt does nothing during replayApi. */
+    });
 
     stepperApi.onInit(function (stepperState, globalState) {
       const syntaxTree = deps.getSyntaxTree(globalState);
