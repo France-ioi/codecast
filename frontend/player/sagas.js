@@ -327,7 +327,7 @@ export default function (bundle, deps) {
         const nextInstant = findInstant(instants, audioTime);
         if (nextInstant.pos < prevInstant.pos) {
           // Event index jumped backwards.
-          yield call(resetToInstant, nextInstant, audioTime, true);
+          yield call(resetToInstant, nextInstant, audioTime, false);
         } else if (nextInstant.t > prevInstant.t + 1000 && prevInstant.pos + 10 < nextInstant.pos) {
           // Time between last state and new state jumped by more than 1 second,
           // and there are more than 10 events to replay.
