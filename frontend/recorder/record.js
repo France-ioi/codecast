@@ -97,8 +97,13 @@ export default function (bundle, deps) {
       let done = false;
       while (!done) {
         const action = yield take(channel);
-        const offset = yield select(st =>
-          st.getIn(['recorder', 'eventRef']) - st.getIn(['recorder', 'audioRef']));
+        const recorder = yield select(st => st.get('recorder'));
+        const status = recorder.get('status');
+        if (status !== 'recording') {
+          // Ignore events fired while not recording.
+          continue;
+        }
+        const offset = recorder.get('eventRef') - recorder.get('audioRef');
         const timestamp = Math.round(context.audioContext.currentTime * 1000);
         function* addEvent (name, ...args) {
           const event = [timestamp + offset, name, ...args];
