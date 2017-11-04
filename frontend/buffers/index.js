@@ -291,14 +291,15 @@ export default function (bundle, deps) {
         yield put({type: deps.bufferModelScroll, buffer, firstVisibleRow});
       };
     });
-    replayApi.onReset(function* (instant, quick) {
+    replayApi.onReset(function* ({state, range}, quick) {
       /* Reset all buffers. */
       for (let buffer of ['source', 'input', 'output']) {
-        const model = instant.state.getIn(['buffers', buffer, 'model']);
+        const model = state.getIn(['buffers', buffer, 'model']);
         yield put({type: deps.bufferReset, buffer, model, quiet: quick});
       }
-      const {range} = instant;
-      yield put({type: deps.bufferHighlight, buffer: 'source', range});
+      if (range) {
+        yield put({type: deps.bufferHighlight, buffer: 'source', range});
+      }
     });
   });
 
