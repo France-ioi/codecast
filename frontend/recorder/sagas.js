@@ -307,7 +307,8 @@ export default function (bundle, deps) {
         });
         if ('stopped' in outcome)
           break;
-        const elapsed = Math.round(context.audioContext.currentTime * 1000);
+        const offset = yield select(st => st.getIn(['recorder', 'eventRef']) - st.getIn(['recorder', 'audioRef']));
+        const elapsed = Math.round(context.audioContext.currentTime * 1000) + offset;
         yield put({type: deps.recorderTick, elapsed});
       }
     }
