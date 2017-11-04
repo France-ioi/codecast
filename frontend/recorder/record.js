@@ -54,18 +54,12 @@ export default function (bundle, deps) {
 
   // Truncate the event stream at the given position (milliseconds).
   bundle.defineAction('recorderTruncate', 'Recorder.Truncate');
-  bundle.addReducer('recorderTruncate', function (state, {payload: {position}}) {
+  bundle.addReducer('recorderTruncate', function (state, {payload: {position, timestamp}}) {
     return state.update('recorder', recorder => recorder
-      .update('events', events => truncateEvents(events, position))
-      .set('eventRef', position)
+      .update('events', events => events.slice(0, position))
+      .set('eventRef', timestamp)
     );
   });
-
-  function truncateEvents (events, timestamp) {
-    const index = findEventIndex(events, timestamp);
-    console.log('truncateEvents', timestamp, index, events);
-    return events.slice(0, index);
-  }
 
   function findEventIndex (events, timestamp) {
     let low = 0, high = events.size;

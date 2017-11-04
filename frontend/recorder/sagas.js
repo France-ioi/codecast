@@ -156,7 +156,7 @@ export default function (bundle, deps) {
         /* When stopping while paused, the recording is truncated at the
            playback position */
         const audioTime = yield select(st => deps.getPlayerState(st).get('audioTime'));
-        yield call(truncateRecording, audioTime);
+        yield call(truncateRecording, audioTime, null);
       }
       /* Encode the audio track. */
       const worker = context.get('worker');
@@ -237,7 +237,7 @@ export default function (bundle, deps) {
       /* Signal that the recorder is resuming. */
       yield put({type: deps.recorderResuming});
       /* Truncate the recording at the current playback position. */
-      yield call(truncateRecording, player.get('audioTime'));
+      yield call(truncateRecording, player.get('audioTime'), player.get('current'));
       /* Resume the audio context to resume recording audio buffers. */
       yield call(resumeAudioContext, recorder.get('context'));
       // Signal that recording has resumed.
@@ -248,10 +248,13 @@ export default function (bundle, deps) {
     }
   }
 
-  function* truncateRecording (timestamp) {
+  function* truncateRecording (timestamp, instant) {
     const worker = yield select(st => deps.getRecorderState(st).getIn(['context', 'worker']));
     yield call(callWorker, worker, {command: 'truncateRecording', payload: {position: timestamp}});
-    yield put({type: deps.recorderTruncate, payload: {position: timestamp}});
+    if (instant) {
+      const position = instant.pos + 1;
+      yield put({type: deps.recorderTruncate, payload: {timestamp, position}});
+    }
   }
 
   function* resumeAudioContext (context) {
