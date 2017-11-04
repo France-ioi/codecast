@@ -450,6 +450,7 @@ export default function (bundle, deps) {
     });
     replayApi.on('stepper.undo', function (context, event, instant) {
       context.state = stepperUndo(context.state);
+      instant.range = getNodeRange(deps.getStepperDisplay(context.state));
     });
 
     recordApi.on(deps.stepperRedo, function* (addEvent, action) {
@@ -457,6 +458,7 @@ export default function (bundle, deps) {
     });
     replayApi.on('stepper.redo', function (context, event, instant) {
       context.state = stepperRedo(context.state);
+      instant.range = getNodeRange(deps.getStepperDisplay(context.state));
     });
 
     recordApi.on(deps.stepperStackUp, function* (addEvent, action) {
@@ -464,6 +466,7 @@ export default function (bundle, deps) {
     });
     replayApi.on('stepper.stack.up', function (context, event, instant) {
       context.state = stepperStackUp(context.state);
+      instant.range = getNodeRange(deps.getStepperDisplay(context.state));
     });
 
     recordApi.on(deps.stepperStackDown, function* (addEvent, action) {
@@ -471,6 +474,7 @@ export default function (bundle, deps) {
     });
     replayApi.on('stepper.stack.down', function (context, event, instant) {
       context.state = stepperStackDown(context.state);
+      instant.range = getNodeRange(deps.getStepperDisplay(context.state));
     });
 
     /* TODO: move out of here */
