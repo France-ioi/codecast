@@ -417,6 +417,10 @@ export default function (bundle, deps) {
       context.state = stepperStarted(context.state, {mode});
       const stepperState = deps.getStepperDisplay(context.state);
       context.run = stepperApi.makeContext(stepperState);
+      /* Update the current displayed state with the new context, as the next
+         event will reload it (possibly modified by user interactions) from
+         there. */
+      context.state = stepperIdle(context.state, {context: context.run});
     });
 
     recordApi.on(deps.stepperIdle, function* (addEvent, action) {
