@@ -23,6 +23,7 @@ var chunksR = [];
 
 // Configured sample rate, stored in the WAV files produced.
 var recordingSampleRate;
+var memoryUsageInterval;
 
 // Respond to a null message with a null message to indicate that the worker
 // loaded successfully.
@@ -68,6 +69,19 @@ function sendResponse (e, response) {
 
 function init (config) {
   recordingSampleRate = config.sampleRate;
+  memoryUsageInterval = setInterval(reportMemoryUsage, 1000);
+}
+
+function reportMemoryUsage () {
+  // const heapSize = (self.performance.memory.usedJSHeapSize / (1024 * 1024)).toFixed(1);
+  let heapSize = 0;
+  for (var chunk of chunksL) {
+    heapSize += 4 * chunk.length;
+  }
+  for (var chunk of chunksR) {
+    heapSize += 4 * chunk.length;
+  }
+  self.postMessage({id: 'memoryUsage', heapSize});
 }
 
 // Add a chunk to the current recording.

@@ -10,6 +10,7 @@ module.exports = {
   FULLSCREEN: "fullscreen",
   EXIT_FULLSCREEN: "exit fullscreen",
   AN_ERROR_OCCURRED: "An error occurred!",
+  MEMORY_USAGE: "Memory usage",
   PROGRAM_CANNOT_BE_MODIFIED_WHILE_RUNNING: "The programme cannot be modified while it is running.",
   START_PLAYBACK: "start playback",
   PAUSE_PLAYBACK: "pause playback",

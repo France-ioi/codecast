@@ -10,6 +10,7 @@ module.exports = {
   FULLSCREEN: "plein écran",
   EXIT_FULLSCREEN: "sortie de plein-écran",
   AN_ERROR_OCCURRED: "Une erreur est survenue !",
+  MEMORY_USAGE: "Utilisation mémoire",
   PROGRAM_CANNOT_BE_MODIFIED_WHILE_RUNNING: "Le programme ne peut pas être modifié pendant qu'il s'exécute.",
   START_PLAYBACK: "lecture des explications",
   PAUSE_PLAYBACK: "pause des explications",

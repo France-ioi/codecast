@@ -4,7 +4,7 @@ import {Button} from 'react-bootstrap';
 
 export default function (bundle, deps) {
 
-  bundle.use('ErrorView', 'LoginScreen', 'RecordScreen', 'SaveScreen');
+  bundle.use('ErrorView', 'LoginScreen', 'RecordScreen', 'SaveScreen', 'MemoryUsage');
 
   bundle.defineView('RecorderApp', RecorderAppSelector, class RecorderApp extends React.PureComponent {
     render () {
@@ -17,6 +17,7 @@ export default function (bundle, deps) {
           {screen === 'record' && <deps.RecordScreen/>}
           {screen === 'save' && <deps.SaveScreen/>}
           <canvas id="vumeter" width="10" height="100"></canvas>
+          <deps.MemoryUsage/>
         </div>
       );
     };

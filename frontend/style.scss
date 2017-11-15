@@ -152,6 +152,11 @@ body#app, #app h1, #app h2, #app h3 {
   left: 10px;
   top: 10px;
 }
+#memory-usage {
+  position: fixed;
+  left: 10px;
+  top: 120px;
+}
 
 .stack-view {
   overflow-y: auto;
