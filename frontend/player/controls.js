@@ -4,6 +4,8 @@ import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 import Slider from 'rc-slider';
 
+import {formatTime} from './utils';
+
 export default function (bundle, deps) {
 
   bundle.use(
@@ -40,16 +42,6 @@ export default function (bundle, deps) {
       self.props.dispatch({type: deps.playerSeek, audioTime});
     };
 
-    const zeroPad2 = function (n) {
-      return ('0'+n).slice(-2);
-    };
-    const timeFormatter = function (ms) {
-      let s = Math.round(ms / 1000);
-      const m = Math.floor(s / 60);
-      s -= m * 60;
-      return zeroPad2(m) + ':' + zeroPad2(s);
-    };
-
     self.render = function () {
       const {status, audioTime, duration, getMessage} = self.props;
       const showStartPlayback = /preparing|starting|ready|paused/.test(status);
@@ -58,36 +50,40 @@ export default function (bundle, deps) {
       const canPausePlayback = status === 'playing';
       const canStep = /ready|paused/.test(status);
       return (
-        <div className="pane pane-controls clearfix">
-          <div className="pane-controls-right">
-            <deps.Menu/>
-          </div>
-          <div className="controls controls-main">
-            <div className="player-controls-playback">
-              {showStartPlayback &&
-                  <Button onClick={onStartPlayback} disabled={!canStartPlayback}
-                    title={getMessage('START_PLAYBACK')}>
-                    <i className="fa fa-play"/>
-                  </Button>}
-              {showPausePlayback &&
-                <Button onClick={onPausePlayback} disabled={!canPausePlayback}
-                  title={getMessage('PAUSE_PLAYBACK')}>
-                  <i className="fa fa-pause"/>
-                </Button>}
-            </div>
-            <p className="player-controls-times">
-              <i className="fa fa-clock-o"/>
-              {' '}
-              {timeFormatter(audioTime)}
-              {' / '}
-              {timeFormatter(duration)}
-            </p>
+        <div className="pane pane-controls clearfix" style={{width: '100%'}}>
+          <div className='pane-controls-row' style={{width: '100%'}}>
             <div className="player-slider-container">
-              <Slider tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek}>
+              <Slider tipFormatter={formatTime} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek}>
               </Slider>
             </div>
           </div>
-          <deps.StepperControls enabled={canStep}/>
+          <div className='pane-controls-row' style={{width: '100%'}}>
+            <div className="pane-controls-right" style={{float: 'right'}}>
+              <deps.Menu/>
+            </div>
+            <div className="controls controls-main" style={{float: 'left'}}>
+              <div className="player-controls-playback">
+                {showStartPlayback &&
+                    <Button onClick={onStartPlayback} disabled={!canStartPlayback}
+                      title={getMessage('START_PLAYBACK')}>
+                      <i className="fa fa-play"/>
+                    </Button>}
+                {showPausePlayback &&
+                  <Button onClick={onPausePlayback} disabled={!canPausePlayback}
+                    title={getMessage('PAUSE_PLAYBACK')}>
+                    <i className="fa fa-pause"/>
+                  </Button>}
+              </div>
+              <p className="player-controls-times">
+                {formatTime(audioTime)}
+                {' / '}
+                {formatTime(duration)}
+              </p>
+            </div>
+            <div style={{float: 'left'}}>
+              <deps.StepperControls enabled={canStep}/>
+            </div>
+          </div>
         </div>
       );
     };
