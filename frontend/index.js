@@ -137,7 +137,8 @@ Codecast.start = function (options) {
     store.dispatch({
       type: scope.playerPrepare,
       audioUrl: options.audioUrl,
-      eventsUrl: options.eventsUrl
+      eventsUrl: options.eventsUrl,
+      subtitlesUrl: options.subtitlesUrl,
     });
     App = scope.PlayerApp;
   }

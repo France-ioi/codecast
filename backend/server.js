@@ -103,10 +103,11 @@ function addBackendRoutes (app, config) {
   app.get('/player', function (req, res) {
     const audioUrl = `${req.query.base}.mp3`;
     const eventsUrl = `${req.query.base}.json`;
+    const subtitlesUrl = `${req.query.base}.srt`;
     res.render('index', {
       development: config.isDevelopment,
       rebaseUrl: config.rebaseUrl,
-      options: {start: 'player', baseUrl: config.baseUrl, audioUrl, eventsUrl}
+      options: {start: 'player', baseUrl: config.baseUrl, audioUrl, eventsUrl, subtitlesUrl}
     });
   });
 

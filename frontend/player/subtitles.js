@@ -24,6 +24,10 @@ class SubtitleItem extends React.PureComponent {
 class SubtitlesPane extends React.PureComponent {
   render () {
     const {subtitles, currentIndex} = this.props;
+    /* Hide pane if no subtitles are loaded. */
+    if (subtitles.length === 0) {
+      return false;
+    }
     return (
       <div className='subtitles-container'>
         <div className='subtitles-pane'>
@@ -79,12 +83,27 @@ function findSubtitleIndex (items, time) {
 function updateCurrentItem (subtitles, audioTime) {
   const currentIndex = findSubtitleIndex(subtitles.items, audioTime);
   const currentItem = subtitles.items[currentIndex];
-  const itemVisible = currentItem.start <= audioTime && audioTime <= currentItem.end;
+  const itemVisible = currentItem && currentItem.start <= audioTime && audioTime <= currentItem.end;
   return {...subtitles, currentIndex, itemVisible};
 }
 
 function initReducer (state) {
-  return state.set('subtitles', {items: subtitles, currentIndex: 0, offsetY: 10});
+  return state.set('subtitles', {items: [], currentIndex: 0});
+}
+
+function playerReadyReducer (state, {subtitles}) {
+  let items = [];
+  if (subtitles) {
+    try {
+      items = srtParse(subtitles);
+    } catch (ex) {
+      items = [
+        {start: 0, end: 1000, text: "Subtitles failed to load"},
+        {start: 1, end: 6000, text: ex.toString()}
+      ];
+    }
+  }
+  return state.set('subtitles', {items, currentIndex: 0});
 }
 
 function playerSeekedReducer (state, action) {
@@ -134,6 +153,7 @@ module.exports = function (bundle, deps) {
   bundle.addReducer('subtitlesBandMoved', subtitlesBandMovedReducer);
   bundle.addReducer('playerSeeked', playerSeekedReducer);
   bundle.addReducer('playerTick', playerTickReducer);
+  bundle.addReducer('playerReady', playerReadyReducer);
 
   function SubtitlesPaneSelector (state, props) {
     const {playerSeek} = deps;

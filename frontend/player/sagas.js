@@ -42,6 +42,22 @@ export default function (bundle, deps) {
     });
   };
 
+  function getSubtitles (url) {
+    return new Promise(function (resolve, reject) {
+      return resolve(["1","00:00:02,000 --> 00:00:03,999","Lorem ipsum dolor sit amet, consectetur adipiscing elit.","","2","00:00:05,000 --> 00:00:06,999","Duis maximus nulla sed aliquet lobortis.","","3","00:00:10,000 --> 00:00:11,999","Donec aliquet lectus a turpis euismod pharetra.","","4","00:00:15,000 --> 00:00:16,999","Cras tincidunt libero nec enim molestie, at rutrum quam interdum.",""].join('\r\n'));
+      var req = request.get(url);
+      req.set('Accept', 'text/plain'); // XXX mime-type for srt?
+      req.end(function (err, res) {
+        if (err) {
+          /* Tolerate 4xx errors indicating no subtitles are present. */
+          if (/^4../.test(res.status)) return resolve(false);
+          return reject({err});
+        }
+        resolve(res.body);
+      });
+    });
+  }
+
   const findInstant = function (instants, time) {
     let low = 0, high = instants.length;
     while (low + 1 < high) {
@@ -104,7 +120,7 @@ export default function (bundle, deps) {
   }
 
   function* playerPrepare (action) {
-    const {audioUrl, eventsUrl} = action;
+    const {audioUrl, eventsUrl, subtitlesUrl} = action;
     // Check that the player is idle.
     const player = yield select(deps.getPlayerState);
     if (player.get('status') !== 'idle') {
@@ -119,11 +135,12 @@ export default function (bundle, deps) {
     audio.load();
     yield fork(watchAudioCanPlay, audio);
     audio.play();
-    // While the audio is buffering, download the events URL,
+    // While the audio is buffering, download the events, subtitles.
     const events = yield call(getJson, eventsUrl);
+    const subtitles = yield call(getSubtitles, subtitlesUrl);
     // and compute the future state after every event.
     const instants = yield call(computeInstants, events);
-    yield put({type: deps.playerReady, events, instants});
+    yield put({type: deps.playerReady, events, instants, subtitles});
     yield call(resetToInstant, instants[0], 0, false);
   }
 
