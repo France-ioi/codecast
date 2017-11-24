@@ -633,7 +633,6 @@ svg {
 .subtitles-band {
   position: fixed;
   bottom: 10px;
-  margin: 0 auto;
   width: 1164px;
   background: #eee;
   font-size: 20px;
@@ -643,6 +642,7 @@ svg {
   text-align: center;
   z-index: 6;
   cursor: ns-resize;
+  margin: 0 0 0 -10px;
 }
 .subtitles-band-inactive {
   opacity: 0.2;
