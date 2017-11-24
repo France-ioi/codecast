@@ -1,5 +1,4 @@
 module.exports = {
-  EDITING: 'Édition en cours',
   COMPILE: 'compiler',
   EDIT: 'éditer',
   VARIABLES: 'Variables',

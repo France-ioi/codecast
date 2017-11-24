@@ -64,127 +64,96 @@ export default function (bundle, deps) {
     return result;
   }
 
-  bundle.defineView('StepperControls', StepperControlsSelector, EpicComponent(self => {
+  const controlsWidth = `${36*9+16}px`;
 
-    const onStepRun = function () {
-      self.props.dispatch({type: deps.stepperStep, mode: 'run'});
-    };
+  class StepperControls extends React.PureComponent {
 
-    const onStepExpr = function () {
-      self.props.dispatch({type: deps.stepperStep, mode: 'expr'});
-    };
-
-    const onStepInto = function () {
-      self.props.dispatch({type: deps.stepperStep, mode: 'into'});
-    };
-
-    const onStepOut = function () {
-      self.props.dispatch({type: deps.stepperStep, mode: 'out'});
-    };
-
-    const onStepOver = function () {
-      self.props.dispatch({type: deps.stepperStep, mode: 'over'});
-    };
-
-    const onInterrupt = function () {
-      self.props.dispatch({type: deps.stepperInterrupt});
-    };
-
-    const onRestart = function () {
-      self.props.dispatch({type: deps.stepperRestart});
-    };
-
-    const onEdit = function () {
-      self.props.dispatch({type: deps.stepperExit});
-    };
-
-    const onUndo = function () {
-      self.props.dispatch({type: deps.stepperUndo});
-    };
-
-    const onRedo = function () {
-      self.props.dispatch({type: deps.stepperRedo});
-    };
-
-    const onTranslate = function () {
-      self.props.dispatch({type: deps.translate});
-    };
-
-    const btnStyle = function (which) {
-      return self.props.options.get(which) === '+' ? 'primary' : 'default';
-    };
-
-    const btnDisabled = function (which) {
-      const p = self.props;
-      if (p.options && p.options.get(which) === '-') {
-        return true;
-      }
-      switch (which) {
-        case 'interrupt':
-          return !p.canInterrupt;
-        case 'restart':
-          return !p.canRestart;
-        case 'undo':
-          return !p.canUndo;
-        case 'redo':
-          return !p.canRedo;
-        case 'run': case 'expr': case 'into': case 'over':
-          return !p.canStep;
-        case 'out':
-          return !(p.canStep && p.canStepOut);
-      }
-      return false;
-    };
-
-    const controlsWidth = `${36*9+16}px`;
-    self.render = function () {
-      const p = self.props;
+    render () {
+      const p = this.props;
       const showStepper = p.options && p.options.get('showStepper');
       if (!showStepper)
         return false;
-      const {getMessage} = self.props;
+      const {getMessage} = this.props;
       return (
         <div className="controls controls-stepper">
-          {p.showControls && <ButtonGroup className="controls-stepper-execution" style={{width: controlsWidth}}>
-            <Button onClick={onStepRun} disabled={btnDisabled('run')} bsStyle={btnStyle('run')} title={getMessage('CONTROL_RUN')}>
-              <i className="fa fa-play"/>
-            </Button>
-            <Button onClick={onStepExpr} disabled={btnDisabled('expr')} bsStyle={btnStyle('expr')} title={getMessage('CONTROL_EXPR')}>
-              <i className="fi fi-step-expr"/>
-            </Button>
-            <Button onClick={onStepInto} disabled={btnDisabled('into')} bsStyle={btnStyle('into')} title={getMessage('CONTROL_INTO')}>
-              <i className="fi fi-step-into"/>
-            </Button>
-            <Button onClick={onStepOut} disabled={btnDisabled('out')} bsStyle={btnStyle('out')} title={getMessage('CONTROL_OUT')}>
-              <i className="fi fi-step-out"/>
-            </Button>
-            <Button onClick={onStepOver} disabled={btnDisabled('over')} bsStyle={btnStyle('over')} title={getMessage('CONTROL_OVER')}>
-              <i className="fi fi-step-over"/>
-            </Button>
-            <Button onClick={onInterrupt} disabled={btnDisabled('interrupt')} bsStyle={btnStyle('interrupt')} title={getMessage('CONTROL_INTERRUPT')}>
-              <i className="fi fi-interrupt"/>
-            </Button>
-            <Button onClick={onRestart} disabled={btnDisabled('restart')} bsStyle={btnStyle('restart')} title={getMessage('CONTROL_RESTART')}>
-              <i className="fi fi-restart"/>
-            </Button>
-            <Button onClick={onUndo} disabled={btnDisabled('undo')} bsStyle={btnStyle('undo')} title={getMessage('CONTROL_UNDO')}>
-              <i className="fa fa-rotate-left"/>
-            </Button>
-            <Button onClick={onRedo} disabled={btnDisabled('redo')} bsStyle={btnStyle('redo')} title={getMessage('CONTROL_REDO')}>
-              <i className="fa fa-rotate-right"/>
-            </Button>
-          </ButtonGroup>}
-          {p.showControls || <div className="controls-stepper-execution">
-            <p>{getMessage('EDITING')}</p>
-          </div>}
+          <div className="controls-stepper-wrapper" style={{width: controlsWidth}}>
+            {p.showControls && <ButtonGroup className="controls-stepper-execution">
+              {this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), <i className="fa fa-play"/>)}
+              {this._button('expr', this.onStepExpr, getMessage('CONTROL_EXPR'), <i className="fi fi-step-expr"/>)}
+              {this._button('into', this.onStepInto, getMessage('CONTROL_INTO'), <i className="fi fi-step-into"/>)}
+              {this._button('out', this.onStepOut, getMessage('CONTROL_OUT'), <i className="fi fi-step-out"/>)}
+              {this._button('over', this.onStepOver, getMessage('CONTROL_OVER'), <i className="fi fi-step-over"/>)}
+              {this._button('interrupt', this.onInterrupt, getMessage('CONTROL_INTERRUPT'), <i className="fi fi-interrupt"/>)}
+              {this._button('restart', this.onRestart, getMessage('CONTROL_RESTART'), <i className="fi fi-restart"/>)}
+              {this._button('undo', this.onUndo, getMessage('CONTROL_UNDO'), <i className="fa fa-rotate-left"/>)}
+              {this._button('redo', this.onRedo, getMessage('CONTROL_REDO'), <i className="fa fa-rotate-right"/>)}
+            </ButtonGroup>}
+          </div>
           <div className="controls-translate">
-            {p.showExit && <Button onClick={onEdit} disabled={!p.canExit}>{getMessage('EDIT')}</Button>}
-            {p.showTranslate && <Button onClick={onTranslate} disabled={!p.canTranslate} bsStyle='primary'>{getMessage('COMPILE')}</Button>}
+            {p.showExit && this._button('edit', this.onEdit, false, getMessage('EDIT'))}
+            {p.showTranslate && this._button('translate', this.onTranslate, false, getMessage('COMPILE'))}
           </div>
         </div>
       );
     };
 
-  }));
+    _button (key, onClick, title, body) {
+      const {options} = this.props;
+      let btnStyle = 'default', disabled = false;
+      if (key === 'translate') {
+        btnStyle = 'primary';
+      }
+      switch (key) {
+        case 'interrupt':
+          disabled = !this.props.canInterrupt;
+          break;
+        case 'restart':
+          disabled = !this.props.canRestart;
+          break;
+        case 'undo':
+          disabled = !this.props.canUndo;
+          break;
+        case 'redo':
+          disabled = !this.props.canRedo;
+          break;
+        case 'run': case 'expr': case 'into': case 'over':
+          disabled = !this.props.canStep;
+          break;
+        case 'out':
+          disabled = !(this.props.canStep && this.props.canStepOut);
+          break;
+        case 'edit':
+          disabled = !this.props.canExit;
+          break;
+        case 'translate':
+          disabled = !this.props.canTranslate;
+          break;
+      }
+      if (options) {
+        const mod = options.get(key);
+        btnStyle = mod === '+' ? 'primary' : 'default';
+        if (mod === '-') {
+          disabled = true;
+        }
+      }
+      return (
+        <Button onClick={onClick} disabled={disabled} bsStyle={btnStyle} title={title}>{body}</Button>
+      );
+    }
+
+    onStepRun = () => this.props.dispatch({type: deps.stepperStep, mode: 'run'});
+    onStepExpr = () => this.props.dispatch({type: deps.stepperStep, mode: 'expr'});
+    onStepInto = () => this.props.dispatch({type: deps.stepperStep, mode: 'into'});
+    onStepOut = () => this.props.dispatch({type: deps.stepperStep, mode: 'out'});
+    onStepOver = () => this.props.dispatch({type: deps.stepperStep, mode: 'over'});
+    onInterrupt = () => this.props.dispatch({type: deps.stepperInterrupt});
+    onRestart = () => this.props.dispatch({type: deps.stepperRestart});
+    onEdit = () => this.props.dispatch({type: deps.stepperExit});
+    onUndo = () => this.props.dispatch({type: deps.stepperUndo});
+    onRedo = () => this.props.dispatch({type: deps.stepperRedo});
+    onTranslate = () => this.props.dispatch({type: deps.translate});
+
+  }
+  bundle.defineView('StepperControls', StepperControlsSelector, StepperControls);
 
 };

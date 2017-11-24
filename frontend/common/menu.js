@@ -17,7 +17,7 @@ export default function (bundle, deps) {
 
   class Menu extends React.PureComponent {
     render () {
-      const {isOpen, dispatch, isTranslated, getMessage} = this.props;
+      const {languages, language, getMessage, canSelectExample} = this.props;
       const menuButton =
         <Button title={getMessage('MENU_TOOLTIP')}>
           <i className='fa fa-bars'/>
@@ -25,11 +25,11 @@ export default function (bundle, deps) {
       return (
         <div id='menu'>
           <ButtonGroup>
-            <deps.FullscreenButton/>
             <deps.LogoutButton/>
             <Portal closeOnEsc closeOnOutsideClick openByClickOn={menuButton}>
-              <MenuPopup getMessage={getMessage} dispatch={dispatch} canSelectExample={!isTranslated}/>
+              <deps.MenuPopup/>
             </Portal>
+            <deps.FullscreenButton/>
           </ButtonGroup>
         </div>
       );
@@ -37,9 +37,14 @@ export default function (bundle, deps) {
   }
   bundle.defineView('Menu', MenuSelector, Menu);
 
+  function MenuSelector (state, props) {
+    const getMessage = state.get('getMessage');
+    return {getMessage};
+  }
+
   class MenuPopup extends React.PureComponent {
     render() {
-      const {getMessage, canSelectExample} = this.props;
+      const {languages, language, getMessage, canSelectExample} = this.props;
       return (
         <div className='menu-popup' onClick={this.close}>
           <div className='menu-popup-inset' onClick={this.stopPropagation}>
@@ -50,8 +55,8 @@ export default function (bundle, deps) {
             </div>
             <div>
               {getMessage('LANGUAGE:')}
-              <button type='button' className='btn' data-language='fr-FR' onClick={this.onSetLanguage}>{"fr-FR"}</button>
-              <button type='button' className='btn' data-language='en-US' onClick={this.onSetLanguage}>{"en-US"}</button>
+              {languages.map(lang =>
+                <Button key={lang} data-language={lang} onClick={this.onSetLanguage} active={language === lang}>{lang}</Button>)}
             </div>
             <div>
               {getMessage('LOAD_EXAMPLE:')}
@@ -80,11 +85,14 @@ export default function (bundle, deps) {
       this.props.dispatch({type: deps.exampleSelected, example});
     };
   }
+  bundle.defineView('MenuPopup', MenuPopupSelector, MenuPopup);
 
-  function MenuSelector (state, props) {
+  function MenuPopupSelector (state, props) {
+    const languages = state.get('availableLanguages');
+    const language = state.get('language');
     const getMessage = state.get('getMessage');
     const isTranslated = deps.isTranslated(state);
-    return {isTranslated, getMessage};
+    return {canSelectExample: !isTranslated, languages, language, getMessage};
   }
 
 };

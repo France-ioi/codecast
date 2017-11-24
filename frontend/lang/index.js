@@ -30,7 +30,8 @@ export default function (bundle, deps) {
     toString: () => "???"
   };
   bundle.addReducer('init', function (state, action) {
-    return state.set('getMessage', (message) => languageNotSet);
+    return state.set('availableLanguages', Object.keys(Messages))
+      .set('getMessage', (message) => languageNotSet);
   });
   bundle.defineAction('setLanguage', 'Language.Set');
   bundle.addReducer('setLanguage', function (state, {language}) {
@@ -50,7 +51,7 @@ export default function (bundle, deps) {
       }
       return getMessage(value.toString());
     }
-    return state.set('getMessage', getMessage);
+    return state.set('language', language).set('getMessage', getMessage);
   });
 
 };
