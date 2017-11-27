@@ -71,12 +71,19 @@ function buildApp (config, callback) {
 
   app.use(bodyParser.json());
 
-  oauth(app, config, function (err) {
-    if (err) return callback('oauth initialization failed');
+  /* Enable OAuth2 authentification only if the database is configured. */
+  if (config.database) {
+    return oauth(app, config, function (err) {
+      if (err) return callback('oauth initialization failed');
+      finalizeApp();
+    });
+  }
+
+  function finalizeApp () {
     addBackendRoutes(app, config);
     callback(null, app);
-  });
-
+  }
+  finalizeApp();
 }
 
 function addBackendRoutes (app, config) {

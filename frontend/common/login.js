@@ -51,7 +51,7 @@ module.exports = function (bundle, deps) {
       return (
         <div className={`container size-${size}`}>
           <p>{"Login options:"}</p>
-          {authProviders.map((provider) =>
+          {authProviders && authProviders.map((provider) =>
             <a href={`${baseUrl}/auth/${provider}`} target='_blank' key={provider} className='btn btn-default'>{provider}</a>)}
           <Button onClick={this._authAsGuest}>{"guest"}</Button>
         </div>
