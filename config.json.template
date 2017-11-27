@@ -1,9 +1,18 @@
 {
+  "port": 8001,
+  "baseUrl": "https://codecast.france-ioi.org/next",
+  "mountPath": "/next",
   "database": {
     "host": "@@MYSQL_HOST@@",
     "user": "@@MYSQL_USER@2",
     "password": "@@MYSQL_PASSWORD@@",
     "database": "@@MYSQL_DATABASE@@"
+  },
+  "session": {
+    "secret": "@@RANDOM_SESSION_SECRET@@",
+    "resave": false,
+    "saveUninitialized": true,
+    "cookie": {"secure": true, "maxAge": 604800}
   },
   "auth": {
     "@@AUTH_PROVIDER_NAME@@": {
@@ -15,14 +24,9 @@
         "redirectUri": "@@OAUTH2_CALLBACK_URI@@",
         "scopes": ["codecast"]
       },
-      "identityProviderUri": "@@IDENTITY_PROVIDER_URI@@"
+      "identityProviderUri": "@@IDENTITY_PROVIDER_URI@@",
+      "logoutUri": "@@LOGOUT_URI@@"
     }
-  },
-  "session": {
-    "secret": "@@RANDOM_SESSION_SECRET@@",
-    "resave": false,
-    "saveUninitialized": true,
-    "cookie": {"secure": true, "maxAge": 604800}
   },
   "configs": {
     "base": {
