@@ -11,21 +11,15 @@ import {applyMiddleware} from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import Immutable from 'immutable';
 import queryString from 'query-string';
-import link from 'epic-linker';
-
-import 'brace';
-import 'brace/worker/javascript';
-import 'brace/mode/c_cpp';
-import './arduino/ace';
-import 'brace/theme/github';
 import 'font-awesome/css/font-awesome.min.css';
 import 'rc-slider/dist/rc-slider.css';
-import './slider.css';
+
 import './style.scss';
 
 // import sagaMonitor from './sagaMonitor';
-import stepperComponent from './stepper/index';
-import {default as commonComponent, interpretQueryString} from './common/index';
+import link from './linker';
+import stepperBundle from './stepper/index';
+import {default as commonBundle, interpretQueryString} from './common/index';
 
 import SandboxBundle from './sandbox/index';
 import RecorderBundle from './recorder/index';
@@ -38,8 +32,8 @@ const {store, scope, finalize, start} = link(function (bundle, deps) {
   bundle.addReducer('init', (_state, {payload: {baseUrl, authProviders}}) =>
     Immutable.Map({baseUrl, authProviders, scope}));
 
-  bundle.include(commonComponent);
-  bundle.include(stepperComponent);
+  bundle.include(commonBundle);
+  bundle.include(stepperBundle);
   bundle.include(SandboxBundle);
   bundle.include(RecorderBundle);
   bundle.include(PlayerBundle);

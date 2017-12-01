@@ -39,7 +39,6 @@
     "client-oauth2": "^4.1.0",
     "css-loader": "^0.26.1",
     "epic-component": "^1.1.2",
-    "epic-linker": "^4.1.0",
     "es5-shim": "^4.5.9",
     "es6-shim": "^0.35.3",
     "es6-symbol": "^3.1.1",
