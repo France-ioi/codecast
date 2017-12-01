@@ -6,8 +6,6 @@ import {eventChannel, buffers} from 'redux-saga';
 
 export default function (bundle, deps) {
 
-  var b1 = performance.memory.usedJSHeapSize; window.a = new Float32Array(128 * 1024 * 1024); for (var i = 0; i < 16 * 1024 * 1024; i++) { a[i] = i; }; var b2 = performance.memory.usedJSHeapSize; console.log(b2 - b1, performance.memory);
-
   bundle.use('recorderPreparing');
   bundle.defineAction('memoryUsageChanged', 'MemoryUsage.Changed');
 
@@ -33,7 +31,6 @@ export default function (bundle, deps) {
         const {worker} = action;
         const channel = eventChannel(function (listener) {
           function onMemoryUsage (data) {
-            console.log('memoryUsage', arguments);
             listener(data);
           }
           worker.emitter.on('memoryUsage', onMemoryUsage);
@@ -42,7 +39,6 @@ export default function (bundle, deps) {
           };
         }, buffers.sliding(1));
         yield takeLatest(channel, function* (data) {
-          console.log('took memoryUsage', data);
           const workerHeapSize = data.heapSize;
           yield put({type: deps.memoryUsageChanged, payload: {workerHeapSize}});
         });
