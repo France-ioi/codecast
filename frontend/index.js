@@ -36,7 +36,7 @@ const {store, scope, finalize, start} = link(function (bundle, deps) {
 
   bundle.defineAction('init', 'System.Init');
   bundle.addReducer('init', (_state, {payload: {baseUrl, authProviders}}) =>
-    Immutable.Map({baseUrl, authProviders}));
+    Immutable.Map({baseUrl, authProviders, scope}));
 
   bundle.include(commonComponent);
   bundle.include(stepperComponent);
