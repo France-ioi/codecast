@@ -28,7 +28,7 @@ export default function (bundle, deps) {
     startSagas.push(saga);
   };
   recordApi.start = function* () {
-    const init = {version: RECORDING_FORMAT_VERSION};
+    const init = {};
     for (var saga of startSagas) {
       yield call(saga, init);
     }

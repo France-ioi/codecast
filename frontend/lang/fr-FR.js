@@ -59,4 +59,5 @@ module.exports = {
   ARRAY2D_EXPR_NOARR: "la valeur de l'expression {expr} n'est pas un tableau",
   ARRAY2D_EXPR_NOT2D: "la valeur de l'expression {expr} n'est pas un tableau 2D",
   ARRAY2D_ELT_UNSUP: "le type des éléments du tableau 2D {expr} n'est pas supporté",
+  SUBTITLES_FAILED_TO_LOAD: "le chargement des sous-titres a échoue",
 };

@@ -13,16 +13,16 @@ export default function (bundle, deps) {
   });
 
   function updateStatus (player) {
-    if (player.get('events') && player.get('duration')) {
+    if (player.get('data') && player.get('duration')) {
       player = player.set('status', 'ready');
     }
     return player;
   }
 
   bundle.addReducer('playerReady', function (state, action) {
-    const {audio, events, instants} = action;
+    const {data, instants} = action;
     return state.update('player', player => updateStatus(player
-      .set('events', events)
+      .set('data', data)
       .set('instants', instants)
       .set('current', instants[0])));
   });

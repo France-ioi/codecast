@@ -167,8 +167,11 @@ export default function (bundle, deps) {
       recorder = yield select(deps.getRecorderState);
        /* Ensure the 'end' event occurs before the end of the audio track. */
       const endTime = Math.floor(duration * 1000);
+      const version = RECORDING_FORMAT_VERSION;
       const events = recorder.get('events').push([endTime, 'end']);
-      const eventsBlob = new Blob([JSON.stringify(events.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
+      const subtitles = [];
+      const data = {version, events, subtitles};
+      const eventsBlob = new Blob([JSON.stringify(data.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
       const eventsUrl = URL.createObjectURL(eventsBlob);
       // Signal that the recorder has stopped.
       yield put({

@@ -42,22 +42,6 @@ export default function (bundle, deps) {
     });
   };
 
-  function getSubtitles (url) {
-    return new Promise(function (resolve, reject) {
-      return resolve(["1","00:00:02,000 --> 00:00:03,999","Lorem ipsum dolor sit amet, consectetur adipiscing elit.","","2","00:00:05,000 --> 00:00:06,999","Duis maximus nulla sed aliquet lobortis.","","3","00:00:10,000 --> 00:00:11,999","Donec aliquet lectus a turpis euismod pharetra.","","4","00:00:15,000 --> 00:00:16,999","Cras tincidunt libero nec enim molestie, at rutrum quam interdum.",""].join('\r\n'));
-      var req = request.get(url);
-      req.set('Accept', 'text/plain'); // XXX mime-type for srt?
-      req.end(function (err, res) {
-        if (err) {
-          /* Tolerate 4xx errors indicating no subtitles are present. */
-          if (/^4../.test(res.status)) return resolve(false);
-          return reject({err});
-        }
-        resolve(res.body);
-      });
-    });
-  }
-
   const findInstant = function (instants, time) {
     let low = 0, high = instants.length;
     while (low + 1 < high) {
@@ -136,11 +120,17 @@ export default function (bundle, deps) {
     yield fork(watchAudioCanPlay, audio);
     audio.play();
     // While the audio is buffering, download the events, subtitles.
-    const events = yield call(getJson, eventsUrl);
-    const subtitles = yield call(getSubtitles, subtitlesUrl);
-    // and compute the future state after every event.
-    const instants = yield call(computeInstants, events);
-    yield put({type: deps.playerReady, events, instants, subtitles});
+    let data = yield call(getJson, eventsUrl);
+    if (Array.isArray(data)) {
+      /* Compatibility with old style, where data is an array of events. */
+      const {version, ...init} = data[0][2];
+      data[0][2] = init;
+      data = {version, events: data, subtitles: {}};
+    }
+    /* Compute the future state after every event. */
+    const instants = yield call(computeInstants, data.events);
+    /* Set up the player. */
+    yield put({type: deps.playerReady, data, instants});
     yield call(resetToInstant, instants[0], 0, false);
   }
 
@@ -244,7 +234,6 @@ export default function (bundle, deps) {
         const action = yield take(deps.playerPrepare);
         yield call(playerPrepare, action);
       } catch (error) {
-        console.log('playerPrepare failed', error);
         yield put({type: deps.error, source: 'playerPrepare', error});
       }
     }
@@ -350,12 +339,8 @@ export default function (bundle, deps) {
           // and there are more than 10 events to replay.
           yield call(resetToInstant, nextInstant, audioTime, true);
         } else {
-          // Play incremental events between prevInstant (exclusive) and
-          // nextInstant (inclusive).
-          // Small time delta, attempt to replay events.
-          const events = player.get('events');
-          // Assumption: instants[pos] is the state immediately after replaying events[pos],
-          //             and pos === instants[pos].pos.
+          /* Small time delta, replay incremental events immediately following
+             prevInstant and up to (and including) nextInstant. */
           for (let pos = prevInstant.pos + 1; pos <= nextInstant.pos; pos += 1) {
             const instant = instants[pos];
             if (instant.saga) {
@@ -367,6 +352,9 @@ export default function (bundle, deps) {
             if (instant.event[1] === 'end') {
               ended = true;
               audioTime = player.get('duration');
+            }
+            if (instant.reset) {
+              yield call(resetToInstant, instant, audioTime, false);
             }
           }
           // Perform a quick reset unless playback has ended.

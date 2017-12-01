@@ -182,6 +182,12 @@ body#app, #app h1, #app h2, #app h3 {
   height: 2px;
   border: 2px solid #777;
 }
+.stack-view ul {
+  padding-left: 20px;
+}
+.stack-view li {
+  list-style-type: none;
+}
 .stack-frame-focused {
   background-color: #eee;
 }
@@ -634,23 +640,35 @@ svg {
   position: fixed;
   bottom: 10px;
   width: 1164px;
-  background: #eee;
+  z-index: 6;
+  cursor: grab;
+  cursor: -webkit-grab;
+  cursor: -moz-grab;
+  cursor: -o-grab;
+  margin: 0 0 0 -10px;
+  padding: 10px 0;
+  opacity: 0.8;
+  background-color: #222;
+  color: #ff4;
+  border-radius: 7px;
+}
+.subtitles-band-frame {
+  //background: #eee;
   font-size: 20px;
   padding: 2px 6px;
-  border: 1px solid #ccc;
-  border-radius: 7px;
-  text-align: center;
-  z-index: 6;
-  cursor: ns-resize;
-  margin: 0 0 0 -10px;
-}
-.subtitles-band-inactive {
-  opacity: 0.2;
+  //border: 1px solid #ccc;
+  text-align: left;
 }
 .subtitles-band-moving {
-  opacity: 1;
-  border: 1px solid #000;
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+  cursor: -moz-grabbing;
+  cursor: -o-grabbing;
 }
+.subtitles-band-inactive {
+  color: #777;
+}
+/* .subtitles-band-moving {} */
 .subtitles-band p {
   margin: 0;
 }

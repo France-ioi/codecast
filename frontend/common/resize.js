@@ -2,6 +2,12 @@
 import {eventChannel, buffers} from 'redux-saga';
 import {take, put} from 'redux-saga/effects';
 
+export const mainViewGeometries = [
+  {size: 'lg', width: 1140, svgScale: 1.0},
+  {size: 'md', width:  940, svgScale: 0.9},
+  {size: 'sm', width:  794, svgScale: 0.75},
+];
+
 export default function (bundle, deps) {
 
   bundle.defineAction('windowResized', 'Window.Resized');
@@ -30,22 +36,28 @@ export default function (bundle, deps) {
     }
   });
 
-  const sizeToScale = {
-    xs: 0.5,
-    sm: 0.75,
-    md: 0.9,
-    lg: 1
-  };
 
   // Make windowResized update the global state 'size'.
   bundle.addReducer('windowResized', function (state, action) {
     const {width, height} = action;
-    const size =
-      width <  800 ? 'xs' :
-      width < 1024 ? 'sm' :
-      width < 1200 ? 'md' : 'lg';
-    const scale = sizeToScale[size];
-    return state.set('size', size).set('scale', scale);
+    const subtitlesPaneEnabled = state.get('subtitlesPaneEnabled');
+    let showSubtitlesPane = subtitlesPaneEnabled;
+    const mainViewWidth = subtitlesPaneEnabled ? width - 200 : width;
+    let geometry;
+    for (let index = 0; index < mainViewGeometries.length; index += 1) {
+      geometry = mainViewGeometries[index];
+      if (geometry.width <= mainViewWidth) {
+        break;
+      }
+    }
+    if (!geometry) {
+      /* Screen is too small, pick the smallest geometry and hide subtitles. */
+      geometry = mainViewGeometries[mainViewGeometries.length - 1];
+      showSubtitlesPane = false;
+    }
+    return state
+      .set('mainViewGeometry', geometry)
+      .set('showSubtitlesPane', showSubtitlesPane);
   });
 
 };

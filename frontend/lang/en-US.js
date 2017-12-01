@@ -59,4 +59,5 @@ module.exports = {
   ARRAY2D_EXPR_NOARR: "value of expression {expr} is not an array",
   ARRAY2D_EXPR_NOT2D: "value of expression {expr} is not a 2D array",
   ARRAY2D_ELT_UNSUP: "elements of 2D array {expr} have an unsupported type",
+  SUBTITLES_FAILED_TO_LOAD: "subtitles failed to load",
 };

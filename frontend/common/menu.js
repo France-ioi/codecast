@@ -17,7 +17,7 @@ export default function (bundle, deps) {
 
   class Menu extends React.PureComponent {
     render () {
-      const {languages, language, getMessage, canSelectExample} = this.props;
+      const {languages, language, getMessage, canSelectExample, SubtitlesMenu} = this.props;
       const menuButton =
         <Button title={getMessage('MENU_TOOLTIP')}>
           <i className='fa fa-bars'/>
@@ -25,6 +25,7 @@ export default function (bundle, deps) {
       return (
         <div id='menu'>
           <ButtonGroup>
+            {SubtitlesMenu && <SubtitlesMenu/>}
             <deps.LogoutButton/>
             <Portal closeOnEsc closeOnOutsideClick openByClickOn={menuButton}>
               <deps.MenuPopup/>
@@ -39,7 +40,8 @@ export default function (bundle, deps) {
 
   function MenuSelector (state, props) {
     const getMessage = state.get('getMessage');
-    return {getMessage};
+    const SubtitlesMenu = state.get('subtitles').Menu;
+    return {getMessage, SubtitlesMenu};
   }
 
   class MenuPopup extends React.PureComponent {
