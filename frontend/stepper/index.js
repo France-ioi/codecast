@@ -387,7 +387,7 @@ export default function (bundle, deps) {
       const state = stepperClear();
       context.state = stepperReset(context.state, {state});
     });
-    replayApi.onReset(function* (instant) {
+    replayApi.onReset(function* (instant, quick) {
       const stepperState = instant.state.get('stepper');
       yield put({type: deps.stepperReset, state: stepperState});
       yield put({type: deps.bufferHighlight, buffer: 'source', range: instant.range});

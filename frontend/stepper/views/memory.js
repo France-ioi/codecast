@@ -490,7 +490,7 @@ export const MemoryView = EpicComponent(self => {
       gd1.drawCellBorder(address, address + 1);
       gd1.fillCellBackground(address, address + 1, cell.classes);
     }
-    grids.push(<g className='bytes'>{gd1.finalize()}</g>);
+    grids.push(<g key='bytes' className='bytes'>{gd1.finalize()}</g>);
     // Variables grid
     const gd2 = GridDrawer(view.layout.variablesTop);
     for (let i = 0; i < variables.cells.length; i += 1) {
@@ -501,7 +501,7 @@ export const MemoryView = EpicComponent(self => {
         gd2.drawCellBorder(cell.address, cell.address + cell.size);
       }
     }
-    grids.push(<g className='variables'>{gd2.finalize()}</g>);
+    grids.push(<g key='vars' className='variables'>{gd2.finalize()}</g>);
     // Extra rows grid
     extraRows.forEach(function (extraRow, i) {
       const {cells, size} = extraRow;
@@ -509,7 +509,7 @@ export const MemoryView = EpicComponent(self => {
       cells.forEach(function (cell, j) {
         gd.drawCellBorder(cell.address, cell.address + size);
       });
-      grids.push(<g className={`extras-${i}`}>{gd.finalize()}</g>);
+      grids.push(<g key={`extra-${i}`} className={`extras-${i}`}>{gd.finalize()}</g>);
     });
     return <g className='grid'>{grids}</g>;
   };

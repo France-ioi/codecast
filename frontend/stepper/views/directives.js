@@ -18,8 +18,7 @@ export default function (bundle, deps) {
   function DirectivesPaneSelector (state, props) {
     const getMessage = state.get('getMessage');
     const stepperState = deps.getStepperDisplay(state);
-    const scale = state.get('scale');
-    return {state: stepperState, scale, getMessage};
+    return {state: stepperState, getMessage};
   }
 
   const DirectiveFrame = EpicComponent(self => {
@@ -87,7 +86,7 @@ export default function (bundle, deps) {
       const controls = self.props.state.controls.get(directive.key, Immutable.Map());
       const hide = controls.get('hide', false);
       return (
-        <NavItem eventKey={directive.key} active={!hide}>
+        <NavItem key={directive.key} eventKey={directive.key} active={!hide}>
           {directive.key}
         </NavItem>
       );
@@ -118,7 +117,7 @@ export default function (bundle, deps) {
           return <p>{'Error: undefined view kind '}{kind}</p>;
         }
         return (
-          <View Frame={DirectiveFrame} directive={directive} controls={directiveControls}
+          <View key={directive.key} Frame={DirectiveFrame} directive={directive} controls={directiveControls}
             frames={framesMap[key]} context={context}
             onChange={onControlsChange} scale={scale} getMessage={getMessage} />);
       };

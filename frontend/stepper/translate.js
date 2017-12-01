@@ -91,7 +91,7 @@ export default function (bundle, deps) {
       const source = sourceModel.get('document').toString();
       const mode = yield select(state => state.get('mode'));
       yield put({type: deps.translateStarted, source});
-      let response, syntaxTree, error;
+      let response, syntaxTree;
       try {
         response = yield call(asyncRequestJson, 'translate', {source, mode});
       } catch (ex) {
@@ -100,7 +100,7 @@ export default function (bundle, deps) {
       if (response.ast) {
         yield put({type: deps.translateSucceeded, response});
       } else {
-        yield put({type: deps.translateFailed, response, error});
+        yield put({type: deps.translateFailed, response});
       }
     });
   });
@@ -251,10 +251,10 @@ function translateSucceeded (state, action) {
 }
 
 function translateFailed (state, action) {
-  const {error, diagnostics} = action.response;
+  console.log('translateFailed', action);
+  const {diagnostics} = action.response;
   return state
     .set('status', 'error')
-    .set('error', error)
     .set('diagnostics', diagnostics)
     .set('diagnosticsHtml', toHtml(diagnostics));
 }
