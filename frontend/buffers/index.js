@@ -32,6 +32,12 @@ import Immutable from 'immutable';
 import React from 'react';
 import EpicComponent from 'epic-component';
 
+import 'brace';
+import 'brace/mode/c_cpp';
+import 'brace/theme/textmate';
+import 'brace/worker/javascript';
+import '../arduino/ace';
+
 import {emptyDocument, documentFromString, compressRange, expandRange} from './document';
 import Editor from './editor';
 
