@@ -10,11 +10,20 @@ import React from 'react';
 
 class PlayerApp extends React.PureComponent {
   render () {
-    const {preventInput, width, PlayerControls, MainView, showSubtitlesPane, SubtitlesPane, showSubtitlesBand, SubtitlesBand} = this.props;
+    const {preventInput, geometry, PlayerControls, MainView, panes, showSubtitlesBand, SubtitlesBand} = this.props;
     return (
-      <div style={{position: 'relative', margin: '0 auto', width: `${width}px`}}>
-        <MainView preventInput={preventInput} controls={<PlayerControls/>}/>
-        {showSubtitlesPane && <SubtitlesPane/>}
+      <div style={{overflow: 'hidden'}}>
+        <div style={{width: `${geometry.width}px`, float: 'left'}}>
+          <MainView preventInput={preventInput} controls={<PlayerControls/>}/>
+        </div>
+        {panes.entrySeq().map(([key, pane]) => {
+          if (!pane.get('visible')) return false;
+          const View = pane.get('View');
+          return (
+            <div key={key} className='pane' style={{width: `${pane.get('width')}px`}}>
+              <View />
+            </div>);
+          })}
         {showSubtitlesBand && <SubtitlesBand/>}
       </div>
     );
@@ -23,21 +32,20 @@ class PlayerApp extends React.PureComponent {
 
 export default function (bundle, deps) {
 
-  bundle.use('PlayerControls', 'MainView', 'getPlayerState', 'SubtitlesPane', 'SubtitlesBand');
+  bundle.use('PlayerControls', 'MainView', 'getPlayerState', 'SubtitlesBand');
   bundle.defineView('PlayerApp', PlayerAppSelector, PlayerApp);
 
   function PlayerAppSelector (state, props) {
-    const {PlayerControls, MainView, SubtitlesPane, SubtitlesBand} = deps;
+    const {PlayerControls, MainView, SubtitlesBand} = deps;
     const geometry = state.get('mainViewGeometry');
+    const panes = state.get('panes');
     const showSubtitlesPane = state.get('showSubtitlesPane');
     const showSubtitlesBand = state.get('showSubtitlesBand');
-    const width = geometry.width + (showSubtitlesPane ? 200 : 0);
     const player = deps.getPlayerState(state);
     const status = player.get('status');
     const preventInput = !/ready|paused/.test(status);
     return {
-      preventInput, width, PlayerControls, MainView,
-      showSubtitlesPane, SubtitlesPane,
+      preventInput, geometry, PlayerControls, MainView, panes,
       showSubtitlesBand, SubtitlesBand
     };
   }

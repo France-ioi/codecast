@@ -9,6 +9,7 @@ import Portal from 'react-portal';
 import scrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
 import {takeLatest, put, call} from 'redux-saga/effects';
 import request from 'superagent';
+import Immutable from 'immutable';
 
 import {Button} from '../ui';
 import {formatTime} from './utils';
@@ -31,8 +32,7 @@ class SubtitlesMenu extends React.PureComponent {
 
 class SubtitlesPopup extends React.PureComponent {
   render () {
-    const {availableSubtitles, loadedKey, busy, lastError, showSubtitlesPane} = this.props;
-    console.log("showSubtitlesPane", showSubtitlesPane);
+    const {availableSubtitles, loadedKey, busy, lastError, paneEnabled} = this.props;
     return (
       <div className='menu-popup' onClick={this._close}>
         <div className='menu-popup-inset' onClick={this._stopPropagation}>
@@ -47,8 +47,8 @@ class SubtitlesPopup extends React.PureComponent {
             {availableSubtitles.map(key => <SubtitlesOption key={key} value={key} loaded={key === loadedKey} onSelect={this._selectSubtitles} />)}
           </ul>
           {lastError && <Alert bsStyle='danger'>{lastError}</Alert>}
-          <p onClick={this._changePaneVisibility}>
-            {"checkbox "}{showSubtitlesPane ? 't' : 'f'}{" show pane"}
+          <p onClick={this._changePaneEnabled}>
+            {"checkbox "}{paneEnabled ? 't' : 'f'}{" show pane"}
           </p>
         </div>
       </div>
@@ -67,10 +67,10 @@ class SubtitlesPopup extends React.PureComponent {
   _selectSubtitles = (key) => {
     this.props.dispatch({type: this.props.subtitlesSelected, payload: {key}});
   };
-  _changePaneVisibility = () => {
+  _changePaneEnabled = () => {
     this.props.dispatch({
-      type: this.props.subtitlesPaneVisibilityChanged,
-      payload: {value: !this.props.showSubtitlesPane}});
+      type: this.props.subtitlesPaneEnabledChanged,
+      payload: {value: !this.props.paneEnabled}});
   }
 }
 
@@ -102,15 +102,14 @@ class SubtitleItem extends React.PureComponent {
 class SubtitlesPane extends React.PureComponent {
   render () {
     const {subtitles, currentIndex} = this.props;
+    if (!subtitles) return false;
     return (
-      <div className='subtitles-container'>
-        <div className='subtitles-pane'>
-          {subtitles.map((st, index) => {
-            const selected = currentIndex === index;
-            const ref = selected && this._refSelected;
-            return <SubtitleItem key={index} item={st} selected={selected} ref={ref} onClick={this._onSubtitleClick}/>;
-          })}
-        </div>
+      <div className='subtitles-pane'>
+        {subtitles.map((st, index) => {
+          const selected = currentIndex === index;
+          const ref = selected && this._refSelected;
+          return <SubtitleItem key={index} item={st} selected={selected} ref={ref} onClick={this._onSubtitleClick}/>;
+        })}
       </div>
     );
   }
@@ -158,34 +157,34 @@ class SubtitlesBand extends React.PureComponent {
 }
 
 function initReducer (state) {
-  return updateSubtitlesPaneVisibility(state.set('subtitles', {}));
+  return state.set('subtitles', {}).update('panes', panes => panes.set('subtitles',
+    Immutable.Map({
+      View: state.get('scope').SubtitlesPane,
+      enabled: true,
+      width: 200
+    })));
 }
 
-function subtitlesPaneVisibilityChangedReducer (state, {payload: {value}}) {
-  return updateSubtitlesPaneVisibility(
-    state.update('subtitles', subtitles => ({...subtitles, showSubtitlesPane: value})));
+function subtitlesPaneEnabledChangedReducer (state, {payload: {value}}) {
+  return state.setIn(['panes', 'subtitles', 'enabled'], value);
 }
 
 function playerReadyReducer (state, {data}) {
   const availableSubtitles = data.subtitles;
   const Menu = availableSubtitles ? state.get('scope').SubtitlesMenu : false;
-  return state
-    .set('subtitles', {
+  return state.update('subtitles', subtitles => (
+    {...subtitles,
       Menu,
       availableSubtitles,
       items: [],
       currentIndex: 0,
       loadedKey: false,
-      showSubtitlesPane: true
-    })
-    .set('subtitlesPaneEnabled', false);
+    }));
 }
 
 function subtitlesClearedReducer (state, _action) {
-  return state
-    .update('subtitles', subtitles => (
-      {...subtitles, items: [], currentIndex: 0, loadedKey: false}))
-    .set('subtitlesPaneEnabled', false);
+  return state.update('subtitles', subtitles => (
+    {...subtitles, items: [], currentIndex: 0, loadedKey: false}));
 }
 
 function subtitlesLoadStartedReducer (state, {payload: {key}}) {
@@ -194,10 +193,10 @@ function subtitlesLoadStartedReducer (state, {payload: {key}}) {
 }
 
 function subtitlesLoadSucceededReducer (state, {payload: {items}}) {
-  return updateSubtitlesPaneVisibility(state
+  return state
     .update('subtitles', subtitles => (
       updateCurrentItem({...subtitles, loadedKey: subtitles.loading, loading: false, items})))
-    .set('showSubtitlesBand', true));
+    .set('showSubtitlesBand', true);
 }
 
 function subtitlesLoadFailedReducer (state, {payload: {error}}) {
@@ -264,12 +263,6 @@ function updateCurrentItem (subtitles, audioTime) {
   return {...subtitles, audioTime, currentIndex, itemVisible};
 }
 
-function updateSubtitlesPaneVisibility (state) {
-  const subtitles = state.get('subtitles');
-  return state.set('subtitlesPaneEnabled',
-    subtitles.showSubtitlesPane && subtitles.items && subtitles.items.length > 0);
-}
-
 function getSubtitles (url) {
   return new Promise(function (resolve, reject) {
     var req = request.get(url);
@@ -287,8 +280,8 @@ module.exports = function (bundle, deps) {
   bundle.addReducer('init', initReducer);
 
   bundle.defineView('SubtitlesPane', SubtitlesPaneSelector, SubtitlesPane);
-  bundle.defineAction('subtitlesPaneVisibilityChanged', 'Subtitles.Pane.VisibilityChanged');
-  bundle.addReducer('subtitlesPaneVisibilityChanged', subtitlesPaneVisibilityChangedReducer);
+  bundle.defineAction('subtitlesPaneEnabledChanged', 'Subtitles.Pane.EnabledChanged');
+  bundle.addReducer('subtitlesPaneEnabledChanged', subtitlesPaneEnabledChangedReducer);
 
   bundle.defineView('SubtitlesMenu', SubtitlesMenuSelector, SubtitlesMenu);
   bundle.defineView('SubtitlesPopup', SubtitlesPopupSelector, SubtitlesPopup);
@@ -323,11 +316,13 @@ module.exports = function (bundle, deps) {
   }
 
   function SubtitlesPopupSelector (state, props) {
-    const {availableSubtitles, loadedKey, loading, lastError, showSubtitlesPane} = state.get('subtitles')
-    const {subtitlesCleared, subtitlesSelected, subtitlesPaneVisibilityChanged} = deps;
+    const {availableSubtitles, loadedKey, loading, lastError} = state.get('subtitles')
+    const paneEnabled = state.getIn(['panes', 'subtitles', 'enabled']);
+    const {subtitlesCleared, subtitlesSelected, subtitlesPaneEnabledChanged} = deps;
     return {
-      availableSubtitles, loadedKey, busy: !!loading, lastError, showSubtitlesPane,
-      subtitlesCleared, subtitlesSelected, subtitlesPaneVisibilityChanged,
+      availableSubtitles, loadedKey, busy: !!loading, lastError,
+      subtitlesCleared, subtitlesSelected,
+      paneEnabled, subtitlesPaneEnabledChanged,
     };
   }
 

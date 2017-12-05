@@ -135,6 +135,12 @@ body#app, #app h1, #app h2, #app h3 {
   text-align: center;
 }
 
+.pane {
+  float: left;
+  max-height: 100vh;
+  overflow-y: scroll;
+}
+
 .terminal {
   margin: 4px;
   line-height: 16px;
@@ -608,20 +614,11 @@ svg {
 
 /* subtitles */
 
-.subtitles-container {
-  // position: fixed;
-  position: absolute;
-  left: 1145px; // right: 5px;
-  top: 5px;
-  height: calc(100% - 5px);
-  width: calc((100vw - 1140px) / 2);
-  overflow-y: scroll;
-  z-index: 1;
-}
 .subtitles-pane {
   border: 1px solid #ccc;
   padding: 5px;
   background: #fff;
+  z-index: 6;
 }
 .subtitles-item {
   cursor: pointer;
@@ -671,4 +668,8 @@ svg {
 /* .subtitles-band-moving {} */
 .subtitles-band p {
   margin: 0;
+}
+
+.main-view .pane {
+  overflow: hidden;
 }

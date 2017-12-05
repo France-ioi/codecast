@@ -125,7 +125,7 @@ export default function (bundle, deps) {
       /* Compatibility with old style, where data is an array of events. */
       const {version, ...init} = data[0][2];
       data[0][2] = init;
-      data = {version, events: data, subtitles: {}};
+      data = {version, events: data, subtitles: false};
     }
     /* Compute the future state after every event. */
     const instants = yield call(computeInstants, data.events);
