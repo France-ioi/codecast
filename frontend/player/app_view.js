@@ -6,16 +6,16 @@ import React from 'react';
   xs      …800    best effort
   sm   800…1024   794  (subtitles always hidden)
   md  1024…1200   940 if no subtitles, 794 if subtitles
-  lg  1200…      1140 if no subtitles, 940 if no subtitles
+  lg  1200…      1140 if no subtitles, 940 if subtitles
 */
 
 class PlayerApp extends React.PureComponent {
   render () {
     const {preventInput, containerWidth, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
     return (
-      <div id='main'>
+      <div id='main' style={{width: `${containerWidth}px`}}>
         <PlayerControls/>
-        <div id='mainView-container' style={{width: `${containerWidth}px`}}>
+        <div id='mainView-container'>
           <MainView preventInput={preventInput}/>
           <MainViewPanes/>
         </div>

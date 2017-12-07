@@ -51,17 +51,14 @@ export default function (bundle, deps) {
       const canStep = /ready|paused/.test(status);
       return (
         <div id='player-controls'>
-          <div className='pane-controls-row' style={{width: '100%'}}>
+          <div className='player-controls-row row' style={{width: '100%'}}>
             <div className="player-slider-container">
               <Slider tipFormatter={formatTime} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek}>
               </Slider>
             </div>
           </div>
-          <div className='pane-controls-row' style={{width: '100%'}}>
-            <div className="pane-controls-right" style={{float: 'right'}}>
-              <deps.Menu/>
-            </div>
-            <div className="controls controls-main" style={{float: 'left'}}>
+          <div className='player-controls-row  row' style={{width: '100%'}}>
+            <div className="player-controls controls controls-main col-sm-3">
               <div className="player-controls-playback">
                 {showStartPlayback &&
                     <Button onClick={onStartPlayback} disabled={!canStartPlayback}
@@ -80,8 +77,11 @@ export default function (bundle, deps) {
                 {formatTime(duration)}
               </p>
             </div>
-            <div style={{float: 'left'}}>
+            <div className="player-controls player-controls-stepper col-sm-7">
               <deps.StepperControls enabled={canStep}/>
+            </div>
+            <div className="player-controls player-controls-right col-sm-2">
+              <deps.Menu/>
             </div>
           </div>
         </div>

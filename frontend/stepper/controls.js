@@ -76,7 +76,7 @@ export default function (bundle, deps) {
       const {getMessage} = this.props;
       return (
         <div className="controls controls-stepper">
-          <div className="controls-stepper-wrapper" style={{width: controlsWidth}}>
+          <div className="controls-stepper-wrapper">
             {p.showControls && <ButtonGroup className="controls-stepper-execution">
               {this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), <i className="fa fa-play"/>)}
               {this._button('expr', this.onStepExpr, getMessage('CONTROL_EXPR'), <i className="fi fi-step-expr"/>)}

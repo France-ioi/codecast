@@ -29,6 +29,11 @@ $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
   font-weight: normal;
   font-style: normal;
 }
+#main {
+  margin: 0 auto;
+}
+
+
 .fi {
   display: inline-block;
   font: normal normal normal 14px/1 'fioi';
@@ -135,11 +140,19 @@ body#app, #app h1, #app h2, #app h3 {
   text-align: center;
 }
 
-.pane {
+
+#mainView {
   float: left;
-  max-height: 100vh;
+}
+#mainView-panes {
+  float: left;
+  top: 62px;
+}
+#mainView-panes .pane {
+  max-height: calc(100vh - 62px);
   overflow-y: scroll;
 }
+
 
 .terminal {
   margin: 4px;
@@ -280,8 +293,9 @@ span + .value-previous {
 }
 
 .controls > * {
-  float: left;
+  display: inline-block;
 }
+/*
 .controls-main, .controls-stepper, .controls-stepper-wrapper {
   display: inline-block;
   height: 34px;
@@ -293,6 +307,7 @@ span + .value-previous {
 .controls-stepper {
   width: 450px;
 }
+*/
 .controls-stepper-execution p {
   text-align: center;
 }
@@ -300,6 +315,13 @@ span + .value-previous {
   width: 85px;
   text-align: center;
 }
+.player-controls-right {
+  text-align: right;
+}
+.player-controls-stepper {
+  text-align: center;
+}
+
 .player-controls-playback button {
   width: 40px;
   text-align: center;
