@@ -6,8 +6,8 @@ import classnames from 'classnames';
 class MainView extends React.PureComponent {
   render () {
     const {
-      controls, diagnostics, readOnly, sourceMode, sourceRowHeight,
-      preventInput, haveStepper, error, options, getMessage, geometry,
+      diagnostics, readOnly, sourceMode, sourceRowHeight,
+      preventInput, haveStepper, error, options, getMessage, geometry, panes,
       StackView, BufferEditor, ArduinoPanel, DirectivesPane, IOPane} = this.props;
     const sourcePanelHeader = (
       <span>
@@ -32,55 +32,52 @@ class MainView extends React.PureComponent {
       </div>
     );
     return (
-      <div className={classnames(['main-view', `main-view-${geometry.size}`])}>
-        {controls && <div className="row">
-          <div className="col-sm-12">
-            {controls}
+      <div id='mainView' className={classnames([`mainView-${geometry.size}`])}>
+        <div style={{width: `${geometry.width}px`}}>
+          <div className="row">
+            {StackView && <div className="col-sm-3">
+              <Panel header={<span>{getMessage('VARIABLES')}</span>}>
+                {<StackView height={sourceRowHeight}/>}
+              </Panel>
+            </div>}
+            <div className={StackView ? "col-sm-9" : "col-sm-12"}>
+              <Panel header={sourcePanelHeader}>
+                <BufferEditor buffer='source' readOnly={readOnly} shield={preventInput}
+                  mode={sourceMode} theme={'textmate'} width='100%' height={sourceRowHeight} globalName='source' />
+              </Panel>
+            </div>
           </div>
-        </div>}
-        <div className="row">
-          {StackView && <div className="col-sm-3">
-            <Panel header={<span>{getMessage('VARIABLES')}</span>}>
-              {<StackView height={sourceRowHeight}/>}
-            </Panel>
+          {diagnostics && <div className="row">
+            <div className="col-sm-12">
+              <Panel header={diagnosticsPanelHeader} bsStyle="danger">
+                <div dangerouslySetInnerHTML={diagnostics}/>
+              </Panel>
+            </div>
           </div>}
-          <div className={StackView ? "col-sm-9" : "col-sm-12"}>
-            <Panel header={sourcePanelHeader}>
-              <BufferEditor buffer='source' readOnly={readOnly} shield={preventInput}
-                mode={sourceMode} theme={'textmate'} width='100%' height={sourceRowHeight} globalName='source' />
-            </Panel>
-          </div>
-        </div>
-        {diagnostics && <div className="row">
-          <div className="col-sm-12">
-            <Panel header={diagnosticsPanelHeader} bsStyle="danger">
-              <div dangerouslySetInnerHTML={diagnostics}/>
-            </Panel>
-          </div>
-        </div>}
-        {error && <div className="row">
-          <div className="col-sm-12">
-            <Panel header={stepperErrorPanelHeader} bsStyle="danger">
-              <pre>{error}</pre>
-            </Panel>
-          </div>
-        </div>}
-        {ArduinoPanel && <div className="row">
-          <div className="col-sm-12">
-            <Panel header={
-              <span>
-                <i className="fa fa-microchip"/>
-                {" Arduino"}
-                {haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
-              </span>}>
-              <ArduinoPanel preventInput={preventInput}/>
-            </Panel>
-          </div>
-        </div>}
-        <div className="row">
-          <div className="col-sm-12">
-            {DirectivesPane && <DirectivesPane scale={geometry.svgScale}/>}
-            {IOPane && <IOPane preventInput={preventInput}/>}
+          {error && <div className="row">
+            <div className="col-sm-12">
+              <Panel header={stepperErrorPanelHeader} bsStyle="danger">
+                <pre>{error}</pre>
+              </Panel>
+            </div>
+          </div>}
+          {ArduinoPanel && <div className="row">
+            <div className="col-sm-12">
+              <Panel header={
+                <span>
+                  <i className="fa fa-microchip"/>
+                  {" Arduino"}
+                  {haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
+                </span>}>
+                <ArduinoPanel preventInput={preventInput}/>
+              </Panel>
+            </div>
+          </div>}
+          <div className="row">
+            <div className="col-sm-12">
+              {DirectivesPane && <DirectivesPane scale={geometry.svgScale}/>}
+              {IOPane && <IOPane preventInput={preventInput}/>}
+            </div>
           </div>
         </div>
       </div>
@@ -106,6 +103,7 @@ export default function (bundle, deps) {
   function MainViewSelector (state, props) {
     const getMessage = state.get('getMessage');
     const geometry = state.get('mainViewGeometry');
+    const panes = state.get('panes');
     const diagnostics = deps.getTranslateDiagnostics(state);
     const stepperDisplay = deps.getStepperDisplay(state);
     const haveStepper = !!stepperDisplay;
@@ -117,7 +115,7 @@ export default function (bundle, deps) {
     const sourceRowHeight = '300px';
     const sourceMode = arduinoEnabled ? 'arduino' : 'c_cpp';
     return {
-      diagnostics, haveStepper, readOnly, error, options, getMessage, geometry,
+      diagnostics, haveStepper, readOnly, error, options, getMessage, geometry, panes,
       translateClearDiagnostics, stepperExit,
       BufferEditor: deps.BufferEditor, sourceRowHeight, sourceMode,
       StackView: options.get('showStack') && deps.StackView,

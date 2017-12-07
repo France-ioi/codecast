@@ -102,14 +102,15 @@ class SubtitleItem extends React.PureComponent {
 class SubtitlesPane extends React.PureComponent {
   render () {
     const {subtitles, currentIndex} = this.props;
-    if (!subtitles) return false;
     return (
       <div className='subtitles-pane'>
-        {subtitles.map((st, index) => {
-          const selected = currentIndex === index;
-          const ref = selected && this._refSelected;
-          return <SubtitleItem key={index} item={st} selected={selected} ref={ref} onClick={this._onSubtitleClick}/>;
-        })}
+        {subtitles && subtitles.length > 0
+          ? subtitles.map((st, index) => {
+              const selected = currentIndex === index;
+              const ref = selected && this._refSelected;
+              return <SubtitleItem key={index} item={st} selected={selected} ref={ref} onClick={this._onSubtitleClick}/>;
+            })
+          : <p>{"No subtitles"}</p>}
       </div>
     );
   }
@@ -160,7 +161,7 @@ function initReducer (state) {
   return state.set('subtitles', {}).update('panes', panes => panes.set('subtitles',
     Immutable.Map({
       View: state.get('scope').SubtitlesPane,
-      enabled: true,
+      enabled: false,
       width: 200
     })));
 }

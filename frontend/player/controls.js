@@ -50,7 +50,7 @@ export default function (bundle, deps) {
       const canPausePlayback = status === 'playing';
       const canStep = /ready|paused/.test(status);
       return (
-        <div className="pane pane-controls clearfix" style={{width: '100%'}}>
+        <div id='player-controls'>
           <div className='pane-controls-row' style={{width: '100%'}}>
             <div className="player-slider-container">
               <Slider tipFormatter={formatTime} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek}>

@@ -4,6 +4,7 @@
 */
 
 import MainView from './main_view';
+import MainViewPanes from './main_view_panes';
 import fullscreen  from './fullscreen';
 import buffers from '../buffers/index';
 import errors from './errors';
@@ -28,6 +29,7 @@ export default function (bundle) {
   });
 
   bundle.include(MainView);
+  bundle.include(MainViewPanes);
   bundle.include(fullscreen);
   bundle.include(buffers);
   bundle.include(errors);
