@@ -11,11 +11,11 @@ import React from 'react';
 
 class PlayerApp extends React.PureComponent {
   render () {
-    const {preventInput, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
+    const {preventInput, containerWidth, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
     return (
       <div id='main'>
         <PlayerControls/>
-        <div id='mainView-container'>
+        <div id='mainView-container' style={{width: `${containerWidth}px`}}>
           <MainView preventInput={preventInput}/>
           <MainViewPanes/>
         </div>
@@ -32,12 +32,13 @@ export default function (bundle, deps) {
 
   function PlayerAppSelector (state, props) {
     const {PlayerControls, MainView, MainViewPanes, SubtitlesBand} = deps;
+    const containerWidth = state.get('containerWidth');
     const showSubtitlesBand = state.get('showSubtitlesBand');
     const player = deps.getPlayerState(state);
     const status = player.get('status');
     const preventInput = !/ready|paused/.test(status);
     return {
-      preventInput, PlayerControls, MainView, MainViewPanes,
+      preventInput, containerWidth, PlayerControls, MainView, MainViewPanes,
       showSubtitlesBand, SubtitlesBand
     };
   }

@@ -78,7 +78,15 @@ export default function (bundle, deps) {
         geometry = mainViewGeometries[geometryIndex];
       }
     }
+    /* Compute the container width */
+    let containerWidth = geometry.width;
+    panes.forEach(pane => {
+      if (pane.get('visible')) {
+        containerWidth += pane.get('width');
+      }
+    });
     return state
+      .set('containerWidth', containerWidth)
       .set('mainViewGeometry', geometry)
       .set('panes', panes);
   });
