@@ -55,6 +55,7 @@ export default function (bundle, deps) {
     /* Default to the largest geometry, no visible panes. */
     let geometry = mainViewGeometries[0];
     let panes = state.get('panes');
+    let viewportTooSmall = false;
     const windowWidth = state.get('windowWidth');
     if (windowWidth) {
       let mainViewWidth = windowWidth;
@@ -72,6 +73,7 @@ export default function (bundle, deps) {
         geometryIndex += 1;
         if (geometryIndex === mainViewGeometries.length) {
           /* Screen is too small, use the smallest geometry and hide all panes. */
+          viewportTooSmall = true;
           panes = panes.map(pane => pane.set('visible', false));
           break;
         }
@@ -86,6 +88,7 @@ export default function (bundle, deps) {
       }
     });
     return state
+      .set('viewportTooSmall', viewportTooSmall)
       .set('containerWidth', containerWidth)
       .set('mainViewGeometry', geometry)
       .set('panes', panes);

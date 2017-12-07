@@ -1,5 +1,6 @@
 
 import React from 'react';
+import classnames from 'classnames';
 
 /*
       screen      main-view-no-subtitles
@@ -11,9 +12,9 @@ import React from 'react';
 
 class PlayerApp extends React.PureComponent {
   render () {
-    const {preventInput, containerWidth, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
+    const {preventInput, containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
     return (
-      <div id='main' style={{width: `${containerWidth}px`}}>
+      <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
         <PlayerControls/>
         <div id='mainView-container'>
           <MainView preventInput={preventInput}/>
@@ -32,13 +33,15 @@ export default function (bundle, deps) {
 
   function PlayerAppSelector (state, props) {
     const {PlayerControls, MainView, MainViewPanes, SubtitlesBand} = deps;
+    const viewportTooSmall = state.get('viewportTooSmall');
     const containerWidth = state.get('containerWidth');
     const showSubtitlesBand = state.get('showSubtitlesBand');
     const player = deps.getPlayerState(state);
     const status = player.get('status');
     const preventInput = !/ready|paused/.test(status);
     return {
-      preventInput, containerWidth, PlayerControls, MainView, MainViewPanes,
+      preventInput, viewportTooSmall, containerWidth,
+      PlayerControls, MainView, MainViewPanes,
       showSubtitlesBand, SubtitlesBand
     };
   }
