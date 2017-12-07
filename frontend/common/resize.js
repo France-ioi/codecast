@@ -82,10 +82,12 @@ export default function (bundle, deps) {
     }
     /* Compute the container width */
     let containerWidth = geometry.width;
-    panes.forEach(pane => {
+    panes = panes.map(pane => {
+      pane = pane.set('left', containerWidth);
       if (pane.get('visible')) {
         containerWidth += pane.get('width');
       }
+      return pane;
     });
     return state
       .set('viewportTooSmall', viewportTooSmall)

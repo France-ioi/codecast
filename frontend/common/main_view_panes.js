@@ -9,11 +9,16 @@ class MainViewPanes extends React.PureComponent {
         {panes.entrySeq().map(([key, pane]) => {
           if (!pane.get('visible')) return false;
           const View = pane.get('View');
+          const paneStyle = {
+            width: `${pane.get('width')}px`,
+            left: `${pane.get('left')}px`,
+          };
           return (
-            <div key={key} className='pane' style={{width: `${pane.get('width')}px`}}>
+            <div key={key} className='pane' style={paneStyle}>
               <View />
-            </div>);
-          })}
+            </div>
+          );
+        })}
       </div>
     );
   }
