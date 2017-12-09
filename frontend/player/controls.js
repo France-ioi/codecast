@@ -57,7 +57,7 @@ export default function (bundle, deps) {
               </Slider>
             </div>
           </div>
-          <div className='player-controls-row  row' style={{width: '100%'}}>
+          <div className='player-controls-row row' style={{width: '100%'}}>
             <div className="player-controls controls controls-main col-sm-3">
               <div className="player-controls-playback">
                 {showStartPlayback &&
