@@ -19,7 +19,7 @@ import AudioWorker from 'worker-loader?inline!../audio_worker';
 export default function (bundle, deps) {
 
   bundle.use(
-    'error', 'recordApi',
+    'error', 'recordApi', 'switchToScreen',
     'getRecorderState', 'getPlayerState',
     'recorderPrepare', 'recorderPreparing', 'recorderReady',
     'recorderTick',
@@ -32,6 +32,8 @@ export default function (bundle, deps) {
 
   function* recorderPrepare () {
     try {
+      /* Show 'record' screen to user. */
+      yield put({type: scope.switchToScreen, payload: {screen: 'record'}});
       // Clean up any previous audioContext and worker.
       const recorder = yield select(deps.getRecorderState);
       let context = recorder.get('context');
@@ -47,11 +49,11 @@ export default function (bundle, deps) {
         // TODO: put an action to clean up the old context, in case
         //       the saga fails before recorderReady is sent.
       }
-      yield put({type: deps.recorderPreparing, progress: 'start'});
+      yield put({type: deps.recorderPreparing, payload: {progress: 'start'}});
       // Attempt to obtain an audio stream.  The async call will complete once
       // the user has granted permission to use the microphone.
       const stream = yield call(getAudioStream);
-      yield put({type: deps.recorderPreparing, progress: 'stream_ok'});
+      yield put({type: deps.recorderPreparing, payload: {progress: 'stream_ok'}});
       // Create the AudioContext, connect the nodes, and suspend the audio
       // context until we actually start recording.
       const audioContext = new AudioContext();
@@ -65,10 +67,10 @@ export default function (bundle, deps) {
       analyser.fftSize = 1024;
       scriptProcessor.connect(audioContext.destination);
       yield call(() => audioContext.suspend());
-      yield put({type: deps.recorderPreparing, progress: 'audio_ok'});
+      yield put({type: deps.recorderPreparing, payload: {progress: 'audio_ok'}});
       // Set up a worker to hold and encode the buffers.
       const worker = yield call(spawnWorker, AudioWorker);
-      yield put({type: deps.recorderPreparing, progress: 'worker_ok', worker});
+      yield put({type: deps.recorderPreparing, payload: {progress: 'worker_ok', worker}});
       // Initialize the worker.
       yield call(callWorker, worker, {
         command: "init",
@@ -76,32 +78,17 @@ export default function (bundle, deps) {
           sampleRate: audioContext.sampleRate
         }
       });
-      yield put({type: deps.recorderPreparing, progress: 'worker_init_ok'});
+      // XXX create a channel to which input buffers are posted.
+      yield put({type: deps.recorderPreparing, payload: {
+        progress: 'worker_init_ok', analyser
+      }});
       // Set up the ScriptProcessor to divert all buffers to the worker.
-      const vumeterElement = document.getElementById('vumeter');
-      if (vumeterElement) {
-        const canvasContext = document.getElementById('vumeter').getContext("2d");
-        const vumeterData = new Uint8Array(analyser.frequencyBinCount);
-        scriptProcessor.onaudioprocess = function (event) {
-          if (canvasContext) {
-            // Get analyser data and update vumeter.
-            analyser.getByteFrequencyData(vumeterData);
-            let sum = 0, i;
-            for (i = 0; i < vumeterData.length; i++) {
-              sum += vumeterData[i];
-            }
-            const average = sum / vumeterData.length;
-            canvasContext.fillStyle = '#dddddd';
-            canvasContext.fillRect(0, 0, 10, 100);
-            canvasContext.fillStyle = '#00ff00';
-            canvasContext.fillRect(0, 100 - average, 10, 100);
-          }
-          // Post buffers to worker.
-          const ch0 = event.inputBuffer.getChannelData(0);
-          const ch1 = event.inputBuffer.getChannelData(1);
-          worker.postMessage({command: "record", buffer: [ch0, ch1]});
-        };
-      }
+      scriptProcessor.onaudioprocess = function (event) {
+        // dispatch event
+        const ch0 = event.inputBuffer.getChannelData(0);
+        const ch1 = event.inputBuffer.getChannelData(1);
+        worker.postMessage({command: "record", buffer: [ch0, ch1]});
+      };
       // Signal that the recorder is ready to start, storing the new context.
       // /!\  Chrome: store a reference to the scriptProcessor node to prevent
       //      the browser from garbage-collection the node (which seems to
@@ -179,6 +166,11 @@ export default function (bundle, deps) {
         audioUrl: mp3Url,
         wavAudioUrl: wavUrl,
         eventsUrl: eventsUrl
+      });
+      /* Show 'save' screen to user. */
+      yield put({
+        type: deps.switchToScreen,
+        payload: {screen: 'save'}
       });
     } catch (error) {
       // XXX generic error

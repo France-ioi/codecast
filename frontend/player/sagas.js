@@ -6,9 +6,9 @@
 import {delay} from 'redux-saga';
 import {take, put, call, race, fork, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
-import request from 'superagent';
 import Immutable from 'immutable';
 
+import {getJson} from '../common/utils';
 import {RECORDING_FORMAT_VERSION} from '../version';
 
 export default function (bundle, deps) {
@@ -27,20 +27,6 @@ export default function (bundle, deps) {
   );
 
   // pause, resume audio
-
-  function getJson (path) {
-    return new Promise(function (resolve, reject) {
-      var req = request.get(path);
-      req.set('Accept', 'application/json');
-      req.end(function (err, res) {
-        if (err) {
-          reject({err, res});
-        } else {
-          resolve(res.body);
-        }
-      });
-    });
-  };
 
   const findInstant = function (instants, time) {
     let low = 0, high = instants.length;
@@ -104,7 +90,7 @@ export default function (bundle, deps) {
   }
 
   function* playerPrepare (action) {
-    const {audioUrl, eventsUrl, subtitlesUrl} = action;
+    const {audioUrl, eventsUrl} = action;
     // Check that the player is idle.
     const player = yield select(deps.getPlayerState);
     if (player.get('status') !== 'idle') {

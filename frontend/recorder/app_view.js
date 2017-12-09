@@ -1,34 +1,39 @@
 
 import React from 'react';
-import {Button} from 'react-bootstrap';
+
+class RecorderApp extends React.PureComponent {
+  render () {
+    const {Screen, ErrorView, MemoryUsage, Vumeter} = this.props;
+    return (
+      <div>
+        <Screen/>
+        <ErrorView/>
+        <MemoryUsage/>
+        <Vumeter/>
+      </div>
+    );
+  }
+}
 
 export default function (bundle, deps) {
 
-  bundle.use('ErrorView', 'LoginScreen', 'RecordScreen', 'SaveScreen', 'MemoryUsage');
+  bundle.use('ErrorView', 'LoginScreen', 'RecordScreen', 'SaveScreen', 'MemoryUsage', 'Vumeter');
 
-  bundle.defineView('RecorderApp', RecorderAppSelector, class RecorderApp extends React.PureComponent {
-    render () {
-      let {user, size, screen} = this.props;
-      if (!user) screen = 'login';
-      return (
-        <div className={`container size-${size}`}>
-          <deps.ErrorView/>
-          {screen === 'login' && <deps.LoginScreen/>}
-          {screen === 'record' && <deps.RecordScreen/>}
-          {screen === 'save' && <deps.SaveScreen/>}
-          <canvas id="vumeter" width="10" height="100"></canvas>
-          <deps.MemoryUsage/>
-        </div>
-      );
-    };
-
-  });
+  bundle.defineView('RecorderApp', RecorderAppSelector, RecorderApp);
 
   function RecorderAppSelector (state, props) {
+    const {ErrorView, RecorderControls, MainView, MemoryUsage} = deps;
     const user = state.get('user');
-    const size = state.get('size');
     const screen = state.get('screen');
-    return {user, size, screen};
+    let Screen;
+    if (!user) {
+      Screen = deps.LoginScreen;
+    } else if (screen === 'record') {
+      Screen = deps.RecordScreen;
+    } else if (screen === 'save') {
+      Screen = deps.SaveScreen;
+    }
+    return {Screen, ErrorView, MemoryUsage, Vumeter};
   }
 
 };

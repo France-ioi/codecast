@@ -107,14 +107,35 @@ function addBackendRoutes (app, config) {
     });
   });
 
+  app.get('/editor', function (req, res) {
+    config.initHook(req, {start: 'editor', baseUrl: config.baseUrl}, function (err, init) {
+      //const audioUrl = `${req.query.base}.mp3`;
+      //const eventsUrl = `${req.query.base}.json`;
+      if (err) return res.send(`Error: ${err.toString()}`);
+      res.render('index', {
+        development: config.isDevelopment,
+        rebaseUrl: config.rebaseUrl,
+        options: init
+      });
+    });
+  });
+
+  app.get('/editor.json', function (req, res) {
+    config.getUserConfig(req, function (err, userConfig) {
+      if (err) return res.json({error: err.toString()});
+      const {s3Bucket, uploadPath} = userConfig;
+      const baseDataUrl = `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}/`;
+      res.json({baseDataUrl});
+    });
+  });
+
   app.get('/player', function (req, res) {
     const audioUrl = `${req.query.base}.mp3`;
     const eventsUrl = `${req.query.base}.json`;
-    const subtitlesUrl = `${req.query.base}.srt`;
     res.render('index', {
       development: config.isDevelopment,
       rebaseUrl: config.rebaseUrl,
-      options: {start: 'player', baseUrl: config.baseUrl, audioUrl, eventsUrl, subtitlesUrl}
+      options: {start: 'player', baseUrl: config.baseUrl, audioUrl, eventsUrl}
     });
   });
 

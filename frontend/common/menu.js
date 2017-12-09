@@ -8,6 +8,7 @@ export default function (bundle, deps) {
   bundle.use(
     'FullscreenButton', 'LogoutButton',
     'ExamplePicker', 'isTranslated', 'setLanguage', 'exampleSelected',
+    'subtitlesGetMenu'
   );
 
   bundle.defineAction('menuOpened', 'Menu.Opened');
@@ -40,7 +41,7 @@ export default function (bundle, deps) {
 
   function MenuSelector (state, props) {
     const getMessage = state.get('getMessage');
-    const SubtitlesMenu = state.get('subtitles').Menu;
+    const SubtitlesMenu = deps.subtitlesGetMenu(state);
     return {getMessage, SubtitlesMenu};
   }
 

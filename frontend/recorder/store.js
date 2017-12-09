@@ -16,10 +16,6 @@ import Immutable from 'immutable';
 
 export default function (bundle) {
 
-  bundle.addReducer('switchToScreen', function (state, action) {
-    return state.set('screen', action.screen);
-  });
-
   bundle.defineSelector('getRecorderState', state =>
     state.get('recorder', Immutable.Map())
   );
@@ -66,7 +62,6 @@ export default function (bundle) {
     const context = state.getIn(['recorder', 'context']);
     return state
       .set('recorder', Immutable.Map({status: 'ready', context}))
-      .set('screen', 'save')
       .set('save', Immutable.Map({
         audioUrl: action.audioUrl,
         wavAudioUrl: action.wavAudioUrl,

@@ -1,9 +1,6 @@
 
 export default function (bundle) {
 
-  // Switch to the specified screen.
-  bundle.defineAction('switchToScreen', 'System.SwitchToScreen');
-
   // Sent when the application starts to prepare the recorder's resources.
   bundle.defineAction('recorderPrepare', 'Recorder.Prepare');
 

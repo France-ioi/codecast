@@ -8,6 +8,7 @@ import recorderSagas from './sagas';
 import RecorderControls from './controls';
 import RecordScreen from './record_screen';
 import RecorderAppBundle from './app_view';
+import ScreensBundle from '../common/screens';
 import MemoryUsageBundle from '../common/memory_usage';
 
 export default function (bundle, deps) {
@@ -22,6 +23,7 @@ export default function (bundle, deps) {
   bundle.include(RecorderControls);
   bundle.include(RecordScreen);
   bundle.include(RecorderAppBundle);
+  bundle.include(ScreensBundle);
   bundle.include(MemoryUsageBundle);
 
 };

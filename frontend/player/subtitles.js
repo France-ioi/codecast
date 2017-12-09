@@ -171,12 +171,8 @@ function subtitlesPaneEnabledChangedReducer (state, {payload: {value}}) {
 }
 
 function playerReadyReducer (state, {data}) {
-  const availableSubtitles = data.subtitles;
-  const Menu = availableSubtitles ? state.get('scope').SubtitlesMenu : false;
   return state.update('subtitles', subtitles => (
     {...subtitles,
-      Menu,
-      availableSubtitles,
       items: [],
       currentIndex: 0,
       loadedKey: false,
@@ -185,7 +181,8 @@ function playerReadyReducer (state, {data}) {
 
 function subtitlesClearedReducer (state, _action) {
   return state.update('subtitles', subtitles => (
-    {...subtitles, items: [], currentIndex: 0, loadedKey: false}));
+    {...subtitles, items: [], currentIndex: 0, loadedKey: false}))
+    .set('showSubtitlesBand', false);
 }
 
 function subtitlesLoadStartedReducer (state, {payload: {key}}) {
@@ -200,13 +197,18 @@ function subtitlesLoadSucceededReducer (state, {payload: {items}}) {
     .set('showSubtitlesBand', true);
 }
 
+function subtitlesLoadedSelector (state) {
+  return state.get('subtitles').loadedKey;
+}
+
 function subtitlesLoadFailedReducer (state, {payload: {error}}) {
   let errorText = state.get('getMessage')("SUBTITLES_FAILED_TO_LOAD").s;
   if (error.res) {
     errorText = `${errorText} (${error.res.statusText})`;
   }
   return state.update('subtitles', subtitles => (
-    {...subtitles, loading: false, lastError: errorText}));
+    {...subtitles, loading: false, lastError: errorText}))
+    .set('showSubtitlesBand', false);
 }
 
 function playerSeekedReducer (state, action) {
@@ -275,6 +277,13 @@ function getSubtitles (url) {
   });
 }
 
+function subtitlesGetMenu (state) {
+  /* TODO: force false in editor mode */
+  const playerData = state.getIn(['player', 'data']);
+  if (!playerData) return false;
+  return playerData.subtitles ? state.get('scope').SubtitlesMenu : false;
+}
+
 module.exports = function (bundle, deps) {
 
   bundle.use('getPlayerState', 'playerSeek');
@@ -284,6 +293,7 @@ module.exports = function (bundle, deps) {
   bundle.defineAction('subtitlesPaneEnabledChanged', 'Subtitles.Pane.EnabledChanged');
   bundle.addReducer('subtitlesPaneEnabledChanged', subtitlesPaneEnabledChangedReducer);
 
+  bundle.defineValue('subtitlesGetMenu', subtitlesGetMenu);
   bundle.defineView('SubtitlesMenu', SubtitlesMenuSelector, SubtitlesMenu);
   bundle.defineView('SubtitlesPopup', SubtitlesPopupSelector, SubtitlesPopup);
 
@@ -297,6 +307,7 @@ module.exports = function (bundle, deps) {
   bundle.addReducer('subtitlesLoadFailed', subtitlesLoadFailedReducer);
   bundle.defineAction('subtitlesSelected', 'Subtitles.Selected');
   bundle.addSaga(subtitlesSelectedSaga);
+  bundle.defineSelector('subtitlesLoadedSelector', subtitlesLoadedSelector);
 
   bundle.defineView('SubtitlesBand', SubtitlesBandSelector,
     clickDrag(SubtitlesBand, {touch: true}));
@@ -317,7 +328,8 @@ module.exports = function (bundle, deps) {
   }
 
   function SubtitlesPopupSelector (state, props) {
-    const {availableSubtitles, loadedKey, loading, lastError} = state.get('subtitles')
+    const {loadedKey, loading, lastError} = state.get('subtitles')
+    const availableSubtitles = state.getIn(['player', 'data']).subtitles;
     const paneEnabled = state.getIn(['panes', 'subtitles', 'enabled']);
     const {subtitlesCleared, subtitlesSelected, subtitlesPaneEnabledChanged} = deps;
     return {

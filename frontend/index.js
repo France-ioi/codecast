@@ -24,6 +24,7 @@ import {default as commonBundle, interpretQueryString} from './common/index';
 import SandboxBundle from './sandbox/index';
 import RecorderBundle from './recorder/index';
 import PlayerBundle from './player/index';
+import EditorBundle from './editor/index';
 import LangBundle from './lang/index';
 
 const {store, scope, finalize, start} = link(function (bundle, deps) {
@@ -37,6 +38,7 @@ const {store, scope, finalize, start} = link(function (bundle, deps) {
   bundle.include(SandboxBundle);
   bundle.include(RecorderBundle);
   bundle.include(PlayerBundle);
+  bundle.include(EditorBundle);
   bundle.include(LangBundle);
 
   // bundle.addEnhancer(DevTools.instrument());
@@ -103,6 +105,9 @@ Codecast.start = function (options) {
     store.dispatch({type: scope.inputLoad, text: qs.input||''});
   }
 
+  /* Run the sagas (must be done before loginFeedback) */
+  start();
+
   /* Start already logged in. */
   if ('user' in options) {
     store.dispatch({type: scope.loginFeedback, payload: {user: options.user}});
@@ -113,16 +118,12 @@ Codecast.start = function (options) {
     store.dispatch({type: scope.uploadTokenChanged, token: qs.token});
   }
 
-  /* Run the sagas */
-  start();
-
   let App = scope.SandboxApp;
 
   /* recorder and player */
   store.dispatch({type: scope.playerClear});
 
   if (options.start === 'recorder') {
-    store.dispatch({type: scope.switchToScreen, screen: 'record'});
     store.dispatch({type: scope.recorderPrepare});
     App = scope.RecorderApp;
   }
@@ -131,10 +132,19 @@ Codecast.start = function (options) {
     store.dispatch({
       type: scope.playerPrepare,
       audioUrl: options.audioUrl,
-      eventsUrl: options.eventsUrl,
-      subtitlesUrl: options.subtitlesUrl,
+      eventsUrl: options.eventsUrl
     });
     App = scope.PlayerApp;
+  }
+
+  if (options.start === 'editor') {
+    store.dispatch({
+      type: scope.editorPrepare,
+      payload: {
+        dataUrl: qs.base || ''
+      }
+    });
+    App = scope.EditorApp;
   }
 
   const container = document.getElementById('react-container');
