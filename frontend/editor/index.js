@@ -2,6 +2,7 @@
 import Immutable from 'immutable';
 import React from 'react';
 import classnames from 'classnames';
+import FileInput from 'react-file-input';
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 
 import {Button} from '../ui';
@@ -103,10 +104,10 @@ function* editorUnloadSaga (_action) {
 }
 
 function* editorSubtitlesSelectedSaga ({payload: {key}}) {
-  const {subtitlesSelected, subtitlesLoadSucceeded, switchToScreen} = yield select(state => state.get('scope'));
+  const {subtitlesModeSet, subtitlesSelected, subtitlesLoadSucceeded, switchToScreen} = yield select(state => state.get('scope'));
+  yield put({type: subtitlesModeSet, payload: {mode: 'editor'}});
   yield put({type: subtitlesSelected, payload: {key}});
   yield take(subtitlesLoadSucceeded);
-  yield put({type: switchToScreen, payload: {screen: 'edit'}});
 }
 
 function EditorAppSelector (state, props) {
@@ -170,26 +171,26 @@ class LoadScreen extends React.PureComponent {
     const {dataUrl, baseDataUrl, loading} = this.props;
     const isUrlOk = baseDataUrl && dataUrl.startsWith(baseDataUrl);
     return (
-      <div>
-        <div>
-          <p>{"Enter the base URL of an existing Codecast:"}</p>
-          <div className='form-inline'>
-            <input type='text' className='form-control' onChange={this._urlChanged} value={dataUrl||''} />
+      <div className='container'>
+        <p>{"Enter the base URL of an existing Codecast:"}</p>
+        <div className='input-group'>
+          <input type='text' className='form-control' onChange={this._urlChanged} value={dataUrl||''} />
+          <div className='input-group-btn'>
             <Button disabled={!isUrlOk || loading} onClick={this._loadClicked}>
               {"Load"}
               {loading && <span>{" "}<i className='fa fa-hourglass-o'/></span>}
             </Button>
           </div>
-          {baseDataUrl && !isUrlOk &&
-            <p className='error'>
-              {"The URL must start with "}{baseDataUrl||''}
-            </p>}
-          {baseDataUrl && isUrlOk &&
-            <p>
-              <i className='fa fa-check' style={{color: 'green'}}/>
-              {" The URL is valid."}
-            </p>}
         </div>
+        {baseDataUrl && !isUrlOk &&
+          <p className='error'>
+            {"The URL must start with "}{baseDataUrl||''}
+          </p>}
+        {baseDataUrl && isUrlOk &&
+          <p>
+            <i className='fa fa-check' style={{color: 'green'}}/>
+            {" The URL is valid."}
+          </p>}
       </div>
     );
   }
@@ -203,36 +204,51 @@ class LoadScreen extends React.PureComponent {
 }
 
 function SetupScreenSelector (state, props) {
-  const {editorSubtitlesSelected, subtitlesLoadedSelector} = state.get('scope');
+  const {editorSubtitlesSelected, subtitlesLoadFromFile, subtitlesLoadedSelector, switchToScreen} = state.get('scope');
   const editor = state.get('editor');
   const dataUrl = editor.get('dataUrl');
   const {version, subtitles} = editor.get('data')
   const loadedSubtitles = subtitlesLoadedSelector(state);
-  return {editorSubtitlesSelected, loadedSubtitles, dataUrl, version, subtitles};
+  return {editorSubtitlesSelected, subtitlesLoadFromFile, switchToScreen, loadedSubtitles, dataUrl, version, subtitles: [...subtitles, 'fr_FR']};
 }
 
 class SetupScreen extends React.PureComponent {
   render () {
     const {dataUrl, version, subtitles, loadedSubtitles} = this.props;
     return (
-      <div>
-        <div>
-          <p>{"Editing "}{dataUrl}</p>
-          <p>{"Version "}{version}</p>
-          <p>{"Subtitles "}
-            {(subtitles||[]).map(key =>
-              <span key={key} onClick={this._subtitlesSelected} data-key={key} style={{marginRight: '10px', fontWeight: loadedSubtitles === key ? 'bold' : 'normal'}}>
-                {key}
-              </span>)}
-          </p>
-        </div>
-        {/* TODO: button to switch to edit mode */}
+      <div className='container'>
+        <p>{"Editing "}{dataUrl}</p>
+        <p>{"Version "}{version}</p>
+        <p>{"Subtitles "}
+          {(subtitles||[]).map(key =>
+            <span key={key} onClick={this._subtitlesSelected} data-key={key} style={{marginRight: '10px', fontWeight: loadedSubtitles === key ? 'bold' : 'normal'}}>
+              {key}
+            </span>)}
+        </p>
+
+        {loadedSubtitles &&
+          <div className='form-group'>
+            <label htmlFor='upload-srt'>{"Replace subtitles with a local SRT file"}</label>
+            <div className='input-group'>
+               <FileInput name='upload-srt' accept=".srt" placeholder={`${loadedSubtitles||'*'}.srt`} className='form-control' onChange={this._replaceSubtitles} />
+            </div>
+          </div>}
+
+        <Button onClick={this._beginEdit}><i className='fa fa-edit'/></Button>
       </div>
     );
   }
   _subtitlesSelected = (event) => {
     const {key} = event.currentTarget.dataset;
     this.props.dispatch({type: this.props.editorSubtitlesSelected, payload: {key}});
+  };
+  _beginEdit = (event) => {
+    this.props.dispatch({type: this.props.switchToScreen, payload: {screen: 'edit'}});
+  };
+  _replaceSubtitles = (event) => {
+    const {loadedSubtitles: key} = this.props;
+    const file = event.target.files[0];
+    this.props.dispatch({type: this.props.subtitlesLoadFromFile, payload: {key, file}});
   };
 }
 

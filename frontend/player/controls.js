@@ -4,7 +4,7 @@ import {Button} from 'react-bootstrap';
 import EpicComponent from 'epic-component';
 import Slider from 'rc-slider';
 
-import {formatTime} from './utils';
+import {formatTime} from '../common/utils';
 
 export default function (bundle, deps) {
 

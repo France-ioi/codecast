@@ -14,6 +14,15 @@ import Immutable from 'immutable';
 import {Button} from '../ui';
 import {formatTime} from './utils';
 
+function readFileAsText (file) {
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function (event) { resolve(event.target.result); };
+    reader.onerror = function (event) { reject(event.target.error); };
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
 class SubtitlesMenu extends React.PureComponent {
   render() {
     const {getMessage, Popup} = this.props;
@@ -166,6 +175,16 @@ function initReducer (state) {
     })));
 }
 
+function subtitlesModeSetReducer (state, {payload: {mode}}) {
+  state = state.update('subtitles', subtitles => ({...subtitles, mode}));
+  if (mode === 'editor') {
+    /* The subtitles pane is always enabled in the editor. */
+    state = state.setIn(['panes', 'subtitles', 'enabled'], true);
+  }
+  /* TODO: if mode is 'player', reload state from local storage settings? */
+  return state;
+}
+
 function subtitlesPaneEnabledChangedReducer (state, {payload: {value}}) {
   return state.setIn(['panes', 'subtitles', 'enabled'], value);
 }
@@ -190,10 +209,10 @@ function subtitlesLoadStartedReducer (state, {payload: {key}}) {
     {...subtitles, loading: key, lastError: false}));
 }
 
-function subtitlesLoadSucceededReducer (state, {payload: {items}}) {
+function subtitlesLoadSucceededReducer (state, {payload: {key, items}}) {
   return state
     .update('subtitles', subtitles => (
-      updateCurrentItem({...subtitles, loadedKey: subtitles.loading, loading: false, items})))
+      updateCurrentItem({...subtitles, loadedKey: key, loading: false, items})))
     .set('showSubtitlesBand', true);
 }
 
@@ -202,6 +221,7 @@ function subtitlesLoadedSelector (state) {
 }
 
 function subtitlesLoadFailedReducer (state, {payload: {error}}) {
+  console.log('subtitles failed to load', error);
   let errorText = state.get('getMessage')("SUBTITLES_FAILED_TO_LOAD").s;
   if (error.res) {
     errorText = `${errorText} (${error.res.statusText})`;
@@ -278,7 +298,8 @@ function getSubtitles (url) {
 }
 
 function subtitlesGetMenu (state) {
-  /* TODO: force false in editor mode */
+  const subtitles = state.get('subtitles');
+  if (subtitles.mode === 'editor') return false;
   const playerData = state.getIn(['player', 'data']);
   if (!playerData) return false;
   return playerData.subtitles ? state.get('scope').SubtitlesMenu : false;
@@ -288,6 +309,9 @@ module.exports = function (bundle, deps) {
 
   bundle.use('getPlayerState', 'playerSeek');
   bundle.addReducer('init', initReducer);
+
+  bundle.defineAction('subtitlesModeSet', 'Subtitles.Mode.Set');
+  bundle.addReducer('subtitlesModeSet', subtitlesModeSetReducer);
 
   bundle.defineView('SubtitlesPane', SubtitlesPaneSelector, SubtitlesPane);
   bundle.defineAction('subtitlesPaneEnabledChanged', 'Subtitles.Pane.EnabledChanged');
@@ -306,8 +330,10 @@ module.exports = function (bundle, deps) {
   bundle.defineAction('subtitlesLoadFailed', 'Subtitles.LoadFailed');
   bundle.addReducer('subtitlesLoadFailed', subtitlesLoadFailedReducer);
   bundle.defineAction('subtitlesSelected', 'Subtitles.Selected');
-  bundle.addSaga(subtitlesSelectedSaga);
+  bundle.addSaga(subtitlesSaga);
   bundle.defineSelector('subtitlesLoadedSelector', subtitlesLoadedSelector);
+  bundle.defineAction('subtitlesLoadFromFile', 'Subtitles.LoadFromFile');
+
 
   bundle.defineView('SubtitlesBand', SubtitlesBandSelector,
     clickDrag(SubtitlesBand, {touch: true}));
@@ -356,18 +382,32 @@ module.exports = function (bundle, deps) {
     };
   }
 
-  function* subtitlesSelectedSaga () {
-    yield takeLatest(deps.subtitlesSelected, function* ({payload: {key}}) {
-      yield put({type: deps.subtitlesLoadStarted, payload: {key}});
-      try {
-        const subtitlesUrl = 'https://fioi-recordings.s3.amazonaws.com/sebc/1510348172997.srt'; // `https://XXX/${key}`
-        const srtText = yield call(getSubtitles, subtitlesUrl);
-        const items = srtParse(srtText);
-        yield put({type: deps.subtitlesLoadSucceeded, payload: {items}});
-      } catch (ex) {
-        yield put({type: deps.subtitlesLoadFailed, payload: {error: ex}});
-      }
-    });
+  function* subtitlesSaga () {
+    yield takeLatest(deps.subtitlesSelected, subtitlesSelectedSaga);
+    yield takeLatest(deps.subtitlesLoadFromFile, subtitlesLoadFromFileSaga);
+  }
+
+  function* subtitlesSelectedSaga ({payload: {key}}) {
+    yield put({type: deps.subtitlesLoadStarted, payload: {key}});
+    try {
+      const subtitlesUrl = 'https://fioi-recordings.s3.amazonaws.com/sebc/1510348172997.srt'; // `https://XXX/${key}`
+      const srtText = yield call(getSubtitles, subtitlesUrl);
+      const items = srtParse(srtText);
+      yield put({type: deps.subtitlesLoadSucceeded, payload: {key, items}});
+    } catch (ex) {
+      yield put({type: deps.subtitlesLoadFailed, payload: {error: ex}});
+    }
+  }
+
+  function* subtitlesLoadFromFileSaga ({payload: {key, file}}) {
+    try {
+      console.log('subtitlesLoadFromFileSaga', file);
+      const srtText = yield call(readFileAsText, file);
+      const items = srtParse(srtText);
+      yield put({type: deps.subtitlesLoadSucceeded, payload: {key, items}});
+    } catch (ex) {
+      yield put({type: deps.subtitlesLoadFailed, payload: {error: ex}});
+    }
   }
 
 };

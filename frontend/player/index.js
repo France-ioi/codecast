@@ -14,6 +14,5 @@ export default function (bundle, deps) {
   bundle.include(playerSagas);
   bundle.include(PlayerControls);
   bundle.include(PlayerAppBundle);
-  bundle.include(require('./subtitles'));
 
 };

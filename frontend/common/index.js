@@ -39,5 +39,6 @@ export default function (bundle) {
   bundle.include(ArduinoBundle);
   bundle.include(require('./login'));
   bundle.include(require('./client_api'));
+  bundle.include(require('./subtitles'));
 
 };
