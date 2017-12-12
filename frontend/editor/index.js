@@ -31,6 +31,8 @@ export default function (bundle, deps) {
   bundle.defineAction('editorUnload', 'Editor.Unload');
   bundle.addReducer('editorUnload', editorUnloadReducer);
 
+  bundle.defineAction('editorSave', 'Editor.Save');
+
   bundle.defineAction('editorSubtitlesSelected', 'Editor.Subtitles.Selected');
 
   bundle.defineView('EditorApp', EditorAppSelector, EditorApp);
@@ -53,11 +55,12 @@ function editorConfiguredReducer (state, {payload: {baseDataUrl}}) {
 }
 
 function* editorSaga () {
-  const {editorPrepare, loginFeedback, editorLoad, editorUnload, editorSubtitlesSelected} = yield select(state => state.get('scope'));
+  const {editorPrepare, loginFeedback, editorLoad, editorUnload, editorSave, editorSubtitlesSelected} = yield select(state => state.get('scope'));
   yield takeEvery(editorPrepare, editorPrepareSaga);
   yield takeEvery(loginFeedback, loginFeedbackSaga);
   yield takeLatest(editorLoad, editorLoadSaga);
   yield takeLatest(editorUnload, editorUnloadSaga);
+  yield takeLatest(editorSave, editorSaveSaga);
   yield takeLatest(editorSubtitlesSelected, editorSubtitlesSelectedSaga);
 }
 
@@ -103,6 +106,12 @@ function* editorUnloadSaga (_action) {
   yield put({type: switchToScreen, payload: {screen: 'load'}});
 }
 
+function* editorSaveSaga (_action) {
+  const {switchToScreen} = yield select(state => state.get('scope'));
+  // TODO: save
+  yield put({type: switchToScreen, payload: {screen: 'setup'}});
+}
+
 function* editorSubtitlesSelectedSaga ({payload: {key}}) {
   const {subtitlesModeSet, subtitlesSelected, subtitlesLoadSucceeded, switchToScreen} = yield select(state => state.get('scope'));
   yield put({type: subtitlesModeSet, payload: {mode: 'editor'}});
@@ -112,7 +121,7 @@ function* editorSubtitlesSelectedSaga ({payload: {key}}) {
 
 function EditorAppSelector (state, props) {
   const scope = state.get('scope');
-  const {LogoutButton, editorUnload} = scope;
+  const {LogoutButton, editorUnload, editorSave} = scope;
   const user = state.get('user');
   const screen = state.get('screen');
   let activity;
@@ -133,7 +142,7 @@ function EditorAppSelector (state, props) {
     activity = 'save';
     screenProp = 'SaveScreen';
   }
-  return {Screen: screenProp && scope[screenProp], LogoutButton, editorUnload, activity};
+  return {Screen: screenProp && scope[screenProp], LogoutButton, editorUnload, editorSave, activity};
 }
 
 class EditorApp extends React.PureComponent {
@@ -152,7 +161,7 @@ class EditorApp extends React.PureComponent {
     this.props.dispatch({type: this.props.editorUnload});
   };
   _save = () => {
-    console.log('save and end editing');
+    this.props.dispatch({type: this.props.editorSave});
   };
 }
 
