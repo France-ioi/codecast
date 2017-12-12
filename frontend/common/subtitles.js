@@ -195,7 +195,6 @@ function playerReadyReducer (state, {baseDataUrl, data}) {
     const url = `${baseDataUrl}-${key}.srt`;
     return {key, url};
   });
-  console.log('availableSubtitles', availableSubtitles);
   return state.update('subtitles', subtitles => (
     {...subtitles,
       availableSubtitles,
@@ -225,6 +224,10 @@ function subtitlesLoadSucceededReducer (state, {payload: {key, items}}) {
 
 function subtitlesLoadedSelector (state) {
   return state.get('subtitles').loadedKey;
+}
+
+function subtitlesAvailableSelector (state) {
+  return state.get('subtitles').availableSubtitles;
 }
 
 function subtitlesLoadFailedReducer (state, {payload: {error}}) {
@@ -339,8 +342,8 @@ module.exports = function (bundle, deps) {
   bundle.defineAction('subtitlesSelected', 'Subtitles.Selected');
   bundle.addSaga(subtitlesSaga);
   bundle.defineSelector('subtitlesLoadedSelector', subtitlesLoadedSelector);
+  bundle.defineSelector('subtitlesAvailableSelector', subtitlesAvailableSelector);
   bundle.defineAction('subtitlesLoadFromFile', 'Subtitles.LoadFromFile');
-
 
   bundle.defineView('SubtitlesBand', SubtitlesBandSelector,
     clickDrag(SubtitlesBand, {touch: true}));

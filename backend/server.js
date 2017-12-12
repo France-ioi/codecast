@@ -108,7 +108,8 @@ function addBackendRoutes (app, config) {
   });
 
   app.get('/editor', function (req, res) {
-    config.initHook(req, {start: 'editor', baseUrl: config.baseUrl}, function (err, init) {
+    const baseDataUrl = req.query.base;
+    config.initHook(req, {start: 'editor', baseUrl: config.baseUrl, baseDataUrl}, function (err, init) {
       if (err) return res.send(`Error: ${err.toString()}`);
       res.render('index', {
         development: config.isDevelopment,
@@ -122,8 +123,8 @@ function addBackendRoutes (app, config) {
     config.getUserConfig(req, function (err, userConfig) {
       if (err) return res.json({error: err.toString()});
       const {s3Bucket, uploadPath} = userConfig;
-      const baseDataUrl = `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}/`;
-      res.json({baseDataUrl});
+      const bucketUrl = `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}/`;
+      res.json({bucketUrl});
     });
   });
 

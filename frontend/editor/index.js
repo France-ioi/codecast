@@ -42,16 +42,16 @@ export default function (bundle, deps) {
 
 };
 
-function editorPrepareReducer (state, {payload: {dataUrl}}) {
-  return state.set('editor', Immutable.Map({dataUrl}));
+function editorPrepareReducer (state, {payload: {baseDataUrl}}) {
+  return state.set('editor', Immutable.Map({dataUrl: baseDataUrl}));
 }
 
 function editorDataUrlChangedReducer (state, {payload: {dataUrl}}) {
   return state.setIn(['editor', 'dataUrl'], dataUrl);
 }
 
-function editorConfiguredReducer (state, {payload: {baseDataUrl}}) {
-  return state.setIn(['editor', 'baseDataUrl'], baseDataUrl);
+function editorConfiguredReducer (state, {payload: {bucketUrl}}) {
+  return state.setIn(['editor', 'bucketUrl'], bucketUrl);
 }
 
 function* editorSaga () {
@@ -73,8 +73,8 @@ function* editorPrepareSaga (_action) {
 function* loginFeedbackSaga (_action) {
   const {editorConfigured, switchToScreen} = yield select(state => state.get('scope'));
   const baseUrl = yield select(state => state.get('baseUrl'));
-  const {baseDataUrl} = yield call(getJson, `${baseUrl}/editor.json`);
-  yield put({type: editorConfigured, payload: {baseDataUrl}});
+  const {bucketUrl} = yield call(getJson, `${baseUrl}/editor.json`);
+  yield put({type: editorConfigured, payload: {bucketUrl}});
 }
 
 function editorLoadReducer (state, {payload: {data}}) {
@@ -84,9 +84,7 @@ function editorLoadReducer (state, {payload: {data}}) {
 
 function* editorLoadSaga ({payload: {dataUrl}}) {
   const {playerPrepare, playerReady, editorLoaded, switchToScreen} = yield select(state => state.get('scope'));
-  const audioUrl = `${dataUrl}.mp3`;
-  const eventsUrl = `${dataUrl}.json`;
-  yield put({type: playerPrepare, audioUrl, eventsUrl});
+  yield put({type: playerPrepare, baseDataUrl: dataUrl});
   const {data} = yield take(playerReady);
   yield put({type: editorLoaded, payload: {data}});
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
@@ -113,9 +111,9 @@ function* editorSaveSaga (_action) {
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
 }
 
-function* editorSubtitlesSelectedSaga ({payload: {key}}) {
+function* editorSubtitlesSelectedSaga ({payload: {key, url}}) {
   const {subtitlesSelected, subtitlesLoadSucceeded, switchToScreen} = yield select(state => state.get('scope'));
-  yield put({type: subtitlesSelected, payload: {key}});
+  yield put({type: subtitlesSelected, payload: {key, url}});
   yield take(subtitlesLoadSucceeded);
 }
 
@@ -170,15 +168,15 @@ function LoadScreenSelector (state, props) {
   const result = {editorDataUrlChanged, editorLoad};
   const editor = state.get('editor');
   result.dataUrl = editor.get('dataUrl');
-  result.baseDataUrl = editor.get('baseDataUrl');
+  result.bucketUrl = editor.get('bucketUrl');
   result.loading = editor.get('loading');
   return result;
 }
 
 class LoadScreen extends React.PureComponent {
   render () {
-    const {dataUrl, baseDataUrl, loading} = this.props;
-    const isUrlOk = baseDataUrl && dataUrl.startsWith(baseDataUrl);
+    const {dataUrl, bucketUrl, loading} = this.props;
+    const isUrlOk = bucketUrl && dataUrl.startsWith(bucketUrl);
     return (
       <div className='container'>
         <p>{"Enter the base URL of an existing Codecast:"}</p>
@@ -191,11 +189,11 @@ class LoadScreen extends React.PureComponent {
             </Button>
           </div>
         </div>
-        {baseDataUrl && !isUrlOk &&
+        {bucketUrl && !isUrlOk &&
           <p className='error'>
-            {"The URL must start with "}{baseDataUrl||''}
+            {"The URL must start with "}{bucketUrl||''}
           </p>}
-        {baseDataUrl && isUrlOk &&
+        {bucketUrl && isUrlOk &&
           <p>
             <i className='fa fa-check' style={{color: 'green'}}/>
             {" The URL is valid."}
@@ -213,28 +211,30 @@ class LoadScreen extends React.PureComponent {
 }
 
 function SetupScreenSelector (state, props) {
-  const {editorSubtitlesSelected, subtitlesLoadFromFile, subtitlesLoadedSelector, switchToScreen} = state.get('scope');
+  const {editorSubtitlesSelected, subtitlesLoadFromFile, subtitlesAvailableSelector, subtitlesLoadedSelector, switchToScreen} = state.get('scope');
   const editor = state.get('editor');
   const dataUrl = editor.get('dataUrl');
-  const {version, subtitles} = editor.get('data')
+  const {version} = editor.get('data')
+  const availableSubtitles = subtitlesAvailableSelector(state);
   const selectedSubtitlesKey = subtitlesLoadedSelector(state);
-  return {editorSubtitlesSelected, subtitlesLoadFromFile, switchToScreen, selectedSubtitlesKey, dataUrl, version, subtitles: [...subtitles, 'fr_FR']};
+  return {editorSubtitlesSelected, subtitlesLoadFromFile, switchToScreen, availableSubtitles, selectedSubtitlesKey, dataUrl, version};
 }
 
 class SetupScreen extends React.PureComponent {
   render () {
-    const {dataUrl, version, subtitles, selectedSubtitlesKey} = this.props;
+    const {dataUrl, version, availableSubtitles, selectedSubtitlesKey} = this.props;
     return (
       <div className='container'>
         <p>{"Editing "}{dataUrl}</p>
         <p>{"Version "}{version}</p>
-        <p>{"Subtitles "}
-          {(subtitles||[]).map(key =>
-            <span key={key} onClick={this._subtitlesSelected} data-key={key} style={{marginRight: '10px', fontWeight: selectedSubtitlesKey === key ? 'bold' : 'normal'}}>
-              {key}
-            </span>)}
-        </p>
 
+        <p>{"Subtitles (click one to select) :"}
+          {availableSubtitles.map(option =>
+            <SubtitlesOption key={option.key} option={option} selected={selectedSubtitlesKey === option.key} onSelect={this._subtitlesSelected} />)}
+        </p>
+        {/* show loaded subtitles [key, url] */}
+        {/* button to clear loaded subtitles */}
+        {/* button to load remote subtitles */}
         {selectedSubtitlesKey &&
           <div className='form-group'>
             <label htmlFor='upload-srt'>{"Replace subtitles with a local SRT file"}</label>
@@ -247,9 +247,8 @@ class SetupScreen extends React.PureComponent {
       </div>
     );
   }
-  _subtitlesSelected = (event) => {
-    const {key} = event.currentTarget.dataset;
-    this.props.dispatch({type: this.props.editorSubtitlesSelected, payload: {key}});
+  _subtitlesSelected = ({key, url}) => {
+    this.props.dispatch({type: this.props.editorSubtitlesSelected, payload: {key, url}});
   };
   _beginEdit = (event) => {
     this.props.dispatch({type: this.props.switchToScreen, payload: {screen: 'edit'}});
@@ -258,6 +257,16 @@ class SetupScreen extends React.PureComponent {
     const {selectedSubtitlesKey: key} = this.props;
     const file = event.target.files[0];
     this.props.dispatch({type: this.props.subtitlesLoadFromFile, payload: {key, file}});
+  };
+}
+
+class SubtitlesOption extends React.PureComponent {
+  render () {
+    const {option, selected} = this.props;
+    return <Button onClick={this._clicked} active={selected}>{option.key}</Button>;
+  }
+  _clicked = () => {
+    this.props.onSelect(this.props.option);
   };
 }
 

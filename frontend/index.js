@@ -140,7 +140,7 @@ Codecast.start = function (options) {
     store.dispatch({
       type: scope.editorPrepare,
       payload: {
-        dataUrl: qs.base || ''
+        baseDataUrl: options.baseDataUrl
       }
     });
     App = scope.EditorApp;
