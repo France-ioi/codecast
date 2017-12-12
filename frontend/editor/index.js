@@ -65,7 +65,8 @@ function* editorSaga () {
 }
 
 function* editorPrepareSaga (_action) {
-  const {switchToScreen} = yield select(state => state.get('scope'));
+  const {subtitlesModeSet, switchToScreen} = yield select(state => state.get('scope'));
+  yield put({type: subtitlesModeSet, payload: {mode: 'editor'}});
   yield put({type: switchToScreen, payload: {screen: 'load'}});
 }
 
@@ -113,8 +114,7 @@ function* editorSaveSaga (_action) {
 }
 
 function* editorSubtitlesSelectedSaga ({payload: {key}}) {
-  const {subtitlesModeSet, subtitlesSelected, subtitlesLoadSucceeded, switchToScreen} = yield select(state => state.get('scope'));
-  yield put({type: subtitlesModeSet, payload: {mode: 'editor'}});
+  const {subtitlesSelected, subtitlesLoadSucceeded, switchToScreen} = yield select(state => state.get('scope'));
   yield put({type: subtitlesSelected, payload: {key}});
   yield take(subtitlesLoadSucceeded);
 }
