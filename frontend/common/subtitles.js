@@ -75,7 +75,7 @@ class SubtitlesPopup extends React.PureComponent {
     this.props.dispatch({type: this.props.subtitlesCleared});
   };
   _selectSubtitles = ({key, url}) => {
-    this.props.dispatch({type: this.props.subtitlesSelected, payload: {key, url}});
+    this.props.dispatch({type: this.props.subtitlesLoadFromUrl, payload: {key, url}});
   };
   _changePaneEnabled = () => {
     this.props.dispatch({
@@ -206,7 +206,7 @@ function playerReadyReducer (state, {baseDataUrl, data}) {
 
 function subtitlesClearedReducer (state, _action) {
   return state.update('subtitles', subtitles => (
-    {...subtitles, items: [], currentIndex: 0, loadedKey: false}))
+    {...subtitles, text: '', items: [], currentIndex: 0, loadedKey: false}))
     .set('showSubtitlesBand', false);
 }
 
@@ -215,10 +215,10 @@ function subtitlesLoadStartedReducer (state, {payload: {key}}) {
     {...subtitles, loading: key, lastError: false}));
 }
 
-function subtitlesLoadSucceededReducer (state, {payload: {key, items}}) {
+function subtitlesLoadSucceededReducer (state, {payload: {key, text, items}}) {
   return state
     .update('subtitles', subtitles => (
-      updateCurrentItem({...subtitles, loadedKey: key, loading: false, items})))
+      updateCurrentItem({...subtitles, loadedKey: key, loading: false, text, items})))
     .set('showSubtitlesBand', true);
 }
 
@@ -237,7 +237,7 @@ function subtitlesLoadFailedReducer (state, {payload: {error}}) {
     errorText = `${errorText} (${error.res.statusText})`;
   }
   return state.update('subtitles', subtitles => (
-    {...subtitles, loading: false, lastError: errorText}))
+    {...subtitles, loading: false, lastError: errorText, text: errorText}))
     .set('showSubtitlesBand', false);
 }
 
@@ -339,7 +339,7 @@ module.exports = function (bundle, deps) {
   bundle.defineAction('subtitlesLoadSucceeded', 'Subtitles.LoadSucceeded');
   bundle.defineAction('subtitlesLoadFailed', 'Subtitles.LoadFailed');
   bundle.addReducer('subtitlesLoadFailed', subtitlesLoadFailedReducer);
-  bundle.defineAction('subtitlesSelected', 'Subtitles.Selected');
+  bundle.defineAction('subtitlesLoadFromUrl', 'Subtitles.Selected');
   bundle.addSaga(subtitlesSaga);
   bundle.defineSelector('subtitlesLoadedSelector', subtitlesLoadedSelector);
   bundle.defineSelector('subtitlesAvailableSelector', subtitlesAvailableSelector);
@@ -366,10 +366,10 @@ module.exports = function (bundle, deps) {
   function SubtitlesPopupSelector (state, props) {
     const {loadedKey, loading, lastError, availableSubtitles} = state.get('subtitles');
     const paneEnabled = state.getIn(['panes', 'subtitles', 'enabled']);
-    const {subtitlesCleared, subtitlesSelected, subtitlesPaneEnabledChanged} = deps;
+    const {subtitlesCleared, subtitlesLoadFromUrl, subtitlesPaneEnabledChanged} = deps;
     return {
       availableSubtitles, loadedKey, busy: !!loading, lastError,
-      subtitlesCleared, subtitlesSelected,
+      subtitlesCleared, subtitlesLoadFromUrl,
       paneEnabled, subtitlesPaneEnabledChanged,
     };
   }
@@ -392,16 +392,16 @@ module.exports = function (bundle, deps) {
   }
 
   function* subtitlesSaga () {
-    yield takeLatest(deps.subtitlesSelected, subtitlesSelectedSaga);
+    yield takeLatest(deps.subtitlesLoadFromUrl, subtitlesLoadFromUrlSaga);
     yield takeLatest(deps.subtitlesLoadFromFile, subtitlesLoadFromFileSaga);
   }
 
-  function* subtitlesSelectedSaga ({payload: {key, url}}) {
+  function* subtitlesLoadFromUrlSaga ({payload: {key, url}}) {
     yield put({type: deps.subtitlesLoadStarted, payload: {key}});
     try {
-      const srtText = yield call(getSubtitles, url);
-      const items = srtParse(srtText);
-      yield put({type: deps.subtitlesLoadSucceeded, payload: {key, items}});
+      const text = yield call(getSubtitles, url);
+      const items = srtParse(text);
+      yield put({type: deps.subtitlesLoadSucceeded, payload: {key, text, items}});
     } catch (ex) {
       yield put({type: deps.subtitlesLoadFailed, payload: {error: ex}});
     }
@@ -410,9 +410,9 @@ module.exports = function (bundle, deps) {
   function* subtitlesLoadFromFileSaga ({payload: {key, file}}) {
     try {
       console.log('subtitlesLoadFromFileSaga', file);
-      const srtText = yield call(readFileAsText, file);
-      const items = srtParse(srtText);
-      yield put({type: deps.subtitlesLoadSucceeded, payload: {key, items}});
+      const text = yield call(readFileAsText, file);
+      const items = srtParse(text);
+      yield put({type: deps.subtitlesLoadSucceeded, payload: {key, text, items}});
     } catch (ex) {
       yield put({type: deps.subtitlesLoadFailed, payload: {error: ex}});
     }
