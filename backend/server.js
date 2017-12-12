@@ -109,8 +109,6 @@ function addBackendRoutes (app, config) {
 
   app.get('/editor', function (req, res) {
     config.initHook(req, {start: 'editor', baseUrl: config.baseUrl}, function (err, init) {
-      //const audioUrl = `${req.query.base}.mp3`;
-      //const eventsUrl = `${req.query.base}.json`;
       if (err) return res.send(`Error: ${err.toString()}`);
       res.render('index', {
         development: config.isDevelopment,
@@ -130,12 +128,11 @@ function addBackendRoutes (app, config) {
   });
 
   app.get('/player', function (req, res) {
-    const audioUrl = `${req.query.base}.mp3`;
-    const eventsUrl = `${req.query.base}.json`;
+    const baseDataUrl = req.query.base;
     res.render('index', {
       development: config.isDevelopment,
       rebaseUrl: config.rebaseUrl,
-      options: {start: 'player', baseUrl: config.baseUrl, audioUrl, eventsUrl}
+      options: {start: 'player', baseUrl: config.baseUrl, baseDataUrl}
     });
   });
 

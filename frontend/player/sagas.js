@@ -90,7 +90,7 @@ export default function (bundle, deps) {
   }
 
   function* playerPrepare (action) {
-    const {audioUrl, eventsUrl} = action;
+    const {baseDataUrl} = action;
     // Check that the player is idle.
     const player = yield select(deps.getPlayerState);
     if (player.get('status') !== 'idle') {
@@ -101,12 +101,12 @@ export default function (bundle, deps) {
     /* Attempt to force the media player to preload the audio.
        Start playing to force loading and pause in the 'canplay' event. */
     const audio = player.get('audio');
-    audio.src = audioUrl;
+    audio.src = `${baseDataUrl}.mp3`;
     audio.load();
     yield fork(watchAudioCanPlay, audio);
     audio.play();
     // While the audio is buffering, download the events, subtitles.
-    let data = yield call(getJson, eventsUrl);
+    let data = yield call(getJson, `${baseDataUrl}.json`);
     if (Array.isArray(data)) {
       /* Compatibility with old style, where data is an array of events. */
       const {version, ...init} = data[0][2];
@@ -116,7 +116,7 @@ export default function (bundle, deps) {
     /* Compute the future state after every event. */
     const instants = yield call(computeInstants, data.events);
     /* Set up the player. */
-    yield put({type: deps.playerReady, data, instants});
+    yield put({type: deps.playerReady, baseDataUrl, data, instants});
     yield call(resetToInstant, instants[0], 0, false);
   }
 

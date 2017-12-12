@@ -53,7 +53,8 @@ class SubtitlesPopup extends React.PureComponent {
           </div>
           <ul>
             <Button onClick={this._clearSubtitles} active={!loadedKey}>{"off"}</Button>
-            {availableSubtitles.map(key => <SubtitlesOption key={key} value={key} loaded={key === loadedKey} onSelect={this._selectSubtitles} />)}
+            {availableSubtitles.map(option =>
+              <SubtitlesOption key={option.key} option={option} loaded={option.key === loadedKey} onSelect={this._selectSubtitles} />)}
           </ul>
           {lastError && <Alert bsStyle='danger'>{lastError}</Alert>}
           <p onClick={this._changePaneEnabled}>
@@ -73,8 +74,8 @@ class SubtitlesPopup extends React.PureComponent {
   _clearSubtitles = () => {
     this.props.dispatch({type: this.props.subtitlesCleared});
   };
-  _selectSubtitles = (key) => {
-    this.props.dispatch({type: this.props.subtitlesSelected, payload: {key}});
+  _selectSubtitles = ({key, url}) => {
+    this.props.dispatch({type: this.props.subtitlesSelected, payload: {key, url}});
   };
   _changePaneEnabled = () => {
     this.props.dispatch({
@@ -85,11 +86,11 @@ class SubtitlesPopup extends React.PureComponent {
 
 class SubtitlesOption extends React.PureComponent {
   render () {
-    const {value, loaded} = this.props;
-    return <Button onClick={this._clicked} active={loaded}>{value}</Button>;
+    const {option, loaded} = this.props;
+    return <Button onClick={this._clicked} active={loaded}>{option.key}</Button>;
   }
   _clicked = () => {
-    this.props.onSelect(this.props.value);
+    this.props.onSelect(this.props.option);
   };
 }
 
@@ -189,12 +190,18 @@ function subtitlesPaneEnabledChangedReducer (state, {payload: {value}}) {
   return state.setIn(['panes', 'subtitles', 'enabled'], value);
 }
 
-function playerReadyReducer (state, {data}) {
+function playerReadyReducer (state, {baseDataUrl, data}) {
+  const availableSubtitles = (data.subtitles||[]).map(function (key) {
+    const url = `${baseDataUrl}-${key}.srt`;
+    return {key, url};
+  });
+  console.log('availableSubtitles', availableSubtitles);
   return state.update('subtitles', subtitles => (
     {...subtitles,
+      availableSubtitles,
       items: [],
       currentIndex: 0,
-      loadedKey: false,
+      loadedKey: false
     }));
 }
 
@@ -354,8 +361,7 @@ module.exports = function (bundle, deps) {
   }
 
   function SubtitlesPopupSelector (state, props) {
-    const {loadedKey, loading, lastError} = state.get('subtitles')
-    const availableSubtitles = state.getIn(['player', 'data']).subtitles;
+    const {loadedKey, loading, lastError, availableSubtitles} = state.get('subtitles');
     const paneEnabled = state.getIn(['panes', 'subtitles', 'enabled']);
     const {subtitlesCleared, subtitlesSelected, subtitlesPaneEnabledChanged} = deps;
     return {
@@ -387,11 +393,10 @@ module.exports = function (bundle, deps) {
     yield takeLatest(deps.subtitlesLoadFromFile, subtitlesLoadFromFileSaga);
   }
 
-  function* subtitlesSelectedSaga ({payload: {key}}) {
+  function* subtitlesSelectedSaga ({payload: {key, url}}) {
     yield put({type: deps.subtitlesLoadStarted, payload: {key}});
     try {
-      const subtitlesUrl = 'https://fioi-recordings.s3.amazonaws.com/sebc/1510348172997.srt'; // `https://XXX/${key}`
-      const srtText = yield call(getSubtitles, subtitlesUrl);
+      const srtText = yield call(getSubtitles, url);
       const items = srtParse(srtText);
       yield put({type: deps.subtitlesLoadSucceeded, payload: {key, items}});
     } catch (ex) {

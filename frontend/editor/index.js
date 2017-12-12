@@ -217,29 +217,29 @@ function SetupScreenSelector (state, props) {
   const editor = state.get('editor');
   const dataUrl = editor.get('dataUrl');
   const {version, subtitles} = editor.get('data')
-  const loadedSubtitles = subtitlesLoadedSelector(state);
-  return {editorSubtitlesSelected, subtitlesLoadFromFile, switchToScreen, loadedSubtitles, dataUrl, version, subtitles: [...subtitles, 'fr_FR']};
+  const selectedSubtitlesKey = subtitlesLoadedSelector(state);
+  return {editorSubtitlesSelected, subtitlesLoadFromFile, switchToScreen, selectedSubtitlesKey, dataUrl, version, subtitles: [...subtitles, 'fr_FR']};
 }
 
 class SetupScreen extends React.PureComponent {
   render () {
-    const {dataUrl, version, subtitles, loadedSubtitles} = this.props;
+    const {dataUrl, version, subtitles, selectedSubtitlesKey} = this.props;
     return (
       <div className='container'>
         <p>{"Editing "}{dataUrl}</p>
         <p>{"Version "}{version}</p>
         <p>{"Subtitles "}
           {(subtitles||[]).map(key =>
-            <span key={key} onClick={this._subtitlesSelected} data-key={key} style={{marginRight: '10px', fontWeight: loadedSubtitles === key ? 'bold' : 'normal'}}>
+            <span key={key} onClick={this._subtitlesSelected} data-key={key} style={{marginRight: '10px', fontWeight: selectedSubtitlesKey === key ? 'bold' : 'normal'}}>
               {key}
             </span>)}
         </p>
 
-        {loadedSubtitles &&
+        {selectedSubtitlesKey &&
           <div className='form-group'>
             <label htmlFor='upload-srt'>{"Replace subtitles with a local SRT file"}</label>
             <div className='input-group'>
-               <FileInput name='upload-srt' accept=".srt" placeholder={`${loadedSubtitles||'*'}.srt`} className='form-control' onChange={this._replaceSubtitles} />
+               <FileInput name='upload-srt' accept=".srt" placeholder={`${selectedSubtitlesKey||'*'}.srt`} className='form-control' onChange={this._replaceSubtitles} />
             </div>
           </div>}
 
@@ -255,7 +255,7 @@ class SetupScreen extends React.PureComponent {
     this.props.dispatch({type: this.props.switchToScreen, payload: {screen: 'edit'}});
   };
   _replaceSubtitles = (event) => {
-    const {loadedSubtitles: key} = this.props;
+    const {selectedSubtitlesKey: key} = this.props;
     const file = event.target.files[0];
     this.props.dispatch({type: this.props.subtitlesLoadFromFile, payload: {key, file}});
   };
