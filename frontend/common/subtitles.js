@@ -57,8 +57,8 @@ class SubtitlesPopup extends React.PureComponent {
               <SubtitlesOption key={option.key} option={option} loaded={option.key === loadedKey} onSelect={this._selectSubtitles} />)}
           </ul>
           {lastError && <Alert bsStyle='danger'>{lastError}</Alert>}
-          <p onClick={this._changePaneEnabled}>
-            {"checkbox "}{paneEnabled ? 't' : 'f'}{" show pane"}
+          <p onClick={this._changePaneEnabled} style={{cursor: 'pointer'}}>
+            {paneEnabled ? '☑' : '☐'}{" show pane"}
           </p>
         </div>
       </div>
