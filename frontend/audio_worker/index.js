@@ -88,7 +88,6 @@ function reportMemoryUsage () {
 function record (input) {
   chunksL.push(input[0]);
   chunksR.push(input[1]);
-  console.log('chunk', input[0].length, chunksL.length, chunksR.length);
 }
 
 function releaseResources () {
