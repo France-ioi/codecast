@@ -33,7 +33,7 @@ export default function (bundle, deps) {
   function* recorderPrepare () {
     try {
       /* Show 'record' screen to user. */
-      yield put({type: scope.switchToScreen, payload: {screen: 'record'}});
+      yield put({type: deps.switchToScreen, payload: {screen: 'record'}});
       // Clean up any previous audioContext and worker.
       const recorder = yield select(deps.getRecorderState);
       let context = recorder.get('context');
