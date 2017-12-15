@@ -5,7 +5,7 @@ class RecorderApp extends React.PureComponent {
   render () {
     const {Screen, ErrorView, MemoryUsage, Vumeter} = this.props;
     return (
-      <div>
+      <div className='container'>
         <Screen/>
         <ErrorView/>
         <MemoryUsage/>
@@ -17,12 +17,12 @@ class RecorderApp extends React.PureComponent {
 
 export default function (bundle, deps) {
 
-  bundle.use('ErrorView', 'LoginScreen', 'RecordScreen', 'SaveScreen', 'MemoryUsage', 'Vumeter');
+  bundle.use('LoginScreen', 'RecordScreen', 'SaveScreen', 'ErrorView', 'MemoryUsage', 'Vumeter');
 
   bundle.defineView('RecorderApp', RecorderAppSelector, RecorderApp);
 
   function RecorderAppSelector (state, props) {
-    const {ErrorView, RecorderControls, MainView, MemoryUsage} = deps;
+    const {ErrorView, MemoryUsage, Vumeter} = deps;
     const user = state.get('user');
     const screen = state.get('screen');
     let Screen;
