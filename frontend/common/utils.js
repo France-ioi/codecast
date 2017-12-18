@@ -23,5 +23,13 @@ export function formatTime (ms) {
   let s = Math.round(ms / 1000);
   const m = Math.floor(s / 60);
   s -= m * 60;
-  return zeroPad2(m) + ':' + zeroPad2(s);
+  return `${zeroPad2(m)}:${zeroPad2(s)}`;
+};
+
+export function formatTimeLong (ms) {
+  let s = Math.round(ms / 1000);
+  ms = Math.round(ms % 1000);
+  const m = Math.floor(s / 60);
+  s -= m * 60;
+  return `${zeroPad2(m)}:${zeroPad2(s)}.${ms}`;
 };

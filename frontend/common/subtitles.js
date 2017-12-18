@@ -3,16 +3,20 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {Alert} from 'react-bootstrap';
 import classnames from 'classnames';
-import srtParse from 'subtitle/lib/parse';  //  {parse, stringify, resync, toMS, toSrtTime}
+import srtParse from 'subtitle/lib/parse';
+import srtStringify from 'subtitle/lib/stringify';
 import clickDrag from 'react-clickdrag';
 import Portal from 'react-portal';
 import scrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
-import {takeLatest, put, call} from 'redux-saga/effects';
+import Select from 'react-select';
+import {takeLatest, put, call, select} from 'redux-saga/effects';
 import request from 'superagent';
 import Immutable from 'immutable';
+import FileInput from 'react-file-input';
+import update from 'immutability-helper';
 
 import {Button} from '../ui';
-import {formatTime} from './utils';
+import {formatTime, formatTimeLong} from './utils';
 
 function readFileAsText (file) {
   return new Promise(function (resolve, reject) {
@@ -41,7 +45,8 @@ class SubtitlesMenu extends React.PureComponent {
 
 class SubtitlesPopup extends React.PureComponent {
   render () {
-    const {availableSubtitles, loadedKey, busy, lastError, paneEnabled} = this.props;
+    const {availableOptions, loadedKey, busy, lastError, paneEnabled} = this.props;
+    const availKeys = Object.keys(availableOptions).sort();
     return (
       <div className='menu-popup' onClick={this._close}>
         <div className='menu-popup-inset' onClick={this._stopPropagation}>
@@ -53,8 +58,8 @@ class SubtitlesPopup extends React.PureComponent {
           </div>
           <ul>
             <Button onClick={this._clearSubtitles} active={!loadedKey}>{"off"}</Button>
-            {availableSubtitles.map(option =>
-              <SubtitlesOption key={option.key} option={option} loaded={option.key === loadedKey} onSelect={this._selectSubtitles} />)}
+            {availKeys.map(key =>
+              <SubtitlesOption key={key} option={availableOptions[key]} loaded={key === loadedKey} onSelect={this._selectSubtitles} />)}
           </ul>
           {lastError && <Alert bsStyle='danger'>{lastError}</Alert>}
           <p onClick={this._changePaneEnabled} style={{cursor: 'pointer'}}>
@@ -94,9 +99,9 @@ class SubtitlesOption extends React.PureComponent {
   };
 }
 
-class SubtitleItem extends React.PureComponent {
+class SubtitlePaneItem extends React.PureComponent {
   render() {
-    const {item: {text, start}, selected} = this.props;
+    const {item: {text, start, end}, selected} = this.props;
     return (
       <p className={classnames(['subtitles-item', selected && 'subtitles-item-selected'])} onClick={this._onClick}>
         <span className='subtitles-timestamp'>{formatTime(start)}</span>
@@ -105,20 +110,83 @@ class SubtitleItem extends React.PureComponent {
     );
   }
   _onClick = () => {
-    this.props.onClick(this.props.item);
+    this.props.onJump(this.props.item);
+  };
+}
+
+class SubtitlePaneItemViewer extends React.PureComponent {
+  render() {
+    const {item: {text, start, end}} = this.props;
+    return (
+      <div className='subtitles-item-viewer' onClick={this._onClick}>
+        <div className='subtitles-timestamp'>
+          {formatTimeLong(start)}{' - '}{formatTimeLong(end)}
+        </div>
+        <span className='subtitles-text'>
+          {text}
+        </span>
+      </div>
+    );
+  }
+  _onClick = () => {
+    this.props.onJump(this.props.item);
+  };
+}
+
+
+class SubtitlePaneItemEditor extends React.PureComponent {
+  render() {
+    const {item: {text, start, end}, offset} = this.props;
+    return (
+      <div className='subtitles-item-editor'>
+        <div className='subtitles-timestamp'>
+          {formatTimeLong(start)}{' - '}{formatTimeLong(end)}
+        </div>
+        <div className='btn-group'>
+          <Button bsSize='xsmall' disabled={start < 250} onClick={this._onShiftMinus}><i className='fa fa-chevron-left'/></Button>
+          <Button bsSize='xsmall' disabled={start !== 0 && end - start <= 250} onClick={this._onShiftPlus}><i className='fa fa-chevron-right'/></Button>
+          <Button bsSize='xsmall' disabled={offset === 0} onClick={this._onInsertBelow}><i className='fa fa-plus'/></Button>
+          <Button bsSize='xsmall' disabled={start === 0} onClick={this._onRemoveMergeUp}><i className='fa fa-minus'/></Button>
+        </div>
+        <textarea className='subtitles-text' value={text} onChange={this._onChange}/>
+      </div>
+    );
+  }
+  _onChange = (event) => {
+    this.props.onChange(this.props.item, event.target.value);
+  };
+  _onInsertBelow = (event) => {
+    const {item, offset} = this.props;
+    this.props.onInsert(item, offset, 'below');
+  };
+  _onRemoveMergeUp = (event) => {
+    this.props.onRemove(this.props.item, 'up');
+  };
+  _onShiftMinus = (event) => {
+    this.props.onShift(this.props.item, -250);
+  };
+  _onShiftPlus = (event) => {
+    this.props.onShift(this.props.item, 250);
   };
 }
 
 class SubtitlesPane extends React.PureComponent {
   render () {
-    const {subtitles, currentIndex} = this.props;
+    const {subtitles, currentIndex, mode, audioTime} = this.props;
     return (
       <div className='subtitles-pane'>
         {subtitles && subtitles.length > 0
           ? subtitles.map((st, index) => {
               const selected = currentIndex === index;
-              const ref = selected && this._refSelected;
-              return <SubtitleItem key={index} item={st} selected={selected} ref={ref} onClick={this._onSubtitleClick}/>;
+              if (mode !== 'editor') {
+                const ref = selected && this._refSelected;
+                return <SubtitlePaneItem key={index} item={st} ref={ref} selected={selected} mode={mode} onJump={this._jump}/>;
+              }
+              if (selected) {
+                return <SubtitlePaneItemEditor key={index} item={st} ref={this._refSelected} offset={audioTime - st.start}
+                  onChange={this._changeItem} onInsert={this._insertItem} onRemove={this._removeItem} onShift={this._shiftItem} />;
+              }
+              return <SubtitlePaneItemViewer key={index} item={st} onJump={this._jump} />;
             })
           : <p>{"No subtitles"}</p>}
       </div>
@@ -135,8 +203,24 @@ class SubtitlesPane extends React.PureComponent {
   _refSelected = (component) => {
     this._selectedComponent = component;
   };
-  _onSubtitleClick = (subtitle) => {
+  _jump = (subtitle) => {
     this.props.dispatch({type: this.props.playerSeek, audioTime: subtitle.start});
+  };
+  _changeItem = (item, text) => {
+    const index = this.props.subtitles.indexOf(item);
+    this.props.dispatch({type: this.props.subtitlesItemChanged, payload: {index, text}});
+  };
+  _insertItem = (item, offset, where) => {
+    const index = this.props.subtitles.indexOf(item);
+    this.props.dispatch({type: this.props.subtitlesItemInserted, payload: {index, offset, where}});
+  };
+  _removeItem = (item, merge) => {
+    const index = this.props.subtitles.indexOf(item);
+    this.props.dispatch({type: this.props.subtitlesItemRemoved, payload: {index, merge}});
+  };
+  _shiftItem = (item, amount) => {
+    const index = this.props.subtitles.indexOf(item);
+    this.props.dispatch({type: this.props.subtitlesItemShifted, payload: {index, amount}});
   };
 }
 
@@ -167,6 +251,133 @@ class SubtitlesBand extends React.PureComponent {
   state = {currentY: 0, lastPositionY: 0};
 }
 
+const langOptions = [
+  {label: 'fr-FR', value: 'fr-FR'},
+  {label: 'en-US', value: 'en-US'}
+];
+function SubtitlesEditorSelector (state, props) {
+  const {subtitlesSelected, subtitlesLoadFromText, subtitlesLoadFromUrl, subtitlesLoadFromFile, subtitlesCleared,
+    subtitlesAddOption, subtitlesRemoveOption, subtitlesOptionSaved, subtitlesTextChanged} = state.get('scope');
+  const {text: subtitlesText, selectedKey, availableOptions} = state.get('subtitles');
+  const selected = selectedKey && availableOptions[selectedKey];
+  return {availableOptions, selected, langOptions, subtitlesText,
+    subtitlesSelected, subtitlesLoadFromText, subtitlesLoadFromUrl, subtitlesLoadFromFile,
+    subtitlesCleared, subtitlesAddOption, subtitlesRemoveOption, subtitlesOptionSaved,
+    subtitlesTextChanged};
+}
+
+class SubtitlesEditor extends React.PureComponent {
+  render () {
+    const {availableOptions, selected, subtitlesText, langOptions, onSelect, onRemove} = this.props;
+    const availKeys = Object.keys(availableOptions).filter(key => !availableOptions[key].removed).sort();
+    return (
+      <div className='row'>
+        <div className='col-sm-6'>
+          <div className='form-inline'>
+            <p>{"Select language : "}</p>
+            <ul>
+              {availKeys.map(key =>
+                <SubtitlesEditorOption key={key} option={availableOptions[key]} selected={selected && selected.key === key}
+                  onSelect={this._selectOption} onRemove={this._removeOption} />)}
+            </ul>
+            <Select options={langOptions} onChange={this._addSubtitleOption} clearableValue={false}
+              placeholder='Add language…' />
+          </div>
+        </div>
+        <div className='col-sm-6'>
+          {selected &&
+            <div className='form-inline'>
+              <p>{"Load from:"}</p>
+              <Button onClick={this._loadEdited} disabled={typeof selected.text !== 'string'}>
+                {"edited"}
+              </Button>
+              <Button onClick={this._loadFromUrl} disabled={!selected.url}>
+                {"remote "}{selected.key}
+              </Button>
+              <span>
+                <input type='file' onChange={this._loadFromFile} accept='.srt' ref={this._refLoad} style={{display: 'none'}} />
+                 <Button onClick={this._openLoadInput}>{"file"}</Button>
+              </span>
+              <Button onClick={this._clearSubtitles}>{"empty"}</Button>
+            </div>}
+          <p>{"Loaded subtitles, edit codecast to modify:"}</p>
+          <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange}/>
+          {selected && <Button onClick={this._saveSubtitles}>{"save to "}{selected.key}</Button>}
+        </div>
+      </div>
+    );
+  }
+  _refLoad = (el) => {
+    this._loadInput = el;
+  };
+  _openLoadInput = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    this._loadInput.click();
+  };
+  _selectOption = (option) => {
+    this.props.dispatch({type: this.props.subtitlesSelected, payload: {option}});
+  };
+  _clearSubtitles = (event) => {
+    this.props.dispatch({type: this.props.subtitlesCleared});
+  };
+  _loadEdited = (event) => {
+    const {selected: {key, text}} = this.props;
+    this.props.dispatch({type: this.props.subtitlesLoadFromText, payload: {key, text}});
+  };
+  _loadFromUrl = (event) => {
+    const {selected: {key, url}} = this.props;
+    this.props.dispatch({type: this.props.subtitlesLoadFromUrl, payload: {key, url}});
+  };
+  _loadFromFile = (event) => {
+    const {selected: {key}} = this.props;
+    const file = event.target.files[0];
+    event.target.value = '';
+    this.props.dispatch({type: this.props.subtitlesLoadFromFile, payload: {key, file}});
+  };
+  _addSubtitleOption = (option) => {
+    if (option) {
+      const key = option.value;
+      this.props.dispatch({type: this.props.subtitlesAddOption, payload: {key}});
+    }
+  };
+  _removeOption = (option) => {
+    const {key} = option;
+    this.props.dispatch({type: this.props.subtitlesRemoveOption, payload: {key}});
+  };
+  _onChange = (event) => {
+    const text = event.target.value;
+    this.props.dispatch({type: this.props.subtitlesTextChanged, payload: {text}});
+  };
+  _saveSubtitles = (event) => {
+    const {selected: {key}, subtitlesText: text} = this.props;
+    this.props.dispatch({type: this.props.subtitlesOptionSaved, payload: {key, text}});
+  };
+}
+
+class SubtitlesEditorOption extends React.PureComponent {
+  render () {
+    const {option, selected} = this.props;
+    return (
+      <li>
+        <Button onClick={this._select} active={selected}>
+          {option.key}
+        </Button>
+        <Button onClick={this._remove}><i className='fa fa-remove'/></Button>
+        {typeof option.text === 'string' && <span>{' '}<i className='fa fa-save'/></span>}
+      </li>
+    );
+  }
+  _select = (event) => {
+    event.stopPropagation();
+    this.props.onSelect(this.props.option);
+  };
+  _remove = (event) => {
+    event.stopPropagation();
+    this.props.onRemove(this.props.option);
+  };
+}
+
 function initReducer (state) {
   return state.set('subtitles', {}).update('panes', panes => panes.set('subtitles',
     Immutable.Map({
@@ -191,13 +402,14 @@ function subtitlesPaneEnabledChangedReducer (state, {payload: {value}}) {
 }
 
 function playerReadyReducer (state, {baseDataUrl, data}) {
-  const availableSubtitles = (data.subtitles||[]).map(function (key) {
+  const availableOptions = {};
+  (data.subtitles||[]).forEach(function (key) {
     const url = `${baseDataUrl}-${key}.srt`;
-    return {key, url};
+    availableOptions[key] = {key, url};
   });
   return state.update('subtitles', subtitles => (
     {...subtitles,
-      availableSubtitles,
+      availableOptions,
       items: [],
       currentIndex: 0,
       loadedKey: false
@@ -226,15 +438,35 @@ function subtitlesLoadedSelector (state) {
   return state.get('subtitles').loadedKey;
 }
 
-function subtitlesAvailableSelector (state) {
-  return state.get('subtitles').availableSubtitles;
+function subtitlesSelectedReducer (state, {payload: {option}}) {
+  return state.update('subtitles', subtitles => ({...subtitles, selectedKey: option.key}));
+}
+
+function subtitlesAddOptionReducer (state, {payload: {key}}) {
+  return state.update('subtitles', function (subtitles) {
+    const option = subtitles.availableOptions[key];
+    if (!option || option.removed) {
+      subtitles = update(subtitles, {availableOptions: {[key]: {$set: {key, text: ''}}}});
+    }
+    return subtitles;
+  });
+}
+
+function subtitlesRemoveOptionReducer (state, {payload: {key}}) {
+  return state.update('subtitles', function (subtitles) {
+    return update(subtitles, {availableOptions: {[key]: {removed: {$set: true}}}});
+  });
+}
+
+function subtitlesOptionSavedReducer (state, {payload: {key, text}}) {
+  return state.update('subtitles', subtitles => update(subtitles,
+    {availableOptions: {[key]: {text: {$set: text}}}}));
 }
 
 function subtitlesLoadFailedReducer (state, {payload: {error}}) {
-  console.log('subtitles failed to load', error);
   let errorText = state.get('getMessage')("SUBTITLES_FAILED_TO_LOAD").s;
   if (error.res) {
-    errorText = `${errorText} (${error.res.statusText})`;
+    errorText = `${errorText} (${error.res.statusCode})`;
   }
   return state.update('subtitles', subtitles => (
     {...subtitles, loading: false, lastError: errorText, text: errorText}))
@@ -273,6 +505,68 @@ function subtitlesBandMovedReducer (state, {payload: {y}}) {
   });
 }
 
+function subtitlesItemChangedReducer (state, {payload: {index, text}}) {
+  return state.update('subtitles', function (subtitles) {
+    return update(subtitles, {items: {[index]: {text: {$set: text}}}})
+  });
+}
+
+function subtitlesItemInsertedReducer (state, {payload: {index, offset, where}}) {
+  return state.update('subtitles', function (subtitles) {
+    const {start, end, text} = subtitles.items[index];
+    const split = start + offset;
+    if (start > split && split > end) return subtitles;
+    let jumpTo = start;
+    if (where === 'below') {
+      subtitles = update(subtitles, {items: {$splice: [[index, 1,
+        {start, end: split - 1, text}, {start: split, end, text: ""}]]}});
+      jumpTo = split;
+    }
+    if (where === 'above') {
+      subtitles = update(subtitles, {items: {$splice: [[index, 1,
+        {start, end: split - 1, text: ""}, {start: split, end, text}]]}});
+      jumpTo = start;
+    }
+    return updateCurrentItem(subtitles, jumpTo);
+  });
+}
+
+function subtitlesItemRemovedReducer (state, {payload: {index, merge}}) {
+  return state.update('subtitles', function (subtitles) {
+    if (index === 0 && merge === 'up') return subtitles;
+    if (index === subtitles.items.length - 1 && merge === 'down') return subtitles;
+    const otherIndex = merge === 'up' ? index - 1 : index + 1;
+    const firstIndex = Math.min(index, otherIndex);
+    const {start} = subtitles.items[firstIndex];
+    const {end} = subtitles.items[firstIndex + 1];
+    const {text} = subtitles.items[otherIndex];
+    return update(subtitles, {items: {$splice: [[firstIndex, 2, {start, end, text}]]}});
+  });
+}
+
+function subtitlesItemShiftedReducer (state, {payload: {index, amount}}) {
+  return state.update('subtitles', function (subtitles) {
+    if (index === 0) return subtitles;
+    function shift (ms) { return ms + amount; }
+    return update(subtitles, {items: {
+      [index-1]: {end: {$apply: shift}},
+      [index]: {start: {$apply: shift}}
+    }});
+  });
+}
+
+function subtitlesTextChangedReducer (state, {payload: {text}}) {
+  return state.update('subtitles', function (subtitles) {
+    return update(subtitles, {text: {$set: text}});
+  });
+}
+
+function subtitlesSaveReducer (state, action) {
+  return state.update('subtitles', function (subtitles) {
+    return update(subtitles, {text: {$set: srtStringify(subtitles.items)}});
+  });
+}
+
 function findSubtitleIndex (items, time) {
   let low = 0, high = items.length;
   while (low + 1 < high) {
@@ -289,7 +583,7 @@ function findSubtitleIndex (items, time) {
 
 function updateCurrentItem (subtitles, audioTime) {
   if (!subtitles.items) return subtitles;
-  if (!audioTime) { audioTime = subtitles.audioTime; }
+  if (audioTime === undefined) { audioTime = subtitles.audioTime; }
   const currentIndex = findSubtitleIndex(subtitles.items, audioTime);
   const currentItem = subtitles.items[currentIndex];
   const itemVisible = currentItem && currentItem.start <= audioTime && audioTime <= currentItem.end;
@@ -339,11 +633,20 @@ module.exports = function (bundle, deps) {
   bundle.defineAction('subtitlesLoadSucceeded', 'Subtitles.LoadSucceeded');
   bundle.defineAction('subtitlesLoadFailed', 'Subtitles.LoadFailed');
   bundle.addReducer('subtitlesLoadFailed', subtitlesLoadFailedReducer);
-  bundle.defineAction('subtitlesLoadFromUrl', 'Subtitles.Selected');
-  bundle.addSaga(subtitlesSaga);
+  bundle.defineAction('subtitlesLoadFromText', 'Subtitles.LoadFromText');
+  bundle.defineAction('subtitlesLoadFromUrl', 'Subtitles.LoadFromUrl');
   bundle.defineSelector('subtitlesLoadedSelector', subtitlesLoadedSelector);
-  bundle.defineSelector('subtitlesAvailableSelector', subtitlesAvailableSelector);
   bundle.defineAction('subtitlesLoadFromFile', 'Subtitles.LoadFromFile');
+  bundle.defineAction('subtitlesReload', 'Subtitles.Reload');
+
+  bundle.defineAction('subtitlesSelected', 'Subtitles.Selected');
+  bundle.addReducer('subtitlesSelected', subtitlesSelectedReducer);
+  bundle.defineAction('subtitlesAddOption', 'Subtitles.AddOption');
+  bundle.addReducer('subtitlesAddOption', subtitlesAddOptionReducer);
+  bundle.defineAction('subtitlesRemoveOption', 'Subtitles.Option.Remove');
+  bundle.addReducer('subtitlesRemoveOption', subtitlesRemoveOptionReducer);
+  bundle.defineAction('subtitlesOptionSaved', 'Subtitles.Option.Saved');
+  bundle.addReducer('subtitlesOptionSaved', subtitlesOptionSavedReducer);
 
   bundle.defineView('SubtitlesBand', SubtitlesBandSelector,
     clickDrag(SubtitlesBand, {touch: true}));
@@ -358,26 +661,47 @@ module.exports = function (bundle, deps) {
   bundle.addReducer('playerTick', playerTickReducer);
   bundle.addReducer('playerReady', playerReadyReducer);
 
+  bundle.defineView('SubtitlesEditor', SubtitlesEditorSelector, SubtitlesEditor);
+
+  bundle.defineAction('subtitlesItemChanged', 'Subtitles.Item.Changed');
+  bundle.addReducer('subtitlesItemChanged', subtitlesItemChangedReducer);
+  bundle.defineAction('subtitlesItemInserted', 'Subtitles.Item.Inserted');
+  bundle.addReducer('subtitlesItemInserted', subtitlesItemInsertedReducer);
+  bundle.defineAction('subtitlesItemRemoved', 'Subtitles.Item.Removed');
+  bundle.addReducer('subtitlesItemRemoved', subtitlesItemRemovedReducer);
+  bundle.defineAction('subtitlesItemShifted', 'Subtitles.Item.Shifted');
+  bundle.addReducer('subtitlesItemShifted', subtitlesItemShiftedReducer);
+
+  bundle.defineAction('subtitlesTextChanged', 'Subtitles.Text.Changed');
+  bundle.addReducer('subtitlesTextChanged', subtitlesTextChangedReducer);
+  bundle.defineAction('subtitlesSave', 'Subtitles.Save');
+  bundle.addReducer('subtitlesSave', subtitlesSaveReducer);
+
+  bundle.addSaga(subtitlesSaga);
+
   function SubtitlesMenuSelector (state, props) {
     const getMessage = state.get('getMessage');
     return {getMessage, Popup: deps.SubtitlesPopup};
   }
 
   function SubtitlesPopupSelector (state, props) {
-    const {loadedKey, loading, lastError, availableSubtitles} = state.get('subtitles');
+    const {loadedKey, loading, lastError, availableOptions} = state.get('subtitles');
     const paneEnabled = state.getIn(['panes', 'subtitles', 'enabled']);
     const {subtitlesCleared, subtitlesLoadFromUrl, subtitlesPaneEnabledChanged} = deps;
     return {
-      availableSubtitles, loadedKey, busy: !!loading, lastError,
+      availableOptions, loadedKey, busy: !!loading, lastError,
       subtitlesCleared, subtitlesLoadFromUrl,
       paneEnabled, subtitlesPaneEnabledChanged,
     };
   }
 
   function SubtitlesPaneSelector (state, props) {
+    const {subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved, subtitlesItemShifted} = state.get('scope');
     const {playerSeek} = deps;
-    const {items, currentIndex} = state.get('subtitles');
-    return {subtitles: items, currentIndex, playerSeek};
+    const {items, currentIndex, mode, audioTime} = state.get('subtitles');
+    return {
+      subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved, subtitlesItemShifted,
+      subtitles: items, currentIndex, playerSeek, mode, audioTime};
   }
 
   function SubtitlesBandSelector (state, props) {
@@ -392,8 +716,20 @@ module.exports = function (bundle, deps) {
   }
 
   function* subtitlesSaga () {
+    yield takeLatest(deps.subtitlesLoadFromText, subtitlesLoadFromTextSaga);
     yield takeLatest(deps.subtitlesLoadFromUrl, subtitlesLoadFromUrlSaga);
     yield takeLatest(deps.subtitlesLoadFromFile, subtitlesLoadFromFileSaga);
+    yield takeLatest(deps.subtitlesReload, subtitlesReloadSaga);
+  }
+
+  function* subtitlesLoadFromTextSaga ({payload: {key, text}}) {
+    yield put({type: deps.subtitlesLoadStarted, payload: {key}});
+    try {
+      const items = srtParse(text);
+      yield put({type: deps.subtitlesLoadSucceeded, payload: {key, text, items}});
+    } catch (ex) {
+      yield put({type: deps.subtitlesLoadFailed, payload: {error: ex}});
+    }
   }
 
   function* subtitlesLoadFromUrlSaga ({payload: {key, url}}) {
@@ -409,13 +745,18 @@ module.exports = function (bundle, deps) {
 
   function* subtitlesLoadFromFileSaga ({payload: {key, file}}) {
     try {
-      console.log('subtitlesLoadFromFileSaga', file);
       const text = yield call(readFileAsText, file);
       const items = srtParse(text);
       yield put({type: deps.subtitlesLoadSucceeded, payload: {key, text, items}});
     } catch (ex) {
       yield put({type: deps.subtitlesLoadFailed, payload: {error: ex}});
     }
+  }
+
+  function* subtitlesReloadSaga (_action) {
+    const {loadedKey: key, text} = yield select(state => state.get('subtitles'));
+    const items = srtParse(text);
+    yield put({type: deps.subtitlesLoadSucceeded, payload: {key, text, items}});
   }
 
 };

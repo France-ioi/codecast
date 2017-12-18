@@ -2,7 +2,6 @@
 import Immutable from 'immutable';
 import React from 'react';
 import classnames from 'classnames';
-import FileInput from 'react-file-input';
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 
 import {Button} from '../ui';
@@ -31,10 +30,9 @@ export default function (bundle, deps) {
   bundle.defineAction('editorUnload', 'Editor.Unload');
   bundle.addReducer('editorUnload', editorUnloadReducer);
 
+  bundle.defineAction('editorBeginEdit', 'Editor.BeginEdit');
+  bundle.defineAction('editorReturn', 'Editor.Return'); /* done editing, return to setup screen */
   bundle.defineAction('editorSave', 'Editor.Save');
-
-  bundle.defineAction('editorSubtitlesSelected', 'Editor.Subtitles.Selected');
-  bundle.addReducer('editorSubtitlesSelected', editorSubtitlesSelectedReducer);
 
   bundle.defineView('EditorApp', EditorAppSelector, EditorApp);
   bundle.defineView('LoadScreen', LoadScreenSelector, LoadScreen);
@@ -56,12 +54,14 @@ function editorConfiguredReducer (state, {payload: {bucketUrl}}) {
 }
 
 function* editorSaga () {
-  const {editorPrepare, loginFeedback, editorLoad, editorUnload, editorSave} = yield select(state => state.get('scope'));
+  const {editorPrepare, loginFeedback, editorLoad, editorUnload, editorBeginEdit, editorSave, editorReturn} = yield select(state => state.get('scope'));
   yield takeEvery(editorPrepare, editorPrepareSaga);
   yield takeEvery(loginFeedback, loginFeedbackSaga);
   yield takeLatest(editorLoad, editorLoadSaga);
   yield takeLatest(editorUnload, editorUnloadSaga);
+  yield takeLatest(editorBeginEdit, editorBeginEditSaga);
   yield takeLatest(editorSave, editorSaveSaga);
+  yield takeLatest(editorReturn, editorReturnSaga);
 }
 
 function* editorPrepareSaga (_action) {
@@ -105,19 +105,25 @@ function* editorUnloadSaga (_action) {
   yield put({type: switchToScreen, payload: {screen: 'load'}});
 }
 
-function* editorSaveSaga (_action) {
-  const {switchToScreen} = yield select(state => state.get('scope'));
-  // TODO: save
+function* editorBeginEditSaga (_action) {
+  const {subtitlesReload, switchToScreen} = yield select(state => state.get('scope'));
+  yield put({type: subtitlesReload});
+  yield put({type: switchToScreen, payload: {screen: 'edit'}});
+}
+
+function* editorReturnSaga (_action) {
+  const {switchToScreen, subtitlesSave} = yield select(state => state.get('scope'));
+  yield put({type: subtitlesSave});
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
 }
 
-function editorSubtitlesSelectedReducer (state, {payload: {option}}) {
-  return state.setIn(['editor', 'selectedSubtitles'], option);
+function* editorSaveSaga (_action) {
+  // TODO: save
 }
 
 function EditorAppSelector (state, props) {
   const scope = state.get('scope');
-  const {LogoutButton, editorUnload, editorSave} = scope;
+  const {LogoutButton, FullscreenButton, editorUnload, editorReturn} = scope;
   const user = state.get('user');
   const screen = state.get('screen');
   let activity;
@@ -138,17 +144,22 @@ function EditorAppSelector (state, props) {
     activity = 'save';
     screenProp = 'SaveScreen';
   }
-  return {Screen: screenProp && scope[screenProp], LogoutButton, editorUnload, editorSave, activity};
+  return {Screen: screenProp && scope[screenProp], LogoutButton, FullscreenButton, editorUnload, editorReturn, activity};
 }
 
 class EditorApp extends React.PureComponent {
   render () {
-    const {Screen, LogoutButton, activity} = this.props;
+    const {Screen, LogoutButton, FullscreenButton, activity} = this.props;
     return (
       <div>
-        <LogoutButton/>
-        {activity === 'setup' && <Button onClick={this._unload}><i className='fa fa-reply'/></Button>}
-        {activity === 'edit' && <Button onClick={this._save} bsStyle='primary'><i className='fa fa-save'/></Button>}
+        <div className='container' style={{textAlign: 'right'}}>
+          <div className='btn-group'>
+            {activity === 'edit' && <Button onClick={this._return}><i className='fa fa-reply'/></Button>}
+            {activity === 'setup' && <Button onClick={this._unload}><i className='fa fa-reply'/></Button>}
+            <LogoutButton/>
+            <FullscreenButton/>
+          </div>
+        </div>
         <Screen/>
       </div>
     );
@@ -156,8 +167,8 @@ class EditorApp extends React.PureComponent {
   _unload = () => {
     this.props.dispatch({type: this.props.editorUnload});
   };
-  _save = () => {
-    this.props.dispatch({type: this.props.editorSave});
+  _return = () => {
+    this.props.dispatch({type: this.props.editorReturn});
   };
 }
 
@@ -209,22 +220,16 @@ class LoadScreen extends React.PureComponent {
 }
 
 function SetupScreenSelector (state, props) {
-  const {editorSubtitlesSelected, subtitlesLoadFromUrl, subtitlesLoadFromFile,
-    subtitlesCleared, subtitlesAvailableSelector, switchToScreen} = state.get('scope');
+  const {editorBeginEdit, SubtitlesEditor} = state.get('scope');
   const editor = state.get('editor');
   const dataUrl = editor.get('dataUrl');
   const {version} = editor.get('data')
-  const availableSubtitles = subtitlesAvailableSelector(state);
-  const selectedSubtitles = editor.get('selectedSubtitles');
-  const subtitlesText = state.get('subtitles').text; /* TODO: use selector */
-  return {editorSubtitlesSelected, subtitlesLoadFromUrl, subtitlesLoadFromFile,
-    subtitlesCleared, switchToScreen, availableSubtitles, selectedSubtitles,
-    subtitlesText, dataUrl, version};
+  return {editorBeginEdit, SubtitlesEditor, dataUrl, version};
 }
 
 class SetupScreen extends React.PureComponent {
   render () {
-    const {dataUrl, version, availableSubtitles, selectedSubtitles, subtitlesText} = this.props;
+    const {dataUrl, version, SubtitlesEditor} = this.props;
     return (
       <div className='container'>
         <h2>{"Codecast"}</h2>
@@ -232,64 +237,21 @@ class SetupScreen extends React.PureComponent {
         <p>{"Version "}{version}</p>
 
         <h2>{"Subtitles"}</h2>
-        <div className='row'>
-          <div className='col-sm-6'>
-            <div className='form-inline'>
-              <p>{"Select language : "}</p>
-              {availableSubtitles.map(option =>
-                <SubtitlesOption key={option.key} option={option} selected={selectedSubtitles && selectedSubtitles.key === option.key} onSelect={this._subtitlesSelected} />)}
-            </div>
-            {selectedSubtitles &&
-              <div className='form-inline'>
-                <p>{"Action on selected language : "}</p>
-                <Button onClick={this._loadSubtitles}><i className='fa fa-download'/></Button>
-                <div className='input-group'>
-                   <FileInput name='upload-srt' accept=".srt" placeholder={`load SRT file`} className='form-control' onChange={this._replaceSubtitles} />
-                   <span className='input-group-addon'><i className='fa fa-upload'/></span>
-                </div>
-                <Button onClick={this._clearSubtitles}><i className='fa fa-remove'/></Button>
-              </div>}
-          </div>
-          <div className='col-sm-6'>
-            <textarea readOnly rows={7} style={{width: '100%'}} value={subtitlesText}/>
-          </div>
-        </div>
+        <SubtitlesEditor />
 
-        <div style={{marginTop: '10px'}}>
-          <Button bsStyle='primary' onClick={this._beginEdit}>
-            <i className='fa fa-edit'/>{" Edit Codecast"}
+        <div style={{marginTop: '10px', textAlign: 'center'}} className='btn-group'>
+          <Button onClick={this._beginEdit}>
+            <i className='fa fa-edit'/>{" Edit"}
+          </Button>
+          <Button onClick={this._save}>
+            <i className='fa fa-save'/>{" Save"}
           </Button>
         </div>
       </div>
     );
   }
-  _subtitlesSelected = (option) => {
-    this.props.dispatch({type: this.props.editorSubtitlesSelected, payload: {option}});
-  };
   _beginEdit = (event) => {
-    this.props.dispatch({type: this.props.switchToScreen, payload: {screen: 'edit'}});
-  };
-  _clearSubtitles = (event) => {
-    this.props.dispatch({type: this.props.subtitlesCleared});
-  };
-  _loadSubtitles = (event) => {
-    const {selectedSubtitles: {key, url}} = this.props;
-    this.props.dispatch({type: this.props.subtitlesLoadFromUrl, payload: {key, url}});
-  };
-  _replaceSubtitles = (event) => {
-    const {selectedSubtitles: {key}} = this.props;
-    const file = event.target.files[0];
-    this.props.dispatch({type: this.props.subtitlesLoadFromFile, payload: {key, file}});
-  };
-}
-
-class SubtitlesOption extends React.PureComponent {
-  render () {
-    const {option, selected} = this.props;
-    return <Button onClick={this._clicked} active={selected}>{option.key}</Button>;
-  }
-  _clicked = () => {
-    this.props.onSelect(this.props.option);
+    this.props.dispatch({type: this.props.editorBeginEdit});
   };
 }
 
