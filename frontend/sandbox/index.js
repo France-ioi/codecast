@@ -1,38 +1,47 @@
 
 import React from 'react';
-import ReactDOM from 'react-dom';
-import EpicComponent from 'epic-component';
+import classnames from 'classnames';
 
 export default function (bundle, deps) {
+  bundle.defineView('SandboxApp', SandboxAppSelector, SandboxApp);
+};
 
-  bundle.use('StepperControls', 'Menu', 'MainView');
-
-  bundle.defineView('SandboxApp', SandboxAppSelector, EpicComponent(self => {
-    self.render = function () {
-      const {size} = self.props;
-      return (
-        <div className={`container size-${size}`}>
-          <div className="row">
-            <div className="col-sm-12">
-              <div className="pane pane-controls clearfix">
-                <div className="pane-controls-right">
-                  <deps.Menu/>
-                </div>
-                <div className="controls controls-main">
-                </div>
-                <deps.StepperControls enabled={true}/>
+class SandboxApp extends React.PureComponent {
+  render () {
+    const {FullscreenButton, StepperControls, Menu, MainView, MainViewPanes, containerWidth, viewportTooSmall} = this.props;
+    return (
+      <div>
+        <div style={{position: 'fixed', top: '2px', right: '2px'}}>
+          <FullscreenButton/>
+        </div>
+        <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
+          <div id='player-controls'>
+            <div className='player-controls-row row' style={{width: '100%'}}>
+              <div className="player-controls controls controls-main col-sm-3"></div>
+              <div className="player-controls player-controls-stepper col-sm-7">
+                <StepperControls enabled={true}/>
+              </div>
+              <div className="player-controls player-controls-right col-sm-2">
+                <Menu/>
               </div>
             </div>
           </div>
-          <deps.MainView/>
+          <div id='mainView-container'>
+            <MainView/>
+            <MainViewPanes/>
+          </div>
         </div>
-      );
-    };
-  }));
+      </div>
+    );
+  };
+}
 
-  function SandboxAppSelector (state) {
-    const size = state.get('size');
-    return {size};
-  }
-
-};
+function SandboxAppSelector (state) {
+  const {FullscreenButton, StepperControls, Menu, MainView, MainViewPanes} = state.get('scope');
+  const containerWidth = state.get('containerWidth');
+  const viewportTooSmall = state.get('viewportTooSmall');
+  return {
+    viewportTooSmall, containerWidth,
+    FullscreenButton, StepperControls, Menu, MainView, MainViewPanes
+  };
+}

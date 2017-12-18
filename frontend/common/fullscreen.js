@@ -1,7 +1,7 @@
 
 import React from 'react';
 import {Button} from 'react-bootstrap';
-import EpicComponent from 'epic-component';
+import Immutable from 'immutable';
 import {eventChannel, buffers} from 'redux-saga';
 import {take, put, select} from 'redux-saga/effects';
 
@@ -13,6 +13,10 @@ export default function (bundle, deps) {
   bundle.defineAction('leaveFullscreen', 'Fullscreen.Leave');
   bundle.defineAction('leaveFullscreenSucceeded', 'Fullscreen.Leave.Succeeded');
   bundle.defineAction('fullscreenEnabled', 'Fullscreen.Enabled');
+
+  bundle.addReducer('init', function (state, action) {
+    return state.set('fullscreen', Immutable.Map({active: false, enabled: false}));
+  });
 
   bundle.addReducer('enterFullscreenSucceeded', function (state, action) {
     return state.setIn(['fullscreen', 'active'], true);
@@ -30,31 +34,7 @@ export default function (bundle, deps) {
     return state.setIn(['fullscreen', 'enabled'], action.enabled);
   });
 
-  bundle.defineSelector('FullscreenButtonSelector', function (state, props) {
-    const getMessage = state.get('getMessage');
-    const fullscreen = state.get('fullscreen');
-    const enabled = fullscreen.get('enabled');
-    const active = fullscreen.get('active');
-    return {enabled, active, getMessage};
-  });
-
-  bundle.defineView('FullscreenButton', 'FullscreenButtonSelector', EpicComponent(self => {
-    const onEnterFullscreen = function () {
-      self.props.dispatch({type: deps.enterFullscreen});
-    };
-    const onLeaveFullscreen = function () {
-      self.props.dispatch({type: deps.leaveFullscreen});
-    };
-    self.render = function () {
-      const {enabled, active, getMessage} = self.props;
-      const tooltip = getMessage(active ? 'EXIT_FULLSCREEN' : 'FULLSCREEN');
-      return (
-        <Button onClick={active ? onLeaveFullscreen : onEnterFullscreen} disabled={!enabled} title={tooltip}>
-          <i className={active ? "fa fa-compress" : "fa fa-expand"}/>
-        </Button>
-      );
-    };
-  }));
+  bundle.defineView('FullscreenButton', FullscreenButtonSelector, FullscreenButton);
 
   const fullscreenMonitorChannel = eventChannel(function (listener) {
     const elem = window.document;
@@ -134,3 +114,30 @@ export default function (bundle, deps) {
   })
 
 };
+
+class FullscreenButton extends React.PureComponent {
+  render () {
+    const {enabled, active, getMessage} = this.props;
+    const tooltip = getMessage(active ? 'EXIT_FULLSCREEN' : 'FULLSCREEN');
+    return (
+      <Button onClick={active ? this._leaveFullscreen : this._enterFullscreen} disabled={!enabled} title={tooltip}>
+        <i className={active ? "fa fa-compress" : "fa fa-expand"}/>
+      </Button>
+    );
+  }
+  _enterFullscreen = () => {
+    this.props.dispatch({type: this.props.enterFullscreen});
+  };
+  _leaveFullscreen = () => {
+    this.props.dispatch({type: this.props.leaveFullscreen});
+  };
+}
+
+function FullscreenButtonSelector (state, props) {
+  const {enterFullscreen, leaveFullscreen} = state.get('scope');
+  const getMessage = state.get('getMessage');
+  const fullscreen = state.get('fullscreen');
+  const enabled = fullscreen.get('enabled');
+  const active = fullscreen.get('active');
+  return {enterFullscreen, leaveFullscreen, enabled, active, getMessage};
+}

@@ -6,7 +6,6 @@ import Portal from 'react-portal';
 export default function (bundle, deps) {
 
   bundle.use(
-    'FullscreenButton', 'LogoutButton',
     'ExamplePicker', 'isTranslated', 'setLanguage', 'exampleSelected',
     'subtitlesGetMenu'
   );
@@ -27,11 +26,9 @@ export default function (bundle, deps) {
         <div id='menu'>
           <ButtonGroup>
             {SubtitlesMenu && <SubtitlesMenu/>}
-            <deps.LogoutButton/>
             <Portal closeOnEsc closeOnOutsideClick openByClickOn={menuButton}>
               <deps.MenuPopup/>
             </Portal>
-            <deps.FullscreenButton/>
           </ButtonGroup>
         </div>
       );

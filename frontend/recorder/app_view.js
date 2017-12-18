@@ -3,9 +3,11 @@ import React from 'react';
 
 class RecorderApp extends React.PureComponent {
   render () {
-    const {Screen, ErrorView, MemoryUsage, Vumeter} = this.props;
+    const {LogoutButton, FullscreenButton, Screen, ErrorView, MemoryUsage, Vumeter} = this.props;
     return (
       <div className='container'>
+        <LogoutButton/>
+        <FullscreenButton/>
         <Screen/>
         <ErrorView/>
         <MemoryUsage/>
@@ -22,7 +24,7 @@ export default function (bundle, deps) {
   bundle.defineView('RecorderApp', RecorderAppSelector, RecorderApp);
 
   function RecorderAppSelector (state, props) {
-    const {ErrorView, MemoryUsage, Vumeter} = deps;
+    const {LogoutButton, FullscreenButton, ErrorView, MemoryUsage, Vumeter} = deps;
     const user = state.get('user');
     const screen = state.get('screen');
     let Screen;
@@ -33,7 +35,7 @@ export default function (bundle, deps) {
     } else if (screen === 'save') {
       Screen = deps.SaveScreen;
     }
-    return {Screen, ErrorView, MemoryUsage, Vumeter};
+    return {LogoutButton, FullscreenButton, Screen, ErrorView, MemoryUsage, Vumeter};
   }
 
 };

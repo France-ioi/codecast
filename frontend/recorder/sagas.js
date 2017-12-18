@@ -8,6 +8,8 @@ import {delay} from 'redux-saga';
 import {take, takeEvery, put, call, race, select, actionChannel} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
+import {RECORDING_FORMAT_VERSION} from '../version';
+
 import {spawnWorker, callWorker, killWorker} from '../utils/worker_utils';
 
 // XXX worker URL should use SystemJS baseURL?
@@ -158,7 +160,7 @@ export default function (bundle, deps) {
       const events = recorder.get('events').push([endTime, 'end']);
       const subtitles = [];
       const data = {version, events, subtitles};
-      const eventsBlob = new Blob([JSON.stringify(data.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
+      const eventsBlob = new Blob([JSON.stringify(data)], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
       const eventsUrl = URL.createObjectURL(eventsBlob);
       // Signal that the recorder has stopped.
       yield put({

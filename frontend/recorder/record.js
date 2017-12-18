@@ -13,8 +13,6 @@
 
 import {put, take, call, select, actionChannel} from 'redux-saga/effects';
 
-import {RECORDING_FORMAT_VERSION} from '../version';
-
 export default function (bundle, deps) {
 
   /* Recorder API */

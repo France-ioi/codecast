@@ -12,38 +12,40 @@ import classnames from 'classnames';
 
 class PlayerApp extends React.PureComponent {
   render () {
-    const {preventInput, containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
+    const {preventInput, containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand, FullscreenButton} = this.props;
     return (
-      <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
-        <PlayerControls/>
-        <div id='mainView-container'>
-          <MainView preventInput={preventInput}/>
-          <MainViewPanes/>
+      <div>
+        <div style={{position: 'fixed', top: '2px', right: '2px'}}>
+          <FullscreenButton/>
         </div>
-        {showSubtitlesBand && <SubtitlesBand/>}
+        <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
+          <PlayerControls/>
+          <div id='mainView-container'>
+            <MainView preventInput={preventInput}/>
+            <MainViewPanes/>
+          </div>
+          {showSubtitlesBand && <SubtitlesBand/>}
+        </div>
       </div>
     );
   }
 }
 
-export default function (bundle, deps) {
+function PlayerAppSelector (state, props) {
+  const {PlayerControls, MainView, MainViewPanes, SubtitlesBand, FullscreenButton, getPlayerState} = state.get('scope');
+  const viewportTooSmall = state.get('viewportTooSmall');
+  const containerWidth = state.get('containerWidth');
+  const showSubtitlesBand = state.get('showSubtitlesBand');
+  const player = getPlayerState(state);
+  const status = player.get('status');
+  const preventInput = !/ready|paused/.test(status);
+  return {
+    preventInput, viewportTooSmall, containerWidth,
+    PlayerControls, MainView, MainViewPanes, FullscreenButton,
+    showSubtitlesBand, SubtitlesBand
+  };
+}
 
-  bundle.use('PlayerControls', 'MainView', 'MainViewPanes', 'getPlayerState', 'SubtitlesBand');
+export default function (bundle) {
   bundle.defineView('PlayerApp', PlayerAppSelector, PlayerApp);
-
-  function PlayerAppSelector (state, props) {
-    const {PlayerControls, MainView, MainViewPanes, SubtitlesBand} = deps;
-    const viewportTooSmall = state.get('viewportTooSmall');
-    const containerWidth = state.get('containerWidth');
-    const showSubtitlesBand = state.get('showSubtitlesBand');
-    const player = deps.getPlayerState(state);
-    const status = player.get('status');
-    const preventInput = !/ready|paused/.test(status);
-    return {
-      preventInput, viewportTooSmall, containerWidth,
-      PlayerControls, MainView, MainViewPanes,
-      showSubtitlesBand, SubtitlesBand
-    };
-  }
-
 };
