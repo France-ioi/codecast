@@ -211,7 +211,7 @@ class LoadScreen extends React.PureComponent {
     const {dataUrl, bucketUrl, loading} = this.props;
     const isUrlOk = bucketUrl && dataUrl.startsWith(bucketUrl);
     return (
-      <div className='container'>
+      <div className='container' style={{marginTop: '2em'}}>
         <p>{"Enter the base URL of an existing Codecast:"}</p>
         <div className='input-group'>
           <input type='text' className='form-control' onChange={this._urlChanged} value={dataUrl||''} />
