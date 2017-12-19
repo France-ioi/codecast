@@ -16,33 +16,41 @@ const config = module.exports = {
     filename: '[name].js'
   },
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.js$/,
         include: SRC,
-        loader: 'babel-loader',
-        query: {
-          babelrc: true
-        }
+        use: [
+          {loader: 'babel-loader', options: {babelrc: true}}
+        ]
       },
       {
         test: /\.css$/,
-        loader: 'style-loader!css-loader'
+        use: [
+          {loader: 'style-loader'},
+          {loader: 'css-loader'}
+        ]
       },
       {
         test: /\.scss$/,
-        loader: 'style-loader!css-loader!resolve-url-loader!sass-loader?sourceMap'
+        use: [
+          {loader: 'style-loader'},
+          {loader: 'css-loader'},
+          {loader: 'resolve-url-loader'},
+          {loader: 'sass-loader', options: {sourceMap: true}}
+        ]
       },
       {
         test: /\.(eot|svg|ttf|woff(2)?)(\?v=\d+\.\d+\.\d+)?/,
-        loader: 'file-loader?name=fonts/[name].[ext]',
-        options: {
-          publicPath
-        }
+        use: [
+          {loader: 'file-loader', options: {publicPath, name: 'fonts/[name].[ext]'}}
+        ]
       },
       {
         test: /\.(ico|gif|png|jpg|jpeg|svg)$/,
-        loader: 'file-loader?context=public&name=images/[name].[ext]'
+        use: [
+          {loader: 'file-loader?context=public&name=images/[name].[ext]'}
+        ]
       }
     ]
   },
