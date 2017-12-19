@@ -133,7 +133,6 @@ class SubtitlePaneItemViewer extends React.PureComponent {
   };
 }
 
-
 class SubtitlePaneItemEditor extends React.PureComponent {
   render() {
     const {item: {text, start, end}, offset} = this.props;
@@ -285,24 +284,25 @@ class SubtitlesEditor extends React.PureComponent {
           </div>
         </div>
         <div className='col-sm-6'>
-          {selected &&
-            <div className='form-inline'>
-              <p>{"Load from:"}</p>
+          <div className='form-inline'>
+            <p>{"Load from:"}</p>
+            {selected &&
               <Button onClick={this._loadEdited} disabled={typeof selected.text !== 'string'}>
-                {"edited"}
-              </Button>
+                {"stored "}{selected.key}
+              </Button>}
+            {selected &&
               <Button onClick={this._loadFromUrl} disabled={!selected.url}>
                 {"remote "}{selected.key}
-              </Button>
-              <span>
-                <input type='file' onChange={this._loadFromFile} accept='.srt' ref={this._refLoad} style={{display: 'none'}} />
-                 <Button onClick={this._openLoadInput}>{"file"}</Button>
-              </span>
-              <Button onClick={this._clearSubtitles}>{"empty"}</Button>
-            </div>}
+              </Button>}
+            <span>
+              <input type='file' onChange={this._loadFromFile} accept='.srt' ref={this._refLoad} style={{display: 'none'}} />
+               <Button onClick={this._openLoadInput}>{"file"}</Button>
+            </span>
+            <Button onClick={this._clearSubtitles}>{"empty"}</Button>
+          </div>
           <p>{"Loaded subtitles, edit codecast to modify:"}</p>
           <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange}/>
-          {selected && <Button onClick={this._saveSubtitles}>{"save to "}{selected.key}</Button>}
+          {selected && <Button onClick={this._saveSubtitles}>{"store into "}{selected.key}</Button>}
         </div>
       </div>
     );
