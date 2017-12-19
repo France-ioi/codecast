@@ -35,6 +35,8 @@ export default function (bundle, deps) {
   bundle.defineAction('editorSave', 'Editor.Save');
 
   bundle.defineView('EditorApp', EditorAppSelector, EditorApp);
+  bundle.defineView('EditorGlobalControls', EditorGlobalControlsSelector, EditorGlobalControls);
+
   bundle.defineView('LoadScreen', LoadScreenSelector, LoadScreen);
   bundle.defineView('SetupScreen', SetupScreenSelector, SetupScreen);
   bundle.defineView('EditScreen', EditScreenSelector, EditScreen);
@@ -123,7 +125,7 @@ function* editorSaveSaga (_action) {
 
 function EditorAppSelector (state, props) {
   const scope = state.get('scope');
-  const {LogoutButton, editorUnload, editorReturn} = scope;
+  const {EditorGlobalControls} = scope;
   const user = state.get('user');
   const screen = state.get('screen');
   let activity;
@@ -144,25 +146,48 @@ function EditorAppSelector (state, props) {
     activity = 'save';
     screenProp = 'SaveScreen';
   }
-  return {Screen: screenProp && scope[screenProp], LogoutButton, editorUnload, editorReturn, activity};
+  return {Screen: screenProp && scope[screenProp], activity, EditorGlobalControls};
 }
 
 class EditorApp extends React.PureComponent {
   render () {
-    const {Screen, LogoutButton, activity} = this.props;
+    const {EditorGlobalControls, Screen, activity} = this.props;
     return (
       <div>
-        <div id='page-level-controls'>
-          <div>
-            {activity === 'edit' && <Button onClick={this._return}><i className='fa fa-reply'/></Button>}
-            {activity === 'setup' && <Button onClick={this._unload}><i className='fa fa-reply'/></Button>}
-            {/load|setup/.test(activity) && <LogoutButton/>}
-          </div>
-        </div>
+        <EditorGlobalControls activity={activity}/>
         <Screen/>
       </div>
     );
   }
+}
+
+function EditorGlobalControlsSelector (state) {
+  const {LogoutButton, editorUnload, editorReturn} = state.get('scope');
+  return {LogoutButton, editorUnload, editorReturn};
+}
+
+class EditorGlobalControls extends React.PureComponent {
+  render () {
+    const {LogoutButton, activity} = this.props;
+    const {collapsed} = this.state;
+    return (
+      <div id='globals-controls' className={classnames({collapsed})}>
+        <span className='collapse-toggle' onClick={this._toggleCollapsed}>
+          <i className={`fa fa-chevron-${collapsed ? 'right' : 'left'}`}/>
+        </span>
+        <div>
+          {activity === 'edit' && <Button onClick={this._return}><i className='fa fa-reply'/></Button>}
+          {activity === 'setup' && <Button onClick={this._unload}><i className='fa fa-reply'/></Button>}
+          {/load|setup/.test(activity) && <LogoutButton/>}
+        </div>
+      </div>
+    );
+  }
+  state = {collapsed: false};
+  _toggleCollapsed = () => {
+    const {collapsed} = this.state;
+    this.setState({collapsed: !collapsed});
+  };
   _unload = () => {
     this.props.dispatch({type: this.props.editorUnload});
   };
