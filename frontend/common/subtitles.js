@@ -418,7 +418,7 @@ function subtitlesPaneEnabledChangedReducer (state, {payload: {value}}) {
 function playerReadyReducer (state, {baseDataUrl, data}) {
   const availableOptions = {};
   (data.subtitles||[]).forEach(function (key) {
-    const url = `${baseDataUrl}-${key}.srt`;
+    const url = `${baseDataUrl}_${key}.srt`;
     availableOptions[key] = {key, url};
   });
   return state.update('subtitles', subtitles => (
