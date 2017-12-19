@@ -27,9 +27,10 @@ export function formatTime (ms) {
 };
 
 export function formatTimeLong (ms) {
-  let s = Math.round(ms / 1000);
-  ms = Math.round(ms % 1000);
+  let tenths = Math.round(ms / 100);
+  let s = Math.floor(tenths / 10);
   const m = Math.floor(s / 60);
+  tenths -= s * 10;
   s -= m * 60;
-  return `${zeroPad2(m)}:${zeroPad2(s)}.${ms}`;
+  return `${zeroPad2(m)}:${zeroPad2(s)}.${tenths}`;
 };
