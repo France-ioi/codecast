@@ -156,8 +156,7 @@ class EditorApp extends React.PureComponent {
           <div className='btn-group'>
             {activity === 'edit' && <Button onClick={this._return}><i className='fa fa-reply'/></Button>}
             {activity === 'setup' && <Button onClick={this._unload}><i className='fa fa-reply'/></Button>}
-            <LogoutButton/>
-            <FullscreenButton/>
+            {/edit|setup/.test(activity) && <LogoutButton/>}
           </div>
         </div>
         <Screen/>
@@ -286,10 +285,3 @@ class EditScreen extends React.PureComponent {
     );
   }
 }
-
-/*
-function subtitlesAddLanguageReducer (state, action) {
-  return state.updateIn(['player', 'data'],
-    data => update(data, {subtitles: {$push: [key]}}));
-}
-*/
