@@ -271,10 +271,10 @@ class SubtitlesEditor extends React.PureComponent {
     const availKeys = Object.keys(availableOptions).filter(key => !availableOptions[key].removed).sort();
     return (
       <div className='row'>
-        <div className='col-sm-6'>
+        <div className='col-sm-6' style={{paddingRight: '10px'}}>
           <h3>{"Subtitles options"}</h3>
-          <div className='form-inline'>
-            <p>{"Select language : "}</p>
+          <div className='form-inline section'>
+            <p>{"Select language: "}</p>
             <ul>
               {availKeys.map(key =>
                 <SubtitlesEditorOption key={key} option={availableOptions[key]} selected={selected && selected.key === key}
@@ -284,9 +284,9 @@ class SubtitlesEditor extends React.PureComponent {
               placeholder='Add language…' />
           </div>
         </div>
-        <div className='col-sm-6'>
+        <div className='col-sm-6' style={{paddingLeft: '10px'}}>
           <h3>{"Subtitles buffer"}</h3>
-          <div className='form-inline'>
+          <div className='form-inline section'>
             <p>{"Load from:"}</p>
             {selected &&
               <Button onClick={this._loadEdited} disabled={typeof selected.text !== 'string'}>
@@ -306,12 +306,14 @@ class SubtitlesEditor extends React.PureComponent {
               <i className='fa fa-eraser'/>{" empty"}
             </Button>
           </div>
-          <p>{"Loaded subtitles buffer:"}</p>
-          <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange}/>
-          {selected &&
-            <Button onClick={this._saveSubtitles}>
-              <i className='fa fa-arrow-left'/>{" store into "}{selected.key}
-            </Button>}
+          <div className='section'>
+            <p>{"Loaded subtitles buffer:"}</p>
+            <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange}/>
+            {selected &&
+              <Button onClick={this._saveSubtitles}>
+                <i className='fa fa-arrow-left'/>{" store into "}{selected.key}
+              </Button>}
+          </div>
         </div>
       </div>
     );
