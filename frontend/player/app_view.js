@@ -15,9 +15,6 @@ class PlayerApp extends React.PureComponent {
     const {preventInput, containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand, FullscreenButton} = this.props;
     return (
       <div>
-        <div style={{position: 'fixed', top: '2px', right: '2px'}}>
-          <FullscreenButton/>
-        </div>
         <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
           <PlayerControls/>
           <div id='mainView-container'>
