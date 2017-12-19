@@ -246,7 +246,7 @@ class SetupScreen extends React.PureComponent {
             </Button>
           </span>
           <Button onClick={this._save}>
-            <i className='fa fa-save'/>{" Save"}
+            <i className='fa fa-cloud-upload'/>{" Save"}
           </Button>
         </div>
       </div>
