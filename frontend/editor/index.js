@@ -171,11 +171,11 @@ class EditorGlobalControls extends React.PureComponent {
     const {LogoutButton, activity} = this.props;
     const {collapsed} = this.state;
     return (
-      <div id='globals-controls' className={classnames({collapsed})}>
+      <div id='global-controls' className={classnames({collapsed})}>
         <span className='collapse-toggle' onClick={this._toggleCollapsed}>
-          <i className={`fa fa-chevron-${collapsed ? 'right' : 'left'}`}/>
+          <i className={`fa fa-chevron-${collapsed ? 'down' : 'up'}`}/>
         </span>
-        <div>
+        <div className='btn-group'>
           {activity === 'edit' && <Button onClick={this._return}><i className='fa fa-reply'/></Button>}
           {activity === 'setup' && <Button onClick={this._unload}><i className='fa fa-reply'/></Button>}
           {/load|setup/.test(activity) && <LogoutButton/>}

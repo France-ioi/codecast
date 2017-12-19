@@ -160,6 +160,35 @@ body#app, #app h1, #app h2, #app h3 {
   overflow-y: scroll;
 }
 
+#global-controls {
+  padding: 10px;
+  top: -1px;
+  right: 13px;
+  position: fixed;
+  border: 1px solid #aaa;
+  border-radius: 0 0 5px 5px;
+  z-index: 3;
+  background-color: #f7f7f7;
+  transition: all 250ms;
+}
+#global-controls.collapsed {
+  transform: translateY(calc(-100% + 10px));
+}
+#global-controls .collapse-toggle {
+  position: absolute;
+  right: -12px;
+  bottom: -12px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 16px;
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  cursor: pointer;
+}
+
 
 .terminal {
   margin: 4px;
