@@ -145,7 +145,7 @@ class SubtitlePaneItemEditor extends React.PureComponent {
       <div className='subtitles-item-editor'>
         <div className='subtitles-timestamp row'>
           <div className='col-sm-6'>
-            <Button bsSize='xsmall' disabled={start < 250} onClick={this._onShiftMinus}><i className='fa fa-chevron-left'/></Button>
+            <span className='pull-left'><Button bsSize='xsmall' disabled={start < 250} onClick={this._onShiftMinus}><i className='fa fa-chevron-left'/></Button></span>
             <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
             <span className='pull-right'><Button bsSize='xsmall' disabled={start !== 0 && end - start <= 250} onClick={this._onShiftPlus}><i className='fa fa-chevron-right'/></Button></span>
           </div>
@@ -154,7 +154,7 @@ class SubtitlePaneItemEditor extends React.PureComponent {
             <span className='pull-right'><Button bsSize='xsmall' disabled={start === 0} onClick={this._onRemoveMergeUp}><i className='fa fa-minus'/></Button></span>
           </div>
         </div>
-        <textarea className='subtitles-text' value={text} onChange={this._onChange}/>
+        <textarea className='subtitles-text' value={text} onChange={this._onChange} rows='6'/>
         <div className='subtitles-split row'>
           <p>{formatTimeLong(audioTime)}</p>
           <span className='pull-right'><Button bsSize='xsmall' disabled={offset === 0} onClick={this._onInsertBelow}><i className='fa fa-plus'/></Button></span>

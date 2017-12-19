@@ -684,11 +684,6 @@ svg {
     background-color: #efefef;
     border: 1px solid #ddd;
     margin-top: 3px;
-    .btn-xs {
-      border: 0;
-      border-radius: 0;
-      padding: 1px 2px;
-    }
     .col-sm-6 {
       padding: 0;
       &:first-child {
@@ -696,7 +691,16 @@ svg {
       }
     }
   }
+  .subtitles-item-editor,
+  .subtitles-item-viewer {
+    .btn-xs {
+      border: 0;
+      border-radius: 0;
+      padding: 1px 2px;
+    }
+  }
   .subtitles-item-editor {
+    margin: 15px 0;
     .subtitles-timestamp .subtitles-timestamp-start,
     .subtitles-timestamp .subtitles-timestamp-end {
       padding: 0 3px;
@@ -704,9 +708,12 @@ svg {
     }
     textarea.subtitles-text {
       margin-left: -3px; /*match bootstrap row margin left -3px*/
+      resize: vertical;
+      color: #2a2aff;
     }
     .subtitles-split {
       text-align: center;
+      line-height: 1;
       p {
         display: inline-block;
         margin-bottom: 0;
@@ -717,6 +724,14 @@ svg {
     .subtitles-timestamp .subtitles-timestamp-start,
     .subtitles-timestamp .subtitles-timestamp-end {
       padding: 0 6px;
+    }
+    .subtitles-text {
+      max-height: 40px;
+      display: block;
+      overflow: hidden;
+      line-height: 14px;
+      padding: 3px 0;
+      font-size: 11px;
     }
   }
 }
