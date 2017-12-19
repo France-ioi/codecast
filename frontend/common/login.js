@@ -23,13 +23,14 @@ module.exports = function (bundle, deps) {
         return (
           <Button onClick={this.logoutGuest}>
             <i className='fa fa-sign-out'/>
-            {"G"}
+            {" guest"}
           </Button>
         );
       } else {
         return (
           <a href={`${baseUrl}/logout`} target='_blank' className='btn btn-default'>
             <i className='fa fa-sign-out'/>
+            {` ${user.login}`}
           </a>
         );
       }
