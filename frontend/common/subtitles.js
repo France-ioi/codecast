@@ -119,8 +119,13 @@ class SubtitlePaneItemViewer extends React.PureComponent {
     const {item: {text, start, end}} = this.props;
     return (
       <div className='subtitles-item-viewer' onClick={this._onClick}>
-        <div className='subtitles-timestamp'>
-          {formatTimeLong(start)}{' - '}{formatTimeLong(end)}
+        <div className='subtitles-timestamp row'>
+          <div className='col-sm-6'>
+            <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
+          </div>
+          <div className='col-sm-6'>
+            <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>
+          </div>
         </div>
         <span className='subtitles-text'>
           {text}
@@ -135,19 +140,25 @@ class SubtitlePaneItemViewer extends React.PureComponent {
 
 class SubtitlePaneItemEditor extends React.PureComponent {
   render() {
-    const {item: {text, start, end}, offset} = this.props;
+    const {item: {text, start, end}, offset, audioTime} = this.props;
     return (
       <div className='subtitles-item-editor'>
-        <div className='subtitles-timestamp'>
-          {formatTimeLong(start)}{' - '}{formatTimeLong(end)}
-        </div>
-        <div className='btn-group'>
-          <Button bsSize='xsmall' disabled={start < 250} onClick={this._onShiftMinus}><i className='fa fa-chevron-left'/></Button>
-          <Button bsSize='xsmall' disabled={start !== 0 && end - start <= 250} onClick={this._onShiftPlus}><i className='fa fa-chevron-right'/></Button>
-          <Button bsSize='xsmall' disabled={offset === 0} onClick={this._onInsertBelow}><i className='fa fa-plus'/></Button>
-          <Button bsSize='xsmall' disabled={start === 0} onClick={this._onRemoveMergeUp}><i className='fa fa-minus'/></Button>
+        <div className='subtitles-timestamp row'>
+          <div className='col-sm-6'>
+            <Button bsSize='xsmall' disabled={start < 250} onClick={this._onShiftMinus}><i className='fa fa-chevron-left'/></Button>
+            <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
+            <span className='pull-right'><Button bsSize='xsmall' disabled={start !== 0 && end - start <= 250} onClick={this._onShiftPlus}><i className='fa fa-chevron-right'/></Button></span>
+          </div>
+          <div className='col-sm-6'>
+            <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>
+            <span className='pull-right'><Button bsSize='xsmall' disabled={start === 0} onClick={this._onRemoveMergeUp}><i className='fa fa-minus'/></Button></span>
+          </div>
         </div>
         <textarea className='subtitles-text' value={text} onChange={this._onChange}/>
+        <div className='subtitles-split row'>
+          <p>{formatTimeLong(audioTime)}</p>
+          <span className='pull-right'><Button bsSize='xsmall' disabled={offset === 0} onClick={this._onInsertBelow}><i className='fa fa-plus'/></Button></span>
+        </div>
       </div>
     );
   }
@@ -182,7 +193,7 @@ class SubtitlesPane extends React.PureComponent {
                 return <SubtitlePaneItem key={index} item={st} ref={ref} selected={selected} mode={mode} onJump={this._jump}/>;
               }
               if (selected) {
-                return <SubtitlePaneItemEditor key={index} item={st} ref={this._refSelected} offset={audioTime - st.start}
+                return <SubtitlePaneItemEditor key={index} item={st} ref={this._refSelected} offset={audioTime - st.start} audioTime={audioTime}
                   onChange={this._changeItem} onInsert={this._insertItem} onRemove={this._removeItem} onShift={this._shiftItem} />;
               }
               return <SubtitlePaneItemViewer key={index} item={st} onJump={this._jump} />;
