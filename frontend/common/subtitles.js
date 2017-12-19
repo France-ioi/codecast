@@ -272,6 +272,7 @@ class SubtitlesEditor extends React.PureComponent {
     return (
       <div className='row'>
         <div className='col-sm-6'>
+          <h3>{"Subtitles options"}</h3>
           <div className='form-inline'>
             <p>{"Select language : "}</p>
             <ul>
@@ -284,25 +285,33 @@ class SubtitlesEditor extends React.PureComponent {
           </div>
         </div>
         <div className='col-sm-6'>
+          <h3>{"Subtitles buffer"}</h3>
           <div className='form-inline'>
             <p>{"Load from:"}</p>
             {selected &&
               <Button onClick={this._loadEdited} disabled={typeof selected.text !== 'string'}>
-                {"stored "}{selected.key}
+                <i className='fa fa-arrow-right'/>{" stored "}{selected.key}
               </Button>}
             {selected &&
               <Button onClick={this._loadFromUrl} disabled={!selected.url}>
-                {"remote "}{selected.key}
+                <i className='fa fa-cloud-download'/>{" remote "}{selected.key}
               </Button>}
             <span>
               <input type='file' onChange={this._loadFromFile} accept='.srt' ref={this._refLoad} style={{display: 'none'}} />
-               <Button onClick={this._openLoadInput}>{"file"}</Button>
+              <Button onClick={this._openLoadInput}>
+                <i className='fa fa-file-text-o'/>{" file"}
+              </Button>
             </span>
-            <Button onClick={this._clearSubtitles}>{"empty"}</Button>
+            <Button onClick={this._clearSubtitles}>
+              <i className='fa fa-eraser'/>{" empty"}
+            </Button>
           </div>
-          <p>{"Loaded subtitles, edit codecast to modify:"}</p>
+          <p>{"Loaded subtitles buffer:"}</p>
           <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange}/>
-          {selected && <Button onClick={this._saveSubtitles}>{"store into "}{selected.key}</Button>}
+          {selected &&
+            <Button onClick={this._saveSubtitles}>
+              <i className='fa fa-arrow-left'/>{" store into "}{selected.key}
+            </Button>}
         </div>
       </div>
     );
@@ -364,7 +373,10 @@ class SubtitlesEditorOption extends React.PureComponent {
           {option.key}
         </Button>
         <Button onClick={this._remove}><i className='fa fa-remove'/></Button>
-        {typeof option.text === 'string' && <span>{' '}<i className='fa fa-save'/></span>}
+        {typeof option.text === 'string' &&
+          <span>
+            {' '}<i className='fa fa-save'/>
+          </span>}
       </li>
     );
   }
