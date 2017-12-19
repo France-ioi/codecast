@@ -123,7 +123,7 @@ function* editorSaveSaga (_action) {
 
 function EditorAppSelector (state, props) {
   const scope = state.get('scope');
-  const {LogoutButton, FullscreenButton, editorUnload, editorReturn} = scope;
+  const {LogoutButton, editorUnload, editorReturn} = scope;
   const user = state.get('user');
   const screen = state.get('screen');
   let activity;
@@ -144,19 +144,19 @@ function EditorAppSelector (state, props) {
     activity = 'save';
     screenProp = 'SaveScreen';
   }
-  return {Screen: screenProp && scope[screenProp], LogoutButton, FullscreenButton, editorUnload, editorReturn, activity};
+  return {Screen: screenProp && scope[screenProp], LogoutButton, editorUnload, editorReturn, activity};
 }
 
 class EditorApp extends React.PureComponent {
   render () {
-    const {Screen, LogoutButton, FullscreenButton, activity} = this.props;
+    const {Screen, LogoutButton, activity} = this.props;
     return (
       <div>
-        <div className='container' style={{textAlign: 'right'}}>
-          <div className='btn-group'>
+        <div id='page-level-controls'>
+          <div>
             {activity === 'edit' && <Button onClick={this._return}><i className='fa fa-reply'/></Button>}
             {activity === 'setup' && <Button onClick={this._unload}><i className='fa fa-reply'/></Button>}
-            {/edit|setup/.test(activity) && <LogoutButton/>}
+            {/load|setup/.test(activity) && <LogoutButton/>}
           </div>
         </div>
         <Screen/>

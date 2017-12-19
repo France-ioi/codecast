@@ -8,7 +8,7 @@ export default function (bundle, deps) {
 
 class SandboxApp extends React.PureComponent {
   render () {
-    const {FullscreenButton, StepperControls, Menu, MainView, MainViewPanes, containerWidth, viewportTooSmall} = this.props;
+    const {StepperControls, Menu, MainView, MainViewPanes, containerWidth, viewportTooSmall} = this.props;
     return (
       <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
         <div id='player-controls'>
@@ -19,7 +19,6 @@ class SandboxApp extends React.PureComponent {
             </div>
             <div className="player-controls player-controls-right col-sm-2">
               <Menu/>
-              <FullscreenButton/>
             </div>
           </div>
         </div>
@@ -33,11 +32,11 @@ class SandboxApp extends React.PureComponent {
 }
 
 function SandboxAppSelector (state) {
-  const {FullscreenButton, StepperControls, Menu, MainView, MainViewPanes} = state.get('scope');
+  const {StepperControls, Menu, MainView, MainViewPanes} = state.get('scope');
   const containerWidth = state.get('containerWidth');
   const viewportTooSmall = state.get('viewportTooSmall');
   return {
     viewportTooSmall, containerWidth,
-    FullscreenButton, StepperControls, Menu, MainView, MainViewPanes
+    StepperControls, Menu, MainView, MainViewPanes
   };
 }

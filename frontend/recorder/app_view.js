@@ -3,15 +3,18 @@ import React from 'react';
 
 class RecorderApp extends React.PureComponent {
   render () {
-    const {LogoutButton, FullscreenButton, Screen, ErrorView, MemoryUsage, Vumeter} = this.props;
+    const {LogoutButton, Screen, ErrorView, MemoryUsage, Vumeter} = this.props;
     return (
       <div className='container'>
-        <LogoutButton/>
-        <FullscreenButton/>
+        <div id='page-level-controls'>
+          <div>
+            <LogoutButton/>
+            <MemoryUsage/>
+            <Vumeter/>
+          </div>
+        </div>
         <Screen/>
         <ErrorView/>
-        <MemoryUsage/>
-        <Vumeter/>
       </div>
     );
   }
@@ -19,7 +22,7 @@ class RecorderApp extends React.PureComponent {
 
 function RecorderAppSelector (state, props) {
   const scope = state.get('scope');
-  const {LogoutButton, FullscreenButton, ErrorView, MemoryUsage, Vumeter} = scope;
+  const {LogoutButton, ErrorView, MemoryUsage, Vumeter} = scope;
   const user = state.get('user');
   const screen = state.get('screen');
   let Screen;
@@ -30,7 +33,7 @@ function RecorderAppSelector (state, props) {
   } else if (screen === 'save') {
     Screen = scope.SaveScreen;
   }
-  return {LogoutButton, FullscreenButton, Screen, ErrorView, MemoryUsage, Vumeter};
+  return {LogoutButton, Screen, ErrorView, MemoryUsage, Vumeter};
 }
 
 export default function (bundle, deps) {

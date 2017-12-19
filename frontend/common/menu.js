@@ -7,7 +7,7 @@ export default function (bundle, deps) {
 
   bundle.use(
     'ExamplePicker', 'isTranslated', 'setLanguage', 'exampleSelected',
-    'subtitlesGetMenu'
+    'subtitlesGetMenu', 'FullscreenButton'
   );
 
   bundle.defineAction('menuOpened', 'Menu.Opened');
@@ -17,7 +17,7 @@ export default function (bundle, deps) {
 
   class Menu extends React.PureComponent {
     render () {
-      const {languages, language, getMessage, canSelectExample, SubtitlesMenu} = this.props;
+      const {getMessage, MenuPopup, SubtitlesMenu, FullscreenButton} = this.props;
       const menuButton =
         <Button title={getMessage('MENU_TOOLTIP')}>
           <i className='fa fa-bars'/>
@@ -27,8 +27,9 @@ export default function (bundle, deps) {
           <ButtonGroup>
             {SubtitlesMenu && <SubtitlesMenu/>}
             <Portal closeOnEsc closeOnOutsideClick openByClickOn={menuButton}>
-              <deps.MenuPopup/>
+              <MenuPopup/>
             </Portal>
+            <FullscreenButton/>
           </ButtonGroup>
         </div>
       );
@@ -37,9 +38,10 @@ export default function (bundle, deps) {
   bundle.defineView('Menu', MenuSelector, Menu);
 
   function MenuSelector (state, props) {
+    const {MenuPopup, FullscreenButton, subtitlesGetMenu} = state.get('scope');
     const getMessage = state.get('getMessage');
-    const SubtitlesMenu = deps.subtitlesGetMenu(state);
-    return {getMessage, SubtitlesMenu};
+    const SubtitlesMenu = subtitlesGetMenu(state);
+    return {getMessage, MenuPopup, SubtitlesMenu, FullscreenButton};
   }
 
   class MenuPopup extends React.PureComponent {

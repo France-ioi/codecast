@@ -11,7 +11,7 @@ export default function (bundle, deps) {
   bundle.use(
     'playerStart', 'playerPause', 'playerResume', 'playerSeek',
     'getPlayerState',
-    'StepperControls', 'Menu', 'FullscreenButton'
+    'StepperControls', 'Menu'
   );
 
   bundle.defineSelector('PlayerControlsSelector', function (state, props) {
@@ -82,7 +82,6 @@ export default function (bundle, deps) {
             </div>
             <div className="player-controls player-controls-right col-sm-2">
               <deps.Menu/>
-              <deps.FullscreenButton/>
             </div>
           </div>
         </div>

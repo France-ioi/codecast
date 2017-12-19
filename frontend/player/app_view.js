@@ -12,7 +12,7 @@ import classnames from 'classnames';
 
 class PlayerApp extends React.PureComponent {
   render () {
-    const {preventInput, containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand, FullscreenButton} = this.props;
+    const {preventInput, containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
     return (
       <div>
         <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
@@ -29,7 +29,7 @@ class PlayerApp extends React.PureComponent {
 }
 
 function PlayerAppSelector (state, props) {
-  const {PlayerControls, MainView, MainViewPanes, SubtitlesBand, FullscreenButton, getPlayerState} = state.get('scope');
+  const {PlayerControls, MainView, MainViewPanes, SubtitlesBand, getPlayerState} = state.get('scope');
   const viewportTooSmall = state.get('viewportTooSmall');
   const containerWidth = state.get('containerWidth');
   const showSubtitlesBand = state.get('showSubtitlesBand');
@@ -38,7 +38,7 @@ function PlayerAppSelector (state, props) {
   const preventInput = !/ready|paused/.test(status);
   return {
     preventInput, viewportTooSmall, containerWidth,
-    PlayerControls, MainView, MainViewPanes, FullscreenButton,
+    PlayerControls, MainView, MainViewPanes,
     showSubtitlesBand, SubtitlesBand
   };
 }
