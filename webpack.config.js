@@ -37,7 +37,7 @@ const config = module.exports = {
           {loader: 'style-loader'},
           {loader: 'css-loader'},
           {loader: 'resolve-url-loader'},
-          {loader: 'sass-loader', options: {sourceMap: true}}
+          {loader: 'sass-loader', options: {sourceMap: true, precision: 8}}
         ]
       },
       {
