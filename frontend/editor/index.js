@@ -239,10 +239,12 @@ class SetupScreen extends React.PureComponent {
         <h2>{"Subtitles"}</h2>
         <SubtitlesEditor />
 
-        <div style={{marginTop: '10px', textAlign: 'center'}} className='btn-group'>
-          <Button onClick={this._beginEdit}>
-            <i className='fa fa-edit'/>{" Edit"}
-          </Button>
+        <div style={{marginTop: '2em', textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
+          <span style={{marginRight: '10px'}}>
+            <Button onClick={this._beginEdit}>
+              <i className='fa fa-edit'/>{" Edit"}
+            </Button>
+          </span>
           <Button onClick={this._save}>
             <i className='fa fa-save'/>{" Save"}
           </Button>

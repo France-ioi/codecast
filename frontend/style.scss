@@ -86,13 +86,17 @@ body#app, #app h1, #app h2, #app h3 {
   background-color: #eee;
 }
 #app h1 {
-  font-size: 18px;
+  font-size: 24px;
 }
 #app h2 {
-  font-size: 16px;
+  font-size: 18px;
+  font-weight: bold;
+  padding: 5px 6px;
+  border-top: 1px solid;
 }
 #app h3 {
   font-size: 14px;
+  margin: 10px 0 0;
 }
 
 #app tt, #app pre, #app .ace_editor, .terminal, .stack-view {
@@ -110,6 +114,9 @@ body#app, #app h1, #app h2, #app h3 {
 #app pre {
   background: inherit;
   border: none;
+}
+#app .section {
+  margin-top: 10px;
 }
 
 // Override bootstrap style
