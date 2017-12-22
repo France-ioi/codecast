@@ -1,8 +1,7 @@
-'use strict';
 
-const s3BrowserDirectUpload = require('s3-browser-direct-upload');
+import s3BrowserDirectUpload from 's3-browser-direct-upload';
 
-module.exports.makeS3Client = function (options) {
+export function makeS3Client (options) {
   const s3clientOptions = {
     accessKeyId: options.s3AccessKeyId,
     secretAccessKey: options.s3SecretAccessKey,
@@ -13,7 +12,7 @@ module.exports.makeS3Client = function (options) {
 };
 
 
-module.exports.getMp3UploadForm = function (s3client, bucket, base, callback) {
+export function getMp3UploadForm (s3client, bucket, base, callback) {
   const uploadPostFormOptions = {
     key: `${base}.mp3`,
     extension: 'mp3',
@@ -23,7 +22,7 @@ module.exports.getMp3UploadForm = function (s3client, bucket, base, callback) {
   s3client.uploadPostForm(uploadPostFormOptions, callback);
 };
 
-module.exports.getJsonUploadForm = function (s3client, bucket, base, callback) {
+export function getJsonUploadForm (s3client, bucket, base, callback) {
   const uploadPostFormOptions = {
     key: `${base}.json`,
     extension: 'json',
