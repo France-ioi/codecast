@@ -5,7 +5,7 @@ import classnames from 'classnames';
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 
 import {Button} from '../ui';
-import {getJson} from '../common/utils';
+import {getJson, postJson} from '../common/utils';
 
 export default function (bundle, deps) {
 
@@ -32,7 +32,10 @@ export default function (bundle, deps) {
 
   bundle.defineAction('editorBeginEdit', 'Editor.BeginEdit');
   bundle.defineAction('editorReturn', 'Editor.Return'); /* done editing, return to setup screen */
+
   bundle.defineAction('editorSave', 'Editor.Save');
+  bundle.defineAction('editorSaveFailed', 'Editor.Save.Failed');
+  bundle.defineAction('editorSaveSucceeded', 'Editor.Save.Succeeded');
 
   bundle.defineView('EditorApp', EditorAppSelector, EditorApp);
   bundle.defineView('EditorGlobalControls', EditorGlobalControlsSelector, EditorGlobalControls);
@@ -88,13 +91,15 @@ function* editorLoadSaga ({payload: {dataUrl}}) {
   const {playerPrepare, playerReady, editorLoaded, switchToScreen} = yield select(state => state.get('scope'));
   yield put({type: playerPrepare, baseDataUrl: dataUrl});
   const {data} = yield take(playerReady);
-  yield put({type: editorLoaded, payload: {data}});
+  yield put({type: editorLoaded, payload: {base: dataUrl, data}});
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
 }
 
-function editorLoadedReducer (state, {payload: {data}}) {
-  return state.update('editor', editor =>
-    editor.set('data', data).set('loading', false));
+function editorLoadedReducer (state, {payload: {base, data}}) {
+  return state.update('editor', editor => editor
+    .set('base', base)
+    .set('data', data)
+    .set('loading', false));
 }
 
 function editorUnloadReducer (state, _action) {
@@ -120,7 +125,26 @@ function* editorReturnSaga (_action) {
 }
 
 function* editorSaveSaga (_action) {
-  // TODO: save
+  const {baseUrl, base, data, editorSaveFailed, editorSaveSucceeded} = yield select(function (state) {
+    const {editorSaveFailed, editorSaveSucceeded} = state.get('scope');
+    const baseUrl = state.get('baseUrl');
+    const editor = state.get('editor');
+    const base = editor.get('base');
+    const data = editor.get('data');
+    const subtitles = Object.values(state.get('subtitles').availableOptions);
+    return {
+      baseUrl, base, data: {...data, subtitles},
+      editorSaveFailed, editorSaveSucceeded
+    };
+  });
+  try {
+    const result = yield call(postJson, `${baseUrl}/save`, {base, data});
+    // TODO: pass new base as payload, when copying
+    yield put({type: editorSaveSucceeded, payload: {}});
+  } catch (ex) {
+    console.log('error', ex);
+    yield put({type: editorSaveFailed, payload: {error: ex.toString()}});
+  }
 }
 
 function EditorAppSelector (state, props) {
@@ -244,11 +268,11 @@ class LoadScreen extends React.PureComponent {
 }
 
 function SetupScreenSelector (state, props) {
-  const {editorBeginEdit, SubtitlesEditor} = state.get('scope');
+  const {editorBeginEdit, editorSave, SubtitlesEditor} = state.get('scope');
   const editor = state.get('editor');
   const dataUrl = editor.get('dataUrl');
   const {version} = editor.get('data')
-  return {editorBeginEdit, SubtitlesEditor, dataUrl, version};
+  return {editorBeginEdit, editorSave, SubtitlesEditor, dataUrl, version};
 }
 
 class SetupScreen extends React.PureComponent {
@@ -278,6 +302,9 @@ class SetupScreen extends React.PureComponent {
   }
   _beginEdit = (event) => {
     this.props.dispatch({type: this.props.editorBeginEdit});
+  };
+  _save = (event) => {
+    this.props.dispatch({type: this.props.editorSave});
   };
 }
 

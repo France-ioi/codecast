@@ -1,21 +1,21 @@
-'use strict';
 
-const fs = require('fs');
-const path = require('path');
-const http = require('http');
-const express = require('express');
-const bodyParser = require('body-parser');
-const spawn = require('child_process').spawn;
+import fs from 'fs';
+import path from 'path';
+import http from 'http';
+import express from 'express';
+import bodyParser from 'body-parser';
+import {spawn} from 'child_process';
+import AnsiToHtml from 'ansi-to-html';
+
+import upload from './upload';
+import directives from './directives';
+import Arduino from './arduino';
+import oauth from './oauth';
+import startWorker from './worker';
+
 const rootDir = path.resolve(path.dirname(__dirname));
-const AnsiToHtml = require('ansi-to-html');
 
-
-const upload = require('./upload');
-const directives = require('./directives');
-const Arduino = require('./arduino');
-const oauth = require('./oauth');
-
-function buildApp (config, callback) {
+function buildApp (config, store, callback) {
 
   const app = express();
 
@@ -80,13 +80,13 @@ function buildApp (config, callback) {
   }
 
   function finalizeApp () {
-    addBackendRoutes(app, config);
+    addBackendRoutes(app, config, store);
     callback(null, app);
   }
   finalizeApp();
 }
 
-function addBackendRoutes (app, config) {
+function addBackendRoutes (app, config, store) {
 
   app.get('/', function (req, res) {
     res.render('index', {
@@ -143,7 +143,7 @@ function addBackendRoutes (app, config) {
       const id = Date.now().toString();
       const uploadPath = `${userConfig.uploadPath||'uploads'}/${id}`;
       const bucket = userConfig.s3Bucket;
-      const s3client = upload.makeS3Client(userConfig);
+      const s3client = upload.makeS3UploadClient(userConfig);
       upload.getJsonUploadForm(s3client, bucket, uploadPath, function (err, events) {
         if (err) return res.json({error: err.toString()});
         upload.getMp3UploadForm(s3client, bucket, uploadPath, function (err, audio) {
@@ -153,6 +153,14 @@ function addBackendRoutes (app, config) {
           res.json({player_url, events, audio});
         });
       });
+    });
+  });
+
+  app.post('/save', function (req, res) {
+    config.getUserConfig(req, function (err, userConfig) {
+      if (err) return res.json({error: err});
+      const {base, data} = req.body;
+      store.dispatch({type: 'SAVE', payload: {userConfig, base, data, req, res}});
     });
   });
 
@@ -224,7 +232,8 @@ fs.readFile('config.json', 'utf8', function (err, data) {
   if (!config.playerUrl) {
     config.playerUrl = `${config.baseUrl}/player`;
   }
-  buildApp(config, function (err, app) {
+  const workerStore = startWorker(config);
+  buildApp(config, workerStore, function (err, app) {
     if (err) {
       console.log("app failed to start", err);
       process.exit(1);
@@ -237,5 +246,6 @@ fs.readFile('config.json', 'utf8', function (err, data) {
     }
     const server = http.createServer(app);
     server.listen(config.port);
+    workerStore.dispatch({type: 'START'});
   });
 });
