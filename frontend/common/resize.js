@@ -46,8 +46,8 @@ export default function (bundle, deps) {
 
   // Make windowResized update the global state 'size'.
   bundle.addReducer('windowResized', function (state, action) {
-    const {width} = action;
-    return state.set('windowWidth', width);
+    const {width, height} = action;
+    return state.set('windowWidth', width).set('windowHeight', height);
   });
 
   bundle.addLateReducer(function updateGeometry (state) {
