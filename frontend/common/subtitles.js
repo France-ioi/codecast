@@ -1,4 +1,20 @@
 
+/*
+  state.get('subtitles') =
+  {
+    availableOptions: {
+      'en-US': {key: 'en-US', url: '...', removed: true},
+      'fr-FR': {key: 'fr-FR', text: '...'},
+    },
+    selectedKey: 'en-US',
+    text: subtitlesText,
+    items: [],
+    currentIndex: 0,
+    loading: false,
+    loadedKey: false,
+  }
+*/
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Alert} from 'react-bootstrap';
@@ -16,15 +32,17 @@ import FileInput from 'react-file-input';
 import update from 'immutability-helper';
 
 import {Button} from '../ui';
-import {formatTime, formatTimeLong} from './utils';
+import {formatTime, formatTimeLong, readFileAsText} from './utils';
 
-function readFileAsText (file) {
-  return new Promise(function (resolve, reject) {
-    const reader = new FileReader();
-    reader.onload = function (event) { resolve(event.target.result); };
-    reader.onerror = function (event) { reject(event.target.error); };
-    reader.readAsText(file, 'utf-8');
-  });
+const langOptions = [
+  {label: 'fr-FR', value: 'fr-FR'},
+  {label: 'en-US', value: 'en-US'}
+];
+
+function SubtitlesMenuSelector (state, props) {
+  const {SubtitlesPopup} = state.get('scope');
+  const getMessage = state.get('getMessage');
+  return {getMessage, Popup: SubtitlesPopup};
 }
 
 class SubtitlesMenu extends React.PureComponent {
@@ -41,6 +59,17 @@ class SubtitlesMenu extends React.PureComponent {
       </Portal>
     );
   }
+}
+
+function SubtitlesPopupSelector (state, props) {
+  const {loadedKey, loading, lastError, availableOptions} = state.get('subtitles');
+  const paneEnabled = state.getIn(['panes', 'subtitles', 'enabled']);
+  const {subtitlesCleared, subtitlesLoadFromUrl, subtitlesPaneEnabledChanged} = state.get('scope');
+  return {
+    availableOptions, loadedKey, busy: !!loading, lastError,
+    subtitlesCleared, subtitlesLoadFromUrl,
+    paneEnabled, subtitlesPaneEnabledChanged,
+  };
 }
 
 class SubtitlesPopup extends React.PureComponent {
@@ -145,9 +174,9 @@ class SubtitlePaneItemEditor extends React.PureComponent {
       <div className='subtitles-item-editor'>
         <div className='subtitles-timestamp row'>
           <div className='col-sm-6'>
-            <span className='pull-left'><Button bsSize='xsmall' disabled={start < 250} onClick={this._onShiftMinus}><i className='fa fa-chevron-left'/></Button></span>
+            <span className='pull-left'><Button bsSize='xsmall' disabled={start < 200} onClick={this._onShiftMinus}><i className='fa fa-chevron-left'/></Button></span>
             <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
-            <span className='pull-right'><Button bsSize='xsmall' disabled={start !== 0 && end - start <= 250} onClick={this._onShiftPlus}><i className='fa fa-chevron-right'/></Button></span>
+            <span className='pull-right'><Button bsSize='xsmall' disabled={start !== 0 && end - start <= 200} onClick={this._onShiftPlus}><i className='fa fa-chevron-right'/></Button></span>
           </div>
           <div className='col-sm-6'>
             <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>
@@ -173,11 +202,20 @@ class SubtitlePaneItemEditor extends React.PureComponent {
     this.props.onRemove(this.props.item, 'up');
   };
   _onShiftMinus = (event) => {
-    this.props.onShift(this.props.item, -250);
+    this.props.onShift(this.props.item, -200);
   };
   _onShiftPlus = (event) => {
-    this.props.onShift(this.props.item, 250);
+    this.props.onShift(this.props.item, 200);
   };
+}
+
+function SubtitlesPaneSelector (state, props) {
+  const {subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved, subtitlesItemShifted} = state.get('scope');
+  const {playerSeek} = state.get('scope');
+  const {items, currentIndex, mode, audioTime} = state.get('subtitles');
+  return {
+    subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved, subtitlesItemShifted,
+    subtitles: items, currentIndex, playerSeek, mode, audioTime};
 }
 
 class SubtitlesPane extends React.PureComponent {
@@ -234,13 +272,25 @@ class SubtitlesPane extends React.PureComponent {
   };
 }
 
+function SubtitlesBandSelector (state, props) {
+  const {items, currentIndex, itemVisible, isMoving, offsetY} = state.get('subtitles');
+  const geometry = state.get('mainViewGeometry');
+  const scope = state.get('scope');
+  return {
+    active: itemVisible, item: items && items[currentIndex], isMoving, offsetY, geometry,
+    beginMove: scope.subtitlesBandBeginMove,
+    endMove: scope.subtitlesBandEndMove,
+    doMove: scope.subtitlesBandMoved,
+  };
+}
+
 class SubtitlesBand extends React.PureComponent {
   render () {
-    const {active, item, offsetY, dataDrag: {isMoving}} = this.props;
+    const {active, item, offsetY, dataDrag: {isMoving}, geometry} = this.props;
     const translation = `translate(0px, ${this.state.currentY}px)`;
     return (
-      <div className={classnames(['subtitles-band', `subtitles-band-${active?'':'in'}active`, isMoving && 'subtitles-band-moving', 'no-select'])}
-        style={{transform: translation}}>
+      <div className={classnames(['subtitles-band', `subtitles-band-${active?'':'in'}active`, isMoving && 'subtitles-band-moving', 'no-select', `mainView-${geometry.size}`])}
+        style={{transform: translation, width: `${geometry.width + 20/*padding*/}px`}}>
         <div className='subtitles-band-frame'>
           {item && <p className='subtitles-text'>{item.text}</p>}
         </div>
@@ -261,10 +311,10 @@ class SubtitlesBand extends React.PureComponent {
   state = {currentY: 0, lastPositionY: 0};
 }
 
-const langOptions = [
-  {label: 'fr-FR', value: 'fr-FR'},
-  {label: 'en-US', value: 'en-US'}
-];
+/*
+ *  Subtitles Editor
+ */
+
 function SubtitlesEditorSelector (state, props) {
   const {subtitlesSelected, subtitlesLoadFromText, subtitlesLoadFromUrl, subtitlesLoadFromFile, subtitlesCleared,
     subtitlesAddOption, subtitlesRemoveOption, subtitlesOptionSaved, subtitlesTextChanged} = state.get('scope');
@@ -403,6 +453,10 @@ class SubtitlesEditorOption extends React.PureComponent {
   };
 }
 
+/*
+ *  reducers
+ */
+
 function initReducer (state) {
   return state.set('subtitles', {}).update('panes', panes => panes.set('subtitles',
     Immutable.Map({
@@ -457,10 +511,6 @@ function subtitlesLoadSucceededReducer (state, {payload: {key, text, items}}) {
     .update('subtitles', subtitles => (
       updateCurrentItem({...subtitles, loadedKey: key, loading: false, text, items})))
     .set('showSubtitlesBand', true);
-}
-
-function subtitlesLoadedSelector (state) {
-  return state.get('subtitles').loadedKey;
 }
 
 function subtitlesSelectedReducer (state, {payload: {option}}) {
@@ -615,6 +665,10 @@ function updateCurrentItem (subtitles, audioTime) {
   return {...subtitles, audioTime, currentIndex, itemVisible};
 }
 
+/*
+ * Sagas
+ */
+
 function getSubtitles (url) {
   return new Promise(function (resolve, reject) {
     var req = request.get(url);
@@ -634,7 +688,56 @@ function subtitlesGetMenu (state) {
   return playerData.subtitles ? state.get('scope').SubtitlesMenu : false;
 }
 
-module.exports = function (bundle, deps) {
+function* subtitlesSaga () {
+  const scope = yield select(state => state.get('scope'));
+  yield takeLatest(scope.subtitlesLoadFromText, subtitlesLoadFromTextSaga);
+  yield takeLatest(scope.subtitlesLoadFromUrl, subtitlesLoadFromUrlSaga);
+  yield takeLatest(scope.subtitlesLoadFromFile, subtitlesLoadFromFileSaga);
+  yield takeLatest(scope.subtitlesReload, subtitlesReloadSaga);
+}
+
+function* subtitlesLoadFromTextSaga ({payload: {key, text}}) {
+  const scope = yield select(state => state.get('scope'));
+  yield put({type: scope.subtitlesLoadStarted, payload: {key}});
+  try {
+    const items = srtParse(text);
+    yield put({type: scope.subtitlesLoadSucceeded, payload: {key, text, items}});
+  } catch (ex) {
+    yield put({type: scope.subtitlesLoadFailed, payload: {error: ex}});
+  }
+}
+
+function* subtitlesLoadFromUrlSaga ({payload: {key, url}}) {
+  const scope = yield select(state => state.get('scope'));
+  yield put({type: scope.subtitlesLoadStarted, payload: {key}});
+  try {
+    const text = yield call(getSubtitles, url);
+    const items = srtParse(text);
+    yield put({type: scope.subtitlesLoadSucceeded, payload: {key, text, items}});
+  } catch (ex) {
+    yield put({type: scope.subtitlesLoadFailed, payload: {error: ex}});
+  }
+}
+
+function* subtitlesLoadFromFileSaga ({payload: {key, file}}) {
+  const scope = yield select(state => state.get('scope'));
+  try {
+    const text = yield call(readFileAsText, file);
+    const items = srtParse(text);
+    yield put({type: scope.subtitlesLoadSucceeded, payload: {key, text, items}});
+  } catch (ex) {
+    yield put({type: scope.subtitlesLoadFailed, payload: {error: ex}});
+  }
+}
+
+function* subtitlesReloadSaga (_action) {
+  const scope = yield select(state => state.get('scope'));
+  const {loadedKey: key, text} = yield select(state => state.get('subtitles'));
+  const items = srtParse(text);
+  yield put({type: scope.subtitlesLoadSucceeded, payload: {key, text, items}});
+}
+
+module.exports = function (bundle) {
 
   bundle.use('getPlayerState', 'playerSeek');
   bundle.addReducer('init', initReducer);
@@ -660,7 +763,6 @@ module.exports = function (bundle, deps) {
   bundle.addReducer('subtitlesLoadFailed', subtitlesLoadFailedReducer);
   bundle.defineAction('subtitlesLoadFromText', 'Subtitles.LoadFromText');
   bundle.defineAction('subtitlesLoadFromUrl', 'Subtitles.LoadFromUrl');
-  bundle.defineSelector('subtitlesLoadedSelector', subtitlesLoadedSelector);
   bundle.defineAction('subtitlesLoadFromFile', 'Subtitles.LoadFromFile');
   bundle.defineAction('subtitlesReload', 'Subtitles.Reload');
 
@@ -703,85 +805,5 @@ module.exports = function (bundle, deps) {
   bundle.addReducer('subtitlesSave', subtitlesSaveReducer);
 
   bundle.addSaga(subtitlesSaga);
-
-  function SubtitlesMenuSelector (state, props) {
-    const getMessage = state.get('getMessage');
-    return {getMessage, Popup: deps.SubtitlesPopup};
-  }
-
-  function SubtitlesPopupSelector (state, props) {
-    const {loadedKey, loading, lastError, availableOptions} = state.get('subtitles');
-    const paneEnabled = state.getIn(['panes', 'subtitles', 'enabled']);
-    const {subtitlesCleared, subtitlesLoadFromUrl, subtitlesPaneEnabledChanged} = deps;
-    return {
-      availableOptions, loadedKey, busy: !!loading, lastError,
-      subtitlesCleared, subtitlesLoadFromUrl,
-      paneEnabled, subtitlesPaneEnabledChanged,
-    };
-  }
-
-  function SubtitlesPaneSelector (state, props) {
-    const {subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved, subtitlesItemShifted} = state.get('scope');
-    const {playerSeek} = deps;
-    const {items, currentIndex, mode, audioTime} = state.get('subtitles');
-    return {
-      subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved, subtitlesItemShifted,
-      subtitles: items, currentIndex, playerSeek, mode, audioTime};
-  }
-
-  function SubtitlesBandSelector (state, props) {
-    const {items, currentIndex, itemVisible, isMoving, offsetY} = state.get('subtitles');
-    if (!items) return {};
-    return {
-      active: itemVisible, item: items[currentIndex], isMoving, offsetY,
-      beginMove: deps.subtitlesBandBeginMove,
-      endMove: deps.subtitlesBandEndMove,
-      doMove: deps.subtitlesBandMoved,
-    };
-  }
-
-  function* subtitlesSaga () {
-    yield takeLatest(deps.subtitlesLoadFromText, subtitlesLoadFromTextSaga);
-    yield takeLatest(deps.subtitlesLoadFromUrl, subtitlesLoadFromUrlSaga);
-    yield takeLatest(deps.subtitlesLoadFromFile, subtitlesLoadFromFileSaga);
-    yield takeLatest(deps.subtitlesReload, subtitlesReloadSaga);
-  }
-
-  function* subtitlesLoadFromTextSaga ({payload: {key, text}}) {
-    yield put({type: deps.subtitlesLoadStarted, payload: {key}});
-    try {
-      const items = srtParse(text);
-      yield put({type: deps.subtitlesLoadSucceeded, payload: {key, text, items}});
-    } catch (ex) {
-      yield put({type: deps.subtitlesLoadFailed, payload: {error: ex}});
-    }
-  }
-
-  function* subtitlesLoadFromUrlSaga ({payload: {key, url}}) {
-    yield put({type: deps.subtitlesLoadStarted, payload: {key}});
-    try {
-      const text = yield call(getSubtitles, url);
-      const items = srtParse(text);
-      yield put({type: deps.subtitlesLoadSucceeded, payload: {key, text, items}});
-    } catch (ex) {
-      yield put({type: deps.subtitlesLoadFailed, payload: {error: ex}});
-    }
-  }
-
-  function* subtitlesLoadFromFileSaga ({payload: {key, file}}) {
-    try {
-      const text = yield call(readFileAsText, file);
-      const items = srtParse(text);
-      yield put({type: deps.subtitlesLoadSucceeded, payload: {key, text, items}});
-    } catch (ex) {
-      yield put({type: deps.subtitlesLoadFailed, payload: {error: ex}});
-    }
-  }
-
-  function* subtitlesReloadSaga (_action) {
-    const {loadedKey: key, text} = yield select(state => state.get('subtitles'));
-    const items = srtParse(text);
-    yield put({type: deps.subtitlesLoadSucceeded, payload: {key, text, items}});
-  }
 
 };

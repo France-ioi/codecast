@@ -1,6 +1,15 @@
 
 import request from 'superagent';
 
+export function readFileAsText (file) {
+  return new Promise(function (resolve, reject) {
+    const reader = new FileReader();
+    reader.onload = function (event) { resolve(event.target.result); };
+    reader.onerror = function (event) { reject(event.target.error); };
+    reader.readAsText(file, 'utf-8');
+  });
+};
+
 export function getJson (path) {
   return new Promise(function (resolve, reject) {
     var req = request.get(path);
@@ -9,9 +18,19 @@ export function getJson (path) {
       if (err) {
         reject({err, res});
       } else {
-        resolve(res.body);
+        resolve(res.body || JSON.parse(res.text));
       }
     });
+  });
+};
+
+export function postJson (url, data) {
+  return new Promise(function (resolve, reject) {
+    request.post(url)
+      .send(data)
+      .set('Accept', 'application/json')
+      .catch(reject)
+      .then(res => resolve(res.body));
   });
 };
 
