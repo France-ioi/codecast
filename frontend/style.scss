@@ -99,9 +99,7 @@ body#app, #app h1, #app h2, #app h3 {
   margin: 10px 0 0;
 }
 
-#app tt, #app pre, #app .ace_editor, .terminal, .stack-view {
-  font-size: $font-size-lg;
-  line-height: $line-height-lg;
+#app tt, #app pre, .ace_editor, .terminal, .stack-view {
   font-weight: normal;
   font-family: $font-family-monospace;
 }
@@ -386,8 +384,15 @@ span + .value-previous {
   background-color: #abe2fb;
 }
 
-.size-md {
-  #app pre, #app .ace_editor, .terminal, .stack-view {
+.mainView-lg {
+  pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
+    font-size: $font-size-lg;
+    line-height: $line-height-lg;
+  }
+}
+
+.mainView-md {
+  pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-md;
     line-height: $line-height-md;
   }
@@ -399,8 +404,8 @@ span + .value-previous {
   }
 }
 
-.size-sm {
-  #app pre, #app .ace_editor, .terminal, .stack-view {
+.mainView-sm {
+  pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-sm;
     line-height: $line-height-sm;
   }
