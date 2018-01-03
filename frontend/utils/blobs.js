@@ -10,7 +10,7 @@ export function getBlob (url) {
     xhr.open('GET', url);
     xhr.send();
   });
-}
+};
 
 export function uploadBlob (upload, blob) {
   return new Promise(function (resolve, reject) {
@@ -26,4 +26,4 @@ export function uploadBlob (upload, blob) {
         resolve(response);
       });
   });
-}
+};
