@@ -36,6 +36,9 @@ export default function (bundle, deps) {
   bundle.defineAction('editorSave', 'Editor.Save');
   bundle.defineAction('editorSaveFailed', 'Editor.Save.Failed');
   bundle.defineAction('editorSaveSucceeded', 'Editor.Save.Succeeded');
+  bundle.addReducer('editorSave', editorSaveReducer);
+  bundle.addReducer('editorSaveFailed', editorSaveFailedReducer);
+  bundle.addReducer('editorSaveSucceeded', editorSaveSucceededReducer);
 
   bundle.defineView('EditorApp', EditorAppSelector, EditorApp);
   bundle.defineView('EditorGlobalControls', EditorGlobalControlsSelector, EditorGlobalControls);
@@ -47,7 +50,7 @@ export default function (bundle, deps) {
 };
 
 function editorPrepareReducer (state, {payload: {baseDataUrl}}) {
-  return state.set('editor', Immutable.Map({dataUrl: baseDataUrl}));
+  return state.set('editor', Immutable.Map({dataUrl: baseDataUrl, notify: {}}));
 }
 
 function editorDataUrlChangedReducer (state, {payload: {dataUrl}}) {
@@ -140,11 +143,24 @@ function* editorSaveSaga (_action) {
   try {
     const result = yield call(postJson, `${baseUrl}/save`, {base, data});
     // TODO: pass new base as payload, when copying
-    yield put({type: editorSaveSucceeded, payload: {}});
+    const timestamp = new Date();
+    yield put({type: editorSaveSucceeded, payload: {timestamp}});
   } catch (ex) {
     console.log('error', ex);
     yield put({type: editorSaveFailed, payload: {error: ex.toString()}});
   }
+}
+
+function editorSaveReducer (state, action) {
+  return state.setIn(['editor', 'notify'], {key: 'pending'});
+}
+
+function editorSaveFailedReducer (state, action) {
+  return state.setIn(['editor', 'notify'], {key: 'failure', message: error.toString()});
+}
+
+function editorSaveSucceededReducer (state, {payload: {error}}) {
+  return state.setIn(['editor', 'notify'], {key: 'success'});
 }
 
 function EditorAppSelector (state, props) {
@@ -271,13 +287,14 @@ function SetupScreenSelector (state, props) {
   const {editorBeginEdit, editorSave, SubtitlesEditor} = state.get('scope');
   const editor = state.get('editor');
   const dataUrl = editor.get('dataUrl');
-  const {version} = editor.get('data')
-  return {editorBeginEdit, editorSave, SubtitlesEditor, dataUrl, version};
+  const {version} = editor.get('data');
+  const notify = editor.get('notify');
+  return {editorBeginEdit, editorSave, SubtitlesEditor, dataUrl, version, notify};
 }
 
 class SetupScreen extends React.PureComponent {
   render () {
-    const {dataUrl, version, SubtitlesEditor} = this.props;
+    const {dataUrl, version, SubtitlesEditor, notify} = this.props;
     return (
       <div className='container'>
         <h2>{"Codecast"}</h2>
@@ -294,7 +311,11 @@ class SetupScreen extends React.PureComponent {
             </Button>
           </span>
           <Button onClick={this._save}>
-            <i className='fa fa-cloud-upload'/>{" Save"}
+            <i className='fa fa-cloud-upload'/>
+            {" Save "}
+            {notify.key === 'pending' && <i className='fa fa-spinner fa-spin'/>}
+            {notify.key === 'success' && <i className='fa fa-check' style={{color: 'green'}}/>}
+            {notify.key === 'failure' && <i className='fa fa-exclamation-triangle' style={{color: 'red'}}/>}
           </Button>
         </div>
       </div>
