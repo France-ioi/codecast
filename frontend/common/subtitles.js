@@ -29,6 +29,7 @@ import request from 'superagent';
 import Immutable from 'immutable';
 import FileInput from 'react-file-input';
 import update from 'immutability-helper';
+import Highlight from 'react-highlighter';
 
 import {Button} from '../ui';
 import {formatTime, formatTimeLong, readFileAsText} from './utils';
@@ -127,13 +128,17 @@ class SubtitlesOption extends React.PureComponent {
   };
 }
 
+/* SubtitlePaneItem is used in the *player* to show an item in the subtitles pane. */
 class SubtitlePaneItem extends React.PureComponent {
   render() {
-    const {item: {text, start, end}, selected} = this.props;
+    const {item: {text, start, end}, selected, highlight} = this.props;
+    const showTimestamps = false;
     return (
       <p className={classnames(['subtitles-item', selected && 'subtitles-item-selected'])} onClick={this._onClick}>
-        <span className='subtitles-timestamp'>{formatTime(start)}</span>
-        <span className='subtitles-text'>{text}</span>
+        {showTimestamps && <span className='subtitles-timestamp'>{formatTime(start)}</span>}
+        <span className='subtitles-text'>
+          <Highlight search={highlight||''}>{text}</Highlight>
+        </span>
       </p>
     );
   }
@@ -142,6 +147,7 @@ class SubtitlePaneItem extends React.PureComponent {
   };
 }
 
+/* SubtitlePaneItemViewer is used in the *editor* to show an inactive item in the subtitles pane. */
 class SubtitlePaneItemViewer extends React.PureComponent {
   render() {
     const {item: {text, start, end}} = this.props;
@@ -166,6 +172,7 @@ class SubtitlePaneItemViewer extends React.PureComponent {
   };
 }
 
+/* SubtitlePaneItemViewer is used in the *editor* to show the selected, editable item in the subtitles pane. */
 class SubtitlePaneItemEditor extends React.PureComponent {
   render() {
     const {item: {text, start, end}, offset, audioTime} = this.props;
@@ -209,25 +216,31 @@ class SubtitlePaneItemEditor extends React.PureComponent {
 }
 
 function SubtitlesPaneSelector (state, props) {
-  const {subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved, subtitlesItemShifted} = state.get('scope');
+  const {subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved,
+    subtitlesItemShifted, subtitlesFilterTextChanged} = state.get('scope');
   const {playerSeek} = state.get('scope');
-  const {items, currentIndex, mode, audioTime} = state.get('subtitles');
+  const {items, filteredItems, currentIndex, mode, audioTime, filterText, filterRegexp} = state.get('subtitles');
   return {
-    subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved, subtitlesItemShifted,
-    subtitles: items, currentIndex, playerSeek, mode, audioTime};
+    subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved,
+    subtitlesItemShifted, subtitlesFilterTextChanged,
+    subtitles: mode === 'editor' ? items : filteredItems,
+    currentIndex, playerSeek, mode, audioTime, filterText, filterRegexp};
 }
 
+/* SubtitlesPane is used in both *player* and *editor* mode. */
 class SubtitlesPane extends React.PureComponent {
   render () {
-    const {subtitles, currentIndex, mode, audioTime} = this.props;
+    const {subtitles, currentIndex, mode, audioTime, filterText, filterRegexp} = this.props;
     return (
       <div className='subtitles-pane'>
+        {mode !== 'editor' &&
+          <input type='text' onChange={this._filterTextChanged} value={filterText} />}
         {subtitles && subtitles.length > 0
           ? subtitles.map((st, index) => {
               const selected = currentIndex === index;
               if (mode !== 'editor') {
                 const ref = selected && this._refSelected;
-                return <SubtitlePaneItem key={index} item={st} ref={ref} selected={selected} mode={mode} onJump={this._jump}/>;
+                return <SubtitlePaneItem key={index} item={st} ref={ref} selected={selected} mode={mode} onJump={this._jump} highlight={filterRegexp} />;
               }
               if (selected) {
                 return <SubtitlePaneItemEditor key={index} item={st} ref={this._refSelected} offset={audioTime - st.start} audioTime={audioTime}
@@ -268,6 +281,10 @@ class SubtitlesPane extends React.PureComponent {
   _shiftItem = (item, amount) => {
     const index = this.props.subtitles.indexOf(item);
     this.props.dispatch({type: this.props.subtitlesItemShifted, payload: {index, amount}});
+  };
+  _filterTextChanged = (event) => {
+    const text = event.target.value;
+    this.props.dispatch({type: this.props.subtitlesFilterTextChanged, payload: {text}});
   };
 }
 
@@ -411,12 +428,14 @@ class SubtitlesEditorOption extends React.PureComponent {
  */
 
 function initReducer (state) {
-  return state.set('subtitles', {}).update('panes', panes => panes.set('subtitles',
-    Immutable.Map({
-      View: state.get('scope').SubtitlesPane,
-      enabled: false,
-      width: 200
-    })));
+  return state
+    .set('subtitles', {filterText: '', filterRegexp: null})
+    .setIn(['panes', 'subtitles'],
+      Immutable.Map({
+        View: state.get('scope').SubtitlesPane,
+        enabled: false,
+        width: 200,
+      }));
 }
 
 function subtitlesModeSetReducer (state, {payload: {mode}}) {
@@ -433,6 +452,31 @@ function subtitlesPaneEnabledChangedReducer (state, {payload: {value}}) {
   return state.setIn(['panes', 'subtitles', 'enabled'], value);
 }
 
+function subtitlesFilterTextChangedReducer (state, {payload: {text}}) {
+  return state.update('subtitles', function (subtitles) {
+    let re = null;
+    if (text) {
+      try {
+        re = new RegExp(text, 'i');
+      } catch (ex) {
+        /* silently ignore error, keep last regexp */
+        re = subtitles.filterRegexp;
+      }
+    }
+    return {
+      ...subtitles,
+      filterText: text,
+      filterRegexp: re,
+      filteredItems: filterItems(subtitles.items, re)
+    };
+  });
+}
+
+function filterItems (items, re) {
+  if (!re) return items;
+  return items.filter(item => -1 !== item.text.search(re));
+}
+
 function playerReadyReducer (state, {baseDataUrl, data}) {
   const availableOptions = {};
   (data.subtitles||[]).forEach(function (key) {
@@ -443,6 +487,7 @@ function playerReadyReducer (state, {baseDataUrl, data}) {
     {...subtitles,
       availableOptions,
       items: [],
+      filteredItems: [],
       currentIndex: 0,
       loadedKey: false
     }));
@@ -450,7 +495,7 @@ function playerReadyReducer (state, {baseDataUrl, data}) {
 
 function subtitlesClearedReducer (state, _action) {
   return state.update('subtitles', subtitles => (
-    {...subtitles, text: '', items: [], currentIndex: 0, loadedKey: false}))
+    {...subtitles, text: '', items: [], filteredItems: [], currentIndex: 0, loadedKey: false}))
     .set('showSubtitlesBand', false);
 }
 
@@ -462,7 +507,10 @@ function subtitlesLoadStartedReducer (state, {payload: {key}}) {
 function subtitlesLoadSucceededReducer (state, {payload: {key, text, items}}) {
   return state
     .update('subtitles', subtitles => (
-      updateCurrentItem({...subtitles, loadedKey: key, loading: false, text, items})))
+      updateCurrentItem({
+        ...subtitles, loadedKey: key, loading: false, text, items,
+        filteredItems: filterItems(items, subtitles.filterRegexp)
+      })))
     .set('showSubtitlesBand', true);
 }
 
@@ -529,6 +577,7 @@ function subtitlesBandMovedReducer (state, {payload: {y}}) {
 }
 
 function subtitlesItemChangedReducer (state, {payload: {index, text}}) {
+  /* Used only in the editor, filteredItems is not updated. */
   return state.update('subtitles', function (subtitles) {
     return update(subtitles, {items: {[index]: {text: {$set: text}}}})
   });
@@ -713,6 +762,8 @@ module.exports = function (bundle) {
   bundle.defineView('SubtitlesPane', SubtitlesPaneSelector, SubtitlesPane);
   bundle.defineAction('subtitlesPaneEnabledChanged', 'Subtitles.Pane.EnabledChanged');
   bundle.addReducer('subtitlesPaneEnabledChanged', subtitlesPaneEnabledChangedReducer);
+  bundle.defineAction('subtitlesFilterTextChanged', 'Subtitles.Pane.FilterText.Changed');
+  bundle.addReducer('subtitlesFilterTextChanged', subtitlesFilterTextChangedReducer);
 
   bundle.defineValue('subtitlesGetMenu', subtitlesGetMenu);
   bundle.defineView('SubtitlesMenu', SubtitlesMenuSelector, SubtitlesMenu);
