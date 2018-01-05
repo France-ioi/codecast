@@ -7,7 +7,7 @@ import bodyParser from 'body-parser';
 import {spawn} from 'child_process';
 import AnsiToHtml from 'ansi-to-html';
 
-import upload from './upload';
+import * as upload from './upload';
 import directives from './directives';
 import Arduino from './arduino';
 import oauth from './oauth';
