@@ -9,6 +9,9 @@
     selectedKey: 'en-US',
     items: [],
     currentIndex: 0,
+    filteredItems: [],
+    filterText: '',
+    filterRegexp: null,
     loading: false,
     loadedKey: false,
   }
@@ -33,6 +36,7 @@ import Highlight from 'react-highlighter';
 
 import {Button} from '../ui';
 import {formatTime, formatTimeLong, readFileAsText} from './utils';
+import FlagIcon from './flag_icon';
 
 const langOptions = [
   {label: 'fr-FR', value: 'fr-FR'},
@@ -121,7 +125,15 @@ class SubtitlesPopup extends React.PureComponent {
 class SubtitlesOption extends React.PureComponent {
   render () {
     const {option, loaded} = this.props;
-    return <Button onClick={this._clicked} active={loaded}>{option.key}</Button>;
+    const countryCode = (/-([A-Z]{2})$/.exec(option.key)[1]||'').toLowerCase();
+    return (
+      <div>
+        <Button onClick={this._clicked} active={loaded}>
+          <FlagIcon code={countryCode}/>
+          {option.key}
+        </Button>
+      </div>
+    );
   }
   _clicked = () => {
     this.props.onSelect(this.props.option);
