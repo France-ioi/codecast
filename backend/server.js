@@ -19,6 +19,9 @@ function buildApp (config, store, callback) {
 
   const app = express();
 
+  /* Enable strict routing to make trailing slashes matter. */
+  app.enable('strict routing');
+
   // Default implementations
   config.initHook = function (req, init, callback) {
     callback(null, init);
