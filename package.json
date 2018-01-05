@@ -15,23 +15,25 @@
     "url": "https://github.com/France-ioi/fioi-editor2/issues"
   },
   "scripts": {
-    "start": "nodemon --watch backend --exec babel-node backend/server.js",
+    "start": "nodemon --watch backend --exec npx --no-install babel-node -- backend/server.js",
     "build": "NODE_ENV=production webpack --progress --colors --display-modules"
   },
   "dependencies": {
+    "@babel/core": "^7.0.0-beta.36",
+    "@babel/node": "^7.0.0-beta.36",
+    "@babel/plugin-proposal-class-properties": "^7.0.0-beta.36",
+    "@babel/plugin-proposal-object-rest-spread": "^7.0.0-beta.36",
+    "@babel/plugin-transform-runtime": "^7.0.0-beta.36",
+    "@babel/preset-env": "^7.0.0-beta.36",
+    "@babel/preset-react": "^7.0.0-beta.36",
+    "@babel/runtime": "^7.0.0-beta.36",
     "@tyriar/fibonacci-heap": "^1.0.10",
     "adt": "^0.7.2",
     "ansi-to-html": "^0.4.1",
     "array.prototype.fill": "^1.0.2",
     "aws-sdk": "^2.174.0",
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.23.1",
-    "babel-loader": "^6.3.2",
-    "babel-plugin-transform-object-rest-spread": "^6.23.0",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-es2015": "^6.22.0",
-    "babel-preset-react": "^6.23.0",
-    "babel-preset-stage-2": "^6.24.1",
+    "babel-cli": "^7.0.0-beta.3",
+    "babel-loader": "8.0.0-beta.0",
     "bennu": "^17.3.0",
     "body-parser": "^1.15.0",
     "bootstrap-sass": "^3.3.7",
@@ -68,6 +70,7 @@
     "react": "^15.4.2",
     "react-bootstrap": "^0.30.7",
     "react-clickdrag": "^3.0.2",
+    "react-css-modules": "^4.7.1",
     "react-dom": "^15.4.2",
     "react-file-input": "^0.2.5",
     "react-highlighter": "^0.4.2",
@@ -90,12 +93,9 @@
     "superagent": "^3.4.4",
     "text-encoding-utf-8": "^1.0.1",
     "url-loader": "^0.5.7",
-    "webpack": "^2.2.1",
+    "webpack": "^3.0.0",
     "webpack-dev-middleware": "^1.10.0",
-    "worker-loader": "^0.8.0"
+    "worker-loader": "^1.1.0"
   },
-  "false": {},
-  "devDependencies": {
-    "babel-plugin-transform-class-properties": "^6.24.1"
-  }
+  "false": {}
 }

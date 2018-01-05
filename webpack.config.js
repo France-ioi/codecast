@@ -3,6 +3,7 @@ const path = require('path');
 const webpack = require('webpack');
 const SRC = path.resolve(__dirname, "frontend");
 
+const isDev = process.env.NODE_ENV !== 'production';
 const jsonConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const publicPath = path.join(jsonConfig.mountPath, 'build/');
 
@@ -26,22 +27,37 @@ const config = module.exports = {
       },
       {
         test: /\.css$/,
-        use: [
-          {loader: 'style-loader'},
-          {loader: 'css-loader'}
+        oneOf: [
+          {
+            resourceQuery: /^\?global$/,
+            use: [
+              {loader: 'style-loader', options: {sourceMap: isDev}},
+              {loader: 'css-loader', options: {modules: false}},
+            ]
+          },
+          {
+            use: [
+              {loader: 'style-loader', options: {sourceMap: isDev}},
+              {loader: 'css-loader', options: {
+                modules: true,
+                importLoaders: 1,
+                localIdentName: '[name]__[local]___[hash:base64:5]'
+              }},
+            ]
+          }
         ]
       },
       {
         test: /\.scss$/,
         use: [
-          {loader: 'style-loader'},
+          {loader: 'style-loader', options: {sourceMap: isDev}},
           {loader: 'css-loader'},
           {loader: 'resolve-url-loader'},
-          {loader: 'sass-loader', options: {sourceMap: true, precision: 8}}
+          {loader: 'sass-loader', options: {sourceMap: isDev, precision: 8}}
         ]
       },
       {
-        test: /\.(eot|svg|ttf|woff(2)?)(\?v=\d+\.\d+\.\d+)?/,
+        test: /\.(eot|ttf|woff(2)?)(\?v=\d+\.\d+\.\d+)?/,
         use: [
           {loader: 'file-loader', options: {publicPath, name: 'fonts/[name].[ext]'}}
         ]
@@ -81,7 +97,7 @@ const config = module.exports = {
   ]
 };
 
-if (process.env.NODE_ENV !== 'production') {
+if (isDev) {
   // config.devtool = 'eval';
   // config.devtool = inline-source-map;
   config.devtool = 'inline-source-map';
