@@ -667,12 +667,18 @@ svg {
   max-width: 800px;
   max-height: 80%;
   background: #fff;
-  min-width: 400px;
+  min-width: 300px;
   min-height: 200px;
   margin: 20px auto 0 auto;
   box-shadow: 5px 5px 10px 0px #000;
   text-align: left;
   padding: 10px;
+
+  .menu-popup-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 1.2em;
+  }
 }
 
 /* subtitles */
@@ -786,7 +792,27 @@ svg {
 .subtitles-band p {
   margin: 0;
 }
-
+.subtitleOptions {
+  border: 1px solid #efefef;
+  margin-top: 10px;
+  & > .btn {
+    width: 80px;
+    margin: 3px 0 3px 59px;/* left = icon witdh + div padding & margin to align button with language selector buttons */
+  }
+  .subtitleOption {
+    padding: 3px 20px;
+  }
+  .subtitleOption:nth-child(even) {
+    background-color: #efefef;
+  }
+  .subtitleOption .btn {
+    width: 80px;
+    margin-left: 20px;
+  }
+  .subtitleOption .btn + .btn {
+    width: auto;
+  }
+}
 .main-view .pane {
   overflow: hidden;
 }

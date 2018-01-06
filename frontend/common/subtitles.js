@@ -82,22 +82,23 @@ class SubtitlesPopup extends React.PureComponent {
     const availKeys = Object.keys(availableOptions).sort();
     return (
       <div className='menu-popup' onClick={this._close}>
-        <div className='menu-popup-inset' onClick={this._stopPropagation}>
+        <div className='menu-popup-inset' onClick={this._stopPropagation} style={{width:'350px'}}>
           <div className='pull-right'>
             {busy && <i className='fa fa-spinner fa-spin'/>}
             <Button onClick={this._close}>
               <i className='fa fa-times'/>
             </Button>
           </div>
-          <ul>
-            <Button onClick={this._clearSubtitles} active={!loadedKey}>{"off"}</Button>
+          <div className='menu-popup-title'>{"Subtitles "}</div>
+          <div onClick={this._changePaneEnabled} style={{cursor: 'pointer'}}>
+            {paneEnabled ? '☑' : '☐'}{" show pane"}
+          </div>
+          <div className='subtitleOptions' style={{maxHeight:'240px', overflow:'auto'}}>
+            <Button onClick={this._clearSubtitles} active={!loadedKey} bsSize={'sm'}>{"off"}</Button>
             {availKeys.map(key =>
               <SubtitlesOption key={key} option={availableOptions[key]} loaded={key === loadedKey} onSelect={this._selectSubtitles} />)}
-          </ul>
+          </div>
           {lastError && <Alert bsStyle='danger'>{lastError}</Alert>}
-          <p onClick={this._changePaneEnabled} style={{cursor: 'pointer'}}>
-            {paneEnabled ? '☑' : '☐'}{" show pane"}
-          </p>
         </div>
       </div>
     );
@@ -127,11 +128,12 @@ class SubtitlesOption extends React.PureComponent {
     const {option, loaded} = this.props;
     const countryCode = (/-([A-Z]{2})$/.exec(option.key)[1]||'').toLowerCase();
     return (
-      <div>
-        <Button onClick={this._clicked} active={loaded}>
-          <FlagIcon code={countryCode}/>
+      <div className='subtitleOption'>
+        <FlagIcon code={countryCode}/>
+        <Button onClick={this._clicked} active={loaded} bsSize={'sm'}>
           {option.key}
         </Button>
+        <Button bsSize={'sm'}><i className='fa fa-download'/></Button>
       </div>
     );
   }
