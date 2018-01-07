@@ -133,7 +133,9 @@ class SubtitlesOption extends React.PureComponent {
         <Button onClick={this._clicked} active={loaded} bsSize={'sm'}>
           {option.key}
         </Button>
-        <Button bsSize={'sm'}><i className='fa fa-download'/></Button>
+        <a href={option.url} className='btn btn-default btn-sm' target='_blank' download>
+          <i className='fa fa-download'/>
+        </a>
       </div>
     );
   }
