@@ -76,8 +76,9 @@ module.exports = function (app, config, callback) {
 
   function getUser (identity) {
     if (!identity) return false;
-    const {idUser, sLogin} = identity;
-    return {id: idUser, login: sLogin};
+    console.log('getUser', JSON.stringify(identity));
+    const {id, login} = identity;
+    return {id, login};
   }
 
   config.initHook = function (req, init, callback) {
