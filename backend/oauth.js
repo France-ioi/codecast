@@ -41,6 +41,7 @@ module.exports = function (app, config, callback) {
         // Query identity provider with token.
         request(token.sign({method: 'GET', url: authConfig.identityProviderUri}), function (err, response, body) {
           if (err) return res.render('after_login', {error: err.toString()});
+          if (response.statusCode != 200) return res.status(response.statusCode).send(body);
           req.session.identity = JSON.parse(body);
           const user = getUser(req.session.identity);
           res.render('after_login', {user});
