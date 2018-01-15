@@ -315,17 +315,6 @@ span + .value-previous {
   z-index: 20;
 }
 
-.pane-controls p {
-  margin: 7px 0;
-}
-.pane-controls .btn {
-  border: 0;
-  border-radius: 0;
-}
-.pane-controls-right {
-  float: right;
-}
-
 .controls > * {
   display: inline-block;
 }
@@ -411,13 +400,6 @@ span + .value-previous {
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 6px;
-  }
-  .pane-controls button.btn {
-    padding: 3px 8px;
-  }
-  .pane-controls p {
-    font-size: 12px;
-    margin: 5px 5px;
   }
   .controls-main {
     height: 27px;
