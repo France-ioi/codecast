@@ -52,11 +52,8 @@ export default function (bundle, deps) {
     render () {
       const {getMessage, canRecord, canPlay, canPause, canStop, canStep, isPlayback, playPause, position, duration} = this.props;
       return (
-        <div className="pane pane-controls clearfix">
-          <div className="pane-controls-right">
-            <deps.Menu/>
-          </div>
-          <div className="controls controls-main">
+        <div className="row" style={{marginTop: '3px'}}>
+          <div className="controls controls-main col-sm-3">
             <ButtonGroup>
               <Button onClick={this.onStartRecording} className="float-left" disabled={!canRecord}
                 title={getMessage('START_RECORDING')}>
@@ -82,7 +79,7 @@ export default function (bundle, deps) {
                   {' / '}
                   {timeFormatter(duration)}
                 </p>
-              : <p>
+              : <p style={{paddingLeft: '10px'}}>
                   <i className="fa fa-clock-o"/>
                   {' '}
                   {timeFormatter(position)}
@@ -92,7 +89,12 @@ export default function (bundle, deps) {
                 value={position} min={0} max={duration} onChange={this.onSeek}>
               </Slider>}
           </div>
-          <deps.StepperControls enabled={canStep}/>
+          <div className="col-sm-7 text-center">
+            <deps.StepperControls enabled={canStep}/>
+          </div>
+          <div className="col-sm-2 text-right">
+            <deps.Menu/>
+          </div>
         </div>
       );
     }

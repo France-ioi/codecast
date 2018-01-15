@@ -24,11 +24,7 @@ export default function (bundle, deps) {
       }
       return (
         <div>
-          <div className="row">
-            <div className="col-sm-12">
-              <deps.RecorderControls/>
-            </div>
-          </div>
+          <deps.RecorderControls/>
           <deps.MainView/>
         </div>
       );
