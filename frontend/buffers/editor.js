@@ -117,6 +117,13 @@ export const Editor = EpicComponent(self => {
     });
   };
 
+  const changeMode = function(mode)
+  {
+        wrapModelToEditor(function () {
+          editor.session.setMode(`ace/mode/${mode}`);
+        });
+  };
+
   const applyDeltas = function (deltas) {
     wrapModelToEditor(function () {
       editor.session.doc.applyDeltas(deltas);
@@ -182,7 +189,7 @@ export const Editor = EpicComponent(self => {
     editor.setReadOnly(self.props.readOnly);
     const {onInit, onSelect, onEdit, onScroll} = self.props;
     if (typeof onInit === 'function') {
-      const api = {reset, applyDeltas, setSelection, focus, scrollToLine, getSelectionRange, highlight};
+      const api = {reset, changeMode, applyDeltas, setSelection, focus, scrollToLine, getSelectionRange, highlight};
       onInit(api);
     }
     if (typeof onSelect === 'function') {

@@ -34,6 +34,10 @@ import EpicComponent from 'epic-component';
 
 import 'brace';
 import 'brace/mode/c_cpp';
+import 'brace/mode/python';
+import 'brace/mode/java';
+
+
 import 'brace/theme/textmate';
 import 'brace/worker/javascript';
 import '../arduino/ace';
@@ -61,6 +65,8 @@ export default function (bundle, deps) {
   bundle.defineAction('bufferModelSelect', 'Buffer.Model.Select');
   bundle.defineAction('bufferModelScroll', 'Buffer.Model.Scroll');
   bundle.defineAction('bufferHighlight', 'Buffer.Highlight');
+  bundle.defineAction('bufferChangeMode', 'Buffer.ChangeMode');
+
 
   bundle.defineSelector('getBufferModel', function (state, buffer) {
     return state.getIn(['buffers', buffer, 'model']);
@@ -115,6 +121,7 @@ export default function (bundle, deps) {
     return state.setIn(['buffers', buffer, 'model', 'firstVisibleRow'], firstVisibleRow);
   }
 
+
   bundle.addSaga(function* watchBuffers () {
     yield takeEvery(deps.bufferInit, function* (action) {
       const {buffer, editor} = action;
@@ -158,6 +165,13 @@ export default function (bundle, deps) {
       const editor = yield select(getBufferEditor, buffer);
       if (editor) {
         editor.highlight(range);
+      }
+    });
+    yield takeEvery(deps.bufferChangeMode, function* (action) {
+      const {buffer, mode} = action;
+      const editor = yield select(getBufferEditor, buffer);
+      if (editor) {
+        editor.changeMode(mode);
       }
     });
   });
