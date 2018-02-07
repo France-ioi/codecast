@@ -148,7 +148,7 @@ export default function (bundle, deps) {
           <div className="row">
             <div className="col-sm-12">
               {buffer
-                ? <PureTerminal buffer={terminal} onInit={onTermInit} onKeyPress={onTermChar} onBackspace={onTermBS} onEnter={onTermEnter} />
+                ? <PureTerminal buffer={buffer} onInit={onTermInit} onKeyPress={onTermChar} onBackspace={onTermBS} onEnter={onTermEnter} />
                 : <p>{"no buffer"}</p>}
             </div>
           </div>
