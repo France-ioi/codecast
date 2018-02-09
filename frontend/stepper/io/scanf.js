@@ -282,7 +282,7 @@ export function* scanfBuiltin (context, fmtRef, ...args) {
         value = C.stringValue(rawValue);
       } else if (/double|float/.test(type)) {
         value = new C.FloatingValue(C.builtinTypes[type], rawValue);
-      } else if (/\<int$/.test(type)) {
+      } else if (/int$/.test(type)) {
         value = new C.IntegralValue(C.builtinTypes[type], rawValue);
       } else {
         throw new Error(`unhandled value type ${type}`);
