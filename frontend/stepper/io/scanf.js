@@ -25,6 +25,9 @@ const fp_placeholder =
   P.choice(
     P.bind(PT.oneOf('dxoiufcs%'), type => {
       width = width.length > 0 ? parseInt(width) : false;
+      if (type === '%') {
+        return P.always({kind: 'l', chars: '%'});
+      }
       return P.always({kind: 'p', noStore, width, size, type})}),
     P.next(PT.character('['),
       P.bind(P.optional(false, P.next(PT.character('^'), P.always(true))), negated =>
