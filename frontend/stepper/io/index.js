@@ -310,7 +310,8 @@ export default function (bundle, deps) {
           }
         }];
         /* Parse the next line from updated context state. */
-        let {input, inputPos} = context.state;
+        input = context.state.input;
+        inputPos = context.state.inputPos;
         nextNL = input.indexOf('\n', inputPos);
         // throw 'retry';
       }
