@@ -91,8 +91,6 @@ export function* scanf (fmt, ...args) {
 
   scanning: for (let spec of iterate(specifiers)) {
 
-    let {width} = spec;
-
     if (spec.kind === 'l') {
       /* Litteral chars.  Skip matching part, get more input until all chars matched. */
       const {chars} = spec;
@@ -130,6 +128,7 @@ export function* scanf (fmt, ...args) {
 
     /* Handle placeholders. */
     assert(spec.kind === 'p');
+    let {width} = spec;
 
     if (spec.type === 'c') {
       /* %c matches (width) characters, or 1 if unspecified */
