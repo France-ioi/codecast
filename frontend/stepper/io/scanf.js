@@ -23,7 +23,7 @@ const fp_placeholder =
   P.bind(P.many(PT.oneOf('0123456789')).map(join), width =>
   P.bind(P.many(PT.oneOf('Lhl')).map(join), size =>
   P.choice(
-    P.bind(PT.oneOf('dxoiufcs%'), type => {
+    P.bind(PT.oneOf('dxoiufcs%n'), type => {
       width = width.length > 0 ? parseInt(width) : false;
       if (type === '%') {
         return P.always({kind: 'l', chars: '%'});
@@ -129,6 +129,12 @@ export function* scanf (fmt, ...args) {
     /* Handle placeholders. */
     assert(spec.kind === 'p');
     let {width} = spec;
+
+    if (spec.type === 'n') {
+      yield ['store', args[nStored], 'int', nRead];
+      nStored += 1;
+      continue scanning;
+    }
 
     if (spec.type === 'c') {
       /* %c matches (width) characters, or 1 if unspecified */
