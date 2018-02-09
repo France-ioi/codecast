@@ -1,23 +1,14 @@
 
-import * as C from 'persistent-c';
-import {parse as P, text as PT} from 'bennu';
+import {parse as P, text as PT, lang as PL, incremental as PI} from 'bennu';
 import {stream} from 'nu-stream';
+import assert from 'assert';
 
-function parsePrefixedUint (str) {
-  if (/^0[Xx]/.test(str)) {
-    return parseInt(str.substr(2), 16);
+/* Generator that iterates over the elements of the string argument. */
+function* iterate (s) {
+  while (!stream.isEmpty(s)) {
+    yield stream.first(s);
+    s = stream.rest(s);
   }
-  if (/^0[Bb]/.test(str)) {
-    return parseInt(str.substr(2), 2);
-  }
-  if (/^0/.test(str)) {
-    return parseInt(str.substr(1), 8);
-  }
-  return parseInt(str, 10);
-}
-
-function applySign (sign, value) {
-  return sign === '-' ? (-value) : value;
 }
 
 /* Join all elements from the stream argument into a string. */
@@ -25,155 +16,285 @@ function join (s) {
   return stream.toArray(s).join('');
 }
 
-/* Parse p then q, return only the result of q. */
-function P_first (p, q) {
-  return P.bind(p, v => P.next(q, P.always(v)));
-}
+/* format-string parsers */
+const fp_placeholder =
+  P.next(PT.character('%'),
+  P.bind(P.optional(false, P.next(PT.character('*'), P.always(true))), noStore =>
+  P.bind(P.many(PT.oneOf('0123456789')).map(join), width =>
+  P.bind(P.many(PT.oneOf('Lhl')).map(join), size =>
+  P.choice(
+    P.bind(PT.oneOf('dxoiufcs%'), type => {
+      width = width.length > 0 ? parseInt(width) : false;
+      return P.always({kind: 'p', noStore, width, size, type})}),
+    P.next(PT.character('['),
+      P.bind(P.optional(false, P.next(PT.character('^'), P.always(true))), negated =>
+      P.bind(fp_charset_tail, set =>
+      P.always({kind: 'p', noStore, width, type: 'C', negated, set})))))))));
+const fp_whitespace =
+  P.next(P.many1(PT.space),
+  P.always({kind: 'w'}));
+const fp_literal =
+  P.bind(P.many1(PT.noneOf('%\t\r\n ')).map(join), chars =>
+  P.always({kind: 'l', chars}));
+const fp_charset_tail =
+  P.bind(P.optional('', PT.character(']')), sqB =>
+  P.bind(P.many(PT.noneOf(']')), rest =>
+  P.next(PT.character(']'),
+  P.always(sqB + join(rest)))));
+const fp_specifier = P.choice(fp_placeholder, fp_whitespace, fp_literal);
+const fp_specifiers = P.many(fp_specifier);
 
-const p_whitespace = P.many(PT.space);
-const p_sign = P.optional('+', PT.oneOf('+-'));
-const p_decdigits = P.many1(PT.digit).map(join);
-const p_hexdigits = P.many1(PT.oneOf('0123456789ABCDEFabcdef')).map(join);
-const p_octdigits = P.many1(PT.oneOf('012345678')).map(join);
-const p_bindigits = P.many1(PT.oneOf('01')).map(join);
-const p_prefixedInt = P.choice(
-  P.enumeration(PT.oneOf('123456789'), p_decdigits).map(join),
-  P.enumeration(PT.character('0'), p_octdigits).map(join),
-  P.enumeration(PT.character('0'), PT.oneOf('Xx'), p_hexdigits).map(join),
-  P.enumeration(PT.character('0'), PT.oneOf('Bb'), p_bindigits).map(join));
-const p_fpart = P.optional('', P.next(PT.character('.'), p_decdigits));
-const p_epart = P.optional('0', P.next(PT.oneOf('eE'), p_decdigits));
-const p_fmt_d =
-  P.bind(p_sign, sign =>
-  P.bind(p_decdigits, digits =>
-  P.always(applySign(sign, parseInt(digits, 10)))));
-const p_fmt_x =
-  P.bind(p_sign, sign =>
-  P.bind(p_hexdigits, digits =>
-  P.always(applySign(sign, parseInt(digits, 16)))));
-const p_fmt_o =
-  P.bind(p_sign, sign =>
-  P.bind(p_octdigits, digits =>
-  P.always(applySign(sign, parseInt(digits, 8)))));
-const p_fmt_f =
-  P.bind(p_sign, sign =>
-  P.bind(p_decdigits, ip =>
-  P.bind(p_fpart, fp =>
-  P.bind(p_epart, exp =>
-  P.always(applySign(sign, parseFloat(`${ip}.${fp}e${exp}`)))))));
-const p_fmt_i =
-  P.bind(p_sign, sign =>
-  P.bind(p_prefixedInt, digits =>
-  P.always(applySign(sign, parsePrefixedUint(digits)))));
-const p_fmt_u =
-  P.bind(p_prefixedInt, digits =>
-  P.always(parsePrefixedUint(digits)));
-const p_fmt_s =
-  P.many1(PT.noneOf("\t\r\n ")).map(join);
-const p_fmt_c = P.anyToken
-
-const p_nextArg = (
-  P.bind(P.getState, state =>
-    state.argPos >= state.args.length
-      ? P.fail('insufficient arguments')
-      : P.next(P.setState({...state, argPos: state.argPos + 1}),
-          P.always(state.args[state.argPos]))));
-
-function p_integral (typeName, parser) {
-  return (
-    P.bind(parser, rawValue =>
-    P.bind(p_nextArg, ref =>
-    P.always(function* (context) {
-      yield ['store', ref, new C.IntegralValue(C.builtinTypes[typeName], rawValue)];
-    }))));
-}
-
-function p_floating (typeName, parser) {
-  return (
-    P.bind(parser, rawValue =>
-    P.bind(p_nextArg, ref =>
-    P.always(function* (context) {
-      yield ['store', ref, new C.FloatingValue(C.builtinTypes[typeName], rawValue)];
-    }))));
-}
-
-const p_string =
-  P.bind(p_fmt_s, string =>
-  P.bind(p_nextArg, ref =>
-  P.always(function* (context) {
-    yield ['store', ref, new C.stringValue(string)];
-  })));
-
-const p_char =
-  P.bind(p_fmt_c, char =>
-  P.bind(p_nextArg, ref =>
-  P.always(function* (context) {
-    const charCode = char.charCodeAt(0) & 0xff;
-    yield ['store', ref, new C.IntegralValue(C.builtinTypes["char"], charCode)];
-  })));
-
-function getFormatParser (format) {
-  switch (format) {
-  case '%d':
-    return P.next(p_whitespace, p_integral('int', p_fmt_d));
-  case '%x':
-    return P.next(p_whitespace, p_integral('int', p_fmt_x));
-  case '%o':
-    return P.next(p_whitespace, p_integral('int', p_fmt_o));
-  case '%i':
-    return P.next(p_whitespace, p_integral('int', p_fmt_i));
-  case '%u':
-    return P.next(p_whitespace, p_integral('unsigned int', p_fmt_u));
-  case '%f':
-    return P.next(p_whitespace, p_floating('float', p_fmt_f));
-  case '%lf':
-    return P.next(p_whitespace, p_floating('double', p_fmt_f));
-  case '%c':
-    return p_char;
-  case '%s':
-    return P.next(p_whitespace, p_string);
-  default:
-    throw new Error(`bad format specifier ${format}`);
+function getSpecIntType (size) {
+  switch (size) {
+    case '': return 'int';
+    case 'l': return 'long';
+    case 'll': return 'long long';
+    case 'h': return 'short';
+    default: return 'int';
   }
+}
+
+function commonPrefixLength (s1, s2, p2) {
+  const size = Math.min(s1.length, s2.length - p2);
+  for (let pos = 0; pos < size; pos += 1) {
+    if (s1[pos] != s2[p2 + pos]) {
+      return pos;
+    }
+  }
+  return size;
+}
+
+const typeRegexpMap = {
+  d: /^[+-]?[0-9]+/,
+  x: /^[+-]?[0-9A-Fa-f]+/,
+  o: /^[+-]?[0-7]+/,
+  f: /^[+-]?([0-9]+(\.[0-9]*)?|\.[0-9]+)([eE][+-]?[0-9]+)?/,
+  i: /^[+-]?([1-9][0-9]*|0[0-7]*|0[Xx][0-9A-Fa-f]+)/,
+  u: /^[+-]?[0-9]+/,
+  // p: /^(0[xX])?[0-9A-Fa-f]+/
+};
+
+export function* scanf (fmt, ...args) {
+  /* TODO: behavior if format specifier does not parse? */
+  const specifiers = P.run(fp_specifiers, fmt);
+
+  let nRead = 0; /* number of characters read from input */
+  let nStored = 0; /* number of values stored in args */
+  let buffer = ""; /* buffer */
+  let line; /* next line of input temp */
+  let match; /* regexp match temp. */
+  let skip; /* number of characters skipped temp. */
+  let rawValue; /* raw (string) value temp */
+
+  scanning: for (let spec of iterate(specifiers)) {
+    console.log('doing', JSON.stringify(spec), 'buffer', buffer);
+
+    let {width} = spec;
+
+    if (spec.kind === 'l') {
+      /* Litteral chars.  Skip matching part, get more input until all chars matched. */
+      const {chars} = spec;
+      let matchPos = 0;
+      while (true) {
+        skip = commonPrefixLength(buffer, chars, matchPos);
+        buffer = buffer.slice(skip);
+        nRead += skip;
+        matchPos += skip;
+        if (chars.length === matchPos) continue scanning;
+        if (buffer.length !== 0) break scanning;
+        line = yield ['gets'];
+        if (typeof line !== 'string') break scanning;
+        buffer = buffer + line + '\n';
+      }
+    }
+
+    if (!(spec.kind === 'p' && spec.type === 'c')) {
+      /* Except for %c, skip whitespace until the buffer starts with non-whitespace chars. */
+      eating_ws: while (true) {
+        match = /^[ \t\r\n]*/.exec(buffer);
+        skip = match ? match[0].length : 0;
+        nRead += skip;
+        buffer = buffer.slice(skip);
+        if (buffer.length !== 0) break eating_ws;
+        line = yield ['gets'];
+        if (typeof line !== 'string') break scanning;
+        buffer = buffer + line + '\n';
+      }
+    }
+
+    if (spec.kind === 'w') {
+      continue scanning;
+    }
+
+    /* Handle placeholders. */
+    assert(spec.kind === 'p');
+
+    if (spec.type === 'c') {
+      /* %c matches (width) characters, or 1 if unspecified */
+      if (typeof width !== 'number') {
+        width = 1;
+      }
+      /* Read more input until the number of chars requested is available. */
+      more_input: while (buffer.length < width) {
+        line = yield ['gets'];
+        if (typeof line !== 'string') break more_input;
+        buffer = buffer + line + '\n';
+      }
+      skip = Math.min(buffer.length, width);
+      nRead += skip;
+      rawValue = buffer.slice(0, skip);
+      buffer = buffer.slice(skip);
+      if (!spec.noStore) {
+        yield ['store', args[nStored], 'char[]', rawValue];
+        nStored += 1;
+      }
+      /* A short read means we ran out of input */
+      if (skip !== width) break scanning;
+      continue scanning;
+    }
+
+    if (spec.type === 'C') {
+      const re = new RegExp("^[" + (spec.negated ? '^' : '') + spec.set.replace(']', '\]') + ']*');
+      rawValue = '';
+      /* Except for %c, skip whitespace until the buffer starts with non-whitespace chars. */
+      match_charset: while (true) {
+        const target = typeof width === 'number' ? buffer.slice(0, width) : buffer;
+        match = re.exec(buffer);
+        if (!match || match[0].length === 0) break match_charset;
+        skip = match[0].length;
+        nRead += skip;
+        width -= skip;
+        rawValue = rawValue + buffer.slice(0, skip);
+        buffer = buffer.slice(skip);
+        if (width === 0) {
+          break match_charset;
+        }
+        if (buffer.length === 0) {
+          line = yield ['gets'];
+          if (typeof line !== 'string') break scanning;
+          buffer = buffer + line + '\n';
+          continue match_charset;
+        }
+      }
+      if (!spec.noStore) {
+        yield ['store', args[nStored], 'char[]', rawValue];
+        nStored += 1;
+      }
+      continue scanning;
+    }
+
+    if (spec.type === 's') {
+      /* %s matches until next whitespace */
+      match = /^[^ \t\r\n]+/.exec(buffer);
+      skip = match ? match[0].length : 0;
+      if (typeof width === 'number') {
+        skip = Math.min(skip, width);
+      }
+      nRead += skip;
+      rawValue = buffer.slice(0, skip);
+      buffer = buffer.slice(skip);
+      if (!spec.noStore) {
+        yield ['store', args[nStored], 'char*', rawValue];
+        nStored += 1;
+      }
+      continue scanning;
+    }
+
+    const re = typeRegexpMap[spec.type];
+    const target = typeof width === 'number' ? buffer.slice(0, width) : buffer;
+    match = re.exec(target);
+    if (!match) {
+      /* Regexp did not apply. */
+      break scanning;
+    }
+    skip = match[0].length;
+    nRead += skip;
+    rawValue = buffer.slice(0, skip);
+    buffer = buffer.slice(skip);
+    if (!spec.noStore) {
+      let type;
+      if (/[dxoi]/.test(spec.type)) {
+        type = getSpecIntType(spec.size);
+        switch (spec.type) {
+          case 'd': rawValue = parseInt(rawValue, 10); break;
+          case 'x': rawValue = parseInt(rawValue, 16); break;
+          case 'o': rawValue = parseInt(rawValue, 8); break;
+          case 'i':
+            if (/^0[bB]/.test(rawValue)) rawValue = parseInt(rawValue, 2);
+            else if (/^0[xX]/.test(rawValue)) rawValue = parseInt(rawValue, 16);
+            else if (/^0/.test(rawValue)) rawValue = parseInt(rawValue, 8);
+            else rawValue = parseInt(rawValue, 10);
+            break;
+        }
+      } else if ('u' === spec.type) {
+        type = 'unsigned ' + getSpecIntType(spec.size);
+        rawValue = parseInt(rawValue, 10);
+      } else if ('f' === spec.type) {
+        type = spec.size === 'l' ? 'double' : 'float';
+        rawValue = parseFloat(rawValue);
+      }
+      yield ['store', args[nStored], type, rawValue];
+      nStored += 1;
+    }
+
+  }
+
+  /* Return unread characters to the input stream. */
+  if (buffer.length) {
+    yield ['ungets', buffer];
+  }
+
+  /* Write result of scanf call. */
+  yield ['result', nRead === 0 ? -1 : nStored];
+}
+
+/// XXXX ///
+
+import * as C from 'persistent-c';
+
+function unterminatedStringValue (string) {
+  const encoder = new TextEncoder('utf-8');
+  const bytesArray = encoder.encode(string);
+  const charType = C.builtinTypes['char'];
+  const charLen = bytesArray.length;
+  const chars = [];
+  for (let charPos = 0; charPos < charLen; charPos++) {
+    chars.push(new C.IntegralValue(charType, bytesArray[charPos]));
+  }
+  const lenValue = new C.IntegralValue(C.builtinTypes['int'], chars.length);
+  return new C.ArrayValue(C.arrayType(charType, lenValue), chars);
 }
 
 export function* scanfBuiltin (context, fmtRef, ...args) {
   const {core} = context.state;
-  const line = yield ['gets'];
-  if (line === null) {
-    yield ['result', new C.IntegralValue(C.builtinTypes['int'], -1)];
-    return;
-  }
-  const formats = C.readString(core.memory, fmtRef).split(/[\s]+/);
-  const parsers = formats.map(getFormatParser);
-  const p_actions = P_first(P.enumerationa(parsers), p_whitespace);
-  const parser =
-    P.bind(p_actions, actions =>
-    P.bind(P.getPosition, position =>
-    P.always({actions, position})));
-  // XXX
-  const inputStream = stream.from(line);
-  try {
-    /* Run the parser on the input stream. */
-    var {actions, position} = P.runStream(parser, inputStream, {args, argPos: 0});
-    /* /!\ bennu returns the position as a string. */
-    position = parseInt(position);
-  } catch (ex) {
-    console.log('TODO — scanf exception', ex);
-  }
-  /* Update the position in the input stream. */
-  if (line.length > position) {
-    yield ['ungets', line.length - position + 1]; /* +1 to unget the \n */
-  }
-  /* Perform the actions returned by parsing. */
-  let result = 0;
-  if (stream) {
-    while (!stream.isEmpty(actions)) {
-      const gen = stream.first(actions);
-      yield* gen(context);
-      result += 1;
-      actions = stream.rest(actions);
+  const fmt = C.readString(core.memory, fmtRef);
+  let it = scanf(fmt, ...args), step, nextVal;
+  while ((step = it.next(nextVal)) && !step.done) {
+    nextVal = null;
+    const effect = step.value;
+    if (effect[0] === 'store') {
+      const type = effect[2];
+      const rawValue = effect[3];
+      let value;
+      if (type === 'char[]') {
+        value = unterminatedStringValue(rawValue);
+      } else if (type === 'char*') {
+        value = C.stringValue(rawValue);
+      } else if (/double|float/.test(type)) {
+        value = new C.FloatingValue(C.builtinTypes[type], rawValue);
+      } else if (/\<int$/.test(type)) {
+        value = new C.IntegralValue(C.builtinTypes[type], rawValue);
+      } else {
+        throw new Error(`unhandled value type ${type}`);
+      }
+      yield ['store', effect[1], value];
+    } else if (effect[0] === 'result') {
+      yield ['result', C.IntegralValue(C.builtinTypes['int'], effect[1])];
+    } else if (effect[0] === 'ungets') {
+      console.log('ungets', effect[1]);
+      yield ['ungets', effect[1].length];
+    } else {
+      nextVal = yield effect;
     }
   }
-  yield ['result', new C.IntegralValue(C.builtinTypes['int'], result)];
-};
+}
