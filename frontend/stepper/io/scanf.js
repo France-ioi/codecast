@@ -87,7 +87,6 @@ export function* scanf (fmt, ...args) {
   let rawValue; /* raw (string) value temp */
 
   scanning: for (let spec of iterate(specifiers)) {
-    console.log('doing', JSON.stringify(spec), 'buffer', buffer);
 
     let {width} = spec;
 
@@ -291,7 +290,6 @@ export function* scanfBuiltin (context, fmtRef, ...args) {
     } else if (effect[0] === 'result') {
       yield ['result', new C.IntegralValue(C.builtinTypes['int'], effect[1])];
     } else if (effect[0] === 'ungets') {
-      console.log('ungets', effect[1]);
       yield ['ungets', effect[1].length];
     } else {
       nextVal = yield effect;
