@@ -289,7 +289,7 @@ export function* scanfBuiltin (context, fmtRef, ...args) {
       }
       yield ['store', effect[1], value];
     } else if (effect[0] === 'result') {
-      yield ['result', C.IntegralValue(C.builtinTypes['int'], effect[1])];
+      yield ['result', new C.IntegralValue(C.builtinTypes['int'], effect[1])];
     } else if (effect[0] === 'ungets') {
       console.log('ungets', effect[1]);
       yield ['ungets', effect[1].length];
