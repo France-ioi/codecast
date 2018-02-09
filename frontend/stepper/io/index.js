@@ -288,10 +288,10 @@ export default function (bundle, deps) {
     });
 
     stepperApi.onEffect('gets', function* getsEffect (context) {
-      const {state} = context;
-      const {input, inputPos} = state;
-      var nextNL = input.indexOf('\n', inputPos);
-      if (-1 === nextNL) {
+      let {state} = context;
+      let {input, inputPos} = state;
+      let nextNL = input.indexOf('\n', inputPos);
+      while (-1 === nextNL) {
         if (!state.terminal || !context.interactive) {
           /* non-interactive, end of input */
           return null;
@@ -308,8 +308,11 @@ export default function (bundle, deps) {
           if (interrupted) {
             throw 'interrupted';
           }
-          throw 'retry';
         }];
+        /* Parse the next line from updated context state. */
+        let {input, inputPos} = context.state;
+        nextNL = input.indexOf('\n', inputPos);
+        // throw 'retry';
       }
       const line = input.substring(inputPos, nextNL);
       state.inputPos = nextNL + 1;
@@ -325,7 +328,7 @@ export default function (bundle, deps) {
        modify the global state. So the effect modifies the 'output' property
        of the stepper state, and the saga below detect changes and pushes them
        to the global state and to the editor.
-       This mechanism could by simplified by by having the 'write' effect
+       This mechanism could by simplified by having the 'write' effect
        directly alter the global state & push the change to the editor. */
     stepperApi.addSaga(function* (options) {
       if (!options.terminal) {
