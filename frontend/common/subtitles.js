@@ -761,8 +761,21 @@ function* subtitlesReloadSaga (_action) {
   const scope = yield select(state => state.get('scope'));
   const {selectedKey: key, availableOptions} = yield select(state => state.get('subtitles'));
   if (key) {
-    const text = availableOptions[key].text;
-    const items = srtParse(text);
+    let text = (availableOptions[key].text || '').trim();
+    if (!text) {
+      const data = yield select(state => state.getIn(['player', 'data']));
+      text = srtStringify([{start: 0, end: data.events[data.events.length - 1][0], text: ""}]);
+    }
+    let items;
+    try {
+      console.log('text', JSON.stringify(text));
+      items = srtParse(text);
+      console.log('parsed items', items);
+    } catch (ex) {
+      console.log("failed", ex);
+      yield put({type: scope.subtitlesLoadFailed, payload: {error: ex}});
+      return;
+    }
     yield put({type: scope.subtitlesLoadSucceeded, payload: {key, text, items}});
   }
 }
