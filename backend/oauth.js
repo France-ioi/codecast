@@ -93,7 +93,6 @@ module.exports = function (app, config, callback) {
 
   config.getUserConfig = function (req, callback) {
     const db = mysql.createConnection(config.database);
-    const {identity} = ;
     const {id} = getUser(req.session.identity);
     const q = `SELECT value FROM user_configs WHERE user_id = '${id}' LIMIT 1`;
     db.connect(function (err) {
