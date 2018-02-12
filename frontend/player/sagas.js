@@ -90,7 +90,13 @@ export default function (bundle, deps) {
   }
 
   function* playerPrepare (action) {
-    const {baseDataUrl} = action;
+    /*
+      baseDataUrl is forwarded to playerReady (stored in its reducer) in order
+        to serve as the base URL for subtitle files (in the player & editor).
+      audioUrl, eventsUrl need to be able to be passed independently by the
+        recorder, where they are "blob:" URLs.
+    */
+    const {baseDataUrl, audioUrl, eventsUrl} = action;
     // Check that the player is idle.
     const player = yield select(deps.getPlayerState);
     if (player.get('status') !== 'idle') {
@@ -101,12 +107,12 @@ export default function (bundle, deps) {
     /* Attempt to force the media player to preload the audio.
        Start playing to force loading and pause in the 'canplay' event. */
     const audio = player.get('audio');
-    audio.src = `${baseDataUrl}.mp3`;
+    audio.src = audioUrl;
     audio.load();
     yield fork(watchAudioCanPlay, audio);
     audio.play();
     // While the audio is buffering, download the events, subtitles.
-    let data = yield call(getJson, `${baseDataUrl}.json`);
+    let data = yield call(getJson, eventsUrl);
     if (Array.isArray(data)) {
       /* Compatibility with old style, where data is an array of events. */
       const {version, ...init} = data[0][2];
