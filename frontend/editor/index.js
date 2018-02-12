@@ -92,7 +92,9 @@ function editorLoadReducer (state, {payload: {data}}) {
 
 function* editorLoadSaga ({payload: {dataUrl}}) {
   const {playerPrepare, playerReady, editorLoaded, switchToScreen} = yield select(state => state.get('scope'));
-  yield put({type: playerPrepare, baseDataUrl: dataUrl});
+  const audioUrl = `${dataUrl}.mp3`;
+  const eventsUrl = `${dataUrl}.json`;
+  yield put({type: playerPrepare, baseDataUrl: dataUrl, audioUrl, eventsUrl});
   const {data} = yield take(playerReady);
   yield put({type: editorLoaded, payload: {base: dataUrl, data}});
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
