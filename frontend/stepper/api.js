@@ -13,7 +13,7 @@ export default function (bundle, deps) {
     addBuiltin, /* (name, handler) */
     makeContext, /* state → context */
     runToStep, /* function (context, stepCounter) → context */
-    rootSaga, /* function* (options) */
+    rootSaga, /* function* () */
     run, /* function* (context) → context */
     stepExpr, /* function* (context) → context */
     stepInto, /* function* (context) → context */
@@ -64,9 +64,16 @@ export default function (bundle, deps) {
   }
 
   /* Run all stepper sagas in subtasks. */
-  function* rootSaga (options) {
-    for (var saga of stepperSagas) {
-      yield call(saga, options);
+  function* rootSaga () {
+    for (let saga of stepperSagas) {
+      try {
+        /* It should be possible to 'call' the saga instead of forking, but
+           for some reason redux-saga stops after the the main stepper saga
+           returns. */
+        yield fork(saga);
+      } catch (ex) {
+        console.log('error in stepper saga', saga, ex);
+      }
     }
   }
 

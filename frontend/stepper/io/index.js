@@ -332,8 +332,9 @@ export default function (bundle, deps) {
        to the global state and to the editor.
        This mechanism could by simplified by having the 'write' effect
        directly alter the global state & push the change to the editor. */
-    stepperApi.addSaga(function* (options) {
-      if (!options.terminal) {
+    stepperApi.addSaga(function* ioStepperSaga () {
+      const ioPaneMode = yield select(state => state.get('ioPaneMode'));
+      if (ioPaneMode === 'split') {
         yield call(reflectToOutput);
       }
     });

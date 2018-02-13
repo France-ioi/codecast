@@ -292,7 +292,7 @@ export default function (bundle, deps) {
   bundle.addSaga(function* () {
     yield takeLatest(deps.stepperEnabled, function* enableStepper (action) {
       /* Start the new stepper task. */
-      const newTask = yield fork(deps.stepperApi.rootSaga, action.options);
+      const newTask = yield fork(deps.stepperApi.rootSaga);
       yield put({type: deps.stepperTaskStarted, task: newTask});
     });
   });
@@ -516,7 +516,7 @@ export default function (bundle, deps) {
       C.setupCall(core1, 'main');
     });
 
-    stepperApi.addSaga(function* () {
+    stepperApi.addSaga(function* mainStepperSaga () {
       yield takeEvery(deps.stepperStep, onStepperStep);
       yield takeEvery(deps.stepperExit, onStepperExit);
       /* Highlight the range of the current source fragment. */
