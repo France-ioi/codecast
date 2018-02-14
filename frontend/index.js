@@ -100,16 +100,16 @@ Codecast.start = function (options) {
 
   /* Source code from options or URL */
   if ('source' in options) {
-    store.dispatch({type: scope.sourceLoad, text: options.source||''});
+    store.dispatch({type: scope.bufferLoad, buffer: 'source', text: options.source||''});
   } else if ('source' in qs) {
-    store.dispatch({type: scope.sourceLoad, text: qs.source||''});
+    store.dispatch({type: scope.bufferLoad, buffer: 'source', text: qs.source||''});
   }
 
   /* Standard input from options or URL */
   if ('input' in options) {
-    store.dispatch({type: scope.inputLoad, text: options.input||''});
+    store.dispatch({type: scope.inputLoad, buffer: 'input', text: options.input||''});
   } else if ('input' in qs) {
-    store.dispatch({type: scope.inputLoad, text: qs.input||''});
+    store.dispatch({type: scope.inputLoad, buffer: 'input', text: qs.input||''});
   }
 
   /* Run the sagas (must be done before loginFeedback) */
