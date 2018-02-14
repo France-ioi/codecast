@@ -76,7 +76,7 @@ Codecast.start = function (options) {
   };
   (qs.stepperControls||'').split(',').forEach(function (controlStr) {
     // No prefix to highlight, '-' to disable.
-    const m = /^(-)?(.*)$/.exec(controlStr);
+    const m = /^([-_])?(.*)$/.exec(controlStr);
     if (m) {
       stepperOptions[m[2]] = m[1] || '+';
     }

@@ -131,10 +131,14 @@ export default function (bundle, deps) {
       }
       if (options) {
         const mod = options.get(key);
-        btnStyle = mod === '+' ? 'primary' : 'default';
+        console.log('mod', key, mod);
+        if (mod === '_') {
+          return false;
+        }
         if (mod === '-') {
           disabled = true;
         }
+        btnStyle = mod === '+' ? 'primary' : 'default';
       }
       return (
         <Button onClick={onClick} disabled={disabled} bsStyle={btnStyle} title={title}>{body}</Button>
