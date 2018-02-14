@@ -41,6 +41,13 @@ const {store, scope, finalize, start} = link(function (bundle, deps) {
   bundle.include(EditorBundle);
   bundle.include(LangBundle);
 
+  if (process.env.NODE_ENV === 'development') {
+    bundle.addEarlyReducer(function (state, action) {
+      console.log('action', action);
+      return state;
+    });
+  }
+
   // bundle.addEnhancer(DevTools.instrument());
 
 }/*, {reduxSaga: {sagaMonitor}}*/);
