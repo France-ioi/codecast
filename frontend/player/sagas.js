@@ -199,25 +199,36 @@ export default function (bundle, deps) {
   }
 
   function* computeInstants (events) {
-    const context = {
-      state: Immutable.Map(),
-      run: null,
-      instants: []
-    };
     /* CONSIDER: create a redux store, use the replayApi to convert each event
        to an action that is dispatched to the store (which must have an
        appropriate reducer) plus an optional saga to be called during playback. */
-    for (let pos = 0; pos < events.length; pos += 1) {
-      const event = events[pos];
-      const t = event[0];
-      const key = event[1]
-      const instant = {t, pos, event};
-      yield call(deps.replayApi.applyEvent, key, context, event, instant);
-      instant.state = context.state;
-      context.instants.push(instant);
-      /* TODO: avoid hogging the CPU, emit a progress event every second. */
+    const posDiv = Math.max(1, Math.ceil(events.length / 100));
+    let pos, progress, lastProgress = 0;
+    try {
+      const context = {
+        state: Immutable.Map(),
+        run: null,
+        instants: []
+      };
+      for (pos = 0; pos < events.length; pos += 1) {
+        const event = events[pos];
+        const t = event[0];
+        const key = event[1]
+        const instant = {t, pos, event};
+        yield call(deps.replayApi.applyEvent, key, context, event, instant);
+        instant.state = context.state;
+        context.instants.push(instant);
+        progress = Math.ceil(pos / posDiv);
+        if (progress !== lastProgress) {
+          lastProgress = progress;
+          yield put({type: deps.playerPrepareProgress, payload: {progress}});
+        }
+      }
+      return context.instants;
+    } catch (ex) {
+      yield put({type: deps.playerPrepareFailure, payload: {position: pos}});
+      return null;
     }
-    return context.instants;
   }
 
   bundle.addSaga(function* watchPlayerPrepare () {
@@ -367,5 +378,8 @@ export default function (bundle, deps) {
       status: 'idle',
       audio: document.createElement('video')
     })));
+
+  bundle.defineAction('playerPrepareProgress', 'Player.Prepare.Progress');
+  bundle.defineAction('playerPrepareFailure', 'Player.Prepare.Failure');
 
 };
