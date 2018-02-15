@@ -222,6 +222,8 @@ export const Editor = EpicComponent(self => {
       if (self.props.readOnly !== nextProps.readOnly) {
         editor.setReadOnly(nextProps.readOnly);
       }
+      /* Do not auto-scroll when shielded. */
+      editor.setAutoScrollEditorIntoView(!self.props.shield);
     }
   };
 
