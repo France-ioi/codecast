@@ -210,12 +210,19 @@ export default function (bundle, deps) {
         run: null,
         instants: []
       };
+      let range;
       for (pos = 0; pos < events.length; pos += 1) {
         const event = events[pos];
         const t = event[0];
         const key = event[1]
         const instant = {t, pos, event};
         yield call(deps.replayApi.applyEvent, key, context, event, instant);
+        /* Preserve the last explicitly set range. */
+        if ('range' in instant) {
+          range = instant.range;
+        } else {
+          instant.range = range;
+        }
         instant.state = context.state;
         context.instants.push(instant);
         progress = Math.ceil(pos / posDiv);
