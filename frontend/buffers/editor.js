@@ -131,6 +131,7 @@ export const Editor = EpicComponent(self => {
 
   const scrollToLine = function (firstVisibleRow_) {
     wrapModelToEditor(function () {
+      editor.resize(true);
       editor.scrollToLine(firstVisibleRow_);
       firstVisibleRow_ = firstVisibleRow;
     });
