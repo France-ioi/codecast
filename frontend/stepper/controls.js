@@ -131,7 +131,6 @@ export default function (bundle, deps) {
       }
       if (options) {
         const mod = options.get(key);
-        console.log('mod', key, mod);
         if (mod === '_') {
           return false;
         }
