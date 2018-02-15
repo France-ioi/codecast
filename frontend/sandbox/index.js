@@ -18,7 +18,6 @@ class SandboxApp extends React.PureComponent {
               <StepperControls enabled={true}/>
             </div>
             <div className="player-controls player-controls-right col-sm-2">
-              <ModePicker/>
               <Menu/>
             </div>
           </div>
