@@ -160,8 +160,12 @@ export const Editor = EpicComponent(self => {
       if (range && range.start && range.end) {
         // Add (and save) the marker.
         marker = session.addMarker(toRange(range), "code-highlight", "text");
-        // Also scroll so that the line is visible.
-        editor.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
+        if (!self.props.shield) {
+          /* Also scroll so that the line is visible.  Skipped if the editor has
+             a shield (preventing user input) as this means playback is active,
+             and scrolling is handled by individual events. */
+          editor.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
+        }
       }
     });
   };
