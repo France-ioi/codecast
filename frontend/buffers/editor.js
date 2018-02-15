@@ -119,6 +119,11 @@ export const Editor = EpicComponent(self => {
 
   const changeMode = function(mode)
   {
+        const url = window.location;
+        const path = url.pathname;
+        const searchParams = new URLSearchParams(url.search);
+        searchParams.set("editorLanguage",mode);
+        window.history.replaceState({}, "", path+"?"+searchParams.toString());
         wrapModelToEditor(function () {
           editor.session.setMode(`ace/mode/${mode}`);
         });
