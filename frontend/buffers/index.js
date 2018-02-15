@@ -32,6 +32,7 @@ import Immutable from 'immutable';
 import React from 'react';
 import EpicComponent from 'epic-component';
 
+//Import new modes here then add them to the list in common/aceMode.js
 import 'brace';
 import 'brace/mode/c_cpp';
 import 'brace/mode/python';
@@ -66,6 +67,7 @@ export default function (bundle, deps) {
   bundle.defineAction('bufferModelScroll', 'Buffer.Model.Scroll');
   bundle.defineAction('bufferHighlight', 'Buffer.Highlight');
   bundle.defineAction('bufferChangeMode', 'Buffer.ChangeMode');
+  bundle.defineAction('bufferLanguageConfigure', 'Buffer.Language.Configure');
 
 
   bundle.defineSelector('getBufferModel', function (state, buffer) {
@@ -120,6 +122,19 @@ export default function (bundle, deps) {
     const {buffer, firstVisibleRow} = action;
     return state.setIn(['buffers', buffer, 'model', 'firstVisibleRow'], firstVisibleRow);
   }
+
+
+  bundle.addReducer('bufferLanguageConfigure', bufferLanguageConfigure);
+  function bufferLanguageConfigure(state, action)
+  {
+    const {options} = action;
+    return state.set("bufferLanguage.options", options);
+  }
+
+  bundle.defineSelector('getBufferLanguageOptions', state =>
+       state.get('bufferLanguage.options')
+  );
+   
 
 
   bundle.addSaga(function* watchBuffers () {
