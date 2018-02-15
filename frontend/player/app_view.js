@@ -35,7 +35,12 @@ function PlayerAppSelector (state, props) {
   const showSubtitlesBand = state.get('showSubtitlesBand');
   const player = getPlayerState(state);
   const status = player.get('status');
-  const preventInput = !/ready|paused/.test(status);
+  /* preventInput is set during playback (and seeking-whe-paused) to prevent the
+     user from messing up the editors, and to disable automatic scrolling of the
+     editor triggered by some actions (specifically, highlighting).
+  */
+  const preventInput = !/ready|paused/.test(status) ||
+    ('paused' === status && player.has('seekTo'));
   return {
     preventInput, viewportTooSmall, containerWidth,
     PlayerControls, MainView, MainViewPanes,
