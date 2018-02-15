@@ -348,7 +348,7 @@ export default function (bundle, deps) {
           // Time between last state and new state jumped by more than 1 second,
           // and there are more than 10 events to replay.
           yield call(resetToInstant, nextInstant, audioTime, true);
-        } else {
+        } else if (prevInstant.pos !== nextInstant.pos) {
           /* Small time delta, replay incremental events immediately following
              prevInstant and up to (and including) nextInstant. */
           for (let pos = prevInstant.pos + 1; pos <= nextInstant.pos; pos += 1) {
