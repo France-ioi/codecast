@@ -398,6 +398,8 @@ export default function (bundle, deps) {
     });
     replayApi.on('stepper.exit', function (context, event, instant) {
       context.state = stepperExit(context.state);
+      /* Clear the highlighted range when the stepper terminates. */
+      instant.range = null;
     });
 
     recordApi.on(deps.stepperRestart, function* (addEvent, action) {
