@@ -26,9 +26,8 @@ export default function (bundle, deps) {
 */
 
   bundle.addSaga(function* () {
-    yield takeEvery(deps.recorderPreparing, function* (action) {
-      if (action.progress === 'worker_ok') {
-        const {worker} = action;
+    yield takeEvery(deps.recorderPreparing, function* ({payload: {progress, worker}}) {
+      if (progress === 'worker_ok') {
         const channel = eventChannel(function (listener) {
           function onMemoryUsage (data) {
             listener(data);
