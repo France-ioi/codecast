@@ -138,6 +138,7 @@ Codecast.start = function (options) {
   if (options.start === 'player') {
     store.dispatch({
       type: scope.playerPrepare,
+      baseDataUrl: options.baseDataUrl,
       audioUrl: `${options.baseDataUrl}.mp3`,
       eventsUrl: `${options.baseDataUrl}.json`,
     });
