@@ -1,4 +1,15 @@
 
+# Try it
+
+The most recent production version can be used
+[https://codecast.france-ioi.org/v5/](here).
+
+The development version can be tried
+[https://codecast.france-ioi.org/v5/](here).
+This version can break compatibility with past production releases, that
+is, there is no expectation that recordings made on the development
+version will remain readable.
+
 # Quick start
 
 Build `c-to-json` and copy the executable at the root of this project.
