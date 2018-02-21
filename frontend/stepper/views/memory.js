@@ -259,7 +259,7 @@ const allValuesInRange = function* (path, refType, address, startAddress, endAdd
       yield {ref, path};
     }
   }
-  if (type.kind === 'array') {
+  if (type.kind === 'array' && type.count !== undefined) {
     const elemType = type.elem;
     const elemCount = type.count.toInteger();
     const elemTypePtr = C.pointerType(elemType);
