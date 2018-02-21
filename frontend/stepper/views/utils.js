@@ -55,8 +55,13 @@ export const readScalar = function (context, refType, address) {
 export const readValue = function (context, refType, address, limits) {
   const type = refType.pointee;
   if (type.kind === 'array') {
-    const cells = readArray(context, type, address, limits);
-    return {kind: 'array', count: type.count, cells};
+    if (type.count === undefined) {
+      /* Array of unknown size, display as pointer */
+      return {kind: 'scalar', current: new C.PointerValue(refType, address)};
+    } else {
+      const cells = readArray(context, type, address, limits);
+      return {kind: 'array', count: type.count, cells};
+    }
   }
   if (type.kind === 'record') {
     const fields = readRecord(context, type, address, limits);
@@ -69,10 +74,6 @@ export const readValue = function (context, refType, address, limits) {
 };
 
 export const readArray = function (context, arrayType, address, limits) {
-  if (arrayType.count === undefined) {
-    // Array of unknown size
-    return [{index: 0, address, content: {kind: 'ellipsis'}}];
-  }
   const elemCount = arrayType.count.toInteger();
   const elemType = arrayType.elem;
   const elemSize = elemType.size;
