@@ -276,6 +276,18 @@ const allValuesInRange = function* (path, refType, address, startAddress, endAdd
       }
     }
   }
+  if (type.kind === 'record') {
+    for (let name of type.fields) {
+      const {type: fieldType, offset: fieldOffset} = type.fieldMap[name];
+      const fieldAddress = address + fieldOffset;
+      if (fieldAddress <= endAddress && fieldAddress + fieldType.size >= startAddress) {
+        yield* allValuesInRange(
+          List.Cons(name, path),
+          C.pointerType(fieldType), fieldAddress,
+          startAddress, endAddress);
+      }
+    }
+  }
 };
 
 const viewValue = function (context, byteOps, ref) {
