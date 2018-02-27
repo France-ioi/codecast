@@ -83,7 +83,7 @@
     "redux-devtools": "^3.3.2",
     "redux-devtools-dock-monitor": "^1.1.1",
     "redux-devtools-log-monitor": "^1.2.0",
-    "redux-saga": "^0.15.3",
+    "redux-saga": "^0.16.0",
     "redux-saga-ticker": "^1.0.1",
     "resolve-url-loader": "^2.2.0",
     "s3-browser-direct-upload": "^0.1.2",
