@@ -139,6 +139,9 @@ export default function (bundle, deps) {
         }
         btnStyle = mod === '+' ? 'primary' : 'default';
       }
+      if (title === false) {
+        title = undefined;
+      }
       return (
         <Button onClick={onClick} disabled={disabled} bsStyle={btnStyle} title={title}>{body}</Button>
       );
