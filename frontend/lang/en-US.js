@@ -39,7 +39,7 @@ module.exports = {
   CONTROL_UNDO: "undo",
   CONTROL_REDO: "redo",
   PROGRAM_STOPPED: "Program stopped.",
-  MENU_TOOLTIP: "Settings",
+  MENU_TOOLTIP: "settings",
   'LANGUAGE:': "Language: ",
   'LOAD_EXAMPLE:': "Load example: ",
   EVAL_REF_UNDEF_VAR: "reference to undefined variable {name}",
@@ -60,4 +60,7 @@ module.exports = {
   ARRAY2D_EXPR_NOT2D: "value of expression {expr} is not a 2D array",
   ARRAY2D_ELT_UNSUP: "elements of 2D array {expr} have an unsupported type",
   SUBTITLES_FAILED_TO_LOAD: "subtitles failed to load",
+  CLOSED_CAPTIONS_TOOLTIP: "captions",
+  CLOSED_CAPTIONS_TITLE: "Closed captions",
+  CLOSED_CAPTIONS_OFF: "no closed captions",
 };

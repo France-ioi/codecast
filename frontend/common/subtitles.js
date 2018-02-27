@@ -39,8 +39,8 @@ import {formatTime, formatTimeLong, readFileAsText} from './utils';
 import FlagIcon from './flag_icon';
 
 const langOptions = [
-  {label: 'fr-FR', value: 'fr-FR'},
-  {label: 'en-US', value: 'en-US'}
+  {label: 'Français', value: 'fr-FR'},
+  {label: 'English', value: 'en-US'},
 ];
 
 function SubtitlesMenuSelector (state, props) {
@@ -53,7 +53,7 @@ class SubtitlesMenu extends React.PureComponent {
   render() {
     const {getMessage, Popup} = this.props;
     const menuButton = (
-      <Button title={getMessage("CLOSED_CAPTIONS").s}>
+      <Button title={getMessage("CLOSED_CAPTIONS_TOOLTIP").s}>
         <i className='fa fa-cc'/>
       </Button>
     );
@@ -68,17 +68,17 @@ class SubtitlesMenu extends React.PureComponent {
 function SubtitlesPopupSelector (state, props) {
   const {loadedKey, loading, lastError, availableOptions} = state.get('subtitles');
   const paneEnabled = state.getIn(['panes', 'subtitles', 'enabled']);
-  const {subtitlesCleared, subtitlesLoadFromUrl, subtitlesPaneEnabledChanged} = state.get('scope');
+  const {subtitlesCleared, subtitlesLoadFromUrl, subtitlesPaneEnabledChanged, getMessage} = state.get('scope');
   return {
     availableOptions, loadedKey, busy: !!loading, lastError,
     subtitlesCleared, subtitlesLoadFromUrl,
-    paneEnabled, subtitlesPaneEnabledChanged,
+    paneEnabled, subtitlesPaneEnabledChanged, getMessage
   };
 }
 
 class SubtitlesPopup extends React.PureComponent {
   render () {
-    const {availableOptions, loadedKey, busy, lastError, paneEnabled} = this.props;
+    const {availableOptions, loadedKey, busy, lastError, paneEnabled, getMessage} = this.props;
     const availKeys = Object.keys(availableOptions).sort();
     return (
       <div className='menu-popup' onClick={this._close}>
@@ -89,12 +89,12 @@ class SubtitlesPopup extends React.PureComponent {
               <i className='fa fa-times'/>
             </Button>
           </div>
-          <div className='menu-popup-title'>{"Subtitles "}</div>
+          <div className='menu-popup-title'>{getMessage("CLOSED_CAPTIONS_TITLE")}</div>
           <div onClick={this._changePaneEnabled} style={{cursor: 'pointer'}}>
             {paneEnabled ? '☑' : '☐'}{" show pane"}
           </div>
           <div className='subtitleOptions' style={{maxHeight:'240px', overflow:'auto'}}>
-            <Button onClick={this._clearSubtitles} active={!loadedKey} bsSize={'sm'}>{"off"}</Button>
+            <Button onClick={this._clearSubtitles} active={!loadedKey} bsSize={'sm'}>{getMessage("CLOSED_CAPTIONS_OFF")}</Button>
             {availKeys.map(key =>
               <SubtitlesOption key={key} option={availableOptions[key]} loaded={key === loadedKey} onSelect={this._selectSubtitles} />)}
           </div>

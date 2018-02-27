@@ -39,7 +39,7 @@ module.exports = {
   CONTROL_UNDO: "annuler",
   CONTROL_REDO: "refaire",
   PROGRAM_STOPPED: "Programme arrêté.",
-  MENU_TOOLTIP: "Réglages",
+  MENU_TOOLTIP: "réglages",
   'LANGUAGE:': "Langue : ",
   'LOAD_EXAMPLE:': "Charger un exemple : ",
   EVAL_REF_UNDEF_VAR: "reference à la variable non définie {name}",
@@ -60,4 +60,7 @@ module.exports = {
   ARRAY2D_EXPR_NOT2D: "la valeur de l'expression {expr} n'est pas un tableau 2D",
   ARRAY2D_ELT_UNSUP: "le type des éléments du tableau 2D {expr} n'est pas supporté",
   SUBTITLES_FAILED_TO_LOAD: "le chargement des sous-titres a échoue",
+  CLOSED_CAPTIONS_TOOLTIP: "sous-titres",
+  CLOSED_CAPTIONS_TITLE: "Sous-titres",
+  CLOSED_CAPTIONS_OFF: "pas de sous-titres",
 };
