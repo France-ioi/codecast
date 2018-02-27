@@ -62,7 +62,7 @@
     "nodemon": "^1.12.1",
     "nu-stream": "^3.3.1",
     "packrattle": "^4.1.0",
-    "persistent-c": "^10.3.0",
+    "persistent-c": "^11.0.0",
     "pug": "^2.0.0-beta5",
     "query-string": "^4.3.2",
     "randomstring": "^1.1.5",
