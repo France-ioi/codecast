@@ -98,9 +98,9 @@ export const readArray = function (context, arrayType, address, limits) {
 export const readRecord = function (context, recordType, address, limits) {
   const fields = [];
   for (let fieldName of recordType.fields) {
-    const {offset, refType} = recordType.fieldMap[fieldName];
+    const {offset, type} = recordType.fieldMap[fieldName];
     const fieldAddress = address + offset;
-    const content = readValue(context, refType, fieldAddress, limits);
+    const content = readValue(context, C.pointerType(type), fieldAddress, limits);
     fields.push({name: fieldName, address: fieldAddress, content});
     if (limits && limits.scalars >= limits.maxScalars) {
       break;
