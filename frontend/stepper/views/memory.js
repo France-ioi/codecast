@@ -577,7 +577,7 @@ export const MemoryView = EpicComponent(self => {
         </g>
       );
     });
-    return <g className='extraRow'>{elements}</g>;
+    return <g className='extraRow' key={`extra-${i}`}>{elements}</g>;
   };
 
   const drawCellContent = function (cell, className, format) {
