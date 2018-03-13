@@ -228,10 +228,25 @@ const viewVariables = function (context, byteOps, startAddress, endAddress, opti
 const viewVariable = function (cells, context, byteOps, startAddress, endAddress, name, ref) {
   for (let value of allValuesInRange(List.Nil, ref.type, ref.address, startAddress, endAddress)) {
     const cell = viewValue(context, byteOps, value.ref);
-    cell.name = formatLabel(name, value.path);
+    /* XXX set full label only if selected, otherwise use short label (last component) */
+    cell.name = formatLabelShort(name, value.path);
     cells.push(cell);
   }
 };
+
+function formatLabelShort (name, path) {
+  if (path.isNil) {
+    return name;
+  }
+  const elem = path.get(0);
+  if (typeof elem === 'number') {
+    return `[${elem}]`;
+  }
+  if (typeof elem === 'string') {
+    return `.${elem}`;
+  }
+  return '?';
+}
 
 const formatLabel = function (name, path) {
   const elems = [];
@@ -373,33 +388,20 @@ const viewHeapFlags = function (core, startAddress, endAddress) {
 
 export const MemoryView = EpicComponent(self => {
 
-  const textLineHeight = 18;
-  const textBaseline = 5;
-  const cellWidth = 32;
-  const cellPadding = 4;
-  const cellHeight = cellPadding * 2 + textLineHeight * 2;
-  const addressAngle = 60;
-  const addressSize = rotate(addressAngle, 40, textLineHeight)
-  const marginLeft = 10;
-  const marginTop = 10;
-  const marginBottom = 10;
-  const cellMargin = 4;
-  const minArrowHeight = 20;
-
   const drawLabels = function (view) {
-    const {cells} = view.bytes;
+    const {layout, bytes: {cells}} = view;
     const elements = [];
-    const x0 = marginLeft;
-    const y0 = view.layout.labelsTop + addressSize.y;
-    const dx1 = cellWidth / 2 - addressSize.x / 2; // address label x offset
+    const x0 = layout.marginLeft;
+    const y0 = layout.labelsTop + layout.addressSize.y;
+    const dx1 = layout.cellWidth / 2 - layout.addressSize.x / 2; // address label x offset
     for (let i = 0; i < cells.length; i += 1) {
       const cell = cells[i];
       const {column, address, center} = cell;
-      const x1 = x0 + column * cellWidth;
+      const x1 = x0 + column * layout.cellWidth;
       // Top and bottom horizontal lines.
       if (address !== undefined) {
         elements.push(
-          <text key={address} transform={`translate(${x1+dx1},${y0}) rotate(${-addressAngle})`} className={center && 'center'}>
+          <text key={address} transform={`translate(${x1+dx1},${y0}) rotate(${-layout.addressAngle})`} className={center && 'center'}>
             {formatAddress(address)}
           </text>
         );
@@ -408,25 +410,25 @@ export const MemoryView = EpicComponent(self => {
     return <g className='labels'>{elements}</g>;
   };
 
-  const GridDrawer = function (y0) {
+  const GridDrawer = function (layout, y0) {
     let rx;  // right border not drawn
     let finalEndCol;
     const hs = [], vs = [], rs = [];
     const ccs = {};
-    const x0 = marginLeft;
-    const y1 = y0 + cellHeight;
+    const x0 = layout.marginLeft;
+    const y1 = y0 + layout.cellHeight;
     return {
       drawCellBorder: function (startCol, endCol) {
-        const lx = x0 + startCol * cellWidth;
-        rx = x0 + endCol * cellWidth;
+        const lx = x0 + startCol * layout.cellWidth;
+        rx = x0 + endCol * layout.cellWidth;
         finalEndCol = endCol;
         vs.push({key: `v${startCol}`, x: lx, y1: y0, y2: y1});
         hs.push({key: `ht${startCol}`, x1: lx, x2: rx, y: y0});
         hs.push({key: `hb${startCol}`, x1: lx, x2: rx, y: y1});
       },
       fillCellBackground: function (startCol, endCol, className) {
-        const x = x0 + startCol * cellWidth;
-        const w = (endCol - startCol) * cellWidth;
+        const x = x0 + startCol * layout.cellWidth;
+        const w = (endCol - startCol) * layout.cellWidth;
         rs.push({key: `r${startCol}`, x, w, className});
       },
       addCellClassName: function (col, className) {
@@ -446,7 +448,7 @@ export const MemoryView = EpicComponent(self => {
         const elements = [];
         for (let i = 0; i < rs.length; i += 1) {
           const {key, x, w, className} = rs[i];
-          elements.push(<rect key={key} x={x} y={y0} width={w} height={cellHeight} className={className}/>);
+          elements.push(<rect key={key} x={x} y={y0} width={w} height={layout.cellHeight} className={className}/>);
         }
         for (let i = 0; i < hs.length; i += 1) {
           const {key, x1, x2, y} = hs[i];
@@ -492,10 +494,10 @@ export const MemoryView = EpicComponent(self => {
   };
 
   const drawGrid = function (view) {
-    const {bytes, variables, extraRows, cursorMap, heapMap} = view;
+    const {layout, bytes, variables, extraRows, cursorMap, heapMap} = view;
     const grids = [];
     // Bytes grid
-    const gd1 = GridDrawer(view.layout.bytesTop);
+    const gd1 = GridDrawer(layout, layout.bytesTop);
     for (let i = 0; i < bytes.cells.length; i += 1) {
       const cell = bytes.cells[i];
       const {address} = cell;
@@ -504,7 +506,7 @@ export const MemoryView = EpicComponent(self => {
     }
     grids.push(<g key='bytes' className='bytes'>{gd1.finalize()}</g>);
     // Variables grid
-    const gd2 = GridDrawer(view.layout.variablesTop);
+    const gd2 = GridDrawer(layout, layout.variablesTop);
     for (let i = 0; i < variables.cells.length; i += 1) {
       const cell = variables.cells[i];
       if (cell.sep) {
@@ -517,7 +519,7 @@ export const MemoryView = EpicComponent(self => {
     // Extra rows grid
     extraRows.forEach(function (extraRow, i) {
       const {cells, size} = extraRow;
-      const gd = GridDrawer(view.layout.extraRowsTop + i * (cellHeight + cellMargin));
+      const gd = GridDrawer(layout, layout.extraRowsTop + i * (layout.cellHeight + layout.cellMargin));
       cells.forEach(function (cell, j) {
         gd.drawCellBorder(cell.address, cell.address + size);
       });
@@ -529,12 +531,13 @@ export const MemoryView = EpicComponent(self => {
   const drawCell = function (cell) {
     if (cell.gap)
       return false;
+    const {layout} = this;
     const {column, address} = cell;
-    const x0 = marginLeft + column * cellWidth;
-    const y0 = this.layout.bytesTop;
+    const x0 = layout.marginLeft + column * layout.cellWidth;
+    const y0 = layout.bytesTop;
     return (
       <g className={cell.classes} key={`0x${address}`} transform={`translate(${x0},${y0})`} clipPath='url(#cell)'>
-        {drawCellContent(cell, 'byte', formatByte)}
+        {drawCellContent(cell, 'byte', formatByte, layout)}
       </g>
     );
   };
@@ -543,17 +546,17 @@ export const MemoryView = EpicComponent(self => {
     const {layout, variables} = view;
     const {cells} = variables;
     const elements = [];
-    const x0 = marginLeft;
+    const x0 = layout.marginLeft;
     const y0 = layout.variablesTop;
-    const y1 = cellHeight + cellMargin + textLineHeight - textBaseline;
+    const y1 = layout.cellHeight + layout.cellMargin + layout.textLineHeight - layout.textBaseline;
     cells.forEach(function (cell) {
       if (!cell.sep) {
         const {address, size, name} = cell;
-        const x = x0 + address * cellWidth;
-        const x1 = size * cellWidth / 2;
+        const x = x0 + address * layout.cellWidth;
+        const x1 = size * layout.cellWidth / 2;
         elements.push(
           <g className='cell' key={`0x${address}`} transform={`translate(${x},${y0})`}>
-            {drawCellContent(cell, 'variable', renderValue)}
+            {drawCellContent(cell, 'variable', renderValue, layout)}
             <text x={x1} y={y1}>{name}</text>
           </g>
         );
@@ -563,30 +566,31 @@ export const MemoryView = EpicComponent(self => {
   };
 
   const drawExtraRow = function (row, i) {
+    const {layout} = this;
     const {size, cells} = row;
     const elements = [];
-    const x0 = marginLeft;
-    const y0 = this.layout.extraRowsTop + i * cellHeight;
-    const width = size * cellWidth;
+    const x0 = layout.marginLeft;
+    const y0 = layout.extraRowsTop + i * layout.cellHeight;
+    const width = size * layout.cellWidth;
     cells.forEach(function (cell) {
       const {address} = cell;
-      const x = x0 + address * cellWidth;
+      const x = x0 + address * layout.cellWidth;
       elements.push(
         <g className='cell' key={`0x${address}`} transform={`translate(${x},${y0})`}>
-          {drawCellContent(cell, 'extra', renderValue)}
+          {drawCellContent(cell, 'extra', renderValue, layout)}
         </g>
       );
     });
     return <g className='extraRow' key={`extra-${i}`}>{elements}</g>;
   };
 
-  const drawCellContent = function (cell, className, format) {
+  const drawCellContent = function (cell, className, format, layout) {
     const {current, size, load, store, previous} = cell;
-    const width = size * cellWidth;
+    const width = size * layout.cellWidth;
     const x0 = width / 2;
-    const y0 = cellPadding + textLineHeight - textBaseline;
-    const y1 = y0 + textLineHeight;
-    const h1 = (textLineHeight - textBaseline) / 3;
+    const y0 = layout.cellPadding + layout.textLineHeight - layout.textBaseline;
+    const y1 = y0 + layout.textLineHeight;
+    const h1 = (layout.textLineHeight - layout.textBaseline) / 3;
     const currentClasses = classnames(['current-value', load !== undefined && 'value-load']);
     return (
       <g className={className}>
@@ -605,19 +609,19 @@ export const MemoryView = EpicComponent(self => {
   };
 
   const drawCursor = function (cursor) {
-    const {cursorRows} = this;
+    const {layout, cursorRows} = this;
     const {index, row, color, labels} = cursor;
-    const x0 = marginLeft + index * cellWidth;
-    const y0 = this.layout.cursorsTop;
-    const arrowHeight = minArrowHeight + (cursorRows - row - 1) * textLineHeight;
-    const x1 = cellWidth / 2;
-    const y1 = row * textLineHeight + textLineHeight - textBaseline;
-    const y2 = cursorRows * textLineHeight + minArrowHeight;
+    const x0 = layout.marginLeft + index * layout.cellWidth;
+    const y0 = layout.cursorsTop;
+    const arrowHeight = layout.minArrowHeight + (cursorRows - row - 1) * layout.textLineHeight;
+    const x1 = layout.cellWidth / 2;
+    const y1 = row * layout.textLineHeight + layout.textLineHeight - layout.textBaseline;
+    const y2 = cursorRows * layout.textLineHeight + layout.minArrowHeight;
     const fillColor = '#eef';
     return (
       <g key={`c${index}`} transform={`translate(${x0},${y0})`} className='cursor'>
         <text x={x1} y={y1}>{labels.join(",")}</text>
-        {renderArrow(cellWidth / 2, y2, 'down', 6, arrowHeight)}
+        {renderArrow(layout.cellWidth / 2, y2, 'down', 6, arrowHeight)}
       </g>
     );
   };
@@ -640,11 +644,11 @@ export const MemoryView = EpicComponent(self => {
     return address;
   };
 
-  const getViewState = function (centerAddress) {
+  const getViewState = function (layout, centerAddress) {
     const nBytesShown = getBytesShown();
     const startAddress = centerAddress - nBytesShown / 2;
     const {scale, controls, directive} = self.props;
-    const x = -startAddress * cellWidth * scale;
+    const x = -startAddress * layout.cellWidth * scale;
     return {
       matrix: {a: scale, b: 0, c: 0, d: scale, e: x, f: 0},
       mode: controls.get('mode', 'idle'),
@@ -723,9 +727,9 @@ export const MemoryView = EpicComponent(self => {
 
   const onViewChange = function (event) {
     const {mode, startX, startY, matrix} = event.value;
-    const {directive, scale} = self.props;
+    const {directive, scale, layout} = self.props;
     const nBytesShown = getBytesShown();
-    const centerAddress = clipCenterAddress(-matrix.e / (cellWidth * scale) + nBytesShown / 2);
+    const centerAddress = clipCenterAddress(-matrix.e / (layout.cellWidth * scale) + nBytesShown / 2);
     const update = {mode, startX, startY, centerAddress};
     self.props.onChange(directive, update);
   };
@@ -743,9 +747,34 @@ export const MemoryView = EpicComponent(self => {
     const cursorRows = getNumber(byName.cursorRows, 1);
     const nBytesShown = getBytesShown();
     const widthFactor = getNumber(byName.width, 1);
+    /* Layout */
+    const layout = {};
+    layout.textLineHeight = 18;
+    layout.textBaseline = 5;
+    layout.cellWidth = 32;
+    layout.cellPadding = 4;
+    layout.cellHeight = layout.cellPadding * 2 + layout.textLineHeight * 2;
+    layout.addressAngle = 60;
+    layout.addressSize = rotate(layout.addressAngle, 40, layout.textLineHeight)
+    layout.marginLeft = 10;
+    layout.marginTop = 10;
+    layout.marginBottom = 10;
+    layout.cellMargin = 4;
+    layout.minArrowHeight = 20;
+    layout.cursorsHeight = cursorRows * layout.textLineHeight + layout.minArrowHeight;
+    layout.labelsHeight = layout.addressSize.y;
+    layout.bytesHeight = layout.cellHeight;
+    layout.variablesHeight = layout.cellMargin + layout.cellHeight + layout.textLineHeight;
+    layout.extraRowsHeight = (layout.cellHeight + layout.cellMargin) * extraExprs.length;
+    layout.cursorsTop = layout.marginTop;
+    layout.labelsTop = layout.cursorsTop + layout.cursorsHeight;
+    layout.bytesTop = layout.labelsTop + layout.marginTop + layout.labelsHeight;
+    layout.variablesTop = layout.bytesTop + layout.bytesHeight;
+    layout.extraRowsTop = layout.variablesTop + layout.variablesHeight;
+    layout.bottom = layout.extraRowsTop + layout.extraRowsHeight - layout.cellMargin + layout.marginBottom;
     // Controls
     const centerAddress = getCenterAddress();
-    const viewState = getViewState(centerAddress);
+    const viewState = getViewState(layout, centerAddress);
     // Extract the view-model.
     const maxAddress = context.core.memory.size;
     const view = extractView(
@@ -758,21 +787,10 @@ export const MemoryView = EpicComponent(self => {
         cursorRows,
         extraExprs
       });
+    view.layout = layout;
     // The objects in view.bytes are mutated to add the 'classes' property.
     setCellClasses(view);
-    const layout = view.layout = {};
-    layout.cursorsHeight = cursorRows * textLineHeight + minArrowHeight;
-    layout.labelsHeight = addressSize.y;
-    layout.bytesHeight = cellHeight;
-    layout.variablesHeight = cellMargin + cellHeight + textLineHeight;
-    layout.extraRowsHeight = (cellHeight + cellMargin) * extraExprs.length;
-    layout.cursorsTop = marginTop;
-    layout.labelsTop = layout.cursorsTop + layout.cursorsHeight;
-    layout.bytesTop = layout.labelsTop + marginTop + layout.labelsHeight;
-    layout.variablesTop = layout.bytesTop + layout.bytesHeight;
-    layout.extraRowsTop = layout.variablesTop + layout.variablesHeight;
-    layout.bottom = layout.extraRowsTop + layout.extraRowsHeight - cellMargin + marginBottom;
-    const svgWidth = marginLeft + cellWidth * maxAddress;
+    const svgWidth = layout.marginLeft + layout.cellWidth * maxAddress;
     const svgHeight = layout.bottom;
     const divHeight = (svgHeight * scale) + 'px';
     return (
