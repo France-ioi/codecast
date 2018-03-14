@@ -9,7 +9,7 @@ import {ShowVar} from './utils';
 import {Array1D} from './array1d';
 import {Array2D} from './array2d';
 import {SortView} from './sort';
-import {MemoryView} from './memory';
+import MemoryViewDirective from './memory';
 
 export default function (bundle, deps) {
 
@@ -64,11 +64,11 @@ export default function (bundle, deps) {
   bundle.defineView('DirectivesPane', DirectivesPaneSelector, EpicComponent(self => {
 
     const directiveViewDict = {
-      showVar: ShowVar,
-      showArray: Array1D,
-      showArray2D: Array2D,
-      showSort: SortView,
-      showMemory: MemoryView
+      showVar: {View: ShowVar, selector: obj => obj},
+      showArray: {View: Array1D, selector: obj => obj},
+      showArray2D: {View: Array2D, selector: obj => obj},
+      showSort: {View: SortView, selector: obj => obj},
+      showMemory: MemoryViewDirective,
     };
 
     const onControlsChange = function (directive, update) {
@@ -112,14 +112,15 @@ export default function (bundle, deps) {
         if (directive[0] === 'error') {
           return <p>{'Error: '}{JSON.stringify(directive[1])}</p>;
         }
-        const View = directiveViewDict[kind];
-        if (!View) {
+        if (!directiveViewDict[kind]) {
           return <p>{'Error: undefined view kind '}{kind}</p>;
         }
+        const {View, selector} = directiveViewDict[kind];
+        const props = selector({scale, directive, context, controls: directiveControls, frames: framesMap[key]});
         return (
-          <View key={directive.key} Frame={DirectiveFrame} directive={directive} controls={directiveControls}
-            frames={framesMap[key]} context={context}
-            onChange={onControlsChange} scale={scale} getMessage={getMessage} />);
+          <View key={directive.key} Frame={DirectiveFrame}
+            getMessage={getMessage} onChange={onControlsChange}
+            {...props} />);
       };
 
       return (
