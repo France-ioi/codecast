@@ -350,6 +350,7 @@ class MemoryView extends React.PureComponent {
   };
 
   onSeek = (centerAddress) => {
+    console.log('onSeek', centerAddress);
     // Clear the LSB.
     centerAddress = centerAddress ^ (centerAddress & 0xFF);
     // Preserve the current 16-byte alignment.
@@ -581,10 +582,10 @@ function Cursors ({layout, cursorRows, cursors}) {
 }
 
 function clipCenterAddress ({nBytesShown, context}, address) {
-  address -= nBytesShown / 2;
+  //address -= nBytesShown / 2;
   address = Math.max(0, address);
-  address = Math.min(context.core.memory.size - nBytesShown, address);
-  address += nBytesShown / 2;
+  address = Math.min(context.core.memory.size - 1, address);
+  //address += nBytesShown / 2;
   return address;
 }
 
@@ -601,7 +602,7 @@ function MemoryViewSelector ({scale, directive, context, controls, frames}) {
     centerAddress = clipCenterAddress({nBytesShown, context}, getNumber(byName.start, nBytesShown / 2));
   }
   const startAddress = centerAddress - nBytesShown / 2;
-  const maxAddress = context.core.memory.size;
+  const maxAddress = context.core.memory.size - 1;
   const layout = {};
   layout.textLineHeight = 18;
   layout.textBaseline = 5;
@@ -610,7 +611,7 @@ function MemoryViewSelector ({scale, directive, context, controls, frames}) {
   layout.cellHeight = layout.cellPadding * 2 + layout.textLineHeight * 2;
   layout.addressAngle = 60;
   layout.addressSize = rotate(layout.addressAngle, 40, layout.textLineHeight)
-  layout.marginLeft = 10;
+  layout.marginLeft = 10; /* XXX if centerAddress <= nBytesShown / 2, subtract from marginLeft */
   layout.marginTop = 10;
   layout.marginBottom = 10;
   layout.cellMargin = 4;
@@ -625,7 +626,7 @@ function MemoryViewSelector ({scale, directive, context, controls, frames}) {
   layout.bytesTop = layout.labelsTop + layout.marginTop + layout.labelsHeight;
   layout.variablesTop = layout.bytesTop + layout.bytesHeight;
   layout.extraRowsTop = layout.variablesTop + layout.variablesHeight;
-  layout.right = layout.marginLeft + layout.cellWidth * maxAddress;
+  layout.right = layout.marginLeft + layout.cellWidth * (maxAddress + 1);
   layout.bottom = layout.extraRowsTop + layout.extraRowsHeight - layout.cellMargin + layout.marginBottom;
   const x = -startAddress * layout.cellWidth * scale;
   const viewState = {
@@ -658,15 +659,15 @@ function extractView (layout, context, localMap, options) {
   const {memory, memoryLog} = core;
   const oldMemory = oldCore.memory;
   const {nBytesShown, cursorRows} = options;
-  const maxAddress = memory.size;
+  const maxAddress = memory.size - 1;
   const centerAddress = Math.floor(options.centerAddress);
-  let startAddress = centerAddress - nBytesShown / 2;
+  let startAddress = Math.max(0, centerAddress - nBytesShown / 2);
   if (startAddress + nBytesShown >= maxAddress) {
-    startAddress = maxAddress - nBytesShown;
+    startAddress = maxAddress - nBytesShown + 1;
   }
-  let endAddress = startAddress + nBytesShown - 1;
-  // Show 1 extra cell if address has a floating part.
-  if (options.centerAddress !== centerAddress) {
+  let endAddress = Math.floor(startAddress + nBytesShown - 1);
+  /* Show 1 extra cell if address has a floating part. */
+  if (centerAddress + nBytesShown / 2 < maxAddress && options.centerAddress !== centerAddress) {
     endAddress += 1;
   }
   const cells = [];
