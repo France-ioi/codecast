@@ -141,10 +141,10 @@ function formatLabelShort (name, path) {
   }
   const elem = path.get(0);
   if (typeof elem === 'number') {
-    return `[${elem}]`;
+    return `…[${elem}]`;
   }
   if (typeof elem === 'string') {
-    return `.${elem}`;
+    return `….${elem}`;
   }
   return '?';
 }
@@ -283,7 +283,7 @@ class MemoryView extends React.PureComponent {
                   </g>
                   <ByteAddresses layout={layout} bytes={bytes} />
                   <ByteValues layout={layout} bytes={bytes} />
-                  <Cursors layout={layout} cursorRows={cursorRows} cursors={cursorMap} />
+                  <Cursors layout={layout} cursorRows={cursorRows} cursorMap={cursorMap} />
                   <Variables layout={layout} variables={variables} />
                   <g className='extraRows'>
                     {extraRows.map((extraRow, index) => <ExtraRow key={index} index={index} layout={layout} extraRow={extraRow} />)}
@@ -350,13 +350,10 @@ class MemoryView extends React.PureComponent {
   };
 
   onSeek = (centerAddress) => {
-    console.log('onSeek', centerAddress);
-    // Clear the LSB.
+    // Clear nibbles 0 and 1.
     centerAddress = centerAddress ^ (centerAddress & 0xFF);
-    // Preserve the current 16-byte alignment.
-    centerAddress |= this.props.centerAddress & 0xF0;
-    // Clip to valid range.
-    centerAddress = clipCenterAddress(this.props, centerAddress);
+    // Copy nibble 2 into nibble 1 (0xAB00 → 0xABB0)
+    centerAddress |= 0xF0 & (centerAddress >> 4);
     this.props.onChange(this.props.directive, {centerAddress});
   };
 
@@ -379,7 +376,7 @@ function BytesGrid ({layout, bytes}) {
     gd.drawCellBorder(address, address + 1);
     gd.fillCellBackground(address, address + 1, cell.classes);
   }
-  return <g key='bytes' className='bytes'>{gd.finalize()}</g>;
+  return <g className='bytes'>{gd.finalize()}</g>;
 }
 
 function VariablesGrid ({layout, variables}) {
@@ -392,7 +389,7 @@ function VariablesGrid ({layout, variables}) {
       gd.drawCellBorder(cell.address, cell.address + cell.size);
     }
   }
-  return <g key='vars' className='variables'>{gd.finalize()}</g>;
+  return <g className='variables'>{gd.finalize()}</g>;
 }
 
 function ExtraRowGrid ({layout, index, extraRow}) {
@@ -522,7 +519,7 @@ function ExtraRow ({layout, index, extraRow}) {
   const elements = [];
   const {size, cells} = extraRow;
   const x0 = layout.marginLeft;
-  const y0 = layout.extraRowsTop + i * layout.cellHeight;
+  const y0 = layout.extraRowsTop + index * layout.cellHeight;
   const width = size * layout.cellWidth;
   for (let cell of cells) {
     const {address} = cell;
@@ -533,7 +530,7 @@ function ExtraRow ({layout, index, extraRow}) {
       </g>
     );
   }
-  return <g className='extraRow' key={`extra-${i}`}>{elements}</g>;
+  return <g className='extraRow'>{elements}</g>;
 }
 
 function drawCellContent (cell, className, format, layout) {
@@ -560,10 +557,10 @@ function drawCellContent (cell, className, format, layout) {
   );
 }
 
-function Cursors ({layout, cursorRows, cursors}) {
+function Cursors ({layout, cursorRows, cursorMap}) {
   const elements = [];
-  for (let cursor of cursors) {
-    const {index, row, color, labels} = cursor;
+  for (let key of Object.keys(cursorMap)) {
+    const {index, row, color, labels} = cursorMap[key];
     const x0 = layout.marginLeft + index * layout.cellWidth;
     const y0 = layout.cursorsTop;
     const arrowHeight = layout.minArrowHeight + (cursorRows - row - 1) * layout.textLineHeight;
@@ -597,11 +594,6 @@ function MemoryViewSelector ({scale, directive, context, controls, frames}) {
   const cursorRows = getNumber(byName.cursorRows, 1);
   const nBytesShown = getNumber(byName.bytes, 32);
   const widthFactor = getNumber(byName.width, 1);
-  let centerAddress = controls.get('centerAddress');
-  if (centerAddress === undefined) {
-    centerAddress = clipCenterAddress({nBytesShown, context}, getNumber(byName.start, nBytesShown / 2));
-  }
-  const startAddress = centerAddress - nBytesShown / 2;
   const maxAddress = context.core.memory.size - 1;
   const layout = {};
   layout.textLineHeight = 18;
@@ -611,7 +603,7 @@ function MemoryViewSelector ({scale, directive, context, controls, frames}) {
   layout.cellHeight = layout.cellPadding * 2 + layout.textLineHeight * 2;
   layout.addressAngle = 60;
   layout.addressSize = rotate(layout.addressAngle, 40, layout.textLineHeight)
-  layout.marginLeft = 10; /* XXX if centerAddress <= nBytesShown / 2, subtract from marginLeft */
+  layout.marginLeft = 10;
   layout.marginTop = 10;
   layout.marginBottom = 10;
   layout.cellMargin = 4;
@@ -628,6 +620,12 @@ function MemoryViewSelector ({scale, directive, context, controls, frames}) {
   layout.extraRowsTop = layout.variablesTop + layout.variablesHeight;
   layout.right = layout.marginLeft + layout.cellWidth * (maxAddress + 1);
   layout.bottom = layout.extraRowsTop + layout.extraRowsHeight - layout.cellMargin + layout.marginBottom;
+
+  let centerAddress = controls.get('centerAddress');
+  if (centerAddress === undefined) {
+    centerAddress = clipCenterAddress({nBytesShown, context}, getNumber(byName.start, nBytesShown / 2));
+  }
+  const startAddress = centerAddress - nBytesShown / 2;
   const x = -startAddress * layout.cellWidth * scale;
   const viewState = {
     matrix: {a: scale, b: 0, c: 0, d: scale, e: x, f: 0},
@@ -640,8 +638,10 @@ function MemoryViewSelector ({scale, directive, context, controls, frames}) {
     context,
     localMap,
     {
-      centerAddress,
-      nBytesShown,
+      centerAddress: centerAddress | 0, /* Clear fractional part for equality tests. */
+      nBytesShown: nBytesShown,
+      extraBytes: Math.ceil(centerAddress) - Math.floor(centerAddress),
+      maxAddress,
       cursorExprs,
       cursorRows,
       extraExprs
@@ -658,18 +658,13 @@ function extractView (layout, context, localMap, options) {
   const {core, oldCore} = context;
   const {memory, memoryLog} = core;
   const oldMemory = oldCore.memory;
-  const {nBytesShown, cursorRows} = options;
-  const maxAddress = memory.size - 1;
-  const centerAddress = Math.floor(options.centerAddress);
+  const {nBytesShown, extraBytes, maxAddress, cursorRows} = options;
+  const centerAddress = options.centerAddress;
   let startAddress = Math.max(0, centerAddress - nBytesShown / 2);
   if (startAddress + nBytesShown >= maxAddress) {
     startAddress = maxAddress - nBytesShown + 1;
   }
-  let endAddress = Math.floor(startAddress + nBytesShown - 1);
-  /* Show 1 extra cell if address has a floating part. */
-  if (centerAddress + nBytesShown / 2 < maxAddress && options.centerAddress !== centerAddress) {
-    endAddress += 1;
-  }
+  let endAddress = Math.min(maxAddress, Math.floor(startAddress + nBytesShown + extraBytes - 1));
   const cells = [];
   const byteOps = []; // sparse array of {load,store} objects
   for (let address = startAddress; address <= endAddress; address += 1) {
@@ -761,8 +756,13 @@ function viewVariables (context, byteOps, startAddress, endAddress, options) {
   function viewVariable (name, ref) {
     for (let value of allValuesInRange(List.Nil, ref.type, ref.address, startAddress, endAddress)) {
       const cell = viewValue(context, byteOps, value.ref);
-      /* XXX set full label only on center address, otherwise use short label (last component) */
-      cell.name = formatLabelShort(name, value.path);
+      const isCenter = value.ref.address <= options.centerAddress && options.centerAddress < value.ref.address + value.ref.type.pointee.size;
+      console.log('value', options.centerAddress, value.ref.address, value.ref.type.pointee.size, isCenter);
+      if (isCenter) {
+        cell.name = formatLabel(name, value.path);
+      } else {
+        cell.name = formatLabelShort(name, value.path);
+      }
       cells.push(cell);
     }
   }
