@@ -141,10 +141,10 @@ function formatLabelShort (name, path) {
   }
   const elem = path.get(0);
   if (typeof elem === 'number') {
-    return `…[${elem}]`;
+    return `[${elem}]`;
   }
   if (typeof elem === 'string') {
-    return `….${elem}`;
+    return `.${elem}`;
   }
   return '?';
 }
@@ -508,7 +508,8 @@ function Variables ({layout, variables}) {
     elements.push(
       <g className='cell' key={`0x${address}`} transform={`translate(${x},${y0})`}>
         {drawCellContent(cell, 'variable', renderValue, layout)}
-        <text x={x1} y={y1}>{name}</text>
+        <text x={x1} y={y1 + (cell.center ? layout.textLineHeight : 0)}
+          className={cell.center ? 'var-name-center' : 'var-name'}>{name}</text>
       </g>
     );
   }
@@ -611,7 +612,7 @@ function MemoryViewSelector ({scale, directive, context, controls, frames}) {
   layout.cursorsHeight = cursorRows * layout.textLineHeight + layout.minArrowHeight;
   layout.labelsHeight = layout.addressSize.y;
   layout.bytesHeight = layout.cellHeight;
-  layout.variablesHeight = layout.cellMargin + layout.cellHeight + layout.textLineHeight;
+  layout.variablesHeight = layout.cellMargin + layout.cellHeight + layout.textLineHeight * 2;
   layout.extraRowsHeight = (layout.cellHeight + layout.cellMargin) * extraExprs.length;
   layout.cursorsTop = layout.marginTop;
   layout.labelsTop = layout.cursorsTop + layout.cursorsHeight;
@@ -756,9 +757,8 @@ function viewVariables (context, byteOps, startAddress, endAddress, options) {
   function viewVariable (name, ref) {
     for (let value of allValuesInRange(List.Nil, ref.type, ref.address, startAddress, endAddress)) {
       const cell = viewValue(context, byteOps, value.ref);
-      const isCenter = value.ref.address <= options.centerAddress && options.centerAddress < value.ref.address + value.ref.type.pointee.size;
-      console.log('value', options.centerAddress, value.ref.address, value.ref.type.pointee.size, isCenter);
-      if (isCenter) {
+      cell.center = value.ref.address <= options.centerAddress && options.centerAddress < value.ref.address + value.ref.type.pointee.size;
+      if (cell.center) {
         cell.name = formatLabel(name, value.path);
       } else {
         cell.name = formatLabelShort(name, value.path);
