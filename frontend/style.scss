@@ -777,27 +777,6 @@ svg {
 .subtitles-band p {
   margin: 0;
 }
-.subtitleOptions {
-  border: 1px solid #efefef;
-  margin-top: 10px;
-  & > .btn {
-    width: 80px;
-    margin: 3px 0 3px 59px;/* left = icon witdh + div padding & margin to align button with language selector buttons */
-  }
-  .subtitleOption {
-    padding: 3px 20px;
-  }
-  .subtitleOption:nth-child(even) {
-    background-color: #efefef;
-  }
-  .subtitleOption .btn {
-    width: 80px;
-    margin-left: 20px;
-  }
-  .subtitleOption .btn + .btn {
-    width: auto;
-  }
-}
 .main-view .pane {
   overflow: hidden;
 }

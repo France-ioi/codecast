@@ -20,7 +20,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {RadioGroup, Radio} from 'react-radio-group';
-import {Alert} from 'react-bootstrap';
+import {Alert, Checkbox} from 'react-bootstrap';
 import classnames from 'classnames';
 import srtParse from 'subtitle/lib/parse';
 import srtStringify from 'subtitle/lib/stringify';
@@ -82,40 +82,51 @@ class SubtitlesPopup extends React.PureComponent {
       <div className='menu-popup' onClick={this._close}>
         <div className='menu-popup-inset' onClick={this._stopPropagation} style={{width:'350px'}}>
           <div className='pull-right'>
-            {busy && <i className='fa fa-spinner fa-spin'/>}
             <Button onClick={this._close}>
               <i className='fa fa-times'/>
             </Button>
           </div>
-          <div className='menu-popup-title'>{getMessage("CLOSED_CAPTIONS_TITLE")}</div>
-          <div className='subtitleOptions' style={{maxHeight:'240px', overflow:'auto'}}>
-            <RadioGroup name='subtitles' selectedValue={loadedKey} onChange={this._selectSubtitles}>
+          <div className='menu-popup-title'>
+            {getMessage("CLOSED_CAPTIONS_TITLE")}
+            {busy && <i className='fa fa-spinner fa-spin'/>}
+          </div>
+          <RadioGroup name='subtitles' selectedValue={loadedKey} onChange={this._selectSubtitles}>
+            <div>
               <label>
                 <Radio value="none" />
                 {getMessage("CLOSED_CAPTIONS_OFF")}
               </label>
-              {availKeys.map(function (key) {
-                const option = langOptions.find(option => option.value === key);
-                return (
-                  <label key={key}>
+            </div>
+            {availKeys.map(function (key) {
+              const option = langOptions.find(option => option.value === key);
+              return (
+                <div key={key}>
+                  <label>
                     <Radio value={key} />
                     <FlagIcon code={option.countryCode}/>
                     {option.label}
                   </label>
-                );
-              })}
-            </RadioGroup>
-          </div>
-          {loadedKey !== 'none' &&
-            <a href={availableOptions[loadedKey].url} className='btn btn-default btn-sm' target='_blank' download>
-              <i className='fa fa-download'/>
-            </a>}
+                </div>
+              );
+            })}
+          </RadioGroup>
           {lastError && <Alert bsStyle='danger'>{lastError}</Alert>}
-          <div onClick={this._changePaneEnabled} style={{cursor: 'pointer'}}>
-            {paneEnabled ? '☑' : '☐'}{" show pane"}
+          {loadedKey !== 'none' &&
+            <div>
+              <a href={availableOptions[loadedKey].url} className='btn btn-default btn-sm' target='_blank' download>
+                <i className='fa fa-download'/>
+                {" download selected subtitles"}
+              </a>
+            </div>}
+          <div>
+            <Checkbox checked={paneEnabled} onChange={this._changePaneEnabled}>
+              {" show pane"}
+            </Checkbox>
           </div>
-          <div onClick={this._changeBandEnabled} style={{cursor: 'pointer'}}>
-            {bandEnabled ? '☑' : '☐'}{" show strip"}
+          <div>
+            <Checkbox checked={bandEnabled} onChange={this._changeBandEnabled}>
+              {" show strip"}
+            </Checkbox>
           </div>
         </div>
       </div>
