@@ -12,7 +12,7 @@ import classnames from 'classnames';
 
 class PlayerApp extends React.PureComponent {
   render () {
-    const {preventInput, containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
+    const {preventInput, containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, SubtitlesBand} = this.props;
     return (
       <div>
         <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
@@ -21,7 +21,7 @@ class PlayerApp extends React.PureComponent {
             <MainView preventInput={preventInput}/>
             <MainViewPanes/>
           </div>
-          {showSubtitlesBand && <SubtitlesBand/>}
+          {SubtitlesBand && <SubtitlesBand/>}
         </div>
       </div>
     );
@@ -29,10 +29,9 @@ class PlayerApp extends React.PureComponent {
 }
 
 function PlayerAppSelector (state, props) {
-  const {PlayerControls, MainView, MainViewPanes, SubtitlesBand, getPlayerState} = state.get('scope');
+  const {PlayerControls, MainView, MainViewPanes, getPlayerState, getSubtitlesBandVisible, SubtitlesBand} = state.get('scope');
   const viewportTooSmall = state.get('viewportTooSmall');
   const containerWidth = state.get('containerWidth');
-  const showSubtitlesBand = state.get('showSubtitlesBand');
   const player = getPlayerState(state);
   const status = player.get('status');
   /* preventInput is set during playback (and seeking-whe-paused) to prevent the
@@ -44,7 +43,7 @@ function PlayerAppSelector (state, props) {
   return {
     preventInput, viewportTooSmall, containerWidth,
     PlayerControls, MainView, MainViewPanes,
-    showSubtitlesBand, SubtitlesBand
+    SubtitlesBand: getSubtitlesBandVisible(state) && SubtitlesBand,
   };
 }
 

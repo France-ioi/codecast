@@ -13,12 +13,13 @@
     filterText: '',
     filterRegexp: null,
     loading: false,
-    loadedKey: false,
+    loadedKey: 'none',
   }
 */
 
 import React from 'react';
 import ReactDOM from 'react-dom';
+import {RadioGroup, Radio} from 'react-radio-group';
 import {Alert} from 'react-bootstrap';
 import classnames from 'classnames';
 import srtParse from 'subtitle/lib/parse';
@@ -37,11 +38,6 @@ import Highlight from 'react-highlighter';
 import {Button} from '../ui';
 import {formatTime, formatTimeLong, readFileAsText} from './utils';
 import FlagIcon from './flag_icon';
-
-const langOptions = [
-  {label: 'Français', value: 'fr-FR'},
-  {label: 'English', value: 'en-US'},
-];
 
 function SubtitlesMenuSelector (state, props) {
   const {SubtitlesPopup} = state.get('scope');
@@ -66,19 +62,21 @@ class SubtitlesMenu extends React.PureComponent {
 }
 
 function SubtitlesPopupSelector (state, props) {
-  const {loadedKey, loading, lastError, availableOptions} = state.get('subtitles');
+  const {loadedKey, loading, lastError, availableOptions, langOptions, bandEnabled} = state.get('subtitles');
   const paneEnabled = state.getIn(['panes', 'subtitles', 'enabled']);
-  const {subtitlesCleared, subtitlesLoadFromUrl, subtitlesPaneEnabledChanged, getMessage} = state.get('scope');
+  const {subtitlesCleared, subtitlesLoadFromUrl, subtitlesPaneEnabledChanged, subtitlesBandEnabledChanged} = state.get('scope');
+  const getMessage = state.get('getMessage');
   return {
-    availableOptions, loadedKey, busy: !!loading, lastError,
+    availableOptions, langOptions, loadedKey, busy: !!loading, lastError,
     subtitlesCleared, subtitlesLoadFromUrl,
-    paneEnabled, subtitlesPaneEnabledChanged, getMessage
+    paneEnabled, subtitlesPaneEnabledChanged,
+    bandEnabled, subtitlesBandEnabledChanged, getMessage
   };
 }
 
 class SubtitlesPopup extends React.PureComponent {
   render () {
-    const {availableOptions, loadedKey, busy, lastError, paneEnabled, getMessage} = this.props;
+    const {availableOptions, langOptions, loadedKey, busy, lastError, paneEnabled, bandEnabled, getMessage} = this.props;
     const availKeys = Object.keys(availableOptions).sort();
     return (
       <div className='menu-popup' onClick={this._close}>
@@ -90,15 +88,35 @@ class SubtitlesPopup extends React.PureComponent {
             </Button>
           </div>
           <div className='menu-popup-title'>{getMessage("CLOSED_CAPTIONS_TITLE")}</div>
+          <div className='subtitleOptions' style={{maxHeight:'240px', overflow:'auto'}}>
+            <RadioGroup name='subtitles' selectedValue={loadedKey} onChange={this._selectSubtitles}>
+              <label>
+                <Radio value="none" />
+                {getMessage("CLOSED_CAPTIONS_OFF")}
+              </label>
+              {availKeys.map(function (key) {
+                const option = langOptions.find(option => option.value === key);
+                return (
+                  <label key={key}>
+                    <Radio value={key} />
+                    <FlagIcon code={option.countryCode}/>
+                    {option.label}
+                  </label>
+                );
+              })}
+            </RadioGroup>
+          </div>
+          {loadedKey !== 'none' &&
+            <a href={availableOptions[loadedKey].url} className='btn btn-default btn-sm' target='_blank' download>
+              <i className='fa fa-download'/>
+            </a>}
+          {lastError && <Alert bsStyle='danger'>{lastError}</Alert>}
           <div onClick={this._changePaneEnabled} style={{cursor: 'pointer'}}>
             {paneEnabled ? '☑' : '☐'}{" show pane"}
           </div>
-          <div className='subtitleOptions' style={{maxHeight:'240px', overflow:'auto'}}>
-            <Button onClick={this._clearSubtitles} active={!loadedKey} bsSize={'sm'}>{getMessage("CLOSED_CAPTIONS_OFF")}</Button>
-            {availKeys.map(key =>
-              <SubtitlesOption key={key} option={availableOptions[key]} loaded={key === loadedKey} onSelect={this._selectSubtitles} />)}
+          <div onClick={this._changeBandEnabled} style={{cursor: 'pointer'}}>
+            {bandEnabled ? '☑' : '☐'}{" show strip"}
           </div>
-          {lastError && <Alert bsStyle='danger'>{lastError}</Alert>}
         </div>
       </div>
     );
@@ -110,37 +128,23 @@ class SubtitlesPopup extends React.PureComponent {
     event.stopPropagation();
     this.props.closePortal();
   };
-  _clearSubtitles = () => {
-    this.props.dispatch({type: this.props.subtitlesCleared});
-  };
-  _selectSubtitles = ({key, url}) => {
-    this.props.dispatch({type: this.props.subtitlesLoadFromUrl, payload: {key, url}});
+  _selectSubtitles = (key) => {
+    if (key === 'none') {
+      this.props.dispatch({type: this.props.subtitlesCleared});
+    } else {
+      const option = this.props.availableOptions[key];
+      this.props.dispatch({type: this.props.subtitlesLoadFromUrl, payload: option});
+    }
   };
   _changePaneEnabled = () => {
     this.props.dispatch({
       type: this.props.subtitlesPaneEnabledChanged,
       payload: {value: !this.props.paneEnabled}});
-  }
-}
-
-class SubtitlesOption extends React.PureComponent {
-  render () {
-    const {option, loaded} = this.props;
-    const countryCode = (/-([A-Z]{2})$/.exec(option.key)[1]||'').toLowerCase();
-    return (
-      <div className='subtitleOption'>
-        <FlagIcon code={countryCode}/>
-        <Button onClick={this._clicked} active={loaded} bsSize={'sm'}>
-          {option.key}
-        </Button>
-        <a href={option.url} className='btn btn-default btn-sm' target='_blank' download>
-          <i className='fa fa-download'/>
-        </a>
-      </div>
-    );
-  }
-  _clicked = () => {
-    this.props.onSelect(this.props.option);
+  };
+  _changeBandEnabled = () => {
+    this.props.dispatch({
+      type: this.props.subtitlesBandEnabledChanged,
+      payload: {value: !this.props.bandEnabled}});
   };
 }
 
@@ -235,6 +239,7 @@ function SubtitlesPaneSelector (state, props) {
   const {subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved,
     subtitlesItemShifted, subtitlesFilterTextChanged} = state.get('scope');
   const {playerSeek} = state.get('scope');
+  /* TODO: pass paused / not paused to component, and  */
   const {items, filteredItems, currentIndex, mode, audioTime, filterText, filterRegexp} = state.get('subtitles');
   return {
     subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved,
@@ -305,11 +310,12 @@ class SubtitlesPane extends React.PureComponent {
 }
 
 function SubtitlesBandSelector (state, props) {
-  const {items, currentIndex, itemVisible, isMoving, offsetY} = state.get('subtitles');
+  const {bandEnabled, loaded, items, currentIndex, itemVisible, isMoving, offsetY} = state.get('subtitles');
   const windowHeight = state.get('windowHeight');
   const geometry = state.get('mainViewGeometry');
   const scope = state.get('scope');
   return {
+    top: 400,
     active: itemVisible, item: items && items[currentIndex], isMoving, offsetY, geometry, windowHeight,
     beginMove: scope.subtitlesBandBeginMove,
     endMove: scope.subtitlesBandEndMove,
@@ -317,13 +323,18 @@ function SubtitlesBandSelector (state, props) {
   };
 }
 
+function getSubtitlesBandVisible (state) {
+  const {loaded, bandEnabled} = state.get('subtitles');
+  return loaded && bandEnabled;
+}
+
 class SubtitlesBand extends React.PureComponent {
   render () {
-    const {active, item, offsetY, dataDrag: {isMoving}, geometry} = this.props;
+    const {active, item, offsetY, dataDrag: {isMoving}, geometry, top} = this.props;
     const translation = `translate(0px, ${this.state.currentY}px)`;
     return (
       <div className={classnames(['subtitles-band', `subtitles-band-${active?'':'in'}active`, isMoving && 'subtitles-band-moving', 'no-select', `mainView-${geometry.size}`])}
-        style={{transform: translation, width: `${geometry.width + 20/*padding*/}px`}} ref={this._refBand} >
+        style={{top: `${top}px`, transform: translation, width: `${geometry.width + 20/*padding*/}px`}} ref={this._refBand} >
         <div className='subtitles-band-frame'>
           {item && <p className='subtitles-text'>{item.text}</p>}
         </div>
@@ -331,13 +342,14 @@ class SubtitlesBand extends React.PureComponent {
     );
   }
   componentWillReceiveProps (nextProps) {
-    const height = (this._band ? this._band.offsetHeight : 40) + 20/*padding*/;
-    const currentY = Math.min(0, Math.max(height - this.props.windowHeight,
-      this.state.lastPositionY + nextProps.dataDrag.moveDeltaY));
+    const height = (this._band ? this._band.offsetHeight : 40);
     if (nextProps.dataDrag.isMoving) {
+      const newPositionY = this.state.lastPositionY + nextProps.dataDrag.moveDeltaY;
+      const currentY = Math.min(nextProps.windowHeight - nextProps.top - height, Math.max(-nextProps.top, newPositionY));
       this.setState({currentY});
     } else {
-      this.setState({lastPositionY: currentY, currentY});
+      const currentY = Math.min(nextProps.windowHeight - nextProps.top - height, Math.max(-nextProps.top, this.state.currentY));
+      this.setState({currentY, lastPositionY: currentY});
     }
   }
   state = {currentY: 0, lastPositionY: 0};
@@ -353,7 +365,7 @@ class SubtitlesBand extends React.PureComponent {
 function SubtitlesEditorSelector (state, props) {
   const {subtitlesSelected, subtitlesAddOption, subtitlesRemoveOption,
     subtitlesTextChanged} = state.get('scope');
-  const {selectedKey, availableOptions} = state.get('subtitles');
+  const {selectedKey, availableOptions, langOptions} = state.get('subtitles');
   const selected = selectedKey && availableOptions[selectedKey];
   const subtitlesText = selected && selected.text;
   return {availableOptions, selected, langOptions, subtitlesText,
@@ -445,7 +457,15 @@ class SubtitlesEditorOption extends React.PureComponent {
 
 function initReducer (state) {
   return state
-    .set('subtitles', {filterText: '', filterRegexp: null})
+    .set('subtitles', {
+      filterText: '',
+      filterRegexp: null,
+      langOptions: [
+        {value: 'fr-FR', label: "Français", countryCode: 'fr'},
+        {value: 'en-US', label: "English",  countryCode: 'us'},
+      ],
+      bandEnabled: true
+    })
     .setIn(['panes', 'subtitles'],
       Immutable.Map({
         View: state.get('scope').SubtitlesPane,
@@ -466,6 +486,10 @@ function subtitlesModeSetReducer (state, {payload: {mode}}) {
 
 function subtitlesPaneEnabledChangedReducer (state, {payload: {value}}) {
   return state.setIn(['panes', 'subtitles', 'enabled'], value);
+}
+
+function subtitlesBandEnabledChangedReducer (state, {payload: {value}}) {
+  return state.update('subtitles', subtitles => ({...subtitles, bandEnabled: value}));
 }
 
 function subtitlesFilterTextChangedReducer (state, {payload: {text}}) {
@@ -505,29 +529,27 @@ function playerReadyReducer (state, {baseDataUrl, data}) {
       items: [],
       filteredItems: [],
       currentIndex: 0,
-      loadedKey: false
+      loadedKey: 'none'
     }));
 }
 
 function subtitlesClearedReducer (state, _action) {
   return state.update('subtitles', subtitles => (
-    {...subtitles, text: '', items: [], filteredItems: [], currentIndex: 0, loadedKey: false}))
-    .set('showSubtitlesBand', false);
+    {...subtitles, loaded: false, text: '', items: [], filteredItems: [], currentIndex: 0, loadedKey: 'none'}));
 }
 
 function subtitlesLoadStartedReducer (state, {payload: {key}}) {
   return state.update('subtitles', subtitles => (
-    {...subtitles, loading: key, lastError: false}));
+    {...subtitles, loaded: false, loading: key, lastError: false}));
 }
 
 function subtitlesLoadSucceededReducer (state, {payload: {key, text, items}}) {
   return state
     .update('subtitles', subtitles => (
       updateCurrentItem({
-        ...subtitles, loadedKey: key, loading: false, text, items,
+        ...subtitles, loaded: true, loading: false, loadedKey: key, text, items,
         filteredItems: filterItems(items, subtitles.filterRegexp)
-      })))
-    .set('showSubtitlesBand', true);
+      })));
 }
 
 function subtitlesSelectedReducer (state, {payload: {option}}) {
@@ -556,8 +578,7 @@ function subtitlesLoadFailedReducer (state, {payload: {error}}) {
     errorText = `${errorText} (${error.res.statusCode})`;
   }
   return state.update('subtitles', subtitles => (
-    {...subtitles, loading: false, lastError: errorText, text: errorText}))
-    .set('showSubtitlesBand', false);
+    {...subtitles, loaded: false, loading: false, lastError: errorText, text: errorText, loadedKey: 'none'}));
 }
 
 function playerSeekedReducer (state, action) {
@@ -768,11 +789,8 @@ function* subtitlesReloadSaga (_action) {
     }
     let items;
     try {
-      console.log('text', JSON.stringify(text));
       items = srtParse(text);
-      console.log('parsed items', items);
     } catch (ex) {
-      console.log("failed", ex);
       yield put({type: scope.subtitlesLoadFailed, payload: {error: ex}});
       return;
     }
@@ -791,6 +809,8 @@ module.exports = function (bundle) {
   bundle.defineView('SubtitlesPane', SubtitlesPaneSelector, SubtitlesPane);
   bundle.defineAction('subtitlesPaneEnabledChanged', 'Subtitles.Pane.EnabledChanged');
   bundle.addReducer('subtitlesPaneEnabledChanged', subtitlesPaneEnabledChangedReducer);
+  bundle.defineAction('subtitlesBandEnabledChanged', 'Subtitles.Band.EnabledChanged');
+  bundle.addReducer('subtitlesBandEnabledChanged', subtitlesBandEnabledChangedReducer);
   bundle.defineAction('subtitlesFilterTextChanged', 'Subtitles.Pane.FilterText.Changed');
   bundle.addReducer('subtitlesFilterTextChanged', subtitlesFilterTextChangedReducer);
 
@@ -818,6 +838,7 @@ module.exports = function (bundle) {
   bundle.defineAction('subtitlesRemoveOption', 'Subtitles.Option.Remove');
   bundle.addReducer('subtitlesRemoveOption', subtitlesRemoveOptionReducer);
 
+  bundle.defineValue('getSubtitlesBandVisible', getSubtitlesBandVisible);
   bundle.defineView('SubtitlesBand', SubtitlesBandSelector,
     clickDrag(SubtitlesBand, {touch: true}));
   bundle.defineAction('subtitlesBandBeginMove', 'Subtitles.Band.BeginMove');
