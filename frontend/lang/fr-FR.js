@@ -62,5 +62,9 @@ module.exports = {
   SUBTITLES_FAILED_TO_LOAD: "le chargement des sous-titres a échoue",
   CLOSED_CAPTIONS_TOOLTIP: "sous-titres",
   CLOSED_CAPTIONS_TITLE: "Sous-titres",
+  CLOSED_CAPTIONS_NOT_LOADED: "Sous-titres non chargés",
   CLOSED_CAPTIONS_OFF: "pas de sous-titres",
+  CLOSED_CAPTIONS_DOWNLOAD_SELECTED: "télécharger les sous-titres sélectionnés",
+  CLOSED_CAPTIONS_SHOW_PANE: "afficher tous les sous-titres",
+  CLOSED_CAPTIONS_SHOW_BAND: "afficher le bandeau de sous-titres",
 };

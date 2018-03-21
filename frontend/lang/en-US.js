@@ -62,5 +62,9 @@ module.exports = {
   SUBTITLES_FAILED_TO_LOAD: "subtitles failed to load",
   CLOSED_CAPTIONS_TOOLTIP: "captions",
   CLOSED_CAPTIONS_TITLE: "Closed captions",
+  CLOSED_CAPTIONS_NOT_LOADED: "Closed captions not loaded",
   CLOSED_CAPTIONS_OFF: "no closed captions",
+  CLOSED_CAPTIONS_DOWNLOAD_SELECTED: "download selected subtitles",
+  CLOSED_CAPTIONS_SHOW_PANE: "show pane",
+  CLOSED_CAPTIONS_SHOW_BAND: "show strip",
 };

@@ -49,7 +49,7 @@ class SubtitlesMenu extends React.PureComponent {
   render() {
     const {getMessage, Popup} = this.props;
     const menuButton = (
-      <Button title={getMessage("CLOSED_CAPTIONS_TOOLTIP").s}>
+      <Button title={getMessage('CLOSED_CAPTIONS_TOOLTIP').s}>
         <i className='fa fa-cc'/>
       </Button>
     );
@@ -87,14 +87,14 @@ class SubtitlesPopup extends React.PureComponent {
             </Button>
           </div>
           <div className='menu-popup-title'>
-            {getMessage("CLOSED_CAPTIONS_TITLE")}
+            {getMessage('CLOSED_CAPTIONS_TITLE')}
             {busy && <i className='fa fa-spinner fa-spin'/>}
           </div>
           <RadioGroup name='subtitles' selectedValue={loadedKey} onChange={this._selectSubtitles}>
             <div>
               <label>
-                <Radio value="none" />
-                {getMessage("CLOSED_CAPTIONS_OFF")}
+                <Radio value='none' />
+                {getMessage('CLOSED_CAPTIONS_OFF')}
               </label>
             </div>
             {availKeys.map(function (key) {
@@ -115,17 +115,17 @@ class SubtitlesPopup extends React.PureComponent {
             <div>
               <a href={availableOptions[loadedKey].url} className='btn btn-default btn-sm' target='_blank' download>
                 <i className='fa fa-download'/>
-                {" download selected subtitles"}
+                {getMessage('CLOSED_CAPTIONS_DOWNLOAD_SELECTED')}
               </a>
             </div>}
           <div>
             <Checkbox checked={paneEnabled} onChange={this._changePaneEnabled}>
-              {" show pane"}
+              {getMessage('CLOSED_CAPTIONS_SHOW_PANE')}
             </Checkbox>
           </div>
           <div>
             <Checkbox checked={bandEnabled} onChange={this._changeBandEnabled}>
-              {" show strip"}
+              {getMessage('CLOSED_CAPTIONS_SHOW_BAND')}
             </Checkbox>
           </div>
         </div>
@@ -247,22 +247,22 @@ class SubtitlePaneItemEditor extends React.PureComponent {
 }
 
 function SubtitlesPaneSelector (state, props) {
+  const getMessage = state.get('getMessage');
   const {subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved,
-    subtitlesItemShifted, subtitlesFilterTextChanged} = state.get('scope');
-  const {playerSeek} = state.get('scope');
+    subtitlesItemShifted, subtitlesFilterTextChanged, playerSeek} = state.get('scope');
   /* TODO: pass paused / not paused to component, and  */
   const {items, filteredItems, currentIndex, mode, audioTime, filterText, filterRegexp} = state.get('subtitles');
   return {
     subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved,
-    subtitlesItemShifted, subtitlesFilterTextChanged,
+    subtitlesItemShifted, subtitlesFilterTextChanged, playerSeek, getMessage,
     subtitles: mode === 'editor' ? items : filteredItems,
-    currentIndex, playerSeek, mode, audioTime, filterText, filterRegexp};
+    currentIndex, mode, audioTime, filterText, filterRegexp};
 }
 
 /* SubtitlesPane is used in both *player* and *editor* mode. */
 class SubtitlesPane extends React.PureComponent {
   render () {
-    const {subtitles, currentIndex, mode, audioTime, filterText, filterRegexp} = this.props;
+    const {subtitles, currentIndex, mode, audioTime, filterText, filterRegexp, getMessage} = this.props;
     return (
       <div className='subtitles-pane'>
         {mode !== 'editor' &&
@@ -280,7 +280,7 @@ class SubtitlesPane extends React.PureComponent {
               }
               return <SubtitlePaneItemViewer key={index} item={st} onJump={this._jump} />;
             })
-          : <p>{"No subtitles"}</p>}
+          : <p>{getMessage('CLOSED_CAPTIONS_NOT_LOADED')}</p>}
       </div>
     );
   }
@@ -584,7 +584,7 @@ function subtitlesRemoveOptionReducer (state, {payload: {key}}) {
 }
 
 function subtitlesLoadFailedReducer (state, {payload: {error}}) {
-  let errorText = state.get('getMessage')("SUBTITLES_FAILED_TO_LOAD").s;
+  let errorText = state.get('getMessage')('SUBTITLES_FAILED_TO_LOAD').s;
   if (error.res) {
     errorText = `${errorText} (${error.res.statusCode})`;
   }
@@ -639,12 +639,12 @@ function subtitlesItemInsertedReducer (state, {payload: {index, offset, where}})
     let jumpTo = start;
     if (where === 'below') {
       subtitles = update(subtitles, {items: {$splice: [[index, 1,
-        {start, end: split - 1, text}, {start: split, end, text: ""}]]}});
+        {start, end: split - 1, text}, {start: split, end, text: ''}]]}});
       jumpTo = split;
     }
     if (where === 'above') {
       subtitles = update(subtitles, {items: {$splice: [[index, 1,
-        {start, end: split - 1, text: ""}, {start: split, end, text}]]}});
+        {start, end: split - 1, text: ''}, {start: split, end, text}]]}});
       jumpTo = start;
     }
     return updateCurrentItem(subtitles, jumpTo);
@@ -796,7 +796,7 @@ function* subtitlesReloadSaga (_action) {
     let text = (availableOptions[key].text || '').trim();
     if (!text) {
       const data = yield select(state => state.getIn(['player', 'data']));
-      text = srtStringify([{start: 0, end: data.events[data.events.length - 1][0], text: ""}]);
+      text = srtStringify([{start: 0, end: data.events[data.events.length - 1][0], text: ''}]);
     }
     let items;
     try {
