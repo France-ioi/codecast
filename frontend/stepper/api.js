@@ -326,7 +326,7 @@ export default function (bundle, deps) {
     // Take a first step.
     let newContext = yield call(executeSingleStep, context);
     if (newContext) {
-      newContext = context;
+      context = newContext;
       // Step until out of the current statement but not inside a nested
       // function call.
       context = yield call(stepUntil, context, core =>
