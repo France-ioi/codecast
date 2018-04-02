@@ -59,6 +59,9 @@ $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
 .fi-restart:before {
   content: "\e005";
 }
+.fi-run:before {
+  content: "\e006";
+}
 
 .clickable {
   cursor: pointer;

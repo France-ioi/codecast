@@ -78,7 +78,7 @@ export default function (bundle, deps) {
         <div className="controls controls-stepper">
           <div className="controls-stepper-wrapper">
             {p.showControls && <ButtonGroup className="controls-stepper-execution">
-              {this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), <i className="fa fa-play"/>)}
+              {this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), <i className="fi fi-run"/>)}
               {this._button('expr', this.onStepExpr, getMessage('CONTROL_EXPR'), <i className="fi fi-step-expr"/>)}
               {this._button('into', this.onStepInto, getMessage('CONTROL_INTO'), <i className="fi fi-step-into"/>)}
               {this._button('out', this.onStepOut, getMessage('CONTROL_OUT'), <i className="fi fi-step-out"/>)}
