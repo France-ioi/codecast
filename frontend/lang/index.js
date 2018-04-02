@@ -45,7 +45,6 @@ export default function (bundle, deps) {
         {_m: {writable: false, configurable: false, value}});
     });
     getMessage.format = function (value) {
-      console.log('getMessage.format', value);
       if (value instanceof Error && value.name === 'LocalizedError') {
         return getMessage(value.message).format(value.args);
       }
