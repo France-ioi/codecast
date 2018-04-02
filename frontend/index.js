@@ -125,6 +125,11 @@ Codecast.start = function (options) {
     store.dispatch({type: scope.uploadTokenChanged, token: qs.token});
   }
 
+  /* Set examples URL (enables example selection link in menu) */
+  if ('examplesUrl' in options) {
+    store.dispatch({type: scope.examplesUrlChanged, payload: {examplesUrl: options.examplesUrl}});
+  }
+
   let App = scope.SandboxApp;
 
   /* recorder and player */

@@ -95,12 +95,12 @@ function addBackendRoutes (app, config, store) {
     res.render('index', {
       development: config.isDevelopment,
       rebaseUrl: config.rebaseUrl,
-      options: {start: 'sandbox', baseUrl: config.baseUrl}
+      options: {start: 'sandbox', baseUrl: config.baseUrl, examplesUrl: config.examplesUrl}
     });
   });
 
   app.get('/recorder', function (req, res) {
-    config.initHook(req, {start: 'recorder', baseUrl: config.baseUrl}, function (err, init) {
+    config.initHook(req, {start: 'recorder', baseUrl: config.baseUrl, examplesUrl: config.examplesUrl}, function (err, init) {
       if (err) return res.send(`Error: ${err.toString()}`);
       res.render('index', {
         development: config.isDevelopment,
