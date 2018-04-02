@@ -6,7 +6,7 @@ import Portal from 'react-portal';
 export default function (bundle, deps) {
 
   bundle.use(
-    'ExamplePicker', 'isTranslated', 'setLanguage', 'exampleSelected',
+    'ExamplePicker', 'isTranslated', 'setLanguage',
     'subtitlesGetMenu', 'FullscreenButton'
   );
 
@@ -46,7 +46,7 @@ export default function (bundle, deps) {
 
   class MenuPopup extends React.PureComponent {
     render() {
-      const {languages, language, getMessage, canSelectExample} = this.props;
+      const {languages, language, getMessage} = this.props;
       return (
         <div className='menu-popup' onClick={this.close}>
           <div className='menu-popup-inset' onClick={this.stopPropagation}>
@@ -60,10 +60,7 @@ export default function (bundle, deps) {
               {languages.map(lang =>
                 <Button key={lang} data-language={lang} onClick={this.onSetLanguage} active={language === lang}>{lang}</Button>)}
             </div>
-            <div>
-              {getMessage('LOAD_EXAMPLE:')}
-              <deps.ExamplePicker disabled={!canSelectExample} onSelect={this.onSelectExample} />
-            </div>
+            <deps.ExamplePicker />
           </div>
         </div>
       );
@@ -82,10 +79,6 @@ export default function (bundle, deps) {
       closePortal();
       setTimeout(() => dispatch({type: deps.setLanguage, language}), 0);
     };
-    onSelectExample = (example) => {
-      this.props.closePortal();
-      this.props.dispatch({type: deps.exampleSelected, example});
-    };
   }
   bundle.defineView('MenuPopup', MenuPopupSelector, MenuPopup);
 
@@ -94,7 +87,7 @@ export default function (bundle, deps) {
     const language = state.get('language');
     const getMessage = state.get('getMessage');
     const isTranslated = deps.isTranslated(state);
-    return {canSelectExample: !isTranslated, languages, language, getMessage};
+    return {languages, language, getMessage};
   }
 
 };

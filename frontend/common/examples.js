@@ -10,6 +10,7 @@ export default function (bundle, deps) {
   });
 
   function ExamplePickerSelector (state, props) {
+    const getMessage = state.get('getMessage');
     let examplesUrl = state.get('examplesUrl');
     if (examplesUrl) {
       examplesUrl = url.parse(examplesUrl, true);
@@ -19,15 +20,18 @@ export default function (bundle, deps) {
       examplesUrl.query.callback = state.get('baseUrl');
       examplesUrl = url.format(examplesUrl);
     }
-    return {examplesUrl};
+    return {examplesUrl, getMessage};
   }
 
   bundle.defineView('ExamplePicker', ExamplePickerSelector, class ExamplePicker extends React.PureComponent {
     render () {
-      const {examplesUrl, disabled} = this.props;
+      const {examplesUrl, disabled, getMessage} = this.props;
       if (disabled || !examplesUrl) return false;
       return (
-        <a className='btn btn-default' href={examplesUrl}>{"Load an example"}</a>
+        <div>
+          <p><a className='btn btn-default' href={examplesUrl}>{getMessage('EXAMPLES_LOAD')}</a></p>
+          <p><i className='fa fa-warning'/>{' '}{getMessage('EXAMPLES_MESSAGE')}</p>
+        </div>
       );
     }
   });
