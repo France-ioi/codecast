@@ -1,6 +1,5 @@
 
 import React  from 'react';
-import Ticker from 'redux-saga-ticker';
 import {take, put, takeEvery, takeLatest} from 'redux-saga/effects';
 import {eventChannel, buffers} from 'redux-saga';
 
@@ -12,18 +11,6 @@ export default function (bundle, deps) {
   bundle.addReducer('init', (state) => state.set('memoryUsage', {heapSize: 0, workerHeapSize: 0}));
   bundle.addReducer('memoryUsageChanged', (state, {payload}) =>
     state.update('memoryUsage', (value => ({...value, ...payload}))));
-
-/*
-  // Useless because browsers do not report memory usage accurately "for security reasons".
-  bundle.addSaga(function* () {
-    const tickerChannel = Ticker(1000);
-    while (true) {
-      const heapSize = performance.memory.usedJSHeapSize;
-      yield put({type: deps.memoryUsageChanged, payload: {heapSize}});
-      yield take(tickerChannel);
-    }
-  });
-*/
 
   bundle.addSaga(function* () {
     yield takeEvery(deps.recorderPreparing, function* ({payload: {progress, worker}}) {

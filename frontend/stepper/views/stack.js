@@ -2,7 +2,6 @@
 import React from 'react';
 import classnames from 'classnames';
 import {Alert, Button, ButtonGroup} from 'react-bootstrap';
-import EpicComponent from 'epic-component';
 import Immutable from 'immutable';
 
 import {viewFrame, renderValue, VarDecl, FunctionCall} from './utils';
@@ -42,73 +41,22 @@ export default function (bundle, deps) {
     };
   });
 
-  const StackView = EpicComponent(self => {
+  class StackView extends React.PureComponent {
 
-    const renderFrameHeader = function (view) {
-      const {func, args} = view;
-      return (
-        <div className={classnames(["scope-function-title", false && "scope-function-top"])}>
-          <FunctionCall func={func} args={args}/>
-        </div>
-      );
+    onExit = () => {
+      this.props.dispatch({type: deps.stepperExit});
     };
 
-    const renderFrameLocals = function (decls) {
-      return (
-        <div className="scope-function-blocks">
-          <ul>
-          {decls.map(decl =>
-            <li key={decl.name}><VarDecl {...decl}/></li>
-          )}
-          </ul>
-        </div>
-      );
+    onStackUp = () => {
+      this.props.dispatch({type: deps.stepperStackUp});
     };
 
-    const renderFrame = function (view) {
-      // {key, func, args, locals}
-      const {key, locals} = view;
-      return (
-        <div key={key} className={classnames(['stack-frame', view.focus && 'stack-frame-focused'])}>
-          {renderFrameHeader(view)}
-          {locals && renderFrameLocals(locals)}
-        </div>
-      );
+    onStackDown = () => {
+      this.props.dispatch({type: deps.stepperStackDown});
     };
 
-    const renderCallReturn = function () {
-      const {callReturn} = self.props.analysis;
-      if (!callReturn) {
-        return false;
-      }
-      const {func, args, result} = callReturn;
-      const argCount = args.length;
-      return (
-        <div className="scope-function-return">
-          <FunctionCall func={func} args={args}/>
-          {' '}
-          <i className="fa fa-long-arrow-right"/>
-          <span className="scope-function-retval">
-            {renderValue(result)}
-          </span>
-        </div>
-      );
-    };
-
-    const onExit = function () {
-      self.props.dispatch({type: deps.stepperExit});
-    };
-
-    const onStackUp = function () {
-      self.props.dispatch({type: deps.stepperStackUp});
-    };
-
-    const onStackDown = function () {
-      self.props.dispatch({type: deps.stepperStackDown});
-    };
-
-    self.render = function () {
-      const {context, height, getMessage} = self.props;
+    render () {
+      const {context, height, getMessage} = this.props;
       if (!context) {
         return (
           <div className="stack-view" style={{height}}>
@@ -120,14 +68,14 @@ export default function (bundle, deps) {
       if (core.error) {
         return (
           <div className="stack-view" style={{height}}>
-            <Alert bsStyle="danger" onDismiss={onExit}>
+            <Alert bsStyle="danger" onDismiss={this.onExit}>
               <h4>{getMessage('ERROR')}</h4>
               <p>{core.error.toString()}</p>
             </Alert>
           </div>
         );
       }
-      const {controls, analysis, focusDepth, firstVisible, firstExpanded, maxVisible, maxExpanded} = self.props;
+      const {controls, analysis, focusDepth, firstVisible, firstExpanded, maxVisible, maxExpanded} = this.props;
       let {frames} = analysis;
       /* Hide frames that have no position in user code. */
       frames = frames.filter(function (frame) {
@@ -146,24 +94,25 @@ export default function (bundle, deps) {
         view.focus = focus;
         return view;
       });
+      const {callReturn} = this.props.analysis;
       return (
         <div className="stack-view" style={{height}}>
           <div className="stack-controls">
             <ButtonGroup>
-              <Button onClick={onStackUp} title="navigate up the stack">
+              <Button onClick={this.onStackUp} title="navigate up the stack">
                 <i className="fa fa-arrow-up"/>
               </Button>
-              <Button onClick={onStackDown} title="navigate down the stack">
+              <Button onClick={this.onStackDown} title="navigate down the stack">
                 <i className="fa fa-arrow-down"/>
               </Button>
             </ButtonGroup>
           </div>
-          {renderCallReturn()}
+          {callReturn && <CallReturn view={callReturn} />}
           {firstVisible > 0 &&
             <div key='tail' className="scope-ellipsis">
               {'… +'}{firstVisible}
             </div>}
-          {views.map(renderFrame)}
+          {views.map(view => <FunctionFrame key={view.key} view={view} />)}
           {tailCount > 0 &&
             <div key='tail' className="scope-ellipsis">
               {'… +'}{tailCount}
@@ -173,7 +122,7 @@ export default function (bundle, deps) {
       );
     };
 
-  });
+  }
 
   StackView.defaultProps = {
     height: '100%',
@@ -186,3 +135,48 @@ export default function (bundle, deps) {
   bundle.defineView('StackView', 'StackViewSelector', StackView);
 
 };
+
+function FunctionFrame ({view}) {
+  const {func, args, locals} = view;
+  return (
+    <div className={classnames(['stack-frame', view.focus && 'stack-frame-focused'])}>
+      <FrameHeader func={func} args={args} />
+      {locals && <FrameLocals locals={locals} />}
+    </div>
+  );
+}
+
+function FrameHeader ({func, args}) {
+  return (
+    <div className={classnames(["scope-function-title", false && "scope-function-top"])}>
+      <FunctionCall func={func} args={args}/>
+    </div>
+  );
+}
+
+function FrameLocals ({locals}) {
+  return (
+    <div className="scope-function-blocks">
+      <ul>
+      {locals.map(decl =>
+        <li key={decl.name}><VarDecl {...decl}/></li>
+      )}
+      </ul>
+    </div>
+  );
+}
+
+function CallReturn ({view}) {
+  const {func, args, result} = view;
+  const argCount = args.length;
+  return (
+    <div className="scope-function-return">
+      <FunctionCall func={func} args={args}/>
+      {' '}
+      <i className="fa fa-long-arrow-right"/>
+      <span className="scope-function-retval">
+        {renderValue(result)}
+      </span>
+    </div>
+  );
+}

@@ -1,7 +1,6 @@
 
 import React from 'react';
 import {Button, ButtonGroup} from 'react-bootstrap';
-import EpicComponent from 'epic-component';
 import Slider from 'rc-slider';
 
 export default function (bundle) {

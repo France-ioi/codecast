@@ -2,7 +2,6 @@
 
 import Immutable from 'immutable';
 import React from 'react';
-import EpicComponent from 'epic-component';
 import classnames from 'classnames';
 import {Panel} from 'react-bootstrap';
 import {takeEvery, select, call} from 'redux-saga/effects';
@@ -105,29 +104,28 @@ export default function (bundle, deps) {
 
   });
 
-  bundle.defineView('TerminalView', TerminalViewSelector, EpicComponent(self => {
+  bundle.defineView('TerminalView', TerminalViewSelector, class TerminalView extends React.PureComponent {
 
-    function onTermInit (iface) {
-      self.props.dispatch({type: deps.terminalInit, iface});
-    }
-    function onTermChar (key) {
-      if (!self.props.preventInput) {
-        self.props.dispatch({type: deps.terminalInputKey, key});
+    onTermInit = (iface) => {
+      this.props.dispatch({type: deps.terminalInit, iface});
+    };
+    onTermChar = (key) => {
+      if (!this.props.preventInput) {
+        this.props.dispatch({type: deps.terminalInputKey, key});
       }
-    }
-    function onTermBS () {
-      if (!self.props.preventInput) {
-        self.props.dispatch({type: deps.terminalInputBackspace});
+    };
+    onTermBS = () => {
+      if (!this.props.preventInput) {
+        this.props.dispatch({type: deps.terminalInputBackspace});
       }
-    }
-    function onTermEnter () {
-      if (!self.props.preventInput) {
-        self.props.dispatch({type: deps.terminalInputEnter});
+    };
+    onTermEnter = () => {
+      if (!this.props.preventInput) {
+        this.props.dispatch({type: deps.terminalInputEnter});
       }
-    }
-
-    const renderHeader = function () {
-      const {isWaitingOnInput} = self.props;
+    };
+    renderHeader = () => {
+      const {isWaitingOnInput} = this.props;
       return (
         <div className="row">
           <div className="col-sm-12">
@@ -138,25 +136,25 @@ export default function (bundle, deps) {
         </div>
       );
     };
-
-    self.render = function () {
-      const {readOnly, preventInput, terminal, input} = self.props;
+    render () {
+      const {readOnly, preventInput, terminal, input} = this.props;
       const buffer = terminal && writeString(terminal, input);
-
       return (
-        <Panel header={renderHeader()}>
-          <div className="row">
-            <div className="col-sm-12">
-              {buffer
-                ? <PureTerminal buffer={buffer} onInit={onTermInit} onKeyPress={onTermChar} onBackspace={onTermBS} onEnter={onTermEnter} />
-                : <p>{"no buffer"}</p>}
+        <Panel>
+          <Panel.Heading>{this.renderHeader()}</Panel.Heading>
+          <Panel.Body>
+            <div className="row">
+              <div className="col-sm-12">
+                {buffer
+                  ? <PureTerminal buffer={buffer} onInit={this.onTermInit} onKeyPress={this.onTermChar} onBackspace={this.onTermBS} onEnter={this.onTermEnter} />
+                  : <p>{"no buffer"}</p>}
+              </div>
             </div>
-          </div>
+          </Panel.Body>
         </Panel>
       );
-    };
-
-  }));
+    }
+  });
 
   function TerminalViewSelector (state, props) {
     const result = {};
@@ -174,53 +172,56 @@ export default function (bundle, deps) {
 
 /* pure terminal React component */
 
-const PureTerminal = EpicComponent(self => {
+class PureTerminal extends React.PureComponent {
 
-  let terminalElement;
-
-  function refTerminal (element) {
-    terminalElement = element;
-    self.props.onInit(element && {
-      focus: () => element.focus()
-    });
+  constructor (props) {
+    super(props);
+    this.terminalElement = null;
   }
 
-  function onKeyDown (event) {
+  refTerminal = (element) => {
+    this.terminalElement = element;
+    this.props.onInit(element && {
+      focus: () => element.focus()
+    });
+  };
+
+  onKeyDown = (event) => {
     event.stopPropagation();
-    terminalElement.focus();
+    this.terminalElement.focus();
     let block = false;
     switch (event.keyCode) {
     case 8:
       block = true;
-      self.props.onBackspace();
+      this.props.onBackspace();
       break;
     case 13:
       block = true;
-      self.props.onEnter();
+      this.props.onEnter();
       break;
     }
     if (block) {
       event.preventDefault();
     }
-  }
+  };
 
-  function onKeyUp (event) {
+  onKeyUp = (event) => {
     event.stopPropagation();
     event.preventDefault();
-  }
+  };
 
-  function onKeyPress (event) {
+  onKeyPress = (event) => {
     event.stopPropagation();
     event.preventDefault();
-    self.props.onKeyPress(event.key);
-  }
+    this.props.onKeyPress(event.key);
+  };
 
-  self.render = function () {
-    const {buffer} = self.props;
+  render () {
+    const {buffer} = this.props;
     const cursor = buffer.get('cursor');
     const ci = cursor.get('line'), cj = cursor.get('column');
     return (
-      <div ref={refTerminal} className="terminal" tabIndex="1" onKeyDown={onKeyDown} onKeyUp={onKeyUp} onKeyPress={onKeyPress}>
+      <div ref={this.refTerminal} className="terminal" tabIndex="1" onKeyDown={this.onKeyDown} onKeyUp={this.onKeyUp} onKeyPress={this.onKeyPress}>
         {buffer.get('lines').map(function (line, i) {
           return (
             <div key={i} className="terminal-line" style={{width: '720px'}}>
@@ -235,8 +236,9 @@ const PureTerminal = EpicComponent(self => {
         })}
       </div>
     );
-  };
-});
+  }
+
+}
 
 /* low-level terminal state functions */
 

@@ -1,7 +1,6 @@
 
 import React from 'react';
 import {Panel} from 'react-bootstrap';
-import EpicComponent from 'epic-component';
 import {select, call, put, race, take, takeLatest, takeEvery} from 'redux-saga/effects';
 
 import * as C from 'persistent-c';
@@ -28,17 +27,17 @@ export default function (bundle, deps) {
     return state.set('ioPaneMode', 'terminal');
   });
 
-  bundle.defineView('IOPane', IOPaneSelector, EpicComponent(self => {
+  bundle.defineView('IOPane', IOPaneSelector, class IOPane extends React.PureComponent {
 
-    self.render = function () {
-      switch (self.props.mode) {
-        case 'terminal': return <deps.TerminalView {...self.props}/>;
-        case 'split': return <deps.InputOutputView {...self.props}/>;
+    render () {
+      switch (this.props.mode) {
+        case 'terminal': return <deps.TerminalView {...this.props}/>;
+        case 'split': return <deps.InputOutputView {...this.props}/>;
         default: return <deps.IOPaneOptions/>;
       }
     };
 
-  }));
+  });
 
   function IOPaneSelector (state, props) {
     const stepper = deps.getStepperDisplay(state);
@@ -66,46 +65,49 @@ export default function (bundle, deps) {
     return state.get('ioPaneMode');
   })
 
-  bundle.defineView('IOPaneOptions', IOPaneOptionsSelector, EpicComponent(self => {
+  bundle.defineView('IOPaneOptions', IOPaneOptionsSelector, class IOPaneOptions extends React.PureComponent {
 
-    function onModeChanged (event) {
+    onModeChanged = (event) => {
       const mode = event.target.value;
-      self.props.dispatch({type: deps.ioPaneModeChanged, mode});
+      this.props.dispatch({type: deps.ioPaneModeChanged, mode});
     }
 
-    const modeOptions = [
+    modeOptions = [
       {value: 'split', label: 'IOPANE_MODE_SPLIT'},
       {value: 'terminal', label: 'IOPANE_MODE_INTERACTIVE'}
     ];
 
-    self.render = function () {
-      const {getMessage, canSelectMode, mode} = self.props;
+    render () {
+      const {getMessage, canSelectMode, mode} = this.props;
       const headerTitle = getMessage(canSelectMode ? 'IOPANE_SELECT_TERMINAL_TITLE' : 'IOPANE_FORCED_TERMINAL_TITLE');
       return (
-        <Panel header={headerTitle}>
-          <div className="row">
-            <div className="col-sm-12">
-              {canSelectMode && <form>
-                <label>
-                  {getMessage('IOPANE_MODE')}{" "}
-                  <select value={mode} onChange={onModeChanged}>
-                    {modeOptions.map(p =>
-                      <option key={p.value} value={p.value}>{getMessage(p.label)}</option>)}
-                  </select>
-                </label>
-              </form>}
-              {mode === 'split' &&
-                <div>
-                  <p>{getMessage('IOPANE_INITIAL_INPUT')}</p>
-                  <deps.BufferEditor buffer='input' mode='text' width='100%' height='150px' />
-                </div>}
+        <Panel>
+          <Panel.Heading>{headerTitle}</Panel.Heading>
+          <Panel.Body>
+            <div className="row">
+              <div className="col-sm-12">
+                {canSelectMode && <form>
+                  <label>
+                    {getMessage('IOPANE_MODE')}{" "}
+                    <select value={mode} onChange={this.onModeChanged}>
+                      {this.modeOptions.map(p =>
+                        <option key={p.value} value={p.value}>{getMessage(p.label)}</option>)}
+                    </select>
+                  </label>
+                </form>}
+                {mode === 'split' &&
+                  <div>
+                    <p>{getMessage('IOPANE_INITIAL_INPUT')}</p>
+                    <deps.BufferEditor buffer='input' mode='text' width='100%' height='150px' />
+                  </div>}
+              </div>
             </div>
-          </div>
+          </Panel.Body>
         </Panel>
       );
     };
 
-  }));
+  });
 
   function IOPaneOptionsSelector (state) {
     const getMessage = state.get('getMessage');
@@ -117,13 +119,13 @@ export default function (bundle, deps) {
 
   /* Split input/output view */
 
-  bundle.defineView('InputOutputView', InputOutputViewSelector, EpicComponent(self => {
+  bundle.defineView('InputOutputView', InputOutputViewSelector, class InputOutputView extends React.PureComponent {
 
-    const renderHeader = function () {
+    renderHeader = () => {
       return (
         <div className="row">
           <div className="col-sm-6">
-            {'Entrée '}
+            {"Entrée "}
             <i className="fa fa-lock"/>
           </div>
           <div className="col-sm-6">{"Sortie"}</div>
@@ -131,10 +133,10 @@ export default function (bundle, deps) {
       );
     };
 
-    self.render = function () {
-      const {readOnly, preventInput} = self.props;
+    render () {
+      const {readOnly, preventInput} = this.props;
       return (
-        <Panel header={renderHeader()}>
+        <Panel header={this.renderHeader()}>
           <div className="row">
             <div className="col-sm-6">
               <deps.BufferEditor buffer='input' readOnly={true} mode='text' width='100%' height='150px' />
@@ -147,7 +149,7 @@ export default function (bundle, deps) {
       );
     };
 
-  }));
+  });
 
   function InputOutputViewSelector (state, props) {
     const stepper = deps.getStepperDisplay(state);

@@ -15,6 +15,9 @@ export default function link (rootBuilder) {
   // Map(action type → action name)
   const nameForActionType = new Map();
 
+  // object mapping (action name → action type)
+  const typeForActionName = {};
+
   // Enhancers have a flat structure.
   const enhancers = [];
 
@@ -33,6 +36,7 @@ export default function link (rootBuilder) {
       throw new Error(`action type conflict: ${actionType}`);
     }
     nameForActionType.set(actionType, name);
+    typeForActionName[name] = actionType;
   }
 
   function declareUse (target, names) {
@@ -147,6 +151,7 @@ export default function link (rootBuilder) {
 
   return {
     scope: makeSafeProxy(globalScope, undefinedNameError),
+    actionTypes: typeForActionName,
     store,
     reducer,
     finalize,

@@ -25,7 +25,6 @@ Document:
 */
 
 import React from 'react';
-import EpicComponent from 'epic-component';
 import Slider from 'rc-slider';
 import {Button, ButtonGroup} from 'react-bootstrap';
 import classnames from 'classnames';

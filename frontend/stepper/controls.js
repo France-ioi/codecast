@@ -1,7 +1,6 @@
 
 import React from 'react';
 import {Button, ButtonGroup} from 'react-bootstrap';
-import EpicComponent from 'epic-component';
 import * as C from 'persistent-c';
 
 export default function (bundle, deps) {

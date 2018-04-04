@@ -1,43 +1,25 @@
 
 import React from 'react';
 import classnames from 'classnames';
-import EpicComponent from 'epic-component';
 import * as ace from 'brace';
 const Range = ace.acequire('ace/range').Range;
 
-export const Editor = EpicComponent(self => {
+class Editor extends React.PureComponent {
 
-  let editor;
-  let editorNode;
-  let selection = null;
-  let marker = null;
-  let mute = false;
-  let scrollTop = 0;
-  let firstVisibleRow = 0;
-
-  function toRange (selection) {
-    return new Range(
-      selection.start.row, selection.start.column,
-      selection.end.row, selection.end.column);
+  constructor (props) {
+    super(props);
+    this.editor = null;
+    this.editorNode = null;
+    this.selection = null;
+    this.marker = null;
+    this.mute = false;
+    this.scrollTop = 0;
+    this.firstVisibleRow = 0;
+    this.willUpdateSelection = false;
   }
 
-  const refEditor = function (node) {
-    editorNode = node;
-  };
-
-  const samePosition = function (p1, p2) {
-    return p1 && p2 && p1.row == p2.row && p1.column == p2.column;
-  };
-
-  const sameSelection = function (s1, s2) {
-    if (typeof s1 !== typeof s2 || !!s1 !== !!s2) {
-      return false;
-    }
-    // Test for same object (and also null).
-    if (s1 === s2) {
-      return true;
-    }
-    return samePosition(s1.start, s2.start) && samePosition(s1.end, s2.end);
+  refEditor = (node) => {
+    this.editorNode = node;
   };
 
   /*
@@ -45,159 +27,168 @@ export const Editor = EpicComponent(self => {
     until the next animation frame before querying the selection and firing
     the onSelect callback.
   */
-  let willUpdateSelection = false;
-  const onSelectionChanged = function () {
-    if (mute || willUpdateSelection) {
+  onSelectionChanged = () => {
+    if (this.mute || this.willUpdateSelection) {
       return;
     }
     // const isUserChange = editor.curOp && editor.curOp.command.name;
-    willUpdateSelection = true;
-    window.requestAnimationFrame(function () {
-      willUpdateSelection = false;
-      const selection_ = editor.selection.getRange();
-      if (sameSelection(selection, selection_))
+    this.willUpdateSelection = true;
+    window.requestAnimationFrame(() => {
+      this.willUpdateSelection = false;
+      const selection_ = this.editor.selection.getRange();
+      if (sameSelection(this.selection, selection_))
         return;
-      selection = selection_;
-      self.props.onSelect(selection);
+      this.selection = selection_;
+      this.props.onSelect(selection_);
     });
   };
 
-  const onTextChanged = function (edit) {
-    if (mute) {
+  onTextChanged = (edit) => {
+    if (this.mute) {
       return;
     }
     // The callback must not trigger a rendering of the Editor.
-    self.props.onEdit(edit)
+    this.props.onEdit(edit)
   };
 
-  const onAfterRender = function () {
-    if (mute) {
+  onAfterRender = () => {
+    if (this.mute) {
       return;
     }
-    const scrollTop_ = editor.getSession().getScrollTop();
-    const firstVisibleRow_ = editor.getFirstVisibleRow();
-    if (scrollTop !== scrollTop_) {
-      scrollTop = scrollTop_;
-      const {onScroll} = self.props;
+    const scrollTop_ = this.editor.getSession().getScrollTop();
+    const firstVisibleRow_ = this.editor.getFirstVisibleRow();
+    if (this.scrollTop !== scrollTop_) {
+      this.scrollTop = scrollTop_;
+      const {onScroll} = this.props;
       if (typeof onScroll === 'function') {
-        const firstVisibleRow_ = editor.getFirstVisibleRow();
-        if (firstVisibleRow !== firstVisibleRow_) {
-          firstVisibleRow = firstVisibleRow_;
+        const firstVisibleRow_ = this.editor.getFirstVisibleRow();
+        if (this.firstVisibleRow !== firstVisibleRow_) {
+          this.firstVisibleRow = firstVisibleRow_;
           onScroll(firstVisibleRow_);
         }
       }
     }
   };
 
-  const wrapModelToEditor = function (cb) {
-    if (!editor) {
+  wrapModelToEditor = (cb) => {
+    if (!this.editor) {
       return;
     }
-    mute = true;
+    this.mute = true;
     try {
       cb();
     } finally {
-      mute = false;
+      this.mute = false;
     }
   };
 
-  const reset = function (value, selection_, firstVisibleRow_) {
-    wrapModelToEditor(function () {
-      editor.setValue(value);
+  reset = (value, selection_, firstVisibleRow_) => {
+    this.wrapModelToEditor(() => {
+      this.editor.setValue(value);
       // Work-around for strange ACE behavior?
-      selection = null;
-      setSelection(selection_);
-      editor.scrollToLine(firstVisibleRow_);
-      firstVisibleRow = firstVisibleRow_;
+      this.selection = null;
+      this.setSelection(selection_);
+      this.editor.scrollToLine(firstVisibleRow_);
+      this.firstVisibleRow = firstVisibleRow_;
       // Clear a previously set marker, if any.
-      if (marker) {
-        editor.session.removeMarker(marker);
-        marker = null;
+      if (this.marker) {
+        this.editor.session.removeMarker(this.marker);
+        this.marker = null;
       }
     });
   };
 
-  const applyDeltas = function (deltas) {
-    wrapModelToEditor(function () {
-      editor.session.doc.applyDeltas(deltas);
+  applyDeltas = (deltas) => {
+    this.wrapModelToEditor(() => {
+      this.editor.session.doc.applyDeltas(deltas);
     });
   };
 
-  const focus = function () {
-    if (!editor)
+  focus = () => {
+    if (!this.editor)
       return;
-    editor.focus();
+    this.editor.focus();
   };
 
-  const scrollToLine = function (firstVisibleRow_) {
-    wrapModelToEditor(function () {
-      editor.resize(true);
-      editor.scrollToLine(firstVisibleRow_);
-      firstVisibleRow_ = firstVisibleRow;
+  scrollToLine = (firstVisibleRow_) => {
+    this.wrapModelToEditor(() => {
+      this.editor.resize(true);
+      this.editor.scrollToLine(firstVisibleRow_);
+      this.firstVisibleRow = firstVisibleRow_; /* XXX assignment swapped,
+        was this a bug? should we instead request the first visible row
+        from ACE, in case we did not get exactly what we requested? */
     });
   };
 
-  const setSelection = function (selection_) {
-    wrapModelToEditor(function () {
-      if (sameSelection(selection, selection_)) {
+  setSelection = (selection_) => {
+    this.wrapModelToEditor(() => {
+      if (sameSelection(this.selection, selection_)) {
         return;
       }
-      selection = selection_;
-      if (selection && selection.start && selection.end) {
-        editor.selection.setRange(toRange(selection));
+      this.selection = selection_;
+      if (this.selection && this.selection.start && this.selection.end) {
+        this.editor.selection.setRange(toRange(this.selection));
       } else {
-        editor.selection.setRange(new Range(0, 0, 0, 0));
+        this.editor.selection.setRange(new Range(0, 0, 0, 0));
       }
     });
   };
 
-  const highlight = function (range) {
-    wrapModelToEditor(function () {
-      const session = editor.session;
-      if (marker) {
-        session.removeMarker(marker);
-        marker = null;
+  highlight = (range) => {
+    this.wrapModelToEditor(() => {
+      const session = this.editor.session;
+      if (this.marker) {
+        session.removeMarker(this.marker);
+        this.marker = null;
       }
-      if (range && range.start && range.end) {
+      if (this.range && this.range.start && this.range.end) {
         // Add (and save) the marker.
-        marker = session.addMarker(toRange(range), "code-highlight", "text");
-        if (!self.props.shield) {
+        this.marker = session.addMarker(toRange(this.range), "code-highlight", "text");
+        if (!this.props.shield) {
           /* Also scroll so that the line is visible.  Skipped if the editor has
              a shield (preventing user input) as this means playback is active,
              and scrolling is handled by individual events. */
-          editor.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
+          this.editor.scrollToLine(this.range.start.row, /*center*/true, /*animate*/true);
         }
       }
     });
   };
 
-  const getSelectionRange = function () {
-    return editor && editor.getSelectionRange();
+  getSelectionRange = () => {
+    return this.editor && this.editor.getSelectionRange();
   };
 
-  self.componentDidMount = function () {
-    const {buffer} = self.props;
-    editor = ace.edit(editorNode);
-    const session = editor.getSession();
+  componentDidMount () {
+    const {buffer} = this.props;
+    const editor = this.editor = ace.edit(this.editorNode);
+    const session = this.editor.getSession();
     editor.$blockScrolling = Infinity;
     // editor.setBehavioursEnabled(false);
-    editor.setTheme(`ace/theme/${self.props.theme||'github'}`);
-    session.setMode(`ace/mode/${self.props.mode||'text'}`);
+    editor.setTheme(`ace/theme/${this.props.theme||'github'}`);
+    session.setMode(`ace/mode/${this.props.mode||'text'}`);
     // editor.setOptions({minLines: 25, maxLines: 50});
-    editor.setReadOnly(self.props.readOnly);
-    const {onInit, onSelect, onEdit, onScroll} = self.props;
+    editor.setReadOnly(this.props.readOnly);
+    const {onInit, onSelect, onEdit, onScroll} = this.props;
     if (typeof onInit === 'function') {
-      const api = {reset, applyDeltas, setSelection, focus, scrollToLine, getSelectionRange, highlight};
+      const api = {
+        reset: this.reset,
+        applyDeltas: this.applyDeltas,
+        setSelection: this.setSelection,
+        focus: this.focus,
+        scrollToLine: this.scrollToLine,
+        getSelectionRange: this.getSelectionRange,
+        highlight: this.highlight,
+      };
       onInit(api);
     }
     if (typeof onSelect === 'function') {
-      session.selection.on("changeCursor", onSelectionChanged, true);
-      session.selection.on("changeSelection", onSelectionChanged, true);
+      session.selection.on("changeCursor", this.onSelectionChanged, true);
+      session.selection.on("changeSelection", this.onSelectionChanged, true);
     }
     if (typeof onEdit === 'function') {
-      session.on("change", onTextChanged);
+      session.on("change", this.onTextChanged);
     }
-    editor.renderer.on("afterRender", onAfterRender);
+    editor.renderer.on("afterRender", this.onAfterRender);
     editor.commands.addCommand({
       name: "escape",
       bindKey: {
@@ -218,33 +209,54 @@ export const Editor = EpicComponent(self => {
     }, 0);
   };
 
-  self.componentWillReceiveProps = function (nextProps) {
-    if (editor) {
-      if (self.props.readOnly !== nextProps.readOnly) {
-        editor.setReadOnly(nextProps.readOnly);
+  componentWillReceiveProps (nextProps) {
+    if (this.editor) {
+      if (this.props.readOnly !== nextProps.readOnly) {
+        this.editor.setReadOnly(nextProps.readOnly);
       }
       /* Do not auto-scroll when shielded. */
-      editor.setAutoScrollEditorIntoView(!self.props.shield);
+      this.editor.setAutoScrollEditorIntoView(!this.props.shield);
     }
   };
 
-  self.componentWillUnmount = function () {
-    if (typeof self.props.onInit === 'function') {
-      self.props.onInit(null);
+  componentWillUnmount () {
+    if (typeof this.props.onInit === 'function') {
+      this.props.onInit(null);
     }
   };
 
-  self.render = function () {
-    const {width, height, shield, getMessage} = self.props;
+  render () {
+    const {width, height, shield, getMessage} = this.props;
     return (
       <div className="editor" style={{width: width, height: height}}>
-        <div className="editor-frame" ref={refEditor}/>
+        <div className="editor-frame" ref={this.refEditor}/>
         <div className={classnames(['editor-shield', shield && 'editor-shield-up'])}
           title={getMessage('PROGRAM_CANNOT_BE_MODIFIED_WHILE_RUNNING')}/>
       </div>
     );
-  };
+  }
 
-});
+}
+
+function toRange (selection) {
+  return new Range(
+    selection.start.row, selection.start.column,
+    selection.end.row, selection.end.column);
+}
+
+function samePosition (p1, p2) {
+  return p1 && p2 && p1.row == p2.row && p1.column == p2.column;
+}
+
+function sameSelection (s1, s2) {
+  if (typeof s1 !== typeof s2 || !!s1 !== !!s2) {
+    return false;
+  }
+  // Test for same object (and also null).
+  if (s1 === s2) {
+    return true;
+  }
+  return samePosition(s1.start, s2.start) && samePosition(s1.end, s2.end);
+}
 
 export default Editor;

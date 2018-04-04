@@ -1,6 +1,5 @@
 
 import React from 'react';
-import EpicComponent from 'epic-component';
 import {Alert} from 'react-bootstrap';
 import {take} from 'redux-saga/effects';
 
@@ -32,29 +31,30 @@ export default function (bundle, deps) {
     return {getMessage, error};
   });
 
-  bundle.defineView('ErrorView', 'ErrorViewSelector', EpicComponent(self => {
+  class ErrorView extends React.PureComponent {
 
-    const onClearError = function () {
-      self.props.dispatch({type: 'clearError'});
+    onClearError = () => {
+      this.props.dispatch({type: deps.clearError});
     };
 
-    self.render = function () {
-      const {error, getMessage} = self.props;
+    render () {
+      const {error, getMessage} = this.props;
       if (!error) {
         return false;
       }
       return (
         <div className="row">
           <div className="col-sm-12">
-            <Alert bsStyle="danger" onDismiss={onClearError}>
+            <Alert bsStyle="danger" onDismiss={this.onClearError}>
               <h4>{getMessage('AN_ERROR_OCCURRED')}</h4>
               <p>{error.toString()}</p>
             </Alert>
           </div>
         </div>
       );
-    };
+    }
 
-  }));
+  }
+  bundle.defineView('ErrorView', 'ErrorViewSelector', ErrorView);
 
 };

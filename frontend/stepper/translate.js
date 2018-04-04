@@ -23,7 +23,7 @@ export default function (bundle, deps) {
 
   bundle.use('getBufferModel');
 
-  bundle.addReducer('init', function (state, action) {
+  bundle.addReducer('init', function (state, _action) {
     return state.set('translate', translateClear());
   });
 

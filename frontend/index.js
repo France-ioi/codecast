@@ -27,11 +27,11 @@ import PlayerBundle from './player/index';
 import EditorBundle from './editor/index';
 import LangBundle from './lang/index';
 
-const {store, scope, finalize, start} = link(function (bundle, deps) {
+const {store, scope, actionTypes, finalize, start} = link(function (bundle, deps) {
 
   bundle.defineAction('init', 'System.Init');
   bundle.addReducer('init', (_state, {payload: {baseUrl, authProviders}}) =>
-    Immutable.Map({baseUrl, authProviders, scope}));
+    Immutable.Map({baseUrl, authProviders, scope, actionTypes}));
 
   bundle.include(commonBundle);
   bundle.include(stepperBundle);
@@ -47,8 +47,6 @@ const {store, scope, finalize, start} = link(function (bundle, deps) {
       return state;
     });
   }
-
-  // bundle.addEnhancer(DevTools.instrument());
 
 }/*, {reduxSaga: {sagaMonitor}}*/);
 finalize(scope);

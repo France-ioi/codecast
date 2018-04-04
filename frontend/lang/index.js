@@ -29,7 +29,7 @@ export default function (bundle, deps) {
     format: () => "???",
     toString: () => "???"
   };
-  bundle.addReducer('init', function (state, action) {
+  bundle.addReducer('init', function (state, _action) {
     return state.set('availableLanguages', Object.keys(Messages))
       .set('getMessage', (message) => languageNotSet);
   });
@@ -39,8 +39,8 @@ export default function (bundle, deps) {
     window.localStorage.language = language;
     const localizedMessage = Object.create(Message,
         {_l: {writable: false, configurable: false, value: language}});
-    const getMessage = memoize(function (message) {
-      const value = Messages[language][message] || `L:${message}`;
+    const getMessage = memoize(function (message, defaultText) {
+      const value = Messages[language][message] || defaultText || `L:${message}`;
       return Object.create(localizedMessage,
         {_m: {writable: false, configurable: false, value}});
     });

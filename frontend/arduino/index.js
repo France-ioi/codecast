@@ -15,7 +15,6 @@ In the stepper state:
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import EpicComponent from 'epic-component';
 import {Button, FormControl, ControlLabel, FormGroup} from 'react-bootstrap';
 import classnames from 'classnames';
 import range from 'node-range';
@@ -51,7 +50,7 @@ export default function (bundle, deps) {
     })
   };
 
-  bundle.addReducer('init', function (state, action) {
+  bundle.addReducer('init', function (state, _action) {
     return arduinoReset(state, {state: initialArduinoState});
   });
 
@@ -98,10 +97,10 @@ export default function (bundle, deps) {
     return {portConfigs, portDefns, portStates, selectedPort};
   }
 
-  bundle.defineView('ArduinoPanel', ArduinoPanelSelector, EpicComponent(self => {
+  class ArduinoPanel extends React.PureComponent {
 
-    self.render = function () {
-      const {portConfigs, portDefns, portStates, selectedPort, preventInput, dispatch} = self.props;
+    render () {
+      const {portConfigs, portDefns, portStates, selectedPort, preventInput, dispatch} = this.props;
       if (!portStates) {
         return (
           <form>
@@ -132,53 +131,54 @@ export default function (bundle, deps) {
       );
     };
 
-  }));
+  }
+  bundle.defineView('ArduinoPanel', ArduinoPanelSelector, ArduinoPanel);
 
-  const PortConfig = EpicComponent(self => {
-    function onChange (changes) {
-      const {dispatch, index} = self.props;
+  class PortConfig extends React.PureComponent {
+    onChange = (changes) => {
+      const {dispatch, index} = this.props;
       dispatch({type: deps.arduinoPortConfigured, index, changes});
-    }
-    function onChangePeripheral (changes) {
-      onChange({peripheral: changes});
-    }
-    self.render = function () {
-      const {defn, config, preventInput} = self.props;
+    };
+    onChangePeripheral = (changes) => {
+      this.onChange({peripheral: changes});
+    };
+    render () {
+      const {defn, config, preventInput} = this.props;
       const {peripheral} = config;
       return (
         <div className='arduino-port'>
           <PortHeader defn={defn}/>
           <div className='arduino-port-periph'>
-            <PeripheralConfig defn={defn} value={peripheral} onChange={onChangePeripheral}
+            <PeripheralConfig defn={defn} value={peripheral} onChange={this.onChangePeripheral}
               readOnly={preventInput} />
           </div>
         </div>
       );
-    };
-  });
+    }
+  }
 
-  const PortDisplay = EpicComponent(self => {
-    function onChange (changes) {
-      const {index, preventInput} = self.props;
+  class PortDisplay extends React.PureComponent {
+    onChange = (changes) => {
+      const {index, preventInput} = this.props;
       if (!preventInput) {
-        self.props.dispatch({type: deps.arduinoPortChanged, index, changes});
+        this.props.dispatch({type: deps.arduinoPortChanged, index, changes});
       }
-    }
-    function onButtonToggle () {
-      const input = 1 ^ self.props.state.input;
-      onChange({input: {$set: input}});
-    }
-    function onSelect () {
-      let {index, preventInput, selected} = self.props;
+    };
+    onButtonToggle = () => {
+      const input = 1 ^ this.props.state.input;
+      this.onChange({input: {$set: input}});
+    };
+    onSelect = () => {
+      let {index, preventInput, selected} = this.props;
       if (!preventInput) {
-        self.props.dispatch({
+        this.props.dispatch({
           type: deps.arduinoPortSelected,
           index: selected ? undefined : index
         });
       }
-    }
-    self.render = function () {
-      const {index, defn, config, state, selected} = self.props;
+    };
+    render = () => {
+      const {index, defn, config, state, selected} = this.props;
       const {peripheral} = config;
       const level = state.direction === PINMODE_INPUT
         ? (state.output === 1 ? <strong>{'Z'}</strong> : 'Z')
@@ -194,23 +194,23 @@ export default function (bundle, deps) {
                 : <i className="fa fa-circle"/>}
             </div>}
           {peripheral.type === 'button' &&
-            <div className="arduino-peri-button clickable" onClick={onButtonToggle}>
+            <div className="arduino-peri-button clickable" onClick={this.onButtonToggle}>
               {state.input === 0
                 ? <i className="fa fa-caret-down"/>
                 : <i className="fa fa-caret-up"/>}
             </div>}
           {peripheral.type === 'slider' &&
-            <div className="arduino-slider" onClick={onSelect}>
+            <div className="arduino-slider" onClick={this.onSelect}>
               {Math.round(state.input * 1023)}
             </div>}
         </div>
       );
     };
-  });
+  }
 
-  const PortHeader = EpicComponent(self => {
-    self.render = function () {
-      const {defn, brief} = self.props;
+  class PortHeader extends React.PureComponent {
+    render () {
+      const {defn, brief} = this.props;
       const {label, digital, analog} = defn;
       return (
         <div className='arduino-port-header' style={{minHeight: brief ? '21px' : '63px'}}>
@@ -220,7 +220,7 @@ export default function (bundle, deps) {
         </div>
       );
     };
-  });
+  }
 
   const peripheralTypes = ['none', 'slider', 'LED', 'button'];
   const ledColors = ['red', 'amber', 'yellow', 'green', 'blue', 'white'];
@@ -253,38 +253,38 @@ export default function (bundle, deps) {
     }
     return true;
   }
-  const PeripheralConfig = EpicComponent(self => {
-    function onSelectNext () {
-      const {defn, value, onChange} = self.props;
+  class PeripheralConfig extends React.PureComponent {
+    onSelectNext = () => {
+      const {defn, value, onChange} = this.props;
       let type = value.type;
       do {
         type = nextInArray(peripheralTypes, type);
       } while (!peripheralTypeAvailable(defn, type) && type !== value.type);
       onChange({$set: peripheralDefault[type]});
-    }
-    function onSelectNextLedColor () {
-      const {value, onChange, readOnly} = self.props;
+    };
+    onSelectNextLedColor = () => {
+      const {value, onChange, readOnly} = this.props;
       if (!readOnly) {
         const color = nextInArray(ledColors, value.color);
         onChange({color: {$set: color}});
       }
-    }
-    self.render = function () {
-      const {value, readOnly} = self.props;
+    };
+    render () {
+      const {value, readOnly} = this.props;
       /* peripheral select: none, LED, button, slider */
       return (
         <div className='arduino-peripheral'>
           <div>
-            <Button onClick={onSelectNext} disabled={readOnly} >
+            <Button onClick={this.onSelectNext} disabled={readOnly} >
               <i className="fa fa-angle-right"/>
             </Button>
           </div>
           {value.type === 'none' &&
-            <p>—</p>}
+            <p>{"—"}</p>}
           {value.type === 'LED' &&
-            <div className={classnames(['arduino-peri-led', readOnly || 'clickable'])} onClick={onSelectNextLedColor}>
+            <div className={classnames(['arduino-peri-led', readOnly || 'clickable'])} onClick={this.onSelectNextLedColor}>
               {"LED"}
-              <i className='fa fa-circle' style={{color:colorToCss[value.color]}}/>
+              <i className='fa fa-circle' style={{color: colorToCss[value.color]}}/>
             </div>}
           {value.type === 'button' &&
             <p>{"BTN"}</p>}
@@ -293,38 +293,37 @@ export default function (bundle, deps) {
         </div>
       );
     };
-  });
+  }
 
-  const SelectedPortPanel = EpicComponent(self => {
-    function onChange (changes) {
-      const {index, preventInput} = self.props;
+  class SelectedPortPanel extends React.PureComponent {
+    onChange = (changes) => {
+      const {index, preventInput} = this.props;
       if (!preventInput) {
-        self.props.dispatch({type: deps.arduinoPortChanged, index, changes});
+        this.props.dispatch({type: deps.arduinoPortChanged, index, changes});
       }
+    };
+    onSliderChanged = (event) => {
+      this.onChange({input: {$set: event.currentTarget.value / 1023}});
     }
-    function onSliderChanged (event) {
-      onChange({input: {$set: event.currentTarget.value / 1023}});
-    }
-    function renderSlider () {
-      const value = Math.round(self.props.state.input * 1023);
+    renderSlider = () => {
+      const value = Math.round(this.props.state.input * 1023);
       return (
         <div>
-          <input type="number" value={value} onChange={onSliderChanged}/>
-          <input type="range" value={value} min={0} max={1023} onChange={onSliderChanged}/>
-        </div>
-      );
-    }
-    self.render = function () {
-      const {index, state} = self.props;
-      return (
-        <div className="arduino-port-panel">
-          <p>Port {index}</p>
-          {state.peripheral.type === 'slider' && renderSlider()}
+          <input type="number" value={value} onChange={this.onSliderChanged}/>
+          <input type="range" value={value} min={0} max={1023} onChange={this.onSliderChanged}/>
         </div>
       );
     };
-  });
-
+    render () {
+      const {index, state} = this.props;
+      return (
+        <div className='arduino-port-panel'>
+          <p>{"Port "}{index}</p>
+          {state.peripheral.type === 'slider' && this.renderSlider()}
+        </div>
+      );
+    };
+  }
 
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 

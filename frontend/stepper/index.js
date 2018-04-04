@@ -50,7 +50,7 @@ export default function (bundle, deps) {
     'recorderStopping'
   );
 
-  bundle.addReducer('init', function (state, action) {
+  bundle.addReducer('init', function (state, _action) {
     return state.set('stepper', stepperClear());
   });
 

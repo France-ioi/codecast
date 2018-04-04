@@ -2,7 +2,6 @@
 import {take, put, call, select} from 'redux-saga/effects';
 import React from 'react';
 import {Button, FormControl, ControlLabel, FormGroup} from 'react-bootstrap';
-import EpicComponent from 'epic-component';
 
 import {asyncRequestJson} from '../utils/api';
 import {getBlob, uploadBlob} from '../utils/blobs';
@@ -115,14 +114,14 @@ export default function (bundle, deps) {
     return result;
   });
 
-  bundle.defineView('SaveScreen', 'SaveScreenSelector', EpicComponent(self => {
+  class SaveScreen extends React.PureComponent {
 
-    const onUpload = function () {
-      self.props.dispatch({type: deps.saveScreenUploadStart});
+    onUpload = () => {
+      this.props.dispatch({type: deps.saveScreenUploadStart});
     };
 
-    self.render = function () {
-      const {getMessage, audioUrl, wavAudioUrl, eventsUrl, playerUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = self.props;
+    render () {
+      const {getMessage, audioUrl, wavAudioUrl, eventsUrl, playerUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = this.props;
       return (
         <form>
           <FormGroup controlId="eventsUrlInput">
@@ -161,6 +160,7 @@ export default function (bundle, deps) {
       );
     };
 
-  }));
+  }
+  bundle.defineView('SaveScreen', 'SaveScreenSelector', SaveScreen);
 
 };

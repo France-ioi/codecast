@@ -2,23 +2,11 @@
 // XXX This file is currently not used, and event names are outdated.
 
 import React from 'react';
-import EpicComponent from 'epic-component';
 
-export const EventView = EpicComponent(self => {
+class EventView extends React.PureComponent {
 
-  const renderRange = function (range) {
-    const start_row = range[0];
-    const start_column = range[1];
-    const end_row = range[2];
-    const end_column = range[3];
-    if (end_row === undefined || end_column === undefined)
-      return `${start_row},${start_column}`;
-    else
-      return `${start_row},${start_column}—${end_row},${end_column}`;
-  };
-
-  self.render = function () {
-    const {event} = self.props;
+  render () {
+    const {event} = this.props;
     const timestamp = event.get(0);
     let body;
     switch (event.get(1)) {
@@ -26,13 +14,13 @@ export const EventView = EpicComponent(self => {
         body = <span>start</span>;
         break;
       case 'select':
-        body = <span>select {renderRange(event.get(2))}</span>;
+        body = <span>select {rangeToText(event.get(2))}</span>;
         break;
       case 'insert':
-        body = <span>insert {JSON.stringify(event.get(3))} at {renderRange(event.get(2))}</span>;
+        body = <span>insert {JSON.stringify(event.get(3))} at {rangeToText(event.get(2))}</span>;
         break;
       case 'delete':
-        body = <span>delete {renderRange(event.get(2))}</span>;
+        body = <span>delete {rangeToText(event.get(2))}</span>;
         break;
       case 'translate':
         body = <span>begin translation</span>;
@@ -69,5 +57,16 @@ export const EventView = EpicComponent(self => {
   };
 
 });
+
+function rangeToText (range) {
+  const start_row = range[0];
+  const start_column = range[1];
+  const end_row = range[2];
+  const end_column = range[3];
+  if (end_row === undefined || end_column === undefined)
+    return `${start_row},${start_column}`;
+  else
+    return `${start_row},${start_column}—${end_row},${end_column}`;
+}
 
 export default EventView;

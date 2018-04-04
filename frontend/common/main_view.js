@@ -36,40 +36,64 @@ class MainView extends React.PureComponent {
         <div style={{width: `${geometry.width}px`}}>
           <div className="row">
             {StackView && <div className="col-sm-3">
-              <Panel header={<span>{getMessage('VARIABLES')}</span>}>
-                {<StackView height={sourceRowHeight}/>}
+              <Panel>
+                <Panel.Heading>
+                  <span>{getMessage('VARIABLES')}</span>
+                </Panel.Heading>
+                <Panel.Body>
+                  {<StackView height={sourceRowHeight}/>}
+                </Panel.Body>
               </Panel>
             </div>}
             <div className={StackView ? "col-sm-9" : "col-sm-12"}>
-              <Panel header={sourcePanelHeader}>
-                <BufferEditor buffer='source' readOnly={readOnly} shield={preventInput}
-                  mode={sourceMode} theme={'textmate'} width='100%' height={sourceRowHeight} globalName='source' />
+              <Panel>
+                <Panel.Heading>
+                  {sourcePanelHeader}
+                </Panel.Heading>
+                <Panel.Body>
+                  <BufferEditor buffer='source' readOnly={readOnly} shield={preventInput}
+                    mode={sourceMode} theme={'textmate'} width='100%' height={sourceRowHeight} globalName='source' />
+                </Panel.Body>
               </Panel>
             </div>
           </div>
           {diagnostics && <div className="row">
             <div className="col-sm-12">
-              <Panel header={diagnosticsPanelHeader} bsStyle="danger">
-                <div dangerouslySetInnerHTML={diagnostics}/>
+              <Panel bsStyle='danger'>
+                <Panel.Heading>
+                  {diagnosticsPanelHeader}
+                </Panel.Heading>
+                <Panel.Body>
+                  <div dangerouslySetInnerHTML={diagnostics}/>
+                </Panel.Body>
               </Panel>
             </div>
           </div>}
           {error && <div className="row">
             <div className="col-sm-12">
-              <Panel header={stepperErrorPanelHeader} bsStyle="danger">
-                <pre>{error}</pre>
+              <Panel bsStyle='danger'>
+                <Panel.Heading>
+                  {stepperErrorPanelHeader}
+                </Panel.Heading>
+                <Panel.Body>
+                  <pre>{error}</pre>
+                </Panel.Body>
               </Panel>
             </div>
           </div>}
           {ArduinoPanel && <div className="row">
             <div className="col-sm-12">
-              <Panel header={
-                <span>
-                  <i className="fa fa-microchip"/>
-                  {" Arduino"}
-                  {haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
-                </span>}>
-                <ArduinoPanel preventInput={preventInput}/>
+              <Panel>
+                <Panel.Heading>
+                  <span>
+                    <i className="fa fa-microchip"/>
+                    {" Arduino"}
+                    {haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
+                  </span>
+                </Panel.Heading>
+                <Panel.Body>
+                  <ArduinoPanel preventInput={preventInput}/>
+                </Panel.Body>
               </Panel>
             </div>
           </div>}

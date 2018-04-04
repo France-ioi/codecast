@@ -29,17 +29,60 @@ user interaction change the view.
 
 import {call, put, takeEvery, select} from 'redux-saga/effects';
 import Immutable from 'immutable';
+import update from 'immutability-helper';
 import React from 'react';
-import EpicComponent from 'epic-component';
 
 import 'brace';
 import 'brace/mode/c_cpp';
+import 'brace/theme/ambiance';
+import 'brace/theme/chaos';
+import 'brace/theme/chrome';
+import 'brace/theme/clouds';
+import 'brace/theme/clouds_midnight';
+import 'brace/theme/cobalt';
+import 'brace/theme/crimson_editor';
+import 'brace/theme/dawn';
+import 'brace/theme/dreamweaver';
+import 'brace/theme/eclipse';
+import 'brace/theme/github';
+import 'brace/theme/idle_fingers';
+import 'brace/theme/iplastic';
+import 'brace/theme/katzenmilch';
+import 'brace/theme/kr_theme';
+import 'brace/theme/kuroir';
+import 'brace/theme/merbivore';
+import 'brace/theme/merbivore_soft';
+import 'brace/theme/mono_industrial';
+import 'brace/theme/monokai';
+import 'brace/theme/pastel_on_dark';
+import 'brace/theme/solarized_dark';
+import 'brace/theme/solarized_light';
+import 'brace/theme/sqlserver';
+import 'brace/theme/terminal';
 import 'brace/theme/textmate';
+import 'brace/theme/tomorrow';
+import 'brace/theme/tomorrow_night';
+import 'brace/theme/tomorrow_night_blue';
+import 'brace/theme/tomorrow_night_bright';
+import 'brace/theme/tomorrow_night_eighties';
+import 'brace/theme/twilight';
+import 'brace/theme/vibrant_ink';
+import 'brace/theme/xcode';
 import 'brace/worker/javascript';
 import '../arduino/ace';
 
 import {emptyDocument, documentFromString, compressRange, expandRange} from './document';
 import Editor from './editor';
+
+const AceThemes = [
+  'ambiance', 'chaos', 'chrome', 'clouds', 'clouds_midnight', 'cobalt',
+  'crimson_editor', 'dawn', 'dreamweaver', 'eclipse', 'github', 'idle_fingers',
+  'iplastic', 'katzenmilch', 'kr_theme', 'kuroir', 'merbivore',
+  'merbivore_soft', 'mono_industrial', 'monokai', 'pastel_on_dark',
+  'solarized_dark', 'solarized_light', 'sqlserver', 'terminal', 'textmate',
+  'tomorrow', 'tomorrow_night', 'tomorrow_night_blue', 'tomorrow_night_bright',
+  'tomorrow_night_eighties', 'twilight', 'vibrant_ink', 'xcode'
+];
 
 export const DocumentModel = Immutable.Record({
   document: emptyDocument,
@@ -173,37 +216,12 @@ export default function (bundle, deps) {
     }
   }
 
-  bundle.defineView('BufferEditor', BufferEditorSelector, EpicComponent(self => {
-
-    const onInit = function (editor) {
-      const {dispatch, buffer} = self.props;
-      dispatch({type: deps.bufferInit, buffer, editor});
-    };
-
-    const onSelect = function (selection) {
-      const {dispatch, buffer} = self.props;
-      dispatch({type: deps.bufferSelect, buffer, selection});
-    };
-
-    const onEdit = function (delta) {
-      const {dispatch, buffer} = self.props;
-      dispatch({type: deps.bufferEdit, buffer, delta});
-    };
-
-    const onScroll = function (firstVisibleRow) {
-      const {dispatch, buffer} = self.props;
-      dispatch({type: deps.bufferScroll, buffer, firstVisibleRow});
-    };
-
-    self.render = function () {
-      return <Editor onInit={onInit} onEdit={onEdit} onSelect={onSelect} onScroll={onScroll} {...self.props} />;
-    };
-
-  }));
+  bundle.defineView('BufferEditor', BufferEditorSelector, BufferEditor);
 
   function BufferEditorSelector (state, props) {
+    const actionTypes = state.get('actionTypes');
     const getMessage = state.get('getMessage');
-    return {getMessage};
+    return {actionTypes, getMessage};
   }
 
   bundle.defer(function ({recordApi, replayApi}) {
@@ -309,7 +327,64 @@ export default function (bundle, deps) {
     });
   });
 
+/*
+  bundle.defineView('AceSettings', AceSettingsSelector, class AceSettings extends React.PureComponent {
+    _themeOptions = AceThemes.map((theme) => ({label: theme, value: theme}));
+    render() {
+      return (
+        <div>
+          <Select options={_themeOptions} onChange={this.onSelectSourceTheme} clearableValue={false} />
+        </div>
+      );
+    }
+    onSelect = (option) => {
+      this.props.dispatch({type: deps.aceSourceThemeChanged, payload: {theme: option.value}});
+    };
+  });
+  function AceSettingsSelector (state) {
+    return {};
+  }
+  bundle.addReducer('init', function (state) {
+    return state.set('ace', {source: {theme: 'textmate'}});
+  });
+  bundle.defineAction('aceSourceThemeChanged', 'Ace.Source.Theme.Changed');
+  bundle.addReducer('aceSourceThemeChanged', function (state, {payload: {theme}}) {
+    return state.update('ace', ace => update(ace, {source: {theme: {$set: theme}}}));
+  });
+    yield takeEvery(deps.aceSourceThemeChanged, function* () {
+      yield select(state => state.getIn(''));
+    });
+*/
+
 };
+
+class BufferEditor extends React.PureComponent {
+
+  onInit = (editor) => {
+    const {dispatch, buffer, actionTypes} = this.props;
+    dispatch({type: actionTypes.bufferInit, buffer, editor});
+  };
+
+  onSelect = (selection) => {
+    const {dispatch, buffer, actionTypes} = this.props;
+    dispatch({type: actionTypes.bufferSelect, buffer, selection});
+  };
+
+  onEdit = (delta) => {
+    const {dispatch, buffer, actionTypes} = this.props;
+    dispatch({type: actionTypes.bufferEdit, buffer, delta});
+  };
+
+  onScroll = (firstVisibleRow) => {
+    const {dispatch, buffer, actionTypes} = this.props;
+    dispatch({type: actionTypes.bufferScroll, buffer, firstVisibleRow});
+  };
+
+  render () {
+    return <Editor onInit={this.onInit} onEdit={this.onEdit} onSelect={this.onSelect} onScroll={this.onScroll} {...this.props} />;
+  };
+
+}
 
 function loadBufferModel (dump) {
   return DocumentModel({

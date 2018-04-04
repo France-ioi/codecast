@@ -14,7 +14,7 @@ export default function (bundle, deps) {
   bundle.defineAction('leaveFullscreenSucceeded', 'Fullscreen.Leave.Succeeded');
   bundle.defineAction('fullscreenEnabled', 'Fullscreen.Enabled');
 
-  bundle.addReducer('init', function (state, action) {
+  bundle.addReducer('init', function (state, _action) {
     return state.set('fullscreen', Immutable.Map({active: false, enabled: false}));
   });
 

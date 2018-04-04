@@ -1,7 +1,6 @@
 
 import React from 'react';
 import {Button} from 'react-bootstrap';
-import EpicComponent from 'epic-component';
 import Slider from 'rc-slider';
 
 import {formatTime} from '../common/utils';
@@ -23,27 +22,27 @@ export default function (bundle, deps) {
     return {getMessage, status, audioTime, duration};
   });
 
-  bundle.defineView('PlayerControls', 'PlayerControlsSelector', EpicComponent(self => {
+  class PlayerControls extends React.PureComponent {
 
-    const onStartPlayback = function () {
-      const {status} = self.props;
+    onStartPlayback = () => {
+      const {status} = this.props;
       if (status === 'ready') {
-        self.props.dispatch({type: deps.playerStart});
+        this.props.dispatch({type: deps.playerStart});
       } else if (status === 'paused') {
-        self.props.dispatch({type: deps.playerResume});
+        this.props.dispatch({type: deps.playerResume});
       }
     };
 
-    const onPausePlayback = function () {
-      self.props.dispatch({type: deps.playerPause});
+    onPausePlayback = () => {
+      this.props.dispatch({type: deps.playerPause});
     };
 
-    const onSeek = function (audioTime) {
-      self.props.dispatch({type: deps.playerSeek, audioTime});
+    onSeek = (audioTime) => {
+      this.props.dispatch({type: deps.playerSeek, audioTime});
     };
 
-    self.render = function () {
-      const {status, audioTime, duration, getMessage} = self.props;
+    render () {
+      const {status, audioTime, duration, getMessage} = this.props;
       const showStartPlayback = /preparing|starting|ready|paused/.test(status);
       const canStartPlayback = /ready|paused/.test(status);
       const showPausePlayback = /playing|pausing/.test(status);
@@ -53,7 +52,7 @@ export default function (bundle, deps) {
         <div id='player-controls'>
           <div className='player-controls-row row' style={{width: '100%'}}>
             <div className="player-slider-container">
-              <Slider tipFormatter={formatTime} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={onSeek}>
+              <Slider tipFormatter={formatTime} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={this.onSeek}>
               </Slider>
             </div>
           </div>
@@ -61,12 +60,12 @@ export default function (bundle, deps) {
             <div className="player-controls controls controls-main col-sm-3">
               <div className="player-controls-playback">
                 {showStartPlayback &&
-                    <Button onClick={onStartPlayback} disabled={!canStartPlayback}
+                    <Button onClick={this.onStartPlayback} disabled={!canStartPlayback}
                       title={getMessage('START_PLAYBACK')}>
                       <i className="fa fa-play"/>
                     </Button>}
                 {showPausePlayback &&
-                  <Button onClick={onPausePlayback} disabled={!canPausePlayback}
+                  <Button onClick={this.onPausePlayback} disabled={!canPausePlayback}
                     title={getMessage('PAUSE_PLAYBACK')}>
                     <i className="fa fa-pause"/>
                   </Button>}
@@ -88,6 +87,7 @@ export default function (bundle, deps) {
       );
     };
 
-  }));
+  }
+  bundle.defineView('PlayerControls', 'PlayerControlsSelector', PlayerControls);
 
 };
