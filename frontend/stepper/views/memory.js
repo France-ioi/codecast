@@ -28,7 +28,9 @@ import React from 'react';
 import Slider from 'rc-slider';
 import {Button, ButtonGroup} from 'react-bootstrap';
 import classnames from 'classnames';
-import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
+import {ReactSVGPanZoom, fitToViewer, POSITION_NONE} from 'react-svg-pan-zoom';
+import {toSVG, fromObject, translate, transform} from 'transformation-matrix';
+
 import range from 'node-range';
 import * as C from 'persistent-c';
 import adt from 'adt';
@@ -250,8 +252,8 @@ class MemoryView extends React.PureComponent {
     const {
       Frame, controls, directive, localMap, context, scale, getMessage,
       extraExprs, cursorExprs, cursorRows, nBytesShown, widthFactor,
-      layout, centerAddress, startAddress, maxAddress, viewState,
-      bytes, cursorMap, variables, extraRows
+      layout, centerAddress, startAddress, maxAddress,
+      bytes, cursorMap, variables, extraRows, viewTransform
     } = this.props;
     return (
       <Frame {...this.props}>
@@ -272,24 +274,25 @@ class MemoryView extends React.PureComponent {
         </div>
         <div className='clearfix' style={{padding: '2px'}}>
           <div style={{width: '100%', height: `${layout.bottom * scale}px`}}>
-            <ViewerResponsive tool='pan' value={viewState} onChange={this.onViewChange} background='transparent' specialKeys={[]}>
-              <svg width={layout.right} height={layout.bottom} version='1.1' xmlns='http://www.w3.org/2000/svg'>
-                <g className='memory-view'>
-                  <g className='grid'>
-                    <BytesGrid layout={layout} bytes={bytes} />
-                    <VariablesGrid layout={layout} variables={variables} />
-                    {extraRows.map((extraRow, index) => <ExtraRowGrid key={index} index={index} layout={layout} extraRow={extraRow} />)}
-                  </g>
-                  <ByteAddresses layout={layout} bytes={bytes} />
-                  <ByteValues layout={layout} bytes={bytes} />
-                  <Cursors layout={layout} cursorRows={cursorRows} cursorMap={cursorMap} />
-                  <Variables layout={layout} variables={variables} />
-                  <g className='extraRows'>
-                    {extraRows.map((extraRow, index) => <ExtraRow key={index} index={index} layout={layout} extraRow={extraRow} />)}
-                  </g>
+            <svg width='100%' height={layout.bottom} version='1.1' xmlns='http://www.w3.org/2000/svg'
+              onMouseDown={this.onMouseDown} onMouseMove={this.onMouseMove} onMouseUp={this.onMouseUp} >
+              <g className='memory-view' ref={this.refViewer} transform={viewTransform}>
+                <g style={{pointerEvents: "none"}}>
+                <g className='grid'>
+                  <BytesGrid layout={layout} bytes={bytes} />
+                  <VariablesGrid layout={layout} variables={variables} />
+                  {extraRows.map((extraRow, index) => <ExtraRowGrid key={index} index={index} layout={layout} extraRow={extraRow} />)}
                 </g>
-              </svg>
-            </ViewerResponsive>
+                <ByteAddresses layout={layout} bytes={bytes} />
+                <ByteValues layout={layout} bytes={bytes} />
+                <Cursors layout={layout} cursorRows={cursorRows} cursorMap={cursorMap} />
+                <Variables layout={layout} variables={variables} />
+                <g className='extraRows'>
+                  {extraRows.map((extraRow, index) => <ExtraRow key={index} index={index} layout={layout} extraRow={extraRow} />)}
+                </g>
+                </g>
+              </g>
+            </svg>
           </div>
         </div>
       </Frame>
@@ -356,13 +359,38 @@ class MemoryView extends React.PureComponent {
     this.props.onChange(this.props.directive, {centerAddress});
   };
 
-  onViewChange = (event) => {
-    const {mode, startX, startY, matrix} = event.value;
-    const {directive, scale, layout} = this.props;
-    const nBytesShown = this.props.nBytesShown;
-    const centerAddress = clipCenterAddress(this.props, -matrix.e / (layout.cellWidth * scale) + nBytesShown / 2);
-    const update = {mode, startX, startY, centerAddress};
-    this.props.onChange(directive, update);
+  state = {
+    mode: 'idle', start: null
+  };
+  refViewer = (viewer) => {
+    this.viewer = viewer;
+  };
+  onMouseDown = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const {scale, layout, centerAddress} = this.props;
+    this.setState({mode: 'panning', refAddress: centerAddress, refX: event.clientX});
+  };
+  onMouseMove = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const {mode, refAddress, refX} = this.state;
+    if (mode === 'panning') {
+      const forceExit = (event.buttons === 0); // the mouse exited and reentered into svg
+      if (forceExit) {
+        this.setState({mode: 'idle', start: null});
+      } else {
+        const {scale, layout, maxAddress} = this.props;
+        const delta = event.clientX - refX;
+        const address = Math.max(0, Math.min(maxAddress, refAddress - delta / (scale * layout.cellWidth)));
+        this.props.onChange(this.props.directive, {centerAddress: address});
+      }
+    }
+  };
+  onMouseUp = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    this.setState({mode: 'idle', start: null});
   };
 
 }
@@ -626,13 +654,8 @@ function MemoryViewSelector ({scale, directive, context, controls, frames}) {
     centerAddress = clipCenterAddress({nBytesShown, context}, getNumber(byName.start, nBytesShown / 2));
   }
   const startAddress = centerAddress - nBytesShown / 2;
-  const x = -startAddress * layout.cellWidth * scale;
-  const viewState = {
-    matrix: {a: scale, b: 0, c: 0, d: scale, e: x, f: 0},
-    mode: controls.get('mode', 'idle'),
-    startX: controls.get('startX'),
-    startY: controls.get('startY'),
-  };
+  const x = startAddress * layout.cellWidth * scale;
+  const viewTransform = `matrix(${scale},0,0,${scale},${-x},0)`;
   const {bytes, cursorMap, variables, extraRows} = extractView(
     layout,
     context,
@@ -650,7 +673,7 @@ function MemoryViewSelector ({scale, directive, context, controls, frames}) {
     scale, directive, context, controls, localMap,
     extraExprs, cursorExprs, cursorRows, nBytesShown, widthFactor,
     centerAddress, startAddress, maxAddress,
-    layout, viewState, bytes, cursorMap, variables, extraRows
+    layout, bytes, cursorMap, variables, extraRows, viewTransform
   };
 }
 
