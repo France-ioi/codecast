@@ -141,14 +141,14 @@ class Editor extends React.PureComponent {
         session.removeMarker(this.marker);
         this.marker = null;
       }
-      if (this.range && this.range.start && this.range.end) {
+      if (range && range.start && range.end) {
         // Add (and save) the marker.
-        this.marker = session.addMarker(toRange(this.range), "code-highlight", "text");
+        this.marker = session.addMarker(toRange(range), 'code-highlight', 'text');
         if (!this.props.shield) {
           /* Also scroll so that the line is visible.  Skipped if the editor has
              a shield (preventing user input) as this means playback is active,
              and scrolling is handled by individual events. */
-          this.editor.scrollToLine(this.range.start.row, /*center*/true, /*animate*/true);
+          this.editor.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
         }
       }
     });
