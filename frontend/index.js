@@ -56,7 +56,7 @@ const Codecast = window.Codecast = {store, scope};
 
 Codecast.start = function (options) {
 
-  const {language} = window.localStorage;
+  const language = window.localStorage.language || navigator.language;
   let user = options.user;
   if (!user) {
     try {
@@ -67,7 +67,7 @@ Codecast.start = function (options) {
   }
 
   store.dispatch({type: scope.init, payload: options});
-  store.dispatch({type: scope.setLanguage, language: language || navigator.language});
+  store.dispatch({type: scope.setLanguage, language: language});
 
   // store.dispatch({type: scope.modeChanged, mode: 'arduino'});
 
