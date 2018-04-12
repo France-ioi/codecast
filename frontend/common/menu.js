@@ -60,7 +60,9 @@ export default function (bundle, deps) {
               {languages.map(lang =>
                 <Button key={lang} data-language={lang} onClick={this.onSetLanguage} active={language === lang}>{lang}</Button>)}
             </div>
-            <deps.ExamplePicker />
+            <div style={{marginTop: '10px'}}>
+              <deps.ExamplePicker />
+            </div>
           </div>
         </div>
       );

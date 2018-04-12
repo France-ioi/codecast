@@ -5,19 +5,19 @@ import url from 'url';
 export default function (bundle, deps) {
 
   bundle.defineAction('examplesUrlChanged', 'Examples.Url.Changed');
-  bundle.addReducer('examplesUrlChanged', function (state, {payload: {examplesUrl}}) {
-    return state.set('examplesUrl', examplesUrl);
+  bundle.addReducer('examplesUrlChanged', function (state, {payload: {examplesUrl, callbackUrl}}) {
+    return state.set('examples', {examplesUrl, callbackUrl});
   });
 
   function ExamplePickerSelector (state, props) {
     const getMessage = state.get('getMessage');
-    let examplesUrl = state.get('examplesUrl');
+    let {examplesUrl, callbackUrl} = state.get('examples', {});
     if (examplesUrl) {
       examplesUrl = url.parse(examplesUrl, true);
       examplesUrl.query.target = '_self';
       examplesUrl.query.tags = state.get('mode', 'plain');
       examplesUrl.query.lang = state.get('language', 'en').replace(/_.*$/, '');
-      examplesUrl.query.callback = state.get('baseUrl');
+      examplesUrl.query.callback = callbackUrl;
       examplesUrl = url.format(examplesUrl);
     }
     return {examplesUrl, getMessage};
@@ -29,8 +29,14 @@ export default function (bundle, deps) {
       if (disabled || !examplesUrl) return false;
       return (
         <div>
-          <p><a className='btn btn-default' href={examplesUrl}>{getMessage('EXAMPLES_LOAD')}</a></p>
-          <p><i className='fa fa-warning'/>{' '}{getMessage('EXAMPLES_MESSAGE')}</p>
+          <p>
+            {getMessage('EXAMPLES_LABEL')}{' '}
+            <a className='btn btn-default' href={examplesUrl}>
+              {getMessage('EXAMPLES_BUTTON_TITLE')}
+            </a>{' '}
+            <i className='fa fa-warning'/>{' '}
+            {getMessage('EXAMPLES_MESSAGE')}
+          </p>
         </div>
       );
     }
