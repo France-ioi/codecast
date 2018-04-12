@@ -23,6 +23,9 @@ $nav-link-padding: 7px 12px;
 $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
 @import '~bootstrap-sass/assets/stylesheets/bootstrap';
 
+@import "~@blueprintjs/core/lib/css/blueprint.css";
+@import "~@blueprintjs/icons/lib/css/blueprint-icons.css";
+
 @font-face {
   font-family: 'fioi';
   src: url('../../assets/fioi.woff') format('woff');
@@ -85,21 +88,21 @@ body#app, #app h1, #app h2, #app h3 {
 }
 #app h1, #app h2, #app h3 {
   line-height: 1;
-  padding: 2px;
-  background-color: #eee;
+  /* XXX padding: 2px; */
+  /* XXX background-color: #eee; */
 }
 #app h1 {
   font-size: 24px;
 }
 #app h2 {
   font-size: 18px;
-  font-weight: bold;
-  padding: 5px 6px;
-  border-top: 1px solid;
+  /* font-weight: bold; */
+  /* XXX padding: 5px 6px; */
+  /* XXX border-top: 1px solid; */
 }
 #app h3 {
   font-size: 14px;
-  margin: 10px 0 0;
+  /* XXX margin: 10px 0 0; */
 }
 
 #app tt, #app pre, .ace_editor, .terminal, .stack-view {
@@ -792,4 +795,24 @@ p.error {
 /* highlighted text in subtitles search */
 strong.highlight {
   background: yellow;
+}
+
+/* generic */
+.cc-container {
+  margin: 0 auto;
+  max-width: 760px;
+}
+
+/* login screen */
+.cc-login {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  text-align: center;
+}
+.cc-login h1, .cc-login h3 {
+  background-color: white;
 }
