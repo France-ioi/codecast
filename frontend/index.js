@@ -57,6 +57,14 @@ const Codecast = window.Codecast = {store, scope};
 Codecast.start = function (options) {
 
   const {language} = window.localStorage;
+  let user = options.user;
+  if (!user) {
+    try {
+      user = JSON.parse(window.localStorage.user || 'null');
+    } catch (ex) {
+      user = null;
+    }
+  }
 
   store.dispatch({type: scope.init, payload: options});
   store.dispatch({type: scope.setLanguage, language: language || navigator.language});
@@ -114,8 +122,8 @@ Codecast.start = function (options) {
   start();
 
   /* Start already logged in. */
-  if ('user' in options) {
-    store.dispatch({type: scope.loginFeedback, payload: {user: options.user}});
+  if (user) {
+    store.dispatch({type: scope.loginFeedback, payload: {user}});
   }
 
   /* Set token from URL -- TODO: change this mechanism */

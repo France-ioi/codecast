@@ -1,17 +1,19 @@
 
 import React from 'react';
-import {Button} from 'react-bootstrap';
+import {Button, ButtonGroup} from '@blueprintjs/core';
 
 module.exports = function (bundle, deps) {
 
   bundle.defineAction('loginFeedback', 'Login.Feedback');
   bundle.addReducer('loginFeedback', function (state, {payload: {user, error}}) {
-    if (error) return state; // XXX
+    if (error) return state;
+    window.localStorage.user = JSON.stringify(user);
     return state.set('user', user);
   });
 
   bundle.defineAction('logoutFeedback', 'Logout.Feedback');
   bundle.addReducer('logoutFeedback', function (state, action) {
+    window.localStorage.user = '';
     return state.set('user', false);
   });
 
@@ -48,13 +50,16 @@ module.exports = function (bundle, deps) {
 
   class LoginScreen extends React.PureComponent {
     render() {
-      const {baseUrl, authProviders, size} = this.props;
+      const {baseUrl, authProviders} = this.props;
       return (
-        <div className={`container size-${size}`}>
-          <p>{"Login options:"}</p>
-          {authProviders && authProviders.map((provider) =>
-            <a href={`${baseUrl}/auth/${provider}`} target='_blank' key={provider} className='btn btn-default'>{provider}</a>)}
-          <Button onClick={this._authAsGuest}>{"guest"}</Button>
+        <div className='cc-login'>
+          <h1 style={{margin: '20px 0'}}>{"Codecast"}</h1>
+          <h3 style={{margin: '0 0 10px 0'}}>{"Select a login option"}</h3>
+          <ButtonGroup large={true} vertical={true}>
+            {authProviders && authProviders.map((provider) =>
+              <a href={`${baseUrl}/auth/${provider}`} target='_blank' key={provider} className='pt-button'>{provider}</a>)}
+            <Button onClick={this._authAsGuest}>{"guest"}</Button>
+          </ButtonGroup>
         </div>
       );
     }
@@ -64,9 +69,8 @@ module.exports = function (bundle, deps) {
   }
   function LoginScreenSelector (state, props) {
     const baseUrl = state.get('baseUrl');
-    const size = state.get('size');
     const authProviders = state.get('authProviders');
-    return {baseUrl, size, authProviders};
+    return {baseUrl, authProviders};
   }
   bundle.defineView('LoginScreen', LoginScreenSelector, LoginScreen);
 
