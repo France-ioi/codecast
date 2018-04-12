@@ -4,7 +4,7 @@ import React from 'react';
 import classnames from 'classnames';
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 
-import {Button} from '../ui';
+import {Button, ControlGroup, Intent, Label} from '@blueprintjs/core';
 import {getJson, postJson} from '../common/utils';
 
 export default function (bundle, deps) {
@@ -30,16 +30,6 @@ export default function (bundle, deps) {
   bundle.defineAction('editorUnload', 'Editor.Unload');
   bundle.addReducer('editorUnload', editorUnloadReducer);
 
-  bundle.defineAction('editorBeginEdit', 'Editor.BeginEdit');
-  bundle.defineAction('editorReturn', 'Editor.Return'); /* done editing, return to setup screen */
-
-  bundle.defineAction('editorSave', 'Editor.Save');
-  bundle.defineAction('editorSaveFailed', 'Editor.Save.Failed');
-  bundle.defineAction('editorSaveSucceeded', 'Editor.Save.Succeeded');
-  bundle.addReducer('editorSave', editorSaveReducer);
-  bundle.addReducer('editorSaveFailed', editorSaveFailedReducer);
-  bundle.addReducer('editorSaveSucceeded', editorSaveSucceededReducer);
-
   bundle.defineView('EditorApp', EditorAppSelector, EditorApp);
   bundle.defineView('EditorGlobalControls', EditorGlobalControlsSelector, EditorGlobalControls);
 
@@ -50,6 +40,7 @@ export default function (bundle, deps) {
 };
 
 function editorPrepareReducer (state, {payload: {baseDataUrl}}) {
+  /* XXX notify mechanism is used by subtitles editor */
   return state.set('editor', Immutable.Map({dataUrl: baseDataUrl, notify: {}}));
 }
 
@@ -62,18 +53,16 @@ function editorConfiguredReducer (state, {payload: {bucketUrl}}) {
 }
 
 function* editorSaga () {
-  const {editorPrepare, loginFeedback, editorLoad, editorUnload, editorBeginEdit, editorSave, editorReturn} = yield select(state => state.get('scope'));
+  const {editorPrepare, loginFeedback, editorLoad, editorUnload} = yield select(state => state.get('scope'));
   yield takeEvery(editorPrepare, editorPrepareSaga);
   yield takeEvery(loginFeedback, loginFeedbackSaga);
   yield takeLatest(editorLoad, editorLoadSaga);
   yield takeLatest(editorUnload, editorUnloadSaga);
-  yield takeLatest(editorBeginEdit, editorBeginEditSaga);
-  yield takeLatest(editorSave, editorSaveSaga);
-  yield takeLatest(editorReturn, editorReturnSaga);
 }
 
 function* editorPrepareSaga (_action) {
   const {subtitlesModeSet, switchToScreen} = yield select(state => state.get('scope'));
+  /* XXX only put subtitlesModeSet(editor) when selecting 'edit subtitles' task */
   yield put({type: subtitlesModeSet, payload: {mode: 'editor'}});
   yield put({type: switchToScreen, payload: {screen: 'load'}});
 }
@@ -115,54 +104,6 @@ function* editorUnloadSaga (_action) {
   const {playerClear, switchToScreen} = yield select(state => state.get('scope'));
   yield put({type: playerClear});
   yield put({type: switchToScreen, payload: {screen: 'load'}});
-}
-
-function* editorBeginEditSaga (_action) {
-  const {subtitlesReload, switchToScreen} = yield select(state => state.get('scope'));
-  yield put({type: subtitlesReload});
-  yield put({type: switchToScreen, payload: {screen: 'edit'}});
-}
-
-function* editorReturnSaga (_action) {
-  const {switchToScreen, subtitlesSave} = yield select(state => state.get('scope'));
-  yield put({type: subtitlesSave});
-  yield put({type: switchToScreen, payload: {screen: 'setup'}});
-}
-
-function* editorSaveSaga (_action) {
-  const {baseUrl, base, data, editorSaveFailed, editorSaveSucceeded} = yield select(function (state) {
-    const {editorSaveFailed, editorSaveSucceeded} = state.get('scope');
-    const baseUrl = state.get('baseUrl');
-    const editor = state.get('editor');
-    const base = editor.get('base');
-    const data = editor.get('data');
-    const subtitles = Object.values(state.get('subtitles').availableOptions);
-    return {
-      baseUrl, base, data: {...data, subtitles},
-      editorSaveFailed, editorSaveSucceeded
-    };
-  });
-  try {
-    const result = yield call(postJson, `${baseUrl}/save`, {base, data});
-    // TODO: pass new base as payload, when copying
-    const timestamp = new Date();
-    yield put({type: editorSaveSucceeded, payload: {timestamp}});
-  } catch (ex) {
-    console.log('error', ex);
-    yield put({type: editorSaveFailed, payload: {error: ex.toString()}});
-  }
-}
-
-function editorSaveReducer (state, action) {
-  return state.setIn(['editor', 'notify'], {key: 'pending'});
-}
-
-function editorSaveFailedReducer (state, action) {
-  return state.setIn(['editor', 'notify'], {key: 'failure', message: error.toString()});
-}
-
-function editorSaveSucceededReducer (state, {payload: {error}}) {
-  return state.setIn(['editor', 'notify'], {key: 'success'});
 }
 
 function EditorAppSelector (state, props) {
@@ -234,7 +175,7 @@ class EditorGlobalControls extends React.PureComponent {
     this.props.dispatch({type: this.props.editorUnload});
   };
   _return = () => {
-    this.props.dispatch({type: this.props.editorReturn});
+    this.props.dispatch({type: this.props.editorReturn}); /* XXX editorReturn is specialized for subtitles */
   };
 }
 
@@ -253,17 +194,15 @@ class LoadScreen extends React.PureComponent {
     const {dataUrl, bucketUrl, loading} = this.props;
     const isUrlOk = bucketUrl && dataUrl.startsWith(bucketUrl);
     return (
-      <div className='container' style={{marginTop: '2em'}}>
+      <div className='cc-container' style={{marginTop: '2em'}}>
         <p>{"Enter the base URL of an existing Codecast:"}</p>
-        <div className='input-group'>
-          <input type='text' className='form-control' onChange={this._urlChanged} value={dataUrl||''} />
-          <div className='input-group-btn'>
-            <Button bsStyle='primary' disabled={!isUrlOk || loading} onClick={this._loadClicked}>
-              {"Load"}
-              {loading && <span>{" "}<i className='fa fa-hourglass-o'/></span>}
-            </Button>
-          </div>
-        </div>
+        <ControlGroup>
+          <input type='text' className='pt-input pt-fill' onChange={this._urlChanged} value={dataUrl||''} />
+          <Button intent={Intent.PRIMARY} disabled={!isUrlOk || loading} onClick={this._loadClicked}>
+            {"Load"}
+            {loading && <span>{" "}<i className='fa fa-hourglass-o'/></span>}
+          </Button>
+        </ControlGroup>
         {bucketUrl && !isUrlOk &&
           <p className='error'>
             {"The URL must start with "}{bucketUrl||''}
@@ -286,49 +225,31 @@ class LoadScreen extends React.PureComponent {
 }
 
 function SetupScreenSelector (state, props) {
-  const {editorBeginEdit, editorSave, SubtitlesEditor} = state.get('scope');
+  const {SubtitlesEditor} = state.get('scope');
   const editor = state.get('editor');
   const dataUrl = editor.get('dataUrl');
   const {version} = editor.get('data');
-  const notify = editor.get('notify');
-  return {editorBeginEdit, editorSave, SubtitlesEditor, dataUrl, version, notify};
+  return {SubtitlesEditor, dataUrl, version};
 }
 
 class SetupScreen extends React.PureComponent {
   render () {
-    const {dataUrl, version, SubtitlesEditor, notify} = this.props;
+    const {dataUrl, version, SubtitlesEditor} = this.props;
     return (
-      <div className='container'>
-        <h2>{"Codecast"}</h2>
+      <div className='cc-container'>
+        <h1 style={{margin: '20px 0'}}>{"Codecast Editor"}</h1>
+
+        <h2>{"Information"}</h2>
         <p>{"URL "}{dataUrl}</p>
         <p>{"Version "}{version}</p>
 
+        {/* Task: trim, edit subtitles */}
         <h2>{"Subtitles"}</h2>
         <SubtitlesEditor />
 
-        <div style={{marginTop: '2em', textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
-          <span style={{marginRight: '10px'}}>
-            <Button onClick={this._beginEdit}>
-              <i className='fa fa-edit'/>{" Edit"}
-            </Button>
-          </span>
-          <Button onClick={this._save}>
-            <i className='fa fa-cloud-upload'/>
-            {" Save "}
-            {notify.key === 'pending' && <i className='fa fa-spinner fa-spin'/>}
-            {notify.key === 'success' && <i className='fa fa-check' style={{color: 'green'}}/>}
-            {notify.key === 'failure' && <i className='fa fa-exclamation-triangle' style={{color: 'red'}}/>}
-          </Button>
-        </div>
       </div>
     );
   }
-  _beginEdit = (event) => {
-    this.props.dispatch({type: this.props.editorBeginEdit});
-  };
-  _save = (event) => {
-    this.props.dispatch({type: this.props.editorSave});
-  };
 }
 
 function EditScreenSelector (state, props) {
