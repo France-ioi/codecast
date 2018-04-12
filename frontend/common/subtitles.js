@@ -31,7 +31,7 @@ import Select from 'react-select';
 import {takeLatest, put, call, select} from 'redux-saga/effects';
 import request from 'superagent';
 import Immutable from 'immutable';
-import FileInput from 'react-file-input';
+//import FileInput from 'react-file-input';
 import update from 'immutability-helper';
 import Highlight from 'react-highlighter';
 
@@ -62,12 +62,12 @@ class SubtitlesMenu extends React.PureComponent {
 }
 
 function SubtitlesPopupSelector (state, props) {
-  const {loadedKey, loading, lastError, availableOptions, langOptions, bandEnabled} = state.get('subtitles');
-  const paneEnabled = state.getIn(['panes', 'subtitles', 'enabled']);
+  const {loadedKey, loading, lastError, availableOptions, langOptions, paneEnabled, bandEnabled} = state.get('subtitles');
   const {subtitlesCleared, subtitlesLoadFromUrl, subtitlesPaneEnabledChanged, subtitlesBandEnabledChanged} = state.get('scope');
   const getMessage = state.get('getMessage');
+  const isLoaded = !loading && loadedKey !== 'none';
   return {
-    availableOptions, langOptions, loadedKey, busy: !!loading, lastError,
+    availableOptions, langOptions, loadedKey, isLoaded, busy: !!loading, lastError,
     subtitlesCleared, subtitlesLoadFromUrl,
     paneEnabled, subtitlesPaneEnabledChanged,
     bandEnabled, subtitlesBandEnabledChanged, getMessage
@@ -76,7 +76,7 @@ function SubtitlesPopupSelector (state, props) {
 
 class SubtitlesPopup extends React.PureComponent {
   render () {
-    const {availableOptions, langOptions, loadedKey, busy, lastError, paneEnabled, bandEnabled, getMessage} = this.props;
+    const {availableOptions, langOptions, loadedKey, isLoaded, busy, lastError, paneEnabled, bandEnabled, getMessage} = this.props;
     const availKeys = Object.keys(availableOptions).sort();
     return (
       <div className='menu-popup' onClick={this._close}>
@@ -111,7 +111,7 @@ class SubtitlesPopup extends React.PureComponent {
             })}
           </RadioGroup>
           {lastError && <Alert bsStyle='danger'>{lastError}</Alert>}
-          {loadedKey !== 'none' &&
+          {isLoaded &&
             <div>
               <a href={availableOptions[loadedKey].url} className='btn btn-default btn-sm' target='_blank' download>
                 <i className='fa fa-download'/>
@@ -119,12 +119,12 @@ class SubtitlesPopup extends React.PureComponent {
               </a>
             </div>}
           <div>
-            <Checkbox checked={paneEnabled} onChange={this._changePaneEnabled}>
+            <Checkbox disabled={!isLoaded} checked={paneEnabled} onChange={this._changePaneEnabled}>
               {getMessage('CLOSED_CAPTIONS_SHOW_PANE')}
             </Checkbox>
           </div>
           <div>
-            <Checkbox checked={bandEnabled} onChange={this._changeBandEnabled}>
+            <Checkbox disabled={!isLoaded} checked={bandEnabled} onChange={this._changeBandEnabled}>
               {getMessage('CLOSED_CAPTIONS_SHOW_BAND')}
             </Checkbox>
           </div>
@@ -375,37 +375,54 @@ class SubtitlesBand extends React.PureComponent {
 
 function SubtitlesEditorSelector (state, props) {
   const {subtitlesSelected, subtitlesAddOption, subtitlesRemoveOption,
-    subtitlesTextChanged} = state.get('scope');
+    subtitlesTextChanged, editorBeginEdit, editorSave} = state.get('scope');
+  const notify = state.getIn(['editor', 'notify']);
   const {selectedKey, availableOptions, langOptions} = state.get('subtitles');
   const selected = selectedKey && availableOptions[selectedKey];
   const subtitlesText = selected && selected.text;
   return {availableOptions, selected, langOptions, subtitlesText,
     subtitlesSelected, subtitlesAddOption, subtitlesRemoveOption,
-    subtitlesTextChanged};
+    subtitlesTextChanged, editorBeginEdit, editorSave, notify};
 }
 
 class SubtitlesEditor extends React.PureComponent {
   render () {
-    const {availableOptions, selected, subtitlesText, langOptions, onSelect, onRemove} = this.props;
+    const {availableOptions, selected, subtitlesText, langOptions, onSelect, onRemove, notify} = this.props;
     const availKeys = Object.keys(availableOptions).filter(key => !availableOptions[key].removed).sort();
     return (
-      <div className='row'>
-        <div className='col-sm-6' style={{paddingRight: '10px'}}>
-          <h3>{"Available options"}</h3>
-          <div className='form-inline section'>
-            <ul>
-              {availKeys.map(key =>
-                <SubtitlesEditorOption key={key} option={availableOptions[key]} selected={selected && selected.key === key}
-                  onSelect={this._selectOption} onRemove={this._removeOption} />)}
-            </ul>
-            <Select options={langOptions} onChange={this._addSubtitleOption} clearableValue={false}
-              placeholder='Add language…' />
+      <div>
+        <div className='row'>
+          <div className='col-sm-6' style={{paddingRight: '10px'}}>
+            <h3>{"Available options"}</h3>
+            <div className='form-inline section'>
+              <ul>
+                {availKeys.map(key =>
+                  <SubtitlesEditorOption key={key} option={availableOptions[key]} selected={selected && selected.key === key}
+                    onSelect={this._selectOption} onRemove={this._removeOption} />)}
+              </ul>
+              <Select options={langOptions} onChange={this._addSubtitleOption} clearableValue={false}
+                placeholder='Add language…' />
+            </div>
           </div>
+          {selected && <div className='col-sm-6' style={{paddingLeft: '10px'}}>
+            <h3>{"Selected: "}<span style={{fontWeight: 'bold'}}>{selected.key}</span></h3>
+            <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange}/>
+          </div>}
         </div>
-        {selected && <div className='col-sm-6' style={{paddingLeft: '10px'}}>
-          <h3>{"Selected: "}<span style={{fontWeight: 'bold'}}>{selected.key}</span></h3>
-          <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange}/>
-        </div>}
+        <div style={{marginTop: '2em', textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
+          <span style={{marginRight: '10px'}}>
+            <Button onClick={this._beginEdit}>
+              <i className='fa fa-edit'/>{" Edit"}
+            </Button>
+          </span>
+          <Button onClick={this._save}>
+            <i className='fa fa-cloud-upload'/>
+            {" Save "}
+            {notify.key === 'pending' && <i className='fa fa-spinner fa-spin'/>}
+            {notify.key === 'success' && <i className='fa fa-check' style={{color: 'green'}}/>}
+            {notify.key === 'failure' && <i className='fa fa-exclamation-triangle' style={{color: 'red'}}/>}
+          </Button>
+        </div>
       </div>
     );
   }
@@ -433,6 +450,12 @@ class SubtitlesEditor extends React.PureComponent {
   _onChange = (event) => {
     const text = event.target.value;
     this.props.dispatch({type: this.props.subtitlesTextChanged, payload: {text}});
+  };
+  _beginEdit = (event) => {
+    this.props.dispatch({type: this.props.editorBeginEdit});
+  };
+  _save = (event) => {
+    this.props.dispatch({type: this.props.editorSave});
   };
 }
 
@@ -475,7 +498,8 @@ function initReducer (state) {
         {value: 'fr-FR', label: "Français", countryCode: 'fr'},
         {value: 'en-US', label: "English",  countryCode: 'us'},
       ],
-      bandEnabled: true
+      paneEnabled: false,
+      bandEnabled: true,
     })
     .setIn(['panes', 'subtitles'],
       Immutable.Map({
@@ -487,16 +511,26 @@ function initReducer (state) {
 
 function subtitlesModeSetReducer (state, {payload: {mode}}) {
   state = state.update('subtitles', subtitles => ({...subtitles, mode}));
-  if (mode === 'editor') {
-    /* The subtitles pane is always enabled in the editor. */
-    state = state.setIn(['panes', 'subtitles', 'enabled'], true);
-  }
   /* TODO: if mode is 'player', reload state from local storage settings? */
+  state = updateSubtitlesPaneVisibility(state);
   return state;
 }
 
 function subtitlesPaneEnabledChangedReducer (state, {payload: {value}}) {
-  return state.setIn(['panes', 'subtitles', 'enabled'], value);
+  state = state.update('subtitles', subtitles => ({...subtitles, paneEnabled: value}));
+  state = updateSubtitlesPaneVisibility(state);
+  return state;
+}
+
+function updateSubtitlesPaneVisibility (state) {
+  const {mode, loading, loadedKey, paneEnabled} = state.get('subtitles');
+  const isEditor = mode === 'editor';
+  const isLoaded = !loading && loadedKey !== 'none';
+  /* Editor: the subtitles pane is always visible.
+     Player: the subtitles pane is visible if subtitles are loaded, and if
+             the pane is enabled in the CC settings. */
+  return state
+    .setIn(['panes', 'subtitles', 'enabled'], (isEditor || isLoaded) && paneEnabled);
 }
 
 function subtitlesBandEnabledChangedReducer (state, {payload: {value}}) {
@@ -732,8 +766,10 @@ function subtitlesGetMenu (state) {
   const subtitles = state.get('subtitles');
   if (subtitles.mode === 'editor') return false;
   const playerData = state.getIn(['player', 'data']);
-  if (!playerData) return false;
-  return playerData.subtitles ? state.get('scope').SubtitlesMenu : false;
+  if (!playerData || !playerData.subtitles || playerData.subtitles.length === 0) {
+    return false;
+  }
+  return state.get('scope').SubtitlesMenu;
 }
 
 function* subtitlesSaga () {
@@ -743,6 +779,9 @@ function* subtitlesSaga () {
   yield takeLatest(scope.subtitlesLoadFromUrl, subtitlesLoadFromUrlSaga);
   yield takeLatest(scope.subtitlesLoadFromFile, subtitlesLoadFromFileSaga);
   yield takeLatest(scope.subtitlesReload, subtitlesReloadSaga);
+  yield takeLatest(scope.editorBeginEdit, editorBeginEditSaga);
+  yield takeLatest(scope.editorSave, editorSaveSaga);
+  yield takeLatest(scope.editorReturn, editorReturnSaga);
 }
 
 function* subtitlesSelectedSaga ({payload: {option}}) {
@@ -807,6 +846,56 @@ function* subtitlesReloadSaga (_action) {
     }
     yield put({type: scope.subtitlesLoadSucceeded, payload: {key, text, items}});
   }
+}
+
+function* editorBeginEditSaga (_action) {
+  const {subtitlesReload, switchToScreen} = yield select(state => state.get('scope'));
+  yield put({type: subtitlesReload});
+  yield put({type: switchToScreen, payload: {screen: 'edit'}});
+}
+
+function* editorReturnSaga (_action) {
+  const {switchToScreen, subtitlesSave} = yield select(state => state.get('scope'));
+  yield put({type: subtitlesSave});
+  yield put({type: switchToScreen, payload: {screen: 'setup'}});
+}
+
+function* editorSaveSaga (_action) {
+  /* XXX valid for subtitles, code for trimming is completely different,
+         so move to subtitles bundle */
+  const {baseUrl, base, data, editorSaveFailed, editorSaveSucceeded} = yield select(function (state) {
+    const {editorSaveFailed, editorSaveSucceeded} = state.get('scope');
+    const baseUrl = state.get('baseUrl');
+    const editor = state.get('editor');
+    const base = editor.get('base');
+    const data = editor.get('data');
+    const subtitles = Object.values(state.get('subtitles').availableOptions);
+    return {
+      baseUrl, base, data: {...data, subtitles},
+      editorSaveFailed, editorSaveSucceeded
+    };
+  });
+  try {
+    const result = yield call(postJson, `${baseUrl}/save`, {base, data});
+    // TODO: pass new base as payload, when copying
+    const timestamp = new Date();
+    yield put({type: editorSaveSucceeded, payload: {timestamp}});
+  } catch (ex) {
+    console.log('error', ex);
+    yield put({type: editorSaveFailed, payload: {error: ex.toString()}});
+  }
+}
+
+function editorSaveReducer (state, action) {
+  return state.setIn(['editor', 'notify'], {key: 'pending'});
+}
+
+function editorSaveFailedReducer (state, action) {
+  return state.setIn(['editor', 'notify'], {key: 'failure', message: error.toString()});
+}
+
+function editorSaveSucceededReducer (state, {payload: {error}}) {
+  return state.setIn(['editor', 'notify'], {key: 'success'});
 }
 
 module.exports = function (bundle) {
@@ -878,6 +967,16 @@ module.exports = function (bundle) {
   bundle.addReducer('subtitlesTextChanged', subtitlesTextChangedReducer);
   bundle.defineAction('subtitlesSave', 'Subtitles.Save');
   bundle.addReducer('subtitlesSave', subtitlesSaveReducer);
+
+  bundle.defineAction('editorBeginEdit', 'Editor.BeginEdit');
+  bundle.defineAction('editorReturn', 'Editor.Return'); /* done editing, return to setup screen */
+
+  bundle.defineAction('editorSave', 'Editor.Save');
+  bundle.defineAction('editorSaveFailed', 'Editor.Save.Failed');
+  bundle.defineAction('editorSaveSucceeded', 'Editor.Save.Succeeded');
+  bundle.addReducer('editorSave', editorSaveReducer);
+  bundle.addReducer('editorSaveFailed', editorSaveFailedReducer);
+  bundle.addReducer('editorSaveSucceeded', editorSaveSucceededReducer);
 
   bundle.addSaga(subtitlesSaga);
 
