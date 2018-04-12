@@ -125,7 +125,10 @@ Codecast.start = function (options) {
 
   /* Set examples URL (enables example selection link in menu) */
   if ('examplesUrl' in options) {
-    store.dispatch({type: scope.examplesUrlChanged, payload: {examplesUrl: options.examplesUrl}});
+    store.dispatch({type: scope.examplesUrlChanged, payload: {
+      examplesUrl: options.examplesUrl,
+      callbackUrl: window.location.toString()
+    }});
   }
 
   let App = scope.SandboxApp;
