@@ -21,7 +21,7 @@ import AudioWorker from 'worker-loader?inline!../audio_worker';
 export default function (bundle, deps) {
 
   bundle.use(
-    'error', 'recordApi', 'switchToScreen',
+    'recordApi', 'switchToScreen',
     'getRecorderState', 'getPlayerState',
     'recorderPrepare', 'recorderPreparing', 'recorderReady',
     'recorderTick',

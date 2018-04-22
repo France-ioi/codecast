@@ -1,7 +1,6 @@
 
 import React from 'react';
-import {Button} from 'react-bootstrap';
-import Slider from 'rc-slider';
+import {Button, Slider} from '@blueprintjs/core';
 
 import {formatTime} from '../common/utils';
 
@@ -50,31 +49,29 @@ export default function (bundle, deps) {
       const canStep = /ready|paused/.test(status);
       return (
         <div id='player-controls'>
-          <div className='player-controls-row row' style={{width: '100%'}}>
+          <div className='player-controls-row row' style={{width: '100%', marginTop: '5px'}}>
             <div className="player-slider-container">
-              <Slider tipFormatter={formatTime} tipTransitionName="rc-slider-tooltip-zoom-down" value={audioTime} min={0} max={duration} onChange={this.onSeek}>
-              </Slider>
+              {!Number.isNaN(duration) &&
+                <Slider value={audioTime} onChange={this.onSeek}
+                  stepSize={1000} labelStepSize={30000} min={0} max={duration}
+                  labelRenderer={formatTime} />}
             </div>
           </div>
-          <div className='player-controls-row row' style={{width: '100%'}}>
+          <div className='player-controls-row row' style={{width: '100%', marginBottom: '4px'}}>
             <div className="player-controls controls controls-main col-sm-3">
               <div className="player-controls-playback">
                 {showStartPlayback &&
                     <Button onClick={this.onStartPlayback} disabled={!canStartPlayback}
-                      title={getMessage('START_PLAYBACK')}>
-                      <i className="fa fa-play"/>
-                    </Button>}
+                      title={getMessage('START_PLAYBACK')} icon='play' />}
                 {showPausePlayback &&
                   <Button onClick={this.onPausePlayback} disabled={!canPausePlayback}
-                    title={getMessage('PAUSE_PLAYBACK')}>
-                    <i className="fa fa-pause"/>
-                  </Button>}
+                    title={getMessage('PAUSE_PLAYBACK')} icon='pause' />}
               </div>
-              <p className="player-controls-times">
+              <div className="player-controls-times">
                 {formatTime(audioTime)}
                 {' / '}
                 {formatTime(duration)}
-              </p>
+              </div>
             </div>
             <div className="player-controls player-controls-stepper col-sm-7">
               <deps.StepperControls enabled={canStep}/>

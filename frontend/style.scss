@@ -26,6 +26,11 @@ $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/icons/lib/css/blueprint-icons.css";
 
+/* Darker icons on blueprint buttons. */
+.pt-button .pt-icon, .pt-button .pt-icon-standard, .pt-button .pt-icon-large {
+  color: #3c5060;
+}
+
 @font-face {
   font-family: 'fioi';
   src: url('../../assets/fioi.woff') format('woff');
@@ -105,7 +110,7 @@ body#app, #app h1, #app h2, #app h3 {
   /* XXX margin: 10px 0 0; */
 }
 
-#app tt, #app pre, .ace_editor, .terminal, .stack-view {
+#app tt, #app pre, .ace_editor, .diagnostics, .terminal, .stack-view {
   font-weight: normal;
   font-family: $font-family-monospace;
 }
@@ -255,13 +260,8 @@ body#app, #app h1, #app h2, #app h3 {
   top: -1px;
   right: -1px;
 }
-.stack-controls .btn-group {
-  vertical-align: top;
-}
-.stack-controls button {
-  height: 22px;
-  margin: 0;
-  padding: 0px 10px;
+.stack-controls button.pt-small {
+  min-height: 20px;
 }
 
 .value-load {
@@ -323,32 +323,16 @@ span + .value-previous {
 
 .controls > * {
   display: inline-block;
+  vertical-align: top;
 }
-/*
-.controls-main, .controls-stepper, .controls-stepper-wrapper {
-  display: inline-block;
-  height: 34px;
-}
-.controls-main {
-  width: 440px;
-  margin-right: 10px;
-}
-.controls-stepper {
-  width: 450px;
-}
-*/
-.controls-stepper-execution p {
-  text-align: center;
+.controls-stepper-wrapper {
+  width: 270px;
 }
 .controls-translate button {
   width: 85px;
-  text-align: center;
 }
 .player-controls-right {
   text-align: right;
-}
-.player-controls-stepper {
-  text-align: center;
 }
 
 .player-controls-playback button {
@@ -358,6 +342,8 @@ span + .value-previous {
 .player-controls-times {
   width: 120px;
   text-align: center;
+  vertical-align: top;
+  line-height: 30px;
 }
 .player-slider-container {
   padding: 0 10px;
@@ -414,12 +400,6 @@ span + .value-previous {
   .player-controls-playback button {
     width: 30px;
   }
-  .controls-stepper-execution {
-    width: 237px;
-  }
-  .controls-translate button {
-    width: 80px;
-  }
   .player-controls-times {
     width: 90px;
   }
@@ -458,6 +438,18 @@ span + .value-previous {
   left: 0;
 }
 
+/* Tweak navbar for view toggle buttons */
+.directive-bar {
+  margin-bottom: 6px;
+}
+.directive-bar .pt-navbar {
+  height: 40px;
+  padding: 0 8px;
+}
+.directive-bar .pt-navbar-group {
+  height: 40px;
+}
+
 .directive-view {
   float: left;
   overflow: hidden;
@@ -477,11 +469,9 @@ span + .value-previous {
   right: -1px;
 }
 
-.memory-controls .btn-group {
-  vertical-align: top;
-}
-.memory-controls button {
-    padding: 3px 12px;
+.memory-controls .pt-button-group {
+    vertical-align: 6px;
+    padding-right: 2px;
 }
 .memory-controls .start-address {
   display: inline-block;
@@ -668,6 +658,7 @@ svg {
     text-align: center;
     font-weight: bold;
     font-size: 1.2em;
+    margin-bottom: 10px;
   }
 }
 

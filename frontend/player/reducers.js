@@ -1,13 +1,6 @@
 
 export default function (bundle, deps) {
 
-  bundle.addReducer('error', function (state, action) {
-    return state.set('lastError', {
-      source: action.source,
-      message: action.error.toString()
-    });
-  });
-
   bundle.addReducer('playerPreparing', function (state, action) {
     return state.setIn(['player', 'status'], 'preparing');
   });

@@ -1,6 +1,7 @@
 
 import React from 'react';
-import {Panel, Button, Navbar, Nav, NavItem} from 'react-bootstrap';
+import {Panel} from 'react-bootstrap';
+import {Alignment, Button, Navbar, NavbarGroup} from '@blueprintjs/core';
 import classnames from 'classnames';
 import Immutable from 'immutable';
 
@@ -54,7 +55,7 @@ export default function (bundle, deps) {
       for (let directive of ordered) {
         const {key} = directive;
         const dirControls = controls.get(key, Immutable.Map());
-        buttons.push(<DirectiveButton key={key} directive={directive} controls={dirControls} />);
+        buttons.push(<DirectiveButton key={key} directive={directive} controls={dirControls} onSelect={this.toggleView} />);
         panels.push(<DirectivePanel key={key} directive={directive} controls={dirControls}
           scale={scale} context={context} frames={framesMap[key]} getMessage={getMessage} onChange={this.onControlsChange} />);
       }
@@ -62,9 +63,9 @@ export default function (bundle, deps) {
         <div className='directive-group'>
           <div className='directive-bar'>
             <Navbar>
-              <Nav onSelect={this.toggleView} bsStyle='pills'>
+              <NavbarGroup align={Alignment.LEFT}>
                 {buttons}
-              </Nav>
+              </NavbarGroup>
             </Navbar>
           </div>
           <div className='directive-pane clearfix'>
@@ -78,13 +79,17 @@ export default function (bundle, deps) {
 
 };
 
-function DirectiveButton ({directive, controls}) {
-  const hide = controls.get('hide', false);
-  return (
-    <NavItem eventKey={directive.key} active={!hide}>
-      {directive.key}
-    </NavItem>
-  );
+class DirectiveButton extends React.PureComponent {
+  render() {
+    const {directive, controls} = this.props;
+    const hide = controls.get('hide', false);
+    return (
+      <Button small minimal active={!hide} text={directive.key} onClick={this.onClick}/>
+    );
+  }
+  onClick = () => {
+    this.props.onSelect(this.props.directive.key);
+  };
 }
 
 function DirectivePanel ({scale, directive, controls, context, frames, getMessage, onChange}) {
@@ -128,7 +133,7 @@ class DirectiveFrame extends React.PureComponent {
             <div className="directive-header">
               <div className="pull-right">
                 {hasFullView &&
-                  <Button onClick={this.onToggleFullView} bsSize="xs">
+                  <Button onClick={this.onToggleFullView} small>
                     {fullView ? 'min' : 'max'}
                   </Button>}
               </div>

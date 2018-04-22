@@ -1,4 +1,5 @@
 module.exports = {
+  language: 'English',
   COMPILE: 'compile',
   EDIT: 'edit',
   VARIABLES: 'Variables',
@@ -39,7 +40,7 @@ module.exports = {
   CONTROL_UNDO: "undo",
   CONTROL_REDO: "redo",
   PROGRAM_STOPPED: "Program stopped.",
-  MENU_TOOLTIP: "settings",
+  SETTINGS_MENU_TITLE: "Settings",
   'LANGUAGE:': "Language: ",
   EXAMPLES_LABEL: "Examples: ",
   EXAMPLES_BUTTON_TITLE: "View list",

@@ -1,7 +1,8 @@
 
 import React from 'react';
-import {Button, ButtonGroup} from 'react-bootstrap';
-import Slider from 'rc-slider';
+import {Button, ButtonGroup, Slider} from '@blueprintjs/core';
+
+import {formatTime} from '../common/utils';
 
 export default function (bundle) {
 
@@ -15,17 +16,6 @@ export default function (bundle) {
   bundle.defineView('RecorderControls', RecorderControlsSelector, RecorderControls);
 
 };
-
-function zeroPad2 (n) {
-  return ('0'+n).slice(-2);
-}
-
-function timeFormatter (ms) {
-  let s = Math.round(ms / 1000);
-  const m = Math.floor(s / 60);
-  s -= m * 60;
-  return zeroPad2(m) + ':' + zeroPad2(s);
-}
 
 function RecorderControlsSelector (state, props) {
   const {
@@ -78,49 +68,47 @@ class RecorderControls extends React.PureComponent {
       StepperControls, Menu
     } = this.props;
     return (
-      <div className="row" style={{marginTop: '3px'}}>
-        <div className="controls controls-main col-sm-3">
-          <ButtonGroup>
-            <Button onClick={this.onStartRecording} className="float-left" disabled={!canRecord}
-              title={getMessage('START_RECORDING')}>
-              <i className="fa fa-circle" style={{color: '#a01'}}/>
-            </Button>
-            <Button onClick={this.onStopRecording} disabled={!canStop}>
-              <i className="fa fa-stop"/>
-            </Button>
-            {playPause === 'play'
-              ? <Button onClick={this.onStartPlayback} disabled={!canPlay}
-                  title={getMessage('START_PLAYBACK')}>
-                  <i className="fa fa-play"/>
-                </Button>
-              : <Button onClick={this.onPause} disabled={!canPause}>
-                  <i className="fa fa-pause"/>
-                </Button>}
-          </ButtonGroup>
-          {isPlayback
-            ? <p className="player-controls-times">
-                <i className="fa fa-clock-o"/>
-                {' '}
-                {timeFormatter(position)}
-                {' / '}
-                {timeFormatter(duration)}
-              </p>
-            : <p style={{paddingLeft: '10px'}}>
-                <i className="fa fa-clock-o"/>
-                {' '}
-                {timeFormatter(position)}
-              </p>}
-          {isPlayback &&
-            <Slider tipFormatter={timeFormatter} tipTransitionName="rc-slider-tooltip-zoom-down"
-              value={position} min={0} max={duration} onChange={this.onSeek}>
-            </Slider>}
+      <div>
+        <div className="row" style={{marginTop: '3px'}}>
+          <div className="controls controls-main col-sm-3">
+            <ButtonGroup>
+              <Button onClick={this.onStartRecording} disabled={!canRecord}
+                title={getMessage('START_RECORDING')} icon={<i className="fa fa-circle" style={{color: '#a01'}}/>} />
+              <Button onClick={this.onStopRecording} disabled={!canStop}
+                icon={<i className="fa fa-stop"/>} title={getMessage('STOP_RECORDING')} />
+              {playPause === 'play'
+                ? <Button onClick={this.onStartPlayback} disabled={!canPlay}
+                    title={getMessage('START_PLAYBACK')} icon={<i className="fa fa-play"/>} />
+                : <Button onClick={this.onPause} disabled={!canPause}
+                    title={getMessage('PAUSE_PLAYBACK')} icon={<i className="fa fa-pause"/>} />}
+            </ButtonGroup>
+            {isPlayback
+              ? <p className="player-controls-times">
+                  <i className="fa fa-clock-o"/>
+                  {' '}
+                  {formatTime(position)}
+                  {' / '}
+                  {formatTime(duration)}
+                </p>
+              : <p style={{paddingLeft: '10px'}}>
+                  <i className="fa fa-clock-o"/>
+                  {' '}
+                  {formatTime(position)}
+                </p>}
+          </div>
+          <div className="col-sm-7 text-center">
+            <StepperControls enabled={canStep}/>
+          </div>
+          <div className="col-sm-2 text-right">
+            <Menu/>
+          </div>
         </div>
-        <div className="col-sm-7 text-center">
-          <StepperControls enabled={canStep}/>
-        </div>
-        <div className="col-sm-2 text-right">
-          <Menu/>
-        </div>
+        {isPlayback &&
+          <div className='row' style={{marginTop: '3px'}}>
+            <Slider value={position} onChange={this.onSeek}
+              stepSize={100} labelStepSize={30000} min={0} max={duration}
+              labelRenderer={formatTime} />
+          </div>}
       </div>
     );
   }

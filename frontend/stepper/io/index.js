@@ -86,13 +86,15 @@ export default function (bundle, deps) {
           <Panel.Body>
             <div className="row">
               <div className="col-sm-12">
-                {canSelectMode && <form>
-                  <label>
-                    {getMessage('IOPANE_MODE')}{" "}
-                    <select value={mode} onChange={this.onModeChanged}>
-                      {this.modeOptions.map(p =>
-                        <option key={p.value} value={p.value}>{getMessage(p.label)}</option>)}
-                    </select>
+                {canSelectMode && <form style={{marginTop: '10px', marginLeft: '10px'}}>
+                  <label className='pt-label pt-inline'>
+                    {getMessage('IOPANE_MODE')}
+                    <div className='pt-select'>
+                      <select value={mode} onChange={this.onModeChanged}>
+                        {this.modeOptions.map(p =>
+                          <option key={p.value} value={p.value}>{getMessage(p.label)}</option>)}
+                      </select>
+                    </div>
                   </label>
                 </form>}
                 {mode === 'split' &&
@@ -136,15 +138,20 @@ export default function (bundle, deps) {
     render () {
       const {readOnly, preventInput} = this.props;
       return (
-        <Panel header={this.renderHeader()}>
-          <div className="row">
-            <div className="col-sm-6">
-              <deps.BufferEditor buffer='input' readOnly={true} mode='text' width='100%' height='150px' />
+        <Panel>
+          <Panel.Heading>
+            {this.renderHeader()}
+          </Panel.Heading>
+          <Panel.Body>
+            <div className="row">
+              <div className="col-sm-6">
+                <deps.BufferEditor buffer='input' readOnly={true} mode='text' width='100%' height='150px' />
+              </div>
+              <div className="col-sm-6">
+                <deps.BufferEditor buffer='output' readOnly={true} shield={true} mode='text' width='100%' height='150px' />
+              </div>
             </div>
-            <div className="col-sm-6">
-              <deps.BufferEditor buffer='output' readOnly={true} shield={true} mode='text' width='100%' height='150px' />
-            </div>
-          </div>
+          </Panel.Body>
         </Panel>
       );
     };

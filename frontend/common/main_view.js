@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {Button, Panel} from 'react-bootstrap';
+import {Button} from '@blueprintjs/core';
 import classnames from 'classnames';
 
 class MainView extends React.PureComponent {
@@ -18,7 +18,7 @@ class MainView extends React.PureComponent {
     const diagnosticsPanelHeader = (
       <div>
         <div className="pull-right">
-          <Button className="close" onClick={this._onClearDiagnostics}>×</Button>
+          <Button onClick={this._onClearDiagnostics} icon='cross'/>
         </div>
         <span>{getMessage('MESSAGES')}</span>
       </div>
@@ -26,7 +26,7 @@ class MainView extends React.PureComponent {
     const stepperErrorPanelHeader = (
       <div>
         <div className="pull-right">
-          <Button className="close" onClick={this._onStepperExit}>×</Button>
+          <Button onClick={this._onStepperExit} icon='cross'/>
         </div>
         <span>{getMessage('ERROR')}</span>
       </div>
@@ -36,25 +36,25 @@ class MainView extends React.PureComponent {
         <div style={{width: `${geometry.width}px`}}>
           <div className="row">
             {StackView && <div className="col-sm-3">
-              <Panel>
-                <Panel.Heading>
+              <div className='panel panel-default'>
+                <div className='panel-heading'>
                   <span>{getMessage('VARIABLES')}</span>
-                </Panel.Heading>
-                <Panel.Body>
+                </div>
+                <div className='panel-body'>
                   {<StackView height={sourceRowHeight}/>}
-                </Panel.Body>
-              </Panel>
+                </div>
+              </div>
             </div>}
             <div className={StackView ? "col-sm-9" : "col-sm-12"}>
-              <Panel>
-                <Panel.Heading>
+              <div className='panel panel-default'>
+                <div className='panel-heading'>
                   {sourcePanelHeader}
-                </Panel.Heading>
-                <Panel.Body>
+                </div>
+                <div className='panel-body'>
                   <BufferEditor buffer='source' readOnly={readOnly} shield={preventInput}
                     mode={sourceMode} theme={'textmate'} width='100%' height={sourceRowHeight} globalName='source' />
-                </Panel.Body>
-              </Panel>
+                </div>
+              </div>
             </div>
           </div>
           {diagnostics && <div className="row">
@@ -64,7 +64,8 @@ class MainView extends React.PureComponent {
                   {diagnosticsPanelHeader}
                 </Panel.Heading>
                 <Panel.Body>
-                  <div dangerouslySetInnerHTML={diagnostics}/>
+                  <div className='diagnostics' style={{whiteSpace: 'pre', fontSize: '16px', padding: '5px'}}
+                    dangerouslySetInnerHTML={diagnostics}/>
                 </Panel.Body>
               </Panel>
             </div>

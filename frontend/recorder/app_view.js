@@ -4,7 +4,7 @@ import classnames from 'classnames';
 
 class RecorderApp extends React.PureComponent {
   render () {
-    const {RecorderGlobalControls, Screen, ErrorView, MemoryUsage, Vumeter} = this.props;
+    const {RecorderGlobalControls, Screen, MemoryUsage, Vumeter} = this.props;
     return (
       <div className='container'>
         <RecorderGlobalControls/>
@@ -15,7 +15,6 @@ class RecorderApp extends React.PureComponent {
           </div>
         </div>
         <Screen/>
-        <ErrorView/>
       </div>
     );
   }
@@ -23,7 +22,7 @@ class RecorderApp extends React.PureComponent {
 
 function RecorderAppSelector (state, props) {
   const scope = state.get('scope');
-  const {ErrorView, MemoryUsage, Vumeter, RecorderGlobalControls} = scope;
+  const {MemoryUsage, Vumeter, RecorderGlobalControls} = scope;
   const user = state.get('user');
   const screen = state.get('screen');
   let Screen;
@@ -34,7 +33,7 @@ function RecorderAppSelector (state, props) {
   } else if (screen === 'save') {
     Screen = scope.SaveScreen;
   }
-  return {Screen, ErrorView, MemoryUsage, Vumeter, RecorderGlobalControls};
+  return {Screen, MemoryUsage, Vumeter, RecorderGlobalControls};
 }
 
 function RecorderGlobalControlsSelector (state) {
@@ -65,7 +64,7 @@ class RecorderGlobalControls extends React.PureComponent {
 }
 
 export default function (bundle, deps) {
-  bundle.use('LoginScreen', 'RecordScreen', 'SaveScreen', 'ErrorView', 'MemoryUsage', 'Vumeter');
+  bundle.use('LoginScreen', 'RecordScreen', 'SaveScreen', 'MemoryUsage', 'Vumeter');
   bundle.defineView('RecorderApp', RecorderAppSelector, RecorderApp);
   bundle.defineView('RecorderGlobalControls', RecorderGlobalControlsSelector, RecorderGlobalControls);
 };

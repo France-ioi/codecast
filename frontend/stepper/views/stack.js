@@ -1,7 +1,7 @@
 
 import React from 'react';
 import classnames from 'classnames';
-import {Alert, Button, ButtonGroup} from 'react-bootstrap';
+import {Alert, Button, ButtonGroup, Intent} from '@blueprintjs/core';
 import Immutable from 'immutable';
 
 import {viewFrame, renderValue, VarDecl, FunctionCall} from './utils';
@@ -68,7 +68,7 @@ export default function (bundle, deps) {
       if (core.error) {
         return (
           <div className="stack-view" style={{height}}>
-            <Alert bsStyle="danger" onDismiss={this.onExit}>
+            <Alert intent={Intent.DANGER} onClose={this.onExit}>
               <h4>{getMessage('ERROR')}</h4>
               <p>{core.error.toString()}</p>
             </Alert>
@@ -99,12 +99,8 @@ export default function (bundle, deps) {
         <div className="stack-view" style={{height}}>
           <div className="stack-controls">
             <ButtonGroup>
-              <Button onClick={this.onStackUp} title="navigate up the stack">
-                <i className="fa fa-arrow-up"/>
-              </Button>
-              <Button onClick={this.onStackDown} title="navigate down the stack">
-                <i className="fa fa-arrow-down"/>
-              </Button>
+              <Button minimal small onClick={this.onStackUp} title="navigate up the stack" icon='arrow-up'/>
+              <Button minimal small onClick={this.onStackDown} title="navigate down the stack" icon='arrow-down'/>
             </ButtonGroup>
           </div>
           {callReturn && <CallReturn view={callReturn} />}

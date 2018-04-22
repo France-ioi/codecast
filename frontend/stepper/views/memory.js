@@ -26,7 +26,7 @@ Document:
 
 import React from 'react';
 import Slider from 'rc-slider';
-import {Button, ButtonGroup} from 'react-bootstrap';
+import {Button, ButtonGroup} from '@blueprintjs/core';
 import classnames from 'classnames';
 import {ReactSVGPanZoom, fitToViewer, POSITION_NONE} from 'react-svg-pan-zoom';
 import {toSVG, fromObject, translate, transform} from 'transformation-matrix';
@@ -264,12 +264,8 @@ class MemoryView extends React.PureComponent {
             </Slider>
           </div>
           <ButtonGroup>
-            <Button onClick={this.onShiftLeft} title={getMessage('MEMORY_SHIFT_VIEW_LEFT')}>
-              <i className="fa fa-arrow-left"/>
-            </Button>
-            <Button onClick={this.onShiftRight} title={getMessage('MEMORY_SHIFT_VIEW_RIGHT')}>
-              <i className="fa fa-arrow-right"/>
-            </Button>
+            <Button small onClick={this.onShiftLeft} title={getMessage('MEMORY_SHIFT_VIEW_LEFT')} icon='arrow-left'/>
+            <Button small onClick={this.onShiftRight} title={getMessage('MEMORY_SHIFT_VIEW_RIGHT')} icon='arrow-right'/>
           </ButtonGroup>
         </div>
         <div className='clearfix' style={{padding: '2px'}}>

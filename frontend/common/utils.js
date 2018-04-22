@@ -39,6 +39,7 @@ function zeroPad2 (n) {
 }
 
 export function formatTime (ms) {
+  if (typeof ms !== 'number' || Number.isNaN(ms)) return '—';
   let s = Math.round(ms / 1000);
   const m = Math.floor(s / 60);
   s -= m * 60;

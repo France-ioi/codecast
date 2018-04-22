@@ -93,6 +93,7 @@ export default function (bundle, deps) {
       yield put({type: deps.translateStarted, source});
       let response, syntaxTree;
       try {
+        /* XXX replace 'translate' with a computed absolute path */
         response = yield call(asyncRequestJson, 'translate', {source, mode});
       } catch (ex) {
         response = {error: ex.toString()};
@@ -227,7 +228,7 @@ const getPositionFromOffset = function (lineOffsets, offset) {
 function toHtml (content) {
   // Sanitize and wrap html content.
   const el = document.createElement('div');
-  el.innerHtml = `<pre>${content}</pre>`;
+  el.innerHtml = `<div>${content}</div>`;
   return {__html: el.innerHtml};
 }
 

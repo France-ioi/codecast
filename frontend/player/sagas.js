@@ -14,7 +14,7 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 export default function (bundle, deps) {
 
   bundle.use(
-    'error', 'replayApi', 'stepperApi',
+    'replayApi', 'stepperApi',
     'playerPrepare', 'playerPreparing', 'playerReady',
     'playerStart', 'playerStarting', 'playerStarted',
     'playerPause', 'playerPausing', 'playerPaused',

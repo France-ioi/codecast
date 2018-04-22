@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {Button, ButtonGroup} from 'react-bootstrap';
+import {Button, ButtonGroup, Intent} from '@blueprintjs/core';
 import * as C from 'persistent-c';
 
 export default function (bundle, deps) {
@@ -77,30 +77,30 @@ export default function (bundle, deps) {
         <div className="controls controls-stepper">
           <div className="controls-stepper-wrapper">
             {p.showControls && <ButtonGroup className="controls-stepper-execution">
-              {this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), <i className="fi fi-run"/>)}
-              {this._button('expr', this.onStepExpr, getMessage('CONTROL_EXPR'), <i className="fi fi-step-expr"/>)}
-              {this._button('into', this.onStepInto, getMessage('CONTROL_INTO'), <i className="fi fi-step-into"/>)}
-              {this._button('out', this.onStepOut, getMessage('CONTROL_OUT'), <i className="fi fi-step-out"/>)}
-              {this._button('over', this.onStepOver, getMessage('CONTROL_OVER'), <i className="fi fi-step-over"/>)}
-              {this._button('interrupt', this.onInterrupt, getMessage('CONTROL_INTERRUPT'), <i className="fi fi-interrupt"/>)}
-              {this._button('restart', this.onRestart, getMessage('CONTROL_RESTART'), <i className="fi fi-restart"/>)}
-              {this._button('undo', this.onUndo, getMessage('CONTROL_UNDO'), <i className="fa fa-rotate-left"/>)}
-              {this._button('redo', this.onRedo, getMessage('CONTROL_REDO'), <i className="fa fa-rotate-right"/>)}
+              {this._button('run', this.onStepRun, getMessage('CONTROL_RUN'),               <i className="pt-icon fi fi-run"/>)}
+              {this._button('expr', this.onStepExpr, getMessage('CONTROL_EXPR'),            <i className="pt-icon fi fi-step-expr"/>)}
+              {this._button('into', this.onStepInto, getMessage('CONTROL_INTO'),            <i className="pt-icon fi fi-step-into"/>)}
+              {this._button('out', this.onStepOut, getMessage('CONTROL_OUT'),               <i className="pt-icon fi fi-step-out"/>)}
+              {this._button('over', this.onStepOver, getMessage('CONTROL_OVER'),            <i className="pt-icon fi fi-step-over"/>)}
+              {this._button('interrupt', this.onInterrupt, getMessage('CONTROL_INTERRUPT'), <i className="pt-icon fi fi-interrupt"/>)}
+              {this._button('restart', this.onRestart, getMessage('CONTROL_RESTART'),       <i className="pt-icon fi fi-restart"/>)}
+              {this._button('undo', this.onUndo, getMessage('CONTROL_UNDO'),                'undo')}
+              {this._button('redo', this.onRedo, getMessage('CONTROL_REDO'),                'redo')}
             </ButtonGroup>}
           </div>
           <div className="controls-translate">
-            {p.showExit && this._button('edit', this.onEdit, false, getMessage('EDIT'))}
-            {p.showTranslate && this._button('translate', this.onTranslate, false, getMessage('COMPILE'))}
+            {p.showExit && this._button('edit', this.onEdit, false, false, getMessage('EDIT'))}
+            {p.showTranslate && this._button('translate', this.onTranslate, false, false, getMessage('COMPILE'))}
           </div>
         </div>
       );
     };
 
-    _button (key, onClick, title, body) {
+    _button (key, onClick, title, icon, text) {
       const {options} = this.props;
-      let btnStyle = 'default', disabled = false;
+      let intent = Intent.NONE, disabled = false;
       if (key === 'translate') {
-        btnStyle = 'primary';
+        intent = Intent.PRIMARY;
       }
       switch (key) {
         case 'interrupt':
@@ -136,13 +136,15 @@ export default function (bundle, deps) {
         if (mod === '-') {
           disabled = true;
         }
-        btnStyle = mod === '+' ? 'primary' : 'default';
+        if (mod) {
+          intent = mod === '+' ? Intent.PRIMARY : Intent.NONE;
+        }
       }
       if (title === false) {
         title = undefined;
       }
       return (
-        <Button onClick={onClick} disabled={disabled} bsStyle={btnStyle} title={title}>{body}</Button>
+        <Button onClick={onClick} disabled={disabled} intent={intent} title={title} icon={icon} text={text} />
       );
     }
 

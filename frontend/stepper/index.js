@@ -45,7 +45,7 @@ export default function (bundle, deps) {
   bundle.include(ViewsBundle);
 
   bundle.use(
-    'error', 'stepperApi',
+    'stepperApi',
     'translateSucceeded', 'getSyntaxTree', 'translateClear', 'bufferHighlight',
     'recorderStopping'
   );

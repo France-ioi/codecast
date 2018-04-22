@@ -1,7 +1,7 @@
 
 import {take, put, call, select} from 'redux-saga/effects';
 import React from 'react';
-import {Button, FormControl, ControlLabel, FormGroup} from 'react-bootstrap';
+import {Button, FormGroup} from '@blueprintjs/core';
 
 import {asyncRequestJson} from '../utils/api';
 import {getBlob, uploadBlob} from '../utils/blobs';
@@ -124,27 +124,25 @@ export default function (bundle, deps) {
       const {getMessage, audioUrl, wavAudioUrl, eventsUrl, playerUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = this.props;
       return (
         <form>
-          <FormGroup controlId="eventsUrlInput">
-            <ControlLabel>{"URL évènements"}</ControlLabel>
-            <FormControl type="text" value={eventsUrl} readOnly/>
+          <FormGroup labelFor='eventsUrlInput' label={"URL évènements"}>
+            <input id='eventsUrlInput' type='text' className='pt-input' value={eventsUrl} readOnly/>
           </FormGroup>
-          <FormGroup controlId="audioUrlInput">
-            <ControlLabel>{"URL audio"}</ControlLabel>
-            <FormControl type="text" value={audioUrl} readOnly/>
+          <FormGroup labelFor='audioUrlInput' label={"URL audio"}>
+            <input id='audioUrlInput' type='text' className='pt-input' value={audioUrl} readOnly/>
           </FormGroup>
           {wavAudioUrl &&
-            <FormGroup controlId="wavAudioUrlInput">
-              <ControlLabel>{"URL audio (wav)"}</ControlLabel>
-              <FormControl type="text" value={wavAudioUrl} readOnly/>
+            <FormGroup labelFor='wavAudioUrlInput' label={"URL audio (wav)"}>
+              <input id='wavAudioUrlInput' type='text' className='pt-input' value={wavAudioUrl} readOnly/>
             </FormGroup>}
           <p>
-            <Button onClick={onUpload} disabled={busy || done} bsStyle={done ? 'default' : 'primary'}>
-              {busy
-                ? <i className="fa fa-spin fa-spinner"/>
-                : (done
-                    ? <i className="fa fa-check"/>
-                    : <i className="fa fa-floppy-o"/>)}
-            </Button>
+            <Button onClick={this.onUpload} disabled={busy || done} intent={done && Intents.PRIMARY}
+              icon='floppy-disk' text="Save" />
+            {/* TODO: cleanup status */}
+            {busy
+              ? <i className="fa fa-spin fa-spinner"/>
+              : (done
+                  ? <i className="fa fa-check"/>
+                  : false)}
           </p>
           {prepare === 'pending' && <p>{getMessage('PREPARING_RECORDING')}</p>}
           {uploadEvents === 'pending' && <p>{getMessage('UPLOADING_EVENTS')}</p>}
@@ -152,9 +150,8 @@ export default function (bundle, deps) {
           {error && <p>{getMessage('UPLOADING_ERROR')}</p>}
           {done && <p>{getMessage('UPLOADING_COMPLETE')}</p>}
           {done &&
-            <FormGroup controlId="playerUrlInput">
-              <ControlLabel>{getMessage('PLAYBACK_LINK')}</ControlLabel>
-              <FormControl type="text" value={playerUrl} readOnly/>
+            <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')}>
+              <input id='playerUrlInput' type='text' className='pt-input' value={playerUrl} readOnly/>
             </FormGroup>}
         </form>
       );

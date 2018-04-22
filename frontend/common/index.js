@@ -7,7 +7,6 @@ import MainView from './main_view';
 import MainViewPanes from './main_view_panes';
 import fullscreen  from './fullscreen';
 import buffers from '../buffers/index';
-import errors from './errors';
 import resize from './resize';
 import MenuBundle from './menu';
 import examples from './examples';
@@ -32,7 +31,6 @@ export default function (bundle) {
   bundle.include(MainViewPanes);
   bundle.include(fullscreen);
   bundle.include(buffers);
-  bundle.include(errors);
   bundle.include(resize);
   bundle.include(MenuBundle);
   bundle.include(examples);
