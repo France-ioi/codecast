@@ -1,7 +1,7 @@
 
 import React from 'react';
 import classnames from 'classnames';
-import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
+import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';  /* XXX */
 import range from 'node-range';
 
 import {getIdent, getNumber, getList, renderValue, renderArrow} from './utils';
