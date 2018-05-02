@@ -72,6 +72,7 @@ function init (config) {
   memoryUsageInterval = setInterval(reportMemoryUsage, 1000);
 }
 
+let lastHeapSize = 0;
 function reportMemoryUsage () {
   // const heapSize = (self.performance.memory.usedJSHeapSize / (1024 * 1024)).toFixed(1);
   let heapSize = 0;
@@ -81,7 +82,10 @@ function reportMemoryUsage () {
   for (var chunk of chunksR) {
     heapSize += 4 * chunk.length;
   }
-  self.postMessage({id: 'memoryUsage', heapSize});
+  if (heapSize !== lastHeapSize) {
+    lastHeapSize = heapSize;
+    self.postMessage({id: 'memoryUsage', heapSize});
+  }
 }
 
 // Add a chunk to the current recording.
