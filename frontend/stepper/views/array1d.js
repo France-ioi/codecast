@@ -1,7 +1,6 @@
 
 import React from 'react';
 import classnames from 'classnames';
-import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';  /* XXX */
 import range from 'node-range';
 
 import {getIdent, getNumber, getList, renderValue, renderArrow} from './utils';
@@ -100,19 +99,6 @@ function Cursor ({view, cursor}) {
 
 export class Array1D extends React.PureComponent {
 
-  onViewChange = (event) => {
-    const {value} = event;
-    // Prevent vertical panning.
-    value.matrix.f = 0;
-    const update = {viewState: value};
-    this.props.onChange(this.props.directive, update);
-  };
-
-  getViewState = (controls) => {
-    const viewState = controls.get('viewState');
-    return viewState || ViewerHelper.getDefaultValue();
-  };
-
   render () {
     const {Frame, controls, directive, frames, context, getMessage} = this.props;
     const topFrame = frames[0];
@@ -135,31 +121,68 @@ export class Array1D extends React.PureComponent {
     if (view.error) {
       return <Frame {...this.props}>{view.error}</Frame>;
     }
-    const viewState = this.getViewState(controls);
     return (
       <Frame {...this.props} hasFullView>
         <div className='clearfix' style={{padding: '2px'}}>
-          <div style={{width: '100%', height: cellHeight+'px'}}>
-            <ViewerResponsive tool='pan' value={viewState} onChange={this.onViewChange} background='transparent' specialKeys={[]}>
-              <svg width={cellWidth * view.cells.length} height={cellHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
-                <clipPath id="cell">
-                  <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight}/>
-                </clipPath>
-                <g className="array1d">
-                  <Grid view={view} />
-                  <g className="cursors">
-                    {view.cursorMap.map(cursor => <Cursor key={cursor.index} view={view} cursor={cursor} />)}
-                  </g>
-                  <g className="cells">
-                    {view.cells.map(cell => <Cell key={cell.index} view={view} cell={cell} />)}
-                  </g>
-                </g>
-              </svg>
-            </ViewerResponsive>
-          </div>
+          <svg width='100%' height={cellHeight} version='1.1' xmlns='http://www.w3.org/2000/svg'
+              onMouseDown={this.onMouseDown} onMouseMove={this.onMouseMove} onMouseUp={this.onMouseUp} >
+            <clipPath id="cell">
+              <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight}/>
+            </clipPath>
+            <g className="array1d">
+              <Grid cells={view.cells} cursorMap={view.cursorMap} cellWidth={cellWidth} />
+              <g className="cursors">
+                {view.cursorMap.map(cursor => <Cursor key={cursor.index} view={view} cursor={cursor} />)}
+              </g>
+              <g className="cells">
+                {view.cells.map(cell => <Cell key={cell.index} view={view} cell={cell} />)}
+              </g>
+            </g>
+          </svg>
         </div>
       </Frame>
     );
   }
+
+/*
+
+    <g ref={this.refViewer} transform={viewTransform}>
+    </g>
+
+  state = {
+    mode: 'idle', start: null
+  };
+  refViewer = (viewer) => {
+    this.viewer = viewer;
+    // width = cellWidth * view.cells.length
+  };
+  onMouseDown = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const refX = event.clientX;
+    this.setState({mode: 'panning', refX});
+  };
+  onMouseMove = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (this.state.mode === 'panning') {
+      const forceExit = (event.buttons === 0); // the mouse exited and reentered into svg
+      if (forceExit) {
+        this.setState({mode: 'idle'});
+      } else {
+        const {scale} = this.props;
+        const delta = event.clientX - this.state.refX;
+        const address = Math.max(0, Math.min(maxAddress, refAddress - delta / (scale * layout.cellWidth)));
+        this.props.onChange(this.props.directive, {centerAddress: address});
+      }
+    }
+  };
+  onMouseUp = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    this.setState({mode: 'idle', start: null});
+  };
+
+*/
 
 }
