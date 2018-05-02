@@ -2,10 +2,12 @@
 import Immutable from 'immutable';
 import React from 'react';
 import classnames from 'classnames';
+import {eventChannel} from 'redux-saga'
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
+import {Button, ControlGroup, Intent, Label, ProgressBar, Tab, Tabs} from '@blueprintjs/core';
 
-import {Button, ControlGroup, Intent, Label, Tab, Tabs} from '@blueprintjs/core';
-import {getJson, postJson} from '../common/utils';
+import {getJson, postJson, getAudio} from '../common/utils';
+import TrimBundle from './trim';
 
 export default function (bundle, deps) {
 
@@ -14,6 +16,9 @@ export default function (bundle, deps) {
 
   bundle.defineAction('editorPrepare', 'Editor.Prepare');
   bundle.addReducer('editorPrepare', editorPrepareReducer);
+
+  bundle.defineAction('editorAudioLoadProgress', 'Editor.Audio.LoadProgress');
+  bundle.addReducer('editorAudioLoadProgress', editorAudioLoadProgressReducer);
 
   bundle.defineAction('editorConfigured', 'Editor.Configured');
   bundle.addReducer('editorConfigured', editorConfiguredReducer);
@@ -29,17 +34,23 @@ export default function (bundle, deps) {
 
   bundle.defineView('SetupScreen', SetupScreenSelector, SetupScreen);
   bundle.defineView('EditScreen', EditScreenSelector, EditScreen);
-  bundle.defineView('TrimEditor', TrimEditorSelector, TrimEditor);
 
   bundle.addSaga(editorSaga);
+
+  bundle.include(TrimBundle);
 
 };
 
 function editorPrepareReducer (state, {payload: {baseDataUrl}}) {
   return state.set('editor', Immutable.Map({
     dataUrl: baseDataUrl, loading: true,
-    setupTabId: 'setup-tab-infos'
+    setupTabId: 'setup-tab-infos',
+    audioLoadProgress: 0,
   }));
+}
+
+function editorAudioLoadProgressReducer (state, {payload: {value}}) {
+  return state.setIn(['editor', 'audioLoadProgress'], value);
 }
 
 function editorConfiguredReducer (state, {payload: {bucketUrl}}) {
@@ -59,9 +70,34 @@ function* editorPrepareSaga ({payload: {baseDataUrl}}) {
   yield put({type: subtitlesModeSet, payload: {mode: 'editor'}});
   const audioUrl = `${baseDataUrl}.mp3`;
   const eventsUrl = `${baseDataUrl}.json`;
-  yield put({type: playerPrepare, baseDataUrl, audioUrl, eventsUrl}); /* NOT-FSA */
-  const {data} = yield take(playerReady);
-  yield put({type: editorLoaded, payload: {baseDataUrl, data}});
+  /* Load the audio stream. */
+  const audioBuffer = yield call(getAudioSaga, audioUrl);
+  const duration = audioBuffer.duration;
+  /* Prepare the player and wait until ready.
+     This order (load audio, prepare player) is faster, the reverse
+     (as of Chrome 64) leads to redundant concurrent fetches of the audio. */
+  yield put({type: playerPrepare, payload: {baseDataUrl, audioUrl, eventsUrl}});
+  const {payload: {data}} = yield take(playerReady);
+  // TODO: send progress events during extractWaveform?
+  const waveform = extractWaveform(audioBuffer, Math.floor(duration * 60));
+  yield put({type: editorLoaded, payload: {baseDataUrl, data, duration, waveform}});
+}
+
+function* getAudioSaga (audioUrl) {
+  const {editorAudioLoadProgress} = yield select(state => state.get('actionTypes'));
+  const chan = yield call(getAudio, audioUrl);
+  while (true) {
+    let event = yield take(chan);
+    switch (event.type) {
+      case 'done':
+        return event.audioBuffer;
+      case 'error':
+        throw event.error;
+      case 'progress':
+        yield put({type: editorAudioLoadProgress, payload: {value: event.value}});
+        break;
+    }
+  }
 }
 
 function* loginFeedbackSaga (_action) {
@@ -71,10 +107,12 @@ function* loginFeedbackSaga (_action) {
   yield put({type: editorConfigured, payload: {bucketUrl}});
 }
 
-function editorLoadedReducer (state, {payload: {baseDataUrl, data}}) {
+function editorLoadedReducer (state, {payload: {baseDataUrl, data, duration, waveform}}) {
   return state.update('editor', editor => editor
     .set('base', baseDataUrl)
     .set('data', data)
+    .set('waveform', waveform)
+    .set('duration', duration)
     .set('loading', false));
 }
 
@@ -151,28 +189,42 @@ class EditorGlobalControls extends React.PureComponent {
 
 function SetupScreenSelector (state, props) {
   const editor = state.get('editor');
-  const tabId = editor.get('setupTabId');
   const dataUrl = editor.get('dataUrl');
   const loading = editor.get('loading');
-  if (loading) return {loading, dataUrl};
+  if (loading) {
+    const audioLoadProgress = editor.get('audioLoadProgress');
+    return {loading, audioLoadProgress, dataUrl};
+  }
+  const duration = editor.get('duration');
+  const tabId = editor.get('setupTabId');
   const {TrimEditor, SubtitlesEditor, setupScreenTabChanged} = state.get('scope');
-  const {version} = editor.get('data');
+  const {version, events} = editor.get('data');
+  const waveform = editor.get('waveform');
   return {
-    tabId, loading, dataUrl, version,
+    loading, tabId, dataUrl, version, events, duration, waveform,
     TrimEditor, SubtitlesEditor, setupScreenTabChanged
   };
 }
 
 class SetupScreen extends React.PureComponent {
   render () {
-    const {tabId, loading, dataUrl, version, TrimEditor, SubtitlesEditor} = this.props;
+    const {loading} = this.props;
     if (loading) {
-      return <p>{"loading, please wait"}</p>;
+      const {audioLoadProgress} = this.props;
+      return (
+        <div className='cc-container'>
+          <p style={{marginTop: '20px'}}>{"Loading, please wait…"}</p>
+          <ProgressBar value={audioLoadProgress}/>
+        </div>
+      );
     }
+    const {tabId, dataUrl, version, events, duration, waveform, TrimEditor, SubtitlesEditor} = this.props;
     const infosPanel = (
       <div>
-        <p>{"URL "}{dataUrl}</p>
+        <p>{"Base URL "}{dataUrl}</p>
+        <p>{"Duration "}{duration}</p>
         <p>{"Version "}{version}</p>
+        <WideView duration={duration} waveform={waveform} events={events} />
         {/* recording length in mm:ss */}
         {/* number of events */}
         {/* list of available subtitles */}
@@ -181,7 +233,6 @@ class SetupScreen extends React.PureComponent {
     return (
       <div className='cc-container'>
         <h1 style={{margin: '20px 0'}}>{"Codecast Editor"}</h1>
-
 
         <Tabs id='setup-tabs' onChange={this.handleTabChange} selectedTabId={tabId} large={true}>
           <Tab id='setup-tab-infos' title="Information" panel={infosPanel} />
@@ -194,6 +245,36 @@ class SetupScreen extends React.PureComponent {
   }
   handleTabChange = (newTabId) => {
     this.props.dispatch({type: this.props.setupScreenTabChanged, payload: {tabId: newTabId}});
+  };
+}
+
+class WideView extends React.PureComponent {
+  render () {
+    return <canvas height='100' width='800' ref={this.refCanvas} />;
+  }
+  componentDidMount () {
+    const {duration, waveform, events} = this.props;
+    const hMargin = 3;
+    const imageWidth = this.canvas.width;
+    const width = imageWidth - hMargin * 2;
+    const height = this.canvas.height;
+    const scale = width / (duration * 1000);
+    this._miniWaveform = downsampleWaveform(waveform, width);
+    this._params = {width, height, scale, x0: hMargin};
+    this.updateCanvas();
+  }
+  componentDidUpdate () {
+    this.updateCanvas();
+  }
+  updateCanvas = () => {
+    const ctx = this.canvas.getContext('2d');
+    ctx.fillStyle = '#f8f8f8';
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    renderWaveform(ctx, this._params, this._miniWaveform);
+    renderEvents(ctx, this._params, this.props.events);
+  };
+  refCanvas = (canvas) => {
+    this.canvas = canvas;
   };
 }
 
@@ -227,12 +308,121 @@ class EditScreen extends React.PureComponent {
   }
 }
 
-function TrimEditorSelector (state, props) {
-  return {}
+function createOffscreenCanvas (width, height) {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  return canvas;
 }
 
-class TrimEditor extends React.PureComponent {
-  render () {
-    return <p>{"Trim"}</p>;
+function extractWaveform (buffer, tgt_length) {
+  const src_length = buffer.length;
+  let src_start = 0;
+  let ip = Math.floor(src_length / tgt_length);
+  let fp = src_length % tgt_length;
+  let error = 0;
+  let tgt_pos = 0;
+  const tgt = new Float32Array(tgt_length);
+  let maxValue = 0;
+  while (src_start < src_length) {
+    let src_end = src_start + ip;
+    error += fp;
+    if (error >= tgt_length) {
+      error -= tgt_length;
+      src_end += 1;
+    }
+    let value = 0;
+    for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
+      const data = buffer.getChannelData(channel);
+      for (let pos = src_start; pos < src_end; pos += 1) {
+        value += Math.abs(data[pos]);
+      }
+    }
+    value = value / (src_end - src_start) / buffer.numberOfChannels;
+    if (value > maxValue) {
+      maxValue = value;
+    }
+    tgt[tgt_pos] = value;
+    tgt_pos += 1;
+    src_start = src_end;
+  }
+  if (maxValue > 0) {
+    for (tgt_pos = 0; tgt_pos < tgt_length; tgt_pos += 1) {
+      tgt[tgt_pos] /= maxValue;
+    }
+  }
+  return tgt;
+}
+
+function downsampleWaveform (waveform, tgt_length) {
+  const src_length = waveform.length;
+  let src_start = 0;
+  let ip = Math.floor(src_length / tgt_length);
+  let fp = src_length % tgt_length;
+  let error = 0;
+  let tgt_pos = 0;
+  const tgt = new Float32Array(tgt_length);
+  let maxValue = 0;
+  while (src_start < src_length) {
+    let src_end = src_start + ip;
+    error += fp;
+    if (error >= tgt_length) {
+      error -= tgt_length;
+      src_end += 1;
+    }
+    let value = 0;
+    for (let pos = src_start; pos < src_end; pos += 1) {
+      value += waveform[pos];
+    }
+    value = value / (src_end - src_start);
+    tgt[tgt_pos] = value;
+    tgt_pos += 1;
+    src_start = src_end;
+  }
+  return tgt;
+}
+
+function renderWaveform (ctx, {width, height, x0}, samples) {
+  const midY = height / 2;
+  const scaleY = height * 0.8; /* 160% zoom */
+  ctx.strokeStyle = '#d8d8d8';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < width; x += 1) {
+    const y = samples[x] * scaleY;
+    ctx.beginPath();
+    ctx.moveTo(x0 + x, midY - y);
+    ctx.lineTo(x0 + x, midY + y + 1);
+    ctx.stroke();
+  }
+}
+
+function renderEvents (ctx, {height, scale, x0}, events) {
+  const lineHeight = 5;
+  const y0 = (height - lineHeight) / 2;
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  for (let event of events) {
+    const x = x0 + Math.round(event[0] * scale);
+    let line = 0;
+    const t = event[1];
+    if (/^(start|end|translate)/.test(t)) {
+      line = -1;
+      ctx.strokeStyle = '#f55656'; // @red4
+    } else if (/^buffer\.(insert|delete)/.test(t)) {
+      line = 1;
+      ctx.strokeStyle = '#2b95d6'; // @blue4
+    } else if (/^terminal|ioPane|arduino/.test(t)) {
+      line = 1;
+      ctx.strokeStyle = '#f29d49'; // @orange4
+    } else if (/^stepper/.test(t)) {
+      line = 2;
+      ctx.strokeStyle = '#15b371'; // @green4
+    } else {
+      ctx.strokeStyle = '#5c7080'; // @gray1
+    }
+    ctx.beginPath();
+    ctx.moveTo(x - 1, y0 + line * lineHeight);
+    ctx.lineTo(x + 2, y0 + line * lineHeight);
+    ctx.stroke();
   }
 }

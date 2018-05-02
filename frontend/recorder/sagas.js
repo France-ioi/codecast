@@ -199,7 +199,7 @@ export default function (bundle, deps) {
       const eventsBlob = new Blob([JSON.stringify(events.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
       const eventsUrl = URL.createObjectURL(eventsBlob);
       // Prepare the player to use the audio and event streams, wait till ready.
-      yield put({type: deps.playerPrepare, audioUrl, eventsUrl});
+      yield put({type: deps.playerPrepare, payload: {audioUrl, eventsUrl}});
       yield take(deps.playerReady);
       // Signal that the recorder is paused.
       yield put({type: deps.recorderPaused});

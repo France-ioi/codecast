@@ -89,14 +89,14 @@ export default function (bundle, deps) {
     }
   }
 
-  function* playerPrepare (action) {
+  function* playerPrepare ({payload}) {
     /*
       baseDataUrl is forwarded to playerReady (stored in its reducer) in order
         to serve as the base URL for subtitle files (in the player & editor).
       audioUrl, eventsUrl need to be able to be passed independently by the
         recorder, where they are "blob:" URLs.
     */
-    const {baseDataUrl, audioUrl, eventsUrl} = action;
+    const {baseDataUrl, audioUrl, eventsUrl} = payload;
     // Check that the player is idle.
     const player = yield select(deps.getPlayerState);
     if (player.get('status') !== 'idle') {
@@ -122,7 +122,7 @@ export default function (bundle, deps) {
     /* Compute the future state after every event. */
     const instants = yield call(computeInstants, data.events);
     /* Set up the player. */
-    yield put({type: deps.playerReady, baseDataUrl, data, instants});
+    yield put({type: deps.playerReady, payload: {baseDataUrl, data, instants}});
     yield call(resetToInstant, instants[0], 0, false);
   }
 

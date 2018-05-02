@@ -559,7 +559,7 @@ function filterItems (items, re) {
   return items.filter(item => -1 !== item.text.search(re));
 }
 
-function playerReadyReducer (state, {baseDataUrl, data}) {
+function playerReadyReducer (state, {payload: {baseDataUrl, data}}) {
   const availableOptions = {};
   const {langOptions} = state.get('subtitles');
   (data.subtitles||[]).forEach(function (key) {

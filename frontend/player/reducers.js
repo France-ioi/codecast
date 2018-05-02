@@ -13,7 +13,7 @@ export default function (bundle, deps) {
   }
 
   bundle.addReducer('playerReady', function (state, action) {
-    const {data, instants} = action;
+    const {payload: {data, instants}} = action;
     return state.update('player', player => updateStatus(player
       .set('data', data)
       .set('instants', instants)

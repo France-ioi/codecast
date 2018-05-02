@@ -1,5 +1,7 @@
 
 import request from 'superagent';
+import audioDecode from 'audio-decode';
+import {eventChannel, END} from 'redux-saga'
 
 export function readFileAsText (file) {
   return new Promise(function (resolve, reject) {
@@ -33,6 +35,23 @@ export function postJson (url, data) {
       .then(res => resolve(res.body));
   });
 };
+
+export function getAudio (path) {
+  return eventChannel(emitter => {
+    request.get(path)
+      .accept('audio')
+      .responseType('blob')
+      .on('progress', e => emitter({type: 'progress', value: e.percent / 100}))
+      .end(function (error, response) {
+        if (error) return emitter({type: 'error', error});
+        audioDecode(response.body, function (error, audioBuffer) {
+          if (error) return emitter({type: 'error', error});
+          emitter({type: 'done', audioBuffer});
+        });
+      });
+    return () => request.abort();
+  });
+}
 
 function zeroPad2 (n) {
   return ('0'+n).slice(-2);
