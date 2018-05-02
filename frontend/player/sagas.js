@@ -4,7 +4,7 @@
 // where source and input are buffer models (of shape {document, selection, firstVisibleRow}).
 
 import {delay} from 'redux-saga';
-import {take, put, call, race, fork, select} from 'redux-saga/effects';
+import {takeEvery, take, put, call, race, fork, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 import Immutable from 'immutable';
 
@@ -238,43 +238,12 @@ export default function (bundle, deps) {
     }
   }
 
-  bundle.addSaga(function* watchPlayerPrepare () {
-    while (true) {
-      try {
-        const action = yield take(deps.playerPrepare);
-        yield call(playerPrepare, action);
-      } catch (error) {
-        yield put({type: deps.error, source: 'playerPrepare', error});
-      }
-    }
-  });
-
-  bundle.addSaga(function* watchPlayerStart () {
-    while (true) {
-      yield take(deps.playerStart);
-      yield call(playerStart);
-    }
-  });
-
-  bundle.addSaga(function* watchPlayerPause () {
-    while (true) {
-      yield take(deps.playerPause);
-      yield call(playerPause);
-    }
-  });
-
-  bundle.addSaga(function* watchPlayerResume () {
-    while (true) {
-      yield take(deps.playerResume);
-      yield call(playerResume);
-    }
-  });
-
-  bundle.addSaga(function* watchPlayerStop () {
-    while (true) {
-      yield take(deps.playerStop);
-      yield call(playerStop);
-    }
+  bundle.addSaga(function* playerSaga () {
+    yield takeEvery(deps.playerPrepare, playerPrepare);
+    yield takeEvery(deps.playerStart, playerStart);
+    yield takeEvery(deps.playerPause, playerPause);
+    yield takeEvery(deps.playerResume, playerResume);
+    yield takeEvery(deps.playerStop, playerStop);
   });
 
   /* A quick reset avoids disabling and re-enabling the stepper (which restarts
