@@ -7,6 +7,7 @@ import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects
 import {Button, ControlGroup, Intent, Label, ProgressBar, Tab, Tabs} from '@blueprintjs/core';
 
 import {getJson, postJson, getAudio} from '../common/utils';
+import {FullWaveform, extractWaveform} from './waveform';
 import TrimBundle from './trim';
 
 export default function (bundle, deps) {
@@ -200,9 +201,10 @@ function SetupScreenSelector (state, props) {
   const {TrimEditor, SubtitlesEditor, setupScreenTabChanged} = state.get('scope');
   const {version, events} = editor.get('data');
   const waveform = editor.get('waveform');
+  const waveformWidth = 800;
   return {
     loading, tabId, dataUrl, version, events, duration, waveform,
-    TrimEditor, SubtitlesEditor, setupScreenTabChanged
+    TrimEditor, SubtitlesEditor, setupScreenTabChanged, waveformWidth
   };
 }
 
@@ -218,16 +220,19 @@ class SetupScreen extends React.PureComponent {
         </div>
       );
     }
-    const {tabId, dataUrl, version, events, duration, waveform, TrimEditor, SubtitlesEditor} = this.props;
+    const {tabId, dataUrl, version, events, duration, waveform, TrimEditor, SubtitlesEditor, waveformWidth} = this.props;
+    const {position, viewStart, viewEnd} = this.state;
     const infosPanel = (
       <div>
         <p>{"Base URL "}{dataUrl}</p>
         <p>{"Duration "}{duration}</p>
         <p>{"Version "}{version}</p>
-        <WideView duration={duration} waveform={waveform} events={events} />
         {/* recording length in mm:ss */}
         {/* number of events */}
         {/* list of available subtitles */}
+        <FullWaveform width={waveformWidth} duration={duration} waveform={waveform} events={events}
+          ranges={[{start: viewStart, end: viewEnd, color: '#888'}]} position={position}
+          onPan={this.wideViewPan} />
       </div>
     );
     return (
@@ -243,53 +248,32 @@ class SetupScreen extends React.PureComponent {
       </div>
     );
   }
+  static getDerivedStateFromProps (nextProps, prevState) {
+    return updateNarrow(nextProps, prevState.position);
+  };
+  state = {position: 0, viewStart: 0, viewEnd: 0};
   handleTabChange = (newTabId) => {
     this.props.dispatch({type: this.props.setupScreenTabChanged, payload: {tabId: newTabId}});
   };
-}
-
-class WideView extends React.PureComponent {
-  render () {
-    return <canvas height='100' width='800' ref={this.refCanvas} />;
-  }
-  componentDidMount () {
-    const {duration, waveform, events} = this.props;
-    const hMargin = 3;
-    const imageWidth = this.canvas.width;
-    const width = imageWidth - hMargin * 2;
-    const height = this.canvas.height;
-    const scale = width / (duration * 1000);
-    this._miniWaveform = downsampleWaveform(waveform, width);
-    this._params = {width, height, scale, x0: hMargin};
-    this.updateCanvas();
-  }
-  componentDidUpdate () {
-    this.updateCanvas();
-  }
-  updateCanvas = () => {
-    const ctx = this.canvas.getContext('2d');
-    ctx.fillStyle = '#f8f8f8';
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    renderWaveform(ctx, this._params, this._miniWaveform);
-    renderEvents(ctx, this._params, this.props.events);
-  };
-  refCanvas = (canvas) => {
-    this.canvas = canvas;
+  wideViewPan = (position) => {
+    this.setState(updateNarrow(this.props, position));
   };
 }
 
-function EditScreenSelector (state, props) {
-  const {PlayerControls, MainView, MainViewPanes, SubtitlesBand, getPlayerState} = state.get('scope');
-  const playerStatus = getPlayerState(state).get('status');
-  const preventInput = !/ready|paused/.test(playerStatus);
-  const viewportTooSmall = state.get('viewportTooSmall');
-  const containerWidth = state.get('containerWidth');
-  const showSubtitlesBand = state.get('showSubtitlesBand');
-  return {
-    preventInput, viewportTooSmall, containerWidth,
-    PlayerControls, MainView, MainViewPanes,
-    showSubtitlesBand, SubtitlesBand
-  };
+function updateNarrow (props, position) {
+  if (!props.duration) return null;
+  const duration = props.duration * 1000;
+  const visibleDuration = props.waveformWidth/*px*/ * 1000 / 60;
+  position = Math.max(0, Math.min(duration, position));
+  let viewStart = position - visibleDuration / 2;
+  let viewEnd = position + visibleDuration / 2;
+  if (viewStart < 0) {
+    viewStart = 0;
+  } else if (viewEnd > duration) {
+    viewStart = Math.max(0, duration - visibleDuration);
+  }
+  viewEnd = viewStart + visibleDuration;
+  return {position, viewStart, viewEnd};
 }
 
 class EditScreen extends React.PureComponent {
@@ -308,121 +292,16 @@ class EditScreen extends React.PureComponent {
   }
 }
 
-function createOffscreenCanvas (width, height) {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  return canvas;
-}
-
-function extractWaveform (buffer, tgt_length) {
-  const src_length = buffer.length;
-  let src_start = 0;
-  let ip = Math.floor(src_length / tgt_length);
-  let fp = src_length % tgt_length;
-  let error = 0;
-  let tgt_pos = 0;
-  const tgt = new Float32Array(tgt_length);
-  let maxValue = 0;
-  while (src_start < src_length) {
-    let src_end = src_start + ip;
-    error += fp;
-    if (error >= tgt_length) {
-      error -= tgt_length;
-      src_end += 1;
-    }
-    let value = 0;
-    for (let channel = 0; channel < buffer.numberOfChannels; channel += 1) {
-      const data = buffer.getChannelData(channel);
-      for (let pos = src_start; pos < src_end; pos += 1) {
-        value += Math.abs(data[pos]);
-      }
-    }
-    value = value / (src_end - src_start) / buffer.numberOfChannels;
-    if (value > maxValue) {
-      maxValue = value;
-    }
-    tgt[tgt_pos] = value;
-    tgt_pos += 1;
-    src_start = src_end;
-  }
-  if (maxValue > 0) {
-    for (tgt_pos = 0; tgt_pos < tgt_length; tgt_pos += 1) {
-      tgt[tgt_pos] /= maxValue;
-    }
-  }
-  return tgt;
-}
-
-function downsampleWaveform (waveform, tgt_length) {
-  const src_length = waveform.length;
-  let src_start = 0;
-  let ip = Math.floor(src_length / tgt_length);
-  let fp = src_length % tgt_length;
-  let error = 0;
-  let tgt_pos = 0;
-  const tgt = new Float32Array(tgt_length);
-  let maxValue = 0;
-  while (src_start < src_length) {
-    let src_end = src_start + ip;
-    error += fp;
-    if (error >= tgt_length) {
-      error -= tgt_length;
-      src_end += 1;
-    }
-    let value = 0;
-    for (let pos = src_start; pos < src_end; pos += 1) {
-      value += waveform[pos];
-    }
-    value = value / (src_end - src_start);
-    tgt[tgt_pos] = value;
-    tgt_pos += 1;
-    src_start = src_end;
-  }
-  return tgt;
-}
-
-function renderWaveform (ctx, {width, height, x0}, samples) {
-  const midY = height / 2;
-  const scaleY = height * 0.8; /* 160% zoom */
-  ctx.strokeStyle = '#d8d8d8';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < width; x += 1) {
-    const y = samples[x] * scaleY;
-    ctx.beginPath();
-    ctx.moveTo(x0 + x, midY - y);
-    ctx.lineTo(x0 + x, midY + y + 1);
-    ctx.stroke();
-  }
-}
-
-function renderEvents (ctx, {height, scale, x0}, events) {
-  const lineHeight = 5;
-  const y0 = (height - lineHeight) / 2;
-  ctx.lineWidth = 3;
-  ctx.lineCap = 'round';
-  for (let event of events) {
-    const x = x0 + Math.round(event[0] * scale);
-    let line = 0;
-    const t = event[1];
-    if (/^(start|end|translate)/.test(t)) {
-      line = -1;
-      ctx.strokeStyle = '#f55656'; // @red4
-    } else if (/^buffer\.(insert|delete)/.test(t)) {
-      line = 1;
-      ctx.strokeStyle = '#2b95d6'; // @blue4
-    } else if (/^terminal|ioPane|arduino/.test(t)) {
-      line = 1;
-      ctx.strokeStyle = '#f29d49'; // @orange4
-    } else if (/^stepper/.test(t)) {
-      line = 2;
-      ctx.strokeStyle = '#15b371'; // @green4
-    } else {
-      ctx.strokeStyle = '#5c7080'; // @gray1
-    }
-    ctx.beginPath();
-    ctx.moveTo(x - 1, y0 + line * lineHeight);
-    ctx.lineTo(x + 2, y0 + line * lineHeight);
-    ctx.stroke();
-  }
+function EditScreenSelector (state, props) {
+  const {PlayerControls, MainView, MainViewPanes, SubtitlesBand, getPlayerState} = state.get('scope');
+  const playerStatus = getPlayerState(state).get('status');
+  const preventInput = !/ready|paused/.test(playerStatus);
+  const viewportTooSmall = state.get('viewportTooSmall');
+  const containerWidth = state.get('containerWidth');
+  const showSubtitlesBand = state.get('showSubtitlesBand');
+  return {
+    preventInput, viewportTooSmall, containerWidth,
+    PlayerControls, MainView, MainViewPanes,
+    showSubtitlesBand, SubtitlesBand
+  };
 }
