@@ -346,21 +346,21 @@ class SubtitlesBand extends React.PureComponent {
       </div>
     );
   }
-  componentWillReceiveProps (nextProps) {
-    const height = (this._band ? this._band.offsetHeight : 40);
+  static getDerivedStateFromProps (nextProps, prevState) {
+    const height = (prevState.band ? prevState.band.offsetHeight : 40);
     if (nextProps.dataDrag.isMoving) {
-      const newPositionY = this.state.lastPositionY + nextProps.dataDrag.moveDeltaY;
+      const newPositionY = prevState.lastPositionY + nextProps.dataDrag.moveDeltaY;
       const currentY = Math.min(nextProps.windowHeight - nextProps.top - height, Math.max(-nextProps.top, newPositionY));
-      this.setState({currentY});
+      return {currentY};
     } else {
-      const currentY = Math.min(nextProps.windowHeight - nextProps.top - height, Math.max(-nextProps.top, this.state.currentY));
-      this.setState({currentY, lastPositionY: currentY});
+      const currentY = Math.min(nextProps.windowHeight - nextProps.top - height, Math.max(-nextProps.top, prevState.currentY));
+      return {currentY, lastPositionY: currentY};
     }
   }
-  state = {currentY: 0, lastPositionY: 0};
+  state = {band: null, currentY: 0, lastPositionY: 0};
   _refBand = (element) => {
-    this._band = element;
-  }
+    this.setState({band: element});
+  };
 }
 
 /*

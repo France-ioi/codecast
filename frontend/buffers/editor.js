@@ -209,10 +209,10 @@ class Editor extends React.PureComponent {
     }, 0);
   };
 
-  componentWillReceiveProps (nextProps) {
+  componentDidUpdate (prevProps) {
     if (this.editor) {
-      if (this.props.readOnly !== nextProps.readOnly) {
-        this.editor.setReadOnly(nextProps.readOnly);
+      if (prevProps.readOnly !== this.props.readOnly) {
+        this.editor.setReadOnly(this.props.readOnly);
       }
       /* Do not auto-scroll when shielded. */
       this.editor.setAutoScrollEditorIntoView(!this.props.shield);
