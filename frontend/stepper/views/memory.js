@@ -28,9 +28,6 @@ import React from 'react';
 import Slider from 'rc-slider';
 import {Button, ButtonGroup} from '@blueprintjs/core';
 import classnames from 'classnames';
-import {ReactSVGPanZoom, fitToViewer, POSITION_NONE} from 'react-svg-pan-zoom';
-import {toSVG, fromObject, translate, transform} from 'transformation-matrix';
-
 import range from 'node-range';
 import * as C from 'persistent-c';
 import adt from 'adt';
@@ -356,7 +353,7 @@ class MemoryView extends React.PureComponent {
   };
 
   state = {
-    mode: 'idle', start: null
+    mode: 'idle'
   };
   refViewer = (viewer) => {
     this.viewer = viewer;
@@ -364,8 +361,9 @@ class MemoryView extends React.PureComponent {
   onMouseDown = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    const {scale, layout, centerAddress} = this.props;
-    this.setState({mode: 'panning', refAddress: centerAddress, refX: event.clientX});
+    const refAddress = this.props.centerAddress;
+    const refX = event.clientX;
+    this.setState({mode: 'panning', refAddress, refX});
   };
   onMouseMove = (event) => {
     event.preventDefault();
@@ -374,7 +372,7 @@ class MemoryView extends React.PureComponent {
     if (mode === 'panning') {
       const forceExit = (event.buttons === 0); // the mouse exited and reentered into svg
       if (forceExit) {
-        this.setState({mode: 'idle', start: null});
+        this.setState({mode: 'idle'});
       } else {
         const {scale, layout, maxAddress} = this.props;
         const delta = event.clientX - refX;
@@ -386,7 +384,7 @@ class MemoryView extends React.PureComponent {
   onMouseUp = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    this.setState({mode: 'idle', start: null});
+    this.setState({mode: 'idle'});
   };
 
 }
