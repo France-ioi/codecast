@@ -7,7 +7,7 @@ import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects
 import {Button, ControlGroup, Intent, Label, ProgressBar, Tab, Tabs} from '@blueprintjs/core';
 
 import {getJson, postJson, getAudio} from '../common/utils';
-import {FullWaveform, extractWaveform} from './waveform';
+import {FullWaveform, ExpandedWaveform, extractWaveform} from './waveform';
 import TrimBundle from './trim';
 
 export default function (bundle, deps) {
@@ -73,14 +73,14 @@ function* editorPrepareSaga ({payload: {baseDataUrl}}) {
   const eventsUrl = `${baseDataUrl}.json`;
   /* Load the audio stream. */
   const audioBuffer = yield call(getAudioSaga, audioUrl);
-  const duration = audioBuffer.duration;
+  const duration = audioBuffer.duration * 1000;
   /* Prepare the player and wait until ready.
      This order (load audio, prepare player) is faster, the reverse
      (as of Chrome 64) leads to redundant concurrent fetches of the audio. */
   yield put({type: playerPrepare, payload: {baseDataUrl, audioUrl, eventsUrl}});
   const {payload: {data}} = yield take(playerReady);
   // TODO: send progress events during extractWaveform?
-  const waveform = extractWaveform(audioBuffer, Math.floor(duration * 60));
+  const waveform = extractWaveform(audioBuffer, Math.floor(duration * 60 / 1000));
   yield put({type: editorLoaded, payload: {baseDataUrl, data, duration, waveform}});
 }
 
@@ -225,13 +225,16 @@ class SetupScreen extends React.PureComponent {
     const infosPanel = (
       <div>
         <p>{"Base URL "}{dataUrl}</p>
-        <p>{"Duration "}{duration}</p>
+        <p>{"Duration "}{duration / 1000}</p>
         <p>{"Version "}{version}</p>
         {/* recording length in mm:ss */}
         {/* number of events */}
         {/* list of available subtitles */}
-        <FullWaveform width={waveformWidth} duration={duration} waveform={waveform} events={events}
-          ranges={[{start: viewStart, end: viewEnd, color: '#888'}]} position={position}
+        <FullWaveform width={waveformWidth} position={position} duration={duration}
+          waveform={waveform} events={events} ranges={[{start: viewStart, end: viewEnd, color: '#888'}]}
+          onPan={this.wideViewPan} />
+        <ExpandedWaveform width={waveformWidth} position={position} duration={duration}
+          waveform={waveform} events={events} ranges={[{start: viewStart, end: viewEnd, color: '#888'}]}
           onPan={this.wideViewPan} />
       </div>
     );
@@ -262,7 +265,7 @@ class SetupScreen extends React.PureComponent {
 
 function updateNarrow (props, position) {
   if (!props.duration) return null;
-  const duration = props.duration * 1000;
+  const {duration} = props;
   const visibleDuration = props.waveformWidth/*px*/ * 1000 / 60;
   position = Math.max(0, Math.min(duration, position));
   let viewStart = position - visibleDuration / 2;
