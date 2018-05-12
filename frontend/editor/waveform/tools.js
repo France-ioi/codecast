@@ -105,8 +105,8 @@ export function renderRange (ctx, params, range) {
     ctx.fillStyle = range.color;
     ctx.fillRect(x1 + 0.5, 0, x2 - x1 + 1, height);
     ctx.lineWidth = 1;
-    ctx.strokeStyle = '#000';
-    ctx.strokeRect(x1 + 0.5, 0, x2 - x1 + 1, height);
+    // ctx.strokeStyle = '#000';
+    // ctx.strokeRect(x1 + 0.5, 0, x2 - x1 + 1, height);
   }
 }
 
