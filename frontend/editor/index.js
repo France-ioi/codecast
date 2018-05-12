@@ -6,8 +6,9 @@ import {eventChannel} from 'redux-saga'
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 import {Button, ControlGroup, Intent, Label, ProgressBar, Tab, Tabs} from '@blueprintjs/core';
 
-import {getJson, postJson, getAudio} from '../common/utils';
-import {FullWaveform, ExpandedWaveform, extractWaveform} from './waveform';
+import {getJson, postJson, getAudio, formatTime} from '../common/utils';
+import {extractWaveform} from './waveform/tools';
+import FullWaveform from './waveform/full';
 import TrimBundle from './trim';
 
 export default function (bundle, deps) {
@@ -201,10 +202,9 @@ function SetupScreenSelector (state, props) {
   const {TrimEditor, SubtitlesEditor, setupScreenTabChanged} = state.get('scope');
   const {version, events} = editor.get('data');
   const waveform = editor.get('waveform');
-  const waveformWidth = 800;
   return {
     loading, tabId, dataUrl, version, events, duration, waveform,
-    TrimEditor, SubtitlesEditor, setupScreenTabChanged, waveformWidth
+    TrimEditor, SubtitlesEditor, setupScreenTabChanged
   };
 }
 
@@ -220,22 +220,14 @@ class SetupScreen extends React.PureComponent {
         </div>
       );
     }
-    const {tabId, dataUrl, version, events, duration, waveform, TrimEditor, SubtitlesEditor, waveformWidth} = this.props;
-    const {position, viewStart, viewEnd} = this.state;
-    const infosPanel = (
+    const {tabId, dataUrl, version, events, duration, waveform, TrimEditor, SubtitlesEditor} = this.props;
+    const overviewPanel = (
       <div>
-        <p>{"Base URL "}{dataUrl}</p>
-        <p>{"Duration "}{duration / 1000}</p>
-        <p>{"Version "}{version}</p>
-        {/* recording length in mm:ss */}
-        {/* number of events */}
+        <p>{"Version "}<b>{version}</b></p>
+        <p>{"Duration "}<b>{formatTime(duration)}</b></p>
+        {/* number of events? */}
         {/* list of available subtitles */}
-        <FullWaveform width={waveformWidth} position={position} duration={duration}
-          waveform={waveform} events={events} ranges={[{start: viewStart, end: viewEnd, color: '#888'}]}
-          onPan={this.wideViewPan} />
-        <ExpandedWaveform width={waveformWidth} position={position} duration={duration}
-          waveform={waveform} events={events} ranges={[{start: viewStart, end: viewEnd, color: '#888'}]}
-          onPan={this.wideViewPan} />
+        <FullWaveform width={800} height={80} duration={duration} waveform={waveform} events={events} />
       </div>
     );
     return (
@@ -243,7 +235,7 @@ class SetupScreen extends React.PureComponent {
         <h1 style={{margin: '20px 0'}}>{"Codecast Editor"}</h1>
 
         <Tabs id='setup-tabs' onChange={this.handleTabChange} selectedTabId={tabId} large={true}>
-          <Tab id='setup-tab-infos' title="Information" panel={infosPanel} />
+          <Tab id='setup-tab-infos' title="Overview" panel={overviewPanel} />
           <Tab id='setup-tab-trim' title="Trim" panel={<TrimEditor/>} />
           <Tab id='setup-tab-subtitles' title="Subtitles" panel={<SubtitlesEditor/>} />
         </Tabs>
@@ -251,32 +243,9 @@ class SetupScreen extends React.PureComponent {
       </div>
     );
   }
-  static getDerivedStateFromProps (nextProps, prevState) {
-    return updateNarrow(nextProps, prevState.position);
-  };
-  state = {position: 0, viewStart: 0, viewEnd: 0};
   handleTabChange = (newTabId) => {
     this.props.dispatch({type: this.props.setupScreenTabChanged, payload: {tabId: newTabId}});
   };
-  wideViewPan = (position) => {
-    this.setState(updateNarrow(this.props, position));
-  };
-}
-
-function updateNarrow (props, position) {
-  if (!props.duration) return null;
-  const {duration} = props;
-  const visibleDuration = props.waveformWidth/*px*/ * 1000 / 60;
-  position = Math.max(0, Math.min(duration, position));
-  let viewStart = position - visibleDuration / 2;
-  let viewEnd = position + visibleDuration / 2;
-  if (viewStart < 0) {
-    viewStart = 0;
-  } else if (viewEnd > duration) {
-    viewStart = Math.max(0, duration - visibleDuration);
-  }
-  viewEnd = viewStart + visibleDuration;
-  return {position, viewStart, viewEnd};
 }
 
 class EditScreen extends React.PureComponent {
