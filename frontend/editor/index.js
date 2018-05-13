@@ -19,6 +19,9 @@ export default function (bundle, deps) {
   bundle.defineAction('editorPrepare', 'Editor.Prepare');
   bundle.addReducer('editorPrepare', editorPrepareReducer);
 
+  bundle.defineAction('editorControlsChanged', 'Editor.Controls.Changed');
+  bundle.addReducer('editorControlsChanged', editorControlsChangedReducer);
+
   bundle.defineAction('editorAudioLoadProgress', 'Editor.Audio.LoadProgress');
   bundle.addReducer('editorAudioLoadProgress', editorAudioLoadProgressReducer);
 
@@ -48,7 +51,12 @@ function editorPrepareReducer (state, {payload: {baseDataUrl}}) {
     dataUrl: baseDataUrl, loading: true,
     setupTabId: 'setup-tab-infos',
     audioLoadProgress: 0,
+    controls: []
   }));
+}
+
+function editorControlsChangedReducer (state, {payload: {controls}}) {
+  return state.setIn(['editor', 'controls'], controls);
 }
 
 function editorAudioLoadProgressReducer (state, {payload: {value}}) {
@@ -250,12 +258,12 @@ class SetupScreen extends React.PureComponent {
 
 class EditScreen extends React.PureComponent {
   render () {
-    const {preventInput, containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
+    const {containerWidth, viewportTooSmall, controls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
     return (
       <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
-        <PlayerControls/>
+        {controls.map((Component, i) => <Component key={i} width={containerWidth}/>)}
         <div id='mainView-container'>
-          <MainView preventInput={preventInput}/>
+          <MainView/>
           <MainViewPanes/>
         </div>
         {showSubtitlesBand && <SubtitlesBand/>}
@@ -265,15 +273,14 @@ class EditScreen extends React.PureComponent {
 }
 
 function EditScreenSelector (state, props) {
-  const {PlayerControls, MainView, MainViewPanes, SubtitlesBand, getPlayerState} = state.get('scope');
-  const playerStatus = getPlayerState(state).get('status');
-  const preventInput = !/ready|paused/.test(playerStatus);
+  const {MainView, MainViewPanes, SubtitlesBand} = state.get('scope');
   const viewportTooSmall = state.get('viewportTooSmall');
   const containerWidth = state.get('containerWidth');
   const showSubtitlesBand = state.get('showSubtitlesBand');
+  const controls = state.getIn(['editor', 'controls']);
   return {
-    preventInput, viewportTooSmall, containerWidth,
-    PlayerControls, MainView, MainViewPanes,
+    viewportTooSmall, containerWidth, controls,
+    MainView, MainViewPanes,
     showSubtitlesBand, SubtitlesBand
   };
 }

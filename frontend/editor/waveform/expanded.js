@@ -54,14 +54,13 @@ function render (props, canvas, prevParams) {
   const params = {duration, width, height, leftMargin, firstTimestamp, lastTimestamp, scale};
   const ctx = canvas.getContext('2d');
   ctx.globalAlpha = 1;
+  ctx.fillStyle = '#f8f8f8';
+  ctx.fillRect(0, 0, width, height);
   if (intervals) {
     for (let {start, end, value} of intervals.intervals()) {
       if (end === +Infinity) end = duration;
       renderRange(ctx, params, {start, end, color: value ? '#f8f8f8' : '#808080'});
     }
-  } else {
-    ctx.fillStyle = '#f8f8f8';
-    ctx.fillRect(0, 0, width, height);
   }
   renderWaveform(ctx, params, waveform);
   ctx.globalAlpha = 1;
@@ -93,9 +92,10 @@ function renderWaveform (ctx, params, samples) {
 }
 
 function renderTicks (ctx, params) {
-  const {width, position} = params;
+  const {width, height, leftMargin} = params;
   ctx.lineWidth = 1;
   ctx.strokeStyle = '#333';
+  const position = canvasToTimestamp(params, leftMargin);
   for (let x = 0.5 + 60 - Math.round(position * 60 / 1000) % 60 ; x < width; x += 60) {
     ctx.beginPath();
     ctx.moveTo(x, 0);

@@ -116,7 +116,40 @@ class MainView extends React.PureComponent {
   };
 }
 
-export default function (bundle, deps) {
+function MainViewSelector (state, props) {
+  const {getPlayerState, getTranslateDiagnostics, getStepperDisplay, getStepperOptions, BufferEditor, StackView, ArduinoPanel, DirectivesPane, IOPane} = state.get('scope');
+  const {translateClearDiagnostics, stepperExit} = state.get('actionTypes');
+  const getMessage = state.get('getMessage');
+  const geometry = state.get('mainViewGeometry');
+  const panes = state.get('panes');
+  const diagnostics = getTranslateDiagnostics(state);
+  const stepperDisplay = getStepperDisplay(state);
+  const haveStepper = !!stepperDisplay;
+  const error = haveStepper && stepperDisplay.error;
+  const readOnly = haveStepper || props.preventInput;
+  const options = getStepperOptions(state);
+  const arduinoEnabled = options.get('arduino');
+  const sourceRowHeight = '300px';
+  const sourceMode = arduinoEnabled ? 'arduino' : 'c_cpp';
+  /* preventInput is set during playback (and seeking-while-paused) to prevent the
+     user from messing up the editors, and to disable automatic scrolling of the
+     editor triggered by some actions (specifically, highlighting).
+  */
+  const player = getPlayerState(state);
+  const status = player.get('status');
+  const preventInput = !/idle|ready|paused/.test(status) && !player.has('seekTo');
+  return {
+    diagnostics, haveStepper, readOnly, error, options, getMessage, geometry, panes, preventInput,
+    translateClearDiagnostics, stepperExit,
+    BufferEditor: BufferEditor, sourceRowHeight, sourceMode,
+    StackView: options.get('showStack') && StackView,
+    ArduinoPanel: arduinoEnabled && ArduinoPanel,
+    DirectivesPane: options.get('showViews') && DirectivesPane,
+    IOPane: options.get('showIO') && IOPane
+  };
+}
+
+export default function (bundle) {
 
   bundle.use(
     'getTranslateDiagnostics', 'getStepperDisplay', 'getStepperOptions',
@@ -124,31 +157,6 @@ export default function (bundle, deps) {
     'BufferEditor', 'StackView', 'DirectivesPane', 'IOPane',
     'ArduinoConfigPanel', 'ArduinoPanel'
   );
-
-  function MainViewSelector (state, props) {
-    const getMessage = state.get('getMessage');
-    const geometry = state.get('mainViewGeometry');
-    const panes = state.get('panes');
-    const diagnostics = deps.getTranslateDiagnostics(state);
-    const stepperDisplay = deps.getStepperDisplay(state);
-    const haveStepper = !!stepperDisplay;
-    const error = haveStepper && stepperDisplay.error;
-    const readOnly = haveStepper || props.preventInput;
-    const options = deps.getStepperOptions(state);
-    const {translateClearDiagnostics, stepperExit} = deps;
-    const arduinoEnabled = options.get('arduino');
-    const sourceRowHeight = '300px';
-    const sourceMode = arduinoEnabled ? 'arduino' : 'c_cpp';
-    return {
-      diagnostics, haveStepper, readOnly, error, options, getMessage, geometry, panes,
-      translateClearDiagnostics, stepperExit,
-      BufferEditor: deps.BufferEditor, sourceRowHeight, sourceMode,
-      StackView: options.get('showStack') && deps.StackView,
-      ArduinoPanel: arduinoEnabled && deps.ArduinoPanel,
-      DirectivesPane: options.get('showViews') && deps.DirectivesPane,
-      IOPane: options.get('showIO') && deps.IOPane
-    };
-  }
 
   bundle.defineView('MainView', MainViewSelector, MainView);
 

@@ -55,14 +55,13 @@ function render (props, canvas, prevParams) {
   const params = {duration, width, height, leftMargin, firstTimestamp, lastTimestamp, scale};
   const ctx = canvas.getContext('2d');
   ctx.globalAlpha = 1;
+  ctx.fillStyle = '#f8f8f8';
+  ctx.fillRect(0, 0, width, height);
   if (intervals) {
     for (let {start, end, value} of intervals.intervals()) {
       if (end === +Infinity) end = duration;
       renderRange(ctx, params, {start, end, color: value ? '#f8f8f8' : '#808080'});
     }
-  } else {
-    ctx.fillStyle = '#f8f8f8';
-    ctx.fillRect(0, 0, width, height);
   }
   if (prevParams && width === prevParams.width) {
     params.miniWaveform = prevParams.miniWaveform;

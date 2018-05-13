@@ -12,13 +12,13 @@ import classnames from 'classnames';
 
 class PlayerApp extends React.PureComponent {
   render () {
-    const {preventInput, containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, SubtitlesBand} = this.props;
+    const {containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, SubtitlesBand} = this.props;
     return (
       <div>
         <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
           <PlayerControls/>
           <div id='mainView-container'>
-            <MainView preventInput={preventInput}/>
+            <MainView/>
             <MainViewPanes/>
           </div>
           {SubtitlesBand && <SubtitlesBand/>}
@@ -29,19 +29,11 @@ class PlayerApp extends React.PureComponent {
 }
 
 function PlayerAppSelector (state, props) {
-  const {PlayerControls, MainView, MainViewPanes, getPlayerState, getSubtitlesBandVisible, SubtitlesBand} = state.get('scope');
+  const {PlayerControls, MainView, MainViewPanes, getSubtitlesBandVisible, SubtitlesBand} = state.get('scope');
   const viewportTooSmall = state.get('viewportTooSmall');
   const containerWidth = state.get('containerWidth');
-  const player = getPlayerState(state);
-  const status = player.get('status');
-  /* preventInput is set during playback (and seeking-whe-paused) to prevent the
-     user from messing up the editors, and to disable automatic scrolling of the
-     editor triggered by some actions (specifically, highlighting).
-  */
-  const preventInput = !/ready|paused/.test(status) ||
-    ('paused' === status && player.has('seekTo'));
   return {
-    preventInput, viewportTooSmall, containerWidth,
+    viewportTooSmall, containerWidth,
     PlayerControls, MainView, MainViewPanes,
     SubtitlesBand: getSubtitlesBandVisible(state) && SubtitlesBand,
   };

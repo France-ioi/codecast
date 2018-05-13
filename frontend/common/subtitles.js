@@ -842,7 +842,8 @@ function* subtitlesReloadSaga (_action) {
 }
 
 function* subtitlesEditorBeginEditSaga (_action) {
-  const {subtitlesReload, switchToScreen} = yield select(state => state.get('scope'));
+  const {subtitlesReload, switchToScreen, editorControlsChanged, PlayerControls} = yield select(state => state.get('scope'));
+  yield put({type: editorControlsChanged, payload: {controls: [PlayerControls]}});
   yield put({type: subtitlesReload});
   yield put({type: switchToScreen, payload: {screen: 'edit'}});
 }

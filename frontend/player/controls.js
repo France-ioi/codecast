@@ -37,7 +37,7 @@ export default function (bundle, deps) {
     };
 
     onSeek = (audioTime) => {
-      this.props.dispatch({type: deps.playerSeek, audioTime});
+      this.props.dispatch({type: deps.playerSeek, payload: {audioTime}});
     };
 
     render () {

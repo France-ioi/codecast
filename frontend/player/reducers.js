@@ -1,5 +1,11 @@
 
+import Immutable from 'immutable';
+
 export default function (bundle, deps) {
+
+  bundle.addReducer('init', function (state, action) {
+    return state.set('player', Immutable.Map({status: 'idle'}));
+  });
 
   bundle.addReducer('playerPreparing', function (state, action) {
     return state.setIn(['player', 'status'], 'preparing');
@@ -65,7 +71,7 @@ export default function (bundle, deps) {
   });
 
   bundle.addReducer('playerStopped', function (state, action) {
-    return state; // set player state to ready or stopped?
+    return state.setIn(['player', 'status'], 'idle');
   });
 
   bundle.addReducer('playerTick', function (state, action) {
@@ -76,8 +82,8 @@ export default function (bundle, deps) {
       .set('audioTime', audioTime));
   });
 
-  bundle.addReducer('playerSeek', function (state, action) {
-    const {audioTime} = action;
+  bundle.addReducer('playerSeek', function (state, {payload}) {
+    const {audioTime} = payload;
     return state.update('player', player => player
       .set('seekTo', audioTime));
   });
