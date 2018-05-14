@@ -124,6 +124,36 @@ export function renderMarker (ctx, params, {position, color}) {
   }
 }
 
+export function renderCursor (ctx, params, {position, alpha}) {
+  const {width, height, leftMargin, firstSample} = params;
+  const x = Math.round(timestampToCanvas(params, position)) + 0.5;
+  ctx.globalAlpha = 1;
+  ctx.fillStyle = '#333';
+  const dx = height * 0.05;
+  const dy = height * 0.16;
+  const y0 = height * 0.5;
+  const y2top = height - dy;
+  const y2bot = dy;
+  function drawWedge (y1, y2) {
+    ctx.beginPath();
+    ctx.moveTo(x - dx, y1);
+    ctx.lineTo(x + dx, y1);
+    ctx.lineTo(x, y2);
+    ctx.closePath();
+    ctx.fill();
+  }
+  drawWedge(0, y2bot);
+  drawWedge(height, y2top);
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = '#dfa';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'square';
+  ctx.beginPath()
+  ctx.moveTo(x, y2bot);
+  ctx.lineTo(x, y2top);
+  ctx.stroke();
+}
+
 export function timestampToCanvas (params, timestamp) {
   return params.leftMargin + (timestamp - params.firstTimestamp) * params.scale;
 }

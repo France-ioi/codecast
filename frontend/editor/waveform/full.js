@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-import {renderRange, renderEvents, renderMarker, canvasToTimestamp} from './tools';
+import {renderCursor, renderRange, renderEvents, renderMarker, canvasToTimestamp} from './tools';
 
 export default class FullWaveform extends React.PureComponent {
   render () {
@@ -83,8 +83,7 @@ function render (props, canvas, prevParams) {
     }
   }
   if (typeof position === 'number') {
-    ctx.globalAlpha = 0.5;
-    renderMarker(ctx, params, {position, color: '#000'});
+    renderCursor(ctx, params, {position, alpha: 0.7});
   }
   return params;
 }

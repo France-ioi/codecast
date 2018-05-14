@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-import {renderEvents, renderRange, renderMarker, canvasToTimestamp} from './tools';
+import {renderEvents, renderRange, renderMarker, renderCursor, canvasToTimestamp} from './tools';
 
 export default class ExpandedWaveform extends React.PureComponent {
   render () {
@@ -44,11 +44,17 @@ export default class ExpandedWaveform extends React.PureComponent {
 function render (props, canvas, prevParams) {
   const {position, duration, waveform, events, intervals} = props;
   const {width, height} = canvas;
-  const leftMargin = 0;
   const scale = 60 / 1000; /* Fixed scale: 60 pixels per 1000ms */
-  const centerSample = Math.round(position * 60 / 1000);
-  const maxSample = Math.floor(duration * 60 / 1000) - width;
-  const firstSample = Math.min(maxSample, Math.max(0, centerSample - width / 2));
+  let firstSample, leftMargin = 0;
+  if (true) {
+    const currentSample = Math.round(position * 60 / 1000);
+    const maxSample = Math.floor(duration * 60 / 1000);
+    firstSample = Math.min(maxSample, Math.max(- width / 2, Math.round(currentSample - width / 2)));
+  } else {
+    const centerSample = Math.round(position * 60 / 1000);
+    const maxSample = Math.floor(duration * 60 / 1000) - width;
+    firstSample = Math.min(maxSample, Math.max(0, centerSample - width / 2));
+  }
   const firstTimestamp = firstSample / scale;
   const lastTimestamp = (firstTimestamp + width) / scale;
   const params = {duration, width, height, leftMargin, firstTimestamp, lastTimestamp, scale};
@@ -62,15 +68,14 @@ function render (props, canvas, prevParams) {
       renderRange(ctx, params, {start, end, color: value ? '#f8f8f8' : '#808080'});
     }
   }
+  renderTicks(ctx, params);
   renderWaveform(ctx, params, waveform);
   ctx.globalAlpha = 1;
   renderEvents(ctx, params, events);
-  ctx.globalAlpha = 0.5;
-  renderTicks(ctx, params);
   for (let p of intervals.keys()) {
     renderMarker(ctx, params, {position: p, color: '#ff0000'});
   }
-  renderMarker(ctx, params, {position, color: '#48aff0'});
+  renderCursor(ctx, params, {position, alpha: 0.9});
   return params;
 }
 
@@ -94,7 +99,7 @@ function renderWaveform (ctx, params, samples) {
 function renderTicks (ctx, params) {
   const {width, height, leftMargin} = params;
   ctx.lineWidth = 1;
-  ctx.strokeStyle = '#333';
+  ctx.strokeStyle = '#ffffff';
   const position = canvasToTimestamp(params, leftMargin);
   for (let x = 0.5 + 60 - Math.round(position * 60 / 1000) % 60 ; x < width; x += 60) {
     ctx.beginPath();

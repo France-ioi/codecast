@@ -43,7 +43,6 @@ class TrimEditor extends React.PureComponent {
 
 function TrimControlsSelector (state, props) {
   const {width} = props;
-  console.log('width', width);
   const {getPlayerState, playerSeek} = state.get('scope');
   const editor = state.get('editor');
   const player = getPlayerState(state);
@@ -78,11 +77,11 @@ class TrimControls extends React.PureComponent {
           <Button onClick={this.removeMarker} text="Remove Marker"/>
           <Button onClick={this.toggle} text="Toggle"/>
         </div>
+        <ExpandedWaveform height={100} width={width} position={position} duration={duration}
+          waveform={waveform} events={events} intervals={intervals} onPan={this.seekTo} />
         <FullWaveform height={60} width={width} position={position} duration={duration}
           waveform={waveform} events={events} viewStart={viewStart} viewEnd={viewEnd}
           intervals={intervals} onPan={this.seekTo} />
-        <ExpandedWaveform height={100} width={width} position={position} duration={duration}
-          waveform={waveform} events={events} intervals={intervals} onPan={this.seekTo} />
       </div>
     );
   }
