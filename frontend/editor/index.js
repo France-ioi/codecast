@@ -79,12 +79,13 @@ function* editorPrepareSaga ({payload: {baseDataUrl}}) {
   const audioUrl = `${baseDataUrl}.mp3`;
   const eventsUrl = `${baseDataUrl}.json`;
   /* Load the audio stream. */
-  const audioBuffer = yield call(getAudioSaga, audioUrl);
+  const {blob, audioBuffer} = yield call(getAudioSaga, audioUrl);
+  const inMemoryAudioUrl = URL.createObjectURL(blob);
   const duration = audioBuffer.duration * 1000;
   /* Prepare the player and wait until ready.
      This order (load audio, prepare player) is faster, the reverse
      (as of Chrome 64) leads to redundant concurrent fetches of the audio. */
-  yield put({type: playerPrepare, payload: {baseDataUrl, audioUrl, eventsUrl}});
+  yield put({type: playerPrepare, payload: {baseDataUrl, audioUrl: inMemoryAudioUrl, eventsUrl}});
   const {payload: {data}} = yield take(playerReady);
   // TODO: send progress events during extractWaveform?
   const waveform = extractWaveform(audioBuffer, Math.floor(duration * 60 / 1000));
@@ -98,7 +99,7 @@ function* getAudioSaga (audioUrl) {
     let event = yield take(chan);
     switch (event.type) {
       case 'done':
-        return event.audioBuffer;
+        return event;
       case 'error':
         throw event.error;
       case 'progress':

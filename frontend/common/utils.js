@@ -46,7 +46,7 @@ export function getAudio (path) {
         if (error) return emitter({type: 'error', error});
         audioDecode(response.body, function (error, audioBuffer) {
           if (error) return emitter({type: 'error', error});
-          emitter({type: 'done', audioBuffer});
+          emitter({type: 'done', audioBuffer, blob: response.body});
         });
       });
     return () => request.abort();
