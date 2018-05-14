@@ -3,6 +3,7 @@ import React from 'react';
 import {Button} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
 import {put, select, takeLatest} from 'redux-saga/effects';
+import AudioBuffer from 'audio-buffer';
 
 import FullWaveform from './waveform/full';
 import ExpandedWaveform from './waveform/expanded';
@@ -171,5 +172,32 @@ function* trimEditorReturnSaga (_action) {
 
 function* trimEditorSaveSaga (_action) {
   const {intervals} = yield select(state => state.getIn(['editor', 'trim']));
-  console.log('save', intervals);
+  const audioBuffer = yield select(state => state.getIn(['editor', 'audioBuffer']));
+  const {sampleRate, numberOfChannels, duration} = audioBuffer;
+  const chunks = [];
+  let length = 0;
+  for (let it of intervals.intervals()) {
+    console.log('interval', it);
+    if (it.value) {
+      const sourceStart = Math.round(it.start / 1000 * sampleRate);
+      const sourceEnd = Math.round(Math.min(it.end / 1000, duration) * sampleRate);
+      const chunkLength = sourceEnd - sourceStart;
+      chunks.push({start: sourceStart, length: chunkLength});
+      length += chunkLength;
+    }
+  }
+  console.log('chunks', chunks);
+  console.log('new length', length);
+  const newAudioBuffer = new AudioBuffer({length, sampleRate, numberOfChannels});
+  let targetStart = 0;
+  for (let {start: sourceStart, length: chunkLength} of chunks) {
+    const chunkBuffer = new Float32Array(chunkLength)
+    for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber += 1) {
+      audioBuffer.copyFromChannel(chunkBuffer, channelNumber, sourceStart);
+      newAudioBuffer.copyToChannel(chunkBuffer, channelNumber, targetStart);
+    }
+    targetStart += chunkLength;
+  }
+  window.audioBuffer = newAudioBuffer;
+  console.log('save', newAudioBuffer.length);
 }

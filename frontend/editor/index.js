@@ -89,7 +89,7 @@ function* editorPrepareSaga ({payload: {baseDataUrl}}) {
   const {payload: {data}} = yield take(playerReady);
   // TODO: send progress events during extractWaveform?
   const waveform = extractWaveform(audioBuffer, Math.floor(duration * 60 / 1000));
-  yield put({type: editorLoaded, payload: {baseDataUrl, data, duration, waveform}});
+  yield put({type: editorLoaded, payload: {baseDataUrl, data, duration, audioBuffer, waveform}});
 }
 
 function* getAudioSaga (audioUrl) {
@@ -116,10 +116,11 @@ function* loginFeedbackSaga (_action) {
   yield put({type: editorConfigured, payload: {bucketUrl}});
 }
 
-function editorLoadedReducer (state, {payload: {baseDataUrl, data, duration, waveform}}) {
+function editorLoadedReducer (state, {payload: {baseDataUrl, data, duration, audioBuffer, waveform}}) {
   return state.update('editor', editor => editor
     .set('base', baseDataUrl)
     .set('data', data)
+    .set('audioBuffer', audioBuffer)
     .set('waveform', waveform)
     .set('duration', duration)
     .set('loading', false));

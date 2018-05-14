@@ -52,7 +52,7 @@ const {store, scope, actionTypes, finalize, start} = link(function (bundle, deps
 finalize(scope);
 
 /* In-browser API */
-const Codecast = window.Codecast = {store, scope};
+const Codecast = window.Codecast = {store, scope, restart: start};
 
 Codecast.start = function (options) {
 
