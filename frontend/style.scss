@@ -169,7 +169,7 @@ body#app, #app h1, #app h2, #app h3 {
   overflow-y: scroll;
 }
 
-#global-controls {
+#floating-controls {
   padding: 10px;
   top: -1px;
   right: 13px;
@@ -180,10 +180,10 @@ body#app, #app h1, #app h2, #app h3 {
   background-color: #f7f7f7;
   transition: all 250ms;
 }
-#global-controls.collapsed {
+#floating-controls.collapsed {
   transform: translateY(calc(-100% + 10px));
 }
-#global-controls .collapse-toggle {
+#floating-controls .collapse-toggle {
   position: absolute;
   right: -12px;
   bottom: -12px;

@@ -35,7 +35,6 @@ export default function (bundle, deps) {
   bundle.addReducer('setupScreenTabChanged', setupScreenTabChangedReducer);
 
   bundle.defineView('EditorApp', EditorAppSelector, EditorApp);
-  bundle.defineView('EditorGlobalControls', EditorGlobalControlsSelector, EditorGlobalControls);
 
   bundle.defineView('SetupScreen', SetupScreenSelector, SetupScreen);
   bundle.defineView('EditScreen', EditScreenSelector, EditScreen);
@@ -51,12 +50,13 @@ function editorPrepareReducer (state, {payload: {baseDataUrl}}) {
     dataUrl: baseDataUrl, loading: true,
     setupTabId: 'setup-tab-infos',
     audioLoadProgress: 0,
-    controls: []
+    controls: {floating: [], top: []}
   }));
 }
 
 function editorControlsChangedReducer (state, {payload: {controls}}) {
-  return state.setIn(['editor', 'controls'], controls);
+  return state.updateIn(['editor', 'controls'], oldControls =>
+    ({...oldControls, ...controls}));
 }
 
 function editorAudioLoadProgressReducer (state, {payload: {value}}) {
@@ -131,9 +131,10 @@ function setupScreenTabChangedReducer (state, {payload: {tabId}}) {
 
 function EditorAppSelector (state, props) {
   const scope = state.get('scope');
-  const {EditorGlobalControls} = scope;
   const user = state.get('user');
   const screen = state.get('screen');
+  const {LogoutButton} = scope;
+  const floatingControls = state.getIn(['editor', 'controls']).floating;
   let activity, screenProp, Screen;
   if (!user) {
     activity = 'login';
@@ -150,39 +151,25 @@ function EditorAppSelector (state, props) {
   if (!Screen && screenProp) {
     Screen = scope[screenProp];
   }
-  return {Screen, activity, EditorGlobalControls};
+  return {Screen, activity, floatingControls, LogoutButton};
 }
 
 class EditorApp extends React.PureComponent {
   render () {
-    const {EditorGlobalControls, Screen, activity} = this.props;
-    return (
-      <div>
-        <EditorGlobalControls activity={activity}/>
-        <Screen/>
-      </div>
-    );
-  }
-}
-
-function EditorGlobalControlsSelector (state) {
-  const {LogoutButton, subtitlesEditorReturn} = state.get('scope');
-  return {LogoutButton, subtitlesEditorReturn};
-}
-
-class EditorGlobalControls extends React.PureComponent {
-  render () {
-    const {LogoutButton, activity} = this.props;
+    const {Screen, activity, floatingControls, LogoutButton} = this.props;
     const {collapsed} = this.state;
     return (
-      <div id='global-controls' className={classnames({collapsed})}>
-        <span className='collapse-toggle' onClick={this._toggleCollapsed}>
-          <i className={`fa fa-chevron-${collapsed ? 'down' : 'up'}`}/>
-        </span>
-        <div className='btn-group'>
-          {activity === 'edit' && <Button onClick={this._return}><i className='fa fa-reply'/></Button>}
-          {/load|setup/.test(activity) && <LogoutButton/>}
+      <div>
+        <div id='floating-controls' className={classnames({collapsed})}>
+          <span className='collapse-toggle' onClick={this._toggleCollapsed}>
+            <i className={`fa fa-chevron-${collapsed ? 'down' : 'up'}`}/>
+          </span>
+          <div className='btn-group'>
+            {floatingControls.map((Component, i) => <Component key={i} />)}
+            {/load|setup/.test(activity) && <LogoutButton/>}
+          </div>
         </div>
+        <Screen/>
       </div>
     );
   }
@@ -190,9 +177,6 @@ class EditorGlobalControls extends React.PureComponent {
   _toggleCollapsed = () => {
     const {collapsed} = this.state;
     this.setState({collapsed: !collapsed});
-  };
-  _return = () => {
-    this.props.dispatch({type: this.props.subtitlesEditorReturn}); /* XXX subtitlesEditorReturn is specialized for subtitles */
   };
 }
 
@@ -257,10 +241,10 @@ class SetupScreen extends React.PureComponent {
 
 class EditScreen extends React.PureComponent {
   render () {
-    const {containerWidth, viewportTooSmall, controls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
+    const {containerWidth, viewportTooSmall, topControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
     return (
       <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
-        {controls.map((Component, i) => <Component key={i} width={containerWidth}/>)}
+        {topControls.map((Component, i) => <Component key={i} width={containerWidth}/>)}
         <div id='mainView-container'>
           <MainView/>
           <MainViewPanes/>
@@ -276,9 +260,9 @@ function EditScreenSelector (state, props) {
   const viewportTooSmall = state.get('viewportTooSmall');
   const containerWidth = state.get('containerWidth');
   const showSubtitlesBand = state.get('showSubtitlesBand');
-  const controls = state.getIn(['editor', 'controls']);
+  const topControls = state.getIn(['editor', 'controls']).top;
   return {
-    viewportTooSmall, containerWidth, controls,
+    viewportTooSmall, containerWidth, topControls,
     MainView, MainViewPanes,
     showSubtitlesBand, SubtitlesBand
   };

@@ -369,13 +369,13 @@ class SubtitlesBand extends React.PureComponent {
 
 function SubtitlesEditorSelector (state, props) {
   const {subtitlesSelected, subtitlesAddOption, subtitlesRemoveOption,
-    subtitlesTextChanged, subtitlesEditorBeginEdit, subtitlesEditorSave} = state.get('scope');
+    subtitlesTextChanged, subtitlesEditorEnter, subtitlesEditorSave} = state.get('scope');
   const {notify, selectedKey, availableOptions, langOptions} = state.get('subtitles');
   const selected = selectedKey && availableOptions[selectedKey];
   const subtitlesText = selected && selected.text;
   return {availableOptions, selected, langOptions, subtitlesText,
     subtitlesSelected, subtitlesAddOption, subtitlesRemoveOption,
-    subtitlesTextChanged, subtitlesEditorBeginEdit, subtitlesEditorSave, notify};
+    subtitlesTextChanged, subtitlesEditorEnter, subtitlesEditorSave, notify};
 }
 
 class SubtitlesEditor extends React.PureComponent {
@@ -442,7 +442,7 @@ class SubtitlesEditor extends React.PureComponent {
     this.props.dispatch({type: this.props.subtitlesTextChanged, payload: {text}});
   };
   _beginEdit = (event) => {
-    this.props.dispatch({type: this.props.subtitlesEditorBeginEdit});
+    this.props.dispatch({type: this.props.subtitlesEditorEnter});
   };
   _save = (event) => {
     this.props.dispatch({type: this.props.subtitlesEditorSave});
@@ -478,6 +478,20 @@ class SubtitlesEditorNewOption extends React.PureComponent {
   }
   _add = (event) => {
     this.props.onSelect(this.props.option);
+  };
+}
+
+function SubtitlesEditorReturnSelector (state) {
+  const {subtitlesEditorReturn} = state.get('actionTypes');
+  return {subtitlesEditorReturn};
+}
+
+class SubtitlesEditorReturn extends React.PureComponent {
+  render () {
+    return <Button onClick={this._return}><i className='fa fa-reply'/></Button>;
+  }
+  _return = () => {
+    this.props.dispatch({type: this.props.subtitlesEditorReturn});
   };
 }
 
@@ -770,7 +784,7 @@ function* subtitlesSaga () {
   yield takeLatest(scope.subtitlesLoadFromUrl, subtitlesLoadFromUrlSaga);
   yield takeLatest(scope.subtitlesLoadFromFile, subtitlesLoadFromFileSaga);
   yield takeLatest(scope.subtitlesReload, subtitlesReloadSaga);
-  yield takeLatest(scope.subtitlesEditorBeginEdit, subtitlesEditorBeginEditSaga);
+  yield takeLatest(scope.subtitlesEditorEnter, subtitlesEditorEnterSaga);
   yield takeLatest(scope.subtitlesEditorSave, subtitlesEditorSaveSaga);
   yield takeLatest(scope.subtitlesEditorReturn, subtitlesEditorReturnSaga);
 }
@@ -839,18 +853,19 @@ function* subtitlesReloadSaga (_action) {
   }
 }
 
-function* subtitlesEditorBeginEditSaga (_action) {
-  const {subtitlesReload, switchToScreen, editorControlsChanged, PlayerControls} = yield select(state => state.get('scope'));
+function* subtitlesEditorEnterSaga (_action) {
+  const {subtitlesEditingChanged, editorControlsChanged, PlayerControls, SubtitlesEditorReturn, subtitlesReload, switchToScreen} = yield select(state => state.get('scope'));
   yield put({type: subtitlesEditingChanged, payload: {editing: true}});
-  yield put({type: editorControlsChanged, payload: {controls: [PlayerControls]}});
+  yield put({type: editorControlsChanged, payload: {controls: {top: [PlayerControls], floating: [SubtitlesEditorReturn]}}});
   yield put({type: subtitlesReload});
   yield put({type: switchToScreen, payload: {screen: 'edit'}});
 }
 
 function* subtitlesEditorReturnSaga (_action) {
-  const {switchToScreen, subtitlesSave} = yield select(state => state.get('scope'));
+  const {subtitlesSave, subtitlesEditingChanged, editorControlsChanged, switchToScreen} = yield select(state => state.get('scope'));
   yield put({type: subtitlesSave});
   yield put({type: subtitlesEditingChanged, payload: {editing: false}});
+  yield put({type: editorControlsChanged, payload: {controls: {floating: []}}});
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
 }
 
@@ -946,6 +961,7 @@ module.exports = function (bundle) {
   bundle.addReducer('playerReady', playerReadyReducer);
 
   bundle.defineView('SubtitlesEditor', SubtitlesEditorSelector, SubtitlesEditor);
+  bundle.defineView('SubtitlesEditorReturn', SubtitlesEditorReturnSelector, SubtitlesEditorReturn);
 
   bundle.defineAction('subtitlesItemChanged', 'Subtitles.Item.Changed');
   bundle.addReducer('subtitlesItemChanged', subtitlesItemChangedReducer);
@@ -961,7 +977,7 @@ module.exports = function (bundle) {
   bundle.defineAction('subtitlesSave', 'Subtitles.Save');
   bundle.addReducer('subtitlesSave', subtitlesSaveReducer);
 
-  bundle.defineAction('subtitlesEditorBeginEdit', 'Subtitles.Editor.BeginEdit');
+  bundle.defineAction('subtitlesEditorEnter', 'Subtitles.Editor.Enter');
   bundle.defineAction('subtitlesEditorReturn', 'Subtitles.Editor.Return'); /* done editing, return to setup screen */
 
   bundle.defineAction('subtitlesEditorSave', 'Subtitles.Editor.Save');

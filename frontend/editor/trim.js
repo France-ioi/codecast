@@ -10,17 +10,47 @@ import intervalTree from './interval_tree';
 
 export default function (bundle, deps) {
 
+  bundle.addReducer('editorPrepare', editorPrepareReducer);
   bundle.defineAction('trimEditorEnter', 'Editor.Trim.Enter');
   bundle.defineAction('trimEditorReturn', 'Editor.Trim.Return');
+  bundle.defineAction('trimEditorSave', 'Editor.Trim.Save');
+  bundle.defineAction('trimEditorIntervalsChanged', 'Editor.Trim.Intervals.Changed');
+  bundle.defineAction('trimEditorMarkerAdded', 'Editor.Trim.MarkerAdded');
+  bundle.defineAction('trimEditorMarkerRemoved', 'Editor.Trim.MarkerRemoved');
+  bundle.defineAction('trimEditorIntervalToggled', 'Editor.Trim.IntervalToggled');
+  bundle.addReducer('trimEditorMarkerAdded', trimEditorMarkerAddedReducer);
+  bundle.addReducer('trimEditorMarkerRemoved', trimEditorMarkerRemovedReducer);
+  bundle.addReducer('trimEditorIntervalToggled', trimEditorIntervalToggledReducer);
   bundle.defineView('TrimEditor', TrimEditorSelector, TrimEditor);
-  bundle.defineView('TrimControls', TrimControlsSelector, TrimControls);
+  bundle.defineView('TrimEditorControls', TrimEditorControlsSelector, TrimEditorControls);
+  bundle.defineView('TrimEditorReturn', TrimEditorReturnSelector, TrimEditorReturn);
   bundle.addSaga(trimSaga);
 
 };
 
+function editorPrepareReducer (state) {
+  const intervals = intervalTree(true);
+  return state.setIn(['editor', 'trim'], {intervals});
+}
+
+function trimEditorMarkerAddedReducer (state, {payload: {position}}) {
+  return state.updateIn(['editor', 'trim'], st => ({...st,
+    intervals: st.intervals.split(position)}));
+}
+
+function trimEditorMarkerRemovedReducer (state, {payload: {position}}) {
+  return state.updateIn(['editor', 'trim'], st => ({...st,
+    intervals: st.intervals.mergeLeft(st.intervals.get(position).start)}));
+}
+
+function trimEditorIntervalToggledReducer (state, {payload: {position}}) {
+  return state.updateIn(['editor', 'trim'], st => ({...st,
+    intervals: st.intervals.set(position, !st.intervals.get(position).value)}));
+}
+
 function TrimEditorSelector (state) {
-  const {trimEditorEnter} = state.get('scope');
-  return {trimEditorEnter};
+  const {trimEditorEnter, trimEditorSave} = state.get('scope');
+  return {trimEditorEnter, trimEditorSave};
 }
 
 class TrimEditor extends React.PureComponent {
@@ -34,22 +64,23 @@ class TrimEditor extends React.PureComponent {
   }
   _beginEdit = () => {
     this.props.dispatch({type: this.props.trimEditorEnter});
-    // TODO: open player w/ trim controls
   };
   _save = () => {
-    // TODO: save
+    this.props.dispatch({type: this.props.trimEditorSave});
   };
 }
 
-function TrimControlsSelector (state, props) {
+function TrimEditorControlsSelector (state, props) {
   const {width} = props;
-  const {getPlayerState, playerSeek} = state.get('scope');
+  const {getPlayerState, playerSeek, trimEditorMarkerAdded,
+    trimEditorMarkerRemoved, trimEditorIntervalToggled} = state.get('scope');
   const editor = state.get('editor');
   const player = getPlayerState(state);
   const position = player.get('audioTime');
   const duration = player.get('duration');
   const waveform = editor.get('waveform');
   const {events} = editor.get('data');
+  const {intervals} = editor.get('trim');
   const visibleDuration = width * 1000 / 60;
   let viewStart = position - visibleDuration / 2;
   let viewEnd = position + visibleDuration / 2;
@@ -60,22 +91,20 @@ function TrimControlsSelector (state, props) {
   }
   viewEnd = viewStart + visibleDuration;
   return {
-    position, viewStart, viewEnd, duration, waveform, events,
-    playerSeek
+    position, viewStart, viewEnd, duration, waveform, events, intervals,
+    playerSeek, trimEditorMarkerAdded, trimEditorMarkerRemoved, trimEditorIntervalToggled
   };
 }
 
-
-class TrimControls extends React.PureComponent {
+class TrimEditorControls extends React.PureComponent {
   render () {
-    const {position, viewStart, viewEnd, duration, waveform, events, width} = this.props;
-    const {intervals} = this.state;
+    const {position, viewStart, viewEnd, duration, waveform, events, width, intervals} = this.props;
     return (
       <div>
         <div>
           <Button onClick={this.addMarker} text="Add Marker"/>
           <Button onClick={this.removeMarker} text="Remove Marker"/>
-          <Button onClick={this.toggle} text="Toggle"/>
+          <Button onClick={this.toggleInterval} text="Toggle"/>
         </div>
         <ExpandedWaveform height={100} width={width} position={position} duration={duration}
           waveform={waveform} events={events} intervals={intervals} onPan={this.seekTo} />
@@ -85,26 +114,34 @@ class TrimControls extends React.PureComponent {
       </div>
     );
   }
-  state = {intervals: intervalTree(true)};
   seekTo = (position) => {
     this.props.dispatch({type: this.props.playerSeek, payload: {audioTime: position}});
   };
   addMarker = () => {
     const {position} = this.props;
-    const {intervals} = this.state;
-    this.setState({intervals: intervals.split(position)});
+    this.props.dispatch({type: this.props.trimEditorMarkerAdded, payload: {position}});
   };
   removeMarker = () => {
     const {position} = this.props;
-    const {intervals} = this.state;
-    const {start} = intervals.get(position);
-    this.setState({intervals: intervals.mergeLeft(start)});
+    this.props.dispatch({type: this.props.trimEditorMarkerRemoved, payload: {position}});
   };
-  toggle = () => {
+  toggleInterval = () => {
     const {position} = this.props;
-    const {intervals} = this.state;
-    const {value} = intervals.get(position);
-    this.setState({intervals: intervals.set(position, !value)});
+    this.props.dispatch({type: this.props.trimEditorIntervalToggled, payload: {position}});
+  };
+}
+
+function TrimEditorReturnSelector (state) {
+  const {trimEditorReturn} = state.get('actionTypes');
+  return {return: trimEditorReturn};
+}
+
+class TrimEditorReturn extends React.PureComponent {
+  render () {
+    return <Button onClick={this._return}><i className='fa fa-reply'/></Button>;
+  }
+  _return = () => {
+    this.props.dispatch({type: this.props.return});
   };
 }
 
@@ -112,16 +149,27 @@ function* trimSaga () {
   const scope = yield select(state => state.get('scope'));
   yield takeLatest(scope.trimEditorEnter, trimEditorEnterSaga);
   yield takeLatest(scope.trimEditorReturn, trimEditorReturnSaga);
+  yield takeLatest(scope.trimEditorSave, trimEditorSaveSaga);
 }
 
 function* trimEditorEnterSaga (_action) {
-  const {editorControlsChanged, TrimControls, PlayerControls, switchToScreen} = yield select(state => state.get('scope'));
+  const {editorControlsChanged, TrimEditorControls, PlayerControls, TrimEditorReturn, switchToScreen} = yield select(state => state.get('scope'));
   /* XXX install return button */
-  yield put({type: editorControlsChanged, payload: {controls: [TrimControls, PlayerControls]}});
+  yield put({type: editorControlsChanged, payload: {
+    controls: {
+      top: [TrimEditorControls, PlayerControls],
+      floating: [TrimEditorReturn]
+    }}});
   yield put({type: switchToScreen, payload: {screen: 'edit'}});
 }
 
 function* trimEditorReturnSaga (_action) {
-  const {switchToScreen} = yield select(state => state.get('scope'));
+  const {editorControlsChanged, switchToScreen} = yield select(state => state.get('scope'));
+  yield put({type: editorControlsChanged, payload: {controls: {floating: []}}});
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
+}
+
+function* trimEditorSaveSaga (_action) {
+  const {intervals} = yield select(state => state.getIn(['editor', 'trim']));
+  console.log('save', intervals);
 }
