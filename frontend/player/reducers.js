@@ -85,7 +85,7 @@ export default function (bundle, deps) {
   bundle.addReducer('playerSeek', function (state, {payload}) {
     const {audioTime} = payload;
     return state.update('player', player => player
-      .set('seekTo', audioTime));
+      .set('seekTo', Math.min(player.get('duration'), Math.max(0, audioTime))));
   });
 
   bundle.addReducer('playerSeeked', function (state, action) {
