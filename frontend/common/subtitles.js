@@ -40,7 +40,7 @@ import FlagIcon from './flag_icon';
 
 function SubtitlesMenuSelector (state, props) {
   const subtitles = state.get('subtitles');
-  if (subtitles.mode === 'editor') return {hidden: true};
+  if (subtitles.editing) return {hidden: true};
   const playerData = state.getIn(['player', 'data']);
   if (!playerData || !playerData.subtitles || playerData.subtitles.length === 0) {
     return {hidden: true};
@@ -245,28 +245,28 @@ function SubtitlesPaneSelector (state, props) {
   const {subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved,
     subtitlesItemShifted, subtitlesFilterTextChanged, playerSeek} = state.get('scope');
   /* TODO: pass paused / not paused to component, and  */
-  const {items, filteredItems, currentIndex, mode, audioTime, filterText, filterRegexp} = state.get('subtitles');
+  const {items, filteredItems, currentIndex, editing, audioTime, filterText, filterRegexp} = state.get('subtitles');
   return {
     subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved,
     subtitlesItemShifted, subtitlesFilterTextChanged, playerSeek, getMessage,
-    subtitles: mode === 'editor' ? items : filteredItems,
-    currentIndex, mode, audioTime, filterText, filterRegexp};
+    subtitles: editing ? items : filteredItems,
+    currentIndex, editing, audioTime, filterText, filterRegexp};
 }
 
 /* SubtitlesPane is used in both *player* and *editor* mode. */
 class SubtitlesPane extends React.PureComponent {
   render () {
-    const {subtitles, currentIndex, mode, audioTime, filterText, filterRegexp, getMessage} = this.props;
+    const {subtitles, currentIndex, editing, audioTime, filterText, filterRegexp, getMessage} = this.props;
     return (
       <div className='subtitles-pane'>
-        {mode !== 'editor' &&
+        {!editing &&
           <input type='text' onChange={this._filterTextChanged} value={filterText} />}
         {subtitles && subtitles.length > 0
           ? subtitles.map((st, index) => {
               const selected = currentIndex === index;
-              if (mode !== 'editor') {
+              if (!editing) {
                 const ref = selected && this._refSelected;
-                return <SubtitlePaneItem key={index} item={st} ref={ref} selected={selected} mode={mode} onJump={this._jump} highlight={filterRegexp} />;
+                return <SubtitlePaneItem key={index} item={st} ref={ref} selected={selected} onJump={this._jump} highlight={filterRegexp} />;
               }
               if (selected) {
                 return <SubtitlePaneItemEditor key={index} item={st} ref={this._refSelected} offset={audioTime - st.start} audioTime={audioTime}
@@ -506,9 +506,8 @@ function initReducer (state) {
       }));
 }
 
-function subtitlesModeSetReducer (state, {payload: {mode}}) {
-  state = state.update('subtitles', subtitles => ({...subtitles, mode}));
-  /* TODO: if mode is 'player', reload state from local storage settings? */
+function subtitlesEditingChangedReducer (state, {payload: {editing}}) {
+  state = state.update('subtitles', subtitles => ({...subtitles, editing}));
   state = updateSubtitlesPaneVisibility(state);
   return state;
 }
@@ -520,14 +519,13 @@ function subtitlesPaneEnabledChangedReducer (state, {payload: {value}}) {
 }
 
 function updateSubtitlesPaneVisibility (state) {
-  const {mode, loading, loadedKey, paneEnabled} = state.get('subtitles');
-  const isEditor = mode === 'editor';
+  const {editing, loading, loadedKey, paneEnabled} = state.get('subtitles');
   const isLoaded = !loading && loadedKey !== 'none';
   /* Editor: the subtitles pane is always visible.
      Player: the subtitles pane is visible if subtitles are loaded, and if
              the pane is enabled in the CC settings. */
   return state
-    .setIn(['panes', 'subtitles', 'enabled'], isEditor || (isLoaded && paneEnabled));
+    .setIn(['panes', 'subtitles', 'enabled'], editing || (isLoaded && paneEnabled));
 }
 
 function subtitlesBandEnabledChangedReducer (state, {payload: {value}}) {
@@ -843,6 +841,7 @@ function* subtitlesReloadSaga (_action) {
 
 function* subtitlesEditorBeginEditSaga (_action) {
   const {subtitlesReload, switchToScreen, editorControlsChanged, PlayerControls} = yield select(state => state.get('scope'));
+  yield put({type: subtitlesEditingChanged, payload: {editing: true}});
   yield put({type: editorControlsChanged, payload: {controls: [PlayerControls]}});
   yield put({type: subtitlesReload});
   yield put({type: switchToScreen, payload: {screen: 'edit'}});
@@ -851,6 +850,7 @@ function* subtitlesEditorBeginEditSaga (_action) {
 function* subtitlesEditorReturnSaga (_action) {
   const {switchToScreen, subtitlesSave} = yield select(state => state.get('scope'));
   yield put({type: subtitlesSave});
+  yield put({type: subtitlesEditingChanged, payload: {editing: false}});
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
 }
 
@@ -897,8 +897,8 @@ module.exports = function (bundle) {
   bundle.use('getPlayerState', 'playerSeek');
   bundle.addReducer('init', initReducer);
 
-  bundle.defineAction('subtitlesModeSet', 'Subtitles.Mode.Set');
-  bundle.addReducer('subtitlesModeSet', subtitlesModeSetReducer);
+  bundle.defineAction('subtitlesEditingChanged', 'Subtitles.Editing.Changed');
+  bundle.addReducer('subtitlesEditingChanged', subtitlesEditingChangedReducer);
 
   bundle.defineView('SubtitlesPane', SubtitlesPaneSelector, SubtitlesPane);
   bundle.defineAction('subtitlesPaneEnabledChanged', 'Subtitles.Pane.EnabledChanged');

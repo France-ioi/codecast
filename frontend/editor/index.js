@@ -74,10 +74,8 @@ function* editorSaga () {
 }
 
 function* editorPrepareSaga ({payload: {baseDataUrl}}) {
-  const {subtitlesModeSet, playerPrepare, playerReady, editorLoaded, switchToScreen} = yield select(state => state.get('scope'));
+  const {playerPrepare, playerReady, editorLoaded, switchToScreen} = yield select(state => state.get('scope'));
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
-  /* XXX only put subtitlesModeSet(editor) when selecting 'edit subtitles' task */
-  yield put({type: subtitlesModeSet, payload: {mode: 'editor'}});
   const audioUrl = `${baseDataUrl}.mp3`;
   const eventsUrl = `${baseDataUrl}.json`;
   /* Load the audio stream. */
