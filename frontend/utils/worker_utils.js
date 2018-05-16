@@ -1,59 +1,83 @@
 
 import EventEmitter from 'eventemitter2';
-import {call, cps} from 'redux-saga/effects';
+import {call, take} from 'redux-saga/effects';
+import {eventChannel, buffers} from 'redux-saga';
 
-export function workerUrlFromText (text) {
-  const blob = new Blob([text], {type: "application/javascript;charset=UTF-8"});
-  const url = URL.createObjectURL(blob);
-  return url;
-}
-
-export function* spawnWorker (url) {
-  const worker = yield call(asyncSpawnWorker, url);
-  const emitter = worker.emitter = new EventEmitter();
-  worker.nextResponseId = 1;
-  worker.onmessage = emitResponseEvent;
-  return worker;
-  function emitResponseEvent (event) {
-    emitter.emit(event.data.id, event.data);
-  };
-};
-
-export function* killWorker (worker) {
-  worker.terminate();
-};
-
-export function* callWorker (worker, message) {
-  message.responseId = 'r' + worker.nextResponseId;
-  worker.nextResponseId += 1;
-  worker.postMessage(message);
-  return yield cps(waitForResponse);
-  function waitForResponse (callback) {
-    worker.emitter.once(message.responseId, function (event) {
-      callback(null, event);
-    });
-  }
-};
-
-function asyncSpawnWorker (Worker) {
+export function spawnWorker (Worker) {
   return new Promise(function (resolve, reject) {
     const worker = new Worker();
     worker.onerror = function (event) {
-        worker.onerror = null;
-        worker.onmessage = null;
+      worker.onerror = null;
+      worker.onmessage = null;
       reject('worker failed to initialize');
     };
     worker.onmessage = function (event) {
       worker.onerror = null;
       worker.onmessage = null;
-      // The worker is expected to post a null message once initialized,
-      // any other value is considered to be an error.
+      /* The worker is expected to post a null message once initialized,
+         any other value is considered to be an error. */
       if (event.data !== null) {
-        return reject(event.data);
+        reject(event.data);
       } else {
-        resolve(worker);
+        resolve(wrapWorker(worker));
       }
     };
     worker.postMessage(null);
   });
-};
+}
+
+class WorkerError extends Error {
+  constructor (request, response) {
+    super('error in worker');
+    this.name = 'WorkerError';
+    this.request = request;
+    this.response = response;
+  }
+}
+
+function wrapWorker (worker) {
+  const emitter = new EventEmitter();
+  let nextTransactionId = 1;
+  worker.onmessage = function (message) {
+    if (typeof message.data.id === 'string') {
+      emitter.emit(message.data.id, message.data);
+    }
+  };
+  function kill () {
+    worker.terminate();
+  }
+  function post (command, payload) {
+    worker.postMessage({command, payload});
+  }
+  function listen (id, buffer) {
+    return eventChannel(function (listener) {
+      emitter.on(id, listener);
+      return function () {
+        emitter.off(id, listener);
+      };
+    }, buffer || buffers.expanding(1));
+  }
+  function* callSaga (command, payload, progress) {
+    const request = {id: 't' + nextTransactionId, command, payload};
+    nextTransactionId += 1;
+    const channel = yield call(listen, request.id);
+    worker.postMessage(request);
+    try {
+      while (true) {
+        const response = yield take(channel);
+        if (response.error) {
+          throw new WorkerError(request, response);
+        }
+        if (response.done) {
+          return response.payload;
+        }
+        if (typeof progress === 'function') {
+          yield call(progress, response.payload);
+        }
+      }
+    } finally {
+      channel.close();
+    }
+  }
+  return {emitter, kill, post, listen, call: callSaga};
+}

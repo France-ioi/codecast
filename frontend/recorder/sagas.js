@@ -9,13 +9,7 @@ import {take, takeEvery, put, call, race, select, actionChannel} from 'redux-sag
 import Immutable from 'immutable';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
-
-import {spawnWorker, callWorker, killWorker} from '../utils/worker_utils';
-
-// XXX worker URL should use SystemJS baseURL?
-// import {workerUrlFromText} from '../../utils/worker_utils';
-// import audioWorkerText from '../../assets/audio_worker.js!text';
-// const audioWorkerUrl = workerUrlFromText(audioWorkerText);
+import {spawnWorker} from '../utils/worker_utils';
 import AudioWorker from 'worker-loader?inline!../audio_worker';
 
 export default function (bundle, deps) {
@@ -46,7 +40,7 @@ export default function (bundle, deps) {
           oldContext.close();
         }
         if (oldWorker) {
-          killWorker(oldWorker);
+          yield call(oldWorker.kill);
         }
         // TODO: put an action to clean up the old context, in case
         //       the saga fails before recorderReady is sent.
@@ -74,11 +68,9 @@ export default function (bundle, deps) {
       const worker = yield call(spawnWorker, AudioWorker);
       yield put({type: deps.recorderPreparing, payload: {progress: 'worker_ok', worker}});
       // Initialize the worker.
-      yield call(callWorker, worker, {
-        command: "init",
-        config: {
-          sampleRate: audioContext.sampleRate
-        }
+      yield call(worker.call, 'init', {
+        sampleRate: audioContext.sampleRate,
+        numberOfChannels: source.channelCount
       });
       // XXX create a channel to which input buffers are posted.
       yield put({type: deps.recorderPreparing, payload: {
@@ -89,7 +81,7 @@ export default function (bundle, deps) {
         // dispatch event
         const ch0 = event.inputBuffer.getChannelData(0);
         const ch1 = event.inputBuffer.getChannelData(1);
-        worker.postMessage({command: "record", buffer: [ch0, ch1]});
+        worker.post('addSamples', {samples: [ch0, ch1]});
       };
       // Signal that the recorder is ready to start, storing the new context.
       // /!\  Chrome: store a reference to the scriptProcessor node to prevent
@@ -149,7 +141,7 @@ export default function (bundle, deps) {
       }
       /* Encode the audio track. */
       const worker = context.get('worker');
-      const {mp3, wav, duration} = yield call(callWorker, worker, {command: 'finishRecording', options: {mp3: true, wav: true}});
+      const {mp3, wav, duration} = yield call(worker.call, 'export', {mp3: true, wav: true}, stopExportProgressSaga);
       const mp3Url = URL.createObjectURL(mp3);
       const wavUrl = URL.createObjectURL(wav);
       /* Package the events track. */
@@ -192,7 +184,7 @@ export default function (bundle, deps) {
       yield call(suspendAudioContext, context);
       // Obtain the URL to a (WAV-encoded) audio object from the worker.
       const worker = context.get('worker');
-      const {wav} = yield call(callWorker, worker, {command: "pauseRecording", options: {wav: true}});
+      const {wav} = yield call(worker.call, 'export', {wav: true}, pauseExportProgressSaga);
       const audioUrl = URL.createObjectURL(wav);
       // Get a URL for events.
       const events = recorder.get('events');
@@ -207,6 +199,14 @@ export default function (bundle, deps) {
       // XXX generic error
       yield put({type: deps.error, source: 'recorderPause', error});
     }
+  }
+
+  function* stopExportProgressSaga (progress) {
+    console.log('stop', progress);
+  }
+
+  function* pauseExportProgressSaga (progress) {
+    console.log('pause', progress);
   }
 
   bundle.defineAction('recorderResume', 'Recorder.Resume');
@@ -247,7 +247,7 @@ export default function (bundle, deps) {
 
   function* truncateRecording (timestamp, instant) {
     const worker = yield select(st => deps.getRecorderState(st).getIn(['context', 'worker']));
-    yield call(callWorker, worker, {command: 'truncateRecording', payload: {position: timestamp}});
+    yield call(worker.call, 'truncate', {position: timestamp});
     if (instant) {
       const position = instant.pos + 1;
       yield put({type: deps.recorderTruncate, payload: {timestamp, position}});
