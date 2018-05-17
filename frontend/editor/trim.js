@@ -1,8 +1,8 @@
 
 import React from 'react';
-import {Button, ProgressBar, Icon, Intent} from '@blueprintjs/core';
+import {AnchorButton, Button, ProgressBar, Icon, Intent, Spinner} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
-import {call, put, select, takeLatest} from 'redux-saga/effects';
+import {call, put, select, take, takeLatest} from 'redux-saga/effects';
 import AudioBuffer from 'audio-buffer';
 import update from 'immutability-helper';
 
@@ -21,6 +21,7 @@ export default function (bundle, deps) {
   bundle.defineAction('trimEditorEnter', 'Editor.Trim.Enter');
   bundle.defineAction('trimEditorReturn', 'Editor.Trim.Return');
   bundle.defineAction('trimEditorSave', 'Editor.Trim.Save');
+  bundle.addReducer('trimEditorSave', trimEditorSaveReducer);
   bundle.defineAction('trimEditorIntervalsChanged', 'Editor.Trim.Intervals.Changed');
   bundle.defineAction('trimEditorMarkerAdded', 'Editor.Trim.MarkerAdded');
   bundle.defineAction('trimEditorMarkerRemoved', 'Editor.Trim.MarkerRemoved');
@@ -33,22 +34,16 @@ export default function (bundle, deps) {
   bundle.defineView('TrimEditorReturn', TrimEditorReturnSelector, TrimEditorReturn);
   bundle.addSaga(trimSaga);
 
-  bundle.defineAction('trimEditorSavingStepChanged', 'Editor.Trim.Saving.Step.Changed');
-  bundle.addReducer('trimEditorSavingStepChanged', trimEditorSavingStepChangedReducer);
+  bundle.defineAction('trimEditorSavingStep', 'Editor.Trim.Saving.Step');
+  bundle.addReducer('trimEditorSavingStep', trimEditorSavingStepReducer);
+  bundle.defineAction('trimEditorSavingDone', 'Editor.Trim.Saving.Done');
+  bundle.addReducer('trimEditorSavingDone', trimEditorSavingDoneReducer);
 
 };
 
 function editorPrepareReducer (state) {
   const intervals = intervalTree(true);
-  const saving = {
-    prepareUpload: 'done',
-    uploadEvents: 'pending',
-    assembleAudio: null,
-    encodeAudio: null,
-    uploadAudio: null,
-    progress: 0.1,
-  };
-  return state.setIn(['editor', 'trim'], {intervals, saving});
+  return state.setIn(['editor', 'trim'], {intervals});
 }
 
 function trimEditorMarkerAddedReducer (state, {payload: {position}}) {
@@ -79,18 +74,27 @@ class TrimEditor extends React.PureComponent {
       <div>
         <Button onClick={this._beginEdit} icon={IconNames.EDIT} text={"Edit"}/>
         <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"}/>
-        <hr/>
-        <h2>{"Saving"}</h2>
-        <table>
-          <StepRow title={"Preparing upload"} status={saving.prepareUpload} />
-          <StepRow title={"Uploading events"} status={saving.uploadEvents} />
-          <StepRow title={"Assembling audio stream"} status={saving.assembleAudio} />
-          <StepRow title={"Encoding audio stream"} status={saving.encodeAudio} />
-          <StepRow title={"Uploading audio"} status={saving.uploadAudio} />
-        </table>
-        <div style={{margin: '10px'}}>
-          <ProgressBar value={saving.progress} />
-        </div>
+        {saving &&
+          <div style={{marginTop: '10px'}}>
+            <h2>{"Saving"}</h2>
+            <table>
+              <tbody>
+                <StepRow title={"Preparing upload"} status={saving.prepareUpload} />
+                <StepRow title={"Uploading events"} status={saving.uploadEvents} />
+                <StepRow title={"Assembling audio stream"} status={saving.assembleAudio} />
+                <StepRow title={"Encoding audio stream"} status={saving.encodeAudio} />
+                <StepRow title={"Uploading audio"} status={saving.uploadAudio} />
+              </tbody>
+            </table>
+            {!saving.done &&
+              <div style={{margin: '10px'}}>
+                <ProgressBar value={saving.progress} />
+              </div>}
+            {saving.done &&
+              <div style={{textAlign: 'center'}}>
+                <AnchorButton href={saving.playerUrl} target='_blank' text="Open in player"/>
+              </div>}
+          </div>}
       </div>
     );
   }
@@ -108,6 +112,7 @@ function StepRow ({title, status}) {
       <td style={{width: '40px', textAlign: 'center'}}>
         {status === 'done' && <Icon icon='tick' intent={Intent.SUCCESS} />}
         {status === 'error' && <Icon icon={cross} intent={Intent.DANGER} />}
+        {status === 'pending' && <Spinner small/>}
       </td>
       <td style={status === 'pending' ? {fontWeight: 'bold'} : null}>
         {title}
@@ -191,7 +196,7 @@ class TrimEditorReturn extends React.PureComponent {
   };
 }
 
-function trimEditorSavingStepChangedReducer (state, {payload: {step, status, progress, error}}) {
+function trimEditorSavingStepReducer (state, {payload: {step, status, progress, error}}) {
   const saving = {};
   if (status !== undefined) {
     saving[step] = {$set: status};
@@ -229,8 +234,29 @@ function* trimEditorReturnSaga (_action) {
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
 }
 
+function trimEditorSaveReducer (state, _action) {
+  const saving = {
+    prepareUpload: null,
+    uploadEvents: null,
+    assembleAudio: null,
+    encodeAudio: null,
+    uploadAudio: null,
+    progress: 0,
+  };
+  return state.updateIn(['editor', 'trim'], st => ({...st, saving}));
+}
+
+function trimEditorSavingDoneReducer (state, {payload: {playerUrl}}) {
+  return state.updateIn(['editor', 'trim'], st => update(st, {
+    saving: {
+      done: {$set: true},
+      playerUrl: {$set: playerUrl}
+    }}));
+}
+
 function* trimEditorSaveSaga (_action) {
   // TODO: put 'saving starts' action
+  const {trimEditorSavingDone} = yield select(state => state.get('scope'));
   try {
     const editor = yield select(state => state.get('editor'));
     const {intervals} = editor.get('trim');
@@ -238,13 +264,13 @@ function* trimEditorSaveSaga (_action) {
     const data = editor.get('data');
     const eventsBlob = trimEvents(data, intervals);
     yield call(trimEditorUpload, 'uploadEvents', targets.events, eventsBlob);
-    const worker = yield call(spawnWorker, AudioWorker);
     const audioBuffer = editor.get('audioBuffer');
-    yield call(trimEditorAssembleAudio, worker, audioBuffer, intervals);
-    const {mp3Blob} = yield call(trimEditorEncodeAudio, worker);
+    const worker = yield call(trimEditorAssembleAudio, audioBuffer, intervals);
+    const mp3Blob = yield call(trimEditorEncodeAudio, worker);
     yield call(trimEditorUpload, 'uploadAudio', targets.audio, mp3Blob);
-    // TODO: put 'saving success' action, passing `playerUrl`
+    yield put({type: trimEditorSavingDone, payload: {playerUrl}});
   } catch (ex) {
+    console.log('failed', ex);
     // TODO: put 'saving failed' action
   }
 }
@@ -277,7 +303,7 @@ function trimEvents (data, intervals) {
 function* trimEditorPrepareUpload () {
   const {trimEditorSavingStep} = yield select(state => state.get('scope'));
   yield put({type: trimEditorSavingStep, payload: {step: 'prepareUpload', status: 'pending'}});
-  const token = yield select(getUploadToken);
+  const token = yield select(state => state.get('uploadToken'));
   const targets = yield call(asyncRequestJson, 'upload', {token});
   yield put({type: trimEditorSavingStep, payload: {step: 'prepareUpload', status: 'done'}});
   return {targets, playerUrl: targets.player_url}; // XXX clean up /upload endpoint interface
@@ -306,9 +332,10 @@ function* trimEditorUpload (step, target, data) {
   yield put({type: trimEditorSavingStep, payload: {step, status: 'error', error: 'unexpected end'}});
 }
 
-function* trimEditorAssembleAudio (worker, audioBuffer, intervals) {
+function* trimEditorAssembleAudio (audioBuffer, intervals) {
   const {trimEditorSavingStep} = yield select(state => state.get('scope'));
   yield put({type: trimEditorSavingStep, payload: {step: 'assembleAudio', status: 'pending'}});
+  const worker = yield call(spawnWorker, AudioWorker);
   const {sampleRate, numberOfChannels, duration} = audioBuffer;
   /* Extract the list of chunks to retain. */
   const chunks = [];
@@ -336,6 +363,7 @@ function* trimEditorAssembleAudio (worker, audioBuffer, intervals) {
     yield put({type: trimEditorSavingStep, payload: {step: 'assembleAudio', progress: addedLength / length}});
   }
   yield put({type: trimEditorSavingStep, payload: {step: 'assembleAudio', status: 'done'}});
+  return worker;
 }
 
 function* trimEditorEncodeAudio (worker) {
@@ -347,4 +375,5 @@ function* trimEditorEncodeAudio (worker) {
       yield put({type: trimEditorSavingStep, payload: {step, progress}});
     });
   yield put({type: trimEditorSavingStep, payload: {step, status: 'done'}});
+  return mp3Blob;
 }
