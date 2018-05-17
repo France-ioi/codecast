@@ -1,5 +1,6 @@
 
 import superagent from 'superagent';
+import {eventChannel, buffers, END} from 'redux-saga';
 
 export function getBlob (url) {
   return new Promise(function (resolve, reject) {
@@ -27,3 +28,25 @@ export function uploadBlob (upload, blob) {
       });
   });
 };
+
+export function uploadBlobChannel ({params, form_url}, blob) {
+  return eventChannel(function (listener) {
+    const formData = new FormData();
+    Object.keys(params).forEach(function (key) {
+      formData.append(key, params[key]);
+    });
+    formData.append('file', blob);
+    superagent.post(upload.form_url).send(formData)
+      .on('progress', function (event) {
+        listener({type: 'progress', percent: event.percent});
+      })
+      .end(function (error, response) {
+        if (error) {
+          listener({type: 'error', error});
+        } else {
+          listener({type: 'response', response});
+        }
+        listener(END);
+      });
+  }, buffers.expanding(1));
+}
