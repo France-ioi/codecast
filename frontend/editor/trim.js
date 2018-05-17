@@ -250,10 +250,9 @@ function* trimEditorSaveSaga (_action) {
 }
 
 function trimEvents (data, intervals) {
-  const events = [];
-  const it = intervals.intervals();
+  const it = intervals[Symbol.iterator]();
   let interval = {end: -1, value: false}, start = 0;
-  for (let event of data.events) {
+  const events = data.events.map(event => {
     if (event[0] >= interval.end) {
       if (interval.value) {
         start += interval.end - interval.start;
@@ -266,7 +265,8 @@ function trimEvents (data, intervals) {
     } else {
       event[0] = start;
     }
-  }
+    return event;
+  });
   return new Blob([JSON.stringify({
     version: RECORDING_FORMAT_VERSION,
     events,
@@ -313,7 +313,7 @@ function* trimEditorAssembleAudio (worker, audioBuffer, intervals) {
   /* Extract the list of chunks to retain. */
   const chunks = [];
   let length = 0;
-  for (let it of intervals.intervals()) {
+  for (let it of intervals) {
     if (it.value) {
       const sourceStart = Math.round(it.start / 1000 * sampleRate);
       const sourceEnd = Math.round(Math.min(it.end / 1000, duration) * sampleRate);

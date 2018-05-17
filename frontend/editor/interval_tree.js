@@ -1,4 +1,6 @@
 
+console.log('Symbol.iterator', Symbol.iterator);
+
 function Node (left, key, right) {
   this.left = left;
   this.key = key;
@@ -151,7 +153,7 @@ class IntervalTree {
     this.root = root;
   }
   toString () {
-    return JSON.stringify(Array.from(this.intervals()));
+    return JSON.stringify(Array.from(this));
   }
   split (key) {
     return new IntervalTree(split(this.root, key));
@@ -165,13 +167,16 @@ class IntervalTree {
   set (key, value) {
     return new IntervalTree(set(this.root, key, value));
   }
-  keys () {
-    return {[Symbol.iterator]: () => keys(this.root)};
-  }
-  intervals () {
-    return {[Symbol.iterator]: () => intervals(this.root)};
-  }
+  keys = {[Symbol.iterator]: () => keys(this.root)};
 }
+
+/*
+  As of babel 7.0.0-beta.36, the ES6 class syntax
+    [Symbol.iterator]() { return intervals(this.root); }
+  incorrectly defines a property named 'undefined'.  */
+IntervalTree.prototype[Symbol.iterator] = function () {
+  return intervals(this.root);
+};
 
 export default function intervalTree (initialValue) {
   return new IntervalTree(new Leaf(initialValue))

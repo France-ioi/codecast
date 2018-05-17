@@ -58,7 +58,7 @@ function render (props, canvas, prevParams) {
   ctx.fillStyle = '#f8f8f8';
   ctx.fillRect(0, 0, width, height);
   if (intervals) {
-    for (let {start, end, value} of intervals.intervals()) {
+    for (let {start, end, value} of intervals) {
       if (end === +Infinity) end = duration;
       renderRange(ctx, params, {start, end, color: value ? '#f8f8f8' : '#808080'});
     }
@@ -78,7 +78,7 @@ function render (props, canvas, prevParams) {
     renderEvents(ctx, params, events);
   }
   if (intervals) {
-    for (let p of intervals.keys()) {
+    for (let p of intervals.keys) {
       renderMarker(ctx, params, {position: p, color: '#ff0000'});
     }
   }
