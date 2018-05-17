@@ -6,6 +6,7 @@ import {call, put, select, takeLatest} from 'redux-saga/effects';
 import AudioBuffer from 'audio-buffer';
 import update from 'immutability-helper';
 
+import {RECORDING_FORMAT_VERSION} from '../version';
 import {asyncRequestJson} from '../utils/api';
 import {uploadBlobChannel} from '../utils/blobs';
 import {spawnWorker} from '../utils/worker_utils';
@@ -234,8 +235,8 @@ function* trimEditorSaveSaga (_action) {
     const editor = yield select(state => state.get('editor'));
     const {intervals} = editor.get('trim');
     const {targets, playerUrl} = yield call(trimEditorPrepareUpload);
-    const {events} = editor.get('data');
-    const eventsBlob = trimEvents(events, intervals);
+    const data = editor.get('data');
+    const eventsBlob = trimEvents(data, intervals);
     yield call(trimEditorUpload, 'uploadEvents', targets.events, eventsBlob);
     const worker = yield call(spawnWorker, AudioWorker);
     const audioBuffer = editor.get('audioBuffer');
@@ -248,9 +249,29 @@ function* trimEditorSaveSaga (_action) {
   }
 }
 
-function trimEvents (events, intervals) {
-  // TODO
-  return new Blob([]);
+function trimEvents (data, intervals) {
+  const events = [];
+  const it = intervals.intervals();
+  let interval = {end: -1, value: false}, start = 0;
+  for (let event of data.events) {
+    if (event[0] >= interval.end) {
+      if (interval.value) {
+        start += interval.end - interval.start;
+      }
+      interval = it.next().value;
+    }
+    event = event.slice();
+    if (interval.value) {
+      event[0] = start + (event[0] - interval.start);
+    } else {
+      event[0] = start;
+    }
+  }
+  return new Blob([JSON.stringify({
+    version: RECORDING_FORMAT_VERSION,
+    events,
+    subtitles: []
+  })], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
 }
 
 function* trimEditorPrepareUpload () {
