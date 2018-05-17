@@ -47,6 +47,7 @@ function messageHandler (e) {
         const audioBuffer = recording.getAudioBuffer(function (progress) {
           t.send({step: 'copy', progress});
         });
+        result.duration = audioBuffer.duration;
         if (payload.raw) {
           result.raw = exportRaw(audioBuffer, payload.raw);
         }
