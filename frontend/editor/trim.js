@@ -191,7 +191,7 @@ class TrimEditorReturn extends React.PureComponent {
   };
 }
 
-function trimEditorSavingStepChanged (state, {payload: {step, status, progress, error}}) {
+function trimEditorSavingStepChangedReducer (state, {payload: {step, status, progress, error}}) {
   const saving = {};
   if (status !== undefined) {
     saving[step] = {$set: status};
