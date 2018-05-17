@@ -36,7 +36,8 @@ export function uploadBlobChannel ({params, form_url}, blob) {
       formData.append(key, params[key]);
     });
     formData.append('file', blob);
-    superagent.post(upload.form_url).send(formData)
+    var request = superagent.post(form_url);
+    request.send(formData)
       .on('progress', function (event) {
         listener({type: 'progress', percent: event.percent});
       })
@@ -48,5 +49,8 @@ export function uploadBlobChannel ({params, form_url}, blob) {
         }
         listener(END);
       });
+    return () => {
+      request.abort();
+    };
   }, buffers.expanding(1));
 }
