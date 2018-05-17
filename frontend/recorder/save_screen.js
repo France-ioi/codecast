@@ -1,7 +1,7 @@
 
 import {take, put, call, select} from 'redux-saga/effects';
 import React from 'react';
-import {Button, FormGroup} from '@blueprintjs/core';
+import {Button, FormGroup, Intent} from '@blueprintjs/core';
 
 import {asyncRequestJson} from '../utils/api';
 import {getBlob, uploadBlob} from '../utils/blobs';
@@ -135,7 +135,7 @@ export default function (bundle, deps) {
               <input id='wavAudioUrlInput' type='text' className='pt-input' value={wavAudioUrl} readOnly/>
             </FormGroup>}
           <p>
-            <Button onClick={this.onUpload} disabled={busy || done} intent={done && Intents.PRIMARY}
+            <Button onClick={this.onUpload} disabled={busy || done} intent={done && Intent.PRIMARY}
               icon='floppy-disk' text="Save" />
             {/* TODO: cleanup status */}
             {busy
