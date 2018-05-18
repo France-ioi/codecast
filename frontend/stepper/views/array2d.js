@@ -1,6 +1,5 @@
 
 import React from 'react';
-import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
 
 import {extractView} from './array2d_model';
 import {getNumber, getList, renderValue, renderArrow} from './utils';
@@ -40,7 +39,7 @@ function drawCells (view) {
       const {content} = cell;
       const x = 0.5 * cellWidth;
       elements.push(
-        <g transform={`translate(${colIndex * cellWidth},${rowIndex * cellHeight})`} clipPath="url(#cell)">
+        <g key={`${i},${j}`} transform={`translate(${colIndex * cellWidth},${rowIndex * cellHeight})`} clipPath="url(#cell)">
           {content && 'store' in content && <g>
             <text x={x} y={y1} textAnchor="middle" fill="#777">
               {renderValue(content.previous)}
@@ -80,25 +79,25 @@ function drawGrid (view) {
       const y1 = gridTop + i * cellHeight;
       const cell = row && row[j] && row[j].content;
       const classes = getCellClasses(cell, rowInfoMap[i], colInfoMap[j]);
-      elements.push(<rect x={x1} y={y1} width={cellWidth} height={cellHeight} className={classes}/>);
+      elements.push(<rect key={`r${i},${j}`} x={x1} y={y1} width={cellWidth} height={cellHeight} className={classes}/>);
     }
   }
   // Horizontal lines
   const x1 = gridLeft, x2 = x1 + colCount * cellWidth;
   for (let i = 0, y = gridTop; i <= rowCount; i += 1, y += cellHeight) {
-    elements.push(<line x1={x1} x2={x2} y1={y} y2={y} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
+    elements.push(<line key={`h${i}`} x1={x1} x2={x2} y1={y} y2={y} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
   }
   // Vertical lines
   const y1 = gridTop, y2 = y1 + rowCount * cellHeight;
   for (let j = 0, x = gridLeft; j <= colCount; j += 1, x += cellWidth) {
-    elements.push(<line x1={x} x2={x} y1={y1} y2={y2} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
+    elements.push(<line key={`v${j}`} x1={x} x2={x} y1={y1} y2={y2} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
   }
   // Row labels
   let y = gridTop + (cellHeight + textLineHeight) / 2 - textBaseline;
   let x = gridLeft - gridBorderLeft;
   for (let i = 0; i < rowCount; i += 1, y += cellHeight) {
     elements.push(
-      <text x={x} y={y} textAnchor="end" fill="#777">{i}</text>
+      <text key={`lr${i}`} x={x} y={y} textAnchor="end" fill="#777">{i}</text>
     );
   }
   // Column labels
@@ -106,7 +105,7 @@ function drawGrid (view) {
   y = gridTop - gridBorderTop - textBaseline;
   for (let i = 0; i < rowCount; i += 1, x += cellWidth) {
     elements.push(
-      <text x={x} y={y} textAnchor='middle' fill='#777'>{i}</text>
+      <text key={`lc${i}`} x={x} y={y} textAnchor='middle' fill='#777'>{i}</text>
     );
   }
   return <g className="grid">{elements}</g>;
@@ -123,8 +122,11 @@ function drawRowCursors (rowCount, colCount, infoMap) {
     const cursor = infoMap[i];
     const y0 = gridTop + cellHeight * cursor.index;
     const label = cursor.labels.join(',');
-    elements.push(renderArrow(x0 + x1, y0 + y2, 'right', arrowHeadSize, arrowTailSize));
-    elements.push(<text x={x0 + x2} y={y0 + y1}>{label}</text>);
+    elements.push(
+      <g key={label}>
+        {renderArrow(x0 + x1, y0 + y2, 'right', arrowHeadSize, arrowTailSize)}
+        <text x={x0 + x2} y={y0 + y1}>{label}</text>
+      </g>);
   }
   return <g className='row-cursors'>{elements}</g>;
 }
@@ -140,24 +142,16 @@ function drawColCursors (colCount, rowCount, infoMap) {
     const x0 = gridLeft + cellWidth * cursor.index;
     const label = cursor.labels.join(',');
     const y3 = cursor.row * textLineHeight;
-    elements.push(renderArrow(x0 + x1, y0 + y1, 'down', arrowHeadSize, arrowTailSize + y3));
-    elements.push(<text x={x0 + x1} y={y0 + y2 - y3}>{label}</text>);
+    elements.push(
+      <g key={label}>
+        {renderArrow(x0 + x1, y0 + y1, 'down', arrowHeadSize, arrowTailSize + y3)}
+        <text x={x0 + x1} y={y0 + y2 - y3}>{label}</text>
+      </g>);
   }
   return <g className='col-cursors'>{elements}</g>;
 }
 
 export class Array2D extends React.PureComponent {
-
-  onViewChange = (event) => {
-    const update = {viewState: event.value};
-    this.props.onChange(this.props.directive, update);
-  };
-
-  getViewState = () => {
-    const {controls} = this.props;
-    const viewState = controls && controls.get('viewState');
-    return viewState || ViewerHelper.getDefaultValue();
-  };
 
   render () {
     const {Frame, scale, directive, frames, context, getMessage} = this.props;
@@ -178,30 +172,32 @@ export class Array2D extends React.PureComponent {
     const svgHeight = gridTop + (rowCount + 1) * cellHeight;
     const svgWidth = gridLeft + (colCount + 1) * cellWidth;
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
-    const viewState = this.getViewState();
     return (
       <Frame {...this.props}>
         <div className='clearfix' style={{padding: '2px'}}>
           <div style={{width: '100%', height: divHeight}}>
-            <ViewerResponsive tool='pan' value={viewState} onChange={this.onViewChange} background='transparent' specialKeys={[]}>
-              <svg width={svgWidth} height={svgHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
-                <g transform={`scale(${scale})`} className="array2d">
-                  <clipPath id="cell">
-                    <rect x="0" y="0" width={cellWidth} height={cellHeight}/>
-                  </clipPath>
-                  <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
-                    {drawGrid(view, rowCount, colCount)}
-                    {drawRowCursors(rowCount, colCount, rowInfoMap)}
-                    {drawColCursors(colCount, rowCount, colInfoMap)}
-                    {drawCells(view)}
-                  </g>
+            <svg width={svgWidth} height={svgHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
+              <g transform={`scale(${scale})`} className="array2d">
+                <clipPath id="cell">
+                  <rect x="0" y="0" width={cellWidth} height={cellHeight}/>
+                </clipPath>
+                <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
+                  {drawGrid(view, rowCount, colCount)}
+                  {drawRowCursors(rowCount, colCount, rowInfoMap)}
+                  {drawColCursors(colCount, rowCount, colInfoMap)}
+                  {drawCells(view)}
                 </g>
-              </svg>
-            </ViewerResponsive>
+              </g>
+            </svg>
           </div>
         </div>
       </Frame>
     );
   }
+
+  onViewChange = (event) => {
+    const update = {viewState: event.value};
+    this.props.onChange(this.props.directive, update);
+  };
 
 }
