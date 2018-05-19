@@ -56,25 +56,27 @@ Recording.prototype.addSamples = function (samples) {
 Recording.prototype.truncateAt = function (position) {
   const {sampleRate, length, numberOfChannels, channels} = this;
   const truncPos = Math.round(position * sampleRate);
-  let chunkStart = 0, iChunk = 0, truncated = false;
-  while (iChunk < length) {
-    const chunkEnd = chunkStart + channels[iChunk].length;
-    if (chunkEnd >= truncPos) {
-      // Trim current chunk if needed.
-      const posInChunk = truncPos - chunkStart;
-      if (posInChunk < chunksL.length) {
-        chunksL[iChunk] = chunksL[iChunk].slice(0, posInChunk);
-        chunksR[iChunk] = chunksR[iChunk].slice(0, posInChunk);
+  const chunks = channels[0].chunks;
+  let startPos = 0;
+  for (let iChunk = 0; iChunk < chunks.length; iChunk += 1) {
+    const chunk = chunks[iChunk];
+    const endPos = startPos + chunk.length;
+    if (truncPos <= endPos) {
+      /* Trim current chunk if needed. */
+      const posInChunk = truncPos - startPos;
+      if (posInChunk < chunk.length) {
+        for (let iChannel = 0; iChannel < numberOfChannels; iChannel += 1) {
+          channels[iChannel].chunks[iChunk] =
+            channels[iChannel].chunks[iChunk].slice(0, posInChunk);
+        }
       }
-      // Trim immediately past current cunk.
-      chunksL.splice(iChunk + 1);
-      chunksR.splice(iChunk + 1);
-      chunkStart += chunksL[iChunk].length;
-      truncated = true;
-      break;
+      /* Trim immediately past current chunk. */
+      for (let iChannel = 0; iChannel < numberOfChannels; iChannel += 1) {
+        channels[iChannel].chunks.splice(iChunk + 1);
+      }
+      return true;
     }
-    iChunk += 1;
-    chunkStart = chunkEnd;
+    startPos = endPos;
   }
-  return truncated;
+  return false;
 };
