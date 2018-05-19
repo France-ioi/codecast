@@ -7,7 +7,10 @@ export default function Recording ({numberOfChannels, sampleRate}) {
   this.sampleRate = sampleRate;
   this.duration = 0;
   this.length = 0;
-  this.channels = new Array(numberOfChannels).fill({chunks: []});
+  this.channels = new Array(numberOfChannels);
+  for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber += 1) {
+    this.channels[channelNumber] = {chunks: []};
+  }
 }
 
 Recording.prototype.getAudioBuffer = function (progressCallback) {
