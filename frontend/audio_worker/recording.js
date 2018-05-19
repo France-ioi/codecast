@@ -13,6 +13,12 @@ export default function Recording ({numberOfChannels, sampleRate}) {
   }
 }
 
+Recording.prototype.stats = function () {
+  const {numberOfChannels, sampleRate, duration, length, channels} = this;
+  return {numberOfChannels, sampleRate, duration, length,
+    channels: channels.map(({chunks}) => ({chunks: chunks.length}))};
+};
+
 Recording.prototype.getAudioBuffer = function (progressCallback) {
   const {length, sampleRate, numberOfChannels, channels} = this;
   const audioBuffer = new AudioBuffer({length, sampleRate, numberOfChannels});
