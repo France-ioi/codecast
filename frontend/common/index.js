@@ -8,6 +8,7 @@ import recordBundle from '../recorder/record';
 import langBundle from '../lang/index';
 import buffersBundle from '../buffers';
 import stepperBundle from '../stepper';
+import optionsBundle from './options';
 import mainViewBundle from './main_view';
 import mainViewPanesBundle from './main_view_panes';
 import resizeBundle from './resize';
@@ -33,6 +34,7 @@ export default function (bundle) {
 
   bundle.include(buffersBundle);
   bundle.include(stepperBundle);
+  bundle.include(optionsBundle);
   bundle.include(mainViewBundle);
   bundle.include(mainViewPanesBundle);
   bundle.include(resizeBundle);

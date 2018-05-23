@@ -8,7 +8,7 @@ export default function (bundle) {
 
 class Menu extends React.PureComponent {
   render () {
-    const {getMessage, SubtitlesMenu, FullscreenButton, LanguageSelection, ExamplePicker} = this.props;
+    const {getMessage, SubtitlesMenu, FullscreenButton, LanguageSelection, ExamplePicker, platform} = this.props;
     const {isOpen} = this.state;
     return (
       <div id='menu'>
@@ -22,6 +22,15 @@ class Menu extends React.PureComponent {
             <div style={{marginBottom: '10px'}}>
               <LanguageSelection closeMenu={this.closeMenu} />
             </div>
+            <div className='pt-select'>
+              <label className='pt-label'>
+                {getMessage('PLATFORM_SETTING')}
+                <select onChange={this.setPlatform} value={platform}>
+                  <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
+                  <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
+                </select>
+              </label>
+            </div>
             <div>
               <ExamplePicker />
             </div>
@@ -33,10 +42,16 @@ class Menu extends React.PureComponent {
   state = {isOpen: false};
   openMenu = () => { this.setState({isOpen: true}); };
   closeMenu = () => { this.setState({isOpen: false}); };
+  setPlatform = (event) => {
+    const platform = event.target.value;
+    this.props.dispatch({type: this.props.optionsChanged, payload: {mode: {$set: platform}}});
+  };
 }
 
 function MenuSelector (state, props) {
   const {FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker} = state.get('scope');
+  const {optionsChanged} = state.get('actionTypes');
+  const {mode} = state.get('options');
   const getMessage = state.get('getMessage');
-  return {getMessage, FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker};
+  return {getMessage, FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker, platform: mode, optionsChanged};
 }
