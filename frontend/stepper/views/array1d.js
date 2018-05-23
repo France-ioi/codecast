@@ -38,14 +38,13 @@ function Grid ({cells, cursorMap, cellWidth}) {
   for (let i = 0, x = 0; i < cells.length; i += 1, x += cellWidth) {
     const cell = cells[i];
     const cursor = cursorMap[cell.index];
-    const hLineCls = classnames(['h', cell.gap && 'gap']);
     const cellClasses = getCellClasses(cell, cursor);
     elements.push(
       <g key={`h${i}`}>
-        <text x={x + cellWidth / 2} y={y3} className="index">{cell.index}</text>
+        {!cell.gap && <text x={x + cellWidth / 2} y={y3} className="index">{cell.index}</text>}
         <rect x={x} y={y1} width={cellWidth} height={textLineHeight} className={cellClasses}/>
-        <line x1={x} x2={x + cellWidth} y1={y1} y2={y1} className={hLineCls} className="t" />
-        <line x1={x} x2={x + cellWidth} y1={y2} y2={y2} className={hLineCls} className="b" />
+        <line x1={x} x2={x + cellWidth} y1={y1} y2={y1} className={classnames(['h', 't', cell.gap && 'gap'])} />
+        <line x1={x} x2={x + cellWidth} y1={y2} y2={y2} className={classnames(['h', 'b', cell.gap && 'gap'])} />
       </g>
     );
   }
@@ -58,7 +57,7 @@ function Grid ({cells, cursorMap, cellWidth}) {
 
 function Cell ({view, cell}) {
   if (cell.gap) {
-    return;
+    return null;
   }
   const {cellWidth} = view;
   const {position, index, address, content} = cell;

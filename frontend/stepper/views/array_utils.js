@@ -372,7 +372,8 @@ export const readArray1D = function (context, arrayBase, elemType, elemCount, se
     if (position === undefined)
       position = index;
     if (index === '…') {
-      cells.push({position, gap: true});
+      /* Generate a fake index so it can be used as a key for rendering. */
+      cells.push({position, gap: true, index: `#${position}`});
     } else {
       const elemAddress = arrayBase + index * elemSize;
       const cell = {position, index, address: elemAddress};
