@@ -59,43 +59,43 @@ class MainView extends React.PureComponent {
           </div>
           {diagnostics && <div className="row">
             <div className="col-sm-12">
-              <Panel bsStyle='danger'>
-                <Panel.Heading>
+              <div className='panel panel-danger'>
+                <div className='panel-heading'>
                   {diagnosticsPanelHeader}
-                </Panel.Heading>
-                <Panel.Body>
+                </div>
+                <div className='panel-body'>
                   <div className='diagnostics' style={{whiteSpace: 'pre', fontSize: '16px', padding: '5px'}}
                     dangerouslySetInnerHTML={diagnostics}/>
-                </Panel.Body>
-              </Panel>
+                </div>
+              </div>
             </div>
           </div>}
           {error && <div className="row">
             <div className="col-sm-12">
-              <Panel bsStyle='danger'>
-                <Panel.Heading>
+              <div className='panel panel-danger'>
+                <div className='panel-heading'>
                   {stepperErrorPanelHeader}
-                </Panel.Heading>
-                <Panel.Body>
+                </div>
+                <div className='panel-body'>
                   <pre>{error}</pre>
-                </Panel.Body>
-              </Panel>
+                </div>
+              </div>
             </div>
           </div>}
           {ArduinoPanel && <div className="row">
             <div className="col-sm-12">
-              <Panel>
-                <Panel.Heading>
+              <div className='panel panel-default'>
+                <div className='panel-heading'>
                   <span>
                     <i className="fa fa-microchip"/>
                     {" Arduino"}
                     {haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
                   </span>
-                </Panel.Heading>
-                <Panel.Body>
+                </div>
+                <div className='panel-body'>
                   <ArduinoPanel preventInput={preventInput}/>
-                </Panel.Body>
-              </Panel>
+                </div>
+              </div>
             </div>
           </div>}
           <div className="row">
