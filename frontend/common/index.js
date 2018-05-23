@@ -31,10 +31,11 @@ export default function (bundle) {
 
   /* The language bundle must be included before the examples bundle. */
   bundle.include(langBundle);
+  /* The options bundle must be included before the stepper bundle (see ioPane). */
+  bundle.include(optionsBundle);
 
   bundle.include(buffersBundle);
   bundle.include(stepperBundle);
-  bundle.include(optionsBundle);
   bundle.include(mainViewBundle);
   bundle.include(mainViewPanesBundle);
   bundle.include(resizeBundle);

@@ -26,6 +26,9 @@ export default function (bundle, deps) {
   bundle.addReducer('init', function (state) {
     return state.set('ioPane', updateIoPaneState(state, {}));
   });
+  bundle.addReducer('optionsChanged', function (state) {
+    return state.update('ioPane', ioPane => updateIoPaneState(state, ioPane));
+  });
 
   function updateIoPaneState (state, ioPane) {
     const {mode} = state.get('options');
@@ -50,14 +53,7 @@ export default function (bundle, deps) {
 
   function IOPaneSelector (state, props) {
     const stepper = deps.getStepperDisplay(state);
-    let mode = 'options';
-    if (stepper) {
-      if (stepper.terminal) {
-        mode = 'terminal';
-      } else {
-        mode = 'split';
-      }
-    }
+    const mode = stepper ? state.get('ioPane').mode : 'options';
     return {mode};
   }
 
@@ -90,6 +86,8 @@ export default function (bundle, deps) {
           <Panel.Body>
             <div className="row">
               <div className="col-sm-12">
+                {!modeSelect &&
+                  <p>{getMessage('IOPANE_TERMINAL_PROGRAM_STOPPED')}</p>}
                 {modeSelect && <form style={{marginTop: '10px', marginLeft: '10px'}}>
                   <label className='pt-label pt-inline'>
                     {getMessage('IOPANE_MODE')}
@@ -190,7 +188,7 @@ export default function (bundle, deps) {
     });
 
     replayApi.onReset(function* (instant) {
-      const mode = instant.state.get('ioPaneMode');
+      const {mode} = instant.state.get('ioPane');
       yield put({type: deps.ioPaneModeChanged, payload: {mode}});
     });
 
@@ -227,9 +225,9 @@ export default function (bundle, deps) {
 
     /* Set up the terminal or input. */
     stepperApi.onInit(function (stepperState, globalState) {
-      const ioPaneMode = globalState.get('ioPaneMode');
+      const {mode} = globalState.get('ioPane');
       stepperState.inputPos = 0;
-      if (ioPaneMode === 'terminal') {
+      if (mode === 'terminal') {
         stepperState.input = "";
         stepperState.terminal = new TermBuffer({lines: 10, width: 80});
         stepperState.inputBuffer = "";
@@ -344,8 +342,8 @@ export default function (bundle, deps) {
        This mechanism could by simplified by having the 'write' effect
        directly alter the global state & push the change to the editor. */
     stepperApi.addSaga(function* ioStepperSaga () {
-      const ioPaneMode = yield select(state => state.get('ioPaneMode'));
-      if (ioPaneMode === 'split') {
+      const {mode} = yield select(state => state.get('ioPane'));
+      if (mode === 'split') {
         yield call(reflectToOutput);
       }
     });

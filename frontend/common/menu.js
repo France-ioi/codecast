@@ -26,7 +26,7 @@ class Menu extends React.PureComponent {
               <label className='pt-label'>
                 {getMessage('PLATFORM_SETTING')}
                 <select onChange={this.setPlatform} value={platform}>
-                  <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
+                  <option value='plain'>{getMessage('PLATFORM_UNIX')}</option>
                   <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
                 </select>
               </label>
