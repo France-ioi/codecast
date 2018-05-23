@@ -21,7 +21,7 @@ export default function (bundle, deps) {
   function StepperControlsSelector (state, props) {
     const {enabled} = props;
     const getMessage = state.get('getMessage');
-    const options = deps.getStepperOptions(state);
+    const {controls, showStepper} = state.get('options');
     let showTranslate, showControls, showExit;
     let canTranslate, canExit, canRestart, canStep, canStepOut, canInterrupt, canUndo, canRedo;
     const stepper = deps.getStepperState(state);
@@ -54,11 +54,11 @@ export default function (bundle, deps) {
     }
     const result = {
       getMessage,
-      showControls,
+      showStepper, showControls, controls,
       showExit, canExit,
       showTranslate, canTranslate,
       canRestart, canStep, canStepOut, canInterrupt,
-      canUndo, canRedo, options
+      canUndo, canRedo
     };
     return result;
   }
@@ -68,15 +68,14 @@ export default function (bundle, deps) {
   class StepperControls extends React.PureComponent {
 
     render () {
-      const p = this.props;
-      const showStepper = p.options && p.options.get('showStepper');
+      const {showStepper} = this.props;
       if (!showStepper)
         return false;
-      const {getMessage} = this.props;
+      const {getMessage, showControls, showExit, showTranslate} = this.props;
       return (
         <div className="controls controls-stepper">
           <div className="controls-stepper-wrapper">
-            {p.showControls && <ButtonGroup className="controls-stepper-execution">
+            {showControls && <ButtonGroup className="controls-stepper-execution">
               {this._button('run', this.onStepRun, getMessage('CONTROL_RUN'),               <i className="pt-icon fi fi-run"/>)}
               {this._button('expr', this.onStepExpr, getMessage('CONTROL_EXPR'),            <i className="pt-icon fi fi-step-expr"/>)}
               {this._button('into', this.onStepInto, getMessage('CONTROL_INTO'),            <i className="pt-icon fi fi-step-into"/>)}
@@ -89,15 +88,15 @@ export default function (bundle, deps) {
             </ButtonGroup>}
           </div>
           <div className="controls-translate">
-            {p.showExit && this._button('edit', this.onEdit, false, false, getMessage('EDIT'))}
-            {p.showTranslate && this._button('translate', this.onTranslate, false, false, getMessage('COMPILE'))}
+            {showExit && this._button('edit', this.onEdit, false, false, getMessage('EDIT'))}
+            {showTranslate && this._button('translate', this.onTranslate, false, false, getMessage('COMPILE'))}
           </div>
         </div>
       );
     };
 
     _button (key, onClick, title, icon, text) {
-      const {options} = this.props;
+      const {controls} = this.props;
       let intent = Intent.NONE, disabled = false;
       if (key === 'translate') {
         intent = Intent.PRIMARY;
@@ -128,8 +127,8 @@ export default function (bundle, deps) {
           disabled = !this.props.canTranslate;
           break;
       }
-      if (options) {
-        const mod = options.get(key);
+      if (controls) {
+        const mod = controls.key;
         if (mod === '_') {
           return false;
         }

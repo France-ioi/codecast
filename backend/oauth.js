@@ -81,14 +81,14 @@ module.exports = function (app, config, callback) {
     return {id, login};
   }
 
-  config.initHook = function (req, init, callback) {
+  config.optionsHook = function (req, options, callback) {
     let user;
     if ('guest' in req.query) {
       user = {guest: true};
     } else {
       user = getUser(req.session.identity)
     }
-    callback(null, {...init, authProviders: Object.keys(config.auth), user});
+    callback(null, {...options, authProviders: Object.keys(config.auth), user});
   };
 
   config.getUserConfig = function (req, callback) {

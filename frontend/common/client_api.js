@@ -2,7 +2,7 @@
 import {eventChannel, buffers} from 'redux-saga';
 import {put, take, select} from 'redux-saga/effects'
 
-module.exports = function (bundle, deps) {
+export default function (bundle, deps) {
 
   const messageChannel = eventChannel(function (listener) {
     const onMessage = function (event) {
@@ -36,4 +36,4 @@ module.exports = function (bundle, deps) {
     }
   });
 
-};
+}

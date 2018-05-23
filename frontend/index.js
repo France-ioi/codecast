@@ -10,7 +10,6 @@ import {Provider} from 'react-redux';
 import {applyMiddleware} from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import Immutable from 'immutable';
-import queryString from 'query-string';
 import 'font-awesome/css/font-awesome.min.css?global';
 import 'rc-slider/dist/rc-slider.css?global';
 
@@ -18,28 +17,24 @@ import style from './style.scss';
 
 // import sagaMonitor from './sagaMonitor';
 import link from './linker';
-import stepperBundle from './stepper/index';
-import {default as commonBundle, interpretQueryString} from './common/index';
 
-import SandboxBundle from './sandbox/index';
-import RecorderBundle from './recorder/index';
-import PlayerBundle from './player/index';
-import EditorBundle from './editor/index';
-import LangBundle from './lang/index';
+import commonBundle from './common/index';
+import sandboxBundle from './sandbox/index';
+import playerBundle from './player/index';
+import recorderBundle from './recorder/index';
+import editorBundle from './editor/index';
 
 const {store, scope, actionTypes, finalize, start} = link(function (bundle, deps) {
 
   bundle.defineAction('init', 'System.Init');
-  bundle.addReducer('init', (_state, {payload: {baseUrl, authProviders}}) =>
-    Immutable.Map({baseUrl, authProviders, scope, actionTypes}));
+  bundle.addReducer('init', (_state, {payload: options}) =>
+    Immutable.Map({scope, actionTypes, options}));
 
   bundle.include(commonBundle);
-  bundle.include(stepperBundle);
-  bundle.include(SandboxBundle);
-  bundle.include(RecorderBundle);
-  bundle.include(PlayerBundle);
-  bundle.include(EditorBundle);
-  bundle.include(LangBundle);
+  bundle.include(sandboxBundle);
+  bundle.include(playerBundle);
+  bundle.include(recorderBundle);
+  bundle.include(editorBundle);
 
   if (process.env.NODE_ENV === 'development') {
     bundle.addEarlyReducer(function (state, action) {
@@ -49,124 +44,77 @@ const {store, scope, actionTypes, finalize, start} = link(function (bundle, deps
   }
 
 }/*, {reduxSaga: {sagaMonitor}}*/);
-finalize(scope);
+finalize(scope, actionTypes);
+
+function restart () {
+  if (Codecast.task) {
+    Codecast.task.cancel();
+    Codecast.task = null;
+  }
+  Codecast.task = start();
+}
 
 /* In-browser API */
-const Codecast = window.Codecast = {store, scope, restart: start};
+const Codecast = window.Codecast = {store, scope, restart};
 
+/*
+  options :: {
+    start: 'sandbox'|'player'|'recorder'|'editor',
+    baseUrl: url,
+    examplesUrl: url,
+    baseDataUrl: url,
+    user: {…},
+    mode: 'plain'|'arduino',
+    controls: {…},
+    showStepper: boolean,
+    showStack: boolean,
+    showViews: boolean,
+    showIO: boolean,
+    source: string,
+    input: string,
+    token: string
+  }
+*/
 Codecast.start = function (options) {
 
-  let user = options.user;
-  if (!user) {
-    try {
-      user = JSON.parse(window.localStorage.user || 'null');
-    } catch (ex) {
-      user = null;
-    }
-  }
-
   store.dispatch({type: scope.init, payload: options});
-
-  // store.dispatch({type: scope.modeChanged, mode: 'arduino'});
-
-  const qs = queryString.parse(window.location.search);
-
-  const stepperOptions = {
-    showStepper: true,
-    showStack: true,
-    showViews: true,
-    showIO: true,
-    // arduino: true,
-  };
-  (qs.stepperControls||'').split(',').forEach(function (controlStr) {
-    // No prefix to highlight, '-' to disable.
-    const m = /^([-_])?(.*)$/.exec(controlStr);
-    if (m) {
-      stepperOptions[m[2]] = m[1] || '+';
-    }
-  });
-  if ('noStepper' in qs) {
-    stepperOptions.showStepper = false;
-    stepperOptions.showStack = false;
-    stepperOptions.showViews = false;
-    stepperOptions.showIO = false;
-  }
-  if ('noStack' in qs) {
-    stepperOptions.showStack = false;
-  }
-  if ('noViews' in qs) {
-    stepperOptions.showViews = false;
-  }
-  if ('noIO' in qs) {
-    stepperOptions.showIO = false;
-  }
-  store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
-
-  /* Source code from options or URL */
-  if ('source' in options) {
-    store.dispatch({type: scope.bufferLoad, buffer: 'source', text: options.source||''});
-  } else if ('source' in qs) {
-    store.dispatch({type: scope.bufferLoad, buffer: 'source', text: qs.source||''});
-  }
-
-  /* Standard input from options or URL */
-  if ('input' in options) {
-    store.dispatch({type: scope.inputLoad, buffer: 'input', text: options.input||''});
-  } else if ('input' in qs) {
-    store.dispatch({type: scope.inputLoad, buffer: 'input', text: qs.input||''});
-  }
+  // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
   /* Run the sagas (must be done before loginFeedback) */
-  start();
+  Codecast.task = start();
 
-  /* Start already logged in. */
-  if (user) {
-    store.dispatch({type: scope.loginFeedback, payload: {user}});
-  }
-
-  /* Set token from URL -- TODO: change this mechanism */
-  if ('token' in qs) {
-    store.dispatch({type: scope.uploadTokenChanged, token: qs.token});
-  }
-
-  /* Set examples URL (enables example selection link in menu) */
-  if ('examplesUrl' in options) {
-    store.dispatch({type: scope.examplesUrlChanged, payload: {
-      examplesUrl: options.examplesUrl,
-      callbackUrl: window.location.toString()
-    }});
-  }
-
-  let App = scope.SandboxApp;
-
-  /* recorder and player */
-  store.dispatch({type: scope.playerClear});
-
-  if (options.start === 'recorder') {
-    store.dispatch({type: scope.recorderPrepare});
-    App = scope.RecorderApp;
-  }
-
-  if (options.start === 'player') {
-    store.dispatch({
-      type: scope.playerPrepare,
-      payload: {
-        baseDataUrl: options.baseDataUrl,
-        audioUrl: `${options.baseDataUrl}.mp3`,
-        eventsUrl: `${options.baseDataUrl}.json`,
-      }
-    });
-    App = scope.PlayerApp;
-  }
-
-  if (options.start === 'editor') {
-    store.dispatch({
-      type: scope.editorPrepare,
-      payload: {
-        baseDataUrl: options.baseDataUrl
-      }
-    });
-    App = scope.EditorApp;
+  let App;
+  switch (options.start) {
+    case 'recorder':
+      store.dispatch({type: scope.recorderPrepare});
+      App = scope.RecorderApp;
+      break;
+    case 'player':
+      store.dispatch({
+        type: scope.playerPrepare,
+        payload: {
+          baseDataUrl: options.baseDataUrl,
+          audioUrl: `${options.baseDataUrl}.mp3`,
+          eventsUrl: `${options.baseDataUrl}.json`,
+        }
+      });
+      App = scope.PlayerApp;
+      break;
+    case 'editor':
+      store.dispatch({
+        type: scope.editorPrepare,
+        payload: {
+          baseDataUrl: options.baseDataUrl
+        }
+      });
+      App = scope.EditorApp;
+      break;
+    case 'sandbox':
+      App = scope.SandboxApp;
+      break;
+    default:
+      App = () => <p>{"No such application: "}{options.start}</p>;
+      break;
   }
 
   const container = document.getElementById('react-container');

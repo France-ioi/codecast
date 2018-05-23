@@ -23,8 +23,8 @@ function buildApp (config, store, callback) {
   app.enable('strict routing');
 
   // Default implementations
-  config.initHook = function (req, init, callback) {
-    callback(null, init);
+  config.optionsHook = function (req, options, callback) {
+    callback(null, options);
   };
   config.getUserConfig = function (req, callback) {
     let {token} = req.query;
@@ -92,32 +92,44 @@ function buildApp (config, store, callback) {
 function addBackendRoutes (app, config, store) {
 
   app.get('/', function (req, res) {
-    res.render('index', {
-      development: config.isDevelopment,
-      rebaseUrl: config.rebaseUrl,
-      options: {start: 'sandbox', baseUrl: config.baseUrl, examplesUrl: config.examplesUrl}
+    buildOptions(config, req, 'sandbox', function (err, options) {
+      res.render('index', {
+        development: config.isDevelopment,
+        rebaseUrl: config.rebaseUrl,
+        options,
+      });
     });
   });
 
-  app.get('/recorder', function (req, res) {
-    config.initHook(req, {start: 'recorder', baseUrl: config.baseUrl, examplesUrl: config.examplesUrl}, function (err, init) {
+  app.get('/player', function (req, res) {
+    buildOptions(config, req, 'player', function (err, options) {
       if (err) return res.send(`Error: ${err.toString()}`);
       res.render('index', {
         development: config.isDevelopment,
         rebaseUrl: config.rebaseUrl,
-        options: init,
+        options,
+      });
+    });
+  });
+
+  app.get('/recorder', function (req, res) {
+    buildOptions(config, req, 'recorder', function (err, options) {
+      if (err) return res.send(`Error: ${err.toString()}`);
+      res.render('index', {
+        development: config.isDevelopment,
+        rebaseUrl: config.rebaseUrl,
+        options,
       });
     });
   });
 
   app.get('/editor', function (req, res) {
-    const baseDataUrl = req.query.base;
-    config.initHook(req, {start: 'editor', baseUrl: config.baseUrl, baseDataUrl}, function (err, init) {
+    buildOptions(config, req, 'editor', function (err, options) {
       if (err) return res.send(`Error: ${err.toString()}`);
       res.render('index', {
         development: config.isDevelopment,
         rebaseUrl: config.rebaseUrl,
-        options: init
+        options,
       });
     });
   });
@@ -128,15 +140,6 @@ function addBackendRoutes (app, config, store) {
       const {s3Bucket, uploadPath} = userConfig;
       const bucketUrl = `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}/`;
       res.json({bucketUrl});
-    });
-  });
-
-  app.get('/player', function (req, res) {
-    const baseDataUrl = req.query.base;
-    res.render('index', {
-      development: config.isDevelopment,
-      rebaseUrl: config.rebaseUrl,
-      options: {start: 'player', baseUrl: config.baseUrl, baseDataUrl}
     });
   });
 
@@ -252,3 +255,76 @@ fs.readFile('config.json', 'utf8', function (err, data) {
     workerStore.dispatch({type: 'START'});
   });
 });
+
+function buildOptions(config, req, start, callback) {
+  const {baseUrl, examplesUrl} = config;
+  const options = {
+    start,
+    baseUrl,
+    callbackUrl: req.originalUrl,
+    showStepper: true,
+    showStack: true,
+    showViews: true,
+    showIO: true,
+    mode: 'plain',
+    controls: {},
+  };
+
+  if (/sandbox|recorder/.test(start)) {
+    options.examplesUrl = config.examplesUrl;
+  }
+
+  const {query} = req;
+
+  if (/editor|player/.test(start)) {
+    options.baseDataUrl = req.query.base;
+  }
+
+  if ('language' in query) {
+    options.language = query.language;
+  }
+
+  (query.stepperControls||'').split(',').forEach(function (controlStr) {
+    // No prefix to highlight, '-' to disable.
+    const m = /^([-_])?(.*)$/.exec(controlStr);
+    if (m) {
+      options.controls[m[2]] = m[1] || '+';
+    }
+  });
+  if ('noStepper' in query) {
+    options.showStepper = false;
+    options.showStack = false;
+    options.showViews = false;
+    options.showIO = false;
+  }
+  if ('noStack' in query) {
+    options.showStack = false;
+  }
+  if ('noViews' in query) {
+    options.showViews = false;
+  }
+  if ('noIO' in query) {
+    options.showIO = false;
+  }
+  if ('mode' in query) {
+    options.mode = query.mode; // 'plain'|'arduino'
+  }
+
+  if ('source' in query) {
+    options.source = query.source || '';
+  }
+  if ('input' in query) {
+    options.input = query.input || '';
+  }
+
+  /* XXX Is this still used? */
+  if ('token' in query) {
+    options.token = token;
+  }
+
+  if (/recorder|editor/.test(start)) {
+    return config.optionsHook(req, options, callback);
+  } else {
+    return callback(null, options);
+  }
+}

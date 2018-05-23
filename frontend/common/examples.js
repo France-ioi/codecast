@@ -4,8 +4,7 @@ import url from 'url';
 
 export default function (bundle, deps) {
 
-  bundle.defineAction('examplesUrlChanged', 'Examples.Url.Changed');
-  bundle.addReducer('examplesUrlChanged', function (state, {payload: {examplesUrl, callbackUrl}}) {
+  bundle.addReducer('init', function (state, {payload: {examplesUrl, callbackUrl}}) {
     examplesUrl = makeExamplesUrl(state, callbackUrl, examplesUrl);
     return state.set('examples', {examplesUrl});
   });
@@ -26,10 +25,12 @@ export default function (bundle, deps) {
     delete callbackUrl.query.source;
     delete callbackUrl.query.mode;
     callbackUrl = url.format(callbackUrl);
+    const {mode, language} = state.get('options');
     examplesUrl = url.parse(examplesUrl, true);
     examplesUrl.query.target = '_self';
-    examplesUrl.query.tags = state.get('mode', 'plain');
-    examplesUrl.query.lang = state.get('language', 'en').replace(/_.*$/, '');
+    examplesUrl.query.tags = mode;
+    /* XXX better to pass language unchanged and have the examples app drop the country code */
+    examplesUrl.query.lang = language.replace(/_.*$/, '');
     examplesUrl.query.callback = callbackUrl;
     examplesUrl = url.format(examplesUrl);
     return examplesUrl;

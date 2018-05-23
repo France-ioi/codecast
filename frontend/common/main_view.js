@@ -7,7 +7,7 @@ class MainView extends React.PureComponent {
   render () {
     const {
       diagnostics, readOnly, sourceMode, sourceRowHeight,
-      preventInput, haveStepper, error, options, getMessage, geometry, panes,
+      preventInput, haveStepper, error, getMessage, geometry, panes,
       StackView, BufferEditor, ArduinoPanel, DirectivesPane, IOPane} = this.props;
     const sourcePanelHeader = (
       <span>
@@ -117,7 +117,7 @@ class MainView extends React.PureComponent {
 }
 
 function MainViewSelector (state, props) {
-  const {getPlayerState, getTranslateDiagnostics, getStepperDisplay, getStepperOptions, BufferEditor, StackView, ArduinoPanel, DirectivesPane, IOPane} = state.get('scope');
+  const {getPlayerState, getTranslateDiagnostics, getStepperDisplay, BufferEditor, StackView, ArduinoPanel, DirectivesPane, IOPane} = state.get('scope');
   const {translateClearDiagnostics, stepperExit} = state.get('actionTypes');
   const getMessage = state.get('getMessage');
   const geometry = state.get('mainViewGeometry');
@@ -127,8 +127,8 @@ function MainViewSelector (state, props) {
   const haveStepper = !!stepperDisplay;
   const error = haveStepper && stepperDisplay.error;
   const readOnly = haveStepper || props.preventInput;
-  const options = getStepperOptions(state);
-  const arduinoEnabled = options.get('arduino');
+  const {showIO, showViews, showStack, mode} = state.get('options');
+  const arduinoEnabled = mode === 'arduino';
   const sourceRowHeight = '300px';
   const sourceMode = arduinoEnabled ? 'arduino' : 'c_cpp';
   /* preventInput is set during playback (and seeking-while-paused) to prevent the
@@ -139,20 +139,20 @@ function MainViewSelector (state, props) {
   const status = player.get('status');
   const preventInput = !/idle|ready|paused/.test(status) && !player.has('seekTo');
   return {
-    diagnostics, haveStepper, readOnly, error, options, getMessage, geometry, panes, preventInput,
+    diagnostics, haveStepper, readOnly, error, getMessage, geometry, panes, preventInput,
     translateClearDiagnostics, stepperExit,
     BufferEditor: BufferEditor, sourceRowHeight, sourceMode,
-    StackView: options.get('showStack') && StackView,
+    StackView: showStack && StackView,
     ArduinoPanel: arduinoEnabled && ArduinoPanel,
-    DirectivesPane: options.get('showViews') && DirectivesPane,
-    IOPane: options.get('showIO') && IOPane
+    DirectivesPane: showViews && DirectivesPane,
+    IOPane: showIO && IOPane
   };
 }
 
 export default function (bundle) {
 
   bundle.use(
-    'getTranslateDiagnostics', 'getStepperDisplay', 'getStepperOptions',
+    'getTranslateDiagnostics', 'getStepperDisplay',
     'translateClearDiagnostics', 'stepperExit',
     'BufferEditor', 'StackView', 'DirectivesPane', 'IOPane',
     'ArduinoConfigPanel', 'ArduinoPanel'

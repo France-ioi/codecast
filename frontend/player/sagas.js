@@ -351,13 +351,6 @@ export default function (bundle, deps) {
     }
   });
 
-  bundle.defineAction('playerClear', 'Player.Clear');
-  bundle.addReducer('playerClear', state =>
-    state.set('player', Immutable.Map({
-      status: 'idle',
-      audio: document.createElement('video')
-    })));
-
   bundle.defineAction('playerPrepareProgress', 'Player.Prepare.Progress');
   bundle.defineAction('playerPrepareFailure', 'Player.Prepare.Failure');
 

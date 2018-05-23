@@ -38,6 +38,90 @@ import Highlight from 'react-highlighter';
 import {formatTime, formatTimeLong, readFileAsText} from './utils';
 import FlagIcon from './flag_icon';
 
+export default function (bundle) {
+
+  bundle.use('getPlayerState', 'playerSeek');
+  bundle.addReducer('init', initReducer);
+
+  bundle.defineAction('subtitlesEditingChanged', 'Subtitles.Editing.Changed');
+  bundle.addReducer('subtitlesEditingChanged', subtitlesEditingChangedReducer);
+
+  bundle.defineView('SubtitlesPane', SubtitlesPaneSelector, SubtitlesPane);
+  bundle.defineAction('subtitlesPaneEnabledChanged', 'Subtitles.Pane.EnabledChanged');
+  bundle.addReducer('subtitlesPaneEnabledChanged', subtitlesPaneEnabledChangedReducer);
+  bundle.defineAction('subtitlesBandEnabledChanged', 'Subtitles.Band.EnabledChanged');
+  bundle.addReducer('subtitlesBandEnabledChanged', subtitlesBandEnabledChangedReducer);
+  bundle.defineAction('subtitlesFilterTextChanged', 'Subtitles.Pane.FilterText.Changed');
+  bundle.addReducer('subtitlesFilterTextChanged', subtitlesFilterTextChangedReducer);
+
+  bundle.defineView('SubtitlesMenu', SubtitlesMenuSelector, SubtitlesMenu);
+  bundle.defineView('SubtitlesPopup', SubtitlesPopupSelector, SubtitlesPopup);
+
+  bundle.defineAction('subtitlesCleared', 'Subtitles.Cleared');
+  bundle.addReducer('subtitlesCleared', subtitlesClearedReducer);
+  bundle.addReducer('subtitlesLoadStarted', subtitlesLoadStartedReducer);
+  bundle.defineAction('subtitlesLoadStarted', 'Subtitles.LoadStarted');
+  bundle.addReducer('subtitlesLoadSucceeded', subtitlesLoadSucceededReducer);
+  bundle.defineAction('subtitlesLoadSucceeded', 'Subtitles.LoadSucceeded');
+  bundle.defineAction('subtitlesLoadFailed', 'Subtitles.LoadFailed');
+  bundle.addReducer('subtitlesLoadFailed', subtitlesLoadFailedReducer);
+  bundle.defineAction('subtitlesLoadFromText', 'Subtitles.LoadFromText');
+  bundle.defineAction('subtitlesLoadFromUrl', 'Subtitles.LoadFromUrl');
+  bundle.defineAction('subtitlesLoadFromFile', 'Subtitles.LoadFromFile');
+  bundle.defineAction('subtitlesReload', 'Subtitles.Reload');
+
+  bundle.defineAction('subtitlesSelected', 'Subtitles.Selected');
+  bundle.addReducer('subtitlesSelected', subtitlesSelectedReducer);
+  bundle.defineAction('subtitlesAddOption', 'Subtitles.AddOption');
+  bundle.addReducer('subtitlesAddOption', subtitlesAddOptionReducer);
+  bundle.defineAction('subtitlesRemoveOption', 'Subtitles.Option.Remove');
+  bundle.addReducer('subtitlesRemoveOption', subtitlesRemoveOptionReducer);
+
+  bundle.defineValue('getSubtitlesBandVisible', getSubtitlesBandVisible);
+  bundle.defineView('SubtitlesBand', SubtitlesBandSelector,
+    clickDrag(SubtitlesBand, {touch: true}));
+  bundle.defineAction('subtitlesBandBeginMove', 'Subtitles.Band.BeginMove');
+  bundle.addReducer('subtitlesBandBeginMove', subtitlesBandBeginMoveReducer);
+  bundle.defineAction('subtitlesBandEndMove', 'Subtitles.Band.EndMove');
+  bundle.addReducer('subtitlesBandEndMove', subtitlesBandEndMoveReducer);
+  bundle.defineAction('subtitlesBandMoved', 'Subtitles.Band.Moved');
+  bundle.addReducer('subtitlesBandMoved', subtitlesBandMovedReducer);
+
+  bundle.addReducer('playerSeeked', playerSeekedReducer);
+  bundle.addReducer('playerTick', playerTickReducer);
+  bundle.addReducer('playerReady', playerReadyReducer);
+
+  bundle.defineView('SubtitlesEditor', SubtitlesEditorSelector, SubtitlesEditor);
+  bundle.defineView('SubtitlesEditorReturn', SubtitlesEditorReturnSelector, SubtitlesEditorReturn);
+
+  bundle.defineAction('subtitlesItemChanged', 'Subtitles.Item.Changed');
+  bundle.addReducer('subtitlesItemChanged', subtitlesItemChangedReducer);
+  bundle.defineAction('subtitlesItemInserted', 'Subtitles.Item.Inserted');
+  bundle.addReducer('subtitlesItemInserted', subtitlesItemInsertedReducer);
+  bundle.defineAction('subtitlesItemRemoved', 'Subtitles.Item.Removed');
+  bundle.addReducer('subtitlesItemRemoved', subtitlesItemRemovedReducer);
+  bundle.defineAction('subtitlesItemShifted', 'Subtitles.Item.Shifted');
+  bundle.addReducer('subtitlesItemShifted', subtitlesItemShiftedReducer);
+
+  bundle.defineAction('subtitlesTextChanged', 'Subtitles.Text.Changed');
+  bundle.addReducer('subtitlesTextChanged', subtitlesTextChangedReducer);
+  bundle.defineAction('subtitlesSave', 'Subtitles.Save');
+  bundle.addReducer('subtitlesSave', subtitlesSaveReducer);
+
+  bundle.defineAction('subtitlesEditorEnter', 'Subtitles.Editor.Enter');
+  bundle.defineAction('subtitlesEditorReturn', 'Subtitles.Editor.Return'); /* done editing, return to setup screen */
+
+  bundle.defineAction('subtitlesEditorSave', 'Subtitles.Editor.Save');
+  bundle.defineAction('subtitlesEditorSaveFailed', 'Subtitles.Editor.Save.Failed');
+  bundle.defineAction('subtitlesEditorSaveSucceeded', 'Subtitles.Editor.Save.Succeeded');
+  bundle.addReducer('subtitlesEditorSave', subtitlesEditorSaveReducer);
+  bundle.addReducer('subtitlesEditorSaveFailed', subtitlesEditorSaveFailedReducer);
+  bundle.addReducer('subtitlesEditorSaveSucceeded', subtitlesEditorSaveSucceededReducer);
+
+  bundle.addSaga(subtitlesSaga);
+
+}
+
 function SubtitlesMenuSelector (state, props) {
   const subtitles = state.get('subtitles');
   if (subtitles.editing) return {hidden: true};
@@ -874,7 +958,7 @@ function* subtitlesEditorSaveSaga (_action) {
          so move to subtitles bundle */
   const {baseUrl, base, data, subtitlesEditorSaveFailed, subtitlesEditorSaveSucceeded} = yield select(function (state) {
     const {subtitlesEditorSaveFailed, subtitlesEditorSaveSucceeded} = state.get('scope');
-    const baseUrl = state.get('baseUrl');
+    const {baseUrl} = state.get('options');
     const editor = state.get('editor');
     const base = editor.get('base');
     const data = editor.get('data');
@@ -906,87 +990,3 @@ function subtitlesEditorSaveFailedReducer (state, action) {
 function subtitlesEditorSaveSucceededReducer (state, {payload: {error}}) {
   return state.update('subtitles', subtitles => ({...subtitles, notify: {key: 'success'}}));
 }
-
-module.exports = function (bundle) {
-
-  bundle.use('getPlayerState', 'playerSeek');
-  bundle.addReducer('init', initReducer);
-
-  bundle.defineAction('subtitlesEditingChanged', 'Subtitles.Editing.Changed');
-  bundle.addReducer('subtitlesEditingChanged', subtitlesEditingChangedReducer);
-
-  bundle.defineView('SubtitlesPane', SubtitlesPaneSelector, SubtitlesPane);
-  bundle.defineAction('subtitlesPaneEnabledChanged', 'Subtitles.Pane.EnabledChanged');
-  bundle.addReducer('subtitlesPaneEnabledChanged', subtitlesPaneEnabledChangedReducer);
-  bundle.defineAction('subtitlesBandEnabledChanged', 'Subtitles.Band.EnabledChanged');
-  bundle.addReducer('subtitlesBandEnabledChanged', subtitlesBandEnabledChangedReducer);
-  bundle.defineAction('subtitlesFilterTextChanged', 'Subtitles.Pane.FilterText.Changed');
-  bundle.addReducer('subtitlesFilterTextChanged', subtitlesFilterTextChangedReducer);
-
-  bundle.defineView('SubtitlesMenu', SubtitlesMenuSelector, SubtitlesMenu);
-  bundle.defineView('SubtitlesPopup', SubtitlesPopupSelector, SubtitlesPopup);
-
-  bundle.defineAction('subtitlesCleared', 'Subtitles.Cleared');
-  bundle.addReducer('subtitlesCleared', subtitlesClearedReducer);
-  bundle.addReducer('subtitlesLoadStarted', subtitlesLoadStartedReducer);
-  bundle.defineAction('subtitlesLoadStarted', 'Subtitles.LoadStarted');
-  bundle.addReducer('subtitlesLoadSucceeded', subtitlesLoadSucceededReducer);
-  bundle.defineAction('subtitlesLoadSucceeded', 'Subtitles.LoadSucceeded');
-  bundle.defineAction('subtitlesLoadFailed', 'Subtitles.LoadFailed');
-  bundle.addReducer('subtitlesLoadFailed', subtitlesLoadFailedReducer);
-  bundle.defineAction('subtitlesLoadFromText', 'Subtitles.LoadFromText');
-  bundle.defineAction('subtitlesLoadFromUrl', 'Subtitles.LoadFromUrl');
-  bundle.defineAction('subtitlesLoadFromFile', 'Subtitles.LoadFromFile');
-  bundle.defineAction('subtitlesReload', 'Subtitles.Reload');
-
-  bundle.defineAction('subtitlesSelected', 'Subtitles.Selected');
-  bundle.addReducer('subtitlesSelected', subtitlesSelectedReducer);
-  bundle.defineAction('subtitlesAddOption', 'Subtitles.AddOption');
-  bundle.addReducer('subtitlesAddOption', subtitlesAddOptionReducer);
-  bundle.defineAction('subtitlesRemoveOption', 'Subtitles.Option.Remove');
-  bundle.addReducer('subtitlesRemoveOption', subtitlesRemoveOptionReducer);
-
-  bundle.defineValue('getSubtitlesBandVisible', getSubtitlesBandVisible);
-  bundle.defineView('SubtitlesBand', SubtitlesBandSelector,
-    clickDrag(SubtitlesBand, {touch: true}));
-  bundle.defineAction('subtitlesBandBeginMove', 'Subtitles.Band.BeginMove');
-  bundle.addReducer('subtitlesBandBeginMove', subtitlesBandBeginMoveReducer);
-  bundle.defineAction('subtitlesBandEndMove', 'Subtitles.Band.EndMove');
-  bundle.addReducer('subtitlesBandEndMove', subtitlesBandEndMoveReducer);
-  bundle.defineAction('subtitlesBandMoved', 'Subtitles.Band.Moved');
-  bundle.addReducer('subtitlesBandMoved', subtitlesBandMovedReducer);
-
-  bundle.addReducer('playerSeeked', playerSeekedReducer);
-  bundle.addReducer('playerTick', playerTickReducer);
-  bundle.addReducer('playerReady', playerReadyReducer);
-
-  bundle.defineView('SubtitlesEditor', SubtitlesEditorSelector, SubtitlesEditor);
-  bundle.defineView('SubtitlesEditorReturn', SubtitlesEditorReturnSelector, SubtitlesEditorReturn);
-
-  bundle.defineAction('subtitlesItemChanged', 'Subtitles.Item.Changed');
-  bundle.addReducer('subtitlesItemChanged', subtitlesItemChangedReducer);
-  bundle.defineAction('subtitlesItemInserted', 'Subtitles.Item.Inserted');
-  bundle.addReducer('subtitlesItemInserted', subtitlesItemInsertedReducer);
-  bundle.defineAction('subtitlesItemRemoved', 'Subtitles.Item.Removed');
-  bundle.addReducer('subtitlesItemRemoved', subtitlesItemRemovedReducer);
-  bundle.defineAction('subtitlesItemShifted', 'Subtitles.Item.Shifted');
-  bundle.addReducer('subtitlesItemShifted', subtitlesItemShiftedReducer);
-
-  bundle.defineAction('subtitlesTextChanged', 'Subtitles.Text.Changed');
-  bundle.addReducer('subtitlesTextChanged', subtitlesTextChangedReducer);
-  bundle.defineAction('subtitlesSave', 'Subtitles.Save');
-  bundle.addReducer('subtitlesSave', subtitlesSaveReducer);
-
-  bundle.defineAction('subtitlesEditorEnter', 'Subtitles.Editor.Enter');
-  bundle.defineAction('subtitlesEditorReturn', 'Subtitles.Editor.Return'); /* done editing, return to setup screen */
-
-  bundle.defineAction('subtitlesEditorSave', 'Subtitles.Editor.Save');
-  bundle.defineAction('subtitlesEditorSaveFailed', 'Subtitles.Editor.Save.Failed');
-  bundle.defineAction('subtitlesEditorSaveSucceeded', 'Subtitles.Editor.Save.Succeeded');
-  bundle.addReducer('subtitlesEditorSave', subtitlesEditorSaveReducer);
-  bundle.addReducer('subtitlesEditorSaveFailed', subtitlesEditorSaveFailedReducer);
-  bundle.addReducer('subtitlesEditorSaveSucceeded', subtitlesEditorSaveSucceededReducer);
-
-  bundle.addSaga(subtitlesSaga);
-
-};

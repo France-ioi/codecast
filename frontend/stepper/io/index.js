@@ -24,8 +24,17 @@ export default function (bundle, deps) {
   );
 
   bundle.addReducer('init', function (state) {
-    return state.set('ioPaneMode', 'terminal');
+    return state.set('ioPane', updateIoPaneState(state, {}));
   });
+
+  function updateIoPaneState (state, ioPane) {
+    const {mode} = state.get('options');
+    if (mode === 'arduino') {
+      /* Arduino mode is forced to terminal mode. */
+      return {mode: 'terminal', modeSelect: false};
+    }
+    return {mode: ioPane.mode || 'terminal', modeSelect: true};
+  }
 
   bundle.defineView('IOPane', IOPaneSelector, class IOPane extends React.PureComponent {
 
@@ -56,20 +65,15 @@ export default function (bundle, deps) {
 
   bundle.defineAction('ioPaneModeChanged', 'IOPane.Mode.Changed');
   bundle.addReducer('ioPaneModeChanged', ioPaneModeChanged);
-  function ioPaneModeChanged (state, action) {
-    const {mode} = action;
-    return state.set('ioPaneMode', mode);
+  function ioPaneModeChanged (state, {payload: {mode}}) {
+    return state.update('ioPane', ioPane => ({...ioPane, mode}));
   }
-
-  bundle.defineSelector('getIoPaneMode', function (state) {
-    return state.get('ioPaneMode');
-  })
 
   bundle.defineView('IOPaneOptions', IOPaneOptionsSelector, class IOPaneOptions extends React.PureComponent {
 
     onModeChanged = (event) => {
       const mode = event.target.value;
-      this.props.dispatch({type: deps.ioPaneModeChanged, mode});
+      this.props.dispatch({type: deps.ioPaneModeChanged, payload: {mode}});
     }
 
     modeOptions = [
@@ -78,15 +82,15 @@ export default function (bundle, deps) {
     ];
 
     render () {
-      const {getMessage, canSelectMode, mode} = this.props;
-      const headerTitle = getMessage(canSelectMode ? 'IOPANE_SELECT_TERMINAL_TITLE' : 'IOPANE_FORCED_TERMINAL_TITLE');
+      const {getMessage, mode, modeSelect} = this.props;
+      const headerTitle = getMessage(modeSelect ? 'IOPANE_SELECT_TERMINAL_TITLE' : 'IOPANE_FORCED_TERMINAL_TITLE');
       return (
         <Panel>
           <Panel.Heading>{headerTitle}</Panel.Heading>
           <Panel.Body>
             <div className="row">
               <div className="col-sm-12">
-                {canSelectMode && <form style={{marginTop: '10px', marginLeft: '10px'}}>
+                {modeSelect && <form style={{marginTop: '10px', marginLeft: '10px'}}>
                   <label className='pt-label pt-inline'>
                     {getMessage('IOPANE_MODE')}
                     <div className='pt-select'>
@@ -113,10 +117,8 @@ export default function (bundle, deps) {
 
   function IOPaneOptionsSelector (state) {
     const getMessage = state.get('getMessage');
-    const mode = deps.getIoPaneMode(state);
-    /* Arduino mode cannot select IO mode. */
-    const canSelectMode = state.get('mode') !== 'arduino';
-    return {getMessage, mode, canSelectMode};
+    const {mode, modeSelect} = state.get('ioPane');
+    return {getMessage, mode, modeSelect};
   }
 
   /* Split input/output view */
@@ -180,20 +182,20 @@ export default function (bundle, deps) {
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 
     recordApi.onStart(function* (init) {
-      init.ioPaneMode = yield select(deps.getIoPaneMode)
+      init.ioPaneMode = yield select(state => state.get('ioPane').mode);
     });
     replayApi.on('start', function (context, event, instant) {
-      const {ioPaneMode} = event[2];
-      context.state = ioPaneModeChanged(context.state, {mode: ioPaneMode});
+      const {mode} = event[2];
+      context.state = ioPaneModeChanged(context.state, {mode});
     });
 
     replayApi.onReset(function* (instant) {
-      const ioPaneMode = instant.state.get('ioPaneMode');
-      yield put({type: deps.ioPaneModeChanged, mode: ioPaneMode});
+      const mode = instant.state.get('ioPaneMode');
+      yield put({type: deps.ioPaneModeChanged, payload: {mode}});
     });
 
-    recordApi.on(deps.ioPaneModeChanged, function* (addEvent, action) {
-      yield call(addEvent, 'ioPane.mode', action.mode);
+    recordApi.on(deps.ioPaneModeChanged, function* (addEvent, {payload: {mode}}) {
+      yield call(addEvent, 'ioPane.mode', mode);
     });
     replayApi.on('ioPane.mode', function (context, event, instant) {
       const mode = event[2];

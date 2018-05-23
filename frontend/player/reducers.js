@@ -3,9 +3,11 @@ import Immutable from 'immutable';
 
 export default function (bundle, deps) {
 
-  bundle.addReducer('init', function (state, action) {
-    return state.set('player', Immutable.Map({status: 'idle'}));
+  bundle.addReducer('init', function (state, _action) {
+    return playerClearReducer(state);
   });
+
+  bundle.addReducer('playerClear', playerClearReducer);
 
   bundle.addReducer('playerPreparing', function (state, action) {
     return state.setIn(['player', 'status'], 'preparing');
@@ -101,3 +103,10 @@ export default function (bundle, deps) {
   });
 
 };
+
+function playerClearReducer (state) {
+  return state.set('player', Immutable.Map({
+    status: 'idle',
+    audio: document.createElement('video')
+  }));
+}

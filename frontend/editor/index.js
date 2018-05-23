@@ -111,7 +111,7 @@ function* getAudioSaga (audioUrl) {
 
 function* loginFeedbackSaga (_action) {
   const {editorConfigured, switchToScreen} = yield select(state => state.get('scope'));
-  const baseUrl = yield select(state => state.get('baseUrl'));
+  const {baseUrl} = yield select(state => state.get('options'));
   const {bucketUrl} = yield call(getJson, `${baseUrl}/editor.json`);
   yield put({type: editorConfigured, payload: {bucketUrl}});
 }

@@ -1,6 +1,7 @@
 
 export default function (bundle) {
 
+  bundle.defineAction('playerClear', 'Player.Clear');
   bundle.defineAction('playerPrepare', 'Player.Prepare');
   bundle.defineAction('playerPreparing', 'Player.Preparing');
   bundle.defineAction('playerAudioReady', 'Player.AudioReady');

@@ -5,6 +5,13 @@ import {Button, Popover, Menu, MenuItem} from '@blueprintjs/core';
 import IntlMessageFormat from 'intl-messageformat';
 import memoize from 'lodash.memoize';
 
+export default function (bundle, deps) {
+  bundle.addReducer('init', initReducer);
+  bundle.defineAction('setLanguage', 'Language.Set');
+  bundle.addReducer('setLanguage', setLanguageReducer);
+  bundle.defineView('LanguageSelection', LanguageSelectionSelector, LanguageSelection);
+}
+
 const Languages = {
   'en-US': require('./en-US.js'),
   'fr-FR': require('./fr-FR.js'),
@@ -48,7 +55,9 @@ function setLanguageReducer (state, {payload: {language}}) {
     }
     return getMessage(value.toString());
   }
-  return state.set('language', language).set('getMessage', getMessage);
+  return state
+    .update('options', options => ({...options, language}))
+    .set('getMessage', getMessage);
 }
 
 class LanguageSelection extends React.PureComponent {
@@ -78,16 +87,9 @@ class LanguageSelection extends React.PureComponent {
 
 function LanguageSelectionSelector (state) {
   const {setLanguage} = state.get('actionTypes');
-  const language = state.get('language');
+  const {language} = state.get('options');
   const getMessage = state.get('getMessage');
   return {setLanguage, language, getMessage};
-}
-
-export default function (bundle, deps) {
-  bundle.addReducer('init', initReducer);
-  bundle.defineAction('setLanguage', 'Language.Set');
-  bundle.addReducer('setLanguage', setLanguageReducer);
-  bundle.defineView('LanguageSelection', LanguageSelectionSelector, LanguageSelection);
 }
 
 export class LocalizedError extends Error {

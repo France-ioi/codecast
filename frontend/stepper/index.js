@@ -263,10 +263,6 @@ export default function (bundle, deps) {
     state.get('stepper')
   );
 
-  bundle.defineSelector('getStepperOptions', state =>
-    state.get('stepper.options')
-  );
-
   bundle.defineSelector('getStepperDisplay', state =>
     state.getIn(['stepper', 'current'])
   );
