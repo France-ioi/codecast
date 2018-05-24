@@ -1,6 +1,7 @@
 
 import React from 'react';
 import classnames from 'classnames';
+import {Alert, Intent} from '@blueprintjs/core';
 
 /*
       screen      main-view-no-subtitles
@@ -12,7 +13,7 @@ import classnames from 'classnames';
 
 class PlayerApp extends React.PureComponent {
   render () {
-    const {containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, SubtitlesBand} = this.props;
+    const {containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, SubtitlesBand, error} = this.props;
     return (
       <div>
         <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
@@ -23,19 +24,32 @@ class PlayerApp extends React.PureComponent {
           </div>
           {SubtitlesBand && <SubtitlesBand/>}
         </div>
+        {error &&
+          <Alert intent={Intent.DANGER} icon='error' isOpen={!!error} onConfirm={this.reload}>
+            <p style={{fontSize: '150%', fontWeight: 'bold'}}>{"A fatal error has occured while preparing playback."}</p>
+            <p>{"Source: "}{error.source}</p>
+            <p>{"Error: "}{error.message}</p>
+            <p>{"Details: "}{error.details}</p>
+            <p style={{fontWeight: 'bold'}}>{"Click OK to reload the page."}</p>
+          </Alert>}
       </div>
     );
   }
+  reload = () => {
+    window.location.reload();
+  };
 }
 
 function PlayerAppSelector (state, props) {
   const {PlayerControls, MainView, MainViewPanes, getSubtitlesBandVisible, SubtitlesBand} = state.get('scope');
   const viewportTooSmall = state.get('viewportTooSmall');
   const containerWidth = state.get('containerWidth');
+  const error = state.getIn(['player', 'error']);
   return {
     viewportTooSmall, containerWidth,
     PlayerControls, MainView, MainViewPanes,
     SubtitlesBand: getSubtitlesBandVisible(state) && SubtitlesBand,
+    error
   };
 }
 

@@ -13,6 +13,10 @@ export default function (bundle, deps) {
     return state.setIn(['player', 'status'], 'preparing');
   });
 
+  bundle.addReducer('playerPrepareFailure', function (state, {payload: {position, exception}}) {
+    return state.setIn(['player', 'error'], {source: 'prepare', message: exception.toString(), details: `at ${position}`});
+  });
+
   function updateStatus (player) {
     if (player.get('data') && player.get('duration')) {
       player = player.set('status', 'ready');

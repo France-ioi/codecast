@@ -121,9 +121,11 @@ export default function (bundle, deps) {
     }
     /* Compute the future state after every event. */
     const instants = yield call(computeInstants, data.events);
-    /* Set up the player. */
-    yield put({type: deps.playerReady, payload: {baseDataUrl, data, instants}});
-    yield call(resetToInstant, instants[0], 0, false);
+    if (instants) {
+      /* Set up the player. */
+      yield put({type: deps.playerReady, payload: {baseDataUrl, data, instants}});
+      yield call(resetToInstant, instants[0], 0, false);
+    }
   }
 
   function* playerStart () {
@@ -233,7 +235,8 @@ export default function (bundle, deps) {
       }
       return context.instants;
     } catch (ex) {
-      yield put({type: deps.playerPrepareFailure, payload: {position: pos}});
+      console.error(ex); // TODO: add global fatal exception report mechanism
+      yield put({type: deps.playerPrepareFailure, payload: {position: pos, exception: ex}});
       return null;
     }
   }
