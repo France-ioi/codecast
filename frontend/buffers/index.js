@@ -289,8 +289,8 @@ function resetEditor (editor, model) {
 
 function addRecordHooks ({recordApi}, actionTypes) {
   recordApi.onStart(function* (init) {
-    const sourceModel = yield select(actionTypes.getBufferModel, 'source');
-    const inputModel = yield select(actionTypes.getBufferModel, 'input');
+    const sourceModel = yield select(getBufferModel, 'source');
+    const inputModel = yield select(getBufferModel, 'input');
     init.buffers = {
       source: {
         document: sourceModel.get('document').toString(),
@@ -341,7 +341,7 @@ function addReplayHooks ({replayApi}, actionTypes) {
     // XXX use reducer imported from common/buffers
     const buffer = event[2];
     const selection = expandRange(event[3]);
-    context.state = bufferSelect(context.state, {buffer, selection});
+    context.state = bufferSelectReducer(context.state, {buffer, selection});
     instant.saga = function* () {
       yield put({type: actionTypes.bufferModelSelect, buffer, selection});
     };
@@ -366,7 +366,7 @@ function addReplayHooks ({replayApi}, actionTypes) {
       };
     }
     if (delta) {
-      context.state = bufferEdit(context.state, {buffer, delta});
+      context.state = bufferEditReducer(context.state, {buffer, delta});
       instant.saga = function* () {
         yield put({type: actionTypes.bufferModelEdit, buffer, delta});
       };
@@ -376,7 +376,7 @@ function addReplayHooks ({replayApi}, actionTypes) {
     // XXX use reducer imported from common/buffers
     const buffer = event[2];
     const firstVisibleRow = event[3];
-    context.state = bufferScroll(context.state, {buffer, firstVisibleRow});
+    context.state = bufferScrollReducer(context.state, {buffer, firstVisibleRow});
     instant.saga = function* () {
       yield put({type: actionTypes.bufferModelScroll, buffer, firstVisibleRow});
     };

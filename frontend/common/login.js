@@ -8,7 +8,7 @@ export default function (bundle) {
   bundle.addReducer('loginFeedback', loginFeedbackReducer);
   bundle.defineAction('logoutFeedback', 'Logout.Feedback');
   bundle.addReducer('logoutFeedback', logoutFeedbackReducer);
-  bundle.defineView('LogoutButton', LogoutViewSelector, LogoutButton);
+  bundle.defineView('LogoutButton', LogoutButtonSelector, LogoutButton);
   bundle.defineView('LoginScreen', LoginScreenSelector, LoginScreen);
 }
 
@@ -57,7 +57,7 @@ class LoginScreen extends React.PureComponent {
 function LoginScreenSelector (state, props) {
   const {loginFeedback} = state.get('actionTypes');
   const {baseUrl, authProviders} = state.get('options');
-  return {baseUrl, authProviders};
+  return {baseUrl, authProviders, loginFeedback};
 }
 
 class LogoutButton extends React.PureComponent {
@@ -85,9 +85,9 @@ class LogoutButton extends React.PureComponent {
   };
 }
 
-function LogoutViewSelector (state, props) {
+function LogoutButtonSelector (state, props) {
   const {baseUrl} = state.get('options');
   const {logoutFeedback} = state.get('actionTypes');
-  const {user} = state.get('user');
+  const user = state.get('user');
   return {user, baseUrl, logoutFeedback};
 }

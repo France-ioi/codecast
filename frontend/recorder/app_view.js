@@ -46,7 +46,7 @@ class RecorderGlobalControls extends React.PureComponent {
     const {LogoutButton} = this.props;
     const {collapsed} = this.state;
     return (
-      <div id='global-controls' className={classnames({collapsed})}>
+      <div id='floating-controls' className={classnames({collapsed})}>
         <span className='collapse-toggle' onClick={this._toggleCollapsed}>
           <i className={`fa fa-chevron-${collapsed ? 'down' : 'up'}`}/>
         </span>

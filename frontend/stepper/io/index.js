@@ -184,7 +184,7 @@ export default function (bundle, deps) {
     });
     replayApi.on('start', function (context, event, instant) {
       const {mode} = event[2];
-      context.state = ioPaneModeChanged(context.state, {mode});
+      context.state = ioPaneModeChanged(context.state, {payload: {mode}});
     });
 
     replayApi.onReset(function* (instant) {
@@ -197,7 +197,7 @@ export default function (bundle, deps) {
     });
     replayApi.on('ioPane.mode', function (context, event, instant) {
       const mode = event[2];
-      context.state = ioPaneModeChanged(context.state, {mode});
+      context.state = ioPaneModeChanged(context.state, {payload: {mode}});
     });
 
     replayApi.on(['stepper.restart', 'stepper.undo', 'stepper.redo'], function (context, event, instant) {
