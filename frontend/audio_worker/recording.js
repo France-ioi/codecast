@@ -43,7 +43,6 @@ Recording.prototype.getAudioBuffer = function (progressCallback) {
    chunk of samples.  All chunks passed together must have the same length.
  */
 Recording.prototype.addSamples = function (samples) {
-  console.log('addSamples', samples);
   const {numberOfChannels, channels} = this;
   const chunkLength = samples[0].length;
   for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber += 1) {
