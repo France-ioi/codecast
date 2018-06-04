@@ -23,7 +23,8 @@ export default function (bundle, deps) {
     'playerTick', 'playerSeek', 'playerSeeked',
     'playerAudioReady', 'playerAudioError',
     'getPlayerState',
-    'stepperStep', 'stepperEnabled', 'stepperDisabled'
+    'stepperStep', 'stepperEnabled', 'stepperDisabled',
+    'playerPrepareProgress', 'playerPrepareFailure'
   );
 
   // pause, resume audio
@@ -353,8 +354,5 @@ export default function (bundle, deps) {
       }
     }
   });
-
-  bundle.defineAction('playerPrepareProgress', 'Player.Prepare.Progress');
-  bundle.defineAction('playerPrepareFailure', 'Player.Prepare.Failure');
 
 };

@@ -4,6 +4,8 @@ export default function (bundle) {
   bundle.defineAction('playerClear', 'Player.Clear');
   bundle.defineAction('playerPrepare', 'Player.Prepare');
   bundle.defineAction('playerPreparing', 'Player.Preparing');
+  bundle.defineAction('playerPrepareProgress', 'Player.Prepare.Progress');
+  bundle.defineAction('playerPrepareFailure', 'Player.Prepare.Failure');
   bundle.defineAction('playerAudioReady', 'Player.AudioReady');
   bundle.defineAction('playerAudioError', 'Player.AudioError');
   bundle.defineAction('playerReady', 'Player.Ready');
@@ -22,5 +24,6 @@ export default function (bundle) {
   bundle.defineAction('playerTick', 'Player.Tick');
   bundle.defineAction('playerSeek', 'Player.Seek');
   bundle.defineAction('playerSeeked', 'Player.Seeked');
+
 
 };
