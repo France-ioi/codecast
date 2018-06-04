@@ -35,8 +35,8 @@ import Immutable from 'immutable';
 import update from 'immutability-helper';
 import Highlight from 'react-highlighter';
 
-import {formatTime, formatTimeLong, readFileAsText} from './utils';
-import FlagIcon from './flag_icon';
+import {formatTime, formatTimeLong, readFileAsText} from '../common/utils';
+import FlagIcon from '../common/flag_icon';
 
 export default function (bundle) {
 
@@ -366,7 +366,8 @@ class SubtitlesPane extends React.PureComponent {
     if (this.props.currentIndex !== prevProps.currentIndex) {
       if (this._selectedComponent) {
         const domNode = ReactDOM.findDOMNode(this._selectedComponent);
-        scrollIntoViewIfNeeded(domNode, {centerIfNeeded: true, easing: 'ease', duration: 300});
+        // scrollIntoViewIfNeeded(domNode, {centerIfNeeded: true, easing: 'ease', duration: 300});
+        // scroll domNode to center _selectedComponent vertically
       }
     }
   }

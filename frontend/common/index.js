@@ -16,7 +16,7 @@ import fullscreenBundle from './fullscreen';
 import menuBundle from './menu';
 import loginBundle from './login';
 import clientApiBundle from './client_api';
-import subtitlesBundle from './subtitles';
+import subtitlesBundle from '../subtitles';
 import examplesBundle from './examples';
 import arduinoBundle from '../arduino';
 
