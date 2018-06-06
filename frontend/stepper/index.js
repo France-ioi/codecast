@@ -279,7 +279,7 @@ export default function (bundle, deps) {
         yield put({type: deps.stepperEnabled});
         yield put({type: deps.stepperRestart, stepperState});
       } catch (error) {
-        yield put({type: deps.error, source: 'stepper', error});
+        yield put({type: deps.error, payload: {source: 'stepper', error}});
       }
     });
   });
@@ -383,7 +383,7 @@ export default function (bundle, deps) {
       const state = stepperClear();
       context.state = stepperReset(context.state, {state});
     });
-    replayApi.onReset(function* (instant, quick) {
+    replayApi.onReset(function* (instant) {
       const stepperState = instant.state.get('stepper');
       yield put({type: deps.stepperReset, state: stepperState});
       yield put({type: deps.bufferHighlight, buffer: 'source', range: instant.range});

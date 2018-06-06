@@ -15,14 +15,14 @@ class PlayerApp extends React.PureComponent {
   render () {
     const {containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, SubtitlesBand, error} = this.props;
     return (
-      <div>
+      <div id='player-app'>
         <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
           <PlayerControls/>
           <div id='mainView-container'>
             <MainView/>
             <MainViewPanes/>
           </div>
-          {SubtitlesBand && <SubtitlesBand/>}
+          {/*<SubtitlesBand/>*/}
         </div>
         {error &&
           <Alert intent={Intent.DANGER} icon='error' isOpen={!!error} onConfirm={this.reload}>
@@ -41,14 +41,13 @@ class PlayerApp extends React.PureComponent {
 }
 
 function PlayerAppSelector (state, props) {
-  const {PlayerControls, MainView, MainViewPanes, getSubtitlesBandVisible, SubtitlesBand} = state.get('scope');
+  const {PlayerControls, MainView, MainViewPanes, SubtitlesBand} = state.get('scope');
   const viewportTooSmall = state.get('viewportTooSmall');
   const containerWidth = state.get('containerWidth');
   const error = state.getIn(['player', 'error']);
   return {
     viewportTooSmall, containerWidth,
-    PlayerControls, MainView, MainViewPanes,
-    SubtitlesBand: getSubtitlesBandVisible(state) && SubtitlesBand,
+    PlayerControls, MainView, MainViewPanes, SubtitlesBand,
     error
   };
 }

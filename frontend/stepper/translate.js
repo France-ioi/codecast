@@ -152,7 +152,7 @@ export default function (bundle, deps) {
       context.state = context.state.update('translate', translateClear);
     });
 
-    replayApi.onReset(function* (instant, quick) {
+    replayApi.onReset(function* (instant) {
       const translateModel = instant.state.get('translate');
       yield put({type: deps.translateReset, state: translateModel});
     });

@@ -2,115 +2,69 @@
 import Immutable from 'immutable';
 
 export default function (bundle, deps) {
-
-  bundle.addReducer('init', function (state, _action) {
-    return playerClearReducer(state);
-  });
-
+  bundle.addReducer('init', initReducer);
   bundle.addReducer('playerClear', playerClearReducer);
+  bundle.addReducer('playerPreparing', playerPreparingReducer);
+  bundle.addReducer('playerPrepareProgress', playerPrepareProgressReducer);
+  bundle.addReducer('playerPrepareFailure', playerPrepareFailureReducer);
+  bundle.addReducer('playerReady', playerReadyReducer);
+  bundle.addReducer('playerStarted', playerStartedReducer);
+  bundle.addReducer('playerPaused', playerPausedReducer);
+  bundle.addReducer('playerTick', playerTickReducer);
+}
 
-  bundle.addReducer('playerPreparing', function (state, action) {
-    return state.setIn(['player', 'status'], 'preparing');
-  });
+function initReducer (state, _action) {
+  return playerClearReducer(state);
+}
 
-  bundle.addReducer('playerPrepareFailure', function (state, {payload: {position, exception}}) {
-    return state.setIn(['player', 'error'], {source: 'prepare', message: exception.toString(), details: `at ${position}`});
-  });
-
-  function updateStatus (player) {
-    if (player.get('data') && player.get('duration')) {
-      player = player.set('status', 'ready');
-    }
-    return player;
-  }
-
-  bundle.addReducer('playerReady', function (state, action) {
-    const {payload: {data, instants}} = action;
-    return state.update('player', player => updateStatus(player
-      .set('data', data)
-      .set('instants', instants)
-      .set('current', instants[0])));
-  });
-
-  bundle.addReducer('playerAudioReady', function (state, action) {
-    const {duration} = action;
-    return state.update('player', player => updateStatus(player
-      .set('audioTime', 0)
-      .set('duration', duration)));
-  });
-
-  bundle.addReducer('playerAudioError', function (state, action) {
-    return state.setIn(['player', 'status'], 'broken');
-  });
-
-  bundle.addReducer('playerStarting', function (state, action) {
-    return state.setIn(['player', 'status'], 'starting');
-  });
-
-  bundle.addReducer('playerStarted', function (state, action) {
-    return state.setIn(['player', 'status'], 'playing');
-  });
-
-  bundle.addReducer('playerPausing', function (state, action) {
-    return state.setIn(['player', 'status'], 'pausing');
-  });
-
-  bundle.addReducer('playerPaused', function (state, action) {
-    return state.update('player', player => player
-      .set('status', 'paused')
-      .set('resume', player.get('current')));
-  });
-
-  bundle.addReducer('playerResuming', function (state, action) {
-    return state.setIn(['player', 'status'], 'resuming');
-  });
-
-  bundle.addReducer('playerResumed', function (state, action) {
-    return state.update('player', player => player
-      .set('status', 'playing')
-      .set('current', player.get('resume'))
-      .delete('resume'));
-  });
-
-  bundle.addReducer('playerStopping', function (state, action) {
-    return state.setIn(['player', 'status'], 'stopping');
-  });
-
-  bundle.addReducer('playerStopped', function (state, action) {
-    return state.setIn(['player', 'status'], 'idle');
-  });
-
-  bundle.addReducer('playerTick', function (state, action) {
-    // action shape: {type, current: {t, eventIndex, state}, audioTime}
-    const {current, audioTime} = action;
-    return state.update('player', player => player
-      .set('current', current)
-      .set('audioTime', audioTime));
-  });
-
-  bundle.addReducer('playerSeek', function (state, {payload}) {
-    const {audioTime} = payload;
-    return state.update('player', player => player
-      .set('seekTo', Math.min(player.get('duration'), Math.max(0, audioTime))));
-  });
-
-  bundle.addReducer('playerSeeked', function (state, action) {
-    // action shape: {type, current, audioTime}
-    const {current, seekTo} = action;
-    return state.update('player', function (player) {
-      // Only delete seekTo if it matches the time seeked to.
-      if (player.get('seekTo') === seekTo) {
-        player = player.delete('seekTo');
-      }
-      return player.set('current', current).set('audioTime', seekTo);
-    });
-  });
-
-};
-
-function playerClearReducer (state) {
+function playerClearReducer (state, _action) {
   return state.set('player', Immutable.Map({
-    status: 'idle',
     audio: document.createElement('video')
   }));
+}
+
+function playerPreparingReducer (state, _action) {
+  return state.setIn(['player', 'isReady'], false);
+}
+
+function playerPrepareProgressReducer (state, {payload: {progress}}) {
+  return state.setIn(['player', 'progress'], progress);
+}
+
+function playerPrepareFailureReducer (state, {payload: {position, exception}}) {
+  return state.setIn(['player', 'error'], {
+    source: 'prepare',
+    message: exception.toString(),
+    details: `at ${position}`
+  });
+}
+
+function playerReadyReducer (state, {payload: {duration, data, instants}}) {
+  return state.update('player', player => updateStatus(player
+    .set('audioTime', 0)
+    .set('duration', duration)
+    .set('data', data)
+    .set('instants', instants)
+    .set('current', instants[0])));
+}
+
+function updateStatus (player) {
+  if (player.get('data') && player.get('duration')) {
+    player = player.set('isReady', true);
+  }
+  return player;
+}
+
+function playerStartedReducer (state, _action) {
+  return state.setIn(['player', 'isPlaying'], true);
+}
+
+function playerPausedReducer (state, _action) {
+ return state.setIn(['player', 'isPlaying'], false);
+}
+
+function playerTickReducer (state, {payload: {current, audioTime}}) {
+  return state.update('player', player => player
+    .set('current', current) /* current instant */
+    .set('audioTime', audioTime));
 }

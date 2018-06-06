@@ -7,7 +7,7 @@ import {formatTime} from '../common/utils';
 export default function (bundle, deps) {
 
   bundle.use(
-    'playerStart', 'playerPause', 'playerResume', 'playerSeek',
+    'playerStart', 'playerPause', 'playerSeek',
     'getPlayerState',
     'StepperControls', 'Menu'
   );
@@ -15,21 +15,17 @@ export default function (bundle, deps) {
   bundle.defineSelector('PlayerControlsSelector', function (state, props) {
     const getMessage = state.get('getMessage');
     const player = deps.getPlayerState(state);
-    const status = player.get('status');
+    const isReady = player.get('isReady');
+    const isPlaying = player.get('isPlaying');
     const audioTime = player.get('audioTime');
     const duration = player.get('duration');
-    return {getMessage, status, audioTime, duration};
+    return {getMessage, isReady, isPlaying, audioTime, duration};
   });
 
   class PlayerControls extends React.PureComponent {
 
     onStartPlayback = () => {
-      const {status} = this.props;
-      if (status === 'ready') {
-        this.props.dispatch({type: deps.playerStart});
-      } else if (status === 'paused') {
-        this.props.dispatch({type: deps.playerResume});
-      }
+      this.props.dispatch({type: deps.playerStart});
     };
 
     onPausePlayback = () => {
@@ -41,12 +37,12 @@ export default function (bundle, deps) {
     };
 
     render () {
-      const {status, audioTime, duration, getMessage} = this.props;
-      const showStartPlayback = /preparing|starting|ready|paused/.test(status);
-      const canStartPlayback = /ready|paused/.test(status);
-      const showPausePlayback = /playing|pausing/.test(status);
-      const canPausePlayback = status === 'playing';
-      const canStep = /ready|paused/.test(status);
+      const {isReady, isPlaying, audioTime, duration, getMessage} = this.props;
+      const showStartPlayback = !isPlaying;
+      const canStartPlayback = isReady && !isPlaying;
+      const showPausePlayback = isPlaying;
+      const canPausePlayback = isPlaying;
+      const canStep = isReady || isPlaying;
       return (
         <div id='player-controls'>
           <div className='player-controls-row row' style={{width: '100%', marginTop: '5px'}}>

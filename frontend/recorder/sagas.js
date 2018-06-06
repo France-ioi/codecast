@@ -79,6 +79,7 @@ export default function (bundle, deps) {
       // Set up the ScriptProcessor to divert all buffers to the worker.
       scriptProcessor.onaudioprocess = function (event) {
         // dispatch event
+        // TODO: use same number of channels as in createScriptProcessor
         const ch0 = event.inputBuffer.getChannelData(0);
         const ch1 = event.inputBuffer.getChannelData(1);
         worker.post('addSamples', {samples: [ch0, ch1]});
@@ -320,6 +321,7 @@ export default function (bundle, deps) {
 
   bundle.defer(function ({recordApi, replayApi}) {
     replayApi.on('end', function (context, event, instant) {
+      instant.isEnd = true;
       context.state = context.state.set('stopped', true);
     });
   });

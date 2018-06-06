@@ -8,7 +8,7 @@ export default function (bundle) {
 
   bundle.use(
     'recorderStart', 'recorderStop', 'recorderPause', 'recorderResume',
-    'playerStart', 'playerPause', 'playerResume', 'playerSeek',
+    'playerStart', 'playerPause', 'playerSeek',
     'getRecorderState', 'getPlayerState',
     'Menu', 'StepperControls'
   );
@@ -21,21 +21,22 @@ function RecorderControlsSelector (state, props) {
   const {
     getRecorderState, getPlayerState, StepperControls, Menu,
     recorderStart, recorderPause, recorderResume, recorderStop,
-    playerStart, playerPause, playerResume, playerSeek,
+    playerStart, playerPause, playerSeek,
   } = state.get('scope');
   const getMessage = state.get('getMessage');
   const recorder = getRecorderState(state);
   const recorderStatus = recorder.get('status');
   const isPlayback = recorderStatus === 'paused';
-  let canRecord, canPlay, canPause, canStop, canStep, position, duration, playerStatus, playPause;
+  let canRecord, canPlay, canPause, canStop, canStep, position, duration, playPause;
   if (isPlayback) {
     const player = getPlayerState(state);
-    playerStatus = player.get('status');
+    const isReady = player.get('isReady');
+    const isPlaying = player.get('isPlaying');
     // Pause button shows us only while playing.
-    playPause = playerStatus === 'playing' ? 'pause' : 'play';
+    playPause = player.get('isPlaying') ? 'pause' : 'play';
     // Buttons are enabled only in stable states.
-    canPlay = canStop = canRecord = canStep = /ready|paused/.test(playerStatus);
-    canPause = playerStatus === 'playing';
+    canPlay = canStop = canRecord = canStep = isReady && !isPlaying;
+    canPause = isPlaying;
     position = player.get('audioTime');
     duration = player.get('duration');
   } else {
@@ -50,12 +51,12 @@ function RecorderControlsSelector (state, props) {
   // const eventCount = events && events.count();
   return {
     getMessage,
-    recorderStatus, playerStatus, isPlayback, playPause,
+    recorderStatus, isPlayback, isPlaying, playPause,
     canRecord, canPlay, canPause, canStop, canStep,
     position, duration,
     StepperControls, Menu,
     recorderStart, recorderPause, recorderResume, recorderStop,
-    playerStart, playerPause, playerResume, playerSeek,
+    playerStart, playerPause, playerSeek,
   };
 }
 
@@ -121,25 +122,20 @@ class RecorderControls extends React.PureComponent {
     }
   };
   onPause = () => {
-    const {recorderStatus, playerStatus} = this.props;
+    const {recorderStatus} = this.props;
     if (recorderStatus === 'recording') {
       this.props.dispatch({type: this.props.recorderPause});
-    } else if (playerStatus === 'playing') {
+    } else if (isPlaying) {
       this.props.dispatch({type: this.props.playerPause});
     }
   };
   onStartPlayback = () => {
-    const {playerStatus} = this.props;
-    if (playerStatus === 'ready') {
-      this.props.dispatch({type: this.props.playerStart});
-    } else if (playerStatus === 'paused') {
-      this.props.dispatch({type: this.props.playerResume});
-    }
+    this.props.dispatch({type: this.props.playerStart});
   };
   onStopRecording = () => {
     this.props.dispatch({type: this.props.recorderStop});
   };
   onSeek = (audioTime) => {
-    this.props.dispatch({type: this.props.playerSeek, audioTime});
+    this.props.dispatch({type: this.props.playerSeek, payload: {audioTime}});
   };
 }

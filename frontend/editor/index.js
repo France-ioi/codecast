@@ -160,7 +160,7 @@ class EditorApp extends React.PureComponent {
     const {Screen, activity, floatingControls, LogoutButton} = this.props;
     const {collapsed} = this.state;
     return (
-      <div>
+      <div id='editor-app'>
         <div id='floating-controls' className={classnames({collapsed})}>
           <span className='collapse-toggle' onClick={this._toggleCollapsed}>
             <i className={`fa fa-chevron-${collapsed ? 'down' : 'up'}`}/>
@@ -242,7 +242,7 @@ class SetupScreen extends React.PureComponent {
 
 class EditScreen extends React.PureComponent {
   render () {
-    const {containerWidth, viewportTooSmall, topControls, MainView, MainViewPanes, showSubtitlesBand, SubtitlesBand} = this.props;
+    const {containerWidth, viewportTooSmall, topControls, MainView, MainViewPanes, SubtitlesBand} = this.props;
     return (
       <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
         {topControls.map((Component, i) => <Component key={i} width={containerWidth}/>)}
@@ -250,7 +250,7 @@ class EditScreen extends React.PureComponent {
           <MainView/>
           <MainViewPanes/>
         </div>
-        {showSubtitlesBand && <SubtitlesBand/>}
+        <SubtitlesBand/>
       </div>
     );
   }
@@ -260,11 +260,9 @@ function EditScreenSelector (state, props) {
   const {MainView, MainViewPanes, SubtitlesBand} = state.get('scope');
   const viewportTooSmall = state.get('viewportTooSmall');
   const containerWidth = state.get('containerWidth');
-  const showSubtitlesBand = state.get('showSubtitlesBand');
   const topControls = state.getIn(['editor', 'controls']).top;
   return {
     viewportTooSmall, containerWidth, topControls,
-    MainView, MainViewPanes,
-    showSubtitlesBand, SubtitlesBand
+    MainView, MainViewPanes, SubtitlesBand
   };
 }

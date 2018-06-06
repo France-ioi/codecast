@@ -131,13 +131,12 @@ function MainViewSelector (state, props) {
   const arduinoEnabled = mode === 'arduino';
   const sourceRowHeight = '300px';
   const sourceMode = arduinoEnabled ? 'arduino' : 'c_cpp';
-  /* preventInput is set during playback (and seeking-while-paused) to prevent the
-     user from messing up the editors, and to disable automatic scrolling of the
-     editor triggered by some actions (specifically, highlighting).
+  /* preventInput is set during playback to prevent the user from messing up
+     the editors, and to disable automatic scrolling of the editor triggered
+     by some actions (specifically, highlighting).
   */
   const player = getPlayerState(state);
-  const status = player.get('status');
-  const preventInput = !/idle|ready|paused/.test(status) && !player.has('seekTo');
+  const preventInput = player.get('isPlaying');
   return {
     diagnostics, haveStepper, readOnly, error, getMessage, geometry, panes, preventInput,
     translateClearDiagnostics, stepperExit,

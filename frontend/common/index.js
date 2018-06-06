@@ -24,6 +24,9 @@ import 'react-select/dist/react-select.css?global';
 
 export default function (bundle) {
 
+  bundle.defineAction('error', 'Error');
+  bundle.addReducer('error', errorReducer);
+
   /* The player and recorder bundles must be included early to allow other
      bundles to register replay/record handlers in their deferred callbacks. */
   bundle.include(replayBundle);
@@ -48,3 +51,8 @@ export default function (bundle) {
   bundle.include(arduinoBundle);
 
 };
+
+function errorReducer (state, {payload: {source, error}}) {
+  console.log("GENERIC ERROR", source, error);
+  return state; /* TODO: inject error into state and show in popup */
+}
