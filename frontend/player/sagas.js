@@ -3,8 +3,8 @@
 // where state is an Immutable Map of shape {source, input, syntaxTree, stepper, stepperInitial}
 // where source and input are buffer models (of shape {document, selection, firstVisibleRow}).
 
-import {delay} from 'redux-saga';
-import {takeLatest, put, call, race, fork, select} from 'redux-saga/effects';
+import {buffers, eventChannel, END} from 'redux-saga';
+import {takeLatest, take, put, call, race, fork, select, cancelled} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 import Immutable from 'immutable';
 
@@ -174,16 +174,22 @@ export default function (bundle, deps) {
     }
 
     /* The periodic update loop runs until cancelled by another replay action. */
-    /* TODO: use requestAnimationFrame instead of a loop and delay. */
-    while (!instant.isEnd) {
-      /* Use the audio time as reference. */
-      let audioTime = Math.round(audio.currentTime * 1000);
-      if (audio.ended) {
-        /* Extend a short audio to the timestamp of the last event. */
-        audioTime = instants[instants.length - 1].t;
+    const chan = yield call(requestAnimationFrames, 50);
+    try {
+      while (!instant.isEnd) {
+        yield take(chan);
+        /* Use the audio time as reference. */
+        let audioTime = Math.round(audio.currentTime * 1000);
+        if (audio.ended) {
+          /* Extend a short audio to the timestamp of the last event. */
+          audioTime = instants[instants.length - 1].t;
+        }
+        instant = yield call(replayToAudioTime, instants, instant, audioTime);
       }
-      instant = yield call(replayToAudioTime, instants, instant, audioTime);
-      yield call(delay, 50);
+    } finally {
+      if (yield cancelled()) {
+        chan.close();
+      }
     }
 
     /* Pause when the end event is reached. */
@@ -193,21 +199,18 @@ export default function (bundle, deps) {
   function* replayToAudioTime (instants, instant, audioTime) {
     const nextInstant = findInstant(instants, audioTime);
     if (instant.pos === nextInstant.pos) {
-      console.log('replayToAudioTime [FAST PATH]');
       /* Fast path: audio time has advanced but we are still at the same
          instant, just emit a tick event to update the audio time. */
       yield put({type: deps.playerTick, payload: {audioTime, current: instant}});
       return instant;
     }
     if (nextInstant.pos < instant.pos) {
-      console.log('replayToAudioTime [BACKWARD JUMP]', audioTime, instant, nextInstant);
       /* State has jumped backwards.
          This happens when audio time is changed externally during playback. */
       yield call(resetToInstant, nextInstant, audioTime);
       return nextInstant;
     }
     if (nextInstant.pos - instant.pos >= 50) {
-      console.log('replayToAudioTime [FORWARD JUMP]', audioTime, instant, nextInstant);
       /* State has jumped forward by a large number of events.
          This happens when audio time is changed externally during playback.
          Instead of replaying a lot of events incrementally, do a full reset. */
@@ -222,7 +225,6 @@ export default function (bundle, deps) {
        This mechanism is essential for buffers, for which updating the
        global state and letting that reflecting to the editor would result in
        a costly full-reloading of the editor's state. */
-    console.log('replayToAudioTime [INCREMENTAL]', audioTime, instant, nextInstant);
     for (let pos = instant.pos + 1; pos <= nextInstant.pos; pos += 1) {
       instant = instants[pos];
       if (instant.saga) {
@@ -297,3 +299,23 @@ export default function (bundle, deps) {
   }
 
 };
+
+function requestAnimationFrames (maxDelta) {
+  let shutdown = false;
+  let lastTimestamp = 0;
+  return eventChannel(function (emitter) {
+    function onAnimationFrame (timestamp) {
+      if (timestamp >= lastTimestamp + maxDelta) {
+        lastTimestamp = timestamp;
+        emitter(timestamp);
+      }
+      if (!shutdown) {
+        window.requestAnimationFrame(onAnimationFrame);
+      }
+    }
+    window.requestAnimationFrame(onAnimationFrame);
+    return function () {
+      shutdown = true;
+    };
+  }, buffers.sliding(1));
+}
