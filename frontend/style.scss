@@ -696,7 +696,10 @@ svg {
     .subtitles-timestamp .subtitles-timestamp-start,
     .subtitles-timestamp .subtitles-timestamp-end {
       padding: 0 3px;
-      line-height: 20px;
+      line-height: 24px;
+    }
+    .subtitles-timestamp button.pt-button.pt-small {
+      min-width: auto;
     }
     textarea.subtitles-text {
       margin-left: -3px; /*match bootstrap row margin left -3px*/
