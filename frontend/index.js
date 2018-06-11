@@ -117,7 +117,13 @@ Codecast.start = function (options) {
       break;
   }
 
+  const {AppErrorBoundary} = scope;
   const container = document.getElementById('react-container');
-  ReactDOM.render(<Provider store={store}><App/></Provider>, container);
+  ReactDOM.render(
+    <Provider store={store}>
+      <AppErrorBoundary>
+        <App/>
+      </AppErrorBoundary>
+    </Provider>, container);
 
 };

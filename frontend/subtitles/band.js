@@ -57,7 +57,11 @@ function SubtitlesBandSelector (state, props) {
 
 class SubtitlesBand extends React.PureComponent {
   render () {
-    if (this.props.hidden) return false;
+    if (this.props.hidden) {
+      /* ClickDrag requires a DOM node to attach to, so return a hidden element
+         rather than false. */
+      return <div style={{display: 'none'}}/>;
+    }
     const {active, item, offsetY, dataDrag: {isMoving}, geometry, top} = this.props;
     const translation = `translate(0px, ${this.state.currentY}px)`;
     return (

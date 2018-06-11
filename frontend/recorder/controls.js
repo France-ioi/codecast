@@ -18,11 +18,8 @@ export default function (bundle) {
 };
 
 function RecorderControlsSelector (state, props) {
-  const {
-    getRecorderState, getPlayerState, StepperControls, Menu,
-    recorderStart, recorderPause, recorderResume, recorderStop,
-    playerStart, playerPause, playerSeek,
-  } = state.get('scope');
+  const {getRecorderState, getPlayerState, StepperControls, Menu} = state.get('scope');
+  const {recorderStart, recorderPause, recorderResume, recorderStop, playerStart, playerPause, playerSeek} = state.get('actionTypes');
   const getMessage = state.get('getMessage');
   const recorder = getRecorderState(state);
   const recorderStatus = recorder.get('status');
@@ -32,11 +29,9 @@ function RecorderControlsSelector (state, props) {
     const player = getPlayerState(state);
     const isReady = player.get('isReady');
     const isPlaying = player.get('isPlaying');
-    // Pause button shows us only while playing.
-    playPause = player.get('isPlaying') ? 'pause' : 'play';
-    // Buttons are enabled only in stable states.
     canPlay = canStop = canRecord = canStep = isReady && !isPlaying;
-    canPause = isPlaying;
+    canPause = isReady && isPlaying;
+    playPause = isPlaying ? 'pause' : 'play';
     position = player.get('audioTime');
     duration = player.get('duration');
   } else {
@@ -47,11 +42,9 @@ function RecorderControlsSelector (state, props) {
     position = duration = recorder.get('elapsed') || 0;
     playPause = 'pause';
   }
-  // const events = recorder.get('events');
-  // const eventCount = events && events.count();
   return {
     getMessage,
-    recorderStatus, isPlayback, isPlaying, playPause,
+    recorderStatus, isPlayback, playPause,
     canRecord, canPlay, canPause, canStop, canStep,
     position, duration,
     StepperControls, Menu,
@@ -125,7 +118,7 @@ class RecorderControls extends React.PureComponent {
     const {recorderStatus} = this.props;
     if (recorderStatus === 'recording') {
       this.props.dispatch({type: this.props.recorderPause});
-    } else if (isPlaying) {
+    } else {
       this.props.dispatch({type: this.props.playerPause});
     }
   };

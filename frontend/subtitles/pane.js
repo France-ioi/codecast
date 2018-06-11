@@ -62,7 +62,7 @@ class SubtitlesPane extends React.PureComponent {
     this._selectedComponent = component;
   };
   _jump = (subtitle) => {
-    this.props.dispatch({type: this.props.playerSeek, audioTime: subtitle.start});
+    this.props.dispatch({type: this.props.playerSeek, payload: {audioTime: subtitle.start}});
   };
   _changeItem = (item, text) => {
     const index = this.props.subtitles.indexOf(item);

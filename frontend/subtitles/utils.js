@@ -15,7 +15,7 @@ function findSubtitleIndex (items, time) {
   while (low + 1 < high) {
     const mid = (low + high) / 2 | 0;
     const item = items[mid];
-    if (item.start < time) {
+    if (item.start <= time) {
       low = mid;
     } else {
       high = mid;

@@ -44,8 +44,7 @@ function playerSeekedReducer (state, action) {
   });
 }
 
-function playerTickReducer (state, action) {
-  const {audioTime} = action;
+function playerTickReducer (state, {payload: {audioTime}}) {
   return state.update('subtitles', function (subtitles) {
     return updateCurrentItem(subtitles, audioTime);
   });

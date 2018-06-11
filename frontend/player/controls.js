@@ -17,9 +17,11 @@ export default function (bundle, deps) {
     const player = deps.getPlayerState(state);
     const isReady = player.get('isReady');
     const isPlaying = player.get('isPlaying');
+    const currentInstant = player.get('current');
+    const isAtEnd = currentInstant && currentInstant.isEnd;
     const audioTime = player.get('audioTime');
     const duration = player.get('duration');
-    return {getMessage, isReady, isPlaying, audioTime, duration};
+    return {getMessage, isReady, isPlaying, isAtEnd, audioTime, duration};
   });
 
   class PlayerControls extends React.PureComponent {
@@ -37,7 +39,7 @@ export default function (bundle, deps) {
     };
 
     render () {
-      const {isReady, isPlaying, audioTime, duration, getMessage} = this.props;
+      const {isReady, isPlaying, isAtEnd, audioTime, duration, getMessage} = this.props;
       const showStartPlayback = !isPlaying;
       const canStartPlayback = isReady && !isPlaying;
       const showPausePlayback = isPlaying;
@@ -58,7 +60,7 @@ export default function (bundle, deps) {
               <div className="player-controls-playback">
                 {showStartPlayback &&
                     <Button onClick={this.onStartPlayback} disabled={!canStartPlayback}
-                      title={getMessage('START_PLAYBACK')} icon='play' />}
+                      title={getMessage('START_PLAYBACK')} icon={isAtEnd ? 'repeat' : 'play'} />}
                 {showPausePlayback &&
                   <Button onClick={this.onPausePlayback} disabled={!canPausePlayback}
                     title={getMessage('PAUSE_PLAYBACK')} icon='pause' />}

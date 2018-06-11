@@ -148,8 +148,8 @@ export default function (bundle, deps) {
       /* Package the events track. */
       recorder = yield select(deps.getRecorderState);
        /* Ensure the 'end' event occurs before the end of the audio track. */
-      const endTime = Math.floor(duration * 1000);
       const version = RECORDING_FORMAT_VERSION;
+      const endTime = Math.floor(duration * 1000);
       const events = recorder.get('events').push([endTime, 'end']);
       const subtitles = [];
       const data = {version, events, subtitles};
@@ -185,10 +185,11 @@ export default function (bundle, deps) {
       yield call(suspendAudioContext, context);
       // Obtain the URL to a (WAV-encoded) audio object from the worker.
       const worker = context.get('worker');
-      const {wav} = yield call(worker.call, 'export', {wav: true}, pauseExportProgressSaga);
+      const {wav, duration} = yield call(worker.call, 'export', {wav: true}, pauseExportProgressSaga);
       const audioUrl = URL.createObjectURL(wav);
       // Get a URL for events.
-      const events = recorder.get('events');
+      const endTime = Math.floor(duration * 1000);
+      const events = recorder.get('events').push([endTime, 'end']);
       const eventsBlob = new Blob([JSON.stringify(events.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
       const eventsUrl = URL.createObjectURL(eventsBlob);
       // Prepare the player to use the audio and event streams, wait till ready.
@@ -223,11 +224,11 @@ export default function (bundle, deps) {
   function* recorderResume () {
     try {
       const recorder = yield select(deps.getRecorderState);
-      const player = yield select(deps.getPlayerState);
       const recorderStatus = recorder.get('status');
-      const playerStatus = player.get('status');
-      if (recorderStatus !== 'paused' || !/ready|paused/.test(playerStatus)) {
-        console.log('bad state', recorderStatus, playerStatus);
+      const player = yield select(deps.getPlayerState);
+      const isPlaying = player.get('isPlaying');
+      if (recorderStatus !== 'paused' || isPlaying) {
+        console.log('bad state', recorderStatus);
         return;
       }
       /* Clear the player's state. */

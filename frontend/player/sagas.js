@@ -113,7 +113,6 @@ export default function (bundle, deps) {
   }
 
   function* replaySaga ({type, payload}) {
-    console.log('replaySaga', type, payload);
     const player = yield select(deps.getPlayerState);
     const isPlaying = player.get('isPlaying');
     const audio = player.get('audio');
@@ -126,10 +125,17 @@ export default function (bundle, deps) {
       return;
     }
     if (type === deps.playerStart) {
+      let audioTime = player.get('audioTime');
+      /* If at end of stream, restart automatically. */
+      if (instant.isEnd) {
+        audioTime = 0;
+        audio.currentTime = 0;
+        instant = instants[0];
+      }
       /* The player was started (or resumed), reset to the current instant to
          clear any possible changes to the state prior to entering the update
          loop. */
-      yield call(resetToInstant, instant, player.get('audioTime'));
+      yield call(resetToInstant, instant, audioTime);
       /* Disable the stepper during playback, its states are pre-computed. */
       yield put({type: deps.stepperDisabled});
       /* Play the audio now that an accurate state is displayed. */

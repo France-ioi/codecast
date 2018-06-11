@@ -430,12 +430,16 @@ span + .value-previous {
   width: 100%;
   height: 100%;
 }
-.editor-shield-up {
+.editor-shield  {
   z-index: 1;
   cursor: default;
   position: absolute;
   top: 0;
   left: 0;
+  display: none;
+}
+.editor-shield-up {
+  display: block;
 }
 
 /* Tweak navbar for view toggle buttons */

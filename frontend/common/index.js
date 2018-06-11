@@ -3,6 +3,7 @@
   (sandbox, player, recorder, editor).
 */
 
+import errorBundle from './error';
 import replayBundle from '../player/replay';
 import recordBundle from '../recorder/record';
 import langBundle from '../lang/index';
@@ -24,8 +25,7 @@ import 'react-select/dist/react-select.css?global';
 
 export default function (bundle) {
 
-  bundle.defineAction('error', 'Error');
-  bundle.addReducer('error', errorReducer);
+  bundle.include(errorBundle);
 
   /* The player and recorder bundles must be included early to allow other
      bundles to register replay/record handlers in their deferred callbacks. */
@@ -50,9 +50,4 @@ export default function (bundle) {
   bundle.include(examplesBundle);
   bundle.include(arduinoBundle);
 
-};
-
-function errorReducer (state, {payload: {source, error}}) {
-  console.log("GENERIC ERROR", source, error);
-  return state; /* TODO: inject error into state and show in popup */
 }
