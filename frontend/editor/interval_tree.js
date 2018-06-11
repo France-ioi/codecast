@@ -1,6 +1,4 @@
 
-console.log('Symbol.iterator', Symbol.iterator);
-
 function Node (left, key, right) {
   this.left = left;
   this.key = key;
