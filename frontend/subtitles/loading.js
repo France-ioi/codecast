@@ -86,7 +86,7 @@ function* subtitlesLoadFromTextSaga ({payload: {key, text}}) {
   try {
     items = srtParse(text);
   } catch (ex) {
-    yield put({type: scope.subtitlesLoadFailed, payload: {error: ex}});
+    yield put({type: scope.subtitlesLoadFailed, payload: {key, error: ex}});
     return;
   }
   yield put({type: scope.subtitlesLoadSucceeded, payload: {key, text, items}});
@@ -100,7 +100,7 @@ function* subtitlesLoadFromUrlSaga ({payload: {key, url}}) {
     const items = srtParse(text);
     yield put({type: scope.subtitlesLoadSucceeded, payload: {key, text, items}});
   } catch (ex) {
-    yield put({type: scope.subtitlesLoadFailed, payload: {error: ex}});
+    yield put({type: scope.subtitlesLoadFailed, payload: {key, error: ex}});
   }
 }
 
@@ -111,7 +111,7 @@ function* subtitlesLoadFromFileSaga ({payload: {key, file}}) {
     const items = srtParse(text);
     yield put({type: scope.subtitlesLoadSucceeded, payload: {key, text, items}});
   } catch (ex) {
-    yield put({type: scope.subtitlesLoadFailed, payload: {error: ex}});
+    yield put({type: scope.subtitlesLoadFailed, payload: {key, error: ex}});
   }
 }
 

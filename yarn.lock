@@ -4631,6 +4631,10 @@ react-dom@^16.3.0:
     object-assign "^4.1.1"
     prop-types "^15.6.0"
 
+react-files@^2.4.6:
+  version "2.4.6"
+  resolved "https://registry.yarnpkg.com/react-files/-/react-files-2.4.6.tgz#cb030d50b4b79470229c3a9df8beece9d1d81517"
+
 react-flag-icon-css@^1.0.23:
   version "1.0.23"
   resolved "https://registry.yarnpkg.com/react-flag-icon-css/-/react-flag-icon-css-1.0.23.tgz#48e70dedf40362c4d5974dcdcfcc345e69221c7a"

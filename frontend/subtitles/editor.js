@@ -5,14 +5,14 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import scrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
-import {Button, Icon, Intent, Menu, MenuItem, NonIdealState, Position} from '@blueprintjs/core';
+import {Button, Callout, Icon, Intent, Menu, MenuItem, NonIdealState, Position, Spinner} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
-import {takeLatest, put, call, select} from 'redux-saga/effects';
+import {call, put, select, take, takeLatest} from 'redux-saga/effects';
 import update from 'immutability-helper';
-//import FileInput from 'react-file-input';
+import Files from 'react-files';
 import srtStringify from 'subtitle/lib/stringify';
 
-import {formatTimeLong} from '../common/utils';
+import {formatTimeLong, postJson, readFileAsText} from '../common/utils';
 import FlagIcon from '../common/flag_icon';
 import {updateCurrentItem, getSubtitles} from './utils';
 
@@ -25,6 +25,9 @@ export default function (bundle) {
 
   /* subtitlesRemoveOption removes a subtitles option from the loaded recording. */
   bundle.defineAction('subtitlesRemoveOption', 'Subtitles.Option.Remove');
+
+  /* subtitlesLoadFile {key, file} loads subtitles from a File. */
+  bundle.defineAction('subtitlesTextLoaded', 'Subtitles.Text.Load');
 
   /* subtitlesTextChanged is dispatched when the user directly edits the
      selected subtitles text. */
@@ -74,8 +77,16 @@ export default function (bundle) {
 
 }
 
+function clearNotify (subtitles) {
+  return {...subtitles, notify: {}};
+}
+
+function setUnsaved (subtitles) {
+  return {...subtitles, unsaved: true};
+}
+
 function subtitlesSelectedReducer (state, {payload: {option}}) {
-  return state.update('subtitles', subtitles => ({...subtitles, selectedKey: option.key}));
+  return state.update('subtitles', subtitles => clearNotify({...subtitles, selectedKey: option.key}));
 }
 
 function subtitlesAddOptionReducer (state, {payload: {key, select}}) {
@@ -83,18 +94,18 @@ function subtitlesAddOptionReducer (state, {payload: {key, select}}) {
     const option = subtitles.availableOptions[key];
     if (!option || option.removed) {
       const base = subtitles.langOptions.find(option => option.value === key);
-      subtitles = update(subtitles, {availableOptions: {[key]: {$set: {key, text: '', ...base}}}});
+      subtitles = update(subtitles, {availableOptions: {[key]: {$set: {key, text: '', unsaved: true, ...base}}}});
       if (select) {
         subtitles = update(subtitles, {selectedKey: {$set: key}});
       }
     }
-    return subtitles;
+    return setUnsaved(clearNotify(subtitles));
   });
 }
 
 function subtitlesRemoveOptionReducer (state, {payload: {key}}) {
   return state.update('subtitles', function (subtitles) {
-    return update(subtitles, {availableOptions: {[key]: {removed: {$set: true}}}});
+    return setUnsaved(clearNotify(update(subtitles, {availableOptions: {[key]: {removed: {$set: true}}}})));
   });
 }
 
@@ -102,13 +113,13 @@ function subtitlesRemoveOptionReducer (state, {payload: {key}}) {
 function subtitlesTextChangedReducer (state, {payload: {text}}) {
   return state.update('subtitles', function (subtitles) {
     const {selectedKey: key} = subtitles;
-    return update(subtitles, {availableOptions: {[key]: {text: {$set: text}}}});
+    return setUnsaved(clearNotify(update(subtitles, {availableOptions: {[key]: {text: {$set: text}, unsaved: {$set: true}}}})));
   });
 }
 
 function subtitlesItemChangedReducer (state, {payload: {index, text}}) {
   return state.update('subtitles', function (subtitles) {
-    return update(subtitles, {items: {[index]: {text: {$set: text}}}})
+    return update(subtitles, {items: {[index]: {text: {$set: text}}}});
   });
 }
 
@@ -165,20 +176,33 @@ function subtitlesSaveReducer (state, action) {
   return state.update('subtitles', function (subtitles) {
     const {selectedKey: key, availableOptions, items} = subtitles;
     const text = srtStringify(items)
-    return update(subtitles, {availableOptions: {[key]: {text: {$set: text}}}});
+    return clearNotify(update(subtitles, {availableOptions: {[key]: {text: {$set: text}}}}));
   });
 }
 
 function subtitlesEditorSaveReducer (state, action) {
-  return state.update('subtitles', subtitles => ({...subtitles, notify: 'pending'}));
+  return state.update('subtitles', subtitles => ({...subtitles, notify: {key: 'pending'}}));
 }
 
-function subtitlesEditorSaveFailedReducer (state, action) {
+function subtitlesEditorSaveFailedReducer (state, {payload: {error}}) {
   return state.update('subtitles', subtitles => ({...subtitles, notify: {key: 'failure', message: error.toString()}}));
 }
 
-function subtitlesEditorSaveSucceededReducer (state, {payload: {error}}) {
-  return state.update('subtitles', subtitles => ({...subtitles, notify: {key: 'success'}}));
+function subtitlesEditorSaveSucceededReducer (state, action) {
+  return state.update('subtitles', subtitles =>
+    update(subtitles, {
+      unsaved: {$set: false},
+      notify: {$set: {key: 'success'}},
+      availableOptions: {$apply: clearAllUnsaved}
+    }));
+}
+
+function clearAllUnsaved (options) {
+  const changes = {};
+  for (let key of Object.keys(options)) {
+    changes[key] = {unsaved: {$set: false}};
+  }
+  return update(options, changes);
 }
 
 function* subtitlesEditorSaga () {
@@ -187,6 +211,7 @@ function* subtitlesEditorSaga () {
   yield takeLatest(scope.subtitlesEditorEnter, subtitlesEditorEnterSaga);
   yield takeLatest(scope.subtitlesEditorSave, subtitlesEditorSaveSaga);
   yield takeLatest(scope.subtitlesEditorReturn, subtitlesEditorReturnSaga);
+  yield takeLatest(scope.subtitlesTextLoaded, subtitlesTextLoadedSaga);
 }
 
 function* subtitlesSelectedSaga ({payload: {option}}) {
@@ -241,20 +266,33 @@ function* subtitlesEditorSaveSaga (_action) {
   }
 }
 
+function* subtitlesTextLoadedSaga ({payload: {key, file}}) {
+  const actionTypes = yield select(state => state.get('actionTypes'));
+  yield put({type: actionTypes.subtitlesLoadFromFile, payload: {key, file}});
+  while (true) {
+    const loadAction = yield take([actionTypes.subtitlesLoadSucceeded, actionTypes.subtitlesLoadFailed]);
+    if (loadAction.payload.key !== key) {
+      continue;
+    }
+    if (loadAction.type === actionTypes.subtitlesLoadSucceeded) {
+      const {text} = loadAction.payload;
+      yield put({type: actionTypes.subtitlesTextChanged, payload: {text}});
+    }
+    break;
+  }
+}
+
 function SubtitlesEditorSelector (state, props) {
-  const {subtitlesSelected, subtitlesAddOption, subtitlesRemoveOption,
-    subtitlesTextChanged, subtitlesEditorEnter, subtitlesEditorSave} = state.get('scope');
-  const {notify, selectedKey, availableOptions, langOptions} = state.get('subtitles');
+  const actionTypes = state.get('actionTypes');
+  const {unsaved, notify, selectedKey, availableOptions, langOptions} = state.get('subtitles');
   const selected = selectedKey && availableOptions[selectedKey];
   const subtitlesText = selected && selected.text;
-  return {availableOptions, selected, langOptions, subtitlesText,
-    subtitlesSelected, subtitlesAddOption, subtitlesRemoveOption,
-    subtitlesTextChanged, subtitlesEditorEnter, subtitlesEditorSave, notify};
+  return {actionTypes, unsaved, notify, availableOptions, langOptions, selected, subtitlesText};
 }
 
 class SubtitlesEditor extends React.PureComponent {
   render () {
-    const {availableOptions, selected, subtitlesText, langOptions, onSelect, onRemove, notify} = this.props;
+    const {availableOptions, selected, subtitlesText, langOptions, onSelect, onRemove, unsaved, notify} = this.props;
     const availKeys = Object.keys(availableOptions).filter(key => !availableOptions[key].removed).sort();
     return (
       <div>
@@ -275,19 +313,22 @@ class SubtitlesEditor extends React.PureComponent {
           </div>
           <div className='col-sm-6' style={{paddingLeft: '10px'}}>
             {selected
-              ? <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange} />
+              ? <div>
+                  <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange} />
+                  <Files accepts={this._fileAccepts} onChange={this._fileChanged}><Button>{"Load from file"}</Button></Files>
+                </div>
               : <NonIdealState visual='arrow-left' title={"No language selected"} description={"Load existing subtitles or add a new language, and the click the Edit button."} />}
           </div>
         </div>
         <div style={{marginTop: '2em', textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
-          <span style={{marginRight: '10px'}}>
-            <Button onClick={this._beginEdit} disabled={!selected} icon={IconNames.EDIT} text={"Edit"}/>
-          </span>
-          <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"}/>
+          <Button onClick={this._beginEdit} disabled={!selected} icon={IconNames.EDIT} text={"Edit"} style={{marginRight: '10px'}}/>
+          <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"} intent={unsaved ? Intent.PRIMARY : Intent.NONE}/>
           {/* TODO: clean up the spinner */}
-          {notify.key === 'pending' && <i className='fa fa-spinner fa-spin'/>}
-          {notify.key === 'success' && <Icon icon='saved' intent={Intent.SUCCESS} />}
-          {notify.key === 'failure' && <Icon icon='warning-sign' Intent={Intent.DANGER}/>}
+        </div>
+        <div>
+          {notify.key === 'pending' && <Callout icon={<Spinner small/>}>{"Saving, please wait."}</Callout>}
+          {notify.key === 'success' && <Callout icon='saved' intent={Intent.SUCCESS}>{"Saved."}</Callout>}
+          {notify.key === 'failure' && <Callout icon='warning-sign' intent={Intent.DANGER}>{"Failed to save: "}{notify.message}</Callout>}
         </div>
       </div>
     );
@@ -301,25 +342,30 @@ class SubtitlesEditor extends React.PureComponent {
     this._loadInput.click();
   };
   _selectOption = (option) => {
-    this.props.dispatch({type: this.props.subtitlesSelected, payload: {option}});
+    this.props.dispatch({type: this.props.actionTypes.subtitlesSelected, payload: {option}});
   };
   _addOption = (option) => {
     const key = option.value;
-    this.props.dispatch({type: this.props.subtitlesAddOption, payload: {key, select: true}});
+    this.props.dispatch({type: this.props.actionTypes.subtitlesAddOption, payload: {key, select: true}});
   };
   _removeOption = (option) => {
     const {key} = option;
-    this.props.dispatch({type: this.props.subtitlesRemoveOption, payload: {key}});
+    this.props.dispatch({type: this.props.actionTypes.subtitlesRemoveOption, payload: {key}});
   };
   _onChange = (event) => {
     const text = event.target.value;
-    this.props.dispatch({type: this.props.subtitlesTextChanged, payload: {text}});
+    this.props.dispatch({type: this.props.actionTypes.subtitlesTextChanged, payload: {text}});
   };
   _beginEdit = (event) => {
-    this.props.dispatch({type: this.props.subtitlesEditorEnter});
+    this.props.dispatch({type: this.props.actionTypes.subtitlesEditorEnter});
   };
   _save = (event) => {
-    this.props.dispatch({type: this.props.subtitlesEditorSave});
+    this.props.dispatch({type: this.props.actionTypes.subtitlesEditorSave});
+  };
+  _fileAccepts = ['.srt'];
+  _fileChanged = ([file]) => {
+    const key = this.props.selected.key;
+    this.props.dispatch({type: this.props.actionTypes.subtitlesTextLoaded, payload: {key, file}});
   };
 }
 
@@ -327,7 +373,7 @@ class SubtitlesEditorOption extends React.PureComponent {
   render () {
     const {option, selected} = this.props;
     const text = <span>{<FlagIcon code={option.countryCode}/>}{' '}{option.label}</span>;
-    const icon = typeof option.text === 'string' ? 'floppy-disk' : 'blank';
+    const icon = option.unsaved ? 'floppy-disk' : 'blank';
     const intent = selected ? Intent.PRIMARY : Intent.NONE;
     return (
       <MenuItem icon={icon} text={text} active={selected} intent={intent} popoverProps={{position: Position.TOP_RIGHT}}>
