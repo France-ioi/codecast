@@ -814,3 +814,10 @@ strong.highlight {
 .cc-login h1, .cc-login h3 {
   background-color: white;
 }
+
+.buttons-bar {
+  display: table-row;
+}
+.buttons-bar > * {
+  display: table-cell;
+}
