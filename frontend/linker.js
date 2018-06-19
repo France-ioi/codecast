@@ -103,7 +103,8 @@ export default function link (rootBuilder) {
 
   /* Views can depend on selector definitions, so inject them in a second phase. */
   injectAll(['action', 'selector', 'value']);
-  rootBundle._linkViews();
+  const views = {};
+  rootBundle._linkViews(views);
   injectAll('views');
 
   // Compose the reducer now that all actions have been defined.
@@ -152,6 +153,7 @@ export default function link (rootBuilder) {
   return {
     scope: makeSafeProxy(globalScope, undefinedNameError),
     actionTypes: typeForActionName,
+    views,
     store,
     reducer,
     finalize,
@@ -275,7 +277,7 @@ Bundle.prototype._assertNotSealed = function () {
   }
 };
 
-Bundle.prototype._linkViews = function () {
+Bundle.prototype._linkViews = function (views) {
   var i;
   // Define and connect views.
   for (i = 0; i < this._.views.length; i += 1) {
@@ -291,10 +293,11 @@ Bundle.prototype._linkViews = function () {
     }
     view.displayName = `View(${name})`;
     this._.linker.publish('view', name, view);
+    views[name] = view;
   }
   // Define and connect views in included bundles.
   for (i = 0; i < this._.bundles.length; i += 1) {
-    this._.bundles[i]._linkViews();
+    this._.bundles[i]._linkViews(views);
   }
 };
 

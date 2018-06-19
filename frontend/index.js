@@ -24,11 +24,11 @@ import playerBundle from './player/index';
 import recorderBundle from './recorder/index';
 import editorBundle from './editor/index';
 
-const {store, scope, actionTypes, finalize, start} = link(function (bundle, deps) {
+const {store, scope, actionTypes, views, finalize, start} = link(function (bundle, deps) {
 
   bundle.defineAction('init', 'System.Init');
   bundle.addReducer('init', (_state, {payload: options}) =>
-    Immutable.Map({scope, actionTypes, options}));
+    Immutable.Map({scope, actionTypes, views, options}));
 
   bundle.include(commonBundle);
   bundle.include(sandboxBundle);
