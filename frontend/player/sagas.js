@@ -60,7 +60,11 @@ export default function (bundle, deps) {
       /* Compatibility with old style, where data is an array of events. */
       const {version, ...init} = data[0][2];
       data[0][2] = init;
-      data = {version, events: data, subtitles: false};
+      data = {
+        version,
+        events: data.map(event => modernizeEvent(event)),
+        subtitles: false
+      };
     }
     /* Compute the future state after every event. */
     const instants = yield call(computeInstants, data.events);
@@ -324,4 +328,19 @@ function requestAnimationFrames (maxDelta) {
       shutdown = true;
     };
   }, buffers.sliding(1));
+}
+
+function modernizeEvent (event) {
+  const [ts, type, ...args] = event;
+  switch (type) {
+    case 'source.insert': return [ts, 'buffer.insert', 'source', ...args];
+    case 'source.select': return [ts, 'buffer.select', 'source', ...args];
+    case 'source.delete': return [ts, 'buffer.delete', 'source', ...args];
+    case 'source.scroll': return [ts, 'buffer.scroll', 'source', ...args];
+    case 'input.insert': return [ts, 'buffer.insert', 'input', ...args];
+    case 'input.select': return [ts, 'buffer.select', 'input', ...args];
+    case 'input.delete': return [ts, 'buffer.delete', 'input', ...args];
+    case 'input.scroll': return [ts, 'buffer.scroll', 'input', ...args];
+    default: return event;
+  }
 }

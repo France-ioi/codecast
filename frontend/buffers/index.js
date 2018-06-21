@@ -326,9 +326,9 @@ function addRecordHooks ({recordApi}, actionTypes) {
 
 function addReplayHooks ({replayApi}, actionTypes) {
   replayApi.on('start', function (context, event, instant) {
-    const init = event[2];
-    const sourceModel = loadBufferModel(init.buffers.source);
-    const inputModel = loadBufferModel(init.buffers.input);
+    const {buffers} = event[2];
+    const sourceModel = buffers && buffers.source ? loadBufferModel(buffers.source) : DocumentModel();
+    const inputModel = buffers && buffers.input ? loadBufferModel(buffers.input) : DocumentModel();
     const outputModel = DocumentModel();
     context.state = context.state.set('buffers',
       Immutable.Map({
