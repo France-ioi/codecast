@@ -96,11 +96,17 @@ export default function (bundle, deps) {
       state: {
         ...state,
         core: C.clearMemoryLog(state.core),
-        oldCore: state.core
+        oldCore: state.core,
+        controls: resetControls(state.controls)
       },
       interactive: true,
       stepCounter: 0
     };
+  }
+
+  function resetControls (controls) {
+    /* Reset the controls before a step is started. */
+    return controls.setIn(['stack', 'focusDepth'], 0);
   }
 
   function copyContext (context) {
