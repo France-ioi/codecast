@@ -17,4 +17,7 @@ export default function (bundle) {
 
   bundle.defineAction('playerTick', 'Player.Tick');
 
+  bundle.defineAction('playerVolumeChanged', 'Player.Volume.Changed');
+  bundle.defineAction('playerMutedChanged', 'Player.Muted.Changed');
+
 };

@@ -11,6 +11,8 @@ export default function (bundle, deps) {
   bundle.addReducer('playerStarted', playerStartedReducer);
   bundle.addReducer('playerPaused', playerPausedReducer);
   bundle.addReducer('playerTick', playerTickReducer);
+  bundle.addReducer('playerVolumeChanged', playerVolumeChangedReducer);
+  bundle.addReducer('playerMutedChanged', playerMutedChangedReducer);
 }
 
 function initReducer (state, _action) {
@@ -18,9 +20,10 @@ function initReducer (state, _action) {
 }
 
 function playerClearReducer (state, _action) {
-  return state.set('player', Immutable.Map({
-    audio: document.createElement('video')
-  }));
+  const audio = document.createElement('video');
+  const volume = audio.volume; /* XXX: load from localStorage? */
+  const isMuted = audio.muted; /* XXX: load from localStorage? */
+  return state.set('player', Immutable.Map({audio, volume, isMuted}));
 }
 
 function playerPreparingReducer (state, _action) {
@@ -67,4 +70,20 @@ function playerTickReducer (state, {payload: {current, audioTime}}) {
   return state.update('player', player => player
     .set('current', current) /* current instant */
     .set('audioTime', audioTime));
+}
+
+function playerVolumeChangedReducer (state, {payload: {volume}}) {
+  return state.update('player', function (player) {
+    const audio = player.get('audio');
+    audio.volume = volume;
+    return player.set('volume', audio.volume);
+  });
+}
+
+function playerMutedChangedReducer (state, {payload: {isMuted}}) {
+  return state.update('player', function (player) {
+    const audio = player.get('audio');
+    audio.muted = isMuted;
+    return player.set('isMuted', audio.muted);
+  });
 }

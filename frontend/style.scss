@@ -26,6 +26,8 @@ $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/icons/lib/css/blueprint-icons.css";
 
+@import "./player/style.scss";
+
 /* Darker icons on blueprint buttons. */
 .pt-button .pt-icon, .pt-button .pt-icon-standard, .pt-button .pt-icon-large {
   color: #3c5060;
