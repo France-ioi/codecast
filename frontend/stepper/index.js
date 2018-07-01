@@ -1,5 +1,11 @@
 /*
 
+The stepper bundle provides these views:
+
+  MainView
+  MainViewPanes
+  StepperControls
+
 The stepper's state has the following shape:
 
   {
@@ -31,6 +37,8 @@ import DelayBundle from './delay';
 import HeapBundle from './heap';
 import IoBundle from './io/index';
 import ViewsBundle from './views/index';
+import ArduinoBundle from './arduino';
+import MainViewBundle from './main_view';
 
 /* TODO: clean-up */
 import {analyseState, collectDirectives} from './analysis';
@@ -129,6 +137,8 @@ export default function (bundle) {
   bundle.include(HeapBundle);
   bundle.include(IoBundle);
   bundle.include(ViewsBundle);
+  bundle.include(ArduinoBundle);
+  bundle.include(MainViewBundle);
 
 };
 

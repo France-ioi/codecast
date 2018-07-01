@@ -69,7 +69,6 @@ import 'brace/theme/twilight';
 import 'brace/theme/vibrant_ink';
 import 'brace/theme/xcode';
 import 'brace/worker/javascript';
-import '../arduino/ace';
 
 import {emptyDocument, documentFromString, compressRange, expandRange} from './document';
 import Editor from './editor';

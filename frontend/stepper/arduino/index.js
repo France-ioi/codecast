@@ -22,6 +22,7 @@ import update from 'immutability-helper';
 import {call, select, put} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 
+import './ace';
 import './style.scss';
 
 const PINMODE_INPUT = 0;

@@ -13,15 +13,12 @@ import {Alert, Intent} from '@blueprintjs/core';
 
 class PlayerApp extends React.PureComponent {
   render () {
-    const {containerWidth, viewportTooSmall, PlayerControls, MainView, MainViewPanes, SubtitlesBand, error} = this.props;
+    const {containerWidth, viewportTooSmall, PlayerControls, MainView, SubtitlesBand, error} = this.props;
     return (
       <div id='player-app'>
         <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
           <PlayerControls/>
-          <div id='mainView-container'>
-            <MainView/>
-            <MainViewPanes/>
-          </div>
+          <MainView/>
           {/*<SubtitlesBand/>*/}
         </div>
         {error &&
@@ -41,13 +38,13 @@ class PlayerApp extends React.PureComponent {
 }
 
 function PlayerAppSelector (state, props) {
-  const {PlayerControls, MainView, MainViewPanes, SubtitlesBand} = state.get('scope');
+  const {PlayerControls, MainView, SubtitlesBand} = state.get('scope');
   const viewportTooSmall = state.get('viewportTooSmall');
   const containerWidth = state.get('containerWidth');
   const error = state.getIn(['player', 'error']);
   return {
     viewportTooSmall, containerWidth,
-    PlayerControls, MainView, MainViewPanes, SubtitlesBand,
+    PlayerControls, MainView, SubtitlesBand,
     error
   };
 }
