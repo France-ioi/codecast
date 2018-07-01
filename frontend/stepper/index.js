@@ -37,15 +37,6 @@ import {analyseState, collectDirectives} from './analysis';
 
 export default function (bundle) {
 
-  bundle.include(ApiBundle);
-  bundle.include(ControlsBundle);
-  bundle.include(TranslateBundle);
-  bundle.include(EffectsBundle);
-  bundle.include(DelayBundle);
-  bundle.include(HeapBundle);
-  bundle.include(IoBundle);
-  bundle.include(ViewsBundle);
-
   bundle.addReducer('init', initReducer);
 
   /* Sent when the stepper task is started */
@@ -126,8 +117,18 @@ export default function (bundle) {
   bundle.defineAction('stepperDisabled', 'Stepper.Disabled');
 
   bundle.addSaga(stepperSaga);
-
   bundle.defer(postLink);
+
+  /* Include bundles late so post-link functions that register with replayApi
+     (in particular in IoBundle) are called after our own (just above). */
+  bundle.include(ApiBundle);
+  bundle.include(ControlsBundle);
+  bundle.include(TranslateBundle);
+  bundle.include(EffectsBundle);
+  bundle.include(DelayBundle);
+  bundle.include(HeapBundle);
+  bundle.include(IoBundle);
+  bundle.include(ViewsBundle);
 
 };
 
