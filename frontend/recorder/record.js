@@ -86,7 +86,7 @@ export default function (bundle, deps) {
   bundle.addSaga(function* recordEvents () {
     const pattern = Array.from(actionHandlers.keys());
     // Wait for the recorder to be ready, grab the context.
-    yield takeLatest(deps.recorderReady, function* ({payload: {context}}) {
+    yield takeLatest(deps.recorderReady, function* ({payload: {recorderContext}}) {
       // Wait for recording to actually start.
       yield take(deps.recorderStarted);
       // Start buffering actions.
@@ -101,7 +101,7 @@ export default function (bundle, deps) {
           continue;
         }
         const offset = recorder.get('eventRef') - recorder.get('audioRef');
-        const timestamp = Math.round(context.audioContext.currentTime * 1000);
+        const timestamp = Math.round(recorderContext.audioContext.currentTime * 1000);
         function* addEvent (name, ...args) {
           const event = [timestamp + offset, name, ...args];
           yield put({type: deps.recorderAddEvent, event});

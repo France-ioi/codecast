@@ -182,9 +182,9 @@ export default function (bundle, deps) {
     recordApi.onStart(function* (init) {
       init.ioPaneMode = yield select(state => state.get('ioPane').mode);
     });
-    replayApi.on('start', function (context, event, instant) {
+    replayApi.on('start', function (replayContext, event, instant) {
       const {ioPaneMode} = event[2];
-      context.state = ioPaneModeChanged(context.state, {payload: {mode: ioPaneMode}});
+      replayContext.state = ioPaneModeChanged(replayContext.state, {payload: {mode: ioPaneMode}});
     });
 
     replayApi.onReset(function* (instant) {
@@ -195,13 +195,13 @@ export default function (bundle, deps) {
     recordApi.on(deps.ioPaneModeChanged, function* (addEvent, {payload: {mode}}) {
       yield call(addEvent, 'ioPane.mode', mode);
     });
-    replayApi.on('ioPane.mode', function (context, event, instant) {
+    replayApi.on('ioPane.mode', function (replayContext, event, instant) {
       const mode = event[2];
-      context.state = ioPaneModeChanged(context.state, {payload: {mode}});
+      replayContext.state = ioPaneModeChanged(replayContext.state, {payload: {mode}});
     });
 
-    replayApi.on(['stepper.restart', 'stepper.undo', 'stepper.redo'], function (context, event, instant) {
-      if (context.state.get('ioPaneMode') === 'split') {
+    replayApi.on(['stepper.restart', 'stepper.undo', 'stepper.redo'], function (replayContext, event, instant) {
+      if (replayContext.state.get('ioPaneMode') === 'split') {
         /* Consider: pushing updates from the stepper state to the output buffer
            in the global state adds complexity.  Three options:
            (1) dispatch a recorded 'buffer' action when the output changes, so
@@ -210,7 +210,7 @@ export default function (bundle, deps) {
            (3) make the output editor fetch its model from the stepper state.
            It is not clear which option is best.
         */
-        context.state = syncOutputBuffer(context.state);
+        replayContext.state = syncOutputBuffer(replayContext.state);
         instant.saga = syncOutputBufferSaga;
       }
     });
@@ -244,14 +244,14 @@ export default function (bundle, deps) {
 
     stepperApi.addBuiltin('printf', printfBuiltin);
 
-    stepperApi.addBuiltin('putchar', function* putcharBuiltin (context, charCode) {
+    stepperApi.addBuiltin('putchar', function* putcharBuiltin (stepperContext, charCode) {
       const ch = String.fromCharCode(charCode.toInteger());
       yield ['write', ch];
       yield ['result', charCode];
     });
 
-    stepperApi.addBuiltin('puts', function* putsBuiltin (context, strRef) {
-      const str = C.readString(context.state.core.memory, strRef) + '\n';
+    stepperApi.addBuiltin('puts', function* putsBuiltin (stepperContext, strRef) {
+      const str = C.readString(stepperContext.state.core.memory, strRef) + '\n';
       yield ['write', str];
       const result = new C.IntegralValue(C.builtinTypes['int'], 0);
       yield ['result', result];
@@ -259,8 +259,8 @@ export default function (bundle, deps) {
 
     stepperApi.addBuiltin('scanf', scanfBuiltin);
 
-    stepperApi.onEffect('write', function* writeEffect (context, text) {
-      const {state} = context;
+    stepperApi.onEffect('write', function* writeEffect (stepperContext, text) {
+      const {state} = stepperContext;
       if (state.terminal) {
         state.terminal = writeString(state.terminal, text);
       } else {
@@ -273,7 +273,7 @@ export default function (bundle, deps) {
          syncOutputBuffer/syncOutputBufferSaga (non-interactively). */
     });
 
-    stepperApi.addBuiltin('gets', function* getsBuiltin (context, ref) {
+    stepperApi.addBuiltin('gets', function* getsBuiltin (stepperContext, ref) {
       const line = yield ['gets'];
       let result = C.nullPointer;
       if (line !== null) {
@@ -284,7 +284,7 @@ export default function (bundle, deps) {
       yield ['result', result];
     });
 
-    stepperApi.addBuiltin('getchar', function* getcharBuiltin (context) {
+    stepperApi.addBuiltin('getchar', function* getcharBuiltin (stepperContext) {
       const line = yield ['gets'];
       let result;
       if (line === null) {
@@ -296,12 +296,12 @@ export default function (bundle, deps) {
       yield ['result', new C.IntegralValue(C.builtinTypes['int'], result)];
     });
 
-    stepperApi.onEffect('gets', function* getsEffect (context) {
-      let {state} = context;
+    stepperApi.onEffect('gets', function* getsEffect (stepperContext) {
+      let {state} = stepperContext;
       let {input, inputPos} = state;
       let nextNL = input.indexOf('\n', inputPos);
       while (-1 === nextNL) {
-        if (!state.terminal || !context.interact) {
+        if (!state.terminal || !stepperContext.interact) {
           /* non-interactive, end of input */
           return null;
         }
@@ -313,8 +313,8 @@ export default function (bundle, deps) {
           /* Wait for the user to enter a line. */
           yield take(deps.terminalInputEnter);
         }];
-        /* Parse the next line from updated context state. */
-        state = context.state;
+        /* Parse the next line from updated stepper state. */
+        state = stepperContext.state;
         input = state.input;
         inputPos = state.inputPos;
         nextNL = input.indexOf('\n', inputPos);
@@ -324,8 +324,8 @@ export default function (bundle, deps) {
       return line;
     });
 
-    stepperApi.onEffect('ungets', function* ungetsHandler (context, count) {
-      context.state.inputPos -= count;
+    stepperApi.onEffect('ungets', function* ungetsHandler (stepperContext, count) {
+      stepperContext.state.inputPos -= count;
     });
 
     /* Monitor actions that may need to update the output buffer.

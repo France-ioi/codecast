@@ -14,7 +14,7 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 export default function (bundle, deps) {
 
   bundle.use(
-    'replayApi', 'stepperApi',
+    'replayApi',
     'playerPrepare', 'playerPreparing', 'playerReady',
     'playerPrepareProgress', 'playerPrepareFailure',
     'playerStart', 'playerStarted',
@@ -82,9 +82,8 @@ export default function (bundle, deps) {
        appropriate reducer) plus an optional saga to be called during playback. */
     let pos, progress, lastProgress = 0;
     try {
-      const context = {
+      const replayContext = {
         state: Immutable.Map(),
-        run: null,
         instants: []
       };
       let range;
@@ -93,22 +92,22 @@ export default function (bundle, deps) {
         const t = event[0];
         const key = event[1]
         const instant = {t, pos, event};
-        yield call(deps.replayApi.applyEvent, key, context, event, instant);
+        yield call(deps.replayApi.applyEvent, key, replayContext, event, instant);
         /* Preserve the last explicitly set range. */
         if ('range' in instant) {
           range = instant.range;
         } else {
           instant.range = range;
         }
-        instant.state = context.state;
-        context.instants.push(instant);
+        instant.state = replayContext.state;
+        replayContext.instants.push(instant);
         progress = Math.round(pos * 100 / events.length) / 100;
         if (progress !== lastProgress) {
           lastProgress = progress;
           yield put({type: deps.playerPrepareProgress, payload: {progress}});
         }
       }
-      return context.instants;
+      return replayContext.instants;
     } catch (ex) {
       console.error(ex); // TODO: add global fatal exception report mechanism
       yield put({type: deps.playerPrepareFailure, payload: {position: pos, exception: ex}});

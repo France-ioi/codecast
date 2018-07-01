@@ -73,32 +73,32 @@ export default function (bundle, deps) {
     recordApi.on(deps.terminalInputNeeded, function* (addEvent, action) {
       yield call(addEvent, 'terminal.wait');
     });
-    replayApi.on('terminal.wait', function (context, event, instant) {
-      context.state = terminalInputNeeded(context.state);
+    replayApi.on('terminal.wait', function (replayContext, event, instant) {
+      replayContext.state = terminalInputNeeded(replayContext.state);
     });
 
     recordApi.on(deps.terminalInputKey, function* (addEvent, action) {
       yield call(addEvent, 'terminal.key', action.key);
     });
-    replayApi.on('terminal.key', function (context, event, instant) {
+    replayApi.on('terminal.key', function (replayContext, event, instant) {
       const key = event[2];
-      context.state = terminalInputKey(context.state, {key});
+      replayContext.state = terminalInputKey(replayContext.state, {key});
     });
 
     recordApi.on(deps.terminalInputBackspace, function* (addEvent, action) {
       yield call(addEvent, 'terminal.backspace');
     });
-    replayApi.on('terminal.backspace', function (context, event, instant) {
-      context.state = terminalInputBackspace(context.state);
+    replayApi.on('terminal.backspace', function (replayContext, event, instant) {
+      replayContext.state = terminalInputBackspace(replayContext.state);
     });
 
     recordApi.on(deps.terminalInputEnter, function* (addEvent, action) {
       yield call(addEvent, 'terminal.enter');
     });
-    replayApi.on('terminal.enter', function (context, event, instant) {
-      context.state = terminalInputEnter(context.state);
-      /* // Update the run-context so that the step completes with the added input
-      context.run.state = context.state.getIn(['stepper', 'current']);
+    replayApi.on('terminal.enter', function (replayContext, event, instant) {
+      replayContext.state = terminalInputEnter(replayContext.state);
+      /* // XXX Update the stepper state so the step can complete with the added input
+      replayContext.run.state = replayContext.state.getIn(['stepper', 'current']);
       */
     });
 

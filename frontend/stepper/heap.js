@@ -90,8 +90,8 @@ export const enumerateHeapBlocks = function* (core) {
   }
 };
 
-function* mallocBuiltin (context, nBytes) {
-  const {core} = context.state;
+function* mallocBuiltin (stepperContext, nBytes) {
+  const {core} = stepperContext.state;
   nBytes = nBytes.toInteger();
   const effects = [];
   let result = C.nullPointer;
@@ -105,13 +105,13 @@ function* mallocBuiltin (context, nBytes) {
   yield ['result', result];
 };
 
-function* freeBuiltin (context, ref) {
+function* freeBuiltin (stepperContext, ref) {
   // The block chain is traversed for these reasons:
   // * prevent heap corruption;
   // * locate the block immediately before the freed block,
   //   so the blocks can be merged;
   // * performance is low priority.
-  const {core} = context.state;
+  const {core} = stepperContext.state;
   const effects = [];
   const address = ref.address;
   let prev;
@@ -128,8 +128,8 @@ function* freeBuiltin (context, ref) {
 
 export default function (bundle, deps) {
   bundle.defer(function ({stepperApi}) {
-    stepperApi.onInit(function (state) {
-      const {core, options} = state;
+    stepperApi.onInit(function (stepperState) {
+      const {core, options} = stepperState;
       heapInit(core, options.stackSize);
     });
     stepperApi.addBuiltin('malloc', mallocBuiltin);

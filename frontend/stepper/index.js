@@ -199,8 +199,7 @@ function initReducer (state, _action) {
   return state.set('stepper', stepperClear());
 }
 
-function stepperRestartReducer (state, action) {
-  let stepperState = action.stepperState;
+function stepperRestartReducer (state, {payload: {stepperState}}) {
   if (stepperState) {
     stepperState = enrichStepperState(stepperState);
   } else {
@@ -227,7 +226,7 @@ function stepperResetReducer (state, {payload: {stepperState}}) {
   return state.set('stepper', stepperState);
 }
 
-function stepperStepReducer (state, action) {
+function stepperStepReducer (state, _action) {
   /* No check for 'idle' status, the player must be able to step while
      the status is 'running'. */
   return state.setIn(['stepper', 'status'], 'starting');
@@ -241,17 +240,17 @@ function stepperStartedReducer (state, action) {
     .update('undo', undo => undo.unshift(stepper.get('current'))));
 }
 
-function stepperProgressReducer (state, action) {
+function stepperProgressReducer (state, {payload: {stepperContext}}) {
   // Set new current state and go back to idle.
-  const stepperState = enrichStepperState(action.context.state);
+  const stepperState = enrichStepperState(stepperContext.state);
   return state.update('stepper', stepper => stepper
     .set('current', stepperState));
 }
 
-function stepperIdleReducer (state, action) {
+function stepperIdleReducer (state, {payload: {stepperContext}}) {
   // Set new current state and go back to idle.
   /* XXX Call enrichStepperState prior to calling the reducer. */
-  const stepperState = enrichStepperState(action.context.state);
+  const stepperState = enrichStepperState(stepperContext.state);
   return state.update('stepper', stepper => stepper
     .set('current', stepperState)
     .set('status', 'idle')
@@ -369,7 +368,7 @@ function* translateSucceededSaga () {
     const stepperState = yield call(buildState, globalState);
     /* Enable the stepper */
     yield put({type: actionTypes.stepperEnabled});
-    yield put({type: actionTypes.stepperRestart, stepperState});
+    yield put({type: actionTypes.stepperRestart, payload: {stepperState}});
   } catch (error) {
     yield put({type: actionTypes.error, payload: {source: 'stepper', error}});
   }
@@ -382,10 +381,10 @@ function* recorderStoppingSaga () {
   yield put({type: actionTypes.stepperDisabled});
 }
 
-function* stepperEnabledSaga ({dispatch}, action) {
+function* stepperEnabledSaga (args, action) {
   const actionTypes = yield select(state => state.get('actionTypes'));
   /* Start the new stepper task. */
-  const newTask = yield fork(rootStepperSaga, dispatch);
+  const newTask = yield fork(rootStepperSaga, args);
   yield put({type: actionTypes.stepperTaskStarted, payload: {task: newTask}});
 }
 
@@ -402,26 +401,25 @@ function* stepperDisabledSaga () {
   yield put({type: actionTypes.bufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
 }
 
-function* stepperInteractSaga ({payload: {context, saga, args}, meta: {resolve, reject}}) {
-  const {stepperProgress, stepperInterrupt} = yield select(state => state.get('actionTypes'));
+function* stepperInteractSaga ({actionTypes, selectors}, {payload: {stepperContext, saga, args}, meta: {resolve, reject}}) {
   /* Has the stepper been interrupted? */
-  if (yield select(state => state.get('scope').isStepperInterrupting(state))) {
-    yield call(reject, new StepperError(context, 'interrupt', 'interrupted'));
+  if (yield select(selectors.isStepperInterrupting)) {
+    yield call(reject, new StepperError(stepperContext, 'interrupt', 'interrupted'));
     return;
   }
   /* Emit a progress action so that an up-to-date state gets displayed. */
-  yield put({type: stepperProgress, context});
+  yield put({type: actionTypes.stepperProgress, payload: {stepperContext}});
   /* Run the provided saga if any, or wait until next animation frame. */
   const {completed, interrupted} = yield (race({
-    completed: call(saga || stepperWaitSaga, context, ...args),
-    interrupted: take(stepperInterrupt)
+    completed: call(saga || stepperWaitSaga, stepperContext, ...args),
+    interrupted: take(actionTypes.stepperInterrupt)
   }));
-  /* Update context.state from the global state to avoid discarding the effects
-     of user interaction. */
-  context.state = yield select(state => state.get('scope').getStepperDisplay(state));
+  /* Update stepperContext.state from the global state to avoid discarding
+     the effects of user interaction. */
+  stepperContext.state = yield select(selectors.getStepperDisplay);
   /* Check whether to interrupt or resume the stepper. */
   if (interrupted) {
-    yield call(reject, new StepperError(context, 'interrupt', 'interrupted'));
+    yield call(reject, new StepperError(stepperContext, 'interrupt', 'interrupted'));
   } else {
     /* Continue stepper execution, passing the saga's return value as the
        result of yielding the interact effect. */
@@ -434,35 +432,33 @@ function* stepperWaitSaga () {
   yield call(delay, 0);
 }
 
-function* stepperStepSaga (dispatch, action) {
-  const actionTypes = yield select(state => state.get('actionTypes'));
-  const {mode} = action;
+function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
   const stepper = yield select(getStepperState);
   if (stepper.get('status') === 'starting') {
     yield put({type: actionTypes.stepperStarted, mode});
-    let context = makeContext(stepper.get('current'), interact);
+    let stepperContext = makeContext(stepper.get('current'), interact);
     try {
-      context = yield call(performStep, context, mode);
+      stepperContext = yield call(performStep, stepperContext, mode);
     } catch (ex) {
       if (!(ex instanceof StepperError)) {
-        ex = new StepperError(context, 'error', stringifyError(ex));
+        ex = new StepperError(stepperContext, 'error', stringifyError(ex));
       }
-      context = ex.context;
+      stepperContext = ex.stepperContext;
       if (ex.condition === 'interrupt') {
-        context.interrupted = true;
+        stepperContext.interrupted = true;
         yield put({type: actionTypes.stepperInterrupted});
       }
       if (ex.condition === 'error') {
-        context.state.error = ex.message;
+        stepperContext.state.error = ex.message;
       }
     }
-    yield put({type: actionTypes.stepperIdle, context});
+    yield put({type: actionTypes.stepperIdle, payload: {stepperContext}});
   }
   function interact (saga, ...args) {
     return new Promise((resolve, reject) => {
       dispatch({
         type: actionTypes.stepperInteract,
-        payload: {context: this, saga, args},
+        payload: {stepperContext: this, saga, args},
         meta: {resolve, reject}
       });
     });
@@ -500,10 +496,10 @@ function postLink (scope, actionTypes) {
   recordApi.onStart(function* (init) {
     /* TODO: store stepper options in init */
   });
-  replayApi.on('start', function (context, event, instant) {
+  replayApi.on('start', function (replayContext, event, instant) {
     /* TODO: restore stepper options from event[2] */
     const stepperState = stepperClear();
-    context.state = stepperResetReducer(context.state, {payload: {stepperState}});
+    replayContext.state = stepperResetReducer(replayContext.state, {payload: {stepperState}});
   });
   replayApi.onReset(function* (instant) {
     const stepperState = instant.state.get('stepper');
@@ -514,8 +510,8 @@ function postLink (scope, actionTypes) {
   recordApi.on(actionTypes.stepperExit, function* (addEvent, action) {
     yield call(addEvent, 'stepper.exit');
   });
-  replayApi.on('stepper.exit', function (context, event, instant) {
-    context.state = stepperExitReducer(context.state);
+  replayApi.on('stepper.exit', function (replayContext, event, instant) {
+    replayContext.state = stepperExitReducer(replayContext.state);
     /* Clear the highlighted range when the stepper terminates. */
     instant.range = null;
   });
@@ -523,46 +519,46 @@ function postLink (scope, actionTypes) {
   recordApi.on(actionTypes.stepperRestart, function* (addEvent, action) {
     yield call(addEvent, 'stepper.restart');
   });
-  replayApi.on('stepper.restart', function* (context, event, instant) {
-    const stepperState = yield call(buildState, context.state);
-    context.state = stepperRestartReducer(context.state, {stepperState});
+  replayApi.on('stepper.restart', function* (replayContext, event, instant) {
+    const stepperState = yield call(buildState, replayContext.state);
+    replayContext.state = stepperRestartReducer(replayContext.state, {payload: {stepperState}});
   });
 
   recordApi.on(actionTypes.stepperStarted, function* (addEvent, action) {
     const {mode} = action;
     yield call(addEvent, 'stepper.step', mode);
   });
-  replayApi.on('stepper.step', function* (context, event, instant) {
+  replayApi.on('stepper.step', function* (replayContext, event, instant) {
     const mode = event[2];
-    context.state = stepperStartedReducer(context.state, {mode});
-    const stepperState = getStepperDisplay(context.state);
-    context.run = makeContext(stepperState, interact);
+    replayContext.state = stepperStartedReducer(replayContext.state, {mode});
+    const stepperState = getStepperDisplay(replayContext.state);
+    replayContext.run = makeContext(stepperState, interact);
     /* XXX This skips over progress/interact event, which is wrong; the
        pre-computed step must be broken down to sync with progress events and
        events causing user interaction.
-       To achieve this, create an event channel and store it in the context;
+       To achieve this, create an event channel and store it in replayContext;
        have future events post to the channel, and the interact function
        below pull from the channel; run the try block in a forked task.
      */
     try {
-      context.run = yield call(performStep, context.run, mode);
+      replayContext.run = yield call(performStep, replayContext.run, mode);
     } catch (ex) {
       if (!(ex instanceof StepperError)) {
-        ex = new StepperError(context, 'error', stringifyError(ex));
+        ex = new StepperError(replayContext.run, 'error', stringifyError(ex));
       }
-      context.run = ex.context;
+      replayContext.run = ex.stepperContext;
       if (ex.condition === 'interrupt') {
-        context.run.interrupted = true;
+        replayContext.run.interrupted = true;
         yield put({type: actionTypes.stepperInterrupted});
       }
       if (ex.condition === 'error') {
-        context.run.state.error = ex.message;
+        replayContext.run.state.error = ex.message;
       }
     }
-    context.state = stepperIdleReducer(context.state, {context: context.run});
-    instant.range = getNodeRange(getStepperDisplay(context.state));
+    replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.run}});
+    instant.range = getNodeRange(getStepperDisplay(replayContext.state));
     /* XXX reflectToOutput saga is not running, a mechanism is needed to
-       update the computed global state (context.state).
+       update the computed global state (replayContext.state).
        CONSIDER: generalize interact to take a global-state reducer, used
        when running non-interactively.
      */
@@ -574,69 +570,67 @@ function postLink (scope, actionTypes) {
     }
   });
 
-  recordApi.on(actionTypes.stepperIdle, function* (addEvent, action) {
-    const {context} = action;
-    yield call(addEvent, 'stepper.idle', context.stepCounter);
+  recordApi.on(actionTypes.stepperIdle, function* (addEvent, {payload: {stepperContext}}) {
+    yield call(addEvent, 'stepper.idle', stepperContext.stepCounter);
   });
-  replayApi.on('stepper.idle', function (context, event, instant) {
+  replayApi.on('stepper.idle', function (replayContext, event, instant) {
     /* REPLACE:
-    context.run.state = getStepperDisplay(context.state);
-    context.run = runToStep(context.run, event[2]);
-    context.state = stepperIdleReducer(context.state, {context: context.run});
-    instant.range = getNodeRange(getStepperDisplay(context.state));
+    replayContext.run.state = getStepperDisplay(replayContext.state);
+    replayContext.run = runToStep(replayContext.run, event[2]);
+    replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.run}});
+    instant.range = getNodeRange(getStepperDisplay(replayContext.state));
     */
   });
 
-  recordApi.on(actionTypes.stepperProgress, function* (addEvent, action) {
-    const {context} = action;
-    yield call(addEvent, 'stepper.progress', context.stepCounter);
+  recordApi.on(actionTypes.stepperProgress, function* (addEvent, {payload: {stepperContext}}) {
+    yield call(addEvent, 'stepper.progress', stepperContext.stepCounter);
   });
-  replayApi.on('stepper.progress', function (context, event, instant) {
+  replayApi.on('stepper.progress', function (replayContext, event, instant) {
     /* REPLACE:
-    context.run.state = getStepperDisplay(context.state);
-    context.run = runToStep(context.run, event[2]);
-    context.state = stepperProgressReducer(context.state, {context: context.run});
-    instant.range = getNodeRange(getStepperDisplay(context.state));
+    replayContext.run.state = getStepperDisplay(replayContext.state);
+    replayContext.run = runToStep(replayContext.run, event[2]);
+    replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.run}});
+    instant.range = getNodeRange(getStepperDisplay(replayContext.state));
     */
   });
 
   recordApi.on(actionTypes.stepperInterrupt, function* (addEvent, action) {
     yield call(addEvent, 'stepper.interrupt');
   });
-  replayApi.on('stepper.interrupt', function (context, event, instant) {
+  replayApi.on('stepper.interrupt', function (replayContext, event, instant) {
     /* REPLACE: stepper.interrupt does nothing during replayApi. */
   });
 
   recordApi.on(actionTypes.stepperUndo, function* (addEvent, action) {
     yield call(addEvent, 'stepper.undo');
   });
-  replayApi.on('stepper.undo', function (context, event, instant) {
-    context.state = stepperUndoReducer(context.state);
-    instant.range = getNodeRange(getStepperDisplay(context.state));
+  replayApi.on('stepper.undo', function (replayContext, event, instant) {
+    replayContext.state = stepperUndoReducer(replayContext.state);
+    instant.range = getNodeRange(getStepperDisplay(replayContext.state));
   });
 
   recordApi.on(actionTypes.stepperRedo, function* (addEvent, action) {
     yield call(addEvent, 'stepper.redo');
   });
-  replayApi.on('stepper.redo', function (context, event, instant) {
-    context.state = stepperRedoReducer(context.state);
-    instant.range = getNodeRange(getStepperDisplay(context.state));
+  replayApi.on('stepper.redo', function (replayContext, event, instant) {
+    replayContext.state = stepperRedoReducer(replayContext.state);
+    instant.range = getNodeRange(getStepperDisplay(replayContext.state));
   });
 
   recordApi.on(actionTypes.stepperStackUp, function* (addEvent, action) {
     yield call(addEvent, 'stepper.stack.up');
   });
-  replayApi.on('stepper.stack.up', function (context, event, instant) {
-    context.state = stepperStackUpReducer(context.state);
-    instant.range = getNodeRange(getStepperDisplay(context.state));
+  replayApi.on('stepper.stack.up', function (replayContext, event, instant) {
+    replayContext.state = stepperStackUpReducer(replayContext.state);
+    instant.range = getNodeRange(getStepperDisplay(replayContext.state));
   });
 
   recordApi.on(actionTypes.stepperStackDown, function* (addEvent, action) {
     yield call(addEvent, 'stepper.stack.down');
   });
-  replayApi.on('stepper.stack.down', function (context, event, instant) {
-    context.state = stepperStackDownReducer(context.state);
-    instant.range = getNodeRange(getStepperDisplay(context.state));
+  replayApi.on('stepper.stack.down', function (replayContext, event, instant) {
+    replayContext.state = stepperStackDownReducer(replayContext.state);
+    instant.range = getNodeRange(getStepperDisplay(replayContext.state));
   });
 
   /* TODO: move out of here? */
@@ -644,10 +638,10 @@ function postLink (scope, actionTypes) {
     const {key, update} = action;
     yield call(addEvent, 'stepper.view.update', key, update);
   });
-  replayApi.on('stepper.view.update', function (context, event, instant) {
+  replayApi.on('stepper.view.update', function (replayContext, event, instant) {
     const key = event[2];
     const update = event[3];
-    context.state = stepperViewControlsChangedReducer(context.state, {key, update});
+    replayContext.state = stepperViewControlsChangedReducer(replayContext.state, {key, update});
   });
 
   stepperApi.onInit(function (stepperState, globalState) {

@@ -325,28 +325,28 @@ function addRecordHooks ({recordApi}, actionTypes) {
 }
 
 function addReplayHooks ({replayApi}, actionTypes) {
-  replayApi.on('start', function (context, event, instant) {
+  replayApi.on('start', function (replayContext, event, instant) {
     const {buffers} = event[2];
     const sourceModel = buffers && buffers.source ? loadBufferModel(buffers.source) : DocumentModel();
     const inputModel = buffers && buffers.input ? loadBufferModel(buffers.input) : DocumentModel();
     const outputModel = DocumentModel();
-    context.state = context.state.set('buffers',
+    replayContext.state = replayContext.state.set('buffers',
       Immutable.Map({
         source: Immutable.Map({model: sourceModel}),
         input: Immutable.Map({model: inputModel}),
         output: Immutable.Map({model: outputModel})
       }));
   });
-  replayApi.on('buffer.select', function (context, event, instant) {
+  replayApi.on('buffer.select', function (replayContext, event, instant) {
     // XXX use reducer imported from common/buffers
     const buffer = event[2];
     const selection = expandRange(event[3]);
-    context.state = bufferSelectReducer(context.state, {buffer, selection});
+    replayContext.state = bufferSelectReducer(replayContext.state, {buffer, selection});
     instant.saga = function* () {
       yield put({type: actionTypes.bufferModelSelect, buffer, selection});
     };
   });
-  replayApi.on(['buffer.insert', 'buffer.delete'], function (context, event, instant) {
+  replayApi.on(['buffer.insert', 'buffer.delete'], function (replayContext, event, instant) {
     // XXX use reducer imported from common/buffers
     const buffer = event[2];
     const range = expandRange(event[3]);
@@ -366,17 +366,17 @@ function addReplayHooks ({replayApi}, actionTypes) {
       };
     }
     if (delta) {
-      context.state = bufferEditReducer(context.state, {buffer, delta});
+      replayContext.state = bufferEditReducer(replayContext.state, {buffer, delta});
       instant.saga = function* () {
         yield put({type: actionTypes.bufferModelEdit, buffer, delta});
       };
     }
   });
-  replayApi.on('buffer.scroll', function (context, event, instant) {
+  replayApi.on('buffer.scroll', function (replayContext, event, instant) {
     // XXX use reducer imported from common/buffers
     const buffer = event[2];
     const firstVisibleRow = event[3];
-    context.state = bufferScrollReducer(context.state, {buffer, firstVisibleRow});
+    replayContext.state = bufferScrollReducer(replayContext.state, {buffer, firstVisibleRow});
     instant.saga = function* () {
       yield put({type: actionTypes.bufferModelScroll, buffer, firstVisibleRow});
     };

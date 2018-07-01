@@ -147,17 +147,17 @@ export default function (bundle, deps) {
       );
     }
 
-    onStepRun = () => this.props.dispatch({type: deps.stepperStep, mode: 'run'});
-    onStepExpr = () => this.props.dispatch({type: deps.stepperStep, mode: 'expr'});
-    onStepInto = () => this.props.dispatch({type: deps.stepperStep, mode: 'into'});
-    onStepOut = () => this.props.dispatch({type: deps.stepperStep, mode: 'out'});
-    onStepOver = () => this.props.dispatch({type: deps.stepperStep, mode: 'over'});
-    onInterrupt = () => this.props.dispatch({type: deps.stepperInterrupt});
-    onRestart = () => this.props.dispatch({type: deps.stepperRestart});
-    onEdit = () => this.props.dispatch({type: deps.stepperExit});
-    onUndo = () => this.props.dispatch({type: deps.stepperUndo});
-    onRedo = () => this.props.dispatch({type: deps.stepperRedo});
-    onTranslate = () => this.props.dispatch({type: deps.translate});
+    onStepRun = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'run'}});
+    onStepExpr = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'expr'}});
+    onStepInto = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'into'}});
+    onStepOut = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'out'}});
+    onStepOver = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'over'}});
+    onInterrupt = () => this.props.dispatch({type: deps.stepperInterrupt, payload: {}});
+    onRestart = () => this.props.dispatch({type: deps.stepperRestart, payload: {}});
+    onEdit = () => this.props.dispatch({type: deps.stepperExit, payload: {}});
+    onUndo = () => this.props.dispatch({type: deps.stepperUndo, payload: {}});
+    onRedo = () => this.props.dispatch({type: deps.stepperRedo, payload: {}});
+    onTranslate = () => this.props.dispatch({type: deps.translate, payload: {}});
 
   }
   bundle.defineView('StepperControls', StepperControlsSelector, StepperControls);

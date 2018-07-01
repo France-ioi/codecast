@@ -9,7 +9,7 @@ export default function (bundle, deps) {
 
   bundle.defer(function ({stepperApi}) {
 
-    stepperApi.addBuiltin('delay', function* delayBuiltin (context, millis) {
+    stepperApi.addBuiltin('delay', function* delayBuiltin (stepperContext, millis) {
       yield ['interact', function* () {
         yield call(delay, millis.toInteger())
       }];

@@ -272,8 +272,8 @@ function unterminatedStringValue (string) {
   return new C.ArrayValue(C.arrayType(charType, lenValue), chars);
 }
 
-export function* scanfBuiltin (context, fmtRef, ...args) {
-  const {core} = context.state;
+export function* scanfBuiltin (stepperContext, fmtRef, ...args) {
+  const {core} = stepperContext.state;
   const fmt = C.readString(core.memory, fmtRef);
   let it = scanf(fmt, ...args), step, nextVal;
   while ((step = it.next(nextVal)) && !step.done) {

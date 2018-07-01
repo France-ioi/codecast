@@ -10,7 +10,7 @@ export default function (bundle) {
   /* For each event a number of handlers can be registered.
      An event is replayed by calling (in registration order) the handlers
      registered with the event, each handler being tasked with updating the
-     context. */
+     player context. */
   const eventHandlers = new Map();
   replayApi.on = function (keys, saga) {
     if (typeof keys === 'string') {
@@ -27,11 +27,11 @@ export default function (bundle) {
       sagas.push(saga);
     }
   };
-  replayApi.applyEvent = function* (key, context, event, instant) {
+  replayApi.applyEvent = function* (key, replayContext, event, instant) {
     if (eventHandlers.has(key)) {
       const funcs = eventHandlers.get(key, []);
       for (var func of funcs) {
-        yield call(func, context, event, instant);
+        yield call(func, replayContext, event, instant);
       }
     } else {
       console.log(`event ${key} ignored (no replay handler)`);
