@@ -200,8 +200,8 @@ export default function (bundle, deps) {
       replayContext.state = ioPaneModeChanged(replayContext.state, {payload: {mode}});
     });
 
-    replayApi.on(['stepper.restart', 'stepper.undo', 'stepper.redo'], function (replayContext, event, instant) {
-      if (replayContext.state.get('ioPaneMode') === 'split') {
+    replayApi.on(['stepper.progress', 'stepper.idle', 'stepper.restart', 'stepper.undo', 'stepper.redo'], function replaySyncOutput (replayContext, event, instant) {
+      if (replayContext.state.get('ioPane').mode === 'split') {
         /* Consider: pushing updates from the stepper state to the output buffer
            in the global state adds complexity.  Three options:
            (1) dispatch a recorded 'buffer' action when the output changes, so
@@ -266,11 +266,13 @@ export default function (bundle, deps) {
       } else {
         state.output = state.output + text;
       }
-      /* TODO: update the output buffer model - this needs to alter the
-               (computed) global state. */
-      /* TODO: if interactive, append the new text to the output buffer */
-      /* Currently this is done by reflectToOutput (interactively) and
-         syncOutputBuffer/syncOutputBufferSaga (non-interactively). */
+      /* TODO: update the output buffer model
+         If running interactively, we must alter the actual global state.
+         If pre-computing states for replay, we must alter the (computed) global
+         state in the replayContext.
+         Currently this is done by reflectToOutput (interactively) and
+         syncOutputBuffer/syncOutputBufferSaga (non-interactively).
+       */
     });
 
     stepperApi.addBuiltin('gets', function* getsBuiltin (stepperContext, ref) {
