@@ -1,3 +1,5 @@
+/* TODO: Generalize ArduinoPanel to any number of registered stepper panels.
+         Or perhaps move MainView into the stepper bundle. */
 
 import React from 'react';
 import {Button} from '@blueprintjs/core';
@@ -129,7 +131,8 @@ function MainViewSelector (state, props) {
   const readOnly = haveStepper || props.preventInput;
   const {showIO, showViews, showStack, mode} = state.get('options');
   const arduinoEnabled = mode === 'arduino';
-  const sourceRowHeight = '300px';
+  /* TODO: make number of visible rows in source editor configurable. */
+  const sourceRowHeight = `${Math.ceil(16 * 25)}px`; // 12*25 for /next
   const sourceMode = arduinoEnabled ? 'arduino' : 'c_cpp';
   /* preventInput is set during playback to prevent the user from messing up
      the editors, and to disable automatic scrolling of the editor triggered
