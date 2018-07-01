@@ -58,13 +58,8 @@ export default function (bundle, deps) {
     let data = yield call(getJson, eventsUrl);
     if (Array.isArray(data)) {
       /* Compatibility with old style, where data is an array of events. */
-      const {version, ...init} = data[0][2];
-      data[0][2] = init;
-      data = {
-        version,
-        events: data.map(event => modernizeEvent(event)),
-        subtitles: false
-      };
+      data = new Modernizer(data).toObject();
+      console.log('new events', data.events);
     }
     /* Compute the future state after every event. */
     const instants = yield call(computeInstants, data.events);
@@ -329,17 +324,56 @@ function requestAnimationFrames (maxDelta) {
   }, buffers.sliding(1));
 }
 
-function modernizeEvent (event) {
-  const [ts, type, ...args] = event;
-  switch (type) {
-    case 'source.insert': return [ts, 'buffer.insert', 'source', ...args];
-    case 'source.select': return [ts, 'buffer.select', 'source', ...args];
-    case 'source.delete': return [ts, 'buffer.delete', 'source', ...args];
-    case 'source.scroll': return [ts, 'buffer.scroll', 'source', ...args];
-    case 'input.insert': return [ts, 'buffer.insert', 'input', ...args];
-    case 'input.select': return [ts, 'buffer.select', 'input', ...args];
-    case 'input.delete': return [ts, 'buffer.delete', 'input', ...args];
-    case 'input.scroll': return [ts, 'buffer.scroll', 'input', ...args];
-    default: return event;
+class Modernizer {
+  constructor (events) {
+    this._events = events;
+  }
+  toObject () {
+    const {version, source, input, ...init} = this._events[0][2];
+    if (source || input) {
+      init.buffers = {source, input};
+    }
+    if (!init.ioPaneMode) {
+      init.ioPaneMode = 'split';
+    }
+    return {
+      version,
+      events: Array.from({[Symbol.iterator]: () => new ModernizerIterator(init, this._events.slice(1))}),
+      subtitles: false
+    };
+  }
+}
+
+class ModernizerIterator {
+  constructor (init, events) {
+    this._events = events;
+    this._position = 0;
+    this._inserts = [[0, 'start', init]];
+    this._ended = false;
+  }
+  next () {
+    if (this._inserts.length > 0) {
+      return {value: this._inserts.shift()};
+    }
+    if (this._position === this._events.length || this._ended) {
+      return {done: true};
+    }
+    let event = this._events[this._position++];
+    const [ts, type, ...args] = event;
+    switch (type) {
+      case 'source.insert':
+        event = [ts, 'buffer.insert', 'source', ...args];
+        // this._inserts.push([ts, 'buffer.scroll', 'source', Math.max(0, args[0][0] - 6)]);
+        break;
+      case 'source.select': event = [ts, 'buffer.select', 'source', ...args]; break;
+      case 'source.delete': event = [ts, 'buffer.delete', 'source', ...args]; break;
+      case 'source.scroll': event = [ts, 'buffer.scroll', 'source', ...args]; break;
+      case 'input.insert': event = [ts, 'buffer.insert', 'input', ...args]; break;
+      case 'input.select': event = [ts, 'buffer.select', 'input', ...args]; break;
+      case 'input.delete': event = [ts, 'buffer.delete', 'input', ...args]; break;
+      case 'input.scroll': event = [ts, 'buffer.scroll', 'input', ...args]; break;
+      case 'end': this._ended = true; break;
+    }
+    return {value: event};
   }
 }
