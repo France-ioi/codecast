@@ -532,7 +532,7 @@ function postLink (scope, actionTypes) {
     const mode = event[2];
     replayContext.state = stepperStartedReducer(replayContext.state, {mode});
     const stepperState = getStepperDisplay(replayContext.state);
-    replayContext.run = makeContext(stepperState, interact);
+    replayContext.stepperContext = makeContext(stepperState, interact);
     /* XXX This skips over progress/interact event, which is wrong; the
        pre-computed step must be broken down to sync with progress events and
        events causing user interaction.
@@ -541,21 +541,21 @@ function postLink (scope, actionTypes) {
        below pull from the channel; run the try block in a forked task.
      */
     try {
-      replayContext.run = yield call(performStep, replayContext.run, mode);
+      replayContext.stepperContext = yield call(performStep, replayContext.stepperContext, mode);
     } catch (ex) {
       if (!(ex instanceof StepperError)) {
-        ex = new StepperError(replayContext.run, 'error', stringifyError(ex));
+        ex = new StepperError(replayContext.stepperContext, 'error', stringifyError(ex));
       }
-      replayContext.run = ex.stepperContext;
+      replayContext.stepperContext = ex.stepperContext;
       if (ex.condition === 'interrupt') {
-        replayContext.run.interrupted = true;
+        replayContext.stepperContext.interrupted = true;
         yield put({type: actionTypes.stepperInterrupted});
       }
       if (ex.condition === 'error') {
-        replayContext.run.state.error = ex.message;
+        replayContext.stepperContext.state.error = ex.message;
       }
     }
-    replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.run}});
+    replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
     instant.range = getNodeRange(getStepperDisplay(replayContext.state));
     /* XXX reflectToOutput saga is not running, a mechanism is needed to
        update the computed global state (replayContext.state).
@@ -575,9 +575,9 @@ function postLink (scope, actionTypes) {
   });
   replayApi.on('stepper.idle', function (replayContext, event, instant) {
     /* REPLACE:
-    replayContext.run.state = getStepperDisplay(replayContext.state);
-    replayContext.run = runToStep(replayContext.run, event[2]);
-    replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.run}});
+    replayContext.stepperContext.state = getStepperDisplay(replayContext.state);
+    replayContext.stepperContext = runToStep(replayContext.stepperContext, event[2]);
+    replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
     instant.range = getNodeRange(getStepperDisplay(replayContext.state));
     */
   });
@@ -587,9 +587,9 @@ function postLink (scope, actionTypes) {
   });
   replayApi.on('stepper.progress', function (replayContext, event, instant) {
     /* REPLACE:
-    replayContext.run.state = getStepperDisplay(replayContext.state);
-    replayContext.run = runToStep(replayContext.run, event[2]);
-    replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.run}});
+    replayContext.stepperContext.state = getStepperDisplay(replayContext.state);
+    replayContext.stepperContext = runToStep(replayContext.stepperContext, event[2]);
+    replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
     instant.range = getNodeRange(getStepperDisplay(replayContext.state));
     */
   });
@@ -661,9 +661,9 @@ function postLink (scope, actionTypes) {
     C.setupCall(core1, 'main');
   });
 
-  stepperApi.addSaga(function* mainStepperSaga (dispatch) {
-    yield takeEvery(actionTypes.stepperInteract, stepperInteractSaga);
-    yield takeEvery(actionTypes.stepperStep, stepperStepSaga, dispatch);
+  stepperApi.addSaga(function* mainStepperSaga (args) {
+    yield takeEvery(actionTypes.stepperInteract, stepperInteractSaga, args);
+    yield takeEvery(actionTypes.stepperStep, stepperStepSaga, args);
     yield takeEvery(actionTypes.stepperExit, stepperExitSaga);
     /* Highlight the range of the current source fragment. */
     yield takeLatest([

@@ -98,7 +98,7 @@ export default function (bundle, deps) {
     replayApi.on('terminal.enter', function (replayContext, event, instant) {
       replayContext.state = terminalInputEnter(replayContext.state);
       /* // XXX Update the stepper state so the step can complete with the added input
-      replayContext.run.state = replayContext.state.getIn(['stepper', 'current']);
+      replayContext.stepperContext.state = replayContext.state.getIn(['stepper', 'current']);
       */
     });
 
