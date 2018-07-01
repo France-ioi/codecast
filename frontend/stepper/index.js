@@ -22,7 +22,7 @@ import {takeEvery, takeLatest, take, put, call, select, cancel, fork, race} from
 import Immutable from 'immutable';
 import * as C from 'persistent-c';
 
-import {default as ApiBundle, buildState, makeContext, rootStepperSaga, performStep, runToStep, StepperError} from './api';
+import {default as ApiBundle, buildState, makeContext, rootStepperSaga, performStep, StepperError} from './api';
 import ControlsBundle from './controls';
 import TranslateBundle from './translate';
 import EffectsBundle from './effects';
@@ -523,8 +523,8 @@ function postLink (scope, actionTypes) {
   recordApi.on(actionTypes.stepperRestart, function* (addEvent, action) {
     yield call(addEvent, 'stepper.restart');
   });
-  replayApi.on('stepper.restart', function (context, event, instant) {
-    const stepperState = buildState(context.state);
+  replayApi.on('stepper.restart', function* (context, event, instant) {
+    const stepperState = yield call(buildState, context.state);
     context.state = stepperRestartReducer(context.state, {stepperState});
   });
 

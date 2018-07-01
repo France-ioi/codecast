@@ -25,7 +25,7 @@ function onInit (callback) {
 }
 
 /* Build a stepper state from the given init data. */
-export function buildState (globalState) {
+export async function buildState (globalState) {
   /* Call all the init callbacks. Pass the global state so the player can
      build stepper states without having to install the pre-computed state
      into the store. */
@@ -36,12 +36,26 @@ export function buildState (globalState) {
   /* Run until in user code */
   const context = {
     state: stepperState,
-    stepCounter: 0
+    stepCounter: 0,
+    interact
   };
   while (!inUserCode(context.state.core)) {
-    computeSingleStep(context);
+    /* Mutate the context to advance execution by a single step. */
+    const effects = C.step(context.state.core);
+    if (effects) {
+      await executeEffects(context, effects[Symbol.iterator]());
+    }
+    context.stepCounter += 1;
   }
   return context.state;
+  function interact (saga, ...args) {
+    return new Promise((resolve, reject) => {
+      if (saga) {
+        return reject(new StepperError(context, 'error', 'cannot interact in buildState'));
+      }
+      resolve();
+    });
+  }
 }
 
 /* Register a saga to run inside the stepper task. */
@@ -103,56 +117,6 @@ function freezeContext (context) {
   Object.freeze(context);
 }
 */
-
-function computeEffects (context, iterator) {
-  let lastResult;
-  while (true) {
-    /* Pull the next effect from the builtin's iterator. */
-    const {done, value} = iterator.next(lastResult);
-    if (done) {
-      return value;
-    }
-    /* Call the effect handler, feed the result back into the iterator. */
-    const name = value[0];
-    if (name === 'interact') {
-      lastResult = false;
-    } else if (name === 'builtin') {
-      const builtin = value[1];
-      if (!builtinHandlers.has(builtin)) {
-        throw new StepperError(context, 'error', `unknown builtin ${builtin}`);
-      }
-      lastResult = computeEffects(context, builtinHandlers.get(builtin)(context, ...value.slice(2)));
-    } else {
-      if (!effectHandlers.has(name)) {
-        throw new StepperError(context, 'error', `unhandled effect ${name}`);
-      }
-      lastResult = computeEffects(context, effectHandlers.get(name)(context, ...value.slice(1)));
-    }
-  }
-}
-
-/* Mutate the context to advance execution by a single step. */
-function computeSingleStep (context) {
-  const effects = C.step(context.state.core);
-  if (effects) {
-    computeEffects(context, effects[Symbol.iterator]());
-  }
-  context.stepCounter += 1;
-}
-
-export function runToStep (context, targetStepCounter) {
-  if (context.stepCounter === targetStepCounter) {
-    return context;
-  }
-  if (targetStepCounter < context.stepCounter) {
-    throw new StepperError(context, 'error', `runToStep cannot go from step ${context.stepCounter} to ${targetStepCounter}`);
-  }
-  context = copyContext(context);
-  while (context.stepCounter < targetStepCounter) {
-    computeSingleStep(context);
-  }
-  return context;
-}
 
 async function executeEffects (context, iterator) {
   let lastResult;
