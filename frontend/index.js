@@ -81,7 +81,7 @@ Codecast.start = function (options) {
   // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
   /* Run the sagas (must be done before loginFeedback) */
-  Codecast.task = start();
+  Codecast.task = start({dispatch: store.dispatch});
 
   let App;
   switch (options.start) {

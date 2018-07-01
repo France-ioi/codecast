@@ -146,8 +146,8 @@ export default function link (rootBuilder) {
 
    */
   const rootSaga = rootBundle._saga();
-  function start () {
-    return sagaMiddleware.run(rootSaga);
+  function start (...args) {
+    return sagaMiddleware.run(rootSaga, args);
   }
 
   return {
@@ -343,15 +343,15 @@ Bundle.prototype._lateReducer = function () {
 };
 
 Bundle.prototype._saga = function () {
-  var i;
-  const effects = [];
-  for (i = 0; i < this._.sagas.length; i += 1) {
-    effects.push(call(this._.sagas[i]));
-  }
-  for (i = 0; i < this._.bundles.length; i += 1) {
-    effects.push(call(this._.bundles[i]._saga()));
-  }
-  return function* () {
+  const {sagas, bundles} = this._;
+  return function* (args) {
+    const effects = [];
+    for (let saga of sagas) {
+      effects.push(call(saga, ...args));
+    }
+    for (let bundle of bundles) {
+      effects.push(call(bundle._saga(), args));
+    }
     yield all(effects);
   };
 };
