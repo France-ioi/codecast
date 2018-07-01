@@ -81,7 +81,8 @@ Codecast.start = function (options) {
   // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
   /* Run the sagas (must be done before loginFeedback) */
-  Codecast.task = start({dispatch: store.dispatch});
+  /* XXX Make a separate object for selectors in the linker? */
+  Codecast.task = start({dispatch: store.dispatch, selectors: scope, actionTypes});
 
   let App;
   switch (options.start) {
