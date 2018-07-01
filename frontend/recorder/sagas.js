@@ -5,7 +5,7 @@
 */
 
 import {delay} from 'redux-saga';
-import {take, takeEvery, put, call, race, select, actionChannel} from 'redux-saga/effects';
+import {take, takeLatest, takeEvery, put, call, race, select, actionChannel} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
@@ -89,7 +89,7 @@ export default function (bundle, deps) {
       //      the browser from garbage-collection the node (which seems to
       //      occur even though the node is still connected).
       context = {audioContext, worker, scriptProcessor};
-      yield put({type: deps.recorderReady, context});
+      yield put({type: deps.recorderReady, payload: {context}});
     } catch (error) {
       // XXX send a specialized event and allow retrying recorderPrepare
       yield put({type: deps.error, source: 'recorderPrepare', error});
@@ -289,14 +289,11 @@ export default function (bundle, deps) {
       eventRef => eventRef + timestamp));
 
   bundle.addSaga(function* watchRecorderPrepare () {
-    while (true) {
-      yield take(deps.recorderPrepare);
-      yield call(recorderPrepare);
-    }
+    yield takeLatest(deps.recorderPrepare, recorderPrepare);
   });
 
   bundle.addSaga(function* recorderTicker () {
-    const {context} = yield take(deps.recorderReady);
+    const {payload: {context}} = yield take(deps.recorderReady);
     while (true) {
       yield take(deps.recorderStarted);
       while (true) {

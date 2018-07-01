@@ -11,7 +11,7 @@
 
 */
 
-import {put, take, call, select, actionChannel} from 'redux-saga/effects';
+import {put, take, takeLatest, call, select, actionChannel} from 'redux-saga/effects';
 
 export default function (bundle, deps) {
 
@@ -85,9 +85,8 @@ export default function (bundle, deps) {
   bundle.use('recorderReady', 'recorderStarted')
   bundle.addSaga(function* recordEvents () {
     const pattern = Array.from(actionHandlers.keys());
-    while (true) {
-      // Wait for the recorder to be ready, grab the context.
-      const {context} = yield take(deps.recorderReady);
+    // Wait for the recorder to be ready, grab the context.
+    yield takeLatest(deps.recorderReady, function* ({payload: {context}}) {
       // Wait for recording to actually start.
       yield take(deps.recorderStarted);
       // Start buffering actions.
@@ -113,7 +112,7 @@ export default function (bundle, deps) {
         yield call(actionHandlers.get(action.type), addEvent, action);
       }
       channel.close();
-    }
+    });
   });
 
 };

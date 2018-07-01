@@ -25,8 +25,7 @@ export default function (bundle) {
     return state.set('recorder', Immutable.Map({status: 'preparing', progress}));
   });
 
-  bundle.addReducer('recorderReady', function (state, action) {
-    const {context} = action;
+  bundle.addReducer('recorderReady', function (state, {payload: {context}}) {
     return state.set('recorder', Immutable.Map({
       status: 'ready',
       context: Immutable.Map(context),
