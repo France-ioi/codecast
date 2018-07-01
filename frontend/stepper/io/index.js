@@ -183,8 +183,8 @@ export default function (bundle, deps) {
       init.ioPaneMode = yield select(state => state.get('ioPane').mode);
     });
     replayApi.on('start', function (context, event, instant) {
-      const {mode} = event[2];
-      context.state = ioPaneModeChanged(context.state, {payload: {mode}});
+      const {ioPaneMode} = event[2];
+      context.state = ioPaneModeChanged(context.state, {payload: {mode: ioPaneMode}});
     });
 
     replayApi.onReset(function* (instant) {
@@ -301,7 +301,7 @@ export default function (bundle, deps) {
       let {input, inputPos} = state;
       let nextNL = input.indexOf('\n', inputPos);
       while (-1 === nextNL) {
-        if (!state.terminal || !context.interactive) {
+        if (!state.terminal || !context.interact) {
           /* non-interactive, end of input */
           return null;
         }
@@ -310,20 +310,14 @@ export default function (bundle, deps) {
           yield put({type: deps.terminalInputNeeded});
           /* Transfer focus to the terminal. */
           yield put({type: deps.terminalFocus});
-          const {interrupted} = yield race({
-            completed: take(deps.terminalInputEnter),
-            interrupted: take(deps.stepperInterrupt)
-          });
-          if (interrupted) {
-            throw 'interrupted';
-          }
+          /* Wait for the user to enter a line. */
+          yield take(deps.terminalInputEnter);
         }];
         /* Parse the next line from updated context state. */
         state = context.state;
         input = state.input;
         inputPos = state.inputPos;
         nextNL = input.indexOf('\n', inputPos);
-        // throw 'retry';
       }
       const line = input.substring(inputPos, nextNL);
       state.inputPos = nextNL + 1;
@@ -337,7 +331,7 @@ export default function (bundle, deps) {
     /* Monitor actions that may need to update the output buffer.
        Currently this is done in an awkward way because stepper effects cannot
        modify the global state. So the effect modifies the 'output' property
-       of the stepper state, and the saga below detect changes and pushes them
+       of the stepper state, and the saga below detects changes and pushes them
        to the global state and to the editor.
        This mechanism could by simplified by having the 'write' effect
        directly alter the global state & push the change to the editor. */

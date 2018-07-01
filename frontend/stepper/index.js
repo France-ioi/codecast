@@ -22,7 +22,7 @@ import {takeEvery, takeLatest, take, put, call, select, cancel, fork, race} from
 import Immutable from 'immutable';
 import * as C from 'persistent-c';
 
-import ApiBundle from './api';
+import {default as ApiBundle, buildState, makeContext, rootStepperSaga, performStep, runToStep, StepperError} from './api';
 import ControlsBundle from './controls';
 import TranslateBundle from './translate';
 import EffectsBundle from './effects';
@@ -71,6 +71,8 @@ export default function (bundle) {
   // Sent when the stepper has started evaluating a step.
   bundle.defineAction('stepperStarted', 'Stepper.Start');
   bundle.addReducer('stepperStarted', stepperStartedReducer);
+
+  bundle.defineAction('stepperInteract', 'Stepper.Interact');
 
   // Sent when the stepper has been evaluating for a while without completing a step.
   bundle.defineAction('stepperProgress', 'Stepper.Progress');
@@ -360,12 +362,11 @@ function stepperViewControlsChangedReducer (state, action) {
 
 function* translateSucceededSaga () {
   const actionTypes = yield select(state => state.get('actionTypes'));
-  const {stepperApi} = yield select(state => state.get('scope'));
   try {
     yield put({type: actionTypes.stepperDisabled});
     /* Build the stepper state. This automatically runs into user source code. */
     const globalState = yield select(st => st);
-    const stepperState = yield call(stepperApi.buildState, globalState);
+    const stepperState = yield call(buildState, globalState);
     /* Enable the stepper */
     yield put({type: actionTypes.stepperEnabled});
     yield put({type: actionTypes.stepperRestart, stepperState});
@@ -381,11 +382,10 @@ function* recorderStoppingSaga () {
   yield put({type: actionTypes.stepperDisabled});
 }
 
-function* stepperEnabledSaga (action) {
+function* stepperEnabledSaga ({dispatch}, action) {
   const actionTypes = yield select(state => state.get('actionTypes'));
-  const {stepperApi} = yield select(state => state.get('scope'));
   /* Start the new stepper task. */
-  const newTask = yield fork(stepperApi.rootSaga);
+  const newTask = yield fork(rootStepperSaga, dispatch);
   yield put({type: actionTypes.stepperTaskStarted, payload: {task: newTask}});
 }
 
@@ -402,45 +402,70 @@ function* stepperDisabledSaga () {
   yield put({type: actionTypes.bufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
 }
 
-function* stepperStepSaga (action) {
+function* stepperInteractSaga ({payload: {context, saga, args}, meta: {resolve, reject}}) {
+  const {stepperProgress, stepperInterrupt} = yield select(state => state.get('actionTypes'));
+  /* Has the stepper been interrupted? */
+  if (yield select(state => state.get('scope').isStepperInterrupting(state))) {
+    yield call(reject, new StepperError(context, 'interrupt', 'interrupted'));
+    return;
+  }
+  /* Emit a progress action so that an up-to-date state gets displayed. */
+  yield put({type: stepperProgress, context});
+  /* Run the provided saga if any, or wait until next animation frame. */
+  const {completed, interrupted} = yield (race({
+    completed: call(saga || stepperWaitSaga, context, ...args),
+    interrupted: take(stepperInterrupt)
+  }));
+  /* Update context.state from the global state to avoid discarding the effects
+     of user interaction. */
+  context.state = yield select(state => state.get('scope').getStepperDisplay(state));
+  /* Check whether to interrupt or resume the stepper. */
+  if (interrupted) {
+    yield call(reject, new StepperError(context, 'interrupt', 'interrupted'));
+  } else {
+    /* Continue stepper execution, passing the saga's return value as the
+       result of yielding the interact effect. */
+    yield call(resolve, completed);
+  }
+}
+
+function* stepperWaitSaga () {
+  // Yield until the next tick (XXX use requestAnimationFrame through channel).
+  yield call(delay, 0);
+}
+
+function* stepperStepSaga (dispatch, action) {
   const actionTypes = yield select(state => state.get('actionTypes'));
-  const {stepperApi} = yield select(state => state.get('scope'));
   const {mode} = action;
   const stepper = yield select(getStepperState);
   if (stepper.get('status') === 'starting') {
     yield put({type: actionTypes.stepperStarted, mode});
-    let context = stepperApi.makeContext(stepper.get('current'));
+    let context = makeContext(stepper.get('current'), interact);
     try {
-      switch (mode) {
-        case 'run':
-          context = yield call(stepperApi.run, context);
-          break;
-        case 'into':
-          context = yield call(stepperApi.stepInto, context);
-          break;
-        case 'expr':
-          context = yield call(stepperApi.stepExpr, context);
-          break;
-        case 'out':
-          context = yield call(stepperApi.stepOut, context);
-          break;
-        case 'over':
-          context = yield call(stepperApi.stepOver, context);
-          break;
-      }
+      context = yield call(performStep, context, mode);
     } catch (ex) {
-      console.log('caught', ex);
-      if (ex.context) {
-        context = ex.context;
+      if (!(ex instanceof StepperError)) {
+        ex = new StepperError(context, 'error', stringifyError(ex));
       }
-      if (ex.condition === 'interrupted') {
+      context = ex.context;
+      if (ex.condition === 'interrupt') {
+        context.interrupted = true;
         yield put({type: actionTypes.stepperInterrupted});
       }
       if (ex.condition === 'error') {
-        context.state.error = stringifyError(ex.details);
+        context.state.error = ex.message;
       }
     }
     yield put({type: actionTypes.stepperIdle, context});
+  }
+  function interact (saga, ...args) {
+    return new Promise((resolve, reject) => {
+      dispatch({
+        type: actionTypes.stepperInteract,
+        payload: {context: this, saga, args},
+        meta: {resolve, reject}
+      });
+    });
   }
 }
 
@@ -459,11 +484,11 @@ function* updateSourceHighlightSaga () {
   yield put({type: actionTypes.bufferHighlight, buffer: 'source', range});
 }
 
-function* stepperSaga () {
+function* stepperSaga (args) {
   const actionTypes = yield select(state => state.get('actionTypes'));
   yield takeLatest(actionTypes.translateSucceeded, translateSucceededSaga);
   yield takeLatest(actionTypes.recorderStopping, recorderStoppingSaga);
-  yield takeLatest(actionTypes.stepperEnabled, stepperEnabledSaga);
+  yield takeLatest(actionTypes.stepperEnabled, stepperEnabledSaga, args);
   yield takeLatest(actionTypes.stepperDisabled, stepperDisabledSaga);
 }
 
@@ -499,7 +524,7 @@ function postLink (scope, actionTypes) {
     yield call(addEvent, 'stepper.restart');
   });
   replayApi.on('stepper.restart', function (context, event, instant) {
-    const stepperState = stepperApi.buildState(context.state);
+    const stepperState = buildState(context.state);
     context.state = stepperRestartReducer(context.state, {stepperState});
   });
 
@@ -509,9 +534,24 @@ function postLink (scope, actionTypes) {
   });
   replayApi.on('stepper.step', function (context, event, instant) {
     const mode = event[2];
+    /* TODO:
+       - make context
+       - step until
+         - reached mode-condition -> idle
+         - reached end of program -> idle
+         - blocked on user interaction -> interact
+         - interrupted -> idle
+         - executed some number of steps -> progress
+     */
     context.state = stepperStartedReducer(context.state, {mode});
     const stepperState = getStepperDisplay(context.state);
-    context.run = stepperApi.makeContext(stepperState);
+    context.run = makeContext(stepperState);
+    /* will disappear, merged with runToStep */
+
+    //    function* doStep (mode, stepperState) {
+
+    /* TODO: based on mode, compute number of steps until idle, then…
+       interpolate further progress/idle events? */
     /* Update the current displayed state with the new context, as the next
        event will reload it (possibly modified by user interactions) from
        there. */
@@ -526,7 +566,8 @@ function postLink (scope, actionTypes) {
     /* Update the state with the current displayed state, to make user
        interactions observable by the stepper. */
     context.run.state = getStepperDisplay(context.state);
-    context.run = stepperApi.runToStep(context.run, event[2]);
+    // XXX BAD FIX 
+    context.run = runToStep(context.run, event[2]);
     context.state = stepperIdleReducer(context.state, {context: context.run});
     instant.range = getNodeRange(getStepperDisplay(context.state));
   });
@@ -539,7 +580,8 @@ function postLink (scope, actionTypes) {
     /* Update the state with the current displayed state, to make user
        interactions observable by the stepper. */
     context.run.state = getStepperDisplay(context.state);
-    context.run = stepperApi.runToStep(context.run, event[2]);
+    // XXX BAD FIX 
+    context.run = runToStep(context.run, event[2]);
     context.state = stepperProgressReducer(context.state, {context: context.run});
     instant.range = getNodeRange(getStepperDisplay(context.state));
   });
@@ -611,8 +653,9 @@ function postLink (scope, actionTypes) {
     C.setupCall(core1, 'main');
   });
 
-  stepperApi.addSaga(function* mainStepperSaga () {
-    yield takeEvery(actionTypes.stepperStep, stepperStepSaga);
+  stepperApi.addSaga(function* mainStepperSaga (dispatch) {
+    yield takeEvery(actionTypes.stepperInteract, stepperInteractSaga);
+    yield takeEvery(actionTypes.stepperStep, stepperStepSaga, dispatch);
     yield takeEvery(actionTypes.stepperExit, stepperExitSaga);
     /* Highlight the range of the current source fragment. */
     yield takeLatest([
