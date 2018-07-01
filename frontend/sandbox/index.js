@@ -8,7 +8,7 @@ export default function (bundle, deps) {
 
 class SandboxApp extends React.PureComponent {
   render () {
-    const {StepperControls, Menu, MainView, containerWidth, viewportTooSmall} = this.props;
+    const {Menu, StepperControls, StepperView, containerWidth, viewportTooSmall} = this.props;
     return (
       <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
         <div id='player-controls'>
@@ -22,18 +22,18 @@ class SandboxApp extends React.PureComponent {
             </div>
           </div>
         </div>
-        <MainView/>
+        <StepperView/>
       </div>
     );
   };
 }
 
 function SandboxAppSelector (state) {
-  const {StepperControls, Menu, MainView} = state.get('scope');
+  const {StepperControls, Menu, StepperView} = state.get('scope');
   const containerWidth = state.get('containerWidth');
   const viewportTooSmall = state.get('viewportTooSmall');
   return {
     viewportTooSmall, containerWidth,
-    StepperControls, Menu, MainView
+    Menu, StepperControls, StepperView
   };
 }

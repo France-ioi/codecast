@@ -3,7 +3,7 @@ import React from 'react';
 import {Button} from '@blueprintjs/core';
 import classnames from 'classnames';
 
-class MainView extends React.PureComponent {
+class StepperView extends React.PureComponent {
   render () {
     const {
       diagnostics, readOnly, sourceMode, sourceRowHeight,
@@ -108,7 +108,7 @@ class MainView extends React.PureComponent {
             </div>
           </div>
         </div>
-        <MainViewPanes panes={panes}/>
+        <StepperViewPanes panes={panes}/>
       </div>
     );
   };
@@ -120,7 +120,7 @@ class MainView extends React.PureComponent {
   };
 }
 
-class MainViewPanes extends React.PureComponent {
+class StepperViewPanes extends React.PureComponent {
   render () {
     const {panes} = this.props;
     return (
@@ -143,7 +143,7 @@ class MainViewPanes extends React.PureComponent {
   }
 }
 
-function MainViewSelector (state, props) {
+function StepperViewSelector (state, props) {
   const {getPlayerState, getTranslateDiagnostics, getStepperDisplay} = state.get('scope');
   const {BufferEditor, StackView, ArduinoPanel, DirectivesPane, IOPane} = state.get('views');
   const {translateClearDiagnostics, stepperExit} = state.get('actionTypes');
@@ -178,5 +178,5 @@ function MainViewSelector (state, props) {
 }
 
 export default function (bundle) {
-  bundle.defineView('MainView', MainViewSelector, MainView);
+  bundle.defineView('StepperView', StepperViewSelector, StepperView);
 };

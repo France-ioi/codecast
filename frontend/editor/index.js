@@ -242,11 +242,11 @@ class SetupScreen extends React.PureComponent {
 
 class EditScreen extends React.PureComponent {
   render () {
-    const {containerWidth, viewportTooSmall, topControls, MainView, SubtitlesBand} = this.props;
+    const {containerWidth, viewportTooSmall, topControls, StepperView, SubtitlesBand} = this.props;
     return (
       <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
         {topControls.map((Component, i) => <Component key={i} width={containerWidth}/>)}
-        <MainView/>
+        <StepperView/>
         <SubtitlesBand/>
       </div>
     );
@@ -254,12 +254,12 @@ class EditScreen extends React.PureComponent {
 }
 
 function EditScreenSelector (state, props) {
-  const {MainView, SubtitlesBand} = state.get('scope');
+  const {StepperView, SubtitlesBand} = state.get('scope');
   const viewportTooSmall = state.get('viewportTooSmall');
   const containerWidth = state.get('containerWidth');
   const topControls = state.getIn(['editor', 'controls']).top;
   return {
     viewportTooSmall, containerWidth, topControls,
-    MainView, SubtitlesBand
+    StepperView, SubtitlesBand
   };
 }

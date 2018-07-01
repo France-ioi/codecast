@@ -3,7 +3,7 @@ import React from 'react';
 
 export default function (bundle, deps) {
 
-  bundle.use('RecorderControls', 'MainView');
+  bundle.use('RecorderControls', 'StepperView');
 
   function RecordScreenSelector (state, props) {
     const getMessage = state.get('getMessage');
@@ -25,7 +25,7 @@ export default function (bundle, deps) {
       return (
         <div>
           <deps.RecorderControls/>
-          <deps.MainView/>
+          <deps.StepperView/>
         </div>
       );
     }
