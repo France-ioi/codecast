@@ -328,15 +328,22 @@ export default function (bundle, deps) {
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 
     recordApi.onStart(function* (init) {
-      init.arduino = yield select(state => state.get('arduino'));
+      const {mode} = yield select(state => state.get('options'));
+      if (mode === 'arduino') {
+        init.arduino = yield select(state => state.get('arduino'));
+      }
     });
     replayApi.on('start', function (context, event, instant) {
       const {arduino} = event[2];
-      context.state = arduinoReset(context.state, {state: arduino});
+      if (arduino) {
+        context.state = arduinoReset(context.state, {state: arduino});
+      }
     });
     replayApi.onReset(function* (instant) {
       const arduinoState = instant.state.get('arduino');
-      yield put({type: deps.arduinoReset, state: arduinoState});
+      if (arduinoState) {
+        yield put({type: deps.arduinoReset, state: arduinoState});
+      }
     });
 
     recordApi.on(deps.arduinoPortConfigured, function* (addEvent, action) {
@@ -370,12 +377,14 @@ export default function (bundle, deps) {
 
     stepperApi.onInit(function (stepperState, globalState) {
       const arduinoState = globalState.get('arduino');
-      stepperState.ports = range(0, NPorts-1).map(function (index) {
-        /* Copy peripheral config on stepper init. */
-        const {peripheral} = arduinoState.ports[index];
-        return {direction: 0, output: 0, input: 0, peripheral};
-      });
-      stepperState.serial = {speed: false};
+      if (arduinoState) {
+        stepperState.ports = range(0, NPorts-1).map(function (index) {
+          /* Copy peripheral config on stepper init. */
+          const {peripheral} = arduinoState.ports[index];
+          return {direction: 0, output: 0, input: 0, peripheral};
+        });
+        stepperState.serial = {speed: false};
+      }
     });
 
     stepperApi.addBuiltin('pinMode', function* pinModeBuiltin (context, pin, mode) {
