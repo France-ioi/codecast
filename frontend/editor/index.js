@@ -5,6 +5,8 @@ import classnames from 'classnames';
 import {eventChannel} from 'redux-saga'
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 import {Button, ControlGroup, Intent, Label, ProgressBar, Tab, Tabs} from '@blueprintjs/core';
+import {IconNames} from '@blueprintjs/icons';
+import FileSaver from 'file-saver';
 
 import {getJson, postJson, getAudio, formatTime} from '../common/utils';
 import {extractWaveform} from './waveform/tools';
@@ -24,6 +26,8 @@ export default function (bundle, deps) {
 
   bundle.defineAction('editorAudioLoadProgress', 'Editor.Audio.LoadProgress');
   bundle.addReducer('editorAudioLoadProgress', editorAudioLoadProgressReducer);
+
+  bundle.defineAction('editorSaveAudio', 'Editor.Audio.Save');
 
   bundle.defineAction('editorConfigured', 'Editor.Configured');
   bundle.addReducer('editorConfigured', editorConfiguredReducer);
@@ -67,10 +71,10 @@ function editorConfiguredReducer (state, {payload: {bucketUrl}}) {
   return state.setIn(['editor', 'bucketUrl'], bucketUrl);
 }
 
-function* editorSaga () {
-  const {editorPrepare, loginFeedback} = yield select(state => state.get('scope'));
-  yield takeEvery(editorPrepare, editorPrepareSaga);
-  yield takeEvery(loginFeedback, loginFeedbackSaga);
+function* editorSaga ({actionTypes}) {
+  yield takeEvery(actionTypes.editorPrepare, editorPrepareSaga);
+  yield takeEvery(actionTypes.loginFeedback, loginFeedbackSaga);
+  yield takeLatest(actionTypes.editorSaveAudio, editorSaveAudioSaga);
 }
 
 function* editorPrepareSaga ({payload: {baseDataUrl}}) {
@@ -79,8 +83,8 @@ function* editorPrepareSaga ({payload: {baseDataUrl}}) {
   const audioUrl = `${baseDataUrl}.mp3`;
   const eventsUrl = `${baseDataUrl}.json`;
   /* Load the audio stream. */
-  const {blob, audioBuffer} = yield call(getAudioSaga, audioUrl);
-  const inMemoryAudioUrl = URL.createObjectURL(blob);
+  const {blob: audioBlob, audioBuffer} = yield call(getAudioSaga, audioUrl);
+  const inMemoryAudioUrl = URL.createObjectURL(audioBlob);
   const duration = audioBuffer.duration * 1000;
   /* Prepare the player and wait until ready.
      This order (load audio, prepare player) is faster, the reverse
@@ -89,7 +93,7 @@ function* editorPrepareSaga ({payload: {baseDataUrl}}) {
   const {payload: {data}} = yield take(playerReady);
   // TODO: send progress events during extractWaveform?
   const waveform = extractWaveform(audioBuffer, Math.floor(duration * 60 / 1000));
-  yield put({type: editorLoaded, payload: {baseDataUrl, data, duration, audioBuffer, waveform}});
+  yield put({type: editorLoaded, payload: {baseDataUrl, data, duration, audioBlob, audioBuffer, waveform}});
 }
 
 function* getAudioSaga (audioUrl) {
@@ -116,10 +120,17 @@ function* loginFeedbackSaga (_action) {
   yield put({type: editorConfigured, payload: {bucketUrl}});
 }
 
-function editorLoadedReducer (state, {payload: {baseDataUrl, data, duration, audioBuffer, waveform}}) {
+function* editorSaveAudioSaga (_action) {
+  const id = yield select(state => state.getIn(['editor', 'base']).replace(/^.*\//, ''));
+  const blob = yield select(state => state.getIn(['editor', 'audioBlob']));
+  yield call(FileSaver.saveAs, blob, `${id}.mp3`);
+}
+
+function editorLoadedReducer (state, {payload: {baseDataUrl, data, duration, audioBlob, audioBuffer, waveform}}) {
   return state.update('editor', editor => editor
     .set('base', baseDataUrl)
     .set('data', data)
+    .set('audioBlob', audioBlob)
     .set('audioBuffer', audioBuffer)
     .set('waveform', waveform)
     .set('duration', duration)
@@ -189,14 +200,15 @@ function SetupScreenSelector (state, props) {
     const audioLoadProgress = editor.get('audioLoadProgress');
     return {loading, audioLoadProgress, dataUrl};
   }
+  const views = state.get('views');
+  const actionTypes = state.get('actionTypes');
   const duration = editor.get('duration');
   const tabId = editor.get('setupTabId');
-  const {TrimEditor, SubtitlesEditor, setupScreenTabChanged} = state.get('scope');
   const {version, events} = editor.get('data');
   const waveform = editor.get('waveform');
   return {
+    views, actionTypes,
     loading, tabId, dataUrl, version, events, duration, waveform,
-    TrimEditor, SubtitlesEditor, setupScreenTabChanged
   };
 }
 
@@ -212,7 +224,7 @@ class SetupScreen extends React.PureComponent {
         </div>
       );
     }
-    const {tabId, dataUrl, version, events, duration, waveform, TrimEditor, SubtitlesEditor} = this.props;
+    const {tabId, dataUrl, version, events, duration, waveform, views} = this.props;
     const overviewPanel = (
       <div>
         <p>{"Version "}<b>{version}</b></p>
@@ -220,6 +232,7 @@ class SetupScreen extends React.PureComponent {
         {/* number of events? */}
         {/* list of available subtitles */}
         <FullWaveform width={800} height={80} duration={duration} waveform={waveform} events={events} />
+        <Button onClick={this._saveAudio} icon={IconNames.DOWNLOAD} text={"Save audio"}/>
       </div>
     );
     return (
@@ -228,15 +241,20 @@ class SetupScreen extends React.PureComponent {
 
         <Tabs id='setup-tabs' onChange={this.handleTabChange} selectedTabId={tabId} large={true}>
           <Tab id='setup-tab-infos' title="Overview" panel={overviewPanel} />
-          <Tab id='setup-tab-trim' title="Trim" panel={<TrimEditor/>} />
-          <Tab id='setup-tab-subtitles' title="Subtitles" panel={<SubtitlesEditor/>} />
+          <Tab id='setup-tab-trim' title="Trim" panel={<views.TrimEditor/>} />
+          <Tab id='setup-tab-subtitles' title="Subtitles" panel={<views.SubtitlesEditor/>} />
         </Tabs>
 
       </div>
     );
   }
   handleTabChange = (newTabId) => {
-    this.props.dispatch({type: this.props.setupScreenTabChanged, payload: {tabId: newTabId}});
+    const {dispatch, actionTypes} = this.props;
+    dispatch({type: actionTypes.setupScreenTabChanged, payload: {tabId: newTabId}});
+  };
+  _saveAudio = () => {
+    const {dispatch, actionTypes} = this.props;
+    dispatch({type: actionTypes.editorSaveAudio});
   };
 }
 
