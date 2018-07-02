@@ -396,7 +396,9 @@ class SubtitlesEditor extends React.PureComponent {
   };
   _removeSelected = () => {
     const {selected: {key}} = this.props;
-    this.props.dispatch({type: this.props.actionTypes.subtitlesRemoveOption, payload: {key}});
+    if (confirm(`Confirm remove of language ${key}?`)) {
+      this.props.dispatch({type: this.props.actionTypes.subtitlesRemoveOption, payload: {key}});
+    }
   };
   _onChange = (event) => {
     const text = event.target.value;
