@@ -30,35 +30,54 @@ function parseCodecastUrl (base) {
   return {bucket, uploadPath, id};
 }
 
-function* saveSaga ({payload: {userConfig, base, data, req, res}}) {
+function* saveSaga ({payload: {userConfig, base, changes, req, res}}) {
   try {
     let {bucket, uploadPath, id} = parseCodecastUrl(base);
+    /* TODO: support multiple values for buckets, uploadPath */
     if (bucket !== userConfig.s3Bucket || uploadPath !== userConfig.uploadPath) {
       console.log('bucket', bucket, userConfig.s3Bucket);
       console.log('path', uploadPath, userConfig.uploadPath);
-      return res.json({error: 'copy not implemented'});
+      return res.json({error: 'denied'});
     }
-    const {subtitles} = data; /* {key: "en-US", text: "…", removed: true} */
-    const subtitlesAvailable = [];
+    if (!changes) {
+      return res.json({error: 'no changes requested'});
+    }
+    const s3JsonKey = `${uploadPath}/${id}.json`;
     const s3 = upload.makeS3Client(userConfig);
-    for (let {key: langKey, removed, text} of subtitles) {
-      const s3Key = `${uploadPath}/${id}_${langKey}.srt`;
-      if (removed) {
-        yield call(upload.deleteObject, s3, bucket, s3Key);
-        continue;
-      }
-      if (text !== undefined) {
-        yield call(upload.putObject, s3, {
-          Bucket: bucket, ACL: 'public-read', Key: s3Key,
-          ContentType: 'text/plain', Body: text
-        });
-      }
-      subtitlesAvailable.push(langKey);
+    /* TODO: support updating data: fetch json, apply requested changes, putObject */
+    const {Body, VersionId} = yield call(upload.getObject, s3, {Bucket: bucket, Key: s3JsonKey});
+    console.log('VersionId', VersionId);
+    const data = JSON.parse(Body);
+    if ('name' in changes) {
+      /* name: string */
+      data.name = changes.name;
     }
+    if ('subtitles' in changes) {
+      /* subtitles: [{key: string, text: undefined|string, removed: bool}] */
+      const subtitleKeys = [];
+      for (let {key: langKey, removed, text} of changes.subtitles) {
+        const s3SrtKey = `${uploadPath}/${id}_${langKey}.srt`;
+        if (removed) {
+          yield call(upload.deleteObject, s3, bucket, s3SrtKey);
+          continue;
+        }
+        if (text !== undefined) {
+          yield call(upload.putObject, s3, {
+            Bucket: bucket, Key: s3SrtKey,
+            ACL: 'public-read',
+            ContentType: 'text/plain', Body: text
+          });
+        }
+        subtitleKeys.push(langKey);
+      }
+      data.subtitles = subtitleKeys;
+    }
+    console.log("putObject", JSON.stringify(data));
     yield call(upload.putObject, s3, {
-      Bucket: bucket, ACL: 'public-read', Key: `${uploadPath}/${id}.json`,
+      Bucket: bucket, Key: `${uploadPath}/${id}.json`,
+      ACL: 'public-read',
       ContentType: 'application/json',
-      Body: JSON.stringify({...data, subtitles: subtitlesAvailable})
+      Body: JSON.stringify(data)
     });
     res.json({done: true});
   } catch (ex) {

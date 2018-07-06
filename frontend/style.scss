@@ -823,3 +823,23 @@ strong.highlight {
 .buttons-bar > * {
   display: table-cell;
 }
+
+/* New layout classes, use. */
+
+.mb {
+  margin-bottom: 10px;
+}
+.mt {
+  margin-top: 10px;
+}
+.hbox {
+  display: flex;
+  flex-flow: row;
+}
+.vbox {
+  display: flex;
+  flex-flow: column;
+}
+.fill {
+  flex-grow: 1;
+}

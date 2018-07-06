@@ -33,7 +33,7 @@
     "ansi-to-html": "^0.4.1",
     "array.prototype.fill": "^1.0.2",
     "audio-decode": "^1.4.0",
-    "aws-sdk": "^2.174.0",
+    "aws-sdk": "^2.268.1",
     "babel-cli": "^7.0.0-beta.3",
     "babel-loader": "8.0.0-beta.0",
     "bennu": "^17.3.0",

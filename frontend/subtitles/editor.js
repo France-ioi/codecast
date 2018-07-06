@@ -224,78 +224,70 @@ function clearAllUnsaved (options) {
   return update(options, changes);
 }
 
-function* subtitlesEditorSaga () {
-  const actionTypes = yield select(state => state.get('actionTypes'));
-  yield takeLatest(actionTypes.subtitlesSelected, subtitlesSelectedSaga);
-  yield takeLatest(actionTypes.subtitlesEditorEnter, subtitlesEditorEnterSaga);
-  yield takeLatest(actionTypes.subtitlesEditorSave, subtitlesEditorSaveSaga);
-  yield takeLatest(actionTypes.subtitlesEditorReturn, subtitlesEditorReturnSaga);
-  yield takeLatest(actionTypes.subtitlesTextReverted, subtitlesTextRevertedSaga);
-  yield takeLatest(actionTypes.subtitlesTextLoaded, subtitlesTextLoadedSaga);
-  yield takeLatest(actionTypes.subtitlesSaveOption, subtitlesSaveOptionSaga);
+function* subtitlesEditorSaga (app) {
+  const {actionTypes} = app;
+  yield takeLatest(actionTypes.subtitlesSelected, subtitlesSelectedSaga, app);
+  yield takeLatest(actionTypes.subtitlesEditorEnter, subtitlesEditorEnterSaga, app);
+  yield takeLatest(actionTypes.subtitlesEditorSave, subtitlesEditorSaveSaga, app);
+  yield takeLatest(actionTypes.subtitlesEditorReturn, subtitlesEditorReturnSaga, app);
+  yield takeLatest(actionTypes.subtitlesTextReverted, subtitlesTextRevertedSaga, app);
+  yield takeLatest(actionTypes.subtitlesTextLoaded, subtitlesTextLoadedSaga, app);
+  yield takeLatest(actionTypes.subtitlesSaveOption, subtitlesSaveOptionSaga, app);
 }
 
-function* subtitlesSelectedSaga ({payload: {option}}) {
+function* subtitlesSelectedSaga ({actionTypes}, {payload: {option}}) {
   /* Trigger loading of subtitles when first selected. */
-  const {subtitlesTextReverted} = yield select(state => state.get('actionTypes'));
   const {key, url, text} = option;
   if (url && !text) {
-    yield put({type: subtitlesTextReverted, payload: {key, url}});
+    yield put({type: actionTypes.subtitlesTextReverted, payload: {key, url}});
   }
 }
 
-function* subtitlesEditorEnterSaga (_action) {
-  const {PlayerControls, SubtitlesEditorReturn} = yield select(state => state.get('views'));
-  const {subtitlesEditingChanged, editorControlsChanged, subtitlesReload, switchToScreen} = yield select(state => state.get('actionTypes'));
-  yield put({type: subtitlesEditingChanged, payload: {editing: true}});
-  yield put({type: editorControlsChanged, payload: {controls: {top: [PlayerControls], floating: [SubtitlesEditorReturn]}}});
-  yield put({type: subtitlesReload});
-  yield put({type: switchToScreen, payload: {screen: 'edit'}});
+function* subtitlesEditorEnterSaga ({actionTypes, views}, _action) {
+  yield put({type: actionTypes.subtitlesEditingChanged, payload: {editing: true}});
+  yield put({type: actionTypes.editorControlsChanged, payload: {controls: {top: [views.PlayerControls], floating: [views.SubtitlesEditorReturn]}}});
+  yield put({type: actionTypes.subtitlesReload});
+  yield put({type: actionTypes.switchToScreen, payload: {screen: 'edit'}});
 }
 
-function* subtitlesEditorReturnSaga (_action) {
-  const {subtitlesSave, subtitlesEditingChanged, editorControlsChanged, switchToScreen} = yield select(state => state.get('actionTypes'));
-  yield put({type: subtitlesSave});
-  yield put({type: subtitlesEditingChanged, payload: {editing: false}});
-  yield put({type: editorControlsChanged, payload: {controls: {floating: []}}});
-  yield put({type: switchToScreen, payload: {screen: 'setup'}});
+function* subtitlesEditorReturnSaga ({actionTypes}, _action) {
+  yield put({type: actionTypes.subtitlesSave});
+  yield put({type: actionTypes.subtitlesEditingChanged, payload: {editing: false}});
+  yield put({type: actionTypes.editorControlsChanged, payload: {controls: {floating: []}}});
+  yield put({type: actionTypes.switchToScreen, payload: {screen: 'setup'}});
 }
 
-function* subtitlesEditorSaveSaga (_action) {
-  /* XXX valid for subtitles, code for trimming is completely different,
-         so move to subtitles bundle */
-  const {baseUrl, base, data, subtitlesEditorSaveFailed, subtitlesEditorSaveSucceeded} = yield select(function (state) {
-    const {subtitlesEditorSaveFailed, subtitlesEditorSaveSucceeded} = state.get('actionTypes');
+function* subtitlesEditorSaveSaga ({actionTypes}, _action) {
+  const {baseUrl, base, subtitles} = yield select(function (state) {
     const {baseUrl} = state.get('options');
     const editor = state.get('editor');
     const base = editor.get('base');
-    const data = editor.get('data');
     const subtitles = Object.values(state.get('subtitles').availableOptions);
-    return {
-      baseUrl, base, data: {...data, subtitles},
-      subtitlesEditorSaveFailed, subtitlesEditorSaveSucceeded
-    };
+    return {baseUrl, base, subtitles};
   });
+  const changes = {subtitles};
+  let result;
   try {
-    const result = yield call(postJson, `${baseUrl}/save`, {base, data});
-    // TODO: pass new base as payload, when copying
-    const timestamp = new Date();
-    yield put({type: subtitlesEditorSaveSucceeded, payload: {timestamp}});
+    // TODO: also pass new base when copying
+    result = yield call(postJson, `${baseUrl}/save`, {base, changes});
   } catch (ex) {
-    console.log('error', ex);
-    yield put({type: subtitlesEditorSaveFailed, payload: {error: ex.toString()}});
+    result = {error: ex.toString()};
   }
+  if (result.error) {
+    yield put({type: actionTypes.subtitlesEditorSaveFailed, payload: {error: result.error}});
+    return;
+  }
+  const timestamp = new Date();
+  yield put({type: actionTypes.subtitlesEditorSaveSucceeded, payload: {timestamp}});
 }
 
-function* subtitlesTextRevertedSaga ({payload: {key, url}}) {
-  const {subtitlesTextChanged} = yield select(state => state.get('actionTypes'));
+function* subtitlesTextRevertedSaga ({actionTypes}, {payload: {key, url}}) {
   const text = yield call(getSubtitles, url);
   /* Text is loaded from server, so clear the unsaved flag. */
-  yield put({type: subtitlesTextChanged, payload: {text, unsaved: false}});
+  yield put({type: actionTypes.subtitlesTextChanged, payload: {text, unsaved: false}});
 }
 
-function* subtitlesTextLoadedSaga ({payload: {key, file}}) {
-  const actionTypes = yield select(state => state.get('actionTypes'));
+function* subtitlesTextLoadedSaga ({actionTypes}, {payload: {key, file}}) {
   yield put({type: actionTypes.subtitlesLoadFromFile, payload: {key, file}});
   while (true) {
     const loadAction = yield take([actionTypes.subtitlesLoadSucceeded, actionTypes.subtitlesLoadFailed]);
@@ -310,7 +302,7 @@ function* subtitlesTextLoadedSaga ({payload: {key, file}}) {
   }
 }
 
-function* subtitlesSaveOptionSaga ({payload: {key}}) {
+function* subtitlesSaveOptionSaga (_app, {payload: {key}}) {
   const {text} = yield select(state => state.get('subtitles').availableOptions[key]);
   const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
   yield call(FileSaver.saveAs, blob, `${key}.srt`);

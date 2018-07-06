@@ -40,6 +40,10 @@ export function makeS3Client ({s3AccessKeyId, s3SecretAccessKey, s3Region}) {
   });
 };
 
+export function getObject (s3, params) {
+  return s3.getObject(params).promise();
+};
+
 export function putObject (s3, params) {
   return s3.putObject(params).promise();
 };

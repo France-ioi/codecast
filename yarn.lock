@@ -904,20 +904,19 @@ aws-sdk@^2.1.17:
     xml2js "0.4.17"
     xmlbuilder "4.2.1"
 
-aws-sdk@^2.174.0:
-  version "2.174.0"
-  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.174.0.tgz#4063b5beb27af34fef054b6b02dc791703395556"
+aws-sdk@^2.268.1:
+  version "2.268.1"
+  resolved "https://registry.yarnpkg.com/aws-sdk/-/aws-sdk-2.268.1.tgz#d4a2152d7d34c52b6d1c7a4809a2672db7f2996a"
   dependencies:
     buffer "4.9.1"
-    crypto-browserify "1.0.9"
-    events "^1.1.1"
+    events "1.1.1"
+    ieee754 "1.1.8"
     jmespath "0.15.0"
     querystring "0.2.0"
     sax "1.2.1"
     url "0.10.3"
     uuid "3.1.0"
     xml2js "0.4.17"
-    xmlbuilder "4.2.1"
 
 aws-sign2@~0.6.0:
   version "0.6.0"
@@ -2187,7 +2186,7 @@ eventemitter2@^3.0.0:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/eventemitter2/-/eventemitter2-3.0.2.tgz#81c0edb739ffa64fb9f21bbcb1d2b419a5133512"
 
-events@^1.0.0, events@^1.1.1:
+events@1.1.1, events@^1.0.0, events@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/events/-/events-1.1.1.tgz#9ebdb7635ad099c70dcc4c2a1f5004288e8bd924"
 
@@ -2747,7 +2746,7 @@ icss-replace-symbols@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/icss-replace-symbols/-/icss-replace-symbols-1.1.0.tgz#06ea6f83679a7749e386cfe1fe812ae5db223ded"
 
-ieee754@^1.1.4:
+ieee754@1.1.8, ieee754@^1.1.4:
   version "1.1.8"
   resolved "https://registry.yarnpkg.com/ieee754/-/ieee754-1.1.8.tgz#be33d40ac10ef1926701f6f08a2d86fbfd1ad3e4"
 

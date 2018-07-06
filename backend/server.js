@@ -165,8 +165,8 @@ function addBackendRoutes (app, config, store) {
   app.post('/save', function (req, res) {
     config.getUserConfig(req, function (err, userConfig) {
       if (err) return res.json({error: err});
-      const {base, data} = req.body;
-      store.dispatch({type: 'SAVE', payload: {userConfig, base, data, req, res}});
+      const {base, changes} = req.body;
+      store.dispatch({type: 'SAVE', payload: {userConfig, base, changes, req, res}});
     });
   });
 
