@@ -9,7 +9,9 @@ class StepperView extends React.PureComponent {
       diagnostics, readOnly, sourceMode, sourceRowHeight,
       preventInput, haveStepper, error, getMessage, geometry, panes,
       StackView, BufferEditor, ArduinoPanel, DirectivesPane, IOPane,
+      windowHeight
     } = this.props;
+    const height = `${windowHeight - this.state.top - 10}px`;
     const sourcePanelHeader = (
       <span>
         {getMessage('SOURCE')}
@@ -33,8 +35,8 @@ class StepperView extends React.PureComponent {
       </div>
     );
     return (
-      <div id='mainView-container'>
-        <div id='mainView' className={classnames([`mainView-${geometry.size}`])}>
+      <div id='mainView-container' ref={this.refContainer}>
+        <div id='mainView' className={classnames([`mainView-${geometry.size}`])} style={{height}}>
           <div style={{width: `${geometry.width}px`}}>
             <div className="row">
               {StackView && <div className="col-sm-3">
@@ -112,14 +114,25 @@ class StepperView extends React.PureComponent {
       </div>
     );
   };
+  componentDidUpdate (prevProps, prevState) {
+    const top = this._container.offsetTop;
+    if (top !== this.state.top) {
+      this.setState({top});
+    }
+  }
   _onClearDiagnostics = () => {
     this.props.dispatch({type: this.props.translateClearDiagnostics});
   };
   _onStepperExit = () => {
     this.props.dispatch({type: this.props.stepperExit});
   };
+  refContainer = (element) => {
+    this._container = element;
+  };
+  state = {top: 79};
 }
 
+/* XXX move out of here? */
 class StepperViewPanes extends React.PureComponent {
   render () {
     const {panes} = this.props;
@@ -129,8 +142,7 @@ class StepperViewPanes extends React.PureComponent {
           if (!pane.get('visible')) return false;
           const View = pane.get('View');
           const paneStyle = {
-            width: `${pane.get('width')}px`,
-            left: `${pane.get('left')}px`,
+            width: `${pane.get('width')}px`
           };
           return (
             <div key={key} className='pane' style={paneStyle}>
@@ -166,6 +178,7 @@ function StepperViewSelector (state, props) {
   */
   const player = getPlayerState(state);
   const preventInput = player.get('isPlaying');
+  const windowHeight = state.get('windowHeight');
   return {
     diagnostics, haveStepper, readOnly, error, getMessage, geometry, panes, preventInput,
     translateClearDiagnostics, stepperExit,
@@ -174,6 +187,7 @@ function StepperViewSelector (state, props) {
     ArduinoPanel: arduinoEnabled && ArduinoPanel,
     DirectivesPane: showViews && DirectivesPane,
     IOPane: showIO && IOPane,
+    windowHeight
   };
 }
 

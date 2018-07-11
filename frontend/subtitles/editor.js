@@ -311,19 +311,20 @@ function* subtitlesSaveOptionSaga (_app, {payload: {key}}) {
 function SubtitlesEditorSelector (state, props) {
   const actionTypes = state.get('actionTypes');
   const {unsaved, notify, selectedKey, availableOptions, langOptions} = state.get('subtitles');
+  const canSave = state.getIn(['editor', 'canSave']);
   const selected = selectedKey && availableOptions[selectedKey];
-  const subtitlesText = selected && selected.text;
-  return {actionTypes, unsaved, notify, availableOptions, langOptions, selected, subtitlesText};
+  const subtitlesText = (selected && selected.text) || '';
+  return {actionTypes, canSave, unsaved, notify, availableOptions, langOptions, selected, subtitlesText};
 }
 
 class SubtitlesEditor extends React.PureComponent {
   render () {
-    const {availableOptions, selected, subtitlesText, langOptions, onSelect, onRemove, unsaved, notify} = this.props;
+    const {availableOptions, selected, subtitlesText, langOptions, onSelect, onRemove, canSave, unsaved, notify} = this.props;
     const availKeys = Object.keys(availableOptions).filter(key => !availableOptions[key].removed).sort();
     return (
       <div>
-        <div className='row'>
-          <div className='col-sm-6' style={{paddingRight: '10px'}}>
+        <div className='hbox mb'>
+          <div className='fill' style={{paddingRight: '10px'}}>
             <Menu>
               {availKeys.map(key =>
                 <SubtitlesEditorOption key={key} option={availableOptions[key]}
@@ -337,7 +338,7 @@ class SubtitlesEditor extends React.PureComponent {
               </MenuItem>
             </Menu>
           </div>
-          <div className='col-sm-6' style={{paddingLeft: '10px'}}>
+          <div className='fill' style={{paddingLeft: '10px'}}>
             {selected
               ? <div>
                   <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange}/>
@@ -351,10 +352,16 @@ class SubtitlesEditor extends React.PureComponent {
               : <NonIdealState visual='arrow-left' title={"No language selected"} description={"Load existing subtitles or add a new language, and the click the Edit button."} />}
           </div>
         </div>
-        <div style={{marginTop: '2em', textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
-          <Button onClick={this._beginEdit} disabled={!selected} icon={IconNames.EDIT} text={"Edit"} style={{marginRight: '10px'}}/>
-          <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"} intent={unsaved ? Intent.PRIMARY : Intent.NONE}/>
+        <div className='hbox mb' style={{textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
+          <div className='fill center'>
+            <Button onClick={this._beginEdit} disabled={!selected} icon={IconNames.EDIT} text={"Edit"} style={{marginRight: '10px'}}/>
+            <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"} disabled={!canSave} intent={unsaved ? Intent.PRIMARY : Intent.NONE}/>
+          </div>
         </div>
+        {!canSave &&
+          <Callout intent={Intent.WARNING} title={"Insufficient access rights"}>
+            {"The current user is not allowed to modify this Codecast."}
+          </Callout>}
         <div>
           {notify.key === 'pending' && <Callout icon={<Spinner small/>}>{"Saving, please wait."}</Callout>}
           {notify.key === 'success' && <Callout icon='saved' intent={Intent.SUCCESS}>{"Saved."}</Callout>}

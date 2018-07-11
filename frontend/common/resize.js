@@ -64,7 +64,7 @@ export default function (bundle, deps) {
         if (!pane.get('enabled')) {
           return pane.set('visible', false)
         }
-        mainViewWidth -= pane.get('width');
+        mainViewWidth -= pane.get('width') + 10;
         return pane.set('visible', true);
       });
       /* Find the largest main-view geometry that fits the available space. */
@@ -81,9 +81,9 @@ export default function (bundle, deps) {
       }
     }
     /* Compute the container width */
+    /* XXX is this still needed? */
     let containerWidth = geometry.width;
     panes = panes.map(pane => {
-      pane = pane.set('left', containerWidth);
       if (pane.get('visible')) {
         containerWidth += pane.get('width');
       }

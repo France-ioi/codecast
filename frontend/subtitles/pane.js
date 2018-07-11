@@ -4,6 +4,8 @@ import ReactDOM from 'react-dom';
 import classnames from 'classnames';
 import scrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
 import Highlight from 'react-highlighter';
+import {InputGroup} from '@blueprintjs/core';
+import {IconNames} from '@blueprintjs/icons';
 
 import {formatTime} from '../common/utils';
 import {filterItems} from './utils';
@@ -16,24 +18,25 @@ export default function (bundle) {
 
 function SubtitlesPaneSelector (state, props) {
   const getMessage = state.get('getMessage');
-  const {subtitlesFilterTextChanged, playerSeek} = state.get('scope');
+  const {subtitlesFilterTextChanged, playerSeek} = state.get('actionTypes');
+  const windowHeight = state.get('windowHeight');
   const {items, filteredItems, currentIndex, audioTime, filterText, filterRegexp} = state.get('subtitles');
   return {
     subtitlesFilterTextChanged, playerSeek, getMessage,
     subtitles: filteredItems,
-    currentIndex, audioTime, filterText, filterRegexp};
+    currentIndex, audioTime, filterText, filterRegexp, windowHeight};
 }
 
-/* SubtitlesPane is used in both *player* and *editor* mode. */
 class SubtitlesPane extends React.PureComponent {
   render () {
-    const {subtitles, currentIndex, editing, audioTime, filterText, filterRegexp, getMessage} = this.props;
+    const {subtitles, currentIndex, editing, audioTime, filterText, filterRegexp, getMessage, windowHeight} = this.props;
     return (
       <div className='subtitles-pane'>
         {!editing &&
-          <input type='text' onChange={this._filterTextChanged} value={filterText} />}
-        {subtitles && subtitles.length > 0
-          ? subtitles.map((st, index) => {
+          <InputGroup leftIcon={IconNames.SEARCH} type='text' onChange={this._filterTextChanged} value={filterText} />}
+        <div className='subtitles-pane-items'>
+          {subtitles &&
+            subtitles.map((st, index) => {
               const selected = currentIndex === index;
               if (!editing) {
                 const ref = selected && this._refSelected;
@@ -44,12 +47,14 @@ class SubtitlesPane extends React.PureComponent {
                   onChange={this._changeItem} onInsert={this._insertItem} onRemove={this._removeItem} onShift={this._shiftItem} />;
               }
               return <SubtitlePaneItemViewer key={index} item={st} onJump={this._jump} />;
-            })
-          : <p>{getMessage('CLOSED_CAPTIONS_NOT_LOADED')}</p>}
+            })}
+          </div>
+          {!subtitles &&
+            <p>{getMessage('CLOSED_CAPTIONS_NOT_LOADED')}</p>}
       </div>
     );
   }
-  componentDidUpdate (prevProps) {
+  componentDidUpdate (prevProps, prevState) {
     if (this.props.currentIndex !== prevProps.currentIndex) {
       if (this._selectedComponent) {
         const domNode = ReactDOM.findDOMNode(this._selectedComponent);

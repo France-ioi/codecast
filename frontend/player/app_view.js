@@ -19,7 +19,7 @@ class PlayerApp extends React.PureComponent {
         <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
           <PlayerControls/>
           <StepperView/>
-          {/*<SubtitlesBand/>*/}
+          <SubtitlesBand/>
         </div>
         {error &&
           <Alert intent={Intent.DANGER} icon='error' isOpen={!!error} onConfirm={this.reload}>

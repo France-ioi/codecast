@@ -42,12 +42,12 @@ function SubtitlesBandSelector (state, props) {
   if (!loaded || (!editing && !bandEnabled)) {
     return {hidden: true};
   }
+  const geometry = state.get('mainViewGeometry');
   const {items, currentIndex, itemVisible, isMoving, offsetY} = state.get('subtitles');
   const windowHeight = state.get('windowHeight');
-  const geometry = state.get('mainViewGeometry');
   const scope = state.get('scope');
   return {
-    top: 400,
+    top: windowHeight - 60,
     active: itemVisible, item: items && items[currentIndex], isMoving, offsetY, geometry, windowHeight,
     beginMove: scope.subtitlesBandBeginMove,
     endMove: scope.subtitlesBandEndMove,
@@ -57,16 +57,17 @@ function SubtitlesBandSelector (state, props) {
 
 class SubtitlesBand extends React.PureComponent {
   render () {
-    if (this.props.hidden) {
+    const {hidden} = this.props;
+    if (hidden) {
       /* ClickDrag requires a DOM node to attach to, so return a hidden element
          rather than false. */
       return <div style={{display: 'none'}}/>;
     }
-    const {active, item, offsetY, dataDrag: {isMoving}, geometry, top} = this.props;
+    const {active, item, geometry, offsetY, dataDrag: {isMoving}, top} = this.props;
     const translation = `translate(0px, ${this.state.currentY}px)`;
     return (
       <div className={classnames(['subtitles-band', `subtitles-band-${active?'':'in'}active`, isMoving && 'subtitles-band-moving', 'no-select', `mainView-${geometry.size}`])}
-        style={{top: `${top}px`, transform: translation, width: `${geometry.width + 20/*padding*/}px`}} ref={this._refBand} >
+        style={{top: `${top}px`, transform: translation, width: `${geometry.width}px`}} ref={this._refBand} >
         <div className='subtitles-band-frame'>
           {item && <p className='subtitles-text'>{item.text}</p>}
         </div>
@@ -74,6 +75,7 @@ class SubtitlesBand extends React.PureComponent {
     );
   }
   static getDerivedStateFromProps (nextProps, prevState) {
+    if (!nextProps.windowHeight) return null;
     const height = (prevState.band ? prevState.band.offsetHeight : 40);
     if (nextProps.dataDrag.isMoving) {
       const newPositionY = prevState.lastPositionY + nextProps.dataDrag.moveDeltaY;

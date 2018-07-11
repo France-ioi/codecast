@@ -26,7 +26,7 @@ function findSubtitleIndex (items, time) {
 
 export function filterItems (items, re) {
   if (!re) return items;
-  return items.filter(item => -1 !== item.text.search(re));
+  return items.filter(item => item.text && -1 !== item.text.search(re));
 }
 
 export function getSubtitles (url) {

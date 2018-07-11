@@ -159,16 +159,9 @@ body#app, #app h1, #app h2, #app h3 {
 }
 
 
-#mainView {
-  float: left;
-}
-#mainView-panes {
-  float: left;
-  top: 62px;
-}
-#mainView-panes .pane {
-  max-height: calc(100vh - 62px);
-  overflow-y: scroll;
+#mainView-container, #mainView-panes {
+  display: flex;
+  flex-flow: row;
 }
 
 #floating-controls {
@@ -671,7 +664,9 @@ svg {
 /* subtitles */
 
 .subtitles-pane {
+  height: 100%;
   border: 1px solid #ccc;
+  margin-left: 5px;
   padding: 5px;
   background: #fff;
   z-index: 6;
@@ -738,6 +733,13 @@ svg {
     }
   }
 }
+.subtitles-pane-items {
+  overflow-x: hidden;
+  overflow-y: scroll;
+  margin-top: 5px;
+  height: calc(100% - 35px); /* 5px + height(input) */
+  background: #f8f8f8;
+}
 .subtitles-item {
   cursor: pointer;
   font-size: 12px;
@@ -756,7 +758,6 @@ svg {
   cursor: -webkit-grab;
   cursor: -moz-grab;
   cursor: -o-grab;
-  margin: 0 0 0 -10px;
   padding: 10px 0;
   opacity: 0.8;
   background-color: #222;
@@ -782,9 +783,6 @@ svg {
 /* .subtitles-band-moving {} */
 .subtitles-band p {
   margin: 0;
-}
-.main-view .pane {
-  overflow: hidden;
 }
 
 p.error {
