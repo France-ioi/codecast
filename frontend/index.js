@@ -51,7 +51,8 @@ function restart () {
     Codecast.task.cancel();
     Codecast.task = null;
   }
-  Codecast.task = start();
+  /* XXX Make a separate object for selectors in the linker? */
+  Codecast.task = start({dispatch: store.dispatch, selectors: scope, actionTypes, views});
 }
 
 /* In-browser API */
@@ -81,8 +82,7 @@ Codecast.start = function (options) {
   // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
   /* Run the sagas (must be done before calling autoLogin) */
-  /* XXX Make a separate object for selectors in the linker? */
-  Codecast.task = start({dispatch: store.dispatch, selectors: scope, actionTypes});
+  restart();
 
   let App;
   switch (options.start) {
