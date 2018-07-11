@@ -3,7 +3,7 @@ import React from 'react';
 import classnames from 'classnames';
 import {eventChannel} from 'redux-saga'
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
-import {AnchorButton, Button, ControlGroup, Icon, Intent, Label, ProgressBar, Spinner, Tab, Tabs} from '@blueprintjs/core';
+import {AnchorButton, Button, Callout, ControlGroup, Icon, InputGroup, Intent, Label, ProgressBar, Spinner, Tab, Tabs} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
 import FileSaver from 'file-saver';
 
@@ -59,36 +59,45 @@ function EditorOverviewSelector (state, props) {
   const editor = state.get('editor');
   const playerUrl = editor.get('playerUrl');
   const {version, name, events} = editor.get('data');
+  const canSave = editor.get('canSave');
   const unsaved = editor.get('unsaved');
   const save = editor.get('save');
   const duration = editor.get('duration');
   const waveform = editor.get('waveform');
-  return {actionTypes, version, name, events, duration, waveform, unsaved, save, playerUrl};
+  return {actionTypes, version, name, events, duration, waveform, canSave, unsaved, save, playerUrl};
 }
 
 class EditorOverview extends React.PureComponent {
   render () {
-    const {version, name, events, duration, waveform, unsaved, save, playerUrl} = this.props;
+    const {version, name, events, duration, waveform, unsaved, save, playerUrl, canSave} = this.props;
     return (
       <div className='vbox'>
-        <label className='pt-label'>
-          {"Name"}
+        <Label text={"Name"}>
           <input type='text' placeholder="Name" className='pt-input pt-fill' value={name||''} onChange={this._nameChanged} />
-        </label>
+        </Label>
+        <Label text={"Player URL"}>
+          <InputGroup leftIcon={IconNames.LINK} type='text' value={playerUrl} readOnly
+            rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal target='_blank'/>} />
+        </Label>
         {/* list of available subtitles? */}
         <div>
-          <FullWaveform width={800} height={80} duration={duration} waveform={waveform} events={events} />
+          <FullWaveform width={760} height={80} duration={duration} waveform={waveform} events={events} />
           <div className='hbox mb'>
             <div className='fill'>{"Version "}<b>{version}</b></div>
             <div className='fill'>{"Duration "}<b>{formatTime(duration)}</b></div>
             <div className='fill'>{"Number of events "}<b>{events.length}</b></div>
           </div>
         </div>
-        <div className='hbox mb'>
-          <Button onClick={this._saveAudio} icon={IconNames.DOWNLOAD} text={"Save audio"}/>
-          <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"}/>
-          <AnchorButton href={playerUrl} target='_blank' text={"Open in player"}/>
+        <div className='hbox mb' style={{textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
+          <div className='fill center'>
+            <Button onClick={this._saveAudio} icon={IconNames.DOWNLOAD} text={"Save audio"}/>
+            <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"} disabled={!canSave} />
+          </div>
         </div>
+        {!canSave &&
+          <Callout intent={Intent.WARNING} title={"Insufficient access rights"}>
+            {"The current user is not allowed to modify this Codecast."}
+          </Callout>}
         {save &&
           <div className='vbox'>
             {save.state === 'pending' &&
@@ -98,8 +107,8 @@ class EditorOverview extends React.PureComponent {
               </div>}
             {save.state === 'failure' &&
               <div className='fill'>
-                <Icon icon={cross} intent={Intent.DANGER} />
-                {"Failed to save: "}{save.message}
+                <Icon icon='cross' intent={Intent.DANGER} />
+                {"Failed to save: "}{save.error}
               </div>}
             {save.state === 'success' &&
               <div className='fill'>

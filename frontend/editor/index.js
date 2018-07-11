@@ -4,7 +4,7 @@ import React from 'react';
 import classnames from 'classnames';
 import {eventChannel} from 'redux-saga'
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
-import {ProgressBar, Tab, Tabs} from '@blueprintjs/core';
+import {Callout, Intent, ProgressBar, Tab, Tabs} from '@blueprintjs/core';
 
 import {getJson, getAudio} from '../common/utils';
 import {extractWaveform} from './waveform/tools';
@@ -25,9 +25,6 @@ export default function (bundle, deps) {
   bundle.defineAction('editorAudioLoadProgress', 'Editor.Audio.LoadProgress');
   bundle.addReducer('editorAudioLoadProgress', editorAudioLoadProgressReducer);
 
-  bundle.defineAction('editorConfigured', 'Editor.Configured');
-  bundle.addReducer('editorConfigured', editorConfiguredReducer);
-
   bundle.defineAction('editorLoaded', 'Editor.Loaded');
   bundle.addReducer('editorLoaded', editorLoadedReducer);
 
@@ -41,7 +38,7 @@ export default function (bundle, deps) {
 
   bundle.addSaga(function* editorSaga (app) {
     yield takeEvery(app.actionTypes.editorPrepare, editorPrepareSaga, app);
-    yield takeEvery(app.actionTypes.loginFeedback, loginFeedbackSaga, app);
+
   });
 
   bundle.include(OverviewBundle);
@@ -68,10 +65,6 @@ function editorControlsChangedReducer (state, {payload: {controls}}) {
 
 function editorAudioLoadProgressReducer (state, {payload: {value}}) {
   return state.setIn(['editor', 'audioLoadProgress'], value);
-}
-
-function editorConfiguredReducer (state, {payload: {bucketUrl}}) {
-  return state.setIn(['editor', 'bucketUrl'], bucketUrl);
 }
 
 function* editorPrepareSaga ({actionTypes}, {payload: {baseDataUrl}}) {
@@ -108,13 +101,13 @@ function* getAudioSaga (actionTypes, audioUrl) {
   }
 }
 
-function* loginFeedbackSaga ({actionTypes}, _action) {
-  const {baseUrl} = yield select(state => state.get('options'));
-  const {bucketUrl} = yield call(getJson, `${baseUrl}/editor.json`);
-  yield put({type: actionTypes.editorConfigured, payload: {bucketUrl}});
-}
-
 function editorLoadedReducer (state, {payload: {baseDataUrl, data, duration, audioBlob, audioBuffer, waveform}}) {
+  let canSave = false;
+  for (let grant of state.get('user').grants) {
+    if (baseDataUrl.startsWith(grant.url)) {
+      canSave = true;
+    }
+  }
   return state.update('editor', editor => editor
     .set('base', baseDataUrl)
     .set('data', data)
@@ -122,6 +115,7 @@ function editorLoadedReducer (state, {payload: {baseDataUrl, data, duration, aud
     .set('audioBuffer', audioBuffer)
     .set('waveform', waveform)
     .set('duration', duration)
+    .set('canSave', canSave)
     .set('loading', false));
 }
 
@@ -195,7 +189,7 @@ function SetupScreenSelector (state, props) {
   const waveform = editor.get('waveform');
   return {
     views, actionTypes,
-    loading, tabId, version, title, events, duration, waveform,
+    loading, tabId, version, title, events, duration, waveform
   };
 }
 

@@ -6,6 +6,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import {spawn} from 'child_process';
 import AnsiToHtml from 'ansi-to-html';
+import url from 'url';
 
 import * as upload from './upload';
 import directives from './directives';
@@ -22,28 +23,12 @@ function buildApp (config, store, callback) {
   /* Enable strict routing to make trailing slashes matter. */
   app.enable('strict routing');
 
-  // Default implementations
+  /* Default implementations, override these. */
   config.optionsHook = function (req, options, callback) {
     callback(null, options);
   };
   config.getUserConfig = function (req, callback) {
-    let {token} = req.query;
-    if (token === undefined) {
-      token = 'default';
-    }
-    const {configs, tokens} = config;
-    if (!(token in tokens)) {
-      return callback('bad token');
-    }
-    const result = {};
-    tokens[token].forEach(function (item) {
-      if (typeof item === 'object') {
-        Object.assign(result, item);
-      } else if (typeof item === 'string') {
-        Object.assign(result, configs[item]);
-      }
-    });
-    callback(null, result);
+    callback(null, {grants: []});
   };
 
   app.set('view engine', 'pug');
@@ -134,41 +119,58 @@ function addBackendRoutes (app, config, store) {
     });
   });
 
-  app.get('/editor.json', function (req, res) {
-    config.getUserConfig(req, function (err, userConfig) {
-      if (err) return res.json({error: err.toString()});
-      const {s3Bucket, uploadPath} = userConfig;
-      const bucketUrl = `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}/`;
-      res.json({bucketUrl});
-    });
-  });
-
+  /* Return upload form data.  The query must specify the (s3Bucket, uploadPath)
+     pair identifying the S3 target, which must correspond to one of the user's
+     grants. */
   app.post('/upload', function (req, res) {
     config.getUserConfig(req, function (err, userConfig) {
-      if (err) return res.json({error: err});
-      const id = Date.now().toString();
-      const uploadPath = `${userConfig.uploadPath||'uploads'}/${id}`;
-      const bucket = userConfig.s3Bucket;
-      const s3client = upload.makeS3UploadClient(userConfig);
-      upload.getJsonUploadForm(s3client, bucket, uploadPath, function (err, events) {
+      selectTarget (userConfig, req.body, function (err, target) {
         if (err) return res.json({error: err.toString()});
-        upload.getMp3UploadForm(s3client, bucket, uploadPath, function (err, audio) {
+        const id = Date.now().toString();
+        const s3client = upload.makeS3UploadClient(target);
+        upload.getJsonUploadForm(s3client, s3Bucket, uploadPath, function (err, events) {
           if (err) return res.json({error: err.toString()});
-          const baseUrl = `https://${bucket}.s3.amazonaws.com/${uploadPath}`;
-          const player_url = `${config.playerUrl}?base=${encodeURIComponent(baseUrl)}`;
-          res.json({player_url, events, audio});
+          upload.getMp3UploadForm(s3client, s3Bucket, uploadPath, function (err, audio) {
+            if (err) return res.json({error: err.toString()});
+            const baseUrl = `https://${bucket}.s3.amazonaws.com/${uploadPath}`;
+            const player_url = `${config.playerUrl}?base=${encodeURIComponent(baseUrl)}`;
+            res.json({player_url, events, audio});
+          });
         });
       });
     });
   });
 
+  /* Perform the requested `changes` to the codecast at URL `base`.
+     The `base` URL must identify an S3 Target in the user's grants. */
   app.post('/save', function (req, res) {
     config.getUserConfig(req, function (err, userConfig) {
-      if (err) return res.json({error: err});
-      const {base, changes} = req.body;
-      store.dispatch({type: 'SAVE', payload: {userConfig, base, changes, req, res}});
+      const {s3Bucket, uploadPath, id} = parseCodecastUrl(req.body.base);
+      selectTarget (userConfig, {s3Bucket, uploadPath}, function (err, target) {
+        if (err) return res.json({error: err.toString()});
+        const {changes} = req.body;
+        store.dispatch({type: 'SAVE', payload: {target, id, changes, req, res}});
+      });
     });
   });
+
+  function selectTarget ({grants}, {s3Bucket, uploadPath}, callback) {
+    for (let grant of grants) {
+      if (grant.s3Bucket === s3Bucket && grant.uploadPath === uploadPath) {
+        return callback(null, grant);
+      }
+    }
+    return callback('target unspecified');
+  }
+
+  function parseCodecastUrl (base) {
+    const {hostname, pathname} = url.parse(base);
+    const s3Bucket = hostname.replace('.s3.amazonaws.com', '');
+    const idPos = pathname.lastIndexOf('/');
+    const uploadPath = pathname.slice(1, idPos); // skip leading '/'
+    const id = pathname.slice(idPos + 1);
+    return {s3Bucket, uploadPath, id};
+  }
 
   app.post('/translate', function (req, res) {
     const env = {LANGUAGE: 'c'};

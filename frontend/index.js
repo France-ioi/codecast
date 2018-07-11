@@ -80,13 +80,14 @@ Codecast.start = function (options) {
   store.dispatch({type: scope.init, payload: options});
   // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
-  /* Run the sagas (must be done before loginFeedback) */
+  /* Run the sagas (must be done before calling autoLogin) */
   /* XXX Make a separate object for selectors in the linker? */
   Codecast.task = start({dispatch: store.dispatch, selectors: scope, actionTypes});
 
   let App;
   switch (options.start) {
     case 'recorder':
+      autoLogin();
       store.dispatch({type: scope.recorderPrepare});
       App = scope.RecorderApp;
       break;
@@ -102,6 +103,7 @@ Codecast.start = function (options) {
       App = scope.PlayerApp;
       break;
     case 'editor':
+      autoLogin();
       store.dispatch({
         type: scope.editorPrepare,
         payload: {
@@ -128,3 +130,13 @@ Codecast.start = function (options) {
     </Provider>, container);
 
 };
+
+function autoLogin () {
+  let user = null;
+  try {
+    user = JSON.parse(window.localStorage.user || 'null');
+  } catch (ex) {
+    return;
+  }
+  store.dispatch({type: scope.loginFeedback, payload: {user}});
+}

@@ -122,6 +122,8 @@ export default function (bundle, deps) {
 
     render () {
       const {getMessage, audioUrl, wavAudioUrl, eventsUrl, playerUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = this.props;
+      /* TODO: select target among user grants */
+      /* TODO: display progress while encoding mp3? */
       return (
         <form>
           <FormGroup labelFor='eventsUrlInput' label={"URL évènements"}>

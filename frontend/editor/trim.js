@@ -111,7 +111,7 @@ function StepRow ({title, status}) {
     <tr style={{height: '28px'}}>
       <td style={{width: '40px', textAlign: 'center'}}>
         {status === 'done' && <Icon icon='tick' intent={Intent.SUCCESS} />}
-        {status === 'error' && <Icon icon={cross} intent={Intent.DANGER} />}
+        {status === 'error' && <Icon icon='cross' intent={Intent.DANGER} />}
         {status === 'pending' && <Spinner small/>}
       </td>
       <td style={status === 'pending' ? {fontWeight: 'bold'} : null}>
