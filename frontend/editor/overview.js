@@ -150,9 +150,15 @@ function editorSaveSucceededReducer (state, action) {
 }
 
 function* editorSaveAudioSaga (_app, _action) {
-  const id = yield select(state => state.getIn(['editor', 'base']).replace(/^.*\//, ''));
+  const {id, name} = yield select(function (state) {
+    const editor = state.get('editor');
+    const id = editor.get('base').replace(/^.*\//, '');
+    const name = (editor.get('data').name || '').trim();
+    return {id, name};
+  });
+  const saveAsName = `${name || id}.mp3`;
   const blob = yield select(state => state.getIn(['editor', 'audioBlob']));
-  yield call(FileSaver.saveAs, blob, `${id}.mp3`);
+  yield call(FileSaver.saveAs, blob, saveAsName);
 }
 
 function* editorSaveSaga ({actionTypes}, _action) {
