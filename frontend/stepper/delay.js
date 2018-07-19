@@ -10,9 +10,11 @@ export default function (bundle, deps) {
   bundle.defer(function ({stepperApi}) {
 
     stepperApi.addBuiltin('delay', function* delayBuiltin (stepperContext, millis) {
-      yield ['interact', /* INTERACT */ function* () {
+      function* delaySaga () {
         yield call(delay, millis.toInteger())
-      }];
+      }
+      /* TODO: is there something to do during replay? */
+      yield ['interact', {saga: delaySaga}];
     });
 
   });

@@ -308,14 +308,9 @@ export default function (bundle, deps) {
           /* non-interactive, end of input */
           return null;
         }
-        yield ['interact', /* INTERACT */ function* () {
-          /* Set the isWaitingOnInput flag on the state. */
-          yield put({type: deps.terminalInputNeeded});
-          /* Transfer focus to the terminal. */
-          yield put({type: deps.terminalFocus});
-          /* Wait for the user to enter a line. */
-          yield take(deps.terminalInputEnter);
-        }];
+        /* During replay no action is needed, the stepper will suspended until
+           input events supply the necessary input. */
+        yield ['interact', {saga: waitForInputSaga}];
         /* Parse the next line from updated stepper state. */
         state = stepperContext.state;
         input = state.input;
@@ -326,6 +321,15 @@ export default function (bundle, deps) {
       state.inputPos = nextNL + 1;
       return line;
     });
+
+    function* waitForInputSaga () {
+      /* Set the isWaitingOnInput flag on the state. */
+      yield put({type: deps.terminalInputNeeded});
+      /* Transfer focus to the terminal. */
+      yield put({type: deps.terminalFocus});
+      /* Wait for the user to enter a line. */
+      yield take(deps.terminalInputEnter);
+    }
 
     stepperApi.onEffect('ungets', function* ungetsHandler (stepperContext, count) {
       stepperContext.state.inputPos -= count;

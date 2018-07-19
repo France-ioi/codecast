@@ -43,7 +43,6 @@ export async function buildState (globalState) {
   /* Run until in user code */
   const stepperContext = {
     state: stepperState,
-    stepCounter: 0,
     interact
   };
   while (!inUserCode(stepperContext.state.core)) {
@@ -52,10 +51,9 @@ export async function buildState (globalState) {
     if (effects) {
       await executeEffects(stepperContext, effects[Symbol.iterator]());
     }
-    stepperContext.stepCounter += 1;
   }
   return stepperContext.state;
-  function interact (saga, ...args) {
+  function interact ({saga}) {
     return new Promise((resolve, reject) => {
       if (saga) {
         return reject(new StepperError('error', 'cannot interact in buildState'));
@@ -89,6 +87,18 @@ function addBuiltin (name, handler) {
   builtinHandlers.set(name, handler);
 }
 
+function getNodeStartRow (state) {
+  if (!state) {
+    return undefined;
+  }
+  const {control} = state.core;
+  if (!control || !control.node) {
+    return undefined;
+  }
+  const {range} = control.node[1];
+  return range && range.start.row;
+}
+
 export function makeContext (state, interact) {
   return {
     state: {
@@ -98,7 +108,8 @@ export function makeContext (state, interact) {
       controls: resetControls(state.controls)
     },
     interact,
-    stepCounter: 0
+    position: getNodeStartRow(state),
+    lineCounter: 0
   };
 }
 
@@ -117,7 +128,7 @@ async function executeEffects (stepperContext, iterator) {
     }
     const name = value[0];
     if (name === 'interact') {
-      lastResult = await stepperContext.interact(...value.slice(1));
+      lastResult = await stepperContext.interact(value[1] || {});
     } else if (name === 'builtin') {
       const builtin = value[1];
       if (!builtinHandlers.has(builtin)) {
@@ -142,7 +153,16 @@ async function executeSingleStep (stepperContext) {
   }
   const effects = C.step(stepperContext.state.core);
   await executeEffects(stepperContext, effects[Symbol.iterator]());
-  stepperContext.stepCounter += 1;
+  /* Update the current position in source code. */
+  const position = getNodeStartRow(stepperContext.state);
+  if (position !== undefined && position !== stepperContext.position) {
+    stepperContext.position = position;
+    stepperContext.lineCounter += 1;
+    if (stepperContext.lineCounter === 20) {
+      await stepperContext.interact({position});
+      stepperContext.lineCounter = 0;
+    }
+  }
 }
 
 async function stepUntil (stepperContext, stopCond) {
