@@ -27,11 +27,12 @@ export default function (bundle) {
       sagas.push(saga);
     }
   };
-  replayApi.applyEvent = function* (key, replayContext, event, instant) {
+  replayApi.applyEvent = function* (key, replayContext, event) {
+    console.log('replay', event);
     if (eventHandlers.has(key)) {
       const funcs = eventHandlers.get(key, []);
       for (var func of funcs) {
-        yield call(func, replayContext, event, instant);
+        yield call(func, replayContext, event);
       }
     } else {
       console.log(`event ${key} ignored (no replay handler)`);

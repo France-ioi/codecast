@@ -58,7 +58,7 @@ export async function buildState (globalState) {
   function interact (saga, ...args) {
     return new Promise((resolve, reject) => {
       if (saga) {
-        return reject(new StepperError(stepperContext, 'error', 'cannot interact in buildState'));
+        return reject(new StepperError('error', 'cannot interact in buildState'));
       }
       resolve();
     });
@@ -107,24 +107,6 @@ function resetControls (controls) {
   return controls.setIn(['stack', 'focusDepth'], 0);
 }
 
-function copyContext (stepperContext) {
-  const {state} = stepperContext;
-  const {core} = state;
-  return {
-    ...stepperContext,
-    state: {...state, core: {...core}}
-  };
-}
-
-/*
-// This could be a good idea:
-function freezeContext (stepperContext) {
-  Object.freeze(stepperContext.state.core);
-  Object.freeze(stepperContext.state);
-  Object.freeze(stepperContext);
-}
-*/
-
 async function executeEffects (stepperContext, iterator) {
   let lastResult;
   while (true) {
@@ -139,14 +121,14 @@ async function executeEffects (stepperContext, iterator) {
     } else if (name === 'builtin') {
       const builtin = value[1];
       if (!builtinHandlers.has(builtin)) {
-        throw new StepperError(stepperContext, 'error', `unknown builtin ${builtin}`);
+        throw new StepperError('error', `unknown builtin ${builtin}`);
       }
       lastResult = await executeEffects(stepperContext,
         builtinHandlers.get(builtin)(stepperContext, ...value.slice(2)));
     } else {
       /* Call the effect handler, feed the result back into the iterator. */
       if (!effectHandlers.has(name)) {
-        throw new StepperError(stepperContext, 'error', `unhandled effect ${name}`);
+        throw new StepperError('error', `unhandled effect ${name}`);
       }
       lastResult = await executeEffects(stepperContext,
         effectHandlers.get(name)(stepperContext, ...value.slice(1)));
@@ -156,77 +138,45 @@ async function executeEffects (stepperContext, iterator) {
 
 async function executeSingleStep (stepperContext) {
   if (isStuck(stepperContext.state.core)) {
-    return;
+    throw new StepperError('stuck', 'execution cannot proceed');
   }
   const effects = C.step(stepperContext.state.core);
-  while (true) {
-    const newStepperContext = copyContext(stepperContext);
-    await executeEffects(newStepperContext, effects[Symbol.iterator]());
-    newStepperContext.stepCounter += 1;
-    return newStepperContext;
-  }
+  await executeEffects(stepperContext, effects[Symbol.iterator]());
+  stepperContext.stepCounter += 1;
 }
 
 async function stepUntil (stepperContext, stopCond) {
-  var timeLimit = window.performance.now() + 20, now;
-  var core;
-  var stop = false;
-  var stepCount; // TODO: clean up using stepperContext.stepCounter
-  var newStepperContext;
+  let core;
+  let stop = false;
   while (true) {
-    /* Execute up to 100 steps (until the stop condition is met, the end of
-       the program, an error condition, or an interrupted effect) */
-    for (stepCount = 100; stepCount !== 0; stepCount -= 1) {
-      core = stepperContext.state.core;
-      if (isStuck(core)) {
-        return stepperContext;
-      }
-      if (!stop && stopCond(core)) {
-        stop = true;
-      }
-      if (inUserCode(core) && stop) {
-        return stepperContext;
-      }
-      newStepperContext = await executeSingleStep(stepperContext);
-      if (!newStepperContext) {
-        return stepperContext;
-      }
-      stepperContext = newStepperContext;
+    core = stepperContext.state.core;
+    if (isStuck(core)) {
+      return;
     }
-    /* Has the time limit for the current run passed? */
-    now = window.performance.now();
-    if (now >= timeLimit) {
-      /* Indicate progress to the controlling routine by calling interact()
-         with no argument.  This also allows interrupting a tight loop. */
-      await stepperContext.interact();
-      /* Reset the time limit and put a Progress event. */
-      timeLimit = window.performance.now() + 20;
+    if (!stop && stopCond(core)) {
+      stop = true;
     }
+    if (stop && inUserCode(core)) {
+      return;
+    }
+    await executeSingleStep(stepperContext);
   }
 }
 
 async function stepExpr (stepperContext) {
   // Take a first step.
-  let newStepperContext = await executeSingleStep(stepperContext);
-  if (newStepperContext) {
-    stepperContext = newStepperContext;
-    // Step into the next expression.
-    stepperContext = await stepUntil(stepperContext, C.intoNextExpr);
-  }
-  return stepperContext;
+  await executeSingleStep(stepperContext);
+  // Step into the next expression.
+  await stepUntil(stepperContext, C.intoNextExpr);
 }
 
 async function stepInto (stepperContext) {
   // Take a first step.
-  let newStepperContext = await executeSingleStep(stepperContext);
-  if (newStepperContext) {
-    stepperContext = newStepperContext;
-    // Step out of the current statement.
-    stepperContext = await stepUntil(stepperContext, C.outOfCurrentStmt);
-    // Step into the next statement.
-    stepperContext = await stepUntil(stepperContext, C.intoNextStmt);
-  }
-  return stepperContext;
+  await executeSingleStep(stepperContext);
+  // Step out of the current statement.
+  await stepUntil(stepperContext, C.outOfCurrentStmt);
+  // Step into the next statement.
+  await stepUntil(stepperContext, C.intoNextStmt);
 }
 
 async function stepOut (stepperContext) {
@@ -236,7 +186,7 @@ async function stepOut (stepperContext) {
     const refScope = stepperContext.state.core.scope;
     const funcScope = C.findClosestFunctionScope(refScope);
     // Step until execution reach that scope's parent.
-    stepperContext = await stepUntil(stepperContext, core => core.scope === funcScope.parent);
+    await stepUntil(stepperContext, core => core.scope === funcScope.parent);
   }
   return stepperContext;
 }
@@ -245,38 +195,33 @@ async function stepOver (stepperContext) {
   // Remember the current scope.
   const refScope = stepperContext.state.core.scope;
   // Take a first step.
-  let newStepperContext = await executeSingleStep(stepperContext);
-  if (newStepperContext) {
-    stepperContext = newStepperContext;
-    // Step until out of the current statement but not inside a nested
-    // function call.
-    stepperContext = await stepUntil(stepperContext, core =>
-      C.outOfCurrentStmt(core) && C.notInNestedCall(core.scope, refScope));
-    // Step into the next statement.
-    stepperContext = await stepUntil(stepperContext, C.intoNextStmt);
-  }
-  return stepperContext;
+  await executeSingleStep(stepperContext);
+  // Step until out of the current statement but not inside a nested
+  // function call.
+  await stepUntil(stepperContext, core =>
+    C.outOfCurrentStmt(core) && C.notInNestedCall(core.scope, refScope));
+  // Step into the next statement.
+  await stepUntil(stepperContext, C.intoNextStmt);
 }
 
 export async function performStep (stepperContext, mode) {
   switch (mode) {
     case 'run':
-      stepperContext = await stepUntil(stepperContext, isStuck);
+      await stepUntil(stepperContext, isStuck);
       break;
     case 'into':
-      stepperContext = await stepInto(stepperContext);
+      await stepInto(stepperContext);
       break;
     case 'expr':
-      stepperContext = await stepExpr(stepperContext);
+      await stepExpr(stepperContext);
       break;
     case 'out':
-      stepperContext = await stepOut(stepperContext);
+      await stepOut(stepperContext);
       break;
     case 'over':
-      stepperContext = await stepOver(stepperContext);
+      await stepOver(stepperContext);
       break;
   }
-  return stepperContext;
 }
 
 
@@ -289,10 +234,9 @@ function inUserCode (core) {
 }
 
 export class StepperError extends Error {
-  constructor (stepperContext, condition, message) {
+  constructor (condition, message) {
     super(message);
     this.name = this.constructor.name;
-    this.stepperContext = stepperContext;
     this.condition = condition;
   }
 }

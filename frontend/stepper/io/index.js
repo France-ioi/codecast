@@ -182,7 +182,7 @@ export default function (bundle, deps) {
     recordApi.onStart(function* (init) {
       init.ioPaneMode = yield select(state => state.get('ioPane').mode);
     });
-    replayApi.on('start', function (replayContext, event, instant) {
+    replayApi.on('start', function (replayContext, event) {
       const {ioPaneMode} = event[2];
       replayContext.state = ioPaneModeChanged(replayContext.state, {payload: {mode: ioPaneMode}});
     });
@@ -195,12 +195,12 @@ export default function (bundle, deps) {
     recordApi.on(deps.ioPaneModeChanged, function* (addEvent, {payload: {mode}}) {
       yield call(addEvent, 'ioPane.mode', mode);
     });
-    replayApi.on('ioPane.mode', function (replayContext, event, instant) {
+    replayApi.on('ioPane.mode', function (replayContext, event) {
       const mode = event[2];
       replayContext.state = ioPaneModeChanged(replayContext.state, {payload: {mode}});
     });
 
-    replayApi.on(['stepper.progress', 'stepper.idle', 'stepper.restart', 'stepper.undo', 'stepper.redo'], function replaySyncOutput (replayContext, event, instant) {
+    replayApi.on(['stepper.progress', 'stepper.idle', 'stepper.restart', 'stepper.undo', 'stepper.redo'], function replaySyncOutput (replayContext, event) {
       if (replayContext.state.get('ioPane').mode === 'split') {
         /* Consider: pushing updates from the stepper state to the output buffer
            in the global state adds complexity.  Three options:
@@ -211,7 +211,7 @@ export default function (bundle, deps) {
            It is not clear which option is best.
         */
         replayContext.state = syncOutputBuffer(replayContext.state);
-        instant.saga = syncOutputBufferSaga;
+        replayContext.addSaga(syncOutputBufferSaga);
       }
     });
     function syncOutputBuffer (state) {
@@ -266,6 +266,7 @@ export default function (bundle, deps) {
       } else {
         state.output = state.output + text;
       }
+      console.log('write', stepperContext);
       /* TODO: update the output buffer model
          If running interactively, we must alter the actual global state.
          If pre-computing states for replay, we must alter the (computed) global
@@ -307,7 +308,7 @@ export default function (bundle, deps) {
           /* non-interactive, end of input */
           return null;
         }
-        yield ['interact', function* () {
+        yield ['interact', /* INTERACT */ function* () {
           /* Set the isWaitingOnInput flag on the state. */
           yield put({type: deps.terminalInputNeeded});
           /* Transfer focus to the terminal. */

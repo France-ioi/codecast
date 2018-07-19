@@ -128,7 +128,7 @@ export default function (bundle, deps) {
       }
       /* Signal that the recorder is stopping. */
       yield put({type: deps.recorderStopping});
-      const {audioContext, worker} = recorder.get('context');
+      const {audioContext} = recorder.get('context');
       if (recorderStatus === 'recording') {
         /* Suspend the audio context to stop recording audio buffers. */
         yield call(suspendAudioContext, audioContext);
@@ -139,32 +139,8 @@ export default function (bundle, deps) {
         const audioTime = yield select(st => deps.getPlayerState(st).get('audioTime'));
         yield call(truncateRecording, audioTime, null);
       }
-      /* Encode the audio track. */
-      const {mp3, wav, duration} = yield call(worker.call, 'export', {mp3: true, wav: true}, stopExportProgressSaga);
-      const mp3Url = URL.createObjectURL(mp3);
-      const wavUrl = URL.createObjectURL(wav);
-      /* Package the events track. */
-      recorder = yield select(deps.getRecorderState);
-       /* Ensure the 'end' event occurs before the end of the audio track. */
-      const version = RECORDING_FORMAT_VERSION;
-      const endTime = Math.floor(duration * 1000);
-      const events = recorder.get('events').push([endTime, 'end']);
-      const subtitles = [];
-      const data = {version, events, subtitles};
-      const eventsBlob = new Blob([JSON.stringify(data)], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
-      const eventsUrl = URL.createObjectURL(eventsBlob);
-      // Signal that the recorder has stopped.
-      yield put({
-        type: deps.recorderStopped,
-        audioUrl: mp3Url,
-        wavAudioUrl: wavUrl,
-        eventsUrl: eventsUrl
-      });
-      /* Show 'save' screen to user. */
-      yield put({
-        type: deps.switchToScreen,
-        payload: {screen: 'save'}
-      });
+      /* Signal that the recorder has stopped. */
+      yield put({type: deps.recorderStopped, payload: {}});
     } catch (error) {
       // XXX generic error
       yield put({type: deps.error, source: 'recorderStop', error});
@@ -173,7 +149,7 @@ export default function (bundle, deps) {
 
   function* recorderPause () {
     try {
-      let recorder = yield select(deps.getRecorderState);
+      const recorder = yield select(deps.getRecorderState);
       if (recorder.get('status') !== 'recording') {
         return;
       }
@@ -198,14 +174,9 @@ export default function (bundle, deps) {
       // XXX generic error
       yield put({type: deps.error, source: 'recorderPause', error});
     }
-  }
-
-  function* stopExportProgressSaga (progress) {
-    console.log('stop', progress);
-  }
-
-  function* pauseExportProgressSaga (progress) {
-    console.log('pause', progress);
+    function* pauseExportProgressSaga (progress) {
+      // console.log('pause', progress);
+    }
   }
 
   bundle.defineAction('recorderResume', 'Recorder.Resume');
@@ -313,8 +284,8 @@ export default function (bundle, deps) {
   });
 
   bundle.defer(function ({recordApi, replayApi}) {
-    replayApi.on('end', function (replayContext, event, instant) {
-      instant.isEnd = true;
+    replayApi.on('end', function (replayContext, event) {
+      replayContext.instant.isEnd = true;
       replayContext.state = replayContext.state.set('stopped', true);
     });
   });

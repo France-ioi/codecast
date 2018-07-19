@@ -109,7 +109,7 @@ export default function (bundle, deps) {
 
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 
-    replayApi.on('start', function (replayContext, event, instant) {
+    replayApi.on('start', function (replayContext, event) {
       const translateModel = translateClear();
       replayContext.state = translateReset(replayContext.state, {state: translateModel});
     });
@@ -118,7 +118,7 @@ export default function (bundle, deps) {
       const {source} = action;
       yield call(addEvent, 'translate.start', source);
     });
-    replayApi.on(['stepper.translate', 'translate.start'], function (replayContext, event, instant) {
+    replayApi.on(['stepper.translate', 'translate.start'], function (replayContext, event) {
       const action = {source: event[2]};
       replayContext.state = replayContext.state.update('translate', st => translateStarted(st, action));
     });
@@ -127,7 +127,7 @@ export default function (bundle, deps) {
       const {response} = action;
       yield call(addEvent, 'translate.success', response);
     });
-    replayApi.on('translate.success', function (replayContext, event, instant) {
+    replayApi.on('translate.success', function (replayContext, event) {
       const action = {response: event[2]};
       replayContext.state = replayContext.state.update('translate', st => translateSucceeded(st, action));
     });
@@ -136,7 +136,7 @@ export default function (bundle, deps) {
       const {response} = action;
       yield call(addEvent, 'translate.failure', response);
     });
-    replayApi.on('translate.failure', function (replayContext, event, instant) {
+    replayApi.on('translate.failure', function (replayContext, event) {
       const action = {response: event[2]};
       replayContext.state = replayContext.state.update('translate', st => translateFailed(st, action));
     });
@@ -144,11 +144,11 @@ export default function (bundle, deps) {
     recordApi.on(deps.translateClearDiagnostics, function* (addEvent, action) {
       yield call(addEvent, 'translate.clearDiagnostics');
     });
-    replayApi.on('translate.clearDiagnostics', function (replayContext, event, instant) {
+    replayApi.on('translate.clearDiagnostics', function (replayContext, event) {
       replayContext.state = replayContext.state.update('translate', st => translateClearDiagnostics(st, {}));
     });
 
-    replayApi.on('stepper.exit', function (replayContext, event, instant) {
+    replayApi.on('stepper.exit', function (replayContext, event) {
       replayContext.state = replayContext.state.update('translate', translateClear);
     });
 

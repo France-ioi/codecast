@@ -57,15 +57,7 @@ export default function (bundle) {
   });
 
   bundle.addReducer('recorderStopped', function (state, action) {
-    // Clear the recorder state, keeping its context.
-    const context = state.getIn(['recorder', 'context']);
-    return state
-      .set('recorder', Immutable.Map({status: 'ready', context}))
-      .set('save', Immutable.Map({
-        audioUrl: action.audioUrl,
-        wavAudioUrl: action.wavAudioUrl,
-        eventsUrl: action.eventsUrl
-      }));
+    return state.setIn(['recorder', 'status'], 'stopped');
   });
 
   bundle.addReducer('recorderPausing', (state, action) =>

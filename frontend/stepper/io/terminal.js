@@ -73,14 +73,14 @@ export default function (bundle, deps) {
     recordApi.on(deps.terminalInputNeeded, function* (addEvent, action) {
       yield call(addEvent, 'terminal.wait');
     });
-    replayApi.on('terminal.wait', function (replayContext, event, instant) {
+    replayApi.on('terminal.wait', function (replayContext, event) {
       replayContext.state = terminalInputNeeded(replayContext.state);
     });
 
     recordApi.on(deps.terminalInputKey, function* (addEvent, action) {
       yield call(addEvent, 'terminal.key', action.key);
     });
-    replayApi.on('terminal.key', function (replayContext, event, instant) {
+    replayApi.on('terminal.key', function (replayContext, event) {
       const key = event[2];
       replayContext.state = terminalInputKey(replayContext.state, {key});
     });
@@ -88,18 +88,15 @@ export default function (bundle, deps) {
     recordApi.on(deps.terminalInputBackspace, function* (addEvent, action) {
       yield call(addEvent, 'terminal.backspace');
     });
-    replayApi.on('terminal.backspace', function (replayContext, event, instant) {
+    replayApi.on('terminal.backspace', function (replayContext, event) {
       replayContext.state = terminalInputBackspace(replayContext.state);
     });
 
     recordApi.on(deps.terminalInputEnter, function* (addEvent, action) {
       yield call(addEvent, 'terminal.enter');
     });
-    replayApi.on('terminal.enter', function (replayContext, event, instant) {
+    replayApi.on('terminal.enter', function (replayContext, event) {
       replayContext.state = terminalInputEnter(replayContext.state);
-      /* // XXX Update the stepper state so the step can complete with the added input
-      replayContext.stepperContext.state = replayContext.state.getIn(['stepper', 'current']);
-      */
     });
 
   });

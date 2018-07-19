@@ -75,19 +75,21 @@ export default function (bundle, deps) {
     /* CONSIDER: create a redux store, use the replayApi to convert each event
        to an action that is dispatched to the store (which must have an
        appropriate reducer) plus an optional saga to be called during playback. */
-    let pos, progress, lastProgress = 0;
+    let pos, progress, lastProgress = 0, range;
+    const replayContext = {
+      state: Immutable.Map(),
+      instants: [],
+      /* XXX Consider: addInstant function in replayContext */
+      addSaga,
+    };
     try {
-      const replayContext = {
-        state: Immutable.Map(),
-        instants: []
-      };
-      let range;
       for (pos = 0; pos < events.length; pos += 1) {
         const event = events[pos];
         const t = event[0];
         const key = event[1]
         const instant = {t, pos, event};
-        yield call(deps.replayApi.applyEvent, key, replayContext, event, instant);
+        replayContext.instant = instant;
+        yield call(deps.replayApi.applyEvent, key, replayContext, event);
         /* Preserve the last explicitly set range. */
         if ('range' in instant) {
           range = instant.range;
@@ -107,6 +109,13 @@ export default function (bundle, deps) {
       console.error(ex); // TODO: add global fatal exception report mechanism
       yield put({type: deps.playerPrepareFailure, payload: {position: pos, exception: ex}});
       return null;
+    }
+    function addSaga (saga) {
+      let {sagas} = replayContext.instant;
+      if (!sagas) {
+        sagas = replayContext.instant.sagas = [];
+      }
+      sagas.push(saga);
     }
   }
 
@@ -231,11 +240,13 @@ export default function (bundle, deps) {
        a costly full-reloading of the editor's state. */
     for (let pos = instant.pos + 1; pos <= nextInstant.pos; pos += 1) {
       instant = instants[pos];
-      if (instant.saga) {
+      if (instant.sagas) {
         /* Keep in mind that the instant's saga runs *prior* to the call
            to resetToInstant below, and should not rely on the global
            state being accurate.  Instead, it should use `instant.state`. */
-        yield call(instant.saga, instant);
+        for (let saga of instant.sagas) {
+          yield call(saga, instant);
+        }
       }
       if (instant.isEnd) {
         /* Stop a long audio at the timestamp of the last event. */
