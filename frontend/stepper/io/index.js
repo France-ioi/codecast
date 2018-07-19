@@ -266,7 +266,6 @@ export default function (bundle, deps) {
       } else {
         state.output = state.output + text;
       }
-      console.log('write', stepperContext);
       /* TODO: update the output buffer model
          If running interactively, we must alter the actual global state.
          If pre-computing states for replay, we must alter the (computed) global
