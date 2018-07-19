@@ -28,7 +28,6 @@ export default function (bundle) {
     }
   };
   replayApi.applyEvent = function* (key, replayContext, event) {
-    console.log('replay', event);
     if (eventHandlers.has(key)) {
       const funcs = eventHandlers.get(key, []);
       for (var func of funcs) {

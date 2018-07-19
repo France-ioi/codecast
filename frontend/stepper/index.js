@@ -550,7 +550,6 @@ function postLink (scope, actionTypes) {
       const stepperState = getStepperDisplay(replayContext.state);
       replayContext.stepperContext = makeContext(stepperState, function interact (_) {
         return new Promise((cont) => {
-          console.log('performStep suspended');
           stepperSuspend(replayContext.stepperContext, cont);
           replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
           stepperEventReplayed(replayContext);
@@ -560,9 +559,7 @@ function postLink (scope, actionTypes) {
         replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
         stepperEventReplayed(replayContext);
       }, function (error) {
-        // XXX if (suspended) return;
         if (!(error instanceof StepperError)) {
-          console.log('stepper: next [reject]', error);
           return reject(error);
         }
         if (error.condition === 'interrupt') {
