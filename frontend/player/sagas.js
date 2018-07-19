@@ -76,6 +76,7 @@ export default function (bundle, deps) {
        to an action that is dispatched to the store (which must have an
        appropriate reducer) plus an optional saga to be called during playback. */
     let pos, progress, lastProgress = 0, range;
+    const chan = yield call(requestAnimationFrames, 50);
     const replayContext = {
       state: Immutable.Map(),
       instants: [],
@@ -102,6 +103,8 @@ export default function (bundle, deps) {
         if (progress !== lastProgress) {
           lastProgress = progress;
           yield put({type: deps.playerPrepareProgress, payload: {progress}});
+          /* Allow the display to refresh. */
+          yield take(chan);
         }
       }
       return replayContext.instants;
@@ -109,6 +112,8 @@ export default function (bundle, deps) {
       console.error(ex); // TODO: add global fatal exception report mechanism
       yield put({type: deps.playerPrepareFailure, payload: {position: pos, exception: ex}});
       return null;
+    } finally {
+      chan.close();
     }
     function addSaga (saga) {
       let {sagas} = replayContext.instant;

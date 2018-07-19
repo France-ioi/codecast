@@ -23,7 +23,8 @@ function playerClearReducer (state, _action) {
   const audio = document.createElement('video');
   const volume = audio.volume; /* XXX: load from localStorage? */
   const isMuted = audio.muted; /* XXX: load from localStorage? */
-  return state.set('player', Immutable.Map({audio, volume, isMuted}));
+  const progress = 0;
+  return state.set('player', Immutable.Map({audio, volume, isMuted, progress}));
 }
 
 function playerPreparingReducer (state, _action) {

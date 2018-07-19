@@ -1,7 +1,7 @@
 
 import React from 'react';
 import classnames from 'classnames';
-import {Alert, Intent} from '@blueprintjs/core';
+import {Alert, Intent, ProgressBar} from '@blueprintjs/core';
 
 /*
       screen      main-view-no-subtitles
@@ -13,14 +13,19 @@ import {Alert, Intent} from '@blueprintjs/core';
 
 class PlayerApp extends React.PureComponent {
   render () {
-    const {containerWidth, viewportTooSmall, PlayerControls, StepperView, SubtitlesBand, error} = this.props;
+    const {containerWidth, viewportTooSmall, PlayerControls, StepperView, SubtitlesBand, isReady, progress, error} = this.props;
     return (
       <div id='player-app'>
-        <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
-          <PlayerControls/>
-          <StepperView/>
-          <SubtitlesBand/>
-        </div>
+        {!isReady &&
+          <div id='main' style={{width: `${containerWidth}px`, margin: '20px auto'}}>
+            <ProgressBar value={progress} intent={Intent.SUCCESS}/>
+          </div>}
+        {isReady &&
+          <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
+            <PlayerControls/>
+            <StepperView/>
+            <SubtitlesBand/>
+          </div>}
         {error &&
           <Alert intent={Intent.DANGER} icon='error' isOpen={!!error} onConfirm={this.reload}>
             <p style={{fontSize: '150%', fontWeight: 'bold'}}>{"A fatal error has occured while preparing playback."}</p>
@@ -41,11 +46,14 @@ function PlayerAppSelector (state, props) {
   const {PlayerControls, StepperView, SubtitlesBand} = state.get('scope');
   const viewportTooSmall = state.get('viewportTooSmall');
   const containerWidth = state.get('containerWidth');
-  const error = state.getIn(['player', 'error']);
+  const player = state.get('player');
+  const isReady = player.get('isReady');
+  const progress = player.get('progress');
+  const error = player.get('error');
   return {
     viewportTooSmall, containerWidth,
     PlayerControls, StepperView, SubtitlesBand,
-    error
+    isReady, progress, error
   };
 }
 
