@@ -2,7 +2,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
-import scrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
 import Highlight from 'react-highlighter';
 import {InputGroup} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
@@ -31,10 +30,10 @@ class SubtitlesPane extends React.PureComponent {
   render () {
     const {subtitles, currentIndex, editing, audioTime, filterText, filterRegexp, getMessage, windowHeight} = this.props;
     return (
-      <div className='subtitles-pane'>
+      <div className='subtitles-pane vbox' style={{height: `${windowHeight - 89}px`}}>
         {!editing &&
           <InputGroup leftIcon={IconNames.SEARCH} type='text' onChange={this._filterTextChanged} value={filterText} />}
-        <div className='subtitles-pane-items'>
+        <div className='subtitles-pane-items fill'>
           {subtitles &&
             subtitles.map((st, index) => {
               const selected = currentIndex === index;
@@ -57,9 +56,9 @@ class SubtitlesPane extends React.PureComponent {
   componentDidUpdate (prevProps, prevState) {
     if (this.props.currentIndex !== prevProps.currentIndex) {
       if (this._selectedComponent) {
-        const domNode = ReactDOM.findDOMNode(this._selectedComponent);
-        // scrollIntoViewIfNeeded(domNode, {centerIfNeeded: true, easing: 'ease', duration: 300});
-        // scroll domNode to center _selectedComponent vertically
+        const item = ReactDOM.findDOMNode(this._selectedComponent);
+        const container = item.parentElement;
+        container.scrollTop = (item.offsetTop - container.offsetTop) + (item.clientHeight - container.clientHeight) / 2;
       }
     }
   }
