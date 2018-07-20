@@ -59,7 +59,6 @@ export default function (bundle, deps) {
     if (Array.isArray(data)) {
       /* Compatibility with old style, where data is an array of events. */
       data = new Modernizer(data).toObject();
-      console.log('new events', data.events);
     }
     /* Compute the future state after every event. */
     const instants = yield call(computeInstants, data.events);
@@ -84,6 +83,7 @@ export default function (bundle, deps) {
       addSaga,
     };
     try {
+      const duration = events[events.length - 1][0];
       for (pos = 0; pos < events.length; pos += 1) {
         const event = events[pos];
         const t = event[0];
@@ -99,12 +99,12 @@ export default function (bundle, deps) {
         }
         instant.state = replayContext.state;
         replayContext.instants.push(instant);
-        progress = Math.round(pos * 100 / events.length) / 100;
+        progress = (Math.round(pos * 50 / events.length) + Math.round(t * 50 / duration)) / 100;
         if (progress !== lastProgress) {
           lastProgress = progress;
-          yield put({type: deps.playerPrepareProgress, payload: {progress}});
           /* Allow the display to refresh. */
           yield take(chan);
+          yield put({type: deps.playerPrepareProgress, payload: {progress}});
         }
       }
       return replayContext.instants;

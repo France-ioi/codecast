@@ -1,7 +1,8 @@
 
 import React from 'react';
+import ReactDOM from 'react-dom';
 import classnames from 'classnames';
-import {Alert, Intent, ProgressBar} from '@blueprintjs/core';
+import {Alert, Dialog, Intent, ProgressBar, Spinner} from '@blueprintjs/core';
 
 /*
       screen      main-view-no-subtitles
@@ -16,10 +17,11 @@ class PlayerApp extends React.PureComponent {
     const {containerWidth, viewportTooSmall, PlayerControls, StepperView, SubtitlesBand, isReady, progress, error} = this.props;
     return (
       <div id='player-app'>
-        {!isReady &&
-          <div id='main' style={{width: `${containerWidth}px`, margin: '20px auto'}}>
-            <ProgressBar value={progress} intent={Intent.SUCCESS}/>
-          </div>}
+        <Dialog isOpen={!isReady} title={"Preparing playback"} isCloseButtonShown={false} >
+          <div style={{margin: '20px 20px 0 20px'}}>
+            <ProgressBar value={progress} intent={Intent.SUCCESS} />
+          </div>
+        </Dialog>
         {isReady &&
           <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
             <PlayerControls/>
