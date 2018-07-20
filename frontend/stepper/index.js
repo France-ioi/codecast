@@ -463,7 +463,7 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
       }
     }
     yield put({type: actionTypes.stepperIdle, payload: {stepperContext}});
-    function interact () {
+    function interact (arg) {
       return new Promise((resolve, reject) => {
         dispatch({
           type: actionTypes.stepperInteract,
