@@ -42,8 +42,16 @@ function buildApp (config, store, callback) {
     const compiler = webpack(webpackConfig);
     app.use('/build', webpackDevMiddleware(compiler, {
       stats: {
+        assets: false,
+        cached: false,
+        children: false,
+        chunks: false,
+        chunkGroups: false,
+        chunkModules: false,
+        chunkOrigins: false,
         colors: true,
-        chunks: false
+        modules: false,
+        moduleTrace: false,
       }
     }));
   } else {
