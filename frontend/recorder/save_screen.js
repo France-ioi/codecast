@@ -1,22 +1,19 @@
 
 import {takeLatest, take, put, call, select} from 'redux-saga/effects';
 import React from 'react';
-import {Button, FormGroup, Intent} from '@blueprintjs/core';
+import {Button, FormGroup, HTMLSelect, Icon, Intent, ProgressBar, Spinner} from '@blueprintjs/core';
 
+import {RECORDING_FORMAT_VERSION} from '../version';
 import {asyncRequestJson} from '../utils/api';
 import {getBlob, uploadBlob} from '../utils/blobs';
 
-export default function (bundle, deps) {
+export default function (bundle) {
 
   bundle.defineAction('saveScreenEncodingStart', 'Save.Encoding.Start');
+  bundle.defineAction('saveScreenEncodingProgress', 'Save.Encoding.Progress');
   bundle.defineAction('saveScreenEncodingDone', 'Save.Encoding.Done');
-  bundle.addReducer('saveScreenEncodingStart', saveScreenEncodingStartReducer);
-  bundle.addReducer('saveScreenEncodingDone', saveScreenEncodingDoneReducer);
-
   bundle.defineAction('saveScreenUpload', 'Save.Upload.Start');
-
   bundle.defineAction('saveScreenPreparing', 'Save.Prepare.Pending');
-  bundle.defineAction('saveScreenUploadReady', 'Save.Upload.Ready');
   bundle.defineAction('saveScreenEventsUploading', 'Save.Events.Upload.Pending');
   bundle.defineAction('saveScreenEventsUploaded', 'Save.Events.Upload.Success');
   bundle.defineAction('saveScreenAudioUploading', 'Save.Audio.Upload.Pending');
@@ -24,136 +21,163 @@ export default function (bundle, deps) {
   bundle.defineAction('saveScreenUploadSucceeded', 'Save.Success');
   bundle.defineAction('saveScreenUploadFailed', 'Save.Failure');
 
+  bundle.addReducer('saveScreenEncodingStart', function (state, action) {
+    return state.update('save', save => ({...save, step: 'encoding pending', progress: 0}));
+  });
+
+  bundle.addReducer('saveScreenEncodingProgress', function (state, {payload: progress}) {
+    return state.update('save', save => ({...save, progress}));
+  });
+
+  bundle.addReducer('saveScreenEncodingDone', function (state, {payload: {audioUrl, wavAudioUrl, eventsUrl}}) {
+    return state.update('save', save => ({...save, step: 'encoding done', audioUrl, wavAudioUrl, eventsUrl, progress: false}));
+  });
 
   bundle.addReducer('saveScreenPreparing', function (state, action) {
-    return state.setIn(['save', 'step'], 'upload/preparing');
+    return state.update('save', save => ({...save, step: 'upload preparing'}));
   });
 
-  bundle.addReducer('saveScreenUploadReady', function (state, action) {
-    return state.setIn(['save', 'step'], 'upload/ready');
+  bundle.addReducer('saveScreenEventsUploading', function (state, _action) {
+    return state.update('save', save => ({...save, step: 'upload events pending'}));
   });
 
-  bundle.addReducer('saveScreenUpload', function (state, action) {
-    return state.setIn(['save', 'busy'], true);
-  });
-
-  bundle.addReducer('saveScreenEventsUploading', function (state, action) {
-    return state.setIn(['save', 'uploadEvents'], 'pending');
-  });
-
-  bundle.addReducer('saveScreenEventsUploaded', function (state, action) {
-    return state.update('save', save => save
-      .set('uploadEvents', 'done').set('eventsUrl', action.url));
+  bundle.addReducer('saveScreenEventsUploaded', function (state, {payload: {url}}) {
+    return state.update('save', save => ({...save, step: 'upload events done', eventsUrl: url}));
   });
 
   bundle.addReducer('saveScreenAudioUploading', function (state, action) {
-    return state.setIn(['save', 'uploadAudio'], 'pending');
+    return state.update('save', save => ({...save, step: 'upload audio pending'}));
   });
 
-  bundle.addReducer('saveScreenAudioUploaded', function (state, action) {
-    return state.update('save', save => save
-      .set('uploadAudio', 'done').set('audioUrl', action.url));
+  bundle.addReducer('saveScreenAudioUploaded', function (state, {payload: {url}}) {
+    return state.update('save', save => ({...save, step: 'upload audio done', audioUrl: url}));
   });
 
-  bundle.addReducer('saveScreenUploadSucceeded', function (state, action) {
-    const {playerUrl} = action;
-    return state.update('save', save => save
-      .set('busy', false).set('done', true).set('playerUrl', playerUrl));
+  bundle.addReducer('saveScreenUploadSucceeded', function (state, {payload: {playerUrl}}) {
+    return state.update('save', save => ({...save, step: 'done', playerUrl}));
   });
 
-  bundle.addReducer('saveScreenUploadFailed', function (state, action) {
-    return state.update('save', save => save
-      .set('busy', false).set('error', action.error));
+  bundle.addReducer('saveScreenUploadFailed', function (state, {payload: {error}}) {
+    return state.update('save', save => ({...save, step: 'error', error}));
   });
 
-  bundle.defineAction('uploadTokenChanged', 'Save.UploadToken.Changed');
-  bundle.addReducer('uploadTokenChanged', function (state, {token}) {
-    return state.set('uploadToken', token);
-  });
-  function getUploadToken (state) {
-    return state.get('uploadToken');
-  }
-
-  bundle.addSaga(function* saveSaga ({actionTypes}) {
-    yield takeLatest(actionTypes.recorderStopped, encodingSaga)
-    yield takeLatest(actionTypes.saveScreenUpload, uploadSaga);
+  bundle.addSaga(function* saveSaga (arg) {
+    const {actionTypes} = arg;
+    yield takeLatest(actionTypes.recorderStopped, encodingSaga, arg)
+    yield takeLatest(actionTypes.saveScreenUpload, uploadSaga, arg);
   });
 
   bundle.defineView('SaveScreen', SaveScreenSelector, SaveScreen);
 
 };
 
-function saveScreenEncodingStartReducer (state, _action) {
-  return state.set('save', {});
-}
-
-function saveScreenEncodingDoneReducer (state, {payload: {audioUrl, wavAudioUrl, eventsUrl}}) {
-  return state
-    .set('save', Immutable.Map({
-      step: 'done',
-      audioUrl: action.audioUrl,
-      wavAudioUrl: action.wavAudioUrl,
-      eventsUrl: action.eventsUrl
-    }));
-}
-
 function SaveScreenSelector (state, props) {
   const getMessage = state.get('getMessage');
-  const save = state.get('save')
-  const result = {getMessage, ...save};
+  const actionTypes = state.get('actionTypes');
+  const {grants} = state.get('user');
+  const {step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, error} = state.get('save');
+  return {getMessage, actionTypes, grants, step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, error};
 }
 
 class SaveScreen extends React.PureComponent {
 
   render () {
-    const {getMessage, audioUrl, wavAudioUrl, eventsUrl, playerUrl, busy, done, prepare, uploadEvents, uploadAudio, error} = this.props;
+    const {getMessage, grants} = this.props;
+    const {audioUrl, wavAudioUrl, eventsUrl, playerUrl, step, error, progress} = this.props;
+    const {targetUrl} = this.state;
+    const grantOptions = grants.map(({url, description}) => ({value: url, label: description}));
+    let message = null, canUpload = false, busy = false;
+    switch (step) {
+    case 'encoding pending':
+      message = "Encoding, please wait…";
+      busy = true;
+      // PROGRESS
+      break;
+    case 'encoding done':
+      message = "Encoding complete, ready to upload.";
+      canUpload = true;
+      break;
+    case 'upload preparing':
+      message = "Preparing to upload…";
+      busy = true;
+      break;
+    case 'upload events pending':
+      message = "Uploading events…";
+      busy = true;
+      break;
+    case 'upload events done':
+      message = "Uploading events… done.";
+      break;
+    case 'upload audio pending':
+      message = "Uploading audio…";
+      busy = true;
+      break;
+    case 'upload audio done':
+      message = "Uploading audio done.";
+      break;
+    case 'done':
+      message = "Save complete.";
+      break;
+    case 'error':
+      message = "An error has occured.";
+      break;
+    }
     /* TODO: select target among user grants */
-    /* TODO: display progress while encoding mp3? */
     return (
       <form>
         <FormGroup labelFor='eventsUrlInput' label={"URL évènements"}>
-          <input id='eventsUrlInput' type='text' className='pt-input' value={eventsUrl} readOnly/>
+          <input id='eventsUrlInput' type='text' className='bp3-input bp3-fill' value={eventsUrl||''} readOnly/>
         </FormGroup>
         <FormGroup labelFor='audioUrlInput' label={"URL audio"}>
-          <input id='audioUrlInput' type='text' className='pt-input' value={audioUrl} readOnly/>
+          <input id='audioUrlInput' type='text' className='bp3-input bp3-fill' value={audioUrl||''} readOnly/>
         </FormGroup>
         {wavAudioUrl &&
           <FormGroup labelFor='wavAudioUrlInput' label={"URL audio (wav)"}>
-            <input id='wavAudioUrlInput' type='text' className='pt-input' value={wavAudioUrl} readOnly/>
+            <input id='wavAudioUrlInput' type='text' className='bp3-input bp3-fill' value={wavAudioUrl||''} readOnly/>
           </FormGroup>}
+        <FormGroup label="Target">
+          <HTMLSelect options={grantOptions} value={targetUrl} onChange={this.handleTargetChange} />
+        </FormGroup>
+        <Button onClick={this.onUpload} disabled={!canUpload} intent={canUpload ? Intent.PRIMARY : Intent.NONE}
+          icon='floppy-disk' text="Save" />
         <p>
-          <Button onClick={this.onUpload} disabled={busy || done} intent={done && Intent.PRIMARY}
-            icon='floppy-disk' text="Save" />
-          {/* TODO: cleanup status */}
           {busy
-            ? <i className="fa fa-spin fa-spinner"/>
-            : (done
-                ? <i className="fa fa-check"/>
+            ? <Spinner small/>
+            : (step === 'done'
+                ? <Icon icon='tick' intent={Intent.SUCCESS} />
                 : false)}
+          {message}
         </p>
-        {prepare === 'pending' && <p>{getMessage('PREPARING_RECORDING')}</p>}
-        {uploadEvents === 'pending' && <p>{getMessage('UPLOADING_EVENTS')}</p>}
-        {uploadAudio === 'pending' && <p>{getMessage('UPLOADING_AUDIO')}</p>}
-        {error && <p>{getMessage('UPLOADING_ERROR')}</p>}
-        {done && <p>{getMessage('UPLOADING_COMPLETE')}</p>}
-        {done &&
+        {typeof progress === 'number' &&
+          <ProgressBar value={progress} />}
+        {playerUrl &&
           <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')}>
-            <input id='playerUrlInput' type='text' className='pt-input' value={playerUrl} readOnly/>
+            <input id='playerUrlInput' type='text' className='bp3-input bp3-fill' value={playerUrl} readOnly/>
           </FormGroup>}
       </form>
     );
   }
 
+  state = {targetUrl: ''}; // TODO: default to first valid grant
+  handleTargetChange = (event) => {
+    this.setState({targetUrl: event.target.value});
+  };
+
   onUpload = () => {
-    this.props.dispatch({type: deps.saveScreenUpload});
+    const {targetUrl} = this.state;
+    const grant = this.props.grants.find(grant => grant.url === targetUrl);
+    if (grant) {
+      const {s3Bucket, uploadPath} = grant;
+      this.props.dispatch({type: this.props.actionTypes.saveScreenUpload, payload: {s3Bucket, uploadPath}});
+    }
   };
 
 }
 
-function* encodingSaga ({actionTypes}) {
-  yield put({type: actions.saveScreenEncodingStart, payload: {}});
+function* encodingSaga ({actionTypes, selectors}) {
+  yield put({type: actionTypes.saveScreenEncodingStart, payload: {}});
   yield put({type: actionTypes.switchToScreen, payload: {screen: 'save'}});
-  const recorder = yield select(deps.getRecorderState);
+  const recorder = yield select(selectors.getRecorderState);
   /* Encode the audio track, reporting progress. */
   const {worker} = recorder.get('context');
   const {mp3, wav, duration} = yield call(worker.call, 'export', {mp3: true, wav: true}, encodingProgressSaga);
@@ -182,29 +206,27 @@ function* encodingSaga ({actionTypes}) {
   }
 }
 
-function* uploadSaga ({actionTypes, selectors}) {
+function* uploadSaga ({actionTypes, selectors}, {payload: {s3Bucket, uploadPath}}) {
   try {
     // Step 1: prepare the upload by getting the S3 form parameters
     // from the server.
     yield put({type: actionTypes.saveScreenPreparing});
     const save = yield select(state => state.get('save'));
-    const token = yield select(selectors.getUploadToken);
-    const response = yield call(asyncRequestJson, 'upload', {token});
-    yield put({type: actionTypes.saveScreenUploadReady});
+    const response = yield call(asyncRequestJson, 'upload', {s3Bucket, uploadPath});
     // Upload the events file.
     yield put({type: actionTypes.saveScreenEventsUploading});
-    const eventsBlob = yield call(getBlob, save.get('eventsUrl'));
+    const eventsBlob = yield call(getBlob, save.eventsUrl);
     yield call(uploadBlob, response.events, eventsBlob);
-    yield put({type: actionTypes.saveScreenEventsUploaded, url: response.events.public_url});
+    yield put({type: actionTypes.saveScreenEventsUploaded, payload: {url: response.events.public_url}});
     // Upload the audio file.
     yield put({type: actionTypes.saveScreenAudioUploading});
-    const audioBlob = yield call(getBlob, save.get('audioUrl'));
+    const audioBlob = yield call(getBlob, save.audioUrl);
     yield call(uploadBlob, response.audio, audioBlob);
-    yield put({type: actionTypes.saveScreenAudioUploaded, url: response.audio.public_url});
+    yield put({type: actionTypes.saveScreenAudioUploaded, payload: {url: response.audio.public_url}});
     // Signal completion.
-    yield put({type: actionTypes.saveScreenUploadSucceeded, playerUrl: response.player_url});
+    yield put({type: actionTypes.saveScreenUploadSucceeded, payload: {playerUrl: response.player_url}});
   } catch (error) {
-    yield put({type: actionTypes.saveScreenUploadFailed, error});
+    yield put({type: actionTypes.saveScreenUploadFailed, payload: {error}});
   }
 }
 
