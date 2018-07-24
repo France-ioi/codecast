@@ -8,7 +8,6 @@ import {delay} from 'redux-saga';
 import {take, takeLatest, takeEvery, put, call, race, select, actionChannel} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
-import {RECORDING_FORMAT_VERSION} from '../version';
 import {spawnWorker} from '../utils/worker_utils';
 import AudioWorker from 'worker-loader?inline!../audio_worker';
 
