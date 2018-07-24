@@ -97,6 +97,7 @@ const config = module.exports = {
   ]
 };
 
+/*  Disabled because uglifyjs fails with invalid assignment in vendor.js
 if (isDev) {
   // config.devtool = 'eval';
   // config.devtool = inline-source-map;
@@ -108,3 +109,24 @@ if (isDev) {
     }
   }));
 }
+*/
+
+require('pretty-error').start();
+const oldPrepareStackTrace = Error.prepareStackTrace;
+const nodeModulesPath = path.resolve(__dirname, 'node_modules');
+Error.prepareStackTrace = function (exc, frames) {
+  let hideNodeModules = false;
+  frames = frames.filter(function (call_site) {
+    const fn = call_site.getFileName();
+    if (fn && fn.startsWith(nodeModulesPath)) {
+      if (hideNodeModules) {
+        return false;
+      } else {
+        hideNodeModules = true;
+        return true;
+      }
+    }
+    return true;
+  });
+  return oldPrepareStackTrace.call(null, exc, frames);
+};
