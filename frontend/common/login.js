@@ -47,7 +47,7 @@ function LoginScreenSelector (state, props) {
 class LogoutButton extends React.PureComponent {
   render() {
     const {user, baseUrl} = this.props;
-    if (!user.login) return false;
+    if (!user || !user.login) return false;
     return (
       <a href={`${baseUrl}/logout`} target='_blank' className='btn btn-default'>
         <i className='fa fa-sign-out'/>

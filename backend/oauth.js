@@ -58,9 +58,15 @@ module.exports = function (app, config, callback) {
         request(token.sign({method: 'GET', url: authConfig.identityProviderUri}), function (err, response, body) {
           if (err) return res.render('after_login', {error: err.toString()});
           if (response.statusCode != 200) return res.status(response.statusCode).send(body);
-          req.session.user_id = body.id;
-          req.session.identity = JSON.parse(body);
-          getUserConfig(body.id, function (err, userConfig) {
+          let identity;
+          try {
+            identity = JSON.parse(body);
+          } catch (ex) {
+            if (err) return res.render('after_login', {error: 'malformed user profile'});
+          }
+          req.session.identity = identity;
+          req.session.user_id = identity.id;
+          getUserConfig(identity.id, function (err, userConfig) {
             if (err) return res.render('after_login', {error: err.toString()});
             req.session.grants = userConfig.grants;
             res.render('after_login', {user: getFrontendUser(req.session)});
@@ -74,7 +80,10 @@ module.exports = function (app, config, callback) {
 
   app.get('/logout', function (req, res) {
     const {provider} = req.session;
-    const logoutUri = provider && getOauthConfig(provider).config.logoutUri;
+    let logoutUri;
+    if (provider && provider !== 'guest') {
+      logoutUri = getOauthConfig(provider).config.logoutUri;
+    }
     req.session.destroy(function (err) {
       res.render('after_logout', {
         rebaseUrl: config.rebaseUrl,
@@ -86,7 +95,7 @@ module.exports = function (app, config, callback) {
   function getOauthConfig (provider) {
     let authConfig = config.auth[provider];
     if (!authConfig) {
-      throw new Error(`unknown auth provider ${provide}`);
+      throw new Error(`unknown auth provider ${provider}`);
     }
     let client = oauthClientCache[provider];
     if (!client) {
@@ -160,13 +169,15 @@ module.exports = function (app, config, callback) {
     function queryLegacyUserConfig () {
       const q = "SELECT value FROM user_configs WHERE user_id = ? LIMIT 1";
       db.query(q, [user_id], function (err, rows) {
-        if (err || rows.length !== 1) return done('database error');
-        try {
-          const grant = JSON.parse(rows[0].value);
-          grant.type = "s3"
-          grants.push(grant);
-        } catch (ex) {
-          return done('parse error');
+        if (err) return done('database error');
+        if (rows.length === 1) {
+          try {
+            const grant = JSON.parse(rows[0].value);
+            grant.type = "s3"
+            grants.push(grant);
+          } catch (ex) {
+            return done('parse error');
+          }
         }
         done();
       });

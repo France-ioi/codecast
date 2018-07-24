@@ -68,6 +68,11 @@ function editorAudioLoadProgressReducer (state, {payload: {value}}) {
 }
 
 function* editorPrepareSaga ({actionTypes}, {payload: {baseDataUrl}}) {
+  /* Require the user to be logged in. */
+  while (!(yield select(state => state.get('user')))) {
+    yield take(actionTypes.loginFeedback);
+    console.log('got login feedback', yield select(state => state.get('user')));
+  }
   yield put({type: actionTypes.switchToScreen, payload: {screen: 'setup'}});
   const audioUrl = `${baseDataUrl}.mp3`;
   const eventsUrl = `${baseDataUrl}.json`;
@@ -140,7 +145,7 @@ function EditorAppSelector (state, props) {
     activity = 'edit';
     screenProp = 'EditScreen';
   } else {
-    Screen = <p>{'undefined state'}</p>;
+    Screen = () => <p>{'undefined state'}</p>;
   }
   if (!Screen && screenProp) {
     Screen = scope[screenProp];
