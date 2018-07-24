@@ -128,11 +128,12 @@ function addBackendRoutes (app, config, store) {
         if (err) return res.json({error: err.toString()});
         const id = Date.now().toString();
         const s3client = upload.makeS3UploadClient(target);
+        const {s3Bucket, uploadPath} = target;
         upload.getJsonUploadForm(s3client, s3Bucket, uploadPath, function (err, events) {
           if (err) return res.json({error: err.toString()});
           upload.getMp3UploadForm(s3client, s3Bucket, uploadPath, function (err, audio) {
             if (err) return res.json({error: err.toString()});
-            const baseUrl = `https://${bucket}.s3.amazonaws.com/${uploadPath}`;
+            const baseUrl = `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}`;
             const player_url = `${config.playerUrl}?base=${encodeURIComponent(baseUrl)}`;
             res.json({player_url, events, audio});
           });
