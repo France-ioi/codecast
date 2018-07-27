@@ -5,6 +5,7 @@ import range from 'node-range';
 
 import {getIdent, getNumber, getList, renderValue, renderArrow} from './utils';
 import {extractView} from './array_utils';
+import {SvgPan} from './svg-pan';
 
 // @11px, line height 15, offset 12
 const textLineHeight = 18;
@@ -99,15 +100,16 @@ function Cursor ({view, cursor}) {
 export class Array1D extends React.PureComponent {
 
   render () {
-    const {Frame, controls, directive, frames, context, getMessage} = this.props;
+    const {Frame, controls, directive, frames, context, scale, getMessage} = this.props;
     const topFrame = frames[0];
     const fullView = controls.get('fullView');
+    const cellPan = controls.get('cellPan', 0);
     const {byName, byPos} = directive;
     const expr = byPos[0];
     const cursorExprs = getList(byName.cursors, []);
     const cursorRows = getNumber(byName.cursorRows, 1);
     const cellHeight = (3 + cursorRows) * textLineHeight + minArrowHeight;
-    const cellWidth = getNumber(byName.cw, 28);
+    const cellWidth = this._cellWidth = getNumber(byName.cw, 28);
     const maxVisibleCells = getNumber(byName.n, 40);
     const {dim} = byName;
     // The first element of `frames` is the topmost frame containing the
@@ -123,8 +125,7 @@ export class Array1D extends React.PureComponent {
     return (
       <Frame {...this.props} hasFullView>
         <div className='clearfix' style={{padding: '2px'}}>
-          <svg width='100%' height={cellHeight} version='1.1' xmlns='http://www.w3.org/2000/svg'
-              onMouseDown={this.onMouseDown} onMouseMove={this.onMouseMove} onMouseUp={this.onMouseUp} >
+          <SvgPan width='100%' height={cellHeight} scale={scale} x={cellPan * cellWidth} y={0} getPosition={this.getPosition} onPan={this.onPan} >
             <clipPath id="cell">
               <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight}/>
             </clipPath>
@@ -137,11 +138,20 @@ export class Array1D extends React.PureComponent {
                 {view.cells.map(cell => <Cell key={cell.index} view={view} cell={cell} />)}
               </g>
             </g>
-          </svg>
+          </SvgPan>
         </div>
       </Frame>
     );
   }
+
+  getPosition = () => {
+    return this.props.controls.get('cellPan', 0);
+  };
+
+  onPan = (startPosition, dx, dy) => {
+    const cellPan = startPosition - (dx / this._cellWidth);
+    this.props.onChange(this.props.directive, {cellPan});
+  };
 
 /*
 
