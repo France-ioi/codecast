@@ -103,7 +103,7 @@ export class Array1D extends React.PureComponent {
     const {Frame, controls, directive, frames, context, scale, getMessage} = this.props;
     const topFrame = frames[0];
     const fullView = controls.get('fullView');
-    const cellPan = controls.get('cellPan', 0);
+    const cellPan = this.getPosition();
     const {byName, byPos} = directive;
     const expr = byPos[0];
     const cursorExprs = getList(byName.cursors, []);
@@ -125,7 +125,7 @@ export class Array1D extends React.PureComponent {
     return (
       <Frame {...this.props} hasFullView>
         <div className='clearfix' style={{padding: '2px'}}>
-          <SvgPan width='100%' height={cellHeight} scale={scale} x={cellPan * cellWidth} y={0} getPosition={this.getPosition} onPan={this.onPan} >
+          <SvgPan width='100%' height={cellHeight} scale={scale} x={cellPan * cellWidth - 10} y={0} getPosition={this.getPosition} onPan={this.onPan} >
             <clipPath id="cell">
               <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight}/>
             </clipPath>
@@ -152,46 +152,5 @@ export class Array1D extends React.PureComponent {
     const cellPan = startPosition - (dx / this._cellWidth);
     this.props.onChange(this.props.directive, {cellPan});
   };
-
-/*
-
-    <g ref={this.refViewer} transform={viewTransform}>
-    </g>
-
-  state = {
-    mode: 'idle', start: null
-  };
-  refViewer = (viewer) => {
-    this.viewer = viewer;
-    // width = cellWidth * view.cells.length
-  };
-  onMouseDown = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    const refX = event.clientX;
-    this.setState({mode: 'panning', refX});
-  };
-  onMouseMove = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (this.state.mode === 'panning') {
-      const forceExit = (event.buttons === 0); // the mouse exited and reentered into svg
-      if (forceExit) {
-        this.setState({mode: 'idle'});
-      } else {
-        const {scale} = this.props;
-        const delta = event.clientX - this.state.refX;
-        const address = Math.max(0, Math.min(maxAddress, refAddress - delta / (scale * layout.cellWidth)));
-        this.props.onChange(this.props.directive, {centerAddress: address});
-      }
-    }
-  };
-  onMouseUp = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    this.setState({mode: 'idle', start: null});
-  };
-
-*/
 
 }
