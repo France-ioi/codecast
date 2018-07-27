@@ -4,13 +4,13 @@ import React from 'react';
 export class SvgPan extends React.PureComponent {
 
   render () {
-    const {width, height, x, y, scale} = this.props;
+    const {width, height, x, y, scale, className} = this.props;
     const viewTransform = `matrix(${scale},0,0,${scale},${-x},${-y})`;
     return (
       <svg version='1.1' xmlns='http://www.w3.org/2000/svg'
         width={width} height={height}
         onMouseDown={this.onMouseDown} onMouseMove={this.onMouseMove} onMouseUp={this.onMouseUp} >
-        <g transform={viewTransform}>
+        <g transform={viewTransform} className={className}>
           {this.props.children}
         </g>
       </svg>
@@ -32,7 +32,7 @@ export class SvgPan extends React.PureComponent {
     event.stopPropagation();
     const startPosition = this.props.getPosition();
     const startX = event.clientX;
-    const startY = event.clientX;
+    const startY = event.clientY;
     this.setState({mode: 'panning', startPosition, startX, startY});
   };
 
