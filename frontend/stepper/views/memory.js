@@ -260,10 +260,12 @@ class MemoryView extends React.PureComponent {
               <div className="memory-slider-background"/>
             </Slider>
           </div>
-          <ButtonGroup>
-            <Button small onClick={this.onShiftLeft} title={getMessage('MEMORY_SHIFT_VIEW_LEFT')} icon='arrow-left'/>
-            <Button small onClick={this.onShiftRight} title={getMessage('MEMORY_SHIFT_VIEW_RIGHT')} icon='arrow-right'/>
-          </ButtonGroup>
+          <span style={{verticalAlign: '6px', marginRight: '2px'}}>
+            <ButtonGroup>
+              <Button small onClick={this.onShiftLeft} title={getMessage('MEMORY_SHIFT_VIEW_LEFT')} icon='arrow-left'/>
+              <Button small onClick={this.onShiftRight} title={getMessage('MEMORY_SHIFT_VIEW_RIGHT')} icon='arrow-right'/>
+            </ButtonGroup>
+          </span>
         </div>
         <div className='clearfix' style={{padding: '2px'}}>
           <div style={{width: '100%', height: `${layout.bottom * scale}px`}}>
