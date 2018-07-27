@@ -3,6 +3,7 @@ import React from 'react';
 
 import {extractView} from './array2d_model';
 import {getNumber, getList, renderValue, renderArrow} from './utils';
+import {SvgPan} from './svg-pan';
 
 const textLineHeight = 18;
 const textBaseline = 5; // from bottom
@@ -161,6 +162,7 @@ export class Array2D extends React.PureComponent {
     const colCursors = getList(byName.colCursors, []);
     const height = getNumber(byName.height, 'auto');
     const view = {rowCursors, colCursors, height, getMessage};
+    const {hPan, vPan} = this.getPosition();
     Object.assign(view, extractView(context, frames[0], expr, view));
     if (view.error) {
       return (
@@ -176,28 +178,34 @@ export class Array2D extends React.PureComponent {
       <Frame {...this.props}>
         <div className='clearfix' style={{padding: '2px'}}>
           <div style={{width: '100%', height: divHeight}}>
-            <svg width={svgWidth} height={svgHeight} version="1.1" xmlns="http://www.w3.org/2000/svg">
-              <g transform={`scale(${scale})`} className="array2d">
-                <clipPath id="cell">
-                  <rect x="0" y="0" width={cellWidth} height={cellHeight}/>
-                </clipPath>
-                <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
-                  {drawGrid(view, rowCount, colCount)}
-                  {drawRowCursors(rowCount, colCount, rowInfoMap)}
-                  {drawColCursors(colCount, rowCount, colInfoMap)}
-                  {drawCells(view)}
-                </g>
+            <SvgPan width='100%' height={svgHeight} scale={scale} x={hPan * cellWidth} y={vPan * cellHeight} getPosition={this.getPosition} onPan={this.onPan} className="array2d">
+              <clipPath id="cell">
+                <rect x="0" y="0" width={cellWidth} height={cellHeight}/>
+              </clipPath>
+              <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
+                {drawGrid(view, rowCount, colCount)}
+                {drawRowCursors(rowCount, colCount, rowInfoMap)}
+                {drawColCursors(colCount, rowCount, colInfoMap)}
+                {drawCells(view)}
               </g>
-            </svg>
+            </SvgPan>
           </div>
         </div>
       </Frame>
     );
   }
 
-  onViewChange = (event) => {
-    const update = {viewState: event.value};
-    this.props.onChange(this.props.directive, update);
+  getPosition = () => {
+    const {controls} = this.props;
+    const hPan = controls.get('hPan', 0);
+    const vPan = controls.get('vPan', 0);
+    return {hPan, vPan};
+  };
+
+  onPan = ({hPan, vPan}, dx, dy) => {
+    hPan -= dx / cellWidth;
+    vPan -= dy / cellHeight;
+    this.props.onChange(this.props.directive, {hPan, vPan});
   };
 
 }
