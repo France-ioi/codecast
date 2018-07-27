@@ -29,7 +29,7 @@ $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
 @import "./player/style.scss";
 
 /* Darker icons on blueprint buttons. */
-.pt-button .pt-icon, .pt-button .pt-icon-standard, .pt-button .pt-icon-large {
+.bp3-button .bp3-icon, .bp3-button .bp3-icon-standard, .bp3-button .bp3-icon-large {
   color: #3c5060;
 }
 
@@ -255,7 +255,7 @@ body#app, #app h1, #app h2, #app h3 {
   top: -1px;
   right: -1px;
 }
-.stack-controls button.pt-small {
+.stack-controls button.bp3-small {
   min-height: 20px;
 }
 
@@ -441,12 +441,16 @@ span + .value-previous {
 .directive-bar {
   margin-bottom: 6px;
 }
-.directive-bar .pt-navbar {
+.directive-bar .bp3-navbar {
   height: 40px;
   padding: 0 8px;
+  box-shadow: none;
 }
-.directive-bar .pt-navbar-group {
+.directive-bar .bp3-navbar-group {
   height: 40px;
+}
+.directive-bar .bp3-button {
+  margin-right: 8px;
 }
 
 .directive-view {
@@ -468,7 +472,7 @@ span + .value-previous {
   right: -1px;
 }
 
-.memory-controls .pt-button-group {
+.memory-controls .bp3-button-group {
     vertical-align: 6px;
     padding-right: 2px;
 }
@@ -699,7 +703,7 @@ svg {
       padding: 0 3px;
       line-height: 24px;
     }
-    .subtitles-timestamp button.pt-button.pt-small {
+    .subtitles-timestamp button.bp3-button.bp3-small {
       min-width: auto;
     }
     textarea.subtitles-text {
