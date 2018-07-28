@@ -57,7 +57,6 @@ export default function (bundle, deps) {
     /* Load the events. */
     let data = yield call(getJson, eventsUrl);
     if (Array.isArray(data)) {
-      /* TODO: warn about incompatible recording */
       yield put({type: deps.playerPrepareFailure, payload: {message: "recording is incompatible with this player"}});
       return;
     }
@@ -67,7 +66,6 @@ export default function (bundle, deps) {
       state: Immutable.Map(),
       events: data.events,
       instants: [],
-      /* XXX Consider: addInstant function in replayContext */
       addSaga,
       reportProgress,
     };
