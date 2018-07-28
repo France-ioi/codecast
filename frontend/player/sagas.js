@@ -75,7 +75,6 @@ export default function (bundle, deps) {
       yield call(computeInstants, replayContext);
       /* The duration of the recording is the timestamp of the last event. */
       const instants = replayContext.instants;
-      instants[9].jump = 5500;
       const duration = instants[instants.length - 1].t;
       yield put({type: deps.playerReady, payload: {baseDataUrl, duration, data, instants}});
       yield call(resetToInstant, instants[0], 0);
