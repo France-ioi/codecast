@@ -288,6 +288,7 @@ export default function (bundle, deps) {
   function* jumpToAudioTime (audioTime) {
     /* Jump and full reset to the specified audioTime. */
     const player = yield select(deps.getPlayerState);
+    audioTime = Math.max(0, Math.min(player.get('duration'), audioTime));
     const audio = player.get('audio');
     audio.currentTime = audioTime / 1000;
     yield call(resetToAudioTime, audioTime);
