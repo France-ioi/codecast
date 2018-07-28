@@ -58,9 +58,9 @@ function render (props, canvas, prevParams) {
   ctx.fillStyle = '#f8f8f8';
   ctx.fillRect(0, 0, width, height);
   if (intervals) {
-    for (let {start, end, value} of intervals) {
+    for (let {start, end, value: {skip, mute}} of intervals) {
       if (end === +Infinity) end = duration;
-      renderRange(ctx, params, {start, end, color: value ? '#f8f8f8' : '#808080'});
+      renderRange(ctx, params, {start, end, color: skip ? '#808080' : '#f8f8f8'}); // XXX
     }
   }
   if (prevParams && width === prevParams.width) {

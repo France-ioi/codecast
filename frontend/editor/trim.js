@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {AnchorButton, Button, ProgressBar, Icon, Intent, Spinner} from '@blueprintjs/core';
+import {AnchorButton, Button, Checkbox, ProgressBar, Icon, Intent, Spinner} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
 import AudioBuffer from 'audio-buffer';
@@ -26,10 +26,10 @@ export default function (bundle, deps) {
   bundle.defineAction('trimEditorIntervalsChanged', 'Editor.Trim.Intervals.Changed');
   bundle.defineAction('trimEditorMarkerAdded', 'Editor.Trim.MarkerAdded');
   bundle.defineAction('trimEditorMarkerRemoved', 'Editor.Trim.MarkerRemoved');
-  bundle.defineAction('trimEditorIntervalToggled', 'Editor.Trim.IntervalToggled');
+  bundle.defineAction('trimEditorIntervalChanged', 'Editor.Trim.Interval.Changed');
   bundle.addReducer('trimEditorMarkerAdded', trimEditorMarkerAddedReducer);
   bundle.addReducer('trimEditorMarkerRemoved', trimEditorMarkerRemovedReducer);
-  bundle.addReducer('trimEditorIntervalToggled', trimEditorIntervalToggledReducer);
+  bundle.addReducer('trimEditorIntervalChanged', trimEditorIntervalChangedReducer);
   bundle.defineView('TrimEditor', TrimEditorSelector, TrimEditor);
   bundle.defineView('TrimEditorControls', TrimEditorControlsSelector, TrimEditorControls);
   bundle.defineView('TrimEditorReturn', TrimEditorReturnSelector, TrimEditorReturn);
@@ -43,7 +43,7 @@ export default function (bundle, deps) {
 };
 
 function editorPrepareReducer (state) {
-  const intervals = intervalTree(true);
+  const intervals = intervalTree({skip: false, mute: false});
   return state.setIn(['editor', 'trim'], {intervals});
 }
 
@@ -57,11 +57,10 @@ function trimEditorMarkerRemovedReducer (state, {payload: {position}}) {
     intervals: st.intervals.mergeLeft(st.intervals.get(position).start)}));
 }
 
-function trimEditorIntervalToggledReducer (state, {payload: {position}}) {
+function trimEditorIntervalChangedReducer (state, {payload: {position, value}}) {
   /* TODO: update instants in the player, to add/remove jump at position */
   let {intervals} = state.getIn(['editor', 'trim']);
-  const {start, end, value} = intervals.get(position);
-  intervals = intervals.set(position, !value);
+  intervals = intervals.set(position, value);
   let instants = state.getIn(['player', 'instants']);
   instants = addJumpInstants(instants, intervals);
   return state
@@ -74,19 +73,19 @@ function addJumpInstants (instants, intervals) {
   instants = instants.filter(instant => typeof instant.jump !== 'number');
   let fromTime, isEnabled = true;
   for (let interval of intervals) {
-    if (interval.value) {
+    if (interval.value.skip) {
+      if (isEnabled) {
+        /* Mark start of disabled area. */
+        fromTime = interval.start === 0 ? 1 : interval.start;
+        isEnabled = false;
+      }
+    } else {
       if (!isEnabled) {
         const toTime = interval.start;
         const index = findInstantIndex(instants, fromTime);
         instants.splice(index + 1, 0, {t: fromTime, jump: toTime, state: instants[index].state});
       }
       isEnabled = true;
-    } else {
-      if (isEnabled) {
-        /* Mark start of disabled area. */
-        fromTime = interval.start === 0 ? 1 : interval.start;
-        isEnabled = false;
-      }
     }
   }
   if (!isEnabled) {
@@ -159,8 +158,8 @@ function StepRow ({title, status}) {
 
 function TrimEditorControlsSelector (state, props) {
   const {width} = props;
-  const {getPlayerState, playerSeek, trimEditorMarkerAdded,
-    trimEditorMarkerRemoved, trimEditorIntervalToggled} = state.get('scope');
+  const {getPlayerState} = state.get('scope');
+  const actionTypes = state.get('actionTypes');
   const editor = state.get('editor');
   const player = getPlayerState(state);
   const position = Math.round(player.get('audioTime'));
@@ -176,22 +175,30 @@ function TrimEditorControlsSelector (state, props) {
   } else if (viewEnd > duration) {
     viewStart = Math.max(0, duration - visibleDuration);
   }
+  const selectedInterval = intervals.get(position);
   viewEnd = viewStart + visibleDuration;
   return {
-    position, viewStart, viewEnd, duration, waveform, events, intervals,
-    playerSeek, trimEditorMarkerAdded, trimEditorMarkerRemoved, trimEditorIntervalToggled
+    actionTypes, position, viewStart, viewEnd, duration, waveform, events, intervals, selectedInterval,
   };
 }
 
 class TrimEditorControls extends React.PureComponent {
   render () {
-    const {position, viewStart, viewEnd, duration, waveform, events, width, intervals} = this.props;
+    const {position, viewStart, viewEnd, duration, waveform, events, width, intervals, selectedInterval} = this.props;
     return (
       <div>
-        <div>
+        <div className='hbox'>
           <Button onClick={this.addMarker} text="Add Marker"/>
           <Button onClick={this.removeMarker} text="Remove Marker"/>
-          <Button onClick={this.toggleInterval} text="Toggle"/>
+          {/*<Button onClick={this.toggleInterval} text="Toggle"/>*/}
+          <div>
+            <Checkbox checked={selectedInterval.value.skip} onChange={this.intervalSkipChanged}>
+              {"Skip"}
+            </Checkbox>
+            <Checkbox checked={selectedInterval.value.mute} onChange={this.intervalMuteChanged}>
+              {"Mute"}
+            </Checkbox>
+          </div>
         </div>
         <ExpandedWaveform height={100} width={width} position={position} duration={duration}
           waveform={waveform} events={events} intervals={intervals} onPan={this.seekTo} />
@@ -202,19 +209,27 @@ class TrimEditorControls extends React.PureComponent {
     );
   }
   seekTo = (position) => {
-    this.props.dispatch({type: this.props.playerSeek, payload: {audioTime: position}});
+    this.props.dispatch({type: this.props.actionTypes.playerSeek, payload: {audioTime: position}});
   };
   addMarker = () => {
     const {position} = this.props;
-    this.props.dispatch({type: this.props.trimEditorMarkerAdded, payload: {position}});
+    this.props.dispatch({type: this.props.actionTypes.trimEditorMarkerAdded, payload: {position}});
   };
   removeMarker = () => {
     const {position} = this.props;
-    this.props.dispatch({type: this.props.trimEditorMarkerRemoved, payload: {position}});
+    this.props.dispatch({type: this.props.actionTypes.trimEditorMarkerRemoved, payload: {position}});
   };
-  toggleInterval = () => {
-    const {position} = this.props;
-    this.props.dispatch({type: this.props.trimEditorIntervalToggled, payload: {position}});
+  intervalSkipChanged = (event) => {
+    const {position, selectedInterval} = this.props;
+    const skip = event.target.checked;
+    let {value} = selectedInterval;
+    this.props.dispatch({type: this.props.actionTypes.trimEditorIntervalChanged, payload: {position, value: {...value, skip}}});
+  };
+  intervalMuteChanged = (event) => {
+    const {position, selectedInterval} = this.props;
+    let {value} = selectedInterval;
+    const mute = event.target.checked;
+    this.props.dispatch({type: this.props.actionTypes.trimEditorIntervalChanged, payload: {position, value: {...value, mute}}});
   };
 }
 
@@ -313,16 +328,16 @@ function* trimEditorSaveSaga (_action) {
 
 function trimEvents (data, intervals) {
   const it = intervals[Symbol.iterator]();
-  let interval = {end: -1, value: false}, start = 0;
+  let interval = {end: -1, value: {skip: false, mute: false}}, start = 0;
   const events = data.events.map(event => {
     if (event[0] >= interval.end) {
-      if (interval.value) {
+      if (!interval.value.skip) {
         start += interval.end - interval.start;
       }
       interval = it.next().value;
     }
     event = event.slice();
-    if (interval.value) {
+    if (!interval.value.skip) {
       event[0] = start + (event[0] - interval.start);
     } else {
       event[0] = start;
@@ -377,21 +392,23 @@ function* trimEditorAssembleAudio (audioBuffer, intervals) {
   const chunks = [];
   let length = 0;
   for (let it of intervals) {
-    if (it.value) {
+    if (!it.value.skip) {
       const sourceStart = Math.round(it.start / 1000 * sampleRate);
       const sourceEnd = Math.round(Math.min(it.end / 1000, duration) * sampleRate);
       const chunkLength = sourceEnd - sourceStart;
-      chunks.push({start: sourceStart, length: chunkLength});
+      chunks.push({start: sourceStart, length: chunkLength});  // add muted flag here
       length += chunkLength;
     }
   }
   const init = yield call(worker.call, 'init', {sampleRate, numberOfChannels});
   let addedLength = 0;
-  for (let {start: sourceStart, length: chunkLength} of chunks) {
+  for (let chunk of chunks) {
     let samples = [];
     for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber += 1) {
-      const chunkBuffer = new Float32Array(chunkLength);
-      audioBuffer.copyFromChannel(chunkBuffer, channelNumber, sourceStart);
+      const chunkBuffer = new Float32Array(chunk.chunkLength);
+      if (!chunk.mute) {
+        audioBuffer.copyFromChannel(chunkBuffer, channelNumber, chunk.sourceStart);
+      }
       samples.push(chunkBuffer);
     }
     addedLength += chunkLength;
