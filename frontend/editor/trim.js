@@ -145,7 +145,7 @@ function TrimEditorControlsSelector (state, props) {
     trimEditorMarkerRemoved, trimEditorIntervalToggled} = state.get('scope');
   const editor = state.get('editor');
   const player = getPlayerState(state);
-  const position = player.get('audioTime');
+  const position = Math.round(player.get('audioTime'));
   const duration = player.get('duration');
   const waveform = editor.get('waveform');
   const {events} = editor.get('data');
