@@ -1,6 +1,8 @@
 
 import Immutable from 'immutable';
 
+import {findInstant} from './utils';
+
 export default function (bundle, deps) {
   bundle.addReducer('init', initReducer);
   bundle.addReducer('playerClear', playerClearReducer);
@@ -63,9 +65,11 @@ function playerPausedReducer (state, _action) {
  return state.setIn(['player', 'isPlaying'], false);
 }
 
-function playerTickReducer (state, {payload: {current, audioTime}}) {
+function playerTickReducer (state, {payload: {audioTime}}) {
+  const instants = state.getIn(['player', 'instants'])
+  const instant = findInstant(instants, audioTime);
   return state.update('player', player => player
-    .set('current', current) /* current instant */
+    .set('current', instant) /* current instant */
     .set('audioTime', audioTime));
 }
 

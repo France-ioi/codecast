@@ -10,6 +10,7 @@ import Immutable from 'immutable';
 
 import {getJson} from '../common/utils';
 import {RECORDING_FORMAT_VERSION} from '../version';
+import {findInstant, findInstantIndex} from './utils';
 
 export default function (bundle, deps) {
 
@@ -75,7 +76,7 @@ export default function (bundle, deps) {
       const instants = replayContext.instants;
       const duration = instants[instants.length - 1].t;
       yield put({type: deps.playerReady, payload: {baseDataUrl, duration, data, instants}});
-      yield call(resetToInstant, instants[0], 0);
+      yield call(resetToAudioTime, 0);
     } catch (ex) {
       yield put({type: deps.playerPrepareFailure, payload: {message: `${ex.toString()}`, context: replayContext}});
       return null;
@@ -131,6 +132,7 @@ export default function (bundle, deps) {
     const isPlaying = player.get('isPlaying');
     const audio = player.get('audio');
     const instants = player.get('instants');
+    let audioTime = player.get('audioTime');
     let instant = player.get('current');
 
     if (type === deps.playerStart && !player.get('isReady')) {
@@ -139,17 +141,15 @@ export default function (bundle, deps) {
       return;
     }
     if (type === deps.playerStart) {
-      let audioTime = player.get('audioTime');
       /* If at end of stream, restart automatically. */
       if (instant.isEnd) {
         audioTime = 0;
         audio.currentTime = 0;
-        instant = instants[0];
       }
       /* The player was started (or resumed), reset to the current instant to
          clear any possible changes to the state prior to entering the update
          loop. */
-      yield call(resetToInstant, instant, audioTime);
+      yield call(resetToAudioTime, audioTime);
       /* Disable the stepper during playback, its states are pre-computed. */
       yield put({type: deps.stepperDisabled});
       /* Play the audio now that an accurate state is displayed. */
@@ -162,8 +162,8 @@ export default function (bundle, deps) {
          audio time is used to reset the state accurately. */
       audio.pause();
       const audioTime = Math.round(audio.currentTime * 1000);
-      yield call(resetToInstant, instant, audioTime);
-      yield call(restartStepper, instant);
+      yield call(resetToAudioTime, audioTime);
+      yield call(restartStepper);
       yield put({type: deps.playerPaused});
       return;
     }
@@ -178,12 +178,11 @@ export default function (bundle, deps) {
          make a cleaner jump, as audio will not start playing at the new
          position until the new state has been rendered. */
       const audioTime = Math.max(0, Math.min(player.get('duration'), payload.audioTime));
-      instant = findInstant(instants, audioTime);
-      yield call(resetToInstant, instant, audioTime);
+      yield call(resetToAudioTime, audioTime);
       if (!isPlaying) {
         /* The stepper is restarted after a seek-while-paused, in case it is
            waiting on I/O. */
-        yield call(restartStepper, instant);
+        yield call(restartStepper);
       }
       audio.currentTime = audioTime / 1000;
       if (!isPlaying) {
@@ -196,63 +195,51 @@ export default function (bundle, deps) {
     /* The periodic update loop runs until cancelled by another replay action. */
     const chan = yield call(requestAnimationFrames, 50);
     try {
-      while (!instant.isEnd) {
-        yield take(chan);
+      while (!(yield select(state => state.getIn(['player', 'current']).isEnd))) {
         /* Use the audio time as reference. */
-        let audioTime = Math.round(audio.currentTime * 1000);
+        let endTime = Math.round(audio.currentTime * 1000);
         if (audio.ended) {
           /* Extend a short audio to the timestamp of the last event. */
-          audioTime = instants[instants.length - 1].t;
+          endTime = instants[instants.length - 1].t;
         }
-        instant = yield call(replayToAudioTime, instants, instant, audioTime);
+        if (endTime < audioTime || audioTime + 100 < endTime) {
+          /* Audio time has jumped. */
+          yield call(resetToAudioTime, endTime);
+        } else {
+          /* Continuous playback. */
+          yield call(replayToAudioTime, instants, audioTime, endTime);
+        }
+        audioTime = endTime;
+        yield take(chan);
       }
     } finally {
-      if (yield cancelled()) {
-        chan.close();
-      }
+      chan.close();
     }
 
     /* Pause when the end event is reached. */
     yield put({type: deps.playerPause});
   }
 
-  function* replayToAudioTime (instants, instant, audioTime) {
-    const nextInstant = findInstant(instants, audioTime);
-    if (instant.pos === nextInstant.pos) {
+  function* replayToAudioTime (instants, startTime, endTime) {
+    let instantIndex = findInstantIndex(instants, startTime);
+    const nextInstantIndex = findInstantIndex(instants, endTime);
+    if (instantIndex === nextInstantIndex) {
       /* Fast path: audio time has advanced but we are still at the same
          instant, just emit a tick event to update the audio time. */
-      yield put({type: deps.playerTick, payload: {audioTime, current: instant}});
-      return instant;
+      yield put({type: deps.playerTick, payload: {audioTime: endTime}});
+      return;
     }
-    if (nextInstant.pos < instant.pos) {
-      /* State has jumped backwards.
-         This happens when audio time is changed externally during playback. */
-      yield call(resetToInstant, nextInstant, audioTime);
-      return nextInstant;
-    }
-    if (nextInstant.pos - instant.pos >= 50) {
-      /* State has jumped forward by a large number of events.
-         This happens when audio time is changed externally during playback.
-         Instead of replaying a lot of events incrementally, do a full reset. */
-      yield call(resetToInstant, nextInstant, audioTime);
-      return nextInstant;
-    }
-    /* State has progressed by a small time delta, update the DOM by replaying
-       incremental events between `instant` and up to (including) `nextInstant`.
-       This can result in a semi-consistent state, where the DOM is accurate
-       but updating parts of the global state is deferred until the next full
-       (non-quick) reset.
-       This mechanism is essential for buffers, for which updating the
-       global state and letting that reflecting to the editor would result in
-       a costly full-reloading of the editor's state. */
-    for (let pos = instant.pos + 1; pos <= nextInstant.pos; pos += 1) {
-      instant = instants[pos];
+    /* Update the DOM by replaying incremental events between (immediately
+       after) `instant` and up to (including) `nextInstant`. */
+    instantIndex += 1;
+    while (instantIndex <= nextInstantIndex) {
+      let instant = instants[instantIndex];
       if (typeof instant.jump === 'number') {
-        return yield call(jumpTo, instant.jump);
+        yield call(jumpToAudioTime, instant.jump);
       }
       if (instant.sagas) {
         /* Keep in mind that the instant's saga runs *prior* to the call
-           to resetToInstant below, and should not rely on the global
+           to resetToAudioTime below, and should not rely on the global
            state being accurate.  Instead, it should use `instant.state`. */
         for (let saga of instant.sagas) {
           yield call(saga, instant);
@@ -260,61 +247,36 @@ export default function (bundle, deps) {
       }
       if (instant.isEnd) {
         /* Stop a long audio at the timestamp of the last event. */
-        audioTime = instant.t;
+        endTime = instant.t;
+        break;
       }
-      if (instant.reset) {
-        /* An instant can request a full reset.
-           Currently this feature is not used. */
-        yield call(resetToInstant, instant, audioTime);
-      }
+      instantIndex += 1;
     }
-    /* Performing a quick reset updates the models without pushing changes to
-       the DOM, which can be costly.
+    /* Perform a quick reset to update the editor models without pushing
+       the new state to the editors instances (they are assumed to have
+       been synchronized by replaying individual events).
     */
-    yield call(resetToInstant, instant, audioTime, true);
-    return instant;
+    yield call(resetToAudioTime, endTime, true);
   }
-
-  const findInstant = function (instants, time) {
-    let low = 0, high = instants.length;
-    while (low + 1 < high) {
-      const mid = (low + high) / 2 | 0;
-      const state = instants[mid];
-      if (state.t <= time) {
-        low = mid;
-      } else {
-        high = mid;
-      }
-    }
-    let instant = instants[low];
-    if (instant) {
-      while (low + 1 < instants.length) {
-        const nextInstant = instants[low + 1];
-        if (nextInstant.t !== instant.t)
-          break;
-        low += 1;
-      }
-    }
-    return instants[low];
-  };
 
   /* A quick reset avoids disabling and re-enabling the stepper (which restarts
      the stepper task). */
-  function* resetToInstant (instant, audioTime, quick) {
-    const {state} = instant;
+  function* resetToAudioTime (audioTime, quick) {
     /* Call playerTick to store the current audio time and to install the
        current instant's state as state.getIn(['player', 'current']). */
-    yield put({type: deps.playerTick, payload: {audioTime, current: instant}});
+    yield put({type: deps.playerTick, payload: {audioTime}});
     /* Call the registered reset-sagas to update any part of the state not
        handled by playerTick. */
+    const instant = yield select(state => state.getIn(['player', 'current']));
     yield call(deps.replayApi.reset, instant, quick);
   }
 
-  function* restartStepper (instant) {
+  function* restartStepper () {
     /* Re-enable the stepper to allow the user to interact with it. */
     yield put({type: deps.stepperEnabled});
     /* If the stepper was running and blocking on input, do a "step-into" to
        restore the blocked-on-I/O state. */
+    const instant = yield select(state => state.getIn(['player', 'current']));
     if (instant.state.get('status') === 'running') {
       const {isWaitingOnInput} = instant.state.get('current');
       if (isWaitingOnInput) {
@@ -323,15 +285,12 @@ export default function (bundle, deps) {
     }
   }
 
-  function* jumpTo (audioTime) {
+  function* jumpToAudioTime (audioTime) {
     /* Jump and full reset to the specified audioTime. */
     const player = yield select(deps.getPlayerState);
     const audio = player.get('audio');
     audio.currentTime = audioTime / 1000;
-    const instants = player.get('instants');
-    const instant = findInstant(instants, audioTime);
-    yield call(resetToInstant, instant, audioTime);
-    return instant;
+    yield call(resetToAudioTime, audioTime);
   }
 
 };
