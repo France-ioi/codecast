@@ -14,6 +14,7 @@ import AudioWorker from 'worker-loader?inline!../audio_worker';
 import FullWaveform from './waveform/full';
 import ExpandedWaveform from './waveform/expanded';
 import intervalTree from './interval_tree';
+import {findInstantIndex} from '../player/utils';
 
 export default function (bundle, deps) {
 
@@ -57,8 +58,25 @@ function trimEditorMarkerRemovedReducer (state, {payload: {position}}) {
 }
 
 function trimEditorIntervalToggledReducer (state, {payload: {position}}) {
-  return state.updateIn(['editor', 'trim'], st => ({...st,
-    intervals: st.intervals.set(position, !st.intervals.get(position).value)}));
+  /* TODO: update instants in the player, to add/remove jump at position */
+  let {intervals} = state.getIn(['editor', 'trim']);
+  const {start, end, value} = intervals.get(position);
+  intervals = intervals.set(position, !value);
+  let instants = state.getIn(['player', 'instants']);
+  const index = findInstantIndex(instants, start);
+  if (value) {
+    /* The interval is being disabled, insert an instant with a 'jump'. */
+    instants = instants.slice();
+    instants.splice(index + 1, 0, {t: start, jump: end, state: instants[index].state});
+  } else {
+    /* The interval is being enabled, remove the 'jump'. */
+    // assert(typeof instants[index].jump === 'number');
+    instants = instants.slice();
+    instants.splice(index, 1);
+  }
+  return state
+    .updateIn(['editor', 'trim'], st => ({...st, intervals}))
+    .setIn(['player', 'instants'], instants);
 }
 
 function TrimEditorSelector (state) {
