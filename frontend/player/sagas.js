@@ -10,7 +10,7 @@ import Immutable from 'immutable';
 
 import {getJson} from '../common/utils';
 import {RECORDING_FORMAT_VERSION} from '../version';
-import {findInstant, findInstantIndex} from './utils';
+import {findInstantIndex} from './utils';
 
 export default function (bundle, deps) {
 
