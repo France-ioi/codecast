@@ -35,12 +35,8 @@ function playerPrepareProgressReducer (state, {payload: {progress}}) {
   return state.setIn(['player', 'progress'], progress);
 }
 
-function playerPrepareFailureReducer (state, {payload: {position, exception}}) {
-  return state.setIn(['player', 'error'], {
-    source: 'prepare',
-    message: exception.toString(),
-    details: `at ${position}`
-  });
+function playerPrepareFailureReducer (state, {payload: {message}}) {
+  return state.setIn(['player', 'error'], {source: 'prepare', message});
 }
 
 function playerReadyReducer (state, {payload: {duration, data, instants}}) {

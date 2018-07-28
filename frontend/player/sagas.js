@@ -57,60 +57,30 @@ export default function (bundle, deps) {
     /* Load the events. */
     let data = yield call(getJson, eventsUrl);
     if (Array.isArray(data)) {
-      /* Compatibility with old style, where data is an array of events. */
-      data = new Modernizer(data).toObject();
+      /* TODO: warn about incompatible recording */
+      yield put({type: deps.playerPrepareFailure, payload: {message: "recording is incompatible with this player"}});
+      return;
     }
     /* Compute the future state after every event. */
-    const instants = yield call(computeInstants, data.events);
-    if (instants) {
-      /* The duration of the recording is the timestamp of the last event. */
-      const duration = instants[instants.length - 1].t;
-      yield put({type: deps.playerReady, payload: {baseDataUrl, duration, data, instants}});
-      yield call(resetToInstant, instants[0], 0);
-    }
-  }
-
-  function* computeInstants (events) {
-    /* CONSIDER: create a redux store, use the replayApi to convert each event
-       to an action that is dispatched to the store (which must have an
-       appropriate reducer) plus an optional saga to be called during playback. */
-    let pos, progress, lastProgress = 0, range;
     const chan = yield call(requestAnimationFrames, 50);
     const replayContext = {
       state: Immutable.Map(),
+      events: data.events,
       instants: [],
       /* XXX Consider: addInstant function in replayContext */
       addSaga,
+      reportProgress,
     };
     try {
-      const duration = events[events.length - 1][0];
-      for (pos = 0; pos < events.length; pos += 1) {
-        const event = events[pos];
-        const t = event[0];
-        const key = event[1]
-        const instant = {t, pos, event};
-        replayContext.instant = instant;
-        yield call(deps.replayApi.applyEvent, key, replayContext, event);
-        /* Preserve the last explicitly set range. */
-        if ('range' in instant) {
-          range = instant.range;
-        } else {
-          instant.range = range;
-        }
-        instant.state = replayContext.state;
-        replayContext.instants.push(instant);
-        progress = (Math.round(pos * 50 / events.length) + Math.round(t * 50 / duration)) / 100;
-        if (progress !== lastProgress) {
-          lastProgress = progress;
-          /* Allow the display to refresh. */
-          yield take(chan);
-          yield put({type: deps.playerPrepareProgress, payload: {progress}});
-        }
-      }
-      return replayContext.instants;
+      yield call(computeInstants, replayContext);
+      /* The duration of the recording is the timestamp of the last event. */
+      const instants = replayContext.instants;
+      instants[9].jump = 5500;
+      const duration = instants[instants.length - 1].t;
+      yield put({type: deps.playerReady, payload: {baseDataUrl, duration, data, instants}});
+      yield call(resetToInstant, instants[0], 0);
     } catch (ex) {
-      console.error(ex); // TODO: add global fatal exception report mechanism
-      yield put({type: deps.playerPrepareFailure, payload: {position: pos, exception: ex}});
+      yield put({type: deps.playerPrepareFailure, payload: {message: `${ex.toString()}`, context: replayContext}});
       return null;
     } finally {
       chan.close();
@@ -121,6 +91,41 @@ export default function (bundle, deps) {
         sagas = replayContext.instant.sagas = [];
       }
       sagas.push(saga);
+    }
+    function* reportProgress (progress) {
+      yield put({type: deps.playerPrepareProgress, payload: {progress}});
+      /* Allow the display to refresh. */
+      yield take(chan);
+    }
+  }
+
+  function* computeInstants (replayContext) {
+    /* CONSIDER: create a redux store, use the replayApi to convert each event
+       to an action that is dispatched to the store (which must have an
+       appropriate reducer) plus an optional saga to be called during playback. */
+    let pos, progress, lastProgress = 0, range;
+    const events = replayContext.events;
+    const duration = events[events.length - 1][0];
+    for (pos = 0; pos < events.length; pos += 1) {
+      const event = events[pos];
+      const t = event[0];
+      const key = event[1]
+      const instant = {t, pos, event};
+      replayContext.instant = instant;
+      yield call(deps.replayApi.applyEvent, key, replayContext, event);
+      /* Preserve the last explicitly set range. */
+      if ('range' in instant) {
+        range = instant.range;
+      } else {
+        instant.range = range;
+      }
+      instant.state = replayContext.state;
+      replayContext.instants.push(instant);
+      progress = Math.round(pos * 50 / events.length + t * 50 / duration) / 100;
+      if (progress !== lastProgress) {
+        lastProgress = progress;
+        yield call(replayContext.reportProgress, progress);
+      }
     }
   }
 
@@ -245,6 +250,9 @@ export default function (bundle, deps) {
        a costly full-reloading of the editor's state. */
     for (let pos = instant.pos + 1; pos <= nextInstant.pos; pos += 1) {
       instant = instants[pos];
+      if (typeof instant.jump === 'number') {
+        return yield call(jumpTo, instant.jump);
+      }
       if (instant.sagas) {
         /* Keep in mind that the instant's saga runs *prior* to the call
            to resetToInstant below, and should not rely on the global
@@ -318,6 +326,17 @@ export default function (bundle, deps) {
     }
   }
 
+  function* jumpTo (audioTime) {
+    /* Jump and full reset to the specified audioTime. */
+    const player = yield select(deps.getPlayerState);
+    const audio = player.get('audio');
+    audio.currentTime = audioTime / 1000;
+    const instants = player.get('instants');
+    const instant = findInstant(instants, audioTime);
+    yield call(resetToInstant, instant, audioTime);
+    return instant;
+  }
+
 };
 
 function requestAnimationFrames (maxDelta) {
@@ -357,39 +376,5 @@ class Modernizer {
       events: Array.from({[Symbol.iterator]: () => new ModernizerIterator(init, this._events.slice(1))}),
       subtitles: false
     };
-  }
-}
-
-class ModernizerIterator {
-  constructor (init, events) {
-    this._events = events;
-    this._position = 0;
-    this._inserts = [[0, 'start', init]];
-    this._ended = false;
-  }
-  next () {
-    if (this._inserts.length > 0) {
-      return {value: this._inserts.shift()};
-    }
-    if (this._position === this._events.length || this._ended) {
-      return {done: true};
-    }
-    let event = this._events[this._position++];
-    const [ts, type, ...args] = event;
-    switch (type) {
-      case 'source.insert':
-        event = [ts, 'buffer.insert', 'source', ...args];
-        // this._inserts.push([ts, 'buffer.scroll', 'source', Math.max(0, args[0][0] - 6)]);
-        break;
-      case 'source.select': event = [ts, 'buffer.select', 'source', ...args]; break;
-      case 'source.delete': event = [ts, 'buffer.delete', 'source', ...args]; break;
-      case 'source.scroll': event = [ts, 'buffer.scroll', 'source', ...args]; break;
-      case 'input.insert': event = [ts, 'buffer.insert', 'input', ...args]; break;
-      case 'input.select': event = [ts, 'buffer.select', 'input', ...args]; break;
-      case 'input.delete': event = [ts, 'buffer.delete', 'input', ...args]; break;
-      case 'input.scroll': event = [ts, 'buffer.scroll', 'input', ...args]; break;
-      case 'end': this._ended = true; break;
-    }
-    return {value: event};
   }
 }
