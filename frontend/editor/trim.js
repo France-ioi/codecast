@@ -63,20 +63,38 @@ function trimEditorIntervalToggledReducer (state, {payload: {position}}) {
   const {start, end, value} = intervals.get(position);
   intervals = intervals.set(position, !value);
   let instants = state.getIn(['player', 'instants']);
-  const index = findInstantIndex(instants, start);
-  if (value) {
-    /* The interval is being disabled, insert an instant with a 'jump'. */
-    instants = instants.slice();
-    instants.splice(index + 1, 0, {t: start, jump: end, state: instants[index].state});
-  } else {
-    /* The interval is being enabled, remove the 'jump'. */
-    // assert(typeof instants[index].jump === 'number');
-    instants = instants.slice();
-    instants.splice(index, 1);
-  }
+  instants = addJumpInstants(instants, intervals);
   return state
     .updateIn(['editor', 'trim'], st => ({...st, intervals}))
     .setIn(['player', 'instants'], instants);
+}
+
+function addJumpInstants (instants, intervals) {
+  /* Clear existing jumps (also copy the Array we will mutate). */
+  instants = instants.filter(instant => typeof instant.jump !== 'number');
+  let fromTime, isEnabled = true;
+  for (let interval of intervals) {
+    if (interval.value) {
+      if (!isEnabled) {
+        const toTime = interval.start;
+        const index = findInstantIndex(instants, fromTime);
+        instants.splice(index + 1, 0, {t: fromTime, jump: toTime, state: instants[index].state});
+      }
+      isEnabled = true;
+    } else {
+      if (isEnabled) {
+        /* Mark start of disabled area. */
+        fromTime = interval.start === 0 ? 1 : interval.start;
+        isEnabled = false;
+      }
+    }
+  }
+  if (!isEnabled) {
+    const toTime = instants[instants.length - 1].t;
+    const index = findInstantIndex(instants, fromTime);
+    instants.splice(index + 1, 0, {t: fromTime, jump: toTime, state: instants[index].state});
+  }
+  return instants;
 }
 
 function TrimEditorSelector (state) {
@@ -321,8 +339,8 @@ function trimEvents (data, intervals) {
 function* trimEditorPrepareUpload () {
   const {trimEditorSavingStep} = yield select(state => state.get('scope'));
   yield put({type: trimEditorSavingStep, payload: {step: 'prepareUpload', status: 'pending'}});
-  const token = yield select(state => state.get('uploadToken'));
-  const targets = yield call(asyncRequestJson, 'upload', {token});
+  const options = {}; // TODO: select {s3Bucket, uploadPath}
+  const targets = yield call(asyncRequestJson, 'upload', options);
   yield put({type: trimEditorSavingStep, payload: {step: 'prepareUpload', status: 'done'}});
   return {targets, playerUrl: targets.player_url}; // XXX clean up /upload endpoint interface
 }
