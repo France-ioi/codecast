@@ -52,7 +52,12 @@ function restart () {
     Codecast.task = null;
   }
   /* XXX Make a separate object for selectors in the linker? */
-  Codecast.task = start({dispatch: store.dispatch, selectors: scope, actionTypes, views});
+  Codecast.task = start({
+    dispatch: store.dispatch,
+    globals: scope,
+    selectors: scope,
+    actionTypes,
+    views});
 }
 
 /* In-browser API */
