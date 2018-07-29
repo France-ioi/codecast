@@ -159,14 +159,14 @@ class TrimEditor extends React.PureComponent {
       </div>
     );
   }
-  state = {targetUrl: ''};
   static getDerivedStateFromProps (props, state) {
     /* Default to first valid grant. */
     if (!state.targetUrl) {
-      return {targetUrl: props.grants[0]};
+      return {targetUrl: props.grants[0].url};
     }
     return null;
   }
+  state = {targetUrl: ''};
   handleTargetChange = (event) => {
     this.setState({targetUrl: event.target.value});
   };
