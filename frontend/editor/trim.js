@@ -108,11 +108,46 @@ function TrimEditorSelector (state) {
   return {trimEditorEnter, trimEditorSave, saving, grants};
 }
 
+const savingSteps = [
+  {key: 'prepareUpload', label: "Preparing upload"},
+  {key: 'uploadEvents', label: "Uploading events"},
+  {key: 'assembleAudio', label: "Assembling audio stream"},
+  {key: 'encodeAudio', label: "Encoding audio stream"},
+  {key: 'uploadAudio', label: "Uploading audio"},
+];
+
 class TrimEditor extends React.PureComponent {
   render () {
     const {saving, grants} = this.props;
     const {targetUrl} = this.state;
     const grantOptions = grants.map(({url, description}) => ({value: url, label: description}));
+    let savingView = false;
+    if (saving) {
+      const stepRows = [];
+      for (let step of savingSteps) {
+        const status = saving[step.key];
+        stepRows.push(<StepRow title={step.label} status={status} />);
+        if (status === 'pending') {
+          stepRows.push(
+            <div style={{margin: '10px 0 20px 0'}}>
+              <ProgressBar value={saving.progress} />
+            </div>
+          );
+        }
+      }
+      savingView = (
+        <div style={{marginTop: '10px'}}>
+          <h2>{"Saving"}</h2>
+          <div className="vbox">
+            {stepRows}
+          </div>
+          {saving.done &&
+            <div style={{textAlign: 'center'}}>
+              <AnchorButton href={saving.playerUrl} target='_blank' text="Open in player"/>
+            </div>}
+        </div>
+      );
+    }
     return (
       <div>
         <Button onClick={this._beginEdit} icon={IconNames.EDIT} text={"Edit"}/>
@@ -120,27 +155,7 @@ class TrimEditor extends React.PureComponent {
           <HTMLSelect options={grantOptions} value={targetUrl} onChange={this.handleTargetChange} />
         </FormGroup>
         <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"}/>
-        {saving &&
-          <div style={{marginTop: '10px'}}>
-            <h2>{"Saving"}</h2>
-            <table>
-              <tbody>
-                <StepRow title={"Preparing upload"} status={saving.prepareUpload} />
-                <StepRow title={"Uploading events"} status={saving.uploadEvents} />
-                <StepRow title={"Assembling audio stream"} status={saving.assembleAudio} />
-                <StepRow title={"Encoding audio stream"} status={saving.encodeAudio} />
-                <StepRow title={"Uploading audio"} status={saving.uploadAudio} />
-              </tbody>
-            </table>
-            {!saving.done &&
-              <div style={{margin: '10px'}}>
-                <ProgressBar value={saving.progress} />
-              </div>}
-            {saving.done &&
-              <div style={{textAlign: 'center'}}>
-                <AnchorButton href={saving.playerUrl} target='_blank' text="Open in player"/>
-              </div>}
-          </div>}
+        {savingView}
       </div>
     );
   }
@@ -173,7 +188,7 @@ function StepRow ({title, status}) {
       <td style={{width: '40px', textAlign: 'center'}}>
         {status === 'done' && <Icon icon='tick' intent={Intent.SUCCESS} />}
         {status === 'error' && <Icon icon='cross' intent={Intent.DANGER} />}
-        {status === 'pending' && <Spinner small/>}
+        {status === 'pending' && <Spinner size={20}/>}
       </td>
       <td style={status === 'pending' ? {fontWeight: 'bold'} : null}>
         {title}
