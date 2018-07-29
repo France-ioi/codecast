@@ -55,6 +55,7 @@ function editorPrepareReducer (state, {payload: {baseDataUrl}}) {
   for (let grant of state.get('user').grants) {
     if (baseDataUrl.startsWith(grant.url)) {
       canSave = true;
+      break;
     }
   }
   return state.set('editor', Immutable.Map({
@@ -63,7 +64,8 @@ function editorPrepareReducer (state, {payload: {baseDataUrl}}) {
     playerUrl: `${baseUrl}/player?base=${encodeURIComponent(baseDataUrl)}`,
     setupTabId: 'setup-tab-infos',
     audioLoadProgress: 0,
-    controls: {floating: [], top: []}
+    controls: {floating: [], top: []},
+    canSave
   }));
 }
 
