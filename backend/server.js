@@ -134,9 +134,10 @@ function addBackendRoutes (app, config, store) {
     config.getUserConfig(req, function (err, userConfig) {
       selectTarget (userConfig, req.body, function (err, target) {
         if (err) return res.json({error: err.toString()});
-        const id = Date.now().toString();
         const s3client = upload.makeS3UploadClient(target);
-        const {s3Bucket, uploadPath} = target;
+        const {s3Bucket, uploadPath: uploadDir} = target;
+        const id = Date.now().toString();
+        const uploadPath = `${uploadDir}/${id}`;
         upload.getJsonUploadForm(s3client, s3Bucket, uploadPath, function (err, events) {
           if (err) return res.json({error: err.toString()});
           upload.getMp3UploadForm(s3client, s3Bucket, uploadPath, function (err, audio) {
