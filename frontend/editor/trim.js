@@ -381,7 +381,6 @@ function trimEvents (data, intervals) {
       }
       interval = it.next().value;
       /* Truncate the events if we get to the last interval and it is skipped. */
-      console.log('end?', event[0], interval.end, interval.value.skip);
       if (interval.value.skip && interval.end >= endTime) {
         events.push([interval.start, 'end']);
         break;
