@@ -69,31 +69,36 @@ function trimEditorIntervalChangedReducer (state, {payload: {position, value}}) 
 }
 
 function addJumpInstants (instants, intervals) {
-  /* Clear existing jumps (also copy the Array we will mutate). */
-  instants = instants.filter(instant => typeof instant.jump !== 'number');
-  let fromTime, isEnabled = true;
+  /* Clear existing annotations (also copy the Array we will mutate). */
+  instants = instants.filter(instant => instant.event);
+  let skip = false, skipStart, skipTarget;
   for (let interval of intervals) {
-    if (interval.value.skip) {
-      if (isEnabled) {
-        /* Mark start of disabled area. */
-        fromTime = interval.start === 0 ? 1 : interval.start;
-        isEnabled = false;
+    const mute = interval.value.mute;
+    insertAnnotation(Math.max(1, interval.start), {mute});
+    if (skip !== interval.value.skip) {
+      if (!skip) {
+        skipStart = Math.max(1, interval.start);
+      } else {
+        /* At jump target. */
+        insertAnnotation(skipStart, {jump: interval.start, mute});
       }
-    } else {
-      if (!isEnabled) {
-        const toTime = interval.start;
-        const index = findInstantIndex(instants, fromTime);
-        instants.splice(index + 1, 0, {t: fromTime, jump: toTime, state: instants[index].state});
-      }
-      isEnabled = true;
+      skip = interval.value.skip;
     }
   }
-  if (!isEnabled) {
-    const toTime = instants[instants.length - 1].t;
-    const index = findInstantIndex(instants, fromTime);
-    instants.splice(index + 1, 0, {t: fromTime, jump: toTime, state: instants[index].state});
+  if (skip) {
+    insertAnnotation(skipStart, {jump: instants[instants.length - 1].t})
   }
   return instants;
+  function insertAnnotation (t, data) {
+    let index = findInstantIndex(instants, t);
+    /* Insert an annotation at the requested position, if necessary. */
+    if (instants[index].t < t || instants[index].event) {
+      const state = instants[index].state;
+      index += 1;
+      instants.splice(index, 0, {t, state});
+    }
+    instants[index] = {...instants[index], ...data};
+  }
 }
 
 function TrimEditorSelector (state) {
