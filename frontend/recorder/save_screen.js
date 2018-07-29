@@ -167,8 +167,7 @@ class SaveScreen extends React.PureComponent {
     const {targetUrl} = this.state;
     const grant = this.props.grants.find(grant => grant.url === targetUrl);
     if (grant) {
-      const {s3Bucket, uploadPath} = grant;
-      this.props.dispatch({type: this.props.actionTypes.saveScreenUpload, payload: {s3Bucket, uploadPath}});
+      this.props.dispatch({type: this.props.actionTypes.saveScreenUpload, payload: {target: grant}});
     }
   };
 
@@ -206,13 +205,13 @@ function* encodingSaga ({actionTypes, selectors}) {
   }
 }
 
-function* uploadSaga ({actionTypes, selectors}, {payload: {s3Bucket, uploadPath}}) {
+function* uploadSaga ({actionTypes, selectors}, {payload: {target}}) {
   try {
     // Step 1: prepare the upload by getting the S3 form parameters
     // from the server.
     yield put({type: actionTypes.saveScreenPreparing});
     const save = yield select(state => state.get('save'));
-    const response = yield call(asyncRequestJson, 'upload', {s3Bucket, uploadPath});
+    const response = yield call(asyncRequestJson, 'upload', target);
     // Upload the events file.
     yield put({type: actionTypes.saveScreenEventsUploading});
     const eventsBlob = yield call(getBlob, save.eventsUrl);
