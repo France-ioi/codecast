@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {AnchorButton, Button, Checkbox, ProgressBar, Icon, Intent, Spinner} from '@blueprintjs/core';
+import {AnchorButton, Button, Checkbox, FormGroup, ProgressBar, HTMLSelect, Icon, Intent, Spinner} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
 import AudioBuffer from 'audio-buffer';
@@ -104,15 +104,21 @@ function addJumpInstants (instants, intervals) {
 function TrimEditorSelector (state) {
   const {trimEditorEnter, trimEditorSave} = state.get('scope');
   const {saving} = state.getIn(['editor', 'trim']);
-  return {trimEditorEnter, trimEditorSave, saving};
+  const {grants} = state.get('user');
+  return {trimEditorEnter, trimEditorSave, saving, grants};
 }
 
 class TrimEditor extends React.PureComponent {
   render () {
-    const {saving} = this.props;
+    const {saving, grants} = this.props;
+    const {targetUrl} = this.state;
+    const grantOptions = grants.map(({url, description}) => ({value: url, label: description}));
     return (
       <div>
         <Button onClick={this._beginEdit} icon={IconNames.EDIT} text={"Edit"}/>
+        <FormGroup label="Target">
+          <HTMLSelect options={grantOptions} value={targetUrl} onChange={this.handleTargetChange} />
+        </FormGroup>
         <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"}/>
         {saving &&
           <div style={{marginTop: '10px'}}>
@@ -138,11 +144,26 @@ class TrimEditor extends React.PureComponent {
       </div>
     );
   }
+  state = {targetUrl: ''};
+  static getDerivedStateFromProps (props, state) {
+    /* Default to first valid grant. */
+    if (!state.targetUrl) {
+      return {targetUrl: props.grants[0]};
+    }
+    return null;
+  }
+  handleTargetChange = (event) => {
+    this.setState({targetUrl: event.target.value});
+  };
   _beginEdit = () => {
     this.props.dispatch({type: this.props.trimEditorEnter});
   };
   _save = () => {
-    this.props.dispatch({type: this.props.trimEditorSave});
+    const {targetUrl} = this.state;
+    const grant = this.props.grants.find(grant => grant.url === targetUrl);
+    if (grant) {
+      this.props.dispatch({type: this.props.trimEditorSave, payload: {target: grant}});
+    }
   };
 }
 
@@ -310,13 +331,13 @@ function trimEditorSavingDoneReducer (state, {payload: {playerUrl}}) {
     }}));
 }
 
-function* trimEditorSaveSaga (_action) {
+function* trimEditorSaveSaga ({payload: {target}}) {
   // TODO: put 'saving starts' action
   const {trimEditorSavingDone} = yield select(state => state.get('scope'));
   try {
     const editor = yield select(state => state.get('editor'));
     const {intervals} = editor.get('trim');
-    const {targets, playerUrl} = yield call(trimEditorPrepareUpload);
+    const {targets, playerUrl} = yield call(trimEditorPrepareUpload, target);
     const data = editor.get('data');
     const eventsBlob = trimEvents(data, intervals);
     yield call(trimEditorUpload, 'uploadEvents', targets.events, eventsBlob);
@@ -333,22 +354,32 @@ function* trimEditorSaveSaga (_action) {
 
 function trimEvents (data, intervals) {
   const it = intervals[Symbol.iterator]();
-  let interval = {end: -1, value: {skip: false, mute: false}}, start = 0;
-  const events = data.events.map(event => {
+  let start = 0;
+  const endTime = data.events[data.events.length - 1][0];
+  let interval = {start: -1, end: -1, value: {skip: true, mute: false}};
+  const events = [];
+  for (let event of data.events) {
     if (event[0] >= interval.end) {
+      /* Advance start time if past interval was not skipped. */
       if (!interval.value.skip) {
         start += interval.end - interval.start;
       }
       interval = it.next().value;
+      /* Truncate the events if we get to the last interval and it is skipped. */
+      console.log('end?', event[0], interval.end, interval.value.skip);
+      if (interval.value.skip && interval.end >= endTime) {
+        events.push([interval.start, 'end']);
+        break;
+      }
     }
     event = event.slice();
-    if (!interval.value.skip) {
-      event[0] = start + (event[0] - interval.start);
-    } else {
+    if (interval.value.skip) {
       event[0] = start;
+    } else {
+      event[0] = start + (event[0] - interval.start);
     }
-    return event;
-  });
+    events.push(event);
+  }
   return new Blob([JSON.stringify({
     version: RECORDING_FORMAT_VERSION,
     events,
@@ -356,11 +387,10 @@ function trimEvents (data, intervals) {
   })], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
 }
 
-function* trimEditorPrepareUpload () {
+function* trimEditorPrepareUpload (target) {
   const {trimEditorSavingStep} = yield select(state => state.get('scope'));
   yield put({type: trimEditorSavingStep, payload: {step: 'prepareUpload', status: 'pending'}});
-  const options = {}; // TODO: select {s3Bucket, uploadPath}
-  const targets = yield call(asyncRequestJson, 'upload', options);
+  const targets = yield call(asyncRequestJson, 'upload', target);
   yield put({type: trimEditorSavingStep, payload: {step: 'prepareUpload', status: 'done'}});
   return {targets, playerUrl: targets.player_url}; // XXX clean up /upload endpoint interface
 }
@@ -381,7 +411,7 @@ function* trimEditorUpload (step, target, data) {
         yield put({type: trimEditorSavingStep, payload: {step, status: 'error', error: event.error}});
         break;
       case 'progress':
-        yield put({type: trimEditorSavingStep, payload: {step, progress: event.percent}});
+        yield put({type: trimEditorSavingStep, payload: {step, progress: event.percent / 100}});
         break;
     }
   }
@@ -397,11 +427,12 @@ function* trimEditorAssembleAudio (audioBuffer, intervals) {
   const chunks = [];
   let length = 0;
   for (let it of intervals) {
-    if (!it.value.skip) {
+    let {skip, mute} = it.value;
+    if (!skip) {
       const sourceStart = Math.round(it.start / 1000 * sampleRate);
       const sourceEnd = Math.round(Math.min(it.end / 1000, duration) * sampleRate);
       const chunkLength = sourceEnd - sourceStart;
-      chunks.push({start: sourceStart, length: chunkLength});  // add muted flag here
+      chunks.push({start: sourceStart, length: chunkLength, mute});  // add muted flag here
       length += chunkLength;
     }
   }
@@ -410,13 +441,13 @@ function* trimEditorAssembleAudio (audioBuffer, intervals) {
   for (let chunk of chunks) {
     let samples = [];
     for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber += 1) {
-      const chunkBuffer = new Float32Array(chunk.chunkLength);
+      const chunkBuffer = new Float32Array(chunk.length);
       if (!chunk.mute) {
-        audioBuffer.copyFromChannel(chunkBuffer, channelNumber, chunk.sourceStart);
+        audioBuffer.copyFromChannel(chunkBuffer, channelNumber, chunk.start);
       }
       samples.push(chunkBuffer);
     }
-    addedLength += chunkLength;
+    addedLength += chunk.length;
     yield call(worker.call, 'addSamples', {samples});
     yield put({type: trimEditorSavingStep, payload: {step: 'assembleAudio', progress: addedLength / length}});
   }
@@ -429,7 +460,7 @@ function* trimEditorEncodeAudio (worker) {
   const step = 'encodeAudio';
   yield put({type: trimEditorSavingStep, payload: {step, status: 'pending'}});
   const {mp3: mp3Blob} = yield call(worker.call, 'export', {mp3: true},
-    function* (progress) {
+    function* ({progress}) {
       yield put({type: trimEditorSavingStep, payload: {step, progress}});
     });
   yield put({type: trimEditorSavingStep, payload: {step, status: 'done'}});
