@@ -158,7 +158,16 @@ class SaveScreen extends React.PureComponent {
     );
   }
 
-  state = {targetUrl: ''}; // TODO: default to first valid grant
+  static getDerivedStateFromProps (props, state) {
+    /* Default to first valid grant. */
+    if (!state.targetUrl) {
+      return {targetUrl: props.grants[0].url};
+    }
+    return null;
+  }
+
+  state = {targetUrl: ''};
+
   handleTargetChange = (event) => {
     this.setState({targetUrl: event.target.value});
   };
