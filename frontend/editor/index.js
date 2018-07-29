@@ -25,8 +25,11 @@ export default function (bundle, deps) {
   bundle.defineAction('editorAudioLoadProgress', 'Editor.Audio.LoadProgress');
   bundle.addReducer('editorAudioLoadProgress', editorAudioLoadProgressReducer);
 
-  bundle.defineAction('editorLoaded', 'Editor.Loaded');
-  bundle.addReducer('editorLoaded', editorLoadedReducer);
+  bundle.defineAction('editorAudioLoaded', 'Editor.Audio.Loaded');
+  bundle.addReducer('editorAudioLoaded', editorAudioLoadedReducer);
+
+  bundle.defineAction('editorPlayerReady', 'Editor.Player.Ready');
+  bundle.addReducer('editorPlayerReady', editorPlayerReadyReducer);
 
   bundle.defineAction('setupScreenTabChanged', 'Editor.Setup.TabChanged');
   bundle.addReducer('setupScreenTabChanged', setupScreenTabChangedReducer);
@@ -48,10 +51,16 @@ export default function (bundle, deps) {
 
 function editorPrepareReducer (state, {payload: {baseDataUrl}}) {
   const {baseUrl} = state.get('options');
+  let canSave = false;
+  for (let grant of state.get('user').grants) {
+    if (baseDataUrl.startsWith(grant.url)) {
+      canSave = true;
+    }
+  }
   return state.set('editor', Immutable.Map({
+    base: baseDataUrl,
     dataUrl: baseDataUrl,
     playerUrl: `${baseUrl}/player?base=${encodeURIComponent(baseDataUrl)}`,
-    loading: true,
     setupTabId: 'setup-tab-infos',
     audioLoadProgress: 0,
     controls: {floating: [], top: []}
@@ -80,14 +89,15 @@ function* editorPrepareSaga ({actionTypes}, {payload: {baseDataUrl}}) {
   const {blob: audioBlob, audioBuffer} = yield call(getAudioSaga, actionTypes, audioUrl);
   const inMemoryAudioUrl = URL.createObjectURL(audioBlob);
   const duration = audioBuffer.duration * 1000;
+  // TODO: send progress events during extractWaveform?
+  const waveform = extractWaveform(audioBuffer, Math.floor(duration * 60 / 1000));
+  yield put({type: actionTypes.editorAudioLoaded, payload: {duration, audioBlob, audioBuffer, waveform}});
   /* Prepare the player and wait until ready.
      This order (load audio, prepare player) is faster, the reverse
      (as of Chrome 64) leads to redundant concurrent fetches of the audio. */
   yield put({type: actionTypes.playerPrepare, payload: {baseDataUrl, audioUrl: inMemoryAudioUrl, eventsUrl}});
   const {payload: {data}} = yield take(actionTypes.playerReady);
-  // TODO: send progress events during extractWaveform?
-  const waveform = extractWaveform(audioBuffer, Math.floor(duration * 60 / 1000));
-  yield put({type: actionTypes.editorLoaded, payload: {baseDataUrl, data, duration, audioBlob, audioBuffer, waveform}});
+  yield put({type: actionTypes.editorPlayerReady, payload: {data}});
 }
 
 function* getAudioSaga (actionTypes, audioUrl) {
@@ -106,22 +116,19 @@ function* getAudioSaga (actionTypes, audioUrl) {
   }
 }
 
-function editorLoadedReducer (state, {payload: {baseDataUrl, data, duration, audioBlob, audioBuffer, waveform}}) {
-  let canSave = false;
-  for (let grant of state.get('user').grants) {
-    if (baseDataUrl.startsWith(grant.url)) {
-      canSave = true;
-    }
-  }
+function editorAudioLoadedReducer (state, {payload: {duration, audioBlob, audioBuffer, waveform}}) {
   return state.update('editor', editor => editor
-    .set('base', baseDataUrl)
-    .set('data', data)
+    .set('audioLoaded', true)
+    .set('duration', duration)
     .set('audioBlob', audioBlob)
     .set('audioBuffer', audioBuffer)
-    .set('waveform', waveform)
-    .set('duration', duration)
-    .set('canSave', canSave)
-    .set('loading', false));
+    .set('waveform', waveform));
+}
+
+function editorPlayerReadyReducer (state, {payload: {data}}) {
+  return state.update('editor', editor => editor
+    .set('playerReady', true)
+    .set('data', data));
 }
 
 function setupScreenTabChangedReducer (state, {payload: {tabId}}) {
@@ -181,10 +188,15 @@ class EditorApp extends React.PureComponent {
 
 function SetupScreenSelector (state, props) {
   const editor = state.get('editor');
-  const loading = editor.get('loading');
-  if (loading) {
-    const audioLoadProgress = editor.get('audioLoadProgress');
-    return {loading, audioLoadProgress};
+  const audioLoaded = editor.get('audioLoaded');
+  if (!audioLoaded) {
+    const progress = editor.get('audioLoadProgress');
+    return {step: 'loading', progress};
+  }
+  const playerReady = editor.get('playerReady');
+  if (!playerReady) {
+    const progress = state.getIn(['player', 'progress']);
+    return {step: 'preparing', progress};
   }
   const views = state.get('views');
   const actionTypes = state.get('actionTypes');
@@ -193,20 +205,21 @@ function SetupScreenSelector (state, props) {
   const {version, title, events} = editor.get('data');
   const waveform = editor.get('waveform');
   return {
-    views, actionTypes,
-    loading, tabId, version, title, events, duration, waveform
+    views, actionTypes, tabId, version, title, events, duration, waveform
   };
 }
 
 class SetupScreen extends React.PureComponent {
   render () {
-    const {loading} = this.props;
-    if (loading) {
-      const {audioLoadProgress} = this.props;
+    const {step, progress} = this.props;
+    if (step) {
       return (
         <div className='cc-container'>
-          <p style={{marginTop: '20px'}}>{"Loading, please wait…"}</p>
-          <ProgressBar value={audioLoadProgress}/>
+          {step === 'loading' &&
+           <p style={{marginTop: '20px'}}>{"Loading audio…"}</p>}
+          {step === 'preparing' &&
+           <p style={{marginTop: '20px'}}>{"Preparing player…"}</p>}
+          <ProgressBar value={progress}/>
         </div>
       );
     }
