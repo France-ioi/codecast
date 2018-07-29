@@ -13,7 +13,7 @@ export default function encode (audioBuffer, options, progressCallback) {
   const rightArray = new Int16Array(blockSize), rightView = new DataView(rightArray.buffer);
   let mp3buf, completion, lastCompletion = 0;
   for (let i = 0; i < length; i += blockSize) {
-    completion = Math.min(1, Math.round(100 * i * blockSize / length) / 100);
+    completion = Math.min(1, Math.round(100 * i / length) / 100);
     if (completion !== lastCompletion) {
       progressCallback(completion);
       lastCompletion = completion;
