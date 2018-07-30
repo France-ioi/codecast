@@ -53,8 +53,9 @@ function trimEditorMarkerAddedReducer (state, {payload: {position}}) {
 }
 
 function trimEditorMarkerRemovedReducer (state, {payload: {position}}) {
-  return state.updateIn(['editor', 'trim'], st => ({...st,
-    intervals: st.intervals.mergeLeft(st.intervals.get(position).start)}));
+  return state.updateIn(['editor', 'trim'], st =>
+    ({...st, intervals: st.intervals.mergeLeft(position)})
+  );
 }
 
 function trimEditorIntervalChangedReducer (state, {payload: {position, value}}) {
@@ -266,7 +267,7 @@ class TrimEditorControls extends React.PureComponent {
     this.props.dispatch({type: this.props.actionTypes.trimEditorMarkerAdded, payload: {position}});
   };
   removeMarker = () => {
-    const {position} = this.props;
+    const position = this.props.selectedMarker;
     this.props.dispatch({type: this.props.actionTypes.trimEditorMarkerRemoved, payload: {position}});
   };
   intervalSkipChanged = (event) => {
