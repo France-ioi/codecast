@@ -1,7 +1,7 @@
 
 import React from 'react';
 import classnames from 'classnames';
-import {Alert, Button, ButtonGroup, Intent} from '@blueprintjs/core';
+import {Alert, Button, ButtonGroup, Icon, Intent} from '@blueprintjs/core';
 import Immutable from 'immutable';
 
 import {viewFrame, renderValue, VarDecl, FunctionCall} from './utils';
@@ -169,7 +169,7 @@ function CallReturn ({view}) {
     <div className="scope-function-return">
       <FunctionCall func={func} args={args}/>
       {' '}
-      <i className="fa fa-long-arrow-right"/>
+      <Icon icon='arrow-right'/>
       <span className="scope-function-retval">
         {renderValue(result)}
       </span>

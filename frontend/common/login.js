@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {Button, ButtonGroup} from '@blueprintjs/core';
+import {Button, ButtonGroup, Icon} from '@blueprintjs/core';
 
 export default function (bundle) {
   bundle.defineAction('loginFeedback', 'Login.Feedback');
@@ -50,7 +50,7 @@ class LogoutButton extends React.PureComponent {
     if (!user || !user.login) return false;
     return (
       <a href={`${baseUrl}/logout`} target='_blank' className='btn btn-default'>
-        <i className='fa fa-sign-out'/>
+        <Icon icon='log-out'/>
         {` ${user.login}`}
       </a>
     );

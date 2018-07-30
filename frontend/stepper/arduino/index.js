@@ -15,8 +15,8 @@ In the stepper state:
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import {Button, FormControl, ControlLabel, FormGroup} from 'react-bootstrap';
 import classnames from 'classnames';
+import {Button, Icon} from '@blueprintjs/core';
 import range from 'node-range';
 import update from 'immutability-helper';
 import {call, select, put} from 'redux-saga/effects';
@@ -191,14 +191,12 @@ export default function (bundle, deps) {
           {peripheral.type === 'LED' &&
             <div className="arduino-peri-led" style={{color:colorToCss[peripheral.color]}}>
               {state.output === 0
-                ? <i className="fa fa-circle-thin"/>
-                : <i className="fa fa-circle"/>}
+                ? <Icon icon='circle'/>
+                : <Icon icon='full-circle'/>}
             </div>}
           {peripheral.type === 'button' &&
             <div className="arduino-peri-button clickable" onClick={this.onButtonToggle}>
-              {state.input === 0
-                ? <i className="fa fa-caret-down"/>
-                : <i className="fa fa-caret-up"/>}
+              <Icon icon={state.input === 0 ? 'arrow-down' : 'arrow-up'}/>
             </div>}
           {peripheral.type === 'slider' &&
             <div className="arduino-slider" onClick={this.onSelect}>
@@ -276,16 +274,14 @@ export default function (bundle, deps) {
       return (
         <div className='arduino-peripheral'>
           <div>
-            <Button onClick={this.onSelectNext} disabled={readOnly} >
-              <i className="fa fa-angle-right"/>
-            </Button>
+            <Button onClick={this.onSelectNext} disabled={readOnly} icon='chevron-right'/>
           </div>
           {value.type === 'none' &&
             <p>{"—"}</p>}
           {value.type === 'LED' &&
             <div className={classnames(['arduino-peri-led', readOnly || 'clickable'])} onClick={this.onSelectNextLedColor}>
               {"LED"}
-              <i className='fa fa-circle' style={{color: colorToCss[value.color]}}/>
+              <Icon icon='full-circle' style={{color: colorToCss[value.color]}}/>
             </div>}
           {value.type === 'button' &&
             <p>{"BTN"}</p>}

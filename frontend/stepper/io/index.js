@@ -1,6 +1,7 @@
 
 import React from 'react';
 import {Panel} from 'react-bootstrap';
+import {Icon} from '@blueprintjs/core';
 import {select, call, put, race, take, takeLatest, takeEvery} from 'redux-saga/effects';
 
 import * as C from 'persistent-c';
@@ -128,7 +129,7 @@ export default function (bundle, deps) {
         <div className="row">
           <div className="col-sm-6">
             {"Entrée "}
-            <i className="fa fa-lock"/>
+            <Icon icon='lock'/>
           </div>
           <div className="col-sm-6">{"Sortie"}</div>
         </div>

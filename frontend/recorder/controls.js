@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {Button, ButtonGroup, Slider} from '@blueprintjs/core';
+import {Button, ButtonGroup, Icon, Slider} from '@blueprintjs/core';
 
 import {formatTime} from '../common/utils';
 
@@ -67,28 +67,21 @@ class RecorderControls extends React.PureComponent {
           <div className="controls controls-main col-sm-3">
             <ButtonGroup>
               <Button onClick={this.onStartRecording} disabled={!canRecord}
-                title={getMessage('START_RECORDING')} icon={<i className="fa fa-circle" style={{color: '#a01'}}/>} />
+                title={getMessage('START_RECORDING')} icon={<Icon icon='record' color='#a01'/>}/>
               <Button onClick={this.onStopRecording} disabled={!canStop}
-                icon={<i className="fa fa-stop"/>} title={getMessage('STOP_RECORDING')} />
+                icon='stop' title={getMessage('STOP_RECORDING')} />
               {playPause === 'play'
                 ? <Button onClick={this.onStartPlayback} disabled={!canPlay}
-                    title={getMessage('START_PLAYBACK')} icon={<i className="fa fa-play"/>} />
+                    title={getMessage('START_PLAYBACK')} icon='play' />
                 : <Button onClick={this.onPause} disabled={!canPause}
-                    title={getMessage('PAUSE_PLAYBACK')} icon={<i className="fa fa-pause"/>} />}
+                    title={getMessage('PAUSE_PLAYBACK')} icon='pause' />}
             </ButtonGroup>
-            {isPlayback
-              ? <p className="player-controls-times">
-                  <i className="fa fa-clock-o"/>
-                  {' '}
-                  {formatTime(position)}
-                  {' / '}
-                  {formatTime(duration)}
-                </p>
-              : <p style={{paddingLeft: '10px'}}>
-                  <i className="fa fa-clock-o"/>
-                  {' '}
-                  {formatTime(position)}
-                </p>}
+              <Icon icon='time'/>
+              <span style={{marginLeft: '4px'}}>
+                {formatTime(position)}
+                {isPlayback && ' / '}
+                {isPlayback && formatTime(duration)}
+              </span>
           </div>
           <div className="col-sm-7 text-center">
             <StepperControls enabled={canStep}/>

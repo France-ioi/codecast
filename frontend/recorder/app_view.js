@@ -1,6 +1,7 @@
 
 import React from 'react';
 import classnames from 'classnames';
+import {Icon} from '@blueprintjs/core';
 
 class RecorderApp extends React.PureComponent {
   render () {
@@ -48,7 +49,7 @@ class RecorderGlobalControls extends React.PureComponent {
     return (
       <div id='floating-controls' className={classnames({collapsed})}>
         <span className='collapse-toggle' onClick={this._toggleCollapsed}>
-          <i className={`fa fa-chevron-${collapsed ? 'down' : 'up'}`}/>
+          <Icon icon={`chevron-${collapsed ? 'down' : 'up'}`}/>
         </span>
         <div className='btn-group'>
           <LogoutButton/>

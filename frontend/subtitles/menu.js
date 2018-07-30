@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {Alert, Button, Checkbox, Intent, Radio, RadioGroup} from '@blueprintjs/core';
+import {Alert, Button, Checkbox, Intent, Radio, RadioGroup, Spinner} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
 import Portal from 'react-portal';
 
@@ -28,7 +28,7 @@ class SubtitlesMenu extends React.PureComponent {
     const {hidden, getMessage, Popup} = this.props;
     if (hidden) return false;
     const menuButton = (
-      <Button title={getMessage('CLOSED_CAPTIONS_TOOLTIP').s} icon={<i className='pt-icon fa fa-cc'/>}/>
+      <Button className='btn-cc' title={getMessage('CLOSED_CAPTIONS_TOOLTIP').s} text='CC'/>
     );
     return (
       <Portal closeOnEsc closeOnOutsideClick openByClickOn={menuButton}>
@@ -63,7 +63,7 @@ class SubtitlesPopup extends React.PureComponent {
           </div>
           <div className='menu-popup-title'>
             {getMessage('CLOSED_CAPTIONS_TITLE')}
-            {busy && <i className='fa fa-spinner fa-spin'/>}
+            {busy && <Spinner size={20}/>}
           </div>
           <RadioGroup name='subtitles' selectedValue={loadedKey} onChange={this._selectSubtitles}>
             <Radio value='none' label={getMessage('CLOSED_CAPTIONS_OFF')}/>

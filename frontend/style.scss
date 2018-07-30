@@ -839,10 +839,28 @@ strong.highlight {
   display: flex;
   flex-flow: row;
 }
+.ihbox {
+  display: inline-flex;
+  flex-flow: row;
+}
 .vbox {
   display: flex;
   flex-flow: column;
 }
 .fill {
   flex-grow: 1;
+}
+
+/* Subtitles CC button */
+.btn-cc span {
+  background-color: #5c7080;
+  color: #fff;
+  font-family: monospace;
+  border-radius: 3px;
+  padding: 0 2px;
+  width: 20px;
+  line-height: 16px;
+}
+button.btn-cc {
+  width: 30px;
 }

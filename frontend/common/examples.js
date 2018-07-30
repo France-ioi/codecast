@@ -1,5 +1,6 @@
 
 import React from 'react';
+import {Icon} from '@blueprintjs/core';
 import url from 'url';
 
 export default function (bundle, deps) {
@@ -55,7 +56,7 @@ class ExamplePicker extends React.PureComponent {
           <a className='btn btn-default' href={examplesUrl}>
             {getMessage('EXAMPLES_BUTTON_TITLE')}
           </a>{' '}
-          <i className='fa fa-warning'/>{' '}
+          <Icon icon='warning-sign'/>{' '}
           {getMessage('EXAMPLES_MESSAGE')}
         </p>
       </div>

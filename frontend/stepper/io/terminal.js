@@ -4,6 +4,7 @@ import Immutable from 'immutable';
 import React from 'react';
 import classnames from 'classnames';
 import {Panel} from 'react-bootstrap';
+import {Icon} from '@blueprintjs/core';
 import {takeEvery, select, call} from 'redux-saga/effects';
 
 export default function (bundle, deps) {
@@ -128,7 +129,7 @@ export default function (bundle, deps) {
           <div className="col-sm-12">
             {'Terminal'}
             {isWaitingOnInput &&
-              <i className="fa fa-hourglass-o"/>}
+              <Icon icon='console'/>}
           </div>
         </div>
       );

@@ -4,7 +4,7 @@ import React from 'react';
 import classnames from 'classnames';
 import {eventChannel} from 'redux-saga'
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
-import {Callout, Intent, ProgressBar, Tab, Tabs} from '@blueprintjs/core';
+import {Callout, Icon, Intent, ProgressBar, Tab, Tabs} from '@blueprintjs/core';
 
 import {getJson, getAudio} from '../common/utils';
 import {extractWaveform} from './waveform/tools';
@@ -170,7 +170,7 @@ class EditorApp extends React.PureComponent {
       <div id='editor-app'>
         <div id='floating-controls' className={classnames({collapsed})}>
           <span className='collapse-toggle' onClick={this._toggleCollapsed}>
-            <i className={`fa fa-chevron-${collapsed ? 'down' : 'up'}`}/>
+            <Icon icon={`chevron-${collapsed ? 'down' : 'up'}`}/>
           </span>
           <div className='btn-group'>
             {floatingControls.map((Component, i) => <Component key={i} />)}

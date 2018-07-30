@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {Button} from '@blueprintjs/core';
+import {Button, Icon} from '@blueprintjs/core';
 import Immutable from 'immutable';
 import {eventChannel, buffers} from 'redux-saga';
 import {take, put, select} from 'redux-saga/effects';
@@ -121,7 +121,7 @@ class FullscreenButton extends React.PureComponent {
     const tooltip = getMessage(active ? 'EXIT_FULLSCREEN' : 'FULLSCREEN');
     return (
       <Button onClick={active ? this._leaveFullscreen : this._enterFullscreen} disabled={!enabled} title={tooltip}
-        icon={<i className={`pt-icon fa fa-${active ? 'compress' : 'expand'}`}/>} />
+        icon={active ? 'minimize' : 'fullscreen'} />
     );
   }
   _enterFullscreen = () => {

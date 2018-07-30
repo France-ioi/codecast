@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {Button} from '@blueprintjs/core';
+import {Button, Icon} from '@blueprintjs/core';
 import classnames from 'classnames';
 
 class StepperView extends React.PureComponent {
@@ -15,7 +15,7 @@ class StepperView extends React.PureComponent {
     const sourcePanelHeader = (
       <span>
         {getMessage('SOURCE')}
-        {haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
+        {haveStepper && <span>{' '}<Icon icon='lock'/></span>}
       </span>
     );
     const diagnosticsPanelHeader = (
@@ -91,9 +91,9 @@ class StepperView extends React.PureComponent {
                 <div className='panel panel-default'>
                   <div className='panel-heading'>
                     <span>
-                      <i className="fa fa-microchip"/>
-                      {" Arduino"}
-                      {haveStepper && <span>{' '}<i className="fa fa-lock"/></span>}
+                      {/* microchip icon */}
+                      {"Arduino"}
+                      {haveStepper && <span>{' '}<Icon icon='lock'/></span>}
                     </span>
                   </div>
                   <div className='panel-body'>
