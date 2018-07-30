@@ -110,11 +110,12 @@ export function renderRange (ctx, params, range) {
   }
 }
 
-export function renderMarker (ctx, params, {position, color}) {
+export function renderMarker (ctx, params, {position, color, lineWidth}) {
   const {width, height, leftMargin, firstSample} = params;
+  if (lineWidth === undefined) lineWidth = 2;
   const x = Math.round(timestampToCanvas(params, position));
   if (x >= 0 && x < width) {
-    ctx.lineWidth = 2;
+    ctx.lineWidth = lineWidth;
     ctx.lineCap = 'square';
     ctx.strokeStyle = color;
     ctx.beginPath();

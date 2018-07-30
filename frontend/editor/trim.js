@@ -216,16 +216,20 @@ function TrimEditorControlsSelector (state, props) {
   } else if (viewEnd > duration) {
     viewStart = Math.max(0, duration - visibleDuration);
   }
-  const selectedInterval = intervals.get(position);
   viewEnd = viewStart + visibleDuration;
+  const selectedInterval = intervals.get(position);
+  const diffToStart = position - selectedInterval.start;
+  const diffToEnd = selectedInterval.end - position;
+  const selectedMarker = diffToStart <= diffToEnd ? selectedInterval.start : selectedInterval.end;
   return {
-    actionTypes, position, viewStart, viewEnd, duration, waveform, events, intervals, selectedInterval,
+    actionTypes, position, viewStart, viewEnd, duration, waveform, events, intervals,
+    selectedMarker, selectedInterval
   };
 }
 
 class TrimEditorControls extends React.PureComponent {
   render () {
-    const {position, viewStart, viewEnd, duration, waveform, events, width, intervals, selectedInterval} = this.props;
+    const {position, viewStart, viewEnd, duration, waveform, events, width, intervals, selectedMarker, selectedInterval} = this.props;
     return (
       <div>
         <div className='hbox'>
@@ -241,11 +245,16 @@ class TrimEditorControls extends React.PureComponent {
             </Checkbox>
           </div>
         </div>
-        <ExpandedWaveform height={100} width={width} position={position} duration={duration}
-          waveform={waveform} events={events} intervals={intervals} onPan={this.seekTo} />
-        <FullWaveform height={60} width={width} position={position} duration={duration}
-          waveform={waveform} events={events} viewStart={viewStart} viewEnd={viewEnd}
-          intervals={intervals} onPan={this.seekTo} />
+        <ExpandedWaveform
+          height={100} width={width} position={position} duration={duration}
+          selectedMarker={selectedMarker}
+          waveform={waveform} events={events} intervals={intervals}
+          onPan={this.seekTo} />
+        <FullWaveform
+          height={60} width={width} position={position} duration={duration}
+          selectedMarker={selectedMarker} viewStart={viewStart} viewEnd={viewEnd}
+          waveform={waveform} events={events} intervals={intervals}
+          onPan={this.seekTo} />
       </div>
     );
   }
