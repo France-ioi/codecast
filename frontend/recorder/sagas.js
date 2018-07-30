@@ -8,13 +8,14 @@ import {delay} from 'redux-saga';
 import {take, takeLatest, takeEvery, put, call, race, select, actionChannel} from 'redux-saga/effects';
 import Immutable from 'immutable';
 
+import {RECORDING_FORMAT_VERSION} from '../version';
 import {spawnWorker} from '../utils/worker_utils';
 import AudioWorker from 'worker-loader?inline!../audio_worker';
 
 export default function (bundle, deps) {
 
   bundle.use(
-    'recordApi', 'switchToScreen',
+    'error', 'recordApi', 'switchToScreen',
     'getRecorderState', 'getPlayerState',
     'recorderPrepare', 'recorderPreparing', 'recorderReady',
     'recorderTick',
@@ -162,7 +163,9 @@ export default function (bundle, deps) {
       // Get a URL for events.
       const endTime = Math.floor(duration * 1000);
       const events = recorder.get('events').push([endTime, 'end']);
-      const eventsBlob = new Blob([JSON.stringify(events.toJSON())], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
+      const version = RECORDING_FORMAT_VERSION;
+      const data = {version, events, subtitles: []};
+      const eventsBlob = new Blob([JSON.stringify(data)], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
       const eventsUrl = URL.createObjectURL(eventsBlob);
       // Prepare the player to use the audio and event streams, wait till ready.
       yield put({type: deps.playerPrepare, payload: {audioUrl, eventsUrl}});
