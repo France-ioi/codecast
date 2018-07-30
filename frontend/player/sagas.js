@@ -49,7 +49,13 @@ function* playerPrepare (app, {payload}) {
   audio.src = audioUrl;
   audio.load();
   /* Load the events. */
-  let data = yield call(getJson, eventsUrl);
+  let data;
+  if (/^\./.test(eventsUrl)) {
+    /* Serving files from disk, use embedded data. */
+    data = yield select(state => state.get('options').data);
+  } else {
+    data = yield call(getJson, eventsUrl);
+  }
   if (Array.isArray(data)) {
     yield put({type: actionTypes.playerPrepareFailure, payload: {message: "recording is incompatible with this player"}});
     return;
