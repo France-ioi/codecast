@@ -10,7 +10,6 @@ import {Provider} from 'react-redux';
 import {applyMiddleware} from 'redux';
 import createSagaMiddleware from 'redux-saga';
 import Immutable from 'immutable';
-import 'font-awesome/css/font-awesome.min.css?global';
 import 'rc-slider/dist/rc-slider.css?global';
 
 import style from './style.scss';
