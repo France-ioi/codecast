@@ -14,7 +14,6 @@ import srtStringify from 'subtitle/lib/stringify';
 import FileSaver from 'file-saver';
 
 import {formatTimeLong, postJson, readFileAsText} from '../common/utils';
-import FlagIcon from '../common/flag_icon';
 import {updateCurrentItem, getSubtitles} from './utils';
 
 export default function (bundle) {
@@ -419,7 +418,7 @@ class SubtitlesEditor extends React.PureComponent {
 class SubtitlesEditorOption extends React.PureComponent {
   render () {
     const {option, selected} = this.props;
-    const text = <span>{<FlagIcon code={option.countryCode}/>}{' '}{option.label}</span>;
+    const text = <span>{option.label}</span>;
     const icon = option.unsaved ? 'floppy-disk' : 'blank';
     const intent = selected ? Intent.PRIMARY : Intent.NONE;
     return (
@@ -434,7 +433,7 @@ class SubtitlesEditorOption extends React.PureComponent {
 class SubtitlesEditorNewOption extends React.PureComponent {
   render () {
     const {option, disabled} = this.props;
-    const text = <span>{<FlagIcon code={option.countryCode}/>}{' '}{option.label}</span>;
+    const text = <span>{option.label}</span>;
     return <MenuItem text={text} disabled={disabled} onClick={this._add} />;
   }
   _add = (event) => {

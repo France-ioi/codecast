@@ -4,8 +4,6 @@ import {Alert, Button, Checkbox, Intent, Radio, RadioGroup} from '@blueprintjs/c
 import {IconNames} from '@blueprintjs/icons';
 import Portal from 'react-portal';
 
-import FlagIcon from '../common/flag_icon';
-
 export default function (bundle) {
 
   bundle.defineView('SubtitlesMenu', SubtitlesMenuSelector, SubtitlesMenu);
@@ -73,7 +71,6 @@ class SubtitlesPopup extends React.PureComponent {
               const option = langOptions.find(option => option.value === key);
               return (
                 <Radio key={key} value={option.value}>
-                  <FlagIcon code={option.countryCode}/>
                   {option.label}
                 </Radio>
               );
