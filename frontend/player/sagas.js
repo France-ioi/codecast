@@ -29,7 +29,6 @@ function* playerSaga (app) {
 }
 
 function* playerPrepare (app, {payload}) {
-  console.log('playerPrepare', ...arguments);
   const {actionTypes, selectors: {getPlayerState}, globals: {replayApi}} = app;
   /*
     baseDataUrl is forwarded to playerReady (stored in its reducer) in order
