@@ -35,13 +35,24 @@ const Message = {
 Object.defineProperty(Message, 's', { get() { return this.toString(); } });
 
 function initReducer (state, _action) {
-  const language = window.localStorage.language || navigator.language;
+  let language = navigator.language;
+  try {
+    if (window.localStorage.language) {
+      language = window.localStorage.language;
+    }
+  } catch (ex) {
+    // No local storage access.
+  }
   return setLanguageReducer(state, {payload: {language}});
 }
 
 function setLanguageReducer (state, {payload: {language}}) {
   if (!Languages[language]) language = 'en-US';
-  window.localStorage.language = language;
+  try {
+    window.localStorage.language = language;
+  } catch (ex) {
+    // No local storage access.
+  }
   const localizedMessage = Object.create(Message,
       {_l: {writable: false, configurable: false, value: language}});
   const getMessage = memoize(function (message, defaultText) {
