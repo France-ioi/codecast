@@ -129,7 +129,7 @@ class TrimEditor extends React.PureComponent {
         stepRows.push(<StepRow title={step.label} status={status} />);
         if (status === 'pending') {
           stepRows.push(
-            <div style={{margin: '10px 0 20px 0'}}>
+            <div key={step.key} style={{margin: '10px 0 20px 0'}}>
               <ProgressBar value={saving.progress} />
             </div>
           );
