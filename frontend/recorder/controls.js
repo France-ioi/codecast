@@ -63,8 +63,8 @@ class RecorderControls extends React.PureComponent {
     } = this.props;
     return (
       <div>
-        <div className="row" style={{marginTop: '3px'}}>
-          <div className="controls controls-main col-sm-3">
+        <div className='hbox' style={{marginTop: '3px'}}>
+          <div className="controls controls-main" style={{flexGrow: '3'}}>
             <ButtonGroup>
               <Button onClick={this.onStartRecording} disabled={!canRecord}
                 title={getMessage('START_RECORDING')} icon={<Icon icon='record' color='#a01'/>}/>
@@ -76,17 +76,19 @@ class RecorderControls extends React.PureComponent {
                 : <Button onClick={this.onPause} disabled={!canPause}
                     title={getMessage('PAUSE_PLAYBACK')} icon='pause' />}
             </ButtonGroup>
+            <div className='ihbox' style={{margin: '7px 0 0 10px'}}>
               <Icon icon='time'/>
               <span style={{marginLeft: '4px'}}>
                 {formatTime(position)}
                 {isPlayback && ' / '}
                 {isPlayback && formatTime(duration)}
               </span>
+            </div>
           </div>
-          <div className="col-sm-7 text-center">
+          <div className='text-center' style={{flexGrow: '7'}}>
             <StepperControls enabled={canStep}/>
           </div>
-          <div className="col-sm-2 text-right">
+          <div className='text-right' style={{flexGrow: '2'}}>
             <Menu/>
           </div>
         </div>
