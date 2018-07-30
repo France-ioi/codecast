@@ -27,6 +27,7 @@ $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
 @import "~@blueprintjs/icons/lib/css/blueprint-icons.css";
 
 @import "./player/style.scss";
+@import "./editor/style.scss";
 
 /* Darker icons on blueprint buttons. */
 .bp3-button .bp3-icon, .bp3-button .bp3-icon-standard, .bp3-button .bp3-icon-large {

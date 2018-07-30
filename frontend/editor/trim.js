@@ -231,8 +231,8 @@ class TrimEditorControls extends React.PureComponent {
         <div className='hbox'>
           <Button onClick={this.addMarker} text="Add Marker"/>
           <Button onClick={this.removeMarker} text="Remove Marker"/>
-          {/*<Button onClick={this.toggleInterval} text="Toggle"/>*/}
-          <div>
+          <div className='hbox trim-selection-controls'>
+            {/* TODO: side by side */}
             <Checkbox checked={selectedInterval.value.skip} onChange={this.intervalSkipChanged}>
               {"Skip"}
             </Checkbox>
