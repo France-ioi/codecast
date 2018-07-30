@@ -161,3 +161,91 @@ export function timestampToCanvas (params, timestamp) {
 export function canvasToTimestamp (params, x) {
   return params.firstTimestamp + (x - params.leftMargin) / params.scale;
 }
+
+export function renderWaveform (ctx, params, samples, intervals) {
+  /* Assumes `samples` is computed such that 1 sample corresponds to 1 canvas pixel. */
+  const {duration, width, height, leftMargin, firstTimestamp, lastTimestamp} = params;
+  const timescale = samples.length / duration;
+  const firstIndex = Math.round(canvasToTimestamp(params, leftMargin) * timescale);
+  const midY = height / 2;
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#d8d8d8';
+  for (let x = 0; x < width; x += 1) {
+    const y = samples[firstIndex + x] * height;
+    if (intervals && intervals.get(canvasToTimestamp(params, x)).value.mute) {
+      continue;
+    }
+    ctx.beginPath();
+    ctx.moveTo(leftMargin + x + 0.5, midY - y);
+    ctx.lineTo(leftMargin + x + 0.5, midY + y + 1);
+    ctx.stroke();
+  }
+}
+
+export function renderTicks (ctx, params) {
+  const {width, height, leftMargin} = params;
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#ffffff';
+  const position = canvasToTimestamp(params, leftMargin);
+  for (let x = 0.5 + 60 - Math.round(position * 60 / 1000) % 60 ; x < width; x += 60) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, height);
+    ctx.stroke();
+  }
+}
+
+export function downsampleWaveform (waveform, tgt_length) {
+  const src_length = waveform.length;
+  let src_start = 0;
+  let ip = Math.floor(src_length / tgt_length);
+  let fp = src_length % tgt_length;
+  let error = 0;
+  let tgt_pos = 0;
+  const avgValues = new Float32Array(tgt_length);
+  const maxValues = new Float32Array(tgt_length);
+  while (src_start < src_length) {
+    let src_next = src_start + ip;
+    error += fp;
+    if (error >= tgt_length) {
+      error -= tgt_length;
+      src_next += 1;
+    }
+    let sum = 1, maxValue = 0;
+    for (let pos = src_start; pos < src_next; pos += 1) {
+      sum += waveform[pos];
+      maxValue = Math.max(maxValue, waveform[pos]);
+    }
+    avgValues[tgt_pos] = sum / (src_next - src_start);
+    maxValues[tgt_pos] = maxValue;
+    tgt_pos += 1;
+    src_start = src_next;
+  }
+  return {nSamples: tgt_length, avgValues, maxValues};
+}
+
+export function renderMiniWaveform (ctx, params, miniWaveform, intervals) {
+  /* Assumes samples is computed such that 1 sample corresponds to 1 canvas pixel. */
+  const {duration, width, height, leftMargin, firstTimestamp, lastTimestamp} = params;
+  const {nSamples, avgValues, maxValues} = miniWaveform;
+  const midY = height / 2;
+  ctx.lineWidth = 1;
+  for (let i = 0; i < nSamples; i += 1) {
+    const x = leftMargin + i + 0.5;
+    if (intervals && intervals.get(canvasToTimestamp(params, x)).value.mute) {
+      continue;
+    }
+    const yAvg = avgValues[i] * height;
+    const yMax = maxValues[i] * height;
+    ctx.strokeStyle = '#e8e8e8';
+    ctx.beginPath();
+    ctx.moveTo(x, midY - yMax);
+    ctx.lineTo(x, midY + yMax + 1);
+    ctx.stroke();
+    ctx.strokeStyle = '#d8d8d8';
+    ctx.beginPath();
+    ctx.lineTo(x, midY - yAvg);
+    ctx.lineTo(x, midY + yAvg + 1);
+    ctx.stroke();
+  }
+}

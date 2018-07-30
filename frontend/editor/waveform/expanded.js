@@ -1,7 +1,7 @@
 
 import React from 'react';
 
-import {renderEvents, renderRange, renderMarker, renderCursor, canvasToTimestamp} from './tools';
+import {renderEvents, renderRange, renderMarker, renderCursor, renderWaveform, renderTicks} from './tools';
 
 export default class ExpandedWaveform extends React.PureComponent {
   render () {
@@ -69,7 +69,7 @@ function render (props, canvas, prevParams) {
     }
   }
   renderTicks(ctx, params);
-  renderWaveform(ctx, params, waveform);
+  renderWaveform(ctx, params, waveform, intervals);
   ctx.globalAlpha = 1;
   renderEvents(ctx, params, events);
   for (let p of intervals.keys) {
@@ -77,34 +77,4 @@ function render (props, canvas, prevParams) {
   }
   renderCursor(ctx, params, {position, alpha: 0.9});
   return params;
-}
-
-function renderWaveform (ctx, params, samples) {
-  /* Assumes `samples` is computed such that 1 sample corresponds to 1 canvas pixel. */
-  const {duration, width, height, leftMargin, firstTimestamp, lastTimestamp} = params;
-  const timescale = samples.length / duration;
-  const firstIndex = Math.round(canvasToTimestamp(params, leftMargin) * timescale);
-  const midY = height / 2;
-  ctx.strokeStyle = '#d8d8d8';
-  ctx.lineWidth = 1;
-  for (let x = 0; x < width; x += 1) {
-    const y = samples[firstIndex + x] * height;
-    ctx.beginPath();
-    ctx.moveTo(leftMargin + x + 0.5, midY - y);
-    ctx.lineTo(leftMargin + x + 0.5, midY + y + 1);
-    ctx.stroke();
-  }
-}
-
-function renderTicks (ctx, params) {
-  const {width, height, leftMargin} = params;
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = '#ffffff';
-  const position = canvasToTimestamp(params, leftMargin);
-  for (let x = 0.5 + 60 - Math.round(position * 60 / 1000) % 60 ; x < width; x += 60) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
-    ctx.stroke();
-  }
 }
