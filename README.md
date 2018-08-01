@@ -35,3 +35,9 @@ For development "npm run build" is not needed as webpack is configured
 to watch the source files:
 
     NODE_ENV=development npm start
+
+# Build for offline use
+
+    rm -rf build
+    BUILD=offline NODE_ENV=production npm run build
+    zip -r offline.zip build assets

@@ -5,7 +5,7 @@ const SRC = path.resolve(__dirname, "frontend");
 
 const isDev = process.env.NODE_ENV !== 'production';
 const jsonConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'));
-const publicPath = path.join(jsonConfig.mountPath, 'build/');
+const publicPath = path.join(process.env.BUILD === 'offline' ? '.' : jsonConfig.mountPath, 'build/');
 
 const config = module.exports = {
   entry: {

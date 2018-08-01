@@ -13,12 +13,13 @@ import directives from './directives';
 import Arduino from './arduino';
 import oauth from './oauth';
 import startWorker from './worker';
-
-const rootDir = path.resolve(path.dirname(__dirname));
+import {buildOptions} from './options';
+import addOfflineRoutes from './offline';
 
 function buildApp (config, store, callback) {
 
   const app = express();
+  const {rootDir} = config;
 
   /* Enable strict routing to make trailing slashes matter. */
   app.enable('strict routing');
@@ -77,6 +78,7 @@ function buildApp (config, store, callback) {
 
   function finalizeApp () {
     addBackendRoutes(app, config, store);
+    addOfflineRoutes(app, config, store);
     callback(null, app);
   }
   finalizeApp();
@@ -246,6 +248,7 @@ fs.readFile('config.json', 'utf8', function (err, data) {
   if (err) return res.json({error: err.toString()});
   const config = JSON.parse(data);
   config.isDevelopment = process.env.NODE_ENV !== 'production';
+  config.rootDir = path.resolve(path.dirname(__dirname));
   console.log(`running in ${config.isDevelopment ? 'development' : 'production'} mode`);
   if (!config.playerUrl) {
     config.playerUrl = `${config.baseUrl}/player`;
@@ -268,75 +271,3 @@ fs.readFile('config.json', 'utf8', function (err, data) {
   });
 });
 
-function buildOptions(config, req, start, callback) {
-  const {baseUrl, examplesUrl} = config;
-  const options = {
-    start,
-    baseUrl,
-    callbackUrl: req.originalUrl,
-    showStepper: true,
-    showStack: true,
-    showViews: true,
-    showIO: true,
-    mode: 'plain',
-    controls: {},
-  };
-
-  if (/sandbox|recorder/.test(start)) {
-    options.examplesUrl = config.examplesUrl;
-  }
-
-  const {query} = req;
-
-  if (/editor|player/.test(start)) {
-    options.baseDataUrl = req.query.base;
-  }
-
-  if ('language' in query) {
-    options.language = query.language;
-  }
-
-  (query.stepperControls||'').split(',').forEach(function (controlStr) {
-    // No prefix to highlight, '-' to disable.
-    const m = /^([-_])?(.*)$/.exec(controlStr);
-    if (m) {
-      options.controls[m[2]] = m[1] || '+';
-    }
-  });
-  if ('noStepper' in query) {
-    options.showStepper = false;
-    options.showStack = false;
-    options.showViews = false;
-    options.showIO = false;
-  }
-  if ('noStack' in query) {
-    options.showStack = false;
-  }
-  if ('noViews' in query) {
-    options.showViews = false;
-  }
-  if ('noIO' in query) {
-    options.showIO = false;
-  }
-  if ('mode' in query) {
-    options.mode = query.mode; // 'plain'|'arduino'
-  }
-
-  if ('source' in query) {
-    options.source = query.source || '';
-  }
-  if ('input' in query) {
-    options.input = query.input || '';
-  }
-
-  /* XXX Is this still used? */
-  if ('token' in query) {
-    options.token = token;
-  }
-
-  if (/recorder|editor/.test(start)) {
-    return config.optionsHook(req, options, callback);
-  } else {
-    return callback(null, options);
-  }
-}

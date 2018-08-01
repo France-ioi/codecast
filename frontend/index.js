@@ -96,12 +96,14 @@ Codecast.start = function (options) {
       App = scope.RecorderApp;
       break;
     case 'player':
+      let audioUrl = options.audioUrl || `${options.baseDataUrl}.mp3`;
       store.dispatch({
         type: scope.playerPrepare,
         payload: {
           baseDataUrl: options.baseDataUrl,
-          audioUrl: `${options.baseDataUrl}.mp3`,
+          audioUrl: audioUrl,
           eventsUrl: `${options.baseDataUrl}.json`,
+          data: options.data
         }
       });
       App = scope.PlayerApp;
