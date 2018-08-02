@@ -3609,12 +3609,6 @@ jstransformer@1.0.0:
     is-promise "^2.0.0"
     promise "^7.0.1"
 
-jszip@2.5.0:
-  version "2.5.0"
-  resolved "https://registry.yarnpkg.com/jszip/-/jszip-2.5.0.tgz#7444fd8551ddf3e5da7198fea0c91bc8308cc274"
-  dependencies:
-    pako "~0.2.5"
-
 jwa@^1.1.5:
   version "1.1.6"
   resolved "https://registry.yarnpkg.com/jwa/-/jwa-1.1.6.tgz#87240e76c9808dbde18783cf2264ef4929ee50e6"
@@ -4273,12 +4267,6 @@ node-sass@^4.5.0:
     stdout-stream "^1.4.0"
     "true-case-path" "^1.0.2"
 
-node-zip@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/node-zip/-/node-zip-1.1.1.tgz#94d1ad674a3cd46a1588dd736f4a9a78c757eb62"
-  dependencies:
-    jszip "2.5.0"
-
 nodemon@^1.12.1:
   version "1.17.5"
   resolved "https://registry.yarnpkg.com/nodemon/-/nodemon-1.17.5.tgz#e6a665c872fdf09d48bf2a81f3e85f8cfb39322a"
@@ -4521,10 +4509,6 @@ package-json@^4.0.0:
 packrattle@^4.1.0:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/packrattle/-/packrattle-4.1.0.tgz#aa8d1c28393cdc0f83f14b55eddd3a4713461c0d"
-
-pako@~0.2.5:
-  version "0.2.9"
-  resolved "https://registry.yarnpkg.com/pako/-/pako-0.2.9.tgz#f3f7522f4ef782348da8161bad9ecfd51bf83a75"
 
 pako@~1.0.5:
   version "1.0.6"
