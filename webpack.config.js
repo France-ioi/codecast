@@ -16,6 +16,7 @@ const config = module.exports = {
     publicPath: publicPath,
     filename: '[name].js'
   },
+  devtool: isDev ? '#source-map' : 'eval',
   module: {
     rules: [
       {
@@ -97,12 +98,9 @@ const config = module.exports = {
   ]
 };
 
-/*  Disabled because uglifyjs fails with invalid assignment in vendor.js
-if (isDev) {
-  // config.devtool = 'eval';
-  // config.devtool = inline-source-map;
-  config.devtool = 'inline-source-map';
-} else {
+/*  Disabled because uglifyjs fails with invalid assignment in vendor.js */
+/*
+if (!isDev) {
   config.plugins.push(new webpack.optimize.UglifyJsPlugin({
     compress: {
       warnings: false
