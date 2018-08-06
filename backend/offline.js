@@ -1,10 +1,9 @@
 
-import url from 'url';
 import path from 'path';
 import jwt from 'jsonwebtoken';
-import request from 'request';
 import urlJoin from 'url-join';
 import express from 'express';
+import editURL from 'edit-url';
 
 import {buildCommonOptions} from './options';
 
@@ -13,11 +12,23 @@ export default function (app, config, store) {
   app.use('/offline.zip', express.static(path.join(config.rootDir, 'offline.zip')));
 
   app.get('/offline', function (req, res) {
+    const baseUrl = req.query.base;
+    const manifestUrl = editURL(config.baseUrl, function (obj) {
+      obj.pathname = urlJoin(obj.pathname, 'offline/manifest');
+      obj.query.base = baseUrl;
+    });
+    const builderUrl = editURL(config.builderUrl, function (obj) {
+      obj.query.t = jwt.sign({manifestUrl}, config.builderSecret, {issuer: 'codecast', audience: 'builder'});
+    });
+    res.redirect(builderUrl);
+  });
+
+  app.get('/offline/manifest', function (req, res) {
     const {query} = req;
     if (!query.ownPath) query.ownPath = '';
     if (!query.sharedPath) query.sharedPath = '';
     const {ownPath, sharedPath} = query;
-    const token = jwt.sign({query}, config.privateKey, {audience: 'offline'});
+    const token = jwt.sign({query}, config.ownSecret, {audience: 'offline'});
     const data = {
       version: '1.0.0',
       contents: [
@@ -39,7 +50,7 @@ export default function (app, config, store) {
   });
 
   app.get('/offline/index', function (req, res) {
-    jwt.verify(req.query.t, config.privateKey, {audience: 'offline'}, function (err, token) {
+    jwt.verify(req.query.t, config.ownSecret, {audience: 'offline'}, function (err, token) {
       if (err) return res.status(400).send(err.toString());
       const {query} = token;
       const {ownPath, sharedPath} = query;
