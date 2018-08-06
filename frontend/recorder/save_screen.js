@@ -119,7 +119,13 @@ class SaveScreen extends React.PureComponent {
       message = "Save complete.";
       break;
     case 'error':
-      message = "An error has occured.";
+      message = (
+        <div>
+          <p>{"An error has occured."}</p>
+          <pre>{error.stack}</pre>
+        </div>
+      );
+      canUpload = true; // allow retry
       break;
     }
     /* TODO: select target among user grants */
@@ -140,14 +146,14 @@ class SaveScreen extends React.PureComponent {
         </FormGroup>
         <Button onClick={this.onUpload} disabled={!canUpload} intent={canUpload ? Intent.PRIMARY : Intent.NONE}
           icon='floppy-disk' text="Save" />
-        <p>
+        <div>
           {busy
             ? <Spinner small/>
             : (step === 'done'
                 ? <Icon icon='tick' intent={Intent.SUCCESS} />
                 : false)}
           {message}
-        </p>
+        </div>
         {typeof progress === 'number' &&
           <ProgressBar value={progress} />}
         {playerUrl &&
@@ -221,6 +227,9 @@ function* uploadSaga ({actionTypes, selectors}, {payload: {target}}) {
     yield put({type: actionTypes.saveScreenPreparing});
     const save = yield select(state => state.get('save'));
     const response = yield call(asyncRequestJson, 'upload', target);
+    if (response.error) {
+      throw new Error(`cannot upload: ${response.error}`);
+    }
     // Upload the events file.
     yield put({type: actionTypes.saveScreenEventsUploading});
     const eventsBlob = yield call(getBlob, save.eventsUrl);
