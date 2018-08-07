@@ -217,12 +217,12 @@ export default function (bundle, deps) {
     }
   }
 
-  function* truncateRecording (timestamp, instant) {
+  function* truncateRecording (audioTime, instant) {
     const {worker} = yield select(st => deps.getRecorderState(st).get('context'));
-    yield call(worker.call, 'truncate', {position: timestamp});
+    yield call(worker.call, 'truncate', {position: audioTime / 1000});
     if (instant) {
       const position = instant.pos + 1;
-      yield put({type: deps.recorderTruncate, payload: {timestamp, position}});
+      yield put({type: deps.recorderTruncate, payload: {audioTime, position}});
     }
   }
 
@@ -238,23 +238,16 @@ export default function (bundle, deps) {
          yield call(recorderPrepare);
        */
     }
-    const timestamp = Math.round(audioContext.currentTime * 1000);
-    console.log('audioContextResumed', timestamp);
-    yield put({type: deps.audioContextResumed, payload: {timestamp}})
   }
-  bundle.defineAction('audioContextResumed', 'Recorder.AudioContext.Resumed');
-  bundle.addReducer('audioContextResumed', (state, {payload: {timestamp}}) =>
-    state.setIn(['recorder', 'audioRef'], timestamp));
 
   function* suspendAudioContext (audioContext) {
     yield call(() => audioContext.suspend());
-    const timestamp = Math.round(audioContext.currentTime * 1000);
-    yield put({type: deps.audioContextSuspended, payload: {timestamp}})
+    const audioTime = Math.round(audioContext.currentTime * 1000);
+    yield put({type: deps.audioContextSuspended, payload: {audioTime}})
   }
   bundle.defineAction('audioContextSuspended', 'Recorder.AudioContext.Suspended');
-  bundle.addReducer('audioContextSuspended', (state, {payload: {timestamp}}) =>
-    state.updateIn(['recorder', 'eventRef'],
-      eventRef => eventRef + timestamp));
+  bundle.addReducer('audioContextSuspended', (state, {payload: {audioTime}}) =>
+    state.setIn(['recorder', 'suspendedAt'], audioTime));
 
   bundle.addSaga(function* watchRecorderPrepare () {
     yield takeLatest(deps.recorderPrepare, recorderPrepare);
@@ -271,8 +264,8 @@ export default function (bundle, deps) {
         });
         if ('stopped' in outcome)
           break;
-        const offset = yield select(st => st.getIn(['recorder', 'eventRef']) - st.getIn(['recorder', 'audioRef']));
-        const elapsed = Math.round(recorderContext.audioContext.currentTime * 1000) + offset;
+        const junkTime = yield select(st => st.getIn(['recorder', 'junkTime']));
+        const elapsed = Math.round(recorderContext.audioContext.currentTime * 1000) - junkTime;
         yield put({type: deps.recorderTick, elapsed});
       }
     }

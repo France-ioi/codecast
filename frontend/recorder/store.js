@@ -29,8 +29,7 @@ export default function (bundle) {
     return state.set('recorder', Immutable.Map({
       status: 'ready',
       context: recorderContext,
-      audioRef: 0,
-      eventRef: 0
+      junkTime: 0
     }));
   });
 

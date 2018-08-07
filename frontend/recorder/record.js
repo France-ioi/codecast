@@ -52,10 +52,10 @@ export default function (bundle, deps) {
 
   // Truncate the event stream at the given position (milliseconds).
   bundle.defineAction('recorderTruncate', 'Recorder.Truncate');
-  bundle.addReducer('recorderTruncate', function (state, {payload: {position, timestamp}}) {
+  bundle.addReducer('recorderTruncate', function (state, {payload: {position, audioTime}}) {
     return state.update('recorder', recorder => recorder
       .update('events', events => events.slice(0, position))
-      .set('eventRef', timestamp)
+      .set('junkTime', recorder.get('suspendedAt') - audioTime)
     );
   });
 
@@ -100,10 +100,9 @@ export default function (bundle, deps) {
           // Ignore events fired while not recording.
           continue;
         }
-        const offset = recorder.get('eventRef') - recorder.get('audioRef');
-        const timestamp = Math.round(recorderContext.audioContext.currentTime * 1000);
+        const audioTime = Math.round(recorderContext.audioContext.currentTime * 1000) - recorder.get('junkTime');
         function* addEvent (name, ...args) {
-          const event = [timestamp + offset, name, ...args];
+          const event = [audioTime, name, ...args];
           yield put({type: deps.recorderAddEvent, event});
           if (name === 'end') {
             done = true;
