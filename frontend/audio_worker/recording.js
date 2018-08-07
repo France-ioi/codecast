@@ -79,6 +79,9 @@ Recording.prototype.truncateAt = function (position) {
       for (let iChannel = 0; iChannel < numberOfChannels; iChannel += 1) {
         channels[iChannel].chunks.splice(iChunk + 1);
       }
+      /* Update length and duration. */
+      this.length = truncPos;
+      this.duration = truncPos / sampleRate;
       return true;
     }
     startPos = endPos;
