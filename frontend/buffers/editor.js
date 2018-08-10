@@ -56,7 +56,6 @@ class Editor extends React.PureComponent {
       return;
     }
     const scrollTop_ = this.editor.getSession().getScrollTop();
-    const firstVisibleRow_ = this.editor.getFirstVisibleRow();
     if (this.scrollTop !== scrollTop_) {
       this.scrollTop = scrollTop_;
       const {onScroll} = this.props;
@@ -82,14 +81,16 @@ class Editor extends React.PureComponent {
     }
   };
 
-  reset = (value, selection_, firstVisibleRow_) => {
+  reset = (value, selection, firstVisibleRow) => {
     this.wrapModelToEditor(() => {
       this.editor.setValue(value);
+      this.editor.resize(true);
       // Work-around for strange ACE behavior?
       this.selection = null;
-      this.setSelection(selection_);
-      this.editor.scrollToLine(firstVisibleRow_);
-      this.firstVisibleRow = firstVisibleRow_;
+      this.setSelection(selection);
+      this.firstVisibleRow = firstVisibleRow;
+      this.editor.scrollToLine(firstVisibleRow);
+      this.scrollTop = this.editor.getSession().getScrollTop();
       // Clear a previously set marker, if any.
       if (this.marker) {
         this.editor.session.removeMarker(this.marker);
@@ -110,13 +111,12 @@ class Editor extends React.PureComponent {
     this.editor.focus();
   };
 
-  scrollToLine = (firstVisibleRow_) => {
+  scrollToLine = (firstVisibleRow) => {
     this.wrapModelToEditor(() => {
       this.editor.resize(true);
-      this.editor.scrollToLine(firstVisibleRow_);
-      this.firstVisibleRow = firstVisibleRow_; /* XXX assignment swapped,
-        was this a bug? should we instead request the first visible row
-        from ACE, in case we did not get exactly what we requested? */
+      this.firstVisibleRow = firstVisibleRow;
+      this.editor.scrollToLine(firstVisibleRow);
+      this.scrollTop = this.editor.getSession().getScrollTop();
     });
   };
 
