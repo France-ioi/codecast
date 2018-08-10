@@ -23,7 +23,7 @@ export default function (bundle, deps) {
     'recorderPause', 'recorderPausing', 'recorderPaused',
     'recorderStop', 'recorderStopping', 'recorderStopped',
     'recorderTruncate',
-    'playerPrepare', 'playerClear', 'playerReady'
+    'playerPrepare', 'playerPause', 'playerPaused', 'playerClear', 'playerReady'
   );
 
   function* recorderPrepare () {
@@ -201,6 +201,10 @@ export default function (bundle, deps) {
         console.log('bad state', recorderStatus);
         return;
       }
+      /* Pause the player (even if already paused) to make sure the state
+         accurately represents the instant in the recording. */
+      yield put({type: deps.playerPause});
+      yield take(deps.playerPaused);
       /* Clear the player's state. */
       yield put({type: deps.playerClear});
       /* Signal that the recorder is resuming. */
