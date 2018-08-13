@@ -18,6 +18,7 @@ export default function (bundle, deps) {
 
   bundle.defineAction('editorPrepare', 'Editor.Prepare');
   bundle.addReducer('editorPrepare', editorPrepareReducer);
+  bundle.addReducer('loginFeedback', loginFeedbackReducer);
 
   bundle.defineAction('editorControlsChanged', 'Editor.Controls.Changed');
   bundle.addReducer('editorControlsChanged', editorControlsChangedReducer);
@@ -51,13 +52,6 @@ export default function (bundle, deps) {
 
 function editorPrepareReducer (state, {payload: {baseDataUrl}}) {
   const {baseUrl} = state.get('options');
-  let canSave = false;
-  for (let grant of state.get('user').grants) {
-    if (baseDataUrl.startsWith(grant.url)) {
-      canSave = true;
-      break;
-    }
-  }
   return state.set('editor', Immutable.Map({
     base: baseDataUrl,
     dataUrl: baseDataUrl,
@@ -65,8 +59,29 @@ function editorPrepareReducer (state, {payload: {baseDataUrl}}) {
     setupTabId: 'setup-tab-infos',
     audioLoadProgress: 0,
     controls: {floating: [], top: []},
-    canSave
+    canSave: userHasGrant(state.get('user'), baseDataUrl)
   }));
+}
+
+function loginFeedbackReducer (state, _action) {
+  const editor = state.get('editor');
+  if (editor) {
+    const user = state.get('user');
+    state = state.update('editor', editor =>
+      editor.set('canSave', userHasGrant(user, editor.get('dataUrl'))));
+  }
+  return state;
+}
+
+function userHasGrant (user, dataUrl) {
+  if (user && user.grants && dataUrl) {
+    for (let grant of user.grants) {
+      if (dataUrl.startsWith(grant.url)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 function editorControlsChangedReducer (state, {payload: {controls}}) {
@@ -82,7 +97,6 @@ function* editorPrepareSaga ({actionTypes}, {payload: {baseDataUrl}}) {
   /* Require the user to be logged in. */
   while (!(yield select(state => state.get('user')))) {
     yield take(actionTypes.loginFeedback);
-    console.log('got login feedback', yield select(state => state.get('user')));
   }
   yield put({type: actionTypes.switchToScreen, payload: {screen: 'setup'}});
   const audioUrl = `${baseDataUrl}.mp3`;
