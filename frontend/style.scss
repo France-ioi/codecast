@@ -29,6 +29,11 @@ $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
 @import "./player/style.scss";
 @import "./editor/style.scss";
 
+html {
+    margin-left: calc(100vw - 100%);
+    margin-right: 0;
+}
+
 /* Darker icons on blueprint buttons. */
 .bp3-button .bp3-icon, .bp3-button .bp3-icon-standard, .bp3-button .bp3-icon-large {
   color: #3c5060;
@@ -43,7 +48,6 @@ $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
 #main {
   margin: 0 auto;
 }
-
 
 .fi {
   display: inline-block;
