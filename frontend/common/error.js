@@ -33,7 +33,7 @@ class AppErrorBoundary extends React.Component {
             onClose={this._clearError}
             title={"Something went wrong"}
         >
-          <div className='pt-dialog-body'>
+          <div className='bp3-dialog-body'>
             <p>{"Source: "}{source}</p>
             <p style={{fontWeight: 'bold'}}>{(error||'').toString()}</p>
             {source === 'react' &&

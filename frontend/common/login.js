@@ -31,7 +31,7 @@ class LoginScreen extends React.PureComponent {
         <h3 style={{margin: '0 0 10px 0'}}>{"Select a login option"}</h3>
         <ButtonGroup large={true} vertical={true}>
           {authProviders && authProviders.map((provider) =>
-            <a href={`${baseUrl}/auth/${provider}`} target='_blank' key={provider} className='pt-button'>{provider}</a>)}
+            <a href={`${baseUrl}/auth/${provider}`} target='_blank' key={provider} className='bp3-button'>{provider}</a>)}
         </ButtonGroup>
       </div>
     );

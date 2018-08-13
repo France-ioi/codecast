@@ -90,9 +90,9 @@ export default function (bundle, deps) {
                 {!modeSelect &&
                   <p>{getMessage('IOPANE_TERMINAL_PROGRAM_STOPPED')}</p>}
                 {modeSelect && <form style={{marginTop: '10px', marginLeft: '10px'}}>
-                  <label className='pt-label pt-inline'>
+                  <label className='bp3-label bp3-inline'>
                     {getMessage('IOPANE_MODE')}
-                    <div className='pt-select'>
+                    <div className='bp3-select'>
                       <select value={mode} onChange={this.onModeChanged}>
                         {this.modeOptions.map(p =>
                           <option key={p.value} value={p.value}>{getMessage(p.label)}</option>)}

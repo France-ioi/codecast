@@ -73,7 +73,7 @@ class EditorOverview extends React.PureComponent {
     return (
       <div className='vbox'>
         <Label text={"Name"}>
-          <input type='text' placeholder="Name" className='pt-input pt-fill' value={name||''} onChange={this._nameChanged} />
+          <input type='text' placeholder="Name" className='bp3-input bp3-fill' value={name||''} onChange={this._nameChanged} />
         </Label>
         <Label text={"Player URL"}>
           <InputGroup leftIcon={IconNames.LINK} type='text' value={playerUrl} readOnly

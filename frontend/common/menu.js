@@ -18,12 +18,12 @@ class Menu extends React.PureComponent {
           <FullscreenButton/>
         </ButtonGroup>
         <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={isOpen} onClose={this.closeMenu} >
-          <div className='pt-dialog-body'>
+          <div className='bp3-dialog-body'>
             <div style={{marginBottom: '10px'}}>
               <LanguageSelection closeMenu={this.closeMenu} />
             </div>
-            <div className='pt-select'>
-              <label className='pt-label'>
+            <div className='bp3-select'>
+              <label className='bp3-label'>
                 {getMessage('PLATFORM_SETTING')}
                 <select onChange={this.setPlatform} value={platform}>
                   <option value='plain'>{getMessage('PLATFORM_UNIX')}</option>

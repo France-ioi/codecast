@@ -75,8 +75,8 @@ class LanguageSelection extends React.PureComponent {
   render() {
     const {language, getMessage} = this.props;
     return (
-      <div className='pt-select'>
-        <label className='pt-label'>
+      <div className='bp3-select'>
+        <label className='bp3-label'>
           {getMessage('LANGUAGE:')}
           <select onChange={this.setLanguage} value={language}>
             {languageKeys.map(lang => {
