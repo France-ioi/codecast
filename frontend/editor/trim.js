@@ -105,7 +105,8 @@ function addJumpInstants (instants, intervals) {
 function TrimEditorSelector (state) {
   const {trimEditorEnter, trimEditorSave} = state.get('scope');
   const {saving} = state.getIn(['editor', 'trim']);
-  const {grants} = state.get('user');
+  const user = state.get('user');
+  const grants = user && user.grants || [];
   return {trimEditorEnter, trimEditorSave, saving, grants};
 }
 
@@ -162,7 +163,7 @@ class TrimEditor extends React.PureComponent {
   }
   static getDerivedStateFromProps (props, state) {
     /* Default to first valid grant. */
-    if (!state.targetUrl) {
+    if (!state.targetUrl && props.grants && props.grants.length > 0) {
       return {targetUrl: props.grants[0].url};
     }
     return null;
