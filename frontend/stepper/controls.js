@@ -128,7 +128,7 @@ export default function (bundle, deps) {
           break;
       }
       if (controls) {
-        const mod = controls.key;
+        const mod = controls[key];
         if (mod === '_') {
           return false;
         }
