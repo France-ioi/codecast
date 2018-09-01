@@ -348,7 +348,7 @@ class SubtitlesEditor extends React.PureComponent {
                     <Button onClick={this._removeSelected} icon={IconNames.CROSS} text={'Remove'}/>
                   </div>
                 </div>
-              : <NonIdealState visual='arrow-left' title={"No language selected"} description={"Load existing subtitles or add a new language, and the click the Edit button."} />}
+              : <NonIdealState visual='arrow-left' title={"No language selected"} description={"Load existing subtitles or add a new language, and click the Edit button."} />}
           </div>
         </div>
         <div className='hbox mb' style={{textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
