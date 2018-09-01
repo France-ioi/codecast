@@ -32,9 +32,9 @@ export default function (bundle, deps) {
   });
 
   function updateIoPaneState (state, ioPane) {
-    const {mode} = state.get('options');
-    if (mode === 'arduino') {
-      /* Arduino mode is forced to terminal mode. */
+    const {platform} = state.get('options');
+    if (platform === 'arduino') {
+      /* Arduino is forced to terminal mode. */
       return {mode: 'terminal', modeSelect: false};
     }
     return {mode: ioPane.mode || 'terminal', modeSelect: true};

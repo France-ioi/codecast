@@ -26,8 +26,8 @@ import editorBundle from './editor/index';
 const {store, scope, actionTypes, views, finalize, start} = link(function (bundle, deps) {
 
   bundle.defineAction('init', 'System.Init');
-  bundle.addReducer('init', (_state, {payload: options}) =>
-    Immutable.Map({scope, actionTypes, views, options}));
+  bundle.addReducer('init', (_state, _action) =>
+    Immutable.Map({scope, actionTypes, views}));
 
   bundle.include(commonBundle);
   bundle.include(sandboxBundle);
@@ -69,7 +69,7 @@ const Codecast = window.Codecast = {store, scope, restart};
     examplesUrl: url,
     baseDataUrl: url,
     user: {…},
-    mode: 'plain'|'arduino',
+    platform: 'unix'|'arduino',
     controls: {…},
     showStepper: boolean,
     showStack: boolean,
@@ -82,7 +82,7 @@ const Codecast = window.Codecast = {store, scope, restart};
 */
 Codecast.start = function (options) {
 
-  store.dispatch({type: scope.init, payload: options});
+  store.dispatch({type: scope.init, payload: {options}});
   // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
   /* Run the sagas (must be done before calling autoLogin) */

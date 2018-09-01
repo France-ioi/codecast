@@ -325,8 +325,8 @@ export default function (bundle, deps) {
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 
     recordApi.onStart(function* (init) {
-      const {mode} = yield select(state => state.get('options'));
-      if (mode === 'arduino') {
+      const {platform} = yield select(state => state.get('options'));
+      if (platform === 'arduino') {
         init.arduino = yield select(state => state.get('arduino'));
       }
     });

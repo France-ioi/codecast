@@ -1,6 +1,6 @@
 
 import React from 'react';
-import {Button, ButtonGroup, Dialog} from '@blueprintjs/core';
+import {Button, ButtonGroup, Dialog, Label} from '@blueprintjs/core';
 
 export default function (bundle) {
   bundle.defineView('Menu', MenuSelector, Menu);
@@ -8,7 +8,7 @@ export default function (bundle) {
 
 class Menu extends React.PureComponent {
   render () {
-    const {getMessage, SubtitlesMenu, FullscreenButton, LanguageSelection, ExamplePicker, platform} = this.props;
+    const {getMessage, SubtitlesMenu, FullscreenButton, LanguageSelection, ExamplePicker, platform, canChangePlatform} = this.props;
     const {isOpen} = this.state;
     return (
       <div id='menu'>
@@ -22,18 +22,19 @@ class Menu extends React.PureComponent {
             <div style={{marginBottom: '10px'}}>
               <LanguageSelection closeMenu={this.closeMenu} />
             </div>
-            <div className='bp3-select'>
-              <label className='bp3-label'>
-                {getMessage('PLATFORM_SETTING')}
-                <select onChange={this.setPlatform} value={platform}>
-                  <option value='plain'>{getMessage('PLATFORM_UNIX')}</option>
-                  <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
-                </select>
-              </label>
-            </div>
-            <div>
-              <ExamplePicker />
-            </div>
+            {canChangePlatform &&
+              <div>
+                <label className='bp3-label'>
+                  {getMessage('PLATFORM_SETTING')}
+                  <div className='bp3-select'>
+                    <select onChange={this.setPlatform} value={platform}>
+                      <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
+                      <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
+                    </select>
+                  </div>
+                </label>
+              </div>}
+            <ExamplePicker />
           </div>
         </Dialog>
       </div>
@@ -44,14 +45,17 @@ class Menu extends React.PureComponent {
   closeMenu = () => { this.setState({isOpen: false}); };
   setPlatform = (event) => {
     const platform = event.target.value;
-    this.props.dispatch({type: this.props.optionsChanged, payload: {mode: {$set: platform}}});
+    this.props.dispatch({type: this.props.optionsChanged, payload: {platform: {$set: platform}}});
   };
 }
 
 function MenuSelector (state, props) {
   const {FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker} = state.get('scope');
   const {optionsChanged} = state.get('actionTypes');
-  const {mode} = state.get('options');
+  const {platform, canChangePlatform} = state.get('options');
   const getMessage = state.get('getMessage');
-  return {getMessage, FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker, platform: mode, optionsChanged};
+  return {
+    getMessage, FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker,
+    platform, canChangePlatform, optionsChanged
+  };
 }

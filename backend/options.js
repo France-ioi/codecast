@@ -7,7 +7,8 @@ export function buildCommonOptions(start, query) {
     showStack: true,
     showViews: true,
     showIO: true,
-    mode: 'plain',
+    platform: 'unix',
+    canChangePlatform: /sandbox|recorder/.test(start),
     controls: {},
   };
 
@@ -38,7 +39,16 @@ export function buildCommonOptions(start, query) {
     options.showIO = false;
   }
   if ('mode' in query) {
-    options.mode = query.mode; // 'plain'|'arduino'
+    /* Deprecated */
+    switch (query.mode) {
+      case 'plain': options.platform = 'unix';
+      case 'arduino': options.platform = 'arduino';
+    }
+    options.canChangePlatform = false;
+  }
+  if ('platform' in query) {
+    options.platform = query.platform;
+    options.canChangePlatform = false;
   }
 
   if ('source' in query) {

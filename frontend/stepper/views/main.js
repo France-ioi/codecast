@@ -167,8 +167,8 @@ function StepperViewSelector (state, props) {
   const haveStepper = !!stepperDisplay;
   const error = haveStepper && stepperDisplay.error;
   const readOnly = haveStepper || props.preventInput;
-  const {showIO, showViews, showStack, mode} = state.get('options');
-  const arduinoEnabled = mode === 'arduino';
+  const {showIO, showViews, showStack, platform} = state.get('options');
+  const arduinoEnabled = platform === 'arduino';
   /* TODO: make number of visible rows in source editor configurable. */
   const sourceRowHeight = `${Math.ceil(16 * 25)}px`; // 12*25 for /next
   const sourceMode = arduinoEnabled ? 'arduino' : 'c_cpp';

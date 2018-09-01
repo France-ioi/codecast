@@ -187,8 +187,8 @@ function addBackendRoutes (app, config, store) {
   app.post('/translate', function (req, res) {
     const env = {LANGUAGE: 'c'};
     env.SYSROOT = path.join(config.rootDir, 'sysroot');
-    const {source, mode} = req.body;
-    if (mode === 'arduino') {
+    const {source, platform} = req.body;
+    if (platform === 'arduino') {
       env.SOURCE_WRAPPER = "wrappers/Arduino";
       env.LANGUAGE = 'c++';
     }
@@ -222,7 +222,7 @@ function addBackendRoutes (app, config, store) {
           try {
             let ast = JSON.parse(chunks.join(''));
             const convert = new AnsiToHtml();
-            if (mode === 'arduino') {
+            if (platform === 'arduino') {
               ast = Arduino.transform(ast);
             }
             directives.enrichSyntaxTree(source, ast);

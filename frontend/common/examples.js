@@ -21,17 +21,17 @@ function updateExamplesState (state, examples) {
   const {callbackUrl, examplesUrl} = examples;
   if (!examplesUrl) return false;
   /* Clean up the callback URL to avoid passing the current source to the
-     examples selector.  Also clear 'mode' in case the user changes it in
-     the selector. */
+     examples selector.  Also clear 'platform' in case the user changes it
+     in the selector. */
   let fullCallbackUrl = url.parse(callbackUrl, true);
   delete fullCallbackUrl.search; // force url.format to rebuild the search string
   delete fullCallbackUrl.query.source;
-  delete fullCallbackUrl.query.mode;
+  delete fullCallbackUrl.query.platform;
   fullCallbackUrl = url.format(fullCallbackUrl);
-  const {mode, language} = state.get('options');
+  const {platform, language} = state.get('options');
   let fullExamplesUrl = url.parse(examplesUrl, true);
   fullExamplesUrl.query.target = '_self';
-  fullExamplesUrl.query.tags = mode;
+  fullExamplesUrl.query.tags = platform;
   /* XXX better to pass language unchanged and have the examples app drop the country code */
   fullExamplesUrl.query.lang = language.replace(/_.*$/, '');
   fullExamplesUrl.query.callback = fullCallbackUrl;

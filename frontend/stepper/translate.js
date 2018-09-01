@@ -89,12 +89,12 @@ export default function (bundle, deps) {
     yield takeLatest(deps.translate, function* (action) {
       const sourceModel = yield select(deps.getBufferModel, 'source');
       const source = sourceModel.get('document').toString();
-      const {mode} = yield select(state => state.get('options'));
+      const {platform} = yield select(state => state.get('options'));
       yield put({type: deps.translateStarted, source});
       let response, syntaxTree;
       try {
         /* XXX replace 'translate' with a computed absolute path */
-        response = yield call(asyncRequestJson, 'translate', {source, mode});
+        response = yield call(asyncRequestJson, 'translate', {source, platform});
       } catch (ex) {
         response = {error: ex.toString()};
       }
@@ -116,7 +116,7 @@ export default function (bundle, deps) {
 
     recordApi.on(deps.translateStarted, function* (addEvent, action) {
       const {source} = action;
-      yield call(addEvent, 'translate.start', source);
+      yield call(addEvent, 'translate.start', source); // XXX should also have platform
     });
     replayApi.on(['stepper.translate', 'translate.start'], function (replayContext, event) {
       const action = {source: event[2]};

@@ -34,25 +34,22 @@ const Message = {
 };
 Object.defineProperty(Message, 's', { get() { return this.toString(); } });
 
-function initReducer (state, _action) {
-  let language = navigator.language;
-  try {
-    if (window.localStorage.language) {
-      language = window.localStorage.language;
-    }
-  } catch (ex) {
-    // No local storage access.
+function initReducer (state, {payload: {options}}) {
+  let language = 'en-US';
+  if (navigator.language in Languages) {
+    language = navigator.language;
+  }
+  if (window.localStorage.language && window.localStorage.language in Languages) {
+    language = window.localStorage.language;
+  }
+  if (language in options && options.language in Languages) {
+    language = options.language;
   }
   return setLanguageReducer(state, {payload: {language}});
 }
 
 function setLanguageReducer (state, {payload: {language}}) {
   if (!Languages[language]) language = 'en-US';
-  try {
-    window.localStorage.language = language;
-  } catch (ex) {
-    // No local storage access.
-  }
   const localizedMessage = Object.create(Message,
       {_l: {writable: false, configurable: false, value: language}});
   const getMessage = memoize(function (message, defaultText) {
@@ -75,30 +72,35 @@ class LanguageSelection extends React.PureComponent {
   render() {
     const {language, getMessage} = this.props;
     return (
-      <div className='bp3-select'>
-        <label className='bp3-label'>
-          {getMessage('LANGUAGE:')}
+      <label className='bp3-label'>
+        {getMessage('LANGUAGE:')}
+        <div className='bp3-select'>
           <select onChange={this.setLanguage} value={language}>
             {languageKeys.map(lang => {
               const label = Languages[lang].language;
               return <option key={lang} value={lang}>{label}</option>;
             })}
           </select>
-        </label>
-      </div>
+        </div>
+      </label>
     );
   }
   setLanguage = (event) => {
     const language = event.target.value;
     const {closeMenu, dispatch, setLanguage} = this.props;
     closeMenu();
+    try {
+      window.localStorage.language = language;
+    } catch (ex) {
+      // No local storage access.
+    }
     setTimeout(() => dispatch({type: setLanguage, payload: {language}}), 0);
   };
 }
 
 function LanguageSelectionSelector (state) {
   const {setLanguage} = state.get('actionTypes');
-  const {language} = state.get('options');
+  const language = state.get('language');
   const getMessage = state.get('getMessage');
   return {setLanguage, language, getMessage};
 }
