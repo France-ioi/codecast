@@ -29,10 +29,11 @@ export default function (bundle) {
   bundle.include(replayBundle);
   bundle.include(recordBundle);
 
+  /* The options bundle must be included before the lang and stepper bundles
+     (see ioPane). */
+  bundle.include(optionsBundle);
   /* The language bundle must be included before the examples bundle. */
   bundle.include(langBundle);
-  /* The options bundle must be included before the stepper bundle (see ioPane). */
-  bundle.include(optionsBundle);
 
   bundle.include(buffersBundle);
   bundle.include(resizeBundle);

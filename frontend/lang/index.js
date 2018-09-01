@@ -100,7 +100,7 @@ class LanguageSelection extends React.PureComponent {
 
 function LanguageSelectionSelector (state) {
   const {setLanguage} = state.get('actionTypes');
-  const language = state.get('language');
+  const language = state.get('options').language;
   const getMessage = state.get('getMessage');
   return {setLanguage, language, getMessage};
 }
