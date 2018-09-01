@@ -27,7 +27,7 @@
     "@babel/preset-env": "^7.0.0-beta.36",
     "@babel/preset-react": "^7.0.0-beta.36",
     "@babel/runtime": "^7.0.0-beta.36",
-    "@blueprintjs/core": "^3.0.1",
+    "@blueprintjs/core": "^3.5.1",
     "@tyriar/fibonacci-heap": "^1.0.10",
     "adt": "^0.7.2",
     "ansi-to-html": "^0.4.1",
