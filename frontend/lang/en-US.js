@@ -71,7 +71,7 @@ module.exports = {
   CLOSED_CAPTIONS_DOWNLOAD_SELECTED: "download selected subtitles",
   CLOSED_CAPTIONS_SHOW_PANE: "show pane",
   CLOSED_CAPTIONS_SHOW_BAND: "show strip",
-  PLATFORM_SETTING: "Plateform: ",
+  PLATFORM_SETTING: "Platform: ",
   PLATFORM_UNIX: "Unix",
   PLATFORM_ARDUINO: "Arduino",
 };

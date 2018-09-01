@@ -71,7 +71,7 @@ module.exports = {
   CLOSED_CAPTIONS_DOWNLOAD_SELECTED: "télécharger les sous-titres sélectionnés",
   CLOSED_CAPTIONS_SHOW_PANE: "afficher tous les sous-titres",
   CLOSED_CAPTIONS_SHOW_BAND: "afficher le bandeau de sous-titres",
-  'PLATFORM_SETTING:': "Plateforme: ",
+  PLATFORM_SETTING: "Plateforme: ",
   PLATFORM_UNIX: "Unix",
   PLATFORM_ARDUINO: "Arduino",
 };
