@@ -26,6 +26,18 @@ function PlayerControlsSelector (state, props) {
   return {actionTypes, views, getMessage, isReady, isPlaying, isAtEnd, audioTime, duration, volume, isMuted};
 }
 
+function stepSizeOfDuration (duration) {
+  /* Try to fit 40 steps. */
+  const step = Math.ceil(duration / (40 * 1000));
+  const nums = [1, 2, 5, 10, 15, 30, 60, 90, 120, 150, 240, 300, 600];
+  for (let num of nums) {
+    if (step <= num) {
+      return num * 1000;
+    }
+  }
+  return false;
+}
+
 class PlayerControls extends React.PureComponent {
 
   render () {
@@ -35,13 +47,14 @@ class PlayerControls extends React.PureComponent {
     const showPausePlayback = isPlaying;
     const canPausePlayback = isPlaying;
     const canStep = isReady || isPlaying;
+    const {labelStepSize} = this.state;
     return (
       <div id='player-controls'>
         <div className='player-controls-row row' style={{width: '100%', marginTop: '5px'}}>
           <div className="player-slider-container">
             {!Number.isNaN(duration) &&
               <Slider value={audioTime} onChange={this.onSeek}
-                stepSize={100} labelStepSize={30000} min={0} max={duration}
+                stepSize={100} labelStepSize={labelStepSize} min={0} max={duration}
                 labelRenderer={formatTime} />}
           </div>
         </div>
@@ -84,6 +97,29 @@ class PlayerControls extends React.PureComponent {
       </div>
     );
   };
+
+  state = {
+    labelStepFor: 0,
+    labelStepSize: 30000
+  };
+
+  componentDidMount () {
+    const {duration} = this.props;
+    if (duration) {
+      const labelStepSize = stepSizeOfDuration(duration);
+      this.setState({labelStepFor: duration, labelStepSize});
+    }
+  }
+
+  componentDidUpdate () {
+    const {duration} = this.props;
+    if (duration && duration !== this.state.labelStepFor) {
+      const labelStepSize = stepSizeOfDuration(duration);
+      if (labelStepSize !== this.state.labelStepSize) {
+        this.setState({labelStepFor: duration, labelStepSize});
+      }
+    }
+  }
 
   onStartPlayback = () => {
     this.props.dispatch({type: this.props.actionTypes.playerStart});
