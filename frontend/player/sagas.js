@@ -202,7 +202,7 @@ function* replaySaga (app, {type, payload}) {
         /* Extend a short audio to the timestamp of the last event. */
         endTime = instants[instants.length - 1].t;
       }
-      if (endTime < audioTime || audioTime + 100 < endTime) {
+      if (endTime < audioTime || audioTime + 2000 < endTime) {
         /* Audio time has jumped. */
         yield call(resetToAudioTime, app, endTime);
       } else {
