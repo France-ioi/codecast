@@ -2,6 +2,8 @@
 import update from 'immutability-helper';
 
 import {updateCurrentItem} from './utils';
+import {getPersistentOptions} from './options';
+import {takeLatest, put, select} from 'redux-saga/effects';
 
 export default function (bundle) {
 
@@ -17,6 +19,19 @@ export default function (bundle) {
      has changed due to time advancing. */
   bundle.addReducer('playerTick', playerTickReducer);
 
+  bundle.addSaga(function* () {
+    const scope = yield select(state => state.get('scope'));
+    /* When the player is ready, automatically reload the last selected
+       subtitles language, if available. */
+    yield takeLatest(scope.playerReady, function* () {
+      const {language} = getPersistentOptions();
+      const {availableOptions} = yield select(state => state.get('subtitles'));
+      if (language && language !== "none" && language in availableOptions) {
+        const option = availableOptions[language];
+        yield put({type: scope.subtitlesLoadFromUrl, payload: option});
+      }
+    });
+  });
 }
 
 function playerReadyReducer (state, {payload: {baseDataUrl, data}}) {

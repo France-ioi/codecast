@@ -8,6 +8,7 @@ import paneBundle from './pane';
 import bandBundle from './band';
 import replayBundle from './replay';
 import editorBundle from './editor';
+import {getPersistentOptions, setPersistentOption} from './options';
 
 export default function (bundle) {
 
@@ -29,7 +30,8 @@ export default function (bundle) {
 
 }
 
-function initReducer (state) {
+function initReducer (state, action) {
+  const {paneEnabled, bandEnabled} = getPersistentOptions();
   return state
     .set('subtitles', {
       langOptions: [
@@ -37,8 +39,8 @@ function initReducer (state) {
         {value: 'en-US', label: "English",  countryCode: 'us'},
       ],
       editing: false,
-      paneEnabled: false,
-      bandEnabled: true,
+      paneEnabled,
+      bandEnabled,
       /* player-specific */
       filterText: '',
       filterRegexp: null,
@@ -56,6 +58,7 @@ function subtitlesEditingChangedReducer (state, {payload: {editing}}) {
 function subtitlesPaneEnabledChangedReducer (state, {payload: {value}}) {
   state = state.update('subtitles', subtitles => ({...subtitles, paneEnabled: value}));
   state = updateSubtitlesPaneVisibility(state);
+  setPersistentOption('paneEnabled', value);
   return state;
 }
 
@@ -72,5 +75,6 @@ function updateSubtitlesPaneVisibility (state) {
 }
 
 function subtitlesBandEnabledChangedReducer (state, {payload: {value}}) {
+  setPersistentOption('bandEnabled', value);
   return state.update('subtitles', subtitles => ({...subtitles, bandEnabled: value}));
 }
