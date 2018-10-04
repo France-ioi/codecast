@@ -31,7 +31,7 @@ class LoginScreen extends React.PureComponent {
         <h3 style={{margin: '0 0 10px 0'}}>{"Select a login option"}</h3>
         <ButtonGroup large={true} vertical={true}>
           {authProviders && authProviders.map((provider) =>
-            <a href={`${baseUrl}/auth/${provider}`} target='_blank' key={provider} className='bp3-button'>{provider}</a>)}
+            <a href={`${baseUrl}/auth/${provider}`} target='login' key={provider} className='bp3-button'>{provider}</a>)}
         </ButtonGroup>
       </div>
     );
@@ -49,7 +49,7 @@ class LogoutButton extends React.PureComponent {
     const {user, baseUrl} = this.props;
     if (!user || !user.login) return false;
     return (
-      <a href={`${baseUrl}/logout`} target='_blank' className='btn btn-default'>
+      <a href={`${baseUrl}/logout`} target='login' className='btn btn-default'>
         <Icon icon='log-out'/>
         {` ${user.login}`}
       </a>
