@@ -139,9 +139,9 @@ export default function link (rootBuilder) {
     }
   } else {
     enhancer = applyMiddleware(sagaMiddleware);
-  for (let other of enhancers) {
-    enhancer = compose(enhancer, other);
-  }
+    for (let other of enhancers) {
+      enhancer = compose(enhancer, other);
+    }
   }
 
   // Create the store.

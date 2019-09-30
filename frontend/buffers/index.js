@@ -160,7 +160,7 @@ function BufferEditorSelector (state, props) {
   return {actionTypes, getMessage};
 }
 
-function initReducer (state, {payload: {source, input}}) {
+function initReducer (state, {payload: {options: {source, input}}}) {
   state = state.set('buffers', Immutable.Map({
     source: BufferState(),
     input: BufferState(),

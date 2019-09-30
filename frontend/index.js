@@ -4,6 +4,7 @@ import 'es6-shim';
 import 'array.prototype.fill'; // Array.prototype.fill
 import 'es6-symbol/implement'; // Symbol.iterator
 
+import url from 'url';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
@@ -80,9 +81,22 @@ const Codecast = window.Codecast = {store, scope, restart};
     token: string
   }
 */
+
+function clearUrl() {
+  const currentUrl = url.parse(document.location.href, true)
+  delete currentUrl.search
+  delete currentUrl.query.source
+  window.history.replaceState(null, document.title, url.format(currentUrl))
+}
+
 Codecast.start = function (options) {
 
   store.dispatch({type: scope.init, payload: {options}});
+
+  // remove source from url wihtout reloading
+  if (options.source) {
+    clearUrl();
+  }
   // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
   /* Run the sagas (must be done before calling autoLogin) */
