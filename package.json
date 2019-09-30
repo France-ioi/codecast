@@ -104,5 +104,8 @@
     "webpack-dev-middleware": "^1.10.0",
     "worker-loader": "^1.1.0"
   },
-  "false": {}
+  "false": {},
+  "devDependencies": {
+    "http-proxy-middleware": "^0.20.0"
+  }
 }

@@ -7,6 +7,7 @@ import bodyParser from 'body-parser';
 import {spawn} from 'child_process';
 import AnsiToHtml from 'ansi-to-html';
 import url from 'url';
+import proxy from 'http-proxy-middleware';
 
 import * as upload from './upload';
 import directives from './directives';
@@ -55,6 +56,14 @@ function buildApp (config, store, callback) {
         moduleTrace: false,
       }
     }));
+
+    app.use('/examples/**',proxy(
+      {
+        target: 'http://172.17.0.2:8002',
+        pathRewrite: {
+          '/next/examples/': '/'
+        }
+      }));
   } else {
     // Production route: /build serves static files in build/
     app.use('/build', express.static(path.join(rootDir, 'build')));
