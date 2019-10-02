@@ -148,7 +148,12 @@ module.exports = function (app, config, callback) {
         "ORDER BY `priority` DESC"
       ].join(' ');
       db.query(q, [user_id], function (err, rows) {
-        if (err) return done('database error');
+        if (err) {
+          if (err.code === 'ER_NO_SUCH_TABLE') {
+            return queryLegacyUserConfig();
+          }
+          return done('database error');
+        }
         if (rows.length === 0) {
           // No grants, fall back to querying legacy user_configs table.
           return queryLegacyUserConfig();
