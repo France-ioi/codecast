@@ -66,6 +66,9 @@ module.exports = function (app, config, callback) {
           }
           req.session.identity = identity;
           req.session.user_id = identity.id;
+          if (process.env.NODE_ENV === 'development') {
+            console.log('user_id :', identity.id);
+          }
           getUserConfig(identity.id, function (err, userConfig) {
             if (err) return res.render('after_login', {error: err.toString()});
             req.session.grants = userConfig.grants;

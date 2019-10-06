@@ -57,7 +57,7 @@ function buildApp (config, store, callback) {
       }
     }));
 
-    app.use('/examples/**',proxy(
+    app.use('/examples/**', proxy(
       {
         target: 'http://172.17.0.2:8002',
         pathRewrite: {
@@ -143,7 +143,7 @@ function addBackendRoutes (app, config, store) {
      grants. */
   app.post('/upload', function (req, res) {
     config.getUserConfig(req, function (err, userConfig) {
-      selectTarget (userConfig, req.body, function (err, target) {
+      selectTarget(userConfig, req.body, function (err, target) {
         if (err) return res.json({error: err.toString()});
         const s3client = upload.makeS3UploadClient(target);
         const {s3Bucket, uploadPath: uploadDir} = target;
@@ -162,12 +162,132 @@ function addBackendRoutes (app, config, store) {
     });
   });
 
+
+  app.get('/dev-list-uploads', function (req, res) {
+    const target = {
+      "s3AccessKeyId": "AKIAQ7WFAXNE4RXMG2EV",
+      "s3SecretAccessKey": "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",
+      "s3Region": "eu-central-1",
+      "s3Bucket": "dulanjala-codecast",
+      "uploadPath": "uploads"
+    }
+
+    const s3 = upload.makeS3Client(target);
+    var params = {
+      Bucket: target.s3Bucket,
+      MaxKeys: 10
+    };
+    s3.listObjectsV2(params, function (err, data) {
+      if (err) return res.json({error: err.toString()}); // an error occurred
+      else res.json({data});
+    });
+  })
+
+  if (process.env.NODE_ENV === 'development') {
+    // put your data.mp3,data.json,data.srt into 'backend/temp' foler
+    // Make a json post request (with 'uploadId' param for custom id)
+    // Note: remember to set the srt lang code in 'uploadSrtPostFormOptions'
+    app.post('/dev-upload', function (req, res) {
+
+      // set your traget config
+      const target = {
+        "s3AccessKeyId": "AKIAQ7WFAXNE4RXMG2EV",
+        "s3SecretAccessKey": "OYB3brkRcmVGr62Qv5RC1dhVUTxlorNQtIZh6ai6",
+        "s3Region": "eu-central-1",
+        "s3Bucket": "dulanjala-codecast",
+        "uploadPath": "uploads"
+      }
+
+      if (
+        target.s3AccessKeyId === '' ||
+        target.s3SecretAccessKey === '' ||
+        target.s3Region === '' ||
+        target.s3Bucket === '' ||
+        target.uploadPath === ''
+      ) {
+        return res.json({error: 'set your target config first'});
+      }
+
+      const s3client = upload.makeS3UploadClient(target);
+      const {s3Bucket, uploadPath: uploadDir} = target;
+      const id = (req.body.uploadId !== undefined) ? req.body.uploadId : Date.now().toString();
+      const base = `${uploadDir}/${id}`;
+
+
+      const mp3file = path.join(__dirname, 'temp/data.mp3')
+      const jsonfile = path.join(__dirname, 'temp/data.json')
+      const srtfile = path.join(__dirname, 'temp/data.srt')
+
+
+      fs.access(mp3file, fs.constants.F_OK, (err) => {
+        if (err) return res.json({error: `'${mp3file}' ${err ? 'does not exist' : 'exists'}`});
+      });
+
+      fs.access(jsonfile, fs.constants.F_OK, (err) => {
+        if (err) return res.json({error: `'${jsonfile}' ${err ? 'does not exist' : 'exists'}`});
+      });
+
+      fs.access(srtfile, fs.constants.F_OK, (err) => {
+        if (err) return res.json({error: `'${srtfile}' ${err ? 'does not exist' : 'exists'}`});
+      });
+
+
+      const uploadMp3PostFormOptions = {
+        data: fs.createReadStream(mp3file),
+        key: `${base}.mp3`,
+        extension: 'mp3',
+        bucket: s3Bucket,
+        acl: 'public-read'
+      };
+
+      const uploadJsonPostFormOptions = {
+        data: fs.createReadStream(jsonfile),
+        key: `${base}.json`,
+        extension: 'json',
+        bucket: s3Bucket,
+        acl: 'public-read'
+      };
+
+      const uploadSrtPostFormOptions = {
+        data: fs.createReadStream(srtfile),
+        key: `${base}_en-US.srt`, // replace 'en-Us' with correct Lang code of the srt
+        extension: 'srt',
+        bucket: s3Bucket,
+        acl: 'public-read'
+      };
+
+
+      const uploads = {
+        uploadId: id
+      };
+
+      s3client.upload(uploadMp3PostFormOptions, function (err, _url) {
+
+        if (err) return res.json({error: err.toString(), uploads});
+        uploads.mp3 = 'ok';
+
+        s3client.upload(uploadJsonPostFormOptions, function (err, _url) {
+          if (err) return res.json({error: err.toString(), uploads});
+          uploads.json = 'ok';
+
+          s3client.upload(uploadSrtPostFormOptions, function (err, _url) {
+            if (err) return res.json({error: err.toString(), uploads});
+            uploads.srt = 'ok';
+            const baseUrl = `https://${s3Bucket}.s3.amazonaws.com/${base}`;
+            return res.json({baseUrl, uploads});
+          });
+        });
+      });
+    });
+
+  }
+
   /* Perform the requested `changes` to the codecast at URL `base`.
      The `base` URL must identify an S3 Target in the user's grants. */
   app.post('/save', function (req, res) {
     config.getUserConfig(req, function (err, userConfig) {
       const {s3Bucket, uploadPath, id} = parseCodecastUrl(req.body.base);
-      selectTarget (userConfig, {s3Bucket, uploadPath}, function (err, target) {
+      selectTarget(userConfig, {s3Bucket, uploadPath}, function (err, target) {
         if (err) return res.json({error: err.toString()});
         const {changes} = req.body;
         store.dispatch({type: 'SAVE', payload: {target, id, changes, req, res}});

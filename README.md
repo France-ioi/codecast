@@ -25,6 +25,14 @@ add rows in user_configs where value is a json object with keys
 "s3AccessKeyId", "s3SecretAccessKey", "s3Region", "s3Bucket", and
 "uploadPath".  The row with user_id 0 is used for guest settings.
 
+
+1. setup codecast-examples project and proxy it
+check: search backend/server.js for "app.use('/examples/**'", replace the ip with examples server ip, also install a cors plugin in your browser to get rid of cors issues..
+
+2. when login in for the first time in development, check the console log for the user_id, which you need to add the db row for the user, that's meantioned above
+
+3. for uploading your own codecasts for your dev setup, use "/dev-upload" url, add in backend/server.js, instructions are in there
+
 Start with these commands:
 
     npm install
