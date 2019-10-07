@@ -124,24 +124,9 @@ export default function link (rootBuilder) {
 
   // Compose the enhancers.
   const sagaMiddleware = createSagaMiddleware();
-  // let enhancer = applyMiddleware(sagaMiddleware);
-  // for (let other of enhancers) {
-  //   enhancer = compose(enhancer, other);
-  // }
-
-  let enhancer;
-  if (process.env.NODE_ENV === 'development') {
-    const composeEnhancers =
-      window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-    enhancer = composeEnhancers(applyMiddleware(sagaMiddleware));
-    for (let other of enhancers) {
-      enhancer = composeEnhancers(enhancer, other);
-    }
-  } else {
-    enhancer = applyMiddleware(sagaMiddleware);
-    for (let other of enhancers) {
-      enhancer = compose(enhancer, other);
-    }
+  let enhancer = applyMiddleware(sagaMiddleware);
+  for (let other of enhancers) {
+    enhancer = compose(enhancer, other);
   }
 
   // Create the store.
