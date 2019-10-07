@@ -34,6 +34,7 @@ export function getSubtitles (url) {
     var req = request.get(url);
     req.set('Accept', 'text/plain'); // XXX mime-type for srt?
     req.end(function (err, res) {
+      if (err && err.statusCode === 200) return resolve(err.rawResponse);
       if (err) return reject({err, res});
       resolve(res.text);
     });
