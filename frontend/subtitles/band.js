@@ -38,17 +38,22 @@ function subtitlesBandMovedReducer (state, {payload: {y}}) {
 }
 
 function SubtitlesBandSelector (state, props) {
-  const {loaded, editing, bandEnabled} = state.get('subtitles');
-  if (!loaded || (!editing && !bandEnabled)) {
+  const {loaded, editing, bandEnabled, audioTime,
+    items, currentIndex, itemVisible, isMoving, offsetY
+  } = state.get('subtitles');
+
+  const item = items && items[currentIndex]
+  const {intervals} = state.getIn(['editor', 'trim']);
+  const selectedInterval = intervals.get(Math.round(audioTime));
+  if ((selectedInterval.value.mute && item && selectedInterval.start <= item.start) || !loaded || (!editing && !bandEnabled)) {
     return {hidden: true};
   }
   const geometry = state.get('mainViewGeometry');
-  const {items, currentIndex, itemVisible, isMoving, offsetY} = state.get('subtitles');
   const windowHeight = state.get('windowHeight');
   const scope = state.get('scope');
   return {
     top: windowHeight - 60,
-    active: itemVisible, item: items && items[currentIndex], isMoving, offsetY, geometry, windowHeight,
+    active: itemVisible, item, isMoving, offsetY, geometry, windowHeight,
     beginMove: scope.subtitlesBandBeginMove,
     endMove: scope.subtitlesBandEndMove,
     doMove: scope.subtitlesBandMoved,
