@@ -409,7 +409,84 @@ function trimEvents (data, intervals) {
     version: RECORDING_FORMAT_VERSION,
     events,
     subtitles: []
-  })], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
+
+function trimSubtitles (data, intervals) {
+  function getStartEndIndexes (items, interval) {
+    let indexStart = findSubtitleIndex(items, interval.start);
+    if (items[indexStart].start !== interval.start) {
+      indexStart += 1;
+    }
+    let indexEnd = findSubtitleIndex(items, interval.end);
+    if (items[indexEnd].start === interval.end) {
+      indexEnd -= 1;
+    }
+    return [indexStart, indexEnd];
+  }
+
+  function updateSubtitle (items, intervals) {
+    const last = items[items.length - 1].end;
+    let start = items[0].start;
+    let skipOffset = 0;
+    const outItems = [...items];
+
+    while (start + 1 < last) {
+      const interval = intervals.get(start + 1);
+      const [startIndex, endIndex] = getStartEndIndexes(items, interval);
+
+      // clean out skip/mute items
+      if (interval.value.mute) {
+        // add empty item to mute
+        const emptyItem = {
+          start: items[startIndex].start - skipOffset,
+          end: items[endIndex].end - skipOffset,
+        };
+        const muteStartIndex = (items[startIndex].start === outItems[startIndex].start)
+        ? startIndex : findSubtitleIndex(outItems, items[startIndex].start);
+        outItems.splice(muteStartIndex, endIndex - startIndex + 1, emptyItem);
+      }
+      else if (interval.value.skip) {
+        const prevToStartIndex = startIndex - 1;
+        const prevToStartItem = items[prevToStartIndex];
+        // remove skipoffset, came from previous skips
+        const skipMergedItemStart = prevToStartItem.start - skipOffset;
+        skipOffset += interval.end - interval.start;
+        const skipMergedItem = {
+          start: skipMergedItemStart,
+          end: items[endIndex].end - skipOffset,
+        }
+        if ('text' in prevToStartItem) {
+          skipMergedItem.text = prevToStartItem.text;
+        }
+        const skipStartIndex = (prevToStartItem.start === outItems[prevToStartIndex].start)
+        ? prevToStartIndex : findSubtitleIndex(outItems, skipMergedItemStart);
+        outItems.splice(skipStartIndex, endIndex - prevToStartIndex + 1, skipMergedItem);
+      }
+      else {
+        if (skipOffset !== 0) {
+          // update skipoffset for all items in the interval,
+          // not just the items that start inside of it
+          const updatedInterval = {
+            start: interval.start - skipOffset,
+            end: interval.end - skipOffset,
+          }
+          const [updateStart, updateEnd] = getStartEndIndexes(outItems, updatedInterval);
+
+          for (let i = updateStart; i <= updateEnd; i++) {
+            outItems[i] = {
+              ...outItems[i],
+              start: outItems[i].start - skipOffset,
+              end: outItems[i].end - skipOffset,
+            };
+          }
+        }
+      }
+
+      start = items[endIndex].end;
+    }
+    return srtStringify(outItems);
+  }
+
+  return data.map(({key, items}) => ({key, removed: false, text: updateSubtitle(items, intervals)}));
 }
 
 function* trimEditorPrepareUpload (target) {
