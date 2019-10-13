@@ -1,5 +1,7 @@
 
 import React from 'react';
+import url from 'url';
+import srtStringify from 'subtitle/lib/stringify';
 import {AnchorButton, Button, Checkbox, FormGroup, ProgressBar, HTMLSelect, Icon, Intent, Spinner} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
@@ -15,6 +17,8 @@ import FullWaveform from './waveform/full';
 import ExpandedWaveform from './waveform/expanded';
 import intervalTree from './interval_tree';
 import {findInstantIndex} from '../player/utils';
+import {postJson} from '../common/utils';
+import {findSubtitleIndex} from '../subtitles/utils';
 
 export default function (bundle, deps) {
 
@@ -116,6 +120,8 @@ const savingSteps = [
   {key: 'assembleAudio', label: "Assembling audio stream"},
   {key: 'encodeAudio', label: "Encoding audio stream"},
   {key: 'uploadAudio', label: "Uploading audio"},
+  {key: 'updateSubtitles', label: "Updating Subtitles"},
+  {key: 'uploadSubtitles', label: "Uploading Subtitles"},
 ];
 
 class TrimEditor extends React.PureComponent {
@@ -344,6 +350,8 @@ function trimEditorSaveReducer (state, _action) {
     assembleAudio: null,
     encodeAudio: null,
     uploadAudio: null,
+    updateSubtitles: null,
+    uploadSubtitles: null,
     progress: 0,
   };
   return state.updateIn(['editor', 'trim'], st => ({...st, saving}));
@@ -371,6 +379,11 @@ function* trimEditorSaveSaga ({payload: {target}}) {
     const worker = yield call(trimEditorAssembleAudio, audioBuffer, intervals);
     const mp3Blob = yield call(trimEditorEncodeAudio, worker);
     yield call(trimEditorUpload, 'uploadAudio', targets.audio, mp3Blob);
+    const subtitles = yield call(trimEditorUpdateSubtitles, intervals);
+    if (!subtitles) {
+      return;
+    }
+    yield call(trimSubtitleUpload, playerUrl, subtitles);
     yield put({type: trimEditorSavingDone, payload: {playerUrl}});
   } catch (ex) {
     console.log('failed', ex);
@@ -409,6 +422,8 @@ function trimEvents (data, intervals) {
     version: RECORDING_FORMAT_VERSION,
     events,
     subtitles: []
+  })], {encoding: "UTF-8", type: "application/json;charset=UTF-8"});
+}
 
 function trimSubtitles (data, intervals) {
   function getStartEndIndexes (items, interval) {
@@ -489,6 +504,24 @@ function trimSubtitles (data, intervals) {
   return data.map(({key, items}) => ({key, removed: false, text: updateSubtitle(items, intervals)}));
 }
 
+function* trimEditorUpdateSubtitles (intervals) {
+  try {
+    const step = 'updateSubtitles';
+    const {trimEditorSavingStep, subtitlesTrimDone} = yield select(state => state.get('scope'));
+    yield put({type: trimEditorSavingStep, payload: {step, status: 'pending'}});
+    const {loaded: subtitleData} = yield select(state => state.getIn(['subtitles', 'trim']));
+    const subtitles = trimSubtitles(subtitleData, intervals); // return [{key, text}]
+    yield put({type: subtitlesTrimDone, payload: {subtitles}});
+    yield put({type: trimEditorSavingStep, payload: {step, progress: 100}});
+    yield put({type: trimEditorSavingStep, payload: {step, status: 'done'}});
+    return subtitles;
+  } catch (error) {
+    console.error('Subtitles Trim Error:', error);
+    yield put({type: trimEditorSavingStep, payload: {step, status: 'error', error: error.toString()}});
+  }
+  yield put({type: trimEditorSavingStep, payload: {step, status: 'error', error: 'unexpected end'}});
+}
+
 function* trimEditorPrepareUpload (target) {
   const {trimEditorSavingStep} = yield select(state => state.get('scope'));
   yield put({type: trimEditorSavingStep, payload: {step: 'prepareUpload', status: 'pending'}});
@@ -567,4 +600,20 @@ function* trimEditorEncodeAudio (worker) {
     });
   yield put({type: trimEditorSavingStep, payload: {step, status: 'done'}});
   return mp3Blob;
+}
+
+function* trimSubtitleUpload (playerUrl, subtitles) {
+  const {trimEditorSavingStep} = yield select(state => state.get('scope'));
+  yield put({type: trimEditorSavingStep, payload: {step: 'uploadSubtitles', status: 'pending'}});
+  const {baseUrl} = yield select(state => state.get('options'));
+  const urlParsed = url.parse(playerUrl, true);
+  const base = urlParsed.query.base; //newly generated codecast's base
+  const changes = {subtitles};
+  try {
+    yield call(postJson, `${baseUrl}/save`, {base, changes});
+    yield put({type: trimEditorSavingStep, payload: {step: 'uploadSubtitles', progress: 100}});
+    yield put({type: trimEditorSavingStep, payload: {step: 'uploadSubtitles', status: 'done'}});
+  } catch (ex) {
+    yield put({type: trimEditorSavingStep, payload: {step: 'uploadSubtitles', status: 'error', error: ex.toString()}});
+  }
 }

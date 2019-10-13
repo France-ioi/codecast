@@ -124,13 +124,11 @@ export default function link (rootBuilder) {
 
   // Compose the enhancers.
   const sagaMiddleware = createSagaMiddleware();
-  let enhancer = applyMiddleware(sagaMiddleware);
-  for (let other of enhancers) {
-    enhancer = compose(enhancer, other);
-  }
 
   // Create the store.
-  const store = createStore(reducer, null, enhancer);
+  const store = createStore(reducer, null, compose(applyMiddleware(sagaMiddleware), ...enhancers));
+
+  window.store = store;
 
   function finalize (...args) {
     /* Call the deferred callbacks. */

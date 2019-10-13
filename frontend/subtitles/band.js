@@ -43,11 +43,10 @@ function SubtitlesBandSelector (state, props) {
   } = state.get('subtitles');
 
   const item = items && items[currentIndex]
-  const {intervals} = state.getIn(['editor', 'trim']);
-  const selectedInterval = intervals.get(Math.round(audioTime));
-  if ((selectedInterval.value.mute && item && selectedInterval.start <= item.start) || !loaded || (!editing && !bandEnabled)) {
+  if (item && typeof item.text === 'undefined' || !loaded || (!editing && !bandEnabled)) {
     return {hidden: true};
   }
+
   const geometry = state.get('mainViewGeometry');
   const windowHeight = state.get('windowHeight');
   const scope = state.get('scope');

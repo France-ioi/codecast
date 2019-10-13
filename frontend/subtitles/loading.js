@@ -38,6 +38,10 @@ export default function (bundle) {
   bundle.addReducer('subtitlesLoadSucceeded', subtitlesLoadSucceededReducer);
   bundle.defineAction('subtitlesLoadFailed', 'Subtitles.LoadFailed');
   bundle.addReducer('subtitlesLoadFailed', subtitlesLoadFailedReducer);
+  bundle.defineAction('subtitlesLoadForTrimSucceeded', 'Subtitles.Load.Trim.Succeeded');
+  bundle.addReducer('subtitlesLoadForTrimSucceeded', subtitlesLoadForTrimSucceededReducer);
+  bundle.defineAction('subtitlesTrimDone', 'Subtitles.Trim.Done');
+  bundle.addReducer('subtitlesTrimDone', subtitlesTrimDoneReducer);
 
   bundle.addSaga(subtitlesLoadSaga);
 
@@ -71,12 +75,42 @@ function subtitlesLoadFailedReducer (state, {payload: {error}}) {
     {...subtitles, loaded: false, loading: false, lastError: errorText, text: errorText, loadedKey: 'none'}));
 }
 
+function subtitlesLoadForTrimSucceededReducer (state, {payload: {key, items}}) {
+  return state
+    .update('subtitles', subtitles =>
+      update(subtitles, {
+        trim: {
+          loaded: {$push: [{key, items}]}
+        }
+      })
+    );
+}
+
+function subtitlesTrimDoneReducer (state, {payload: {subtitles: data}}) {
+  return state
+    .update('subtitles', subtitles => {
+      const updateObj = {};
+      for (const {key, text} of data) {
+        updateObj[key] = {text: {$set: text}, unsaved: {$set: true}}
+      }
+
+      if (data.length > 0) {
+        return update(subtitles, {
+          availableOptions: updateObj
+        })
+      } else {
+        return subtitles
+      }
+    });
+}
+
 function* subtitlesLoadSaga () {
   const scope = yield select(state => state.get('scope'));
   yield takeLatest(scope.subtitlesLoadFromText, subtitlesLoadFromTextSaga);
   yield takeLatest(scope.subtitlesLoadFromUrl, subtitlesLoadFromUrlSaga);
   yield takeLatest(scope.subtitlesLoadFromFile, subtitlesLoadFromFileSaga);
   yield takeLatest(scope.subtitlesReload, subtitlesReloadSaga);
+  yield takeLatest(scope.trimEditorEnter, subtitlesLoadForTrimSaga);
 }
 
 function* subtitlesLoadFromTextSaga ({payload: {key, text}}) {
@@ -127,5 +161,24 @@ function* subtitlesReloadSaga (_action) {
       text = srtStringify([{start: 0, end: data.events[data.events.length - 1][0], text: ''}]);
     }
     yield put({type: scope.subtitlesLoadFromText, payload: {key, text}});
+  }
+}
+
+function* subtitlesLoadForTrimSaga (_action) {
+  const scope = yield select(state => state.get('scope'));
+  const {availableOptions} = yield select(state => state.get('subtitles'));
+  const availKeys = Object.keys(availableOptions).sort();
+
+  for (const key of availKeys) {
+    const {url} = availableOptions[key];
+    let text = (availableOptions[key].text || '').trim();
+    try {
+      if (!text) {
+        text = yield call(getSubtitles, url);
+      }
+      const items = srtParse(text);
+      yield put({type: scope.subtitlesLoadForTrimSucceeded, payload: {key, items}});
+    } catch (ex) {
+    }
   }
 }

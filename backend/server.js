@@ -162,27 +162,6 @@ function addBackendRoutes (app, config, store) {
     });
   });
 
-
-  app.get('/dev-list-uploads', function (req, res) {
-    const target = {
-      "s3AccessKeyId": "AKIAQ7WFAXNE4RXMG2EV",
-      "s3SecretAccessKey": "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",
-      "s3Region": "eu-central-1",
-      "s3Bucket": "dulanjala-codecast",
-      "uploadPath": "uploads"
-    }
-
-    const s3 = upload.makeS3Client(target);
-    var params = {
-      Bucket: target.s3Bucket,
-      MaxKeys: 10
-    };
-    s3.listObjectsV2(params, function (err, data) {
-      if (err) return res.json({error: err.toString()}); // an error occurred
-      else res.json({data});
-    });
-  })
-
   if (process.env.NODE_ENV === 'development') {
     // put your data.mp3,data.json,data.srt into 'backend/temp' foler
     // Make a json post request (with 'uploadId' param for custom id)
@@ -191,11 +170,11 @@ function addBackendRoutes (app, config, store) {
 
       // set your traget config
       const target = {
-        "s3AccessKeyId": "AKIAQ7WFAXNE4RXMG2EV",
-        "s3SecretAccessKey": "OYB3brkRcmVGr62Qv5RC1dhVUTxlorNQtIZh6ai6",
-        "s3Region": "eu-central-1",
-        "s3Bucket": "dulanjala-codecast",
-        "uploadPath": "uploads"
+        "s3AccessKeyId": "",
+        "s3SecretAccessKey": "",
+        "s3Region": "",
+        "s3Bucket": "",
+        "uploadPath": ""
       }
 
       if (
@@ -252,6 +231,7 @@ function addBackendRoutes (app, config, store) {
         data: fs.createReadStream(srtfile),
         key: `${base}_en-US.srt`, // replace 'en-Us' with correct Lang code of the srt
         extension: 'srt',
+        ContentType: 'text/plain',
         bucket: s3Bucket,
         acl: 'public-read'
       };
