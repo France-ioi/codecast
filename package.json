@@ -102,10 +102,10 @@
     "url-loader": "^0.5.7",
     "webpack": "^3.0.0",
     "webpack-dev-middleware": "^1.10.0",
-    "worker-loader": "^1.1.0"
+    "worker-loader": "^1.1.0",
+    "request": "^2.88.0"
   },
   "false": {},
   "devDependencies": {
-    "http-proxy-middleware": "^0.20.0"
   }
 }

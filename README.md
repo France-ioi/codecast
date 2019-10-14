@@ -27,7 +27,7 @@ add rows in user_configs where value is a json object with keys
 
 
 1. setup codecast-examples project and proxy it
-check: search backend/server.js for "app.use('/examples/**'", replace the ip with examples server ip, also install a cors plugin in your browser to get rid of cors issues..
+to '/examples' also install a cors plugin in your browser to get rid of cors issues..
 
 2. when login in for the first time in development, check the console log for the user_id, which you need to add the db row for the user, that's meantioned above
 
