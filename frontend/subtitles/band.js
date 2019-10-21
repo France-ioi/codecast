@@ -53,8 +53,10 @@ function SubtitlesBandSelector (state, props) {
   const trim = state.getIn(['editor', 'trim']);
   if (trim && trim.intervals) {
     const interval = trim.intervals.get(item.start);
-    if (interval && interval.value.mute && interval.start <= item.start) {
-      textHidden = true;
+    if (interval && (interval.value.mute || interval.value.skip) ) {
+      if (interval.start <= item.start) {
+        textHidden = true;
+      }
     }
   }
 
