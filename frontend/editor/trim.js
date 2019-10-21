@@ -19,6 +19,7 @@ import intervalTree from './interval_tree';
 import {findInstantIndex} from '../player/utils';
 import {postJson} from '../common/utils';
 import {findSubtitleIndex} from '../subtitles/utils';
+import {isMetaProperty} from 'babel-types';
 
 export default function (bundle, deps) {
 
@@ -52,8 +53,10 @@ function editorPrepareReducer (state) {
 }
 
 function trimEditorMarkerAddedReducer (state, {payload: {position}}) {
-  return state.updateIn(['editor', 'trim'], st => ({...st,
-    intervals: st.intervals.split(position)}));
+  return state.updateIn(['editor', 'trim'], st => ({
+    ...st,
+    intervals: st.intervals.split(position)
+  }));
 }
 
 function trimEditorMarkerRemovedReducer (state, {payload: {position}}) {
@@ -134,7 +137,7 @@ class TrimEditor extends React.PureComponent {
       const stepRows = [];
       for (let step of savingSteps) {
         const status = saving[step.key];
-        stepRows.push(<StepRow title={step.label} status={status} />);
+        stepRows.push(<StepRow key={step.key} title={step.label} status={status} />);
         if (status === 'pending') {
           stepRows.push(
             <div key={step.key} style={{margin: '10px 0 20px 0'}}>
@@ -151,18 +154,18 @@ class TrimEditor extends React.PureComponent {
           </div>
           {saving.done &&
             <div style={{textAlign: 'center'}}>
-              <AnchorButton href={saving.playerUrl} target='_blank' text="Open in player"/>
+              <AnchorButton href={saving.playerUrl} target='_blank' text="Open in player" />
             </div>}
         </div>
       );
     }
     return (
       <div>
-        <Button onClick={this._beginEdit} icon={IconNames.EDIT} text={"Edit"}/>
+        <Button onClick={this._beginEdit} icon={IconNames.EDIT} text={"Edit"} />
         <FormGroup label="Target">
           <HTMLSelect options={grantOptions} value={targetUrl} onChange={this.handleTargetChange} />
         </FormGroup>
-        <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"}/>
+        <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"} />
         {savingView}
       </div>
     );
@@ -196,7 +199,7 @@ function StepRow ({title, status}) {
       <td style={{width: '40px', textAlign: 'center'}}>
         {status === 'done' && <Icon icon='tick' intent={Intent.SUCCESS} />}
         {status === 'error' && <Icon icon='cross' intent={Intent.DANGER} />}
-        {status === 'pending' && <Spinner size={20}/>}
+        {status === 'pending' && <Spinner size={20} />}
       </td>
       <td style={status === 'pending' ? {fontWeight: 'bold'} : null}>
         {title}
@@ -298,7 +301,7 @@ function TrimEditorReturnSelector (state) {
 
 class TrimEditorReturn extends React.PureComponent {
   render () {
-    return <Button onClick={this._return} icon='direction-left' text='Back'/>;
+    return <Button onClick={this._return} icon='direction-left' text='Back' />;
   }
   _return = () => {
     this.props.dispatch({type: this.props.return});
@@ -329,11 +332,14 @@ function* trimSaga () {
 function* trimEditorEnterSaga (_action) {
   const {editorControlsChanged, TrimEditorControls, PlayerControls, TrimEditorReturn, switchToScreen} = yield select(state => state.get('scope'));
   /* XXX install return button */
-  yield put({type: editorControlsChanged, payload: {
-    controls: {
-      top: [TrimEditorControls, PlayerControls],
-      floating: [TrimEditorReturn]
-    }}});
+  yield put({
+    type: editorControlsChanged, payload: {
+      controls: {
+        top: [TrimEditorControls, PlayerControls],
+        floating: [TrimEditorReturn]
+      }
+    }
+  });
   yield put({type: switchToScreen, payload: {screen: 'edit'}});
 }
 
@@ -341,6 +347,16 @@ function* trimEditorReturnSaga (_action) {
   const {editorControlsChanged, switchToScreen} = yield select(state => state.get('scope'));
   yield put({type: editorControlsChanged, payload: {controls: {floating: []}}});
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
+
+  const {intervals} = yield select(state => state.getIn(['editor', 'trim']));
+  const {loaded: subtitleData} = yield select(state => state.getIn(['subtitles', 'trim']));
+
+  try {
+    const subtitles = trimSubtitles(subtitleData, intervals);
+    console.log('subtitles :', subtitles);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 function trimEditorSaveReducer (state, _action) {
@@ -362,7 +378,8 @@ function trimEditorSavingDoneReducer (state, {payload: {playerUrl}}) {
     saving: {
       done: {$set: true},
       playerUrl: {$set: playerUrl}
-    }}));
+    }
+  }));
 }
 
 function* trimEditorSaveSaga ({payload: {target}}) {
@@ -426,83 +443,78 @@ function trimEvents (data, intervals) {
 }
 
 function trimSubtitles (data, intervals) {
-  function getStartEndIndexes (items, interval) {
-    let indexStart = findSubtitleIndex(items, interval.start);
-    if (items[indexStart].start !== interval.start) {
-      indexStart += 1;
-    }
-    let indexEnd = findSubtitleIndex(items, interval.end);
-    if (items[indexEnd].start === interval.end) {
-      indexEnd -= 1;
-    }
-    return [indexStart, indexEnd];
-  }
 
   function updateSubtitle (items, intervals) {
     const last = items[items.length - 1].end;
     let start = items[0].start;
-    let skipOffset = 0;
-    const outItems = [...items];
+    let timeSkipped = 0;
+    const outItems = [];
+    const _posData = {start: -1, isContained: false, startIndex: -1, endIndex: 0, end: 0};
+
+    function getIntervalItemData (items, interval) {
+      _posData.start = _posData.end;
+      _posData.startIndex = interval.start !== items[_posData.start].start ? _posData.start + 1 : _posData.start;
+      _posData.isContained = (interval.end <= items[_posData.start].end);
+      if (_posData.isContained) {
+        _posData.end = _posData.start;
+      } else {
+        _posData.end = findSubtitleIndex(items, interval.end);
+      }
+      _posData.endIndex = interval.end === items[_posData.end].start ? _posData.end - 1 : _posData.end;
+      return _posData;
+    }
 
     while (start + 1 < last) {
       const interval = intervals.get(start + 1);
-      const [startIndex, endIndex] = getStartEndIndexes(items, interval);
+      const selectedItems = getIntervalItemData(items, interval);
 
       // clean out skip/mute items
-      if (interval.value.mute) {
-        // add empty item to mute
-        const emptyItem = {
-          start: items[startIndex].start - skipOffset,
-          end: items[endIndex].end - skipOffset,
-        };
-        const muteStartIndex = (items[startIndex].start === outItems[startIndex].start)
-        ? startIndex : findSubtitleIndex(outItems, items[startIndex].start);
-        outItems.splice(muteStartIndex, endIndex - startIndex + 1, emptyItem);
+      if (interval.value.skip) {
+        timeSkipped += interval.end - interval.start;
+        const item = outItems[outItems.length - 1];
+        if (selectedItems.isContained) {
+          item.end -= interval.end - interval.start;
+        } else {
+          item.end = items[selectedItems.endIndex].end - timeSkipped;
+        }
       }
-      else if (interval.value.skip) {
-        const prevToStartIndex = startIndex - 1;
-        const prevToStartItem = items[prevToStartIndex];
-        // remove skipoffset, came from previous skips
-        const skipMergedItemStart = prevToStartItem.start - skipOffset;
-        skipOffset += interval.end - interval.start;
-        const skipMergedItem = {
-          start: skipMergedItemStart,
-          end: items[endIndex].end - skipOffset,
-        }
-        if ('text' in prevToStartItem) {
-          skipMergedItem.text = prevToStartItem.text;
-        }
-        const skipStartIndex = (prevToStartItem.start === outItems[prevToStartIndex].start)
-        ? prevToStartIndex : findSubtitleIndex(outItems, skipMergedItemStart);
-        outItems.splice(skipStartIndex, endIndex - prevToStartIndex + 1, skipMergedItem);
+      else if (interval.value.mute && !selectedItems.isContained) {
+        // add empty item to mute
+        outItems.push({
+          start: outItems[outItems.length - 1].end,
+          end: items[selectedItems.endIndex].end - timeSkipped
+        });
       }
       else {
-        if (skipOffset !== 0) {
-          // update skipoffset for all items in the interval,
-          // not just the items that start inside of it
-          const updatedInterval = {
-            start: interval.start - skipOffset,
-            end: interval.end - skipOffset,
-          }
-          const [updateStart, updateEnd] = getStartEndIndexes(outItems, updatedInterval);
 
-          for (let i = updateStart; i <= updateEnd; i++) {
-            outItems[i] = {
-              ...outItems[i],
-              start: outItems[i].start - skipOffset,
-              end: outItems[i].end - skipOffset,
-            };
+          if (timeSkipped !== 0) {
+            // update skipoffset for all items in the interval,
+            // not just the items that start inside of it
+            for (let i =  (selectedItems.isContained) ? selectedItems.start : selectedItems.startIndex; i <= selectedItems.endIndex; i++) {
+              outItems.push({...items[i], start: items[i].start - timeSkipped, end: items[i].end - timeSkipped});
+            }
+          } else {
+            if (selectedItems.start === 0) {
+              for (let i = selectedItems.start; i <= selectedItems.endIndex; i++) {
+                outItems.push({...items[i]});
+              }
+            } else {
+              for (let i = selectedItems.startIndex; i <= selectedItems.endIndex; i++) {
+                outItems.push({...items[i]});
+              }
+            }
           }
-        }
       }
 
-      start = items[endIndex].end;
+      start = items[selectedItems.endIndex].end;
     }
+
     return srtStringify(outItems);
   }
 
   return data.map(({key, items}) => ({key, removed: false, text: updateSubtitle(items, intervals)}));
 }
+
 
 function* trimEditorUpdateSubtitles (intervals) {
   try {
