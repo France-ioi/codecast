@@ -47,6 +47,18 @@ function SubtitlesBandSelector (state, props) {
     return {hidden: true};
   }
 
+  let textHidden = false;
+
+
+  const trim = state.getIn(['editor', 'trim']);
+  if (trim && trim.intervals) {
+    const interval = trim.intervals.get(item.start);
+    if (interval && interval.value.mute && interval.start <= item.start) {
+      textHidden = true;
+    }
+  }
+
+
   const geometry = state.get('mainViewGeometry');
   const windowHeight = state.get('windowHeight');
   const scope = state.get('scope');
@@ -56,6 +68,7 @@ function SubtitlesBandSelector (state, props) {
     beginMove: scope.subtitlesBandBeginMove,
     endMove: scope.subtitlesBandEndMove,
     doMove: scope.subtitlesBandMoved,
+    textHidden
   };
 }
 
@@ -65,15 +78,16 @@ class SubtitlesBand extends React.PureComponent {
     if (hidden) {
       /* ClickDrag requires a DOM node to attach to, so return a hidden element
          rather than false. */
-      return <div style={{display: 'none'}}/>;
+      return <div style={{display: 'none'}} />;
     }
-    const {active, item, geometry, offsetY, dataDrag: {isMoving}, top} = this.props;
+    const {active, item, geometry, offsetY, dataDrag: {isMoving}, top, textHidden} = this.props;
     const translation = `translate(0px, ${this.state.currentY}px)`;
+
     return (
-      <div className={classnames(['subtitles-band', `subtitles-band-${active?'':'in'}active`, isMoving && 'subtitles-band-moving', 'no-select', `mainView-${geometry.size}`])}
+      <div className={classnames(['subtitles-band', `subtitles-band-${active ? '' : 'in'}active`, isMoving && 'subtitles-band-moving', 'no-select', `mainView-${geometry.size}`])}
         style={{top: `${top}px`, transform: translation, width: `${geometry.width}px`}} ref={this._refBand} >
         <div className='subtitles-band-frame'>
-          {item && <p className='subtitles-text'>{item.text}</p>}
+          {item && <p className='subtitles-text' style={{textDecoration: textHidden ? 'line-through' : 'none'}}>{item.text}</p>}
         </div>
       </div>
     );
