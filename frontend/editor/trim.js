@@ -140,7 +140,7 @@ class TrimEditor extends React.PureComponent {
         stepRows.push(<StepRow key={step.key} title={step.label} status={status} />);
         if (status === 'pending') {
           stepRows.push(
-            <div key={step.key} style={{margin: '10px 0 20px 0'}}>
+            <div key={`${step.key}_progress`} style={{margin: '10px 0 20px 0'}}>
               <ProgressBar value={saving.progress} />
             </div>
           );
@@ -348,15 +348,6 @@ function* trimEditorReturnSaga (_action) {
   yield put({type: editorControlsChanged, payload: {controls: {floating: []}}});
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
 
-  const {intervals} = yield select(state => state.getIn(['editor', 'trim']));
-  const {loaded: subtitleData} = yield select(state => state.getIn(['subtitles', 'trim']));
-
-  try {
-    const subtitles = trimSubtitles(subtitleData, intervals);
-    console.log('subtitles :', subtitles);
-  } catch (error) {
-    console.error(error);
-  }
 }
 
 function trimEditorSaveReducer (state, _action) {
@@ -470,20 +461,21 @@ function trimSubtitles (data, intervals) {
 
       // clean out skip/mute items
       if (interval.value.skip) {
-        timeSkipped += interval.end - interval.start;
-        const item = outItems[outItems.length - 1];
         if (selectedItems.isContained) {
-          item.end -= interval.end - interval.start;
+          outItems[outItems.length - 1].end -= interval.end - interval.start;
+          timeSkipped += interval.end - interval.start;
         } else {
-          item.end = items[selectedItems.endIndex].end - timeSkipped;
+          const itemStartIndex = interval.start - timeSkipped;
+          outItems[outItems.length - 1].end = itemStartIndex;
+          timeSkipped += interval.end - interval.start;
+          outItems.push({
+            start: itemStartIndex,
+            end: items[selectedItems.endIndex].end - timeSkipped
+          });
         }
       }
       else if (interval.value.mute && !selectedItems.isContained) {
-        // add empty item to mute
-        outItems.push({
-          start: outItems[outItems.length - 1].end,
-          end: items[selectedItems.endIndex].end - timeSkipped
-        });
+        outItems[outItems.length - 1].end = items[selectedItems.endIndex].end - timeSkipped;
       }
       else {
 
@@ -506,7 +498,7 @@ function trimSubtitles (data, intervals) {
           }
       }
 
-      start = items[selectedItems.endIndex].end;
+      start = interval.end;
     }
 
     return srtStringify(outItems);
@@ -514,7 +506,6 @@ function trimSubtitles (data, intervals) {
 
   return data.map(({key, items}) => ({key, removed: false, text: updateSubtitle(items, intervals)}));
 }
-
 
 function* trimEditorUpdateSubtitles (intervals) {
   try {
