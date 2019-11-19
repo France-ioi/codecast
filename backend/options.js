@@ -1,3 +1,4 @@
+import {buildStatisticsOptions} from "./statistics";
 
 export function buildCommonOptions(start, query) {
 
@@ -63,7 +64,7 @@ export function buildCommonOptions(start, query) {
 
 export function buildOptions(config, req, start, callback) {
   const {baseUrl, examplesUrl} = config;
-  const options = buildCommonOptions(start, req.query);
+  let options = buildCommonOptions(start, req.query);
   options.baseUrl = config.baseUrl;
   options.callbackUrl = req.originalUrl;
   if (/sandbox|recorder/.test(start)) {
@@ -72,7 +73,11 @@ export function buildOptions(config, req, start, callback) {
   if (/editor|player/.test(start)) {
     options.baseDataUrl = req.query.base;
   }
-  if (/recorder|editor/.test(start)) {
+  if (/sandbox|editor|statistics/.test(start)) {
+    options.isStatisticsReady = config.database;
+    options = buildStatisticsOptions(config, options);
+  }
+  if (/recorder|editor|statistics/.test(start)) {
     return config.optionsHook(req, options, callback);
   } else {
     return callback(null, options);

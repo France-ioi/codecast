@@ -129,6 +129,17 @@ function addBackendRoutes (app, config, store) {
     });
   });
 
+  app.get('/statistics', function (req, res) {
+    buildOptions(config, req, 'statistics', function (err, options) {
+      if (err) return res.send(`Error: ${err.toString()}`);
+      res.render('index', {
+        development: config.isDevelopment,
+        rebaseUrl: config.rebaseUrl,
+        options,
+      });
+    });
+  });
+
   /* Return upload form data.  The query must specify the (s3Bucket, uploadPath)
      pair identifying the S3 target, which must correspond to one of the user's
      grants. */

@@ -23,6 +23,7 @@ import sandboxBundle from './sandbox/index';
 import playerBundle from './player/index';
 import recorderBundle from './recorder/index';
 import editorBundle from './editor/index';
+import statisticsBundle from './statistics/index';
 
 const {store, scope, actionTypes, views, finalize, start} = link(function (bundle, deps) {
 
@@ -35,6 +36,7 @@ const {store, scope, actionTypes, views, finalize, start} = link(function (bundl
   bundle.include(playerBundle);
   bundle.include(recorderBundle);
   bundle.include(editorBundle);
+  bundle.include(statisticsBundle);
 
   if (process.env.NODE_ENV === 'development') {
     bundle.addEarlyReducer(function (state, action) {
@@ -131,6 +133,14 @@ Codecast.start = function (options) {
         }
       });
       App = scope.EditorApp;
+      break;
+    case 'statistics':
+      autoLogin();
+      store.dispatch({
+        type: scope.statisticsPrepare,
+        payload: {}
+      });
+      App = scope.StatisticsApp;
       break;
     case 'sandbox':
       App = scope.SandboxApp;
