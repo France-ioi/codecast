@@ -6,14 +6,14 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import {spawn} from 'child_process';
 import AnsiToHtml from 'ansi-to-html';
-import url from 'url';
 import * as upload from './upload';
 import directives from './directives';
 import Arduino from './arduino';
 import oauth from './oauth';
 import startWorker from './worker';
-import {buildOptions} from './options';
+import {buildOptions, parseCodecastUrl} from './options';
 import addOfflineRoutes from './offline';
+import {statisticsSearch, logCompileData, logCodecastLoadData} from './statistics';
 
 function buildApp (config, store, callback) {
 
@@ -277,6 +277,47 @@ function addBackendRoutes (app, config, store) {
     });
   });
 
+  const statisticsApi = express();
+  statisticsApi.post('/search', function (req, res) {
+    config.getUserConfig(req, async function (err, userConfig) {
+      if (err) return res.json({error: err.toString()});
+      try {
+        const {data} = await statisticsSearch(config, req.body);
+        return res.json({data});
+      } catch (err) {
+        return res.json({error: err.toString()});
+      }
+    });
+  });
+
+  statisticsApi.post('/logCodecast', function (req, res) {
+    config.getUserConfig(req, async function (err, userConfig) {
+      if (err) return res.json({error: err.toString()});
+      try {
+        const {
+          codecast, name, folder, bucket, referer, browser, language, resolution
+        } = req.body;
+        logCodecastLoadData(config, {
+          codecast,
+          name,
+          folder,
+          bucket,
+          browser,
+          language,
+          resolution,
+          viewed: 1,
+          referer: referer || req.headers.referer
+        });
+        return res.json({});
+      } catch (err) {
+        return res.json({error: err.toString()});
+      }
+    });
+  });
+
+
+  app.use('/statistics/api', statisticsApi);
+
   function selectTarget ({grants}, {s3Bucket, uploadPath}, callback) {
     for (let grant of grants) {
       if (grant.s3Bucket === s3Bucket && grant.uploadPath === uploadPath) {
@@ -286,23 +327,15 @@ function addBackendRoutes (app, config, store) {
     return callback('target unspecified');
   }
 
-  function parseCodecastUrl (base) {
-    const {hostname, pathname} = url.parse(base);
-    const s3Bucket = hostname.replace('.s3.amazonaws.com', '');
-    const idPos = pathname.lastIndexOf('/');
-    const uploadPath = pathname.slice(1, idPos); // skip leading '/'
-    const id = pathname.slice(idPos + 1);
-    return {s3Bucket, uploadPath, id};
-  }
-
   app.post('/translate', function (req, res) {
     const env = {LANGUAGE: 'c'};
     env.SYSROOT = path.join(config.rootDir, 'sysroot');
-    const {source, platform} = req.body;
+    const {source, platform, origin: folder} = req.body;
     if (platform === 'arduino') {
       env.SOURCE_WRAPPER = "wrappers/Arduino";
       env.LANGUAGE = 'c++';
     }
+    const startTime = process.hrtime();
     const cp = spawn('./c-to-json', {env: env});
     //env.LD_LIBRARY_PATH = path.join(config.rootDir, 'lib');
     const chunks = [];
@@ -331,6 +364,14 @@ function addBackendRoutes (app, config, store) {
           res.json({diagnostics: convert.toHtml(errorChunks.join(''))});
         } else {
           try {
+            const endTime = process.hrtime(startTime);
+            const timeSpentInMilliseconds = (endTime[0] * 1000) + (endTime[1] / 1000000);
+            logCompileData(config, {
+              folder,
+              compile_time: timeSpentInMilliseconds,
+              referer: req.headers.referer || null
+            })
+
             let ast = JSON.parse(chunks.join(''));
             const convert = new AnsiToHtml();
             if (platform === 'arduino') {

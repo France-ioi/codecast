@@ -27,7 +27,8 @@
     "@babel/preset-env": "^7.0.0-beta.36",
     "@babel/preset-react": "^7.0.0-beta.36",
     "@babel/runtime": "^7.0.0-beta.36",
-    "@blueprintjs/core": "^3.5.1",
+    "@blueprintjs/core": "^3.21.0",
+    "@blueprintjs/datetime": "^3.15.1",
     "@tyriar/fibonacci-heap": "^1.0.10",
     "adt": "^0.7.2",
     "ansi-to-html": "^0.4.1",
@@ -88,6 +89,7 @@
     "react-transition-group": "^2.3.0",
     "redux": "^3.6.0",
     "redux-saga": "^0.16.0",
+    "request": "^2.88.0",
     "resolve-url-loader": "^2.2.0",
     "s3-browser-direct-upload": "^0.1.2",
     "sass-loader": "^6.0.1",
@@ -102,10 +104,8 @@
     "url-loader": "^0.5.7",
     "webpack": "^3.0.0",
     "webpack-dev-middleware": "^1.10.0",
-    "worker-loader": "^1.1.0",
-    "request": "^2.88.0"
+    "worker-loader": "^1.1.0"
   },
   "false": {},
-  "devDependencies": {
-  }
+  "devDependencies": {}
 }

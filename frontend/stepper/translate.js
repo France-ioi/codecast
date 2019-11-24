@@ -89,13 +89,13 @@ export default function (bundle, deps) {
     yield takeLatest(deps.translate, function* (action) {
       const sourceModel = yield select(deps.getBufferModel, 'source');
       const source = sourceModel.get('document').toString();
-      const {platform, baseUrl} = yield select(state => state.get('options'));
+      const {platform, baseUrl, origin} = yield select(state => state.get('options'));
 
       yield put({type: deps.translateStarted, source});
       let response, syntaxTree;
       try {
         /* XXX replace 'translate' with a computed absolute path */
-        response = yield call(asyncRequestJson, `${baseUrl}/translate`, {source, platform});
+        response = yield call(asyncRequestJson, `${baseUrl}/translate`, {source, platform, origin});
       } catch (ex) {
         response = {error: ex.toString()};
       }

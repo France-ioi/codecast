@@ -3,6 +3,7 @@ import 'es5-shim';
 import 'es6-shim';
 import 'array.prototype.fill'; // Array.prototype.fill
 import 'es6-symbol/implement'; // Symbol.iterator
+import './style.scss';
 
 import url from 'url';
 import React from 'react';
@@ -13,7 +14,6 @@ import createSagaMiddleware from 'redux-saga';
 import Immutable from 'immutable';
 import 'rc-slider/dist/rc-slider.css?global';
 
-import style from './style.scss';
 
 // import sagaMonitor from './sagaMonitor';
 import link from './linker';
@@ -138,7 +138,7 @@ Codecast.start = function (options) {
       autoLogin();
       store.dispatch({
         type: scope.statisticsPrepare,
-        payload: {}
+        payload: {isReady: options.isStatisticsReady}
       });
       App = scope.StatisticsApp;
       break;
