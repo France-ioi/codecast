@@ -56,29 +56,65 @@ export async function logCodecastLoadData (config, logData) {
 export async function logCompileData (config, logData) {
     try {
         const db = await getDB(config);
-        const {folder, compile_time, referer} = logData;
-        const query = `
+        if (logData.compileType === 'sandbox') {
+            const {folder, compile_time, referer} = logData;
+            const query = `
+                INSERT INTO \`statistics_logs\`(
+                    \`name\`,
+                    \`folder\`,
+                    \`compiled\`,
+                    \`compile_time\`,
+                    \`referer\`
+                ) VALUES (?,?,?,?,?)
+            `;
+
+            db.query(query, [
+                'sandbox',
+                folder || 'none',
+                1,
+                compile_time,
+                referer
+            ], function (err) {
+                db.end();
+                if (err) {
+                    console.error('Statistics:DB:Codecast:Log:Query failed', err);
+                }
+            });
+        } else {
+            const {codecast, name, folder, bucket, compile_time, referer, browser, language, resolution} = logData;
+            const query = `
             INSERT INTO \`statistics_logs\`(
+                \`codecast\`,
                 \`name\`,
                 \`folder\`,
+                \`bucket\`,
                 \`compiled\`,
                 \`compile_time\`,
-                \`referer\`
-            ) VALUES (?,?,?,?,?)
-        `;
+                \`referer\`,
+                \`browser\`,
+                \`language\`,
+                \`resolution\`
+            ) VALUES (?,?,?,?,?,?,?,?,?,?)`;
 
-        db.query(query, [
-            'sandbox',
-            folder || 'none',
-            1,
-            compile_time,
-            referer
-        ], function (err) {
-            db.end();
-            if (err) {
-                console.error('Statistics:DB:Codecast:Log:Query failed', err);
-            }
-        });
+            db.query(query, [
+                codecast,
+                name,
+                folder,
+                bucket,
+                1,
+                compile_time,
+                referer,
+                browser,
+                language,
+                resolution
+            ], function (err) {
+                db.end();
+                if (err) {
+                    console.error('Statistics:DB:Codecast:Log:Query failed', err);
+                }
+            });
+        }
+
     } catch (err) {
         console.error('Statistics:DB:Codecast:Log failed', err);
     }

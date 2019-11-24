@@ -1,7 +1,7 @@
 import React from 'react';
 import Immutable from 'immutable';
 import classnames from 'classnames';
-import {Icon, Classes, FormGroup, ControlGroup, HTMLSelect, InputGroup, Button, Intent, HTMLTable, Callout, Alert} from '@blueprintjs/core';
+import {Spinner, Icon, Classes, FormGroup, ControlGroup, HTMLSelect, InputGroup, Button, Intent, HTMLTable, Callout, Alert} from '@blueprintjs/core';
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 import {DateRangePicker} from "@blueprintjs/datetime";
 import {asyncRequestJson} from '../utils/api';
@@ -28,6 +28,9 @@ export default function (bundle, deps) {
   bundle.defineAction('statisticsSearchStatusChanged', 'Statistics.Search.Status.Changed');
   bundle.addReducer('statisticsSearchStatusChanged', statisticsSearchStatusChangedReducer);
 
+  bundle.defineAction('statisticsCodecastDataChanged', 'Statistics.CodecastData.Changed');
+  bundle.addReducer('statisticsCodecastDataChanged', statisticsCodecastDataChangedReducer);
+
   bundle.defineView('StatisticsApp', StatisticsAppSelector, StatisticsApp);
   bundle.defineView('StatisticsScreen', StatisticsScreenSelector, StatisticsScreen);
 
@@ -48,6 +51,7 @@ function statisticsPrepareReducer (state, {payload: {isReady}}) {
     dateRange: [null, null],
     folder: {label: "Select a Folder", value: null},
     prefix: '',
+    codecastData: null,
     search: {
       status: 'success',
       data: [],
@@ -65,9 +69,11 @@ function statisticsFolderChangedReducer (state, {payload: {folder}}) {
 function statisticsPrefixChangedReducer (state, {payload: {prefix}}) {
   return state.setIn(['statistics', 'prefix'], prefix);
 }
-
 function statisticsSearchStatusChangedReducer (state, {payload}) {
   return state.setIn(['statistics', 'search'], {data: [], error: null, ...payload});
+}
+function statisticsCodecastDataChangedReducer (state, {payload: {codecastData}}) {
+  return state.setIn(['statistics', 'codecastData'], codecastData);
 }
 
 
@@ -103,7 +109,7 @@ function getBrowser () {
 }
 
 
-function* statisticsPlayerReadySaga (_app, {payload: {data: {name}}}) {
+function* statisticsPlayerReadySaga ({actionTypes}, {payload: {data: {name}}}) {
   try {
     const {
       baseUrl,
@@ -113,11 +119,10 @@ function* statisticsPlayerReadySaga (_app, {payload: {data: {name}}}) {
     } = yield select(state => state.get('options'));
     const resolution = window.innerWidth + 'x' + window.innerHeight;
     const browser = getBrowser();
-
-
     const postData = {
       codecast, name, folder, bucket, referer, browser, language, resolution
     };
+    yield put({type: actionTypes.statisticsCodecastDataChanged, payload: {codecastData: postData}});
     yield call(asyncRequestJson, `${baseUrl}/statistics/api/logCodecast`, postData);
   } catch (error) {
     console.error('Error Codecast Load Log', error);
@@ -217,14 +222,14 @@ function StatisticsScreenSelector (state, props) {
   const isReady = statistics.get('isReady');
 
   const rowData = statistics.getIn(['search', 'data']);
+  const searchStatus = statistics.getIn(['search', 'status']);
   const searchError = statistics.getIn(['search', 'error']);
-
-
 
   return {
     isReady,
     rowData,
     searchError,
+    searchStatus,
     dateRange,
     folderOptions,
     folder,
@@ -268,7 +273,7 @@ class StatisticsScreen extends React.PureComponent {
     }
   }
   render () {
-    const {dateRange, folder, folderOptions, prefix, rowData, searchError} = this.props;
+    const {dateRange, folder, folderOptions, prefix, rowData, searchError, searchStatus} = this.props;
     return (
       <div className='cc-container text-center' style={{maxWidth: '790px'}} >
         <Alert icon="error" isOpen={!!searchError} onClose={this.handleErrorReset}>
@@ -330,8 +335,11 @@ class StatisticsScreen extends React.PureComponent {
         </div>
         <hr />
         <div style={{marginBottom: '30px'}}>
-          {rowData.length === 0 ?
-            (
+          {
+            searchStatus === 'loading' && <Spinner className="text-center" intent={Intent.PRIMARY} size={Spinner.SIZE_STANDARD} />
+          }
+          { rowData.length === 0 ?
+            searchStatus !== 'loading' && (
               <Callout title="No Data Loaded" style={{margin: '0 auto'}}>
                 Search to load Statistics...
             </Callout>
@@ -380,7 +388,7 @@ class StatisticsScreen extends React.PureComponent {
                         <td></td>
                         <td><b>{total_views}</b></td>
                         <td><b>{total_compiles}</b></td>
-                        <td><b>{total_compile_time}</b></td>
+                        <td><b>{total_compile_time.toFixed(3)}</b></td>
                       </tr>
                     )
                   })()
