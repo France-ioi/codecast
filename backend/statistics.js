@@ -56,7 +56,7 @@ export async function logCodecastLoadData (config, logData) {
 export async function logCompileData (config, logData) {
     try {
         const db = await getDB(config);
-        const {folder = 'none', compile_time, referer} = logData;
+        const {folder, compile_time, referer} = logData;
         const query = `
             INSERT INTO \`statistics_logs\`(
                 \`name\`,

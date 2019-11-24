@@ -32,7 +32,7 @@ function buildApp (config, store, callback) {
   };
 
   app.set('view engine', 'pug');
-  app.set('views', path.join(rootDir, 'backend', 'views'));
+  app.set('views', path.join(__dirname, 'views'));
 
   if (config.isDevelopment) {
     // Development route: /build is managed by webpack
