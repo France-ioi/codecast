@@ -105,7 +105,9 @@ Codecast.start = function (options) {
   /* Run the sagas (must be done before calling autoLogin) */
   restart();
 
-  store.dispatch({type: scope.statisticsInitLogData});
+  if (/editor|player|sandbox/.test(options.start)) {
+    store.dispatch({type: scope.statisticsInitLogData});
+  }
 
   let App;
   switch (options.start) {
@@ -145,6 +147,9 @@ Codecast.start = function (options) {
       App = scope.StatisticsApp;
       break;
     case 'sandbox':
+      store.dispatch({
+        type: scope.statisticsLogLoadingData
+      });
       App = scope.SandboxApp;
       break;
     default:

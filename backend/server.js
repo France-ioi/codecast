@@ -13,7 +13,7 @@ import oauth from './oauth';
 import startWorker from './worker';
 import {buildOptions, parseCodecastUrl} from './options';
 import addOfflineRoutes from './offline';
-import {statisticsSearch, logCompileData, logCodecastLoadData} from './statistics';
+import {statisticsSearch, logCompileData, logLoadingData} from './statistics';
 
 function buildApp (config, store, callback) {
 
@@ -282,7 +282,7 @@ function addBackendRoutes (app, config, store) {
     config.getUserConfig(req, async function (err, userConfig) {
       if (err) return res.json({error: err.toString()});
       try {
-        const {data} = await statisticsSearch(config, req.body);
+        const {data} = await statisticsSearch(userConfig, config, req.body);
         return res.json({data});
       } catch (err) {
         return res.json({error: err.toString()});
@@ -290,24 +290,13 @@ function addBackendRoutes (app, config, store) {
     });
   });
 
-  statisticsApi.post('/logCodecast', function (req, res) {
+  statisticsApi.post('/logLoadingData', function (req, res) {
     config.getUserConfig(req, async function (err, userConfig) {
       if (err) return res.json({error: err.toString()});
       try {
-        const {
-          codecast, name, folder, bucket, referer, browser, language, resolution
-        } = req.body;
-        logCodecastLoadData(config, {
-          codecast,
-          name,
-          folder,
-          bucket,
-          browser,
-          language,
-          resolution,
-          viewed: 1,
-          referer: referer || req.headers.referer
-        });
+        const {logData} = req.body;
+        logData.referer = logData.referer || (req.headers.referer || null)
+        logLoadingData(config, logData);
         return res.json({});
       } catch (err) {
         return res.json({error: err.toString()});

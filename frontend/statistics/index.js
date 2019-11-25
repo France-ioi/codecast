@@ -35,6 +35,7 @@ export default function (bundle, deps) {
   });
 
   bundle.defineAction('statisticsInitLogData', 'Statistics.LogData.Init');
+  bundle.defineAction('statisticsLogLoadingData', 'Statistics.Loading.LogData.Submit');
 
   bundle.defineAction('statisticsPrepare', 'Statistics.Prepare');
   bundle.addReducer('statisticsPrepare', statisticsPrepareReducer);
@@ -59,6 +60,7 @@ export default function (bundle, deps) {
   bundle.defineView('StatisticsScreen', StatisticsScreenSelector, StatisticsScreen);
 
   bundle.addSaga(function* editorSaga (app) {
+    yield takeEvery(app.actionTypes.statisticsLogLoadingData, statisticsLogLoadingDataSaga, app);
     yield takeEvery(app.actionTypes.statisticsInitLogData, statisticsInitLogDataSaga, app);
     yield takeEvery(app.actionTypes.playerReady, statisticsPlayerReadySaga, app);
     yield takeEvery(app.actionTypes.statisticsPrepare, statisticsPrepareSaga, app);
@@ -107,7 +109,6 @@ function* statisticsPrepareSaga ({actionTypes}) {
 }
 
 function* statisticsInitLogDataSaga ({actionTypes}) {
-  console.log('called :');
   const options = yield select(state => state.get('options'));
   const {
     start: compileType,
@@ -140,29 +141,24 @@ function* statisticsInitLogDataSaga ({actionTypes}) {
 
 function* statisticsPlayerReadySaga ({actionTypes}, {payload: {data: {name}}}) {
   try {
-    const {baseUrl} = yield select(state => state.get('options'));
-
     const logData = yield select(state => state.getIn(['statistics', 'logData']));
     logData.name = name;
     yield put({type: actionTypes.statisticsLogDataChanged, payload: {logData}});
-    
-    const {
-      baseUrl,
-      language,
-      referer,
-      codecastData: {codecast, folder, bucket}
-    } = yield select(state => state.get('options'));
-    const resolution = window.innerWidth + 'x' + window.innerHeight;
-    const browser = getBrowser();
-    const postData = {
-      codecast, name, folder, bucket, referer, browser, language, resolution
-    };
-    yield put({type: actionTypes.statisticsCodecastDataChanged, payload: {codecastData: postData}});
-    yield call(asyncRequestJson, `${baseUrl}/statistics/api/logCodecast`, postData);
+
+    yield put({type: actionTypes.statisticsLogLoadingData});
   } catch (error) {
     console.error('Error Codecast Load Log', error);
   }
+}
 
+function* statisticsLogLoadingDataSaga () {
+  try {
+    const {baseUrl} = yield select(state => state.get('options'));
+    const logData = yield select(state => state.getIn(['statistics', 'logData']));
+    yield call(asyncRequestJson, `${baseUrl}/statistics/api/logLoadingData`, {logData});
+  } catch (error) {
+    console.error('Error Codecast Load Log', error);
+  }
 }
 
 function* statisticsSearchSaga ({actionTypes}) {
@@ -310,7 +306,7 @@ class StatisticsScreen extends React.PureComponent {
   render () {
     const {dateRange, folder, folderOptions, prefix, rowData, searchError, searchStatus} = this.props;
     return (
-      <div className='cc-container text-center' style={{maxWidth: '790px'}} >
+      <div className='container text-center'  >
         <Alert icon="error" isOpen={!!searchError} onClose={this.handleErrorReset}>
           Search Error: {searchError}
           <br />

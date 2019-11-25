@@ -15,41 +15,73 @@ function getDB (config) {
     });
 }
 
-export async function logCodecastLoadData (config, logData) {
+export async function logLoadingData (config, logData) {
+    let db;
     try {
-        const db = await getDB(config);
-        const {codecast, name, folder, bucket, viewed, referer, browser, language, resolution} = logData;
-        const query = `
-        INSERT INTO \`statistics_logs\`(
-            \`codecast\`,
-            \`name\`,
-            \`folder\`,
-            \`bucket\`,
-            \`viewed\`,
-            \`referer\`,
-            \`browser\`,
-            \`language\`,
-            \`resolution\`
-        ) VALUES (?,?,?,?,?,?,?,?,?)`;
+        db = await getDB(config);
+        if (logData.type === 'sandbox') {
+            const {folder, referer, browser, language, resolution} = logData;
+            const query = `
+                INSERT INTO \`statistics_logs\`(
+                    \`name\`,
+                    \`folder\`,
+                    \`viewed\`,
+                    \`referer\`,
+                    \`browser\`,
+                    \`language\`,
+                    \`resolution\`
+                ) VALUES (?,?,?,?,?,?,?)
+            `;
 
-        db.query(query, [
-            codecast,
-            name,
-            folder,
-            bucket,
-            viewed,
-            referer,
-            browser,
-            language,
-            resolution
-        ], function (err) {
-            db.end();
-            if (err) {
-                console.error('Statistics:DB:Codecast:Log:Query failed', err);
-            }
-        });
+            db.query(query, [
+                'sandbox',
+                folder || 'none',
+                1,
+                referer,
+                browser,
+                language,
+                resolution
+            ], function (err) {
+                if (err) {
+                    console.error('Statistics:DB:Codecast:Log:Query failed', err);
+                }
+            });
+        } else {
+            const {codecast, name, folder, bucket, referer, browser, language, resolution} = logData;
+            const query = `
+            INSERT INTO \`statistics_logs\`(
+                \`codecast\`,
+                \`name\`,
+                \`folder\`,
+                \`bucket\`,
+                \`viewed\`,
+                \`referer\`,
+                \`browser\`,
+                \`language\`,
+                \`resolution\`
+            ) VALUES (?,?,?,?,?,?,?,?,?)`;
+
+            db.query(query, [
+                codecast,
+                name,
+                folder,
+                bucket,
+                1,
+                referer,
+                browser,
+                language,
+                resolution
+            ], function (err) {
+                if (err) {
+                    console.error('Statistics:DB:Codecast:Log:Query failed', err);
+                }
+            });
+        }
     } catch (err) {
         console.error('Statistics:DB:Codecast:Log failed', err);
+    }
+    finally {
+        db.end();
     }
 }
 
@@ -127,14 +159,21 @@ export async function logCompileData (config, logData) {
     }
 }
 
-export function statisticsSearch (config, params) {
+export function statisticsSearch ({grants}, config, params) {
     return new Promise(async (resolve, reject) => {
         try {
             const db = await getDB(config);
             let whereQueryParts = [];
             if (params.folder) {
                 const [bucket, folder] = params.folder;
-                whereQueryParts.push(`\`folder\` = '${folder}' AND (\`bucket\` = '${bucket}' OR \`bucket\` = 'none')`);
+                whereQueryParts.push(`\`folder\` = '${folder}' AND \`bucket\` IN ('${bucket}', 'none')`);
+            } else {
+                const buckets = ['none'], folders = ['none'];
+                for (const {uploadPath, s3Bucket} of grants) {
+                    buckets.push(s3Bucket);
+                    folders.push(uploadPath);
+                }
+                whereQueryParts.push(`\`folder\` IN ('${folders.join('\',\'')}') AND \`bucket\` IN ('${buckets.join('\',\'')}')`);
             }
             if (params.prefix) {
                 whereQueryParts.push(`\`NAME\` LIKE '%${params.prefix}%'`);
