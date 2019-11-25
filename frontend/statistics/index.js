@@ -306,7 +306,7 @@ class StatisticsScreen extends React.PureComponent {
   render () {
     const {dateRange, folder, folderOptions, prefix, rowData, searchError, searchStatus} = this.props;
     return (
-      <div className='container text-center'  >
+      <div className='container text-center'>
         <Alert icon="error" isOpen={!!searchError} onClose={this.handleErrorReset}>
           Search Error: {searchError}
           <br />
@@ -365,7 +365,7 @@ class StatisticsScreen extends React.PureComponent {
           </ControlGroup>
         </div>
         <hr />
-        <div style={{marginBottom: '30px'}}>
+        <div style={{marginBottom: '30px', display: 'flex', justifyContent: 'center'}}>
           {
             searchStatus === 'loading' && <Spinner className="text-center" intent={Intent.PRIMARY} size={Spinner.SIZE_STANDARD} />
           }
