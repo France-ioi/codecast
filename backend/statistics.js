@@ -170,8 +170,8 @@ export function statisticsSearch ({grants}, config, params) {
             } else {
                 const buckets = ['none'], folders = ['none'];
                 for (const {uploadPath, s3Bucket} of grants) {
-                    buckets.push(s3Bucket);
-                    folders.push(uploadPath);
+                    if (!buckets.includes(s3Bucket)) {buckets.push(s3Bucket);}
+                    if (!folders.includes(uploadPath)) {folders.push(uploadPath);}
                 }
                 whereQueryParts.push(`\`folder\` IN ('${folders.join('\',\'')}') AND \`bucket\` IN ('${buckets.join('\',\'')}')`);
             }
@@ -181,7 +181,7 @@ export function statisticsSearch ({grants}, config, params) {
             if (params.dateRange) {
                 const [start, end] = params.dateRange;
                 if (start && end) {
-                    whereQueryParts.push(`\`date_time\` BETWEEN '${start}' AND '${end}'`);
+                    whereQueryParts.push(`CAST(\`date_time\` AS DATE) BETWEEN '${start}' AND '${end}'`);
                 }
             }
 

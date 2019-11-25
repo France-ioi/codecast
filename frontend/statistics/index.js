@@ -168,7 +168,7 @@ function* statisticsSearchSaga ({actionTypes}) {
     const {baseUrl} = yield select(state => state.get('options'));
 
     const statistics = yield select(state => state.get('statistics'));
-    const dateRange = statistics.get('dateRange');
+    const dateRange = statistics.get('dateRange').map(date => date && date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate());
     const folder = statistics.get('folder').value;
     const prefix = statistics.get('prefix');
 
