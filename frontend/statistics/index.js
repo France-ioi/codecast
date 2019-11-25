@@ -1,4 +1,5 @@
 import React from 'react';
+import {CSVLink} from 'react-csv';
 import Immutable from 'immutable';
 import classnames from 'classnames';
 import {Spinner, Icon, Classes, FormGroup, ControlGroup, HTMLSelect, InputGroup, Button, Intent, HTMLTable, Callout, Alert} from '@blueprintjs/core';
@@ -303,6 +304,17 @@ class StatisticsScreen extends React.PureComponent {
       dispatch({type: actionTypes.statisticsSearchSubmit});
     }
   }
+  getCSVData = () => {
+    const {rowData} = this.props;
+    return rowData.reduce((arr, {
+      codecast, folder, bucket, name, date_time, views, compiles, compile_time
+    }) => {
+      arr.push([date_time, new String(codecast), name, folder, bucket, views, compiles, compile_time]);
+      return arr;
+    },
+      [['DateTime', 'Codecast', 'Name', 'Folder', 'Bucket', 'Views', 'Compilations', 'Total Compile Time (ms)']]);
+  }
+
   render () {
     const {dateRange, folder, folderOptions, prefix, rowData, searchError, searchStatus} = this.props;
     return (
@@ -365,7 +377,7 @@ class StatisticsScreen extends React.PureComponent {
           </ControlGroup>
         </div>
         <hr style={{width: '80%'}} />
-        <div style={{marginBottom: '30px', display: 'flex', justifyContent: 'center'}}>
+        <div style={{marginBottom: '30px', display: 'flex', justifyContent: 'center', flexDirection: 'column'}}>
           {
             searchStatus === 'loading' && <Spinner className="text-center" intent={Intent.PRIMARY} size={Spinner.SIZE_STANDARD} />
           }
@@ -375,57 +387,69 @@ class StatisticsScreen extends React.PureComponent {
                 Search to load Statistics...
             </Callout>
             ) :
-            (<HTMLTable
-              bordered
-              interactive
-              condensed
-            >
-              <thead>
-                <tr>
-                  <th>DateTime</th>
-                  <th>Codecast</th>
-                  <th>Name</th>
-                  <th>Folder</th>
-                  <th>Bucket</th>
-                  <th>Views</th>
-                  <th>Compilations</th>
-                  <th>Total Compile Time (ms)</th>
-                </tr >
-              </thead >
-              <tbody>
-                {
-                  rowData.map(({codecast, folder, bucket, name, date_time, views, compiles, compile_time}, index) => (
-                    <tr key={index}>
-                      <td>{date_time}</td>
-                      <td>{codecast || '-------------'}</td>
-                      <td>{name}</td>
-                      <td>{folder}</td>
-                      <td>{bucket}</td>
-                      <td>{views}</td>
-                      <td>{compiles}</td>
-                      <td>{compile_time}</td>
-                    </tr>
-                  ))
-                }
-                {
-                  (() => {
-                    const [total_views, total_compiles, total_compile_time] = rowData.reduce((totals, {views, compiles, compile_time}) => [totals[0] + views, totals[1] + compiles, totals[2] + compile_time], [0, 0, 0]);
-                    return (
-                      <tr key={rowData.length}>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td><b>{total_views}</b></td>
-                        <td><b>{total_compiles}</b></td>
-                        <td><b>{total_compile_time.toFixed(3)}</b></td>
+            (<React.Fragment>
+              <HTMLTable
+                bordered
+                interactive
+                condensed
+              >
+                <thead>
+                  <tr>
+                    <th>DateTime</th>
+                    <th>Codecast</th>
+                    <th>Name</th>
+                    <th>Folder</th>
+                    <th>Bucket</th>
+                    <th>Views</th>
+                    <th>Compilations</th>
+                    <th>Total Compile Time (ms)</th>
+                  </tr >
+                </thead >
+                <tbody>
+                  {
+                    rowData.map(({codecast, folder, bucket, name, date_time, views, compiles, compile_time}, index) => (
+                      <tr key={index}>
+                        <td>{date_time}</td>
+                        <td>{codecast || '-------------'}</td>
+                        <td>{name}</td>
+                        <td>{folder}</td>
+                        <td>{bucket}</td>
+                        <td>{views}</td>
+                        <td>{compiles}</td>
+                        <td>{compile_time}</td>
                       </tr>
-                    )
-                  })()
-                }
-              </tbody>
-            </HTMLTable >)}
+                    ))
+                  }
+                  {
+                    (() => {
+                      const [total_views, total_compiles, total_compile_time] = rowData.reduce((totals, {views, compiles, compile_time}) => [totals[0] + views, totals[1] + compiles, totals[2] + compile_time], [0, 0, 0]);
+                      return (
+                        <tr key={rowData.length}>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td></td>
+                          <td><b>{total_views}</b></td>
+                          <td><b>{total_compiles}</b></td>
+                          <td><b>{total_compile_time.toFixed(3)}</b></td>
+                        </tr>
+                      )
+                    })()
+                  }
+                </tbody>
+              </HTMLTable >
+              <div>
+                <CSVLink style={{
+                  padding: '5px',
+                  display: 'inline-block',
+                  color: 'black',
+                  fontWeight: 600,
+                  border: '1px solid black',
+                  marginTop: ' 20px'
+                }} data={this.getCSVData()} >Export CSV</CSVLink>
+              </div>
+            </React.Fragment>)}
         </div>
       </div >
     );
