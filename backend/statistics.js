@@ -54,18 +54,22 @@ export async function logCodecastLoadData (config, logData) {
 }
 
 export async function logCompileData (config, logData) {
+    let db;
     try {
-        const db = await getDB(config);
-        if (logData.compileType === 'sandbox') {
-            const {folder, compile_time, referer} = logData;
+        db = await getDB(config);
+        if (logData.type === 'sandbox') {
+            const {folder, compile_time, referer, browser, language, resolution} = logData;
             const query = `
                 INSERT INTO \`statistics_logs\`(
                     \`name\`,
                     \`folder\`,
                     \`compiled\`,
                     \`compile_time\`,
-                    \`referer\`
-                ) VALUES (?,?,?,?,?)
+                    \`referer\`,
+                    \`browser\`,
+                    \`language\`,
+                    \`resolution\`
+                ) VALUES (?,?,?,?,?,?,?,?)
             `;
 
             db.query(query, [
@@ -73,9 +77,11 @@ export async function logCompileData (config, logData) {
                 folder || 'none',
                 1,
                 compile_time,
-                referer
+                referer,
+                browser,
+                language,
+                resolution
             ], function (err) {
-                db.end();
                 if (err) {
                     console.error('Statistics:DB:Codecast:Log:Query failed', err);
                 }
@@ -108,7 +114,6 @@ export async function logCompileData (config, logData) {
                 language,
                 resolution
             ], function (err) {
-                db.end();
                 if (err) {
                     console.error('Statistics:DB:Codecast:Log:Query failed', err);
                 }
@@ -117,6 +122,8 @@ export async function logCompileData (config, logData) {
 
     } catch (err) {
         console.error('Statistics:DB:Codecast:Log failed', err);
+    } finally {
+        db.end();
     }
 }
 

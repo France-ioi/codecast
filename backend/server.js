@@ -330,7 +330,7 @@ function addBackendRoutes (app, config, store) {
   app.post('/translate', function (req, res) {
     const env = {LANGUAGE: 'c'};
     env.SYSROOT = path.join(config.rootDir, 'sysroot');
-    const {source, platform, compileType} = req.body;
+    const {source, platform, logData} = req.body;
     if (platform === 'arduino') {
       env.SOURCE_WRAPPER = "wrappers/Arduino";
       env.LANGUAGE = 'c++';
@@ -365,22 +365,9 @@ function addBackendRoutes (app, config, store) {
         } else {
           try {
             const endTime = process.hrtime(startTime);
-            const timeSpentInMilliseconds = (endTime[0] * 1000) + (endTime[1] / 1000000);
-            if (compileType === 'sandbox') {
-              logCompileData(config, {
-                folder: req.body.origin,
-                compile_time: timeSpentInMilliseconds,
-                referer: req.headers.referer || null,
-                compileType
-              })
-            } else {
-              logCompileData(config, {
-                ...req.body.codecastData,
-                compile_time: timeSpentInMilliseconds,
-                referer: req.body.codecastData.referer || req.headers.referer,
-                compileType
-              })
-            }
+            logData.compile_time = (endTime[0] * 1000) + (endTime[1] / 1000000);
+            logData.referer = logData.referer || req.headers.referer;
+            logCompileData(config, logData);
 
             let ast = JSON.parse(chunks.join(''));
             const convert = new AnsiToHtml();

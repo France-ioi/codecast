@@ -59,7 +59,8 @@ function restart () {
     globals: scope,
     selectors: scope,
     actionTypes,
-    views});
+    views
+  });
 }
 
 /* In-browser API */
@@ -84,7 +85,7 @@ const Codecast = window.Codecast = {store, scope, restart};
   }
 */
 
-function clearUrl() {
+function clearUrl () {
   const currentUrl = url.parse(document.location.href, true)
   delete currentUrl.search
   delete currentUrl.query.source
@@ -103,6 +104,8 @@ Codecast.start = function (options) {
 
   /* Run the sagas (must be done before calling autoLogin) */
   restart();
+
+  store.dispatch({type: scope.statisticsInitLogData});
 
   let App;
   switch (options.start) {
@@ -137,8 +140,7 @@ Codecast.start = function (options) {
     case 'statistics':
       autoLogin();
       store.dispatch({
-        type: scope.statisticsPrepare,
-        payload: {isReady: options.isStatisticsReady}
+        type: scope.statisticsPrepare
       });
       App = scope.StatisticsApp;
       break;
@@ -155,7 +157,7 @@ Codecast.start = function (options) {
   ReactDOM.render(
     <Provider store={store}>
       <AppErrorBoundary>
-        <App/>
+        <App />
       </AppErrorBoundary>
     </Provider>, container);
 

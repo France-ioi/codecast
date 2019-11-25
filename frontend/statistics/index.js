@@ -6,85 +6,6 @@ import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects
 import {DateRangePicker} from "@blueprintjs/datetime";
 import {asyncRequestJson} from '../utils/api';
 
-
-export default function (bundle, deps) {
-
-  bundle.addReducer('init', state =>
-    state.set('statistics', Immutable.Map()));
-
-  bundle.defineAction('statisticsPrepare', 'Statistics.Prepare');
-  bundle.addReducer('statisticsPrepare', statisticsPrepareReducer);
-
-  bundle.defineAction('statisticsDateRangeChanged', 'Statistics.DateRange.Changed');
-  bundle.addReducer('statisticsDateRangeChanged', statisticsDateRangeChangedReducer);
-
-  bundle.defineAction('statisticsFolderChanged', 'Statistics.Folder.Changed');
-  bundle.addReducer('statisticsFolderChanged', statisticsFolderChangedReducer);
-
-  bundle.defineAction('statisticsPrefixChanged', 'Statistics.Prefix.Changed');
-  bundle.addReducer('statisticsPrefixChanged', statisticsPrefixChangedReducer);
-
-  bundle.defineAction('statisticsSearchSubmit', 'Statistics.Search.Submit');
-  bundle.defineAction('statisticsSearchStatusChanged', 'Statistics.Search.Status.Changed');
-  bundle.addReducer('statisticsSearchStatusChanged', statisticsSearchStatusChangedReducer);
-
-  bundle.defineAction('statisticsCodecastDataChanged', 'Statistics.CodecastData.Changed');
-  bundle.addReducer('statisticsCodecastDataChanged', statisticsCodecastDataChangedReducer);
-
-  bundle.defineView('StatisticsApp', StatisticsAppSelector, StatisticsApp);
-  bundle.defineView('StatisticsScreen', StatisticsScreenSelector, StatisticsScreen);
-
-  bundle.addSaga(function* editorSaga (app) {
-    yield takeEvery(app.actionTypes.playerReady, statisticsPlayerReadySaga, app);
-    yield takeEvery(app.actionTypes.statisticsPrepare, statisticsPrepareSaga, app);
-    yield takeLatest(app.actionTypes.statisticsSearchSubmit, statisticsSearchSaga, app);
-  });
-
-  //bundle.include(TrimBundle);
-
-};
-
-
-function statisticsPrepareReducer (state, {payload: {isReady}}) {
-  return state.set('statistics', Immutable.Map({
-    isReady,
-    dateRange: [null, null],
-    folder: {label: "Select a Folder", value: null},
-    prefix: '',
-    codecastData: null,
-    search: {
-      status: 'success',
-      data: [],
-      error: null,
-    }
-  }));
-}
-
-function statisticsDateRangeChangedReducer (state, {payload: {dateRange}}) {
-  return state.setIn(['statistics', 'dateRange'], dateRange);
-}
-function statisticsFolderChangedReducer (state, {payload: {folder}}) {
-  return state.setIn(['statistics', 'folder'], folder);
-}
-function statisticsPrefixChangedReducer (state, {payload: {prefix}}) {
-  return state.setIn(['statistics', 'prefix'], prefix);
-}
-function statisticsSearchStatusChangedReducer (state, {payload}) {
-  return state.setIn(['statistics', 'search'], {data: [], error: null, ...payload});
-}
-function statisticsCodecastDataChangedReducer (state, {payload: {codecastData}}) {
-  return state.setIn(['statistics', 'codecastData'], codecastData);
-}
-
-
-function* statisticsPrepareSaga ({actionTypes}) {
-  /* Require the user to be logged in. */
-  while (!(yield select(state => state.get('user')))) {
-    yield take(actionTypes.loginFeedback);
-  }
-  yield put({type: actionTypes.switchToScreen, payload: {screen: 'statistics'}});
-}
-
 function getBrowser () {
   // Opera 8.0+
   const isOpera = (!!window.opr && !!opr.addons) || !!window.opera || navigator.userAgent.indexOf(' OPR/') >= 0;
@@ -105,12 +26,126 @@ function getBrowser () {
   if (isIE) {return 'IE: (' + navigator.userAgent + ')';}
   if (isEdge) {return 'Edge: (' + navigator.userAgent + ')';}
   if (isChrome) {return 'Chrome: (' + navigator.userAgent + ')';}
+}
 
+export default function (bundle, deps) {
+
+  bundle.addReducer('init', (state, {payload: {options: {isStatisticsReady}}}) => {
+    return state.set('statistics', Immutable.Map({isReady: isStatisticsReady}))
+  });
+
+  bundle.defineAction('statisticsInitLogData', 'Statistics.LogData.Init');
+
+  bundle.defineAction('statisticsPrepare', 'Statistics.Prepare');
+  bundle.addReducer('statisticsPrepare', statisticsPrepareReducer);
+
+  bundle.defineAction('statisticsDateRangeChanged', 'Statistics.DateRange.Changed');
+  bundle.addReducer('statisticsDateRangeChanged', statisticsDateRangeChangedReducer);
+
+  bundle.defineAction('statisticsFolderChanged', 'Statistics.Folder.Changed');
+  bundle.addReducer('statisticsFolderChanged', statisticsFolderChangedReducer);
+
+  bundle.defineAction('statisticsPrefixChanged', 'Statistics.Prefix.Changed');
+  bundle.addReducer('statisticsPrefixChanged', statisticsPrefixChangedReducer);
+
+  bundle.defineAction('statisticsSearchSubmit', 'Statistics.Search.Submit');
+  bundle.defineAction('statisticsSearchStatusChanged', 'Statistics.Search.Status.Changed');
+  bundle.addReducer('statisticsSearchStatusChanged', statisticsSearchStatusChangedReducer);
+
+  bundle.defineAction('statisticsLogDataChanged', 'Statistics.LogData.Changed');
+  bundle.addReducer('statisticsLogDataChanged', statisticsLogDataChangedReducer);
+
+  bundle.defineView('StatisticsApp', StatisticsAppSelector, StatisticsApp);
+  bundle.defineView('StatisticsScreen', StatisticsScreenSelector, StatisticsScreen);
+
+  bundle.addSaga(function* editorSaga (app) {
+    yield takeEvery(app.actionTypes.statisticsInitLogData, statisticsInitLogDataSaga, app);
+    yield takeEvery(app.actionTypes.playerReady, statisticsPlayerReadySaga, app);
+    yield takeEvery(app.actionTypes.statisticsPrepare, statisticsPrepareSaga, app);
+    yield takeLatest(app.actionTypes.statisticsSearchSubmit, statisticsSearchSaga, app);
+  });
+
+};
+
+function statisticsPrepareReducer (state) {
+  return state.update('statistics', statistics =>
+    statistics
+      .set('dateRange', [null, null])
+      .set('folder', {label: "Select a Folder", value: null})
+      .set('prefix', '')
+      .set('search', {
+        status: 'success',
+        data: [],
+        error: null,
+      }));
+}
+
+function statisticsDateRangeChangedReducer (state, {payload: {dateRange}}) {
+  return state.setIn(['statistics', 'dateRange'], dateRange);
+}
+function statisticsFolderChangedReducer (state, {payload: {folder}}) {
+  return state.setIn(['statistics', 'folder'], folder);
+}
+function statisticsPrefixChangedReducer (state, {payload: {prefix}}) {
+  return state.setIn(['statistics', 'prefix'], prefix);
+}
+function statisticsSearchStatusChangedReducer (state, {payload}) {
+  return state.setIn(['statistics', 'search'], {data: [], error: null, ...payload});
+}
+function statisticsLogDataChangedReducer (state, {payload: {logData}}) {
+  return state.setIn(['statistics', 'logData'], logData);
 }
 
 
+function* statisticsPrepareSaga ({actionTypes}) {
+  /* Require the user to be logged in. */
+  while (!(yield select(state => state.get('user')))) {
+    yield take(actionTypes.loginFeedback);
+  }
+
+  yield put({type: actionTypes.switchToScreen, payload: {screen: 'statistics'}});
+}
+
+function* statisticsInitLogDataSaga ({actionTypes}) {
+  console.log('called :');
+  const options = yield select(state => state.get('options'));
+  const {
+    start: compileType,
+    language,
+    referer
+  } = options;
+  const resolution = window.innerWidth + 'x' + window.innerHeight;
+  const browser = getBrowser();
+
+  const logData = {
+    type: compileType,
+    referer,
+    browser,
+    language,
+    resolution
+  };
+
+  if (compileType === 'sandbox') {
+    const {origin} = options;
+    logData.folder = origin;
+  } else {
+    const {codecastData: {codecast, folder, bucket}} = options;
+    logData.codecast = codecast;
+    logData.folder = folder;
+    logData.bucket = bucket;
+  }
+
+  yield put({type: actionTypes.statisticsLogDataChanged, payload: {logData}});
+}
+
 function* statisticsPlayerReadySaga ({actionTypes}, {payload: {data: {name}}}) {
   try {
+    const {baseUrl} = yield select(state => state.get('options'));
+
+    const logData = yield select(state => state.getIn(['statistics', 'logData']));
+    logData.name = name;
+    yield put({type: actionTypes.statisticsLogDataChanged, payload: {logData}});
+    
     const {
       baseUrl,
       language,
@@ -338,7 +373,7 @@ class StatisticsScreen extends React.PureComponent {
           {
             searchStatus === 'loading' && <Spinner className="text-center" intent={Intent.PRIMARY} size={Spinner.SIZE_STANDARD} />
           }
-          { rowData.length === 0 ?
+          {rowData.length === 0 ?
             searchStatus !== 'loading' && (
               <Callout title="No Data Loaded" style={{margin: '0 auto'}}>
                 Search to load Statistics...
