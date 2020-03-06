@@ -74,4 +74,5 @@ module.exports = {
   PLATFORM_SETTING: "Plateforme: ",
   PLATFORM_UNIX: "Unix",
   PLATFORM_ARDUINO: "Arduino",
+  PLATFORM_PYTHON: "Python",
 };

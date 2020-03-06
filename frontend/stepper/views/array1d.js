@@ -100,8 +100,8 @@ function Cursor ({view, cursor}) {
 export class Array1D extends React.PureComponent {
 
   render () {
-    const {Frame, controls, directive, frames, context, scale, getMessage} = this.props;
-    const topFrame = frames[0];
+    const {StackFrame, controls, directive, functionCallStack, context, scale, getMessage} = this.props;
+    const topStackFrame = functionCallStack[0];
     const fullView = controls.get('fullView');
     const cellPan = this.getPosition();
     const {byName, byPos} = directive;
@@ -112,18 +112,17 @@ export class Array1D extends React.PureComponent {
     const cellWidth = this._cellWidth = getNumber(byName.cw, 28);
     const maxVisibleCells = getNumber(byName.n, 40);
     const {dim} = byName;
-    // The first element of `frames` is the topmost frame containing the
-    // directive.
+    // The first element of `functionCallStack` is the topmost stackFrame containing the  directive.
     const view = {
       dimExpr: dim, cursorExprs, cursorRows, maxVisibleCells,
       fullView, cellHeight, cellWidth, getMessage
     };
-    Object.assign(view, extractView(context, topFrame, expr, view));
+    Object.assign(view, extractView(context, topStackFrame, expr, view));
     if (view.error) {
-      return <Frame {...this.props}>{view.error}</Frame>;
+      return <StackFrame {...this.props}>{view.error}</StackFrame>;
     }
     return (
-      <Frame {...this.props} hasFullView>
+      <StackFrame {...this.props} hasFullView>
         <div className='clearfix' style={{padding: '2px'}}>
           <SvgPan width='100%' height={cellHeight} scale={scale} x={cellPan * cellWidth - 10} y={0} getPosition={this.getPosition} onPan={this.onPan} >
             <clipPath id="cell">
@@ -140,7 +139,7 @@ export class Array1D extends React.PureComponent {
             </g>
           </SvgPan>
         </div>
-      </Frame>
+      </StackFrame>
     );
   }
 

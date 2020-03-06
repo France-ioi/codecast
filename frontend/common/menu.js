@@ -28,6 +28,7 @@ class Menu extends React.PureComponent {
                   {getMessage('PLATFORM_SETTING')}
                   <div className='bp3-select'>
                     <select onChange={this.setPlatform} value={platform}>
+                      <option value='python'>{getMessage('PLATFORM_PYTHON')}</option>
                       <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
                       <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
                     </select>
@@ -45,17 +46,20 @@ class Menu extends React.PureComponent {
   closeMenu = () => { this.setState({isOpen: false}); };
   setPlatform = (event) => {
     const platform = event.target.value;
-    this.props.dispatch({type: this.props.optionsChanged, payload: {platform: {$set: platform}}});
+    this.props.dispatch({
+      type: this.props.platformChanged,
+      payload: platform
+    });
   };
 }
 
 function MenuSelector (state, props) {
   const {FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker} = state.get('scope');
-  const {optionsChanged} = state.get('actionTypes');
+  const {platformChanged} = state.get('actionTypes');
   const {platform, canChangePlatform} = state.get('options');
   const getMessage = state.get('getMessage');
   return {
     getMessage, FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker,
-    platform, canChangePlatform, optionsChanged
+    platform, canChangePlatform, platformChanged
   };
 }

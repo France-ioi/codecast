@@ -7,10 +7,10 @@ import {readScalarBasic, stringifyExpr, evalExpr, viewVariable} from './utils';
 
 /**
 
-  extractView(context, frame, name, options) looks up `name` in `frame` and
+  extractView(context, stackFrame, name, options) looks up `name` in `stackFrame` and
   builds a view depending on the `options` given.
 
-  TODO: look up in in globals if `name` not defined in `frame`.
+  TODO: look up in in globals if `name` not defined in `stackFrame`.
 
   The return value is an object of shape {cells, cursors} where `cells`
   is an array in which each element is either a cell-content object or the
@@ -48,7 +48,7 @@ import {readScalarBasic, stringifyExpr, evalExpr, viewVariable} from './utils';
                  with the cell
 
   If `options` contains a `cursorExprs` property (array of expressions evaluated
-  in the context of the current `frame`), the `cursors` property in the result
+  in the context of the current `stackFrame`), the `cursors` property in the result
   is an array of cursor objects of this shape:
 
     {cursors, index, row, col}
@@ -62,9 +62,9 @@ import {readScalarBasic, stringifyExpr, evalExpr, viewVariable} from './utils';
               (up to `options.cursorRows` rows are used)
 
 */
-export const extractView = function (context, frame, refExpr, options) {
-  const {core} = context;
-  const localMap = frame.get('localMap');
+export const extractView = function (context, stackFrame, refExpr, options) {
+  const {programState} = context;
+  const localMap = stackFrame.get('localMap');
   // Normalize options.
   const {fullView, dimExpr} = options;
   let {cursorExprs, cursorRows, maxVisibleCells, pointsByKind, getMessage} = options;
@@ -90,7 +90,7 @@ export const extractView = function (context, frame, refExpr, options) {
   let elemCount;
   if (dimExpr) {
     try {
-      const dimVal = evalExpr(core, localMap, dimExpr, false);
+      const dimVal = evalExpr(programState, localMap, dimExpr, false);
       if (dimVal.type.kind !== 'builtin') {
         return {error: getMessage('ARRAY1D_DIM_INVALID').format({dim: stringifyExpr(dimExpr)})};
       }
@@ -102,7 +102,7 @@ export const extractView = function (context, frame, refExpr, options) {
   // Evaluate the array expression `expr`.
   let ref;
   try {
-    ref = evalExpr(core, localMap, refExpr, false);
+    ref = evalExpr(programState, localMap, refExpr, false);
   } catch (ex) {
     return {error: getMessage('ARRAY1D_EXPR_NOVAL').format({expr: stringifyExpr(refExpr), ex: getMessage.format(ex)})};
   }
@@ -123,9 +123,9 @@ export const extractView = function (context, frame, refExpr, options) {
   if (!/^(builtin|pointer)$/.test(elemType.kind)) {
     return {error: getMessage('ARRAY1D_ELT_UNSUP').format({expr: stringifyExpr(refExpr)})};
   }
-  const cellOpsMap = getOpsArray1D(core, address, elemCount, elemType.size);
+  const cellOpsMap = getOpsArray1D(programState, address, elemCount, elemType.size);
   const cursorMap = getCursorMap(
-    core, localMap, cursorExprs,
+    programState, localMap, cursorExprs,
     {minIndex: 0, maxIndex: elemCount, address, cellSize: elemType.size});
   const selection =
     fullView
@@ -360,7 +360,7 @@ export const mapArray1D = function (arrayBase, elemCount, elemSize) {
 
 // Read an 1D array of scalars.
 export const readArray1D = function (context, arrayBase, elemType, elemCount, selection, mops) {
-  const {core, oldCore} = context;
+  const {programState, lastProgramState} = context;
   const elemSize = elemType.size;
   const elemRefType = C.pointerType(elemType);
   // TODO: check that elemType is scalar
@@ -378,7 +378,7 @@ export const readArray1D = function (context, arrayBase, elemType, elemCount, se
       const elemAddress = arrayBase + index * elemSize;
       const cell = {position, index, address: elemAddress};
       if (index >= 0 && index < elemCount) {
-        const content = readScalarBasic(core, elemRefType, elemAddress);
+        const content = readScalarBasic(programState, elemRefType, elemAddress);
         if (index in mops) {
           const mop = mops[index];
           if ('load' in mop) {
@@ -386,7 +386,7 @@ export const readArray1D = function (context, arrayBase, elemType, elemCount, se
           }
           if ('store' in mop) {
             content.store = mop.store;
-            content.previous = C.readValue(oldCore, content.ref);
+            content.previous = C.readValue(lastProgramState, content.ref);
           }
         }
         cell.content = content;
@@ -399,12 +399,12 @@ export const readArray1D = function (context, arrayBase, elemType, elemCount, se
 
 // Returns a map keyed by cell index, and whose values are objects giving
 // the greatest rank in the memory log of a 'load' or 'store' operation.
-const getOpsArray1D = function (core, address, elemCount, elemSize) {
+const getOpsArray1D = function (programState, address, elemCount, elemSize) {
   // Go through the memory log, translate memory-operation references into
   // array cells indexes, and save the cell load/store operations in cellOps.
   const cellOpsMap = [];
   const forEachCell = mapArray1D(address, elemCount, elemSize);
-  core.memoryLog.forEach(function (entry, i) {
+  programState.memoryLog.forEach(function (entry, i) {
     const op = entry[0]; // 'load' or 'store'
     forEachCell(entry[1], function (index) {
       let cellOps;
@@ -430,7 +430,7 @@ const getOpsArray1D = function (core, address, elemCount, elemSize) {
 // `cellSize` (in bytes).  The calculated value is then subject to the
 // minIndex/maxIndex constraint.
 // If the `address` option is not given, then pointer values are not used.
-export const getCursorMap = function (core, localMap, cursorExprs, options) {
+export const getCursorMap = function (programState, localMap, cursorExprs, options) {
   const {minIndex, maxIndex, address, cellSize, cellSizeMod} = options;
   const allowPointers = typeof address === 'number';
   const haveCellSizeMod = typeof cellSizeMod === 'number';
@@ -438,7 +438,7 @@ export const getCursorMap = function (core, localMap, cursorExprs, options) {
   cursorExprs.forEach(function (expr) {
     let cursorValue;
     try {
-      cursorValue = evalExpr(core, localMap, expr);
+      cursorValue = evalExpr(programState, localMap, expr);
     } catch (ex) {
       // TODO: return errors somehow
       //console.log('failed to evaluate cursor expression', expr, ex);

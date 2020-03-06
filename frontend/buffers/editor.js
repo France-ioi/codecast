@@ -205,7 +205,7 @@ class Editor extends React.PureComponent {
     window.editors[buffer] = editor; */
     /* Force a resize, the editor will not work properly otherwise. */
     setTimeout(function () {
-      editor.resize(true);
+      editor.resize(true);console.log(editor);
     }, 0);
   };
 

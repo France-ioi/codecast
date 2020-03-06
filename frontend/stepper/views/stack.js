@@ -4,11 +4,11 @@ import classnames from 'classnames';
 import {Alert, Button, ButtonGroup, Icon, Intent} from '@blueprintjs/core';
 import Immutable from 'immutable';
 
-import {viewFrame, renderValue, VarDecl, FunctionCall} from './utils';
+import {viewStackFrame, renderValue, VarDecl, FunctionCall} from './utils';
 
 export default function (bundle, deps) {
 
-  bundle.use('stepperExit', 'stepperStackUp', 'stepperStackDown', 'getStepperDisplay');
+  bundle.use('stepperExit', 'stepperStackUp', 'stepperStackDown', 'getCurrentStepperState');
 
   bundle.defer(function ({stepperApi}) {
     stepperApi.onInit(function (state) {
@@ -20,11 +20,11 @@ export default function (bundle, deps) {
 
   bundle.defineSelector('StackViewSelector', function (state, props) {
     const getMessage = state.get('getMessage');
-    const stepperState = deps.getStepperDisplay(state);
+    const stepperState = deps.getCurrentStepperState(state);
     if (!stepperState) {
       return {getMessage};
     }
-    const {core, oldCore, analysis, controls} = stepperState;
+    const {programState, lastProgramState, analysis, controls} = stepperState;
     const {maxVisible} = props;
     const stackControls = controls.get('stack');
     const focusDepth = stackControls ? stackControls.get('focusDepth', 0) : 0;
@@ -32,7 +32,7 @@ export default function (bundle, deps) {
     return {
       getMessage,
       focusDepth,
-      context: {core, oldCore},
+      context: {programState, lastProgramState},
       analysis,
       controls: stackControls,
       firstVisible,
@@ -64,33 +64,33 @@ export default function (bundle, deps) {
           </div>
         );
       }
-      const {core} = context;
-      if (core.error) {
+      const {programState} = context;
+      if (programState.error) {
         return (
           <div className="stack-view" style={{height}}>
             <Alert intent={Intent.DANGER} onClose={this.onExit}>
               <h4>{getMessage('ERROR')}</h4>
-              <p>{core.error.toString()}</p>
+              <p>{programState.error.toString()}</p>
             </Alert>
           </div>
         );
       }
       const {controls, analysis, focusDepth, firstVisible, firstExpanded, maxVisible, maxExpanded} = this.props;
-      let {frames} = analysis;
-      /* Hide frames that have no position in user code. */
-      frames = frames.filter(function (frame) {
-        if (!frame.get('func').body[1].range) {
+      let {functionCallStack} = analysis;
+      /* Hide function calls that have no position in user code. */
+      functionCallStack = functionCallStack.filter(function (stackFrame) {
+        if (!stackFrame.get('func').body[1].range) {
           return false;
         }
         return true;
       });
-      /* Display the frames in reverse order (top of the stack last). */
-      frames = frames.reverse();
-      const beyondVisible = Math.min(frames.size, firstVisible + maxVisible);
-      const tailCount = frames.size - beyondVisible;
-      const views = frames.slice(firstVisible, beyondVisible).map(function (frame, depth) {
+      /* Display the functionCallStack in reverse order (top of the stack last). */
+      functionCallStack = functionCallStack.reverse();
+      const beyondVisible = Math.min(functionCallStack.size, firstVisible + maxVisible);
+      const tailCount = functionCallStack.size - beyondVisible;
+      const views = functionCallStack.slice(firstVisible, beyondVisible).map(function (stackFrame, depth) {
         const focus = depth >= firstExpanded && depth < firstExpanded + maxExpanded;
-        const view = viewFrame(context, frame, {locals: focus});
+        const view = viewStackFrame(context, stackFrame, {locals: focus});
         view.focus = focus;
         return view;
       });
@@ -108,7 +108,7 @@ export default function (bundle, deps) {
             <div key='tail' className="scope-ellipsis">
               {'… +'}{firstVisible}
             </div>}
-          {views.map(view => <FunctionFrame key={view.key} view={view} />)}
+          {views.map(view => <FunctionStackFrame key={view.key} view={view} />)}
           {tailCount > 0 &&
             <div key='tail' className="scope-ellipsis">
               {'… +'}{tailCount}
@@ -132,17 +132,17 @@ export default function (bundle, deps) {
 
 };
 
-function FunctionFrame ({view}) {
+function FunctionStackFrame ({view}) {
   const {func, args, locals} = view;
   return (
     <div className={classnames(['stack-frame', view.focus && 'stack-frame-focused'])}>
-      <FrameHeader func={func} args={args} />
-      {locals && <FrameLocals locals={locals} />}
+      <StackFrameHeader func={func} args={args} />
+      {locals && <StackFrameLocals locals={locals} />}
     </div>
   );
 }
 
-function FrameHeader ({func, args}) {
+function StackFrameHeader ({func, args}) {
   return (
     <div className={classnames(["scope-function-title", false && "scope-function-top"])}>
       <FunctionCall func={func} args={args}/>
@@ -150,7 +150,7 @@ function FrameHeader ({func, args}) {
   );
 }
 
-function FrameLocals ({locals}) {
+function StackFrameLocals ({locals}) {
   return (
     <div className="scope-function-blocks">
       <ul>

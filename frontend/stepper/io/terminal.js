@@ -10,7 +10,7 @@ import {takeEvery, select, call} from 'redux-saga/effects';
 export default function (bundle, deps) {
 
   bundle.use(
-    'getStepperDisplay',
+    'getCurrentStepperState',
     'terminalInit', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
   );
 
@@ -33,7 +33,7 @@ export default function (bundle, deps) {
   bundle.defineAction('terminalInputNeeded', 'Terminal.Input.Needed');
   bundle.addReducer('terminalInputNeeded', terminalInputNeeded);
   function terminalInputNeeded (state, action) {
-    return state.updateIn(['stepper', 'current'], function (stepper) {
+    return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
       return {...stepper, isWaitingOnInput: true};
     });
   };
@@ -42,7 +42,7 @@ export default function (bundle, deps) {
   bundle.addReducer('terminalInputKey', terminalInputKey);
   function terminalInputKey (state, action) {
     const {key} = action;
-    return state.updateIn(['stepper', 'current'], function (stepper) {
+    return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
       return {...stepper, inputBuffer: stepper.inputBuffer + key};
     });
   };
@@ -50,7 +50,7 @@ export default function (bundle, deps) {
   bundle.defineAction('terminalInputBackspace', 'Terminal.Input.Backspace');
   bundle.addReducer('terminalInputBackspace', terminalInputBackspace);
   function terminalInputBackspace (state) {
-    return state.updateIn(['stepper', 'current'], function (stepper) {
+    return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
       return {...stepper, inputBuffer: stepper.inputBuffer.slice(0, -1)};
     });
   };
@@ -58,7 +58,7 @@ export default function (bundle, deps) {
   bundle.defineAction('terminalInputEnter', 'Terminal.Input.Enter');
   bundle.addReducer('terminalInputEnter', terminalInputEnter);
   function terminalInputEnter (state) {
-    return state.updateIn(['stepper', 'current'], function (stepper) {
+    return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
       const inputLine = stepper.inputBuffer + '\n';
       return {...stepper,
         inputBuffer: "",
@@ -157,7 +157,7 @@ export default function (bundle, deps) {
   function TerminalViewSelector (state, props) {
     const result = {};
     result.readOnly = props.preventInput;
-    const stepper = deps.getStepperDisplay(state);
+    const stepper = deps.getCurrentStepperState(state);
     if (stepper) {
       result.terminal = stepper.terminal;
       result.input = stepper.inputBuffer;

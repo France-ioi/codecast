@@ -22,16 +22,16 @@ class EventView extends React.PureComponent {
       case 'delete':
         body = <span>delete {rangeToText(event.get(2))}</span>;
         break;
-      case 'translate':
+      case 'compile':
         body = <span>begin translation</span>;
         break;
-      case 'translateSuccess':
+      case 'compileSuccess':
         body = <span>translation succeeded</span>;
         break;
-      case 'translateFailure':
+      case 'compileFailure':
         body = <span>translation failed</span>;
         break;
-      case 'translateClear':
+      case 'compileClear':
         body = <span>translation cleared</span>;
         break;
       case 'stepperRestart':

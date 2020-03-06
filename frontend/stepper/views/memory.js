@@ -104,16 +104,16 @@ function maxDefinedRank (r1, r2) {
 }
 
 function viewValue (context, byteOps, ref) {
-  const {core, oldCore} = context;
+  const {programState, lastProgramState} = context;
   const {address} = ref;
   const {size} = ref.type.pointee;
-  const current = C.readValue(core, ref);
+  const current = C.readValue(programState, ref);
   const cell = {address, size, current};
   const ops = getByteRangeOps(byteOps, address, address + size - 1);
   cell.load = ops.load;
   if (ops.store !== undefined) {
     cell.store = ops.store;
-    cell.previous = C.readValue(oldCore, ref);
+    cell.previous = C.readValue(lastProgramState, ref);
   }
   return cell;
 }
@@ -205,14 +205,14 @@ const allValuesInRange = function* (path, refType, address, startAddress, endAdd
 };
 
 /* Enumerate all markers () */
-function* allMarkers (core, localMap, cursorExprs) {
-  const {memoryLog, globalMap} = core;
+function* allMarkers (programState, localMap, cursorExprs) {
+  const {memoryLog, globalMap} = programState;
   // XXX The initial heap start is a constant in persistent-c.
   yield {kind: 'start', address: 0x100};
   // Cursors
   for (let expr of cursorExprs) {
     try {
-      const value = evalExpr(core, localMap, expr, false);
+      const value = evalExpr(programState, localMap, expr, false);
       if (value.type.kind === 'pointer') {
         yield {kind: 'cursor', address: value.address};
       }
@@ -234,7 +234,7 @@ function* allMarkers (core, localMap, cursorExprs) {
     }
   }
   // Stack: function boundaries
-  let scope = core.scope;
+  let scope = programState.scope;
   while (scope) {
     if (scope.kind === 'function') {
       yield {kind: scope.kind, address: scope.limit};
@@ -247,13 +247,13 @@ class MemoryView extends React.PureComponent {
 
   render () {
     const {
-      Frame, controls, directive, localMap, context, scale, getMessage,
+      StackFrame, controls, directive, localMap, context, scale, getMessage,
       extraExprs, cursorExprs, cursorRows, nBytesShown, widthFactor,
       layout, centerAddress, startAddress, maxAddress,
       bytes, cursorMap, variables, extraRows, viewTransform
     } = this.props;
     return (
-      <Frame {...this.props}>
+      <StackFrame {...this.props}>
         <div className="memory-controls directive-controls">
           <div className="memory-slider-container" style={{width: `${Math.round(400 * widthFactor)}px`}}>
             <Slider prefixCls="memory-slider" tipFormatter={null} value={centerAddress} min={0} max={maxAddress} onChange={this.onSeek}>
@@ -290,19 +290,19 @@ class MemoryView extends React.PureComponent {
             </svg>
           </div>
         </div>
-      </Frame>
+      </StackFrame>
     );
   }
 
   onShiftLeft = (event) => {
     const fallThrough = false; // XXX could be an option
-    const {directive, frames, context, localMap, cursorExprs, centerAddress, nBytesShown} = this.props;
-    const {core} = context;
+    const {directive, functionCallStack, context, localMap, cursorExprs, centerAddress, nBytesShown} = this.props;
+    const {programState} = context;
     // Pretend currentAddress is just past the left of the visible area.
     const currentAddress = centerAddress - nBytesShown / 2;
     let nextAddress;
     let maxAddress = currentAddress;
-    for (let marker of allMarkers(core, localMap, cursorExprs)) {
+    for (let marker of allMarkers(programState, localMap, cursorExprs)) {
       const {kind, address} = marker;
       if (address < currentAddress && (nextAddress === undefined || address > nextAddress)) {
         nextAddress = address;
@@ -322,13 +322,13 @@ class MemoryView extends React.PureComponent {
 
   onShiftRight = (event) => {
     const fallThrough = false; // XXX could be an option
-    const {directive, frames, context, localMap, cursorExprs, nBytesShown, centerAddress} = this.props;
-    const {core} = context;
+    const {directive, functionCallStack, context, localMap, cursorExprs, nBytesShown, centerAddress} = this.props;
+    const {programState} = context;
     // Pretend currentAddress is just past the right of the visible area.
     const currentAddress = centerAddress + nBytesShown / 2;
     let nextAddress;
     let minAddress = currentAddress;
-    for (let marker of allMarkers(core, localMap, cursorExprs)) {
+    for (let marker of allMarkers(programState, localMap, cursorExprs)) {
       const {kind, address} = marker;
       if (currentAddress < address && (nextAddress === undefined || address < nextAddress)) {
         nextAddress = address;
@@ -605,20 +605,20 @@ function Cursors ({layout, cursorRows, cursorMap}) {
 function clipCenterAddress ({nBytesShown, context}, address) {
   //address -= nBytesShown / 2;
   address = Math.max(0, address);
-  address = Math.min(context.core.memory.size - 1, address);
+  address = Math.min(context.programState.memory.size - 1, address);
   //address += nBytesShown / 2;
   return address;
 }
 
-function MemoryViewSelector ({scale, directive, context, controls, frames}) {
-  const localMap = frames[0].get('localMap');
+function MemoryViewSelector ({scale, directive, context, controls, functionCallStack}) {
+  const localMap = functionCallStack[0].get('localMap');
   const {byName, byPos} = directive;
   const extraExprs = getList(byName.extras, []);
   const cursorExprs = getList(byName.cursors, []);
   const cursorRows = getNumber(byName.cursorRows, 1);
   const nBytesShown = getNumber(byName.bytes, 32);
   const widthFactor = getNumber(byName.width, 1);
-  const maxAddress = context.core.memory.size - 1;
+  const maxAddress = context.programState.memory.size - 1;
   const layout = {};
   layout.textLineHeight = 18;
   layout.textBaseline = 5;
@@ -674,9 +674,9 @@ function MemoryViewSelector ({scale, directive, context, controls, frames}) {
 }
 
 function extractView (layout, context, localMap, options) {
-  const {core, oldCore} = context;
-  const {memory, memoryLog} = core;
-  const oldMemory = oldCore.memory;
+  const {programState, lastProgramState} = context;
+  const {memory, memoryLog} = programState;
+  const oldMemory = lastProgramState.memory;
   const {nBytesShown, extraBytes, maxAddress, cursorRows} = options;
   const centerAddress = options.centerAddress;
   let startAddress = Math.max(0, centerAddress - nBytesShown / 2);
@@ -703,7 +703,7 @@ function extractView (layout, context, localMap, options) {
   const bytes = {startAddress, endAddress, cells};
   // Build the cursor views.
   const cursorMap = getCursorMap(
-    core, localMap, options.cursorExprs, {
+    programState, localMap, options.cursorExprs, {
       minIndex: startAddress, maxIndex: endAddress,
       address: 0, cellSize: 1
     });
@@ -714,7 +714,7 @@ function extractView (layout, context, localMap, options) {
   const extraRows = [];
   for (let expr of options.extraExprs) {
     try {
-      const ref = evalExpr(core, localMap, expr, true);
+      const ref = evalExpr(programState, localMap, expr, true);
       if (ref && /^(builtin|pointer)$/.test(ref.type.pointee.kind)) {
         const row = viewExtraCells(context, byteOps, ref, startAddress, endAddress);
         extraRows.push(row);
@@ -724,15 +724,15 @@ function extractView (layout, context, localMap, options) {
     }
   }
   // Add heap structure annotations to bytes.
-  const heapMap = viewHeapFlags(core, startAddress, endAddress);
+  const heapMap = viewHeapFlags(programState, startAddress, endAddress);
   setCellClasses(bytes, cursorMap, heapMap);
   return {bytes, cursorMap, variables, extraRows};
 }
 
 function viewVariables (context, byteOps, startAddress, endAddress, options) {
   const cells = [];
-  const {memory, globalMap} = context.core;
-  let {scope} = context.core;
+  const {memory, globalMap} = context.programState;
+  let {scope} = context.programState;
   // Materialize the stack pointer.
   if (scope) {
     cells.push({sep: 'sp', address: scope.limit});
@@ -786,9 +786,9 @@ function viewVariables (context, byteOps, startAddress, endAddress, options) {
   }
 }
 
-function viewHeapFlags (core, startAddress, endAddress) {
+function viewHeapFlags (programState, startAddress, endAddress) {
   const heapMap = []; // sparse array
-  for (let block of enumerateHeapBlocks(core)) {
+  for (let block of enumerateHeapBlocks(programState)) {
     const {start, end} = block;
     if (start <= endAddress && end >= startAddress) {
       // Mark header area bytes

@@ -75,7 +75,7 @@ export function renderEvents (ctx, params, events) {
     const x = timestampToCanvas(params, event[0]);
     let line = 0;
     const t = event[1];
-    if (/^(start|end|translate)/.test(t)) {
+    if (/^(start|end|compile)/.test(t)) {
       line = -1;
       ctx.strokeStyle = '#f55656'; // @red4
     } else if (/^buffer\.(insert|delete)/.test(t)) {

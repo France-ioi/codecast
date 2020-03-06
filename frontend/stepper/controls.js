@@ -1,12 +1,10 @@
-
 import React from 'react';
 import {Button, ButtonGroup, Intent} from '@blueprintjs/core';
 import * as C from 'persistent-c';
 
 export default function (bundle, deps) {
-
   bundle.use(
-    'getStepperState',
+    'getStepper',
     'getStepperOptions',
     'stepperStep',
     'stepperInterrupt',
@@ -14,34 +12,51 @@ export default function (bundle, deps) {
     'stepperExit',
     'stepperUndo',
     'stepperRedo',
-    'translate',
+    'compile',
     'isStepperInterrupting'
   );
 
   function StepperControlsSelector (state, props) {
-    const {enabled} = props;
+    const { enabled } = props;
     const getMessage = state.get('getMessage');
-    const {controls, showStepper} = state.get('options');
-    let showTranslate, showControls, showExit;
-    let canTranslate, canExit, canRestart, canStep, canStepOut, canInterrupt, canUndo, canRedo;
-    const stepper = deps.getStepperState(state);
+    const { controls, showStepper, platform } = state.get('options');
+    let showCompile, showControls, showExit;
+    let canCompile, canExit, canRestart, canStep, canStepOut, canInterrupt, canUndo, canRedo;
+    let showExpr = true;
+    const stepper = deps.getStepper(state);
     if (stepper) {
       const status = stepper.get('status');
       if (status === 'clear') {
-        showTranslate = true;
-        canTranslate = enabled;
+        showCompile = true;
+        canCompile = enabled;
       } else if (status === 'idle') {
+        const currentStepperState = stepper.get('currentStepperState', {});
+
         showExit = true;
         showControls = true;
         canExit = enabled;
-        const current = stepper.get('current', {});
-        if (current && current.core) {
-          const {control, scope} = current.core;
-          canStepOut = !!C.findClosestFunctionScope(scope);
-          canStep = control && !!control.node;
-          canRestart = enabled;
-          canUndo = enabled && !stepper.get('undo').isEmpty();
-          canRedo = enabled && !stepper.get('redo').isEmpty();
+
+        switch (platform) {
+          case 'python':
+            canStepOut = false;
+            canStep = !window.currentPythonRunner._isFinished;
+            canRestart = enabled;
+            canUndo = enabled && !stepper.get('undo').isEmpty();
+            canRedo = enabled && !stepper.get('redo').isEmpty();
+            showExpr = false;
+
+            break;
+          default:
+            if (currentStepperState && currentStepperState.programState) {
+              const {control, scope} = currentStepperState.programState;
+              canStepOut = !!C.findClosestFunctionScope(scope);
+              canStep = control && !!control.node;
+              canRestart = enabled;
+              canUndo = enabled && !stepper.get('undo').isEmpty();
+              canRedo = enabled && !stepper.get('redo').isEmpty();
+            }
+
+            break;
         }
       } else if (status === 'starting') {
         showExit = true;
@@ -52,26 +67,26 @@ export default function (bundle, deps) {
         canInterrupt = enabled && !deps.isStepperInterrupting(state);
       }
     }
+
     const result = {
       getMessage,
       showStepper, showControls, controls,
       showExit, canExit,
-      showTranslate, canTranslate,
+      showExpr,
+      showCompile, canCompile,
       canRestart, canStep, canStepOut, canInterrupt,
       canUndo, canRedo
     };
+
     return result;
   }
 
-  const controlsWidth = `${36*9+16}px`;
-
   class StepperControls extends React.PureComponent {
-
-    render () {
+    render = () => {
       const {showStepper} = this.props;
       if (!showStepper)
         return false;
-      const {getMessage, showControls, showExit, showTranslate} = this.props;
+      const {getMessage, showControls, showExit, showCompile} = this.props;
       return (
         <div className="controls controls-stepper">
           <div className="controls-stepper-wrapper">
@@ -87,20 +102,24 @@ export default function (bundle, deps) {
               {this._button('redo', this.onRedo, getMessage('CONTROL_REDO'),                'redo')}
             </ButtonGroup>}
           </div>
-          <div className="controls-translate">
+          <div className="controls-compile">
             {showExit && this._button('edit', this.onEdit, false, false, getMessage('EDIT'))}
-            {showTranslate && this._button('translate', this.onTranslate, false, false, getMessage('COMPILE'))}
+            {showCompile && this._button('compile', this.onCompile, false, false, getMessage('COMPILE'))}
           </div>
         </div>
       );
     };
 
-    _button (key, onClick, title, icon, text) {
+    _button = (key, onClick, title, icon, text) => {
       const {controls} = this.props;
-      let intent = Intent.NONE, disabled = false;
-      if (key === 'translate') {
+
+      let disabled = false;
+      const style = {};
+      let intent = Intent.NONE;
+      if (key === 'compile') {
         intent = Intent.PRIMARY;
       }
+
       switch (key) {
         case 'interrupt':
           disabled = !this.props.canInterrupt;
@@ -114,8 +133,18 @@ export default function (bundle, deps) {
         case 'redo':
           disabled = !this.props.canRedo;
           break;
-        case 'run': case 'expr': case 'into': case 'over':
+        case 'run':
+        case 'into':
+        case 'over':
           disabled = !this.props.canStep;
+          break;
+        case 'expr':
+          disabled = !this.props.canStep;
+
+          if (!this.props.showExpr) {
+            style.display = 'none';
+          }
+
           break;
         case 'out':
           disabled = !(this.props.canStep && this.props.canStepOut);
@@ -123,10 +152,11 @@ export default function (bundle, deps) {
         case 'edit':
           disabled = !this.props.canExit;
           break;
-        case 'translate':
-          disabled = !this.props.canTranslate;
+        case 'compile':
+          disabled = !this.props.canCompile;
           break;
       }
+
       if (controls) {
         const mod = controls[key];
         if (mod === '_') {
@@ -139,13 +169,23 @@ export default function (bundle, deps) {
           intent = mod === '+' ? Intent.PRIMARY : Intent.NONE;
         }
       }
+
       if (title === false) {
         title = undefined;
       }
+
       return (
-        <Button onClick={onClick} disabled={disabled} intent={intent} title={title} icon={icon} text={text} />
+        <Button
+            onClick={onClick}
+            style={style}
+            disabled={disabled}
+            intent={intent}
+            title={title}
+            icon={icon}
+            text={text}
+        />
       );
-    }
+    };
 
     onStepRun = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'run'}});
     onStepExpr = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'expr'}});
@@ -157,9 +197,8 @@ export default function (bundle, deps) {
     onEdit = () => this.props.dispatch({type: deps.stepperExit, payload: {}});
     onUndo = () => this.props.dispatch({type: deps.stepperUndo, payload: {}});
     onRedo = () => this.props.dispatch({type: deps.stepperRedo, payload: {}});
-    onTranslate = () => this.props.dispatch({type: deps.translate, payload: {}});
-
+    onCompile = () => this.props.dispatch({type: deps.compile, payload: {}});
   }
-  bundle.defineView('StepperControls', StepperControlsSelector, StepperControls);
 
+  bundle.defineView('StepperControls', StepperControlsSelector, StepperControls);
 };

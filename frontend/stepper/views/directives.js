@@ -21,11 +21,11 @@ const directiveViewDict = {
 
 export default function (bundle, deps) {
 
-  bundle.use('stepperViewControlsChanged', 'getStepperDisplay');
+  bundle.use('stepperViewControlsChanged', 'getCurrentStepperState');
 
   function DirectivesPaneSelector (state, props) {
     const getMessage = state.get('getMessage');
-    const stepperState = deps.getStepperDisplay(state);
+    const stepperState = deps.getCurrentStepperState(state);
     return {state: stepperState, getMessage};
   }
 
@@ -47,17 +47,17 @@ export default function (bundle, deps) {
       if (!state || !state.analysis) {
         return false;
       }
-      const {core, oldCore, analysis, controls, directives} = state;
-      const {ordered, framesMap} = directives;
+      const {programState, lastProgramState, analysis, controls, directives} = state;
+      const {ordered, functionCallStackMap} = directives;
       const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
-      const context = {core, oldCore};
+      const context = {programState, lastProgramState};
       const buttons = [], panels = [];
       for (let directive of ordered) {
         const {key} = directive;
         const dirControls = controls.get(key, Immutable.Map());
         buttons.push(<DirectiveButton key={key} directive={directive} controls={dirControls} onSelect={this.toggleView} />);
         panels.push(<DirectivePanel key={key} directive={directive} controls={dirControls}
-          scale={scale} context={context} frames={framesMap[key]} getMessage={getMessage} onChange={this.onControlsChange} />);
+          scale={scale} context={context} functionCallStack={functionCallStackMap[key]} getMessage={getMessage} onChange={this.onControlsChange} />);
       }
       return (
         <div className='directive-group'>
@@ -92,7 +92,7 @@ class DirectiveButton extends React.PureComponent {
   };
 }
 
-function DirectivePanel ({scale, directive, controls, context, frames, getMessage, onChange}) {
+function DirectivePanel ({scale, directive, controls, context, functionCallStack, getMessage, onChange}) {
   const {key, kind} = directive;
   const hide = controls.get('hide', false);
   if (hide) {
@@ -105,11 +105,11 @@ function DirectivePanel ({scale, directive, controls, context, frames, getMessag
     return <p>{'Error: undefined view kind '}{kind}</p>;
   }
   const {View, selector} = directiveViewDict[kind];
-  const props = selector({scale, directive, context, controls, frames});
+  const props = selector({scale, directive, context, controls, functionCallStack});
   return (
-    <View Frame={DirectiveFrame} getMessage={getMessage} onChange={onChange}
+    <View StackFrame={DirectiveFrame} getMessage={getMessage} onChange={onChange}
       {...props} />);
-};
+}
 
 class DirectiveFrame extends React.PureComponent {
   onToggleFullView = () => {

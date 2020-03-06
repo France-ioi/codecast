@@ -148,7 +148,7 @@ module.exports = function (app, config, callback) {
         "ORDER BY `priority` DESC"
       ].join(' ');
       db.query(q, [user_id], function (err, rows) {
-        if (err) return done('database error');
+        if (err) return done('database error ' + err);
         if (rows.length === 0) {
           // No grants, fall back to querying legacy user_configs table.
           return queryLegacyUserConfig();
@@ -169,11 +169,11 @@ module.exports = function (app, config, callback) {
     function queryLegacyUserConfig () {
       const q = "SELECT value FROM user_configs WHERE user_id = ? LIMIT 1";
       db.query(q, [user_id], function (err, rows) {
-        if (err) return done('database error');
+        if (err) return done('database error ' + err);
         if (rows.length === 1) {
           try {
             const grant = JSON.parse(rows[0].value);
-            grant.type = "s3"
+            grant.type = "s3";
             grants.push(grant);
           } catch (ex) {
             return done('parse error');
@@ -187,7 +187,7 @@ module.exports = function (app, config, callback) {
       if (err) return callback(err);
       callback(null, {grants});
     }
-  };
+  }
 
   callback(null);
 };

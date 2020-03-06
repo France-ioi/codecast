@@ -155,7 +155,7 @@ function drawColCursors (colCount, rowCount, infoMap) {
 export class Array2D extends React.PureComponent {
 
   render () {
-    const {Frame, scale, directive, frames, context, getMessage} = this.props;
+    const {StackFrame, scale, directive, functionCallStack, context, getMessage} = this.props;
     const {byName, byPos} = directive;
     const expr = byPos[0];
     const rowCursors = getList(byName.rowCursors, []);
@@ -163,19 +163,19 @@ export class Array2D extends React.PureComponent {
     const height = getNumber(byName.height, 'auto');
     const view = {rowCursors, colCursors, height, getMessage};
     const {hPan, vPan} = this.getPosition();
-    Object.assign(view, extractView(context, frames[0], expr, view));
+    Object.assign(view, extractView(context, functionCallStack[0], expr, view));
     if (view.error) {
       return (
-        <Frame {...this.props}>
+        <StackFrame {...this.props}>
           <div className='clearfix'>{view.error}</div>
-        </Frame>);
+        </StackFrame>);
     }
     const {rowCount, colCount, rowInfoMap, colInfoMap} = view;
     const svgHeight = gridTop + (rowCount + 1) * cellHeight;
     const svgWidth = gridLeft + (colCount + 1) * cellWidth;
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
     return (
-      <Frame {...this.props}>
+      <StackFrame {...this.props}>
         <div className='clearfix' style={{padding: '2px'}}>
           <div style={{width: '100%', height: divHeight}}>
             <SvgPan width='100%' height={svgHeight} scale={scale} x={hPan * cellWidth} y={vPan * cellHeight} getPosition={this.getPosition} onPan={this.onPan} className="array2d">
@@ -191,7 +191,7 @@ export class Array2D extends React.PureComponent {
             </SvgPan>
           </div>
         </div>
-      </Frame>
+      </StackFrame>
     );
   }
 

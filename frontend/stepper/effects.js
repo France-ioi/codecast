@@ -1,8 +1,8 @@
 /*
 
-  Effects API and core effects.
+  Effects API and programState effects.
 
-  A call to C.step(core) returns a list of effects.
+  A call to C.step(programState) returns a list of effects.
   An effect is an array whose first element is a (string) name.
   An effect handler is a generator function that takes a stepper context and
   the effect's arguments.
@@ -25,44 +25,44 @@ export default function (bundle, deps) {
   bundle.defer(function ({stepperApi}) {
 
     stepperApi.onEffect('control', function* controlHandler (stepperContext, control) {
-      C.effects.doControl(stepperContext.state.core, control);
+      C.effects.doControl(stepperContext.state.programState, control);
     });
 
     stepperApi.onEffect('result', function* resultHandler (stepperContext, result) {
-      C.effects.doResult(stepperContext.state.core, result);
+      C.effects.doResult(stepperContext.state.programState, result);
     });
 
     stepperApi.onEffect('load', function* loadHandler (stepperContext, ref) {
-      C.effects.doLoad(stepperContext.state.core, ref);
+      C.effects.doLoad(stepperContext.state.programState, ref);
     });
 
     stepperApi.onEffect('store', function* storeHandler (stepperContext, ref, value) {
-      C.effects.doStore(stepperContext.state.core, ref, value);
+      C.effects.doStore(stepperContext.state.programState, ref, value);
     });
 
     stepperApi.onEffect('enter', function* enterHandler (stepperContext, blockNode) {
-      C.effects.doEnter(stepperContext.state.core, blockNode);
-      stepperContext.state.core.scope.directives = blockNode[1].directives || [];
+      C.effects.doEnter(stepperContext.state.programState, blockNode);
+      stepperContext.state.programState.scope.directives = blockNode[1].directives || [];
     });
 
     stepperApi.onEffect('leave', function* leaveHandler (stepperContext, blockNode) {
-      C.effects.doLeave(stepperContext.state.core, blockNode);
+      C.effects.doLeave(stepperContext.state.programState, blockNode);
     });
 
     stepperApi.onEffect('call', function* callHandler (stepperContext, cont, values) {
-      C.effects.doCall(stepperContext.state.core, cont, values);
+      C.effects.doCall(stepperContext.state.programState, cont, values);
       /* XXX disable this code and leave directives in block */
       const bodyNode = values[0].decl;
-      stepperContext.state.core.scope.directives = bodyNode[1].directives || [];
+      stepperContext.state.programState.scope.directives = bodyNode[1].directives || [];
       /* --- */
     });
 
     stepperApi.onEffect('return', function* returnHandler (stepperContext, result) {
-      C.effects.doReturn(stepperContext.state.core, result);
+      C.effects.doReturn(stepperContext.state.programState, result);
     });
 
     stepperApi.onEffect('vardecl', function* vardeclHandler (stepperContext, name, type, init) {
-      C.effects.doVardecl(stepperContext.state.core, name, type, init);
+      C.effects.doVardecl(stepperContext.state.programState, name, type, init);
     });
 
   });

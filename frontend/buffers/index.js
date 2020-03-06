@@ -34,6 +34,7 @@ import React from 'react';
 
 import 'brace';
 import 'brace/mode/c_cpp';
+import 'brace/mode/python';
 import 'brace/theme/ambiance';
 import 'brace/theme/chaos';
 import 'brace/theme/chrome';
@@ -140,6 +141,7 @@ class BufferEditor extends React.PureComponent {
 
   onEdit = (delta) => {
     const {dispatch, buffer, actionTypes} = this.props;
+    console.log(this.props);
     dispatch({type: actionTypes.bufferEdit, buffer, delta});
   };
 

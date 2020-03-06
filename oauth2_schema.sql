@@ -1,4 +1,3 @@
-
 CREATE TABLE `sessions` (
   `session_id` varchar(128) NOT NULL,
   `expires` int(11) unsigned NOT NULL,

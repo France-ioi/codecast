@@ -61,14 +61,27 @@ function* playerPrepare (app, {payload}) {
   }
   /* Compute the future state after every event. */
   const chan = yield call(requestAnimationFrames, 50);
+
+  const { platform } = data.options;
+  yield put({
+    type: actionTypes.platformChanged,
+    platform: platform
+  });
+
+  const state = Immutable.Map({
+    options: { platform }
+  });
+  state.set('options', data.options);
+console.log(state);console.log(state.toJS());
   const replayContext = {
-    state: Immutable.Map(),
+    state,
     events: data.events,
     instants: [],
     applyEvent: replayApi.applyEvent,
     addSaga,
     reportProgress,
   };
+  console.log(replayContext);
   try {
     yield call(computeInstants, replayContext);
     /* The duration of the recording is the timestamp of the last event. */
@@ -106,9 +119,11 @@ function* computeInstants (replayContext) {
   for (pos = 0; pos < events.length; pos += 1) {
     const event = events[pos];
     const t = event[0];
-    const key = event[1]
+    // Get the action name, with replace to support older versions.
+    const key = event[1].replace('translate.', 'compile.');
     const instant = {t, pos, event};
     replayContext.instant = instant;
+    console.log('call', key, replayContext, event);
     yield call(replayContext.applyEvent, key, replayContext, event);
     /* Preserve the last explicitly set range. */
     if ('range' in instant) {

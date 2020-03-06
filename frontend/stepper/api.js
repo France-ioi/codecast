@@ -8,7 +8,7 @@
 */
 
 import * as C from 'persistent-c';
-import {all, call} from 'redux-saga/effects';
+import {all, call, put} from 'redux-saga/effects';
 
 export default function (bundle) {
 
@@ -33,10 +33,17 @@ function onInit (callback) {
 
 /* Build a stepper state from the given init data. */
 export async function buildState (globalState) {
-  /* Call all the init callbacks. Pass the global state so the player can
-     build stepper states without having to install the pre-computed state
-     into the store. */
-  const stepperState = {};
+  console.log('buildState globalState', globalState);
+  const { platform } = globalState.get('options');
+
+  /*
+   * Call all the init callbacks. Pass the global state so the player can
+   * build stepper states without having to install the pre-computed state
+   * into the store.
+   */
+  const stepperState = {
+    platform
+  };
   for (var callback of initCallbacks) {
     callback(stepperState, globalState);
   }
@@ -45,14 +52,22 @@ export async function buildState (globalState) {
     state: stepperState,
     interact
   };
-  while (!inUserCode(stepperContext.state.core)) {
-    /* Mutate the stepper context to advance execution by a single step. */
-    const effects = C.step(stepperContext.state.core);
-    if (effects) {
-      await executeEffects(stepperContext, effects[Symbol.iterator]());
-    }
+
+  switch (platform) {
+    case 'python':
+      return stepperContext.state;
+
+    default:
+      while (!inUserCode(stepperContext.state)) {
+        /* Mutate the stepper context to advance execution by a single step. */
+        const effects = C.step(stepperContext.state.programState);
+        if (effects) {
+          await executeEffects(stepperContext, effects[Symbol.iterator]());
+        }
+      }
+      return stepperContext.state;
   }
-  return stepperContext.state;
+
   function interact ({saga}) {
     return new Promise((resolve, reject) => {
       if (saga) {
@@ -73,7 +88,7 @@ export function* rootStepperSaga (...args) {
   yield all(stepperSagas.map(saga => call(saga, ...args)));
 }
 
-/* An effect is a generator that may alter the stepperContext/state/core, and
+/* An effect is a generator that may alter the stepperContext/state/programState, and
    yield further effects. */
 function onEffect (name, handler) {
   /* TODO: guard against duplicate effects? allow multiple handlers for a
@@ -91,7 +106,7 @@ function getNodeStartRow (state) {
   if (!state) {
     return undefined;
   }
-  const {control} = state.core;
+  const {control} = state.programState;
   if (!control || !control.node) {
     return undefined;
   }
@@ -100,17 +115,32 @@ function getNodeStartRow (state) {
 }
 
 export function makeContext (state, interact) {
-  return {
-    state: {
-      ...state,
-      core: C.clearMemoryLog(state.core),
-      oldCore: state.core,
-      controls: resetControls(state.controls)
-    },
-    interact,
-    position: getNodeStartRow(state),
-    lineCounter: 0
-  };
+  switch (state.platform) {
+    case 'python':
+      return {
+        state: {
+          ...state,
+          programState: state.programState, // TODO : What to do here ?
+          lastProgramState: state.programState,
+          controls: resetControls(state.controls)
+        },
+        interact,
+        position: getNodeStartRow(state),
+        lineCounter: 0
+      };
+    default:
+      return {
+        state: {
+          ...state,
+          programState: C.clearMemoryLog(state.programState),
+          lastProgramState: state.programState,
+          controls: resetControls(state.controls)
+        },
+        interact,
+        position: getNodeStartRow(state),
+        lineCounter: 0
+      };
+  }
 }
 
 function resetControls (controls) {
@@ -147,12 +177,31 @@ async function executeEffects (stepperContext, iterator) {
   }
 }
 
-async function executeSingleStep (stepperContext) {
-  if (isStuck(stepperContext.state.core)) {
+async function executeSingleStep (stepperContext) {console.log('!!! executeSingleStep !!!');
+  console.log('control', stepperContext.state.programState.control);
+
+  if (isStuck(stepperContext.state)) {
     throw new StepperError('stuck', 'execution cannot proceed');
   }
-  const effects = C.step(stepperContext.state.core);
-  await executeEffects(stepperContext, effects[Symbol.iterator]());
+
+  switch (stepperContext.state.platform) {
+    case 'python':
+      console.log('EXECUTE STEP HERE');
+      window.currentPythonRunner.runStep();
+
+      put({
+        type: 'Python.Stepped',
+        suspension: window.currentPythonRunner.getCurrentSuspension()
+      });
+
+      break;
+    default:
+      const effects = C.step(stepperContext.state.programState);
+      await executeEffects(stepperContext, effects[Symbol.iterator]());
+
+      break;
+  }
+
   /* Update the current position in source code. */
   const position = getNodeStartRow(stepperContext.state);
   if (position !== undefined && position !== stepperContext.position) {
@@ -166,17 +215,17 @@ async function executeSingleStep (stepperContext) {
 }
 
 async function stepUntil (stepperContext, stopCond) {
-  let core;
+  let programState;
   let stop = false;
   while (true) {
-    core = stepperContext.state.core;
-    if (isStuck(core)) {
+    if (isStuck(stepperContext.state)) {
       return;
     }
-    if (!stop && stopCond(core)) {
+    programState = stepperContext.state.programState;
+    if (!stop && stopCond(programState)) {
       stop = true;
     }
-    if (stop && inUserCode(core)) {
+    if (stop && inUserCode(stepperContext.state)) {
       return;
     }
     await executeSingleStep(stepperContext);
@@ -193,33 +242,36 @@ async function stepExpr (stepperContext) {
 async function stepInto (stepperContext) {
   // Take a first step.
   await executeSingleStep(stepperContext);
-  // Step out of the current statement.
-  await stepUntil(stepperContext, C.outOfCurrentStmt);
-  // Step into the next statement.
-  await stepUntil(stepperContext, C.intoNextStmt);
+
+  if (stepperContext.state.platform === 'unix' || stepperContext.state.platform === 'arduino') {
+    // Step out of the current statement.
+    await stepUntil(stepperContext, C.outOfCurrentStmt);
+    // Step into the next statement.
+    await stepUntil(stepperContext, C.intoNextStmt);
+  }
 }
 
 async function stepOut (stepperContext) {
   // The program must be running.
-  if (!isStuck(stepperContext.state.core)) {
+  if (!isStuck(stepperContext.state)) {
     // Find the closest function scope.
-    const refScope = stepperContext.state.core.scope;
+    const refScope = stepperContext.state.programState.scope;
     const funcScope = C.findClosestFunctionScope(refScope);
     // Step until execution reach that scope's parent.
-    await stepUntil(stepperContext, core => core.scope === funcScope.parent);
+    await stepUntil(stepperContext, programState => programState.scope === funcScope.parent);
   }
   return stepperContext;
 }
 
 async function stepOver (stepperContext) {
   // Remember the current scope.
-  const refScope = stepperContext.state.core.scope;
+  const refCurrentScope = stepperContext.state.programState.scope;
   // Take a first step.
   await executeSingleStep(stepperContext);
   // Step until out of the current statement but not inside a nested
   // function call.
-  await stepUntil(stepperContext, core =>
-    C.outOfCurrentStmt(core) && C.notInNestedCall(core.scope, refScope));
+  await stepUntil(stepperContext, programState =>
+    C.outOfCurrentStmt(programState) && C.notInNestedCall(programState.scope, refCurrentScope));
   // Step into the next statement.
   await stepUntil(stepperContext, C.intoNextStmt);
 }
@@ -245,12 +297,22 @@ export async function performStep (stepperContext, mode) {
 }
 
 
-function isStuck (core) {
-  return !core.control;
+function isStuck (state) {
+  switch (state.platform) {
+    case 'python':
+      return false;
+    default:
+      return !state.programState.control;
+  }
 }
 
-function inUserCode (core) {
-  return !!core.control.node[1].begin;
+function inUserCode (state) {
+  switch (state.platform) {
+    case 'python':
+      return true;
+    default:
+      return !!state.programState.control.node[1].begin;;
+  }
 }
 
 export class StepperError extends Error {

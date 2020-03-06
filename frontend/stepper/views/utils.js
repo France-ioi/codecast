@@ -9,7 +9,7 @@ import * as C from 'persistent-c';
 
 import {LocalizedError} from '../../lang/index';
 
-export const readScalarBasic = function (core, refType, address) {
+export const readScalarBasic = function (programState, refType, address) {
   // Produce a 'basic stored scalar value' object whose shape is
   //   {kind, ref, current}
   // where:
@@ -18,7 +18,7 @@ export const readScalarBasic = function (core, refType, address) {
   //   - 'current' holds the current value
   const kind = 'scalar';
   const ref = new C.PointerValue(refType, address);
-  const current = C.readValue(core, ref);
+  const current = C.readValue(programState, ref);
   return {kind, ref, current};
 };
 
@@ -30,9 +30,9 @@ export const readScalar = function (context, refType, address) {
   //   - 'load' holds the smallest rank of a load in the memory log
   //   - 'store' holds the greatest rank of a store in the memory log
   //   - 'previous' holds the previous value (if 'store' is defined)
-  const {core, oldCore} = context;
-  const result = readScalarBasic(core, refType, address);
-  core.memoryLog.forEach(function (entry, i) {
+  const {programState, lastProgramState} = context;
+  const result = readScalarBasic(programState, refType, address);
+  programState.memoryLog.forEach(function (entry, i) {
     /* FIXME: when ref is a pointer type, the length of the value written
               to it should be used to decide if the ranges intersect */
     if (refsIntersect(result.ref, entry[1])) {
@@ -46,7 +46,7 @@ export const readScalar = function (context, refType, address) {
     }
   });
   if ('store' in result) {
-    result.previous = C.readValue(oldCore, result.ref);
+    result.previous = C.readValue(lastProgramState, result.ref);
   }
   return result;
 };
@@ -127,34 +127,34 @@ export const refsIntersect = function (ref1, ref2) {
   is returned.
   If any error occurs, an Error is thrown.
 */
-export const evalExpr = function (core, localMap, expr, asRef) {
+export const evalExpr = function (programState, localMap, expr, asRef) {
   if (expr[0] === 'ident') {
     const name = expr[1];
     const decl = localMap.get(name);
     if (!decl) {
-      if (name in core.globalMap) {
-        const value = core.globalMap[name];
+      if (name in programState.globalMap) {
+        const value = programState.globalMap[name];
         if (value instanceof C.PointerValue) {
-          return evalRef(core, value, asRef);
+          return evalRef(programState, value, asRef);
         }
       }
       throw new LocalizedError('EVAL_REF_UNDEF_VAR', {name});
     }
-    return evalRef(core, decl.ref, asRef);
+    return evalRef(programState, decl.ref, asRef);
   }
   if (expr[0] === 'deref') {
-    const ref = evalExpr(core, localMap, expr[1], false);
+    const ref = evalExpr(programState, localMap, expr[1], false);
     if (ref.type.kind !== 'pointer') {
       throw new LocalizedError('EVAL_DEREF_NONPTR');
     }
-    return evalRef(core, ref, asRef);
+    return evalRef(programState, ref, asRef);
   }
   if (expr[0] === 'subscript') {
-    const arrayRef = evalExpr(core, localMap, expr[1], false);
+    const arrayRef = evalExpr(programState, localMap, expr[1], false);
     if (arrayRef.type.kind !== 'pointer') {
       throw new LocalizedError('EVAL_SUBSC_NONPTR');
     }
-    const index = evalExpr(core, localMap, expr[2], false);
+    const index = evalExpr(programState, localMap, expr[2], false);
     if (index.type.kind !== 'builtin') {
       throw new LocalizedError('EVAL_SUBSC_NONBLT');
     }
@@ -164,7 +164,7 @@ export const evalExpr = function (core, localMap, expr, asRef) {
     if (asRef || elemType.kind === 'array') {
       return ref;
     } else {
-      return C.readValue(core, ref);
+      return C.readValue(programState, ref);
     }
   }
   if (asRef) {
@@ -174,12 +174,12 @@ export const evalExpr = function (core, localMap, expr, asRef) {
     return new C.IntegralValue(C.builtinTypes['int'], expr[1] | 0);
   }
   if (expr[0] === 'addrOf') {
-    return evalExpr(core, localMap, expr[1], true);
+    return evalExpr(programState, localMap, expr[1], true);
   }
   throw new LocalizedError('EVAL_UNSUP_EXPR');
 };
 
-const evalRef = function (core, ref, asRef) {
+const evalRef = function (programState, ref, asRef) {
   if (asRef) {
     if (ref.type.pointee.kind === 'array') {
       // Taking the address of an array, returns a decayed pointer to the array.
@@ -192,7 +192,7 @@ const evalRef = function (core, ref, asRef) {
     if (valueType.kind === 'array') {
       return C.makeRef(valueType, ref.address);
     } else {
-      return C.readValue(core, ref);
+      return C.readValue(programState, ref);
     }
   }
 };
@@ -223,13 +223,13 @@ export const stringifyExpr = function (expr, precedence) {
   return JSON.stringify(expr);
 };
 
-export const viewExprs = function (core, frame, exprs) {
-  const localMap = frame.get('localMap');
+export const viewExprs = function (programState, stackFrame, exprs) {
+  const localMap = stackFrame.get('localMap');
   const views = [];
   exprs.forEach(function (expr) {
     const label = stringifyExpr(expr, 0);
     try {
-      const value = evalExpr(core, localMap, expr, false);
+      const value = evalExpr(programState, localMap, expr, false);
       views.push({label, value});
     } catch (ex) {
       views.push({label, error: ex.toString});
@@ -238,16 +238,16 @@ export const viewExprs = function (core, frame, exprs) {
   return views;
 };
 
-export const viewFrame = function (context, frame, options) {
+export const viewStackFrame = function (context, stackFrame, options) {
   const view = {
-    key: frame.get('scope').key,
-    func: frame.get('func'),
-    args: frame.get('args')
+    key: stackFrame.get('scope').key,
+    func: stackFrame.get('func'),
+    args: stackFrame.get('args')
   };
   if (options.locals) {
-    const localMap = frame.get('localMap');
+    const localMap = stackFrame.get('localMap');
     const locals = view.locals = [];
-    frame.get('localNames').forEach(function (name) {
+    stackFrame.get('localNames').forEach(function (name) {
       const {type, ref} = localMap.get(name);
       // type and ref.type.pointee are assumed identical
       locals.push(viewVariable(context, name, type, ref.address));
@@ -409,12 +409,12 @@ export const getNumber = function (expr, options) {
   if (expr[0] === 'number') {
     return expr[1];
   }
-  const core = options.core;
-  const frame = options.frame;
-  if (expr[0] === 'ident' && core && frame) {
-    const decl = frame.get('localMap').get(expr[1]);
+  const programState = options.programState;
+  const stackFrame = options.stackFrame;
+  if (expr[0] === 'ident' && programState && stackFrame) {
+    const decl = stackFrame.get('localMap').get(expr[1]);
     if (decl && decl.type.kind === 'builtin') {
-      const value = C.readValue(core, decl.ref);
+      const value = C.readValue(programState, decl.ref);
       if (value) {
         return value.toInteger();
       }
@@ -431,11 +431,11 @@ export const getList = function (expr, noVal) {
 };
 
 export function ShowVar (props) {
-  const {Frame, directive, controls, frames, context} = props;
+  const {StackFrame, directive, controls, functionCallStack, context} = props;
   const {byPos} = directive;
   const name = getIdent(byPos[0]);
-  const frame = frames[0];
-  const localMap = frame.get('localMap');
+  const stackFrame = functionCallStack[0];
+  const localMap = stackFrame.get('localMap');
   if (!localMap.has(name)) {
     return <p>{name}{" not in scope"}</p>;
   }
@@ -443,9 +443,9 @@ export function ShowVar (props) {
   const limits = {scalars: 0, maxScalars: 100};
   const value = readValue(context, C.pointerType(type), ref.address, limits);
   return (
-    <Frame {...props}>
+    <StackFrame {...props}>
       <VarDecl name={name} type={type} address={ref.address} value={value} />
-    </Frame>
+    </StackFrame>
   );
 }
 
