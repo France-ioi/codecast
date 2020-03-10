@@ -24,7 +24,7 @@ export default function (bundle, deps) {
     let showCompile = false, showControls = false, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
     let canInterrupt = false, canUndo = false, canRedo = false;
-    let showExpr = true;
+    let showExpr = true, showOver = true;
 
     const stepper = deps.getStepper(state);
     if (stepper) {
@@ -47,6 +47,7 @@ export default function (bundle, deps) {
             canUndo = enabled && !stepper.get('undo').isEmpty();
             canRedo = enabled && !stepper.get('redo').isEmpty();
             showExpr = false;
+            showOver = false;
 
             break;
           default:
@@ -75,7 +76,7 @@ export default function (bundle, deps) {
       getMessage,
       showStepper, showControls, controls,
       showEdit, canExit,
-      showExpr,
+      showExpr, showOver,
       showCompile, canCompile,
       canRestart, canStep, canStepOut, canInterrupt,
       canUndo, canRedo
@@ -138,8 +139,15 @@ export default function (bundle, deps) {
           break;
         case 'run':
         case 'into':
+          disabled = !this.props.canStep;
+          break;
         case 'over':
           disabled = !this.props.canStep;
+
+          if (!this.props.showOver) {
+            style.display = 'none';
+          }
+
           break;
         case 'expr':
           disabled = !this.props.canStep;
