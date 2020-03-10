@@ -1,7 +1,8 @@
 module.exports = {
   language: 'Français',
-  COMPILE: 'compiler',
-  EDIT: 'éditer',
+  COMPILE: 'Compiler',
+  EXECUTE: 'Exécuter',
+  EDIT: 'Éditer',
   VARIABLES: 'Variables',
   SOURCE: 'Source',
   TERMINAL: 'Terminal',

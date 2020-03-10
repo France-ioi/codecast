@@ -24,7 +24,14 @@ export default function (bundle, deps) {
     let showCompile = false, showControls = false, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
     let canInterrupt = false, canUndo = false, canRedo = false;
-    let showExpr = true, showOver = true;
+    let showExpr = true, showOver = true, showRun = true;
+    let compileOrExecuteMessage = '';
+
+    if (platform === 'python') {
+      compileOrExecuteMessage = getMessage('EXECUTE');
+    } else {
+      compileOrExecuteMessage = getMessage('COMPILE');
+    }
 
     const stepper = deps.getStepper(state);
     if (stepper) {
@@ -47,6 +54,7 @@ export default function (bundle, deps) {
             canUndo = enabled && !stepper.get('undo').isEmpty();
             canRedo = enabled && !stepper.get('redo').isEmpty();
             showExpr = false;
+            showRun = false;
             showOver = false;
 
             break;
@@ -76,10 +84,11 @@ export default function (bundle, deps) {
       getMessage,
       showStepper, showControls, controls,
       showEdit, canExit,
-      showExpr, showOver,
+      showExpr, showOver, showRun,
       showCompile, canCompile,
       canRestart, canStep, canStepOut, canInterrupt,
-      canUndo, canRedo
+      canUndo, canRedo,
+      compileOrExecuteMessage
     };
 
     return result;
@@ -90,7 +99,7 @@ export default function (bundle, deps) {
       const {showStepper} = this.props;
       if (!showStepper)
         return false;
-      const {getMessage, showControls, showEdit, showCompile} = this.props;
+      const {getMessage, showControls, showEdit, showCompile, compileOrExecuteMessage} = this.props;
       return (
         <div className="controls controls-stepper">
           <div className="controls-stepper-wrapper">
@@ -108,7 +117,7 @@ export default function (bundle, deps) {
           </div>
           <div className="controls-compile">
             {showEdit && this._button('edit', this.onEdit, false, false, getMessage('EDIT'))}
-            {showCompile && this._button('compile', this.onCompile, false, false, getMessage('COMPILE'))}
+            {showCompile && this._button('compile', this.onCompile, false, false, compileOrExecuteMessage)}
           </div>
         </div>
       );
@@ -138,6 +147,13 @@ export default function (bundle, deps) {
           disabled = !this.props.canRedo;
           break;
         case 'run':
+          disabled = !this.props.canStep;
+
+          if (!this.props.showRun) {
+            style.display = 'none';
+          }
+
+          break;
         case 'into':
           disabled = !this.props.canStep;
           break;
