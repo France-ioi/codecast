@@ -55,8 +55,7 @@ class EventView extends React.PureComponent {
     }
     return <div className="dev-EventView">{timestamp.toFixed(0)} {body}</div>
   };
-
-});
+}
 
 function rangeToText (range) {
   const start_row = range[0];

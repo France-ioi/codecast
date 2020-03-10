@@ -449,10 +449,14 @@ export default function (context) {
     };
 
     this.initCodes = (codes) => {
+        console.log(codes);
         // For reportValue in Skulpt.
         window.currentPythonRunner = this;
 
+        this._resetInterpreterState();
+
         if (Sk.running) {
+            console.log('running aleady');
             if(typeof Sk.runQueue === 'undefined') {
                 Sk.runQueue = [];
             }
@@ -466,6 +470,7 @@ export default function (context) {
 
         window.currentPythonContext = this.context;
         this._debugger = new Sk.Debugger(this._editor_filename, this);
+        console.log('LE DEBUGGER EST LA :', this._debugger);
         this._configure();
         this._injectFunctions();
         this._code = codes[0];
@@ -483,8 +488,9 @@ export default function (context) {
                 console.log('success promise', response);
                 this._debugger.success.bind(this._debugger);
             }, (error) => {
-                console.log('errororororor', error);
                 this._debugger.error.bind(this._debugger);
+
+                this.onError(error + "\n");
             });
         } catch (e) {
             this.onError(e.toString() + "\n");

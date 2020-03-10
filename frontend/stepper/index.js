@@ -262,15 +262,20 @@ function stepperRestartReducer (state, {payload: {stepperState}}) {
       console.log('TODO: restart python with stepperState');
     }
   } else {
-    stepperState = state.getIn(['stepper', 'initialStepperState']);
-
     if (platform === 'python') {
-      window.currentPythonRunner.initCodes([window.currentPythonRunner._code]);
+      stepperState = state.getIn(['stepper', 'initialStepperState']);
 
-      put({
+      const sourceModel = state.get('buffers').get('source').get('model');
+      const source = sourceModel.get('document').toString();
+
+      window.currentPythonRunner.initCodes([source]);
+
+      /*put({
         type: deps.pythonStepped,
         suspension: window.currentPythonRunner.getCurrentSuspension()
-      });
+      });*/
+    } else {
+      stepperState = state.getIn(['stepper', 'initialStepperState']);
     }
   }
 
@@ -437,9 +442,13 @@ function* compileSucceededSaga () {
 
     let stepperState = yield call(buildState, globalState);
 
-    /* Enable the stepper */
-    yield put({type: actionTypes.stepperEnabled});
-    yield put({type: actionTypes.stepperRestart, payload: {stepperState}});
+    // buildState may have triggered an error.
+    const newGlobalState = yield select(st => st);
+    if (newGlobalState.get('compile').get('status') !== 'error') {
+      /* Enable the stepper */
+      yield put({type: actionTypes.stepperEnabled});
+      yield put({type: actionTypes.stepperRestart, payload: {stepperState}});
+    }
   } catch (error) {
     yield put({type: actionTypes.error, payload: {source: 'stepper', error}});
   }
@@ -560,9 +569,16 @@ function* stepperExitSaga () {
 
 function* updateSourceHighlightSaga () {
   const actionTypes = yield select(state => state.get('actionTypes'));
-  const stepperState = yield select(getCurrentStepperState);
+  const state = yield select();
+  const stepperState = state.get('stepper').get('currentStepperState');
+
   const range = getNodeRange(stepperState);
-  yield put({type: actionTypes.bufferHighlight, buffer: 'source', range});
+
+  yield put({
+    type: actionTypes.bufferHighlight,
+    buffer: 'source',
+    range
+  });
 }
 
 function* stepperSaga (args) {

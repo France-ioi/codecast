@@ -20,6 +20,7 @@ import { asyncRequestJson } from '../utils/api';
 
 import { toHtml } from "../utils/sanitize";
 import { TextEncoder } from "text-encoding-utf-8";
+import {stepperClear} from "./index";
 
 export default function (bundle, deps) {
 
@@ -60,7 +61,11 @@ export default function (bundle, deps) {
   // Failed to compile {source} with {error}.
   bundle.defineAction('compileFailed', 'Compile.Failed');
   bundle.addReducer('compileFailed', function (state, action) {
-    return state.update('compile', st => compileFailed(st, action));
+    const newState = state.update('compile', st => compileFailed(st, action));
+
+    newState.set('stepper', stepperClear());
+
+    return newState;
   });
 
   // Clear the diagnostics (compilation errors and warnings) returned
@@ -244,8 +249,8 @@ export function compileSucceeded (state, action) {
 }
 
 function compileFailed (state, action) {
-  console.log('compileFailed', action);
   const {diagnostics} = action.response;
+
   return state
     .set('status', 'error')
     .set('diagnostics', diagnostics)

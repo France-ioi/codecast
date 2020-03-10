@@ -20,9 +20,12 @@ export default function (bundle, deps) {
     const { enabled } = props;
     const getMessage = state.get('getMessage');
     const { controls, showStepper, platform } = state.get('options');
-    let showCompile, showControls, showExit;
-    let canCompile, canExit, canRestart, canStep, canStepOut, canInterrupt, canUndo, canRedo;
+
+    let showCompile = false, showControls = false, showEdit = false;
+    let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
+    let canInterrupt = false, canUndo = false, canRedo = false;
     let showExpr = true;
+
     const stepper = deps.getStepper(state);
     if (stepper) {
       const status = stepper.get('status');
@@ -32,7 +35,7 @@ export default function (bundle, deps) {
       } else if (status === 'idle') {
         const currentStepperState = stepper.get('currentStepperState', {});
 
-        showExit = true;
+        showEdit = true;
         showControls = true;
         canExit = enabled;
 
@@ -59,10 +62,10 @@ export default function (bundle, deps) {
             break;
         }
       } else if (status === 'starting') {
-        showExit = true;
+        showEdit = true;
         showControls = true;
       } else if (status === 'running') {
-        showExit = true;
+        showEdit = true;
         showControls = true;
         canInterrupt = enabled && !deps.isStepperInterrupting(state);
       }
@@ -71,7 +74,7 @@ export default function (bundle, deps) {
     const result = {
       getMessage,
       showStepper, showControls, controls,
-      showExit, canExit,
+      showEdit, canExit,
       showExpr,
       showCompile, canCompile,
       canRestart, canStep, canStepOut, canInterrupt,
@@ -86,7 +89,7 @@ export default function (bundle, deps) {
       const {showStepper} = this.props;
       if (!showStepper)
         return false;
-      const {getMessage, showControls, showExit, showCompile} = this.props;
+      const {getMessage, showControls, showEdit, showCompile} = this.props;
       return (
         <div className="controls controls-stepper">
           <div className="controls-stepper-wrapper">
@@ -103,7 +106,7 @@ export default function (bundle, deps) {
             </ButtonGroup>}
           </div>
           <div className="controls-compile">
-            {showExit && this._button('edit', this.onEdit, false, false, getMessage('EDIT'))}
+            {showEdit && this._button('edit', this.onEdit, false, false, getMessage('EDIT'))}
             {showCompile && this._button('compile', this.onCompile, false, false, getMessage('COMPILE'))}
           </div>
         </div>

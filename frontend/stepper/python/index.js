@@ -95,7 +95,8 @@ export default function (bundle, deps) {
             console.log('ERROR RECEIVED', diagnostics);
 
             pythonInterpreterChannel.put({
-              type: 'Compile.Failed',response
+              type: 'Compile.Failed',
+              response
             });
           },
           onInput: (prompt) => {
@@ -122,12 +123,12 @@ export default function (bundle, deps) {
         const pythonInterpreter = new PythonInterpreter(context);
         pythonInterpreter.initCodes([source]);
 
-        console.log('HIEOE');
+        /*console.log('HIEOE');
         put({
-          type: deps.pythonStepped,
+          type: 'Python.Stepped',
           suspension: pythonInterpreter.getCurrentSuspension()
         });
-        console.log('HIEOFFZE');
+        console.log('HIEOFFZE');*/
       }
     });
   })
