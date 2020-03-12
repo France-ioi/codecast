@@ -24,7 +24,7 @@ export default function (bundle, deps) {
     let showCompile = false, showControls = false, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
     let canInterrupt = false, canUndo = false, canRedo = false;
-    let showExpr = true, showOver = true, showRun = true;
+    let showExpr = true, showOver = true;
     let compileOrExecuteMessage = '';
 
     if (platform === 'python') {
@@ -54,7 +54,6 @@ export default function (bundle, deps) {
             canUndo = enabled && !stepper.get('undo').isEmpty();
             canRedo = enabled && !stepper.get('redo').isEmpty();
             showExpr = false;
-            showRun = false;
             showOver = false;
 
             break;
@@ -84,7 +83,7 @@ export default function (bundle, deps) {
       getMessage,
       showStepper, showControls, controls,
       showEdit, canExit,
-      showExpr, showOver, showRun,
+      showExpr, showOver,
       showCompile, canCompile,
       canRestart, canStep, canStepOut, canInterrupt,
       canUndo, canRedo,
@@ -148,10 +147,6 @@ export default function (bundle, deps) {
           break;
         case 'run':
           disabled = !this.props.canStep;
-
-          if (!this.props.showRun) {
-            style.display = 'none';
-          }
 
           break;
         case 'into':

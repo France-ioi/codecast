@@ -411,9 +411,9 @@ export default function (context) {
     };
 
     this.print = (message, className) => {
-        pythonRunnerLog('Message PRINT ', message);
+        pythonRunnerLog('Message PRINT : "', message, '"');
 
-        if (message === 'Program execution complete') {
+        if (message.trim() === 'Program execution complete') {
             this._onFinished();
         } else {
             this.onPrint(message);
@@ -500,21 +500,6 @@ export default function (context) {
 
         Sk.running = true;
         this._isRunning = true;
-    };
-
-    this.run = () => {
-        pythonRunnerLog('run');
-
-        if(this.stepMode) {
-            this._paused = this._stepInProgress;
-            this.stepMode = false;
-        }
-        this._setTimeout(this._continue.bind(this), 100);
-    };
-
-    this.runCodes = (codes) => {
-        this.initCodes(codes);
-        this.run();
     };
 
     this.runStep = () => {

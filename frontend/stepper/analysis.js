@@ -27,10 +27,6 @@ export const analyseState = function (programState) {
     };
   }
 
-  console.log('programState', programState);
-  console.log('functionCallStack', functionCallStack.toJS());
-  console.log('result', result);
-
   return Object.freeze(result);
 };
 

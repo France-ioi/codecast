@@ -317,8 +317,22 @@ function stepperStartedReducer (state, action) {
 function stepperProgressReducer (state, {payload: {stepperContext}}) {
   // Set new currentStepperState state and go back to idle.
   const stepperState = enrichStepperState(stepperContext.state);
-  return state.update('stepper', stepper => stepper
-    .set('currentStepperState', stepperState));
+
+  // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
+  if (stepperState.hasOwnProperty('platform') && stepperState.platform === 'python') {
+    const storeStepper = getStepper(state);
+    const storeCurrentStepperState = storeStepper.get('currentStepperState');
+
+    const storeTerminal = storeCurrentStepperState.terminal;
+    const storeOutput = storeCurrentStepperState.output;
+
+    stepperState.terminal = storeTerminal;
+    stepperState.output = storeOutput;
+  }
+
+  return state.update('stepper', stepper => {
+    return stepper.set('currentStepperState', stepperState);
+  });
 }
 
 function stepperIdleReducer (state, {payload: {stepperContext}}) {
@@ -340,6 +354,7 @@ function stepperInterruptReducer (state, action) {
   if (state.getIn(['stepper', 'status']) === 'idle') {
     return state;
   }
+
   return state.setIn(['stepper', 'interrupting'], true);
 }
 
@@ -482,11 +497,17 @@ function* stepperDisabledSaga () {
 }
 
 function* stepperInteractSaga ({actionTypes, selectors}, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
+
+
   /* Has the stepper been interrupted? */
+  console.log('Check for interruption...');
   if (yield select(selectors.isStepperInterrupting)) {
+    console.log('Interrupted !');
     yield call(reject, new StepperError('interrupt', 'interrupted'));
     return;
   }
+  console.log('not interrupted !');
+
   /* Emit a progress action so that an up-to-date state gets displayed. */
   yield put({type: actionTypes.stepperProgress, payload: {stepperContext}});
   /* Run the provided saga if any, or wait until next animation frame. */
@@ -522,6 +543,7 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
     try {
       yield call(performStep, stepperContext, mode);
     } catch (ex) {
+      console.log('stepperStepSaga has catched', ex);
       if (!(ex instanceof StepperError)) {
         ex = new StepperError('error', stringifyError(ex));
       }

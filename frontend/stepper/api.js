@@ -9,6 +9,7 @@
 
 import * as C from 'persistent-c';
 import {all, call, put} from 'redux-saga/effects';
+import sleep from '../utils/sleep';
 
 export default function (bundle) {
 
@@ -177,7 +178,8 @@ async function executeEffects (stepperContext, iterator) {
   }
 }
 
-async function executeSingleStep (stepperContext) {console.log('!!! executeSingleStep !!!');
+async function executeSingleStep (stepperContext) {
+  console.log('!!! executeSingleStep !!!');
   console.log('control', stepperContext.state.programState.control);
 
   if (isStuck(stepperContext.state)) {
@@ -189,9 +191,13 @@ async function executeSingleStep (stepperContext) {console.log('!!! executeSingl
       console.log('EXECUTE STEP HERE');
       window.currentPythonRunner.runStep();
 
-      put({
-        type: 'Python.Stepped',
-        suspension: window.currentPythonRunner.getCurrentSuspension()
+      // put({
+      //   type: 'Python.Stepped',
+      //   suspension: window.currentPythonRunner.getCurrentSuspension()
+      // });
+
+      await stepperContext.interact({
+        position: 0, // TODO: Need real position ?
       });
 
       break;
@@ -199,35 +205,43 @@ async function executeSingleStep (stepperContext) {console.log('!!! executeSingl
       const effects = C.step(stepperContext.state.programState);
       await executeEffects(stepperContext, effects[Symbol.iterator]());
 
-      break;
-  }
+      /* Update the current position in source code. */
+      const position = getNodeStartRow(stepperContext.state);
+      if (position !== undefined && position !== stepperContext.position) {
+        stepperContext.position = position;
+        stepperContext.lineCounter += 1;
 
-  /* Update the current position in source code. */
-  const position = getNodeStartRow(stepperContext.state);
-  if (position !== undefined && position !== stepperContext.position) {
-    stepperContext.position = position;
-    stepperContext.lineCounter += 1;
-    if (stepperContext.lineCounter === 20) {
-      await stepperContext.interact({position});
-      stepperContext.lineCounter = 0;
-    }
+        if (stepperContext.lineCounter === 20) {
+          await stepperContext.interact({
+            position
+          });
+
+          stepperContext.lineCounter = 0;
+        }
+      }
+
+      break;
   }
 }
 
 async function stepUntil (stepperContext, stopCond) {
-  let programState;
   let stop = false;
   while (true) {
     if (isStuck(stepperContext.state)) {
       return;
     }
-    programState = stepperContext.state.programState;
-    if (!stop && stopCond(programState)) {
+    if (!stop && stopCond(stepperContext.state)) {
       stop = true;
     }
     if (stop && inUserCode(stepperContext.state)) {
       return;
     }
+
+    if (stepperContext.state.platform === 'python') {
+      // If we want to slightly reduce the speed.
+      // await sleep(20);
+    }
+
     await executeSingleStep(stepperContext);
   }
 }
@@ -298,20 +312,18 @@ export async function performStep (stepperContext, mode) {
 
 
 function isStuck (state) {
-  switch (state.platform) {
-    case 'python':
-      return false;
-    default:
-      return !state.programState.control;
+  if (state.platform === 'python') {
+    return window.currentPythonRunner._isFinished;
+  } else {
+    return !state.programState.control;
   }
 }
 
 function inUserCode (state) {
-  switch (state.platform) {
-    case 'python':
-      return true;
-    default:
-      return !!state.programState.control.node[1].begin;;
+  if (state.platform === 'python') {
+    return true;
+  } else {
+    return !!state.programState.control.node[1].begin;
   }
 }
 
