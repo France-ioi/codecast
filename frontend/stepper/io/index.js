@@ -33,7 +33,13 @@ export default function (bundle, deps) {
 
   function updateIoPaneState (state, ioPane) {
     const {platform} = state.get('options');
-    if (platform === 'arduino') {
+    if (platform === 'python') {
+      /* No interactive terminal for python */
+      return {
+        mode: 'split',
+        modeSelect: false
+      }
+    } else if (platform === 'arduino') {
       /* Arduino is forced to terminal mode. */
       return {
         mode: 'terminal',

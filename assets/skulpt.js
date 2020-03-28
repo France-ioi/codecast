@@ -13686,11 +13686,28 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
     var localsToSave = unit.localnames.concat(unit.tempsToSave);
     var seenTemps = {};
     var hasCell = unit.ste.blockType === Sk.SYMTAB_CONSTS.FunctionBlock && unit.ste.childHasFree;
+
+    var saveFunctionName = "";
+    var wakeFunctionName = "";
+    if (unit.hasOwnProperty("name") && unit.name) {
+        saveFunctionName = "susp._name='" + unit.name.v + "'; ";
+    }
+    var saveFunctionArgNames = "susp._argnames=[]; ";
+    var wakeFunctionArgNames = "";
+    if (unit.hasOwnProperty("argnames") && unit.argnames) {
+        var uniqueNames = unit.argnames.filter(function(value, index, self) {
+            return self.indexOf(value) === index;
+        });
+
+        saveFunctionArgNames = "susp._argnames=[" + uniqueNames.map((name) => '"' + name + '"') + "]; ";
+    }
+
     var output = (localsToSave.length > 0 ? ("var " + localsToSave.join(",") + ";") : "") +
                  "var $wakeFromSuspension = function() {" +
                     "var susp = "+unit.scopename+".$wakingSuspension; "+unit.scopename+".$wakingSuspension = undefined;" +
                     "$blk=susp.$blk; $loc=susp.$loc; $gbl=susp.$gbl; $exc=susp.$exc; $err=susp.$err; $postfinally=susp.$postfinally;" +
-                    "$currLineNo=susp.$lineno; $currColNo=susp.$colno; Sk.lastYield=Date.now();" +
+                    "$currLineNo=susp.$lineno; $currColNo=susp.$colno; Sk.lastYield=Date.now(); " +
+                    wakeFunctionName + wakeFunctionArgNames +
                     (hasCell?"$cell=susp.$cell;":"");
 
     for (i = 0; i < localsToSave.length; i++) {
@@ -13710,6 +13727,7 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
                 "susp.data=susp.child.data;susp.$blk=$blk;susp.$loc=$loc;susp.$gbl=$gbl;susp.$exc=$exc;susp.$err=$err;susp.$postfinally=$postfinally;" +
                 "susp.$filename=$filename;susp.$lineno=$lineno;susp.$colno=$colno;" +
                 "susp.optional=susp.child.optional;" +
+                saveFunctionName + saveFunctionArgNames +
                 (hasCell ? "susp.$cell=$cell;" : "");
 
     seenTemps = {};
@@ -34173,7 +34191,7 @@ var Sk = {}; // jshint ignore:line
 
 Sk.build = {
     githash: "7bfe963a29af478f23a17c8e48cf80ec334be743",
-    date: "2020-01-30T09:09:54.778Z"
+    date: "2020-03-28T09:27:05.310Z"
 };
 
 /**

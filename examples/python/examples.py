@@ -19,6 +19,21 @@ print test.sum()
 print test.getM()
 
 
+# Functions
+def ret(a):
+    b = a + a
+    return b
+
+def test(a):
+    v = ret(a)
+    return v + 'c'
+
+c = 'a'
+d = ret(c)
+e = test(d)
+print(e)
+
+
 # Extend
 class classA:
     def __init__(self, a):

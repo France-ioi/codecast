@@ -110,6 +110,7 @@ Sk.Debugger.prototype.get_active_suspension = function() {
     console.log('get_active_suspension');
     console.log(this.suspension_stack);
     console.log(this.current_suspension);
+    console.log(this.suspension_stack[this.current_suspension]);
     return this.suspension_stack[this.current_suspension];
 };
 

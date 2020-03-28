@@ -133,7 +133,6 @@ export default function link (rootBuilder) {
        applyMiddleware(sagaMiddleware)
    );
 
-  //let enhancer = applyMiddleware(sagaMiddleware);
   for (let other of enhancers) {
     enhancer = compose(enhancer, other);
   }

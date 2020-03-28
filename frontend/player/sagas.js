@@ -72,7 +72,6 @@ function* playerPrepare (app, {payload}) {
     options: { platform }
   });
   state.set('options', data.options);
-console.log(state);console.log(state.toJS());
   const replayContext = {
     state,
     events: data.events,

@@ -1,4 +1,3 @@
-
 import 'es5-shim';
 import 'es6-shim';
 import 'array.prototype.fill'; // Array.prototype.fill
@@ -7,14 +6,11 @@ import 'es6-symbol/implement'; // Symbol.iterator
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
-import {applyMiddleware} from 'redux';
-import createSagaMiddleware from 'redux-saga';
 import Immutable from 'immutable';
 import 'rc-slider/dist/rc-slider.css?global';
 
 import style from './style.scss';
 
-// import sagaMonitor from './sagaMonitor';
 import link from './linker';
 
 import commonBundle from './common/index';
@@ -27,9 +23,6 @@ const {store, scope, actionTypes, views, finalize, start} = link(function (bundl
 
   bundle.defineAction('init', 'System.Init');
   bundle.addReducer('init', (_state, _action) => {
-    console.log(scope);
-    console.log(actionTypes);
-    console.log(views);
     return Immutable.Map({scope, actionTypes, views});
   });
 
@@ -44,6 +37,15 @@ const {store, scope, actionTypes, views, finalize, start} = link(function (bundl
       console.log('action', action);
       return state;
     });
+
+    /**
+     * Enable Immutable debug dev-tools.
+     *
+     * @see https://github.com/andrewdavey/immutable-devtools
+     */
+    var Immutable = require('immutable');
+    var installDevTools = require('immutable-devtools');
+    installDevTools(Immutable);
   }
 
 }/*, {reduxSaga: {sagaMonitor}}*/);

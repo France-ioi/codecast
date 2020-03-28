@@ -44,6 +44,7 @@ import PythonBundle from './python';
 
 /* TODO: clean-up */
 import {analyseState, collectDirectives} from './analysis';
+import {analyseSkulptState} from "./python/analysis";
 
 export default function (bundle) {
   bundle.use('getBufferModel');
@@ -165,27 +166,23 @@ function enrichStepperState (stepperState) {
 
   /* TODO: extend stepper API to add enrichers that run here */
 
-  switch (stepperState.platform) {
-    case 'python':
-      stepperState.directives = {
-        ordered: [],
-        functionCallStackMap: {}
-      };
-      stepperState.analysis = {
-        functionCallStack: new Immutable.List()
-      };
+  if (stepperState.platform === 'python') {
+    stepperState.directives = {
+      ordered: [],
+      functionCallStackMap: {}
+    };
 
-      break;
-    default:
-      // TODO? initialize controls for each directive added,
-      //       clear controls for each directive removed (except 'stack').
+    stepperState.analysis = analyseSkulptState(stepperState.suspensions);
+  } else {
+    const analysis = stepperState.analysis = analyseState(programState);
+    const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
+    stepperState.directives = collectDirectives(analysis.functionCallStack, focusDepth);
 
-      break;
+    // TODO? initialize controls for each directive added,
+    //       clear controls for each directive removed (except 'stack').
   }
 
-  const analysis = stepperState.analysis = analyseState(programState);
-  const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
-  stepperState.directives = collectDirectives(analysis.functionCallStack, focusDepth);
+  console.log(stepperState);
 
   return stepperState;
 }
@@ -270,10 +267,10 @@ function stepperRestartReducer (state, {payload: {stepperState}}) {
 
       window.currentPythonRunner.initCodes([source]);
 
-      /*put({
+      put({
         type: deps.pythonStepped,
         suspension: window.currentPythonRunner.getCurrentSuspension()
-      });*/
+      });
     } else {
       stepperState = state.getIn(['stepper', 'initialStepperState']);
     }
@@ -556,8 +553,8 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
       }
     }
 
-    // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
     if (stepperContext.state.hasOwnProperty('platform') && stepperContext.state.platform === 'python') {
+      // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
       const storeStepper = yield select(getStepper);
       const storeCurrentStepperState = storeStepper.get('currentStepperState');
 
@@ -566,6 +563,9 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
 
       stepperContext.state.terminal = storeTerminal;
       stepperContext.state.output = storeOutput;
+
+      // Save scope.
+      stepperContext.state.suspensions = window.currentPythonRunner._debugger.suspension_stack;
     }
 
     yield put({type: actionTypes.stepperIdle, payload: {stepperContext}});

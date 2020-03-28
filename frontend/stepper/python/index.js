@@ -7,8 +7,36 @@ import PythonInterpreter from "./python_interpreter";
 const pythonInterpreterChannel = channel();
 
 export default function (bundle, deps) {
-  bundle.defineAction('terminalPrint', 'Terminal.Print');
-  bundle.addReducer('terminalPrint', (state, action) => {
+  bundle.defineAction('pythonInput', 'Python.Input');
+  bundle.addReducer('pythonInput', (state, action) => {
+    const { message } = action;
+    const { terminal, input, inputPos } = state.getIn(['stepper', 'currentStepperState']);
+
+    if (terminal) {
+      // No interactive terminal for python.
+      return state;
+    } else {
+      // Read from the current cursor to the next new line.
+      let newInputPos = input.substring(inputPos).indexOf("\n");
+      if (newInputPos === -1) {
+        // Position the cursor after the end of the input if no newline found.
+        newInputPos = input.length();
+      } else {
+        // New position of the cursor : just after the new line.
+        newInputPos++;
+      }
+
+      return state.updateIn(['stepper', 'currentStepperState'], (currentStepperState) => {
+        return {
+          ...currentStepperState,
+          inputPos: newInputPos
+        }
+      });
+    }
+  });
+
+  bundle.defineAction('pythonOutput', 'Python.Output');
+  bundle.addReducer('pythonOutput', (state, action) => {
     const { message } = action;
     const { terminal, output } = state.getIn(['stepper', 'currentStepperState']);
 
@@ -33,7 +61,7 @@ export default function (bundle, deps) {
 
   bundle.defineAction('pythonStepped', 'Python.Stepped');
   bundle.addReducer('pythonStepped', (state, action) => {
-    console.log('CURRENT SUSPENSION', action.suspension);
+    console.log('CURRENT SUSPENSION', action.suspensions);
 
     return state;
   });
@@ -85,7 +113,7 @@ export default function (bundle, deps) {
             console.log('PRINT RECEIVED', message);
 
             pythonInterpreterChannel.put({
-              type: 'Terminal.Print',
+              type: 'Python.Output',
               message
             });
           },
@@ -116,19 +144,47 @@ export default function (bundle, deps) {
               // ToDo: output prompt
               // ToDo: get input string
 
-              resolve('HEllo');
+              resolve('Hello this is a test... !');
             });
           }
+          // onInput: (prompt) => {
+            // if (prompt) {
+            //   pythonInterpreterChannel.put({
+            //     type: 'Python.Output',
+            //     message
+            //   });
+            // }
+            //
+            // pythonInterpreterChannel.put({
+            //   type: 'Python.Input',
+            //   message
+            // });
+
+            // let {state} = stepperContext;
+            // let {input, inputPos} = state;
+            // let nextNL = input.indexOf('\n', inputPos);
+            // while (-1 === nextNL) {
+            //   if (!state.terminal || !stepperContext.interact) {
+            //     /* non-interactive, end of input */
+            //     return null;
+            //   }
+            //   /* During replay no action is needed, the stepper will suspended until
+            //      input events supply the necessary input. */
+            //   yield ['interact', {saga: waitForInputSaga}];
+            //   /* Parse the next line from updated stepper state. */
+            //   state = stepperContext.state;
+            //   input = state.input;
+            //   inputPos = state.inputPos;
+            //   nextNL = input.indexOf('\n', inputPos);
+            // }
+            // const line = input.substring(inputPos, nextNL);
+            // state.inputPos = nextNL + 1;
+            // return line;
+          // }
         };
+
         const pythonInterpreter = new PythonInterpreter(context);
         pythonInterpreter.initCodes([source]);
-
-        /*console.log('HIEOE');
-        put({
-          type: 'Python.Stepped',
-          suspension: pythonInterpreter.getCurrentSuspension()
-        });
-        console.log('HIEOFFZE');*/
       }
     });
   })

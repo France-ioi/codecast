@@ -105,6 +105,7 @@
   },
   "false": {},
   "devDependencies": {
+    "immutable-devtools": "^0.1.5",
     "nodemon": "^1.19.4"
   }
 }

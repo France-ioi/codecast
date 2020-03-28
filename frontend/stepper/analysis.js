@@ -7,7 +7,6 @@ A `Stored Value` can have one of these shapes:
 */
 
 import Immutable from 'immutable';
-import * as C from 'persistent-c';
 
 export const StackFrame = Immutable.Record({
   scope: null, key: null, func: null, args: null,

@@ -1,6 +1,6 @@
-
 import React from 'react';
 import {Button, Icon} from '@blueprintjs/core';
+import PythonStackView from "../python/components/PythonStackView";
 import classnames from 'classnames';
 
 class StepperView extends React.PureComponent {
@@ -9,7 +9,8 @@ class StepperView extends React.PureComponent {
       diagnostics, readOnly, sourceMode, sourceRowHeight,
       preventInput, haveStepper, error, getMessage, geometry, panes,
       StackView, BufferEditor, ArduinoPanel, DirectivesPane, IOPane,
-      windowHeight
+      windowHeight,
+      currentStepperState
     } = this.props;
     const height = `${windowHeight - this.state.top - 10}px`;
     const sourcePanelHeader = (
@@ -45,7 +46,16 @@ class StepperView extends React.PureComponent {
                     <span>{getMessage('VARIABLES')}</span>
                   </div>
                   <div className='panel-body'>
-                    {<StackView height={sourceRowHeight}/>}
+                    {(currentStepperState && currentStepperState.platform === 'python')
+                        ? <PythonStackView
+                            height={sourceRowHeight}
+                            analysis={currentStepperState.analysis}
+                            getMessage={getMessage}
+                        />
+                        : <StackView
+                            height={sourceRowHeight}
+                        />
+                    }
                   </div>
                 </div>
               </div>}
@@ -187,7 +197,7 @@ function StepperViewSelector (state, props) {
 
       break;
   }
-  //mode = 'python';
+
   const sourceMode = mode;
 
   /* preventInput is set during playback to prevent the user from messing up
@@ -205,7 +215,8 @@ function StepperViewSelector (state, props) {
     ArduinoPanel: arduinoEnabled && ArduinoPanel,
     DirectivesPane: showViews && DirectivesPane,
     IOPane: showIO && IOPane,
-    windowHeight
+    windowHeight,
+    currentStepperState: stepperDisplay,
   };
 }
 

@@ -46,18 +46,15 @@ export default function (bundle, deps) {
         showControls = true;
         canExit = enabled;
 
-        switch (platform) {
-          case 'python':
-            canStepOut = false;
-            canStep = !window.currentPythonRunner._isFinished;
-            canRestart = enabled;
-            canUndo = enabled && !stepper.get('undo').isEmpty();
-            canRedo = enabled && !stepper.get('redo').isEmpty();
-            showExpr = false;
-            showOver = false;
-
-            break;
-          default:
+        if (platform === 'python') {
+          canStepOut = false;
+          canStep = !window.currentPythonRunner._isFinished;
+          canRestart = enabled;
+          canUndo = enabled && !stepper.get('undo').isEmpty();
+          canRedo = enabled && !stepper.get('redo').isEmpty();
+          showExpr = false;
+          showOver = false;
+        } else {
             if (currentStepperState && currentStepperState.programState) {
               const {control, scope} = currentStepperState.programState;
               canStepOut = !!C.findClosestFunctionScope(scope);
@@ -66,8 +63,6 @@ export default function (bundle, deps) {
               canUndo = enabled && !stepper.get('undo').isEmpty();
               canRedo = enabled && !stepper.get('redo').isEmpty();
             }
-
-            break;
         }
       } else if (status === 'starting') {
         showEdit = true;

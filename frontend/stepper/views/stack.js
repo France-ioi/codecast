@@ -1,4 +1,3 @@
-
 import React from 'react';
 import classnames from 'classnames';
 import {Alert, Button, ButtonGroup, Icon, Intent} from '@blueprintjs/core';
@@ -25,10 +24,10 @@ export default function (bundle, deps) {
       return {getMessage};
     }
     const {programState, lastProgramState, analysis, controls} = stepperState;
-    const {maxVisible} = props;
     const stackControls = controls.get('stack');
     const focusDepth = stackControls ? stackControls.get('focusDepth', 0) : 0;
     const firstVisible = Math.max(0, focusDepth - 5);
+
     return {
       getMessage,
       focusDepth,
@@ -42,7 +41,6 @@ export default function (bundle, deps) {
   });
 
   class StackView extends React.PureComponent {
-
     onExit = () => {
       this.props.dispatch({type: deps.stepperExit});
     };
@@ -64,6 +62,7 @@ export default function (bundle, deps) {
           </div>
         );
       }
+
       const {programState} = context;
       if (programState.error) {
         return (
@@ -75,15 +74,18 @@ export default function (bundle, deps) {
           </div>
         );
       }
-      const {controls, analysis, focusDepth, firstVisible, firstExpanded, maxVisible, maxExpanded} = this.props;
+
+      const {analysis, firstVisible, firstExpanded, maxVisible, maxExpanded} = this.props;
       let {functionCallStack} = analysis;
       /* Hide function calls that have no position in user code. */
       functionCallStack = functionCallStack.filter(function (stackFrame) {
         if (!stackFrame.get('func').body[1].range) {
           return false;
         }
+
         return true;
       });
+
       /* Display the functionCallStack in reverse order (top of the stack last). */
       functionCallStack = functionCallStack.reverse();
       const beyondVisible = Math.min(functionCallStack.size, firstVisible + maxVisible);
@@ -94,7 +96,9 @@ export default function (bundle, deps) {
         view.focus = focus;
         return view;
       });
+
       const {callReturn} = this.props.analysis;
+
       return (
         <div className="stack-view" style={{height}}>
           <div className="stack-controls">
@@ -107,7 +111,8 @@ export default function (bundle, deps) {
           {firstVisible > 0 &&
             <div key='tail' className="scope-ellipsis">
               {'… +'}{firstVisible}
-            </div>}
+            </div>
+          }
           {views.map(view => <FunctionStackFrame key={view.key} view={view} />)}
           {tailCount > 0 &&
             <div key='tail' className="scope-ellipsis">
@@ -117,7 +122,6 @@ export default function (bundle, deps) {
         </div>
       );
     };
-
   }
 
   StackView.defaultProps = {
@@ -129,7 +133,6 @@ export default function (bundle, deps) {
   };
 
   bundle.defineView('StackView', 'StackViewSelector', StackView);
-
 };
 
 function FunctionStackFrame ({view}) {
@@ -144,7 +147,7 @@ function FunctionStackFrame ({view}) {
 
 function StackFrameHeader ({func, args}) {
   return (
-    <div className={classnames(["scope-function-title", false && "scope-function-top"])}>
+    <div className={classnames(["scope-function-title"])}>
       <FunctionCall func={func} args={args}/>
     </div>
   );
@@ -154,9 +157,9 @@ function StackFrameLocals ({locals}) {
   return (
     <div className="scope-function-blocks">
       <ul>
-      {locals.map(decl =>
-        <li key={decl.name}><VarDecl {...decl}/></li>
-      )}
+        {locals.map(decl =>
+          <li key={decl.name}><VarDecl {...decl}/></li>
+        )}
       </ul>
     </div>
   );
@@ -164,7 +167,7 @@ function StackFrameLocals ({locals}) {
 
 function CallReturn ({view}) {
   const {func, args, result} = view;
-  const argCount = args.length;
+
   return (
     <div className="scope-function-return">
       <FunctionCall func={func} args={args}/>

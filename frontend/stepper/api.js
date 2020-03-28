@@ -121,7 +121,7 @@ export function makeContext (state, interact) {
       return {
         state: {
           ...state,
-          programState: state.programState, // TODO : What to do here ?
+          programState: state.programState,
           lastProgramState: state.programState,
           controls: resetControls(state.controls)
         },
@@ -179,29 +179,18 @@ async function executeEffects (stepperContext, iterator) {
 }
 
 async function executeSingleStep (stepperContext) {
-  console.log('!!! executeSingleStep !!!');
-  console.log('control', stepperContext.state.programState.control);
-
   if (isStuck(stepperContext.state)) {
     throw new StepperError('stuck', 'execution cannot proceed');
   }
 
-  switch (stepperContext.state.platform) {
-    case 'python':
-      console.log('EXECUTE STEP HERE');
-      window.currentPythonRunner.runStep();
+  if (stepperContext.state.platform === 'python') {
+    console.log('EXECUTE STEP HERE');
+    window.currentPythonRunner.runStep();
 
-      // put({
-      //   type: 'Python.Stepped',
-      //   suspension: window.currentPythonRunner.getCurrentSuspension()
-      // });
-
-      await stepperContext.interact({
-        position: 0, // TODO: Need real position ?
-      });
-
-      break;
-    default:
+    await stepperContext.interact({
+      position: 0, // TODO: Need real position ?
+    });
+  } else {
       const effects = C.step(stepperContext.state.programState);
       await executeEffects(stepperContext, effects[Symbol.iterator]());
 
@@ -219,18 +208,16 @@ async function executeSingleStep (stepperContext) {
           stepperContext.lineCounter = 0;
         }
       }
-
-      break;
   }
 }
 
-async function stepUntil (stepperContext, stopCond) {
+async function stepUntil (stepperContext, stopCond = undefined) {
   let stop = false;
   while (true) {
     if (isStuck(stepperContext.state)) {
       return;
     }
-    if (!stop && stopCond(stepperContext.state)) {
+    if (!stop && stopCond && stopCond(stepperContext.state.programState)) {
       stop = true;
     }
     if (stop && inUserCode(stepperContext.state)) {
@@ -293,7 +280,7 @@ async function stepOver (stepperContext) {
 export async function performStep (stepperContext, mode) {
   switch (mode) {
     case 'run':
-      await stepUntil(stepperContext, isStuck);
+      await stepUntil(stepperContext);
       break;
     case 'into':
       await stepInto(stepperContext);
