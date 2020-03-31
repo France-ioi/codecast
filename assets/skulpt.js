@@ -12543,11 +12543,15 @@ function hookAffectation(mangled, dataToStore, debug) {
 
     // TO :   $loc.varName = window.currentPythonRunner.reportValue(value, 'varName');
     //var varName = mangled.substr(5);
-    out(mangled, "=", "window.currentPythonRunner.reportValue(", dataToStore, ", '", mangled, "');");
+    out(mangled, "=", "window.currentPythonRunner.reportValue(Sk.builtin.persistentCopy(", mangled, ", ", dataToStore, "), '", mangled, "');");
 }
 
 function hookGr(v, arguments) {
-    //console.log("HOOK_GR : " + debug + " [" + mangled + "     =      " + dataToStore + "]");
+    var args = "";
+    for (i = 1; i < arguments.length; ++i) {
+        args += " " + arguments[i] + ", ";
+    }
+    console.log("HOOK_GR : " + v + "  = " + args);
 
     // FROM :
     // out("var ", v, "=");
@@ -13303,7 +13307,11 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
         return this._gr("lsubscr", "$ret");
     }
     else if (ctx === Sk.astnodes.Store || ctx === Sk.astnodes.AugStore) {
+        //out("_newRef = Sk.builting.persistentCopy(", obj, " ,", obj, ")");
+        out(obj, " = ", obj, ".clone();");
         out("$ret = Sk.abstr.objectSetItem(", obj, ",", subs, ",", data, ", true);");
+        //out("console.log($ret);")
+        //out(obj, " = Sk.builting.persistentCopy()
         this._checkSuspension();
     }
     else if (ctx === Sk.astnodes.Del) {
@@ -13688,12 +13696,10 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
     var hasCell = unit.ste.blockType === Sk.SYMTAB_CONSTS.FunctionBlock && unit.ste.childHasFree;
 
     var saveFunctionName = "";
-    var wakeFunctionName = "";
     if (unit.hasOwnProperty("name") && unit.name) {
         saveFunctionName = "susp._name='" + unit.name.v + "'; ";
     }
     var saveFunctionArgNames = "susp._argnames=[]; ";
-    var wakeFunctionArgNames = "";
     if (unit.hasOwnProperty("argnames") && unit.argnames) {
         var uniqueNames = unit.argnames.filter(function(value, index, self) {
             return self.indexOf(value) === index;
@@ -13701,13 +13707,16 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
 
         saveFunctionArgNames = "susp._argnames=[" + uniqueNames.map((name) => '"' + name + '"') + "]; ";
     }
+    var saveScopeName = "";
+    if (unit.hasOwnProperty('scopename') && unit.scopename) {
+        saveScopeName = "susp._scopename='" + unit.scopename + "'; ";
+    }
 
     var output = (localsToSave.length > 0 ? ("var " + localsToSave.join(",") + ";") : "") +
                  "var $wakeFromSuspension = function() {" +
                     "var susp = "+unit.scopename+".$wakingSuspension; "+unit.scopename+".$wakingSuspension = undefined;" +
                     "$blk=susp.$blk; $loc=susp.$loc; $gbl=susp.$gbl; $exc=susp.$exc; $err=susp.$err; $postfinally=susp.$postfinally;" +
                     "$currLineNo=susp.$lineno; $currColNo=susp.$colno; Sk.lastYield=Date.now(); " +
-                    wakeFunctionName + wakeFunctionArgNames +
                     (hasCell?"$cell=susp.$cell;":"");
 
     for (i = 0; i < localsToSave.length; i++) {
@@ -13727,7 +13736,7 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
                 "susp.data=susp.child.data;susp.$blk=$blk;susp.$loc=$loc;susp.$gbl=$gbl;susp.$exc=$exc;susp.$err=$err;susp.$postfinally=$postfinally;" +
                 "susp.$filename=$filename;susp.$lineno=$lineno;susp.$colno=$colno;" +
                 "susp.optional=susp.child.optional;" +
-                saveFunctionName + saveFunctionArgNames +
+                saveFunctionName + saveFunctionArgNames + saveScopeName +
                 (hasCell ? "susp.$cell=$cell;" : "");
 
     seenTemps = {};
@@ -20656,10 +20665,10 @@ Sk.builtin.func = function (code, globals, closure, closure2) {
         // situations that will cause a lot of strange errors.
         throw new Error("builtin func should be called as a class with `new`");
     }
-    if (globals) {
-        console.log(arguments.callee.caller.name);
-        console.log(code,globals);
-    }
+    // if (globals) {
+    //     console.log(arguments.callee.caller.name);
+    //     console.log(code,globals);
+    // }
     var k;
     this.func_code = code;
     this.func_globals = globals || null;
@@ -23055,7 +23064,8 @@ Sk.builtin.list.prototype.list_ass_item_ = function (i, v) {
     if (i < 0 || i >= this.v.length) {
         throw new Sk.builtin.IndexError("list assignment index out of range");
     }
-    this.v[i] = v;
+
+    this.v[i] = Sk.builtin.persistentCopy(v, this.v[i]);
 };
 
 Sk.builtin.list.prototype.list_ass_slice_ = function (ilow, ihigh, v) {
@@ -23273,6 +23283,8 @@ Sk.builtin.list.prototype.list_subscript_ = function (index) {
 };
 
 Sk.builtin.list.prototype.list_ass_subscript_ = function (index, value) {
+    const newList = this.clone();
+
     var i;
     var j;
     var tosub;
@@ -23281,18 +23293,18 @@ Sk.builtin.list.prototype.list_ass_subscript_ = function (index, value) {
         i = Sk.misceval.asIndex(index);
         if (i !== undefined) {
             if (i < 0) {
-                i = this.v.length + i;
+                i = newList.v.length + i;
             }
-            this.list_ass_item_(i, value);
+            newList.list_ass_item_(i, value);
             return;
         }
     } else if (index instanceof Sk.builtin.slice) {
-        indices = index.slice_indices_(this.v.length);
+        indices = index.slice_indices_(newList.v.length);
         if (indices[2] === 1) {
-            this.list_ass_slice_(indices[0], indices[1], value);
+            newList.list_ass_slice_(indices[0], indices[1], value);
         } else {
             tosub = [];
-            index.sssiter$(this, function (i, wrt) {
+            index.sssiter$(newList, function (i, wrt) {
                 tosub.push(i);
             });
             j = 0;
@@ -23300,7 +23312,7 @@ Sk.builtin.list.prototype.list_ass_subscript_ = function (index, value) {
                 throw new Sk.builtin.ValueError("attempt to assign sequence of size " + value.v.length + " to extended slice of size " + tosub.length);
             }
             for (i = 0; i < tosub.length; ++i) {
-                this.v.splice(tosub[i], 1, value.v[j]);
+                newList.v.splice(tosub[i], 1, value.v[j]);
                 j += 1;
             }
         }
@@ -23603,6 +23615,17 @@ Sk.builtin.list.prototype["copy"] = new Sk.builtin.func(function (self) {
     return new Sk.builtin.list(items);
 
 });
+
+Sk.builtin.list.prototype["clone"] = function() {
+    let items = [];
+    for (let it = Sk.abstr.iter(this), k = it.tp$iternext();
+        k !== undefined;
+        k = it.tp$iternext()) {
+        items.push(k);
+    }
+
+    return new Sk.builtin.list(items);
+};
 
 Sk.builtin.list.prototype["reverse"] = new Sk.builtin.func(Sk.builtin.list.prototype.list_reverse_);
 Sk.builtin.list.prototype["sort"] = new Sk.builtin.func(Sk.builtin.list.prototype.list_sort_);
@@ -24581,6 +24604,7 @@ __webpack_require__(/*! ./typeobject.js */ "./src/typeobject.js");
 __webpack_require__(/*! ./builtindict.js */ "./src/builtindict.js");
 __webpack_require__(/*! ./constants.js */ "./src/constants.js");
 __webpack_require__(/*! ./internalpython.js */ "./src/internalpython.js");
+__webpack_require__(/*! ./persistent.js */ "./src/persistent.js");
 
 /* jshint ignore:end */
 
@@ -28118,6 +28142,52 @@ Sk.exportSymbol("Sk.parseTreeDump", Sk.parseTreeDump);
 
 /***/ }),
 
+/***/ "./src/persistent.js":
+/*!***************************!*\
+  !*** ./src/persistent.js ***!
+  \***************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+/* jslint nomen: true, bitwise: true */
+/* global Sk: true */
+
+/**
+ * @namespace Sk.builtin
+ */
+
+/**
+ * @description
+ * Copy a Skulpt object with a new reference (object is different), + keep the old value.
+ *
+ * @param  {Object} dest The destination object.
+ * @param  {Object} src  The source object.
+ *
+ * @return {Object} A new object with src's value as value and dest's value as old value.
+ */
+Sk.builtin.persistentCopy = function (dest, src) {
+    if (src instanceof Sk.builtin.func || typeof src === "function") {
+        return src;
+    }
+
+    console.log("__PERSISTENT__COPY__", dest, src);
+
+    const newObject = src.clone();
+
+    if (dest) {
+        newObject._old = dest.v;
+    } else {
+        newObject._old = undefined;
+    }
+
+    return newObject;
+};
+
+Sk.exportSymbol("Sk.builtin.persistentCopy", Sk.builtin.persistentCopy);
+
+
+/***/ }),
+
 /***/ "./src/print.js":
 /*!**********************!*\
   !*** ./src/print.js ***!
@@ -29186,6 +29256,7 @@ Sk.builtin.str = function (x) {
     return this;
 
 };
+
 Sk.exportSymbol("Sk.builtin.str", Sk.builtin.str);
 
 Sk.abstr.setUpInheritance("str", Sk.builtin.str, Sk.builtin.seqtype);
@@ -29983,6 +30054,10 @@ Sk.builtin.str.prototype["isupper"] = new Sk.builtin.func(function (self) {
     return new Sk.builtin.bool( self.v.length && !/[a-z]/.test(self.v) && /[A-Z]/.test(self.v));
 });
 
+Sk.builtin.str.prototype["clone"] = function() {
+    return new Sk.builtin.str(this.v);
+};
+
 Sk.builtin.str.prototype["istitle"] = new Sk.builtin.func(function (self) {
     // Comparing to str.title() seems the most intuitive thing, but it fails on "",
     // Other empty-ish strings with no change.
@@ -30220,7 +30295,7 @@ Sk.builtin.str.prototype.nb$remainder = function (rhs) {
             }
             convName = ["toExponential", "toFixed", "toPrecision"]["efg".indexOf(conversionType.toLowerCase())];
             if (precision === undefined || precision === "") {
-                
+
                 if (conversionType === "e" || conversionType === "E") {
                     precision = 6;
                 } else if (conversionType === "f" || conversionType === "F") {
@@ -30243,7 +30318,7 @@ Sk.builtin.str.prototype.nb$remainder = function (rhs) {
                 if ((result.length >= 7) && (result.slice(0, 6) == "0.0000")) {
 
                     val = parseFloat(result);
-                    result = val.toExponential(); 
+                    result = val.toExponential();
                 }
                 if (result.charAt(result.length -2) == "-") {
                     result = result.slice(0, result.length - 1) + "0" + result.charAt(result.length - 1);
@@ -34190,8 +34265,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "7bfe963a29af478f23a17c8e48cf80ec334be743",
-    date: "2020-03-28T09:27:05.310Z"
+    githash: "daf1d1be671c927bbfb23d4d8496770b13b37971",
+    date: "2020-03-30T14:30:04.866Z"
 };
 
 /**

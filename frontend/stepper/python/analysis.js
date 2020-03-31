@@ -1,68 +1,198 @@
 import Immutable from 'immutable';
 
-export const analyseSkulptState = function (suspensions) {
+/**
+ * Transforms the skulpt state (the suspensions) to something readable with the variables content.
+ *
+ * @param {Array} suspensions   The skulpt suspensions.
+ * @param {Object} lastAnalysis The last analysis (this function on the precedent step).
+ *
+ * @returns {Object}
+ */
+export const analyseSkulptState = function (suspensions, lastAnalysis) {
     console.log('[¥¥¥¥¥¥¥] Building analysis');
-    console.log(suspensions);
 
     let functionCallStack = Immutable.List();
+
     let currentIdx = 0;
-    for (const suspensionIdx in suspensions) {
-        const suspension = suspensions[suspensionIdx];
-        let variables = Immutable.Map();
+    if (suspensions) {
+        for (let suspensionIdx = 0; suspensionIdx < suspensions.length; suspensionIdx++) {
+            const suspension = suspensions[suspensionIdx];
 
-        let name = suspension._name;
-        if (name === '<module>') {
-            name = '';
-        }
-
-        const args = suspension._argnames;
-
-        // If $loc is empty, we are in a function's scope.
-        if (Object.keys(suspension.$loc).length === 0 && suspension.$loc.constructor === Object) {
-            const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspension.$tmps)), args);
-            for (const variableIdx in variableNames) {
-                const variableName = variableNames[variableIdx];
-                const value = suspension.$tmps[variableName];
-
-                if (value instanceof Sk.builtin.func) {
-                    continue;
-                }
-
-                variables = variables.set(variableName, value);
+            let lastScopeAnalysis = null;
+            if (lastAnalysis && lastAnalysis.functionCallStack.size > suspensionIdx) {
+                lastScopeAnalysis = lastAnalysis.functionCallStack.get(suspensionIdx);
             }
-        } else {
-            // Global scope.
-            const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspension.$loc)));
-            for (const variableIdx in variableNames) {
-                const variableName = variableNames[variableIdx];
-                const value = suspension.$loc[variableName];
 
-                if (value instanceof Sk.builtin.func) {
-                    continue;
-                }
+            const analysedScope = analyseSkulptScope(suspension, lastScopeAnalysis);
+            analysedScope.key = currentIdx;
 
-                variables = variables.set(variableName, value);
-            }
+            functionCallStack = functionCallStack.push(analysedScope);
+
+            currentIdx = currentIdx + 1;
         }
-
-        functionCallStack = functionCallStack.push({
-            variables,
-            name,
-            args,
-            key: currentIdx,
-        });
-
-        currentIdx = currentIdx + 1;
     }
 
-    const result = {
+    const analysis = {
         functionCallStack: functionCallStack.reverse()
     };
 
     console.log('[¥¥¥¥¥¥¥] End of building analysis');
-    console.log(result);
+    console.log(analysis);
 
-    return Object.freeze(result);
+    return Object.freeze(analysis);
+};
+
+/**
+ * Transforms the skulpt scope (one suspension) to something readable with the variables content.
+ *
+ * @param {Object} suspension   The skulpt suspension.
+ * @param {Object} lastAnalysis The last analysis (this function on the precedent step and the same scope).
+ *
+ * @returns {Object}
+ */
+export const analyseSkulptScope = function (suspension, lastAnalysis) {
+    console.log('////// Analyse scope...');
+    console.log(suspension);
+    console.log(lastAnalysis);
+
+    let variables = Immutable.Map();
+
+    let name = suspension._name;
+    if (name === '<module>') {
+        name = '';
+    }
+
+    const args = suspension._argnames;
+
+    // If $loc is empty, we are in a function's scope.
+    if (Object.keys(suspension.$loc).length === 0 && suspension.$loc.constructor === Object) {
+        const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspension.$tmps)), args);
+        for (const variableIdx in variableNames) {
+            const variableName = variableNames[variableIdx];
+            const value = suspension.$tmps[variableName];
+
+            if (value instanceof Sk.builtin.func) {
+                continue;
+            }
+
+            // let lastValue = null;
+            // if (lastAnalysis) {
+            //     lastValue = lastAnalysis.variables.get(variableName);
+            // }
+            // const newValue = cloneSkuptValue(value);
+            // const valueWithPrevious = valuesWithPrevious(newValue, lastValue);
+            //
+            // variables = variables.set(variableName, valueWithPrevious);
+
+            variables = variables.set(variableName, value);
+        }
+    } else {
+        // Global scope.
+        const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspension.$loc)), args);
+        for (const variableIdx in variableNames) {
+            const variableName = variableNames[variableIdx];
+            const value = suspension.$loc[variableName];
+
+            if (value instanceof Sk.builtin.func) {
+                continue;
+            }
+
+            // let lastValue = null;
+            // if (lastAnalysis) {
+            //     lastValue = lastAnalysis.variables.get(variableName);
+            // }
+            // const newValue = cloneSkuptValue(value);
+            // const valueWithPrevious = valuesWithPrevious(newValue, lastValue);
+            //
+            // variables = variables.set(variableName, valueWithPrevious);
+
+            variables = variables.set(variableName, value);
+        }
+    }
+
+    const analysis = {
+        variables,
+        name,
+        args
+    };
+
+    console.log('////// End of analyse scope...');
+    console.log(analysis);
+
+    return analysis;
+};
+
+/**
+ * Gets the values with the new and previous value.
+ *
+ * @param {*} newValue
+ * @param {*} oldValue
+ *
+ * @return {*}
+ */
+const valuesWithPrevious = (newValue, oldValue) => {
+    console.log(newValue, oldValue);
+    if (Array.isArray(newValue) && Array.isArray(oldValue)) {
+        let values = [];
+        const maxIdx = Math.max(newValue.length, oldValue.length);
+        for (let idx = 0; idx < maxIdx; idx++) {
+            let curNewValue = undefined;
+            if (newValue.length > idx) {
+                curNewValue = newValue[idx];
+            }
+            let curOldValue = undefined;
+            if (oldValue.length > idx) {
+                curOldValue = oldValue[idx];
+            }
+
+            values.push(valuesWithPrevious(curNewValue, curOldValue));
+        }
+
+        return values;
+    } else if (Array.isArray(oldValue)) {
+        return {
+            cur: newValue,
+            old: undefined
+        };
+    } else if (Array.isArray(newValue)) {
+        let values = [];
+        for (let idx = 0; idx < newValue.length; idx++) {
+            values.push(valuesWithPrevious(newValue[idx], undefined));
+        }
+
+        return values;
+    } else {
+        let newOldValue = undefined;
+        if (oldValue) {
+            newOldValue = oldValue.cur;
+        }
+        return {
+            cur: newValue,
+            old: newOldValue
+        };
+    }
+};
+
+/**
+ * Clone a skulpt value.
+ *
+ * @param {Object} value The skulpt bultin object.
+ *
+ * @returns {[]|*}
+ */
+const cloneSkuptValue = (value) => {
+    if (Array.isArray(value)) {
+        let values = [];
+        for (let idx = 0; idx < value.length; idx++) {
+            values.push(cloneSkuptValue(value[idx]));
+        }
+
+        return values;
+    } else if (value.hasOwnProperty('v')) {
+        return cloneSkuptValue(value.v);
+    } else {
+        return value;
+    }
 };
 
 // To filter the internal variables of Skulpt.

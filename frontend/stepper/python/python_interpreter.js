@@ -470,7 +470,6 @@ export default function (context) {
 
         window.currentPythonContext = this.context;
         this._debugger = new Sk.Debugger(this._editor_filename, this);
-        console.log('LE DEBUGGER EST LA :', this._debugger);
         this._configure();
         this._injectFunctions();
         this._code = codes[0];
@@ -729,14 +728,10 @@ export default function (context) {
     };
 
     this._setBreakpoint = (bp, isTemporary) => {
-        pythonRunnerLog('_setBreakpoint');
-
         this._debugger.add_breakpoint(this._editor_filename + '.py', bp, '0', isTemporary);
     };
 
     this._asyncCallback = function () {
-        pythonRunnerLog('_asyncCallback');
-
         return Sk.importMainWithBody(this._editor_filename, true, this._code, true);
     };
 }

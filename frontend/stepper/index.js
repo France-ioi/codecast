@@ -172,7 +172,7 @@ function enrichStepperState (stepperState) {
       functionCallStackMap: {}
     };
 
-    stepperState.analysis = analyseSkulptState(stepperState.suspensions);
+    stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.analysis);
   } else {
     const analysis = stepperState.analysis = analyseState(programState);
     const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
@@ -267,10 +267,10 @@ function stepperRestartReducer (state, {payload: {stepperState}}) {
 
       window.currentPythonRunner.initCodes([source]);
 
-      put({
+      /*put({
         type: deps.pythonStepped,
         suspension: window.currentPythonRunner.getCurrentSuspension()
-      });
+      });*/
     } else {
       stepperState = state.getIn(['stepper', 'initialStepperState']);
     }
