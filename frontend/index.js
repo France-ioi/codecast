@@ -7,6 +7,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
 import Immutable from 'immutable';
+import installDevTools from 'immutable-devtools';
 import 'rc-slider/dist/rc-slider.css?global';
 
 import style from './style.scss';
@@ -43,8 +44,6 @@ const {store, scope, actionTypes, views, finalize, start} = link(function (bundl
      *
      * @see https://github.com/andrewdavey/immutable-devtools
      */
-    var Immutable = require('immutable');
-    var installDevTools = require('immutable-devtools');
     installDevTools(Immutable);
   }
 
