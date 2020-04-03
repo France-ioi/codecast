@@ -10,10 +10,11 @@ import Immutable from 'immutable';
  */
 export const analyseSkulptState = function (suspensions, lastAnalysis) {
     console.log('[¥¥¥¥¥¥¥] Building analysis');
+    console.log(suspensions);
+    console.log(lastAnalysis);
 
     let functionCallStack = Immutable.List();
 
-    let currentIdx = 0;
     if (suspensions) {
         for (let suspensionIdx = 0; suspensionIdx < suspensions.length; suspensionIdx++) {
             const suspension = suspensions[suspensionIdx];
@@ -24,16 +25,14 @@ export const analyseSkulptState = function (suspensions, lastAnalysis) {
             }
 
             const analysedScope = analyseSkulptScope(suspension, lastScopeAnalysis);
-            analysedScope.key = currentIdx;
+            analysedScope.key = suspensionIdx;
 
             functionCallStack = functionCallStack.push(analysedScope);
-
-            currentIdx = currentIdx + 1;
         }
     }
 
     const analysis = {
-        functionCallStack: functionCallStack.reverse()
+        functionCallStack: functionCallStack
     };
 
     console.log('[¥¥¥¥¥¥¥] End of building analysis');
@@ -75,16 +74,24 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
                 continue;
             }
 
-            // let lastValue = null;
-            // if (lastAnalysis) {
-            //     lastValue = lastAnalysis.variables.get(variableName);
-            // }
+            let lastValue = null;
+            if (lastAnalysis) {
+                lastValue = lastAnalysis.variables.get(variableName);
+                if (lastValue) {
+                    lastValue = lastValue.cur;
+                } else {
+                    lastValue = undefined;
+                }
+            }
             // const newValue = cloneSkuptValue(value);
             // const valueWithPrevious = valuesWithPrevious(newValue, lastValue);
-            //
+
             // variables = variables.set(variableName, valueWithPrevious);
 
-            variables = variables.set(variableName, value);
+            variables = variables.set(variableName, {
+                cur: value,
+                old: lastValue
+            });
         }
     } else {
         // Global scope.
@@ -97,16 +104,24 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
                 continue;
             }
 
-            // let lastValue = null;
-            // if (lastAnalysis) {
-            //     lastValue = lastAnalysis.variables.get(variableName);
-            // }
+            let lastValue = null;
+            if (lastAnalysis) {
+                lastValue = lastAnalysis.variables.get(variableName);
+                if (lastValue) {
+                    lastValue = lastValue.cur;
+                } else {
+                    lastValue = undefined;
+                }
+            }
             // const newValue = cloneSkuptValue(value);
             // const valueWithPrevious = valuesWithPrevious(newValue, lastValue);
-            //
+
             // variables = variables.set(variableName, valueWithPrevious);
 
-            variables = variables.set(variableName, value);
+            variables = variables.set(variableName, {
+                cur: value,
+                old: lastValue
+            });
         }
     }
 

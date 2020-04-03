@@ -6,11 +6,11 @@ const PythonVariableValue = (props) => {
     }
 
     if (props.value instanceof Sk.builtin.list) {
-        const nbElements = props.value.v.length;
+        const nbElements = props.value.cur.v.length;
 
         return (
             <React.Fragment>
-                [{props.value.v.map((element, index) => (
+                [{props.value.cur.v.map((element, index) => (
                     <span key={index}>
                         <PythonVariableValue value={element} />
                         {(index + 1) < nbElements ? ', ' : null}
@@ -20,19 +20,19 @@ const PythonVariableValue = (props) => {
         )
     }
 
-    if (props.value instanceof Sk.builtin.str) {
+    if (props.value.cur instanceof Sk.builtin.str) {
         return (
             <React.Fragment>
-                "{props.value.v}"
-                {props.value._old ? <span className="value-previous">"{props.value._old}"</span> : null }
+                "{props.value.cur.v}"
+                {(props.value.old && (props.value.cur.v !== props.value.old.v)) ? <span className="value-previous">"{props.value.old.v}"</span> : null }
             </React.Fragment>
         )
     }
 
     return (
         <React.Fragment>
-            <span>{props.value.v}</span>
-            {(props.value._old !== undefined) ? <span className="value-previous">{props.value._old}</span> : null }
+            <span>{props.value.cur.v}</span>
+            {(props.value.old && (props.value.cur.v !== props.value.old.v)) ? <span className="value-previous">{props.value.old.v}</span> : null }
         </React.Fragment>
     );
 };

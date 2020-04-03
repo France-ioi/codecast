@@ -29,6 +29,7 @@ def test(a):
     return v + 'c'
 
 c = 'a'
+c = 'b'
 d = ret(c)
 e = test(d)
 print(e)
@@ -55,7 +56,6 @@ def plop(a):
     return a + plop(a - 1)
 
 print plop(5)
-
 
 # Recursion 2
 def plop(a, b):

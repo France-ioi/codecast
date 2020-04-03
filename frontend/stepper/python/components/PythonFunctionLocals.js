@@ -6,7 +6,7 @@ const PythonFunctionLocals = (props) => {
         <div className="scope-function-blocks">
             <ul>
                 {props.func.variables.entrySeq().map(([name, value]) => (
-                    value !== undefined ?
+                    value.cur !== undefined ?
                         <li key={name}>
                             <PythonVariable name={name} value={value} />
                         </li>

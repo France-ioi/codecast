@@ -12529,7 +12529,7 @@ var out;
 Sk.gensymcount = 0;
 
 function hookAffectation(mangled, dataToStore, debug) {
-    console.log("HOOK_AFFECTATION : " + debug + " [" + mangled + "     =      " + dataToStore + "]");
+    // console.log("HOOK_AFFECTATION : " + debug + " [" + mangled + "     =      " + dataToStore + "]");
 
     // FROM : $loc.varName = value;
     // out(mangled, "=", dataToStore, ";");
@@ -12543,15 +12543,18 @@ function hookAffectation(mangled, dataToStore, debug) {
 
     // TO :   $loc.varName = window.currentPythonRunner.reportValue(value, 'varName');
     //var varName = mangled.substr(5);
-    out(mangled, "=", "window.currentPythonRunner.reportValue(Sk.builtin.persistentCopy(", mangled, ", ", dataToStore, "), '", mangled, "');");
+    // out(mangled, "=", "window.currentPythonRunner.reportValue(Sk.builtin.persistentCopy(", mangled, ", ", dataToStore, "), '", mangled, "');");
+    out(mangled, "=", "window.currentPythonRunner.reportValue(", dataToStore, ", '", mangled, "');");
 }
 
 function hookGr(v, arguments) {
+    /*
     var args = "";
     for (i = 1; i < arguments.length; ++i) {
         args += " " + arguments[i] + ", ";
     }
     console.log("HOOK_GR : " + v + "  = " + args);
+    */
 
     // FROM :
     // out("var ", v, "=");
@@ -12567,7 +12570,6 @@ function hookGr(v, arguments) {
         out(arguments[i]);
     }
     out(";");
-    out("console.log('"+ v + " ='," + v + ");");
     //out("console.log('var '" + v + "'='," + arguments + ")");
 }
 
@@ -12595,6 +12597,9 @@ function Compiler (filename, st, flags, canSuspend, sourceCodeForAnnotation) {
     // this.gensymcount = 0;
 
     this.allUnits = [];
+
+    this.localReferencesToUpdateForPersistantVariables = [];
+    // this.localReferencesToUpdateWihoutOldValueVariables = [];
 
     this.source = sourceCodeForAnnotation ? sourceCodeForAnnotation.split("\n") : false;
 }
@@ -12869,7 +12874,18 @@ Compiler.prototype._gr = function (hint, rest) {
     var i;
     var v = this.gensym(hint);
     this.u.localtemps.push(v);
+
     hookGr(v, arguments);
+
+    if (this.filename === "<stdin>.py") {
+        if (rest.substr(0, 5) === "$loc.") {
+            this.localReferencesToUpdateForPersistantVariables.push({
+                localName: rest,
+                ref: v
+            });
+        }
+    }
+
     return v;
 };
 
@@ -12935,6 +12951,7 @@ Compiler.prototype._checkSuspension = function(e) {
 
         e = e || {lineno: "$currLineNo", col_offset: "$currColNo"};
 
+        this.endBlockHook();
         out ("if ($ret && $ret.$isSuspension) { console.log('saveSuspension'); return $saveSuspension($ret,'"+this.filename+"',"+e.lineno+","+e.col_offset+"); }");
 
         this.u.doesSuspend = true;
@@ -13231,10 +13248,10 @@ Compiler.prototype.ccall = function (e) {
     if (keywordArgs !== "undefined") {
         out("$ret = Sk.misceval.applyOrSuspend(",func,",undefined,undefined,",keywordArgs,",",positionalArgs,");");
     } else if (positionalArgs != "[]") {
-        out("console.log('ENTER callsimOrSuspendArray','" + func + "'," + func + "," + positionalArgs + ");");
+        // out("console.log('ENTER callsimOrSuspendArray','" + func + "'," + func + "," + positionalArgs + ");");
         out ("$ret = Sk.misceval.callsimOrSuspendArray(", func, ", ", positionalArgs, ");");
     } else {
-        out("console.log('ENTEER callsimOrSuspendArray','" + func + "'," + func + ");");
+        // out("console.log('ENTEER callsimOrSuspendArray','" + func + "'," + func + ");");
         out ("$ret = Sk.misceval.callsimOrSuspendArray(", func, ");");
     }
 
@@ -13458,13 +13475,13 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
                     out("$ret = undefined;");
                     out("if(", data, "!==undefined){");
                     out("$ret = Sk.abstr.sattr(", augvar, ",", mname, ",", data, ", true);");
-                    out("console.log('AugStore ret ',$ret);");
+                    // out("console.log('AugStore ret ',$ret);");
                     out("}");
                     this._checkSuspension(e);
                     break;
                 case Sk.astnodes.Store:
                     out("$ret = Sk.abstr.sattr(", val, ",", mname, ",", data, ", true);");
-                    out("console.log('Store ret ',$ret);");
+                    // out("console.log('Store ret ',$ret);");
                     this._checkSuspension(e);
                     break;
                 case Sk.astnodes.Del:
@@ -13713,11 +13730,17 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
     }
 
     var output = (localsToSave.length > 0 ? ("var " + localsToSave.join(",") + ";") : "") +
-                 "var $wakeFromSuspension = function() {" +
-                    "var susp = "+unit.scopename+".$wakingSuspension; "+unit.scopename+".$wakingSuspension = undefined;" +
-                    "$blk=susp.$blk; $loc=susp.$loc; $gbl=susp.$gbl; $exc=susp.$exc; $err=susp.$err; $postfinally=susp.$postfinally;" +
-                    "$currLineNo=susp.$lineno; $currColNo=susp.$colno; Sk.lastYield=Date.now(); " +
-                    (hasCell?"$cell=susp.$cell;":"");
+         "var $wakeFromSuspension = function() {" +
+         "var susp = "+unit.scopename+".$wakingSuspension; "+unit.scopename+".$wakingSuspension = undefined;";
+    output +=  "$blk=susp.$blk; ";
+
+    // output += " $loc={...susp.$loc}; $gbl=susp.$gbl; ";
+    output += " $loc=susp.$loc; $gbl=susp.$gbl; ";
+    // output += "if (susp._name === '<module>') { $loc=susp.$loc; $gbl=susp.$gbl; } else { $loc={...susp.$loc}; $gbl=susp.$gbl; }";
+
+    output += " $exc=susp.$exc; $err=susp.$err; $postfinally=susp.$postfinally;" +
+         "$currLineNo=susp.$lineno; $currColNo=susp.$colno; Sk.lastYield=Date.now(); " +
+         (hasCell?"$cell=susp.$cell;":"");
 
     for (i = 0; i < localsToSave.length; i++) {
         t = localsToSave[i];
@@ -13830,6 +13853,7 @@ Compiler.prototype.cif = function (s) {
         if (s.orelse && s.orelse.length > 0) {
             this._jumpfalse(test, next);
             this.vseqstmt(s.body);
+
             this._jump(end);
 
             this.setBlock(next);
@@ -13877,6 +13901,7 @@ Compiler.prototype.cwhile = function (s) {
         if ((Sk.debugging || Sk.killableWhile) && this.u.canSuspend) {
             var suspType = 'Sk.delay';
             var debugBlock = this.newBlock("debug breakpoint for line "+s.lineno);
+            this.endBlockHook();
             out("if (Sk.breakpoints('"+this.filename+"',"+s.lineno+","+s.col_offset+")) {",
                 "var $susp = $saveSuspension({data: {type: '"+suspType+"'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+");",
                 "$susp.$blk = "+debugBlock+";",
@@ -13946,6 +13971,7 @@ Compiler.prototype.cfor = function (s) {
     if ((Sk.debugging || Sk.killableFor) && this.u.canSuspend) {
         var suspType = 'Sk.delay';
         var debugBlock = this.newBlock("debug breakpoint for line "+s.lineno);
+        this.endBlockHook();
         out("if (Sk.breakpoints('"+this.filename+"',"+s.lineno+","+s.col_offset+")) {",
             "var $susp = $saveSuspension({data: {type: '"+suspType+"'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+");",
             "$susp.$blk = "+debugBlock+";",
@@ -14926,6 +14952,7 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
 
     if (Sk.debugging && this.u.canSuspend) {
         debugBlock = this.newBlock("debug breakpoint for line "+s.lineno);
+
         out("if (Sk.breakpoints('"+this.filename+"',"+s.lineno+","+s.col_offset+")) {",
             "var $susp = $saveSuspension({data: {type: 'Sk.debug'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+");",
             "$susp.$blk = " + debugBlock + ";",
@@ -15015,6 +15042,8 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
         default:
             Sk.asserts.fail("unhandled case in vstmt: " + JSON.stringify(s));
     }
+
+    // out("console.log('end of vstmt');");
 };
 
 Compiler.prototype.vseqstmt = function (stmts) {
@@ -15135,6 +15164,7 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
             switch (ctx) {
                 case Sk.astnodes.Load:
                     // can't be || for loc.x = 0 or null
+
                     return this._gr("loadname", mangled, "!==undefined?", mangled, ":Sk.misceval.loadname('", mangledNoPre, "',$gbl);");
                 case Sk.astnodes.Store:
                     // out(mangled, "=", dataToStore, ";");
@@ -15297,7 +15327,8 @@ Compiler.prototype.cmod = function (mod) {
         this.u.varDeclsCode += "if (typeof Sk.lastYield === 'undefined') {Sk.lastYield = Date.now()}";
     }
 
-    this.u.varDeclsCode += "if ("+modf+".$wakingSuspension!==undefined) { $wakeFromSuspension(); }" +
+    // TODO: Check here.
+    this.u.varDeclsCode += "if ("+modf+".$wakingSuspension!==undefined) { $wakeFromSuspension(); }"; +
         "if (Sk.retainGlobals) {" +
         "    if (Sk.globals) { $gbl = Sk.globals; Sk.globals = $gbl; $loc = $gbl; }" +
         "    if (Sk.globals) { $gbl = Sk.globals; Sk.globals = $gbl; $loc = $gbl; $loc.__file__=new Sk.builtins.str('" + this.filename + "');}" +
@@ -15346,6 +15377,28 @@ Compiler.prototype.cmod = function (mod) {
     return modf;
 };
 
+Compiler.prototype.endBlockHook = function() {
+    // for (let idx in this.localReferencesToUpdateWihoutOldValueVariables) {
+    //     const localName = this.localReferencesToUpdateWihoutOldValueVariables[idx].localName;
+    //     const ref = this.localReferencesToUpdateWihoutOldValueVariables[idx].ref;
+    //
+    //     out(localName + " = Sk.builtin.removeOldValues(" + localName + "); ");
+    // }
+    // this.localReferencesToUpdateWihoutOldValueVariables = [];
+
+    for (let idx in this.localReferencesToUpdateForPersistantVariables) {
+        const localName = this.localReferencesToUpdateForPersistantVariables[idx].localName;
+        const ref = this.localReferencesToUpdateForPersistantVariables[idx].ref;
+
+        out(localName + " = " + ref + "; ");
+
+        // this.localReferencesToUpdateWihoutOldValueVariables.push({
+        //     localName: localName
+        // });
+    }
+    this.localReferencesToUpdateForPersistantVariables = [];
+};
+
 /**
  * @param {string} source the code
  * @param {string} filename where it came from
@@ -15375,7 +15428,12 @@ Sk.compile = function (source, filename, mode, canSuspend) {
     // Restore the global __future__ flags
     Sk.__future__ = savedFlags;
 
-    var ret = "$compiledmod = function() {" + c.result.join("") + "\nreturn " + funcname + ";}();";
+    var ret = "";
+    if (this.filename !== "<stdin>.py") {
+        //ret = "debugger;";
+    }
+    ret += "$compiledmod = function() {" + c.result.join("") + "\nreturn " + funcname + ";}();";
+
     return {
         funcname: "$compiledmod",
         code    : ret
@@ -23065,7 +23123,8 @@ Sk.builtin.list.prototype.list_ass_item_ = function (i, v) {
         throw new Sk.builtin.IndexError("list assignment index out of range");
     }
 
-    this.v[i] = Sk.builtin.persistentCopy(v, this.v[i]);
+    // this.v[i] = Sk.builtin.persistentCopy(this.v[i], v);
+    this.v[i] = v;
 };
 
 Sk.builtin.list.prototype.list_ass_slice_ = function (ilow, ihigh, v) {
@@ -23283,8 +23342,6 @@ Sk.builtin.list.prototype.list_subscript_ = function (index) {
 };
 
 Sk.builtin.list.prototype.list_ass_subscript_ = function (index, value) {
-    const newList = this.clone();
-
     var i;
     var j;
     var tosub;
@@ -23293,18 +23350,18 @@ Sk.builtin.list.prototype.list_ass_subscript_ = function (index, value) {
         i = Sk.misceval.asIndex(index);
         if (i !== undefined) {
             if (i < 0) {
-                i = newList.v.length + i;
+                i = this.v.length + i;
             }
-            newList.list_ass_item_(i, value);
+            this.list_ass_item_(i, value);
             return;
         }
     } else if (index instanceof Sk.builtin.slice) {
-        indices = index.slice_indices_(newList.v.length);
+        indices = index.slice_indices_(this.v.length);
         if (indices[2] === 1) {
-            newList.list_ass_slice_(indices[0], indices[1], value);
+            this.list_ass_slice_(indices[0], indices[1], value);
         } else {
             tosub = [];
-            index.sssiter$(newList, function (i, wrt) {
+            index.sssiter$(this, function (i, wrt) {
                 tosub.push(i);
             });
             j = 0;
@@ -23312,7 +23369,7 @@ Sk.builtin.list.prototype.list_ass_subscript_ = function (index, value) {
                 throw new Sk.builtin.ValueError("attempt to assign sequence of size " + value.v.length + " to extended slice of size " + tosub.length);
             }
             for (i = 0; i < tosub.length; ++i) {
-                newList.v.splice(tosub[i], 1, value.v[j]);
+                this.v.splice(tosub[i], 1, value.v[j]);
                 j += 1;
             }
         }
@@ -23621,6 +23678,7 @@ Sk.builtin.list.prototype["clone"] = function() {
     for (let it = Sk.abstr.iter(this), k = it.tp$iternext();
         k !== undefined;
         k = it.tp$iternext()) {
+        //items.push(k.clone());
         items.push(k);
     }
 
@@ -28160,27 +28218,55 @@ Sk.exportSymbol("Sk.parseTreeDump", Sk.parseTreeDump);
  * @description
  * Copy a Skulpt object with a new reference (object is different), + keep the old value.
  *
- * @param  {Object} dest The destination object.
- * @param  {Object} src  The source object.
+ * @param  {Object} currentValue The current object.
+ * @param  {Object} newValue     The new value object.
  *
- * @return {Object} A new object with src's value as value and dest's value as old value.
+ * @return {Object} A cloned object.
  */
-Sk.builtin.persistentCopy = function (dest, src) {
-    if (src instanceof Sk.builtin.func || typeof src === "function") {
-        return src;
+Sk.builtin.persistentCopy = function (currentValue, newValue) {
+    if (newValue instanceof Sk.builtin.func || typeof newValue === "function") {
+        return newValue;
     }
 
-    console.log("__PERSISTENT__COPY__", dest, src);
+    console.log("__PERSISTENT__COPY__", currentValue, newValue);
 
-    const newObject = src.clone();
+    // const newObject = src.clone();
 
-    if (dest) {
-        newObject._old = dest.v;
+    // if (newValue) {
+    //     newObject._old = newValue.v;
+    // } else {
+    //     newObject._old = undefined;
+    // }
+
+    return newValue.clone();
+};
+
+/**
+ * Removes all the ._old properties of a skuplt builtin object.
+ *
+ * @param value The value.
+ *
+ * @returns {[]|*} A new value without the ._old properties.
+ */
+Sk.builtin.removeOldValues = function(value) {
+    if (Array.isArray(value)) {
+        let values = [];
+        for (let idx = 0; idx < value.length; idx++) {
+            const newValue = value[idx].clone();
+            newValue._old = undefined;
+
+            values.push(newValue);
+        }
+
+        return values;
+    } else if (value.hasOwnProperty("v")) {
+        const newValue = value.clone();
+        newValue._old = undefined;
+
+        return newValue;
     } else {
-        newObject._old = undefined;
+        return value;
     }
-
-    return newObject;
 };
 
 Sk.exportSymbol("Sk.builtin.persistentCopy", Sk.builtin.persistentCopy);
@@ -34265,8 +34351,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "daf1d1be671c927bbfb23d4d8496770b13b37971",
-    date: "2020-03-30T14:30:04.866Z"
+    githash: "b806f4a5a6683574187b198c6210c6b8e703efb8",
+    date: "2020-04-01T13:05:48.345Z"
 };
 
 /**

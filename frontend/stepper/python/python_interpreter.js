@@ -340,8 +340,6 @@ export default function (context) {
     };
 
     this.noDelay = (callback, value) => {
-        pythonRunnerLog('noDelay');
-
         var primitive = this._createPrimitive(value);
         if (primitive !== Sk.builtin.none.none$) {
             // Apparently when we create a new primitive, the debugger adds a call to
@@ -411,8 +409,6 @@ export default function (context) {
     };
 
     this.print = (message, className) => {
-        pythonRunnerLog('Message PRINT : "', message, '"');
-
         if (message.trim() === 'Program execution complete') {
             this._onFinished();
         } else {
@@ -421,8 +417,6 @@ export default function (context) {
     };
 
     this._onFinished = () => {
-        pythonRunnerLog('_onFinished');
-
         this.stop();
     };
 
@@ -439,8 +433,6 @@ export default function (context) {
     };
 
     this._continue = () => {
-        pythonRunnerLog('_continue');
-
         if (this._steps >= this._maxIterations) {
             this._onStepError(window.languageStrings.tooManyIterations);
         } else if (!this._paused && this._isRunning) {
@@ -605,8 +597,6 @@ export default function (context) {
     };
 
     this.stop = () => {
-        pythonRunnerLog('stop');
-
         for (let i = 0; i < this._timeouts.length; i += 1) {
             window.clearTimeout(this._timeouts[i]);
         }
@@ -626,8 +616,6 @@ export default function (context) {
     };
 
     this._resetInterpreterState = () => {
-        pythonRunnerLog('_resetInterpreterState');
-
         this._steps = 0;
         this._nbActions = 0;
 
@@ -646,8 +634,6 @@ export default function (context) {
     };
 
     this._resetCallstack = () => {
-        pythonRunnerLog('_resetCallstack');
-
         if (this._resetCallstackOnNextStep) {
             this._resetCallstackOnNextStep = false;
             this._debugger.suspension_stack.pop();
@@ -655,8 +641,6 @@ export default function (context) {
     };
 
     this.step = () => {
-        pythonRunnerLog('step');
-
         this._resetCallstack();
         this._stepInProgress = true;
 
@@ -664,8 +648,6 @@ export default function (context) {
     };
 
     this.realStep = () => {
-        pythonRunnerLog('realStep');
-
         this._paused = this.stepMode;
         this._debugger.enable_step_mode();
         this._debugger.resume.call(this._debugger);

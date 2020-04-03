@@ -1,8 +1,7 @@
 /*     1 */
 $compiledmod = function () {
     var $scope146 = (function ($forcegbl) {
-        var $loadname158, $loadname158, $loadname159, $loadname160, $loadname159, $loadname160, $call161, $loadname159,
-            $loadname160, $call161;
+        var $loadname160, $loadname161, $loadname163, $loadname164, $loadname166, $loadname166;
         var $wakeFromSuspension = function () {
             var susp = $scope146.$wakingSuspension;
             $scope146.$wakingSuspension = undefined;
@@ -15,10 +14,11 @@ $compiledmod = function () {
             $currLineNo = susp.$lineno;
             $currColNo = susp.$colno;
             Sk.lastYield = Date.now();
-            $loadname158 = susp.$tmps.$loadname158;
-            $loadname159 = susp.$tmps.$loadname159;
             $loadname160 = susp.$tmps.$loadname160;
-            $call161 = susp.$tmps.$call161;
+            $loadname161 = susp.$tmps.$loadname161;
+            $loadname163 = susp.$tmps.$loadname163;
+            $loadname164 = susp.$tmps.$loadname164;
+            $loadname166 = susp.$tmps.$loadname166;
             try {
                 $ret = susp.child.resume();
             } catch (err) {
@@ -53,12 +53,14 @@ $compiledmod = function () {
             susp.$colno = $colno;
             susp.optional = susp.child.optional;
             susp._name = '<module>';
-            susp._localNames = [];
+            susp._argnames = [];
+            susp._scopename = '$scope146';
             susp.$tmps = {
-                "$loadname158": $loadname158,
-                "$loadname159": $loadname159,
                 "$loadname160": $loadname160,
-                "$call161": $call161
+                "$loadname161": $loadname161,
+                "$loadname163": $loadname163,
+                "$loadname164": $loadname164,
+                "$loadname166": $loadname166
             };
             return susp;
         };
@@ -67,23 +69,6 @@ $compiledmod = function () {
         var $ret = undefined, $postfinally = undefined, $currLineNo = undefined, $currColNo = undefined;
         if ($scope146.$wakingSuspension !== undefined) {
             $wakeFromSuspension();
-        }
-        if (Sk.retainGlobals) {
-            if (Sk.globals) {
-                $gbl = Sk.globals;
-                Sk.globals = $gbl;
-                $loc = $gbl;
-            }
-            if (Sk.globals) {
-                $gbl = Sk.globals;
-                Sk.globals = $gbl;
-                $loc = $gbl;
-                $loc.__file__ = new Sk.builtins.str('<stdin>.py');
-            } else {
-                Sk.globals = $gbl;
-            }
-        } else {
-            Sk.globals = $gbl;
         }
         while (true) {
             try {
@@ -102,7 +87,7 @@ $compiledmod = function () {
                     case 1: /* --- debug breakpoint for line 1 --- */
                         /*     2 */ //
                         /*     3 */ // line 1:
-                        /*     4 */ // def lother(test, v):
+                        /*     4 */ // def ret(a):
                         /*     5 */ // ^
                         /*     6 */ //
                         /*     7 */
@@ -111,84 +96,82 @@ $compiledmod = function () {
                         $currColNo = 0;
                         /*     9 */
                         /*    10 */
-                        $scope147.co_name = new Sk.builtins['str']('lother');
-                        $scope147.co_varnames = ['test', 'v'];
+                        $scope147.co_name = new Sk.builtins['str']('ret');
+                        $scope147.co_varnames = ['a'];
                         var $funcobj150 = new Sk.builtins['function']($scope147, $gbl);
-                        console.log('$funcobj150 =', $funcobj150);
-                        $loc.lother = window.currentPythonRunner.reportValue($funcobj150, '$loc.lother');
-                        if (Sk.breakpoints('<stdin>.py', 4, 0)) {
+                        $loc.ret = window.currentPythonRunner.reportValue($funcobj150, '$loc.ret');
+                        if (Sk.breakpoints('<stdin>.py', 5, 0)) {
                             var $susp = $saveSuspension({
                                 data: {type: 'Sk.debug'}, resume: function () {
                                 }
-                            }, '<stdin>.py', 4, 0);
+                            }, '<stdin>.py', 5, 0);
                             $susp.$blk = 2;
                             $susp.optional = true;
                             return $susp;
                         }
                         $blk = 2;/* allowing case fallthrough */
-                    case 2: /* --- debug breakpoint for line 4 --- */
+                    case 2: /* --- debug breakpoint for line 5 --- */
                         /*    11 */ //
-                        /*    12 */ // line 4:
-                        /*    13 */ // def bilo(param):
+                        /*    12 */ // line 5:
+                        /*    13 */ // def test(a):
                         /*    14 */ // ^
                         /*    15 */ //
                         /*    16 */
-                        $currLineNo = 4;
+                        $currLineNo = 5;
                         /*    17 */
                         $currColNo = 0;
                         /*    18 */
                         /*    19 */
-                        $scope151.co_name = new Sk.builtins['str']('bilo');
-                        $scope151.co_varnames = ['param'];
-                        var $funcobj155 = new Sk.builtins['function']($scope151, $gbl);
-                        console.log('$funcobj155 =', $funcobj155);
-                        $loc.bilo = window.currentPythonRunner.reportValue($funcobj155, '$loc.bilo');
-                        if (Sk.breakpoints('<stdin>.py', 8, 0)) {
-                            var $susp = $saveSuspension({
-                                data: {type: 'Sk.debug'}, resume: function () {
-                                }
-                            }, '<stdin>.py', 8, 0);
-                            $susp.$blk = 3;
-                            $susp.optional = true;
-                            return $susp;
-                        }
-                        $blk = 3;/* allowing case fallthrough */
-                    case 3: /* --- debug breakpoint for line 8 --- */
-                        /*    20 */ //
-                        /*    21 */ // line 8:
-                        /*    22 */ // a = 'Teest'
-                        /*    23 */ // ^
-                        /*    24 */ //
-                        /*    25 */
-                        $currLineNo = 8;
-                        /*    26 */
-                        $currColNo = 0;
-                        /*    27 */
-                        /*    28 */
-                        $loc.a = window.currentPythonRunner.reportValue($scope146.$const156, '$loc.a');
+                        $scope151.co_name = new Sk.builtins['str']('test');
+                        $scope151.co_varnames = ['a'];
+                        var $funcobj157 = new Sk.builtins['function']($scope151, $gbl);
+                        $loc.test = window.currentPythonRunner.reportValue($funcobj157, '$loc.test');
                         if (Sk.breakpoints('<stdin>.py', 9, 0)) {
                             var $susp = $saveSuspension({
                                 data: {type: 'Sk.debug'}, resume: function () {
                                 }
                             }, '<stdin>.py', 9, 0);
+                            $susp.$blk = 3;
+                            $susp.optional = true;
+                            return $susp;
+                        }
+                        $blk = 3;/* allowing case fallthrough */
+                    case 3: /* --- debug breakpoint for line 9 --- */
+                        /*    20 */ //
+                        /*    21 */ // line 9:
+                        /*    22 */ // c = 'a'
+                        /*    23 */ // ^
+                        /*    24 */ //
+                        /*    25 */
+                        $currLineNo = 9;
+                        /*    26 */
+                        $currColNo = 0;
+                        /*    27 */
+                        /*    28 */
+                        $loc.c = window.currentPythonRunner.reportValue($scope146.$const158, '$loc.c');
+                        if (Sk.breakpoints('<stdin>.py', 10, 0)) {
+                            var $susp = $saveSuspension({
+                                data: {type: 'Sk.debug'}, resume: function () {
+                                }
+                            }, '<stdin>.py', 10, 0);
                             $susp.$blk = 4;
                             $susp.optional = true;
                             return $susp;
                         }
                         $blk = 4;/* allowing case fallthrough */
-                    case 4: /* --- debug breakpoint for line 9 --- */
+                    case 4: /* --- debug breakpoint for line 10 --- */
                         /*    29 */ //
-                        /*    30 */ // line 9:
-                        /*    31 */ // g = 22
+                        /*    30 */ // line 10:
+                        /*    31 */ // c = 'b'
                         /*    32 */ // ^
                         /*    33 */ //
                         /*    34 */
-                        $currLineNo = 9;
+                        $currLineNo = 10;
                         /*    35 */
                         $currColNo = 0;
                         /*    36 */
                         /*    37 */
-                        $loc.g = window.currentPythonRunner.reportValue($scope146.$const157, '$loc.g');
+                        $loc.c = window.currentPythonRunner.reportValue($scope146.$const159, '$loc.c');
                         if (Sk.breakpoints('<stdin>.py', 11, 0)) {
                             var $susp = $saveSuspension({
                                 data: {type: 'Sk.debug'}, resume: function () {
@@ -202,7 +185,7 @@ $compiledmod = function () {
                     case 5: /* --- debug breakpoint for line 11 --- */
                         /*    38 */ //
                         /*    39 */ // line 11:
-                        /*    40 */ // print(a)
+                        /*    40 */ // d = ret(c)
                         /*    41 */ // ^
                         /*    42 */ //
                         /*    43 */
@@ -211,82 +194,113 @@ $compiledmod = function () {
                         $currColNo = 0;
                         /*    45 */
                         /*    46 */
-                        var $loadname158 = $loc.a !== undefined ? $loc.a : Sk.misceval.loadname('a', $gbl);
-                        ;console.log('$loadname158 =', $loadname158);
-                        $ret = Sk.misceval.print_(new Sk.builtins['str']($loadname158).v);
+                        var $loadname160 = $loc.ret !== undefined ? $loc.ret : Sk.misceval.loadname('ret', $gbl);
+                        ;var $loadname161 = $loc.c !== undefined ? $loc.c : Sk.misceval.loadname('c', $gbl);
+                        ;$ret = Sk.misceval.callsimOrSuspendArray($loadname160, [$loadname161]);
                         $blk = 6;/* allowing case fallthrough */
                     case 6: /* --- function return or resume suspension --- */
+                        $loc.ret = $loadname160;
+                        $loc.c = $loadname161;
                         if ($ret && $ret.$isSuspension) {
                             console.log('saveSuspension');
-                            return $saveSuspension($ret, '<stdin>.py', 11, 0);
+                            return $saveSuspension($ret, '<stdin>.py', 11, 4);
                         }
-                        $ret = Sk.misceval.print_("\n");
-                        $blk = 7;/* allowing case fallthrough */
-                    case 7: /* --- function return or resume suspension --- */
-                        if ($ret && $ret.$isSuspension) {
-                            console.log('saveSuspension');
-                            return $saveSuspension($ret, '<stdin>.py', 11, 0);
-                        }
+                        var $call162 = $ret;
+                        /*    47 */ //
+                        /*    48 */ // line 11:
+                        /*    49 */ // d = ret(c)
+                        /*    50 */ //     ^
+                        /*    51 */ //
+                        /*    52 */
+                        $currLineNo = 11;
+                        /*    53 */
+                        $currColNo = 4;
+                        /*    54 */
+                        /*    55 */
+                        $loc.d = window.currentPythonRunner.reportValue($call162, '$loc.d');
                         if (Sk.breakpoints('<stdin>.py', 12, 0)) {
                             var $susp = $saveSuspension({
                                 data: {type: 'Sk.debug'}, resume: function () {
                                 }
                             }, '<stdin>.py', 12, 0);
-                            $susp.$blk = 8;
+                            $susp.$blk = 7;
                             $susp.optional = true;
                             return $susp;
                         }
-                        $blk = 8;/* allowing case fallthrough */
-                    case 8: /* --- debug breakpoint for line 12 --- */
-                        /*    47 */ //
-                        /*    48 */ // line 12:
-                        /*    49 */ // print(bilo(a))
-                        /*    50 */ // ^
-                        /*    51 */ //
-                        /*    52 */
-                        $currLineNo = 12;
-                        /*    53 */
-                        $currColNo = 0;
-                        /*    54 */
-                        /*    55 */
-                        var $loadname159 = $loc.bilo !== undefined ? $loc.bilo : Sk.misceval.loadname('bilo', $gbl);
-                        ;console.log('$loadname159 =', $loadname159);
-                        var $loadname160 = $loc.a !== undefined ? $loc.a : Sk.misceval.loadname('a', $gbl);
-                        ;console.log('$loadname160 =', $loadname160);
-                        console.log('ENTER callsimOrSuspendArray', '$loadname159', $loadname159, [$loadname160]);
-                        $ret = Sk.misceval.callsimOrSuspendArray($loadname159, [$loadname160]);
-                        $blk = 9;/* allowing case fallthrough */
-                    case 9: /* --- function return or resume suspension --- */
-                        if ($ret && $ret.$isSuspension) {
-                            console.log('saveSuspension');
-                            return $saveSuspension($ret, '<stdin>.py', 12, 6);
-                        }
-                        var $call161 = $ret;
-                        console.log('$call161 =', $call161);
+                        $blk = 7;/* allowing case fallthrough */
+                    case 7: /* --- debug breakpoint for line 12 --- */
                         /*    56 */ //
                         /*    57 */ // line 12:
-                        /*    58 */ // print(bilo(a))
-                        /*    59 */ //       ^
+                        /*    58 */ // e = test(d)
+                        /*    59 */ // ^
                         /*    60 */ //
                         /*    61 */
                         $currLineNo = 12;
                         /*    62 */
-                        $currColNo = 6;
+                        $currColNo = 0;
                         /*    63 */
                         /*    64 */
-                        $ret = Sk.misceval.print_(new Sk.builtins['str']($call161).v);
-                        $blk = 10;/* allowing case fallthrough */
-                    case 10: /* --- function return or resume suspension --- */
+                        var $loadname163 = $loc.test !== undefined ? $loc.test : Sk.misceval.loadname('test', $gbl);
+                        ;var $loadname164 = $loc.d !== undefined ? $loc.d : Sk.misceval.loadname('d', $gbl);
+                        ;$ret = Sk.misceval.callsimOrSuspendArray($loadname163, [$loadname164]);
+                        $blk = 8;/* allowing case fallthrough */
+                    case 8: /* --- function return or resume suspension --- */
+                        $loc.test = $loadname163;
+                        $loc.d = $loadname164;
                         if ($ret && $ret.$isSuspension) {
                             console.log('saveSuspension');
-                            return $saveSuspension($ret, '<stdin>.py', 12, 0);
+                            return $saveSuspension($ret, '<stdin>.py', 12, 4);
+                        }
+                        var $call165 = $ret;
+                        /*    65 */ //
+                        /*    66 */ // line 12:
+                        /*    67 */ // e = test(d)
+                        /*    68 */ //     ^
+                        /*    69 */ //
+                        /*    70 */
+                        $currLineNo = 12;
+                        /*    71 */
+                        $currColNo = 4;
+                        /*    72 */
+                        /*    73 */
+                        $loc.e = window.currentPythonRunner.reportValue($call165, '$loc.e');
+                        if (Sk.breakpoints('<stdin>.py', 13, 0)) {
+                            var $susp = $saveSuspension({
+                                data: {type: 'Sk.debug'}, resume: function () {
+                                }
+                            }, '<stdin>.py', 13, 0);
+                            $susp.$blk = 9;
+                            $susp.optional = true;
+                            return $susp;
+                        }
+                        $blk = 9;/* allowing case fallthrough */
+                    case 9: /* --- debug breakpoint for line 13 --- */
+                        /*    74 */ //
+                        /*    75 */ // line 13:
+                        /*    76 */ // print(e)
+                        /*    77 */ // ^
+                        /*    78 */ //
+                        /*    79 */
+                        $currLineNo = 13;
+                        /*    80 */
+                        $currColNo = 0;
+                        /*    81 */
+                        /*    82 */
+                        var $loadname166 = $loc.e !== undefined ? $loc.e : Sk.misceval.loadname('e', $gbl);
+                        ;$ret = Sk.misceval.print_(new Sk.builtins['str']($loadname166).v);
+                        $blk = 10;/* allowing case fallthrough */
+                    case 10: /* --- function return or resume suspension --- */
+                        $loc.e = $loadname166;
+                        if ($ret && $ret.$isSuspension) {
+                            console.log('saveSuspension');
+                            return $saveSuspension($ret, '<stdin>.py', 13, 0);
                         }
                         $ret = Sk.misceval.print_("\n");
                         $blk = 11;/* allowing case fallthrough */
                     case 11: /* --- function return or resume suspension --- */
                         if ($ret && $ret.$isSuspension) {
                             console.log('saveSuspension');
-                            return $saveSuspension($ret, '<stdin>.py', 12, 0);
+                            return $saveSuspension($ret, '<stdin>.py', 13, 0);
                         }
                         console.log('cmod ast return');
                         return $loc;
@@ -307,10 +321,11 @@ $compiledmod = function () {
             }
         }
     });
-    $scope146.$const156 = new Sk.builtin.str('Teest');
-    $scope146.$const157 = new Sk.builtin.int_(22);
-    var $scope147 = (function $lother148$(test, v) {
-        var test, v;
+    $scope146.$const158 = new Sk.builtin.str('a');
+    $scope146.$const159 = new Sk.builtin.str('b');
+    var $scope147 = (function $ret148$(a) {
+        var b; /* locals */
+        var a, a, a, b, b;
         var $wakeFromSuspension = function () {
             var susp = $scope147.$wakingSuspension;
             $scope147.$wakingSuspension = undefined;
@@ -323,8 +338,8 @@ $compiledmod = function () {
             $currLineNo = susp.$lineno;
             $currColNo = susp.$colno;
             Sk.lastYield = Date.now();
-            test = susp.$tmps.test;
-            v = susp.$tmps.v;
+            a = susp.$tmps.a;
+            b = susp.$tmps.b;
             try {
                 $ret = susp.child.resume();
             } catch (err) {
@@ -358,9 +373,10 @@ $compiledmod = function () {
             susp.$lineno = $lineno;
             susp.$colno = $colno;
             susp.optional = susp.child.optional;
-            susp._name = 'lother';
-            susp._localNames = ["test", "v"];
-            susp.$tmps = {"test": test, "v": v};
+            susp._name = 'ret';
+            susp._argnames = ["a"];
+            susp._scopename = '$scope147';
+            susp.$tmps = {"a": a, "b": b};
             return susp;
         };
         var $blk = 0, $exc = [], $loc = {}, $cell = {}, $gbl = this, $err = undefined, $ret = undefined,
@@ -373,14 +389,10 @@ $compiledmod = function () {
             try {
                 switch ($blk) {
                     case 0: /* --- codeobj entry --- */
-                        if (test === undefined) {
-                            throw new Sk.builtin.UnboundLocalError('local variable \'test\' referenced before assignment');
+                        if (a === undefined) {
+                            throw new Sk.builtin.UnboundLocalError('local variable \'a\' referenced before assignment');
                         }
-                        /*    65 */
-                        if (v === undefined) {
-                            throw new Sk.builtin.UnboundLocalError('local variable \'v\' referenced before assignment');
-                        }
-                        /*    66 */
+                        /*    83 */
                         if (Sk.breakpoints('<stdin>.py', 2, 4)) {
                             var $susp = $saveSuspension({
                                 data: {type: 'Sk.debug'}, resume: function () {
@@ -392,19 +404,55 @@ $compiledmod = function () {
                         }
                         $blk = 1;/* allowing case fallthrough */
                     case 1: /* --- debug breakpoint for line 2 --- */
-                        /*    67 */ //
-                        /*    68 */ // line 2:
-                        /*    69 */ //     return 4
-                        /*    70 */ //     ^
-                        /*    71 */ //
-                        /*    72 */
+                        /*    84 */ //
+                        /*    85 */ // line 2:
+                        /*    86 */ //     b = a + a
+                        /*    87 */ //     ^
+                        /*    88 */ //
+                        /*    89 */
                         $currLineNo = 2;
-                        /*    73 */
+                        /*    90 */
                         $currColNo = 4;
-                        /*    74 */
-                        /*    75 */
+                        /*    91 */
+                        /*    92 */
+                        if (a === undefined) {
+                            throw new Sk.builtin.UnboundLocalError('local variable \'a\' referenced before assignment');
+                        }
+                        /*    93 */
+                        if (a === undefined) {
+                            throw new Sk.builtin.UnboundLocalError('local variable \'a\' referenced before assignment');
+                        }
+                        /*    94 */
+                        var $binop149 = Sk.abstr.numberBinOp(a, a, 'Add');
+                        b = window.currentPythonRunner.reportValue($binop149, 'b');
+                        if (Sk.breakpoints('<stdin>.py', 3, 4)) {
+                            var $susp = $saveSuspension({
+                                data: {type: 'Sk.debug'}, resume: function () {
+                                }
+                            }, '<stdin>.py', 3, 4);
+                            $susp.$blk = 2;
+                            $susp.optional = true;
+                            return $susp;
+                        }
+                        $blk = 2;/* allowing case fallthrough */
+                    case 2: /* --- debug breakpoint for line 3 --- */
+                        /*    95 */ //
+                        /*    96 */ // line 3:
+                        /*    97 */ //     return b
+                        /*    98 */ //     ^
+                        /*    99 */ //
+                        /*   100 */
+                        $currLineNo = 3;
+                        /*   101 */
+                        $currColNo = 4;
+                        /*   102 */
+                        /*   103 */
+                        if (b === undefined) {
+                            throw new Sk.builtin.UnboundLocalError('local variable \'b\' referenced before assignment');
+                        }
+                        /*   104 */
                         console.log('astnode return');
-                        return $scope147.$const149;
+                        return b;
                         return Sk.builtin.none.none$;
                         throw new Sk.builtin.SystemError('internal error: unterminated block');
                 }
@@ -423,10 +471,9 @@ $compiledmod = function () {
             }
         }
     });
-    $scope147.$const149 = new Sk.builtin.int_(4);
-    var $scope151 = (function $bilo152$(param) {
-        var d; /* locals */
-        var d, d, param, param;
+    var $scope151 = (function $test152$(a) {
+        var v; /* locals */
+        var a, a, v, v, $loadgbl153;
         var $wakeFromSuspension = function () {
             var susp = $scope151.$wakingSuspension;
             $scope151.$wakingSuspension = undefined;
@@ -439,8 +486,9 @@ $compiledmod = function () {
             $currLineNo = susp.$lineno;
             $currColNo = susp.$colno;
             Sk.lastYield = Date.now();
-            d = susp.$tmps.d;
-            param = susp.$tmps.param;
+            a = susp.$tmps.a;
+            v = susp.$tmps.v;
+            $loadgbl153 = susp.$tmps.$loadgbl153;
             try {
                 $ret = susp.child.resume();
             } catch (err) {
@@ -474,9 +522,10 @@ $compiledmod = function () {
             susp.$lineno = $lineno;
             susp.$colno = $colno;
             susp.optional = susp.child.optional;
-            susp._name = 'bilo';
-            susp._localNames = ["d", "param"];
-            susp.$tmps = {"d": d, "param": param};
+            susp._name = 'test';
+            susp._argnames = ["a"];
+            susp._scopename = '$scope151';
+            susp.$tmps = {"a": a, "v": v, "$loadgbl153": $loadgbl153};
             return susp;
         };
         var $blk = 0, $exc = [], $loc = {}, $cell = {}, $gbl = this, $err = undefined, $ret = undefined,
@@ -489,67 +538,86 @@ $compiledmod = function () {
             try {
                 switch ($blk) {
                     case 0: /* --- codeobj entry --- */
-                        if (param === undefined) {
-                            throw new Sk.builtin.UnboundLocalError('local variable \'param\' referenced before assignment');
+                        if (a === undefined) {
+                            throw new Sk.builtin.UnboundLocalError('local variable \'a\' referenced before assignment');
                         }
-                        /*    76 */
-                        if (Sk.breakpoints('<stdin>.py', 5, 4)) {
-                            var $susp = $saveSuspension({
-                                data: {type: 'Sk.debug'}, resume: function () {
-                                }
-                            }, '<stdin>.py', 5, 4);
-                            $susp.$blk = 1;
-                            $susp.optional = true;
-                            return $susp;
-                        }
-                        $blk = 1;/* allowing case fallthrough */
-                    case 1: /* --- debug breakpoint for line 5 --- */
-                        /*    77 */ //
-                        /*    78 */ // line 5:
-                        /*    79 */ //     d = 32
-                        /*    80 */ //     ^
-                        /*    81 */ //
-                        /*    82 */
-                        $currLineNo = 5;
-                        /*    83 */
-                        $currColNo = 4;
-                        /*    84 */
-                        /*    85 */
-                        d = window.currentPythonRunner.reportValue($scope151.$const153, 'd');
+                        /*   105 */
                         if (Sk.breakpoints('<stdin>.py', 6, 4)) {
                             var $susp = $saveSuspension({
                                 data: {type: 'Sk.debug'}, resume: function () {
                                 }
                             }, '<stdin>.py', 6, 4);
-                            $susp.$blk = 2;
+                            $susp.$blk = 1;
                             $susp.optional = true;
                             return $susp;
                         }
-                        $blk = 2;/* allowing case fallthrough */
-                    case 2: /* --- debug breakpoint for line 6 --- */
-                        /*    86 */ //
-                        /*    87 */ // line 6:
-                        /*    88 */ //     return d + param
-                        /*    89 */ //     ^
-                        /*    90 */ //
-                        /*    91 */
+                        $blk = 1;/* allowing case fallthrough */
+                    case 1: /* --- debug breakpoint for line 6 --- */
+                        /*   106 */ //
+                        /*   107 */ // line 6:
+                        /*   108 */ //     v = ret(a)
+                        /*   109 */ //     ^
+                        /*   110 */ //
+                        /*   111 */
                         $currLineNo = 6;
-                        /*    92 */
+                        /*   112 */
                         $currColNo = 4;
-                        /*    93 */
-                        /*    94 */
-                        if (d === undefined) {
-                            throw new Sk.builtin.UnboundLocalError('local variable \'d\' referenced before assignment');
+                        /*   113 */
+                        /*   114 */
+                        var $loadgbl153 = Sk.misceval.loadname('ret', $gbl);
+                        if (a === undefined) {
+                            throw new Sk.builtin.UnboundLocalError('local variable \'a\' referenced before assignment');
                         }
-                        /*    95 */
-                        if (param === undefined) {
-                            throw new Sk.builtin.UnboundLocalError('local variable \'param\' referenced before assignment');
+                        /*   115 */
+                        $ret = Sk.misceval.callsimOrSuspendArray($loadgbl153, [a]);
+                        $blk = 2;/* allowing case fallthrough */
+                    case 2: /* --- function return or resume suspension --- */
+                        if ($ret && $ret.$isSuspension) {
+                            console.log('saveSuspension');
+                            return $saveSuspension($ret, '<stdin>.py', 6, 8);
                         }
-                        /*    96 */
-                        var $binop154 = Sk.abstr.numberBinOp(d, param, 'Add');
-                        console.log('$binop154 =', $binop154);
+                        var $call154 = $ret;
+                        /*   116 */ //
+                        /*   117 */ // line 6:
+                        /*   118 */ //     v = ret(a)
+                        /*   119 */ //         ^
+                        /*   120 */ //
+                        /*   121 */
+                        $currLineNo = 6;
+                        /*   122 */
+                        $currColNo = 8;
+                        /*   123 */
+                        /*   124 */
+                        v = window.currentPythonRunner.reportValue($call154, 'v');
+                        if (Sk.breakpoints('<stdin>.py', 7, 4)) {
+                            var $susp = $saveSuspension({
+                                data: {type: 'Sk.debug'}, resume: function () {
+                                }
+                            }, '<stdin>.py', 7, 4);
+                            $susp.$blk = 3;
+                            $susp.optional = true;
+                            return $susp;
+                        }
+                        $blk = 3;/* allowing case fallthrough */
+                    case 3: /* --- debug breakpoint for line 7 --- */
+                        /*   125 */ //
+                        /*   126 */ // line 7:
+                        /*   127 */ //     return v + 'c'
+                        /*   128 */ //     ^
+                        /*   129 */ //
+                        /*   130 */
+                        $currLineNo = 7;
+                        /*   131 */
+                        $currColNo = 4;
+                        /*   132 */
+                        /*   133 */
+                        if (v === undefined) {
+                            throw new Sk.builtin.UnboundLocalError('local variable \'v\' referenced before assignment');
+                        }
+                        /*   134 */
+                        var $binop156 = Sk.abstr.numberBinOp(v, $scope151.$const155, 'Add');
                         console.log('astnode return');
-                        return $binop154;
+                        return $binop156;
                         return Sk.builtin.none.none$;
                         throw new Sk.builtin.SystemError('internal error: unterminated block');
                 }
@@ -568,7 +636,7 @@ $compiledmod = function () {
             }
         }
     });
-    $scope151.$const153 = new Sk.builtin.int_(32);
-    /*    97 */
+    $scope151.$const155 = new Sk.builtin.str('c');
+    /*   135 */
     return $scope146;
 }();

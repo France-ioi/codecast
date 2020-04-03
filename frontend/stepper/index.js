@@ -154,7 +154,15 @@ function getCurrentStepperState (state) {
   return state.getIn(['stepper', 'currentStepperState']);
 }
 
-function enrichStepperState (stepperState) {
+/**
+ * Enrich, analysis the current stepper state.
+ *
+ * @param stepperState The stepper statee.
+ * @param {string} context The context (Stepper.Progress, Stepper.Restart, Stepper.Idle).
+ *
+ * @returns The new stepper state with analysis.
+ */
+function enrichStepperState (stepperState, context) {
   stepperState = {...stepperState};
   if (!('controls' in stepperState)) {
     stepperState.controls = Immutable.Map();
@@ -172,7 +180,10 @@ function enrichStepperState (stepperState) {
       functionCallStackMap: {}
     };
 
-    stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.analysis);
+    // Don't analyse skulpt state on Idle to avoid double analyse.
+    if (context !== 'Stepper.Progress') {
+      stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.analysis);
+    }
   } else {
     const analysis = stepperState.analysis = analyseState(programState);
     const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
@@ -252,7 +263,7 @@ function stepperRestartReducer (state, {payload: {stepperState}}) {
   const {platform} = state.get('options');
 
   if (stepperState) {
-    stepperState = enrichStepperState(stepperState);
+    stepperState = enrichStepperState(stepperState, 'Stepper.Restart');
 
     if (platform === 'python') {
       // TODO: Check restart.
@@ -313,7 +324,7 @@ function stepperStartedReducer (state, action) {
 
 function stepperProgressReducer (state, {payload: {stepperContext}}) {
   // Set new currentStepperState state and go back to idle.
-  const stepperState = enrichStepperState(stepperContext.state);
+  const stepperState = enrichStepperState(stepperContext.state, 'Stepper.Progress');
 
   // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
   if (stepperState.hasOwnProperty('platform') && stepperState.platform === 'python') {
@@ -335,7 +346,7 @@ function stepperProgressReducer (state, {payload: {stepperContext}}) {
 function stepperIdleReducer (state, {payload: {stepperContext}}) {
   // Set new currentStepperState state and go back to idle.
   /* XXX Call enrichStepperState prior to calling the reducer. */
-  const stepperState = enrichStepperState(stepperContext.state);
+  const stepperState = enrichStepperState(stepperContext.state, 'Stepper.Idle');
   return state.update('stepper', stepper => stepper
     .set('currentStepperState', stepperState)
     .set('status', 'idle')

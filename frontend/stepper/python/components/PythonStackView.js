@@ -45,7 +45,7 @@ const PythonStackView = (props) => {
                 {'… +'}{firstVisible}
             </div>
             }
-            {props.analysis.functionCallStack.map((func) => (
+            {props.analysis.functionCallStack.reverse().map((func) => (
                 <PythonFunctionView
                     key={func.key}
                     func={func}
