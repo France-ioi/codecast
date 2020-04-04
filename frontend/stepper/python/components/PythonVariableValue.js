@@ -1,18 +1,27 @@
 import * as React from 'react';
 
 const PythonVariableValue = (props) => {
-    if (!props.value) {
-        return (<React.Fragment></React.Fragment>);
-    }
+    if (props.cur instanceof Sk.builtin.list) {
+        const nbElements = props.cur.v.length;
 
-    if (props.value instanceof Sk.builtin.list) {
-        const nbElements = props.value.cur.v.length;
+        const elements = [];
+        for (let idx = 0; idx < props.cur.v.length; idx++) {
+            let old = undefined;
+            if (props.old && props.old instanceof Sk.builtin.list) {
+                old = props.old.v[idx];
+            }
+
+            elements.push({
+                cur: props.cur.v[idx],
+                old: old
+            });
+        }
 
         return (
             <React.Fragment>
-                [{props.value.cur.v.map((element, index) => (
+                [{elements.map((element, index) => (
                     <span key={index}>
-                        <PythonVariableValue value={element} />
+                        <PythonVariableValue cur={element.cur} old={element.old} />
                         {(index + 1) < nbElements ? ', ' : null}
                     </span>
                 ))}]
@@ -20,19 +29,19 @@ const PythonVariableValue = (props) => {
         )
     }
 
-    if (props.value.cur instanceof Sk.builtin.str) {
+    if (props.cur instanceof Sk.builtin.str) {
         return (
             <React.Fragment>
-                "{props.value.cur.v}"
-                {(props.value.old && (props.value.cur.v !== props.value.old.v)) ? <span className="value-previous">"{props.value.old.v}"</span> : null }
+                <span>"{props.cur.v}"</span>
+                {(props.old && (props.cur.v !== props.old.v)) ? <span className="value-previous">"{props.old.v}"</span> : null }
             </React.Fragment>
         )
     }
 
     return (
         <React.Fragment>
-            <span>{props.value.cur.v}</span>
-            {(props.value.old && (props.value.cur.v !== props.value.old.v)) ? <span className="value-previous">{props.value.old.v}</span> : null }
+            <span>{props.cur.v}</span>
+            {(props.old && (props.cur.v !== props.old.v)) ? <span className="value-previous">{props.old.v}</span> : null }
         </React.Fragment>
     );
 };

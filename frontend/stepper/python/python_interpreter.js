@@ -441,7 +441,6 @@ export default function (context) {
     };
 
     this.initCodes = (codes) => {
-        console.log(codes);
         // For reportValue in Skulpt.
         window.currentPythonRunner = this;
 
@@ -545,8 +544,6 @@ export default function (context) {
     };
 
     this.reportValue = (origValue, varName) => {
-        pythonRunnerLog('> REPORT_VALUE', origValue, varName);
-
         // Show a popup displaying the value of a block in step-by-step mode
         if (origValue === undefined
             || (origValue && origValue.constructor === Sk.builtin.func)

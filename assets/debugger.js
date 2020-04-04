@@ -120,7 +120,7 @@ Sk.Debugger.prototype.generate_breakpoint_key = function(filename, lineno, colno
 };
 
 Sk.Debugger.prototype.check_breakpoints = function(filename, lineno, colno, globals, locals) {
-    debuggerLog('check_breakpoints', filename, lineno, colno, globals, locals);
+    // debuggerLog('check_breakpoints', filename, lineno, colno, globals, locals);
 
     // If Step mode is enabled then ignore breakpoints since we will just break
     // at every line.

@@ -10,12 +10,7 @@ const PythonVariable = (props) => {
             {' = '}
             <span className="vardecl-value">
                 <span className="value">
-                    <span>
-                        <PythonVariableValue value={props.value} />
-                    </span>
-                    <span className="value-previous">
-                        <PythonVariableValue value={null} />
-                    </span>
+                    <PythonVariableValue cur={props.value.cur} old={props.value.old} />
                 </span>
             </span>
         </div>
