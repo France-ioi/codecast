@@ -181,11 +181,19 @@ function enrichStepperState (stepperState, context) {
     };
 
     /**
-     * Don't analyse on Stepper.Progress to avoid double analysis each step (rendering the old value unusable).
-     * Don't analyse when the program is finished to display the last state of the stack.
+     * Only analyses on Stepper.Progress to avoid mulltiple analysis of each step.
      */
-    if (context !== 'Stepper.Progress' && !window.currentPythonRunner._isFinished) {
-      stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.analysis);
+    if (context === 'Stepper.Progress') {
+      // Don't reanalyse after program is finished : keep the last state of the stack.
+      if (!window.currentPythonRunner._isFinished) {
+        stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.analysis);
+      }
+    }
+
+    if (!stepperState.analysis) {
+      stepperState.analysis = {
+        functionCallStack: new Immutable.List()
+      }
     }
   } else {
     const analysis = stepperState.analysis = analyseState(programState);
@@ -326,6 +334,11 @@ function stepperStartedReducer (state, action) {
 }
 
 function stepperProgressReducer (state, {payload: {stepperContext}}) {
+  if (stepperContext.state.hasOwnProperty('platform') && stepperContext.state.platform === 'python') {
+    // Save scope.
+    stepperContext.state.suspensions = window.currentPythonRunner._debugger.suspension_stack;
+  }
+
   // Set new currentStepperState state and go back to idle.
   const stepperState = enrichStepperState(stepperContext.state, 'Stepper.Progress');
 
