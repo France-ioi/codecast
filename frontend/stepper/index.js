@@ -180,8 +180,11 @@ function enrichStepperState (stepperState, context) {
       functionCallStackMap: {}
     };
 
-    // Don't analyse skulpt state on Idle to avoid double analyse.
-    if (context !== 'Stepper.Progress') {
+    /**
+     * Don't analyse on Stepper.Progress to avoid double analysis each step (rendering the old value unusable).
+     * Don't analyse when the program is finished to display the last state of the stack.
+     */
+    if (context !== 'Stepper.Progress' && !window.currentPythonRunner._isFinished) {
       stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.analysis);
     }
   } else {
