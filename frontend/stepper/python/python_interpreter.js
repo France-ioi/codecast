@@ -493,10 +493,12 @@ export default function (context) {
     };
 
     this.runStep = () => {
-        this.stepMode = true;
-        if(this._isRunning && !this._stepInProgress) {
-            this.step();
-        }
+        return new Promise((resolve, reject) => {
+            this.stepMode = true;
+            if (this._isRunning && !this._stepInProgress) {
+                this.step(resolve, reject);
+            }
+        });
     };
 
     this.nbRunning = () => {
@@ -637,17 +639,17 @@ export default function (context) {
         }
     };
 
-    this.step = () => {
+    this.step = (resolve, reject) => {
         this._resetCallstack();
         this._stepInProgress = true;
 
-        this.realStep();
+        this.realStep(resolve, reject);
     };
 
-    this.realStep = () => {
+    this.realStep = (resolve, reject) => {
         this._paused = this.stepMode;
         this._debugger.enable_step_mode();
-        this._debugger.resume.call(this._debugger);
+        this._debugger.resume.call(this._debugger, resolve, reject);
         this._steps += 1;
     };
 
@@ -666,15 +668,19 @@ export default function (context) {
         return suspension;
     };
 
-    this._onStepSuccess = () => {
+    this._onStepSuccess = (callback) => {
         pythonRunnerLog('_onStepSuccess');
 
         // If there are still timeouts, there's still a step in progress
         this._stepInProgress = !!this._timeouts.length;
         this._continue();
+
+        if (typeof callback === 'function') {
+            callback();
+        }
     };
 
-    this._onStepError = (message) => {
+    this._onStepError = (message, callback) => {
         pythonRunnerLog('_onStepError');
 
         context.onExecutionEnd && context.onExecutionEnd();
@@ -704,6 +710,10 @@ export default function (context) {
         }
 
         this.onError(message);
+
+        if (typeof callback === 'function') {
+            callback();
+        }
     };
 
     this._setBreakpoint = (bp, isTemporary) => {

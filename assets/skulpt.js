@@ -13335,7 +13335,6 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
 
         out("$ret = Sk.abstr.objectSetItem(", obj, ",", subs, ",", data, ", true);");
 
-        debugger;
         for (let idx in this.localReferencesToUpdateForPersistantVariables) {
             const localName = this.localReferencesToUpdateForPersistantVariables[idx].localName;
             if (this.localReferencesToUpdateForPersistantVariables[idx].hasOwnProperty("ref")) {
@@ -34360,8 +34359,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "de5e54c42d72ef0c2971fdf0df30da308d0759a5",
-    date: "2020-04-04T07:49:18.613Z"
+    githash: "ec7170906c2b026374023f42d98c2de5fb3b0776",
+    date: "2020-04-09T16:06:38.252Z"
 };
 
 /**

@@ -17,7 +17,7 @@ const PythonFunctionHeader = (props) => {
                     {args.map(function(value, index) {
                         return (
                             <span key={index}>
-                                <PythonVariableValue value={value}/>
+                                <PythonVariableValue cur={value.cur} old={value.old} />
                                 {(index + 1) < argCount ? ', ' : null}
                             </span>
                         );

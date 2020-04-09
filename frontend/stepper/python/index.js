@@ -183,8 +183,17 @@ export default function (bundle, deps) {
           // }
         };
 
+        /**
+         * Add a last instruction at the end of the code so Skupt will generate a Suspension state
+         * for after the user's last instruction. Otherwise it would be impossible to retrieve the
+         * modifications made by the last user's line.
+         *
+         * @type {string} pythonSource
+         */
+        const pythonSource = source + "\n0;";
+
         const pythonInterpreter = new PythonInterpreter(context);
-        pythonInterpreter.initCodes([source]);
+        pythonInterpreter.initCodes([pythonSource]);
       }
     });
   })

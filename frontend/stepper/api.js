@@ -185,7 +185,7 @@ async function executeSingleStep (stepperContext) {
 
   if (stepperContext.state.platform === 'python') {
     console.log('EXECUTE STEP HERE');
-    window.currentPythonRunner.runStep();
+    await window.currentPythonRunner.runStep();
 
     await stepperContext.interact({
       position: 0, // TODO: Need real position ?

@@ -267,7 +267,7 @@ Sk.Debugger.prototype.suspension_handler = function(susp) {
     });
 };
 
-Sk.Debugger.prototype.resume = function() {
+Sk.Debugger.prototype.resume = function(resolve, reject) {
     debuggerLog('resume');
 
     // Reset the suspension stack to the topmost
@@ -275,10 +275,17 @@ Sk.Debugger.prototype.resume = function() {
 
     if (this.suspension_stack.length === 0) {
         this.print("No running program");
+
+        resolve();
     } else {
         var promise = this.suspension_handler(this.get_active_suspension());
         console.log('promise', promise);
-        promise.then(this.success.bind(this), this.error.bind(this));
+        var self = this;
+        promise.then(function(value) {
+            self.success(value, resolve, reject);
+        }, function(error) {
+            self.error(error, reject);
+        });
     }
 };
 
@@ -287,13 +294,14 @@ Sk.Debugger.prototype.pop_suspension_stack = function() {
     this.current_suspension -= 1;
 };
 
-Sk.Debugger.prototype.success = function(r) {
-    debuggerLog('success', r);
+Sk.Debugger.prototype.success = function(r, resolve, reject) {
+    debuggerLog('success', r, resolve);
 
     if (r instanceof Sk.misceval.Suspension) {
+        debuggerLog('success suspension');
         this.set_suspension(r);
         if (this.output_callback != null) {
-            this.output_callback._onStepSuccess();
+            this.output_callback._onStepSuccess(resolve);
         }
     } else {
         if (this.suspension_stack.length > 0) {
@@ -301,9 +309,18 @@ Sk.Debugger.prototype.success = function(r) {
             this.pop_suspension_stack();
 
             if (this.suspension_stack.length === 0) {
+                debuggerLog('success complete');
+
                 this.print("Program execution complete");
+
+                if (typeof resolve === 'function') {
+                    resolve();
+                }
+
                 return;
             }
+
+            debuggerLog('here we are');
 
             var parent_suspension = this.get_active_suspension();
             // The child has completed the execution. So override the child's resume
@@ -311,16 +328,25 @@ Sk.Debugger.prototype.success = function(r) {
             parent_suspension.child.resume = function() {
                 return r;
             };
-            this.resume();
+
+            this.resume(resolve, reject);
         } else {
+            debuggerLog('success complete 2');
+
             this.print("Program execution complete");
+
+            if (typeof resolve === 'function') {
+                resolve();
+            }
         }
     }
 };
 
-Sk.Debugger.prototype.error = function(e) {
+Sk.Debugger.prototype.error = function(e, reject) {
+    debuggerLog('error', e);
+
     if (this.output_callback != null) {
-        this.output_callback._onStepError(e);
+        this.output_callback._onStepError(e, reject);
     }
     this.print("Traceback (most recent call last):");
     for (var idx = 0; idx < e.traceback.length; ++idx) {
@@ -334,6 +360,10 @@ Sk.Debugger.prototype.error = function(e) {
     var err_ty = e.constructor.tp$name;
     for (idx = 0; idx < e.args.v.length; ++idx) {
         this.print(err_ty + ": " + e.args.v[idx].v);
+    }
+
+    if (typeof reject === 'function') {
+        reject();
     }
 };
 

@@ -180,9 +180,6 @@ function enrichStepperState (stepperState, context) {
       functionCallStackMap: {}
     };
 
-    /**
-     * Only analyses on Stepper.Progress to avoid mulltiple analysis of each step.
-     */
     if (context === 'Stepper.Progress') {
       // Don't reanalyse after program is finished : keep the last state of the stack.
       if (!window.currentPythonRunner._isFinished) {
@@ -287,7 +284,16 @@ function stepperRestartReducer (state, {payload: {stepperState}}) {
       const sourceModel = state.get('buffers').get('source').get('model');
       const source = sourceModel.get('document').toString();
 
-      window.currentPythonRunner.initCodes([source]);
+      /**
+       * Add a last instruction at the end of the code so Skupt will generate a Suspension state
+       * for after the user's last instruction. Otherwise it would be impossible to retrieve the
+       * modifications made by the last user's line.
+       *
+       * @type {string} pythonSource
+       */
+      const pythonSource = source + "\n0";
+
+      window.currentPythonRunner.initCodes([pythonSource]);
 
       /*put({
         type: deps.pythonStepped,

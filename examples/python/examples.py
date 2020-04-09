@@ -1,3 +1,18 @@
+# Simple
+a = 0
+a = 1
+a = 2
+a = 3
+a = 4
+
+# Simple function
+def test(a):
+    a = a + 1
+    return a
+b = test(0)
+print(b)
+
+
 # Objects
 class Test:
     def __init__(self, a, b, m):
