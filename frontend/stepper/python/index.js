@@ -110,8 +110,6 @@ export default function (bundle, deps) {
           infos: {},
           aceEditor: null,
           onPrint: (message) => {
-            console.log('PRINT RECEIVED', message);
-
             pythonInterpreterChannel.put({
               type: 'Python.Output',
               message
@@ -119,8 +117,6 @@ export default function (bundle, deps) {
           },
           onError: (diagnostics) => {
             const response = {diagnostics};
-
-            console.log('ERROR RECEIVED', diagnostics);
 
             pythonInterpreterChannel.put({
               type: 'Compile.Failed',
@@ -190,7 +186,7 @@ export default function (bundle, deps) {
          *
          * @type {string} pythonSource
          */
-        const pythonSource = source + "\n0;";
+        const pythonSource = source + "\npass";
 
         const pythonInterpreter = new PythonInterpreter(context);
         pythonInterpreter.initCodes([pythonSource]);

@@ -44,7 +44,7 @@ import PythonBundle from './python';
 
 /* TODO: clean-up */
 import {analyseState, collectDirectives} from './analysis';
-import {analyseSkulptState} from "./python/analysis";
+import {analyseSkulptState} from "./python/analysis/analysis";
 
 export default function (bundle) {
   bundle.use('getBufferModel');
@@ -255,7 +255,7 @@ function stringifyError (error) {
   if (process.env.NODE_ENV === 'production') {
     return error.toString();
   }
-  if (error.stack) {
+  if (error && error.stack) {
     return error.stack.toString();
   }
   return JSON.stringify(error);
@@ -291,7 +291,7 @@ function stepperRestartReducer (state, {payload: {stepperState}}) {
        *
        * @type {string} pythonSource
        */
-      const pythonSource = source + "\n0";
+      const pythonSource = source + "\npass";
 
       window.currentPythonRunner.initCodes([pythonSource]);
 

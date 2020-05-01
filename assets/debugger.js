@@ -21,7 +21,7 @@ var Sk = Sk || {}; //jshint ignore:line
  * - this.output_callback._onStepSuccess(e);
  */
 
-var DEBUG_DEBUGGER = true;
+var DEBUG_DEBUGGER = false;
 var debuggerLog = function() {
     if (DEBUG_DEBUGGER) {
         // 1. Convert args to a normal array
@@ -107,10 +107,6 @@ Sk.Debugger.prototype.get_active_suspension = function() {
         return null;
     }
 
-    console.log('get_active_suspension');
-    console.log(this.suspension_stack);
-    console.log(this.current_suspension);
-    console.log(this.suspension_stack[this.current_suspension]);
     return this.suspension_stack[this.current_suspension];
 };
 
@@ -212,11 +208,13 @@ Sk.Debugger.prototype.print_suspension_info = function(suspension) {
     var filename = suspension.$filename;
     var lineno = suspension.$lineno;
     var colno = suspension.$colno;
-    console.log("Hit Breakpoint at <" + filename + "> at line: " + lineno + " column: " + colno + "\n");
-    console.log("----------------------------------------------------------------------------------\n");
-    console.log(" ==> " + this.get_source_line(lineno - 1) + "\n");
-    console.log("----------------------------------------------------------------------------------\n");
-    console.log(suspension);
+    if (DEBUG_DEBUGGER) {
+        console.log("Hit Breakpoint at <" + filename + "> at line: " + lineno + " column: " + colno + "\n");
+        console.log("----------------------------------------------------------------------------------\n");
+        console.log(" ==> " + this.get_source_line(lineno - 1) + "\n");
+        console.log("----------------------------------------------------------------------------------\n");
+        console.log(suspension);
+    }
 };
 
 Sk.Debugger.prototype.set_suspension = function(suspension) {
@@ -242,9 +240,6 @@ Sk.Debugger.prototype.set_suspension = function(suspension) {
     }
 
     suspension = parent;
-
-    console.log('STACK SIZE IS ' + this.suspension_stack.length);
-    console.log(this.suspension_stack);
 
     this.print_suspension_info(suspension);
 };
@@ -276,10 +271,11 @@ Sk.Debugger.prototype.resume = function(resolve, reject) {
     if (this.suspension_stack.length === 0) {
         this.print("No running program");
 
-        resolve();
+        if (typeof resolve === 'function') {
+            resolve();
+        }
     } else {
         var promise = this.suspension_handler(this.get_active_suspension());
-        console.log('promise', promise);
         var self = this;
         promise.then(function(value) {
             self.success(value, resolve, reject);

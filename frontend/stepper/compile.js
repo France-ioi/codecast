@@ -64,6 +64,7 @@ export default function (bundle, deps) {
     const newState = state.update('compile', st => compileFailed(st, action));
 
     newState.set('stepper', stepperClear());
+    console.log(newState);
 
     return newState;
   });

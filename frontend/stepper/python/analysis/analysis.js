@@ -18,6 +18,9 @@ export const analyseSkulptState = function (suspensions, lastAnalysis) {
     if (suspensions) {
         for (let suspensionIdx = 0; suspensionIdx < suspensions.length; suspensionIdx++) {
             const suspension = suspensions[suspensionIdx];
+            if (!isProgramSuspension(suspension)) {
+                continue;
+            }
 
             let lastScopeAnalysis = null;
             if (lastAnalysis && lastAnalysis.functionCallStack.size > suspensionIdx) {
@@ -39,6 +42,18 @@ export const analyseSkulptState = function (suspensions, lastAnalysis) {
     console.log(analysis);
 
     return Object.freeze(analysis);
+};
+
+/**
+ * Checks whether a suspension is a program's suspension.
+ * It can also be only a promise encapsulated in a suspension when certain functions are called.
+ *
+ * @param {Object} suspension The suspension.
+ *
+ * @returns {boolean}
+ */
+var isProgramSuspension = function(suspension) {
+    return suspension.hasOwnProperty('$lineno');
 };
 
 /**

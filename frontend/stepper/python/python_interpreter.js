@@ -395,7 +395,8 @@ export default function (context) {
             yieldLimit: null,
             execLimit: null,
             debugging: true,
-            breakpoints: this._debugger.check_breakpoints.bind(this._debugger)
+            breakpoints: this._debugger.check_breakpoints.bind(this._debugger),
+            __future__: Sk.python3
         });
         Sk.pre = 'edoutput';
         Sk.pre = 'codeoutput';
@@ -455,9 +456,6 @@ export default function (context) {
 
             return;
         }
-
-        // Set Skulpt to Python 3
-        Sk.python3 = true;
 
         window.currentPythonContext = this.context;
         this._debugger = new Sk.Debugger(this._editor_filename, this);

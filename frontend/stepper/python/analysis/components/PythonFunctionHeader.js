@@ -1,5 +1,4 @@
 import * as React from 'react';
-import classnames from "classnames";
 import PythonVariableValue from "./PythonVariableValue";
 
 const PythonFunctionHeader = (props) => {
@@ -10,9 +9,9 @@ const PythonFunctionHeader = (props) => {
     });
 
     return (
-        <div className={classnames(["scope-function-title"])}>
+        <div className="scope-function-title">
             <span>
-              {props.func.name}(
+              {props.func.name ? (props.func.name + ' (') : null}
                 <span>
                     {args.map(function(value, index) {
                         return (
@@ -22,7 +21,7 @@ const PythonFunctionHeader = (props) => {
                             </span>
                         );
                     })}
-                </span>)
+                </span>{props.func.name ? ')' : null}
             </span>
         </div>
     );
