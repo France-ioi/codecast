@@ -167,8 +167,6 @@ function addBackendRoutes (app, config, store) {
   });
 
   function selectTarget ({grants}, {s3Bucket, uploadPath}, callback) {
-    console.log(grants);
-    console.log(s3Bucket, uploadPath);
     for (let grant of grants) {
       if (grant.s3Bucket === s3Bucket && grant.uploadPath === uploadPath) {
         return callback(null, grant);
@@ -193,7 +191,7 @@ function addBackendRoutes (app, config, store) {
     if (platform === 'arduino') {
       env.SOURCE_WRAPPER = "wrappers/Arduino";
       env.LANGUAGE = 'c++';
-    }console.log(env);
+    }
     const cp = spawn('./c-to-json', {env: env});
     //env.LD_LIBRARY_PATH = path.join(config.rootDir, 'lib');
     const chunks = [];

@@ -128,7 +128,11 @@ export default function (bundle, deps) {
 
         response.platform = platform;
         if (response.ast) {
-          yield put({type: deps.compileSucceeded, response, platform});
+          yield put({
+            type: deps.compileSucceeded,
+            response,
+            platform
+          });
         } else {
           yield put({type: deps.compileFailed, response});
         }
@@ -153,11 +157,11 @@ export default function (bundle, deps) {
     });
 
     recordApi.on(deps.compileSucceeded, function* (addEvent, action) {
-      const {response} = action;
-      yield call(addEvent, 'compile.success', response);
+      yield call(addEvent, 'compile.success', action);
     });
     replayApi.on('compile.success', function (replayContext, event) {
-      const action = {response: event[2]};
+      const action = event[2];
+
       replayContext.state = replayContext.state.update('compile', st => compileSucceeded(st, action));
     });
 
@@ -245,22 +249,21 @@ function compileStarted (state, action) {
   return state.set('status', 'running').set('source', source);
 }
 
-export function compileSucceeded (state, action) {
-  switch (action.platform) {
-    case 'python':
-      return state
-          .set('status', 'done')
-          .set('diagnostics', '')
-          .set('diagnosticsHtml', '');
-    default:
-      const {ast, diagnostics} = action.response;
-      const source = state.get('source');
+export function compileSucceeded(state, action) {
+  if (action.platform === 'python') {
+    return state
+        .set('status', 'done')
+        .set('diagnostics', '')
+        .set('diagnosticsHtml', '');
+  } else {
+    const {ast, diagnostics} = action.response;
+    const source = state.get('source');
 
-      return state
-          .set('status', 'done')
-          .set('syntaxTree', addNodeRanges(source, ast))
-          .set('diagnostics', diagnostics)
-          .set('diagnosticsHtml', diagnostics && toHtml(diagnostics));
+    return state
+        .set('status', 'done')
+        .set('syntaxTree', addNodeRanges(source, ast))
+        .set('diagnostics', diagnostics)
+        .set('diagnosticsHtml', diagnostics && toHtml(diagnostics));
   }
 }
 

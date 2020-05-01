@@ -13,7 +13,7 @@ function initReducer (state, {payload: {options}}) {
   return state.set('options', options);
 }
 
-function platformChangedReducer (state, {payload: platform}) {
+function platformChangedReducer (state, { payload: platform }) {
   let newOptions = state.update('options', options => {
     return {
       ...options,
