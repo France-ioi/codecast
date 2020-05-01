@@ -76,4 +76,5 @@ module.exports = {
   PLATFORM_UNIX: "Unix",
   PLATFORM_ARDUINO: "Arduino",
   PLATFORM_PYTHON: "Python",
+  EMPTY_PROGRAM: "The program is empty."
 };

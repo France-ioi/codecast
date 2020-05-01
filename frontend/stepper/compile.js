@@ -64,7 +64,6 @@ export default function (bundle, deps) {
     const newState = state.update('compile', st => compileFailed(st, action));
 
     newState.set('stepper', stepperClear());
-    console.log(newState);
 
     return newState;
   });
@@ -94,15 +93,31 @@ export default function (bundle, deps) {
 
   bundle.addSaga(function* watchCompile () {
     yield takeLatest(deps.compile, function* (action) {
+      const getMessage = yield select(state => state.get('getMessage'));
       const sourceModel = yield select(deps.getBufferModel, 'source');
       const source = sourceModel.get('document').toString();
       const {platform} = yield select(state => state.get('options'));
-      //const platform = 'python';
-      yield put({type: deps.compileStarted, source});
-      let response, syntaxTree;
 
+      yield put({
+        type: deps.compileStarted,
+        source
+      });
+
+      let response;
       if (platform === 'python') {
-        yield put({type: deps.compileSucceeded, platform});
+        if (!source.trim()) {
+          yield put({
+            type: deps.compileFailed,
+            response: {
+              diagnostics: getMessage('EMPTY_PROGRAM')
+            }
+          });
+        } else {
+          yield put({
+            type: deps.compileSucceeded,
+            platform
+          });
+        }
       } else {
         try {
           /* XXX replace 'compile' with a computed absolute path */
