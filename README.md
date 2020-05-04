@@ -57,8 +57,8 @@ Fill the key and cert fields in config.json :
 
     {
       ...
-      "key": "server.key",
-      "cert": "server.cert",
+      "key": "/path/to/privatekey",
+      "cert": "/path/to/cert",
       ...
     }
 
