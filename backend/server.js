@@ -271,8 +271,8 @@ fs.readFile('config.json', 'utf8', function (err, data) {
       const https = require('https');
 
       server = https.createServer({
-        key: fs.readFileSync(config.key),
-        cert: fs.readFileSync(config.cert)
+        key: fs.readFileSync(__dirname + '/../' + config.key),
+        cert: fs.readFileSync(__dirname + '/../' + config.cert)
       }, app);
     } else {
       server = http.createServer(app);
