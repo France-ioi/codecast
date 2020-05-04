@@ -1,7 +1,6 @@
 {
   "port": 8001,
   "baseUrl": "https://codecast.france-ioi.org/next",
-
   "mountPath": "/next",
   "database": {
     "host": "@@MYSQL_HOST@@",

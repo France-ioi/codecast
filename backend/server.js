@@ -265,21 +265,8 @@ fs.readFile('config.json', 'utf8', function (err, data) {
       rootApp.use(config.mountPath, app);
       app = rootApp;
     }
-
-    let server;
-    if (config.key && config.cert) {
-      const https = require('https');
-
-      server = https.createServer({
-        key: fs.readFileSync(__dirname + '/../' + config.key),
-        cert: fs.readFileSync(__dirname + '/../' + config.cert)
-      }, app);
-    } else {
-      server = http.createServer(app);
-    }
-
+    const server = http.createServer(app);
     server.listen(config.port);
-
     workerStore.dispatch({type: 'START'});
   });
 });

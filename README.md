@@ -1,3 +1,4 @@
+
 # Try it
 
 The most recent production version can be used
@@ -21,6 +22,8 @@ Current version of `c-to-json` doesn't build, you can retrieve the last compiled
     d517a2e95a13ab66fe106443c12aff9764026944  c-to-json
 
 Copy `config.json.template` to `config.json` and edit it.
+
+If not using HTTPS, set session.cookie.secure to false.
 
 If not using oauth2, remove keys "database", "session" and "auth" and
 fill in settings in "configs" and "tokens".
@@ -46,23 +49,6 @@ Add a CORS configuration for your domain in the AWS S3 bucket's Permissions :
  </CORSRule>
 </CORSConfiguration>
 ```
-
-# Enable HTTPS
-
-Create a certificate :
-    
-    openssl req -nodes -new -x509 -key server.key -sha256 -days 1024 -out server.cert
-
-Fill the key and cert fields in config.json :
-
-    {
-      ...
-      "key": "server.key",
-      "cert": "server.cert",
-      ...
-    }
-
-# Development and build
 
 Start with these commands:
 
