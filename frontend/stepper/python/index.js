@@ -35,41 +35,9 @@ export default function (bundle, deps) {
     }
   });
 
-  bundle.defineAction('pythonOutput', 'Python.Output');
-  bundle.addReducer('pythonOutput', (state, action) => {
-    const { message } = action;
-    const { terminal, output } = state.getIn(['stepper', 'currentStepperState']);
-
-    if (terminal) {
-      const newTerminal = writeString(terminal, message);
-
-      return state.updateIn(['stepper', 'currentStepperState'], (currentStepperState) => {
-        return {
-          ...currentStepperState,
-          terminal: newTerminal
-        };
-      });
-    } else {
-      return state.updateIn(['stepper', 'currentStepperState'], (currentStepperState) => {
-        return {
-          ...currentStepperState,
-          output: output + message
-        }
-      });
-    }
-  });
-
-  bundle.defineAction('pythonStepped', 'Python.Stepped');
-  bundle.addReducer('pythonStepped', (state, action) => {
-    console.log('CURRENT SUSPENSION', action.suspensions);
-
-    return state;
-  });
-
   bundle.addSaga(function* watchPythonInterpreterChannel() {
     while (true) {
       const action = yield take(pythonInterpreterChannel);
-      console.log('Got in channel');
       yield put(action);
     }
   });
@@ -109,12 +77,6 @@ export default function (bundle, deps) {
         const context = {
           infos: {},
           aceEditor: null,
-          onPrint: (message) => {
-            pythonInterpreterChannel.put({
-              type: 'Python.Output',
-              message
-            });
-          },
           onError: (diagnostics) => {
             const response = {diagnostics};
 
@@ -194,3 +156,21 @@ export default function (bundle, deps) {
     });
   })
 };
+
+export function addStepOutput(stepperState, message) {
+  const {terminal, output} = stepperState;
+
+  if (terminal) {
+    const newTerminal = writeString(terminal, message);
+
+    return {
+      ...stepperState,
+      terminal: newTerminal
+    };
+  } else {
+    return {
+      ...stepperState,
+      output: output + message
+    }
+  }
+}

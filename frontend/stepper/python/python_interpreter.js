@@ -3,16 +3,11 @@
         Python code runner.
 */
 
-var DEBUG_PYTHON_RUNNER = true;
+var DEBUG_PYTHON_RUNNER = false;
 var pythonRunnerLog = function() {
     if (DEBUG_PYTHON_RUNNER) {
-        // 1. Convert args to a normal array
         var args = Array.prototype.slice.call(arguments);
-
-        // 2. Prepend log prefix log string
         args.unshift("[python_runner.js] ");
-
-        // 3. Pass along arguments to console.log
         console.log.apply(console, args);
     }
 };
@@ -41,7 +36,7 @@ export default function (context) {
     this._argumentsByBlock = {};
     this._definedFunctions = [];
     this._isFinished = false;
-    this.onPrint = context.onPrint;
+    this._printedDuringStep = '';
     this.onInput = context.onInput;
     this.onError = context.onError;
 
@@ -387,7 +382,7 @@ export default function (context) {
 
     this._configure = () => {
         Sk.configure({
-            output: this.onPrint,
+            output: this.logPrint,
             inputfun: this.onInput,
             inputfunTakesPrompt: true,
             debugout: this._onDebugOut,
@@ -409,11 +404,11 @@ export default function (context) {
         this.context.callCallback = this.noDelay.bind(this);
     };
 
-    this.print = (message, className) => {
+    this.logPrint = (message) => {
         if (message.trim() === 'Program execution complete') {
-            this._onFinished();
+            this._isFinished = true;
         } else {
-            this.onPrint(message);
+            this._printedDuringStep += message;
         }
     };
 
@@ -493,6 +488,7 @@ export default function (context) {
     this.runStep = () => {
         return new Promise((resolve, reject) => {
             this.stepMode = true;
+            this._printedDuringStep = '';
             if (this._isRunning && !this._stepInProgress) {
                 this.step(resolve, reject);
             }

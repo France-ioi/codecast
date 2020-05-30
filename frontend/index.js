@@ -20,6 +20,20 @@ import playerBundle from './player/index';
 import recorderBundle from './recorder/index';
 import editorBundle from './editor/index';
 
+/**
+ * List of actions not to write in the console in development mode.
+ *
+ * @type {Object}
+ */
+const DEBUG_IGNORE_ACTIONS_MAP = {
+  'Window.Resized': true,
+  'Buffer.Reset': true,
+  'Buffer.Highlight': true,
+  'Buffer.Init': true,
+  'Buffer.Model.Edit': true,
+  'Player.Tick': true
+};
+
 const {store, scope, actionTypes, views, finalize, start} = link(function (bundle, deps) {
 
   bundle.defineAction('init', 'System.Init');
@@ -35,7 +49,10 @@ const {store, scope, actionTypes, views, finalize, start} = link(function (bundl
 
   if (process.env.NODE_ENV === 'development') {
     bundle.addEarlyReducer(function (state, action) {
-      console.log('action', action);
+      if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
+          console.log('action', action);
+      }
+
       return state;
     });
 

@@ -127,12 +127,12 @@ export default function link (rootBuilder) {
   const sagaMiddleware = createSagaMiddleware();
 
   // Store is too huge for this extension to work properly.
-  //
-   const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-   let enhancer = composeEnhancers(
-       applyMiddleware(sagaMiddleware)
-   );
+  // const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+  // let enhancer = composeEnhancers(
+  //    applyMiddleware(sagaMiddleware)
+  // );
 
+  let enhancer = applyMiddleware(sagaMiddleware);
   for (let other of enhancers) {
     enhancer = compose(enhancer, other);
   }

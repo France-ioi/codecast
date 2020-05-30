@@ -1,6 +1,17 @@
 import Immutable from 'immutable';
 
 /**
+ * Enable debug of skulpt analysis.
+ *
+ * 0 : No analysis
+ * 1 : Only the result of analysis
+ * 2 : The details of analysis
+ *
+ * @type {int}
+ */
+const SKULPT_ANALYSIS_DEBUG = 1;
+
+/**
  * Transforms the skulpt state (the suspensions) to something readable with the variables content.
  *
  * @param {Array} suspensions   The skulpt suspensions.
@@ -9,9 +20,11 @@ import Immutable from 'immutable';
  * @returns {Object}
  */
 export const analyseSkulptState = function (suspensions, lastAnalysis) {
-    console.log('[¥¥¥¥¥¥¥] Building analysis');
-    console.log(suspensions);
-    console.log(lastAnalysis);
+    if (SKULPT_ANALYSIS_DEBUG === 2) {
+        console.log('[¥¥¥¥¥¥¥] Building analysis');
+        console.log(suspensions);
+        console.log(lastAnalysis);
+    }
 
     let functionCallStack = Immutable.List();
 
@@ -35,11 +48,15 @@ export const analyseSkulptState = function (suspensions, lastAnalysis) {
     }
 
     const analysis = {
-        functionCallStack: functionCallStack
+        ...lastAnalysis,
+        functionCallStack: functionCallStack,
+        stepNum: (lastAnalysis.stepNum + 1)
     };
 
-    console.log('[¥¥¥¥¥¥¥] End of building analysis');
-    console.log(analysis);
+    if (SKULPT_ANALYSIS_DEBUG > 0) {
+        console.log('[¥¥¥¥¥¥¥] End of building analysis');
+        console.log(analysis);
+    }
 
     return Object.freeze(analysis);
 };
@@ -65,9 +82,11 @@ var isProgramSuspension = function(suspension) {
  * @returns {Object}
  */
 export const analyseSkulptScope = function (suspension, lastAnalysis) {
-    console.log('////// Analyse scope...');
-    console.log(suspension);
-    console.log(lastAnalysis);
+    if (SKULPT_ANALYSIS_DEBUG === 2) {
+        console.log('////// Analyse scope...');
+        console.log(suspension);
+        console.log(lastAnalysis);
+    }
 
     let variables = Immutable.Map();
 
@@ -98,10 +117,6 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
                     lastValue = undefined;
                 }
             }
-            // const newValue = cloneSkuptValue(value);
-            // const valueWithPrevious = valuesWithPrevious(newValue, lastValue);
-
-            // variables = variables.set(variableName, valueWithPrevious);
 
             variables = variables.set(variableName, {
                 cur: value,
@@ -128,10 +143,6 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
                     lastValue = undefined;
                 }
             }
-            // const newValue = cloneSkuptValue(value);
-            // const valueWithPrevious = valuesWithPrevious(newValue, lastValue);
-
-            // variables = variables.set(variableName, valueWithPrevious);
 
             variables = variables.set(variableName, {
                 cur: value,
@@ -146,83 +157,12 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
         args
     };
 
-    console.log('////// End of analyse scope...');
-    console.log(analysis);
+    if (SKULPT_ANALYSIS_DEBUG === 2) {
+        console.log('////// End of analyse scope...');
+        console.log(analysis);
+    }
 
     return analysis;
-};
-
-/**
- * Gets the values with the new and previous value.
- *
- * @param {*} newValue
- * @param {*} oldValue
- *
- * @return {*}
- */
-const valuesWithPrevious = (newValue, oldValue) => {
-    console.log(newValue, oldValue);
-    if (Array.isArray(newValue) && Array.isArray(oldValue)) {
-        let values = [];
-        const maxIdx = Math.max(newValue.length, oldValue.length);
-        for (let idx = 0; idx < maxIdx; idx++) {
-            let curNewValue = undefined;
-            if (newValue.length > idx) {
-                curNewValue = newValue[idx];
-            }
-            let curOldValue = undefined;
-            if (oldValue.length > idx) {
-                curOldValue = oldValue[idx];
-            }
-
-            values.push(valuesWithPrevious(curNewValue, curOldValue));
-        }
-
-        return values;
-    } else if (Array.isArray(oldValue)) {
-        return {
-            cur: newValue,
-            old: undefined
-        };
-    } else if (Array.isArray(newValue)) {
-        let values = [];
-        for (let idx = 0; idx < newValue.length; idx++) {
-            values.push(valuesWithPrevious(newValue[idx], undefined));
-        }
-
-        return values;
-    } else {
-        let newOldValue = undefined;
-        if (oldValue) {
-            newOldValue = oldValue.cur;
-        }
-        return {
-            cur: newValue,
-            old: newOldValue
-        };
-    }
-};
-
-/**
- * Clone a skulpt value.
- *
- * @param {Object} value The skulpt bultin object.
- *
- * @returns {[]|*}
- */
-const cloneSkuptValue = (value) => {
-    if (Array.isArray(value)) {
-        let values = [];
-        for (let idx = 0; idx < value.length; idx++) {
-            values.push(cloneSkuptValue(value[idx]));
-        }
-
-        return values;
-    } else if (value.hasOwnProperty('v')) {
-        return cloneSkuptValue(value.v);
-    } else {
-        return value;
-    }
 };
 
 // To filter the internal variables of Skulpt.
@@ -278,3 +218,25 @@ const sortArgumentsFirst = (variableNames, args) => {
         return a.localeCompare(b);
     });
 };
+
+/**
+ * Gets a copy of skulpt suspensions.
+ *
+ * @param {Array} suspensions The suspensions.
+ *
+ * @return {Array} A copy of the suspensions.
+ */
+export const getSkulptSuspensionsCopy = function(suspensions)
+{
+    const copies = [];
+    for (let suspensionIdx in suspensions) {
+        const suspension = suspensions[suspensionIdx];
+        const copy = {
+            ...suspension
+        };
+
+        copies[suspensionIdx] = copy;
+    }
+
+    return copies;
+}

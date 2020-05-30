@@ -165,7 +165,6 @@ export default function (bundle, deps) {
       const events = recorder.get('events').push([endTime, 'end']);
       const version = RECORDING_FORMAT_VERSION;
       const options = yield select(state => state.get('options'));
-      console.log('TAKE OPTIONS CHECK ',options);
       const data = {version, options, events, subtitles: []};
       const eventsBlob = new Blob([JSON.stringify(data)], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
       const eventsUrl = URL.createObjectURL(eventsBlob);

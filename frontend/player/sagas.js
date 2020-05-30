@@ -88,7 +88,7 @@ function* playerPrepare (app, {payload}) {
     addSaga,
     reportProgress,
   };
-  console.log(replayContext);
+
   try {
     yield call(computeInstants, replayContext);
     /* The duration of the recording is the timestamp of the last event. */
@@ -161,7 +161,6 @@ function* computeInstants (replayContext) {
 
     const instant = {t, pos, event};
     replayContext.instant = instant;
-
     yield call(replayContext.applyEvent, key, replayContext, event);
 
     /* Preserve the last explicitly set range. */
@@ -171,6 +170,7 @@ function* computeInstants (replayContext) {
       instant.range = range;
     }
     instant.state = replayContext.state;
+
     replayContext.instants.push(instant);
     progress = Math.round(pos * 50 / events.length + t * 50 / duration) / 100;
     if (progress !== lastProgress) {

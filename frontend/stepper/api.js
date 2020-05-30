@@ -10,6 +10,8 @@
 import * as C from 'persistent-c';
 import {all, call, put} from 'redux-saga/effects';
 import sleep from '../utils/sleep';
+import {getSkulptSuspensionsCopy} from "./python/analysis/analysis";
+import {addStepOutput} from "./python";
 
 export default function (bundle) {
 
@@ -34,7 +36,6 @@ function onInit (callback) {
 
 /* Build a stepper state from the given init data. */
 export async function buildState (globalState) {
-  console.log('buildState globalState', globalState);
   const { platform } = globalState.get('options');
 
   /*
@@ -184,12 +185,21 @@ async function executeSingleStep (stepperContext) {
   }
 
   if (stepperContext.state.platform === 'python') {
-    console.log('EXECUTE STEP HERE');
+    console.log('EXECUTE STEP HERE', stepperContext.state);
+
     await window.currentPythonRunner.runStep();
 
     await stepperContext.interact({
       position: 0, // TODO: Need real position ?
     });
+
+    /**
+     * Update the output with what has been printed during the step.
+     * Do this after the call the interact has it retrieve the state from the global state again.
+     */
+    if (window.currentPythonRunner._printedDuringStep) {
+      stepperContext.state = addStepOutput(stepperContext.state, window.currentPythonRunner._printedDuringStep);
+    }
   } else {
       const effects = C.step(stepperContext.state.programState);
       await executeEffects(stepperContext, effects[Symbol.iterator]());
@@ -300,7 +310,7 @@ export async function performStep (stepperContext, mode) {
 
 function isStuck (state) {
   if (state.platform === 'python') {
-    return window.currentPythonRunner._isFinished;
+    return state.analysis.isFinished;
   } else {
     return !state.programState.control;
   }

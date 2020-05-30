@@ -16,7 +16,7 @@ const config = module.exports = {
     publicPath: publicPath,
     filename: '[name].js'
   },
-  devtool: isDev ? '#source-map' : 'eval',
+  devtool: isDev ? 'source-map' : 'eval',
   module: {
     rules: [
       {

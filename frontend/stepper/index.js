@@ -26,7 +26,7 @@ The stepper's state has the following shape:
 
 import { delay } from 'redux-saga';
 
-import {call, cancel, fork, put, race, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
+import {call, apply, cancel, fork, put, race, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 import Immutable from 'immutable';
 import * as C from 'persistent-c';
 
@@ -40,11 +40,11 @@ import HeapBundle from './heap';
 import IoBundle from './io/index';
 import ViewsBundle from './views/index';
 import ArduinoBundle from './arduino';
-import PythonBundle from './python';
+import PythonBundle, {addStepOutput} from './python';
 
 /* TODO: clean-up */
 import {analyseState, collectDirectives} from './analysis';
-import {analyseSkulptState} from "./python/analysis/analysis";
+import {analyseSkulptState, getSkulptSuspensionsCopy} from "./python/analysis/analysis";
 
 export default function (bundle) {
   bundle.use('getBufferModel');
@@ -181,15 +181,24 @@ function enrichStepperState (stepperState, context) {
     };
 
     if (context === 'Stepper.Progress') {
-      // Don't reanalyse after program is finished : keep the last state of the stack.
-      if (!window.currentPythonRunner._isFinished) {
+      // Don't reanalyse after program is finished :
+      // keep the last state of the stack and set isFinished state.
+      if (window.currentPythonRunner._isFinished) {
+        stepperState.analysis = {
+          ...stepperState.analysis,
+          isFinished: true
+        }
+      } else {
         stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.analysis);
       }
     }
 
     if (!stepperState.analysis) {
       stepperState.analysis = {
-        functionCallStack: new Immutable.List()
+        functionCallStack: new Immutable.List(),
+        code: window.currentPythonRunner._code,
+        stepNum: 0,
+        isFinished: false
       }
     }
   } else {
@@ -275,7 +284,6 @@ function stepperRestartReducer (state, {payload: {stepperState}}) {
 
     if (platform === 'python') {
       // TODO: Check restart.
-      console.log('TODO: restart python with stepperState');
     }
   } else {
     if (platform === 'python') {
@@ -294,11 +302,6 @@ function stepperRestartReducer (state, {payload: {stepperState}}) {
       const pythonSource = source + "\npass";
 
       window.currentPythonRunner.initCodes([pythonSource]);
-
-      /*put({
-        type: deps.pythonStepped,
-        suspension: window.currentPythonRunner.getCurrentSuspension()
-      });*/
     } else {
       stepperState = state.getIn(['stepper', 'initialStepperState']);
     }
@@ -342,10 +345,11 @@ function stepperStartedReducer (state, action) {
 function stepperProgressReducer (state, {payload: {stepperContext}}) {
   if (stepperContext.state.hasOwnProperty('platform') && stepperContext.state.platform === 'python') {
     // Save scope.
-    stepperContext.state.suspensions = window.currentPythonRunner._debugger.suspension_stack;
+    stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
   }
 
   // Set new currentStepperState state and go back to idle.
+  // Returns a new references.
   const stepperState = enrichStepperState(stepperContext.state, 'Stepper.Progress');
 
   // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
@@ -570,6 +574,37 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
     yield put({type: actionTypes.stepperStarted, mode});
 
     const stepperContext = makeContext(stepper.get('currentStepperState'), interact);
+
+    /**
+     * Before we do a step, we check if the state in analysis is the same as the one in the python runner.
+     *
+     * If it is different, it means the analysis has been overwritten by playing a record, and so
+     * we need to move the python runner to the same point before we can to a step.
+     */
+    if (stepperContext.state.platform === 'python') {
+      const analysisStepNum = stepperContext.state.analysis.stepNum;
+      const analysisCode = stepperContext.state.analysis.code;
+      const currentPythonStepNum = window.currentPythonRunner._steps;
+      const currentPythonCode = window.currentPythonRunner._code;
+
+      if (analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode) {
+        console.log('Move the python runner !');
+
+        // TODO: Check if it works with the input.
+
+        // TODO: Support error.
+
+        window.currentPythonRunner.initCodes([analysisCode]);
+        while (window.currentPythonRunner._steps < analysisStepNum) {
+          yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep);
+
+          if (window.currentPythonRunner._isFinished) {
+            break;
+          }
+        }
+      }
+    }
+
     try {
       yield call(performStep, stepperContext, mode);
     } catch (ex) {
@@ -588,6 +623,7 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
 
     if (stepperContext.state.hasOwnProperty('platform') && stepperContext.state.platform === 'python') {
       // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
+      /*
       const storeStepper = yield select(getStepper);
       const storeCurrentStepperState = storeStepper.get('currentStepperState');
 
@@ -596,9 +632,10 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
 
       stepperContext.state.terminal = storeTerminal;
       stepperContext.state.output = storeOutput;
-
+      */
+console.log('oighezohgzhzeghzeo', stepperContext.state.output);
       // Save scope.
-      stepperContext.state.suspensions = window.currentPythonRunner._debugger.suspension_stack;
+      stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
     }
 
     yield put({type: actionTypes.stepperIdle, payload: {stepperContext}});
@@ -702,6 +739,14 @@ function postLink (scope, actionTypes) {
         });
       });
       performStep(replayContext.stepperContext, mode).then(function () {
+        let currentStepperState = replayContext.state.getIn(['stepper', 'currentStepperState']);
+
+        if (currentStepperState.platform === 'python' && window.currentPythonRunner._printedDuringStep) {
+          replayContext.state.updateIn(['stepper', 'currentStepperState'], (currentStepperState) => {
+            return addStepOutput(currentStepperState, window.currentPythonRunner._printedDuringStep);
+          });
+        }
+
         replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
         stepperEventReplayed(replayContext);
       }, function (error) {

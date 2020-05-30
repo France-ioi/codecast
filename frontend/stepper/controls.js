@@ -48,7 +48,7 @@ export default function (bundle, deps) {
 
         if (platform === 'python') {
           canStepOut = false;
-          canStep = !window.currentPythonRunner._isFinished;
+          canStep = !currentStepperState.analysis.isFinished;
           canRestart = enabled;
           canUndo = enabled && !stepper.get('undo').isEmpty();
           canRedo = enabled && !stepper.get('redo').isEmpty();

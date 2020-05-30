@@ -70,7 +70,7 @@ Sk.Debugger = function(filename, output_callback) {
 
 Sk.Debugger.prototype.print = function(txt) {
     if (this.output_callback != null) {
-        this.output_callback.print(txt + "\n");
+        this.output_callback.logPrint(txt + "\n");
     }
 };
 
@@ -280,7 +280,11 @@ Sk.Debugger.prototype.resume = function(resolve, reject) {
         promise.then(function(value) {
             self.success(value, resolve, reject);
         }, function(error) {
-            self.error(error, reject);
+            /**
+             * Note : We call resolve and not reject in case of error because resolve throws an Exception
+             * and breaks the player which stops when there is an exception.
+             */
+            self.error(error, resolve);
         });
     }
 };
