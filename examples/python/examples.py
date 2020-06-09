@@ -30,8 +30,8 @@ def coucou():
     return 'coucou'
 
 test = Test(41, 1, "Bonjour")
-print test.sum()
-print test.getM()
+print(test.sum())
+print(test.getM())
 
 
 # Functions
@@ -61,16 +61,18 @@ class classB(classA):
         self.a = self.a + 1
 
 obj = classB(41)
-print obj.a
+print(obj.a)
 
 
 # Recursion
 def plop(a):
     if (a == 0):
         return 0
+    print(a)
     return a + plop(a - 1)
 
-print plop(5)
+for i in range(0, 15):
+    print(plop(i))
 
 # Recursion 2
 def plop(a, b):
@@ -80,7 +82,7 @@ def plop(a, b):
         return plop(a - 1, a)
     return 1 + plop(a, b - 1)
 
-print plop(3, 3)
+print(plop(3, 3))
 
 
 

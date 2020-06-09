@@ -367,6 +367,7 @@ export default function (bundle, deps) {
       yield takeLatest([deps.stepperProgress, deps.stepperIdle], function* (action) {
         const stepperState = yield select(deps.getCurrentStepperState);
         const outputModel = yield select(deps.getBufferModel, 'output');
+        console.log(outputModel.get('document'));
         const oldSize = outputModel.get('document').size();
         const newSize = stepperState.output.length;
         if (oldSize !== newSize) {

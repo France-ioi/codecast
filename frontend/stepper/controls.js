@@ -47,7 +47,8 @@ export default function (bundle, deps) {
         canExit = enabled;
 
         if (platform === 'python') {
-          canStepOut = false;
+          // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
+          canStepOut = (currentStepperState.suspensions && (currentStepperState.suspensions.length > 1));
           canStep = !currentStepperState.analysis.isFinished;
           canRestart = enabled;
           canUndo = enabled && !stepper.get('undo').isEmpty();

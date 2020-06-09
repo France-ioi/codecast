@@ -191,42 +191,35 @@ async function executeSingleStep (stepperContext) {
     const newOutput = getNewOutput(stepperContext.state, window.currentPythonRunner._printedDuringStep);
     const newTerminal = getNewTerminal(stepperContext.state, window.currentPythonRunner._printedDuringStep);
 
-    // Warning : It retrieves the state from the global state.
-    // It means : it will overwrite whatever we change here.
+    // Warning : The interact event retrieves the state from the global state again.
+    // It means : we need to pass the changes so it can update it.
     await stepperContext.interact({
       position: 0, // TODO: Need real position ?
-    });
-
-    /**
-     * The output and terminal must be replaced even if there is no modifications before interacts rewrites the
-     * stepperContext and it's possible executeSingleStep is called many times (eg. when step over).
-     *
-     * Update the output with what has been printed during the step.
-     * Do this after the call the interact has it retrieve the state from the global state again.
-     */
-    stepperContext.state = {
-      ...stepperContext.state,
       output: newOutput,
       terminal: newTerminal
-    }
+    });
+
+    // Put the output and terminal again so it works with the replay too.
+    stepperContext.state.output = newOutput;
+    stepperContext.state.terminal = newTerminal;
   } else {
-      const effects = C.step(stepperContext.state.programState);
-      await executeEffects(stepperContext, effects[Symbol.iterator]());
+    const effects = C.step(stepperContext.state.programState);
+    await executeEffects(stepperContext, effects[Symbol.iterator]());
 
-      /* Update the current position in source code. */
-      const position = getNodeStartRow(stepperContext.state);
-      if (position !== undefined && position !== stepperContext.position) {
-        stepperContext.position = position;
-        stepperContext.lineCounter += 1;
+    /* Update the current position in source code. */
+    const position = getNodeStartRow(stepperContext.state);
+    if (position !== undefined && position !== stepperContext.position) {
+      stepperContext.position = position;
+      stepperContext.lineCounter += 1;
 
-        if (stepperContext.lineCounter === 20) {
-          await stepperContext.interact({
-            position
-          });
+      if (stepperContext.lineCounter === 20) {
+        await stepperContext.interact({
+          position
+        });
 
-          stepperContext.lineCounter = 0;
-        }
+        stepperContext.lineCounter = 0;
       }
+    }
   }
 }
 
@@ -278,28 +271,41 @@ async function stepInto (stepperContext) {
 async function stepOut (stepperContext) {
   // The program must be running.
   if (!isStuck(stepperContext.state)) {
-    // Find the closest function scope.
-    const refScope = stepperContext.state.programState.scope;
-    const funcScope = C.findClosestFunctionScope(refScope);
-    // Step until execution reach that scope's parent.
-    await stepUntil(stepperContext, programState => programState.scope === funcScope.parent);
+    if (stepperContext.state.platform === 'python') {
+      const nbSuspensions = stepperContext.state.suspensions.length;
+
+      // Take a first step.
+      await executeSingleStep(stepperContext);
+
+      // The number of suspensions represents the number of layers of functions called.
+      // We want it to be less, which means be got out of at least one level of function.
+      await stepUntil(stepperContext, curState => {
+        console.log(curState.suspensions.length, nbSuspensions);
+        return (curState.suspensions.length < nbSuspensions);
+      });
+    } else {
+      // Find the closest function scope.
+      const refScope = stepperContext.state.programState.scope;
+      const funcScope = C.findClosestFunctionScope(refScope);
+      // Step until execution reach that scope's parent.
+      await stepUntil(stepperContext, programState => programState.scope === funcScope.parent);
+    }
   }
+
   return stepperContext;
 }
 
 async function stepOver (stepperContext) {
   if (stepperContext.state.platform === 'python') {
     if (stepperContext.state.suspensions) {
-      console.log(stepperContext.state);
       const nbSuspensions = stepperContext.state.suspensions.length;
-      console.log(nbSuspensions);
+
       // Take a first step.
       await executeSingleStep(stepperContext);
 
       // The number of suspensions represents the number of layers of functions called.
       // We want to be at the same number or less, not inside a new function.
       await stepUntil(stepperContext, curState => {
-        console.log('curState', curState);
         return (curState.suspensions.length <= nbSuspensions);
       });
     } else {

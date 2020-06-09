@@ -531,10 +531,8 @@ function* stepperDisabledSaga () {
 }
 
 function* stepperInteractSaga ({actionTypes, selectors}, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
-
-
   /* Has the stepper been interrupted? */
-  console.log('Check for interruption...');
+  console.log('Check for interruption...', stepperContext, arg);
   if (yield select(selectors.isStepperInterrupting)) {
     console.log('Interrupted !');
     yield call(reject, new StepperError('interrupt', 'interrupted'));
@@ -550,9 +548,16 @@ function* stepperInteractSaga ({actionTypes, selectors}, {payload: {stepperConte
     completed: call(saga, stepperContext),
     interrupted: take(actionTypes.stepperInterrupt)
   }));
+
   /* Update stepperContext.state from the global state to avoid discarding
      the effects of user interaction. */
   stepperContext.state = yield select(selectors.getCurrentStepperState);
+
+  if (stepperContext.state.platform === 'python' && arg) {
+    stepperContext.state.output = arg.output;
+    stepperContext.state.terminal = arg.terminal;
+  }
+
   /* Check whether to interrupt or resume the stepper. */
   if (interrupted) {
     yield call(reject, new StepperError('interrupt', 'interrupted'));
@@ -566,6 +571,47 @@ function* stepperInteractSaga ({actionTypes, selectors}, {payload: {stepperConte
 function* stepperWaitSaga () {
   // Yield until the next tick (XXX use requestAnimationFrame through channel).
   yield call(delay, 0);
+}
+
+function* stepperInterruptSaga ({actionTypes, dispatch}, {payload}) {
+  const stepper = yield select(getStepper);
+  const stepperContext = makeContext(stepper.get('currentStepperState'), () => {
+    return new Promise((resolve) => {
+      resolve();
+    });
+  });
+
+  /**
+   * Before we do a step, we check if the state in analysis is the same as the one in the python runner.
+   *
+   * If it is different, it means the analysis has been overwritten by playing a record, and so
+   * we need to move the python runner to the same point before we can to a step.
+   */
+  if (stepperContext.state.platform === 'python') {
+    const analysisStepNum = stepperContext.state.analysis.stepNum;
+    const analysisCode = stepperContext.state.analysis.code;
+    const currentPythonStepNum = window.currentPythonRunner._steps;
+    const currentPythonCode = window.currentPythonRunner._code;
+
+    if (analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode) {
+      console.log('Move the python runner !');
+
+      // TODO: Check if it works with the input.
+
+      // TODO: Support error.
+
+      window.currentPythonRunner.initCodes([analysisCode]);
+      while (window.currentPythonRunner._steps < analysisStepNum) {
+        yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep);
+
+        if (window.currentPythonRunner._isFinished) {
+          break;
+        }
+      }
+
+      yield put({type: actionTypes.stepperIdle, payload: {stepperContext}});
+    }
+  }
 }
 
 function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
@@ -606,7 +652,6 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
     }
 
     try {
-      console.log('shubi');
       yield call(performStep, stepperContext, mode);
     } catch (ex) {
       console.log('stepperStepSaga has catched', ex);
@@ -641,6 +686,7 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
 
     yield put({type: actionTypes.stepperIdle, payload: {stepperContext}});
     function interact (arg) {
+      console.log('int2');
       return new Promise((resolve, reject) => {
         dispatch({
           type: actionTypes.stepperInteract,
@@ -733,6 +779,7 @@ function postLink (scope, actionTypes) {
       replayContext.state = stepperStartedReducer(replayContext.state, {mode});
       const stepperState = getCurrentStepperState(replayContext.state);
       replayContext.stepperContext = makeContext(stepperState, function interact (_) {
+        console.log('int3');
         return new Promise((cont) => {
           stepperSuspend(replayContext.stepperContext, cont);
           replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
@@ -777,10 +824,18 @@ function postLink (scope, actionTypes) {
     return new Promise((resolve, reject) => {
       replayContext.stepperDone = resolve;
       replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
-      stepperResume(replayContext.stepperContext, function interact (_) {
+      stepperResume(replayContext.stepperContext, function interact (args) {
+        console.log('int4', args, replayContext.stepperContext);
         return new Promise((cont) => {
           stepperSuspend(replayContext.stepperContext, cont);
+
           replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+
+          if (replayContext.state.platform === 'python') {
+            //replayContext.state.output = args.output;
+            //replayContext.state.terminal = args.terminal;
+          }
+
           stepperEventReplayed(replayContext);
         });
       }, function () {
@@ -810,6 +865,7 @@ function postLink (scope, actionTypes) {
       replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
       /* Set the interact callback to resume the stepper until completion. */
       stepperResume(replayContext.stepperContext, function interact (_) {
+        console.log('int1');
         return new Promise((cont) => { cont(); });
       }, function () {
         replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
@@ -915,6 +971,7 @@ function postLink (scope, actionTypes) {
   stepperApi.addSaga(function* mainStepperSaga (args) {
     yield takeEvery(actionTypes.stepperInteract, stepperInteractSaga, args);
     yield takeEvery(actionTypes.stepperStep, stepperStepSaga, args);
+    yield takeEvery(actionTypes.stepperInterrupt, stepperInterruptSaga, args);
     yield takeEvery(actionTypes.stepperExit, stepperExitSaga);
     /* Highlight the range of the current source fragment. */
     yield takeLatest([
