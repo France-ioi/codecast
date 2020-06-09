@@ -40,7 +40,7 @@ import HeapBundle from './heap';
 import IoBundle from './io/index';
 import ViewsBundle from './views/index';
 import ArduinoBundle from './arduino';
-import PythonBundle, {addStepOutput} from './python';
+import PythonBundle, {getNewOutput, getNewTerminal} from './python';
 
 /* TODO: clean-up */
 import {analyseState, collectDirectives} from './analysis';
@@ -606,6 +606,7 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
     }
 
     try {
+      console.log('shubi');
       yield call(performStep, stepperContext, mode);
     } catch (ex) {
       console.log('stepperStepSaga has catched', ex);
@@ -633,7 +634,7 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
       stepperContext.state.terminal = storeTerminal;
       stepperContext.state.output = storeOutput;
       */
-console.log('oighezohgzhzeghzeo', stepperContext.state.output);
+
       // Save scope.
       stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
     }
@@ -743,7 +744,11 @@ function postLink (scope, actionTypes) {
 
         if (currentStepperState.platform === 'python' && window.currentPythonRunner._printedDuringStep) {
           replayContext.state.updateIn(['stepper', 'currentStepperState'], (currentStepperState) => {
-            return addStepOutput(currentStepperState, window.currentPythonRunner._printedDuringStep);
+            return {
+              ...currentStepperState,
+              output: getNewOutput(currentStepperState, window.currentPythonRunner._printedDuringStep),
+              terminal: getNewTerminal(currentStepperState, window.currentPythonRunner._printedDuringStep)
+            }
           });
         }
 

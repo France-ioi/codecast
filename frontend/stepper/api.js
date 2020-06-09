@@ -10,8 +10,7 @@
 import * as C from 'persistent-c';
 import {all, call, put} from 'redux-saga/effects';
 import sleep from '../utils/sleep';
-import {getSkulptSuspensionsCopy} from "./python/analysis/analysis";
-import {addStepOutput} from "./python";
+import {getNewOutput, getNewTerminal} from "./python";
 
 export default function (bundle) {
 
@@ -189,16 +188,26 @@ async function executeSingleStep (stepperContext) {
 
     await window.currentPythonRunner.runStep();
 
+    const newOutput = getNewOutput(stepperContext.state, window.currentPythonRunner._printedDuringStep);
+    const newTerminal = getNewTerminal(stepperContext.state, window.currentPythonRunner._printedDuringStep);
+
+    // Warning : It retrieves the state from the global state.
+    // It means : it will overwrite whatever we change here.
     await stepperContext.interact({
       position: 0, // TODO: Need real position ?
     });
 
     /**
+     * The output and terminal must be replaced even if there is no modifications before interacts rewrites the
+     * stepperContext and it's possible executeSingleStep is called many times (eg. when step over).
+     *
      * Update the output with what has been printed during the step.
      * Do this after the call the interact has it retrieve the state from the global state again.
      */
-    if (window.currentPythonRunner._printedDuringStep) {
-      stepperContext.state = addStepOutput(stepperContext.state, window.currentPythonRunner._printedDuringStep);
+    stepperContext.state = {
+      ...stepperContext.state,
+      output: newOutput,
+      terminal: newTerminal
     }
   } else {
       const effects = C.step(stepperContext.state.programState);
@@ -221,22 +230,26 @@ async function executeSingleStep (stepperContext) {
   }
 }
 
-async function stepUntil (stepperContext, stopCond = undefined) {
+async function stepUntil(stepperContext, stopCond = undefined) {
   let stop = false;
   while (true) {
     if (isStuck(stepperContext.state)) {
       return;
     }
-    if (!stop && stopCond && stopCond(stepperContext.state.programState)) {
-      stop = true;
-    }
-    if (stop && inUserCode(stepperContext.state)) {
-      return;
+    if (!stop && stopCond) {
+      if (stepperContext.state.platform === 'python') {
+        if (stopCond(stepperContext.state)) {
+          stop = true;
+        }
+      } else {
+          if (stopCond(stepperContext.state.programState)) {
+            stop = true;
+          }
+        }
     }
 
-    if (stepperContext.state.platform === 'python') {
-      // If we want to slightly reduce the speed.
-      // await sleep(20);
+    if (stop && inUserCode(stepperContext.state)) {
+      return;
     }
 
     await executeSingleStep(stepperContext);
@@ -275,16 +288,39 @@ async function stepOut (stepperContext) {
 }
 
 async function stepOver (stepperContext) {
-  // Remember the current scope.
-  const refCurrentScope = stepperContext.state.programState.scope;
-  // Take a first step.
-  await executeSingleStep(stepperContext);
-  // Step until out of the current statement but not inside a nested
-  // function call.
-  await stepUntil(stepperContext, programState =>
-    C.outOfCurrentStmt(programState) && C.notInNestedCall(programState.scope, refCurrentScope));
-  // Step into the next statement.
-  await stepUntil(stepperContext, C.intoNextStmt);
+  if (stepperContext.state.platform === 'python') {
+    if (stepperContext.state.suspensions) {
+      console.log(stepperContext.state);
+      const nbSuspensions = stepperContext.state.suspensions.length;
+      console.log(nbSuspensions);
+      // Take a first step.
+      await executeSingleStep(stepperContext);
+
+      // The number of suspensions represents the number of layers of functions called.
+      // We want to be at the same number or less, not inside a new function.
+      await stepUntil(stepperContext, curState => {
+        console.log('curState', curState);
+        return (curState.suspensions.length <= nbSuspensions);
+      });
+    } else {
+      // The program hasn't started yet, just execute a step.
+      await executeSingleStep(stepperContext);
+    }
+  } else {
+    // Remember the current scope.
+    const refCurrentScope = stepperContext.state.programState.scope;
+
+    // Take a first step.
+    await executeSingleStep(stepperContext);
+
+    // Step until out of the current statement but not inside a nested
+    // function call.
+    await stepUntil(stepperContext, programState =>
+        C.outOfCurrentStmt(programState) && C.notInNestedCall(programState.scope, refCurrentScope));
+
+    // Step into the next statement.
+    await stepUntil(stepperContext, C.intoNextStmt);
+  }
 }
 
 export async function performStep (stepperContext, mode) {

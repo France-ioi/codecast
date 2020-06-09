@@ -157,20 +157,28 @@ export default function (bundle, deps) {
   })
 };
 
-export function addStepOutput(stepperState, message) {
-  const {terminal, output} = stepperState;
+export function getNewTerminal(stepperState, message) {
+  const { terminal } = stepperState;
 
-  if (terminal) {
-    const newTerminal = writeString(terminal, message);
-
-    return {
-      ...stepperState,
-      terminal: newTerminal
-    };
-  } else {
-    return {
-      ...stepperState,
-      output: output + message
+  if (stepperState.terminal) {
+    if (message) {
+      return writeString(terminal, message);
     }
+
+    return terminal;
   }
+
+  return null;
+}
+
+export function getNewOutput(stepperState, message) {
+  if (stepperState.terminal) {
+    return null;
+  }
+
+  if (message) {
+    return stepperState.output + message;
+  }
+
+  return stepperState.output;
 }
