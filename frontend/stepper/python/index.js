@@ -1,38 +1,67 @@
 import { channel } from 'redux-saga';
-import { take, put } from 'redux-saga/effects';
+import {take, put, takeEvery, select} from 'redux-saga/effects';
 
 import { writeString } from "../io/terminal";
 import PythonInterpreter from "./python_interpreter";
+import {isEmptyObject} from "../../utils/javascript";
 
 const pythonInterpreterChannel = channel();
 
 export default function (bundle, deps) {
   bundle.defineAction('pythonInput', 'Python.Input');
-  bundle.addReducer('pythonInput', (state, action) => {
-    const { message } = action;
-    const { terminal, input, inputPos } = state.getIn(['stepper', 'currentStepperState']);
 
-    if (terminal) {
-      // No interactive terminal for python.
-      return state;
-    } else {
-      // Read from the current cursor to the next new line.
-      let newInputPos = input.substring(inputPos).indexOf("\n");
-      if (newInputPos === -1) {
-        // Position the cursor after the end of the input if no newline found.
-        newInputPos = input.length();
-      } else {
-        // New position of the cursor : just after the new line.
-        newInputPos++;
+  function* waitForInputSaga() {
+    /* Set the isWaitingOnInput flag on the state. */
+    yield put({type: deps.terminalInputNeeded});
+    /* Transfer focus to the terminal. */
+    yield put({type: deps.terminalFocus});
+    /* Wait for the user to enter a line. */
+    yield take(deps.terminalInputEnter);
+  }
+
+  function* pythonInputSaga({actionTypes, dispatch}, {payload: {resolve}}) {
+    //let stepperContext = yield select(state => state.get('stepper').get('currentStepperState'));
+
+    let terminal = window.currentPythonRunner._terminal;
+    let input = window.currentPythonRunner._input;
+    let inputPos = window.currentPythonRunner._inputPos;
+
+    console.log('input', input, inputPos);
+
+    let nextNL = input.indexOf('\n', inputPos);
+    console.log('found at ', nextNL);
+    while (-1 === nextNL) {
+      if (!terminal /*|| !stepperContext.interact*/) {
+        /* non-interactive, end of input */
+        return null;
       }
 
-      return state.updateIn(['stepper', 'currentStepperState'], (currentStepperState) => {
-        return {
-          ...currentStepperState,
-          inputPos: newInputPos
-        }
-      });
+      /* During replay no action is needed, the stepper will suspended until
+         input events supply the necessary input. */
+      //yield ['interact', {saga: waitForInputSaga}];
+
+      // TODO: Handle terminal too.
+
+      /* Parse the next line from updated stepper state. */
+      //stepperContext = yield select(state => state.get('stepper').get('currentStepperState'));
+
+      //input = stepperContext.input;
+      //inputPos = stepperContext.inputPos;
+
+      nextNL = input.indexOf('\n', inputPos);
     }
+
+    const line = input.substring(inputPos, nextNL);
+    window.currentPythonRunner._inputPos = nextNL + 1;
+
+    console.log(window.currentPythonRunner._inputPos, 'pythoninputsaga');
+
+    // Resolve the promise of the input that was passed in the action.
+    resolve(line);
+  }
+
+  bundle.addSaga(function* pythonMainSaga(args) {
+    yield takeEvery(deps.pythonInput, pythonInputSaga, args);
   });
 
   bundle.addSaga(function* watchPythonInterpreterChannel() {
@@ -43,30 +72,6 @@ export default function (bundle, deps) {
   });
 
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
-
-    /*
-    recordApi.onStart(function* (init) {
-      const {platform} = yield select(state => state.get('options'));
-      if (platform === 'arduino') {
-        init.arduino = yield select(state => state.get('arduino'));
-      }
-    });
-    */
-
-    /*
-    replayApi.on('start', function (replayContext, event) {
-      const {arduino} = event[2];
-      if (arduino) {
-        replayContext.state = arduinoReset(replayContext.state, {state: arduino});
-      }
-    });
-    replayApi.onReset(function* (instant) {
-      const arduinoState = instant.state.get('arduino');
-      if (arduinoState) {
-        yield put({type: deps.arduinoReset, state: arduinoState});
-      }
-    });
-     */
 
     stepperApi.onInit(function (stepperState, globalState) {
       const { platform } = globalState.get('options');
@@ -87,58 +92,15 @@ export default function (bundle, deps) {
           },
           onInput: (prompt) => {
             return new Promise((resolve, reject) => {
-              console.log('PYTHON ASKED FOR INPUT');
-              console.log(prompt);
-
-              // var inputLines = $("#programInputField").val().split("\n");
-              // resolve(inputLines[0]);
-              // inputLines.shift();
-              // $("#programInputField").val("");
-              // for (let i = 0; i < inputLines.length; i++) {
-              //     let currentInputFieldVal = $("#programInputField").val();
-              //     $("#programInputField").val(currentInputFieldVal + ((i != 0)? "\n" : "")  + inputLines[i]);
-              // }
-
-              // ToDo: output prompt
-              // ToDo: get input string
-
-              resolve('Hello this is a test... !');
+              pythonInterpreterChannel.put({
+                type: 'Python.Input',
+                payload: {
+                  resolve: resolve,
+                  reject: reject
+                }
+              });
             });
           }
-          // onInput: (prompt) => {
-            // if (prompt) {
-            //   pythonInterpreterChannel.put({
-            //     type: 'Python.Output',
-            //     message
-            //   });
-            // }
-            //
-            // pythonInterpreterChannel.put({
-            //   type: 'Python.Input',
-            //   message
-            // });
-
-            // let {state} = stepperContext;
-            // let {input, inputPos} = state;
-            // let nextNL = input.indexOf('\n', inputPos);
-            // while (-1 === nextNL) {
-            //   if (!state.terminal || !stepperContext.interact) {
-            //     /* non-interactive, end of input */
-            //     return null;
-            //   }
-            //   /* During replay no action is needed, the stepper will suspended until
-            //      input events supply the necessary input. */
-            //   yield ['interact', {saga: waitForInputSaga}];
-            //   /* Parse the next line from updated stepper state. */
-            //   state = stepperContext.state;
-            //   input = state.input;
-            //   inputPos = state.inputPos;
-            //   nextNL = input.indexOf('\n', inputPos);
-            // }
-            // const line = input.substring(inputPos, nextNL);
-            // state.inputPos = nextNL + 1;
-            // return line;
-          // }
         };
 
         /**
@@ -160,6 +122,8 @@ export default function (bundle, deps) {
 export function getNewTerminal(stepperState, message) {
   const { terminal } = stepperState;
 
+  return terminal;
+
   if (stepperState.terminal) {
     if (message) {
       return writeString(terminal, message);
@@ -172,7 +136,7 @@ export function getNewTerminal(stepperState, message) {
 }
 
 export function getNewOutput(stepperState, message) {
-  if (stepperState.terminal) {
+  if (stepperState.terminal && !isEmptyObject(stepperState.terminal)) {
     return null;
   }
 

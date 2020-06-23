@@ -288,6 +288,7 @@ function stepperRestartReducer (state, {payload: {stepperState}}) {
   } else {
     if (platform === 'python') {
       stepperState = state.getIn(['stepper', 'initialStepperState']);
+      stepperState.inputPos = 0;
 
       const sourceModel = state.get('buffers').get('source').get('model');
       const source = sourceModel.get('document').toString();
@@ -360,6 +361,7 @@ function stepperProgressReducer (state, {payload: {stepperContext}}) {
     const storeTerminal = storeCurrentStepperState.terminal;
     const storeOutput = storeCurrentStepperState.output;
 
+    console.log('update output 2');
     stepperState.terminal = storeTerminal;
     stepperState.output = storeOutput;
   }
@@ -551,11 +553,15 @@ function* stepperInteractSaga ({actionTypes, selectors}, {payload: {stepperConte
 
   /* Update stepperContext.state from the global state to avoid discarding
      the effects of user interaction. */
+  console.log(stepperContext.state.inputPos, 'interactsaga1');
   stepperContext.state = yield select(selectors.getCurrentStepperState);
+  console.log(stepperContext.state.inputPos, 'interactsaga2');
 
   if (stepperContext.state.platform === 'python' && arg) {
+    console.log('update output 1');
     stepperContext.state.output = arg.output;
     stepperContext.state.terminal = arg.terminal;
+    stepperContext.state.inputPos = arg.inputPos;
   }
 
   /* Check whether to interrupt or resume the stepper. */
@@ -588,26 +594,30 @@ function* stepperInterruptSaga ({actionTypes, dispatch}, {payload}) {
    * we need to move the python runner to the same point before we can to a step.
    */
   if (stepperContext.state.platform === 'python') {
-    const analysisStepNum = stepperContext.state.analysis.stepNum;
-    const analysisCode = stepperContext.state.analysis.code;
-    const currentPythonStepNum = window.currentPythonRunner._steps;
-    const currentPythonCode = window.currentPythonRunner._code;
-
-    if (analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode) {
+    if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
       console.log('Move the python runner !');
-
-      // TODO: Check if it works with the input.
 
       // TODO: Support error.
 
-      window.currentPythonRunner.initCodes([analysisCode]);
-      while (window.currentPythonRunner._steps < analysisStepNum) {
+      window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
+
+      window.currentPythonRunner._input = stepperContext.state.input;
+      window.currentPythonRunner._inputPos = 0;
+      window.currentPythonRunner._terminal = {
+        ...stepperContext.state.terminal
+      };
+
+      while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
         yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep);
 
         if (window.currentPythonRunner._isFinished) {
           break;
         }
       }
+
+      stepperContext.state.input = window.currentPythonRunner._input;
+      stepperContext.state.terminal = window.currentPythonRunner._terminal;
+      stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
 
       yield put({type: actionTypes.stepperIdle, payload: {stepperContext}});
     }
@@ -628,26 +638,32 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
      * we need to move the python runner to the same point before we can to a step.
      */
     if (stepperContext.state.platform === 'python') {
-      const analysisStepNum = stepperContext.state.analysis.stepNum;
-      const analysisCode = stepperContext.state.analysis.code;
-      const currentPythonStepNum = window.currentPythonRunner._steps;
-      const currentPythonCode = window.currentPythonRunner._code;
-
-      if (analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode) {
+      if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
         console.log('Move the python runner !');
 
         // TODO: Check if it works with the input.
 
         // TODO: Support error.
 
-        window.currentPythonRunner.initCodes([analysisCode]);
-        while (window.currentPythonRunner._steps < analysisStepNum) {
+        window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
+
+        window.currentPythonRunner._input = stepperContext.state.input;
+        window.currentPythonRunner._inputPos = 0;
+        window.currentPythonRunner._terminal = {
+          ...stepperContext.state.terminal
+        };
+
+        while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
           yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep);
 
           if (window.currentPythonRunner._isFinished) {
             break;
           }
         }
+
+        stepperContext.state.input = window.currentPythonRunner._input;
+        stepperContext.state.terminal = window.currentPythonRunner._terminal;
+        stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
       }
     }
 
@@ -790,6 +806,7 @@ function postLink (scope, actionTypes) {
         let currentStepperState = replayContext.state.getIn(['stepper', 'currentStepperState']);
 
         if (currentStepperState.platform === 'python' && window.currentPythonRunner._printedDuringStep) {
+          console.log('update output 3');
           replayContext.state.updateIn(['stepper', 'currentStepperState'], (currentStepperState) => {
             return {
               ...currentStepperState,

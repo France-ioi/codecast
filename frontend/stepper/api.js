@@ -186,22 +186,31 @@ async function executeSingleStep (stepperContext) {
   if (stepperContext.state.platform === 'python') {
     console.log('EXECUTE STEP HERE', stepperContext.state);
 
+    window.currentPythonRunner._input = stepperContext.state.input;
+    window.currentPythonRunner._inputPos = stepperContext.state.inputPos;
+    window.currentPythonRunner._terminal = stepperContext.state.terminal;
+
     await window.currentPythonRunner.runStep();
+    console.log(stepperContext.state.inputPos, 'after runstep');
 
     const newOutput = getNewOutput(stepperContext.state, window.currentPythonRunner._printedDuringStep);
     const newTerminal = getNewTerminal(stepperContext.state, window.currentPythonRunner._printedDuringStep);
+    const newInputPos = window.currentPythonRunner._inputPos;
 
     // Warning : The interact event retrieves the state from the global state again.
     // It means : we need to pass the changes so it can update it.
     await stepperContext.interact({
       position: 0, // TODO: Need real position ?
       output: newOutput,
-      terminal: newTerminal
+      terminal: newTerminal,
+      input: newInputPos
     });
 
     // Put the output and terminal again so it works with the replay too.
     stepperContext.state.output = newOutput;
+    console.log('curouput', newOutput);
     stepperContext.state.terminal = newTerminal;
+    stepperContext.state.inputPos = newInputPos;
   } else {
     const effects = C.step(stepperContext.state.programState);
     await executeEffects(stepperContext, effects[Symbol.iterator]());

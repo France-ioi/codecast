@@ -37,6 +37,7 @@ export default function (context) {
     this._definedFunctions = [];
     this._isFinished = false;
     this._printedDuringStep = '';
+    this._inputPos = 0;
     this.onInput = context.onInput;
     this.onError = context.onError;
 
@@ -417,11 +418,11 @@ export default function (context) {
     };
 
     this._builtinRead = (x) => {
-        if (Sk.builtinFiles === undefined || Sk.builtinFiles['files'][x] === undefined) {
+        if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
             throw 'File not found: ' + x;
         }
 
-        return Sk.builtinFiles['files'][x];
+        return Sk.builtinFiles["files"][x];
     };
 
     this.get_source_line = (lineno) => {
@@ -468,7 +469,6 @@ export default function (context) {
             susp_handlers['*'] = this._debugger.suspension_handler.bind(this);
             let promise = this._debugger.asyncToPromise(this._asyncCallback.bind(this), susp_handlers, this._debugger);
             promise.then((response) => {
-                console.log('success promise', response);
                 this._debugger.success.bind(this._debugger);
             }, (error) => {
                 this._debugger.error.bind(this._debugger);
@@ -717,4 +717,26 @@ export default function (context) {
     this._asyncCallback = function () {
         return Sk.importMainWithBody(this._editor_filename, true, this._code, true);
     };
+
+    /**
+     * Checks whether the interpreter is synchronized with the analysis object.
+     *
+     * @param {object} analysis The analysis object.
+     *
+     * @return {boolean}
+     */
+    this.isSynchronizedWithAnalysis = function(analysis) {
+        // Must be at the same step number and have the same source code.
+
+        const analysisStepNum = analysis.stepNum;
+        const analysisCode = analysis.code;
+        const currentPythonStepNum = window.currentPythonRunner._steps;
+        const currentPythonCode = window.currentPythonRunner._code;
+
+        if (analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode) {
+            return false;
+        }
+
+        return true;
+    }
 }

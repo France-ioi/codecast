@@ -21187,7 +21187,8 @@ Sk.doOneTimeInitialization = function (canSuspend) {
         }
     }
 
-
+    console.log('miaou');
+console.log(Sk.internalPy);
     for (var file in Sk.internalPy.files) {
         var fileWithoutExtension = file.split(".")[0].split("/")[1];
         var mod = Sk.importBuiltinWithBody(fileWithoutExtension, false, Sk.internalPy.files[file], true);

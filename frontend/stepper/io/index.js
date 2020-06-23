@@ -358,6 +358,7 @@ export default function (bundle, deps) {
        directly alter the global state & push the change to the editor. */
     stepperApi.addSaga(function* ioStepperSaga () {
       const {mode} = yield select(state => state.get('ioPane'));
+
       if (mode === 'split') {
         yield call(reflectToOutput);
       }
@@ -369,6 +370,7 @@ export default function (bundle, deps) {
         const outputModel = yield select(deps.getBufferModel, 'output');
         console.log(outputModel.get('document'));
         const oldSize = outputModel.get('document').size();
+        console.log(stepperState.output);
         const newSize = stepperState.output.length;
         if (oldSize !== newSize) {
           const outputDoc = outputModel.get('document');

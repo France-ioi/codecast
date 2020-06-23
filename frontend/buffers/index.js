@@ -313,6 +313,14 @@ function addRecordHooks ({recordApi}, actionTypes) {
     const {buffer, delta} = action;
     const {start, end} = delta;
     const range = {start, end};
+
+    const {platform} = yield select(state => state.get('options'));
+    if (buffer === 'output' && platform === 'python') {
+      // For python, the full output is retrieved from the interpreter at each step.
+
+      return;
+    }
+
     if (delta.action === 'insert') {
       yield call(addEvent, 'buffer.insert', buffer, compressRange(range), delta.lines);
     } else {

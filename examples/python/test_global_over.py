@@ -17,3 +17,11 @@ print(b)
 # WITH STEP OVER :
 # 42
 # 3
+
+def test(a):
+    if (a == 0):
+        return 0
+    return 1 + test(a - 1)
+
+for i in range(0, 10):
+    print(test(i))

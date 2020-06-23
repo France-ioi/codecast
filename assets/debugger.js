@@ -120,6 +120,7 @@ Sk.Debugger.prototype.check_breakpoints = function(filename, lineno, colno, glob
 
     // If Step mode is enabled then ignore breakpoints since we will just break
     // at every line.
+    return true;
     if (this.step_mode === true) {
         return true;
     }
@@ -278,7 +279,17 @@ Sk.Debugger.prototype.resume = function(resolve, reject) {
         var promise = this.suspension_handler(this.get_active_suspension());
         var self = this;
         promise.then(function(value) {
-            self.success(value, resolve, reject);
+            if (value.data && value.data.promise) {
+                // If waiting for input, wait that it has resolved too before continuing.
+                value.data.promise.then((inputValue) => {
+                    // Skulpt is taking the value into the result parameter, so let's put it in !
+                    value.data.result = inputValue;
+
+                    self.success(value, resolve, reject);
+                });
+            } else {
+                self.success(value, resolve, reject);
+            }
         }, function(error) {
             /**
              * Note : We call resolve and not reject in case of error because resolve throws an Exception
