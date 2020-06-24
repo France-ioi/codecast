@@ -34,10 +34,10 @@ export default function (bundle, deps) {
   function updateIoPaneState (state, ioPane) {
     const {platform} = state.get('options');
     if (platform === 'python') {
-      /* No interactive terminal for python */
       return {
-        mode: 'split',
-        modeSelect: false
+        //mode: 'split',
+        mode: ioPane.mode || 'terminal',
+        modeSelect: true
       }
     } else if (platform === 'arduino') {
       /* Arduino is forced to terminal mode. */
@@ -68,6 +68,7 @@ export default function (bundle, deps) {
   function IOPaneSelector (state, props) {
     const stepper = deps.getCurrentStepperState(state);
     const mode = stepper ? state.get('ioPane').mode : 'options';
+
     return {mode};
   }
 
@@ -94,6 +95,7 @@ export default function (bundle, deps) {
     render () {
       const {getMessage, mode, modeSelect} = this.props;
       const headerTitle = getMessage(modeSelect ? 'IOPANE_SELECT_TERMINAL_TITLE' : 'IOPANE_FORCED_TERMINAL_TITLE');
+
       return (
         <Panel>
           <Panel.Heading>{headerTitle}</Panel.Heading>

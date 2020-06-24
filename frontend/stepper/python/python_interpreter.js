@@ -38,6 +38,7 @@ export default function (context) {
     this._isFinished = false;
     this._printedDuringStep = '';
     this._inputPos = 0;
+    this._interact = null;
     this.onInput = context.onInput;
     this.onError = context.onError;
 
@@ -732,7 +733,7 @@ export default function (context) {
         const analysisCode = analysis.code;
         const currentPythonStepNum = window.currentPythonRunner._steps;
         const currentPythonCode = window.currentPythonRunner._code;
-
+        console.log('check sync analysis', analysisStepNum, currentPythonStepNum);
         if (analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode) {
             return false;
         }

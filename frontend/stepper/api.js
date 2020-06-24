@@ -70,6 +70,7 @@ export async function buildState (globalState) {
   }
 
   function interact ({saga}) {
+    console.log('int5');
     return new Promise((resolve, reject) => {
       if (saga) {
         return reject(new StepperError('error', 'cannot interact in buildState'));
@@ -116,6 +117,7 @@ function getNodeStartRow (state) {
 }
 
 export function makeContext (state, interact) {
+  console.log('MAKE CONTEEEXT*************************************');
   switch (state.platform) {
     case 'python':
       return {
@@ -189,12 +191,15 @@ async function executeSingleStep (stepperContext) {
     window.currentPythonRunner._input = stepperContext.state.input;
     window.currentPythonRunner._inputPos = stepperContext.state.inputPos;
     window.currentPythonRunner._terminal = stepperContext.state.terminal;
+    window.currentPythonRunner._interact = stepperContext.interact;
 
     await window.currentPythonRunner.runStep();
+
     console.log(stepperContext.state.inputPos, 'after runstep');
+    console.log('TTTTTTTT', window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
 
     const newOutput = getNewOutput(stepperContext.state, window.currentPythonRunner._printedDuringStep);
-    const newTerminal = getNewTerminal(stepperContext.state, window.currentPythonRunner._printedDuringStep);
+    const newTerminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
     const newInputPos = window.currentPythonRunner._inputPos;
 
     // Warning : The interact event retrieves the state from the global state again.
@@ -210,6 +215,7 @@ async function executeSingleStep (stepperContext) {
     stepperContext.state.output = newOutput;
     console.log('curouput', newOutput);
     stepperContext.state.terminal = newTerminal;
+    console.log('curterminal', newTerminal);
     stepperContext.state.inputPos = newInputPos;
   } else {
     const effects = C.step(stepperContext.state.programState);

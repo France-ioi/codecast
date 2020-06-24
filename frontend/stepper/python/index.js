@@ -1,5 +1,5 @@
 import { channel } from 'redux-saga';
-import {take, put, takeEvery, select} from 'redux-saga/effects';
+import {take, put, takeEvery, call, select} from 'redux-saga/effects';
 
 import { writeString } from "../io/terminal";
 import PythonInterpreter from "./python_interpreter";
@@ -11,12 +11,13 @@ export default function (bundle, deps) {
   bundle.defineAction('pythonInput', 'Python.Input');
 
   function* waitForInputSaga() {
+    console.log('wait for input...', deps);
     /* Set the isWaitingOnInput flag on the state. */
-    yield put({type: deps.terminalInputNeeded});
+    yield put({type: 'Terminal.Input.Needed'});
     /* Transfer focus to the terminal. */
-    yield put({type: deps.terminalFocus});
+    yield put({type: 'Terminal.Focus'});
     /* Wait for the user to enter a line. */
-    yield take(deps.terminalInputEnter);
+    yield take('Terminal.Input.Enter');
   }
 
   function* pythonInputSaga({actionTypes, dispatch}, {payload: {resolve}}) {
@@ -31,30 +32,27 @@ export default function (bundle, deps) {
     let nextNL = input.indexOf('\n', inputPos);
     console.log('found at ', nextNL);
     while (-1 === nextNL) {
-      if (!terminal /*|| !stepperContext.interact*/) {
+      if (!terminal || !window.currentPythonRunner._interact) {
         /* non-interactive, end of input */
         return null;
       }
 
       /* During replay no action is needed, the stepper will suspended until
          input events supply the necessary input. */
-      //yield ['interact', {saga: waitForInputSaga}];
+      //yield window.currentPythonRunner._interact({saga: waitForInputSaga});
+      yield call(waitForInputSaga);
 
-      // TODO: Handle terminal too.
+      /* Parse the next line from updated input and inputPos. */
 
-      /* Parse the next line from updated stepper state. */
-      //stepperContext = yield select(state => state.get('stepper').get('currentStepperState'));
-
-      //input = stepperContext.input;
-      //inputPos = stepperContext.inputPos;
+      input = window.currentPythonRunner._input;
+      inputPos = window.currentPythonRunner._inputPos;
 
       nextNL = input.indexOf('\n', inputPos);
+      console.log('found ?', input, inputPos, nextNL);
     }
 
     const line = input.substring(inputPos, nextNL);
     window.currentPythonRunner._inputPos = nextNL + 1;
-
-    console.log(window.currentPythonRunner._inputPos, 'pythoninputsaga');
 
     // Resolve the promise of the input that was passed in the action.
     resolve(line);
@@ -119,12 +117,8 @@ export default function (bundle, deps) {
   })
 };
 
-export function getNewTerminal(stepperState, message) {
-  const { terminal } = stepperState;
-
-  return terminal;
-
-  if (stepperState.terminal) {
+export function getNewTerminal(terminal, message) {
+  if (terminal) {
     if (message) {
       return writeString(terminal, message);
     }
@@ -136,9 +130,9 @@ export function getNewTerminal(stepperState, message) {
 }
 
 export function getNewOutput(stepperState, message) {
-  if (stepperState.terminal && !isEmptyObject(stepperState.terminal)) {
+  /*if (stepperState.terminal && !isEmptyObject(stepperState.terminal)) {
     return null;
-  }
+  }*/
 
   if (message) {
     return stepperState.output + message;

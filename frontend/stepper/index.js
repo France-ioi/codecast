@@ -553,12 +553,9 @@ function* stepperInteractSaga ({actionTypes, selectors}, {payload: {stepperConte
 
   /* Update stepperContext.state from the global state to avoid discarding
      the effects of user interaction. */
-  console.log(stepperContext.state.inputPos, 'interactsaga1');
   stepperContext.state = yield select(selectors.getCurrentStepperState);
-  console.log(stepperContext.state.inputPos, 'interactsaga2');
 
   if (stepperContext.state.platform === 'python' && arg) {
-    console.log('update output 1');
     stepperContext.state.output = arg.output;
     stepperContext.state.terminal = arg.terminal;
     stepperContext.state.inputPos = arg.inputPos;
@@ -603,9 +600,7 @@ function* stepperInterruptSaga ({actionTypes, dispatch}, {payload}) {
 
       window.currentPythonRunner._input = stepperContext.state.input;
       window.currentPythonRunner._inputPos = 0;
-      window.currentPythonRunner._terminal = {
-        ...stepperContext.state.terminal
-      };
+      window.currentPythonRunner._terminal = stepperContext.state.terminal;
 
       while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
         yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep);
@@ -649,9 +644,7 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
 
         window.currentPythonRunner._input = stepperContext.state.input;
         window.currentPythonRunner._inputPos = 0;
-        window.currentPythonRunner._terminal = {
-          ...stepperContext.state.terminal
-        };
+        window.currentPythonRunner._terminal = stepperContext.state.terminal;
 
         while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
           yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep);

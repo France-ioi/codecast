@@ -60,10 +60,21 @@ export default function (bundle, deps) {
   function terminalInputEnter (state) {
     return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
       const inputLine = stepper.inputBuffer + '\n';
-      return {...stepper,
+
+      const newInput = stepper.input + inputLine;
+      const newTerminal = writeString(stepper.terminal, inputLine);
+
+      if (stepper.platform === 'python') {
+        window.currentPythonRunner._input = newInput;
+        window.currentPythonRunner._inputPos = 0;
+        window.currentPythonRunner._terminal = newTerminal;
+      }
+
+      return {
+        ...stepper,
         inputBuffer: "",
-        input: stepper.input + inputLine,
-        terminal: writeString(stepper.terminal, inputLine),
+        input: newInput,
+        terminal: newTerminal,
         isWaitingOnInput: false
       };
     });
