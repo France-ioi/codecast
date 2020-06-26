@@ -16,12 +16,14 @@ export default function (bundle, deps) {
     yield put({type: 'Terminal.Input.Needed'});
     /* Transfer focus to the terminal. */
     yield put({type: 'Terminal.Focus'});
+    console.log('now we wait ?');
     /* Wait for the user to enter a line. */
     yield take('Terminal.Input.Enter');
   }
 
   function* pythonInputSaga({actionTypes, dispatch}, {payload: {resolve}}) {
-    //let stepperContext = yield select(state => state.get('stepper').get('currentStepperState'));
+    const stepperContext = yield select(state => state.get('stepper').get('currentStepperState'));
+    const isPlayerContext = (typeof stepperContext === 'undefined');
 
     let terminal = window.currentPythonRunner._terminal;
     let input = window.currentPythonRunner._input;
@@ -37,10 +39,23 @@ export default function (bundle, deps) {
         return null;
       }
 
-      /* During replay no action is needed, the stepper will suspended until
-         input events supply the necessary input. */
-      //yield window.currentPythonRunner._interact({saga: waitForInputSaga});
-      yield call(waitForInputSaga);
+      if (isPlayerContext || window.currentPythonRunner._synchronizingAnalysis) {
+        /**
+         * During replay, we resolve the Promise with an object that will later be filled
+         * with the real value when the terminal inputs are provided.
+         */
+        const futureInputValue = {
+          type: 'future_value',
+          value: ''
+        }
+
+        window.currentPythonRunner._futureInputValue = futureInputValue;
+        resolve(futureInputValue);
+
+        return;
+      } else {
+        yield call(waitForInputSaga);
+      }
 
       /* Parse the next line from updated input and inputPos. */
 
@@ -130,10 +145,6 @@ export function getNewTerminal(terminal, message) {
 }
 
 export function getNewOutput(stepperState, message) {
-  /*if (stepperState.terminal && !isEmptyObject(stepperState.terminal)) {
-    return null;
-  }*/
-
   if (message) {
     return stepperState.output + message;
   }

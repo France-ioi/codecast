@@ -39,6 +39,8 @@ export default function (context) {
     this._printedDuringStep = '';
     this._inputPos = 0;
     this._interact = null;
+    this._futureInputValue = null;
+    this._synchronizingAnalysis = false;
     this.onInput = context.onInput;
     this.onError = context.onError;
 
@@ -410,6 +412,7 @@ export default function (context) {
         if (message.trim() === 'Program execution complete') {
             this._isFinished = true;
         } else {
+            console.log('PYTHON ____ INTERPRETER ____ PRINT _____', message);
             this._printedDuringStep += message;
         }
     };

@@ -5497,7 +5497,7 @@ Sk.abstr.objectGetItem = function (o, key, canSuspend) {
 Sk.exportSymbol("Sk.abstr.objectGetItem", Sk.abstr.objectGetItem);
 
 Sk.abstr.objectSetItem = function (o, key, v, canSuspend) {
-    console.log('objectSetItem', o, key, v, canSuspend);
+    //console.log("objectSetItem", o, key, v, canSuspend);
 
     var otypename;
     if (o !== null) {
@@ -5542,7 +5542,7 @@ Sk.exportSymbol("Sk.abstr.gattr", Sk.abstr.gattr);
 
 
 Sk.abstr.sattr = function (obj, pyName, data, canSuspend) {
-    console.log('S_ATTR',obj, pyName, data, canSuspend);
+    //console.log("S_ATTR",obj, pyName, data, canSuspend);
 
     var objname = Sk.abstr.typeName(obj), r, setf;
     var jsName = pyName.$jsstr();
@@ -12535,19 +12535,19 @@ function hookAffectation(mangled, dataToStore, debug) {
     // out(mangled, "=", dataToStore, ";");
 
     // If doesn't start with $loc.
-    /*if (mangled.substr(0, 5) !== "$loc.") {
+    if (mangled.substr(0, 5) !== "$loc.") {
         out(mangled, "=", dataToStore, ";");
 
         return;
-    }*/
+    }
 
     // TO :   $loc.varName = window.currentPythonRunner.reportValue(value, 'varName');
-    //var varName = mangled.substr(5);
+    var varName = mangled.substr(5);
     // out(mangled, "=", "window.currentPythonRunner.reportValue(Sk.builtin.persistentCopy(", mangled, ", ", dataToStore, "), '", mangled, "');");
-    out(mangled, "=", "window.currentPythonRunner.reportValue(", dataToStore, ", '", mangled, "');");
+    out(mangled, "=", "window.currentPythonRunner.reportValue(", dataToStore, ", '", varName, "');");
 }
 
-function hookGr(v, arguments) {
+function hookGr(v, args) {
     /*
     var args = "";
     for (i = 1; i < arguments.length; ++i) {
@@ -12566,8 +12566,8 @@ function hookGr(v, arguments) {
     // TO :
 
     out("var ", v, "=");
-    for (i = 1; i < arguments.length; ++i) {
-        out(arguments[i]);
+    for (let i = 1; i < args.length; ++i) {
+        out(args[i]);
     }
     out(";");
     //out("console.log('var '" + v + "'='," + arguments + ")");
@@ -12950,7 +12950,7 @@ Compiler.prototype._checkSuspension = function(e) {
 
         e = e || {lineno: "$currLineNo", col_offset: "$currColNo"};
 
-        out ("if ($ret && $ret.$isSuspension) { console.log('saveSuspension'); return $saveSuspension($ret,'"+this.filename+"',"+e.lineno+","+e.col_offset+"); }");
+        out ("if ($ret && $ret.$isSuspension) { return $saveSuspension($ret,'"+this.filename+"',"+e.lineno+","+e.col_offset+"); }");
 
         this.u.doesSuspend = true;
         this.u.tempsToSave = this.u.tempsToSave.concat(this.u.localtemps);
@@ -13165,7 +13165,7 @@ Compiler.prototype.cyield = function(e)
     }
     nextBlock = this.newBlock("after yield");
     // return a pair: resume target block and yielded value
-    out(" console.log('cyield return'); return [/*resume*/", nextBlock, ",/*ret*/", val, "];");
+    out(" return [/*resume*/", nextBlock, ",/*ret*/", val, "];");
     this.setBlock(nextBlock);
     return "$gen.gi$sentvalue"; // will either be null if none sent, or the value from gen.send(value)
 };
@@ -14768,7 +14768,7 @@ Compiler.prototype.clambda = function (e) {
     Sk.asserts.assert(e instanceof Sk.astnodes.Lambda);
     func = this.buildcodeobj(e, new Sk.builtin.str("<lambda>"), null, e.args, function (scopename) {
         var val = this.vexpr(e.body);
-        out("console.log('clambda return'); return ", val, ";");
+        out("return ", val, ";");
     });
     return func;
 };
@@ -15009,7 +15009,7 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
             }
             val = s.value ? this.vexpr(s.value) : "Sk.builtin.none.none$";
             if (this.u.finallyBlocks.length == 0) {
-                out("console.log('astnode return'); return ", val, ";");
+                out("return ", val, ";");
             } else {
                 out("$postfinally={returning:",val,"};");
                 this._jump(this.peekFinallyBlock().blk);
@@ -15396,7 +15396,8 @@ Compiler.prototype.cmod = function (mod) {
     switch (mod.constructor) {
         case Sk.astnodes.Module:
             this.cbody(mod.body);
-            out("console.log('cmod ast return'); return $loc;");
+            // out("console.log('cmod ast return'); return $loc;");
+            out("return $loc;");
             break;
         default:
             Sk.asserts.fail("todo; unhandled case in compilerMod");
@@ -18931,6 +18932,11 @@ Sk.builtin.file.$readline = function (self, size, prompt) {
                     throw susp.data.error;
                 }
 
+                // For codecast player mode.
+                if (typeof susp.data.result === "object" && susp.data.result.type === "future_value") {
+                    return new Sk.builtin.str(susp.data.result.value);
+                }
+
                 return new Sk.builtin.str(susp.data.result);
             };
 
@@ -21187,8 +21193,7 @@ Sk.doOneTimeInitialization = function (canSuspend) {
         }
     }
 
-    console.log('miaou');
-console.log(Sk.internalPy);
+
     for (var file in Sk.internalPy.files) {
         var fileWithoutExtension = file.split(".")[0].split("/")[1];
         var mod = Sk.importBuiltinWithBody(fileWithoutExtension, false, Sk.internalPy.files[file], true);
@@ -22890,6 +22895,7 @@ Sk.exportSymbol("Sk.builtin.int_", Sk.builtin.int_);
 /***/ (function(module, exports) {
 
 Sk.internalPy={"files":{"src/classmethod.py":"class classmethod(object):\n    \"Emulate PyClassMethod_Type() in Objects/funcobject.c\"\n\n    def __init__(self, f):\n        self.f = f\n\n    def __get__(self, obj, klass=None):\n        if klass is None:\n            klass = type(obj)\n        def newfunc(*args):\n            return self.f(klass, *args)\n        return newfunc\n","src/property.py":"class property(object):\n    \"Emulate PyProperty_Type() in Objects/descrobject.c\"\n\n    def __init__(self, fget=None, fset=None, fdel=None, doc=None):\n        self.fget = fget\n        self.fset = fset\n        self.fdel = fdel\n        if doc is None and fget is not None:\n            if hasattr(fget, '__doc__'):\n                doc = fget.__doc__\n            else:\n                doc = None\n        self.__doc__ = doc\n\n    def __get__(self, obj, objtype=None):\n        if obj is None:\n            return self\n        if self.fget is None:\n            raise AttributeError(\"unreadable attribute\")\n        return self.fget(obj)\n\n    def __set__(self, obj, value):\n        if self.fset is None:\n            raise AttributeError(\"can't set attribute\")\n        self.fset(obj, value)\n\n    def __delete__(self, obj):\n        if self.fdel is None:\n            raise AttributeError(\"can't delete attribute\")\n        self.fdel(obj)\n\n    def getter(self, fget):\n        return type(self)(fget, self.fset, self.fdel, self.__doc__)\n\n    def setter(self, fset):\n        return type(self)(self.fget, fset, self.fdel, self.__doc__)\n\n    def deleter(self, fdel):\n        return type(self)(self.fget, self.fset, fdel, self.__doc__)\n","src/staticmethod.py":"class staticmethod(object):\n    \"Emulate PyStaticMethod_Type() in Objects/funcobject.c\"\n\n    def __init__(self, f):\n        self.f = f\n\n    def __get__(self, obj, objtype=None):\n        return self.f\n"}}
+
 
 /***/ }),
 
@@ -28255,7 +28261,7 @@ Sk.builtin.persistentCopy = function (currentValue, newValue) {
  *
  * @param value The value.
  *
- * @returns {[]|*} A new value without the ._old properties.
+ * @returns {*} A new value without the ._old properties.
  */
 Sk.builtin.removeOldValues = function(value) {
     if (Array.isArray(value)) {
@@ -34360,8 +34366,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "ec7170906c2b026374023f42d98c2de5fb3b0776",
-    date: "2020-04-09T16:06:38.252Z"
+    githash: "3a3a6fc986cd9013155fdabdadadd3d104b05af9",
+    date: "2020-06-25T15:27:10.282Z"
 };
 
 /**

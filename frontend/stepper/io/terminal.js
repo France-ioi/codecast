@@ -59,21 +59,45 @@ export default function (bundle, deps) {
   bundle.addReducer('terminalInputEnter', terminalInputEnter);
   function terminalInputEnter (state) {
     return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
-      const inputLine = stepper.inputBuffer + '\n';
-
+      const inputLine = stepper.inputBuffer + '\n'
       const newInput = stepper.input + inputLine;
-      const newTerminal = writeString(stepper.terminal, inputLine);
 
+      let newTerminal;
+      let newInputPos = stepper.inputPos;
       if (stepper.platform === 'python') {
+        newTerminal = writeString(window.currentPythonRunner._terminal, inputLine);
+
+        /**
+         * For when we are in player mode, _futureInputValue is filled with an object that
+         * will contain the input value, because we need to read the terminal events first
+         * without stopping the skulpt execution.
+         */
+        if (window.currentPythonRunner._futureInputValue) {
+          console.log('PUT_____FUTURE____VALUE____ : ', inputLine.trim());
+          window.currentPythonRunner._futureInputValue.value = inputLine.trim();
+
+          // We update the input position yet then.
+          newInputPos = window.currentPythonRunner._inputPos + inputLine.length;
+          window.currentPythonRunner._inputPos = newInputPos;
+
+          console.log('new inputPos : ', newInputPos);
+        }
+
         window.currentPythonRunner._input = newInput;
-        window.currentPythonRunner._inputPos = 0;
         window.currentPythonRunner._terminal = newTerminal;
+      } else {
+        newTerminal = writeString(stepper.terminal, inputLine);
+      }
+
+      if (newTerminal) {
+        console.log('t11', newTerminal.toJS().lines[0], newTerminal.toJS().lines[1], newTerminal.toJS().lines[2]);
       }
 
       return {
         ...stepper,
         inputBuffer: "",
         input: newInput,
+        inputPos: newInputPos,
         terminal: newTerminal,
         isWaitingOnInput: false
       };
@@ -170,6 +194,7 @@ export default function (bundle, deps) {
     result.readOnly = props.preventInput;
     const stepper = deps.getCurrentStepperState(state);
     if (stepper) {
+      console.log('t1');
       result.terminal = stepper.terminal;
       result.input = stepper.inputBuffer;
       result.isWaitingOnInput = stepper.isWaitingOnInput;

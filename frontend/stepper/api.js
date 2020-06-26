@@ -117,7 +117,8 @@ function getNodeStartRow (state) {
 }
 
 export function makeContext (state, interact) {
-  console.log('MAKE CONTEEEXT*************************************');
+  console.log('MAKE CONTEEEXT*************************************', state);
+
   switch (state.platform) {
     case 'python':
       return {
@@ -195,28 +196,47 @@ async function executeSingleStep (stepperContext) {
 
     await window.currentPythonRunner.runStep();
 
+    /**
+     * In player mode, empty _futureInputValue after it has been used.
+     */
+    if (window.currentPythonRunner._futureInputValue && window.currentPythonRunner._futureInputValue.value) {
+      window.currentPythonRunner._futureInputValue = null;
+    }
+
     console.log(stepperContext.state.inputPos, 'after runstep');
     console.log('TTTTTTTT', window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
 
     const newOutput = getNewOutput(stepperContext.state, window.currentPythonRunner._printedDuringStep);
-    const newTerminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
+    const newInput = window.currentPythonRunner._input;
     const newInputPos = window.currentPythonRunner._inputPos;
+
+    console.log('the input position at this point is ', newInputPos);
+
+    //console.log('t0', newTerminal.toJS().lines[0], newTerminal.toJS().lines[1]);
 
     // Warning : The interact event retrieves the state from the global state again.
     // It means : we need to pass the changes so it can update it.
     await stepperContext.interact({
       position: 0, // TODO: Need real position ?
       output: newOutput,
-      terminal: newTerminal,
-      input: newInputPos
+      //terminal: newTerminal,
+      inputPos: newInputPos,
+      input: newInput
     });
+    console.log('interact done.');
+
+    const newTerminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
+    window.currentPythonRunner._terminal = newTerminal;
 
     // Put the output and terminal again so it works with the replay too.
     stepperContext.state.output = newOutput;
-    console.log('curouput', newOutput);
+    stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
+
+    if (newTerminal) {
+      console.log('t2', newTerminal.toJS().lines[0], newTerminal.toJS().lines[1]);
+    }
+
     stepperContext.state.terminal = newTerminal;
-    console.log('curterminal', newTerminal);
-    stepperContext.state.inputPos = newInputPos;
   } else {
     const effects = C.step(stepperContext.state.programState);
     await executeEffects(stepperContext, effects[Symbol.iterator]());

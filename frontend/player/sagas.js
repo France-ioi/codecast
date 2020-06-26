@@ -161,6 +161,7 @@ function* computeInstants (replayContext) {
 
     const instant = {t, pos, event};
     replayContext.instant = instant;
+    console.log('-------- REPLAY ---- EVENT ----', key, event)
     yield call(replayContext.applyEvent, key, replayContext, event);
 
     /* Preserve the last explicitly set range. */

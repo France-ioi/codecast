@@ -246,6 +246,7 @@ export default function (bundle, deps) {
       stepperState.inputPos = 0;
       if (mode === 'terminal') {
         stepperState.input = "";
+        console.log('t7');
         stepperState.terminal = new TermBuffer({lines: 10, width: 80});
         stepperState.inputBuffer = "";
       } else {
@@ -279,6 +280,7 @@ export default function (bundle, deps) {
     stepperApi.onEffect('write', function* writeEffect (stepperContext, text) {
       const {state} = stepperContext;
       if (state.terminal) {
+        console.log('t8');
         state.terminal = writeString(state.terminal, text);
       } else {
         state.output = state.output + text;
