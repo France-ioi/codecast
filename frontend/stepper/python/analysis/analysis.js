@@ -9,7 +9,7 @@ import Immutable from 'immutable';
  *
  * @type {int}
  */
-const SKULPT_ANALYSIS_DEBUG = 1;
+const SKULPT_ANALYSIS_DEBUG = 2;
 
 /**
  * Transforms the skulpt state (the suspensions) to something readable with the variables content.
@@ -97,58 +97,42 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
 
     const args = suspension._argnames;
 
-    // If $loc is empty, we are in a function's scope.
+    let suspVariables;
     if (Object.keys(suspension.$loc).length === 0 && suspension.$loc.constructor === Object) {
-        const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspension.$tmps)), args);
-        for (const variableIdx in variableNames) {
-            const variableName = variableNames[variableIdx];
-            const value = suspension.$tmps[variableName];
+        // If $loc is empty, we are in a function's scope.
 
-            if (value instanceof Sk.builtin.func) {
-                continue;
-            }
-
-            let lastValue = null;
-            if (lastAnalysis) {
-                lastValue = lastAnalysis.variables.get(variableName);
-                if (lastValue) {
-                    lastValue = lastValue.cur;
-                } else {
-                    lastValue = undefined;
-                }
-            }
-
-            variables = variables.set(variableName, {
-                cur: value,
-                old: lastValue
-            });
-        }
+        suspVariables = suspension.$tmps;
     } else {
-        // Global scope.
-        const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspension.$loc)), args);
-        for (const variableIdx in variableNames) {
-            const variableName = variableNames[variableIdx];
-            const value = suspension.$loc[variableName];
+        suspVariables = suspension.$loc;
+    }
 
-            if (value instanceof Sk.builtin.func) {
-                continue;
-            }
+    const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspVariables)), args);
 
-            let lastValue = null;
-            if (lastAnalysis) {
-                lastValue = lastAnalysis.variables.get(variableName);
-                if (lastValue) {
-                    lastValue = lastValue.cur;
-                } else {
-                    lastValue = undefined;
-                }
-            }
+    for (const variableIdx in variableNames) {
+        const variableName = variableNames[variableIdx];
+        const value = suspVariables[variableName];
 
-            variables = variables.set(variableName, {
-                cur: value,
-                old: lastValue
-            });
+        if (typeof value === 'function') {
+            continue;
         }
+        if (value instanceof Sk.builtin.func) {
+            continue;
+        }
+
+        let lastValue = null;
+        if (lastAnalysis) {
+            lastValue = lastAnalysis.variables.get(variableName);
+            if (lastValue) {
+                lastValue = lastValue.cur;
+            } else {
+                lastValue = undefined;
+            }
+        }
+
+        variables = variables.set(variableName, {
+            cur: value,
+            old: lastValue
+        });
     }
 
     const analysis = {
@@ -171,6 +155,7 @@ const variablesBeginWithIgnore = [
     '__doc__',
     '__package__',
     '__file__',
+    '__class__',
     '$compareres',
     '$loadgbl',
     '$binop'

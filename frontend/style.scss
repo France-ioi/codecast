@@ -281,6 +281,9 @@ span + .value-previous {
   overflow: hidden;
   max-height: 2 * $line-height-lg;
 }
+.vardecl-object {
+  max-height: none;
+}
 
 .array-cells {
   margin: 2px;
@@ -386,6 +389,9 @@ span + .value-previous {
   .vardecl {
     max-height: 2 * $line-height-md;
   }
+  .vardecl-object {
+    max-height: none;
+  }
 }
 
 .mainView-sm {
@@ -416,6 +422,9 @@ span + .value-previous {
   }
   .vardecl {
     max-height: 2 * $line-height-sm;
+  }
+  .vardecl-object {
+    max-height: none;
   }
   .array-cell {
     font-size: 10px;

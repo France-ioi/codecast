@@ -13,27 +13,6 @@ b = test(0)
 print(b)
 
 
-# Objects
-class Test:
-    def __init__(self, a, b, m):
-        self.a = a
-        self.b = b
-        self.m = m
-
-    def sum(self):
-        return self.a + self.b
-
-    def getM(self):
-        return self.m
-
-def coucou():
-    return 'coucou'
-
-test = Test(41, 1, "Bonjour")
-print(test.sum())
-print(test.getM())
-
-
 # Functions
 def ret(a):
     b = a + a
@@ -48,20 +27,6 @@ c = 'b'
 d = ret(c)
 e = test(d)
 print(e)
-
-
-# Extend
-class classA:
-    def __init__(self, a):
-        self.a = a
-
-class classB(classA):
-    def __init__(self, a):
-        classA.__init__(self, a)
-        self.a = self.a + 1
-
-obj = classB(41)
-print(obj.a)
 
 
 # Recursion
