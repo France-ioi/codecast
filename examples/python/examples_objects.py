@@ -15,8 +15,10 @@ class Test:
 test = Test(41, 1, "Bonjour")
 i = 0
 i = 1
-tel = {'name': "John", 'number': "0123456789"}
+tel = {'name': "John", 'number': "0123456789", 'inside': {'a': "val", 'c': "test"}}
 tel['number'] = "0987654321"
+tel['inside']['a'] = "newval"
+tel['inside'] = {'a': "vala", 'b': "valb"}
 test.b = 10
 print(test.sum())
 print(test.getM())

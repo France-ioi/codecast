@@ -13331,6 +13331,7 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
         return this._gr("lsubscr", "$ret");
     }
     else if (ctx === Sk.astnodes.Store || ctx === Sk.astnodes.AugStore) {
+        out('debugger;');
         out(obj, " = ", obj, ".clone();");
 
         out("$ret = Sk.abstr.objectSetItem(", obj, ",", subs, ",", data, ", true);");
@@ -17404,6 +17405,20 @@ Sk.builtin.dict.prototype["copy"] = new Sk.builtin.func(function (self) {
 
     return newCopy;
 });
+
+Sk.builtin.dict.prototype["clone"] = function() {
+    const newCopy = new Sk.builtin.dict([]);
+    for (let it = Sk.abstr.iter(this), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
+        let v = this.mp$subscript(k);
+        if (v === undefined) {
+            v = null;
+        }
+
+        newCopy.mp$ass_subscript(k, v);
+    }
+
+    return newCopy;
+};
 
 Sk.builtin.dict.$fromkeys = function fromkeys(self, seq, value) {
     var k, iter, val, res, iterable;
@@ -23690,10 +23705,7 @@ Sk.builtin.list.prototype["copy"] = new Sk.builtin.func(function (self) {
 
 Sk.builtin.list.prototype["clone"] = function() {
     let items = [];
-    for (let it = Sk.abstr.iter(this), k = it.tp$iternext();
-        k !== undefined;
-        k = it.tp$iternext()) {
-        //items.push(k.clone());
+    for (let it = Sk.abstr.iter(this), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
         items.push(k);
     }
 
@@ -34367,7 +34379,7 @@ var Sk = {}; // jshint ignore:line
 
 Sk.build = {
     githash: "3a3a6fc986cd9013155fdabdadadd3d104b05af9",
-    date: "2020-06-25T15:27:10.282Z"
+    date: "2020-07-08T15:12:54.430Z"
 };
 
 /**
