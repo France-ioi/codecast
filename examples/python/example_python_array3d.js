@@ -1,9 +1,9 @@
 /*     1 */
 $compiledmod = function () {
     var $scope146 = (function ($forcegbl) {
-        var $loadname177, $loadname177, $lsubscr178, $loadname177, $lsubscr178, $lsubscr179, $loadname180, $loadname180,
-            $lsubscr181, $loadname180, $lsubscr181, $lsubscr182, $loadname180, $lsubscr181, $lsubscr182, $lsubscr183,
-            $loadname180, $lsubscr181, $lsubscr182, $lsubscr183;
+        var $loadname177, $loadname177, $lsubscr178, $loadname177, $lsubscr178, $lsubscr179, $loadname180, $loadname181,
+            $loadname180, $loadname181, $lsubscr182, $loadname180, $loadname181, $lsubscr182, $lsubscr183, $loadname180,
+            $loadname181, $lsubscr182, $lsubscr183, $lsubscr184;
         var $wakeFromSuspension = function () {
             var susp = $scope146.$wakingSuspension;
             $scope146.$wakingSuspension = undefined;
@@ -20,9 +20,10 @@ $compiledmod = function () {
             $lsubscr178 = susp.$tmps.$lsubscr178;
             $lsubscr179 = susp.$tmps.$lsubscr179;
             $loadname180 = susp.$tmps.$loadname180;
-            $lsubscr181 = susp.$tmps.$lsubscr181;
+            $loadname181 = susp.$tmps.$loadname181;
             $lsubscr182 = susp.$tmps.$lsubscr182;
             $lsubscr183 = susp.$tmps.$lsubscr183;
+            $lsubscr184 = susp.$tmps.$lsubscr184;
             try {
                 $ret = susp.child.resume();
             } catch (err) {
@@ -64,9 +65,10 @@ $compiledmod = function () {
                 "$lsubscr178": $lsubscr178,
                 "$lsubscr179": $lsubscr179,
                 "$loadname180": $loadname180,
-                "$lsubscr181": $lsubscr181,
+                "$loadname181": $loadname181,
                 "$lsubscr182": $lsubscr182,
-                "$lsubscr183": $lsubscr183
+                "$lsubscr183": $lsubscr183,
+                "$lsubscr184": $lsubscr184
             };
             return susp;
         };
@@ -123,7 +125,11 @@ $compiledmod = function () {
                         var $loadlist173 = new Sk.builtins['list']([$elem166, $elem172]);
                         var $elem174 = $loadlist173;
                         var $loadlist175 = new Sk.builtins['list']([$elem160, $elem174]);
-                        $loc.Array3D = window.currentPythonRunner.reportValue($loadlist175, '$loc.Array3D');
+                        if ($loadlist175._uuid) {
+                            $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
+                            $loc.__refs__[$loadlist175._uuid] = 'Array3D';
+                        }
+                        $loc.Array3D = window.currentPythonRunner.reportValue($loadlist175, 'Array3D');
                         if (Sk.breakpoints('<stdin>.py', 3, 0)) {
                             var $susp = $saveSuspension({
                                 data: {type: 'Sk.debug'}, resume: function () {
@@ -146,12 +152,12 @@ $compiledmod = function () {
                         $currColNo = 0;
                         /*    18 */
                         /*    19 */
+                        console.log('test1', '$loc.Array3D', 'Array3D');
                         var $loadname177 = $loc.Array3D !== undefined ? $loc.Array3D : Sk.misceval.loadname('Array3D', $gbl);
                         ;$ret = Sk.abstr.objectGetItem($loadname177, $scope146.$const147, true);
                         $blk = 3;/* allowing case fallthrough */
                     case 3: /* --- function return or resume suspension --- */
                         if ($ret && $ret.$isSuspension) {
-                            console.log('saveSuspension');
                             return $saveSuspension($ret, '<stdin>.py', $currLineNo, $currColNo);
                         }
                         var $lsubscr178 = $ret;
@@ -159,21 +165,15 @@ $compiledmod = function () {
                         $blk = 4;/* allowing case fallthrough */
                     case 4: /* --- function return or resume suspension --- */
                         if ($ret && $ret.$isSuspension) {
-                            console.log('saveSuspension');
                             return $saveSuspension($ret, '<stdin>.py', $currLineNo, $currColNo);
                         }
                         var $lsubscr179 = $ret;
-                        $lsubscr179 = $lsubscr179.clone();
+                        $lsubscr179 = $lsubscr179.clone($scope146.$const176);
                         $ret = Sk.abstr.objectSetItem($lsubscr179, $scope146.$const147, $scope146.$const176, true);
-                        $lsubscr178 = $lsubscr178.clone();
-                        Sk.abstr.objectSetItem($lsubscr178, $scope146.$const149, $lsubscr179, true);
-                        $loadname177 = $loadname177.clone();
-                        Sk.abstr.objectSetItem($loadname177, $scope146.$const147, $lsubscr179, true);
-                        $loc.Array3D = $loadname177;
+                        Sk.builtin.changeReferences($loc, $lsubscr179);
                         $blk = 5;/* allowing case fallthrough */
                     case 5: /* --- function return or resume suspension --- */
                         if ($ret && $ret.$isSuspension) {
-                            console.log('saveSuspension');
                             return $saveSuspension($ret, '<stdin>.py', $currLineNo, $currColNo);
                         }
                         if (Sk.breakpoints('<stdin>.py', 4, 0)) {
@@ -189,7 +189,7 @@ $compiledmod = function () {
                     case 6: /* --- debug breakpoint for line 4 --- */
                         /*    20 */ //
                         /*    21 */ // line 4:
-                        /*    22 */ // print Array3D[0][1][0]
+                        /*    22 */ // print(Array3D[0][1][0])
                         /*    23 */ // ^
                         /*    24 */ //
                         /*    25 */
@@ -198,46 +198,71 @@ $compiledmod = function () {
                         $currColNo = 0;
                         /*    27 */
                         /*    28 */
-                        var $loadname180 = $loc.Array3D !== undefined ? $loc.Array3D : Sk.misceval.loadname('Array3D', $gbl);
-                        ;$ret = Sk.abstr.objectGetItem($loadname180, $scope146.$const147, true);
+                        console.log('test1', '$loc.print', 'print');
+                        var $loadname180 = $loc.print !== undefined ? $loc.print : Sk.misceval.loadname('print', $gbl);
+                        ;console.log('test1', '$loc.Array3D', 'Array3D');
+                        var $loadname181 = $loc.Array3D !== undefined ? $loc.Array3D : Sk.misceval.loadname('Array3D', $gbl);
+                        ;$ret = Sk.abstr.objectGetItem($loadname181, $scope146.$const147, true);
                         $blk = 7;/* allowing case fallthrough */
                     case 7: /* --- function return or resume suspension --- */
                         if ($ret && $ret.$isSuspension) {
-                            console.log('saveSuspension');
-                            return $saveSuspension($ret, '<stdin>.py', $currLineNo, $currColNo);
-                        }
-                        var $lsubscr181 = $ret;
-                        $ret = Sk.abstr.objectGetItem($lsubscr181, $scope146.$const149, true);
-                        $blk = 8;/* allowing case fallthrough */
-                    case 8: /* --- function return or resume suspension --- */
-                        if ($ret && $ret.$isSuspension) {
-                            console.log('saveSuspension');
                             return $saveSuspension($ret, '<stdin>.py', $currLineNo, $currColNo);
                         }
                         var $lsubscr182 = $ret;
-                        $ret = Sk.abstr.objectGetItem($lsubscr182, $scope146.$const147, true);
-                        $blk = 9;/* allowing case fallthrough */
-                    case 9: /* --- function return or resume suspension --- */
+                        $ret = Sk.abstr.objectGetItem($lsubscr182, $scope146.$const149, true);
+                        $blk = 8;/* allowing case fallthrough */
+                    case 8: /* --- function return or resume suspension --- */
                         if ($ret && $ret.$isSuspension) {
-                            console.log('saveSuspension');
                             return $saveSuspension($ret, '<stdin>.py', $currLineNo, $currColNo);
                         }
                         var $lsubscr183 = $ret;
-                        $ret = Sk.misceval.print_(new Sk.builtins['str']($lsubscr183).v);
+                        $ret = Sk.abstr.objectGetItem($lsubscr183, $scope146.$const147, true);
+                        $blk = 9;/* allowing case fallthrough */
+                    case 9: /* --- function return or resume suspension --- */
+                        if ($ret && $ret.$isSuspension) {
+                            return $saveSuspension($ret, '<stdin>.py', $currLineNo, $currColNo);
+                        }
+                        var $lsubscr184 = $ret;
+                        $ret = Sk.misceval.callsimOrSuspendArray($loadname180, [$lsubscr184]);
                         $blk = 10;/* allowing case fallthrough */
                     case 10: /* --- function return or resume suspension --- */
                         if ($ret && $ret.$isSuspension) {
-                            console.log('saveSuspension');
                             return $saveSuspension($ret, '<stdin>.py', 4, 0);
                         }
-                        $ret = Sk.misceval.print_("\n");
+                        var $call185 = $ret;
+                        /*    29 */ //
+                        /*    30 */ // line 4:
+                        /*    31 */ // print(Array3D[0][1][0])
+                        /*    32 */ // ^
+                        /*    33 */ //
+                        /*    34 */
+                        $currLineNo = 4;
+                        /*    35 */
+                        $currColNo = 0;
+                        /*    36 */
+                        /*    37 */
+                        if (Sk.breakpoints('<stdin>.py', 5, 0)) {
+                            var $susp = $saveSuspension({
+                                data: {type: 'Sk.debug'}, resume: function () {
+                                }
+                            }, '<stdin>.py', 5, 0);
+                            $susp.$blk = 11;
+                            $susp.optional = true;
+                            return $susp;
+                        }
                         $blk = 11;/* allowing case fallthrough */
-                    case 11: /* --- function return or resume suspension --- */
-                        if ($ret && $ret.$isSuspension) {
-                            console.log('saveSuspension');
-                            return $saveSuspension($ret, '<stdin>.py', 4, 0);
-                        }
-                        console.log('cmod ast return');
+                    case 11: /* --- debug breakpoint for line 5 --- */
+                        /*    38 */ //
+                        /*    39 */ // line 5:
+                        /*    40 */ // pass
+                        /*    41 */ // ^
+                        /*    42 */ //
+                        /*    43 */
+                        $currLineNo = 5;
+                        /*    44 */
+                        $currColNo = 0;
+                        /*    45 */
+                        /*    46 */
                         return $loc;
                         throw new Sk.builtin.SystemError('internal error: unterminated block');
                 }
@@ -265,6 +290,6 @@ $compiledmod = function () {
     $scope146.$const167 = new Sk.builtin.int_(6);
     $scope146.$const169 = new Sk.builtin.int_(7);
     $scope146.$const176 = new Sk.builtin.int_(42);
-    /*    29 */
+    /*    47 */
     return $scope146;
 }();

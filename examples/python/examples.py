@@ -65,7 +65,7 @@ def plop(a):
         return 0
     return a + plop(a - 1)
 
-print plop(5)
+print(plop(5))
 
 
 
@@ -74,20 +74,20 @@ tab = [4, 10, 21]
 
 tab[1] = 28
 
-print tab[1]
+print(tab[1])
 
 for num in tab:
-    print num
+    print(num)
 
 
 # Array 2D
 Array2D = [[11, 12, 5, 2], [15, 6,10], [10, 8, 12, 5], [12,15,8,6]]
 
 Array2D[1][2] = 46
-print Array2D[1][1]
+print(Array2D[1][1])
 
 # Array 3D
 Array3D = [[[0, 1], [2, 3]], [[4, 5], [6, 7]]]
 
 Array3D[0][1][0] = 42
-print Array3D[0][1][0]
+print(Array3D[0][1][0])

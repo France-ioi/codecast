@@ -128,7 +128,6 @@ const PythonVariableValue = (props) => {
         )
     }
 
-    console.log('2', props);
     return (
         <React.Fragment>
             <span>{props.cur.v}</span>
