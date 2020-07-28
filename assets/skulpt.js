@@ -13231,8 +13231,11 @@ function hookAffectation(mangled, dataToStore, debug) {
     var varName = mangled.substr(5);
 
     out("if (" + dataToStore + "._uuid) {");
-    out("$loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];");
-    out("$loc.__refs__[" + dataToStore + "._uuid ] = '" + varName + "';");
+    out("  $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];");
+    out("  if (!$loc.__refs__.hasOwnProperty(" + dataToStore + "._uuid)) {");
+    out("    $loc.__refs__[" + dataToStore + "._uuid] = [];");
+    out("  }");
+    out("  $loc.__refs__[" + dataToStore + "._uuid].push(\"" + varName + "\");");
     out("}");
 
     out(mangled, "=", "window.currentPythonRunner.reportValue(", dataToStore, ", '", varName, "');");
@@ -14026,11 +14029,31 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
     else if (ctx === Sk.astnodes.Store || ctx === Sk.astnodes.AugStore) {
         out(obj, " = ", obj, ".clone(" + data + ");");
 
+        /**
+         * Changes all the references of the object in :
+         *   - local variables
+         *   - global variables
+         *   - functions parameters
+         *   - other stack frames (suspensions)
+         */
+
         // $ret = Sk.abstr.objectSetItem($LIST, $INDEX, $VALUE, true);
         out("$ret = Sk.abstr.objectSetItem(", obj, ",", subs, ",", data, ", true);");
 
-        out("Sk.builtin.changeReferences($loc, " + obj + ");");
-        out("var $__correspondences__ = Sk.builtin.changeReferences($gbl, " + obj + ");");
+        out("var $__cloned_references = {};");
+        out("$__cloned_references[" + obj + "._uuid] = " + obj + ";");
+
+        out("Sk.builtin.changeReferences($__cloned_references, $loc, " + obj + ");");
+        out("for (var idx in window.currentPythonRunner._debugger.suspension_stack) {");
+        out("  if (idx > 0) {");
+        out("    var $__cur_suspension__ = window.currentPythonRunner._debugger.suspension_stack[idx];");
+        out("    Sk.builtin.changeReferences($__cloned_references, $__cur_suspension__.$tmps, " + obj + ");");
+        out("    Sk.builtin.changeReferences($__cloned_references, $__cur_suspension__.$loc, " + obj + ");");
+        out("    Sk.builtin.changeReferences($__cloned_references, $__cur_suspension__.$gbl, " + obj + ");");
+        out("  }");
+        out("}");
+        out("var $__correspondences__ = Sk.builtin.changeReferences($__cloned_references, $gbl, " + obj + ");");
+        //out("debugger;");
 
         /**
          * Update the function's parameters variables if required.
@@ -14038,9 +14061,11 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
          * Skulpt access those variables directly by their name.
          * eg: test(a) has a "var a" in the local scope.
          */
-        if (this.u.ste.varnames.length) {
-            for (let idx in this.u.ste.varnames) {
-                const varname = this.u.ste.varnames[idx];
+        if (this.u.localnames.length) {
+            const localnames = [...new Set(this.u.localnames)];
+
+            for (let idx in localnames) {
+                const varname = localnames[idx];
                 out("if (" + varname + " && " + varname + ".hasOwnProperty('_uuid') && $__correspondences__.hasOwnProperty(" + varname + "._uuid)) {");
                 out("  " + varname + " = $__correspondences__[" + varname + "._uuid];");
                 out("}");
@@ -14510,19 +14535,33 @@ Compiler.prototype.outputSuspensionHelpers = function (unit) {
                 (hasCell ? "susp.$cell=$cell;" : "");
 
     seenTemps = {};
+    output += "var $__tmpsReferences__ = {};";
     for (i = 0; i < localsToSave.length; i++) {
         t = localsToSave[i];
         if (seenTemps[t]===undefined) {
             localSaveCode.push("\"" + t + "\":" + t);
             seenTemps[t]=true;
+
+            console.log(t);
+            // Save references int $tmp.__refs__
+
+            output += "if (" + t + " && " + t + " .hasOwnProperty('_uuid')) {";
+            output += "  if (!$__tmpsReferences__.hasOwnProperty(" + t + "._uuid)) {";
+            output += "    $__tmpsReferences__[" + t + "._uuid] = [];";
+            output += "  }";
+            output += "  $__tmpsReferences__[" + t + "._uuid].push(\"" + t + "\");";
+            output += "}";
         }
     }
+
+    localSaveCode.push("\"__refs__\":$__tmpsReferences__");
+
     output +=   "susp.$tmps={" + localSaveCode.join(",") + "};" +
                 "return susp;" +
               "};";
 
     return output;
-}
+};
 
 Compiler.prototype.outputAllUnits = function () {
     var i;
@@ -23772,9 +23811,10 @@ __webpack_require__.r(__webpack_exports__);
  * @constructor
  * @param {Array.<Object>=} L
  * @param {boolean=} canSuspend (defaults to true in this case, as list() is used directly from Python)
+ * @param uuid The uuid, if not set it will be created.
  * @extends Sk.builtin.object
  */
-Sk.builtin.list = function (L, canSuspend) {
+Sk.builtin.list = function (L, canSuspend, uuid) {
     var v, it, thisList;
 
     if (this instanceof Sk.builtin.list) {
@@ -23814,15 +23854,28 @@ Sk.builtin.list = function (L, canSuspend) {
         throw new Sk.builtin.TypeError("'" + Sk.abstr.typeName(L)+ "' " +"object is not iterable");
     }
 
-    this._uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
-    this._parents = [];
+    // Sets the UUID.
+    console.log('list', v, canSuspend, uuid);
+    if (uuid === undefined) {
+        this._uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
 
-    for (let idx in v) {
-        const element = v[idx];
+        /*
+         * Set the parents.
+         *
+         * If uuid is provided, then it is a clone and the parents are
+         * copied during the clone.
+         */
 
-        if (element instanceof Sk.builtin.list) {
-            element._parents[this._uuid] = this;
+        this._parents = [];
+        for (let idx in v) {
+            const element = v[idx];
+
+            if (element instanceof Sk.builtin.list) {
+                element._parents[this._uuid] = this;
+            }
         }
+    } else {
+        this._uuid = uuid;
     }
 
     this.v = v;
@@ -24457,9 +24510,8 @@ Sk.builtin.list.prototype["clone"] = function(newElementValue) {
             items.push(k);
         }
     }
-
-    const clone = new Sk.builtin.list(items);
-    clone._uuid = this._uuid;
+console.log("clone", this);
+    const clone = new Sk.builtin.list(items, true, this._uuid);
     clone._parents = this._parents;
 
     for (let it = Sk.abstr.iter(clone), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
@@ -29028,38 +29080,36 @@ Sk.exportSymbol("Sk.parseTreeDump", Sk.parseTreeDump);
  * Changes recursively all the references of an object.
  * At first call, parent is the object and obj is undefined.
  *
- * @param $loc   The internal skulpt $loc or $gbl.
- * @param parent The object's parent.
- * @param obj    The object.
+ * @param clonedReferences The already cloned references.
+ * @param $loc             The internal skulpt $loc or $gbl.
+ * @param parent           The object's parent.
+ * @param obj              The object.
  *
  * @return {object} The references correspondences with key uuid and value the object.
  */
-Sk.builtin.changeReferencesRec = function ($loc, parent, obj) {
-    let parentClone;
-    if (obj === undefined) {
-        /**
-         * "obj" is undefined for the object which has initially been modified.
-         * This object has already been cloned and therefore its reference has
-         * already changed.
-         */
-
-        parentClone = parent;
-    } else {
-        parentClone = parent.clone(obj);
+Sk.builtin.changeReferencesRec = function (clonedReferences, $loc, parent, obj) {
+    if (!clonedReferences.hasOwnProperty(parent._uuid)) {
+        clonedReferences[parent._uuid] = parent.clone(obj);
     }
+
+    const parentClone = clonedReferences[parent._uuid];
 
     const correspondences = {};
     correspondences[parentClone._uuid] = parentClone;
 
     if ($loc.hasOwnProperty("__refs__")) {
         if ($loc.__refs__[parentClone._uuid]) {
-            $loc[$loc.__refs__[parentClone._uuid]] = parentClone;
+            const parentRefs = $loc.__refs__[parentClone._uuid];
+            for (let idx in parentRefs) {
+                $loc[parentRefs[idx]] = parentClone;
+            }
         }
     }
 
     if (parentClone._parents) {
+        console.log('number of parents', parentClone._parents.length);
         for (let parentUuid in parentClone._parents) {
-            const correspondencesRec = Sk.builtin.changeReferencesRec($loc, parentClone._parents[parentUuid], parentClone);
+            const correspondencesRec = Sk.builtin.changeReferencesRec(clonedReferences, $loc, parentClone._parents[parentUuid], parentClone);
 
             for (let correspondenceRecIdx in correspondencesRec) {
                 correspondences[correspondenceRecIdx] = correspondencesRec[correspondenceRecIdx];
@@ -29073,13 +29123,14 @@ Sk.builtin.changeReferencesRec = function ($loc, parent, obj) {
 /**
  * Changes all the references of an object.
  *
- * @param $loc The internal skulpt $loc or $gbl.
- * @param obj  The object.
+ * @param clonedReferences The already cloned references.
+ * @param $loc             The internal skulpt $loc or $gbl.
+ * @param obj              The object.
  *
  * @return {object} The references correspondences with key uuid and value the object.
  */
-Sk.builtin.changeReferences = function ($loc, obj) {
-    return Sk.builtin.changeReferencesRec($loc, obj);
+Sk.builtin.changeReferences = function (clonedReferences, $loc, obj) {
+    return Sk.builtin.changeReferencesRec(clonedReferences, $loc, obj);
 };
 
 Sk.exportSymbol("Sk.builtin.changeReferences", Sk.builtin.changeReferences);
@@ -35164,8 +35215,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "8b96602c23fef9f8c33caaeff6e5b56d901f01fc",
-    date: "2020-07-21T07:15:20.114Z"
+    githash: "4258f1db36bac3874ab3bfc73bb0a5895774c028",
+    date: "2020-07-28T08:36:50.989Z"
 };
 
 /**

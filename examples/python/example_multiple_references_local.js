@@ -391,24 +391,24 @@ $compiledmod = function () {
                         $currColNo = 0;
                         /*   108 */
                         /*   109 */
-                        if (Sk.breakpoints('<stdin>.py', 22, 0)) {
+                        if (Sk.breakpoints('<stdin>.py', 21, 0)) {
                             var $susp = $saveSuspension({
                                 data: {type: 'Sk.debug'}, resume: function () {
                                 }
-                            }, '<stdin>.py', 22, 0);
+                            }, '<stdin>.py', 21, 0);
                             $susp.$blk = 15;
                             $susp.optional = true;
                             return $susp;
                         }
                         $blk = 15;/* allowing case fallthrough */
-                    case 15: /* --- debug breakpoint for line 22 --- */
+                    case 15: /* --- debug breakpoint for line 21 --- */
                         /*   110 */ //
-                        /*   111 */ // line 22:
+                        /*   111 */ // line 21:
                         /*   112 */ // pass
                         /*   113 */ // ^
                         /*   114 */ //
                         /*   115 */
-                        $currLineNo = 22;
+                        $currLineNo = 21;
                         /*   116 */
                         $currColNo = 0;
                         /*   117 */
@@ -591,7 +591,14 @@ $compiledmod = function () {
                         $lsubscr167 = $lsubscr167.clone($scope157.$const165);
                         $ret = Sk.abstr.objectSetItem($lsubscr167, $scope157.$const166, $scope157.$const165, true);
                         Sk.builtin.changeReferences($loc, $lsubscr167);
+                        debugger;
                         var $__correspondences__ = Sk.builtin.changeReferences($gbl, $lsubscr167);
+                        if (v && v.hasOwnProperty('_uuid') && $__correspondences__.hasOwnProperty(v._uuid)) {
+                            v = $__correspondences__[v._uuid];
+                        }
+                        if (c0 && c0.hasOwnProperty('_uuid') && $__correspondences__.hasOwnProperty(c0._uuid)) {
+                            c0 = $__correspondences__[c0._uuid];
+                        }
                         $blk = 5;/* allowing case fallthrough */
                     case 5: /* --- function return or resume suspension --- */
                         if ($ret && $ret.$isSuspension) {
@@ -764,9 +771,13 @@ $compiledmod = function () {
                         a0 = a0.clone($scope170.$const173);
                         $ret = Sk.abstr.objectSetItem(a0, $scope170.$const174, $scope170.$const173, true);
                         Sk.builtin.changeReferences($loc, a0);
+                        debugger;
                         var $__correspondences__ = Sk.builtin.changeReferences($gbl, a0);
                         if (a0 && a0.hasOwnProperty('_uuid') && $__correspondences__.hasOwnProperty(a0._uuid)) {
                             a0 = $__correspondences__[a0._uuid];
+                        }
+                        if (v && v.hasOwnProperty('_uuid') && $__correspondences__.hasOwnProperty(v._uuid)) {
+                            v = $__correspondences__[v._uuid];
                         }
                         $blk = 3;/* allowing case fallthrough */
                     case 3: /* --- function return or resume suspension --- */
