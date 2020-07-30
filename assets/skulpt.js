@@ -14027,7 +14027,17 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
         return this._gr("lsubscr", "$ret");
     }
     else if (ctx === Sk.astnodes.Store || ctx === Sk.astnodes.AugStore) {
-        out(obj, " = ", obj, ".clone(" + data + ");");
+        //out("debugger;");
+        // If we put the list within itself, we need both references to be the same.
+        // out("if (" + data + ".hasOwnProperty('_uuid') && " + obj + "._uuid === " + data + "._uuid) {");
+        // out("  " + obj, " = ", obj, ".clone(" + obj + ");");
+        // out("  " + data + " = " + obj + ";");
+        // out("} else {");
+        out("  " + obj, " = ", obj, ".clone(" + data + ");");
+        // out("}");
+
+        out("var $__cloned_references = {};");
+        out("$__cloned_references[" + obj + "._uuid] = " + obj + ";");
 
         /**
          * Changes all the references of the object in :
@@ -14040,9 +14050,6 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
         // $ret = Sk.abstr.objectSetItem($LIST, $INDEX, $VALUE, true);
         out("$ret = Sk.abstr.objectSetItem(", obj, ",", subs, ",", data, ", true);");
 
-        out("var $__cloned_references = {};");
-        out("$__cloned_references[" + obj + "._uuid] = " + obj + ";");
-
         out("Sk.builtin.changeReferences($__cloned_references, $loc, " + obj + ");");
         out("for (var idx in window.currentPythonRunner._debugger.suspension_stack) {");
         out("  if (idx > 0) {");
@@ -14053,7 +14060,12 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
         out("  }");
         out("}");
         out("var $__correspondences__ = Sk.builtin.changeReferences($__cloned_references, $gbl, " + obj + ");");
-        //out("debugger;");
+
+        /**
+         * If some elements within the list have been cloned during the changes of references process,
+         * then we need to put those cloned elements in the list.
+         */
+        out(obj + ".updateReferencesInside($__cloned_references);");
 
         /**
          * Update the function's parameters variables if required.
@@ -23856,6 +23868,7 @@ Sk.builtin.list = function (L, canSuspend, uuid) {
 
     // Sets the UUID.
     console.log('list', v, canSuspend, uuid);
+    this._ref_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
     if (uuid === undefined) {
         this._uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
 
@@ -24501,17 +24514,53 @@ Sk.builtin.list.prototype["copy"] = new Sk.builtin.func(function (self) {
 
 });
 
+/**
+ * Updates references within a list.
+ *
+ * @param newReferences The set of new references {UUID: Object}.
+ */
+Sk.builtin.list.prototype["updateReferencesInside"] = function(newReferences) {
+    const toChange = {};
+
+    for (let it = Sk.abstr.iter(this), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
+        if (k.hasOwnProperty('_uuid') && newReferences.hasOwnProperty(k._uuid)) {
+            toChange[it.$index - 1] = newReferences[k._uuid];
+        }
+    }
+
+    for (let idx in toChange) {
+        Sk.abstr.objectSetItem(this, parseInt(idx), toChange[idx], true);
+    }
+};
+
+/**
+ * Clones a list. Used when an element is put or updated.
+ * TODO: And when it is DELETED ? Did you forget this case ?
+ *
+ * @param newElementValue The new element put or updated.
+ */
 Sk.builtin.list.prototype["clone"] = function(newElementValue) {
+    const thisInKeys = [];
     let items = [];
     for (let it = Sk.abstr.iter(this), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
         if (newElementValue.hasOwnProperty('_uuid') && k.hasOwnProperty('_uuid') && newElementValue._uuid === k._uuid) {
             items.push(newElementValue);
+        } else if (k.hasOwnProperty('_uuid') && k._uuid === this._uuid) {
+            thisInKeys.push(it.$index - 1);
+
+            items.push(this);
         } else {
             items.push(k);
         }
     }
-console.log("clone", this);
+
     const clone = new Sk.builtin.list(items, true, this._uuid);
+
+    // If the list contains itself, update those references.
+    for (let idx in thisInKeys) {
+        Sk.abstr.objectSetItem(clone, thisInKeys[idx], clone, true);
+    }
+
     clone._parents = this._parents;
 
     for (let it = Sk.abstr.iter(clone), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
@@ -29109,10 +29158,19 @@ Sk.builtin.changeReferencesRec = function (clonedReferences, $loc, parent, obj) 
     if (parentClone._parents) {
         console.log('number of parents', parentClone._parents.length);
         for (let parentUuid in parentClone._parents) {
-            const correspondencesRec = Sk.builtin.changeReferencesRec(clonedReferences, $loc, parentClone._parents[parentUuid], parentClone);
+            const parentParent = parentClone._parents[parentUuid];
 
-            for (let correspondenceRecIdx in correspondencesRec) {
-                correspondences[correspondenceRecIdx] = correspondencesRec[correspondenceRecIdx];
+
+            if (clonedReferences.hasOwnProperty(parentParent._uuid) && parentParent === clonedReferences[parentParent._uuid]) {
+                /*
+                 * Avoid the cycles : if the reference has already changed, don't go there again.
+                 */
+            } else {
+                const correspondencesRec = Sk.builtin.changeReferencesRec(clonedReferences, $loc, parentParent, parentClone);
+
+                for (let correspondenceRecIdx in correspondencesRec) {
+                    correspondences[correspondenceRecIdx] = correspondencesRec[correspondenceRecIdx];
+                }
             }
         }
     }
@@ -35215,8 +35273,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "4258f1db36bac3874ab3bfc73bb0a5895774c028",
-    date: "2020-07-28T08:36:50.989Z"
+    githash: "57466064b64dfc8aaf2afb1f225b5c1b51fda0b2",
+    date: "2020-07-30T12:17:28.399Z"
 };
 
 /**

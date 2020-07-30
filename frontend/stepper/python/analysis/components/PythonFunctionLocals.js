@@ -8,7 +8,7 @@ const PythonFunctionLocals = (props) => {
                 {props.func.variables.entrySeq().map(([name, value]) => (
                     value.cur !== undefined ?
                         <li key={name}>
-                            <PythonVariable name={name} value={value} />
+                            <PythonVariable name={name} value={value} visited={{}} />
                         </li>
                     : null
                 ))}

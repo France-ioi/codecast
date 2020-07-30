@@ -17,7 +17,7 @@ const PythonVariable = (props) => {
             {' = '}
             <span className="vardecl-value">
                 <span className="value">
-                    <PythonVariableValue cur={props.value.cur} old={props.value.old} />
+                    <PythonVariableValue cur={props.value.cur} old={props.value.old} visited={props.visited} />
                 </span>
             </span>
         </div>

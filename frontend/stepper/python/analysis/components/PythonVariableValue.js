@@ -60,14 +60,19 @@ const PythonVariableValue = (props) => {
             })
         }
 
+        const wasVisited = props.visited[props.cur._uuid];
+        props.visited[props.cur._uuid] = true;
+
         return (
             <React.Fragment>
                 <ul className="object_scope">
-                    {elements.map((element) => (
-                        <li key={element.name}>
-                            <PythonVariable name={element.name} value={element.value} />
-                        </li>
-                    ))}
+                    {wasVisited ? '...' : (
+                        elements.map((element) => (
+                            <li key={element.name}>
+                                <PythonVariable name={element.name} value={element.value} visited={props.visited}/>
+                            </li>
+                        ))
+                    )}
                 </ul>
             </React.Fragment>
         )
@@ -89,14 +94,19 @@ const PythonVariableValue = (props) => {
             });
         }
 
+        const wasVisited = props.visited[props.cur._uuid];
+        props.visited[props.cur._uuid] = true;
+
         return (
             <React.Fragment>
-                [{elements.map((element, index) => (
-                    <span key={index}>
-                        <PythonVariableValue cur={element.cur} old={element.old} />
-                        {(index + 1) < nbElements ? ', ' : null}
-                    </span>
-                ))}]
+                [{wasVisited ? '...' : (
+                    elements.map((element, index) => (
+                        <span key={index}>
+                            <PythonVariableValue cur={element.cur} old={element.old} visited={props.visited} />
+                            {(index + 1) < nbElements ? ', ' : null}
+                        </span>
+                    ))
+                )}]
             </React.Fragment>
         )
     }
@@ -123,8 +133,15 @@ const PythonVariableValue = (props) => {
             old = old.$d;
         }
 
+        const wasVisited = props.visited[props.cur._uuid];
+        props.visited[props.cur._uuid] = true;
+
         return (
-            <PythonVariableValue cur={props.cur.$d} old={old} />
+            <React.Fragment>
+                {wasVisited ? '...' : (
+                    <PythonVariableValue cur={props.cur.$d} old={old} visited={props.visited} />
+                )}
+            </React.Fragment>
         )
     }
 
