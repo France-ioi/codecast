@@ -14027,7 +14027,7 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
         return this._gr("lsubscr", "$ret");
     }
     else if (ctx === Sk.astnodes.Store || ctx === Sk.astnodes.AugStore) {
-        //out("debugger;");
+        // out("debugger;");
         // If we put the list within itself, we need both references to be the same.
         // out("if (" + data + ".hasOwnProperty('_uuid') && " + obj + "._uuid === " + data + "._uuid) {");
         // out("  " + obj, " = ", obj, ".clone(" + obj + ");");
@@ -14078,8 +14078,8 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
 
             for (let idx in localnames) {
                 const varname = localnames[idx];
-                out("if (" + varname + " && " + varname + ".hasOwnProperty('_uuid') && $__correspondences__.hasOwnProperty(" + varname + "._uuid)) {");
-                out("  " + varname + " = $__correspondences__[" + varname + "._uuid];");
+                out("if (" + varname + " && " + varname + ".hasOwnProperty('_uuid') && $__cloned_references.hasOwnProperty(" + varname + "._uuid)) {");
+                out("  " + varname + " = $__cloned_references[" + varname + "._uuid];");
                 out("}");
             }
         }
@@ -29133,18 +29133,16 @@ Sk.exportSymbol("Sk.parseTreeDump", Sk.parseTreeDump);
  * @param $loc             The internal skulpt $loc or $gbl.
  * @param parent           The object's parent.
  * @param obj              The object.
+ * @param cycle            Whether a cycle has been detected.
  *
  * @return {object} The references correspondences with key uuid and value the object.
  */
-Sk.builtin.changeReferencesRec = function (clonedReferences, $loc, parent, obj) {
+Sk.builtin.changeReferencesRec = function (clonedReferences, $loc, parent, obj, cycle) {
     if (!clonedReferences.hasOwnProperty(parent._uuid)) {
         clonedReferences[parent._uuid] = parent.clone(obj);
     }
 
     const parentClone = clonedReferences[parent._uuid];
-
-    const correspondences = {};
-    correspondences[parentClone._uuid] = parentClone;
 
     if ($loc.hasOwnProperty("__refs__")) {
         if ($loc.__refs__[parentClone._uuid]) {
@@ -29155,27 +29153,18 @@ Sk.builtin.changeReferencesRec = function (clonedReferences, $loc, parent, obj) 
         }
     }
 
-    if (parentClone._parents) {
-        console.log('number of parents', parentClone._parents.length);
+    if (!cycle && parentClone._parents) {
         for (let parentUuid in parentClone._parents) {
             const parentParent = parentClone._parents[parentUuid];
 
-
+            let cycle = false;
             if (clonedReferences.hasOwnProperty(parentParent._uuid) && parentParent === clonedReferences[parentParent._uuid]) {
-                /*
-                 * Avoid the cycles : if the reference has already changed, don't go there again.
-                 */
-            } else {
-                const correspondencesRec = Sk.builtin.changeReferencesRec(clonedReferences, $loc, parentParent, parentClone);
-
-                for (let correspondenceRecIdx in correspondencesRec) {
-                    correspondences[correspondenceRecIdx] = correspondencesRec[correspondenceRecIdx];
-                }
+                cycle = true;
             }
+
+            Sk.builtin.changeReferencesRec(clonedReferences, $loc, parentParent, parentClone, cycle);
         }
     }
-
-    return correspondences;
 };
 
 /**
@@ -29188,7 +29177,7 @@ Sk.builtin.changeReferencesRec = function (clonedReferences, $loc, parent, obj) 
  * @return {object} The references correspondences with key uuid and value the object.
  */
 Sk.builtin.changeReferences = function (clonedReferences, $loc, obj) {
-    return Sk.builtin.changeReferencesRec(clonedReferences, $loc, obj);
+    return Sk.builtin.changeReferencesRec(clonedReferences, $loc, obj, undefined, false);
 };
 
 Sk.exportSymbol("Sk.builtin.changeReferences", Sk.builtin.changeReferences);
@@ -35273,8 +35262,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "57466064b64dfc8aaf2afb1f225b5c1b51fda0b2",
-    date: "2020-07-30T12:17:28.399Z"
+    githash: "1ae081302215736940743fd15c0fbd4a0b39f053",
+    date: "2020-08-11T20:10:53.781Z"
 };
 
 /**

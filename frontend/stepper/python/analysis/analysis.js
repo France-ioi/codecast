@@ -156,9 +156,13 @@ const variablesBeginWithIgnore = [
     '__package__',
     '__file__',
     '__class__',
+    '__refs__',
     '$compareres',
     '$loadgbl',
-    '$binop'
+    '$binop',
+    '$lsubscr',
+    '$iter',
+    '$call'
 ];
 /**
  * Filter the variable names by removing those useed internally by Skulpt.
