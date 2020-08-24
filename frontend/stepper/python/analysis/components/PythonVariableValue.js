@@ -78,7 +78,7 @@ const PythonVariableValue = (props) => {
         )
     }
 
-    if (props.cur instanceof Sk.builtin.list) {
+    if (props.cur instanceof Sk.builtin.list || props.cur instanceof Sk.builtin.tuple) {
         const nbElements = props.cur.v.length;
 
         const elements = [];

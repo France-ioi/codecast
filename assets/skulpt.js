@@ -13292,10 +13292,6 @@ function Compiler (filename, st, flags, canSuspend, sourceCodeForAnnotation) {
 
     this.allUnits = [];
 
-    this.localReferencesToUpdateForPersistantVariables = [];
-    //this.localReferencesModified = false;
-    // this.localReferencesToUpdateWihoutOldValueVariables = [];
-
     this.source = sourceCodeForAnnotation ? sourceCodeForAnnotation.split("\n") : false;
 }
 
@@ -13572,14 +13568,6 @@ Compiler.prototype._gr = function (hint, rest) {
     this.u.localtemps.push(v);
 
     hookGr(v, arguments);
-
-    if (rest.substr(0, 5) === "$loc.") {
-        //debugger;
-        this.localReferencesToUpdateForPersistantVariables.push({
-            localName: rest,
-            ref: v
-        });
-    }
 
     return v;
 };
@@ -14017,24 +14005,13 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
     }
 
     if (ctx === Sk.astnodes.Load || ctx === Sk.astnodes.AugLoad) {
-        this.localReferencesToUpdateForPersistantVariables.unshift({
-            localName: obj,
-            index: subs
-        });
-
         out("$ret = Sk.abstr.objectGetItem(", obj, ",", subs, ", true);");
         this._checkSuspension();
         return this._gr("lsubscr", "$ret");
     }
     else if (ctx === Sk.astnodes.Store || ctx === Sk.astnodes.AugStore) {
-        // out("debugger;");
-        // If we put the list within itself, we need both references to be the same.
-        // out("if (" + data + ".hasOwnProperty('_uuid') && " + obj + "._uuid === " + data + "._uuid) {");
-        // out("  " + obj, " = ", obj, ".clone(" + obj + ");");
-        // out("  " + data + " = " + obj + ";");
-        // out("} else {");
+        //out("debugger;");
         out("  " + obj, " = ", obj, ".clone(" + data + ");");
-        // out("}");
 
         out("var $__cloned_references = {};");
         out("$__cloned_references[" + obj + "._uuid] = " + obj + ";");
@@ -14059,7 +14036,7 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
         out("    Sk.builtin.changeReferences($__cloned_references, $__cur_suspension__.$gbl, " + obj + ");");
         out("  }");
         out("}");
-        out("var $__correspondences__ = Sk.builtin.changeReferences($__cloned_references, $gbl, " + obj + ");");
+        out("Sk.builtin.changeReferences($__cloned_references, $gbl, " + obj + ");");
 
         /**
          * If some elements within the list have been cloned during the changes of references process,
@@ -14083,28 +14060,6 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
                 out("}");
             }
         }
-
-        // TODO: Remove this.localReferencesToUpdateForPersistantVariables
-        /*
-        for (let idx in this.localReferencesToUpdateForPersistantVariables) {
-            const localName = this.localReferencesToUpdateForPersistantVariables[idx].localName;
-            if (this.localReferencesToUpdateForPersistantVariables[idx].hasOwnProperty("ref")) {
-                const ref = this.localReferencesToUpdateForPersistantVariables[idx].ref;
-
-                out(localName, " = " + ref + ";");
-            } else {
-                const index = this.localReferencesToUpdateForPersistantVariables[idx].index;
-
-                out(localName, " = ", localName, ".clone();");
-
-                var lastObj = obj;
-                if (idx > 0) {
-                    lastObj = this.localReferencesToUpdateForPersistantVariables[idx - 1].localName;
-                }
-                out("Sk.abstr.objectSetItem(", localName, ",", index, ",", lastObj, ", true);");
-            }
-        }
-        */
 
         this._checkSuspension();
     }
@@ -15738,9 +15693,6 @@ Compiler.prototype.cbreak = function (s) {
  * @param {Sk.builtin.str=} class_for_super
  */
 Compiler.prototype.vstmt = function (s, class_for_super) {
-    //this.localReferencesModified = false;
-    this.localReferencesToUpdateForPersistantVariables = [];
-
     var i;
     var val;
     var n;
@@ -15963,17 +15915,6 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
             switch (ctx) {
                 case Sk.astnodes.Load:
                     // can't be || for loc.x = 0 or null
-                    out("console.log('test1', '" + mangled + "', '" + mangledNoPre + "');");
-
-                    if (mangled.substr(0, 5) === "$loc.") {
-                        // Warning : renders things like $loc.a = a which we don't want.
-                        /*this.localReferencesToUpdateForPersistantVariables.push({
-                            localName: mangled,
-                            ref: mangledNoPre
-                        });*/
-
-                        console.log('lcoalReffff  ', this.localReferencesToUpdateForPersistantVariables);
-                    }
 
                     return this._gr("loadname", mangled, "!==undefined?", mangled, ":Sk.misceval.loadname('", mangledNoPre, "',$gbl);");
                 case Sk.astnodes.Store:
@@ -17643,14 +17584,20 @@ for (var i = 0; i < builtinNames.length; i++) {
 /*!*********************!*\
   !*** ./src/dict.js ***!
   \*********************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
+
 
 /**
  * @constructor
  * @param {Array.<Object>} L
+ * @param uuid The uuid, if not set it will be created.
  */
-Sk.builtin.dict = function dict (L) {
+Sk.builtin.dict = function dict (L, uuid) {
     var v;
     var it, k;
     var i;
@@ -17698,6 +17645,30 @@ Sk.builtin.dict = function dict (L) {
 
     this.__class__ = Sk.builtin.dict;
     this.tp$call = undefined; // Not callable, even though constructor is
+
+    // Sets the UUID.
+    this._ref_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+    if (uuid === undefined) {
+        this._uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+
+        /*
+         * Set the parents.
+         *
+         * If uuid is provided, then it is a clone and the parents are
+         * copied during the clone.
+         */
+
+        this._parents = [];
+        for (let idx in this.buckets) {
+            const element = this.buckets[idx].items[0].rhs;
+
+            if (element.hasOwnProperty('_uuid')) {
+                element._parents[this._uuid] = this;
+            }
+        }
+    } else {
+        this._uuid = uuid;
+    }
 
     return this;
 };
@@ -18186,18 +18157,81 @@ Sk.builtin.dict.prototype["copy"] = new Sk.builtin.func(function (self) {
     return newCopy;
 });
 
-Sk.builtin.dict.prototype["clone"] = function() {
-    const newCopy = new Sk.builtin.dict([]);
+/**
+ * Clones a dict. Used when an element is put or updated.
+ *
+ * @param newElementValue The new element put or updated.
+ */
+Sk.builtin.dict.prototype["clone"] = function(newElementValue) {
+    const clone = new Sk.builtin.dict([], this._uuid);
+    const thisInKeys = [];
     for (let it = Sk.abstr.iter(this), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
         let v = this.mp$subscript(k);
         if (v === undefined) {
             v = null;
         }
 
-        newCopy.mp$ass_subscript(k, v);
+        if (v && newElementValue.hasOwnProperty('_uuid') && v.hasOwnProperty('_uuid') && newElementValue._uuid === v._uuid) {
+            clone.mp$ass_subscript(k, newElementValue);
+        } else if (v && v.hasOwnProperty('_uuid') && v._uuid === this._uuid) {
+            thisInKeys.push(k);
+
+            clone.mp$ass_subscript(k, this);
+        } else {
+            clone.mp$ass_subscript(k, v);
+        }
     }
 
-    return newCopy;
+    // If the list contains itself, update those references.
+    for (let idx in thisInKeys) {
+        clone.mp$ass_subscript(thisInKeys[idx], this);
+    }
+
+    clone._parents = this._parents;
+
+    for (let it = Sk.abstr.iter(this), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
+        let v = this.mp$subscript(k);
+        if (v === undefined) {
+            v = null;
+        }
+
+        if (v && v.hasOwnProperty('_parents')) {
+            v._parents[clone._uuid] = clone;
+        }
+    }
+
+    if (newElementValue && newElementValue.hasOwnProperty('_parents')) {
+        newElementValue._parents[clone._uuid] = clone;
+    }
+
+    return clone;
+};
+
+/**
+ * Updates references within a list.
+ *
+ * @param newReferences The set of new references {UUID: Object}.
+ */
+Sk.builtin.dict.prototype["updateReferencesInside"] = function(newReferences) {
+    const toChange = [];
+
+    for (let it = Sk.abstr.iter(this), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
+        let v = this.mp$subscript(k);
+        if (v === undefined) {
+            v = null;
+        }
+
+        if (v && v.hasOwnProperty('_uuid') && newReferences.hasOwnProperty(v._uuid)) {
+            toChange.push({
+                key: k,
+                value: newReferences[v._uuid]
+            });
+        }
+    }
+
+    for (let idx in toChange) {
+        this.mp$ass_subscript(toChange[idx].key, toChange[idx].value);
+    }
 };
 
 Sk.builtin.dict.$fromkeys = function fromkeys(self, seq, value) {
@@ -23867,7 +23901,6 @@ Sk.builtin.list = function (L, canSuspend, uuid) {
     }
 
     // Sets the UUID.
-    console.log('list', v, canSuspend, uuid);
     this._ref_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
     if (uuid === undefined) {
         this._uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
@@ -23883,7 +23916,7 @@ Sk.builtin.list = function (L, canSuspend, uuid) {
         for (let idx in v) {
             const element = v[idx];
 
-            if (element instanceof Sk.builtin.list) {
+            if (element.hasOwnProperty('_uuid')) {
                 element._parents[this._uuid] = this;
             }
         }
@@ -24535,7 +24568,6 @@ Sk.builtin.list.prototype["updateReferencesInside"] = function(newReferences) {
 
 /**
  * Clones a list. Used when an element is put or updated.
- * TODO: And when it is DELETED ? Did you forget this case ?
  *
  * @param newElementValue The new element put or updated.
  */
@@ -35262,8 +35294,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "1ae081302215736940743fd15c0fbd4a0b39f053",
-    date: "2020-08-11T20:10:53.781Z"
+    githash: "bb5bc27dd3f043e4957280bd7b19bd981c7388a2",
+    date: "2020-08-24T12:49:04.539Z"
 };
 
 /**

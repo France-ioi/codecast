@@ -162,7 +162,10 @@ const variablesBeginWithIgnore = [
     '$binop',
     '$lsubscr',
     '$iter',
-    '$call'
+    '$call',
+    '$loadtuple',
+    '$items',
+    '$elem'
 ];
 /**
  * Filter the variable names by removing those useed internally by Skulpt.
