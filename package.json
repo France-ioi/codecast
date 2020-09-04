@@ -63,7 +63,7 @@
     "lodash.memoize": "^4.1.2",
     "mysql": "^2.14.1",
     "node-range": "^0.1.0",
-    "node-sass": "^4.5.0",
+    "node-sass": "^4.13.1",
     "nodemon": "^1.12.1",
     "nu-stream": "^3.3.1",
     "packrattle": "^4.1.0",
