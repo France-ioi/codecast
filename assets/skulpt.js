@@ -13229,7 +13229,6 @@ function hookAffectation(mangled, dataToStore, debug) {
 
     // TO :   $loc.varName = window.currentPythonRunner.reportValue(value, 'varName');
     var varName = mangled.substr(5);
-
     out("if (" + dataToStore + "._uuid) {");
     out("  $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];");
     out("  if (!$loc.__refs__.hasOwnProperty(" + dataToStore + "._uuid)) {");
@@ -13376,7 +13375,6 @@ Compiler.prototype.annotateSource = function (ast) {
 
         Sk.asserts.assert(ast.lineno !== undefined && ast.col_offset !== undefined);
         out("$currLineNo = ", lineno, ";\n$currColNo = ", col_offset, ";\n\n");
-        //out("debugger;");
     }
 };
 
@@ -13931,11 +13929,13 @@ Compiler.prototype.ccall = function (e) {
         out("$ret = Sk.misceval.applyOrSuspend(",func,",undefined,undefined,",keywordArgs,",",positionalArgs,");");
     } else if (positionalArgs != "[]") {
         // out("console.log('ENTER callsimOrSuspendArray','" + func + "'," + func + "," + positionalArgs + ");");
-        out ("$ret = Sk.misceval.callsimOrSuspendArray(", func, ", ", positionalArgs, ");");
+        out("$ret = Sk.misceval.callsimOrSuspendArray(", func, ", ", positionalArgs, ");");
     } else {
         // out("console.log('ENTEER callsimOrSuspendArray','" + func + "'," + func + ");");
-        out ("$ret = Sk.misceval.callsimOrSuspendArray(", func, ");");
+        out("$ret = Sk.misceval.callsimOrSuspendArray(", func, ");");
     }
+
+    out("Sk.builtin.registerPromiseReference($ret);");
 
     this._checkSuspension(e);
 
@@ -14000,66 +14000,18 @@ Compiler.prototype.vslice = function (s, ctx, obj, dataToStore) {
 };
 
 Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
-    if (this.filename === "<stdin>.py") {
-        //debugger;
-    }
-
     if (ctx === Sk.astnodes.Load || ctx === Sk.astnodes.AugLoad) {
         out("$ret = Sk.abstr.objectGetItem(", obj, ",", subs, ", true);");
         this._checkSuspension();
         return this._gr("lsubscr", "$ret");
     }
     else if (ctx === Sk.astnodes.Store || ctx === Sk.astnodes.AugStore) {
-        //out("debugger;");
-        out("  " + obj, " = ", obj, ".clone(" + data + ");");
-
-        out("var $__cloned_references = {};");
-        out("$__cloned_references[" + obj + "._uuid] = " + obj + ";");
-
-        /**
-         * Changes all the references of the object in :
-         *   - local variables
-         *   - global variables
-         *   - functions parameters
-         *   - other stack frames (suspensions)
-         */
+        this.generateNewReference(obj, data);
 
         // $ret = Sk.abstr.objectSetItem($LIST, $INDEX, $VALUE, true);
         out("$ret = Sk.abstr.objectSetItem(", obj, ",", subs, ",", data, ", true);");
 
-        out("Sk.builtin.changeReferences($__cloned_references, $loc, " + obj + ");");
-        out("for (var idx in window.currentPythonRunner._debugger.suspension_stack) {");
-        out("  if (idx > 0) {");
-        out("    var $__cur_suspension__ = window.currentPythonRunner._debugger.suspension_stack[idx];");
-        out("    Sk.builtin.changeReferences($__cloned_references, $__cur_suspension__.$tmps, " + obj + ");");
-        out("    Sk.builtin.changeReferences($__cloned_references, $__cur_suspension__.$loc, " + obj + ");");
-        out("    Sk.builtin.changeReferences($__cloned_references, $__cur_suspension__.$gbl, " + obj + ");");
-        out("  }");
-        out("}");
-        out("Sk.builtin.changeReferences($__cloned_references, $gbl, " + obj + ");");
-
-        /**
-         * If some elements within the list have been cloned during the changes of references process,
-         * then we need to put those cloned elements in the list.
-         */
-        out(obj + ".updateReferencesInside($__cloned_references);");
-
-        /**
-         * Update the function's parameters variables if required.
-         *
-         * Skulpt access those variables directly by their name.
-         * eg: test(a) has a "var a" in the local scope.
-         */
-        if (this.u.localnames.length) {
-            const localnames = [...new Set(this.u.localnames)];
-
-            for (let idx in localnames) {
-                const varname = localnames[idx];
-                out("if (" + varname + " && " + varname + ".hasOwnProperty('_uuid') && $__cloned_references.hasOwnProperty(" + varname + "._uuid)) {");
-                out("  " + varname + " = $__cloned_references[" + varname + "._uuid];");
-                out("}");
-            }
-        }
+        this.updateReferences(obj);
 
         this._checkSuspension();
     }
@@ -14068,6 +14020,81 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
     }
     else {
         Sk.asserts.fail("handlesubscr fail");
+    }
+};
+
+/**
+ * Generates a new reference for an object.
+ *
+ * @param objVariableName The object's variable name.
+ * @param data            The object's data.
+ */
+Compiler.prototype.generateNewReference = function(objVariableName, data) {
+    out("  " + objVariableName, " = ", objVariableName, ".clone(" + data + ");");
+
+    out("var $__cloned_references = {};");
+    out("$__cloned_references[" + objVariableName + "._uuid] = " + objVariableName + ";");
+
+    out("if (" + objVariableName + ".hasOwnProperty('$d')) {");
+    out("  $__cloned_references[" + objVariableName + ".$d._uuid] = " + objVariableName + ".$d;");
+    out("}");
+};
+
+/**
+ * Updates all references of an object.
+ *
+ * @param obj The object.
+ */
+Compiler.prototype.updateReferences = function(obj) {
+    /**
+     * Changes all the references of the object in :
+     *   - Local variables
+     *   - Global variables
+     *   - Functions parameters
+     *   - The promises references in the debugger
+     *   - The object itself
+     *   - Other stack frames (suspensions)
+     */
+
+    out("Sk.builtin.changeReferences($__cloned_references, $loc, " + obj + ");");
+    out("for (var idx in window.currentPythonRunner._debugger.suspension_stack) {");
+    out("  if (idx > 0) {");
+    out("    var $__cur_suspension__ = window.currentPythonRunner._debugger.suspension_stack[idx];");
+    out("    while ($__cur_suspension__) {");
+    out("      if ($__cur_suspension__.hasOwnProperty('$gbl')) {");
+    out("        Sk.builtin.changeReferences($__cloned_references, $__cur_suspension__.$tmps, " + obj + ");");
+    out("        Sk.builtin.changeReferences($__cloned_references, $__cur_suspension__.$loc, " + obj + ");");
+    out("        Sk.builtin.changeReferences($__cloned_references, $__cur_suspension__.$gbl, " + obj + ");");
+    out("      }");
+    out("      $__cur_suspension__ = $__cur_suspension__.child;");
+    out("    }");
+    out("  }");
+    out("}");
+    out("Sk.builtin.changeReferences($__cloned_references, $gbl, " + obj + ");");
+
+    out("window.currentPythonRunner._debugger.updatePromiseReference(" + obj + ");");
+
+    /**
+     * If some elements within the list have been cloned during the changes of references process,
+     * then we need to put those cloned elements in the list.
+     */
+    out(obj + ".updateReferencesInside($__cloned_references);");
+
+    /**
+     * Update the function's parameters variables if required.
+     *
+     * Skulpt access those variables directly by their name.
+     * eg: test(a) has a "var a" in the local scope.
+     */
+    if (this.u.localnames.length) {
+        const localnames = [...new Set(this.u.localnames)];
+
+        for (let idx in localnames) {
+            const varname = localnames[idx];
+            out("if (" + varname + " && " + varname + ".hasOwnProperty('_uuid') && $__cloned_references.hasOwnProperty(" + varname + "._uuid)) {");
+            out("  " + varname + " = $__cloned_references[" + varname + "._uuid];");
+            out("}");
+        }
     }
 };
 
@@ -14213,10 +14240,15 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
                     break;
                 case Sk.astnodes.Store:
                     out("console.log(" + val + ");");
-                    out(val, " = ", val, ".clone();");
-                    out("console.log(" + val + ");");
-                    //out("debugger;");
+
+                    this.generateNewReference(val, data);
+
                     out("$ret = Sk.abstr.sattr(", val, ",", mname, ",", data, ", true);");
+                    out("debugger;");
+                    out("Sk.builtin.registerParentReferenceInChild(" + val + ", " + data + ");");
+
+                    this.updateReferences(val);
+
                     this._checkSuspension(e);
                     break;
                 case Sk.astnodes.Del:
@@ -14244,11 +14276,7 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
 
                     out("$ret=undefined;");
                     out("if(", data, "!==undefined){");
-                    if (this.filename === "<stdin>.py") {
-                        //this.localReferencesModified = true;
-                        //debugger;
-                    }
-                    out("$ret=Sk.abstr.objectSetItem(",augvar,",",augsubs,",",data,", true)");
+                    out("  $ret=Sk.abstr.objectSetItem(",augvar,",",augsubs,",",data,", true)");
                     out("}");
                     this._checkSuspension(e);
                     break;
@@ -16159,11 +16187,7 @@ Sk.compile = function (source, filename, mode, canSuspend) {
     // Restore the global __future__ flags
     Sk.__future__ = savedFlags;
 
-    var ret = "";
-    if (this.filename !== "<stdin>.py") {
-        //ret = "debugger;";
-    }
-    ret += "$compiledmod = function() {" + c.result.join("") + "\nreturn " + funcname + ";}();";
+    var ret = "$compiledmod = function() {" + c.result.join("") + "\nreturn " + funcname + ";}();";
 
     return {
         funcname: "$compiledmod",
@@ -17658,13 +17682,11 @@ Sk.builtin.dict = function dict (L, uuid) {
          * copied during the clone.
          */
 
-        this._parents = [];
+        this._parents = {};
         for (let idx in this.buckets) {
             const element = this.buckets[idx].items[0].rhs;
 
-            if (element.hasOwnProperty('_uuid')) {
-                element._parents[this._uuid] = this;
-            }
+            Sk.builtin.registerParentReferenceInChild(this, element);
         }
     } else {
         this._uuid = uuid;
@@ -18171,7 +18193,7 @@ Sk.builtin.dict.prototype["clone"] = function(newElementValue) {
             v = null;
         }
 
-        if (v && newElementValue.hasOwnProperty('_uuid') && v.hasOwnProperty('_uuid') && newElementValue._uuid === v._uuid) {
+        if (v && newElementValue && newElementValue.hasOwnProperty('_uuid') && v.hasOwnProperty('_uuid') && newElementValue._uuid === v._uuid) {
             clone.mp$ass_subscript(k, newElementValue);
         } else if (v && v.hasOwnProperty('_uuid') && v._uuid === this._uuid) {
             thisInKeys.push(k);
@@ -18184,7 +18206,7 @@ Sk.builtin.dict.prototype["clone"] = function(newElementValue) {
 
     // If the list contains itself, update those references.
     for (let idx in thisInKeys) {
-        clone.mp$ass_subscript(thisInKeys[idx], this);
+        clone.mp$ass_subscript(thisInKeys[idx], clone);
     }
 
     clone._parents = this._parents;
@@ -18195,20 +18217,16 @@ Sk.builtin.dict.prototype["clone"] = function(newElementValue) {
             v = null;
         }
 
-        if (v && v.hasOwnProperty('_parents')) {
-            v._parents[clone._uuid] = clone;
-        }
+        Sk.builtin.registerParentReferenceInChild(clone, v);
     }
 
-    if (newElementValue && newElementValue.hasOwnProperty('_parents')) {
-        newElementValue._parents[clone._uuid] = clone;
-    }
+    Sk.builtin.registerParentReferenceInChild(clone, newElementValue);
 
     return clone;
 };
 
 /**
- * Updates references within a list.
+ * Updates references within a dict.
  *
  * @param newReferences The set of new references {UUID: Object}.
  */
@@ -18221,7 +18239,7 @@ Sk.builtin.dict.prototype["updateReferencesInside"] = function(newReferences) {
             v = null;
         }
 
-        if (v && v.hasOwnProperty('_uuid') && newReferences.hasOwnProperty(v._uuid)) {
+        if (v && newReferences && v.hasOwnProperty('_uuid') && newReferences.hasOwnProperty(v._uuid)) {
             toChange.push({
                 key: k,
                 value: newReferences[v._uuid]
@@ -21990,6 +22008,7 @@ Sk.doOneTimeInitialization = function (canSuspend) {
             child.tp$base = bases[0];
         }
         child["$d"] = new Sk.builtin.dict([]);
+        console.log("Sk.doOneTimeInitialization: reference ?");
         child["$d"].mp$ass_subscript(Sk.builtin.type.basesStr_, new Sk.builtin.tuple(bases));
         child["$d"].mp$ass_subscript(Sk.builtin.type.mroStr_, child.tp$mro);
     };
@@ -23912,13 +23931,11 @@ Sk.builtin.list = function (L, canSuspend, uuid) {
          * copied during the clone.
          */
 
-        this._parents = [];
+        this._parents = {};
         for (let idx in v) {
             const element = v[idx];
 
-            if (element.hasOwnProperty('_uuid')) {
-                element._parents[this._uuid] = this;
-            }
+            Sk.builtin.registerParentReferenceInChild(this, element);
         }
     } else {
         this._uuid = uuid;
@@ -24596,14 +24613,10 @@ Sk.builtin.list.prototype["clone"] = function(newElementValue) {
     clone._parents = this._parents;
 
     for (let it = Sk.abstr.iter(clone), k = it.tp$iternext(); k !== undefined; k = it.tp$iternext()) {
-        if (k.hasOwnProperty('_parents')) {
-            k._parents[clone._uuid] = clone;
-        }
+        Sk.builtin.registerParentReferenceInChild(clone, k);
     }
 
-    if (newElementValue && newElementValue.hasOwnProperty('_parents')) {
-        newElementValue._parents[clone._uuid] = clone;
-    }
+    Sk.builtin.registerParentReferenceInChild(clone, newElementValue);
 
     return clone;
 };
@@ -28196,8 +28209,13 @@ Sk.builtin.numtype.prototype.nb$ispositive = function () {
 /*!***********************!*\
   !*** ./src/object.js ***!
   \***********************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
+
 
 /**
  * @constructor
@@ -28213,6 +28231,21 @@ Sk.builtin.object = function () {
     if (!(this instanceof Sk.builtin.object)) {
         return new Sk.builtin.object();
     }
+
+    // Sets the UUID.
+    this._ref_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+    // if (uuid === undefined) {
+
+    /**
+     * This constructor is NOT called when an object is cloned.
+     * So the _uuid is always new.
+     */
+
+    this._uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+
+    /**
+     * The internal dict $d doesn't exist here, so it's parent (this), is set elsewhere.
+     */
 
     return this;
 };
@@ -28404,7 +28437,7 @@ Sk.builtin.object.prototype.ob$type = Sk.builtin.type.makeIntoTypeObj("object", 
 Sk.builtin.object.prototype.ob$type.sk$klass = undefined;   // Nonsense for closure compiler
 Sk.builtin.object.prototype.tp$descr_set = undefined;   // Nonsense for closure compiler
 
-Sk.builtin.object.prototype["clone"] = function() {
+Sk.builtin.object.prototype["clone"] = function(newElementValue, clonedReferences) {
     /**
      * Warning : Only clone the content, not the reference itself.
      * Then only the internal dict will be persistent and not the object itself.
@@ -28417,11 +28450,38 @@ Sk.builtin.object.prototype["clone"] = function() {
     // Try to overcome to above warning.
     const newObject = Object.create(this);
 
-    if (this.hasOwnProperty("$d")) {
-        newObject["$d"] = this["$d"].clone();
+    // New reference id.
+    newObject._ref_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+
+    for (let idx in this) {
+        if (idx === '_ref_uuid') {
+            // Ignore.
+        }
+        else if (idx === '$d') {
+            if (!clonedReferences || !clonedReferences.hasOwnProperty(newObject.$d._uuid)) {
+                newObject.$d = newObject.$d.clone(newElementValue);
+                Sk.builtin.registerParentReferenceInChild(newObject, newObject.$d);
+            } else {
+                // If the internal dict has already been cloned, just copy it.
+                newObject.$d = clonedReferences[newObject.$d._uuid];
+            }
+        } else {
+            newObject[idx] = this[idx];
+        }
     }
-    //debugger;
+
     return newObject;
+};
+
+/**
+ * Updates references within an object.
+ *
+ * @param newReferences The set of new references {UUID: Object}.
+ */
+Sk.builtin.object.prototype["updateReferencesInside"] = function(newReferences) {
+    if (this.hasOwnProperty('$d') && newReferences.hasOwnProperty(this.$d._uuid)) {
+        this.$d = newReferences[this.$d._uuid];
+    }
 };
 
 /** Default implementations of dunder methods found in all Python objects */
@@ -29158,6 +29218,38 @@ Sk.exportSymbol("Sk.parseTreeDump", Sk.parseTreeDump);
  */
 
 /**
+ * Register a promise reference.
+ *
+ * @param susp The suspension.
+ */
+Sk.builtin.registerPromiseReference = function(susp) {
+    if (susp && susp.child && susp.child.$tmps) {
+        var __selfArgName = susp.child._argnames[0];
+        if (susp.child.$tmps[__selfArgName] && susp.child.$tmps[__selfArgName]._uuid) {
+            window.currentPythonRunner._debugger.registerPromiseReference(susp.child.$tmps[__selfArgName]);
+        }
+    }
+};
+
+/**
+ * Register the parent reference of one of its child.
+ *
+ * @param parent The parent.
+ * @param child  The child.
+ */
+Sk.builtin.registerParentReferenceInChild = function(parent, child) {
+    if (!child || !parent || !child.hasOwnProperty('_uuid') || !parent.hasOwnProperty('_uuid')) {
+        return;
+    }
+
+    if (!child.hasOwnProperty('_parents')) {
+        child._parents = {};
+    }
+
+    child._parents[parent._uuid] = parent;
+};
+
+/**
  * Changes recursively all the references of an object.
  * At first call, parent is the object and obj is undefined.
  *
@@ -29171,7 +29263,11 @@ Sk.exportSymbol("Sk.parseTreeDump", Sk.parseTreeDump);
  */
 Sk.builtin.changeReferencesRec = function (clonedReferences, $loc, parent, obj, cycle) {
     if (!clonedReferences.hasOwnProperty(parent._uuid)) {
-        clonedReferences[parent._uuid] = parent.clone(obj);
+        clonedReferences[parent._uuid] = parent.clone(obj, clonedReferences);
+
+        if (parent.hasOwnProperty('$d')) {
+            clonedReferences[parent.$d._uuid] = parent.$d;
+        }
     }
 
     const parentClone = clonedReferences[parent._uuid];
@@ -29187,6 +29283,10 @@ Sk.builtin.changeReferencesRec = function (clonedReferences, $loc, parent, obj, 
 
     if (!cycle && parentClone._parents) {
         for (let parentUuid in parentClone._parents) {
+            if (clonedReferences.hasOwnProperty(parentUuid)) {
+                parentClone._parents[parentUuid] = clonedReferences[parentUuid];
+            }
+
             const parentParent = parentClone._parents[parentUuid];
 
             let cycle = false;
@@ -29212,6 +29312,7 @@ Sk.builtin.changeReferences = function (clonedReferences, $loc, obj) {
     return Sk.builtin.changeReferencesRec(clonedReferences, $loc, obj, undefined, false);
 };
 
+Sk.exportSymbol("Sk.builtin.registerParentReferenceInChild", Sk.builtin.registerParentReferenceInChild);
 Sk.exportSymbol("Sk.builtin.changeReferences", Sk.builtin.changeReferences);
 
 
@@ -29980,6 +30081,8 @@ Sk.builtin.slice = function slice (start, stop, step) {
                                       Sk.builtin.slice$stop, this.stop,
                                       Sk.builtin.slice$step, this.step]);
 
+    console.log("Sk.builtin.slice: reference ?");
+
     return this;
 };
 
@@ -30099,8 +30202,8 @@ Sk.builtin.slice.prototype["indices"] = new Sk.builtin.func(function (self, leng
     var sss = self.slice_indices_(length);
 
     return new Sk.builtin.tuple([
-        new Sk.builtin.int_(sss[0]), 
-        new Sk.builtin.int_(sss[1]), 
+        new Sk.builtin.int_(sss[0]),
+        new Sk.builtin.int_(sss[1]),
         new Sk.builtin.int_(sss[2])
     ]);
 });
@@ -34545,6 +34648,7 @@ Sk.builtin.type = function (name, bases, dict) {
             }
 
             this["$d"] = new Sk.builtin.dict([]);
+            Sk.builtin.registerParentReferenceInChild(this, this["$d"]);
             this["$d"].mp$ass_subscript(new Sk.builtin.str("__dict__"), this["$d"]);
         };
 
@@ -35294,8 +35398,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "bb5bc27dd3f043e4957280bd7b19bd981c7388a2",
-    date: "2020-08-24T12:49:04.539Z"
+    githash: "e69082c2d7930c4662eb698e882205e9fb9360bd",
+    date: "2020-09-08T07:53:47.138Z"
 };
 
 /**

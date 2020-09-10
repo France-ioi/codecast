@@ -57,7 +57,7 @@ const PythonVariableValue = (props) => {
                     cur: element.rhs,
                     old: old
                 }
-            })
+            });
         }
 
         const wasVisited = props.visited[props.cur._uuid];

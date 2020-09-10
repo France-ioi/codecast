@@ -21,7 +21,7 @@ var Sk = Sk || {}; //jshint ignore:line
  * - this.output_callback._onStepSuccess(e);
  */
 
-var DEBUG_DEBUGGER = false;
+var DEBUG_DEBUGGER = true;
 var debuggerLog = function() {
     if (DEBUG_DEBUGGER) {
         // 1. Convert args to a normal array
@@ -66,6 +66,64 @@ Sk.Debugger = function(filename, output_callback) {
     this.output_callback = output_callback;
     this.step_mode = false;
     this.filename = filename;
+
+    /**
+     * Contains the last references of objects that will be retrieved by Skulpt's promises.
+     *
+     * This is required because the way Skulpt handles classes is so as it stores the reference of
+     * the class before calling a method, and then retrieves it after. Since the codecast implementation
+     * modify the references each time something is modified into an object, we need to get the updated
+     * object, hence the last reference of that object when we want to get the result of the promise.
+     *
+     * Storing references of objects would disable the garbage collector to clear those objects when necessary,
+     * so we also want to clean those references when there are not needed anymore.
+     * Since it's possible to have a method of an object that calls another, or itself recursively, we store
+     * the number of use of the reference, so we know when we can safely clear the reference.
+     *
+     * {
+     *     UUID_OBJ_1 : {
+     *         reference: The object 1,
+     *         nb: The number of use
+     *     },
+     *     UUID_OBJ_2 : {
+     *         reference: The object 2,
+     *         nb: The number of use
+     *     }
+     * }
+     *
+     * When nb becomes 0, we can remove the reference as we don't need it anymore.
+     */
+    this._promise_references = {};
+};
+
+/**
+ * Add a reference of an object that will be retrieved later using a Skulpt promise, and which
+ * may later have a new reference.
+ *
+ * @param object The object.
+ */
+Sk.Debugger.prototype.registerPromiseReference = function(object) {
+    if (object.hasOwnProperty('_uuid')) {
+        if (!this._promise_references.hasOwnProperty(object._uuid)) {
+            this._promise_references[object._uuid] = {
+                reference: object,
+                nb: 0
+            }
+        }
+
+        this._promise_references[object._uuid].nb++;
+    }
+};
+
+/**
+ * Updates the promise reference of an object if it exists.
+ *
+ * @param object The new object reference.
+ */
+Sk.Debugger.prototype.updatePromiseReference = function(object) {
+    if (object.hasOwnProperty('_uuid') && this._promise_references.hasOwnProperty(object._uuid)) {
+        this._promise_references[object._uuid].reference = object;
+    }
 };
 
 Sk.Debugger.prototype.print = function(txt) {
@@ -287,6 +345,19 @@ Sk.Debugger.prototype.resume = function(resolve, reject) {
 
                     self.success(value, resolve, reject);
                 });
+            } else if (value.hasOwnProperty('_uuid')) {
+                /**
+                 * In the case the value is a class, its reference may have changed since the
+                 * creation of the Promise, which is done before the call to a method.
+                 * We want to get its last reference.
+                 */
+                value = self._promise_references[value._uuid].reference;
+                self._promise_references[value._uuid].nb--;
+                if (self._promise_references[value._uuid].nb < 1) {
+                    delete self._promise_references[value._uuid];
+                }
+
+                self.success(value, resolve, reject);
             } else {
                 self.success(value, resolve, reject);
             }

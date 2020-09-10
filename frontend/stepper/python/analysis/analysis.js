@@ -69,7 +69,7 @@ export const analyseSkulptState = function (suspensions, lastAnalysis) {
  *
  * @returns {boolean}
  */
-var isProgramSuspension = function(suspension) {
+const isProgramSuspension = function(suspension) {
     return suspension.hasOwnProperty('$lineno');
 };
 
@@ -165,7 +165,8 @@ const variablesBeginWithIgnore = [
     '$call',
     '$loadtuple',
     '$items',
-    '$elem'
+    '$elem',
+    '$lattr'
 ];
 /**
  * Filter the variable names by removing those useed internally by Skulpt.
