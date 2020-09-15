@@ -1,8 +1,15 @@
 .object-toggle {
   cursor: pointer;
 }
+.object-toggle .toggle-icon {
+  color: #b8b246;
+}
 .object-toggle:hover .toggle-icon {
-  color: #aaaaaa;
+  color: #000000;
+}
+.object-toggle-open {
+  display: inline-block;
+  min-width: 60px;
 }
 
 .function-name {
