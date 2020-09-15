@@ -70,5 +70,3 @@ tab = [Test1(1), Test2(2)]
 test.a.tab = tab
 test.a.tab[1].a = 42
 print(test.a.tab[1].a)
-
-

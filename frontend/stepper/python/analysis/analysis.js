@@ -168,8 +168,9 @@ const variablesBeginWithIgnore = [
     '$elem',
     '$lattr'
 ];
+
 /**
- * Filter the variable names by removing those useed internally by Skulpt.
+ * Filter the variable names by removing those used internally by Skulpt.
  *
  * @param {Array} variableNames The names.
  *

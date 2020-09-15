@@ -28,6 +28,7 @@ $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
 
 @import "./player/style.scss";
 @import "./editor/style.scss";
+@import "python";
 
 html {
     margin-left: calc(100vw - 100%);

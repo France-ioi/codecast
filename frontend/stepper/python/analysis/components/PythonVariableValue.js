@@ -31,6 +31,7 @@ const PythonVariableValue = (props) => {
          */
 
         const elements = [];
+        let isEmpty = true;
         for (let hashKey in props.cur.buckets) {
             const element = props.cur.buckets[hashKey].items[0];
 
@@ -58,22 +59,37 @@ const PythonVariableValue = (props) => {
                     old: old
                 }
             });
+            isEmpty = false;
         }
 
         const wasVisited = props.visited[props.cur._uuid];
-        props.visited[props.cur._uuid] = true;
+        const visited = {
+            ...props.visited,
+
+        }
+        visited[props.cur._uuid] = true;
 
         return (
             <React.Fragment>
-                <ul className="object_scope">
-                    {wasVisited ? '...' : (
-                        elements.map((element) => (
-                            <li key={element.name}>
-                                <PythonVariable name={element.name} value={element.value} visited={props.visited}/>
-                            </li>
-                        ))
-                    )}
-                </ul>
+                {props.opened ? (
+                    <ul className="object_scope">
+                        {wasVisited ? '...' : (
+                            (isEmpty) ? (
+                                <span className="value-empty">&lt;&gt;</span>
+                            ) : (
+                                elements.map((element) => (
+                                    <li key={element.name}>
+                                        <PythonVariable name={element.name} value={element.value} visited={visited}/>
+                                    </li>
+                                ))
+                            )
+                        )}
+                    </ul>
+                ) : (
+                    <span className="value-object-closed">
+                        &lt;obj&gt;
+                    </span>
+                )}
             </React.Fragment>
         )
     }
@@ -95,14 +111,18 @@ const PythonVariableValue = (props) => {
         }
 
         const wasVisited = props.visited[props.cur._uuid];
-        props.visited[props.cur._uuid] = true;
+        const visited = {
+            ...props.visited,
+
+        }
+        visited[props.cur._uuid] = true;
 
         return (
             <React.Fragment>
                 [{wasVisited ? '...' : (
                     elements.map((element, index) => (
                         <span key={index}>
-                            <PythonVariableValue cur={element.cur} old={element.old} visited={props.visited} />
+                            <PythonVariableValue cur={element.cur} old={element.old} visited={visited} />
                             {(index + 1) < nbElements ? ', ' : null}
                         </span>
                     ))
@@ -114,7 +134,7 @@ const PythonVariableValue = (props) => {
     if (props.cur instanceof Sk.builtin.str) {
         return (
             <React.Fragment>
-                <span>"{props.cur.v}"</span>
+                <span className="value-string">"{props.cur.v}"</span>
                 {(props.old && (props.cur.v !== props.old.v)) ? <span className="value-previous">"{props.old.v}"</span> : null }
             </React.Fragment>
         )
@@ -134,12 +154,16 @@ const PythonVariableValue = (props) => {
         }
 
         const wasVisited = props.visited[props.cur._uuid];
-        props.visited[props.cur._uuid] = true;
+        const visited = {
+            ...props.visited,
+
+        }
+        visited[props.cur._uuid] = true;
 
         return (
             <React.Fragment>
                 {wasVisited ? '...' : (
-                    <PythonVariableValue cur={props.cur.$d} old={old} visited={props.visited} />
+                    <PythonVariableValue cur={props.cur.$d} old={old} visited={visited} opened={props.opened} />
                 )}
             </React.Fragment>
         )
@@ -147,7 +171,7 @@ const PythonVariableValue = (props) => {
 
     return (
         <React.Fragment>
-            <span>{props.cur.v}</span>
+            <span className="value-scalar">{props.cur.v}</span>
             {(props.old && (props.cur.v !== props.old.v)) ? <span className="value-previous">{props.old.v}</span> : null }
         </React.Fragment>
     );

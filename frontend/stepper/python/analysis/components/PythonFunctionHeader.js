@@ -11,7 +11,12 @@ const PythonFunctionHeader = (props) => {
     return (
         <div className="scope-function-title">
             <span>
-              {props.func.name ? (props.func.name + ' (') : null}
+              {props.func.name ? (
+                  <span>
+                      <span className="function-name">{props.func.name}</span>
+                      {' ('}
+                  </span>
+              ) : null}
                 <span>
                     {args.map(function(value, index) {
                         return (

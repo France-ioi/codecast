@@ -1,0 +1,27 @@
+.object-toggle {
+  cursor: pointer;
+}
+.object-toggle:hover .toggle-icon {
+  color: #aaaaaa;
+}
+
+.function-name {
+  color: #53b846;
+}
+.variable-name {
+  color: #d25ff8;
+}
+
+.value-string {
+  color: #f85f5f;
+}
+.value-scalar {
+  color: #5f86f8;
+}
+.value-empty {
+  color: #b8b246;
+}
+
+.value-object-closed {
+  color: #b8b246;
+}

@@ -14244,7 +14244,6 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
                     this.generateNewReference(val, data);
 
                     out("$ret = Sk.abstr.sattr(", val, ",", mname, ",", data, ", true);");
-                    out("debugger;");
                     out("Sk.builtin.registerParentReferenceInChild(" + val + ", " + data + ");");
 
                     this.updateReferences(val);
@@ -35398,8 +35397,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "e69082c2d7930c4662eb698e882205e9fb9360bd",
-    date: "2020-09-08T07:53:47.138Z"
+    githash: "1479d34e4748a8d169a0986c17c93250fbed8622",
+    date: "2020-09-11T16:01:08.476Z"
 };
 
 /**
