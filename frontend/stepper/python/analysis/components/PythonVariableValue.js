@@ -1,19 +1,42 @@
 import * as React from 'react';
 import PythonVariable from "./PythonVariable";
+import {connect} from "react-redux";
 
-class PythonVariableValue extends React.Component {
+class PythonVariableValue extends React.PureComponent {
     constructor(props) {
         super(props);
 
+        let opened = false;
+        if (props.hasOwnProperty('defaultopened')) {
+            opened = props.defaultopened;
+        } else if (this.props.cur instanceof Sk.builtin.list || this.props.cur instanceof Sk.builtin.tuple) {
+            opened = true;
+        }
+
         this.state = {
-            opened: false
+            opened: opened
         };
     }
 
+    isOpened = () => {
+        let opened = false;
+        if (this.props.cur.hasOwnProperty('_uuid')) {
+            if (this.props.openedPaths.has(this.props.path)) {
+                opened = this.props.openedPaths.get(this.props.path);
+            } else if (this.props.hasOwnProperty('defaultopened')) {
+                opened = this.props.defaultopened;
+            } else if (this.props.cur instanceof Sk.builtin.list || this.props.cur instanceof Sk.builtin.tuple) {
+                opened = true;
+            }
+        }
+
+        return opened;
+    }
+
     toggleOpened = () => {
-        this.setState((state) => ({
-            opened: !state.opened
-        }));
+        const isOpened = !this.isOpened();
+
+        this.props.toggle(this.props.scopeIndex, this.props.path, isOpened);
     }
 
     render() {
@@ -67,12 +90,15 @@ class PythonVariableValue extends React.Component {
                     }
                 }
 
+                const path = this.props.path + ':' + element.lhs.v;
+
                 elements.push({
                     name: element.lhs.v,
                     value: {
                         cur: element.rhs,
                         old: old
-                    }
+                    },
+                    path: path
                 });
                 isEmpty = false;
             }
@@ -86,7 +112,7 @@ class PythonVariableValue extends React.Component {
 
             return (
                 <React.Fragment>
-                    {this.state.opened ? (
+                    {this.isOpened() ? (
                         <React.Fragment>
                             <span className="object-toggle object-toggle-open" onClick={this.toggleOpened}>
                                 <span className="toggle-icon">▾</span>
@@ -98,7 +124,14 @@ class PythonVariableValue extends React.Component {
                                     ) : (
                                         elements.map((element) => (
                                             <li key={element.name}>
-                                                <PythonVariable name={element.name} value={element.value} visited={visited}/>
+                                                <PythonVariable
+                                                    name={element.name}
+                                                    value={element.value}
+                                                    visited={visited}
+                                                    path={element.path}
+                                                    openedPaths={this.props.openedPaths}
+                                                    scopeIndex={this.props.scopeIndex}
+                                                />
                                             </li>
                                         ))
                                     )
@@ -127,9 +160,12 @@ class PythonVariableValue extends React.Component {
                     old = this.props.old.v[idx];
                 }
 
+                const path = this.props.path + ':' + idx;
+
                 elements.push({
                     cur: this.props.cur.v[idx],
-                    old: old
+                    old: old,
+                    path: path
                 });
             }
 
@@ -142,14 +178,35 @@ class PythonVariableValue extends React.Component {
 
             return (
                 <React.Fragment>
-                    [{wasVisited ? '...' : (
-                    elements.map((element, index) => (
-                        <span key={index}>
-                                <PythonVariableValue cur={element.cur} old={element.old} visited={visited}/>
-                            {(index + 1) < nbElements ? ', ' : null}
+                    {this.isOpened() ? (
+                        <React.Fragment>
+                            <span className="list-toggle list-toggle-open" onClick={this.toggleOpened}>
+                                <span className="toggle-icon">▾</span>
                             </span>
-                    ))
-                )}]
+                            [{wasVisited ? '...' : (
+                                elements.map((element, index) => (
+                                    <span key={index}>
+                                        <ConnectedPythonVariableValue
+                                            cur={element.cur}
+                                            old={element.old}
+                                            visited={visited}
+                                            path={element.path}
+                                            openedPaths={this.props.openedPaths}
+                                            scopeIndex={this.props.scopeIndex}
+                                        />
+                                        {(index + 1) < nbElements ? ', ' : null}
+                                    </span>
+                                ))
+                            )}]
+                        </React.Fragment>
+                    ) : (
+                        <span className="list-toggle" onClick={this.toggleOpened}>
+                            <span className="toggle-icon">▸</span>
+                            <span className="value-list-closed">
+                                &lt;list&gt;
+                            </span>
+                        </span>
+                    )}
                 </React.Fragment>
             )
         }
@@ -188,7 +245,14 @@ class PythonVariableValue extends React.Component {
             return (
                 <React.Fragment>
                     {wasVisited ? '...' : (
-                        <PythonVariableValue cur={this.props.cur.$d} old={old} visited={visited} />
+                        <ConnectedPythonVariableValue
+                            cur={this.props.cur.$d}
+                            old={old}
+                            visited={visited}
+                            path={this.props.path}
+                            openedPaths={this.props.openedPaths}
+                            scopeIndex={this.props.scopeIndex}
+                        />
                     )}
                 </React.Fragment>
             )
@@ -198,10 +262,26 @@ class PythonVariableValue extends React.Component {
             <React.Fragment>
                 <span className="value-scalar">{this.props.cur.v}</span>
                 {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
-                    <span className="value-previous">{this.props.old.v}</span> : null}
+                    <span className="value-previous">{this.props.old.v}</span>
+                : null}
             </React.Fragment>
         );
     }
 }
 
-export default PythonVariableValue;
+const mapDispatchToProps = (dispatch) => {
+    return {
+        toggle: (scopeIndex, path, isOpened) => dispatch({
+            type: 'StackView.Path.Toggle',
+            payload: {
+                scopeIndex,
+                path,
+                isOpened
+            }
+        })
+    }
+}
+
+const ConnectedPythonVariableValue = connect(null, mapDispatchToProps)(PythonVariableValue);
+
+export default ConnectedPythonVariableValue;

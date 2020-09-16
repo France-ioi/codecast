@@ -3,7 +3,7 @@ import {take, put, takeEvery, call, select} from 'redux-saga/effects';
 
 import { writeString } from "../io/terminal";
 import PythonInterpreter from "./python_interpreter";
-import {isEmptyObject} from "../../utils/javascript";
+import update from "immutability-helper";
 
 const pythonInterpreterChannel = channel();
 
@@ -84,7 +84,38 @@ export default function (bundle, deps) {
     }
   });
 
+  bundle.defineAction('stackViewPathToggle', 'StackView.Path.Toggle');
+  bundle.addReducer('stackViewPathToggle', stackViewPathToggle);
+
+  function stackViewPathToggle (state, action) {
+    const { scopeIndex, path, isOpened } = action.payload;
+
+    const newState = state.updateIn(['stepper', 'currentStepperState'], currentStepperState => {
+      return {
+        ...currentStepperState,
+        analysis: {
+          ...currentStepperState.analysis,
+          functionCallStack: currentStepperState.analysis.functionCallStack.update(scopeIndex, curFunctionCallStack => {
+            return {
+              ...curFunctionCallStack,
+              openedPaths: curFunctionCallStack.openedPaths.set(path, isOpened)
+            };
+          })
+        }
+      }
+    });
+
+    return newState;
+  }
+
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
+    recordApi.on('StackView.Path.Toggle', function* (addEvent, action) {
+      yield call(addEvent, 'stackview.path.toggle', action);
+    });
+    replayApi.on('stackview.path.toggle', function (replayContext, event) {
+      const action = event[2];
+      replayContext.state = stackViewPathToggle(replayContext.state, action);
+    });
 
     stepperApi.onInit(function (stepperState, globalState) {
       const { platform } = globalState.get('options');

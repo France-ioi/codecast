@@ -5,7 +5,16 @@ const PythonFunctionHeader = (props) => {
     const argCount = props.func.args.length;
 
     const args = props.func.args.map((name) => {
-        return props.func.variables.get(name);
+        const argument = {
+            ...props.func.variables.get(name),
+            path: null
+        };
+
+        if (argument.cur.hasOwnProperty('_uuid')) {
+            argument.path = '#' + name;
+        }
+
+        return argument;
     });
 
     return (
@@ -14,14 +23,22 @@ const PythonFunctionHeader = (props) => {
               {props.func.name ? (
                   <span>
                       <span className="function-name">{props.func.name}</span>
-                      {' ('}
+                      {'('}
                   </span>
               ) : null}
                 <span>
-                    {args.map(function(value, index) {
+                    {args.map(function(argument, index) {
                         return (
                             <span key={index}>
-                                <PythonVariableValue cur={value.cur} old={value.old} visited={{}} />
+                                <PythonVariableValue
+                                    cur={argument.cur}
+                                    old={argument.old}
+                                    visited={{}}
+                                    defaultopened={false}
+                                    path={argument.path}
+                                    openedPaths={props.openedPaths}
+                                    scopeIndex={props.scopeIndex}
+                                />
                                 {(index + 1) < argCount ? ', ' : null}
                             </span>
                         );

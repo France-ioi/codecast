@@ -29,6 +29,7 @@ export const analyseSkulptState = function (suspensions, lastAnalysis) {
     let functionCallStack = Immutable.List();
 
     if (suspensions) {
+        let scopeIndex = 0;
         for (let suspensionIdx = 0; suspensionIdx < suspensions.length; suspensionIdx++) {
             const suspension = suspensions[suspensionIdx];
             if (!isProgramSuspension(suspension)) {
@@ -42,8 +43,11 @@ export const analyseSkulptState = function (suspensions, lastAnalysis) {
 
             const analysedScope = analyseSkulptScope(suspension, lastScopeAnalysis);
             analysedScope.key = suspensionIdx;
+            analysedScope.scopeIndex = scopeIndex;
 
             functionCallStack = functionCallStack.push(analysedScope);
+
+            scopeIndex++;
         }
     }
 
@@ -135,10 +139,18 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
         });
     }
 
+    let openedPaths = null;
+    if (lastAnalysis) {
+        openedPaths = lastAnalysis.openedPaths;
+    } else {
+        openedPaths = Immutable.Map();
+    }
+
     const analysis = {
         variables,
         name,
-        args
+        args,
+        openedPaths
     };
 
     if (SKULPT_ANALYSIS_DEBUG === 2) {

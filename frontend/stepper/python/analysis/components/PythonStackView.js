@@ -48,6 +48,8 @@ const PythonStackView = (props) => {
             {props.analysis.functionCallStack.reverse().map((func) => (
                 <PythonFunctionView
                     key={func.key}
+                    scopeIndex={func.scopeIndex}
+                    openedPaths={func.openedPaths}
                     func={func}
                 />
             ))}

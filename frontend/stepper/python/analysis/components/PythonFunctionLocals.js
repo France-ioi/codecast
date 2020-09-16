@@ -1,5 +1,7 @@
 import * as React from 'react';
 import PythonVariable from "./PythonVariable";
+import PythonFunctionHeader from "./PythonFunctionHeader";
+import PythonVariableValue from "./PythonVariableValue";
 
 const PythonFunctionLocals = (props) => {
     return (
@@ -8,7 +10,13 @@ const PythonFunctionLocals = (props) => {
                 {props.func.variables.entrySeq().map(([name, value]) => (
                     value.cur !== undefined ?
                         <li key={name}>
-                            <PythonVariable name={name} value={value} visited={{}} />
+                            <PythonVariable
+                                name={name}
+                                value={value}
+                                visited={{}}
+                                openedPaths={props.openedPaths}
+                                scopeIndex={props.scopeIndex}
+                            />
                         </li>
                     : null
                 ))}

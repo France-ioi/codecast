@@ -1,10 +1,10 @@
-.object-toggle {
+.object-toggle, .list-toggle {
   cursor: pointer;
 }
-.object-toggle .toggle-icon {
-  color: #b8b246;
+.toggle-icon {
+  color: #ffcc1e;
 }
-.object-toggle:hover .toggle-icon {
+.object-toggle:hover .toggle-icon, .list-toggle:hover .toggle-icon {
   color: #000000;
 }
 .object-toggle-open {
@@ -16,19 +16,19 @@
   color: #53b846;
 }
 .variable-name {
-  color: #d25ff8;
+  color: #c313e0;
 }
 
 .value-string {
-  color: #f85f5f;
+  color: #e01313;
 }
 .value-scalar {
-  color: #5f86f8;
+  color: #241eff;
 }
 .value-empty {
-  color: #b8b246;
+  color: #ffcc1e;
 }
 
-.value-object-closed {
+.value-object-closed, .value-list-closed {
   color: #b8b246;
 }
