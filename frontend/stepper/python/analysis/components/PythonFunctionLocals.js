@@ -8,7 +8,7 @@ const PythonFunctionLocals = (props) => {
         <div className="scope-function-blocks">
             <ul className={!props.func.name ? 'global-scope' : null}>
                 {props.func.variables.entrySeq().map(([name, value]) => (
-                    value.cur !== undefined ?
+                    (value.cur !== undefined && !(value.cur instanceof Sk.builtin.module)) ?
                         <li key={name}>
                             <PythonVariable
                                 name={name}
