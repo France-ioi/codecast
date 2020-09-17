@@ -119,9 +119,6 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
         if (typeof value === 'function') {
             continue;
         }
-        if (value instanceof Sk.builtin.func || value instanceof Sk.builtin.module) {
-            continue;
-        }
 
         let lastValue = null;
         if (lastAnalysis) {

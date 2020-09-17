@@ -40,6 +40,18 @@ class PythonVariableValue extends React.PureComponent {
     }
 
     render() {
+        if (this.props.cur instanceof Sk.builtin.module) {
+            return (
+                <span className="value-module">&lt;module&gt;</span>
+            );
+        }
+
+        if (this.props.cur instanceof Sk.builtin.func) {
+            return (
+                <span className="value-function">&lt;func&gt;</span>
+            );
+        }
+
         if (this.props.cur instanceof Sk.builtin.dict) {
             /**
              * A dict's representation is as follow :
@@ -256,6 +268,31 @@ class PythonVariableValue extends React.PureComponent {
                     )}
                 </React.Fragment>
             )
+        }
+
+        if (this.props.cur.hasOwnProperty('$__iterType')) {
+            let old = this.props.old;
+            if (old && old.hasOwnProperty('$__iterType')) {
+                old = old.myobj;
+            }
+
+            const iteratorType = this.props.cur.$__iterType;
+
+            return (
+                <React.Fragment>
+                    <span className="value-iterator">&lt;{iteratorType}&gt;</span>
+                    (
+                    <ConnectedPythonVariableValue
+                        cur={this.props.cur.myobj}
+                        old={old}
+                        visited={this.props.visited}
+                        path={this.props.path}
+                        openedPaths={this.props.openedPaths}
+                        scopeIndex={this.props.scopeIndex}
+                    />
+                    )
+                </React.Fragment>
+            );
         }
 
         return (
