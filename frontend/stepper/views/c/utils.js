@@ -7,7 +7,7 @@ import React from 'react';
 import classnames from 'classnames';
 import * as C from 'persistent-c';
 
-import {LocalizedError} from '../../lang/index';
+import {LocalizedError} from '../../../lang/index';
 
 export const readScalarBasic = function (programState, refType, address) {
   // Produce a 'basic stored scalar value' object whose shape is
@@ -431,7 +431,7 @@ export const getList = function (expr, noVal) {
 };
 
 export function ShowVar (props) {
-  const {StackFrame, directive, controls, functionCallStack, context} = props;
+  const {DirectiveFrame, directive, controls, functionCallStack, context} = props;
   const {byPos} = directive;
   const name = getIdent(byPos[0]);
   const stackFrame = functionCallStack[0];
@@ -443,9 +443,9 @@ export function ShowVar (props) {
   const limits = {scalars: 0, maxScalars: 100};
   const value = readValue(context, C.pointerType(type), ref.address, limits);
   return (
-    <StackFrame {...props}>
+    <DirectiveFrame {...props}>
       <VarDecl name={name} type={type} address={ref.address} value={value} />
-    </StackFrame>
+    </DirectiveFrame>
   );
 }
 

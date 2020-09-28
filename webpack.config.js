@@ -8,6 +8,9 @@ const jsonConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const publicPath = path.join(process.env.BUILD === 'offline' ? '.' : jsonConfig.mountPath, 'build/');
 
 const config = module.exports = {
+  node: {
+    fs: 'empty'
+  },
   entry: {
     index: './frontend/index.js'
   },

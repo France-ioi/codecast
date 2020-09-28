@@ -45,6 +45,7 @@ import PythonBundle, {getNewOutput, getNewTerminal} from './python';
 /* TODO: clean-up */
 import {analyseState, collectDirectives} from './analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy} from "./python/analysis/analysis";
+import {parseDirectives} from "./python/directives";
 
 export default function (bundle) {
   bundle.use('getBufferModel');
@@ -175,11 +176,6 @@ function enrichStepperState (stepperState, context) {
   /* TODO: extend stepper API to add enrichers that run here */
 
   if (stepperState.platform === 'python') {
-    stepperState.directives = {
-      ordered: [],
-      functionCallStackMap: {}
-    };
-
     if (context === 'Stepper.Progress') {
       // Don't reanalyse after program is finished :
       // keep the last state of the stack and set isFinished state.
@@ -190,6 +186,10 @@ function enrichStepperState (stepperState, context) {
         }
       } else {
         stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.analysis);
+        stepperState.directives = {
+          ordered: parseDirectives(stepperState.analysis),
+          functionCallStackMap: null
+        };
       }
     }
 
@@ -197,6 +197,7 @@ function enrichStepperState (stepperState, context) {
       stepperState.analysis = {
         functionCallStack: new Immutable.List(),
         code: window.currentPythonRunner._code,
+        lines: window.currentPythonRunner._code.split("\n"),
         stepNum: 0,
         isFinished: false
       }
@@ -360,10 +361,6 @@ function stepperProgressReducer (state, {payload: {stepperContext}}) {
 
     const storeTerminal = window.currentPythonRunner._terminal;
     const storeOutput = storeCurrentStepperState.output;
-
-    if (storeTerminal) {
-      console.log('t3', storeTerminal.toJS().lines[0], storeTerminal.toJS().lines[1]);
-    }
 
     stepperState.terminal = storeTerminal;
     stepperState.output = storeOutput;
@@ -537,13 +534,10 @@ function* stepperDisabledSaga () {
 
 function* stepperInteractSaga ({actionTypes, selectors}, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
   /* Has the stepper been interrupted? */
-  console.log('Check for interruption...', stepperContext, arg);
   if (yield select(selectors.isStepperInterrupting)) {
-    console.log('Interrupted !');
     yield call(reject, new StepperError('interrupt', 'interrupted'));
     return;
   }
-  console.log('not interrupted !');
 
   /* Emit a progress action so that an up-to-date state gets displayed. */
   yield put({type: actionTypes.stepperProgress, payload: {stepperContext}});
@@ -560,7 +554,6 @@ function* stepperInteractSaga ({actionTypes, selectors}, {payload: {stepperConte
 
   if (stepperContext.state.platform === 'python' && arg) {
     stepperContext.state.output = arg.output;
-    console.log('t4');
     stepperContext.state.terminal = arg.terminal;
     stepperContext.state.inputPos = arg.inputPos;
     stepperContext.state.input = arg.input;
@@ -601,8 +594,6 @@ function* stepperInterruptSaga ({actionTypes, dispatch}, {payload}) {
    */
   if (stepperContext.state.platform === 'python') {
     if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
-      console.log('Move the python runner !');
-
       // TODO: Support error.
 
       window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
@@ -622,7 +613,6 @@ function* stepperInterruptSaga ({actionTypes, dispatch}, {payload}) {
       window.currentPythonRunner._synchronizingAnalysis = false;
 
       stepperContext.state.input = window.currentPythonRunner._input;
-      console.log('t5');
       stepperContext.state.terminal = window.currentPythonRunner._terminal;
       stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
 
@@ -646,8 +636,6 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
      */
     if (stepperContext.state.platform === 'python') {
       if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
-        console.log('Move the python runner !');
-
         // TODO: Check if it works with the input.
 
         // TODO: Support error.
@@ -669,7 +657,6 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
         window.currentPythonRunner._synchronizingAnalysis = false;
 
         stepperContext.state.input = window.currentPythonRunner._input;
-        console.log('t6');
         stepperContext.state.terminal = window.currentPythonRunner._terminal;
         stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
       }
@@ -710,7 +697,6 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
 
     yield put({type: actionTypes.stepperIdle, payload: {stepperContext}});
     function interact (arg) {
-      console.log('int2');
       return new Promise((resolve, reject) => {
         dispatch({
           type: actionTypes.stepperInteract,
@@ -803,7 +789,6 @@ function postLink (scope, actionTypes) {
       replayContext.state = stepperStartedReducer(replayContext.state, {mode});
       const stepperState = getCurrentStepperState(replayContext.state);
       replayContext.stepperContext = makeContext(stepperState, function interact (_) {
-        console.log('int3');
         return new Promise((cont) => {
           stepperSuspend(replayContext.stepperContext, cont);
           replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
@@ -814,10 +799,7 @@ function postLink (scope, actionTypes) {
         let currentStepperState = replayContext.state.getIn(['stepper', 'currentStepperState']);
 
         if (currentStepperState.platform === 'python' && window.currentPythonRunner._printedDuringStep) {
-          console.log('update output 3');
           replayContext.state.updateIn(['stepper', 'currentStepperState'], (currentStepperState) => {
-            console.log('t10');
-
             const newOutput = getNewOutput(currentStepperState, window.currentPythonRunner._printedDuringStep);
             const newTerminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
 
@@ -855,17 +837,10 @@ function postLink (scope, actionTypes) {
       replayContext.stepperDone = resolve;
       replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
       stepperResume(replayContext.stepperContext, function interact (args) {
-        console.log('int4', args, replayContext.stepperContext);
         return new Promise((cont) => {
-          console.log('intpromise');
           stepperSuspend(replayContext.stepperContext, cont);
 
           replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
-
-          if (replayContext.state.platform === 'python') {
-            //replayContext.state.output = args.output;
-            //replayContext.state.terminal = args.terminal;
-          }
 
           stepperEventReplayed(replayContext);
         });
@@ -896,7 +871,6 @@ function postLink (scope, actionTypes) {
       replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
       /* Set the interact callback to resume the stepper until completion. */
       stepperResume(replayContext.stepperContext, function interact (_) {
-        console.log('int1');
         return new Promise((cont) => { cont(); });
       }, function () {
         replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});

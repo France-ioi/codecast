@@ -1,9 +1,9 @@
-
 import React from 'react';
 
 import {extractView} from './array2d_model';
 import {getNumber, getList, renderValue, renderArrow} from './utils';
-import {SvgPan} from './svg-pan';
+import {SvgPan} from '../svg-pan';
+import DirectiveFrame from "../DirectiveFrame";
 
 const textLineHeight = 18;
 const textBaseline = 5; // from bottom
@@ -28,7 +28,7 @@ const colCursorRows = 2;
 // directive named argument to set view height
 
 function drawCells (view) {
-  const {rows, rowCount, colCount, rowInfoMap, colInfoMap} = view;
+  const {rows} = view;
   const elements = [];
   rows.forEach(function (row, i) {
     const rowIndex = row.index;
@@ -155,7 +155,7 @@ function drawColCursors (colCount, rowCount, infoMap) {
 export class Array2D extends React.PureComponent {
 
   render () {
-    const {StackFrame, scale, directive, functionCallStack, context, getMessage} = this.props;
+    const {scale, directive, functionCallStack, context, getMessage} = this.props;
     const {byName, byPos} = directive;
     const expr = byPos[0];
     const rowCursors = getList(byName.rowCursors, []);
@@ -163,19 +163,22 @@ export class Array2D extends React.PureComponent {
     const height = getNumber(byName.height, 'auto');
     const view = {rowCursors, colCursors, height, getMessage};
     const {hPan, vPan} = this.getPosition();
-    Object.assign(view, extractView(context, functionCallStack[0], expr, view));
+
+    const extractedView = extractView(context, functionCallStack[0], expr, view);
+    Object.assign(view, extractedView);
     if (view.error) {
       return (
-        <StackFrame {...this.props}>
+        <DirectiveFrame {...this.props}>
           <div className='clearfix'>{view.error}</div>
-        </StackFrame>);
+        </DirectiveFrame>);
     }
+    debugger;
     const {rowCount, colCount, rowInfoMap, colInfoMap} = view;
     const svgHeight = gridTop + (rowCount + 1) * cellHeight;
     const svgWidth = gridLeft + (colCount + 1) * cellWidth;
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
     return (
-      <StackFrame {...this.props}>
+      <DirectiveFrame {...this.props}>
         <div className='clearfix' style={{padding: '2px'}}>
           <div style={{width: '100%', height: divHeight}}>
             <SvgPan width='100%' height={svgHeight} scale={scale} x={hPan * cellWidth} y={vPan * cellHeight} getPosition={this.getPosition} onPan={this.onPan} className="array2d">
@@ -191,7 +194,7 @@ export class Array2D extends React.PureComponent {
             </SvgPan>
           </div>
         </div>
-      </StackFrame>
+      </DirectiveFrame>
     );
   }
 

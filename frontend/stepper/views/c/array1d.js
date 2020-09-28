@@ -1,11 +1,10 @@
-
 import React from 'react';
 import classnames from 'classnames';
-import range from 'node-range';
 
-import {getIdent, getNumber, getList, renderValue, renderArrow} from './utils';
+import {getNumber, getList, renderValue, renderArrow} from './utils';
 import {extractView} from './array_utils';
-import {SvgPan} from './svg-pan';
+import {SvgPan} from '../svg-pan';
+import DirectiveFrame from "../DirectiveFrame";
 
 // @11px, line height 15, offset 12
 const textLineHeight = 18;
@@ -100,7 +99,7 @@ function Cursor ({view, cursor}) {
 export class Array1D extends React.PureComponent {
 
   render () {
-    const {StackFrame, controls, directive, functionCallStack, context, scale, getMessage} = this.props;
+    const {controls, directive, functionCallStack, context, scale, getMessage} = this.props;
     const topStackFrame = functionCallStack[0];
     const fullView = controls.get('fullView');
     const cellPan = this.getPosition();
@@ -119,10 +118,10 @@ export class Array1D extends React.PureComponent {
     };
     Object.assign(view, extractView(context, topStackFrame, expr, view));
     if (view.error) {
-      return <StackFrame {...this.props}>{view.error}</StackFrame>;
+      return <DirectiveFrame {...this.props}>{view.error}</DirectiveFrame>;
     }
     return (
-      <StackFrame {...this.props} hasFullView>
+      <DirectiveFrame {...this.props} hasFullView>
         <div className='clearfix' style={{padding: '2px'}}>
           <SvgPan width='100%' height={cellHeight} scale={scale} x={cellPan * cellWidth - 10} y={0} getPosition={this.getPosition} onPan={this.onPan} >
             <clipPath id="cell">
@@ -139,7 +138,7 @@ export class Array1D extends React.PureComponent {
             </g>
           </SvgPan>
         </div>
-      </StackFrame>
+      </DirectiveFrame>
     );
   }
 

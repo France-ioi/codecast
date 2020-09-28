@@ -203,16 +203,9 @@ async function executeSingleStep (stepperContext) {
       window.currentPythonRunner._futureInputValue = null;
     }
 
-    console.log(stepperContext.state.inputPos, 'after runstep');
-    console.log('TTTTTTTT', window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
-
     const newOutput = getNewOutput(stepperContext.state, window.currentPythonRunner._printedDuringStep);
     const newInput = window.currentPythonRunner._input;
     const newInputPos = window.currentPythonRunner._inputPos;
-
-    console.log('the input position at this point is ', newInputPos);
-
-    //console.log('t0', newTerminal.toJS().lines[0], newTerminal.toJS().lines[1]);
 
     // Warning : The interact event retrieves the state from the global state again.
     // It means : we need to pass the changes so it can update it.
@@ -223,7 +216,6 @@ async function executeSingleStep (stepperContext) {
       inputPos: newInputPos,
       input: newInput
     });
-    console.log('interact done.');
 
     const newTerminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
     window.currentPythonRunner._terminal = newTerminal;
@@ -231,10 +223,6 @@ async function executeSingleStep (stepperContext) {
     // Put the output and terminal again so it works with the replay too.
     stepperContext.state.output = newOutput;
     stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
-
-    if (newTerminal) {
-      console.log('t2', newTerminal.toJS().lines[0], newTerminal.toJS().lines[1]);
-    }
 
     stepperContext.state.terminal = newTerminal;
   } else {

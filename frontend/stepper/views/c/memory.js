@@ -32,11 +32,10 @@ import range from 'node-range';
 import * as C from 'persistent-c';
 import adt from 'adt';
 
-import {
-  getNumber, getIdent, getList, renderArrow, renderValue, evalExpr,
-  highlightColors} from './utils';
+import {getNumber, getList, renderArrow, renderValue, evalExpr} from './utils';
 import {getCursorMap, finalizeCursors} from './array_utils';
-import {enumerateHeapBlocks} from '../heap';
+import {enumerateHeapBlocks} from '../../heap';
+import DirectiveFrame from "../DirectiveFrame";
 
 const List = adt.data(function () {
   return {
@@ -247,13 +246,12 @@ class MemoryView extends React.PureComponent {
 
   render () {
     const {
-      StackFrame, controls, directive, localMap, context, scale, getMessage,
-      extraExprs, cursorExprs, cursorRows, nBytesShown, widthFactor,
-      layout, centerAddress, startAddress, maxAddress,
+      scale, getMessage, cursorRows, widthFactor,
+      layout, centerAddress, maxAddress,
       bytes, cursorMap, variables, extraRows, viewTransform
     } = this.props;
     return (
-      <StackFrame {...this.props}>
+      <DirectiveFrame {...this.props}>
         <div className="memory-controls directive-controls">
           <div className="memory-slider-container" style={{width: `${Math.round(400 * widthFactor)}px`}}>
             <Slider prefixCls="memory-slider" tipFormatter={null} value={centerAddress} min={0} max={maxAddress} onChange={this.onSeek}>
@@ -290,7 +288,7 @@ class MemoryView extends React.PureComponent {
             </svg>
           </div>
         </div>
-      </StackFrame>
+      </DirectiveFrame>
     );
   }
 

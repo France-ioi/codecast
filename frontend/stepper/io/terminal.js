@@ -194,7 +194,6 @@ export default function (bundle, deps) {
     result.readOnly = props.preventInput;
     const stepper = deps.getCurrentStepperState(state);
     if (stepper) {
-      console.log('t1');
       result.terminal = stepper.terminal;
       result.input = stepper.inputBuffer;
       result.isWaitingOnInput = stepper.isWaitingOnInput;

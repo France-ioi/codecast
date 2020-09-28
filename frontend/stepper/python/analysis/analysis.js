@@ -136,7 +136,7 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
         });
     }
 
-    let openedPaths = null;
+    let openedPaths;
     if (lastAnalysis) {
         openedPaths = lastAnalysis.openedPaths;
     } else {
@@ -147,7 +147,8 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
         variables,
         name,
         args,
-        openedPaths
+        openedPaths,
+        currentLine: suspension.$lineno
     };
 
     if (SKULPT_ANALYSIS_DEBUG === 2) {

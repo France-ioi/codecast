@@ -3,7 +3,6 @@ import {take, put, takeEvery, call, select} from 'redux-saga/effects';
 
 import { writeString } from "../io/terminal";
 import PythonInterpreter from "./python_interpreter";
-import update from "immutability-helper";
 
 const pythonInterpreterChannel = channel();
 
@@ -11,12 +10,10 @@ export default function (bundle, deps) {
   bundle.defineAction('pythonInput', 'Python.Input');
 
   function* waitForInputSaga() {
-    console.log('wait for input...', deps);
     /* Set the isWaitingOnInput flag on the state. */
     yield put({type: 'Terminal.Input.Needed'});
     /* Transfer focus to the terminal. */
     yield put({type: 'Terminal.Focus'});
-    console.log('now we wait ?');
     /* Wait for the user to enter a line. */
     yield take('Terminal.Input.Enter');
   }
@@ -29,10 +26,7 @@ export default function (bundle, deps) {
     let input = window.currentPythonRunner._input;
     let inputPos = window.currentPythonRunner._inputPos;
 
-    console.log('input', input, inputPos);
-
     let nextNL = input.indexOf('\n', inputPos);
-    console.log('found at ', nextNL);
     while (-1 === nextNL) {
       if (!terminal || !window.currentPythonRunner._interact) {
         /* non-interactive, end of input */
@@ -145,6 +139,11 @@ export default function (bundle, deps) {
               });
             });
           }
+        };
+
+        stepperState.directives = {
+          ordered: [],
+          functionCallStackMap: {}
         };
 
         /**
