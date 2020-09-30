@@ -33,7 +33,7 @@ export const extractView = function (context, stackFrame, refExpr, options) {
   }
   // Read the cells.
   const rows = readArray2D(context, arrayType, ref.address, rowCount, colCount, cellType);
-  debugger;
+
   // Inspect cursors.
   const rowInfoMap = getCursorMap(programState, localMap, options.rowCursors,
     {

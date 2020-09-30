@@ -104,7 +104,7 @@ function drawGrid (view) {
   // Column labels
   x = gridLeft + cellWidth / 2;
   y = gridTop - gridBorderTop - textBaseline;
-  for (let i = 0; i < rowCount; i += 1, x += cellWidth) {
+  for (let i = 0; i < colCount; i += 1, x += cellWidth) {
     elements.push(
       <text key={`lc${i}`} x={x} y={y} textAnchor='middle' fill='#777'>{i}</text>
     );
@@ -172,7 +172,7 @@ export class Array2D extends React.PureComponent {
           <div className='clearfix'>{view.error}</div>
         </DirectiveFrame>);
     }
-    debugger;
+
     const {rowCount, colCount, rowInfoMap, colInfoMap} = view;
     const svgHeight = gridTop + (rowCount + 1) * cellHeight;
     const svgWidth = gridLeft + (colCount + 1) * cellWidth;

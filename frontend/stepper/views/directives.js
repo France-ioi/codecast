@@ -1,5 +1,4 @@
 import React from 'react';
-import {Panel} from 'react-bootstrap';
 import {Alignment, Button, Navbar, NavbarGroup} from '@blueprintjs/core';
 import Immutable from 'immutable';
 
@@ -9,7 +8,9 @@ import {Array2D as C_Array2D} from './c/array2d';
 import {SortView as C_SortView} from './c/sort';
 import MemoryViewDirective from './c/memory';
 
+import {Array1D as pythonArray1D} from './python/array1d';
 import {Array2D as pythonArray2D} from './python/array2d';
+import DirectiveFrame from './DirectiveFrame';
 
 const C_directiveViewDict = {
   showVar: {View: C_ShowVar, selector: obj => obj},
@@ -19,6 +20,7 @@ const C_directiveViewDict = {
   showMemory: MemoryViewDirective,
 };
 const pythonDirectiveViewDict = {
+  showArray: {View: pythonArray1D, selector: obj => obj},
   showArray2D: {View: pythonArray2D, selector: obj => obj}
 };
 

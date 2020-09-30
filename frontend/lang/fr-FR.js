@@ -65,6 +65,8 @@ module.exports = {
   ARRAY2D_EXPR_NOT2D: "la valeur de l'expression {expr} n'est pas un tableau 2D",
   ARRAY2D_ELT_UNSUP: "le type des éléments du tableau 2D {expr} n'est pas supporté",
 
+  PYTHON_ARRAY1D_REF_UNDEFINED: "la variable {name} n'est pas définie",
+  PYTHON_ARRAY1D_REF_NOT_LIST: "la variable {name} n'est pas une liste",
   PYTHON_ARRAY2D_REF_UNDEFINED: "la variable {name} n'est pas définie",
   PYTHON_ARRAY2D_REF_NOT_LIST: "la variable {name} n'est pas une liste",
 

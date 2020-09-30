@@ -6,6 +6,16 @@ for line in range(0, 2):
     for col in range(0, 3):
         matrix[line][col] = line * 10 + col
 
+
+# Array
+
+#! arr = showArray(arr, cursors=[index])
+arr = [0, 0, 0]
+for index in range(0, 3):
+    arr[index] = index * 10
+
+
+
 # Matrix scope
 
 def initMatrix():

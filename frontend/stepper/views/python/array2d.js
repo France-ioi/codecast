@@ -5,71 +5,78 @@ import {renderValue, renderArrow} from './utils';
 import {SvgPan} from '../svg-pan';
 import DirectiveFrame from "../DirectiveFrame";
 
-const textLineHeight = 18;
-const textBaseline = 5; // from bottom
-const strikeThroughHeight = 5; // from baseline
-const textArrowHeight = 4; // from baseline to arrow point
-const textArrowSpacing = 2;
-const arrowHeadSize = 6;
-const arrowTailSize = 15;
-const cellWidth = 60;  // to fit a negative double
-const cellHeight = 2 * textLineHeight + 3;
-const gridLeft = textLineHeight * 4 + arrowTailSize;
-const gridTop = textLineHeight * 4 + arrowTailSize;
-const gridBorderLeft = 5;
-const gridBorderTop = 5;
-const gridStroke = "#777";
-const gridStrokeWidth = "1";
-const colNumWidth = 20;
-const colCursorRows = 2;
+const TEXT_LINE_HEIGHT = 18;
+const TEXT_BASELINE = 5; // from bottom
+const STRIKE_THROUGH_HEIGHT = 5; // from baseline
+const TEXT_ARROW_HEIGHT = 4; // from baseline to arrow point
+const TEXT_ARROW_SPACING = 2;
+const ARROW_HEAD_SIZE = 6;
+const ARROW_TAIL_SIZE = 15;
+const CELL_WIDTH = 60;  // to fit a negative double
+const CELL_HEIGHT = 2 * TEXT_LINE_HEIGHT + 3;
+const GRID_LEFT = TEXT_LINE_HEIGHT * 4 + ARROW_TAIL_SIZE;
+const GRID_TOP = TEXT_LINE_HEIGHT * 4 + ARROW_TAIL_SIZE;
+const GRID_BORDER_LEFT = 5;
+const GRID_BORDER_TOP = 5;
+const GRID_STROKE = "#777";
+const GRID_STROKEWidth = "1";
+const COL_NUM_WIDTH = 20;
 
 // left offset: big enough to fit a cursor with 10 characters
 // top offset: 2 line (cursors) + arrow + 1 line (column index)
 // directive named argument to set view height
 
 function drawCells (view) {
-  const {rows} = view;
+  const {ref} = view;
   const elements = [];
 
-  rows.forEach(function (row, i) {
-    const rowIndex = row.index;
-    const y1 = textLineHeight * 1 - textBaseline;
-    const y1a = y1 - strikeThroughHeight;
-    const y2 = textLineHeight * 2 - textBaseline;
+  ref.cur.v.forEach(function(rowList, i) {
+    const y1 = TEXT_LINE_HEIGHT - TEXT_BASELINE;
+    const y1a = y1 - STRIKE_THROUGH_HEIGHT;
+    const y2 = TEXT_LINE_HEIGHT * 2 - TEXT_BASELINE;
 
-    row.content.forEach(function (cell, j) {
-      const colIndex = cell.index;
-      const {content} = cell;
-      const x = 0.5 * cellWidth;
+    let oldRowList = null;
+    if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(i)) {
+      oldRowList = ref.old.v[i];
+    }
+
+    rowList.v.forEach(function(cellElement, j) {
+      const x = 0.5 * CELL_WIDTH;
+
+      let oldCellElement = null;
+      if (oldRowList && oldRowList.v.hasOwnProperty(j)) {
+        oldCellElement = oldRowList.v[j];
+      }
 
       elements.push(
-        <g key={`${i},${j}`} transform={`translate(${colIndex * cellWidth},${rowIndex * cellHeight})`} clipPath="url(#cell)">
-          {content && 'store' in content && <g>
+        <g key={`${i},${j}`} transform={`translate(${j * CELL_WIDTH},${i * CELL_HEIGHT})`} clipPath="url(#cell)">
+          {oldCellElement && (oldCellElement !== cellElement) && <g>
             <text x={x} y={y1} textAnchor="middle" fill="#777">
-              {renderValue(content.previous)}
+              {renderValue(oldCellElement.v)}
             </text>
-            <line x1={5} x2={cellWidth - 5} y1={y1a} y2={y1a} stroke="#777" strokeWidth="1"/>
+            <line x1={5} x2={CELL_WIDTH - 5} y1={y1a} y2={y1a} stroke="#777" strokeWidth="1"/>
           </g>}
           <text x={x} y={y2} textAnchor="middle" fill="#000">
-            {renderValue(content.current)}
+            {renderValue(cellElement.v)}
           </text>
         </g>
       );
     });
   });
 
-  return <g transform={`translate(${gridLeft},${gridTop})`}>{elements}</g>;
+  return <g transform={`translate(${GRID_LEFT},${GRID_TOP})`}>{elements}</g>;
 }
 
-function getCellClasses (content, rowCursor, colCursor) {
-  if (content) {
-    if (content.store !== undefined) {
-      return "cell cell-store";
-    }
-    if (content.load !== undefined) {
-      return "cell cell-load";
-    }
-  }
+function getCellClasses(content, rowCursor, colCursor) {
+  // TODO: Can we know this (maybe using old value) ?
+  // if (content) {
+  //   if (content.store !== undefined) {
+  //     return "cell cell-store";
+  //   }
+  //   if (content.load !== undefined) {
+  //     return "cell cell-load";
+  //   }
+  // }
 
   if (rowCursor || colCursor) {
     return "cell cell-cursor";
@@ -84,41 +91,43 @@ function drawGrid (view) {
 
   // Cell backgrounds
   for (let i = 0; i <= rowCount; i += 1) {
-    const row = rows[i] && rows[i].content;
+    const rowList = ref.cur.v[i];
+
     for (let j = 0; j <= colCount; j += 1) {
-      const x1 = gridLeft + j * cellWidth;
-      const y1 = gridTop + i * cellHeight;
-      const cell = row && row[j] && row[j].content;
-      const classes = getCellClasses(cell, rowInfoMap[i], colInfoMap[j]);
-      elements.push(<rect key={`r${i},${j}`} x={x1} y={y1} width={cellWidth} height={cellHeight} className={classes}/>);
+      const x1 = GRID_LEFT + j * CELL_WIDTH;
+      const y1 = GRID_TOP + i * CELL_HEIGHT;
+      const cellElement = rowList && rowList.v[j];
+      const classes = getCellClasses(cellElement, rowInfoMap[i], colInfoMap[j]);
+
+      elements.push(<rect key={`r${i},${j}`} x={x1} y={y1} width={CELL_WIDTH} height={CELL_HEIGHT} className={classes}/>);
     }
   }
 
   // Horizontal lines
-  const x1 = gridLeft, x2 = x1 + colCount * cellWidth;
-  for (let i = 0, y = gridTop; i <= rowCount; i += 1, y += cellHeight) {
-    elements.push(<line key={`h${i}`} x1={x1} x2={x2} y1={y} y2={y} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
+  const x1 = GRID_LEFT, x2 = x1 + colCount * CELL_WIDTH;
+  for (let i = 0, y = GRID_TOP; i <= rowCount; i += 1, y += CELL_HEIGHT) {
+    elements.push(<line key={`h${i}`} x1={x1} x2={x2} y1={y} y2={y} stroke={GRID_STROKE} strokeWidth={GRID_STROKEWidth} />);
   }
 
   // Vertical lines
-  const y1 = gridTop, y2 = y1 + rowCount * cellHeight;
-  for (let j = 0, x = gridLeft; j <= colCount; j += 1, x += cellWidth) {
-    elements.push(<line key={`v${j}`} x1={x} x2={x} y1={y1} y2={y2} stroke={gridStroke} strokeWidth={gridStrokeWidth} />);
+  const y1 = GRID_TOP, y2 = y1 + rowCount * CELL_HEIGHT;
+  for (let j = 0, x = GRID_LEFT; j <= colCount; j += 1, x += CELL_WIDTH) {
+    elements.push(<line key={`v${j}`} x1={x} x2={x} y1={y1} y2={y2} stroke={GRID_STROKE} strokeWidth={GRID_STROKEWidth} />);
   }
 
   // Row labels
-  let y = gridTop + (cellHeight + textLineHeight) / 2 - textBaseline;
-  let x = gridLeft - gridBorderLeft;
-  for (let i = 0; i < rowCount; i += 1, y += cellHeight) {
+  let y = GRID_TOP + (CELL_HEIGHT + TEXT_LINE_HEIGHT) / 2 - TEXT_BASELINE;
+  let x = GRID_LEFT - GRID_BORDER_LEFT;
+  for (let i = 0; i < rowCount; i += 1, y += CELL_HEIGHT) {
     elements.push(
       <text key={`lr${i}`} x={x} y={y} textAnchor="end" fill="#777">{i}</text>
     );
   }
 
   // Column labels
-  x = gridLeft + cellWidth / 2;
-  y = gridTop - gridBorderTop - textBaseline;
-  for (let i = 0; i < rowCount; i += 1, x += cellWidth) {
+  x = GRID_LEFT + CELL_WIDTH / 2;
+  y = GRID_TOP - GRID_BORDER_TOP - TEXT_BASELINE;
+  for (let i = 0; i < colCount; i += 1, x += CELL_WIDTH) {
     elements.push(
       <text key={`lc${i}`} x={x} y={y} textAnchor='middle' fill='#777'>{i}</text>
     );
@@ -129,19 +138,19 @@ function drawGrid (view) {
 
 function drawRowCursors (rowCount, colCount, infoMap) {
   const elements = [];
-  const x0 = gridLeft;
-  const x1 = - gridBorderLeft - (textArrowSpacing + arrowTailSize);
-  const x2 = x1 - colNumWidth;
-  const y1 = (cellHeight + textLineHeight) / 2 - textBaseline;
-  const y2 = y1 - textArrowHeight;
+  const x0 = GRID_LEFT;
+  const x1 = - GRID_BORDER_LEFT - (TEXT_ARROW_SPACING + ARROW_TAIL_SIZE);
+  const x2 = x1 - COL_NUM_WIDTH;
+  const y1 = (CELL_HEIGHT + TEXT_LINE_HEIGHT) / 2 - TEXT_BASELINE;
+  const y2 = y1 - TEXT_ARROW_HEIGHT;
 
   for (let i in infoMap) {
     const cursor = infoMap[i];
-    const y0 = gridTop + cellHeight * cursor.index;
+    const y0 = GRID_TOP + CELL_HEIGHT * cursor.index;
     const label = cursor.labels.join(',');
     elements.push(
       <g key={label}>
-        {renderArrow(x0 + x1, y0 + y2, 'right', arrowHeadSize, arrowTailSize)}
+        {renderArrow(x0 + x1, y0 + y2, 'right', ARROW_HEAD_SIZE, ARROW_TAIL_SIZE)}
         <text x={x0 + x2} y={y0 + y1}>{label}</text>
       </g>);
   }
@@ -151,21 +160,23 @@ function drawRowCursors (rowCount, colCount, infoMap) {
 
 function drawColCursors (colCount, rowCount, infoMap) {
   const elements = [];
-  const y0 = gridTop;
-  const x1 = cellWidth / 2;
-  const y1 = - gridBorderTop - textLineHeight - textBaseline;
-  const y2 = y1 - (textBaseline + textArrowSpacing + arrowTailSize);
+  const y0 = GRID_TOP;
+  const x1 = CELL_WIDTH / 2;
+  const y1 = - GRID_BORDER_TOP - TEXT_LINE_HEIGHT - TEXT_BASELINE;
+  const y2 = y1 - (TEXT_BASELINE + TEXT_ARROW_SPACING + ARROW_TAIL_SIZE);
 
   for (let j in infoMap) {
     const cursor = infoMap[j];
-    const x0 = gridLeft + cellWidth * cursor.index;
+    const x0 = GRID_LEFT + CELL_WIDTH * cursor.index;
     const label = cursor.labels.join(',');
-    const y3 = cursor.row * textLineHeight;
+    const y3 = cursor.row * TEXT_LINE_HEIGHT;
+
     elements.push(
       <g key={label}>
-        {renderArrow(x0 + x1, y0 + y1, 'down', arrowHeadSize, arrowTailSize + y3)}
+        {renderArrow(x0 + x1, y0 + y1, 'down', ARROW_HEAD_SIZE, ARROW_TAIL_SIZE + y3)}
         <text x={x0 + x1} y={y0 + y2 - y3}>{label}</text>
-      </g>);
+      </g>
+    );
   }
 
   return <g className='col-cursors'>{elements}</g>;
@@ -210,17 +221,17 @@ export class Array2D extends React.PureComponent {
     }
 
     const {rowInfoMap, colInfoMap} = view;
-    const svgHeight = gridTop + (rowCount + 1) * cellHeight;
-    const svgWidth = gridLeft + (colCount + 1) * cellWidth;
+    const svgHeight = GRID_TOP + (rowCount + 1) * CELL_HEIGHT;
+    const svgWidth = GRID_LEFT + (colCount + 1) * CELL_WIDTH;
     const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
 
     return (
       <DirectiveFrame {...this.props}>
         <div className='clearfix' style={{padding: '2px'}}>
           <div style={{width: '100%', height: divHeight}}>
-            <SvgPan width='100%' height={svgHeight} scale={scale} x={hPan * cellWidth} y={vPan * cellHeight} getPosition={this.getPosition} onPan={this.onPan} className="array2d">
+            <SvgPan width='100%' height={svgHeight} scale={scale} x={hPan * CELL_WIDTH} y={vPan * CELL_HEIGHT} getPosition={this.getPosition} onPan={this.onPan} className="array2d">
               <clipPath id="cell">
-                <rect x="0" y="0" width={cellWidth} height={cellHeight}/>
+                <rect x="0" y="0" width={CELL_WIDTH} height={CELL_HEIGHT}/>
               </clipPath>
               <g style={{fontFamily: 'Open Sans', fontSize: '13px'}}>
                 {drawGrid(view, rowCount, colCount)}
@@ -243,8 +254,8 @@ export class Array2D extends React.PureComponent {
   };
 
   onPan = ({hPan, vPan}, dx, dy) => {
-    hPan -= dx / cellWidth;
-    vPan -= dy / cellHeight;
+    hPan -= dx / CELL_WIDTH;
+    vPan -= dy / CELL_HEIGHT;
     this.props.onChange(this.props.directive, {hPan, vPan});
   };
 }

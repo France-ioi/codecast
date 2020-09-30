@@ -216,8 +216,9 @@ export const renderValue = function (value) {
     return 'noval';
   }
   if (value === null) {
-    return 'void';
+    return 'null';
   }
+
   return value.toString();
 };
 
