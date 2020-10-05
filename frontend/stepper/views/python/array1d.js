@@ -123,6 +123,11 @@ export class Array1D extends React.PureComponent {
      *
      * #! arr = showArray(arr, cursors=[index])
      *
+     * Other options:
+     * - cursorRows : ? (default 1)
+     * - cw : The width of a cell in px (default 28)
+     * - n : ? (default 40)
+     *
      * byName: {
      *   cursors: ["index"]
      * }

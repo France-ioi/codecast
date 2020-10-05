@@ -9,10 +9,11 @@ for line in range(0, 2):
 
 # Array
 
-#! arr = showArray(arr, cursors=[index])
-arr = [0, 0, 0]
-for index in range(0, 3):
+#! arr = showArray(arr, cursors=[index], cursorRows=20)
+arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+for index in range(0, 20):
     arr[index] = index * 10
+
 
 
 

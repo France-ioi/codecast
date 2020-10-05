@@ -191,6 +191,10 @@ export class Array2D extends React.PureComponent {
      *
      * #! matrix = showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=2, cols=3)
      *
+     * Other options :
+     * - height = The height of the view in px (default : special value "auto")
+     *
+     * Object return :
      * byName: {
      *   rowCursors: ["line"],
      *   rows: 2,
@@ -205,8 +209,8 @@ export class Array2D extends React.PureComponent {
     const {byName, byPos} = directive;
     const {rowCursors, colCursors} = byName;
     const height = (byName.height) ? byName.height : 'auto';
-    const rowCount = byName.rows;
-    const colCount = byName.cols;
+    const rowCount = parseInt(byName.rows);
+    const colCount = parseInt(byName.cols);
     const view = {rowCursors, colCursors, rowCount, colCount, height, getMessage};
     const {hPan, vPan} = this.getPosition();
 
