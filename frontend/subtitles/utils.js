@@ -10,7 +10,7 @@ export function updateCurrentItem (subtitles, audioTime) {
   return {...subtitles, audioTime, currentIndex, itemVisible};
 }
 
-function findSubtitleIndex (items, time) {
+export function findSubtitleIndex (items, time) {
   let low = 0, high = items.length;
   while (low + 1 < high) {
     const mid = (low + high) / 2 | 0;
@@ -34,6 +34,7 @@ export function getSubtitles (url) {
     var req = request.get(url);
     req.set('Accept', 'text/plain'); // XXX mime-type for srt?
     req.end(function (err, res) {
+      if (err && err.statusCode === 200) return resolve(err.rawResponse);
       if (err) return reject({err, res});
       resolve(res.text);
     });

@@ -16,12 +16,12 @@ const re = {
 const formatCache = new Map();
 
 export function* printfBuiltin (stepperContext, fmtRef, ...args) {
-  const {core} = stepperContext.state;
-  const fmt = C.readString(core.memory, fmtRef);
+  const {programState} = stepperContext.state;
+  const fmt = C.readString(programState.memory, fmtRef);
   if (!formatCache.has(fmt)) {
     formatCache.set(fmt, parseFormat(fmt));
   }
-  const str = applyFormat(core, formatCache.get(fmt), args);
+  const str = applyFormat(programState, formatCache.get(fmt), args);
   yield ['write', str];
   const result = new C.IntegralValue(C.builtinTypes['int'], str.length);
   yield ['result', result];
@@ -58,7 +58,7 @@ function parseFormat (fmt) {
   return ops;
 };
 
-function applyFormat (core, ops, args) {
+function applyFormat (programState, ops, args) {
   const output = [];
   let cursor = 0;
   for (let i = 0; i < ops.length; i++) {
@@ -80,7 +80,7 @@ function applyFormat (core, ops, args) {
     let prefix = '', suffix = '', sign = '';
 
     if (op.specifier === 's') {
-      arg = C.readString(core.memory, arg, op.precision);
+      arg = C.readString(programState.memory, arg, op.precision);
       if (precision !== null) {
         arg = arg.substring(0, precision);
       }
@@ -196,16 +196,16 @@ function justify (op, arg, sign, prefix, suffix) {
 TODO: write a test suite
 
 !function () {
-  const core = C.start({decls: []});
+  const programState = C.start({decls: []});
 
   const fmtVal = C.stringValue('>%f<');
   const fmtRef = new C.PointerValue(C.pointerType(C.builtinTypes['char']), 0);
-  core.memory = C.writeValue(core.memory, fmtRef, fmtVal);
+  programState.memory = C.writeValue(programState.memory, fmtRef, fmtVal);
 
   const int = C.builtinTypes['int'];
   const val = new C.FloatingValue(int, 3.3);
 
-  console.log(sprintf({state: {core}}, [null, fmtRef, val]));
+  console.log(sprintf({state: {programState}}, [null, fmtRef, val]));
 
 }();
 */

@@ -5,7 +5,7 @@ import url from 'url';
 
 export default function (bundle, deps) {
   bundle.addReducer('init', initReducer);
-  bundle.addReducer('optionsChanged', optionsChangedReducer);
+  bundle.addReducer('platformChanged', platformChangedReducer);
   bundle.defineView('ExamplePicker', ExamplePickerSelector, ExamplePicker);
 }
 
@@ -13,7 +13,7 @@ function initReducer (state, _action) {
   return state.set('examples', updateExamplesState(state, {}));
 }
 
-function optionsChangedReducer (state) {
+function platformChangedReducer (state) {
   return state.update('examples', examples => updateExamplesState(state, examples));
 }
 

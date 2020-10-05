@@ -1,5 +1,7 @@
 
 import React from 'react';
+import url from 'url';
+import srtStringify from 'subtitle/lib/stringify';
 import {AnchorButton, Button, Checkbox, FormGroup, ProgressBar, HTMLSelect, Icon, Intent, Spinner} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
@@ -15,6 +17,8 @@ import FullWaveform from './waveform/full';
 import ExpandedWaveform from './waveform/expanded';
 import intervalTree from './interval_tree';
 import {findInstantIndex} from '../player/utils';
+import {postJson} from '../common/utils';
+import {findSubtitleIndex} from '../subtitles/utils';
 
 export default function (bundle, deps) {
 
@@ -48,8 +52,10 @@ function editorPrepareReducer (state) {
 }
 
 function trimEditorMarkerAddedReducer (state, {payload: {position}}) {
-  return state.updateIn(['editor', 'trim'], st => ({...st,
-    intervals: st.intervals.split(position)}));
+  return state.updateIn(['editor', 'trim'], st => ({
+    ...st,
+    intervals: st.intervals.split(position)
+  }));
 }
 
 function trimEditorMarkerRemovedReducer (state, {payload: {position}}) {
@@ -116,6 +122,8 @@ const savingSteps = [
   {key: 'assembleAudio', label: "Assembling audio stream"},
   {key: 'encodeAudio', label: "Encoding audio stream"},
   {key: 'uploadAudio', label: "Uploading audio"},
+  {key: 'updateSubtitles', label: "Updating Subtitles"},
+  {key: 'uploadSubtitles', label: "Uploading Subtitles"},
 ];
 
 class TrimEditor extends React.PureComponent {
@@ -128,10 +136,10 @@ class TrimEditor extends React.PureComponent {
       const stepRows = [];
       for (let step of savingSteps) {
         const status = saving[step.key];
-        stepRows.push(<StepRow title={step.label} status={status} />);
+        stepRows.push(<StepRow key={step.key} title={step.label} status={status} />);
         if (status === 'pending') {
           stepRows.push(
-            <div key={step.key} style={{margin: '10px 0 20px 0'}}>
+            <div key={`${step.key}_progress`} style={{margin: '10px 0 20px 0'}}>
               <ProgressBar value={saving.progress} />
             </div>
           );
@@ -145,18 +153,18 @@ class TrimEditor extends React.PureComponent {
           </div>
           {saving.done &&
             <div style={{textAlign: 'center'}}>
-              <AnchorButton href={saving.playerUrl} target='_blank' text="Open in player"/>
+              <AnchorButton href={saving.playerUrl} target='_blank' text="Open in player" />
             </div>}
         </div>
       );
     }
     return (
       <div>
-        <Button onClick={this._beginEdit} icon={IconNames.EDIT} text={"Edit"}/>
+        <Button onClick={this._beginEdit} icon={IconNames.EDIT} text={"Edit"} />
         <FormGroup label="Target">
           <HTMLSelect options={grantOptions} value={targetUrl} onChange={this.handleTargetChange} />
         </FormGroup>
-        <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"}/>
+        <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"} />
         {savingView}
       </div>
     );
@@ -190,7 +198,7 @@ function StepRow ({title, status}) {
       <td style={{width: '40px', textAlign: 'center'}}>
         {status === 'done' && <Icon icon='tick' intent={Intent.SUCCESS} />}
         {status === 'error' && <Icon icon='cross' intent={Intent.DANGER} />}
-        {status === 'pending' && <Spinner size={20}/>}
+        {status === 'pending' && <Spinner size={20} />}
       </td>
       <td style={status === 'pending' ? {fontWeight: 'bold'} : null}>
         {title}
@@ -292,7 +300,7 @@ function TrimEditorReturnSelector (state) {
 
 class TrimEditorReturn extends React.PureComponent {
   render () {
-    return <Button onClick={this._return} icon='direction-left' text='Back'/>;
+    return <Button onClick={this._return} icon='direction-left' text='Back' />;
   }
   _return = () => {
     this.props.dispatch({type: this.props.return});
@@ -323,11 +331,14 @@ function* trimSaga () {
 function* trimEditorEnterSaga (_action) {
   const {editorControlsChanged, TrimEditorControls, PlayerControls, TrimEditorReturn, switchToScreen} = yield select(state => state.get('scope'));
   /* XXX install return button */
-  yield put({type: editorControlsChanged, payload: {
-    controls: {
-      top: [TrimEditorControls, PlayerControls],
-      floating: [TrimEditorReturn]
-    }}});
+  yield put({
+    type: editorControlsChanged, payload: {
+      controls: {
+        top: [TrimEditorControls, PlayerControls],
+        floating: [TrimEditorReturn]
+      }
+    }
+  });
   yield put({type: switchToScreen, payload: {screen: 'edit'}});
 }
 
@@ -335,6 +346,7 @@ function* trimEditorReturnSaga (_action) {
   const {editorControlsChanged, switchToScreen} = yield select(state => state.get('scope'));
   yield put({type: editorControlsChanged, payload: {controls: {floating: []}}});
   yield put({type: switchToScreen, payload: {screen: 'setup'}});
+
 }
 
 function trimEditorSaveReducer (state, _action) {
@@ -344,6 +356,8 @@ function trimEditorSaveReducer (state, _action) {
     assembleAudio: null,
     encodeAudio: null,
     uploadAudio: null,
+    updateSubtitles: null,
+    uploadSubtitles: null,
     progress: 0,
   };
   return state.updateIn(['editor', 'trim'], st => ({...st, saving}));
@@ -354,7 +368,8 @@ function trimEditorSavingDoneReducer (state, {payload: {playerUrl}}) {
     saving: {
       done: {$set: true},
       playerUrl: {$set: playerUrl}
-    }}));
+    }
+  }));
 }
 
 function* trimEditorSaveSaga ({payload: {target}}) {
@@ -371,6 +386,11 @@ function* trimEditorSaveSaga ({payload: {target}}) {
     const worker = yield call(trimEditorAssembleAudio, audioBuffer, intervals);
     const mp3Blob = yield call(trimEditorEncodeAudio, worker);
     yield call(trimEditorUpload, 'uploadAudio', targets.audio, mp3Blob);
+    const subtitles = yield call(trimEditorUpdateSubtitles, intervals);
+    if (!subtitles) {
+      return;
+    }
+    yield call(trimSubtitleUpload, playerUrl, subtitles);
     yield put({type: trimEditorSavingDone, payload: {playerUrl}});
   } catch (ex) {
     console.log('failed', ex);
@@ -405,11 +425,107 @@ function trimEvents (data, intervals) {
     }
     events.push(event);
   }
+
+  const options = data.options;
+
   return new Blob([JSON.stringify({
     version: RECORDING_FORMAT_VERSION,
+    options,
     events,
     subtitles: []
-  })], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
+  })], {encoding: "UTF-8", type: "application/json;charset=UTF-8"});
+}
+
+function trimSubtitles (data, intervals) {
+
+  function updateSubtitle (items, intervals) {
+    const last = items[items.length - 1].end;
+    let start = items[0].start;
+    let timeSkipped = 0;
+    const outItems = [];
+    const _posData = {start: -1, isContained: false, startIndex: -1, endIndex: 0, end: 0};
+
+    function getIntervalItemData (items, interval) {
+      _posData.start = _posData.end;
+      _posData.startIndex = interval.start !== items[_posData.start].start ? _posData.start + 1 : _posData.start;
+      _posData.isContained = (interval.end <= items[_posData.start].end);
+      if (_posData.isContained) {
+        _posData.end = _posData.start;
+      } else {
+        _posData.end = findSubtitleIndex(items, interval.end);
+      }
+      _posData.endIndex = interval.end === items[_posData.end].start ? _posData.end - 1 : _posData.end;
+      return _posData;
+    }
+
+    while (start + 1 < last) {
+      const interval = intervals.get(start + 1);
+      const selectedItems = getIntervalItemData(items, interval);
+
+      // clean out skip/mute items
+      if (interval.value.skip) {
+        if (selectedItems.isContained) {
+          outItems[outItems.length - 1].end -= interval.end - interval.start;
+          timeSkipped += interval.end - interval.start;
+        } else {
+          const itemStartIndex = interval.start - timeSkipped;
+          outItems[outItems.length - 1].end = itemStartIndex;
+          timeSkipped += interval.end - interval.start;
+          outItems.push({
+            start: itemStartIndex,
+            end: items[selectedItems.endIndex].end - timeSkipped
+          });
+        }
+      }
+      else if (interval.value.mute && !selectedItems.isContained) {
+        outItems[outItems.length - 1].end = items[selectedItems.endIndex].end - timeSkipped;
+      }
+      else {
+
+          if (timeSkipped !== 0) {
+            // update skipoffset for all items in the interval,
+            // not just the items that start inside of it
+            for (let i =  (selectedItems.isContained) ? selectedItems.start : selectedItems.startIndex; i <= selectedItems.endIndex; i++) {
+              outItems.push({...items[i], start: items[i].start - timeSkipped, end: items[i].end - timeSkipped});
+            }
+          } else {
+            if (selectedItems.start === 0) {
+              for (let i = selectedItems.start; i <= selectedItems.endIndex; i++) {
+                outItems.push({...items[i]});
+              }
+            } else {
+              for (let i = selectedItems.startIndex; i <= selectedItems.endIndex; i++) {
+                outItems.push({...items[i]});
+              }
+            }
+          }
+      }
+
+      start = interval.end;
+    }
+
+    return srtStringify(outItems);
+  }
+
+  return data.map(({key, items}) => ({key, removed: false, text: updateSubtitle(items, intervals)}));
+}
+
+function* trimEditorUpdateSubtitles (intervals) {
+  try {
+    const step = 'updateSubtitles';
+    const {trimEditorSavingStep, subtitlesTrimDone} = yield select(state => state.get('scope'));
+    yield put({type: trimEditorSavingStep, payload: {step, status: 'pending'}});
+    const {loaded: subtitleData} = yield select(state => state.getIn(['subtitles', 'trim']));
+    const subtitles = trimSubtitles(subtitleData, intervals); // return [{key, text}]
+    yield put({type: subtitlesTrimDone, payload: {subtitles}});
+    yield put({type: trimEditorSavingStep, payload: {step, progress: 100}});
+    yield put({type: trimEditorSavingStep, payload: {step, status: 'done'}});
+    return subtitles;
+  } catch (error) {
+    console.error('Subtitles Trim Error:', error);
+    yield put({type: trimEditorSavingStep, payload: {step, status: 'error', error: error.toString()}});
+  }
+  yield put({type: trimEditorSavingStep, payload: {step, status: 'error', error: 'unexpected end'}});
 }
 
 function* trimEditorPrepareUpload (target) {
@@ -490,4 +606,20 @@ function* trimEditorEncodeAudio (worker) {
     });
   yield put({type: trimEditorSavingStep, payload: {step, status: 'done'}});
   return mp3Blob;
+}
+
+function* trimSubtitleUpload (playerUrl, subtitles) {
+  const {trimEditorSavingStep} = yield select(state => state.get('scope'));
+  yield put({type: trimEditorSavingStep, payload: {step: 'uploadSubtitles', status: 'pending'}});
+  const {baseUrl} = yield select(state => state.get('options'));
+  const urlParsed = url.parse(playerUrl, true);
+  const base = urlParsed.query.base; //newly generated codecast's base
+  const changes = {subtitles};
+  try {
+    yield call(postJson, `${baseUrl}/save`, {base, changes});
+    yield put({type: trimEditorSavingStep, payload: {step: 'uploadSubtitles', progress: 100}});
+    yield put({type: trimEditorSavingStep, payload: {step: 'uploadSubtitles', status: 'done'}});
+  } catch (ex) {
+    yield put({type: trimEditorSavingStep, payload: {step: 'uploadSubtitles', status: 'error', error: ex.toString()}});
+  }
 }

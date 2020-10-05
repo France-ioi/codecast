@@ -1,36 +1,39 @@
-
 import React from 'react';
-import {Panel} from 'react-bootstrap';
 import {Alignment, Button, Navbar, NavbarGroup} from '@blueprintjs/core';
-import classnames from 'classnames';
 import Immutable from 'immutable';
 
-import {ShowVar} from './utils';
-import {Array1D} from './array1d';
-import {Array2D} from './array2d';
-import {SortView} from './sort';
-import MemoryViewDirective from './memory';
+import {ShowVar as C_ShowVar} from './c/utils';
+import {Array1D as C_Array1D} from './c/array1d';
+import {Array2D as C_Array2D} from './c/array2d';
+import {SortView as C_SortView} from './c/sort';
+import MemoryViewDirective from './c/memory';
 
-const directiveViewDict = {
-  showVar: {View: ShowVar, selector: obj => obj},
-  showArray: {View: Array1D, selector: obj => obj},
-  showArray2D: {View: Array2D, selector: obj => obj},
-  showSort: {View: SortView, selector: obj => obj},
+import {Array1D as pythonArray1D} from './python/array1d';
+import {Array2D as pythonArray2D} from './python/array2d';
+import DirectiveFrame from './DirectiveFrame';
+
+const C_directiveViewDict = {
+  showVar: {View: C_ShowVar, selector: obj => obj},
+  showArray: {View: C_Array1D, selector: obj => obj},
+  showArray2D: {View: C_Array2D, selector: obj => obj},
+  showSort: {View: C_SortView, selector: obj => obj},
   showMemory: MemoryViewDirective,
+};
+const pythonDirectiveViewDict = {
+  showArray: {View: pythonArray1D, selector: obj => obj},
+  showArray2D: {View: pythonArray2D, selector: obj => obj}
 };
 
 export default function (bundle, deps) {
-
-  bundle.use('stepperViewControlsChanged', 'getStepperDisplay');
+  bundle.use('stepperViewControlsChanged', 'getCurrentStepperState');
 
   function DirectivesPaneSelector (state, props) {
     const getMessage = state.get('getMessage');
-    const stepperState = deps.getStepperDisplay(state);
+    const stepperState = deps.getCurrentStepperState(state);
     return {state: stepperState, getMessage};
   }
 
   bundle.defineView('DirectivesPane', DirectivesPaneSelector, class DirectivesPane extends React.PureComponent {
-
     onControlsChange = (directive, update) => {
       const {key} = directive;
       this.props.dispatch({type: deps.stepperViewControlsChanged, key, update});
@@ -47,18 +50,44 @@ export default function (bundle, deps) {
       if (!state || !state.analysis) {
         return false;
       }
-      const {core, oldCore, analysis, controls, directives} = state;
-      const {ordered, framesMap} = directives;
-      const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
-      const context = {core, oldCore};
+
+      const {analysis, programState, lastProgramState, controls, directives, platform} = state;
+      const {ordered, functionCallStackMap} = directives;
+      const context = {analysis, programState, lastProgramState};
       const buttons = [], panels = [];
       for (let directive of ordered) {
         const {key} = directive;
         const dirControls = controls.get(key, Immutable.Map());
-        buttons.push(<DirectiveButton key={key} directive={directive} controls={dirControls} onSelect={this.toggleView} />);
-        panels.push(<DirectivePanel key={key} directive={directive} controls={dirControls}
-          scale={scale} context={context} frames={framesMap[key]} getMessage={getMessage} onChange={this.onControlsChange} />);
+
+        buttons.push(
+            <DirectiveButton
+                key={key}
+                directive={directive}
+                controls={dirControls}
+                onSelect={this.toggleView}
+            />
+        );
+
+        let functionCallStack = null;
+        if (platform === 'unix' || platform === 'arduino') {
+          functionCallStack = functionCallStackMap[key];
+        }
+
+        panels.push(
+            <DirectivePanel
+                key={key}
+                directive={directive}
+                controls={dirControls}
+                scale={scale}
+                context={context}
+                functionCallStack={functionCallStack}
+                platform={platform}
+                getMessage={getMessage}
+                onChange={this.onControlsChange}
+            />
+        );
       }
+
       return (
         <div className='directive-group'>
           <div className='directive-bar'>
@@ -74,26 +103,26 @@ export default function (bundle, deps) {
         </div>
       );
     };
-
   });
-
 };
 
 class DirectiveButton extends React.PureComponent {
   render() {
     const {directive, controls} = this.props;
     const hide = controls.get('hide', false);
+
     return (
       <Button small minimal active={!hide} text={directive.key} onClick={this.onClick}/>
     );
   }
+
   onClick = () => {
     this.props.onSelect(this.props.directive.key);
   };
 }
 
-function DirectivePanel ({scale, directive, controls, context, frames, getMessage, onChange}) {
-  const {key, kind} = directive;
+function DirectivePanel ({scale, directive, controls, context, functionCallStack, platform, getMessage, onChange}) {
+  const {kind} = directive;
   const hide = controls.get('hide', false);
   if (hide) {
     return false;
@@ -101,52 +130,25 @@ function DirectivePanel ({scale, directive, controls, context, frames, getMessag
   if (directive[0] === 'error') {
     return <p>{'Error: '}{JSON.stringify(directive[1])}</p>;
   }
+
+  let directiveViewDict = C_directiveViewDict;
+  if (platform === 'python') {
+    directiveViewDict = pythonDirectiveViewDict;
+  }
+
   if (!directiveViewDict[kind]) {
     return <p>{'Error: undefined view kind '}{kind}</p>;
   }
-  const {View, selector} = directiveViewDict[kind];
-  const props = selector({scale, directive, context, controls, frames});
-  return (
-    <View Frame={DirectiveFrame} getMessage={getMessage} onChange={onChange}
-      {...props} />);
-};
 
-class DirectiveFrame extends React.PureComponent {
-  onToggleFullView = () => {
-    const {directive, controls, onChange} = this.props;
-    const update = {fullView: !controls.get('fullView')};
-    onChange(directive, update);
-  };
-  render () {
-    const {directive, controls, title, hasFullView} = this.props;
-    const {key} = directive;
-    const fullView = controls.get('fullView');
-    const style = {width: '100%'};
-    const width = directive.byName['width'];
-    if (width && width[0] === 'number') {
-      style.width = `${width[1]*100}%`;
-    }
-    return (
-      <div key={key} className='directive-view' style={style}>
-        <Panel className='directive'>
-          <Panel.Heading>
-            <div className="directive-header">
-              <div className="pull-right">
-                {hasFullView &&
-                  <Button onClick={this.onToggleFullView} small>
-                    {fullView ? 'min' : 'max'}
-                  </Button>}
-              </div>
-              <div className="directive-title">
-                {title || key}
-              </div>
-            </div>
-          </Panel.Heading>
-          <Panel.Body>
-            {this.props.children}
-          </Panel.Body>
-        </Panel>
-      </div>
-    );
-  }
+  const {View, selector} = directiveViewDict[kind];
+  const props = selector({scale, directive, context, controls, functionCallStack});
+
+  return (
+    <View
+        DirectiveFrame={DirectiveFrame}
+        getMessage={getMessage}
+        onChange={onChange}
+        {...props}
+    />
+  );
 }

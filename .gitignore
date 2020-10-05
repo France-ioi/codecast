@@ -2,3 +2,7 @@
 /node_modules
 /c-to-json
 /build
+/dist
+/.vscode
+/.idea
+config.json

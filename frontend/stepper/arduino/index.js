@@ -31,7 +31,7 @@ const PINMODE_INPUT_PULLUP = 2;
 
 export default function (bundle, deps) {
 
-  bundle.use('getStepperDisplay');
+  bundle.use('getCurrentStepperState');
 
   const NPorts = 20;
   const PortDefns = range(0,NPorts-1).map(index => {
@@ -70,18 +70,18 @@ export default function (bundle, deps) {
   }
 
   bundle.defineAction('arduinoPortChanged', 'Arduino.Port.Changed');
-  bundle.addReducer('arduinoPortChanged', arduinoPortChanged)
+  bundle.addReducer('arduinoPortChanged', arduinoPortChanged);
   function arduinoPortChanged (state, action) {
     const {index, changes} = action;
-    return state.updateIn(['stepper', 'current'], stepper =>
+    return state.updateIn(['stepper', 'currentStepperState'], stepper =>
       update(stepper, {ports: {[index]: changes}}));
   }
 
   bundle.defineAction('arduinoPortSelected', 'Arduino.Port.Selected');
-  bundle.addReducer('arduinoPortSelected', arduinoPortSelected)
+  bundle.addReducer('arduinoPortSelected', arduinoPortSelected);
   function arduinoPortSelected (state, action) {
     const {index} = action;
-    return state.updateIn(['stepper', 'current'], stepper =>
+    return state.updateIn(['stepper', 'currentStepperState'], stepper =>
       update(stepper, {selectedPort: {$set: index}}));
   }
 
@@ -90,7 +90,7 @@ export default function (bundle, deps) {
     const portDefns = PortDefns; /* should depend on arduinoState.hardware */
     const portConfigs = arduinoState.ports;
     let portStates, selectedPort;
-    const stepperState = deps.getStepperDisplay(state);
+    const stepperState = deps.getCurrentStepperState(state);
     if (stepperState) {
       portStates = stepperState.ports;
       selectedPort = stepperState.selectedPort;
@@ -459,14 +459,14 @@ export default function (bundle, deps) {
     });
 
     stepperApi.addBuiltin('Serial_print', function* (stepperContext, value, base) {
-      const str = stringifyValue(stepperContext.state.core, value, base);
+      const str = stringifyValue(stepperContext.state.programState, value, base);
       if (stepperContext.state.serial.speed) {
         yield ['write', str];
       }
     });
 
     stepperApi.addBuiltin('Serial_println', function* (stepperContext, value, base) {
-      const str = stringifyValue(stepperContext.state.core, value, base) + '\n';
+      const str = stringifyValue(stepperContext.state.programState, value, base) + '\n';
       if (stepperContext.state.serial.speed) {
         yield ['write', str];
       }
@@ -482,14 +482,14 @@ export default function (bundle, deps) {
 
 };
 
-function stringifyValue (core, value, base) {
+function stringifyValue (programState, value, base) {
   if (!value) {
     return '';
   }
   let str;
   switch (value.type.kind) {
   case 'pointer':
-    str = C.readString(core.memory, value);
+    str = C.readString(programState.memory, value);
     break;
   case 'builtin':
     switch (value.type.repr) {

@@ -1,12 +1,9 @@
-
 import React from 'react';
-import classnames from 'classnames';
-import {ViewerResponsive, ViewerHelper} from 'react-svg-pan-zoom';
-import range from 'node-range';
 
 import {getNumber, getList, viewExprs, evalExpr, renderValue, renderArrow} from './utils';
 import {extractView} from './array_utils';
-import {SvgPan} from './svg-pan';
+import {SvgPan} from '../svg-pan';
+import DirectiveFrame from "../DirectiveFrame";
 
 const marginLeft = 100;
 const marginTop = 4;
@@ -71,7 +68,7 @@ function Bar ({view, bar}) {
 }
 
 function Cursor ({cursor}) {
-  const {index, labels, col, row} = cursor;
+  const {labels, col, row} = cursor;
   const h1 = minArrowHeight + row * textLineHeight;
   const x0 = marginLeft + (barWidth + barSpacing) * col;
   const y0 = marginTop + barHeight + barMarginBottom + textLineHeight;
@@ -107,17 +104,17 @@ function Threshold ({view, threshold}) {
 export class SortView extends React.PureComponent {
 
   render () {
-    const {Frame, controls, directive, frames, context, scale, getMessage} = this.props;
-    const {core} = context;
-    const topFrame = frames[0];
-    const localMap = topFrame.get('localMap');
+    const {controls, directive, functionCallStack, context, scale, getMessage} = this.props;
+    const {programState} = context;
+    const topStackFrame = functionCallStack[0];
+    const localMap = topStackFrame.get('localMap');
     // Controls
     //   - fullView: read and render all cells
     const fullView = controls.get('fullView');
     const {byName, byPos} = directive;
     const expr = byPos[0];
     const {dim} = byName;
-    const getOptions = {core: core, frame: topFrame};
+    const getOptions = {programState: programState, stackFrame: topStackFrame};
     const cellPan = this.getPosition();
     const thExprs = getList(byName.thresholds, []);
     const cursorExprs = getList(byName.cursors, []);
@@ -126,11 +123,11 @@ export class SortView extends React.PureComponent {
     const height = getNumber(byName.height, 'auto');
     const svgHeight = marginTop + barHeight + barMarginBottom + textLineHeight + minArrowHeight + textLineHeight * cursorRows + marginBottom;
     const view = {dimExpr: dim, fullView, cursorExprs, maxVisibleCells, cursorRows, getMessage};
-    Object.assign(view, extractView(context, topFrame, expr, view));
+    Object.assign(view, extractView(context, topStackFrame, expr, view));
     if (view.error) {
-      return <Frame {...this.props}>{view.error}</Frame>;
+      return <DirectiveFrame {...this.props}>{view.error}</DirectiveFrame>;
     }
-    view.thresholds = viewExprs(core, topFrame, thExprs);
+    view.thresholds = viewExprs(programState, topStackFrame, thExprs);
     view.nbCells = view.cells.length;
     // Find the largest cell value.
     let maxValue = 0;
@@ -146,7 +143,7 @@ export class SortView extends React.PureComponent {
     });
     view.maxValue = maxValue;
     return (
-      <Frame {...this.props} hasFullView>
+      <DirectiveFrame {...this.props} hasFullView>
         <div className='clearfix' style={{padding: '2px'}}>
           <SvgPan width='100%' height={svgHeight} scale={scale} x={cellPan * (barWidth + barSpacing) - 10} y={0} getPosition={this.getPosition} onPan={this.onPan} >
             <clipPath id="barClipping">
@@ -165,7 +162,7 @@ export class SortView extends React.PureComponent {
             </g>
           </SvgPan>
         </div>
-      </Frame>
+      </DirectiveFrame>
     );
   }
 

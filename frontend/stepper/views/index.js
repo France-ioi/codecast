@@ -1,6 +1,5 @@
-
 import MainBundle from './main';
-import StackBundle from './stack';
+import StackBundle from './c/stack';
 import DirectivesBundle from './directives';
 
 export default function (bundle) {

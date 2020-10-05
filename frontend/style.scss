@@ -25,9 +25,11 @@ $bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
 
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/icons/lib/css/blueprint-icons.css";
+@import "~@blueprintjs/datetime/lib/css/blueprint-datetime.css";
 
 @import "./player/style.scss";
 @import "./editor/style.scss";
+@import "python";
 
 html {
     margin-left: calc(100vw - 100%);
@@ -249,6 +251,9 @@ body#app, #app h1, #app h2, #app h3 {
 .stack-view ul {
   padding-left: 20px;
 }
+.stack-view  ul.global-scope {
+  padding-left: 2px;
+}
 .stack-view li {
   list-style-type: none;
 }
@@ -268,7 +273,14 @@ body#app, #app h1, #app h2, #app h3 {
   font-weight: bold;
 }
 .value-previous {
-  text-decoration: line-through;
+  color: #999999;
+  font-style: italic;
+}
+.value-previous::before {
+  content: '(';
+}
+.value-previous::after {
+  content: ')';
 }
 span + .value-previous {
   padding-left: 0.5em;
@@ -277,6 +289,9 @@ span + .value-previous {
 .vardecl {
   overflow: hidden;
   max-height: 2 * $line-height-lg;
+}
+.vardecl-object {
+  max-height: none;
 }
 
 .array-cells {
@@ -328,7 +343,7 @@ span + .value-previous {
 .controls-stepper-wrapper {
   width: 300px;
 }
-.controls-translate button {
+.controls-compile button {
   width: 85px;
 }
 .player-controls-right {
@@ -383,6 +398,9 @@ span + .value-previous {
   .vardecl {
     max-height: 2 * $line-height-md;
   }
+  .vardecl-object {
+    max-height: none;
+  }
 }
 
 .mainView-sm {
@@ -413,6 +431,9 @@ span + .value-previous {
   }
   .vardecl {
     max-height: 2 * $line-height-sm;
+  }
+  .vardecl-object {
+    max-height: none;
   }
   .array-cell {
     font-size: 10px;

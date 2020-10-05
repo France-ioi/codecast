@@ -46,6 +46,9 @@ function initReducer (state, action) {
       filterRegexp: null,
       /* editor-specific */
       notify: {},
+      trim: {
+        loaded: [],
+      },
     });
 }
 

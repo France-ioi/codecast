@@ -273,8 +273,8 @@ function unterminatedStringValue (string) {
 }
 
 export function* scanfBuiltin (stepperContext, fmtRef, ...args) {
-  const {core} = stepperContext.state;
-  const fmt = C.readString(core.memory, fmtRef);
+  const {programState} = stepperContext.state;
+  const fmt = C.readString(programState.memory, fmtRef);
   let it = scanf(fmt, ...args), step, nextVal;
   while ((step = it.next(nextVal)) && !step.done) {
     nextVal = null;

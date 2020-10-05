@@ -1,20 +1,18 @@
-
 import 'es5-shim';
 import 'es6-shim';
 import 'array.prototype.fill'; // Array.prototype.fill
 import 'es6-symbol/implement'; // Symbol.iterator
+import './style.scss';
 
+import url from 'url';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
-import {applyMiddleware} from 'redux';
-import createSagaMiddleware from 'redux-saga';
 import Immutable from 'immutable';
+import installDevTools from 'immutable-devtools';
 import 'rc-slider/dist/rc-slider.css?global';
 
-import style from './style.scss';
 
-// import sagaMonitor from './sagaMonitor';
 import link from './linker';
 
 import commonBundle from './common/index';
@@ -22,24 +20,51 @@ import sandboxBundle from './sandbox/index';
 import playerBundle from './player/index';
 import recorderBundle from './recorder/index';
 import editorBundle from './editor/index';
+import statisticsBundle from './statistics/index';
+
+/**
+ * List of actions not to write in the console in development mode.
+ *
+ * @type {Object}
+ */
+const DEBUG_IGNORE_ACTIONS_MAP = {
+  'Window.Resized': true,
+  'Buffer.Reset': true,
+  'Buffer.Highlight': true,
+  'Buffer.Init': true,
+  'Buffer.Model.Edit': true,
+  'Player.Tick': true
+};
 
 const {store, scope, actionTypes, views, finalize, start} = link(function (bundle, deps) {
 
   bundle.defineAction('init', 'System.Init');
-  bundle.addReducer('init', (_state, _action) =>
-    Immutable.Map({scope, actionTypes, views}));
+  bundle.addReducer('init', (_state, _action) => {
+    return Immutable.Map({scope, actionTypes, views});
+  });
 
   bundle.include(commonBundle);
   bundle.include(sandboxBundle);
   bundle.include(playerBundle);
   bundle.include(recorderBundle);
   bundle.include(editorBundle);
+  bundle.include(statisticsBundle);
 
   if (process.env.NODE_ENV === 'development') {
     bundle.addEarlyReducer(function (state, action) {
-      console.log('action', action);
+      if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
+          console.log('action', action);
+      }
+
       return state;
     });
+
+    /**
+     * Enable Immutable debug dev-tools.
+     *
+     * @see https://github.com/andrewdavey/immutable-devtools
+     */
+    installDevTools(Immutable);
   }
 
 }/*, {reduxSaga: {sagaMonitor}}*/);
@@ -56,7 +81,8 @@ function restart () {
     globals: scope,
     selectors: scope,
     actionTypes,
-    views});
+    views
+  });
 }
 
 /* In-browser API */
@@ -69,7 +95,7 @@ const Codecast = window.Codecast = {store, scope, restart};
     examplesUrl: url,
     baseDataUrl: url,
     user: {…},
-    platform: 'unix'|'arduino',
+    platform: 'python'|'unix'|'arduino',
     controls: {…},
     showStepper: boolean,
     showStack: boolean,
@@ -80,13 +106,30 @@ const Codecast = window.Codecast = {store, scope, restart};
     token: string
   }
 */
+
+function clearUrl () {
+  const currentUrl = url.parse(document.location.href, true)
+  delete currentUrl.search
+  delete currentUrl.query.source
+  window.history.replaceState(null, document.title, url.format(currentUrl))
+}
+
 Codecast.start = function (options) {
 
   store.dispatch({type: scope.init, payload: {options}});
+
+  // remove source from url wihtout reloading
+  if (options.source) {
+    clearUrl();
+  }
   // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
   /* Run the sagas (must be done before calling autoLogin) */
   restart();
+
+  if (/editor|player|sandbox/.test(options.start)) {
+    store.dispatch({type: scope.statisticsInitLogData});
+  }
 
   let App;
   switch (options.start) {
@@ -118,7 +161,17 @@ Codecast.start = function (options) {
       });
       App = scope.EditorApp;
       break;
+    case 'statistics':
+      autoLogin();
+      store.dispatch({
+        type: scope.statisticsPrepare
+      });
+      App = scope.StatisticsApp;
+      break;
     case 'sandbox':
+      store.dispatch({
+        type: scope.statisticsLogLoadingData
+      });
       App = scope.SandboxApp;
       break;
     default:
@@ -131,7 +184,7 @@ Codecast.start = function (options) {
   ReactDOM.render(
     <Provider store={store}>
       <AppErrorBoundary>
-        <App/>
+        <App />
       </AppErrorBoundary>
     </Provider>, container);
 

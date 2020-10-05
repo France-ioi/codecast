@@ -61,14 +61,34 @@ function* playerPrepare (app, {payload}) {
   }
   /* Compute the future state after every event. */
   const chan = yield call(requestAnimationFrames, 50);
+
+  let platform = 'unix';
+  if (data.options) {
+    platform = data.options.platform;
+  }
+
+  yield put({
+    type: actionTypes.platformChanged,
+    payload: platform
+  });
+
+  const state = Immutable.Map({
+    options: { platform }
+  });
+
+  if (data.options) {
+    state.set('options', data.options);
+  }
+
   const replayContext = {
-    state: Immutable.Map(),
+    state,
     events: data.events,
     instants: [],
     applyEvent: replayApi.applyEvent,
     addSaga,
     reportProgress,
   };
+
   try {
     yield call(computeInstants, replayContext);
     /* The duration of the recording is the timestamp of the last event. */
@@ -105,11 +125,45 @@ function* computeInstants (replayContext) {
   const duration = events[events.length - 1][0];
   for (pos = 0; pos < events.length; pos += 1) {
     const event = events[pos];
+
+    /**
+     * For version < 6, the translate.success action, now renamed to compile.success used to contain :
+     * {
+     *   ast,
+     *   diagnostics
+     * }
+     *
+     * Now it should contain :
+     * {
+     *   response: {
+     *     ast,
+     *     diagnotics,
+     *     platform: 'unix'
+     *   }
+     * }
+     */
+    if (event[1] === 'translate.success') {
+      event[2] = {
+        response: {
+          ...event[2],
+          platform: 'unix'
+        }
+      };
+    }
+
     const t = event[0];
-    const key = event[1]
+
+    /**
+     * Get the action name.
+     * Note : translate.* actions have been replaced by compile.* actions from version 6.
+     */
+    const key = event[1].replace('translate.', 'compile.');
+
     const instant = {t, pos, event};
     replayContext.instant = instant;
+    console.log('-------- REPLAY ---- EVENT ----', key, event)
     yield call(replayContext.applyEvent, key, replayContext, event);
+
     /* Preserve the last explicitly set range. */
     if ('range' in instant) {
       range = instant.range;
@@ -117,6 +171,7 @@ function* computeInstants (replayContext) {
       instant.range = range;
     }
     instant.state = replayContext.state;
+
     replayContext.instants.push(instant);
     progress = Math.round(pos * 50 / events.length + t * 50 / duration) / 100;
     if (progress !== lastProgress) {

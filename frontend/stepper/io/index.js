@@ -19,7 +19,7 @@ export default function (bundle, deps) {
   bundle.use(
     'TerminalView', 'terminalInputNeeded', 'terminalInputEnter', 'terminalFocus',
     'BufferEditor',
-    'getStepperDisplay', 'stepperProgress', 'stepperIdle', 'stepperInterrupt',
+    'getCurrentStepperState', 'stepperProgress', 'stepperIdle', 'stepperInterrupt',
     'stepperRestart', 'stepperUndo', 'stepperRedo',
     'getBufferModel', 'bufferReset', 'bufferEdit', 'bufferModelEdit', 'bufferModelSelect'
   );
@@ -27,17 +27,30 @@ export default function (bundle, deps) {
   bundle.addReducer('init', function (state) {
     return state.set('ioPane', updateIoPaneState(state, {}));
   });
-  bundle.addReducer('optionsChanged', function (state) {
+  bundle.addReducer('platformChanged', function (state) {
     return state.update('ioPane', ioPane => updateIoPaneState(state, ioPane));
   });
 
   function updateIoPaneState (state, ioPane) {
     const {platform} = state.get('options');
-    if (platform === 'arduino') {
+    if (platform === 'python') {
+      return {
+        //mode: 'split',
+        mode: ioPane.mode || 'terminal',
+        modeSelect: true
+      }
+    } else if (platform === 'arduino') {
       /* Arduino is forced to terminal mode. */
-      return {mode: 'terminal', modeSelect: false};
+      return {
+        mode: 'terminal',
+        modeSelect: false
+      };
     }
-    return {mode: ioPane.mode || 'terminal', modeSelect: true};
+
+    return {
+      mode: ioPane.mode || 'terminal',
+      modeSelect: true
+    };
   }
 
   bundle.defineView('IOPane', IOPaneSelector, class IOPane extends React.PureComponent {
@@ -53,8 +66,9 @@ export default function (bundle, deps) {
   });
 
   function IOPaneSelector (state, props) {
-    const stepper = deps.getStepperDisplay(state);
+    const stepper = deps.getCurrentStepperState(state);
     const mode = stepper ? state.get('ioPane').mode : 'options';
+
     return {mode};
   }
 
@@ -81,6 +95,7 @@ export default function (bundle, deps) {
     render () {
       const {getMessage, mode, modeSelect} = this.props;
       const headerTitle = getMessage(modeSelect ? 'IOPANE_SELECT_TERMINAL_TITLE' : 'IOPANE_FORCED_TERMINAL_TITLE');
+
       return (
         <Panel>
           <Panel.Heading>{headerTitle}</Panel.Heading>
@@ -160,13 +175,13 @@ export default function (bundle, deps) {
   });
 
   function InputOutputViewSelector (state, props) {
-    const stepper = deps.getStepperDisplay(state);
+    const stepper = deps.getCurrentStepperState(state);
     const {output} = stepper;
     return {output};
   }
 
   function getOutputBufferModel (state) {
-    const stepper = deps.getStepperDisplay(state);
+    const stepper = deps.getCurrentStepperState(state);
     const {output} = stepper;
     const doc = documentFromString(output);
     const endCursor = doc.endCursor();
@@ -227,9 +242,11 @@ export default function (bundle, deps) {
     /* Set up the terminal or input. */
     stepperApi.onInit(function (stepperState, globalState) {
       const {mode} = globalState.get('ioPane');
+
       stepperState.inputPos = 0;
       if (mode === 'terminal') {
         stepperState.input = "";
+        console.log('t7');
         stepperState.terminal = new TermBuffer({lines: 10, width: 80});
         stepperState.inputBuffer = "";
       } else {
@@ -252,7 +269,7 @@ export default function (bundle, deps) {
     });
 
     stepperApi.addBuiltin('puts', function* putsBuiltin (stepperContext, strRef) {
-      const str = C.readString(stepperContext.state.core.memory, strRef) + '\n';
+      const str = C.readString(stepperContext.state.programState.memory, strRef) + '\n';
       yield ['write', str];
       const result = new C.IntegralValue(C.builtinTypes['int'], 0);
       yield ['result', result];
@@ -263,6 +280,7 @@ export default function (bundle, deps) {
     stepperApi.onEffect('write', function* writeEffect (stepperContext, text) {
       const {state} = stepperContext;
       if (state.terminal) {
+        console.log('t8');
         state.terminal = writeString(state.terminal, text);
       } else {
         state.output = state.output + text;
@@ -344,6 +362,7 @@ export default function (bundle, deps) {
        directly alter the global state & push the change to the editor. */
     stepperApi.addSaga(function* ioStepperSaga () {
       const {mode} = yield select(state => state.get('ioPane'));
+
       if (mode === 'split') {
         yield call(reflectToOutput);
       }
@@ -351,9 +370,11 @@ export default function (bundle, deps) {
     function* reflectToOutput () {
       /* Incrementally add text produced by the stepper to the output buffer. */
       yield takeLatest([deps.stepperProgress, deps.stepperIdle], function* (action) {
-        const stepperState = yield select(deps.getStepperDisplay);
+        const stepperState = yield select(deps.getCurrentStepperState);
         const outputModel = yield select(deps.getBufferModel, 'output');
+        console.log(outputModel.get('document'));
         const oldSize = outputModel.get('document').size();
+        console.log(stepperState.output);
         const newSize = stepperState.output.length;
         if (oldSize !== newSize) {
           const outputDoc = outputModel.get('document');

@@ -10,7 +10,7 @@ import {takeEvery, select, call} from 'redux-saga/effects';
 export default function (bundle, deps) {
 
   bundle.use(
-    'getStepperDisplay',
+    'getCurrentStepperState',
     'terminalInit', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
   );
 
@@ -33,7 +33,7 @@ export default function (bundle, deps) {
   bundle.defineAction('terminalInputNeeded', 'Terminal.Input.Needed');
   bundle.addReducer('terminalInputNeeded', terminalInputNeeded);
   function terminalInputNeeded (state, action) {
-    return state.updateIn(['stepper', 'current'], function (stepper) {
+    return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
       return {...stepper, isWaitingOnInput: true};
     });
   };
@@ -42,7 +42,7 @@ export default function (bundle, deps) {
   bundle.addReducer('terminalInputKey', terminalInputKey);
   function terminalInputKey (state, action) {
     const {key} = action;
-    return state.updateIn(['stepper', 'current'], function (stepper) {
+    return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
       return {...stepper, inputBuffer: stepper.inputBuffer + key};
     });
   };
@@ -50,7 +50,7 @@ export default function (bundle, deps) {
   bundle.defineAction('terminalInputBackspace', 'Terminal.Input.Backspace');
   bundle.addReducer('terminalInputBackspace', terminalInputBackspace);
   function terminalInputBackspace (state) {
-    return state.updateIn(['stepper', 'current'], function (stepper) {
+    return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
       return {...stepper, inputBuffer: stepper.inputBuffer.slice(0, -1)};
     });
   };
@@ -58,12 +58,47 @@ export default function (bundle, deps) {
   bundle.defineAction('terminalInputEnter', 'Terminal.Input.Enter');
   bundle.addReducer('terminalInputEnter', terminalInputEnter);
   function terminalInputEnter (state) {
-    return state.updateIn(['stepper', 'current'], function (stepper) {
-      const inputLine = stepper.inputBuffer + '\n';
-      return {...stepper,
+    return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
+      const inputLine = stepper.inputBuffer + '\n'
+      const newInput = stepper.input + inputLine;
+
+      let newTerminal;
+      let newInputPos = stepper.inputPos;
+      if (stepper.platform === 'python') {
+        newTerminal = writeString(window.currentPythonRunner._terminal, inputLine);
+
+        /**
+         * For when we are in player mode, _futureInputValue is filled with an object that
+         * will contain the input value, because we need to read the terminal events first
+         * without stopping the skulpt execution.
+         */
+        if (window.currentPythonRunner._futureInputValue) {
+          console.log('PUT_____FUTURE____VALUE____ : ', inputLine.trim());
+          window.currentPythonRunner._futureInputValue.value = inputLine.trim();
+
+          // We update the input position yet then.
+          newInputPos = window.currentPythonRunner._inputPos + inputLine.length;
+          window.currentPythonRunner._inputPos = newInputPos;
+
+          console.log('new inputPos : ', newInputPos);
+        }
+
+        window.currentPythonRunner._input = newInput;
+        window.currentPythonRunner._terminal = newTerminal;
+      } else {
+        newTerminal = writeString(stepper.terminal, inputLine);
+      }
+
+      if (newTerminal) {
+        console.log('t11', newTerminal.toJS().lines[0], newTerminal.toJS().lines[1], newTerminal.toJS().lines[2]);
+      }
+
+      return {
+        ...stepper,
         inputBuffer: "",
-        input: stepper.input + inputLine,
-        terminal: writeString(stepper.terminal, inputLine),
+        input: newInput,
+        inputPos: newInputPos,
+        terminal: newTerminal,
         isWaitingOnInput: false
       };
     });
@@ -157,7 +192,7 @@ export default function (bundle, deps) {
   function TerminalViewSelector (state, props) {
     const result = {};
     result.readOnly = props.preventInput;
-    const stepper = deps.getStepperDisplay(state);
+    const stepper = deps.getCurrentStepperState(state);
     if (stepper) {
       result.terminal = stepper.terminal;
       result.input = stepper.inputBuffer;

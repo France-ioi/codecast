@@ -1,5 +1,6 @@
 
-import {createStore, applyMiddleware, compose} from 'redux';
+import {createStore, applyMiddleware, compose}
+from 'redux';
 import {default as createSagaMiddleware} from 'redux-saga';
 import {all, call} from 'redux-saga/effects';
 import {connect} from 'react-redux';
@@ -124,13 +125,22 @@ export default function link (rootBuilder) {
 
   // Compose the enhancers.
   const sagaMiddleware = createSagaMiddleware();
+
+  // Store is too huge for this extension to work properly.
+  // const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+  // let enhancer = composeEnhancers(
+  //    applyMiddleware(sagaMiddleware)
+  // );
+
   let enhancer = applyMiddleware(sagaMiddleware);
   for (let other of enhancers) {
     enhancer = compose(enhancer, other);
   }
 
   // Create the store.
-  const store = createStore(reducer, null, enhancer);
+  const store = createStore(reducer, null, compose(applyMiddleware(sagaMiddleware), ...enhancers));
+
+  window.store = store;
 
   function finalize (...args) {
     /* Call the deferred callbacks. */
@@ -151,7 +161,8 @@ export default function link (rootBuilder) {
   }
 
   return {
-    scope: makeSafeProxy(globalScope, undefinedNameError),
+    //scope: makeSafeProxy(globalScope, undefinedNameError),
+    scope: globalScope,
     actionTypes: typeForActionName,
     views,
     store,

@@ -1,3 +1,4 @@
+import url from 'url';
 
 export function buildCommonOptions(start, query) {
 
@@ -7,7 +8,7 @@ export function buildCommonOptions(start, query) {
     showStack: true,
     showViews: true,
     showIO: true,
-    platform: 'unix',
+    platform: 'python',
     canChangePlatform: /sandbox|recorder/.test(start),
     controls: {},
   };
@@ -62,19 +63,36 @@ export function buildCommonOptions(start, query) {
 }
 
 export function buildOptions(config, req, start, callback) {
-  const {baseUrl, examplesUrl} = config;
   const options = buildCommonOptions(start, req.query);
   options.baseUrl = config.baseUrl;
   options.callbackUrl = req.originalUrl;
+  options.referer = req.headers.referer || null;
+  if (/sandbox/.test(start)) {
+      options.origin = req.query.origin || null;
+  }
   if (/sandbox|recorder/.test(start)) {
     options.examplesUrl = config.examplesUrl;
   }
   if (/editor|player/.test(start)) {
     options.baseDataUrl = req.query.base;
+    const {s3Bucket:bucket, uploadPath: folder, id: codecast} = parseCodecastUrl(options.baseDataUrl);
+    options.codecastData = {bucket, folder, codecast};
   }
-  if (/recorder|editor/.test(start)) {
+  if (/sandbox|editor|statistics/.test(start)) {
+    options.isStatisticsReady = !!config.database;
+  }
+  if (/recorder|editor|statistics/.test(start)) {
     return config.optionsHook(req, options, callback);
   } else {
     return callback(null, options);
   }
+}
+
+export function parseCodecastUrl (base) {
+  const {hostname, pathname} = url.parse(base);
+  const s3Bucket = hostname.replace('.s3.amazonaws.com', '');
+  const idPos = pathname.lastIndexOf('/');
+  const uploadPath = pathname.slice(1, idPos); // skip leading '/'
+  const id = pathname.slice(idPos + 1);
+  return {s3Bucket, uploadPath, id};
 }
