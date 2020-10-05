@@ -19,7 +19,6 @@ import intervalTree from './interval_tree';
 import {findInstantIndex} from '../player/utils';
 import {postJson} from '../common/utils';
 import {findSubtitleIndex} from '../subtitles/utils';
-import {isMetaProperty} from 'babel-types';
 
 export default function (bundle, deps) {
 

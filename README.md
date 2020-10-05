@@ -58,7 +58,6 @@ Add a CORS configuration for your domain in the AWS S3 bucket's Permissions :
  </CORSRule>
 </CORSConfiguration>
 ```
->>>>>>> with_python
 
 Start with these commands:
 
