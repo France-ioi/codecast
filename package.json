@@ -51,7 +51,7 @@
     "intl-messageformat": "^2.2.0",
     "jsonwebtoken": "^8.3.0",
     "lamejs": "^1.1.0",
-    "lodash": "^4.17.4",
+    "lodash": "^4.17.19",
     "lodash.memoize": "^4.1.2",
     "mysql": "^2.17.1",
     "node-range": "^0.1.0",
