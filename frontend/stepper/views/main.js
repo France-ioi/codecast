@@ -1,6 +1,6 @@
-
 import React from 'react';
 import {Button, Icon} from '@blueprintjs/core';
+import PythonStackView from "../python/analysis/components/PythonStackView";
 import classnames from 'classnames';
 
 class StepperView extends React.PureComponent {
@@ -9,7 +9,8 @@ class StepperView extends React.PureComponent {
       diagnostics, readOnly, sourceMode, sourceRowHeight,
       preventInput, haveStepper, error, getMessage, geometry, panes,
       StackView, BufferEditor, ArduinoPanel, DirectivesPane, IOPane,
-      windowHeight
+      windowHeight,
+      currentStepperState
     } = this.props;
     const height = `${windowHeight - this.state.top - 10}px`;
     const sourcePanelHeader = (
@@ -45,7 +46,16 @@ class StepperView extends React.PureComponent {
                     <span>{getMessage('VARIABLES')}</span>
                   </div>
                   <div className='panel-body'>
-                    {<StackView height={sourceRowHeight}/>}
+                    {(currentStepperState && currentStepperState.platform === 'python')
+                        ? <PythonStackView
+                            height={sourceRowHeight}
+                            analysis={currentStepperState.analysis}
+                            getMessage={getMessage}
+                        />
+                        : <StackView
+                            height={sourceRowHeight}
+                        />
+                    }
                   </div>
                 </div>
               </div>}
@@ -121,7 +131,7 @@ class StepperView extends React.PureComponent {
     }
   }
   _onClearDiagnostics = () => {
-    this.props.dispatch({type: this.props.translateClearDiagnostics});
+    this.props.dispatch({type: this.props.compileClearDiagnostics});
   };
   _onStepperExit = () => {
     this.props.dispatch({type: this.props.stepperExit});
@@ -156,14 +166,14 @@ class StepperViewPanes extends React.PureComponent {
 }
 
 function StepperViewSelector (state, props) {
-  const {getPlayerState, getTranslateDiagnostics, getStepperDisplay} = state.get('scope');
+  const {getPlayerState, getCompileDiagnostics, getCurrentStepperState} = state.get('scope');
   const {BufferEditor, StackView, ArduinoPanel, DirectivesPane, IOPane} = state.get('views');
-  const {translateClearDiagnostics, stepperExit} = state.get('actionTypes');
+  const {compileClearDiagnostics, stepperExit} = state.get('actionTypes');
   const getMessage = state.get('getMessage');
   const geometry = state.get('mainViewGeometry');
   const panes = state.get('panes');
-  const diagnostics = getTranslateDiagnostics(state);
-  const stepperDisplay = getStepperDisplay(state);
+  const diagnostics = getCompileDiagnostics(state);
+  const stepperDisplay = getCurrentStepperState(state);
   const haveStepper = !!stepperDisplay;
   const error = haveStepper && stepperDisplay.error;
   const readOnly = haveStepper || props.preventInput;
@@ -171,7 +181,25 @@ function StepperViewSelector (state, props) {
   const arduinoEnabled = platform === 'arduino';
   /* TODO: make number of visible rows in source editor configurable. */
   const sourceRowHeight = `${Math.ceil(16 * 25)}px`; // 12*25 for /next
-  const sourceMode = arduinoEnabled ? 'arduino' : 'c_cpp';
+
+  let mode;
+  switch (platform) {
+    case 'arduino':
+      mode = 'arduino';
+
+      break;
+    case 'python':
+      mode = 'python';
+
+      break;
+    default:
+      mode = 'c_cpp';
+
+      break;
+  }
+
+  const sourceMode = mode;
+
   /* preventInput is set during playback to prevent the user from messing up
      the editors, and to disable automatic scrolling of the editor triggered
      by some actions (specifically, highlighting).
@@ -181,13 +209,14 @@ function StepperViewSelector (state, props) {
   const windowHeight = state.get('windowHeight');
   return {
     diagnostics, haveStepper, readOnly, error, getMessage, geometry, panes, preventInput,
-    translateClearDiagnostics, stepperExit,
+    compileClearDiagnostics, stepperExit,
     BufferEditor: BufferEditor, sourceRowHeight, sourceMode,
     StackView: showStack && StackView,
     ArduinoPanel: arduinoEnabled && ArduinoPanel,
     DirectivesPane: showViews && DirectivesPane,
     IOPane: showIO && IOPane,
-    windowHeight
+    windowHeight,
+    currentStepperState: stepperDisplay,
   };
 }
 

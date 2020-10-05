@@ -1,16 +1,13 @@
-
-import * as C from 'persistent-c';
 import FibonacciHeap from '@tyriar/fibonacci-heap';
 import range from 'node-range';
 
-import {readScalarBasic, stringifyExpr, evalExpr, viewVariable} from './utils';
+import {stringifyExpr, getVariable} from './utils';
 
 /**
-
-  extractView(context, frame, name, options) looks up `name` in `frame` and
+  extractView(context, name, options) looks up `name` in `stackFrame` and
   builds a view depending on the `options` given.
 
-  TODO: look up in in globals if `name` not defined in `frame`.
+  TODO: look up in in globals if `name` not defined in `stackFrame`.
 
   The return value is an object of shape {cells, cursors} where `cells`
   is an array in which each element is either a cell-content object or the
@@ -47,8 +44,8 @@ import {readScalarBasic, stringifyExpr, evalExpr, viewVariable} from './utils';
                  memory log, if it contains any store operation that overlaps
                  with the cell
 
-  If `options` contains a `cursorExprs` property (array of expressions evaluated
-  in the context of the current `frame`), the `cursors` property in the result
+  If `options` contains a `cursors` property (array of expressions evaluated
+  in the context of the current `stackFrame`), the `cursors` property in the result
   is an array of cursor objects of this shape:
 
     {cursors, index, row, col}
@@ -62,14 +59,15 @@ import {readScalarBasic, stringifyExpr, evalExpr, viewVariable} from './utils';
               (up to `options.cursorRows` rows are used)
 
 */
-export const extractView = function (context, frame, refExpr, options) {
-  const {core} = context;
-  const localMap = frame.get('localMap');
+export const extractView = function (context, name, options) {
+  const {analysis} = context;
+  const localMap = null;
+
   // Normalize options.
-  const {fullView, dimExpr} = options;
-  let {cursorExprs, cursorRows, maxVisibleCells, pointsByKind, getMessage} = options;
-  if (cursorExprs === undefined) {
-    cursorExprs = [];
+  const {fullView, dim} = options;
+  let {cursors, cursorRows, maxVisibleCells, pointsByKind, getMessage} = options;
+  if (cursors === undefined) {
+    cursors = [];
   }
   if (cursorRows === undefined) {
     cursorRows = 2;
@@ -86,58 +84,41 @@ export const extractView = function (context, frame, refExpr, options) {
       last: 20
     };
   }
-  // Evaluate `dimExpr` if given.
+
+  // Evaluate `dim` if given.
   let elemCount;
-  if (dimExpr) {
-    try {
-      const dimVal = evalExpr(core, localMap, dimExpr, false);
-      if (dimVal.type.kind !== 'builtin') {
-        return {error: getMessage('ARRAY1D_DIM_INVALID').format({dim: stringifyExpr(dimExpr)})};
-      }
-      elemCount = dimVal.toInteger();
-    } catch (ex) {
-      return {error: getMessage('ARRAY1D_DIM_NOVAL').format({dim: stringifyExpr(dimExpr), ex: getMessage.format(ex)})};
-    }
+  if (dim) {
+    elemCount = dim;
   }
-  // Evaluate the array expression `expr`.
-  let ref;
-  try {
-    ref = evalExpr(core, localMap, refExpr, false);
-  } catch (ex) {
-    return {error: getMessage('ARRAY1D_EXPR_NOVAL').format({expr: stringifyExpr(refExpr), ex: getMessage.format(ex)})};
+
+  const ref = getVariable(analysis, name);
+  if (!ref) {
+    return {error: getMessage('PYTHON_ARRAY1D_REF_UNDEFINED').format({name: stringifyExpr(name)})};
   }
-  // By the array-value decaying rule, ref should be a pointer.
-  if (ref.type.kind !== 'pointer') {
-    return {error: getMessage('ARRAY1D_EXPR_NOPTR').format({expr: stringifyExpr(refExpr)})};
+
+  if (!(ref.cur instanceof Sk.builtin.list)) {
+    return {error: getMessage('PYTHON_ARRAY1D_REF_NOT_LIST').format({name: stringifyExpr(name)})};
   }
+
   if (elemCount === undefined) {
-    if ('orig' in ref.type) {
-      // The array size can be obtained from the original type.
-      elemCount = ref.type.orig.count.toInteger();
-    } else {
-      return {error: getMessage('ARRAY1D_DIM_UNK').format({expr: stringifyExpr(refExpr)})};
-    }
+    elemCount = ref.cur.v.length;
   }
-  const address = ref.address;
-  const elemType = ref.type.pointee;
-  if (!/^(builtin|pointer)$/.test(elemType.kind)) {
-    return {error: getMessage('ARRAY1D_ELT_UNSUP').format({expr: stringifyExpr(refExpr)})};
-  }
-  const cellOpsMap = getOpsArray1D(core, address, elemCount, elemType.size);
-  const cursorMap = getCursorMap(
-    core, localMap, cursorExprs,
-    {minIndex: 0, maxIndex: elemCount, address, cellSize: elemType.size});
+
+  const cursorMap = getCursorMap(analysis, cursors, {
+      minIndex: 0,
+      maxIndex: elemCount
+  });
   const selection =
     fullView
       ? range(0, elemCount + 1)
-      : getSelection(maxVisibleCells, elemCount, cellOpsMap, cursorMap, pointsByKind);
-  const cells = readArray1D(context, address, elemType, elemCount, selection, cellOpsMap);
+      : getSelection(maxVisibleCells, elemCount, cursorMap, pointsByKind);
+
   finalizeCursors(selection, cursorMap, cursorRows);
-  return {cells, cursorMap};
+
+  return {ref, cursorMap};
 };
 
 /*
-
    ArrayViewBuilder(nbVisibleCells, nbCells) is a constructor for an object
    that allows selecting nbVisibleCells cells out of an array of nbCells,
    prioritizing the display of the most important cells based on markers.
@@ -358,135 +339,57 @@ export const mapArray1D = function (arrayBase, elemCount, elemSize) {
    };
 };
 
-// Read an 1D array of scalars.
-export const readArray1D = function (context, arrayBase, elemType, elemCount, selection, mops) {
-  const {core, oldCore} = context;
-  const elemSize = elemType.size;
-  const elemRefType = C.pointerType(elemType);
-  // TODO: check that elemType is scalar
-  const cells = [];
-  if (selection === undefined) {
-    selection = range(0, elemCount + 1);
-  }
-  selection.forEach(function (index, position) {
-    if (position === undefined)
-      position = index;
-    if (index === '…') {
-      /* Generate a fake index so it can be used as a key for rendering. */
-      cells.push({position, gap: true, index: `#${position}`});
-    } else {
-      const elemAddress = arrayBase + index * elemSize;
-      const cell = {position, index, address: elemAddress};
-      if (index >= 0 && index < elemCount) {
-        const content = readScalarBasic(core, elemRefType, elemAddress);
-        if (index in mops) {
-          const mop = mops[index];
-          if ('load' in mop) {
-            content.load = mop.load;
-          }
-          if ('store' in mop) {
-            content.store = mop.store;
-            content.previous = C.readValue(oldCore, content.ref);
-          }
-        }
-        cell.content = content;
-      }
-      cells.push(cell);
-    }
-  });
-  return cells;
-};
-
-// Returns a map keyed by cell index, and whose values are objects giving
-// the greatest rank in the memory log of a 'load' or 'store' operation.
-const getOpsArray1D = function (core, address, elemCount, elemSize) {
-  // Go through the memory log, translate memory-operation references into
-  // array cells indexes, and save the cell load/store operations in cellOps.
-  const cellOpsMap = [];
-  const forEachCell = mapArray1D(address, elemCount, elemSize);
-  core.memoryLog.forEach(function (entry, i) {
-    const op = entry[0]; // 'load' or 'store'
-    forEachCell(entry[1], function (index) {
-      let cellOps;
-      if (index in cellOpsMap) {
-        cellOps = cellOpsMap[index];
-      } else {
-        cellOps = cellOpsMap[index] = {index};
-      }
-      cellOps[op] = i; // the greatest memory log index is used as rank
-    });
-  });
-  return cellOpsMap;
-};
-
 // Returns a map keyed by cell index, and whose values are objects of shape
 // {index, labels}, where `labels` lists the string representation of each
 // cursor expression whose value is `index`.
 // The `options` argument is an object with these properties:
-//   minIndex, maxIndex, address, cellSize
+//   minIndex, maxIndex
 // Only cursors whose value is in the range [minIndex, maxIndex] are considered.
-// If a cursor expression evaluates to a pointer (rather than an integer),
-// an index is calculated using `address` (address of cell at index 0) and
-// `cellSize` (in bytes).  The calculated value is then subject to the
-// minIndex/maxIndex constraint.
-// If the `address` option is not given, then pointer values are not used.
-export const getCursorMap = function (core, localMap, cursorExprs, options) {
-  const {minIndex, maxIndex, address, cellSize, cellSizeMod} = options;
-  const allowPointers = typeof address === 'number';
-  const haveCellSizeMod = typeof cellSizeMod === 'number';
+// The calculated value is then subject to the minIndex/maxIndex constraint.
+export const getCursorMap = function (analysis, cursorNames, options) {
+  const {minIndex, maxIndex} = options;
   const cursorMap = [];  // spare array
-  cursorExprs.forEach(function (expr) {
-    let cursorValue;
-    try {
-      cursorValue = evalExpr(core, localMap, expr);
-    } catch (ex) {
-      // TODO: return errors somehow
-      //console.log('failed to evaluate cursor expression', expr, ex);
-      return;
+
+  cursorNames.forEach(function(name) {
+    const cursorVariable = getVariable(analysis, name);
+    if (!cursorVariable) {
+        return;
     }
-    const cursorLabel = stringifyExpr(expr, 0);
-    let index;
-    if (cursorValue.type.kind === 'builtin') {
-      index = cursorValue.toInteger();
-    } else if (allowPointers && cursorValue.type.kind === 'pointer') {
-      let offset = cursorValue.address - address;
-      if (haveCellSizeMod) {
-        offset = offset % cellSizeMod;
-      }
-      index = Math.floor(offset / cellSize);
-    } else {
-      //console.log('invalid cursor expression value', expr);
-      return;
+
+    if (!(cursorVariable.cur instanceof Sk.builtin.int_)) {
+        return;
     }
+
+    const index = cursorVariable.cur.v;
+
     if (index >= minIndex && index <= maxIndex) {
-      // We currently do not attempt to find the previous value of the cursor
-      // (and when it changed).  This would requires support from evalExpr.
+      // TODO: We currently do not attempt to find the previous value of the cursor (and when it changed) ?
       if (!(index in cursorMap)) {
-        cursorMap[index] = {index, labels: []};
+        cursorMap[index] = {
+            index,
+            labels: []
+        };
       }
-      cursorMap[index].labels.push(cursorLabel);
+
+      cursorMap[index].labels.push(name);
     }
   });
+
   return cursorMap;
 };
 
 // Returns an array of up to maxVisibleCells indices between 0 and elemCount
 // (inclusive), prioritizing cells that have memory operations or cursors.
-const getSelection = function (maxVisibleCells, elemCount, cellOpsMap, cursorMap, pointsByKind) {
+const getSelection = function (maxVisibleCells, elemCount, cursorMap, pointsByKind) {
   const builder = new ArrayViewBuilder(maxVisibleCells, elemCount);
+
   builder.addMarker(0, pointsByKind.first);
   builder.addMarker(elemCount, pointsByKind.last);
-  cellOpsMap.forEach(function (ops) {
-    if ('load' in ops) {
-      builder.addMarker(ops.index, pointsByKind.load, ops.load);
-    }
-    if ('store' in ops) {
-      builder.addMarker(ops.index, pointsByKind.store, ops.store);
-    }
-  });
+
   cursorMap.forEach(function (cursor) {
     builder.addMarker(cursor.index, pointsByKind.cursor);
   });
+
   return builder.getSelection();
 };
 
@@ -498,8 +401,9 @@ export const finalizeCursors = function (selection, cursorMap, cursorRows) {
   const staggerAll = true; // XXX could be an option
   let nextStaggerCol, cursorRow = 0;
   selection.forEach(function (index, col) {
-    if (col === undefined)
-      col = index;
+    if (col === undefined) {
+        col = index;
+    }
     if (index in cursorMap) {
       const cursor = cursorMap[index];
       if (staggerAll || col === nextStaggerCol) {
@@ -507,6 +411,7 @@ export const finalizeCursors = function (selection, cursorMap, cursorRows) {
       } else {
         cursorRow = 0;
       }
+
       nextStaggerCol = col + 1;
       cursor.col = col;
       cursor.row = cursorRow;

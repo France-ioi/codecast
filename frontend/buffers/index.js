@@ -34,6 +34,7 @@ import React from 'react';
 
 import 'brace';
 import 'brace/mode/c_cpp';
+import 'brace/mode/python';
 import 'brace/theme/ambiance';
 import 'brace/theme/chaos';
 import 'brace/theme/chrome';
@@ -140,6 +141,7 @@ class BufferEditor extends React.PureComponent {
 
   onEdit = (delta) => {
     const {dispatch, buffer, actionTypes} = this.props;
+    console.log(this.props);
     dispatch({type: actionTypes.bufferEdit, buffer, delta});
   };
 
@@ -311,6 +313,14 @@ function addRecordHooks ({recordApi}, actionTypes) {
     const {buffer, delta} = action;
     const {start, end} = delta;
     const range = {start, end};
+
+    const {platform} = yield select(state => state.get('options'));
+    if (buffer === 'output' && platform === 'python') {
+      // For python, the full output is retrieved from the interpreter at each step.
+
+      return;
+    }
+
     if (delta.action === 'insert') {
       yield call(addEvent, 'buffer.insert', buffer, compressRange(range), delta.lines);
     } else {

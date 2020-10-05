@@ -15,7 +15,12 @@ Document.prototype.size = function () {
   if (this.lines.size === 0) {
     return 0;
   }
-  return this.lines.reduce(function (a, v) { return (a + v.length + 1); }, 0) - 1;
+
+  console.log(this.lines.toJS());
+
+  return this.lines.reduce(function (a, v) {
+    return (a + v.length + 1);
+  }, 0) - 1;
 };
 
 Document.prototype.toString = function () {

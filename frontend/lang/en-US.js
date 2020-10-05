@@ -1,7 +1,8 @@
 module.exports = {
   language: 'English',
-  COMPILE: 'compile',
-  EDIT: 'edit',
+  COMPILE: 'Compile',
+  EXECUTE: 'Execute',
+  EDIT: 'Edit',
   VARIABLES: 'Variables',
   SOURCE: 'Source',
   TERMINAL: 'Terminal',
@@ -63,6 +64,12 @@ module.exports = {
   ARRAY2D_EXPR_NOARR: "value of expression {expr} is not an array",
   ARRAY2D_EXPR_NOT2D: "value of expression {expr} is not a 2D array",
   ARRAY2D_ELT_UNSUP: "elements of 2D array {expr} have an unsupported type",
+
+  PYTHON_ARRAY1D_REF_UNDEFINED: "the variable {name} is undefined",
+  PYTHON_ARRAY1D_REF_NOT_LIST: "the variable {name} is not a list",
+  PYTHON_ARRAY2D_REF_UNDEFINED: "the variable {name} is undefined",
+  PYTHON_ARRAY2D_REF_NOT_LIST: "the variable {name} is not a list",
+
   SUBTITLES_FAILED_TO_LOAD: "subtitles failed to load",
   CLOSED_CAPTIONS_TOOLTIP: "captions",
   CLOSED_CAPTIONS_TITLE: "Closed captions",
@@ -74,4 +81,6 @@ module.exports = {
   PLATFORM_SETTING: "Platform: ",
   PLATFORM_UNIX: "Unix",
   PLATFORM_ARDUINO: "Arduino",
+  PLATFORM_PYTHON: "Python",
+  EMPTY_PROGRAM: "The program is empty."
 };

@@ -1,3 +1,1 @@
-
-export const RECORDING_FORMAT_VERSION = '5.0.0';
-
+export const RECORDING_FORMAT_VERSION = '6.0.0';

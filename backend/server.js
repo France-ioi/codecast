@@ -1,4 +1,3 @@
-
 import fs from 'fs';
 import path from 'path';
 import http from 'http';
@@ -316,7 +315,7 @@ function addBackendRoutes (app, config, store) {
     return callback('target unspecified');
   }
 
-  app.post('/translate', function (req, res) {
+  app.post('/compile', function (req, res) {
     const env = {LANGUAGE: 'c'};
     env.SYSROOT = path.join(config.rootDir, 'sysroot');
     const {source, platform, logData} = req.body;

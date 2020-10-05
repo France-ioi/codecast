@@ -426,8 +426,12 @@ function trimEvents (data, intervals) {
     }
     events.push(event);
   }
+
+  const options = data.options;
+
   return new Blob([JSON.stringify({
     version: RECORDING_FORMAT_VERSION,
+    options,
     events,
     subtitles: []
   })], {encoding: "UTF-8", type: "application/json;charset=UTF-8"});

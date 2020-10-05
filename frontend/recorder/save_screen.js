@@ -202,7 +202,8 @@ function* encodingSaga ({actionTypes, selectors}) {
   const endTime = Math.floor(duration * 1000);
   const events = recorder.get('events').push([endTime, 'end']);
   const subtitles = [];
-  const data = {version, events, subtitles};
+  const options = yield select(state => state.get('options'));
+  const data = {version, options, events, subtitles};
   const eventsBlob = new Blob([JSON.stringify(data)], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
   const eventsUrl = URL.createObjectURL(eventsBlob);
   /* Signal that the recorder has stopped. */

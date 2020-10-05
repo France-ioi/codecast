@@ -1,4 +1,3 @@
-
 import 'es5-shim';
 import 'es6-shim';
 import 'array.prototype.fill'; // Array.prototype.fill
@@ -9,13 +8,11 @@ import url from 'url';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
-import {applyMiddleware} from 'redux';
-import createSagaMiddleware from 'redux-saga';
 import Immutable from 'immutable';
+import installDevTools from 'immutable-devtools';
 import 'rc-slider/dist/rc-slider.css?global';
 
 
-// import sagaMonitor from './sagaMonitor';
 import link from './linker';
 
 import commonBundle from './common/index';
@@ -25,11 +22,26 @@ import recorderBundle from './recorder/index';
 import editorBundle from './editor/index';
 import statisticsBundle from './statistics/index';
 
+/**
+ * List of actions not to write in the console in development mode.
+ *
+ * @type {Object}
+ */
+const DEBUG_IGNORE_ACTIONS_MAP = {
+  'Window.Resized': true,
+  'Buffer.Reset': true,
+  'Buffer.Highlight': true,
+  'Buffer.Init': true,
+  'Buffer.Model.Edit': true,
+  'Player.Tick': true
+};
+
 const {store, scope, actionTypes, views, finalize, start} = link(function (bundle, deps) {
 
   bundle.defineAction('init', 'System.Init');
-  bundle.addReducer('init', (_state, _action) =>
-    Immutable.Map({scope, actionTypes, views}));
+  bundle.addReducer('init', (_state, _action) => {
+    return Immutable.Map({scope, actionTypes, views});
+  });
 
   bundle.include(commonBundle);
   bundle.include(sandboxBundle);
@@ -40,9 +52,19 @@ const {store, scope, actionTypes, views, finalize, start} = link(function (bundl
 
   if (process.env.NODE_ENV === 'development') {
     bundle.addEarlyReducer(function (state, action) {
-      console.log('action', action);
+      if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
+          console.log('action', action);
+      }
+
       return state;
     });
+
+    /**
+     * Enable Immutable debug dev-tools.
+     *
+     * @see https://github.com/andrewdavey/immutable-devtools
+     */
+    installDevTools(Immutable);
   }
 
 }/*, {reduxSaga: {sagaMonitor}}*/);
@@ -73,7 +95,7 @@ const Codecast = window.Codecast = {store, scope, restart};
     examplesUrl: url,
     baseDataUrl: url,
     user: {…},
-    platform: 'unix'|'arduino',
+    platform: 'python'|'unix'|'arduino',
     controls: {…},
     showStepper: boolean,
     showStack: boolean,
