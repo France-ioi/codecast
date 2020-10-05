@@ -59,7 +59,7 @@ Add a CORS configuration for your domain in the AWS S3 bucket's Permissions :
 </CORSConfiguration>
 ```
 
-Start with these commands:
+To install and run the project, or after an update, run:
 
     npm install
     npm run build
