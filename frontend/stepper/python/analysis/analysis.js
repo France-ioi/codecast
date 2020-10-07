@@ -9,7 +9,7 @@ import Immutable from 'immutable';
  *
  * @type {int}
  */
-const SKULPT_ANALYSIS_DEBUG = 2;
+const SKULPT_ANALYSIS_DEBUG = 0;
 
 /**
  * Transforms the skulpt state (the suspensions) to something readable with the variables content.
@@ -19,7 +19,7 @@ const SKULPT_ANALYSIS_DEBUG = 2;
  *
  * @returns {Object}
  */
-export const analyseSkulptState = function (suspensions, lastAnalysis) {
+export const analyseSkulptState = function (suspensions, lastAnalysis, lastStepNum) {
     if (SKULPT_ANALYSIS_DEBUG === 2) {
         console.log('[¥¥¥¥¥¥¥] Building analysis');
         console.log(suspensions);
@@ -54,7 +54,7 @@ export const analyseSkulptState = function (suspensions, lastAnalysis) {
     const analysis = {
         ...lastAnalysis,
         functionCallStack: functionCallStack,
-        stepNum: (lastAnalysis.stepNum + 1)
+        stepNum: (lastStepNum + 1)
     };
 
     if (SKULPT_ANALYSIS_DEBUG > 0) {

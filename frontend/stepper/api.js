@@ -117,15 +117,14 @@ function getNodeStartRow (state) {
 }
 
 export function makeContext (state, interact) {
-  console.log('MAKE CONTEEEXT*************************************', state);
+  console.log('**********  MAKE CONTEXT  **********', state);
 
   switch (state.platform) {
     case 'python':
       return {
         state: {
           ...state,
-          programState: state.programState,
-          lastProgramState: state.programState,
+          lastAnalysis: state.analysis,
           controls: resetControls(state.controls)
         },
         interact,

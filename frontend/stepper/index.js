@@ -185,7 +185,7 @@ function enrichStepperState (stepperState, context) {
           isFinished: true
         }
       } else {
-        stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.analysis);
+        stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum);
         stepperState.directives = {
           ordered: parseDirectives(stepperState.analysis),
           functionCallStackMap: null
@@ -195,6 +195,14 @@ function enrichStepperState (stepperState, context) {
 
     if (!stepperState.analysis) {
       stepperState.analysis = {
+        functionCallStack: new Immutable.List(),
+        code: window.currentPythonRunner._code,
+        lines: window.currentPythonRunner._code.split("\n"),
+        stepNum: 0,
+        isFinished: false
+      }
+
+      stepperState.lastAnalysis = {
         functionCallStack: new Immutable.List(),
         code: window.currentPythonRunner._code,
         lines: window.currentPythonRunner._code.split("\n"),

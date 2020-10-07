@@ -21,7 +21,7 @@ var Sk = Sk || {}; //jshint ignore:line
  * - this.output_callback._onStepSuccess(e);
  */
 
-var DEBUG_DEBUGGER = true;
+var DEBUG_DEBUGGER = false;
 var debuggerLog = function() {
     if (DEBUG_DEBUGGER) {
         // 1. Convert args to a normal array
