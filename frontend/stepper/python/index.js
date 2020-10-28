@@ -57,7 +57,6 @@ export default function (bundle, deps) {
       inputPos = window.currentPythonRunner._inputPos;
 
       nextNL = input.indexOf('\n', inputPos);
-      console.log('found ?', input, inputPos, nextNL);
     }
 
     const line = input.substring(inputPos, nextNL);

@@ -246,7 +246,6 @@ export default function (bundle, deps) {
       stepperState.inputPos = 0;
       if (mode === 'terminal') {
         stepperState.input = "";
-        console.log('t7');
         stepperState.terminal = new TermBuffer({lines: 10, width: 80});
         stepperState.inputBuffer = "";
       } else {
@@ -280,7 +279,6 @@ export default function (bundle, deps) {
     stepperApi.onEffect('write', function* writeEffect (stepperContext, text) {
       const {state} = stepperContext;
       if (state.terminal) {
-        console.log('t8');
         state.terminal = writeString(state.terminal, text);
       } else {
         state.output = state.output + text;
@@ -372,9 +370,7 @@ export default function (bundle, deps) {
       yield takeLatest([deps.stepperProgress, deps.stepperIdle], function* (action) {
         const stepperState = yield select(deps.getCurrentStepperState);
         const outputModel = yield select(deps.getBufferModel, 'output');
-        console.log(outputModel.get('document'));
         const oldSize = outputModel.get('document').size();
-        console.log(stepperState.output);
         const newSize = stepperState.output.length;
         if (oldSize !== newSize) {
           const outputDoc = outputModel.get('document');

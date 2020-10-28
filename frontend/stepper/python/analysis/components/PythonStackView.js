@@ -1,6 +1,6 @@
 import * as React from 'react';
 import PythonFunctionView from "./PythonFunctionView";
-import {Alert, Button, ButtonGroup, Intent} from "@blueprintjs/core";
+import {Button, ButtonGroup} from "@blueprintjs/core";
 
 const PythonStackView = (props) => {
     const callReturn = null;
@@ -50,6 +50,7 @@ const PythonStackView = (props) => {
                     key={func.key}
                     scopeIndex={func.scopeIndex}
                     openedPaths={func.openedPaths}
+                    loadedReferences={func.loadedReferences}
                     func={func}
                 />
             ))}

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import PythonVariable from "./PythonVariable";
 import {connect} from "react-redux";
+import {isLoaded} from "../helpers";
 
 class PythonVariableValue extends React.PureComponent {
     constructor(props) {
@@ -122,6 +123,34 @@ class PythonVariableValue extends React.PureComponent {
             }
             visited[this.props.cur._uuid] = true;
 
+            let renderedElements;
+            if (wasVisited) {
+                renderedElements = '...';
+            } else if (isEmpty) {
+                renderedElements = <span className="value-empty">&lt;&gt;</span>;
+            } else {
+                renderedElements = elements.map((element) => {
+                    let loadedReferences = {};
+                    if (isLoaded(this.props.loadedReferences, element)) {
+                        loadedReferences = this.props.loadedReferences;
+                    }
+
+                    return (
+                        <li key={element.name}>
+                            <PythonVariable
+                                name={element.name}
+                                value={element.value}
+                                visited={visited}
+                                path={element.path}
+                                loadedReferences={loadedReferences}
+                                openedPaths={this.props.openedPaths}
+                                scopeIndex={this.props.scopeIndex}
+                            />
+                        </li>
+                    );
+                });
+            }
+
             return (
                 <React.Fragment>
                     {this.isOpened() ? (
@@ -130,24 +159,7 @@ class PythonVariableValue extends React.PureComponent {
                                 <span className="toggle-icon">▾</span>
                             </span>
                             <ul className="object_scope">
-                                {wasVisited ? '...' : (
-                                    (isEmpty) ? (
-                                        <span className="value-empty">&lt;&gt;</span>
-                                    ) : (
-                                        elements.map((element) => (
-                                            <li key={element.name}>
-                                                <PythonVariable
-                                                    name={element.name}
-                                                    value={element.value}
-                                                    visited={visited}
-                                                    path={element.path}
-                                                    openedPaths={this.props.openedPaths}
-                                                    scopeIndex={this.props.scopeIndex}
-                                                />
-                                            </li>
-                                        ))
-                                    )
-                                )}
+                                {renderedElements}
                             </ul>
                         </React.Fragment>
                     ) : (
@@ -188,6 +200,33 @@ class PythonVariableValue extends React.PureComponent {
             }
             visited[this.props.cur._uuid] = true;
 
+            let renderedElements;
+            if (wasVisited) {
+                renderedElements = '...';
+            } else {
+                renderedElements = elements.map((element, index) => {
+                    let loadedReferences = {};
+                    if (isLoaded(this.props.loadedReferences, element)) {
+                        loadedReferences = this.props.loadedReferences;
+                    }
+
+                    return (
+                        <span key={index}>
+                            <ConnectedPythonVariableValue
+                                cur={element.cur}
+                                old={element.old}
+                                visited={visited}
+                                path={element.path}
+                                loadedReferences={loadedReferences}
+                                openedPaths={this.props.openedPaths}
+                                scopeIndex={this.props.scopeIndex}
+                            />
+                            {(index + 1) < nbElements ? ', ' : null}
+                        </span>
+                    );
+                });
+            }
+
             return (
                 <React.Fragment>
                     {this.isOpened() ? (
@@ -195,21 +234,7 @@ class PythonVariableValue extends React.PureComponent {
                             <span className="list-toggle list-toggle-open" onClick={this.toggleOpened}>
                                 <span className="toggle-icon">▾</span>
                             </span>
-                            [{wasVisited ? '...' : (
-                                elements.map((element, index) => (
-                                    <span key={index}>
-                                        <ConnectedPythonVariableValue
-                                            cur={element.cur}
-                                            old={element.old}
-                                            visited={visited}
-                                            path={element.path}
-                                            openedPaths={this.props.openedPaths}
-                                            scopeIndex={this.props.scopeIndex}
-                                        />
-                                        {(index + 1) < nbElements ? ', ' : null}
-                                    </span>
-                                ))
-                            )}]
+                            [{renderedElements}]
                         </React.Fragment>
                     ) : (
                         <span className="list-toggle" onClick={this.toggleOpened}>
@@ -224,9 +249,14 @@ class PythonVariableValue extends React.PureComponent {
         }
 
         if (this.props.cur instanceof Sk.builtin.str) {
+            let classes = 'value-string';
+            if (isLoaded(props.loadedReferences, this.props)) {
+                classes = ' value-loaded';
+            }
+
             return (
                 <React.Fragment>
-                    <span className="value-string">"{this.props.cur.v}"</span>
+                    <span className={classes}>"{this.props.cur.v}"</span>
                     {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
                         <span className="value-previous">"{this.props.old.v}"</span>
                     : null}
@@ -254,6 +284,11 @@ class PythonVariableValue extends React.PureComponent {
             }
             visited[this.props.cur._uuid] = true;
 
+            let loadedReferences = {};
+            if (isLoaded(this.props.loadedReferences, this.props)) {
+                loadedReferences = this.props.loadedReferences;
+            }
+
             return (
                 <React.Fragment>
                     {wasVisited ? '...' : (
@@ -262,6 +297,7 @@ class PythonVariableValue extends React.PureComponent {
                             old={old}
                             visited={visited}
                             path={this.props.path}
+                            loadedReferences={loadedReferences}
                             openedPaths={this.props.openedPaths}
                             scopeIndex={this.props.scopeIndex}
                         />
@@ -293,6 +329,11 @@ class PythonVariableValue extends React.PureComponent {
                     )
                 </React.Fragment>
             );
+        }
+
+        let classes = 'value-scalar';
+        if (isLoaded(this.props.loadedReferences, this.props)) {
+            classes = ' value-loaded';
         }
 
         return (

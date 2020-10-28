@@ -185,7 +185,7 @@ function enrichStepperState (stepperState, context) {
           isFinished: true
         }
       } else {
-        stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum);
+        stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
         stepperState.directives = {
           ordered: parseDirectives(stepperState.analysis),
           functionCallStackMap: null

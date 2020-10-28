@@ -141,7 +141,6 @@ class BufferEditor extends React.PureComponent {
 
   onEdit = (delta) => {
     const {dispatch, buffer, actionTypes} = this.props;
-    console.log(this.props);
     dispatch({type: actionTypes.bufferEdit, buffer, delta});
   };
 

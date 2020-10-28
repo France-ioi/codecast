@@ -13,6 +13,7 @@ const PythonFunctionView = (props) => {
             <PythonFunctionLocals
                 func={props.func}
                 scopeIndex={props.scopeIndex}
+                loadedReferences={props.loadedReferences}
                 openedPaths={props.openedPaths}
             />
         </div>

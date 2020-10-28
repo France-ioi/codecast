@@ -70,7 +70,6 @@ export async function buildState (globalState) {
   }
 
   function interact ({saga}) {
-    console.log('int5');
     return new Promise((resolve, reject) => {
       if (saga) {
         return reject(new StepperError('error', 'cannot interact in buildState'));
@@ -186,7 +185,7 @@ async function executeSingleStep (stepperContext) {
   }
 
   if (stepperContext.state.platform === 'python') {
-    console.log('EXECUTE STEP HERE', stepperContext.state);
+    console.log('EXECUTE STEP', stepperContext.state);
 
     window.currentPythonRunner._input = stepperContext.state.input;
     window.currentPythonRunner._inputPos = stepperContext.state.inputPos;

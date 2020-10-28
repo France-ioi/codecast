@@ -9700,9 +9700,12 @@ Sk.exportSymbol("Sk.astDump", Sk.astDump);
 /*!***************************!*\
   !*** ./src/biginteger.js ***!
   \***************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
 /**
  * @fileoverview
  * @suppress {checkTypes}
@@ -9743,6 +9746,8 @@ Sk.exportSymbol("Sk.astDump", Sk.astDump);
 
 
 // (public) Constructor
+
+
 /**
  * @constructor
  * @param {number|string|null} a
@@ -9750,6 +9755,8 @@ Sk.exportSymbol("Sk.astDump", Sk.astDump);
  * @param {*=} c
  */
 Sk.builtin.biginteger = function (a, b, c) {
+    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+
     if (a != null) {
         if ("number" == typeof a) {
             this.fromNumber(a, b, c);
@@ -11566,8 +11573,13 @@ Sk.builtin.biginteger.prototype.isProbablePrime = Sk.builtin.biginteger.prototyp
 /*!*********************!*\
   !*** ./src/bool.js ***!
   \*********************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
+
 
 /**
  * @constructor
@@ -11576,21 +11588,27 @@ Sk.builtin.biginteger.prototype.isProbablePrime = Sk.builtin.biginteger.prototyp
  * @description
  * Constructor for Python bool. Also used for builtin bool() function.
  *
- * Where possible, do not create a new instance but use the constants 
+ * Where possible, do not create a new instance but use the constants
  * Sk.builtin.bool.true$ or Sk.builtin.bool.false$. These are defined in src/constant.js
  *
  * @extends {Sk.builtin.object}
- * 
+ *
  * @param  {(Object|number|boolean)} x Value to evaluate as true or false
  * @return {Sk.builtin.bool} Sk.builtin.bool.true$ if x is true, Sk.builtin.bool.false$ otherwise
  */
 Sk.builtin.bool = function (x) {
     Sk.builtin.pyCheckArgsLen("bool", arguments.length, 1);
+
+    let bool;
     if (Sk.misceval.isTrue(x)) {
-        return Sk.builtin.bool.true$;
+        bool = Sk.builtin.bool.true$;
     } else {
-        return Sk.builtin.bool.false$;
+        bool = Sk.builtin.bool.false$;
     }
+
+    bool._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+
+    return bool;
 };
 
 Sk.abstr.setUpInheritance("bool", Sk.builtin.bool, Sk.builtin.int_);
@@ -13230,7 +13248,7 @@ function hookAffectation(mangled, dataToStore, debug) {
 
     // TO :   $loc.varName = window.currentPythonRunner.reportValue(value, 'varName');
     var varName = mangled.substr(5);
-    out("if (" + dataToStore + "._uuid) {");
+    out("if (" + dataToStore + ".hasOwnProperty('_uuid')) {");
     out("  $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];");
     out("  if (!$loc.__refs__.hasOwnProperty(" + dataToStore + "._uuid)) {");
     out("    $loc.__refs__[" + dataToStore + "._uuid] = [];");
@@ -13239,32 +13257,6 @@ function hookAffectation(mangled, dataToStore, debug) {
     out("}");
 
     out(mangled, "=", "window.currentPythonRunner.reportValue(", dataToStore, ", '", varName, "');");
-}
-
-function hookGr(v, args) {
-    /*
-    var args = "";
-    for (i = 1; i < arguments.length; ++i) {
-        args += " " + arguments[i] + ", ";
-    }
-    console.log("HOOK_GR : " + v + "  = " + args);
-    */
-
-    // FROM :
-    // out("var ", v, "=");
-    // for (i = 1; i < arguments.length; ++i) {
-    //     out(arguments[i]);
-    // }
-    // out(";");
-
-    // TO :
-
-    out("var ", v, "=");
-    for (let i = 1; i < args.length; ++i) {
-        out(args[i]);
-    }
-    out(";");
-    //out("console.log('var '" + v + "'='," + arguments + ")");
 }
 
 /**
@@ -13376,6 +13368,7 @@ Compiler.prototype.annotateSource = function (ast) {
 
         Sk.asserts.assert(ast.lineno !== undefined && ast.col_offset !== undefined);
         out("$currLineNo = ", lineno, ";\n$currColNo = ", col_offset, ";\n\n");
+        out("var $__loaded_references = {};");
     }
 };
 
@@ -13566,7 +13559,33 @@ Compiler.prototype._gr = function (hint, rest) {
     var v = this.gensym(hint);
     this.u.localtemps.push(v);
 
-    hookGr(v, arguments);
+    out("var ", v, "=");
+    for (let i = 1; i < arguments.length; ++i) {
+        out(arguments[i]);
+    }
+    out(";");
+
+    if (hint === "loadname") {
+        out("if (" + v + ".hasOwnProperty('_uuid')) {");
+        out("  $__loaded_references[" + v + "._uuid] = true;");
+        out("    if (" + v + ".hasOwnProperty('$d')) {");
+        out("      $__loaded_references[" + v + ".$d._uuid] = true;");
+        out("    }");
+        out("} else if (" + v + ".hasOwnProperty('_scalar_uuid')) {");
+        out("  $__loaded_references[" + v + "._scalar_uuid] = true;");
+        out("}");
+    } else if (hint === "lsubscr" || hint === "gitem" || hint === "lattr") {
+        out("if (typeof $ret !== 'undefined') {");
+        out("  if ($ret.hasOwnProperty('_uuid')) {");
+        out("    $__loaded_references[$ret._uuid] = true;");
+        out("    if ($ret.hasOwnProperty('$d')) {");
+        out("      $__loaded_references[$ret.$d._uuid] = true;");
+        out("    }");
+        out("  } else if ($ret.hasOwnProperty('_scalar_uuid')) {");
+        out("    $__loaded_references[$ret._scalar_uuid] = true;");
+        out("  }");
+        out("}");
+    }
 
     return v;
 };
@@ -13587,6 +13606,9 @@ Compiler.prototype.outputInterruptTest = function () { // Added by RNL
             output += "var $susp = $saveSuspension({data: {type: 'Sk.yield'}, resume: function() {}}, '"+this.filename+"',$currLineNo,$currColNo);";
             output += "$susp.$blk = $blk;";
             output += "$susp.optional = true;";
+            output += "if ($__loaded_references) {";
+            output += "$susp.$loaded_references = $__loaded_references;";
+            output += "}";
             output += "return $susp;";
             output += "}";
             this.u.doesSuspend = true;
@@ -14683,6 +14705,9 @@ Compiler.prototype.cwhile = function (s) {
                 "var $susp = $saveSuspension({data: {type: '"+suspType+"'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+");",
                 "$susp.$blk = "+debugBlock+";",
                 "$susp.optional = true;",
+                "if ($__loaded_references) {",
+                "  $susp.$loaded_references = $__loaded_references;",
+                "}",
                 "return $susp;",
                 "}");
             this._jump(debugBlock);
@@ -14752,6 +14777,9 @@ Compiler.prototype.cfor = function (s) {
             "var $susp = $saveSuspension({data: {type: '"+suspType+"'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+");",
             "$susp.$blk = "+debugBlock+";",
             "$susp.optional = true;",
+            "if ($__loaded_references) {",
+            "  $susp.$loaded_references = $__loaded_references;",
+            "}",
             "return $susp;",
             "}");
         this._jump(debugBlock);
@@ -15733,6 +15761,9 @@ Compiler.prototype.vstmt = function (s, class_for_super) {
             "var $susp = $saveSuspension({data: {type: 'Sk.debug'}, resume: function() {}}, '"+this.filename+"',"+s.lineno+","+s.col_offset+");",
             "$susp.$blk = " + debugBlock + ";",
             "$susp.optional = true;",
+            "if ($__loaded_references) {",
+            "  $susp.$loaded_references = $__loaded_references;",
+            "}",
             "return $susp;",
             "}");
         this._jump(debugBlock);
@@ -15940,7 +15971,6 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
             switch (ctx) {
                 case Sk.astnodes.Load:
                     // can't be || for loc.x = 0 or null
-
                     return this._gr("loadname", mangled, "!==undefined?", mangled, ":Sk.misceval.loadname('", mangledNoPre, "',$gbl);");
                 case Sk.astnodes.Store:
                     // out(mangled, "=", dataToStore, ";");
@@ -16218,8 +16248,13 @@ Sk.exportSymbol("Sk.mangleName", Sk.mangleName);
 /*!************************!*\
   !*** ./src/complex.js ***!
   \************************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
+
 
 /**
  * hypot is a ESCMA6 function and maybe not available across all browsers
@@ -16251,6 +16286,8 @@ Math.hypot = Math.hypot || function() {
  */
 Sk.builtin.complex = function (real, imag) {
     Sk.builtin.pyCheckArgsLen("complex", arguments.length, 0, 2);
+
+    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
 
     var r, i, tmp; // PyObject
     var nbr, nbi; // real, imag as numbers
@@ -19957,12 +19994,17 @@ Sk.exportSymbol("Sk.builtin.filter_", Sk.builtin.filter_);
 /*!**********************!*\
   !*** ./src/float.js ***!
   \**********************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
 /**
  * @namespace Sk.builtin
  */
+
+
 
 /**
  * @constructor
@@ -19977,6 +20019,8 @@ Sk.exportSymbol("Sk.builtin.filter_", Sk.builtin.filter_);
  * @return {Sk.builtin.float_} Python float
  */
 Sk.builtin.float_ = function (x) {
+    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+
     var tmp;
     if (x === undefined) {
         return new Sk.builtin.float_(0.0);
@@ -20850,7 +20894,7 @@ Sk.builtin.float_.prototype.str$ = function (base, sign) {
         } else {
             tmp = work.toPrecision(12);
         }
-        
+
 
         // transform fractions with 4 or more leading zeroes into exponents
         idx = tmp.indexOf(".");
@@ -22528,15 +22572,20 @@ Sk.exportSymbol("Sk.importStar", Sk.importStar);
 /*!********************!*\
   !*** ./src/int.js ***!
   \********************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
 /* jslint nomen: true, bitwise: true */
 /* global Sk: true */
 
 /**
  * @namespace Sk.builtin
  */
+
+
 
 /**
  * @constructor
@@ -22558,6 +22607,8 @@ Sk.exportSymbol("Sk.importStar", Sk.importStar);
  * @return {(Sk.builtin.int_|Sk.builtin.lng)}      Python int (or long, if overflow)
  */
 Sk.builtin.int_ = function (x, base) {
+    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+
     var val;
     var func;
     var ret; // return value
@@ -23740,7 +23791,6 @@ Sk.exportSymbol("Sk.builtin.int_", Sk.builtin.int_);
 
 Sk.internalPy={"files":{"src/classmethod.py":"class classmethod(object):\n    \"Emulate PyClassMethod_Type() in Objects/funcobject.c\"\n\n    def __init__(self, f):\n        self.f = f\n\n    def __get__(self, obj, klass=None):\n        if klass is None:\n            klass = type(obj)\n        def newfunc(*args):\n            return self.f(klass, *args)\n        return newfunc\n","src/property.py":"class property(object):\n    \"Emulate PyProperty_Type() in Objects/descrobject.c\"\n\n    def __init__(self, fget=None, fset=None, fdel=None, doc=None):\n        self.fget = fget\n        self.fset = fset\n        self.fdel = fdel\n        if doc is None and fget is not None:\n            if hasattr(fget, '__doc__'):\n                doc = fget.__doc__\n            else:\n                doc = None\n        self.__doc__ = doc\n\n    def __get__(self, obj, objtype=None):\n        if obj is None:\n            return self\n        if self.fget is None:\n            raise AttributeError(\"unreadable attribute\")\n        return self.fget(obj)\n\n    def __set__(self, obj, value):\n        if self.fset is None:\n            raise AttributeError(\"can't set attribute\")\n        self.fset(obj, value)\n\n    def __delete__(self, obj):\n        if self.fdel is None:\n            raise AttributeError(\"can't delete attribute\")\n        self.fdel(obj)\n\n    def getter(self, fget):\n        return type(self)(fget, self.fset, self.fdel, self.__doc__)\n\n    def setter(self, fset):\n        return type(self)(self.fget, fset, self.fdel, self.__doc__)\n\n    def deleter(self, fdel):\n        return type(self)(self.fget, self.fset, fdel, self.__doc__)\n","src/staticmethod.py":"class staticmethod(object):\n    \"Emulate PyStaticMethod_Type() in Objects/funcobject.c\"\n\n    def __init__(self, f):\n        self.f = f\n\n    def __get__(self, obj, objtype=None):\n        return self.f\n"}}
 
-
 /***/ }),
 
 /***/ "./src/iterator.js":
@@ -24683,14 +24733,19 @@ Sk.builtin.list_iter_.prototype.next$ = function (self) {
 /*!*********************!*\
   !*** ./src/long.js ***!
   \*********************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
 
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
 /* global Sk: true, goog:true */
 
 // long aka "bignumber" implementation
 //
 //  Using javascript BigInteger by Tom Wu
+
+
 /**
  * @constructor
  * Sk.builtin.lng
@@ -24705,6 +24760,8 @@ Sk.builtin.list_iter_.prototype.next$ = function (self) {
  * @return {Sk.builtin.lng} Python long
  */
 Sk.builtin.lng = function (x, base) {   /* long is a reserved word */
+    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
+
     base = Sk.builtin.asnum$(base);
     if (!(this instanceof Sk.builtin.lng)) {
         return new Sk.builtin.lng(x, base);
@@ -28244,7 +28301,6 @@ Sk.builtin.object = function () {
 
     // Sets the UUID.
     this._ref_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
-    // if (uuid === undefined) {
 
     /**
      * This constructor is NOT called when an object is cloned.
@@ -29235,7 +29291,7 @@ Sk.exportSymbol("Sk.parseTreeDump", Sk.parseTreeDump);
 Sk.builtin.registerPromiseReference = function(susp) {
     if (susp && susp.child && susp.child.$tmps) {
         var __selfArgName = susp.child._argnames[0];
-        if (susp.child.$tmps[__selfArgName] && susp.child.$tmps[__selfArgName]._uuid) {
+        if (susp.child.$tmps[__selfArgName] && susp.child.$tmps[__selfArgName].hasOwnProperty('_uuid')) {
             window.currentPythonRunner._debugger.registerPromiseReference(susp.child.$tmps[__selfArgName]);
         }
     }
@@ -30328,8 +30384,13 @@ Sk.builtin.sorted = function sorted (iterable, cmp, key, reverse) {
 /*!********************!*\
   !*** ./src/str.js ***!
   \********************/
-/*! no static exports found */
-/***/ (function(module, exports) {
+/*! no exports provided */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
+
 
 Sk.builtin.interned = {};
 
@@ -30342,6 +30403,8 @@ Sk.builtin.str = function (x) {
     var ret;
 
     Sk.builtin.pyCheckArgsLen("str", arguments.length, 0, 1);
+
+    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
 
     if (x === undefined) {
         x = "";
@@ -35408,8 +35471,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "b12852e21588ebb910520df4113734d669ab6efe",
-    date: "2020-09-28T13:48:32.709Z"
+    githash: "18a4a3f28363c6fefc9f877c9936aaab55301112",
+    date: "2020-10-15T09:06:55.446Z"
 };
 
 /**
