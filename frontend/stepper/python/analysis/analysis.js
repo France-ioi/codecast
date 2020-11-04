@@ -38,8 +38,8 @@ export const analyseSkulptState = function (suspensions, lastAnalysis, newStepNu
             }
 
             let lastScopeAnalysis = null;
-            if (lastAnalysis && lastAnalysis.functionCallStack.size > suspensionIdx) {
-                lastScopeAnalysis = lastAnalysis.functionCallStack.get(suspensionIdx);
+            if (lastAnalysis && lastAnalysis.functionCallStack.size > scopeIndex) {
+                lastScopeAnalysis = lastAnalysis.functionCallStack.get(scopeIndex);
             }
 
             const analysedScope = analyseSkulptScope(suspension, lastScopeAnalysis, newStepNum);
@@ -263,13 +263,13 @@ export const clearLoadedReferences = function(analysis)
         ...analysis,
         functionCallStack: new Immutable.List()
     };
-    for (let idx = 0; idx < clearedAnalysis.functionCallStack.size; idx++) {
+    for (let idx = 0; idx < analysis.functionCallStack.size; idx++) {
         const clearedFunctionCallStack = {
-            ...clearedAnalysis.functionCallStack.get(idx),
+            ...analysis.functionCallStack.get(idx),
             loadedReferences: {}
         }
 
-        clearedAnalysis.functionCallStack.push(clearedFunctionCallStack);
+        clearedAnalysis.functionCallStack = clearedAnalysis.functionCallStack.push(clearedFunctionCallStack);
     }
 
     return clearedAnalysis;
