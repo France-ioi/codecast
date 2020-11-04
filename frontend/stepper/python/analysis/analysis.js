@@ -1,4 +1,5 @@
 import Immutable from 'immutable';
+import {VIEW_DIRECTIVE_PREFIX} from "../directives";
 
 /**
  * Enable debug of skulpt analysis.
@@ -153,6 +154,7 @@ export const analyseSkulptScope = function (suspension, lastAnalysis, newStepNum
 
     const analysis = {
         variables,
+        directives: getDirectiveVariables(suspVariables),
         name,
         args,
         openedPaths,
@@ -176,6 +178,7 @@ const variablesBeginWithIgnore = [
     '__file__',
     '__class__',
     '__refs__',
+    VIEW_DIRECTIVE_PREFIX,
     '$compareres',
     '$loadgbl',
     '$binop',
@@ -206,6 +209,19 @@ const filterInternalVariables = (variableNames) => {
 
         return true;
     });
+};
+
+const getDirectiveVariables = (variables) => {
+    let directiveVariables = [];
+    for (let variableName in variables) {
+        if (variableName.startsWith(VIEW_DIRECTIVE_PREFIX)) {
+            const directiveName = variableName.substr(VIEW_DIRECTIVE_PREFIX.length);
+
+            directiveVariables.push(directiveName + ' = ' + variables[variableName].v);
+        }
+    }
+
+    return directiveVariables;
 };
 
 /**

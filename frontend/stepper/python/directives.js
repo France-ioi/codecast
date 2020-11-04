@@ -1,3 +1,5 @@
+export const VIEW_DIRECTIVE_PREFIX = '_VIEW_';
+
 const PR = require('packrattle');
 
 const g = module.exports.grammar = {};
@@ -78,73 +80,25 @@ g.directive = PR.seq(g.directiveAssignment.optional(), g.ident, g.lparen, g.dire
 });
 
 export const parseDirectives = function (analysis) {
-    /**
-     * To find directives in the current scope, we look at all lines preceding the current one
-     * where the ident level must always be constant or decreasing as an increase would mean
-     * a different scope.
-     */
+    const currentFunctionCallStack = analysis.functionCallStack.get(0);
 
-    const {lines, functionCallStack} = analysis;
-    const currentLine = functionCallStack.get(0).currentLine;
-    let curLineIdx = (currentLine - 1); // currentLine is 1-indexed.
-    let lastNbTabs = getIndentLevel(lines[curLineIdx]);
     let nextId = 1;
     let directives = [];
-
-    curLineIdx--;
-    while (curLineIdx >= 0) {
-        const line = lines[curLineIdx];
-
-        const curNbTabs = getIndentLevel(lines[curLineIdx]);
-        if (curNbTabs > lastNbTabs) {
-            continue;
-        } else {
-            lastNbTabs = curNbTabs;
+    for (let directiveString of currentFunctionCallStack.directives) {
+        const directive = parseDirective(directiveString);
+        if (!directive.key) {
+            directive.key = `view${nextId}`;
+            nextId += 1;
         }
 
-        if (isDirective(line)) {
-            const directive = parseDirective(line);
-            if (!directive.key) {
-                directive.key = `view${nextId}`;
-                nextId += 1;
-            }
-
-            directives.push(directive);
-        }
-
-        curLineIdx--;
+        directives.push(directive);
     }
 
     return directives;
 };
 
-const isDirective = function (line) {
-    return (/^\s*#!/).test(line);
-};
-
 const parseDirective = function (line) {
-    const str = /^\s*#!\s*(.*)\s*$/.exec(line)[1];
+    const str = /^\s*(.*)\s*$/.exec(line)[1];
 
     return g.directive.run(str);
-};
-
-/**
- * Gets the ident level of a line.
- *
- * @param {string} line The line.
- *
- * @return {int}
- */
-const getIndentLevel = function(line) {
-    let nbTabs = 0;
-    const length = line.length;
-    for (let i = 0; i < length; i++) {
-        if (line[i] === '\t') {
-            nbTabs++;
-        } else {
-            break;
-        }
-    }
-
-    return nbTabs;
 };
