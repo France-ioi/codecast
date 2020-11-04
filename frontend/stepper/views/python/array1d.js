@@ -1,7 +1,7 @@
 import React from 'react';
 import classnames from 'classnames';
 
-import {getNumber, getList, renderValue, renderArrow} from './utils';
+import {renderValue, renderArrow} from './utils';
 import {extractView} from './array_utils';
 import {SvgPan} from '../svg-pan';
 import DirectiveFrame from "../DirectiveFrame";
@@ -19,16 +19,15 @@ function baseline (i) {
   return TEXT_LINE_HEIGHT * (i + 1) - TEXT_BASELINE;
 }
 
-function getCellClasses(cellElement, cursor) {
-  // TODO: Can we do this ?
-  // const {content} = cell;
-  // if (content) {
-  //   if (content.store !== undefined)
-  //     return "cell cell-store";
-  //   if (content.load !== undefined)
-  //     return "cell cell-load";
-  // }
+function getCellClasses(ref, index, cursor, loadedReferences) {
+  const list = ref.cur.v;
 
+  if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(index) && ref.old.v[index] !== list[index]) {
+    return "cell cell-store";
+  }
+  if (loadedReferences.hasOwnProperty(ref.cur._uuid + '_' + index)) {
+    return "cell cell-load";
+  }
   if (cursor) {
     return 'cell cell-cursor';
   }
@@ -37,7 +36,7 @@ function getCellClasses(cellElement, cursor) {
 }
 
 function Grid({view, cellWidth}) {
-  const {ref, cursorMap} = view;
+  const {ref, cursorMap, loadedReferences} = view;
   const elements = [];
 
   const nbRows = (ref.cur) ? ref.cur.v.length : 0;
@@ -47,8 +46,7 @@ function Grid({view, cellWidth}) {
   const y2 = TEXT_LINE_HEIGHT * 2;
   const y3 = baseline(2);
   for (let i = 0, x = 0; i < nbRows; i += 1, x += cellWidth) {
-    const cellElement = ref.cur.v[i];
-    const cellClasses = getCellClasses(cellElement, cursorMap[i]);
+    const cellClasses = getCellClasses(ref, i, cursorMap[i], loadedReferences);
 
     elements.push(
       <g key={`h${i}`}>
@@ -185,8 +183,9 @@ export class Array1D extends React.PureComponent {
     return this.props.controls.get('cellPan', 0);
   };
 
-  onPan = (startPosition, dx, dy) => {
+  onPan = (startPosition, dx) => {
     const cellPan = startPosition - (dx / this._cellWidth);
+
     this.props.onChange(this.props.directive, {cellPan});
   };
 }
