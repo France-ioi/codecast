@@ -89,9 +89,9 @@ $compiledmod = function () {
                         /*     9 */
                         /*    10 */
                         var $__loaded_references = {};
-                        if ($scope146.$const147.hasOwnProperty('._uuid')) {
+                        if ($scope146.$const147.hasOwnProperty('_uuid')) {
                             $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                            if (!$loc.__refs__.hasOwnProperty($scope146.$const147.hasOwnProperty('_uuid'))) {
+                            if (!$loc.__refs__.hasOwnProperty($scope146.$const147._uuid)) {
                                 $loc.__refs__[$scope146.$const147._uuid] = [];
                             }
                             $loc.__refs__[$scope146.$const147._uuid].push("i");
@@ -123,9 +123,9 @@ $compiledmod = function () {
                         /*    18 */
                         /*    19 */
                         var $__loaded_references = {};
-                        if ($scope146.$const148.hasOwnProperty('._uuid')) {
+                        if ($scope146.$const148.hasOwnProperty('_uuid')) {
                             $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                            if (!$loc.__refs__.hasOwnProperty($scope146.$const148.hasOwnProperty('_uuid'))) {
+                            if (!$loc.__refs__.hasOwnProperty($scope146.$const148._uuid)) {
                                 $loc.__refs__[$scope146.$const148._uuid] = [];
                             }
                             $loc.__refs__[$scope146.$const148._uuid].push("i");
@@ -157,9 +157,9 @@ $compiledmod = function () {
                         /*    27 */
                         /*    28 */
                         var $__loaded_references = {};
-                        if ($scope146.$const149.hasOwnProperty('._uuid')) {
+                        if ($scope146.$const149.hasOwnProperty('_uuid')) {
                             $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                            if (!$loc.__refs__.hasOwnProperty($scope146.$const149.hasOwnProperty('_uuid'))) {
+                            if (!$loc.__refs__.hasOwnProperty($scope146.$const149._uuid)) {
                                 $loc.__refs__[$scope146.$const149._uuid] = [];
                             }
                             $loc.__refs__[$scope146.$const149._uuid].push("j");
@@ -193,15 +193,18 @@ $compiledmod = function () {
                         var $__loaded_references = {};
                         var $loadname150 = $loc.j !== undefined ? $loc.j : Sk.misceval.loadname('j', $gbl);
                         ;
-                        if ($loadname150.hasOwnProperty('_uuid')) {
-                            $__loaded_references[$loadname150._uuid] = true;
-                        } else if ($loadname150.hasOwnProperty('_scalar_uuid')) {
-                            $__loaded_references[$loadname150._scalar_uuid] = true;
+                        if (typeof $loadname150 !== 'undefined') {
+                            if ($loadname150.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$loadname150._uuid] = true;
+                                if ($loadname150.hasOwnProperty('$d')) {
+                                    $__loaded_references[$loadname150.$d._uuid] = true;
+                                }
+                            }
                         }
                         var $binop151 = Sk.abstr.numberBinOp($loadname150, $scope146.$const148, 'Add');
-                        if ($binop151.hasOwnProperty('._uuid')) {
+                        if ($binop151.hasOwnProperty('_uuid')) {
                             $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                            if (!$loc.__refs__.hasOwnProperty($binop151.hasOwnProperty('_uuid'))) {
+                            if (!$loc.__refs__.hasOwnProperty($binop151._uuid)) {
                                 $loc.__refs__[$binop151._uuid] = [];
                             }
                             $loc.__refs__[$binop151._uuid].push("j");
@@ -233,9 +236,9 @@ $compiledmod = function () {
                         /*    45 */
                         /*    46 */
                         var $__loaded_references = {};
-                        if ($scope146.$const147.hasOwnProperty('._uuid')) {
+                        if ($scope146.$const147.hasOwnProperty('_uuid')) {
                             $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                            if (!$loc.__refs__.hasOwnProperty($scope146.$const147.hasOwnProperty('_uuid'))) {
+                            if (!$loc.__refs__.hasOwnProperty($scope146.$const147._uuid)) {
                                 $loc.__refs__[$scope146.$const147._uuid] = [];
                             }
                             $loc.__refs__[$scope146.$const147._uuid].push("j");
@@ -269,14 +272,17 @@ $compiledmod = function () {
                         var $__loaded_references = {};
                         var $loadname152 = $loc.i !== undefined ? $loc.i : Sk.misceval.loadname('i', $gbl);
                         ;
-                        if ($loadname152.hasOwnProperty('_uuid')) {
-                            $__loaded_references[$loadname152._uuid] = true;
-                        } else if ($loadname152.hasOwnProperty('_scalar_uuid')) {
-                            $__loaded_references[$loadname152._scalar_uuid] = true;
+                        if (typeof $loadname152 !== 'undefined') {
+                            if ($loadname152.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$loadname152._uuid] = true;
+                                if ($loadname152.hasOwnProperty('$d')) {
+                                    $__loaded_references[$loadname152.$d._uuid] = true;
+                                }
+                            }
                         }
-                        if ($loadname152.hasOwnProperty('._uuid')) {
+                        if ($loadname152.hasOwnProperty('_uuid')) {
                             $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                            if (!$loc.__refs__.hasOwnProperty($loadname152.hasOwnProperty('_uuid'))) {
+                            if (!$loc.__refs__.hasOwnProperty($loadname152._uuid)) {
                                 $loc.__refs__[$loadname152._uuid] = [];
                             }
                             $loc.__refs__[$loadname152._uuid].push("j");
@@ -308,9 +314,9 @@ $compiledmod = function () {
                         /*    63 */
                         /*    64 */
                         var $__loaded_references = {};
-                        if ($scope146.$const147.hasOwnProperty('._uuid')) {
+                        if ($scope146.$const147.hasOwnProperty('_uuid')) {
                             $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                            if (!$loc.__refs__.hasOwnProperty($scope146.$const147.hasOwnProperty('_uuid'))) {
+                            if (!$loc.__refs__.hasOwnProperty($scope146.$const147._uuid)) {
                                 $loc.__refs__[$scope146.$const147._uuid] = [];
                             }
                             $loc.__refs__[$scope146.$const147._uuid].push("j");
@@ -344,22 +350,28 @@ $compiledmod = function () {
                         var $__loaded_references = {};
                         var $loadname153 = $loc.i !== undefined ? $loc.i : Sk.misceval.loadname('i', $gbl);
                         ;
-                        if ($loadname153.hasOwnProperty('_uuid')) {
-                            $__loaded_references[$loadname153._uuid] = true;
-                        } else if ($loadname153.hasOwnProperty('_scalar_uuid')) {
-                            $__loaded_references[$loadname153._scalar_uuid] = true;
+                        if (typeof $loadname153 !== 'undefined') {
+                            if ($loadname153.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$loadname153._uuid] = true;
+                                if ($loadname153.hasOwnProperty('$d')) {
+                                    $__loaded_references[$loadname153.$d._uuid] = true;
+                                }
+                            }
                         }
                         var $loadname154 = $loc.j !== undefined ? $loc.j : Sk.misceval.loadname('j', $gbl);
                         ;
-                        if ($loadname154.hasOwnProperty('_uuid')) {
-                            $__loaded_references[$loadname154._uuid] = true;
-                        } else if ($loadname154.hasOwnProperty('_scalar_uuid')) {
-                            $__loaded_references[$loadname154._scalar_uuid] = true;
+                        if (typeof $loadname154 !== 'undefined') {
+                            if ($loadname154.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$loadname154._uuid] = true;
+                                if ($loadname154.hasOwnProperty('$d')) {
+                                    $__loaded_references[$loadname154.$d._uuid] = true;
+                                }
+                            }
                         }
                         var $binop155 = Sk.abstr.numberBinOp($loadname153, $loadname154, 'Add');
-                        if ($binop155.hasOwnProperty('._uuid')) {
+                        if ($binop155.hasOwnProperty('_uuid')) {
                             $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                            if (!$loc.__refs__.hasOwnProperty($binop155.hasOwnProperty('_uuid'))) {
+                            if (!$loc.__refs__.hasOwnProperty($binop155._uuid)) {
                                 $loc.__refs__[$binop155._uuid] = [];
                             }
                             $loc.__refs__[$binop155._uuid].push("i");

@@ -2,6 +2,7 @@ import * as React from 'react';
 import PythonVariable from "./PythonVariable";
 import {connect} from "react-redux";
 import {isLoaded} from "../helpers";
+import {isEmptyObject} from "../../../../utils/javascript";
 
 class PythonVariableValue extends React.PureComponent {
     constructor(props) {
@@ -104,6 +105,7 @@ class PythonVariableValue extends React.PureComponent {
                 }
 
                 const path = this.props.path + ':' + element.lhs.v;
+                const loaded = this.props.loadedReferences.hasOwnProperty(this.props.cur._uuid + '_' + element.lhs.v);
 
                 elements.push({
                     name: element.lhs.v,
@@ -111,7 +113,8 @@ class PythonVariableValue extends React.PureComponent {
                         cur: element.rhs,
                         old: old
                     },
-                    path: path
+                    path: path,
+                    loaded: loaded
                 });
                 isEmpty = false;
             }
@@ -131,7 +134,7 @@ class PythonVariableValue extends React.PureComponent {
             } else {
                 renderedElements = elements.map((element) => {
                     let loadedReferences = {};
-                    if (isLoaded(this.props.loadedReferences, element)) {
+                    if (element.loaded) {
                         loadedReferences = this.props.loadedReferences;
                     }
 
@@ -185,11 +188,13 @@ class PythonVariableValue extends React.PureComponent {
                 }
 
                 const path = this.props.path + ':' + idx;
+                const loaded = this.props.loadedReferences.hasOwnProperty(this.props.cur._uuid + '_' + idx);
 
                 elements.push({
                     cur: this.props.cur.v[idx],
                     old: old,
-                    path: path
+                    path: path,
+                    loaded: loaded
                 });
             }
 
@@ -206,7 +211,7 @@ class PythonVariableValue extends React.PureComponent {
             } else {
                 renderedElements = elements.map((element, index) => {
                     let loadedReferences = {};
-                    if (isLoaded(this.props.loadedReferences, element)) {
+                    if (element.loaded) {
                         loadedReferences = this.props.loadedReferences;
                     }
 
@@ -250,7 +255,7 @@ class PythonVariableValue extends React.PureComponent {
 
         if (this.props.cur instanceof Sk.builtin.str) {
             let classes = 'value-string';
-            if (isLoaded(props.loadedReferences, this.props)) {
+            if (!isEmptyObject(this.props.loadedReferences)) {
                 classes = ' value-loaded';
             }
 
@@ -313,6 +318,7 @@ class PythonVariableValue extends React.PureComponent {
             }
 
             const iteratorType = this.props.cur.$__iterType;
+            const loadedReferences = {};
 
             return (
                 <React.Fragment>
@@ -321,6 +327,7 @@ class PythonVariableValue extends React.PureComponent {
                     <ConnectedPythonVariableValue
                         cur={this.props.cur.myobj}
                         old={old}
+                        loadedReferences={loadedReferences}
                         visited={this.props.visited}
                         path={this.props.path}
                         openedPaths={this.props.openedPaths}
@@ -332,13 +339,13 @@ class PythonVariableValue extends React.PureComponent {
         }
 
         let classes = 'value-scalar';
-        if (isLoaded(this.props.loadedReferences, this.props)) {
+        if (!isEmptyObject(this.props.loadedReferences)) {
             classes = ' value-loaded';
         }
 
         return (
             <React.Fragment>
-                <span className="value-scalar">{this.props.cur.v}</span>
+                <span className={classes}>{this.props.cur.v}</span>
                 {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
                     <span className="value-previous">{this.props.old.v}</span>
                 : null}

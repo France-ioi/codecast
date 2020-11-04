@@ -11,6 +11,7 @@ import * as C from 'persistent-c';
 import {all, call, put} from 'redux-saga/effects';
 import sleep from '../utils/sleep';
 import {getNewOutput, getNewTerminal} from "./python";
+import {clearLoadedReferences} from "./python/analysis/analysis";
 
 export default function (bundle) {
 
@@ -123,7 +124,7 @@ export function makeContext (state, interact) {
       return {
         state: {
           ...state,
-          lastAnalysis: state.analysis,
+          lastAnalysis: clearLoadedReferences(state.analysis),
           controls: resetControls(state.controls)
         },
         interact,

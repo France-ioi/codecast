@@ -251,3 +251,26 @@ export const getSkulptSuspensionsCopy = function(suspensions)
 
     return copies;
 }
+
+/**
+ * Clears the loaded references.
+ *
+ * @param analysis
+ */
+export const clearLoadedReferences = function(analysis)
+{
+    const clearedAnalysis = {
+        ...analysis,
+        functionCallStack: new Immutable.List()
+    };
+    for (let idx = 0; idx < clearedAnalysis.functionCallStack.size; idx++) {
+        const clearedFunctionCallStack = {
+            ...clearedAnalysis.functionCallStack.get(idx),
+            loadedReferences: {}
+        }
+
+        clearedAnalysis.functionCallStack.push(clearedFunctionCallStack);
+    }
+
+    return clearedAnalysis;
+}

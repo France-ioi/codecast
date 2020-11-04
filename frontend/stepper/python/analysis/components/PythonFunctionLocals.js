@@ -1,7 +1,5 @@
 import * as React from 'react';
 import PythonVariable from "./PythonVariable";
-import PythonFunctionHeader from "./PythonFunctionHeader";
-import PythonVariableValue from "./PythonVariableValue";
 import {isLoaded} from "../helpers";
 
 const PythonFunctionLocals = (props) => {
@@ -11,7 +9,7 @@ const PythonFunctionLocals = (props) => {
             !(value.cur instanceof Sk.builtin.func)
         ) {
             let loadedReferences = {};
-            if (isLoaded(props.loadedReferences, value)) {
+            if (props.loadedReferences.hasOwnProperty(name)) {
                 loadedReferences = props.loadedReferences;
             }
 

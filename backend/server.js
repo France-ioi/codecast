@@ -382,7 +382,11 @@ function addBackendRoutes (app, config, store) {
 }
 
 fs.readFile('config.json', 'utf8', function (err, data) {
-  if (err) return res.json({error: err.toString()});
+  if (err) {
+    console.err('Cannot read config.json');
+    process.exit(1);
+  }
+
   const config = JSON.parse(data);
   config.isDevelopment = process.env.NODE_ENV !== 'production';
   config.rootDir = path.resolve(path.dirname(__dirname));

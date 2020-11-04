@@ -175,9 +175,9 @@ $compiledmod = function () {
                         var $__loaded_references = {};
                         $scope147.co_name = new Sk.builtins['str']('Test1');
                         $ret = Sk.misceval.buildClass($gbl, $scope147, 'Test1', [], $cell);
-                        if ($ret.hasOwnProperty('._uuid')) {
+                        if ($ret.hasOwnProperty('_uuid')) {
                             $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                            if (!$loc.__refs__.hasOwnProperty($ret.hasOwnProperty('_uuid'))) {
+                            if (!$loc.__refs__.hasOwnProperty($ret._uuid)) {
                                 $loc.__refs__[$ret._uuid] = [];
                             }
                             $loc.__refs__[$ret._uuid].push("Test1");
@@ -211,9 +211,9 @@ $compiledmod = function () {
                         var $__loaded_references = {};
                         $scope152.co_name = new Sk.builtins['str']('Test2');
                         $ret = Sk.misceval.buildClass($gbl, $scope152, 'Test2', [], $cell);
-                        if ($ret.hasOwnProperty('._uuid')) {
+                        if ($ret.hasOwnProperty('_uuid')) {
                             $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                            if (!$loc.__refs__.hasOwnProperty($ret.hasOwnProperty('_uuid'))) {
+                            if (!$loc.__refs__.hasOwnProperty($ret._uuid)) {
                                 $loc.__refs__[$ret._uuid] = [];
                             }
                             $loc.__refs__[$ret._uuid].push("Test2");
@@ -246,11 +246,14 @@ $compiledmod = function () {
                         /*    28 */
                         var $__loaded_references = {};
                         var $loadname157 = $loc.Test1 !== undefined ? $loc.Test1 : Sk.misceval.loadname('Test1', $gbl);
-                        ;
-                        if ($loadname157.hasOwnProperty('_uuid')) {
-                            $__loaded_references[$loadname157._uuid] = true;
-                        } else if ($loadname157.hasOwnProperty('_scalar_uuid')) {
-                            $__loaded_references[$loadname157._scalar_uuid] = true;
+                        ;$__loaded_references['Test1'] = true;
+                        if (typeof $loadname157 !== 'undefined') {
+                            if ($loadname157.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$loadname157._uuid] = true;
+                                if ($loadname157.hasOwnProperty('$d')) {
+                                    $__loaded_references[$loadname157.$d._uuid] = true;
+                                }
+                            }
                         }
                         $ret = Sk.misceval.callsimOrSuspendArray($loadname157, [$scope146.$const158]);
                         Sk.builtin.registerPromiseReference($ret);
@@ -272,9 +275,9 @@ $compiledmod = function () {
                         /*    36 */
                         /*    37 */
                         var $__loaded_references = {};
-                        if ($call159.hasOwnProperty('._uuid')) {
+                        if ($call159.hasOwnProperty('_uuid')) {
                             $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                            if (!$loc.__refs__.hasOwnProperty($call159.hasOwnProperty('_uuid'))) {
+                            if (!$loc.__refs__.hasOwnProperty($call159._uuid)) {
                                 $loc.__refs__[$call159._uuid] = [];
                             }
                             $loc.__refs__[$call159._uuid].push("test");
@@ -307,11 +310,14 @@ $compiledmod = function () {
                         /*    46 */
                         var $__loaded_references = {};
                         var $loadname160 = $loc.Test2 !== undefined ? $loc.Test2 : Sk.misceval.loadname('Test2', $gbl);
-                        ;
-                        if ($loadname160.hasOwnProperty('_uuid')) {
-                            $__loaded_references[$loadname160._uuid] = true;
-                        } else if ($loadname160.hasOwnProperty('_scalar_uuid')) {
-                            $__loaded_references[$loadname160._scalar_uuid] = true;
+                        ;$__loaded_references['Test2'] = true;
+                        if (typeof $loadname160 !== 'undefined') {
+                            if ($loadname160.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$loadname160._uuid] = true;
+                                if ($loadname160.hasOwnProperty('$d')) {
+                                    $__loaded_references[$loadname160.$d._uuid] = true;
+                                }
+                            }
                         }
                         $ret = Sk.misceval.callsimOrSuspendArray($loadname160, [$scope146.$const161]);
                         Sk.builtin.registerPromiseReference($ret);
@@ -334,11 +340,14 @@ $compiledmod = function () {
                         /*    55 */
                         var $__loaded_references = {};
                         var $loadname163 = $loc.test !== undefined ? $loc.test : Sk.misceval.loadname('test', $gbl);
-                        ;
-                        if ($loadname163.hasOwnProperty('_uuid')) {
-                            $__loaded_references[$loadname163._uuid] = true;
-                        } else if ($loadname163.hasOwnProperty('_scalar_uuid')) {
-                            $__loaded_references[$loadname163._scalar_uuid] = true;
+                        ;$__loaded_references['test'] = true;
+                        if (typeof $loadname163 !== 'undefined') {
+                            if ($loadname163.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$loadname163._uuid] = true;
+                                if ($loadname163.hasOwnProperty('$d')) {
+                                    $__loaded_references[$loadname163.$d._uuid] = true;
+                                }
+                            }
                         }
                         $loadname163 = $loadname163.clone($call162);
                         var $__cloned_references = {};
@@ -397,11 +406,14 @@ $compiledmod = function () {
                         /*    64 */
                         var $__loaded_references = {};
                         var $loadname166 = $loc.test !== undefined ? $loc.test : Sk.misceval.loadname('test', $gbl);
-                        ;
-                        if ($loadname166.hasOwnProperty('_uuid')) {
-                            $__loaded_references[$loadname166._uuid] = true;
-                        } else if ($loadname166.hasOwnProperty('_scalar_uuid')) {
-                            $__loaded_references[$loadname166._scalar_uuid] = true;
+                        ;$__loaded_references['test'] = true;
+                        if (typeof $loadname166 !== 'undefined') {
+                            if ($loadname166.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$loadname166._uuid] = true;
+                                if ($loadname166.hasOwnProperty('$d')) {
+                                    $__loaded_references[$loadname166.$d._uuid] = true;
+                                }
+                            }
                         }
                         $ret = Sk.abstr.gattr($loadname166, $scope146.$const164, true);
                         $blk = 9;/* allowing case fallthrough */
@@ -410,6 +422,14 @@ $compiledmod = function () {
                             return $saveSuspension($ret, '<stdin>.py', 11, 0);
                         }
                         var $lattr167 = $ret;
+                        if (typeof $ret !== 'undefined') {
+                            if ($ret.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$ret._uuid] = true;
+                                if ($ret.hasOwnProperty('$d')) {
+                                    $__loaded_references[$ret.$d._uuid] = true;
+                                }
+                            }
+                        }
                         $lattr167 = $lattr167.clone($scope146.$const165);
                         var $__cloned_references = {};
                         $__cloned_references[$lattr167._uuid] = $lattr167;
@@ -467,11 +487,14 @@ $compiledmod = function () {
                         /*    73 */
                         var $__loaded_references = {};
                         var $loadname169 = $loc.test !== undefined ? $loc.test : Sk.misceval.loadname('test', $gbl);
-                        ;
-                        if ($loadname169.hasOwnProperty('_uuid')) {
-                            $__loaded_references[$loadname169._uuid] = true;
-                        } else if ($loadname169.hasOwnProperty('_scalar_uuid')) {
-                            $__loaded_references[$loadname169._scalar_uuid] = true;
+                        ;$__loaded_references['test'] = true;
+                        if (typeof $loadname169 !== 'undefined') {
+                            if ($loadname169.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$loadname169._uuid] = true;
+                                if ($loadname169.hasOwnProperty('$d')) {
+                                    $__loaded_references[$loadname169.$d._uuid] = true;
+                                }
+                            }
                         }
                         $ret = Sk.abstr.gattr($loadname169, $scope146.$const164, true);
                         $blk = 12;/* allowing case fallthrough */
@@ -480,6 +503,14 @@ $compiledmod = function () {
                             return $saveSuspension($ret, '<stdin>.py', 12, 9);
                         }
                         var $lattr170 = $ret;
+                        if (typeof $ret !== 'undefined') {
+                            if ($ret.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$ret._uuid] = true;
+                                if ($ret.hasOwnProperty('$d')) {
+                                    $__loaded_references[$ret.$d._uuid] = true;
+                                }
+                            }
+                        }
                         $ret = Sk.abstr.gattr($lattr170, $scope146.$const168, true);
                         $blk = 13;/* allowing case fallthrough */
                     case 13: /* --- function return or resume suspension --- */
@@ -487,12 +518,23 @@ $compiledmod = function () {
                             return $saveSuspension($ret, '<stdin>.py', 12, 9);
                         }
                         var $lattr171 = $ret;
+                        if (typeof $ret !== 'undefined') {
+                            if ($ret.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$ret._uuid] = true;
+                                if ($ret.hasOwnProperty('$d')) {
+                                    $__loaded_references[$ret.$d._uuid] = true;
+                                }
+                            }
+                        }
                         var $loadname172 = $loc.test !== undefined ? $loc.test : Sk.misceval.loadname('test', $gbl);
-                        ;
-                        if ($loadname172.hasOwnProperty('_uuid')) {
-                            $__loaded_references[$loadname172._uuid] = true;
-                        } else if ($loadname172.hasOwnProperty('_scalar_uuid')) {
-                            $__loaded_references[$loadname172._scalar_uuid] = true;
+                        ;$__loaded_references['test'] = true;
+                        if (typeof $loadname172 !== 'undefined') {
+                            if ($loadname172.hasOwnProperty('_uuid')) {
+                                $__loaded_references[$loadname172._uuid] = true;
+                                if ($loadname172.hasOwnProperty('$d')) {
+                                    $__loaded_references[$loadname172.$d._uuid] = true;
+                                }
+                            }
                         }
                         $loadname172 = $loadname172.clone($lattr171);
                         var $__cloned_references = {};
@@ -599,9 +641,9 @@ $compiledmod = function () {
                             $scope148.co_name = new Sk.builtins['str']('__init__');
                             $scope148.co_varnames = ['self', 'a'];
                             var $funcobj151 = new Sk.builtins['function']($scope148, $gbl);
-                            if ($funcobj151.hasOwnProperty('._uuid')) {
+                            if ($funcobj151.hasOwnProperty('_uuid')) {
                                 $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                                if (!$loc.__refs__.hasOwnProperty($funcobj151.hasOwnProperty('_uuid'))) {
+                                if (!$loc.__refs__.hasOwnProperty($funcobj151._uuid)) {
                                     $loc.__refs__[$funcobj151._uuid] = [];
                                 }
                                 $loc.__refs__[$funcobj151._uuid].push("__init__");
@@ -827,9 +869,9 @@ $compiledmod = function () {
                             $scope153.co_name = new Sk.builtins['str']('__init__');
                             $scope153.co_varnames = ['self', 'b'];
                             var $funcobj156 = new Sk.builtins['function']($scope153, $gbl);
-                            if ($funcobj156.hasOwnProperty('._uuid')) {
+                            if ($funcobj156.hasOwnProperty('_uuid')) {
                                 $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];
-                                if (!$loc.__refs__.hasOwnProperty($funcobj156.hasOwnProperty('_uuid'))) {
+                                if (!$loc.__refs__.hasOwnProperty($funcobj156._uuid)) {
                                     $loc.__refs__[$funcobj156._uuid] = [];
                                 }
                                 $loc.__refs__[$funcobj156._uuid].push("__init__");

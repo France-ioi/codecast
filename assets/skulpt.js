@@ -4645,41 +4645,11 @@ process.umask = function() { return 0; };
 
 /***/ }),
 
-/***/ "./node_modules/uuid/dist/esm-browser/bytesToUuid.js":
-/*!***********************************************************!*\
-  !*** ./node_modules/uuid/dist/esm-browser/bytesToUuid.js ***!
-  \***********************************************************/
-/*! exports provided: default */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/**
- * Convert array of 16 byte values to UUID string format of the form:
- * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
- */
-var byteToHex = [];
-
-for (var i = 0; i < 256; ++i) {
-  byteToHex.push((i + 0x100).toString(16).substr(1));
-}
-
-function bytesToUuid(buf, offset_) {
-  var offset = offset_ || 0; // Note: Be careful editing this code!  It's been tuned for performance
-  // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
-
-  return (byteToHex[buf[offset + 0]] + byteToHex[buf[offset + 1]] + byteToHex[buf[offset + 2]] + byteToHex[buf[offset + 3]] + '-' + byteToHex[buf[offset + 4]] + byteToHex[buf[offset + 5]] + '-' + byteToHex[buf[offset + 6]] + byteToHex[buf[offset + 7]] + '-' + byteToHex[buf[offset + 8]] + byteToHex[buf[offset + 9]] + '-' + byteToHex[buf[offset + 10]] + byteToHex[buf[offset + 11]] + byteToHex[buf[offset + 12]] + byteToHex[buf[offset + 13]] + byteToHex[buf[offset + 14]] + byteToHex[buf[offset + 15]]).toLowerCase();
-}
-
-/* harmony default export */ __webpack_exports__["default"] = (bytesToUuid);
-
-/***/ }),
-
 /***/ "./node_modules/uuid/dist/esm-browser/index.js":
 /*!*****************************************************!*\
   !*** ./node_modules/uuid/dist/esm-browser/index.js ***!
   \*****************************************************/
-/*! exports provided: v1, v3, v4, v5 */
+/*! exports provided: v1, v3, v4, v5, NIL, version, validate, stringify, parse */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -4695,6 +4665,26 @@ __webpack_require__.r(__webpack_exports__);
 
 /* harmony import */ var _v5_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./v5.js */ "./node_modules/uuid/dist/esm-browser/v5.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "v5", function() { return _v5_js__WEBPACK_IMPORTED_MODULE_3__["default"]; });
+
+/* harmony import */ var _nil_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./nil.js */ "./node_modules/uuid/dist/esm-browser/nil.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "NIL", function() { return _nil_js__WEBPACK_IMPORTED_MODULE_4__["default"]; });
+
+/* harmony import */ var _version_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./version.js */ "./node_modules/uuid/dist/esm-browser/version.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "version", function() { return _version_js__WEBPACK_IMPORTED_MODULE_5__["default"]; });
+
+/* harmony import */ var _validate_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./validate.js */ "./node_modules/uuid/dist/esm-browser/validate.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "validate", function() { return _validate_js__WEBPACK_IMPORTED_MODULE_6__["default"]; });
+
+/* harmony import */ var _stringify_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./stringify.js */ "./node_modules/uuid/dist/esm-browser/stringify.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "stringify", function() { return _stringify_js__WEBPACK_IMPORTED_MODULE_7__["default"]; });
+
+/* harmony import */ var _parse_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./parse.js */ "./node_modules/uuid/dist/esm-browser/parse.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "parse", function() { return _parse_js__WEBPACK_IMPORTED_MODULE_8__["default"]; });
+
+
+
+
+
 
 
 
@@ -4930,6 +4920,80 @@ function md5ii(a, b, c, d, x, s, t) {
 
 /***/ }),
 
+/***/ "./node_modules/uuid/dist/esm-browser/nil.js":
+/*!***************************************************!*\
+  !*** ./node_modules/uuid/dist/esm-browser/nil.js ***!
+  \***************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = ('00000000-0000-0000-0000-000000000000');
+
+/***/ }),
+
+/***/ "./node_modules/uuid/dist/esm-browser/parse.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/uuid/dist/esm-browser/parse.js ***!
+  \*****************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _validate_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./validate.js */ "./node_modules/uuid/dist/esm-browser/validate.js");
+
+
+function parse(uuid) {
+  if (!Object(_validate_js__WEBPACK_IMPORTED_MODULE_0__["default"])(uuid)) {
+    throw TypeError('Invalid UUID');
+  }
+
+  var v;
+  var arr = new Uint8Array(16); // Parse ########-....-....-....-............
+
+  arr[0] = (v = parseInt(uuid.slice(0, 8), 16)) >>> 24;
+  arr[1] = v >>> 16 & 0xff;
+  arr[2] = v >>> 8 & 0xff;
+  arr[3] = v & 0xff; // Parse ........-####-....-....-............
+
+  arr[4] = (v = parseInt(uuid.slice(9, 13), 16)) >>> 8;
+  arr[5] = v & 0xff; // Parse ........-....-####-....-............
+
+  arr[6] = (v = parseInt(uuid.slice(14, 18), 16)) >>> 8;
+  arr[7] = v & 0xff; // Parse ........-....-....-####-............
+
+  arr[8] = (v = parseInt(uuid.slice(19, 23), 16)) >>> 8;
+  arr[9] = v & 0xff; // Parse ........-....-....-....-############
+  // (Use "/" to avoid 32-bit truncation when bit-shifting high-order bytes)
+
+  arr[10] = (v = parseInt(uuid.slice(24, 36), 16)) / 0x10000000000 & 0xff;
+  arr[11] = v / 0x100000000 & 0xff;
+  arr[12] = v >>> 24 & 0xff;
+  arr[13] = v >>> 16 & 0xff;
+  arr[14] = v >>> 8 & 0xff;
+  arr[15] = v & 0xff;
+  return arr;
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (parse);
+
+/***/ }),
+
+/***/ "./node_modules/uuid/dist/esm-browser/regex.js":
+/*!*****************************************************!*\
+  !*** ./node_modules/uuid/dist/esm-browser/regex.js ***!
+  \*****************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony default export */ __webpack_exports__["default"] = (/^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000)$/i);
+
+/***/ }),
+
 /***/ "./node_modules/uuid/dist/esm-browser/rng.js":
 /*!***************************************************!*\
   !*** ./node_modules/uuid/dist/esm-browser/rng.js ***!
@@ -5000,6 +5064,9 @@ function sha1(bytes) {
     for (var i = 0; i < msg.length; ++i) {
       bytes.push(msg.charCodeAt(i));
     }
+  } else if (!Array.isArray(bytes)) {
+    // Convert Array-like to Array
+    bytes = Array.prototype.slice.call(bytes);
   }
 
   bytes.push(0x80);
@@ -5062,6 +5129,49 @@ function sha1(bytes) {
 
 /***/ }),
 
+/***/ "./node_modules/uuid/dist/esm-browser/stringify.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/uuid/dist/esm-browser/stringify.js ***!
+  \*********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _validate_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./validate.js */ "./node_modules/uuid/dist/esm-browser/validate.js");
+
+/**
+ * Convert array of 16 byte values to UUID string format of the form:
+ * XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
+ */
+
+var byteToHex = [];
+
+for (var i = 0; i < 256; ++i) {
+  byteToHex.push((i + 0x100).toString(16).substr(1));
+}
+
+function stringify(arr) {
+  var offset = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+  // Note: Be careful editing this code!  It's been tuned for performance
+  // and works in ways you may not expect. See https://github.com/uuidjs/uuid/pull/434
+  var uuid = (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + '-' + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + '-' + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + '-' + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + '-' + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase(); // Consistency check for valid UUID.  If this throws, it's likely due to one
+  // of the following:
+  // - One or more input array values don't map to a hex octet (leading to
+  // "undefined" in the uuid)
+  // - Invalid input values for the RFC `version` or `variant` fields
+
+  if (!Object(_validate_js__WEBPACK_IMPORTED_MODULE_0__["default"])(uuid)) {
+    throw TypeError('Stringified UUID is invalid');
+  }
+
+  return uuid;
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (stringify);
+
+/***/ }),
+
 /***/ "./node_modules/uuid/dist/esm-browser/v1.js":
 /*!**************************************************!*\
   !*** ./node_modules/uuid/dist/esm-browser/v1.js ***!
@@ -5072,7 +5182,7 @@ function sha1(bytes) {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _rng_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./rng.js */ "./node_modules/uuid/dist/esm-browser/rng.js");
-/* harmony import */ var _bytesToUuid_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bytesToUuid.js */ "./node_modules/uuid/dist/esm-browser/bytesToUuid.js");
+/* harmony import */ var _stringify_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./stringify.js */ "./node_modules/uuid/dist/esm-browser/stringify.js");
 
  // **`v1()` - Generate time-based UUID**
 //
@@ -5164,7 +5274,7 @@ function v1(options, buf, offset) {
     b[i + n] = node[n];
   }
 
-  return buf || Object(_bytesToUuid_js__WEBPACK_IMPORTED_MODULE_1__["default"])(b);
+  return buf || Object(_stringify_js__WEBPACK_IMPORTED_MODULE_1__["default"])(b);
 }
 
 /* harmony default export */ __webpack_exports__["default"] = (v1);
@@ -5200,17 +5310,10 @@ var v3 = Object(_v35_js__WEBPACK_IMPORTED_MODULE_0__["default"])('v3', 0x30, _md
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DNS", function() { return DNS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "URL", function() { return URL; });
-/* harmony import */ var _bytesToUuid_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./bytesToUuid.js */ "./node_modules/uuid/dist/esm-browser/bytesToUuid.js");
+/* harmony import */ var _stringify_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./stringify.js */ "./node_modules/uuid/dist/esm-browser/stringify.js");
+/* harmony import */ var _parse_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parse.js */ "./node_modules/uuid/dist/esm-browser/parse.js");
 
 
-function uuidToBytes(uuid) {
-  // Note: We assume we're being passed a valid uuid string
-  var bytes = [];
-  uuid.replace(/[a-fA-F0-9]{2}/g, function (hex) {
-    bytes.push(parseInt(hex, 16));
-  });
-  return bytes;
-}
 
 function stringToBytes(str) {
   str = unescape(encodeURIComponent(str)); // UTF8 escape
@@ -5233,19 +5336,20 @@ var URL = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
     }
 
     if (typeof namespace === 'string') {
-      namespace = uuidToBytes(namespace);
+      namespace = Object(_parse_js__WEBPACK_IMPORTED_MODULE_1__["default"])(namespace);
     }
 
-    if (!Array.isArray(value)) {
-      throw TypeError('value must be an array of bytes');
-    }
-
-    if (!Array.isArray(namespace) || namespace.length !== 16) {
-      throw TypeError('namespace must be uuid string or an Array of 16 byte values');
-    } // Per 4.3
+    if (namespace.length !== 16) {
+      throw TypeError('Namespace must be array-like (16 iterable integer values, 0-255)');
+    } // Compute hash of namespace and value, Per 4.3
+    // Future: Use spread syntax when supported on all platforms, e.g. `bytes =
+    // hashfunc([...namespace, ... value])`
 
 
-    var bytes = hashfunc(namespace.concat(value));
+    var bytes = new Uint8Array(16 + value.length);
+    bytes.set(namespace);
+    bytes.set(value, namespace.length);
+    bytes = hashfunc(bytes);
     bytes[6] = bytes[6] & 0x0f | version;
     bytes[8] = bytes[8] & 0x3f | 0x80;
 
@@ -5259,7 +5363,7 @@ var URL = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
       return buf;
     }
 
-    return Object(_bytesToUuid_js__WEBPACK_IMPORTED_MODULE_0__["default"])(bytes);
+    return Object(_stringify_js__WEBPACK_IMPORTED_MODULE_0__["default"])(bytes);
   } // Function#name is not settable on some platforms (#270)
 
 
@@ -5285,7 +5389,7 @@ var URL = '6ba7b811-9dad-11d1-80b4-00c04fd430c8';
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _rng_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./rng.js */ "./node_modules/uuid/dist/esm-browser/rng.js");
-/* harmony import */ var _bytesToUuid_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./bytesToUuid.js */ "./node_modules/uuid/dist/esm-browser/bytesToUuid.js");
+/* harmony import */ var _stringify_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./stringify.js */ "./node_modules/uuid/dist/esm-browser/stringify.js");
 
 
 
@@ -5306,7 +5410,7 @@ function v4(options, buf, offset) {
     return buf;
   }
 
-  return Object(_bytesToUuid_js__WEBPACK_IMPORTED_MODULE_1__["default"])(rnds);
+  return Object(_stringify_js__WEBPACK_IMPORTED_MODULE_1__["default"])(rnds);
 }
 
 /* harmony default export */ __webpack_exports__["default"] = (v4);
@@ -5328,6 +5432,50 @@ __webpack_require__.r(__webpack_exports__);
 
 var v5 = Object(_v35_js__WEBPACK_IMPORTED_MODULE_0__["default"])('v5', 0x50, _sha1_js__WEBPACK_IMPORTED_MODULE_1__["default"]);
 /* harmony default export */ __webpack_exports__["default"] = (v5);
+
+/***/ }),
+
+/***/ "./node_modules/uuid/dist/esm-browser/validate.js":
+/*!********************************************************!*\
+  !*** ./node_modules/uuid/dist/esm-browser/validate.js ***!
+  \********************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _regex_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./regex.js */ "./node_modules/uuid/dist/esm-browser/regex.js");
+
+
+function validate(uuid) {
+  return typeof uuid === 'string' && _regex_js__WEBPACK_IMPORTED_MODULE_0__["default"].test(uuid);
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (validate);
+
+/***/ }),
+
+/***/ "./node_modules/uuid/dist/esm-browser/version.js":
+/*!*******************************************************!*\
+  !*** ./node_modules/uuid/dist/esm-browser/version.js ***!
+  \*******************************************************/
+/*! exports provided: default */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _validate_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./validate.js */ "./node_modules/uuid/dist/esm-browser/validate.js");
+
+
+function version(uuid) {
+  if (!Object(_validate_js__WEBPACK_IMPORTED_MODULE_0__["default"])(uuid)) {
+    throw TypeError('Invalid UUID');
+  }
+
+  return parseInt(uuid.substr(14, 1), 16);
+}
+
+/* harmony default export */ __webpack_exports__["default"] = (version);
 
 /***/ }),
 
@@ -9700,12 +9848,9 @@ Sk.exportSymbol("Sk.astDump", Sk.astDump);
 /*!***************************!*\
   !*** ./src/biginteger.js ***!
   \***************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports) {
 
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
 /**
  * @fileoverview
  * @suppress {checkTypes}
@@ -9747,7 +9892,6 @@ __webpack_require__.r(__webpack_exports__);
 
 // (public) Constructor
 
-
 /**
  * @constructor
  * @param {number|string|null} a
@@ -9755,8 +9899,6 @@ __webpack_require__.r(__webpack_exports__);
  * @param {*=} c
  */
 Sk.builtin.biginteger = function (a, b, c) {
-    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
-
     if (a != null) {
         if ("number" == typeof a) {
             this.fromNumber(a, b, c);
@@ -11573,13 +11715,8 @@ Sk.builtin.biginteger.prototype.isProbablePrime = Sk.builtin.biginteger.prototyp
 /*!*********************!*\
   !*** ./src/bool.js ***!
   \*********************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
-
+/*! no static exports found */
+/***/ (function(module, exports) {
 
 /**
  * @constructor
@@ -11605,8 +11742,6 @@ Sk.builtin.bool = function (x) {
     } else {
         bool = Sk.builtin.bool.false$;
     }
-
-    bool._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
 
     return bool;
 };
@@ -13233,32 +13368,6 @@ var out;
 
 Sk.gensymcount = 0;
 
-function hookAffectation(mangled, dataToStore, debug) {
-    // console.log("HOOK_AFFECTATION : " + debug + " [" + mangled + "     =      " + dataToStore + "]");
-
-    // FROM : $loc.varName = value;
-    // out(mangled, "=", dataToStore, ";");
-
-    // If doesn't start with $loc.
-    if (mangled.substr(0, 5) !== "$loc.") {
-        out(mangled, "=", dataToStore, ";");
-
-        return;
-    }
-
-    // TO :   $loc.varName = window.currentPythonRunner.reportValue(value, 'varName');
-    var varName = mangled.substr(5);
-    out("if (" + dataToStore + ".hasOwnProperty('_uuid')) {");
-    out("  $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];");
-    out("  if (!$loc.__refs__.hasOwnProperty(" + dataToStore + "._uuid)) {");
-    out("    $loc.__refs__[" + dataToStore + "._uuid] = [];");
-    out("  }");
-    out("  $loc.__refs__[" + dataToStore + "._uuid].push(\"" + varName + "\");");
-    out("}");
-
-    out(mangled, "=", "window.currentPythonRunner.reportValue(", dataToStore, ", '", varName, "');");
-}
-
 /**
  * @constructor
  * @param {string} filename
@@ -13566,25 +13675,10 @@ Compiler.prototype._gr = function (hint, rest) {
     out(";");
 
     if (hint === "loadname") {
-        out("if (" + v + ".hasOwnProperty('_uuid')) {");
-        out("  $__loaded_references[" + v + "._uuid] = true;");
-        out("    if (" + v + ".hasOwnProperty('$d')) {");
-        out("      $__loaded_references[" + v + ".$d._uuid] = true;");
-        out("    }");
-        out("} else if (" + v + ".hasOwnProperty('_scalar_uuid')) {");
-        out("  $__loaded_references[" + v + "._scalar_uuid] = true;");
-        out("}");
+        this.markLoadedName(arguments[5]); // 5th argument is the variable's name.
+        this.markLoadedReference(v);
     } else if (hint === "lsubscr" || hint === "gitem" || hint === "lattr") {
-        out("if (typeof $ret !== 'undefined') {");
-        out("  if ($ret.hasOwnProperty('_uuid')) {");
-        out("    $__loaded_references[$ret._uuid] = true;");
-        out("    if ($ret.hasOwnProperty('$d')) {");
-        out("      $__loaded_references[$ret.$d._uuid] = true;");
-        out("    }");
-        out("  } else if ($ret.hasOwnProperty('_scalar_uuid')) {");
-        out("    $__loaded_references[$ret._scalar_uuid] = true;");
-        out("  }");
-        out("}");
+        this.markLoadedReference("$ret");
     }
 
     return v;
@@ -14025,6 +14119,7 @@ Compiler.prototype.vslice = function (s, ctx, obj, dataToStore) {
 Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
     if (ctx === Sk.astnodes.Load || ctx === Sk.astnodes.AugLoad) {
         out("$ret = Sk.abstr.objectGetItem(", obj, ",", subs, ", true);");
+        this.markLoadedElement(obj, subs);
         this._checkSuspension();
         return this._gr("lsubscr", "$ret");
     }
@@ -14044,6 +14139,66 @@ Compiler.prototype.chandlesubscr = function (ctx, obj, subs, data) {
     else {
         Sk.asserts.fail("handlesubscr fail");
     }
+};
+
+Compiler.prototype.hookAffectation = function (mangled, dataToStore, debug) {
+    // console.log("HOOK_AFFECTATION : " + debug + " [" + mangled + "     =      " + dataToStore + "]");
+
+    // FROM : $loc.varName = value;
+    // out(mangled, "=", dataToStore, ";");
+
+    // If doesn't start with $loc.
+    if (mangled.substr(0, 5) !== "$loc.") {
+        out(mangled, "=", dataToStore, ";");
+
+        return;
+    }
+
+    // TO :   $loc.varName = window.currentPythonRunner.reportValue(value, 'varName');
+    var varName = mangled.substr(5);
+    out("if (" + dataToStore + ".hasOwnProperty('_uuid')) {");
+    out("  $loc.__refs__ = ($loc.hasOwnProperty('__refs__')) ? $loc.__refs__ : [];");
+    out("  if (!$loc.__refs__.hasOwnProperty(" + dataToStore + "._uuid)) {");
+    out("    $loc.__refs__[" + dataToStore + "._uuid] = [];");
+    out("  }");
+    out("  $loc.__refs__[" + dataToStore + "._uuid].push(\"" + varName + "\");");
+    out("}");
+
+    out(mangled, "=", "window.currentPythonRunner.reportValue(", dataToStore, ", '", varName, "');");
+};
+
+/**
+ * Marks a name as loaded.
+ *
+ * @param varName The variable name.
+ */
+Compiler.prototype.markLoadedName = function(varName) {
+    out("$__loaded_references['" + varName + "'] = true;");
+};
+
+Compiler.prototype.markLoadedElement = function(obj, subs) {
+    out("$__loaded_references[" + obj + "._uuid + '_' + " + subs + ".v] = true;");
+
+    // Also mark the internal dict of an object if it's an object.
+    out("if (" + obj + ".hasOwnProperty('$d')) {");
+    out("  $__loaded_references[" + obj + ".$d._uuid + '_' + " + subs + ".v] = true;");
+    out("}");
+};
+
+/**
+ * Marks a reference as loaded.
+ *
+ * @param varName The variable name.
+ */
+Compiler.prototype.markLoadedReference = function(varName) {
+    out("if (typeof " + varName + " !== 'undefined') {");
+    out("  if (" + varName + ".hasOwnProperty('_uuid')) {");
+    out("    $__loaded_references[" + varName + "._uuid] = true;");
+    out("    if (" + varName + ".hasOwnProperty('$d')) {");
+    out("      $__loaded_references[" + varName + ".$d._uuid] = true;");
+    out("    }");
+    out("  }");
+    out("}");
 };
 
 /**
@@ -14244,10 +14399,12 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
             switch (e.ctx) {
                 case Sk.astnodes.AugLoad:
                     out("$ret = Sk.abstr.gattr(", augvar, ",", mname, ", true);");
+                    this.markLoadedElement(augvar, mname);
                     this._checkSuspension(e);
                     return this._gr("lattr", "$ret");
                 case Sk.astnodes.Load:
                     out("$ret = Sk.abstr.gattr(", val, ",", mname, ", true);");
+                    this.markLoadedElement(val, mname);
                     this._checkSuspension(e);
                     return this._gr("lattr", "$ret");
                 case Sk.astnodes.AugStore:
@@ -14283,6 +14440,7 @@ Compiler.prototype.vexpr = function (e, data, augvar, augsubs) {
             switch (e.ctx) {
                 case Sk.astnodes.AugLoad:
                     out("$ret = Sk.abstr.objectGetItem(",augvar,",",augsubs,", true);");
+                    this.markLoadedElement(augvar, augsubs);
                     this._checkSuspension(e)
                     return this._gr("gitem", "$ret");
                 case Sk.astnodes.Load:
@@ -15958,7 +16116,7 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
                     return mangled;
                 case Sk.astnodes.Store:
                     // out(mangled, "=", dataToStore, ";");
-                    hookAffectation(mangled, dataToStore, '1');
+                    this.hookAffectation(mangled, dataToStore, "1");
                     break;
                 case Sk.astnodes.Del:
                     out("delete ", mangled, ";");
@@ -15974,7 +16132,7 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
                     return this._gr("loadname", mangled, "!==undefined?", mangled, ":Sk.misceval.loadname('", mangledNoPre, "',$gbl);");
                 case Sk.astnodes.Store:
                     // out(mangled, "=", dataToStore, ";");
-                    hookAffectation(mangled, dataToStore, '2');
+                    this.hookAffectation(mangled, dataToStore, "2");
                     break;
                 case Sk.astnodes.Del:
                     out("delete ", mangled, ";");
@@ -15991,7 +16149,7 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
                     return this._gr("loadgbl", "Sk.misceval.loadname('", mangledNoPre, "',$gbl)");
                 case Sk.astnodes.Store:
                     // out("$gbl.", mangledNoPre, "=", dataToStore, ";");
-                    hookAffectation("$gbl." + mangledNoPre, dataToStore, '3');
+                    this.hookAffectation("$gbl." + mangledNoPre, dataToStore, "3");
                     break;
                 case Sk.astnodes.Del:
                     out("delete $gbl.", mangledNoPre);
@@ -16006,7 +16164,7 @@ Compiler.prototype.nameop = function (name, ctx, dataToStore) {
                     return dict + "." + mangledNoPre;
                 case Sk.astnodes.Store:
                     // out(dict, ".", mangledNoPre, "=", dataToStore, ";");
-                    hookAffectation(dict + "." + mangledNoPre, dataToStore, '4');
+                    this.hookAffectation(dict + "." + mangledNoPre, dataToStore, "4");
                     break;
                 case Sk.astnodes.Param:
                     return mangledNoPre;
@@ -16248,13 +16406,8 @@ Sk.exportSymbol("Sk.mangleName", Sk.mangleName);
 /*!************************!*\
   !*** ./src/complex.js ***!
   \************************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
-
+/*! no static exports found */
+/***/ (function(module, exports) {
 
 /**
  * hypot is a ESCMA6 function and maybe not available across all browsers
@@ -16286,8 +16439,6 @@ Math.hypot = Math.hypot || function() {
  */
 Sk.builtin.complex = function (real, imag) {
     Sk.builtin.pyCheckArgsLen("complex", arguments.length, 0, 2);
-
-    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
 
     var r, i, tmp; // PyObject
     var nbr, nbi; // real, imag as numbers
@@ -19994,17 +20145,12 @@ Sk.exportSymbol("Sk.builtin.filter_", Sk.builtin.filter_);
 /*!**********************!*\
   !*** ./src/float.js ***!
   \**********************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports) {
 
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
 /**
  * @namespace Sk.builtin
  */
-
-
 
 /**
  * @constructor
@@ -20019,8 +20165,6 @@ __webpack_require__.r(__webpack_exports__);
  * @return {Sk.builtin.float_} Python float
  */
 Sk.builtin.float_ = function (x) {
-    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
-
     var tmp;
     if (x === undefined) {
         return new Sk.builtin.float_(0.0);
@@ -22572,20 +22716,15 @@ Sk.exportSymbol("Sk.importStar", Sk.importStar);
 /*!********************!*\
   !*** ./src/int.js ***!
   \********************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports) {
 
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
 /* jslint nomen: true, bitwise: true */
 /* global Sk: true */
 
 /**
  * @namespace Sk.builtin
  */
-
-
 
 /**
  * @constructor
@@ -22607,8 +22746,6 @@ __webpack_require__.r(__webpack_exports__);
  * @return {(Sk.builtin.int_|Sk.builtin.lng)}      Python int (or long, if overflow)
  */
 Sk.builtin.int_ = function (x, base) {
-    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
-
     var val;
     var func;
     var ret; // return value
@@ -24733,18 +24870,14 @@ Sk.builtin.list_iter_.prototype.next$ = function (self) {
 /*!*********************!*\
   !*** ./src/long.js ***!
   \*********************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
+/*! no static exports found */
+/***/ (function(module, exports) {
 
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
 /* global Sk: true, goog:true */
 
 // long aka "bignumber" implementation
 //
 //  Using javascript BigInteger by Tom Wu
-
 
 /**
  * @constructor
@@ -24760,8 +24893,6 @@ __webpack_require__.r(__webpack_exports__);
  * @return {Sk.builtin.lng} Python long
  */
 Sk.builtin.lng = function (x, base) {   /* long is a reserved word */
-    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
-
     base = Sk.builtin.asnum$(base);
     if (!(this instanceof Sk.builtin.lng)) {
         return new Sk.builtin.lng(x, base);
@@ -30384,13 +30515,8 @@ Sk.builtin.sorted = function sorted (iterable, cmp, key, reverse) {
 /*!********************!*\
   !*** ./src/str.js ***!
   \********************/
-/*! no exports provided */
-/***/ (function(module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var uuid__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! uuid */ "./node_modules/uuid/dist/esm-browser/index.js");
-
+/*! no static exports found */
+/***/ (function(module, exports) {
 
 Sk.builtin.interned = {};
 
@@ -30403,8 +30529,6 @@ Sk.builtin.str = function (x) {
     var ret;
 
     Sk.builtin.pyCheckArgsLen("str", arguments.length, 0, 1);
-
-    this._scalar_uuid = Object(uuid__WEBPACK_IMPORTED_MODULE_0__["v4"])();
 
     if (x === undefined) {
         x = "";
@@ -35471,8 +35595,8 @@ Sk.builtin.super_.__doc__ = new Sk.builtin.str(
 var Sk = {}; // jshint ignore:line
 
 Sk.build = {
-    githash: "18a4a3f28363c6fefc9f877c9936aaab55301112",
-    date: "2020-10-15T09:06:55.446Z"
+    githash: "14e964e8b941e132c02328b7eafa99ab34d6a93d",
+    date: "2020-11-04T10:37:26.518Z"
 };
 
 /**
