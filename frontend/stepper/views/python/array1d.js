@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import {renderValue, renderArrow} from './utils';
 import {extractView} from './array_utils';
 import {SvgPan} from '../svg-pan';
-import DirectiveFrame from "../DirectiveFrame";
+import DirectiveFrame from '../DirectiveFrame';
 
 const TEXT_LINE_HEIGHT = 18;
 const TEXT_BASELINE = 5; // from bottom
@@ -23,10 +23,10 @@ function getCellClasses(ref, index, cursor, loadedReferences) {
   const list = ref.cur.v;
 
   if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(index) && ref.old.v[index] !== list[index]) {
-    return "cell cell-store";
+    return 'cell cell-store';
   }
   if (loadedReferences.hasOwnProperty(ref.cur._uuid + '_' + index)) {
-    return "cell cell-load";
+    return 'cell cell-load';
   }
   if (cursor) {
     return 'cell cell-cursor';

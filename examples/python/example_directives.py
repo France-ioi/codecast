@@ -1,10 +1,10 @@
 # Matrix
 
-#! matrix = showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=2, cols=3)
-matrix = [[1, -1, 0], [0, 0, 0], [0, 0, 0]
-for line in range(1, 3):
+#! matrix = showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=5, cols=3)
+matrix = [[2, 1, 1], [1, -1, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
+for line in range(2, 5):
     for col in range(0, 3):
-        matrix[line][col] = matrix[line - 1][col] + col
+        matrix[line][col] = matrix[line - 1][col] + matrix[line - 2][col]
 
 
 # Array

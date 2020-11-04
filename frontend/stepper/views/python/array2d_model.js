@@ -1,4 +1,4 @@
-import {getVariable, stringifyExpr} from './utils';
+import {getLoadedReferencesFromVariable, getVariable, stringifyExpr} from './utils';
 import {getCursorMap} from './array_utils';
 
 export const extractView = function (context, name, options) {
@@ -38,5 +38,12 @@ export const extractView = function (context, name, options) {
     cursor.row = cursorRow;
   }
 
-  return {ref, rowCount, colCount, rowInfoMap, colInfoMap};
+  return {
+    ref,
+    rowCount,
+    colCount,
+    rowInfoMap,
+    colInfoMap,
+    loadedReferences: getLoadedReferencesFromVariable(analysis, name)
+  };
 };
