@@ -192,7 +192,7 @@ export class Array2D extends React.PureComponent {
     /**
      * Eg. directive :
      *
-     * #! matrix = showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=2, cols=3)
+     * _VIEW_matrix = "showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=2, cols=3)"
      *
      * Other options :
      * - height = The height of the view in px (default : special value "auto")

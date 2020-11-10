@@ -84,10 +84,17 @@ export const extractView = function (context, name, options) {
     };
   }
 
-  // Evaluate `dim` if given.
+  // Evaluate "dim" if given.
   let elemCount;
   if (dim) {
-    elemCount = dim;
+    if (/^\d/.test(dim)) {
+        elemCount = dim;
+    } else {
+        const dimVariable = getVariable(analysis, dim);
+        if (dimVariable && dimVariable.cur) {
+            elemCount = dimVariable.cur.v;
+        }
+    }
   }
 
   const ref = getVariable(analysis, name);
@@ -245,7 +252,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
             nextIndex += 1;
          } else {
             // If a gap of size 1 is detected, use the missing index.
-            const filler = result[i] === nextIndex + 1 ? nextIndex : '…';
+            const filler = result[i] === nextIndex + 1 ? nextIndex : '…'; // TODO: Is this useful ?
             result.splice(i, 0, filler);
             i += 1;
             // Reset nextIndex to the start of the sequence after the gap.

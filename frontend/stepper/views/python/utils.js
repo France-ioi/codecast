@@ -51,6 +51,23 @@ export const getVariable = function(analysis, name) {
 };
 
 /**
+ * Gets variables by name in analysis.
+ *
+ * @param {object} analysis The analysis.
+ * @param {Array}  names    The names.
+ *
+ * @return {object|null}
+ */
+export const getVariables = function(analysis, names) {
+  return names.map((name) => {
+    return {
+      name,
+      value: getVariable(analysis, name)
+    }
+  });
+};
+
+/**
  * Gets a variable by name in a scope.
  *
  * @param {object} scope The scope.
@@ -200,21 +217,6 @@ export const stringifyExpr = function (expr, precedence) {
     return `&${stringifyExpr(expr[1], 0)}`;
   }
   return JSON.stringify(expr);
-};
-
-export const viewExprs = function (programState, stackFrame, exprs) {
-  const localMap = stackFrame.get('localMap');
-  const views = [];
-  exprs.forEach(function (expr) {
-    const label = stringifyExpr(expr, 0);
-    try {
-      const value = evalExpr(programState, localMap, expr, false);
-      views.push({label, value});
-    } catch (ex) {
-      views.push({label, error: ex.toString});
-    }
-  });
-  return views;
 };
 
 export const viewVariable = function (context, name, type, address) {

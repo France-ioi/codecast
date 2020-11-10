@@ -59,7 +59,7 @@ g.directiveArgByName = PR.seq(g.ident, g.equals, g.expr).map(function (match) {
 });
 g.directiveArg = PR.alt(g.directiveArgByName, g.directiveArgByPos);
 g.directiveArgs = PR.repeatSeparated(g.directiveArg, g.coma, {min:0}).map(function (match) {
-    var byPos = [], byName = {};
+    const byPos = [], byName = {};
     match.forEach(function (arg) {
         if ('name' in arg) {
             byName[arg.name] = arg.value;
@@ -73,32 +73,64 @@ g.directiveAssignment = PR.seq(g.ident, g.equals).map(function (match) {
     return match[0];
 });
 g.directive = PR.seq(g.directiveAssignment.optional(), g.ident, g.lparen, g.directiveArgs.optional(), g.rparen).map(function (match) {
-    var key = match[0];
-    var kind = match[1];
-    var args = match[3] || {byPos: [], byName: {}};
+    const key = match[0];
+    const kind = match[1];
+    const args = match[3] || {byPos: [], byName: {}};
+
     return {key: key, kind: kind, byPos: args.byPos, byName: args.byName};
 });
 
+/**
+ * Gets the currently active directives.
+ *
+ * @param analysis
+ *
+ * @returns {[]}
+ */
 export const parseDirectives = function (analysis) {
-    const currentFunctionCallStack = analysis.functionCallStack.get(0);
+    /**
+     * Search for directives in the current and in the global callstack.
+     * Put the current first so it overrides directives in the global scope.
+     */
+    const activeFunctionCallStacks = [];
+    if (analysis.functionCallStack.size > 1) {
+        activeFunctionCallStacks.push(analysis.functionCallStack.last()); // Active.
+    }
+    activeFunctionCallStacks.push(analysis.functionCallStack.get(0)); // Global.
 
     let nextId = 1;
     let directives = [];
-    for (let directiveString of currentFunctionCallStack.directives) {
-        const directive = parseDirective(directiveString);
-        if (!directive.key) {
-            directive.key = `view${nextId}`;
-            nextId += 1;
-        }
+    let directiveKeyExists = {};
+    for (let functionCallStack of activeFunctionCallStacks) {
+        for (let directiveString of functionCallStack.directives) {
+            const directive = parseDirective(directiveString);
+            if (directive.key) {
+                if (directiveKeyExists.hasOwnProperty(directive.key)) {
+                    // When a directive exists in both the current and global scopes, we use only the former.
+                    continue;
+                }
+            } else {
+                // Default key if it's not specified in the directive declaration.
+                directive.key = `view${nextId}`;
+                nextId += 1;
+            }
 
-        directives.push(directive);
+            directives.push(directive);
+
+            directiveKeyExists[directive.key] = true;
+        }
     }
 
     return directives;
 };
 
-const parseDirective = function (line) {
-    const str = /^\s*(.*)\s*$/.exec(line)[1];
-
-    return g.directive.run(str);
+/**
+ * Gets a directive object from the directive declaration.
+ *
+ * @param {string} directiveDeclaration The directive declaration.
+ *
+ * @returns {key, kind, byPos, byName}
+ */
+const parseDirective = function (directiveDeclaration) {
+    return g.directive.run(directiveDeclaration);
 };

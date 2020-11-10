@@ -2,7 +2,6 @@ import * as C from 'persistent-c';
 
 const uint = C.builtinTypes['unsigned int'];
 const uintPtr = C.pointerType(uint);
-const uintPtrPtr = C.pointerType(uintPtr);
 const headerSize = 4;
 
 /*

@@ -10,6 +10,7 @@ import MemoryViewDirective from './c/memory';
 
 import {Array1D as pythonArray1D} from './python/array1d';
 import {Array2D as pythonArray2D} from './python/array2d';
+import {SortView as pythonSortView} from './python/sort';
 import DirectiveFrame from './DirectiveFrame';
 
 const C_directiveViewDict = {
@@ -21,7 +22,8 @@ const C_directiveViewDict = {
 };
 const pythonDirectiveViewDict = {
   showArray: {View: pythonArray1D, selector: obj => obj},
-  showArray2D: {View: pythonArray2D, selector: obj => obj}
+  showArray2D: {View: pythonArray2D, selector: obj => obj},
+  showSort: {View: pythonSortView, selector: obj => obj},
 };
 
 export default function (bundle, deps) {

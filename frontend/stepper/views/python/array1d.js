@@ -119,12 +119,13 @@ export class Array1D extends React.PureComponent {
     /**
      * Eg. directive :
      *
-     * #! arr = showArray(arr, cursors=[index])
+     * _VIEW_arr = "showArray(arr, cursors=[index])"
      *
      * Other options:
      * - cursorRows : ? (default 1)
      * - cw : The width of a cell in px (default 28)
      * - n : ? (default 40)
+     * - dim : The size of the list by value (int) or by name
      *
      * byName: {
      *   cursors: ["index"]
@@ -135,6 +136,7 @@ export class Array1D extends React.PureComponent {
      */
 
     const fullView = controls.get('fullView');
+
     const cellPan = this.getPosition();
     const {byName, byPos} = directive;
     const cursors = (byName.cursors) ? byName.cursors : [];
@@ -149,8 +151,14 @@ export class Array1D extends React.PureComponent {
     const {dim} = byName;
 
     const view = {
-      dim, cursors, cursorRows, maxVisibleCells,
-      fullView, cellHeight, cellWidth, getMessage
+      dim,
+      cursors,
+      cursorRows,
+      maxVisibleCells,
+      fullView,
+      cellHeight,
+      cellWidth,
+      getMessage
     };
     Object.assign(view, extractView(context, byPos[0], view));
     if (view.error) {

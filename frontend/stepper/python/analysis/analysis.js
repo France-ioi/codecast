@@ -217,7 +217,9 @@ const getDirectiveVariables = (variables) => {
         if (variableName.startsWith(VIEW_DIRECTIVE_PREFIX)) {
             const directiveName = variableName.substr(VIEW_DIRECTIVE_PREFIX.length);
 
-            directiveVariables.push(directiveName + ' = ' + variables[variableName].v);
+            if (variables[variableName]) {
+                directiveVariables.push(directiveName + ' = ' + variables[variableName].v);
+            }
         }
     }
 

@@ -33,17 +33,17 @@ import * as C from 'persistent-c';
 import {default as ApiBundle, buildState, makeContext, rootStepperSaga, performStep, StepperError} from './api';
 import ControlsBundle from './controls';
 import CompileBundle from './compile';
-import EffectsBundle from './effects';
+import EffectsBundle from './c/effects';
 
 import DelayBundle from './delay';
-import HeapBundle from './heap';
+import HeapBundle from './c/heap';
 import IoBundle from './io/index';
 import ViewsBundle from './views/index';
 import ArduinoBundle from './arduino';
 import PythonBundle, {getNewOutput, getNewTerminal} from './python';
 
 /* TODO: clean-up */
-import {analyseState, collectDirectives} from './analysis';
+import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy} from "./python/analysis/analysis";
 import {parseDirectives} from "./python/directives";
 
