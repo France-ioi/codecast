@@ -6,6 +6,7 @@ import {Spinner, Icon, Classes, FormGroup, ControlGroup, HTMLSelect, InputGroup,
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 import {DateRangePicker} from "@blueprintjs/datetime";
 import {asyncRequestJson} from '../utils/api';
+import {isLocalMode} from "../utils/app";
 
 function getBrowser () {
   // Opera 8.0+
@@ -30,6 +31,9 @@ function getBrowser () {
 }
 
 export default function (bundle, deps) {
+  if (isLocalMode()) {
+    return;
+  }
 
   bundle.addReducer('init', (state, {payload: {options: {isStatisticsReady}}}) => {
     return state.set('statistics', Immutable.Map({isReady: isStatisticsReady}))
