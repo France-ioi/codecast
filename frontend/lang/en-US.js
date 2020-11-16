@@ -43,6 +43,7 @@ module.exports = {
   CONTROL_REDO: "redo",
   PROGRAM_STOPPED: "Program stopped.",
   SETTINGS_MENU_TITLE: "Settings",
+  DOWNLOAD_OFFLINE: "Download to use the app without connection : Extract the zip and open index.html in your browser.",
   'LANGUAGE:': "Language: ",
   EXAMPLES_LABEL: "Examples: ",
   EXAMPLES_BUTTON_TITLE: "View list",

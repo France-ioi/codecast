@@ -318,8 +318,9 @@ function SubtitlesEditorSelector (state, props) {
 
 class SubtitlesEditor extends React.PureComponent {
   render () {
-    const {availableOptions, selected, subtitlesText, langOptions, onSelect, onRemove, canSave, unsaved, notify} = this.props;
+    const {availableOptions, selected, subtitlesText, langOptions, canSave, unsaved, notify} = this.props;
     const availKeys = Object.keys(availableOptions).filter(key => !availableOptions[key].removed).sort();
+
     return (
       <div>
         <div className='hbox mb'>

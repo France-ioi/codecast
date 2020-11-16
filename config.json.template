@@ -40,5 +40,8 @@
     "default": [
       "base", {"uploadPath": "uploads"}
     ]
-  }
+  },
+  "builderUrl": "https://archive-builder.test",
+  "ownSecret": "The own secret",
+  "builderSecret": "The builder secret"
 }

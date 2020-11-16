@@ -5,6 +5,7 @@ import {extractView} from './array_utils';
 import {SvgPan} from '../svg-pan';
 import DirectiveFrame from "../DirectiveFrame";
 
+const DEFAULT_MAX_VISIBLE_CELLS = 40;
 const MARGIN_LEFT = 100;
 const MARGIN_TOP = 4;
 const MARGIN_BOTTOM = 4;
@@ -144,13 +145,13 @@ export class SortView extends React.PureComponent {
     //   - fullView: read and render all cells
     const fullView = controls.get('fullView');
     const {byName, byPos} = directive;
-    console.log(fullView);
+
     const {dim} = byName;
     const cellPan = this.getPosition();
     const thresholds = (byName.thresholds) ? byName.thresholds : [];
     const cursors = (byName.cursors) ? byName.cursors : [];
     const cursorRows = (byName.cursorRows) ? byName.cursorRows : 1;
-    const maxVisibleCells = (byName.n) ? byName.n : 40;
+    const maxVisibleCells = (byName.n) ? byName.n : DEFAULT_MAX_VISIBLE_CELLS;
     const svgHeight = MARGIN_TOP + BAR_HEIGHT + BAR_MARGIN_BOTTOM + TEXT_LINE_HEIGHT + MIN_ARROW_HEIGHT + TEXT_LINE_HEIGHT * cursorRows + MARGIN_BOTTOM;
 
     const view = {

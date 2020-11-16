@@ -1,5 +1,6 @@
+# Codecast
 
-# Try it
+## Try it
 
 The most recent production version can be used
 [here](https://codecast.france-ioi.org/v5/).
@@ -10,7 +11,10 @@ This version can break compatibility with past production releases, that
 is, there is no expectation that recordings made on the development
 version will remain readable.
 
-# Quick start
+[Python documentation](docs/python.md)
+
+
+## Quick start
 
 (Build `c-to-json` and copy the executable at the root of this project.)
 
@@ -36,7 +40,7 @@ add rows in user_configs where value is a json object with keys
 
 
 1. setup codecast-examples project and proxy it
-to '/examples' also install a cors plugin in your browser to get rid of cors issues..
+to '/examples' also install a cors plugin in your browser to get rid of cors issues.
 
 2. when login in for the first time in development, check the console log for the user_id, which you need to add the db row for the user, that's mentioned above
 
@@ -70,12 +74,27 @@ to watch the source files:
 
     NODE_ENV=development npm start
 
-# Build for offline use
 
+## Offline use
+
+1 : Build the offline ZIP :
+```
     rm -rf build
     BUILD=offline NODE_ENV=production npm run build
     zip -r offline.zip build assets
+```
 
-# Documentation
+2 : Install and configure [archive-builder](https://github.com/France-ioi/archive-builder)
 
-Document for linker : https://github.com/epixode/epic-linker
+3 : Fill the configuration in /config.json
+
+- **builderUrl** is the URL of the archive-builder you installed in the previous step.
+- **builderSecret** is the builder secret.
+- **ownSecret** A secret string you can generate with :
+```javascript
+node -e 'console.log(require("crypto").randomBytes(32).toString("base64"))'
+```
+
+## Developers additional documentation
+
+Documentation for linker : https://github.com/epixode/epic-linker
