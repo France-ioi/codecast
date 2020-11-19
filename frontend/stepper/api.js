@@ -11,6 +11,7 @@ import * as C from 'persistent-c';
 import {all, call, put} from 'redux-saga/effects';
 import sleep from '../utils/sleep';
 import {getNewOutput, getNewTerminal} from "./python";
+import {clearLoadedReferences} from "./python/analysis/analysis";
 
 export default function (bundle) {
 
@@ -70,7 +71,6 @@ export async function buildState (globalState) {
   }
 
   function interact ({saga}) {
-    console.log('int5');
     return new Promise((resolve, reject) => {
       if (saga) {
         return reject(new StepperError('error', 'cannot interact in buildState'));
@@ -117,15 +117,14 @@ function getNodeStartRow (state) {
 }
 
 export function makeContext (state, interact) {
-  console.log('MAKE CONTEEEXT*************************************', state);
+  console.log('**********  MAKE CONTEXT  **********', state);
 
   switch (state.platform) {
     case 'python':
       return {
         state: {
           ...state,
-          programState: state.programState,
-          lastProgramState: state.programState,
+          lastAnalysis: clearLoadedReferences(state.analysis),
           controls: resetControls(state.controls)
         },
         interact,
@@ -187,7 +186,7 @@ async function executeSingleStep (stepperContext) {
   }
 
   if (stepperContext.state.platform === 'python') {
-    console.log('EXECUTE STEP HERE', stepperContext.state);
+    console.log('EXECUTE STEP', stepperContext.state);
 
     window.currentPythonRunner._input = stepperContext.state.input;
     window.currentPythonRunner._inputPos = stepperContext.state.inputPos;

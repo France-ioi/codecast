@@ -1,3 +1,5 @@
+export const VIEW_DIRECTIVE_PREFIX = '_VIEW_';
+
 const PR = require('packrattle');
 
 const g = module.exports.grammar = {};
@@ -57,7 +59,7 @@ g.directiveArgByName = PR.seq(g.ident, g.equals, g.expr).map(function (match) {
 });
 g.directiveArg = PR.alt(g.directiveArgByName, g.directiveArgByPos);
 g.directiveArgs = PR.repeatSeparated(g.directiveArg, g.coma, {min:0}).map(function (match) {
-    var byPos = [], byName = {};
+    const byPos = [], byName = {};
     match.forEach(function (arg) {
         if ('name' in arg) {
             byName[arg.name] = arg.value;
@@ -71,80 +73,64 @@ g.directiveAssignment = PR.seq(g.ident, g.equals).map(function (match) {
     return match[0];
 });
 g.directive = PR.seq(g.directiveAssignment.optional(), g.ident, g.lparen, g.directiveArgs.optional(), g.rparen).map(function (match) {
-    var key = match[0];
-    var kind = match[1];
-    var args = match[3] || {byPos: [], byName: {}};
+    const key = match[0];
+    const kind = match[1];
+    const args = match[3] || {byPos: [], byName: {}};
+
     return {key: key, kind: kind, byPos: args.byPos, byName: args.byName};
 });
 
+/**
+ * Gets the currently active directives.
+ *
+ * @param analysis
+ *
+ * @returns {[]}
+ */
 export const parseDirectives = function (analysis) {
     /**
-     * To find directives in the current scope, we look at all lines preceding the current one
-     * where the ident level must always be constant or decreasing as an increase would mean
-     * a different scope.
+     * Search for directives in the current and in the global callstack.
+     * Put the current first so it overrides directives in the global scope.
      */
+    const activeFunctionCallStacks = [];
+    if (analysis.functionCallStack.size > 1) {
+        activeFunctionCallStacks.push(analysis.functionCallStack.last()); // Active.
+    }
+    activeFunctionCallStacks.push(analysis.functionCallStack.get(0)); // Global.
 
-    const {lines, functionCallStack} = analysis;
-    const currentLine = functionCallStack.get(0).currentLine;
-    let curLineIdx = (currentLine - 1); // currentLine is 1-indexed.
-    let lastNbTabs = getIndentLevel(lines[curLineIdx]);
     let nextId = 1;
     let directives = [];
-
-    curLineIdx--;
-    while (curLineIdx >= 0) {
-        const line = lines[curLineIdx];
-
-        const curNbTabs = getIndentLevel(lines[curLineIdx]);
-        if (curNbTabs > lastNbTabs) {
-            continue;
-        } else {
-            lastNbTabs = curNbTabs;
-        }
-
-        if (isDirective(line)) {
-            const directive = parseDirective(line);
-            if (!directive.key) {
+    let directiveKeyExists = {};
+    for (let functionCallStack of activeFunctionCallStacks) {
+        for (let directiveString of functionCallStack.directives) {
+            const directive = parseDirective(directiveString);
+            if (directive.key) {
+                if (directiveKeyExists.hasOwnProperty(directive.key)) {
+                    // When a directive exists in both the current and global scopes, we use only the former.
+                    continue;
+                }
+            } else {
+                // Default key if it's not specified in the directive declaration.
                 directive.key = `view${nextId}`;
                 nextId += 1;
             }
 
             directives.push(directive);
-        }
 
-        curLineIdx--;
+            directiveKeyExists[directive.key] = true;
+        }
     }
 
     return directives;
 };
 
-const isDirective = function (line) {
-    return (/^\s*#!/).test(line);
-};
-
-const parseDirective = function (line) {
-    const str = /^\s*#!\s*(.*)\s*$/.exec(line)[1];
-
-    return g.directive.run(str);
-};
-
 /**
- * Gets the ident level of a line.
+ * Gets a directive object from the directive declaration.
  *
- * @param {string} line The line.
+ * @param {string} directiveDeclaration The directive declaration.
  *
- * @return {int}
+ * @returns {key, kind, byPos, byName}
  */
-const getIndentLevel = function(line) {
-    let nbTabs = 0;
-    const length = line.length;
-    for (let i = 0; i < length; i++) {
-        if (line[i] === '\t') {
-            nbTabs++;
-        } else {
-            break;
-        }
-    }
-
-    return nbTabs;
+const parseDirective = function (directiveDeclaration) {
+    return g.directive.run(directiveDeclaration);
 };

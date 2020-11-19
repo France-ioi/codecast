@@ -33,6 +33,10 @@
   color: #ffcc1e;
 }
 
+.value-loaded {
+  font-weight: bold;
+}
+
 .value-object-closed, .value-list-closed, .value-iterator, .value-module, .value-function {
   color: #b8b246;
 }

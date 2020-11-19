@@ -16,8 +16,6 @@ Document.prototype.size = function () {
     return 0;
   }
 
-  console.log(this.lines.toJS());
-
   return this.lines.reduce(function (a, v) {
     return (a + v.length + 1);
   }, 0) - 1;

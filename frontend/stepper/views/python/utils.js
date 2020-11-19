@@ -9,6 +9,28 @@ import * as C from 'persistent-c';
 import DirectiveFrame from "../DirectiveFrame";
 
 /**
+ * Gets the scope's loaded references from a variable name.
+ *
+ * @param {object} analysis The analysis.
+ * @param {string} name     The variable name.
+ *
+ * @return {object|null}
+ */
+export const getLoadedReferencesFromVariable = function(analysis, name) {
+  // Check in the last (the current) and the first (which is the global) scopes.
+
+  const nbScopes = analysis.functionCallStack.size;
+  if (getVariableInScope(analysis.functionCallStack.get(nbScopes - 1), name)) {
+    return analysis.functionCallStack.get(nbScopes - 1).loadedReferences;
+  }
+  if (nbScopes > 1 && getVariableInScope(analysis.functionCallStack.get(0), name)) {
+    return analysis.functionCallStack.get(0).loadedReferences;
+  }
+
+  return {};
+};
+
+/**
  * Gets a variable by name in analysis.
  *
  * @param {object} analysis The analysis.
@@ -26,6 +48,23 @@ export const getVariable = function(analysis, name) {
   }
 
   return variable;
+};
+
+/**
+ * Gets variables by name in analysis.
+ *
+ * @param {object} analysis The analysis.
+ * @param {Array}  names    The names.
+ *
+ * @return {object|null}
+ */
+export const getVariables = function(analysis, names) {
+  return names.map((name) => {
+    return {
+      name,
+      value: getVariable(analysis, name)
+    }
+  });
 };
 
 /**
@@ -150,8 +189,8 @@ export const readRecord = function (context, recordType, address, limits) {
 export const refsIntersect = function (ref1, ref2) {
   const base1 = ref1.address, limit1 = base1 + ref1.type.pointee.size - 1;
   const base2 = ref2.address, limit2 = base2 + ref2.type.pointee.size - 1;
-  const result = (base1 <= base2) ? (base2 <= limit1) : (base1 <= limit2);
-  return result;
+
+  return (base1 <= base2) ? (base2 <= limit1) : (base1 <= limit2);
 };
 
 const strParensIf = function (cond, str) {
@@ -178,21 +217,6 @@ export const stringifyExpr = function (expr, precedence) {
     return `&${stringifyExpr(expr[1], 0)}`;
   }
   return JSON.stringify(expr);
-};
-
-export const viewExprs = function (programState, stackFrame, exprs) {
-  const localMap = stackFrame.get('localMap');
-  const views = [];
-  exprs.forEach(function (expr) {
-    const label = stringifyExpr(expr, 0);
-    try {
-      const value = evalExpr(programState, localMap, expr, false);
-      views.push({label, value});
-    } catch (ex) {
-      views.push({label, error: ex.toString});
-    }
-  });
-  return views;
 };
 
 export const viewVariable = function (context, name, type, address) {

@@ -21,6 +21,7 @@ import playerBundle from './player/index';
 import recorderBundle from './recorder/index';
 import editorBundle from './editor/index';
 import statisticsBundle from './statistics/index';
+import {isLocalMode} from "./utils/app";
 
 /**
  * List of actions not to write in the console in development mode.
@@ -127,7 +128,7 @@ Codecast.start = function (options) {
   /* Run the sagas (must be done before calling autoLogin) */
   restart();
 
-  if (/editor|player|sandbox/.test(options.start)) {
+  if (!isLocalMode() && /editor|player|sandbox/.test(options.start)) {
     store.dispatch({type: scope.statisticsInitLogData});
   }
 
@@ -187,7 +188,6 @@ Codecast.start = function (options) {
         <App />
       </AppErrorBoundary>
     </Provider>, container);
-
 };
 
 function autoLogin () {

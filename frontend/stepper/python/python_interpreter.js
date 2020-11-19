@@ -412,7 +412,6 @@ export default function (context) {
         if (message.trim() === 'Program execution complete') {
             this._isFinished = true;
         } else {
-            console.log('PYTHON ____ INTERPRETER ____ PRINT _____', message);
             this._printedDuringStep += message;
         }
     };

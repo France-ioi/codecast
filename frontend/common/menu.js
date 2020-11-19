@@ -1,6 +1,7 @@
 
 import React from 'react';
 import {Button, ButtonGroup, Dialog, Label} from '@blueprintjs/core';
+import {isLocalMode} from "../utils/app";
 
 export default function (bundle) {
   bundle.defineView('Menu', MenuSelector, Menu);
@@ -8,8 +9,9 @@ export default function (bundle) {
 
 class Menu extends React.PureComponent {
   render () {
-    const {getMessage, SubtitlesMenu, FullscreenButton, LanguageSelection, ExamplePicker, platform, canChangePlatform} = this.props;
+    const {getMessage, SubtitlesMenu, FullscreenButton, LanguageSelection, ExamplePicker, platform, canChangePlatform, offlineDownloadUrl} = this.props;
     const {isOpen} = this.state;
+
     return (
       <div id='menu'>
         <ButtonGroup>
@@ -34,7 +36,13 @@ class Menu extends React.PureComponent {
                     </select>
                   </div>
                 </label>
-              </div>}
+              </div>
+            }
+            {offlineDownloadUrl &&
+              <a href={offlineDownloadUrl} target="_blank">
+                {getMessage('DOWNLOAD_OFFLINE')}
+              </a>
+            }
             <ExamplePicker />
           </div>
         </Dialog>
@@ -56,10 +64,16 @@ class Menu extends React.PureComponent {
 function MenuSelector (state, props) {
   const {FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker} = state.get('scope');
   const {platformChanged} = state.get('actionTypes');
-  const {platform, canChangePlatform} = state.get('options');
+  const {baseUrl, baseDataUrl, platform, canChangePlatform} = state.get('options');
   const getMessage = state.get('getMessage');
+
+  let offlineDownloadUrl = null;
+  if (!isLocalMode() && baseDataUrl) {
+    offlineDownloadUrl = baseUrl + '/offline?base=' + encodeURIComponent(baseDataUrl);
+  }
+
   return {
     getMessage, FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker,
-    platform, canChangePlatform, platformChanged
+    platform, canChangePlatform, platformChanged, offlineDownloadUrl
   };
 }

@@ -28,6 +28,8 @@ const PythonFunctionHeader = (props) => {
               ) : null}
                 <span>
                     {args.map(function(argument, index) {
+                        const loadedReferences = {};
+
                         return (
                             <span key={index}>
                                 <PythonVariableValue
@@ -36,6 +38,7 @@ const PythonFunctionHeader = (props) => {
                                     visited={{}}
                                     defaultopened={false}
                                     path={argument.path}
+                                    loadedReferences={loadedReferences}
                                     openedPaths={props.openedPaths}
                                     scopeIndex={props.scopeIndex}
                                 />

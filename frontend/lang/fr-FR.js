@@ -43,6 +43,7 @@ module.exports = {
   CONTROL_REDO: "refaire",
   PROGRAM_STOPPED: "Programme arrêté.",
   SETTINGS_MENU_TITLE: "Réglages",
+  DOWNLOAD_OFFLINE: "Télécharger pour utiliser l'application sans connexion : Extraire le zip et ouvrir index.html dans votre navigateur.",
   'LANGUAGE:': "Langue : ",
   EXAMPLES_LABEL: "Exemples: ",
   EXAMPLES_BUTTON_TITLE: "Afficher la liste",

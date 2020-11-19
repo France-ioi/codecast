@@ -1,7 +1,7 @@
 import FibonacciHeap from '@tyriar/fibonacci-heap';
 import range from 'node-range';
 
-import {stringifyExpr, getVariable} from './utils';
+import {stringifyExpr, getVariable, getLoadedReferencesFromVariable} from './utils';
 
 /**
   extractView(context, name, options) looks up `name` in `stackFrame` and
@@ -61,7 +61,6 @@ import {stringifyExpr, getVariable} from './utils';
 */
 export const extractView = function (context, name, options) {
   const {analysis} = context;
-  const localMap = null;
 
   // Normalize options.
   const {fullView, dim} = options;
@@ -85,10 +84,17 @@ export const extractView = function (context, name, options) {
     };
   }
 
-  // Evaluate `dim` if given.
+  // Evaluate "dim" if given.
   let elemCount;
   if (dim) {
-    elemCount = dim;
+    if (/^\d/.test(dim)) {
+        elemCount = dim;
+    } else {
+        const dimVariable = getVariable(analysis, dim);
+        if (dimVariable && dimVariable.cur) {
+            elemCount = dimVariable.cur.v;
+        }
+    }
   }
 
   const ref = getVariable(analysis, name);
@@ -115,7 +121,11 @@ export const extractView = function (context, name, options) {
 
   finalizeCursors(selection, cursorMap, cursorRows);
 
-  return {ref, cursorMap};
+  return {
+      ref,
+      cursorMap,
+      loadedReferences: getLoadedReferencesFromVariable(analysis, name)
+  };
 };
 
 /*
@@ -194,7 +204,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
          if (node === undefined) {
             break;
          }
-         let {index, points, rank} = node.key;
+         let {index} = node.key;
          // Find the position in result where the index can be inserted.
          let pos = findInsertionIndex(index, result);
          // Does the inserted index extend a sequence on the left or right?
@@ -242,7 +252,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
             nextIndex += 1;
          } else {
             // If a gap of size 1 is detected, use the missing index.
-            const filler = result[i] === nextIndex + 1 ? nextIndex : '…';
+            const filler = result[i] === nextIndex + 1 ? nextIndex : '…'; // TODO: Is this useful ?
             result.splice(i, 0, filler);
             i += 1;
             // Reset nextIndex to the start of the sequence after the gap.

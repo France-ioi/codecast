@@ -33,17 +33,17 @@ import * as C from 'persistent-c';
 import {default as ApiBundle, buildState, makeContext, rootStepperSaga, performStep, StepperError} from './api';
 import ControlsBundle from './controls';
 import CompileBundle from './compile';
-import EffectsBundle from './effects';
+import EffectsBundle from './c/effects';
 
 import DelayBundle from './delay';
-import HeapBundle from './heap';
+import HeapBundle from './c/heap';
 import IoBundle from './io/index';
 import ViewsBundle from './views/index';
 import ArduinoBundle from './arduino';
 import PythonBundle, {getNewOutput, getNewTerminal} from './python';
 
 /* TODO: clean-up */
-import {analyseState, collectDirectives} from './analysis';
+import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy} from "./python/analysis/analysis";
 import {parseDirectives} from "./python/directives";
 
@@ -185,7 +185,7 @@ function enrichStepperState (stepperState, context) {
           isFinished: true
         }
       } else {
-        stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.analysis);
+        stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
         stepperState.directives = {
           ordered: parseDirectives(stepperState.analysis),
           functionCallStackMap: null
@@ -195,6 +195,14 @@ function enrichStepperState (stepperState, context) {
 
     if (!stepperState.analysis) {
       stepperState.analysis = {
+        functionCallStack: new Immutable.List(),
+        code: window.currentPythonRunner._code,
+        lines: window.currentPythonRunner._code.split("\n"),
+        stepNum: 0,
+        isFinished: false
+      }
+
+      stepperState.lastAnalysis = {
         functionCallStack: new Immutable.List(),
         code: window.currentPythonRunner._code,
         lines: window.currentPythonRunner._code.split("\n"),

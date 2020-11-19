@@ -1,4 +1,5 @@
 import Immutable from 'immutable';
+import {VIEW_DIRECTIVE_PREFIX} from "../directives";
 
 /**
  * Enable debug of skulpt analysis.
@@ -9,24 +10,25 @@ import Immutable from 'immutable';
  *
  * @type {int}
  */
-const SKULPT_ANALYSIS_DEBUG = 2;
+const SKULPT_ANALYSIS_DEBUG = 0;
 
 /**
  * Transforms the skulpt state (the suspensions) to something readable with the variables content.
  *
- * @param {Array} suspensions   The skulpt suspensions.
+ * @param {Array}  suspensions  The skulpt suspensions.
  * @param {Object} lastAnalysis The last analysis (this function on the precedent step).
+ * @param {int}    newStepNum   The new Skulpt step number.
  *
  * @returns {Object}
  */
-export const analyseSkulptState = function (suspensions, lastAnalysis) {
+export const analyseSkulptState = function (suspensions, lastAnalysis, newStepNum) {
     if (SKULPT_ANALYSIS_DEBUG === 2) {
         console.log('[¥¥¥¥¥¥¥] Building analysis');
         console.log(suspensions);
         console.log(lastAnalysis);
     }
 
-    let functionCallStack = Immutable.List();
+    let functionCallStack = new Immutable.List();
 
     if (suspensions) {
         let scopeIndex = 0;
@@ -37,11 +39,11 @@ export const analyseSkulptState = function (suspensions, lastAnalysis) {
             }
 
             let lastScopeAnalysis = null;
-            if (lastAnalysis && lastAnalysis.functionCallStack.size > suspensionIdx) {
-                lastScopeAnalysis = lastAnalysis.functionCallStack.get(suspensionIdx);
+            if (lastAnalysis && lastAnalysis.functionCallStack.size > scopeIndex) {
+                lastScopeAnalysis = lastAnalysis.functionCallStack.get(scopeIndex);
             }
 
-            const analysedScope = analyseSkulptScope(suspension, lastScopeAnalysis);
+            const analysedScope = analyseSkulptScope(suspension, lastScopeAnalysis, newStepNum);
             analysedScope.key = suspensionIdx;
             analysedScope.scopeIndex = scopeIndex;
 
@@ -54,7 +56,7 @@ export const analyseSkulptState = function (suspensions, lastAnalysis) {
     const analysis = {
         ...lastAnalysis,
         functionCallStack: functionCallStack,
-        stepNum: (lastAnalysis.stepNum + 1)
+        stepNum: newStepNum
     };
 
     if (SKULPT_ANALYSIS_DEBUG > 0) {
@@ -82,17 +84,18 @@ const isProgramSuspension = function(suspension) {
  *
  * @param {Object} suspension   The skulpt suspension.
  * @param {Object} lastAnalysis The last analysis (this function on the precedent step and the same scope).
+ * @param {int}    newStepNum   The new Skulpt step number.
  *
- * @returns {Object}
+ * @returns {{args: *, variables: Map, name: string, openedPaths: Map<any, any>, currentLine: *}}
  */
-export const analyseSkulptScope = function (suspension, lastAnalysis) {
+export const analyseSkulptScope = function (suspension, lastAnalysis, newStepNum) {
     if (SKULPT_ANALYSIS_DEBUG === 2) {
         console.log('////// Analyse scope...');
         console.log(suspension);
         console.log(lastAnalysis);
     }
 
-    let variables = Immutable.Map();
+    let variables = new Immutable.Map();
 
     let name = suspension._name;
     if (name === '<module>') {
@@ -112,8 +115,7 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
 
     const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspVariables)), args);
 
-    for (const variableIdx in variableNames) {
-        const variableName = variableNames[variableIdx];
+    for (let variableName of variableNames) {
         const value = suspVariables[variableName];
 
         if (typeof value === 'function') {
@@ -136,18 +138,27 @@ export const analyseSkulptScope = function (suspension, lastAnalysis) {
         });
     }
 
+    // The references of loaded objects and variables whithin the step.
+    const loadedReferences = (lastAnalysis) ? {...lastAnalysis.loadedReferences} : {};
+    for (let reference in suspension.$loaded_references) {
+        loadedReferences[reference] = newStepNum;
+    }
+
+    // Opened objects / lists in the variables view.
     let openedPaths;
     if (lastAnalysis) {
         openedPaths = lastAnalysis.openedPaths;
     } else {
-        openedPaths = Immutable.Map();
+        openedPaths = new Immutable.Map();
     }
 
     const analysis = {
         variables,
+        directives: getDirectiveVariables(suspVariables),
         name,
         args,
         openedPaths,
+        loadedReferences,
         currentLine: suspension.$lineno
     };
 
@@ -167,6 +178,7 @@ const variablesBeginWithIgnore = [
     '__file__',
     '__class__',
     '__refs__',
+    VIEW_DIRECTIVE_PREFIX,
     '$compareres',
     '$loadgbl',
     '$binop',
@@ -189,8 +201,7 @@ const variablesBeginWithIgnore = [
 const filterInternalVariables = (variableNames) => {
     return variableNames.filter((name) => {
         let ignore = false;
-        for (const variableBeginWithIgnoreIdx in variablesBeginWithIgnore) {
-            const variableBeginWithIgnore = variablesBeginWithIgnore[variableBeginWithIgnoreIdx];
+        for (let variableBeginWithIgnore of variablesBeginWithIgnore) {
             if (name.indexOf(variableBeginWithIgnore) === 0) {
                 return false;
             }
@@ -198,6 +209,21 @@ const filterInternalVariables = (variableNames) => {
 
         return true;
     });
+};
+
+const getDirectiveVariables = (variables) => {
+    let directiveVariables = [];
+    for (let variableName in variables) {
+        if (variableName.startsWith(VIEW_DIRECTIVE_PREFIX)) {
+            const directiveName = variableName.substr(VIEW_DIRECTIVE_PREFIX.length);
+
+            if (variables[variableName]) {
+                directiveVariables.push(directiveName + ' = ' + variables[variableName].v);
+            }
+        }
+    }
+
+    return directiveVariables;
 };
 
 /**
@@ -235,12 +261,34 @@ export const getSkulptSuspensionsCopy = function(suspensions)
     const copies = [];
     for (let suspensionIdx in suspensions) {
         const suspension = suspensions[suspensionIdx];
-        const copy = {
+
+        copies[suspensionIdx] = {
             ...suspension
         };
-
-        copies[suspensionIdx] = copy;
     }
 
     return copies;
+}
+
+/**
+ * Clears the loaded references.
+ *
+ * @param analysis
+ */
+export const clearLoadedReferences = function(analysis)
+{
+    const clearedAnalysis = {
+        ...analysis,
+        functionCallStack: new Immutable.List()
+    };
+    for (let idx = 0; idx < analysis.functionCallStack.size; idx++) {
+        const clearedFunctionCallStack = {
+            ...analysis.functionCallStack.get(idx),
+            loadedReferences: {}
+        }
+
+        clearedAnalysis.functionCallStack = clearedAnalysis.functionCallStack.push(clearedFunctionCallStack);
+    }
+
+    return clearedAnalysis;
 }

@@ -34,7 +34,7 @@ import adt from 'adt';
 
 import {getNumber, getList, renderArrow, renderValue, evalExpr} from './utils';
 import {getCursorMap, finalizeCursors} from './array_utils';
-import {enumerateHeapBlocks} from '../../heap';
+import {enumerateHeapBlocks} from '../../c/heap';
 import DirectiveFrame from "../DirectiveFrame";
 
 const List = adt.data(function () {

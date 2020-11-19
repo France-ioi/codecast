@@ -111,6 +111,7 @@ export class SortView extends React.PureComponent {
     // Controls
     //   - fullView: read and render all cells
     const fullView = controls.get('fullView');
+    console.log(fullView);
     const {byName, byPos} = directive;
     const expr = byPos[0];
     const {dim} = byName;

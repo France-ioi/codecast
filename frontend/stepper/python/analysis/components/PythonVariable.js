@@ -1,6 +1,5 @@
 import * as React from 'react';
 import PythonVariableValue from "./PythonVariableValue";
-import PythonFunctionHeader from "./PythonFunctionHeader";
 
 const PythonVariable = (props) => {
     let classes = 'variable-container';
@@ -31,6 +30,7 @@ const PythonVariable = (props) => {
                         old={props.value.old}
                         visited={props.visited}
                         path={path}
+                        loadedReferences={props.loadedReferences}
                         openedPaths={props.openedPaths}
                         scopeIndex={props.scopeIndex}
                     />

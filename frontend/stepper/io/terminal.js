@@ -73,24 +73,17 @@ export default function (bundle, deps) {
          * without stopping the skulpt execution.
          */
         if (window.currentPythonRunner._futureInputValue) {
-          console.log('PUT_____FUTURE____VALUE____ : ', inputLine.trim());
           window.currentPythonRunner._futureInputValue.value = inputLine.trim();
 
           // We update the input position yet then.
           newInputPos = window.currentPythonRunner._inputPos + inputLine.length;
           window.currentPythonRunner._inputPos = newInputPos;
-
-          console.log('new inputPos : ', newInputPos);
         }
 
         window.currentPythonRunner._input = newInput;
         window.currentPythonRunner._terminal = newTerminal;
       } else {
         newTerminal = writeString(stepper.terminal, inputLine);
-      }
-
-      if (newTerminal) {
-        console.log('t11', newTerminal.toJS().lines[0], newTerminal.toJS().lines[1], newTerminal.toJS().lines[2]);
       }
 
       return {

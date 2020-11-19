@@ -67,39 +67,42 @@ function drawCells (view) {
   return <g transform={`translate(${GRID_LEFT},${GRID_TOP})`}>{elements}</g>;
 }
 
-function getCellClasses(content, rowCursor, colCursor) {
-  // TODO: Can we know this (maybe using old value) ?
-  // if (content) {
-  //   if (content.store !== undefined) {
-  //     return "cell cell-store";
-  //   }
-  //   if (content.load !== undefined) {
-  //     return "cell cell-load";
-  //   }
-  // }
+function getCellClasses(ref, row, column, rowCursor, colCursor, loadedReferences) {
+  const rootList = ref.cur;
+  const rowList = rootList.v[row];
 
+  if (
+      ref.old &&
+      ref.old instanceof Sk.builtin.list &&
+      ref.old.v.hasOwnProperty(row) &&
+      ref.old.v[row] instanceof Sk.builtin.list &&
+      ref.old.v[row].v.hasOwnProperty(column) &&
+      ref.old.v[row].v[column] !== rowList.v[column]
+  ) {
+    return 'cell cell-store';
+  }
+  if (loadedReferences.hasOwnProperty(rowList._uuid + '_' + column)) {
+    return 'cell cell-load';
+  }
   if (rowCursor || colCursor) {
-    return "cell cell-cursor";
+    return 'cell cell-cursor';
   }
 
-  return "cell";
+  return 'cell';
 }
 
 function drawGrid (view) {
-  const {ref, rowCount, colCount, rowInfoMap, colInfoMap} = view;
+  const {ref, rowCount, colCount, rowInfoMap, colInfoMap, loadedReferences} = view;
   const elements = [];
 
   // Cell backgrounds
-  for (let i = 0; i <= rowCount; i += 1) {
-    const rowList = ref.cur.v[i];
-
-    for (let j = 0; j <= colCount; j += 1) {
+  for (let i = 0; i < rowCount; i++) {
+    for (let j = 0; j < colCount; j++) {
       const x1 = GRID_LEFT + j * CELL_WIDTH;
       const y1 = GRID_TOP + i * CELL_HEIGHT;
-      const cellElement = rowList && rowList.v[j];
-      const classes = getCellClasses(cellElement, rowInfoMap[i], colInfoMap[j]);
+      const classes = getCellClasses(ref, i, j, rowInfoMap[i], colInfoMap[j], loadedReferences);
 
-      elements.push(<rect key={`r${i},${j}`} x={x1} y={y1} width={CELL_WIDTH} height={CELL_HEIGHT} className={classes}/>);
+      elements.push(<rect key={`r${i},${j}`} x={x1} y={y1} width={CELL_WIDTH} height={CELL_HEIGHT} className={classes} />);
     }
   }
 
@@ -189,7 +192,7 @@ export class Array2D extends React.PureComponent {
     /**
      * Eg. directive :
      *
-     * #! matrix = showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=2, cols=3)
+     * _VIEW_matrix = "showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=2, cols=3)"
      *
      * Other options :
      * - height = The height of the view in px (default : special value "auto")
