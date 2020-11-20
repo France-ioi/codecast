@@ -170,7 +170,16 @@ function* subtitlesReloadSaga (_action) {
     if (!text) {
       const data = yield select(state => state.getIn(['player', 'data']));
 
-      text = stringifySync([{start: 0, end: data.events[data.events.length - 1][0], text: ''}]);
+      text = stringifySync([{
+          data: {
+            start: 0,
+            end: data.events[data.events.length - 1][0],
+            text: ''
+          }
+        }], {
+          format: "SRT"
+        }
+      );
     }
 
     yield put({type: scope.subtitlesLoadFromText, payload: {key, text}});

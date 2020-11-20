@@ -286,7 +286,9 @@ function subtitlesItemShiftedReducer (state, {payload: {index, amount}}) {
 function subtitlesSaveReducer (state, action) {
   return state.update('subtitles', function (subtitles) {
     const {selectedKey: key, availableOptions, items} = subtitles;
-    const text = stringifySync(items);
+    const text = stringifySync(items, {
+      format: "SRT"
+    });
 
     return clearNotify(update(subtitles, {availableOptions: {[key]: {text: {$set: text}}}}));
   });

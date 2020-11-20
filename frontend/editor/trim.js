@@ -479,7 +479,6 @@ function trimSubtitles (data, intervals) {
         outItems[outItems.length - 1].end = items[selectedItems.endIndex].end - timeSkipped;
       }
       else {
-
           if (timeSkipped !== 0) {
             // update skipoffset for all items in the interval,
             // not just the items that start inside of it
@@ -502,7 +501,9 @@ function trimSubtitles (data, intervals) {
       start = interval.end;
     }
 
-    return stringifySync(outItems);
+    return stringifySync(outItems, {
+      format: "SRT"
+    });
   }
 
   return data.map(({key, items}) => ({key, removed: false, text: updateSubtitle(items, intervals)}));
