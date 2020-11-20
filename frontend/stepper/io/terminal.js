@@ -2,7 +2,6 @@
 
 import Immutable from 'immutable';
 import React from 'react';
-import classnames from 'classnames';
 import {Panel} from 'react-bootstrap';
 import {Icon} from '@blueprintjs/core';
 import {takeEvery, select, call} from 'redux-saga/effects';

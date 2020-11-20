@@ -15,6 +15,8 @@ module.exports = {
   PROGRAM_CANNOT_BE_MODIFIED_WHILE_RUNNING: "Le programme ne peut pas être modifié pendant qu'il s'exécute.",
   START_PLAYBACK: "lecture des explications",
   PAUSE_PLAYBACK: "pause des explications",
+  SOUND_ON: "Active le son",
+  SOUND_OFF: "Désactiver le son",
   START_RECORDING: "démarrer un enregistrement",
   ENCODING_IN_PROGRESS: "Encodage en cours, veuillez patienter.",
   PREPARING_RECORDING: "Préparation de l'enregistrement…",

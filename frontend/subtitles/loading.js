@@ -1,10 +1,8 @@
-
 /* "Loading subtitles" in this context means parsing a SRT resource
    (obtained in a number of ways) and making the individual subtitle
    items ({start, end, text} objects, timestamps in milliseconds) */
 
-import srtParse from 'subtitle/lib/parse';
-import srtStringify from 'subtitle/lib/stringify';
+import {parseSync, stringifySync} from 'subtitle';
 import {takeLatest, put, call, select} from 'redux-saga/effects';
 import update from 'immutability-helper';
 
@@ -61,9 +59,15 @@ function subtitlesLoadSucceededReducer (state, {payload: {key, text, items}}) {
   return state
     .update('subtitles', subtitles => (
       updateCurrentItem({
-        ...subtitles, loaded: true, loading: false, loadedKey: key, text, items,
+        ...subtitles,
+        loaded: true,
+        loading: false,
+        loadedKey: key,
+        text,
+        items,
         filteredItems: filterItems(items, subtitles.filterRegexp)
-      })));
+      })
+    ));
 }
 
 function subtitlesLoadFailedReducer (state, {payload: {error}}) {
@@ -71,19 +75,25 @@ function subtitlesLoadFailedReducer (state, {payload: {error}}) {
   if (error.res) {
     errorText = `${errorText} (${error.res.statusCode})`;
   }
-  return state.update('subtitles', subtitles => (
-    {...subtitles, loaded: false, loading: false, lastError: errorText, text: errorText, loadedKey: 'none'}));
+
+  return state.update('subtitles', subtitles => ({
+      ...subtitles,
+      loaded: false,
+      loading: false,
+      lastError: errorText,
+      text: errorText,
+      loadedKey: 'none'
+  }));
 }
 
 function subtitlesLoadForTrimSucceededReducer (state, {payload: {key, items}}) {
-  return state
-    .update('subtitles', subtitles =>
-      update(subtitles, {
-        trim: {
-          loaded: {$push: [{key, items}]}
-        }
-      })
-    );
+  return state.update('subtitles', subtitles =>
+    update(subtitles, {
+      trim: {
+        loaded: {$push: [{key, items}]}
+      }
+    })
+  );
 }
 
 function subtitlesTrimDoneReducer (state, {payload: {subtitles: data}}) {
@@ -118,7 +128,7 @@ function* subtitlesLoadFromTextSaga ({payload: {key, text}}) {
   yield put({type: scope.subtitlesLoadStarted, payload: {key}});
   let items;
   try {
-    items = srtParse(text);
+    items = parseSync(text);
   } catch (ex) {
     yield put({type: scope.subtitlesLoadFailed, payload: {key, error: ex}});
     return;
@@ -131,7 +141,8 @@ function* subtitlesLoadFromUrlSaga ({payload: {key, url}}) {
   yield put({type: scope.subtitlesLoadStarted, payload: {key}});
   try {
     const text = yield call(getSubtitles, url);
-    const items = srtParse(text);
+    const items = parseSync(text);
+
     yield put({type: scope.subtitlesLoadSucceeded, payload: {key, text, items}});
   } catch (ex) {
     yield put({type: scope.subtitlesLoadFailed, payload: {key, error: ex}});
@@ -142,7 +153,7 @@ function* subtitlesLoadFromFileSaga ({payload: {key, file}}) {
   const scope = yield select(state => state.get('scope'));
   try {
     const text = yield call(readFileAsText, file);
-    const items = srtParse(text);
+    const items = parseSync(text);
     yield put({type: scope.subtitlesLoadSucceeded, payload: {key, text, items}});
   } catch (ex) {
     yield put({type: scope.subtitlesLoadFailed, payload: {key, error: ex}});
@@ -158,8 +169,10 @@ function* subtitlesReloadSaga (_action) {
     let text = (availableOptions[key].text || '').trim();
     if (!text) {
       const data = yield select(state => state.getIn(['player', 'data']));
-      text = srtStringify([{start: 0, end: data.events[data.events.length - 1][0], text: ''}]);
+
+      text = stringifySync([{start: 0, end: data.events[data.events.length - 1][0], text: ''}]);
     }
+
     yield put({type: scope.subtitlesLoadFromText, payload: {key, text}});
   }
 }
@@ -176,7 +189,7 @@ function* subtitlesLoadForTrimSaga (_action) {
       if (!text) {
         text = yield call(getSubtitles, url);
       }
-      const items = srtParse(text);
+      const items = parseSync(text);
       yield put({type: scope.subtitlesLoadForTrimSucceeded, payload: {key, items}});
     } catch (ex) {
     }

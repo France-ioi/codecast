@@ -5,12 +5,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import scrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
-import {Button, Callout, Icon, Intent, Menu, MenuItem, NonIdealState, Position, Spinner} from '@blueprintjs/core';
+import {Button, Callout, Intent, Menu, MenuItem, NonIdealState, Position, Spinner} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
 import update from 'immutability-helper';
 import Files from 'react-files';
-import srtStringify from 'subtitle/lib/stringify';
+import {stringifySync} from 'subtitle';
 import FileSaver from 'file-saver';
 
 import {formatTimeLong, postJson, readFileAsText} from '../common/utils';
@@ -109,6 +109,7 @@ function subtitlesAddOptionReducer (state, {payload: {key, select}}) {
     if (select && subtitles.availableOptions[key]) {
       subtitles = update(subtitles, {selectedKey: {$set: key}});
     }
+
     return setUnsaved(clearNotify(subtitles));
   });
 }
@@ -119,6 +120,7 @@ function subtitlesRemoveOptionReducer (state, {payload: {key}}) {
     if (subtitles.selectedKey === key) {
       changes.selectedKey = {$set: null};
     }
+
     return setUnsaved(clearNotify(update(subtitles, changes)));
   });
 }
@@ -129,6 +131,7 @@ function subtitlesTextChangedReducer (state, {payload: {text, unsaved}}) {
   if (typeof unsaved === 'boolean') {
     changes.unsaved = {$set: unsaved}
   }
+
   return state.update('subtitles', function (subtitles) {
     const {selectedKey: key} = subtitles;
     return setUnsaved(clearNotify(update(subtitles, {availableOptions: {[key]: changes}})));
@@ -143,57 +146,148 @@ function subtitlesItemChangedReducer (state, {payload: {index, text}}) {
 
 function subtitlesItemInsertedReducer (state, {payload: {index, offset, where}}) {
   return state.update('subtitles', function (subtitles) {
-    const {start, end, text} = subtitles.items[index];
+    const {data: {start, end, text}} = subtitles.items[index];
     const split = start + offset;
-    if (start > split && split > end) return subtitles;
+    if (start > split && split > end) {
+      return subtitles;
+    }
+
     let jumpTo = start;
     if (where === 'below') {
-      subtitles = update(subtitles, {items: {$splice: [[index, 1,
-        {start, end: split - 1, text}, {start: split, end, text: ''}]]}});
+      subtitles = update(subtitles, {
+        items: {
+          $splice: [
+            [
+              index,
+              1,
+              {
+                data: {
+                  start,
+                  end: split - 1,
+                  text
+                }
+              }, {
+                data: {
+                  start: split,
+                  end,
+                  text: ''
+                }
+              }
+            ]
+          ]
+        }
+      });
+
       jumpTo = split;
     }
     if (where === 'above') {
-      subtitles = update(subtitles, {items: {$splice: [[index, 1,
-        {start, end: split - 1, text: ''}, {start: split, end, text}]]}});
+      subtitles = update(subtitles, {
+        items: {
+          $splice: [
+            [
+              index,
+              1,
+              {
+                data: {
+                  start,
+                  end: split - 1,
+                  text: ''
+                }
+              }, {
+                data: {
+                  start: split,
+                  end,
+                  text
+                }
+              }
+            ]
+          ]
+        }
+      });
+
       jumpTo = start;
     }
+
     return updateCurrentItem(subtitles, jumpTo);
   });
 }
 
 function subtitlesItemRemovedReducer (state, {payload: {index, merge}}) {
   return state.update('subtitles', function (subtitles) {
-    if (index === 0 && merge === 'up') return subtitles;
-    if (index === subtitles.items.length - 1 && merge === 'down') return subtitles;
+    if (index === 0 && merge === 'up') {
+      return subtitles;
+    }
+    if (index === subtitles.items.length - 1 && merge === 'down') {
+      return subtitles;
+    }
+
     const otherIndex = merge === 'up' ? index - 1 : index + 1;
     const firstIndex = Math.min(index, otherIndex);
-    const {start} = subtitles.items[firstIndex];
-    const {end} = subtitles.items[firstIndex + 1];
-    const {text} = subtitles.items[otherIndex];
-    subtitles = update(subtitles, {items: {$splice: [[firstIndex, 2, {start, end, text}]]}});
+    const {start} = subtitles.items[firstIndex].data;
+    const {end} = subtitles.items[firstIndex + 1].data;
+    const {text} = subtitles.items[otherIndex].data;
+
+    subtitles = update(subtitles, {
+      items: {
+        $splice: [
+          [
+            firstIndex,
+            2,
+            {
+              data: {
+                start,
+                end,
+                text
+              }
+            }
+          ]
+        ]
+      }
+    });
+
     const audioTime = state.getIn(['player', 'audioTime']);
+
     return updateCurrentItem(subtitles, audioTime);
   });
 }
 
 function subtitlesItemShiftedReducer (state, {payload: {index, amount}}) {
   return state.update('subtitles', function (subtitles) {
-    if (index === 0) return subtitles;
-    function shift (ms) { return ms + amount; }
+    if (index === 0) {
+      return subtitles;
+    }
+
+    function shift (ms) {
+      return ms + amount;
+    }
+
     /* The current item is not updated, otherwise its start could move
        backwards past audioTime, causing the item not to remain current,
        and disturbing further user action on the same item. */
-    return update(subtitles, {items: {
-      [index-1]: {end: {$apply: shift}},
-      [index]: {start: {$apply: shift}}
-    }});
+    return update(subtitles, {
+      items: {
+        [index - 1]: {
+          data: {
+            ...subtitles[index - 1].data,
+            end: {$apply: shift}
+          }
+        },
+        [index]: {
+          data: {
+            ...subtitles[index].data,
+            start: {$apply: shift}
+          }
+        }
+      }
+    });
   });
 }
 
 function subtitlesSaveReducer (state, action) {
   return state.update('subtitles', function (subtitles) {
     const {selectedKey: key, availableOptions, items} = subtitles;
-    const text = srtStringify(items)
+    const text = stringifySync(items);
+
     return clearNotify(update(subtitles, {availableOptions: {[key]: {text: {$set: text}}}}));
   });
 }
@@ -313,6 +407,7 @@ function SubtitlesEditorSelector (state, props) {
   const canSave = state.getIn(['editor', 'canSave']);
   const selected = selectedKey && availableOptions[selectedKey];
   const subtitlesText = (selected && selected.text) || '';
+
   return {actionTypes, canSave, unsaved, notify, availableOptions, langOptions, selected, subtitlesText};
 }
 
@@ -461,6 +556,7 @@ function SubtitlesEditorPaneSelector (state, props) {
   const {subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved,
     subtitlesItemShifted, subtitlesFilterTextChanged, playerSeek} = state.get('actionTypes');
   const {items, currentIndex, audioTime} = state.get('subtitles');
+
   return {
     subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved,
     subtitlesItemShifted, playerSeek, getMessage,
@@ -470,24 +566,38 @@ function SubtitlesEditorPaneSelector (state, props) {
 class SubtitlesEditorPane extends React.PureComponent {
   render () {
     const {subtitles, currentIndex, editing, audioTime, filterText, filterRegexp, getMessage} = this.props;
-    const items = [], message = false;
+    const items = [];
+    let message = false;
     const shiftAmount = 200;
+
     if (subtitles && subtitles.length > 0) {
       let prevStart = 0;
       const canRemove = subtitles.length > 1;
-      subtitles.forEach((st, index) => {
+      subtitles.forEach((subtitle, index) => {
         const selected = currentIndex === index;
         if (selected) {
-          items.push(<SubtitlePaneItemEditor key={index} item={st} ref={this._refSelected} offset={audioTime - st.start} audioTime={audioTime}
+          items.push(<SubtitlePaneItemEditor
+            key={index}
+            item={subtitle}
+            ref={this._refSelected}
+            offset={audioTime - subtitle.start}
+            audioTime={audioTime}
             onChange={this._changeItem}
             onInsert={this._insertItem}
             onRemove={canRemove && this._removeItem}
             onShift={this._shiftItem}
-            minStart={prevStart + shiftAmount} maxStart={st.end - shiftAmount} shiftAmount={shiftAmount} />);
+            minStart={prevStart + shiftAmount}
+            maxStart={subtitle.end - shiftAmount}
+            shiftAmount={shiftAmount}
+          />);
         } else {
-          items.push(<SubtitlePaneItemViewer key={index} item={st} onJump={this._jump} />);
+          items.push(<SubtitlePaneItemViewer
+            key={index}
+            item={subtitle}
+            onJump={this._jump} />
+          );
         }
-        prevStart = st.start;
+        prevStart = subtitle.start;
       });
     } else {
       message = <p>{getMessage('CLOSED_CAPTIONS_NOT_LOADED')}</p>;
@@ -539,7 +649,8 @@ class SubtitlesEditorPane extends React.PureComponent {
 /* SubtitlePaneItemViewer is used in the *editor* to show an inactive item in the subtitles pane. */
 class SubtitlePaneItemViewer extends React.PureComponent {
   render() {
-    const {item: {text, start, end}} = this.props;
+    const {item: {data: {text, start, end}}} = this.props;
+
     return (
       <div className='subtitles-item-viewer' onClick={this._onClick}>
         <div className='subtitles-timestamp row'>
@@ -564,7 +675,8 @@ class SubtitlePaneItemViewer extends React.PureComponent {
 /* SubtitlePaneItemEditor is used in the *editor* to show the selected, editable item in the subtitles pane. */
 class SubtitlePaneItemEditor extends React.PureComponent {
   render() {
-    const {item: {text, start, end}, offset, audioTime, minStart, maxStart} = this.props;
+    const {item: {data: {text, start, end}}, offset, audioTime, minStart, maxStart} = this.props;
+
     return (
       <div className='subtitles-item-editor'>
         <div className='subtitles-timestamp row'>

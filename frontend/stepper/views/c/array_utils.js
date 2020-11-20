@@ -1,5 +1,5 @@
 import * as C from 'persistent-c';
-import FibonacciHeap from '@tyriar/fibonacci-heap';
+import {FibonacciHeap} from '@tyriar/fibonacci-heap';
 import range from 'node-range';
 
 import {readScalarBasic, stringifyExpr, evalExpr} from './utils';

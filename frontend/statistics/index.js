@@ -144,12 +144,14 @@ function* statisticsInitLogDataSaga ({actionTypes}) {
   yield put({type: actionTypes.statisticsLogDataChanged, payload: {logData}});
 }
 
-function* statisticsPlayerReadySaga ({actionTypes}, {payload: {data: {name}}}) {
+function* statisticsPlayerReadySaga ({actionTypes}, {payload: {data}}) {
   try {
     const logData = yield select(state => state.getIn(['statistics', 'logData']));
-    logData.name = name;
-    yield put({type: actionTypes.statisticsLogDataChanged, payload: {logData}});
 
+    const name = (data.hasOwnProperty('name')) ? data.name : 'default';
+    logData.name = name;
+
+    yield put({type: actionTypes.statisticsLogDataChanged, payload: {logData}});
     yield put({type: actionTypes.statisticsLogLoadingData});
   } catch (error) {
     console.error('Error Codecast Load Log', error);

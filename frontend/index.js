@@ -10,8 +10,7 @@ import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
 import Immutable from 'immutable';
 import installDevTools from 'immutable-devtools';
-import 'rc-slider/dist/rc-slider.css?global';
-
+import 'rc-slider/assets/index.css?global';
 
 import link from './linker';
 

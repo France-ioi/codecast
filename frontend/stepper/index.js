@@ -24,7 +24,7 @@ The stepper's state has the following shape:
 
 */
 
-import { delay } from 'redux-saga';
+import {delay} from 'redux-saga/effects';
 
 import {call, apply, cancel, fork, put, race, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 import Immutable from 'immutable';
@@ -579,7 +579,7 @@ function* stepperInteractSaga ({actionTypes, selectors}, {payload: {stepperConte
 
 function* stepperWaitSaga () {
   // Yield until the next tick (XXX use requestAnimationFrame through channel).
-  yield call(delay, 0);
+  yield delay(0);
 }
 
 function* stepperInterruptSaga ({actionTypes, dispatch}, {payload}) {

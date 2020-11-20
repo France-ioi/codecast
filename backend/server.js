@@ -33,26 +33,21 @@ function buildApp (config, store, callback) {
   app.set('view engine', 'pug');
   app.set('views', path.join(__dirname, 'views'));
 
+  console.log('IS DEVELOPMENT ? ', config.isDevelopment);
   if (config.isDevelopment) {
     // Development route: /build is managed by webpack
     const webpack = require('webpack');
     const webpackDevMiddleware = require('webpack-dev-middleware');
     const webpackConfig = require('../webpack.config.js');
     const compiler = webpack(webpackConfig);
-    app.use('/build', webpackDevMiddleware(compiler, {
-      stats: {
-        assets: false,
-        cached: false,
-        children: false,
-        chunks: false,
-        chunkGroups: false,
-        chunkModules: false,
-        chunkOrigins: false,
-        colors: true,
-        modules: false,
-        moduleTrace: false,
-      }
-    }));
+
+    const instance = webpackDevMiddleware(compiler, {
+      publicPath: (webpackConfig.output.publicPath === '.') ? '.' : '/build/'
+    });
+
+    // app.use('/build', webpackDevMiddleware(compiler));
+    console.log('publicPath: ', webpackConfig.output.publicPath);
+    app.use(instance);
 
   } else {
     // Production route: /build serves static files in build/
@@ -411,4 +406,3 @@ fs.readFile('config.json', 'utf8', function (err, data) {
     workerStore.dispatch({type: 'START'});
   });
 });
-

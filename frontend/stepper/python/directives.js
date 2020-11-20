@@ -2,7 +2,7 @@ export const VIEW_DIRECTIVE_PREFIX = '_VIEW_';
 
 const PR = require('packrattle');
 
-const g = module.exports.grammar = {};
+const g = {};
 
 g.whitespace = PR(/[ \t]+/).optional().drop();
 

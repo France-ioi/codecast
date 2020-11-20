@@ -65,14 +65,14 @@ Add a CORS configuration for your domain in the AWS S3 bucket's Permissions :
 
 To install and run the project, or after an update, run:
 
-    npm install
-    npm run build
-    npm start
+    yarn install
+    yarn run build
+    yarn start
 
 For development "npm run build" is not needed as webpack is configured
 to watch the source files:
 
-    NODE_ENV=development npm start
+    NODE_ENV=development yarn dev
 
 
 ## Offline use
@@ -80,7 +80,7 @@ to watch the source files:
 1 : Build the offline ZIP :
 ```
     rm -rf build
-    BUILD=offline NODE_ENV=production npm run build
+    BUILD=offline NODE_ENV=production yarn run build
     zip -r offline.zip build assets
 ```
 

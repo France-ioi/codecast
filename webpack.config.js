@@ -8,8 +8,17 @@ const jsonConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'));
 const publicPath = path.join(process.env.BUILD === 'offline' ? '.' : jsonConfig.mountPath, 'build/');
 
 const config = module.exports = {
-  node: {
-    fs: 'empty'
+  mode: process.env.NODE_ENV,
+  resolve: {
+    fallback: {
+      assert: false,
+      fs: false
+    },
+    alias: {
+      lamejs: 'lamejs/src/js/',
+      stream: 'stream-browserify'
+    },
+    extensions: ['.js']
   },
   entry: {
     index: './frontend/index.js'
@@ -23,10 +32,21 @@ const config = module.exports = {
   module: {
     rules: [
       {
+        test: /\.worker\.js$/,
+        use: {
+          loader: 'worker-loader'
+        }
+      },
+      {
         test: /\.js$/,
         include: SRC,
         use: [
-          {loader: 'babel-loader', options: {babelrc: true}}
+          {
+            loader: 'babel-loader',
+            options: {
+              babelrc: true
+            }
+          }
         ]
       },
       {
@@ -35,18 +55,29 @@ const config = module.exports = {
           {
             resourceQuery: /^\?global$/,
             use: [
-              {loader: 'style-loader', options: {sourceMap: isDev}},
-              {loader: 'css-loader', options: {modules: false}},
+              {
+                loader: 'style-loader'
+              }, {
+                loader: 'css-loader',
+                options: {
+                  modules: false, sourceMap: isDev
+                }
+              },
             ]
           },
           {
             use: [
-              {loader: 'style-loader', options: {sourceMap: isDev}},
-              {loader: 'css-loader', options: {
-                modules: true,
-                importLoaders: 1,
-                localIdentName: '[name]__[local]___[hash:base64:5]'
-              }},
+              {
+                loader: 'style-loader'
+              }, {
+                loader: 'css-loader',
+                options: {
+                  modules: true,
+                  sourceMap: isDev,
+                  importLoaders: 1,
+                  localIdentName: '[name]__[local]___[hash:base64:5]'
+                }
+              },
             ]
           }
         ]
@@ -54,16 +85,45 @@ const config = module.exports = {
       {
         test: /\.scss$/,
         use: [
-          {loader: 'style-loader', options: {sourceMap: isDev}},
-          {loader: 'css-loader'},
-          {loader: 'resolve-url-loader'},
-          {loader: 'sass-loader', options: {sourceMap: isDev, precision: 8}}
+          {
+            loader: 'style-loader'
+          }, {
+            loader: 'css-loader',
+            options: {
+              sourceMap: isDev
+            }
+          }, {
+            loader: 'resolve-url-loader'
+            // loader: 'postcss-loader',
+            // options: {
+            //   plugins: function () {
+            //     return [
+            //       require('precss'),
+            //       require('autoprefixer')
+            //     ];
+            //   }
+            // }
+          }, {
+            loader: 'sass-loader',
+            options: {
+              sassOptions: {
+                sourceMap: isDev,
+                precision: 8
+              }
+            }
+          }
         ]
       },
       {
         test: /\.(eot|ttf|woff(2)?)(\?v=\d+\.\d+\.\d+)?/,
         use: [
-          {loader: 'file-loader', options: {publicPath, name: 'fonts/[name].[ext]'}}
+          {
+            loader: 'file-loader',
+            options: {
+              publicPath,
+              name: 'fonts/[name].[ext]'
+            }
+          }
         ]
       },
       {
@@ -74,31 +134,41 @@ const config = module.exports = {
       }
     ]
   },
-  resolve: {
-    extensions: ['.js'],
-    alias: {
-      'lamejs': 'lamejs/src/js/'
-    }
-  },
   plugins: [
     new webpack.DefinePlugin({
       'process.env': {
         'NODE_ENV': JSON.stringify(process.env.NODE_ENV)
       }
     }),
-    new webpack.optimize.OccurrenceOrderPlugin(),
+    //new webpack.optimize.OccurrenceOrderPlugin(),
     new webpack.NoEmitOnErrorsPlugin(),
-    new webpack.optimize.CommonsChunkPlugin({
-      name: "vendor",
-      filename: "vendor.js",
-      minChunks: function (module) {
-        if (/persistent-c/.test(module.resource)) {
-          return false;
-        }
-        return /node_modules/.test(module.resource);
-      }
+    // new webpack.optimize.SplitChunksPlugin({
+    //   name: "vendor",
+    //   filename: "vendor.js",
+    //   minChunks: function (module) {
+    //     if (/persistent-c/.test(module.resource)) {
+    //       return false;
+    //     }
+    //     return /node_modules/.test(module.resource);
+    //   }
+    // })
+    new webpack.ProvidePlugin({
+      Buffer: ['buffer', 'Buffer'],
+      process: ['process']
     })
-  ]
+  ],
+  stats: {
+    assets: false,
+    cached: false,
+    children: false,
+    chunks: false,
+    chunkGroups: false,
+    chunkModules: false,
+    chunkOrigins: false,
+    colors: true,
+    modules: false,
+    moduleTrace: false,
+  }
 };
 
 /*  Disabled because uglifyjs fails with invalid assignment in vendor.js */

@@ -1,7 +1,6 @@
-
 import React from 'react';
 import {takeEvery, call, fork, cancel, select} from 'redux-saga/effects';
-import {delay} from 'redux-saga';
+import {delay} from 'redux-saga/effects';
 
 class Vumeter extends React.PureComponent {
   render () {
@@ -61,7 +60,7 @@ function* vumeterSaga () {
       if (canvasContext) {
         yield call(saga);
       }
-      yield call(delay, 100);
+      yield delay(100);
     }
   }
 }

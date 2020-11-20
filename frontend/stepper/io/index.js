@@ -1,15 +1,14 @@
-
 import React from 'react';
-import {Panel} from 'react-bootstrap';
+
+import {Panel} from 'react-bootstrap'
 import {Icon} from '@blueprintjs/core';
-import {select, call, put, race, take, takeLatest, takeEvery} from 'redux-saga/effects';
+import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 
 import * as C from 'persistent-c';
 
-import Editor from '../../buffers/editor';
 import {documentFromString} from '../../buffers/document';
 import {DocumentModel} from '../../buffers/index';
-import {TermBuffer, writeString, default as TerminalBundle} from './terminal';
+import {default as TerminalBundle, TermBuffer, writeString} from './terminal';
 import {printfBuiltin} from './printf';
 import {scanfBuiltin} from './scanf';
 
@@ -152,7 +151,6 @@ export default function (bundle, deps) {
     };
 
     render () {
-      const {readOnly, preventInput} = this.props;
       return (
         <Panel>
           <Panel.Heading>
@@ -185,12 +183,12 @@ export default function (bundle, deps) {
     const {output} = stepper;
     const doc = documentFromString(output);
     const endCursor = doc.endCursor();
-    const model = DocumentModel({
+
+    return DocumentModel({
       document: doc,
       selection: {start: endCursor, end: endCursor},
       firstVisibleRow: endCursor.row
     });
-    return model;
   }
 
   bundle.defer(function ({recordApi, replayApi, stepperApi}) {
@@ -396,7 +394,5 @@ export default function (bundle, deps) {
         yield put({type: deps.bufferReset, buffer: 'output', model});
       });
     }
-
   });
-
 };

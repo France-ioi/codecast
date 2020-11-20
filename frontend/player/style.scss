@@ -7,17 +7,10 @@ $color-hover: desaturate(darken($color-theme, 20%), 10%);
 $color-active: fade-out($color-hover, 0.5);
 
 .player-controls-volume {
-  padding: 11px 0;
+  padding: 7px 0;
 }
 
-// Adapted from https://github.com/alexanderwallin/react-player-controls/blob/master/docs/src/sass/_controls.scss
-
-.PlayButton,
-.PauseButton,
-.PrevButton,
-.NextButton,
-.SoundOnButton,
-.SoundOffButton {
+.round-button {
   margin-right: 10px;
   padding: 5px;
   background: $color-background;
@@ -29,13 +22,13 @@ $color-active: fade-out($color-hover, 0.5);
     opacity: 0.5;
   }
 
-  &.isEnabled {
+  &:not(disabled) {
     cursor: pointer;
 
     &:hover {
       border-color: $color-hover;
 
-      .Icon-shape {
+      .bp3-icon {
         fill: $color-hover;
       }
     }
@@ -43,127 +36,41 @@ $color-active: fade-out($color-hover, 0.5);
     &:active {
       border-color: $color-active;
 
-      .Icon-shape {
+      .bp3-icon {
         fill: $color-active;
       }
+    }
+
+    .bp3-icon {
+      color: $color-theme;
     }
   }
 }
 
-.Icon {
-  display: block;
-  width: $icon-size;
-  height: $icon-size;
-}
-
-.Icon-shape {
-  fill: $color-theme;
-}
-
-// .ProgressBar,
-.VolumeSlider {
+.volume-slider {
+  width: 100px;
+  min-width: 100px;
   position: relative;
-  background: #eee;
   border-radius: 4px;
+  transition: width 0.3s, height 0.05s;
 
-  &-elapsed,
-  &-value {
-    background: $gray;
-    border-radius: 4px;
+  .bp3-slider-progress.bp3-intent-primary {
+    background-color: $color-theme;
   }
 
-  &-seek {
-    position: absolute;
-    cursor: pointer;
-  }
-
-  &-handle {
-    position: absolute;
-    width: 16px;
-    height: 16px;
+  .bp3-slider-handle {
+    width: 14px;
+    height: 14px;
     background: $color-theme;
     border-radius: 100%;
     transform: scale(0);
     transition: transform 0.2s;
   }
 
-  &.isSeekable,
-  &.isEnabled {
+  &:not(disabled) {
     &:hover {
-      .ProgressBar-handle,
-      .VolumeSlider-handle {
+      .bp3-slider-handle {
         transform: scale(1);
-      }
-
-      .ProgressBar-intent,
-      .VolumeSlider-intent {
-        position: absolute;
-        background: rgba(0,0,0,0.1);
-      }
-    }
-
-    .ProgressBar-elapsed,
-    .VolumeSlider-value {
-      background: $color-theme;
-    }
-  }
-}
-
-.VolumeSlider {
-  // margin: 10px 0;
-
-  &-value {
-    position: absolute;
-  }
-
-  &.isHorizontal {
-    width: 100px;
-    height: 8px;
-    transition: width 0.3s, height 0.05s;
-  }
-
-  &.isHorizontal &-value {
-    height: 100%;
-    left: 0;
-  }
-
-  &.isHorizontal &-handle {
-    margin: -4px 0 0 -8px;
-  }
-
-  &.isVertical {
-    width: 8px;
-    height: 100px;
-    transition: width 0.05s, height 0.3s;
-  }
-
-  &.isVertical &-value {
-    bottom: 0;
-    width: 100%;
-  }
-
-  &.isVertical &-handle {
-    left: 0;
-    margin: 0 0 -8px -4px;
-  }
-
-  &-seek {
-    left: -6px;
-    top: 0;
-    right: -6px;
-    bottom: 0;
-  }
-
-  &.isEnabled {
-    &:hover {
-      .VolumeSlider-handle {
-        transform: scale(1);
-      }
-
-      .VolumeSlider-intent {
-        bottom: 0;
-        left: 0;
-        width: 100%;
       }
     }
   }

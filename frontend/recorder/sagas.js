@@ -4,13 +4,11 @@
          => because 'end' is added by recorderStopping
 */
 
-import {delay} from 'redux-saga';
-import {take, takeLatest, takeEvery, put, call, race, select, actionChannel} from 'redux-saga/effects';
-import Immutable from 'immutable';
+import {take, takeLatest, takeEvery, put, call, race, select, delay} from 'redux-saga/effects';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {spawnWorker} from '../utils/worker_utils';
-import AudioWorker from 'worker-loader?inline!../audio_worker';
+import AudioWorker from '../audio_worker/index.worker';
 
 export default function (bundle, deps) {
 
@@ -235,7 +233,7 @@ export default function (bundle, deps) {
     /* Race with timeout, in case the audio device is busy. */
     const outcome = yield race({
       resumed: call(() => audioContext.resume()),
-      timeout: call(delay, 1000)
+      timeout: delay(1000)
     });
     if ('timeout' in outcome) {
       throw new Error('audio device is busy');
@@ -264,7 +262,7 @@ export default function (bundle, deps) {
       yield take(deps.recorderStarted);
       while (true) {
         const outcome = yield race({
-          tick: call(delay, 1000),
+          tick: delay(1000),
           stopped: take(deps.recorderStopped)
         });
         if ('stopped' in outcome)

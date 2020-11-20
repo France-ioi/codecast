@@ -18,8 +18,6 @@ import subtitlesBundle from '../subtitles';
 import examplesBundle from './examples';
 import stepperBundle from '../stepper';
 
-import 'react-select/dist/react-select.css?global';
-
 export default function (bundle) {
 
   bundle.include(errorBundle);

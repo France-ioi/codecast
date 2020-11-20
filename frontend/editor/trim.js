@@ -1,18 +1,16 @@
-
 import React from 'react';
 import url from 'url';
-import srtStringify from 'subtitle/lib/stringify';
+import {stringifySync} from 'subtitle';
 import {AnchorButton, Button, Checkbox, FormGroup, ProgressBar, HTMLSelect, Icon, Intent, Spinner} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
-import AudioBuffer from 'audio-buffer';
 import update from 'immutability-helper';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {asyncRequestJson} from '../utils/api';
 import {uploadBlobChannel} from '../utils/blobs';
 import {spawnWorker} from '../utils/worker_utils';
-import AudioWorker from 'worker-loader?inline!../audio_worker';
+import AudioWorker from '../audio_worker/index.worker';
 import FullWaveform from './waveform/full';
 import ExpandedWaveform from './waveform/expanded';
 import intervalTree from './interval_tree';
@@ -504,7 +502,7 @@ function trimSubtitles (data, intervals) {
       start = interval.end;
     }
 
-    return srtStringify(outItems);
+    return stringifySync(outItems);
   }
 
   return data.map(({key, items}) => ({key, removed: false, text: updateSubtitle(items, intervals)}));

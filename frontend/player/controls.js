@@ -1,7 +1,5 @@
-
 import React from 'react';
 import {Button, Slider} from '@blueprintjs/core';
-import {ControlDirection, MuteToggleButton, VolumeSlider} from 'react-player-controls';
 
 import {formatTime} from '../common/utils';
 
@@ -23,6 +21,7 @@ function PlayerControlsSelector (state, props) {
   const duration = player.get('duration');
   const volume = player.get('volume');
   const isMuted = player.get('isMuted');
+
   return {actionTypes, views, getMessage, isReady, isPlaying, isAtEnd, audioTime, duration, volume, isMuted};
 }
 
@@ -35,25 +34,43 @@ class PlayerControls extends React.PureComponent {
     const showPausePlayback = isPlaying;
     const canPausePlayback = isPlaying;
     const canStep = isReady || isPlaying;
+
     return (
       <div id='player-controls'>
         <div className='player-controls-row row' style={{width: '100%', marginTop: '5px'}}>
           <div className="player-slider-container">
             {!Number.isNaN(duration) &&
-              <Slider value={audioTime} onChange={this.onSeek}
-                min={0} max={duration} stepSize={100}
-                labelStepSize={duration} labelRenderer={formatTime} />}
+              <Slider
+                  value={audioTime}
+                  onChange={this.onSeek}
+                  min={0}
+                  max={duration}
+                  stepSize={100}
+                  labelStepSize={duration}
+                  labelRenderer={formatTime}
+              />
+            }
           </div>
         </div>
         <div className='player-controls-row row' style={{width: '100%', marginBottom: '4px'}}>
           <div className="player-controls controls controls-main col-sm-4">
             <div className="player-controls-playback">
               {showStartPlayback &&
-                  <Button onClick={this.onStartPlayback} disabled={!canStartPlayback}
-                    title={getMessage('START_PLAYBACK')} icon={isAtEnd ? 'repeat' : 'play'} />}
+                  <Button
+                      onClick={this.onStartPlayback}
+                      disabled={!canStartPlayback}
+                      title={getMessage('START_PLAYBACK')}
+                      icon={isAtEnd ? 'repeat' : 'play'}
+                  />
+              }
               {showPausePlayback &&
-                <Button onClick={this.onPausePlayback} disabled={!canPausePlayback}
-                  title={getMessage('PAUSE_PLAYBACK')} icon='pause' />}
+                <Button
+                    onClick={this.onPausePlayback}
+                    disabled={!canPausePlayback}
+                    title={getMessage('PAUSE_PLAYBACK')}
+                    icon='pause'
+                />
+              }
             </div>
             <div className="player-controls-times">
               {formatTime(audioTime)}
@@ -61,17 +78,44 @@ class PlayerControls extends React.PureComponent {
               {formatTime(duration)}
             </div>
             <div className="player-controls-mute">
-              <MuteToggleButton
-                isMuted={isMuted}
-                onMuteChange={this.handleMuteChange}
-                isEnabled={isReady} />
+              {isMuted ?
+                  <Button
+                      className='round-button'
+                      title={getMessage('SOUND_OFF')}
+                      onClick={(isReady) ? this.handleMuteChange.bind(this, false) : undefined}
+                      icon='volume-off'
+                      disabled={!isReady}
+                  />
+                  :
+                  <Button
+                      className='round-button'
+                      title={getMessage('SOUND_ON')}
+                      onClick={(isReady) ? this.handleMuteChange.bind(this, true) : undefined}
+                      icon='volume-up'
+                      disabled={!isReady}
+                  />
+              }
+
             </div>
             <div className="player-controls-volume">
-              <VolumeSlider
-                style={{height: '8px', width: '100px', transition: 'width: 0.3s, height: 0.05s'}}
-                direction={ControlDirection.HORIZONTAL}
-                volume={volume} onVolumeChange={this.handleVolumeChange}
-                isEnabled={isReady} />
+              <Slider
+                  className='volume-slider'
+                  value={volume}
+                  onChange={this.handleVolumeChange}
+                  min={0}
+                  max={1}
+                  labelRenderer={false}
+                  stepSize={0.01}
+                  disabled={!isReady}
+              />
+
+              {/*<SliderControl*/}
+              {/*  style={{height: '8px', width: '100px', transition: 'width: 0.3s, height: 0.05s'}}*/}
+              {/*  direction={Direction.HORIZONTAL}*/}
+              {/*  value={volume}*/}
+              {/*  onChange={this.handleVolumeChange}*/}
+              {/*  //isEnabled={isReady}*/}
+              {/*/>*/}
             </div>
           </div>
           <div className="player-controls player-controls-stepper col-sm-6">

@@ -1,8 +1,6 @@
-
 import React from 'react';
 import classnames from 'classnames';
 import clickDrag from 'react-clickdrag';
-import update from 'immutability-helper';
 
 export default function (bundle) {
 
@@ -14,9 +12,7 @@ export default function (bundle) {
   bundle.addReducer('subtitlesBandEndMove', subtitlesBandEndMoveReducer);
   bundle.addReducer('subtitlesBandMoved', subtitlesBandMovedReducer);
 
-  bundle.defineView('SubtitlesBand', SubtitlesBandSelector,
-    clickDrag(SubtitlesBand, {touch: true}));
-
+  bundle.defineView('SubtitlesBand', SubtitlesBandSelector, clickDrag(SubtitlesBand, {touch: true}));
 }
 
 function subtitlesBandBeginMoveReducer (state, {payload: {y}}) {
@@ -42,28 +38,28 @@ function SubtitlesBandSelector (state, props) {
     items, currentIndex, itemVisible, isMoving, offsetY
   } = state.get('subtitles');
 
-  const item = items && items[currentIndex]
-  if (item && typeof item.text === 'undefined' || !loaded || (!editing && !bandEnabled)) {
+  const item = items && items[currentIndex];
+  const subtitleData = item && item.data;
+  if (subtitleData && typeof subtitleData.text === 'undefined' || !loaded || (!editing && !bandEnabled)) {
     return {hidden: true};
   }
 
   let textHidden = false;
 
-
   const trim = state.getIn(['editor', 'trim']);
   if (trim && trim.intervals) {
-    const interval = trim.intervals.get(item.start);
+    const interval = trim.intervals.get(subtitleData.start);
     if (interval && (interval.value.mute || interval.value.skip) ) {
-      if (interval.start <= item.start) {
+      if (interval.start <= subtitleData.start) {
         textHidden = true;
       }
     }
   }
 
-
   const geometry = state.get('mainViewGeometry');
   const windowHeight = state.get('windowHeight');
   const scope = state.get('scope');
+
   return {
     top: windowHeight - 60,
     active: itemVisible, item, isMoving, offsetY, geometry, windowHeight,
@@ -82,14 +78,22 @@ class SubtitlesBand extends React.PureComponent {
          rather than false. */
       return <div style={{display: 'none'}} />;
     }
+
     const {active, item, geometry, offsetY, dataDrag: {isMoving}, top, textHidden} = this.props;
     const translation = `translate(0px, ${this.state.currentY}px)`;
 
     return (
-      <div className={classnames(['subtitles-band', `subtitles-band-${active ? '' : 'in'}active`, isMoving && 'subtitles-band-moving', 'no-select', `mainView-${geometry.size}`])}
-        style={{top: `${top}px`, transform: translation, width: `${geometry.width}px`}} ref={this._refBand} >
+      <div
+          className={classnames(['subtitles-band', `subtitles-band-${active ? '' : 'in'}active`, isMoving && 'subtitles-band-moving', 'no-select', `mainView-${geometry.size}`])}
+          style={{top: `${top}px`, transform: translation, width: `${geometry.width}px`}}
+          ref={this._refBand}
+      >
         <div className='subtitles-band-frame'>
-          {item && <p className='subtitles-text' style={{textDecoration: textHidden ? 'line-through' : 'none'}}>{item.text}</p>}
+          {item &&
+            <p className='subtitles-text' style={{textDecoration: textHidden ? 'line-through' : 'none'}}>
+              {item.data.text}
+            </p>
+          }
         </div>
       </div>
     );

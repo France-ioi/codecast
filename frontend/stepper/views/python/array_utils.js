@@ -1,4 +1,4 @@
-import FibonacciHeap from '@tyriar/fibonacci-heap';
+import {FibonacciHeap} from '@tyriar/fibonacci-heap';
 import range from 'node-range';
 
 import {stringifyExpr, getVariable, getLoadedReferencesFromVariable} from './utils';

@@ -1,7 +1,4 @@
-/* The delay builtin. */
-
-import {delay} from 'redux-saga'
-import {call} from 'redux-saga/effects';
+import {delay} from 'redux-saga/effects';
 
 export default function (bundle, deps) {
   bundle.use('stepperInterrupt');
@@ -9,7 +6,7 @@ export default function (bundle, deps) {
   bundle.defer(function ({stepperApi}) {
     stepperApi.addBuiltin('delay', function* delayBuiltin (stepperContext, millis) {
       function* delaySaga () {
-        yield call(delay, millis.toInteger())
+        yield delay(millis.toInteger());
       }
       /* TODO: is there something to do during replay? */
       yield ['interact', {saga: delaySaga}];

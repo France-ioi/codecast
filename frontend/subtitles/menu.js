@@ -1,41 +1,50 @@
-
 import React from 'react';
 import {Alert, Button, Checkbox, Intent, Radio, RadioGroup, Spinner} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
-import Portal from 'react-portal';
+import {PortalWithState} from 'react-portal';
 
 import {setPersistentOption} from './options';
 
 export default function (bundle) {
-
   bundle.defineView('SubtitlesMenu', SubtitlesMenuSelector, SubtitlesMenu);
   bundle.defineView('SubtitlesPopup', SubtitlesPopupSelector, SubtitlesPopup);
-
 }
 
 function SubtitlesMenuSelector (state, props) {
   const subtitles = state.get('subtitles');
-  if (subtitles.editing) return {hidden: true};
+  if (subtitles.editing) {
+    return {hidden: true};
+  }
+
   const playerData = state.getIn(['player', 'data']);
   if (!playerData || !playerData.subtitles || playerData.subtitles.length === 0) {
     return {hidden: true};
   }
+
   const {SubtitlesPopup} = state.get('scope');
   const getMessage = state.get('getMessage');
-  return {getMessage, Popup: SubtitlesPopup};
+
+  return {getMessage, SubtitlesPopup};
 }
 
 class SubtitlesMenu extends React.PureComponent {
   render() {
-    const {hidden, getMessage, Popup} = this.props;
-    if (hidden) return false;
-    const menuButton = (
-      <Button className='btn-cc' title={getMessage('CLOSED_CAPTIONS_TOOLTIP').s} text='CC'/>
-    );
+    const {hidden, getMessage, SubtitlesPopup} = this.props;
+    if (hidden) {
+      return false;
+    }
+
     return (
-      <Portal closeOnEsc closeOnOutsideClick openByClickOn={menuButton}>
-        <Popup/>
-      </Portal>
+        <PortalWithState closeOnOutsideClick closeOnEsc>
+          {({ openPortal, closePortal, isOpen, portal }) => (
+              <React.Fragment>
+                <Button onClick={openPortal} className='btn-cc' title={getMessage('CLOSED_CAPTIONS_TOOLTIP').s} text='CC'/>
+                {portal(
+                    <SubtitlesPopup closePortal={closePortal} />
+                )}
+              </React.Fragment>
+          )}
+        </PortalWithState>
     );
   }
 }
@@ -45,6 +54,7 @@ function SubtitlesPopupSelector (state, props) {
   const {subtitlesCleared, subtitlesLoadFromUrl, subtitlesPaneEnabledChanged, subtitlesBandEnabledChanged} = state.get('scope');
   const getMessage = state.get('getMessage');
   const isLoaded = !loading && loadedKey !== 'none';
+
   return {
     availableOptions, langOptions, loadedKey, isLoaded, busy: !!loading, lastError,
     subtitlesCleared, subtitlesLoadFromUrl,
@@ -57,6 +67,7 @@ class SubtitlesPopup extends React.PureComponent {
   render () {
     const {availableOptions, langOptions, loadedKey, isLoaded, busy, lastError, paneEnabled, bandEnabled, getMessage} = this.props;
     const availKeys = Object.keys(availableOptions).sort();
+
     return (
       <div className='menu-popup' onClick={this._close}>
         <div className='menu-popup-inset' onClick={this._stopPropagation} style={{width:'350px'}}>
@@ -104,27 +115,33 @@ class SubtitlesPopup extends React.PureComponent {
   };
   _close = (event) => {
     event.stopPropagation();
+
     this.props.closePortal();
   };
   _selectSubtitles = (event) => {
     const key = event.target.value;
     if (key === 'none') {
       setPersistentOption("language", "none");
+
       this.props.dispatch({type: this.props.subtitlesCleared});
     } else {
       const option = this.props.availableOptions[key];
+
       setPersistentOption("language", option.value);
+
       this.props.dispatch({type: this.props.subtitlesLoadFromUrl, payload: option});
     }
   };
   _changePaneEnabled = () => {
     this.props.dispatch({
       type: this.props.subtitlesPaneEnabledChanged,
-      payload: {value: !this.props.paneEnabled}});
+      payload: {value: !this.props.paneEnabled}
+    });
   };
   _changeBandEnabled = () => {
     this.props.dispatch({
       type: this.props.subtitlesBandEnabledChanged,
-      payload: {value: !this.props.bandEnabled}});
+      payload: {value: !this.props.bandEnabled}
+    });
   };
 }

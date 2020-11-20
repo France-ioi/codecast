@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ReactDOM from 'react-dom';
 import classnames from 'classnames';
@@ -19,37 +18,65 @@ function SubtitlesPaneSelector (state, props) {
   const getMessage = state.get('getMessage');
   const {subtitlesFilterTextChanged, playerSeek} = state.get('actionTypes');
   const windowHeight = state.get('windowHeight');
-  const {items, filteredItems, currentIndex, audioTime, filterText, filterRegexp} = state.get('subtitles');
+  const {filteredItems, currentIndex, audioTime, filterText, filterRegexp} = state.get('subtitles');
+
   return {
     subtitlesFilterTextChanged, playerSeek, getMessage,
     subtitles: filteredItems,
-    currentIndex, audioTime, filterText, filterRegexp, windowHeight};
+    currentIndex, audioTime, filterText, filterRegexp, windowHeight
+  };
 }
 
 class SubtitlesPane extends React.PureComponent {
   render () {
     const {subtitles, currentIndex, editing, audioTime, filterText, filterRegexp, getMessage, windowHeight} = this.props;
+
     return (
       <div className='subtitles-pane vbox' style={{height: `${windowHeight - 89}px`}}>
         {!editing &&
-          <InputGroup leftIcon={IconNames.SEARCH} type='text' onChange={this._filterTextChanged} value={filterText} />}
+          <InputGroup leftIcon={IconNames.SEARCH} type='text' onChange={this._filterTextChanged} value={filterText} />
+        }
         <div className='subtitles-pane-items fill'>
           {subtitles &&
-            subtitles.map((st, index) => {
-              const selected = currentIndex === index;
+            subtitles.map((subtitle, index) => {
+              const selected = (currentIndex === index);
               if (!editing) {
                 const ref = selected && this._refSelected;
-                return <SubtitlePaneItem key={index} item={st} ref={ref} selected={selected} onJump={this._jump} highlight={filterRegexp} />;
+
+                return <SubtitlePaneItem
+                    key={index}
+                    item={subtitle}
+                    ref={ref}
+                    selected={selected}
+                    onJump={this._jump}
+                    highlight={filterRegexp}
+                />;
               }
               if (selected) {
-                return <SubtitlePaneItemEditor key={index} item={st} ref={this._refSelected} offset={audioTime - st.start} audioTime={audioTime}
-                  onChange={this._changeItem} onInsert={this._insertItem} onRemove={this._removeItem} onShift={this._shiftItem} />;
+                return <SubtitlePaneItemEditor
+                    key={index}
+                    item={subtitle}
+                    ref={this._refSelected}
+                    offset={audioTime - subtitle.start}
+                    audioTime={audioTime}
+                    onChange={this._changeItem}
+                    onInsert={this._insertItem}
+                    onRemove={this._removeItem}
+                    onShift={this._shiftItem}
+                />;
               }
-              return <SubtitlePaneItemViewer key={index} item={st} onJump={this._jump} />;
-            })}
+
+              return <SubtitlePaneItemViewer
+                  key={index}
+                  item={subtitle}
+                  onJump={this._jump}
+              />;
+            })
+          }
           </div>
           {!subtitles &&
-            <p>{getMessage('CLOSED_CAPTIONS_NOT_LOADED')}</p>}
+            <p>{getMessage('CLOSED_CAPTIONS_NOT_LOADED')}</p>
+          }
       </div>
     );
   }
@@ -93,8 +120,9 @@ class SubtitlesPane extends React.PureComponent {
 /* SubtitlePaneItem is used in the *player* to show an item in the subtitles pane. */
 class SubtitlePaneItem extends React.PureComponent {
   render() {
-    const {item: {text, start, end}, selected, highlight} = this.props;
+    const {item: {data: {text, start, end}}, selected, highlight} = this.props;
     const showTimestamps = false;
+
     return (
       <p className={classnames(['subtitles-item', selected && 'subtitles-item-selected'])} onClick={this._onClick}>
         {showTimestamps && <span className='subtitles-timestamp'>{formatTime(start)}</span>}
