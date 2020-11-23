@@ -3,7 +3,7 @@ import StackBundle from './c/stack';
 import DirectivesBundle from './directives';
 
 export default function (bundle) {
-  bundle.include(MainBundle);
-  bundle.include(StackBundle);
-  bundle.include(DirectivesBundle);
+    bundle.include(MainBundle);
+    bundle.include(StackBundle);
+    bundle.include(DirectivesBundle);
 };

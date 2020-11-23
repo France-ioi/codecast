@@ -163,6 +163,7 @@ function* subtitlesLoadFromFileSaga ({payload: {key, file}}) {
 function* subtitlesReloadSaga (_action) {
   const scope = yield select(state => state.get('scope'));
   const {selectedKey: key, availableOptions} = yield select(state => state.get('subtitles'));
+
   if (key) {
     /* Generate an initial item covering the entire recording (needed because
        the editor works by splitting existing items at a specific position). */
@@ -175,7 +176,8 @@ function* subtitlesReloadSaga (_action) {
             start: 0,
             end: data.events[data.events.length - 1][0],
             text: ''
-          }
+          },
+          type: "cue"
         }], {
           format: "SRT"
         }

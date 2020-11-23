@@ -82,7 +82,6 @@ export default function (bundle) {
   bundle.defineView('SubtitlesEditor', SubtitlesEditorSelector, SubtitlesEditor);
   bundle.defineView('SubtitlesEditorReturn', SubtitlesEditorReturnSelector, SubtitlesEditorReturn);
   bundle.defineView('SubtitlesEditorPane', SubtitlesEditorPaneSelector, SubtitlesEditorPane);
-
 }
 
 function clearNotify (subtitles) {
@@ -134,13 +133,14 @@ function subtitlesTextChangedReducer (state, {payload: {text, unsaved}}) {
 
   return state.update('subtitles', function (subtitles) {
     const {selectedKey: key} = subtitles;
+
     return setUnsaved(clearNotify(update(subtitles, {availableOptions: {[key]: changes}})));
   });
 }
 
 function subtitlesItemChangedReducer (state, {payload: {index, text}}) {
   return state.update('subtitles', function (subtitles) {
-    return update(subtitles, {items: {[index]: {text: {$set: text}}}});
+    return update(subtitles, {items: {[index]: {data: {text: {$set: text}}}}});
   });
 }
 
@@ -165,13 +165,15 @@ function subtitlesItemInsertedReducer (state, {payload: {index, offset, where}})
                   start,
                   end: split - 1,
                   text
-                }
+                },
+                type: "cue"
               }, {
                 data: {
                   start: split,
                   end,
                   text: ''
-                }
+                },
+                type: "cue"
               }
             ]
           ]
@@ -192,13 +194,15 @@ function subtitlesItemInsertedReducer (state, {payload: {index, offset, where}})
                   start,
                   end: split - 1,
                   text: ''
-                }
+                },
+                type: "cue"
               }, {
                 data: {
                   start: split,
                   end,
                   text
-                }
+                },
+                type: "cue"
               }
             ]
           ]
@@ -238,7 +242,8 @@ function subtitlesItemRemovedReducer (state, {payload: {index, merge}}) {
                 start,
                 end,
                 text
-              }
+              },
+              type: "cue"
             }
           ]
         ]
@@ -268,13 +273,11 @@ function subtitlesItemShiftedReducer (state, {payload: {index, amount}}) {
       items: {
         [index - 1]: {
           data: {
-            ...subtitles[index - 1].data,
             end: {$apply: shift}
           }
         },
         [index]: {
           data: {
-            ...subtitles[index].data,
             start: {$apply: shift}
           }
         }
@@ -285,9 +288,9 @@ function subtitlesItemShiftedReducer (state, {payload: {index, amount}}) {
 
 function subtitlesSaveReducer (state, action) {
   return state.update('subtitles', function (subtitles) {
-    const {selectedKey: key, availableOptions, items} = subtitles;
+    const {selectedKey: key, items} = subtitles;
     const text = stringifySync(items, {
-      format: "SRT"
+      format: 'SRT'
     });
 
     return clearNotify(update(subtitles, {availableOptions: {[key]: {text: {$set: text}}}}));
@@ -316,6 +319,7 @@ function clearAllUnsaved (options) {
   for (let key of Object.keys(options)) {
     changes[key] = {unsaved: {$set: false}};
   }
+
   return update(options, changes);
 }
 
@@ -358,9 +362,11 @@ function* subtitlesEditorSaveSaga ({actionTypes}, _action) {
     const editor = state.get('editor');
     const base = editor.get('base');
     const subtitles = Object.values(state.get('subtitles').availableOptions);
+
     return {baseUrl, base, subtitles};
   });
   const changes = {subtitles};
+
   let result;
   try {
     // TODO: also pass new base when copying
@@ -368,22 +374,27 @@ function* subtitlesEditorSaveSaga ({actionTypes}, _action) {
   } catch (ex) {
     result = {error: ex.toString()};
   }
+
   if (result.error) {
     yield put({type: actionTypes.subtitlesEditorSaveFailed, payload: {error: result.error}});
     return;
   }
+
   const timestamp = new Date();
+
   yield put({type: actionTypes.subtitlesEditorSaveSucceeded, payload: {timestamp}});
 }
 
 function* subtitlesTextRevertedSaga ({actionTypes}, {payload: {key, url}}) {
   const text = yield call(getSubtitles, url);
+
   /* Text is loaded from server, so clear the unsaved flag. */
   yield put({type: actionTypes.subtitlesTextChanged, payload: {text, unsaved: false}});
 }
 
 function* subtitlesTextLoadedSaga ({actionTypes}, {payload: {key, file}}) {
   yield put({type: actionTypes.subtitlesLoadFromFile, payload: {key, file}});
+
   while (true) {
     const loadAction = yield take([actionTypes.subtitlesLoadSucceeded, actionTypes.subtitlesLoadFailed]);
     if (loadAction.payload.key !== key) {
@@ -391,8 +402,10 @@ function* subtitlesTextLoadedSaga ({actionTypes}, {payload: {key, file}}) {
     }
     if (loadAction.type === actionTypes.subtitlesLoadSucceeded) {
       const {text} = loadAction.payload;
+
       yield put({type: actionTypes.subtitlesTextChanged, payload: {text, unsaved: true}});
     }
+
     break;
   }
 }
@@ -400,6 +413,7 @@ function* subtitlesTextLoadedSaga ({actionTypes}, {payload: {key, file}}) {
 function* subtitlesSaveOptionSaga (_app, {payload: {key}}) {
   const {text} = yield select(state => state.get('subtitles').availableOptions[key]);
   const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+
   yield call(FileSaver.saveAs, blob, `${key}.srt`);
 }
 
@@ -424,12 +438,18 @@ class SubtitlesEditor extends React.PureComponent {
           <div className='fill' style={{paddingRight: '10px'}}>
             <Menu>
               {availKeys.map(key =>
-                <SubtitlesEditorOption key={key} option={availableOptions[key]}
+                <SubtitlesEditorOption
+                  key={key}
+                  option={availableOptions[key]}
                   selected={selected && selected.key === key}
-                  onSelect={this._selectOption} />)}
+                  onSelect={this._selectOption}
+                />)
+              }
               <MenuItem icon='add' text='Add language…' popoverProps={{position: Position.TOP_RIGHT}}>
                 {langOptions.map(option =>
-                  <SubtitlesEditorNewOption key={option.value} option={option}
+                  <SubtitlesEditorNewOption
+                    key={option.value}
+                    option={option}
                     disabled={availKeys.find(key => option.value === key)}
                     onSelect={this._addOption} />)}
               </MenuItem>
@@ -519,6 +539,7 @@ class SubtitlesEditorOption extends React.PureComponent {
     const text = <span>{option.label}</span>;
     const icon = option.unsaved ? 'floppy-disk' : 'blank';
     const intent = selected ? Intent.PRIMARY : Intent.NONE;
+
     return (
       <MenuItem icon={icon} text={text} active={selected} intent={intent} onClick={this._select} />
     );
@@ -562,12 +583,13 @@ function SubtitlesEditorPaneSelector (state, props) {
   return {
     subtitlesItemChanged, subtitlesItemInserted, subtitlesItemRemoved,
     subtitlesItemShifted, playerSeek, getMessage,
-    subtitles: items, currentIndex, audioTime};
+    subtitles: items, currentIndex, audioTime
+  };
 }
 
 class SubtitlesEditorPane extends React.PureComponent {
   render () {
-    const {subtitles, currentIndex, editing, audioTime, filterText, filterRegexp, getMessage} = this.props;
+    const {subtitles, currentIndex, audioTime, getMessage} = this.props;
     const items = [];
     let message = false;
     const shiftAmount = 200;
@@ -582,14 +604,14 @@ class SubtitlesEditorPane extends React.PureComponent {
             key={index}
             item={subtitle}
             ref={this._refSelected}
-            offset={audioTime - subtitle.start}
+            offset={audioTime - subtitle.data.start}
             audioTime={audioTime}
             onChange={this._changeItem}
             onInsert={this._insertItem}
             onRemove={canRemove && this._removeItem}
             onShift={this._shiftItem}
             minStart={prevStart + shiftAmount}
-            maxStart={subtitle.end - shiftAmount}
+            maxStart={subtitle.data.end - shiftAmount}
             shiftAmount={shiftAmount}
           />);
         } else {
@@ -599,7 +621,7 @@ class SubtitlesEditorPane extends React.PureComponent {
             onJump={this._jump} />
           );
         }
-        prevStart = subtitle.start;
+        prevStart = subtitle.data.start;
       });
     } else {
       message = <p>{getMessage('CLOSED_CAPTIONS_NOT_LOADED')}</p>;
@@ -623,7 +645,7 @@ class SubtitlesEditorPane extends React.PureComponent {
     this._selectedComponent = component;
   };
   _jump = (subtitle) => {
-    this.props.dispatch({type: this.props.playerSeek, payload: {audioTime: subtitle.start}});
+    this.props.dispatch({type: this.props.playerSeek, payload: {audioTime: subtitle.data.start}});
   };
   _changeItem = (item, text) => {
     const index = this.props.subtitles.indexOf(item);
@@ -719,6 +741,7 @@ class SubtitlePaneItemEditor extends React.PureComponent {
   };
   _onInsertBelow = (event) => {
     const {item, offset} = this.props;
+
     this.props.onInsert(item, offset, 'below');
   };
   _onRemove = (event) => {

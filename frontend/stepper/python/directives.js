@@ -40,7 +40,7 @@ g.subscriptExpr = PR.seq(() => g.expr1, g.lbrack, () => g.expr, g.rbrack).map(fu
 });
 g.expr1 = PR.alt(g.numberExpr, g.identExpr, g.parensExpr, g.subscriptExpr);
 
-g.listExpr = PR.seq(g.lbrack, PR.repeatSeparated(() => g.expr, g.coma, {min:0}).optional(), g.rbrack).map(function (match) {
+g.listExpr = PR.seq(g.lbrack, PR.repeatSeparated(() => g.expr, g.coma, {min: 0}).optional(), g.rbrack).map(function (match) {
     return match[1] || [];
 });
 g.derefExpr = PR.seq(g.star, () => g.expr).map(function (match) {
@@ -58,7 +58,7 @@ g.directiveArgByName = PR.seq(g.ident, g.equals, g.expr).map(function (match) {
     return {name: match[0], value: match[2]};
 });
 g.directiveArg = PR.alt(g.directiveArgByName, g.directiveArgByPos);
-g.directiveArgs = PR.repeatSeparated(g.directiveArg, g.coma, {min:0}).map(function (match) {
+g.directiveArgs = PR.repeatSeparated(g.directiveArg, g.coma, {min: 0}).map(function (match) {
     const byPos = [], byName = {};
     match.forEach(function (arg) {
         if ('name' in arg) {

@@ -35,11 +35,11 @@ const PythonStackView = (props) => {
         <div className="stack-view" style={{height: props.height}}>
             <div className="stack-controls">
                 <ButtonGroup>
-                    <Button minimal small title="navigate up the stack" icon='arrow-up' />
-                    <Button minimal small title="navigate down the stack" icon='arrow-down' />
+                    <Button minimal small title="navigate up the stack" icon='arrow-up'/>
+                    <Button minimal small title="navigate down the stack" icon='arrow-down'/>
                 </ButtonGroup>
             </div>
-            {callReturn && <CallReturn view={callReturn} />}
+            {callReturn && <CallReturn view={callReturn}/>}
             {firstVisible > 0 &&
             <div key='tail' className="scope-ellipsis">
                 {'… +'}{firstVisible}
@@ -58,7 +58,7 @@ const PythonStackView = (props) => {
             <div key='tail' className="scope-ellipsis">
                 {'… +'}{tailCount}
             </div>}
-            <div className="stack-bottom" />
+            <div className="stack-bottom"/>
         </div>
     );
 };

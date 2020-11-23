@@ -28,61 +28,61 @@ import {isLocalMode} from "./utils/app";
  * @type {Object}
  */
 const DEBUG_IGNORE_ACTIONS_MAP = {
-  'Window.Resized': true,
-  'Buffer.Reset': true,
-  'Buffer.Highlight': true,
-  'Buffer.Init': true,
-  'Buffer.Model.Edit': true,
-  'Player.Tick': true
+    'Window.Resized': true,
+    'Buffer.Reset': true,
+    'Buffer.Highlight': true,
+    'Buffer.Init': true,
+    'Buffer.Model.Edit': true,
+    'Player.Tick': true
 };
 
 const {store, scope, actionTypes, views, finalize, start} = link(function (bundle, deps) {
 
-  bundle.defineAction('init', 'System.Init');
-  bundle.addReducer('init', (_state, _action) => {
-    return Immutable.Map({scope, actionTypes, views});
-  });
-
-  bundle.include(commonBundle);
-  bundle.include(sandboxBundle);
-  bundle.include(playerBundle);
-  bundle.include(recorderBundle);
-  bundle.include(editorBundle);
-  bundle.include(statisticsBundle);
-
-  if (process.env.NODE_ENV === 'development') {
-    bundle.addEarlyReducer(function (state, action) {
-      if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
-          console.log('action', action);
-      }
-
-      return state;
+    bundle.defineAction('init', 'System.Init');
+    bundle.addReducer('init', (_state, _action) => {
+        return Immutable.Map({scope, actionTypes, views});
     });
 
-    /**
-     * Enable Immutable debug dev-tools.
-     *
-     * @see https://github.com/andrewdavey/immutable-devtools
-     */
-    installDevTools(Immutable);
-  }
+    bundle.include(commonBundle);
+    bundle.include(sandboxBundle);
+    bundle.include(playerBundle);
+    bundle.include(recorderBundle);
+    bundle.include(editorBundle);
+    bundle.include(statisticsBundle);
+
+    if (process.env.NODE_ENV === 'development') {
+        bundle.addEarlyReducer(function (state, action) {
+            if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
+                console.log('action', action);
+            }
+
+            return state;
+        });
+
+        /**
+         * Enable Immutable debug dev-tools.
+         *
+         * @see https://github.com/andrewdavey/immutable-devtools
+         */
+        installDevTools(Immutable);
+    }
 
 }/*, {reduxSaga: {sagaMonitor}}*/);
 finalize(scope, actionTypes);
 
-function restart () {
-  if (Codecast.task) {
-    Codecast.task.cancel();
-    Codecast.task = null;
-  }
-  /* XXX Make a separate object for selectors in the linker? */
-  Codecast.task = start({
-    dispatch: store.dispatch,
-    globals: scope,
-    selectors: scope,
-    actionTypes,
-    views
-  });
+function restart() {
+    if (Codecast.task) {
+        Codecast.task.cancel();
+        Codecast.task = null;
+    }
+    /* XXX Make a separate object for selectors in the linker? */
+    Codecast.task = start({
+        dispatch: store.dispatch,
+        globals: scope,
+        selectors: scope,
+        actionTypes,
+        views
+    });
 }
 
 /* In-browser API */
@@ -107,94 +107,94 @@ const Codecast = window.Codecast = {store, scope, restart};
   }
 */
 
-function clearUrl () {
-  const currentUrl = url.parse(document.location.href, true)
-  delete currentUrl.search
-  delete currentUrl.query.source
-  window.history.replaceState(null, document.title, url.format(currentUrl))
+function clearUrl() {
+    const currentUrl = url.parse(document.location.href, true)
+    delete currentUrl.search
+    delete currentUrl.query.source
+    window.history.replaceState(null, document.title, url.format(currentUrl))
 }
 
 Codecast.start = function (options) {
 
-  store.dispatch({type: scope.init, payload: {options}});
+    store.dispatch({type: scope.init, payload: {options}});
 
-  // remove source from url wihtout reloading
-  if (options.source) {
-    clearUrl();
-  }
-  // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
+    // remove source from url wihtout reloading
+    if (options.source) {
+        clearUrl();
+    }
+    // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
-  /* Run the sagas (must be done before calling autoLogin) */
-  restart();
+    /* Run the sagas (must be done before calling autoLogin) */
+    restart();
 
-  if (!isLocalMode() && /editor|player|sandbox/.test(options.start)) {
-    store.dispatch({type: scope.statisticsInitLogData});
-  }
+    if (!isLocalMode() && /editor|player|sandbox/.test(options.start)) {
+        store.dispatch({type: scope.statisticsInitLogData});
+    }
 
-  let App;
-  switch (options.start) {
-    case 'recorder':
-      autoLogin();
-      store.dispatch({type: scope.recorderPrepare});
-      App = scope.RecorderApp;
-      break;
-    case 'player':
-      let audioUrl = options.audioUrl || `${options.baseDataUrl}.mp3`;
-      store.dispatch({
-        type: scope.playerPrepare,
-        payload: {
-          baseDataUrl: options.baseDataUrl,
-          audioUrl: audioUrl,
-          eventsUrl: `${options.baseDataUrl}.json`,
-          data: options.data
-        }
-      });
-      App = scope.PlayerApp;
-      break;
-    case 'editor':
-      autoLogin();
-      store.dispatch({
-        type: scope.editorPrepare,
-        payload: {
-          baseDataUrl: options.baseDataUrl
-        }
-      });
-      App = scope.EditorApp;
-      break;
-    case 'statistics':
-      autoLogin();
-      store.dispatch({
-        type: scope.statisticsPrepare
-      });
-      App = scope.StatisticsApp;
-      break;
-    case 'sandbox':
-      store.dispatch({
-        type: scope.statisticsLogLoadingData
-      });
-      App = scope.SandboxApp;
-      break;
-    default:
-      App = () => <p>{"No such application: "}{options.start}</p>;
-      break;
-  }
+    let App;
+    switch (options.start) {
+        case 'recorder':
+            autoLogin();
+            store.dispatch({type: scope.recorderPrepare});
+            App = scope.RecorderApp;
+            break;
+        case 'player':
+            let audioUrl = options.audioUrl || `${options.baseDataUrl}.mp3`;
+            store.dispatch({
+                type: scope.playerPrepare,
+                payload: {
+                    baseDataUrl: options.baseDataUrl,
+                    audioUrl: audioUrl,
+                    eventsUrl: `${options.baseDataUrl}.json`,
+                    data: options.data
+                }
+            });
+            App = scope.PlayerApp;
+            break;
+        case 'editor':
+            autoLogin();
+            store.dispatch({
+                type: scope.editorPrepare,
+                payload: {
+                    baseDataUrl: options.baseDataUrl
+                }
+            });
+            App = scope.EditorApp;
+            break;
+        case 'statistics':
+            autoLogin();
+            store.dispatch({
+                type: scope.statisticsPrepare
+            });
+            App = scope.StatisticsApp;
+            break;
+        case 'sandbox':
+            store.dispatch({
+                type: scope.statisticsLogLoadingData
+            });
+            App = scope.SandboxApp;
+            break;
+        default:
+            App = () => <p>{"No such application: "}{options.start}</p>;
+            break;
+    }
 
-  const {AppErrorBoundary} = scope;
-  const container = document.getElementById('react-container');
-  ReactDOM.render(
-    <Provider store={store}>
-      <AppErrorBoundary>
-        <App />
-      </AppErrorBoundary>
-    </Provider>, container);
+    const {AppErrorBoundary} = scope;
+    const container = document.getElementById('react-container');
+    ReactDOM.render(
+        <Provider store={store}>
+            <AppErrorBoundary>
+                <App/>
+            </AppErrorBoundary>
+        </Provider>, container);
 };
 
-function autoLogin () {
-  let user = null;
-  try {
-    user = JSON.parse(window.localStorage.user || 'null');
-  } catch (ex) {
-    return;
-  }
-  store.dispatch({type: scope.loginFeedback, payload: {user}});
+function autoLogin() {
+    let user = null;
+    try {
+        user = JSON.parse(window.localStorage.user || 'null');
+    } catch (ex) {
+        return;
+    }
+    store.dispatch({type: scope.loginFeedback, payload: {user}});
 }

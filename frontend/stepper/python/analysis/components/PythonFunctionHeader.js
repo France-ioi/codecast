@@ -27,7 +27,7 @@ const PythonFunctionHeader = (props) => {
                   </span>
               ) : null}
                 <span>
-                    {args.map(function(argument, index) {
+                    {args.map(function (argument, index) {
                         const loadedReferences = {};
 
                         return (

@@ -75,7 +75,7 @@ export const analyseSkulptState = function (suspensions, lastAnalysis, newStepNu
  *
  * @returns {boolean}
  */
-const isProgramSuspension = function(suspension) {
+const isProgramSuspension = function (suspension) {
     return suspension.hasOwnProperty('$lineno');
 };
 
@@ -256,8 +256,7 @@ const sortArgumentsFirst = (variableNames, args) => {
  *
  * @return {Array} A copy of the suspensions.
  */
-export const getSkulptSuspensionsCopy = function(suspensions)
-{
+export const getSkulptSuspensionsCopy = function (suspensions) {
     const copies = [];
     for (let suspensionIdx in suspensions) {
         const suspension = suspensions[suspensionIdx];
@@ -275,8 +274,7 @@ export const getSkulptSuspensionsCopy = function(suspensions)
  *
  * @param analysis
  */
-export const clearLoadedReferences = function(analysis)
-{
+export const clearLoadedReferences = function (analysis) {
     const clearedAnalysis = {
         ...analysis,
         functionCallStack: new Immutable.List()

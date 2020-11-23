@@ -34,7 +34,7 @@ function subtitlesBandMovedReducer (state, {payload: {y}}) {
 }
 
 function SubtitlesBandSelector (state, props) {
-  const {loaded, editing, bandEnabled, audioTime,
+  const {loaded, editing, bandEnabled,
     items, currentIndex, itemVisible, isMoving, offsetY
   } = state.get('subtitles');
 

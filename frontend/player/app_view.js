@@ -1,8 +1,6 @@
-
 import React from 'react';
-import ReactDOM from 'react-dom';
 import classnames from 'classnames';
-import {Alert, Dialog, Intent, ProgressBar, Spinner} from '@blueprintjs/core';
+import {Alert, Dialog, Intent, ProgressBar} from '@blueprintjs/core';
 
 /*
       screen      main-view-no-subtitles
@@ -13,52 +11,57 @@ import {Alert, Dialog, Intent, ProgressBar, Spinner} from '@blueprintjs/core';
 */
 
 class PlayerApp extends React.PureComponent {
-  render () {
-    const {containerWidth, viewportTooSmall, PlayerControls, StepperView, SubtitlesBand, isReady, progress, error} = this.props;
-    return (
-      <div id='player-app'>
-        <Dialog isOpen={!isReady} title={"Preparing playback"} isCloseButtonShown={false} >
-          <div style={{margin: '20px 20px 0 20px'}}>
-            <ProgressBar value={progress} intent={Intent.SUCCESS} />
-          </div>
-        </Dialog>
-        {isReady &&
-          <div id='main' style={{width: `${containerWidth}px`}} className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
-            <PlayerControls/>
-            <StepperView/>
-            <SubtitlesBand/>
-          </div>}
-        {error &&
-          <Alert intent={Intent.DANGER} icon='error' isOpen={!!error} onConfirm={this.reload}>
-            <p style={{fontSize: '150%', fontWeight: 'bold'}}>{"A fatal error has occured while preparing playback."}</p>
-            <p>{"Source: "}{error.source}</p>
-            <p>{"Error: "}{error.message}</p>
-            <p>{"Details: "}{error.details}</p>
-            <p style={{fontWeight: 'bold'}}>{"Click OK to reload the page."}</p>
-          </Alert>}
-      </div>
-    );
-  }
-  reload = () => {
-    window.location.reload();
-  };
+    render() {
+        const {containerWidth, viewportTooSmall, PlayerControls, StepperView, SubtitlesBand, isReady, progress, error} = this.props;
+        return (
+            <div id='player-app'>
+                <Dialog isOpen={!isReady} title={"Preparing playback"} isCloseButtonShown={false}>
+                    <div style={{margin: '20px 20px 0 20px'}}>
+                        <ProgressBar value={progress} intent={Intent.SUCCESS}/>
+                    </div>
+                </Dialog>
+                {isReady &&
+                <div id='main' style={{width: `${containerWidth}px`}}
+                     className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
+                    <PlayerControls/>
+                    <StepperView/>
+                    <SubtitlesBand/>
+                </div>}
+                {error &&
+                <Alert intent={Intent.DANGER} icon='error' isOpen={!!error} onConfirm={this.reload}>
+                    <p style={{
+                        fontSize: '150%',
+                        fontWeight: 'bold'
+                    }}>{"A fatal error has occured while preparing playback."}</p>
+                    <p>{"Source: "}{error.source}</p>
+                    <p>{"Error: "}{error.message}</p>
+                    <p>{"Details: "}{error.details}</p>
+                    <p style={{fontWeight: 'bold'}}>{"Click OK to reload the page."}</p>
+                </Alert>}
+            </div>
+        );
+    }
+
+    reload = () => {
+        window.location.reload();
+    };
 }
 
-function PlayerAppSelector (state, props) {
-  const {PlayerControls, StepperView, SubtitlesBand} = state.get('scope');
-  const viewportTooSmall = state.get('viewportTooSmall');
-  const containerWidth = state.get('containerWidth');
-  const player = state.get('player');
-  const isReady = player.get('isReady');
-  const progress = player.get('progress');
-  const error = player.get('error');
-  return {
-    viewportTooSmall, containerWidth,
-    PlayerControls, StepperView, SubtitlesBand,
-    isReady, progress, error
-  };
+function PlayerAppSelector(state, props) {
+    const {PlayerControls, StepperView, SubtitlesBand} = state.get('scope');
+    const viewportTooSmall = state.get('viewportTooSmall');
+    const containerWidth = state.get('containerWidth');
+    const player = state.get('player');
+    const isReady = player.get('isReady');
+    const progress = player.get('progress');
+    const error = player.get('error');
+    return {
+        viewportTooSmall, containerWidth,
+        PlayerControls, StepperView, SubtitlesBand,
+        isReady, progress, error
+    };
 }
 
 export default function (bundle) {
-  bundle.defineView('PlayerApp', PlayerAppSelector, PlayerApp);
+    bundle.defineView('PlayerApp', PlayerAppSelector, PlayerApp);
 };

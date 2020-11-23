@@ -1,4 +1,3 @@
-
 import playerActions from './actions';
 import playerSelectors from './selectors';
 import playerReducers from './reducers';
@@ -8,11 +7,11 @@ import PlayerAppBundle from './app_view';
 
 export default function (bundle, deps) {
 
-  bundle.include(playerActions);
-  bundle.include(playerSelectors);
-  bundle.include(playerReducers);
-  bundle.include(playerSagas);
-  bundle.include(PlayerControls);
-  bundle.include(PlayerAppBundle);
+    bundle.include(playerActions);
+    bundle.include(playerSelectors);
+    bundle.include(playerReducers);
+    bundle.include(playerSagas);
+    bundle.include(PlayerControls);
+    bundle.include(PlayerAppBundle);
 
 };

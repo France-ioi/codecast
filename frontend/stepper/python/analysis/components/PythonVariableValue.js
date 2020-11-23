@@ -264,7 +264,7 @@ class PythonVariableValue extends React.PureComponent {
                     <span className={classes}>"{this.props.cur.v}"</span>
                     {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
                         <span className="value-previous">"{this.props.old.v}"</span>
-                    : null}
+                        : null}
                 </React.Fragment>
             )
         }
@@ -348,7 +348,7 @@ class PythonVariableValue extends React.PureComponent {
                 <span className={classes}>{this.props.cur.v}</span>
                 {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
                     <span className="value-previous">{this.props.old.v}</span>
-                : null}
+                    : null}
             </React.Fragment>
         );
     }

@@ -1,83 +1,87 @@
-
 import EventEmitter from 'eventemitter2';
 import {call, take} from 'redux-saga/effects';
-import {eventChannel, buffers} from 'redux-saga';
+import {buffers, eventChannel} from 'redux-saga';
 
-export function spawnWorker (Worker) {
-  return new Promise(function (resolve, reject) {
-    const worker = new Worker();
-    worker.onerror = function (event) {
-      worker.onerror = null;
-      worker.onmessage = null;
-      reject('worker failed to initialize');
-    };
-    worker.onmessage = function (event) {
-      worker.onerror = null;
-      worker.onmessage = null;
-      /* The worker is expected to post a null message once initialized,
-         any other value is considered to be an error. */
-      if (event.data !== null) {
-        reject(event.data);
-      } else {
-        resolve(wrapWorker(worker));
-      }
-    };
-    worker.postMessage(null);
-  });
+export function spawnWorker(Worker) {
+    return new Promise(function (resolve, reject) {
+        const worker = new Worker();
+        worker.onerror = function (event) {
+            worker.onerror = null;
+            worker.onmessage = null;
+            reject('worker failed to initialize');
+        };
+        worker.onmessage = function (event) {
+            worker.onerror = null;
+            worker.onmessage = null;
+            /* The worker is expected to post a null message once initialized,
+               any other value is considered to be an error. */
+            if (event.data !== null) {
+                reject(event.data);
+            } else {
+                resolve(wrapWorker(worker));
+            }
+        };
+        worker.postMessage(null);
+    });
 }
 
 class WorkerError extends Error {
-  constructor (request, response) {
-    super('error in worker');
-    this.name = 'WorkerError';
-    this.request = request;
-    this.response = response;
-  }
+    constructor(request, response) {
+        super('error in worker');
+        this.name = 'WorkerError';
+        this.request = request;
+        this.response = response;
+    }
 }
 
-function wrapWorker (worker) {
-  const emitter = new EventEmitter();
-  let nextTransactionId = 1;
-  worker.onmessage = function (message) {
-    if (typeof message.data.id === 'string') {
-      emitter.emit(message.data.id, message.data);
+function wrapWorker(worker) {
+    const emitter = new EventEmitter();
+    let nextTransactionId = 1;
+    worker.onmessage = function (message) {
+        if (typeof message.data.id === 'string') {
+            emitter.emit(message.data.id, message.data);
+        }
+    };
+
+    function kill() {
+        worker.terminate();
     }
-  };
-  function kill () {
-    worker.terminate();
-  }
-  function post (command, payload) {
-    worker.postMessage({command, payload});
-  }
-  function listen (id, buffer) {
-    return eventChannel(function (listener) {
-      emitter.on(id, listener);
-      return function () {
-        emitter.off(id, listener);
-      };
-    }, buffer || buffers.expanding(1));
-  }
-  function* callSaga (command, payload, progress) {
-    const request = {id: 't' + nextTransactionId, command, payload};
-    nextTransactionId += 1;
-    const channel = yield call(listen, request.id);
-    worker.postMessage(request);
-    try {
-      while (true) {
-        const response = yield take(channel);
-        if (response.error) {
-          throw new WorkerError(request, response);
-        }
-        if (response.done) {
-          return response.payload;
-        }
-        if (typeof progress === 'function') {
-          yield call(progress, response.payload);
-        }
-      }
-    } finally {
-      channel.close();
+
+    function post(command, payload) {
+        worker.postMessage({command, payload});
     }
-  }
-  return {emitter, kill, post, listen, call: callSaga};
+
+    function listen(id, buffer) {
+        return eventChannel(function (listener) {
+            emitter.on(id, listener);
+            return function () {
+                emitter.off(id, listener);
+            };
+        }, buffer || buffers.expanding(1));
+    }
+
+    function* callSaga(command, payload, progress) {
+        const request = {id: 't' + nextTransactionId, command, payload};
+        nextTransactionId += 1;
+        const channel = yield call(listen, request.id);
+        worker.postMessage(request);
+        try {
+            while (true) {
+                const response = yield take(channel);
+                if (response.error) {
+                    throw new WorkerError(request, response);
+                }
+                if (response.done) {
+                    return response.payload;
+                }
+                if (typeof progress === 'function') {
+                    yield call(progress, response.payload);
+                }
+            }
+        } finally {
+            channel.close();
+        }
+    }
+
+    return {emitter, kill, post, listen, call: callSaga};
 }

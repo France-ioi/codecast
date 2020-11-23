@@ -4,7 +4,7 @@
 */
 
 var DEBUG_PYTHON_RUNNER = false;
-var pythonRunnerLog = function() {
+var pythonRunnerLog = function () {
     if (DEBUG_PYTHON_RUNNER) {
         var args = Array.prototype.slice.call(arguments);
         args.unshift("[python_runner.js] ");
@@ -66,7 +66,7 @@ export default function (context) {
         handler += "\n\targs.push(resolve);";
 
         // Count actions
-        if(type == 'actions') {
+        if (type == 'actions') {
             // Was this._nbAction++.
         }
 
@@ -138,7 +138,7 @@ export default function (context) {
                 for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
                     let blockName = blockList[iBlock];
                     let code = this.context.strings.code[blockName];
-                    if (typeof(code) == "undefined") {
+                    if (typeof (code) == "undefined") {
                         code = blockName;
                     }
                     let nbsArgs = blocksInfos[blockName] ? (blocksInfos[blockName].nbsArgs ? blocksInfos[blockName].nbsArgs : []) : [];
@@ -165,7 +165,7 @@ export default function (context) {
                 }
 
                 modContents += "\nreturn mod;\n};";
-                Sk.builtinFiles["files"]["src/lib/"+generatorName+".js"] = modContents;
+                Sk.builtinFiles["files"]["src/lib/" + generatorName + ".js"] = modContents;
                 this.availableModules.push(generatorName);
             }
         }
@@ -175,7 +175,7 @@ export default function (context) {
         let msg = '';
 
         // Check the number of arguments corresponds to a variant of the function
-        if(!this._argumentsByBlock[generatorName] || !this._argumentsByBlock[generatorName][blockName]) {
+        if (!this._argumentsByBlock[generatorName] || !this._argumentsByBlock[generatorName][blockName]) {
             console.error("Couldn't find the number of arguments for " + generatorName + "/" + blockName + ".");
             return;
         }
@@ -186,7 +186,7 @@ export default function (context) {
                 msg = name + "() takes no arguments (" + args.length + " given)";
                 throw new Sk.builtin.TypeError(msg);
             }
-        } else if(nbsArgs.indexOf(args.length) === -1 && nbsArgs.indexOf(Infinity) === -1) {
+        } else if (nbsArgs.indexOf(args.length) === -1 && nbsArgs.indexOf(Infinity) === -1) {
             let minArgs = nbsArgs[0];
             let maxArgs = nbsArgs[0];
             for (let i = 1; i < nbsArgs.length; i++) {
@@ -198,7 +198,7 @@ export default function (context) {
                 msg = name + "() takes exactly " + minArgs + " arguments";
             } else if (args.length < minArgs) {
                 msg = name + "() takes at least " + minArgs + " arguments";
-            } else if (args.length > maxArgs){
+            } else if (args.length > maxArgs) {
                 msg = name + "() takes at most " + maxArgs + " arguments";
             } else {
                 msg = name + "() doesn't have a variant accepting this number of arguments";
@@ -211,17 +211,19 @@ export default function (context) {
 
     this._definePythonNumber = () => {
         // Create a class which behaves as a Number, but can have extra properties
-        this.pythonNumber = function(val) {
-            this.val = new Number(val);
+        this.pythonNumber = function (val) {
+            this.val = Number(val);
         };
         this.pythonNumber.prototype = Object.create(Number.prototype);
 
         function makePrototype(func) {
-            return function() { return Number.prototype[func].call(this.val); }
+            return function () {
+                return Number.prototype[func].call(this.val);
+            }
         }
 
         var funcs = ['toExponential', 'toFixed', 'toLocaleString', 'toPrecision', 'toSource', 'toString', 'valueOf'];
-        for (let i = 0; i < funcs.length ; i++) {
+        for (let i = 0; i < funcs.length; i++) {
             this.pythonNumber.prototype[funcs[i]] = makePrototype(funcs[i]);
         }
     };
@@ -237,7 +239,7 @@ export default function (context) {
                     args.push(that._createPrimitive(arguments[i]));
                 }
 
-                let retp = new Promise(function(resolve, reject) {
+                let retp = new Promise(function (resolve, reject) {
                     let p = Sk.misceval.asyncToPromise(() => {
                         return val.tp$call(args);
                     });
@@ -269,7 +271,7 @@ export default function (context) {
             let retVal = val.v;
             if (val instanceof Sk.builtin.tuple || val instanceof Sk.builtin.list) {
                 retVal = [];
-                for(let i = 0; i < val.v.length; i++) {
+                for (let i = 0; i < val.v.length; i++) {
                     retVal[i] = this.skToJs(val.v[i]);
                 }
             }
@@ -322,7 +324,7 @@ export default function (context) {
         this._paused = true;
         var listenerFunc = null;
         var that = this;
-        listenerFunc = function(e) {
+        listenerFunc = function (e) {
             target.removeEventListener(eventName, listenerFunc);
             that.noDelay(callback, func(e));
         };
@@ -371,7 +373,7 @@ export default function (context) {
             result = new Sk.builtin.bool(data);
         } else if (typeof data.length != 'undefined') {
             let skl = [];
-            for(let i = 0; i < data.length; i++) {
+            for (let i = 0; i < data.length; i++) {
                 skl.push(this._createPrimitive(data[i]));
             }
 
@@ -448,7 +450,7 @@ export default function (context) {
 
         if (Sk.running) {
             console.log('running aleady');
-            if(typeof Sk.runQueue === 'undefined') {
+            if (typeof Sk.runQueue === 'undefined') {
                 Sk.runQueue = [];
             }
             Sk.runQueue.push({ctrl: this, codes: codes});
@@ -464,7 +466,7 @@ export default function (context) {
         this._setBreakpoint(1, false);
 
         if (typeof this.context.infos.maxIter !== 'undefined') {
-            this._maxIterations = Math.ceil(this.context.infos.maxIter/10);
+            this._maxIterations = Math.ceil(this.context.infos.maxIter / 10);
         }
 
         try {
@@ -508,10 +510,10 @@ export default function (context) {
         // Transform a value, possibly a Skulpt one, into a printable value
         if (typeof origValue !== 'object' || origValue === null) {
             value = origValue;
-        } else if(origValue.constructor === Sk.builtin.dict) {
+        } else if (origValue.constructor === Sk.builtin.dict) {
             let keys = Object.keys(origValue);
             let dictElems = [];
-            for (let i = 0; i<keys.length; i++) {
+            for (let i = 0; i < keys.length; i++) {
                 if (keys[i] == 'size' || keys[i] == '__class__'
                     || !origValue[keys[i]].items
                     || !origValue[keys[i]].items[0]) {
@@ -522,11 +524,11 @@ export default function (context) {
                 var items = origValue[keys[i]].items[0];
                 dictElems.push('' + this.unSkulptValue(items.lhs) + ': ' + this.unSkulptValue(items.rhs));
             }
-            value = '{' + dictElems.join(',' ) + '}';
+            value = '{' + dictElems.join(',') + '}';
         } else if (origValue.constructor === Sk.builtin.list) {
             let oldArray = origValue.v;
             let newArray = [];
-            for (let i = 0; i<oldArray.length; i++) {
+            for (let i = 0; i < oldArray.length; i++) {
                 newArray.push(this.unSkulptValue(oldArray[i]));
             }
             value = '[' + newArray.join(', ') + ']';
@@ -535,7 +537,7 @@ export default function (context) {
             if (typeof value == 'string') {
                 value = '"' + value + '"';
             }
-        } else if(typeof origValue == 'object') {
+        } else if (typeof origValue == 'object') {
             value = origValue;
         }
 
@@ -558,15 +560,15 @@ export default function (context) {
 
         if (highlighted.length === 0) {
             return origValue;
-        } else if(highlighted.find('.ace_start').length > 0) {
+        } else if (highlighted.find('.ace_start').length > 0) {
             target = highlighted.find('.ace_start')[0];
         } else {
             target = highlighted[0];
         }
         let bbox = target.getBoundingClientRect();
 
-        let leftPos = bbox.left+10;
-        let topPos = bbox.top-14;
+        let leftPos = bbox.left + 10;
+        let topPos = bbox.top - 14;
 
         let displayStr = value.toString();
         if (typeof value == 'boolean') {
@@ -577,7 +579,7 @@ export default function (context) {
         }
 
         let dropDownDiv = '' +
-            '<div class="blocklyDropDownDiv" style="transition: transform 0.25s, opacity 0.25s; background-color: rgb(255, 255, 255); border-color: rgb(170, 170, 170); left: '+leftPos+'px; top: '+topPos+'px; display: block; opacity: 1; transform: translate(0px, -20px);">' +
+            '<div class="blocklyDropDownDiv" style="transition: transform 0.25s, opacity 0.25s; background-color: rgb(255, 255, 255); border-color: rgb(170, 170, 170); left: ' + leftPos + 'px; top: ' + topPos + 'px; display: block; opacity: 1; transform: translate(0px, -20px);">' +
             '  <div class="blocklyDropDownContent">' +
             '    <div class="valueReportBox">' +
             displayStr +
@@ -600,7 +602,7 @@ export default function (context) {
 
         if (Sk.runQueue) {
             for (let i = 0; i < Sk.runQueue.length; i++) {
-                if(Sk.runQueue[i].ctrl === this) {
+                if (Sk.runQueue[i].ctrl === this) {
                     Sk.runQueue.splice(i, 1);
                     i--;
                 }
@@ -621,9 +623,11 @@ export default function (context) {
         this._resetCallstackOnNextStep = false;
         this._paused = false;
         Sk.running = false;
-        if(Sk.runQueue && Sk.runQueue.length > 0) {
+        if (Sk.runQueue && Sk.runQueue.length > 0) {
             var nextExec = Sk.runQueue.shift();
-            setTimeout(function () { nextExec.ctrl.runCodes(nextExec.codes); }, 100);
+            setTimeout(function () {
+                nextExec.ctrl.runCodes(nextExec.codes);
+            }, 100);
         }
 
         this._isFinished = false;
@@ -728,7 +732,7 @@ export default function (context) {
      *
      * @return {boolean}
      */
-    this.isSynchronizedWithAnalysis = function(analysis) {
+    this.isSynchronizedWithAnalysis = function (analysis) {
         // Must be at the same step number and have the same source code.
 
         const analysisStepNum = analysis.stepNum;

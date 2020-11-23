@@ -1,6 +1,5 @@
 import * as React from 'react';
 import PythonVariable from "./PythonVariable";
-import {isLoaded} from "../helpers";
 
 const PythonFunctionLocals = (props) => {
     const variables = props.func.variables.entrySeq().map(([name, value]) => {

@@ -17,6 +17,7 @@ export function updateCurrentItem (subtitles, audioTime) {
 
 export function findSubtitleIndex (items, time) {
   let low = 0, high = items.length;
+
   while (low + 1 < high) {
     const mid = (low + high) / 2 | 0;
     const item = items[mid];
@@ -26,6 +27,7 @@ export function findSubtitleIndex (items, time) {
       high = mid;
     }
   }
+
   return low;
 }
 

@@ -27,9 +27,8 @@ user interaction change the view.
 */
 
 
-import {call, put, takeEvery, select} from 'redux-saga/effects';
+import {call, put, select, takeEvery} from 'redux-saga/effects';
 import Immutable from 'immutable';
-import update from 'immutability-helper';
 import React from 'react';
 
 import 'brace';
@@ -71,332 +70,333 @@ import 'brace/theme/vibrant_ink';
 import 'brace/theme/xcode';
 import 'brace/worker/javascript';
 
-import {emptyDocument, documentFromString, compressRange, expandRange} from './document';
+import {compressRange, documentFromString, emptyDocument, expandRange} from './document';
 import Editor from './editor';
 
 const AceThemes = [
-  'ambiance', 'chaos', 'chrome', 'clouds', 'clouds_midnight', 'cobalt',
-  'crimson_editor', 'dawn', 'dreamweaver', 'eclipse', 'github', 'idle_fingers',
-  'iplastic', 'katzenmilch', 'kr_theme', 'kuroir', 'merbivore',
-  'merbivore_soft', 'mono_industrial', 'monokai', 'pastel_on_dark',
-  'solarized_dark', 'solarized_light', 'sqlserver', 'terminal', 'textmate',
-  'tomorrow', 'tomorrow_night', 'tomorrow_night_blue', 'tomorrow_night_bright',
-  'tomorrow_night_eighties', 'twilight', 'vibrant_ink', 'xcode'
+    'ambiance', 'chaos', 'chrome', 'clouds', 'clouds_midnight', 'cobalt',
+    'crimson_editor', 'dawn', 'dreamweaver', 'eclipse', 'github', 'idle_fingers',
+    'iplastic', 'katzenmilch', 'kr_theme', 'kuroir', 'merbivore',
+    'merbivore_soft', 'mono_industrial', 'monokai', 'pastel_on_dark',
+    'solarized_dark', 'solarized_light', 'sqlserver', 'terminal', 'textmate',
+    'tomorrow', 'tomorrow_night', 'tomorrow_night_blue', 'tomorrow_night_bright',
+    'tomorrow_night_eighties', 'twilight', 'vibrant_ink', 'xcode'
 ];
 
 export const DocumentModel = Immutable.Record({
-  document: emptyDocument,
-  selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
-  firstVisibleRow: 0
+    document: emptyDocument,
+    selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
+    firstVisibleRow: 0
 });
 
 const BufferState = Immutable.Record({
-  model: DocumentModel(),
-  editor: null
+    model: DocumentModel(),
+    editor: null
 });
 
 export default function (bundle) {
 
-  bundle.defineAction('bufferInit', 'Buffer.Init');
-  bundle.defineAction('bufferLoad', 'Buffer.Load');
-  bundle.defineAction('bufferReset', 'Buffer.Reset');
-  bundle.defineAction('bufferEdit', 'Buffer.Edit');
-  bundle.defineAction('bufferSelect', 'Buffer.Select');
-  bundle.defineAction('bufferScroll', 'Buffer.Scroll');
-  bundle.defineAction('bufferModelEdit', 'Buffer.Model.Edit');
-  bundle.defineAction('bufferModelSelect', 'Buffer.Model.Select');
-  bundle.defineAction('bufferModelScroll', 'Buffer.Model.Scroll');
-  bundle.defineAction('bufferHighlight', 'Buffer.Highlight');
+    bundle.defineAction('bufferInit', 'Buffer.Init');
+    bundle.defineAction('bufferLoad', 'Buffer.Load');
+    bundle.defineAction('bufferReset', 'Buffer.Reset');
+    bundle.defineAction('bufferEdit', 'Buffer.Edit');
+    bundle.defineAction('bufferSelect', 'Buffer.Select');
+    bundle.defineAction('bufferScroll', 'Buffer.Scroll');
+    bundle.defineAction('bufferModelEdit', 'Buffer.Model.Edit');
+    bundle.defineAction('bufferModelSelect', 'Buffer.Model.Select');
+    bundle.defineAction('bufferModelScroll', 'Buffer.Model.Scroll');
+    bundle.defineAction('bufferHighlight', 'Buffer.Highlight');
 
-  bundle.defineSelector('getBufferModel', getBufferModel);
+    bundle.defineSelector('getBufferModel', getBufferModel);
 
-  bundle.defineView('BufferEditor', BufferEditorSelector, BufferEditor);
+    bundle.defineView('BufferEditor', BufferEditorSelector, BufferEditor);
 
-  bundle.addReducer('init', initReducer);
-  bundle.addReducer('bufferInit', bufferInitReducer);
-  bundle.addReducer('bufferLoad', bufferLoadReducer);
-  bundle.addReducer('bufferReset', bufferResetReducer);
-  bundle.addReducer('bufferEdit', bufferEditReducer);
-  bundle.addReducer('bufferSelect', bufferSelectReducer);
-  bundle.addReducer('bufferScroll', bufferScrollReducer);
+    bundle.addReducer('init', initReducer);
+    bundle.addReducer('bufferInit', bufferInitReducer);
+    bundle.addReducer('bufferLoad', bufferLoadReducer);
+    bundle.addReducer('bufferReset', bufferResetReducer);
+    bundle.addReducer('bufferEdit', bufferEditReducer);
+    bundle.addReducer('bufferSelect', bufferSelectReducer);
+    bundle.addReducer('bufferScroll', bufferScrollReducer);
 
-  bundle.addSaga(buffersSaga);
+    bundle.addSaga(buffersSaga);
 
-  bundle.defer(addRecordHooks);
-  bundle.defer(addReplayHooks);
+    bundle.defer(addRecordHooks);
+    bundle.defer(addReplayHooks);
 
 };
 
 class BufferEditor extends React.PureComponent {
 
-  onInit = (editor) => {
-    const {dispatch, buffer, actionTypes} = this.props;
-    dispatch({type: actionTypes.bufferInit, buffer, editor});
-  };
-
-  onSelect = (selection) => {
-    const {dispatch, buffer, actionTypes} = this.props;
-    dispatch({type: actionTypes.bufferSelect, buffer, selection});
-  };
-
-  onEdit = (delta) => {
-    const {dispatch, buffer, actionTypes} = this.props;
-    dispatch({type: actionTypes.bufferEdit, buffer, delta});
-  };
-
-  onScroll = (firstVisibleRow) => {
-    const {dispatch, buffer, actionTypes} = this.props;
-    dispatch({type: actionTypes.bufferScroll, buffer, firstVisibleRow});
-  };
-
-  render () {
-    return <Editor onInit={this.onInit} onEdit={this.onEdit} onSelect={this.onSelect} onScroll={this.onScroll} {...this.props} />;
-  };
-
-}
-
-function BufferEditorSelector (state, props) {
-  const actionTypes = state.get('actionTypes');
-  const getMessage = state.get('getMessage');
-  return {actionTypes, getMessage};
-}
-
-function initReducer (state, {payload: {options: {source, input}}}) {
-  state = state.set('buffers', Immutable.Map({
-    source: BufferState(),
-    input: BufferState(),
-    output: BufferState()
-  }));
-  if (source) {
-    state = bufferLoadReducer(state, {buffer: 'source', text: source || ''});
-  }
-  if (input) {
-    state = bufferLoadReducer(state, {buffer: 'input', text: input || ''});
-  }
-  return state;
-}
-
-function bufferInitReducer (state, action) {
-  const {buffer, editor} = action;
-  return state.setIn(['buffers', buffer, 'editor'], editor);
-}
-
-function bufferLoadReducer (state, action) {
-  const {buffer, text} = action;
-  return state.setIn(['buffers', buffer, 'model'], DocumentModel({
-    document: documentFromString(text),
-    selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
-    firstVisibleRow: 0
-  }));
-}
-
-function bufferResetReducer (state, action) {
-  const {buffer, model} = action;
-  return state.setIn(['buffers', buffer, 'model'], model);
-}
-
-function bufferEditReducer (state, action) {
-  const {buffer, delta} = action;
-  const oldDoc = state.getIn(['buffers', buffer, 'model', 'document']);
-  const newDoc = oldDoc.applyDelta(delta);
-  return state.setIn(['buffers', buffer, 'model', 'document'], newDoc);
-}
-
-function bufferSelectReducer (state, action) {
-  const {buffer, selection} = action;
-  return state.setIn(['buffers', buffer, 'model', 'selection'], selection);
-}
-
-function bufferScrollReducer (state, action) {
-  const {buffer, firstVisibleRow} = action;
-  return state.setIn(['buffers', buffer, 'model', 'firstVisibleRow'], firstVisibleRow);
-}
-
-function loadBufferModel (dump) {
-  return DocumentModel({
-    document: documentFromString(dump.document),
-    selection: expandRange(dump.selection),
-    firstVisibleRow: dump.firstVisibleRow || 0
-  });
-}
-
-function getBufferModel (state, buffer) {
-  return state.getIn(['buffers', buffer, 'model']);
-}
-
-function getBufferEditor (state, buffer) {
-  return state.getIn(['buffers', buffer, 'editor']);
-}
-
-function* buffersSaga () {
-  const actionTypes = yield select(state => state.get('actionTypes'));
-  yield takeEvery(actionTypes.bufferInit, function* (action) {
-    const {buffer, editor} = action;
-    if (editor) {
-      const model = yield select(getBufferModel, buffer);
-      resetEditor(editor, model);
-    }
-  });
-  yield takeEvery(actionTypes.bufferReset, function* (action) {
-    const {buffer, model, quiet} = action;
-    if (!quiet) {
-      const editor = yield select(getBufferEditor, buffer);
-      if (editor) {
-        resetEditor(editor, model);
-      }
-    }
-  });
-  yield takeEvery(actionTypes.bufferModelSelect, function* (action) {
-    const {buffer, selection} = action;
-    const editor = yield select(getBufferEditor, buffer);
-    if (editor) {
-      editor.setSelection(selection);
-    }
-  });
-  yield takeEvery(actionTypes.bufferModelEdit, function* (action) {
-    const {buffer, delta, deltas} = action;
-    const editor = yield select(getBufferEditor, buffer);
-    if (editor) {
-      editor.applyDeltas(deltas || [delta]);
-    }
-  });
-  yield takeEvery(actionTypes.bufferModelScroll, function* (action) {
-    const {buffer, firstVisibleRow} = action;
-    const editor = yield select(getBufferEditor, buffer);
-    if (editor) {
-      editor.scrollToLine(firstVisibleRow);
-    }
-  });
-  yield takeEvery(actionTypes.bufferHighlight, function* (action) {
-    const {buffer, range} = action;
-    const editor = yield select(getBufferEditor, buffer);
-    if (editor) {
-      editor.highlight(range);
-    }
-  });
-}
-
-function resetEditor (editor, model) {
-  try {
-    const text = model.get('document').toString();
-    const selection = model.get('selection');
-    const firstVisibleRow = model.get('firstVisibleRow');
-    editor.reset(text, selection, firstVisibleRow);
-  } catch (error) {
-    console.log('failed to update editor view with model', error);
-  }
-}
-
-function addRecordHooks ({recordApi}, actionTypes) {
-  recordApi.onStart(function* (init) {
-    const sourceModel = yield select(getBufferModel, 'source');
-    const inputModel = yield select(getBufferModel, 'input');
-    init.buffers = {
-      source: {
-        document: sourceModel.get('document').toString(),
-        selection: compressRange(sourceModel.get('selection')),
-        firstVisibleRow: sourceModel.get('firstVisibleRow')
-      },
-      input: {
-        document: inputModel.get('document').toString(),
-        selection: compressRange(inputModel.get('selection')),
-        firstVisibleRow: inputModel.get('firstVisibleRow')
-      }
+    onInit = (editor) => {
+        const {dispatch, buffer, actionTypes} = this.props;
+        dispatch({type: actionTypes.bufferInit, buffer, editor});
     };
-  });
-  recordApi.on(actionTypes.bufferSelect, function* (addEvent, action) {
-    const {buffer, selection} = action;
-    yield call(addEvent, 'buffer.select', buffer, compressRange(selection));
-  });
-  recordApi.on(actionTypes.bufferEdit, function* (addEvent, action) {
-    const {buffer, delta} = action;
-    const {start, end} = delta;
-    const range = {start, end};
 
-    const {platform} = yield select(state => state.get('options'));
-    if (buffer === 'output' && platform === 'python') {
-      // For python, the full output is retrieved from the interpreter at each step.
+    onSelect = (selection) => {
+        const {dispatch, buffer, actionTypes} = this.props;
+        dispatch({type: actionTypes.bufferSelect, buffer, selection});
+    };
 
-      return;
-    }
+    onEdit = (delta) => {
+        const {dispatch, buffer, actionTypes} = this.props;
+        dispatch({type: actionTypes.bufferEdit, buffer, delta});
+    };
 
-    if (delta.action === 'insert') {
-      yield call(addEvent, 'buffer.insert', buffer, compressRange(range), delta.lines);
-    } else {
-      yield call(addEvent, 'buffer.delete', buffer, compressRange(range));
-    }
-  });
-  recordApi.on(actionTypes.bufferScroll, function* (addEvent, action) {
-    const {buffer, firstVisibleRow} = action;
-    yield call(addEvent, 'buffer.scroll', buffer, firstVisibleRow);
-  });
+    onScroll = (firstVisibleRow) => {
+        const {dispatch, buffer, actionTypes} = this.props;
+        dispatch({type: actionTypes.bufferScroll, buffer, firstVisibleRow});
+    };
+
+    render() {
+        return <Editor onInit={this.onInit} onEdit={this.onEdit} onSelect={this.onSelect}
+                       onScroll={this.onScroll} {...this.props} />;
+    };
+
 }
 
-function addReplayHooks ({replayApi}, actionTypes) {
-  replayApi.on('start', function (replayContext, event) {
-    const {buffers} = event[2];
-    const sourceModel = buffers && buffers.source ? loadBufferModel(buffers.source) : DocumentModel();
-    const inputModel = buffers && buffers.input ? loadBufferModel(buffers.input) : DocumentModel();
-    const outputModel = DocumentModel();
-    replayContext.state = replayContext.state.set('buffers',
-      Immutable.Map({
-        source: Immutable.Map({model: sourceModel}),
-        input: Immutable.Map({model: inputModel}),
-        output: Immutable.Map({model: outputModel})
-      }));
-  });
-  replayApi.on('buffer.select', function (replayContext, event) {
-    // XXX use reducer imported from common/buffers
-    const buffer = event[2];
-    const selection = expandRange(event[3]);
-    replayContext.state = bufferSelectReducer(replayContext.state, {buffer, selection});
-    replayContext.addSaga(function* () {
-      yield put({type: actionTypes.bufferModelSelect, buffer, selection});
+function BufferEditorSelector(state, props) {
+    const actionTypes = state.get('actionTypes');
+    const getMessage = state.get('getMessage');
+    return {actionTypes, getMessage};
+}
+
+function initReducer(state, {payload: {options: {source, input}}}) {
+    state = state.set('buffers', Immutable.Map({
+        source: BufferState(),
+        input: BufferState(),
+        output: BufferState()
+    }));
+    if (source) {
+        state = bufferLoadReducer(state, {buffer: 'source', text: source || ''});
+    }
+    if (input) {
+        state = bufferLoadReducer(state, {buffer: 'input', text: input || ''});
+    }
+    return state;
+}
+
+function bufferInitReducer(state, action) {
+    const {buffer, editor} = action;
+    return state.setIn(['buffers', buffer, 'editor'], editor);
+}
+
+function bufferLoadReducer(state, action) {
+    const {buffer, text} = action;
+    return state.setIn(['buffers', buffer, 'model'], DocumentModel({
+        document: documentFromString(text),
+        selection: {start: {row: 0, column: 0}, end: {row: 0, column: 0}},
+        firstVisibleRow: 0
+    }));
+}
+
+function bufferResetReducer(state, action) {
+    const {buffer, model} = action;
+    return state.setIn(['buffers', buffer, 'model'], model);
+}
+
+function bufferEditReducer(state, action) {
+    const {buffer, delta} = action;
+    const oldDoc = state.getIn(['buffers', buffer, 'model', 'document']);
+    const newDoc = oldDoc.applyDelta(delta);
+    return state.setIn(['buffers', buffer, 'model', 'document'], newDoc);
+}
+
+function bufferSelectReducer(state, action) {
+    const {buffer, selection} = action;
+    return state.setIn(['buffers', buffer, 'model', 'selection'], selection);
+}
+
+function bufferScrollReducer(state, action) {
+    const {buffer, firstVisibleRow} = action;
+    return state.setIn(['buffers', buffer, 'model', 'firstVisibleRow'], firstVisibleRow);
+}
+
+function loadBufferModel(dump) {
+    return DocumentModel({
+        document: documentFromString(dump.document),
+        selection: expandRange(dump.selection),
+        firstVisibleRow: dump.firstVisibleRow || 0
     });
-  });
-  replayApi.on(['buffer.insert', 'buffer.delete'], function (replayContext, event) {
-    // XXX use reducer imported from common/buffers
-    const buffer = event[2];
-    const range = expandRange(event[3]);
-    let delta;
-    if (event[1].endsWith('insert')) {
-      delta = {
-        action: 'insert',
-        start: range.start,
-        end: range.end,
-        lines: event[4]
-      };
-    } else if (event[1].endsWith('delete')) {
-      delta = {
-        action: 'remove',
-        start: range.start,
-        end: range.end
-      };
-    }
-    if (delta) {
-      replayContext.state = bufferEditReducer(replayContext.state, {buffer, delta});
-      replayContext.addSaga(function* () {
-        yield put({type: actionTypes.bufferModelEdit, buffer, delta});
-      });
-    }
-  });
-  replayApi.on('buffer.scroll', function (replayContext, event) {
-    // XXX use reducer imported from common/buffers
-    const buffer = event[2];
-    const firstVisibleRow = event[3];
-    replayContext.state = bufferScrollReducer(replayContext.state, {buffer, firstVisibleRow});
-    replayContext.addSaga(function* () {
-      yield put({type: actionTypes.bufferModelScroll, buffer, firstVisibleRow});
+}
+
+function getBufferModel(state, buffer) {
+    return state.getIn(['buffers', buffer, 'model']);
+}
+
+function getBufferEditor(state, buffer) {
+    return state.getIn(['buffers', buffer, 'editor']);
+}
+
+function* buffersSaga() {
+    const actionTypes = yield select(state => state.get('actionTypes'));
+    yield takeEvery(actionTypes.bufferInit, function* (action) {
+        const {buffer, editor} = action;
+        if (editor) {
+            const model = yield select(getBufferModel, buffer);
+            resetEditor(editor, model);
+        }
     });
-  });
-  replayApi.onReset(function* ({state, range}, quick) {
-    /* Reset all buffers. */
-    for (let buffer of ['source', 'input', 'output']) {
-      const model = state.getIn(['buffers', buffer, 'model']);
-      yield put({type: actionTypes.bufferReset, buffer, model, quiet: quick});
+    yield takeEvery(actionTypes.bufferReset, function* (action) {
+        const {buffer, model, quiet} = action;
+        if (!quiet) {
+            const editor = yield select(getBufferEditor, buffer);
+            if (editor) {
+                resetEditor(editor, model);
+            }
+        }
+    });
+    yield takeEvery(actionTypes.bufferModelSelect, function* (action) {
+        const {buffer, selection} = action;
+        const editor = yield select(getBufferEditor, buffer);
+        if (editor) {
+            editor.setSelection(selection);
+        }
+    });
+    yield takeEvery(actionTypes.bufferModelEdit, function* (action) {
+        const {buffer, delta, deltas} = action;
+        const editor = yield select(getBufferEditor, buffer);
+        if (editor) {
+            editor.applyDeltas(deltas || [delta]);
+        }
+    });
+    yield takeEvery(actionTypes.bufferModelScroll, function* (action) {
+        const {buffer, firstVisibleRow} = action;
+        const editor = yield select(getBufferEditor, buffer);
+        if (editor) {
+            editor.scrollToLine(firstVisibleRow);
+        }
+    });
+    yield takeEvery(actionTypes.bufferHighlight, function* (action) {
+        const {buffer, range} = action;
+        const editor = yield select(getBufferEditor, buffer);
+        if (editor) {
+            editor.highlight(range);
+        }
+    });
+}
+
+function resetEditor(editor, model) {
+    try {
+        const text = model.get('document').toString();
+        const selection = model.get('selection');
+        const firstVisibleRow = model.get('firstVisibleRow');
+        editor.reset(text, selection, firstVisibleRow);
+    } catch (error) {
+        console.log('failed to update editor view with model', error);
     }
-    if (range) {
-      yield put({type: actionTypes.bufferHighlight, buffer: 'source', range});
-    }
-  });
+}
+
+function addRecordHooks({recordApi}, actionTypes) {
+    recordApi.onStart(function* (init) {
+        const sourceModel = yield select(getBufferModel, 'source');
+        const inputModel = yield select(getBufferModel, 'input');
+        init.buffers = {
+            source: {
+                document: sourceModel.get('document').toString(),
+                selection: compressRange(sourceModel.get('selection')),
+                firstVisibleRow: sourceModel.get('firstVisibleRow')
+            },
+            input: {
+                document: inputModel.get('document').toString(),
+                selection: compressRange(inputModel.get('selection')),
+                firstVisibleRow: inputModel.get('firstVisibleRow')
+            }
+        };
+    });
+    recordApi.on(actionTypes.bufferSelect, function* (addEvent, action) {
+        const {buffer, selection} = action;
+        yield call(addEvent, 'buffer.select', buffer, compressRange(selection));
+    });
+    recordApi.on(actionTypes.bufferEdit, function* (addEvent, action) {
+        const {buffer, delta} = action;
+        const {start, end} = delta;
+        const range = {start, end};
+
+        const {platform} = yield select(state => state.get('options'));
+        if (buffer === 'output' && platform === 'python') {
+            // For python, the full output is retrieved from the interpreter at each step.
+
+            return;
+        }
+
+        if (delta.action === 'insert') {
+            yield call(addEvent, 'buffer.insert', buffer, compressRange(range), delta.lines);
+        } else {
+            yield call(addEvent, 'buffer.delete', buffer, compressRange(range));
+        }
+    });
+    recordApi.on(actionTypes.bufferScroll, function* (addEvent, action) {
+        const {buffer, firstVisibleRow} = action;
+        yield call(addEvent, 'buffer.scroll', buffer, firstVisibleRow);
+    });
+}
+
+function addReplayHooks({replayApi}, actionTypes) {
+    replayApi.on('start', function (replayContext, event) {
+        const {buffers} = event[2];
+        const sourceModel = buffers && buffers.source ? loadBufferModel(buffers.source) : DocumentModel();
+        const inputModel = buffers && buffers.input ? loadBufferModel(buffers.input) : DocumentModel();
+        const outputModel = DocumentModel();
+        replayContext.state = replayContext.state.set('buffers',
+            Immutable.Map({
+                source: Immutable.Map({model: sourceModel}),
+                input: Immutable.Map({model: inputModel}),
+                output: Immutable.Map({model: outputModel})
+            }));
+    });
+    replayApi.on('buffer.select', function (replayContext, event) {
+        // XXX use reducer imported from common/buffers
+        const buffer = event[2];
+        const selection = expandRange(event[3]);
+        replayContext.state = bufferSelectReducer(replayContext.state, {buffer, selection});
+        replayContext.addSaga(function* () {
+            yield put({type: actionTypes.bufferModelSelect, buffer, selection});
+        });
+    });
+    replayApi.on(['buffer.insert', 'buffer.delete'], function (replayContext, event) {
+        // XXX use reducer imported from common/buffers
+        const buffer = event[2];
+        const range = expandRange(event[3]);
+        let delta;
+        if (event[1].endsWith('insert')) {
+            delta = {
+                action: 'insert',
+                start: range.start,
+                end: range.end,
+                lines: event[4]
+            };
+        } else if (event[1].endsWith('delete')) {
+            delta = {
+                action: 'remove',
+                start: range.start,
+                end: range.end
+            };
+        }
+        if (delta) {
+            replayContext.state = bufferEditReducer(replayContext.state, {buffer, delta});
+            replayContext.addSaga(function* () {
+                yield put({type: actionTypes.bufferModelEdit, buffer, delta});
+            });
+        }
+    });
+    replayApi.on('buffer.scroll', function (replayContext, event) {
+        // XXX use reducer imported from common/buffers
+        const buffer = event[2];
+        const firstVisibleRow = event[3];
+        replayContext.state = bufferScrollReducer(replayContext.state, {buffer, firstVisibleRow});
+        replayContext.addSaga(function* () {
+            yield put({type: actionTypes.bufferModelScroll, buffer, firstVisibleRow});
+        });
+    });
+    replayApi.onReset(function* ({state, range}, quick) {
+        /* Reset all buffers. */
+        for (let buffer of ['source', 'input', 'output']) {
+            const model = state.getIn(['buffers', buffer, 'model']);
+            yield put({type: actionTypes.bufferReset, buffer, model, quiet: quick});
+        }
+        if (range) {
+            yield put({type: actionTypes.bufferHighlight, buffer: 'source', range});
+        }
+    });
 }
