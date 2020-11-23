@@ -212,7 +212,7 @@ function StepRow({title, status}) {
                 <div style={{display: 'inline-block', width: '40px', textAlign: 'center'}}>
                     {status === 'done' && <Icon icon='tick' intent={Intent.SUCCESS}/>}
                     {status === 'error' && <Icon icon='cross' intent={Intent.DANGER}/>}
-                    {status === 'pending' && <Spinner size={20}/>}
+                    {status === 'pending' && <Spinner size={Spinner.SIZE_SMALL}/>}
                 </div>
                 <div style={status === 'pending' ? {
                     display: 'inline-block',

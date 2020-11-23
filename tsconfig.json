@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "outDir": "./build/",
+    "sourceMap": true,
+    //"noImplicitAny": true,
+    "module": "commonjs",
+    "target": "ES2015",
+    //"strict": true,
+    "esModuleInterop": true,
+    //"skipLibCheck": true,
+    //"forceConsistentCasingInFileNames": true
+    "jsx": "react",
+    "allowJs": true
+  },
+  "$schema": "https://json.schemastore.org/tsconfig"
+}

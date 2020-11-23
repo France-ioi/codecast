@@ -101,7 +101,7 @@ class EditorOverview extends React.PureComponent {
                 <div className='vbox'>
                     {save.state === 'pending' &&
                     <div className='fill'>
-                        <Spinner small/>
+                        <Spinner size={Spinner.SIZE_SMALL}/>
                         {"Saving, please wait…"}
                     </div>}
                     {save.state === 'failure' &&

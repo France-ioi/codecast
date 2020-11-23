@@ -148,7 +148,7 @@ class SaveScreen extends React.PureComponent {
           icon='floppy-disk' text="Save" />
         <div>
           {busy
-            ? <Spinner small/>
+            ? <Spinner size={Spinner.SIZE_SMALL}/>
             : (step === 'done'
                 ? <Icon icon='tick' intent={Intent.SUCCESS} />
                 : false)}

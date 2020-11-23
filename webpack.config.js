@@ -18,17 +18,17 @@ const config = module.exports = {
             lamejs: 'lamejs/src/js/',
             stream: 'stream-browserify'
         },
-        extensions: ['.js']
+        extensions: ['.tsx', '.ts', '.js']
     },
     entry: {
-        index: './frontend/index.js'
+        index: './frontend/index.tsx'
     },
     output: {
         path: path.join(__dirname, 'build'),
         publicPath: publicPath,
         filename: '[name].js'
     },
-    devtool: isDev ? 'source-map' : 'eval',
+    devtool: isDev ? 'inline-source-map' : 'eval',
     module: {
         rules: [
             {
@@ -36,6 +36,11 @@ const config = module.exports = {
                 use: {
                     loader: 'worker-loader'
                 }
+            },
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
             },
             {
                 test: /\.js$/,
