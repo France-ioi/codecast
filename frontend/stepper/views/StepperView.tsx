@@ -77,7 +77,6 @@ export class StepperView extends React.PureComponent<StepperViewProps> {
                                             ? <PythonStackView
                                                 height={sourceRowHeight}
                                                 analysis={currentStepperState.analysis}
-                                                getMessage={getMessage}
                                             />
                                             : <StackView
                                                 height={sourceRowHeight}

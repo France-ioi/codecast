@@ -8,7 +8,7 @@ import scrollIntoViewIfNeeded from 'scroll-into-view-if-needed';
 import {Button, Callout, Intent, Menu, MenuItem, NonIdealState, Position, Spinner} from '@blueprintjs/core';
 import {IconNames} from '@blueprintjs/icons';
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
-import update from 'immutability-helper';
+import update, {Spec} from 'immutability-helper';
 import Files from 'react-files';
 import {NodeCue, stringifySync} from 'subtitle';
 import FileSaver from 'file-saver';
@@ -116,7 +116,7 @@ function subtitlesAddOptionReducer(state, {payload: {key, select}}) {
 
 function subtitlesRemoveOptionReducer(state, {payload: {key}}) {
     return state.update('subtitles', function (subtitles) {
-        const changes = {availableOptions: {[key]: {removed: {$set: true}}}};
+        const changes: Spec<any> = {availableOptions: {[key]: {removed: {$set: true}}}};
         if (subtitles.selectedKey === key) {
             changes.selectedKey = {$set: null};
         }
@@ -127,7 +127,7 @@ function subtitlesRemoveOptionReducer(state, {payload: {key}}) {
 
 
 function subtitlesTextChangedReducer(state, {payload: {text, unsaved}}) {
-    const changes = {text: {$set: text}};
+    const changes: Spec<any> = {text: {$set: text}};
     if (typeof unsaved === 'boolean') {
         changes.unsaved = {$set: unsaved}
     }

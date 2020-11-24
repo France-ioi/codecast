@@ -13,7 +13,7 @@ Shape of the 'compile' state:
 
 */
 
-import Immutable from 'immutable';
+import {Map} from 'immutable';
 import { takeLatest, put, call, select } from 'redux-saga/effects';
 
 import { asyncRequestJson } from '../utils/api';
@@ -21,6 +21,7 @@ import { asyncRequestJson } from '../utils/api';
 import { toHtml } from "../utils/sanitize";
 import { TextEncoder } from "text-encoding-utf-8";
 import {stepperClear} from "./index";
+import {ActionTypes} from "./actionTypes";
 
 export default function (bundle, deps) {
 
@@ -31,36 +32,36 @@ export default function (bundle, deps) {
   });
 
   // Requested translation of given {source}.
-  bundle.defineAction('compile', 'Compile');
+  bundle.defineAction(ActionTypes.Compile);
 
   // Clear the 'compile' state.
-  bundle.defineAction('compileClear', 'Compile.Clear');
-  bundle.addReducer('compileClear', function (state, action) {
+  bundle.defineAction(ActionTypes.CompileClear);
+  bundle.addReducer(ActionTypes.CompileClear, function (state, action) {
     return state.set('compile', compileClear());
   });
 
   // Reset the 'compile' state.
-  bundle.defineAction('compileReset', 'Compile.Reset');
-  bundle.addReducer('compileReset', compileReset);
+  bundle.defineAction(ActionTypes.CompileReset);
+  bundle.addReducer(ActionTypes.CompileReset, compileReset);
   function compileReset (state, action) {
     return state.set('compile', action.state);
   }
 
   // Started translation of {source}.
-  bundle.defineAction('compileStarted', 'Compile.Started');
-  bundle.addReducer('compileStarted', function (state, action) {
+  bundle.defineAction(ActionTypes.CompileStarted);
+  bundle.addReducer(ActionTypes.CompileStarted, function (state, action) {
     return state.update('compile', st => compileStarted(st, action));
   });
 
   // Succeeded translating {source} to {syntaxTree}.
-  bundle.defineAction('compileSucceeded', 'Compile.Succeeded');
-  bundle.addReducer('compileSucceeded', function (state, action) {
+  bundle.defineAction(ActionTypes.CompileSucceeded);
+  bundle.addReducer(ActionTypes.CompileSucceeded, function (state, action) {
     return state.update('compile', st => compileSucceeded(st, action));
   });
 
   // Failed to compile {source} with {error}.
-  bundle.defineAction('compileFailed', 'Compile.Failed');
-  bundle.addReducer('compileFailed', function (state, action) {
+  bundle.defineAction(ActionTypes.CompileFailed);
+  bundle.addReducer(ActionTypes.CompileFailed, function (state, action) {
     const newState = state.update('compile', st => compileFailed(st, action));
 
     newState.set('stepper', stepperClear());
@@ -70,8 +71,8 @@ export default function (bundle, deps) {
 
   // Clear the diagnostics (compilation errors and warnings) returned
   // by the last compile operation.
-  bundle.defineAction('compileClearDiagnostics', 'Compile.ClearDiagnostics');
-  bundle.addReducer('compileClearDiagnostics', function (state, action) {
+  bundle.defineAction(ActionTypes.CompileClearDiagnostics);
+  bundle.addReducer(ActionTypes.CompileClearDiagnostics, function (state, action) {
     return state.update('compile', st => compileClearDiagnostics(st, action));
   });
 
@@ -242,8 +243,8 @@ const addNodeRanges = function (source, syntaxTree) {
   return traverse(syntaxTree);
 };
 
-function compileClear (state, action) {
-  return Immutable.Map({status: 'clear'});
+function compileClear () {
+  return Map({status: 'clear'});
 }
 
 function compileStarted (state, action) {

@@ -41,12 +41,12 @@ export function link(rootBuilder): Linker {
         throw new Error(`use of undefined name ${property}`);
     }
 
-    function declareActionType(actionType, name) {
-        if (nameForActionType.has(actionType)) {
-            throw new Error(`action type conflict: ${actionType}`);
+    function declareActionType(name) {
+        if (nameForActionType.has(name)) {
+            throw new Error(`action type conflict: ${name}`);
         }
-        nameForActionType.set(actionType, name);
-        typeForActionName[name] = actionType;
+        nameForActionType.set(name, name);
+        typeForActionName[name] = name;
     }
 
     function declareUse(target, names) {
@@ -238,10 +238,10 @@ class Bundle {
         this.use(name);
     }
 
-    defineAction(name, actionType) {
+    defineAction(name) {
         this._assertNotSealed();
-        this._.linker.declareActionType(actionType, name);
-        this._.linker.publish('action', name, actionType);
+        this._.linker.declareActionType(name);
+        this._.linker.publish('action', name, name);
         this.use(name);
     }
 

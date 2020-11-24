@@ -27,7 +27,7 @@ The stepper's state has the following shape:
 import {delay} from 'redux-saga/effects';
 
 import {call, apply, cancel, fork, put, race, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
-import Immutable from 'immutable';
+import {List, Map} from 'immutable';
 import * as C from 'persistent-c';
 
 import {default as ApiBundle, buildState, makeContext, rootStepperSaga, performStep, StepperError} from './api';
@@ -46,6 +46,7 @@ import PythonBundle, {getNewOutput, getNewTerminal} from './python';
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy} from "./python/analysis/analysis";
 import {parseDirectives} from "./python/directives";
+import {ActionTypes} from "./actionTypes";
 
 export default function (bundle) {
   bundle.use('getBufferModel');
@@ -53,81 +54,81 @@ export default function (bundle) {
   bundle.addReducer('init', initReducer);
 
   /* Sent when the stepper task is started */
-  bundle.defineAction('stepperTaskStarted', 'Stepper.Task.Started');
-  bundle.addReducer('stepperTaskStarted', stepperTaskStartedReducer);
+  bundle.defineAction(ActionTypes.StepperTaskStarted);
+  bundle.addReducer(ActionTypes.StepperTaskStarted, stepperTaskStartedReducer);
 
   /* Sent when the stepper task is cancelled */
-  bundle.defineAction('stepperTaskCancelled', 'Stepper.Task.Cancelled');
-  bundle.addReducer('stepperTaskCancelled', stepperTaskCancelledReducer);
+  bundle.defineAction(ActionTypes.StepperTaskCancelled);
+  bundle.addReducer(ActionTypes.StepperTaskCancelled, stepperTaskCancelledReducer);
 
   // Sent when the stepper's state is initialized.
-  bundle.defineAction('stepperRestart', 'Stepper.Restart');
-  bundle.addReducer('stepperRestart', stepperRestartReducer);
+  bundle.defineAction(ActionTypes.StepperRestart);
+  bundle.addReducer(ActionTypes.StepperRestart, stepperRestartReducer);
 
   // Restore a saved or computed state.
-  bundle.defineAction('stepperReset', 'Stepper.Reset');
-  bundle.addReducer('stepperReset', stepperResetReducer);
+  bundle.defineAction(ActionTypes.StepperReset);
+  bundle.addReducer(ActionTypes.StepperReset, stepperResetReducer);
 
   // Sent when the user requested stepping in a given mode.
-  bundle.defineAction('stepperStep', 'Stepper.Step');
-  bundle.addReducer('stepperStep', stepperStepReducer);
+  bundle.defineAction(ActionTypes.StepperStep);
+  bundle.addReducer(ActionTypes.StepperStep, stepperStepReducer);
 
   // Sent when the stepper has started evaluating a step.
-  bundle.defineAction('stepperStarted', 'Stepper.Start');
-  bundle.addReducer('stepperStarted', stepperStartedReducer);
+  bundle.defineAction(ActionTypes.StepperStarted);
+  bundle.addReducer(ActionTypes.StepperStarted, stepperStartedReducer);
 
-  bundle.defineAction('stepperInteract', 'Stepper.Interact');
+  bundle.defineAction(ActionTypes.StepperInteract);
 
   // Sent when the stepper has been evaluating for a while without completing a step.
-  bundle.defineAction('stepperProgress', 'Stepper.Progress');
-  bundle.addReducer('stepperProgress', stepperProgressReducer);
+  bundle.defineAction(ActionTypes.StepperProgress);
+  bundle.addReducer(ActionTypes.StepperProgress, stepperProgressReducer);
 
   // Sent when the stepper has completed a step and is idle again.
-  bundle.defineAction('stepperIdle', 'Stepper.Idle');
-  bundle.addReducer('stepperIdle', stepperIdleReducer);
+  bundle.defineAction(ActionTypes.StepperIdle);
+  bundle.addReducer(ActionTypes.StepperIdle, stepperIdleReducer);
 
   // Sent when the user exits the stepper.
-  bundle.defineAction('stepperExit', 'Stepper.Exit');
-  bundle.addReducer('stepperExit', stepperExitReducer);
+  bundle.defineAction(ActionTypes.StepperExit);
+  bundle.addReducer(ActionTypes.StepperExit, stepperExitReducer);
 
   // Sent when the user interrupts the stepper.
-  bundle.defineAction('stepperInterrupt', 'Stepper.Interrupt');
-  bundle.addReducer('stepperInterrupt', stepperInterruptReducer);
+  bundle.defineAction(ActionTypes.StepperInterrupt);
+  bundle.addReducer(ActionTypes.StepperInterrupt, stepperInterruptReducer);
 
-  bundle.defineAction('stepperInterrupted', 'Stepper.Interrupted');
-  bundle.addReducer('stepperInterrupted', stepperInterruptedReducer);
+  bundle.defineAction(ActionTypes.StepperInterrupted);
+  bundle.addReducer(ActionTypes.StepperInterrupted, stepperInterruptedReducer);
 
   bundle.defineSelector('isStepperInterrupting', function (state) {
     return state.getIn(['stepper', 'interrupting'], false);
   });
 
-  bundle.defineAction('stepperUndo', 'Stepper.Undo');
-  bundle.addReducer('stepperUndo', stepperUndoReducer);
+  bundle.defineAction(ActionTypes.StepperUndo);
+  bundle.addReducer(ActionTypes.StepperUndo, stepperUndoReducer);
 
-  bundle.defineAction('stepperRedo', 'Stepper.Redo');
-  bundle.addReducer('stepperRedo', stepperRedoReducer);
+  bundle.defineAction(ActionTypes.StepperRedo);
+  bundle.addReducer(ActionTypes.StepperRedo, stepperRedoReducer);
 
-  bundle.defineAction('stepperConfigure', 'Stepper.Configure');
-  bundle.addReducer('stepperConfigure', stepperConfigureReducer);
+  bundle.defineAction(ActionTypes.StepperConfigure);
+  bundle.addReducer(ActionTypes.StepperConfigure, stepperConfigureReducer);
 
   /* BEGIN view stuff to move out of here */
 
-  bundle.defineAction('stepperStackUp', 'Stepper.Stack.Up');
-  bundle.addReducer('stepperStackUp', stepperStackUpReducer);
+  bundle.defineAction(ActionTypes.StepperStackUp);
+  bundle.addReducer(ActionTypes.StepperStackUp, stepperStackUpReducer);
 
-  bundle.defineAction('stepperStackDown', 'Stepper.Stack.Down');
-  bundle.addReducer('stepperStackDown', stepperStackDownReducer);
+  bundle.defineAction(ActionTypes.StepperStackDown);
+  bundle.addReducer(ActionTypes.StepperStackDown, stepperStackDownReducer);
 
-  bundle.defineAction('stepperViewControlsChanged', 'Stepper.View.ControlsChanged');
-  bundle.addReducer('stepperViewControlsChanged', stepperViewControlsChangedReducer);
+  bundle.defineAction(ActionTypes.StepperViewControlsChanged);
+  bundle.addReducer(ActionTypes.StepperViewControlsChanged, stepperViewControlsChangedReducer);
 
   /* END view stuff to move out of here */
 
   bundle.defineSelector('getStepper', getStepper);
   bundle.defineSelector('getCurrentStepperState', getCurrentStepperState);
 
-  bundle.defineAction('stepperEnabled', 'Stepper.Enabled');
-  bundle.defineAction('stepperDisabled', 'Stepper.Disabled');
+  bundle.defineAction(ActionTypes.StepperEnabled);
+  bundle.defineAction(ActionTypes.StepperDisabled);
 
   bundle.addSaga(stepperSaga);
 
@@ -166,7 +167,7 @@ function getCurrentStepperState (state) {
 function enrichStepperState (stepperState, context) {
   stepperState = {...stepperState};
   if (!('controls' in stepperState)) {
-    stepperState.controls = Immutable.Map();
+    stepperState.controls = Map();
   }
   const {programState, controls} = stepperState;
   if (!programState) {
@@ -195,7 +196,7 @@ function enrichStepperState (stepperState, context) {
 
     if (!stepperState.analysis) {
       stepperState.analysis = {
-        functionCallStack: new Immutable.List(),
+        functionCallStack: List(),
         code: window.currentPythonRunner._code,
         lines: window.currentPythonRunner._code.split("\n"),
         stepNum: 0,
@@ -203,7 +204,7 @@ function enrichStepperState (stepperState, context) {
       }
 
       stepperState.lastAnalysis = {
-        functionCallStack: new Immutable.List(),
+        functionCallStack: List(),
         code: window.currentPythonRunner._code,
         lines: window.currentPythonRunner._code.split("\n"),
         stepNum: 0,
@@ -225,10 +226,10 @@ function enrichStepperState (stepperState, context) {
 }
 
 export function stepperClear () {
-  return Immutable.Map({
+  return Map({
     status: 'clear',
-    undo: Immutable.List(),
-    redo: Immutable.List()
+    undo: List(),
+    redo: List()
   });
 }
 
@@ -317,12 +318,12 @@ function stepperRestartReducer (state, {payload: {stepperState}}) {
     }
   }
 
-  return state.set('stepper', Immutable.Map({
+  return state.set('stepper', Map({
     status: 'idle',
     initialStepperState: stepperState,
     currentStepperState: stepperState,
     undo: state.getIn(['stepper', 'undo']), /* preserve undo stack */
-    redo: Immutable.List()
+    redo: List()
   }));
 }
 
@@ -348,7 +349,7 @@ function stepperStartedReducer (state, action) {
   return state.update('stepper', stepper => stepper
     .set('status', 'running')
     .set('mode', action.mode)
-    .set('redo', Immutable.List())
+    .set('redo', List())
     .update('undo', undo => undo.unshift(stepper.get('currentStepperState'))));
 }
 
@@ -389,7 +390,7 @@ function stepperIdleReducer (state, {payload: {stepperContext}}) {
     .delete('mode'));
 }
 
-function stepperExitReducer (state, action) {
+function stepperExitReducer (state) {
   return state.update('stepper', st => stepperClear());
 }
 
@@ -402,11 +403,11 @@ function stepperInterruptReducer (state, action) {
   return state.setIn(['stepper', 'interrupting'], true);
 }
 
-function stepperInterruptedReducer (state, action) {
+function stepperInterruptedReducer(state, action) {
   return state.setIn(['stepper', 'interrupting'], false);
 }
 
-function stepperUndoReducer (state, action) {
+function stepperUndoReducer(state) {
   return state.update('stepper', function (stepper) {
     const undo = stepper.get('undo');
     if (undo.isEmpty()) {
@@ -421,7 +422,7 @@ function stepperUndoReducer (state, action) {
   });
 }
 
-function stepperRedoReducer (state, action) {
+function stepperRedoReducer(state) {
   return state.update('stepper', function (stepper) {
     const redo = stepper.get('redo');
     if (redo.isEmpty()) {
@@ -436,12 +437,12 @@ function stepperRedoReducer (state, action) {
   });
 }
 
-function stepperConfigureReducer (state, action) {
+function stepperConfigureReducer(state, action) {
   const {options} = action;
-  return state.set('stepper.options', Immutable.Map(options));
+  return state.set('stepper.options', Map(options));
 }
 
-function stepperStackUpReducer (state, action) {
+function stepperStackUpReducer(state) {
   return state.updateIn(['stepper', 'currentStepperState'], function (stepperState) {
     let {controls, analysis} = stepperState;
     let focusDepth = controls.getIn(['stack', 'focusDepth']);
@@ -455,7 +456,7 @@ function stepperStackUpReducer (state, action) {
   });
 }
 
-function stepperStackDownReducer (state, action) {
+function stepperStackDownReducer(state) {
   return state.updateIn(['stepper', 'currentStepperState'], function (stepperState) {
     let {controls, analysis} = stepperState;
     const stackDepth = analysis.functionCallStack.size;
@@ -484,7 +485,7 @@ function stepperViewControlsChangedReducer (state, action) {
         return viewControls;
       });
     } else {
-      controls = controls.set(key, Immutable.Map(update));
+      controls = controls.set(key, Map(update));
     }
     return {...stepperState, controls};
   });
@@ -590,7 +591,7 @@ function* stepperInterruptSaga ({actionTypes, dispatch}, {payload}) {
 
   const stepperContext = makeContext(curStepperState, () => {
     return new Promise((resolve) => {
-      resolve();
+      resolve(true);
     });
   });
 
@@ -612,7 +613,7 @@ function* stepperInterruptSaga ({actionTypes, dispatch}, {payload}) {
 
       window.currentPythonRunner._synchronizingAnalysis = true;
       while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
-        yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep);
+        yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, []);
 
         if (window.currentPythonRunner._isFinished) {
           break;
@@ -656,7 +657,7 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
 
         window.currentPythonRunner._synchronizingAnalysis = true;
         while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
-          yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep);
+          yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, []);
 
           if (window.currentPythonRunner._isFinished) {
             break;
@@ -686,19 +687,7 @@ function* stepperStepSaga ({actionTypes, dispatch}, {payload: {mode}}) {
       }
     }
 
-    if (stepperContext.state.hasOwnProperty('platform') && stepperContext.state.platform === 'python') {
-      // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
-      /*
-      const storeStepper = yield select(getStepper);
-      const storeCurrentStepperState = storeStepper.get('currentStepperState');
-
-      const storeTerminal = storeCurrentStepperState.terminal;
-      const storeOutput = storeCurrentStepperState.output;
-
-      stepperContext.state.terminal = storeTerminal;
-      stepperContext.state.output = storeOutput;
-      */
-
+    if (stepperContext.state.platform === 'python') {
       // Save scope.
       stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
     }
@@ -783,6 +772,7 @@ function postLink (scope, actionTypes) {
   });
   replayApi.on('stepper.restart', async function (replayContext, event) {
     const stepperState = await buildState(replayContext.state);
+
     replayContext.state = stepperRestartReducer(replayContext.state, {payload: {stepperState}});
   });
 
@@ -879,7 +869,7 @@ function postLink (scope, actionTypes) {
       replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
       /* Set the interact callback to resume the stepper until completion. */
       stepperResume(replayContext.stepperContext, function interact (_) {
-        return new Promise((cont) => { cont(); });
+        return new Promise((cont) => { cont(true); });
       }, function () {
         replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
         stepperEventReplayed(replayContext);

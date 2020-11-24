@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import scrollIntoViewIfNeeded from "scroll-into-view-if-needed";
+import scrollIntoView from "scroll-into-view-if-needed";
 import {SubtitlePaneItemEditor} from "./SubtitlePaneItemEditor";
 import {SubtitlePaneItemViewer} from "./SubtitlePaneItemViewer";
 
@@ -73,10 +73,9 @@ export class SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPane
                 const domNode = ReactDOM.findDOMNode(this._selectedComponent);
 
                 if (domNode instanceof Element) {
-                    scrollIntoViewIfNeeded(domNode, {
-                        centerIfNeeded: true,
-                        easing: 'ease',
-                        duration: 300
+                    scrollIntoView(domNode, {
+                        block: 'center',
+                        behavior: 'smooth'
                     });
                 }
             }

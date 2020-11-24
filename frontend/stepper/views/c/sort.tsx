@@ -43,7 +43,7 @@ function getValueClass(content) {
 }
 
 function Bar({view, bar}) {
-    const {position, index, address, content, gap} = bar;
+    const {position, index, content, gap} = bar;
     const w1 = barWidth + barSpacing;        // w1: total bar width
     const y1 = barHeight;                    // y1: relative bottom corner of bar rect
     const y5 = y1 + textLineHeight - textBaseline + barMarginBottom; // y5: baseline of the index label
@@ -145,7 +145,7 @@ export class SortView extends React.PureComponent<SortViewProps> {
         const {controls, directive, functionCallStack, context, scale, getMessage} = this.props;
         const {programState} = context;
         const topStackFrame = functionCallStack[0];
-        const localMap = topStackFrame.get('localMap');
+
         // Controls
         //   - fullView: read and render all cells
         const fullView = controls.get('fullView');
@@ -209,9 +209,8 @@ export class SortView extends React.PureComponent<SortViewProps> {
         return this.props.controls.get('cellPan', 0);
     };
 
-    onPan = (startPosition, dx, dy) => {
+    onPan = (startPosition, dx) => {
         const cellPan = startPosition - (dx / (barWidth + barSpacing));
         this.props.onChange(this.props.directive, {cellPan});
     };
-
 }

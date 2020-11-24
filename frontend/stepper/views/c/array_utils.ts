@@ -1,5 +1,5 @@
 import * as C from 'persistent-c';
-import {FibonacciHeap, INode} from '@tyriar/fibonacci-heap';
+import {FibonacciHeap} from '@tyriar/fibonacci-heap';
 import range from 'node-range';
 
 import {evalExpr, readScalarBasic, stringifyExpr} from './utils';
@@ -229,7 +229,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
             if (node === undefined) {
                 break;
             }
-            let {index, points, rank} = node.key;
+            let {index} = node.key;
             // Find the position in result where the index can be inserted.
             let pos = findInsertionIndex(index, result);
             // Does the inserted index extend a sequence on the left or right?

@@ -7,7 +7,7 @@ import React from 'react';
 import classnames from 'classnames';
 import * as C from 'persistent-c';
 
-import {LocalizedError} from '../../../lang/index';
+import {LocalizedError} from '../../../lang';
 
 interface ViewElement {
     kind: any,

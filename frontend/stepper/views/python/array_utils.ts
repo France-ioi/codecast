@@ -1,7 +1,14 @@
 import {FibonacciHeap} from '@tyriar/fibonacci-heap';
 import range from 'node-range';
 
-import {getLoadedReferencesFromVariable, getVariable, stringifyExpr} from './utils';
+import {getLoadedReferencesFromVariable, getVariable} from './utils';
+
+interface HeapNode {
+    key: any,
+    points: number,
+    rank: number,
+    index: number
+}
 
 /**
  extractView(context, name, options) looks up `name` in `stackFrame` and
@@ -99,11 +106,11 @@ export const extractView = function (context, name, options) {
 
     const ref = getVariable(analysis, name);
     if (!ref) {
-        return {error: getMessage('PYTHON_ARRAY1D_REF_UNDEFINED').format({name: stringifyExpr(name)})};
+        return {error: getMessage('PYTHON_ARRAY1D_REF_UNDEFINED').format({name})};
     }
 
     if (!(ref.cur instanceof Sk.builtin.list)) {
-        return {error: getMessage('PYTHON_ARRAY1D_REF_NOT_LIST').format({name: stringifyExpr(name)})};
+        return {error: getMessage('PYTHON_ARRAY1D_REF_NOT_LIST').format({name})};
     }
 
     if (elemCount === undefined) {
@@ -194,7 +201,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
 
     this.getSelection = function () {
         // Insert the marked cells in a heap.
-        const heap = new FibonacciHeap(compareHeapNodes);
+        const heap = new FibonacciHeap<HeapNode, any>(compareHeapNodes);
         Object.keys(cells).forEach(index => heap.insert(cells[index]));
         // Build the result array containing the selected indexes.
         const result = [];
@@ -269,7 +276,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
  array.splice(index, 0, element)
  keeps array sorted according to comparer.
  */
-const findInsertionIndex = function (element, array, comparer) {
+const findInsertionIndex = function (element, array, comparer?) {
     if (array.length === 0) {
         return -1;
     }

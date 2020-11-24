@@ -75,7 +75,7 @@ function Cell({view, cell}) {
         return null;
     }
     const {cellWidth} = view;
-    const {position, index, address, content} = cell;
+    const {position, content} = cell;
     const y0 = baseline(0);
     const y0a = y0 - (textLineHeight - textBaseline) / 3;
     const y1 = baseline(1);
@@ -97,7 +97,7 @@ function Cell({view, cell}) {
 
 function Cursor({view, cursor}) {
     const {cellWidth} = view;
-    const {index, labels, col, row} = cursor;
+    const {labels, col, row} = cursor;
     const arrowTop = textLineHeight * 3;
     const arrowHeight = minArrowHeight + row * textLineHeight;
     const cursorsY = baseline(3) + arrowHeight;
@@ -173,9 +173,8 @@ export class Array1D extends React.PureComponent<Array1DProps> {
         return this.props.controls.get('cellPan', 0);
     };
 
-    onPan = (startPosition, dx, dy) => {
+    onPan = (startPosition, dx) => {
         const cellPan = startPosition - (dx / this._cellWidth);
         this.props.onChange(this.props.directive, {cellPan});
     };
-
 }

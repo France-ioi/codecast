@@ -1,5 +1,7 @@
 import React, {ReactElement} from "react";
 import {Button, ButtonGroup, Intent} from "@blueprintjs/core";
+import {IconName} from "@blueprintjs/icons";
+import {ActionTypes} from "../actionTypes";
 
 interface StepperControlsProps {
     showStepper: any,
@@ -18,14 +20,17 @@ interface StepperControlsProps {
     canRestart: boolean,
     canUndo: boolean,
     canRedo: boolean,
-    showExpr:  boolean
+    showExpr: boolean,
+    enabled: boolean
 }
 
 export class StepperControls extends React.PureComponent<StepperControlsProps> {
     render = () => {
         const {showStepper} = this.props;
-        if (!showStepper)
-            return false;
+        if (!showStepper) {
+            return null;
+        }
+
         const {getMessage, showControls, showEdit, showCompile, compileOrExecuteMessage} = this.props;
 
         return (
@@ -51,20 +56,20 @@ export class StepperControls extends React.PureComponent<StepperControlsProps> {
                     </ButtonGroup>}
                 </div>
                 <div className="controls-compile">
-                    {showEdit && this._button('edit', this.onEdit, false, false, getMessage('EDIT'))}
-                    {showCompile && this._button('compile', this.onCompile, false, false, compileOrExecuteMessage)}
+                    {showEdit && this._button('edit', this.onEdit, null, null, getMessage('EDIT'))}
+                    {showCompile && this._button('compile', this.onCompile, null, null, compileOrExecuteMessage)}
                 </div>
             </div>
         );
     };
 
-    _button = (key: string, onClick: Function, title: string, icon: string, text?: string): ReactElement => {
+    _button = (key: string, onClick: any, title: string, icon: IconName|JSX.Element, text?: string): ReactElement => {
         const {controls} = this.props;
 
         let disabled = false;
-        const style = {};
+        const style: React.CSSProperties = {};
 
-        let intent: string = Intent.NONE;
+        let intent: Intent = Intent.NONE;
         if (key === 'compile') {
             intent = Intent.PRIMARY;
         }
@@ -115,7 +120,7 @@ export class StepperControls extends React.PureComponent<StepperControlsProps> {
         if (controls) {
             const mod = controls[key];
             if (mod === '_') {
-                return false;
+                return null;
             }
             if (mod === '-') {
                 disabled = true;
@@ -125,7 +130,7 @@ export class StepperControls extends React.PureComponent<StepperControlsProps> {
             }
         }
 
-        if (title === false) {
+        if (!title) {
             title = undefined;
         }
 
@@ -142,15 +147,15 @@ export class StepperControls extends React.PureComponent<StepperControlsProps> {
         );
     };
 
-    onStepRun = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'run'}});
-    onStepExpr = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'expr'}});
-    onStepInto = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'into'}});
-    onStepOut = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'out'}});
-    onStepOver = () => this.props.dispatch({type: deps.stepperStep, payload: {mode: 'over'}});
-    onInterrupt = () => this.props.dispatch({type: deps.stepperInterrupt, payload: {}});
-    onRestart = () => this.props.dispatch({type: deps.stepperRestart, payload: {}});
-    onEdit = () => this.props.dispatch({type: deps.stepperExit, payload: {}});
-    onUndo = () => this.props.dispatch({type: deps.stepperUndo, payload: {}});
-    onRedo = () => this.props.dispatch({type: deps.stepperRedo, payload: {}});
-    onCompile = () => this.props.dispatch({type: deps.compile, payload: {}});
+    onStepRun = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: 'run'}});
+    onStepExpr = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: 'expr'}});
+    onStepInto = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: 'into'}});
+    onStepOut = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: 'out'}});
+    onStepOver = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: 'over'}});
+    onInterrupt = () => this.props.dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
+    onRestart = () => this.props.dispatch({type: ActionTypes.StepperRestart, payload: {}});
+    onEdit = () => this.props.dispatch({type: ActionTypes.StepperExit, payload: {}});
+    onUndo = () => this.props.dispatch({type: ActionTypes.StepperUndo, payload: {}});
+    onRedo = () => this.props.dispatch({type: ActionTypes.StepperRedo, payload: {}});
+    onCompile = () => this.props.dispatch({type: ActionTypes.Compile, payload: {}});
 }

@@ -53,15 +53,23 @@ export default function (bundle, deps) {
     }
 
     class StackView extends React.PureComponent<StackViewProps> {
-        onExit = () => {
+        static defaultProps = {
+            height: '100%',
+            firstVisible: 0,
+            maxVisible: 10,
+            firstExpanded: 0,
+            maxExpanded: 1
+        };
+
+        onExit() {
             this.props.dispatch({type: deps.stepperExit});
         };
 
-        onStackUp = () => {
+        onStackUp() {
             this.props.dispatch({type: deps.stepperStackUp});
         };
 
-        onStackDown = () => {
+        onStackDown() {
             this.props.dispatch({type: deps.stepperStackDown});
         };
 
@@ -138,14 +146,6 @@ export default function (bundle, deps) {
             );
         };
     }
-
-    StackView.defaultProps = {
-        height: '100%',
-        firstVisible: 0,
-        maxVisible: 10,
-        firstExpanded: 0,
-        maxExpanded: 1
-    };
 
     bundle.defineView('StackView', 'StackViewSelector', StackView);
 };

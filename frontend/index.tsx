@@ -28,13 +28,16 @@ interface Codecast {
     task?: any,
     start?: Function,
     restart: Function
-
 }
 
 declare global {
     interface Window {
         store: any,
-        Codecast: Codecast
+        Codecast: Codecast,
+        currentPythonRunner: any,
+        currentPythonContext: any,
+        languageStrings: any,
+        quickAlgoInterface: any
     }
 }
 

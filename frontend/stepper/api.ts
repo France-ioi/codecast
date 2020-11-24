@@ -12,6 +12,35 @@ import {all, call} from 'redux-saga/effects';
 import {getNewOutput, getNewTerminal} from "./python";
 import {clearLoadedReferences} from "./python/analysis/analysis";
 
+interface StepperState {
+    platform: string,
+    error?: string
+}
+
+interface StepperStatePython extends StepperState {
+    platform: 'python',
+    analysis: any,
+    suspensions: any,
+    terminal: any,
+    input: any,
+    inputPos: number
+}
+
+interface StepperStateC extends StepperState {
+    platform: 'unix' | 'arduino',
+    programState: any,
+    lastProgramState: any,
+    controls: any
+}
+
+interface StepperContext {
+    state: StepperStatePython | StepperStateC,
+    interrupted?: boolean,
+    interact: Function,
+    position: any,
+    lineCounter: number
+}
+
 export default function (bundle) {
 
     bundle.defineValue('stepperApi', {
@@ -34,7 +63,7 @@ function onInit(callback) {
 }
 
 /* Build a stepper state from the given init data. */
-export async function buildState(globalState) {
+export async function buildState(globalState): Promise<StepperStateC | StepperStatePython> {
     const {platform} = globalState.get('options');
 
     /*
@@ -42,31 +71,34 @@ export async function buildState(globalState) {
      * build stepper states without having to install the pre-computed state
      * into the store.
      */
-    const stepperState = {
+    const curStepperState: StepperState = {
         platform
     };
-    for (var callback of initCallbacks) {
-        callback(stepperState, globalState);
+    for (let callback of initCallbacks) {
+        callback(curStepperState, globalState);
     }
+
+    // TODO: Make something so that the initCallbacks doesn't obscure the creation of stepperState.
+    const stepperState = curStepperState as (StepperStateC | StepperStatePython);
+
     /* Run until in user code */
     const stepperContext = {
         state: stepperState,
         interact
     };
 
-    switch (platform) {
-        case 'python':
-            return stepperContext.state;
-
-        default:
-            while (!inUserCode(stepperContext.state)) {
-                /* Mutate the stepper context to advance execution by a single step. */
-                const effects = C.step(stepperContext.state.programState);
-                if (effects) {
-                    await executeEffects(stepperContext, effects[Symbol.iterator]());
-                }
+    if (stepperContext.state.platform === 'python') {
+        return stepperContext.state;
+    } else {
+        while (!inUserCode(stepperContext.state)) {
+            /* Mutate the stepper context to advance execution by a single step. */
+            const effects = C.step(stepperContext.state.programState);
+            if (effects) {
+                await executeEffects(stepperContext, effects[Symbol.iterator]());
             }
-            return stepperContext.state;
+        }
+
+        return stepperContext.state;
     }
 
     function interact({saga}) {
@@ -74,7 +106,8 @@ export async function buildState(globalState) {
             if (saga) {
                 return reject(new StepperError('error', 'cannot interact in buildState'));
             }
-            resolve();
+
+            resolve(true);
         });
     }
 }
@@ -115,33 +148,32 @@ function getNodeStartRow(state) {
     return range && range.start.row;
 }
 
-export function makeContext(state, interact) {
+export function makeContext(state, interact): StepperContext {
     console.log('**********  MAKE CONTEXT  **********', state);
 
-    switch (state.platform) {
-        case 'python':
-            return {
-                state: {
-                    ...state,
-                    lastAnalysis: clearLoadedReferences(state.analysis),
-                    controls: resetControls(state.controls)
-                },
-                interact,
-                position: getNodeStartRow(state),
-                lineCounter: 0
-            };
-        default:
-            return {
-                state: {
-                    ...state,
-                    programState: C.clearMemoryLog(state.programState),
-                    lastProgramState: state.programState,
-                    controls: resetControls(state.controls)
-                },
-                interact,
-                position: getNodeStartRow(state),
-                lineCounter: 0
-            };
+    if (state.platform === 'python') {
+        return {
+            state: {
+                ...state,
+                lastAnalysis: clearLoadedReferences(state.analysis),
+                controls: resetControls(state.controls)
+            },
+            interact,
+            position: getNodeStartRow(state),
+            lineCounter: 0
+        };
+    } else {
+        return {
+            state: {
+                ...state,
+                programState: C.clearMemoryLog(state.programState),
+                lastProgramState: state.programState,
+                controls: resetControls(state.controls)
+            },
+            interact,
+            position: getNodeStartRow(state),
+            lineCounter: 0
+        };
     }
 }
 
@@ -388,6 +420,8 @@ function inUserCode(state) {
 }
 
 export class StepperError extends Error {
+    condition = null;
+
     constructor(condition, message) {
         super(message);
         this.name = this.constructor.name;

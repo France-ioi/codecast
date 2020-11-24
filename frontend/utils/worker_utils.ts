@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter2';
+import {EventEmitter2} from 'eventemitter2';
 import {call, take} from 'redux-saga/effects';
 import {buffers, eventChannel} from 'redux-saga';
 
@@ -35,7 +35,7 @@ class WorkerError extends Error {
 }
 
 function wrapWorker(worker) {
-    const emitter = new EventEmitter();
+    const emitter = new EventEmitter2();
     let nextTransactionId = 1;
     worker.onmessage = function (message) {
         if (typeof message.data.id === 'string') {
@@ -51,7 +51,7 @@ function wrapWorker(worker) {
         worker.postMessage({command, payload});
     }
 
-    function listen(id, buffer) {
+    function listen(id, buffer?) {
         return eventChannel(function (listener) {
             emitter.on(id, listener);
             return function () {

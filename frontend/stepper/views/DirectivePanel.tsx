@@ -32,20 +32,25 @@ export function DirectivePanel({scale, directive, controls, context, functionCal
         return <p>{'Error: '}{JSON.stringify(directive[1])}</p>;
     }
 
-    let directiveViewDict = C_directiveViewDict;
+    let directiveDescription;
     if (platform === 'python') {
-        directiveViewDict = pythonDirectiveViewDict;
+        if (!pythonDirectiveViewDict[kind]) {
+            return <p>{'Error: undefined view kind '}{kind}</p>;
+        }
+
+        directiveDescription = pythonDirectiveViewDict[kind];
+    } else {
+        if (!C_directiveViewDict[kind]) {
+            return <p>{'Error: undefined view kind '}{kind}</p>;
+        }
+
+        directiveDescription = C_directiveViewDict[kind];
     }
 
-    if (!directiveViewDict[kind]) {
-        return <p>{'Error: undefined view kind '}{kind}</p>;
-    }
-
-    const {View, selector} = directiveViewDict[kind];
-    const props = selector({scale, directive, context, controls, functionCallStack});
+    const props = directiveDescription.selector({scale, directive, context, controls, functionCallStack});
 
     return (
-        <View
+        <directiveDescription.View
             DirectiveFrame={DirectiveFrame}
             getMessage={getMessage}
             onChange={onChange}
