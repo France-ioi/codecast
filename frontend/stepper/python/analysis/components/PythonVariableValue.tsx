@@ -4,6 +4,7 @@ import PythonVariable from "./PythonVariable";
 import {connect} from "react-redux";
 import {isLoaded} from "../helpers";
 import {isEmptyObject} from "../../../../utils/javascript";
+import {ActionTypes} from "../../actionTypes";
 
 interface PythonVariableValueProps {
     cur: any,
@@ -370,7 +371,7 @@ class PythonVariableValue extends React.PureComponent<PythonVariableValueProps> 
 const mapDispatchToProps = (dispatch) => {
     return {
         toggle: (scopeIndex, path, isOpened) => dispatch({
-            type: 'StackView.Path.Toggle',
+            type: ActionTypes.StackViewPathToggle,
             payload: {
                 scopeIndex,
                 path,

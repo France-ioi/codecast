@@ -3,7 +3,7 @@ import classnames from 'classnames';
 
 import {getList, getNumber, renderArrow, renderValue} from './utils';
 import {extractView} from './array_utils';
-import {SvgPan} from '../svg-pan';
+import {SvgPan} from '../SvgPan';
 import DirectiveFrame from "../DirectiveFrame";
 
 // @11px, line height 15, offset 12

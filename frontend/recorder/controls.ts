@@ -13,8 +13,7 @@ export default function (bundle) {
 };
 
 function RecorderControlsSelector (state, props) {
-  const {getRecorderState, getPlayerState, StepperControls, Menu} = state.get('scope');
-  const {recorderStart, recorderPause, recorderResume, recorderStop, playerStart, playerPause, playerSeek} = state.get('actionTypes');
+  const {getRecorderState, getPlayerState} = state.get('scope');
   const getMessage = state.get('getMessage');
   const recorder = getRecorderState(state);
   const recorderStatus = recorder.get('status');
@@ -43,10 +42,7 @@ function RecorderControlsSelector (state, props) {
     getMessage,
     recorderStatus, isPlayback, playPause,
     canRecord, canPlay, canPause, canStop, canStep,
-    position, duration,
-    StepperControls, Menu,
-    recorderStart, recorderPause, recorderResume, recorderStop,
-    playerStart, playerPause, playerSeek,
+    position, duration
   };
 }
 

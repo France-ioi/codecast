@@ -270,6 +270,7 @@ export function* scanf(fmt, ...args) {
 /// XXXX ///
 
 function unterminatedStringValue(string) {
+    // @ts-ignore
     const encoder = new TextEncoder('utf-8');
     const bytesArray = encoder.encode(string);
     const charType = C.builtinTypes['char'];

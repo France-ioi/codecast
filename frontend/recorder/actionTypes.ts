@@ -32,6 +32,12 @@ export enum ActionTypes {
     RecorderPaused = 'Recorder.Paused',
     RecorderTick = 'Recorder.Tick',
 
+    RecorderResume = 'Recorder.Resume',
+    RecorderResuming = 'Recorder.Resuming',
+    RecorderResumed = 'Recorder.Resumed',
+
     RecorderAddEvent = 'Recorder.Add.Event',
-    RecorderTruncate = 'Recorder.Truncate'
+    RecorderTruncate = 'Recorder.Truncate',
+
+    AudioContextSuspended = 'Audio.Context.Suspended'
 }

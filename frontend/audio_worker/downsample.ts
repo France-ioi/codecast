@@ -20,30 +20,43 @@ export default function downsample(samples, divider) {
     return samplesOut;
 }
 
-function FIR(coeffs) {
-    this.coeffs = coeffs;
-    this.nCoeffs = coeffs.length;
-    this.registers = new Float32Array(this.nCoeffs);
-    this.iTopReg = this.nCoeffs - 1;
+class FIR {
+    coeffs = null;
+    nCoeffs = 0;
+    registers = null;
+    iTopReg = -1;
+
+    constructor(coeffs) {
+        this.coeffs = coeffs;
+        this.nCoeffs = coeffs.length;
+        this.registers = new Float32Array(this.nCoeffs);
+        this.iTopReg = this.nCoeffs - 1;
+    }
+
+    sampleIn(sample) {
+        let i = this.iTopReg;
+        i += 1;
+
+        if (i >= this.nCoeffs) {
+            i = 0;
+        }
+
+        this.registers[i] = sample;
+        this.iTopReg = i;
+    };
+
+    sampleOut() {
+        let sample = 0.0, iCoeff = 0;
+        for (let iReg = this.iTopReg; iReg >= 0; iReg--) {
+            sample += this.coeffs[iCoeff++] * this.registers[iReg];
+        }
+        for (let iReg = this.nCoeffs - 1; iReg > this.iTopReg; iReg--) {
+            sample += this.coeffs[iCoeff++] * this.registers[iReg];
+        }
+
+        return sample;
+    };
 }
-
-FIR.prototype.sampleIn = function (sample) {
-    var i = this.iTopReg;
-    i += 1;
-    if (i >= this.nCoeffs)
-        i = 0;
-    this.registers[i] = sample;
-    this.iTopReg = i;
-};
-
-FIR.prototype.sampleOut = function () {
-    var sample = 0.0, iCoeff = 0;
-    for (var iReg = this.iTopReg; iReg >= 0; iReg--)
-        sample += this.coeffs[iCoeff++] * this.registers[iReg];
-    for (iReg = this.nCoeffs - 1; iReg > this.iTopReg; iReg--)
-        sample += this.coeffs[iCoeff++] * this.registers[iReg];
-    return sample;
-};
 
 /*
   Returns low-pass filter cut-off frequency (sample frequency)/(divider).

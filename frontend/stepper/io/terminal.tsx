@@ -1,6 +1,6 @@
 /* Line-buffered terminal */
 
-import Immutable from 'immutable';
+import {Map, Record, List} from 'immutable';
 import React from 'react';
 import {call, select, takeEvery} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
@@ -44,6 +44,7 @@ export default function (bundle, deps) {
 
     function terminalInputKey(state, action) {
         const {key} = action;
+
         return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
             return {...stepper, inputBuffer: stepper.inputBuffer + key};
         });
@@ -103,14 +104,14 @@ export default function (bundle, deps) {
 
     bundle.defer(function ({recordApi, replayApi}) {
 
-        recordApi.on(deps.terminalInputNeeded, function* (addEvent, action) {
+        recordApi.on(ActionTypes.TerminalInputNeeded, function* (addEvent, action) {
             yield call(addEvent, 'terminal.wait');
         });
         replayApi.on('terminal.wait', function (replayContext, event) {
             replayContext.state = terminalInputNeeded(replayContext.state);
         });
 
-        recordApi.on(deps.terminalInputKey, function* (addEvent, action) {
+        recordApi.on(ActionTypes.TerminalInputKey, function* (addEvent, action) {
             yield call(addEvent, 'terminal.key', action.key);
         });
         replayApi.on('terminal.key', function (replayContext, event) {
@@ -118,14 +119,14 @@ export default function (bundle, deps) {
             replayContext.state = terminalInputKey(replayContext.state, {key});
         });
 
-        recordApi.on(deps.terminalInputBackspace, function* (addEvent, action) {
+        recordApi.on(ActionTypes.TerminalInputBackspace, function* (addEvent, action) {
             yield call(addEvent, 'terminal.backspace');
         });
         replayApi.on('terminal.backspace', function (replayContext, event) {
             replayContext.state = terminalInputBackspace(replayContext.state);
         });
 
-        recordApi.on(deps.terminalInputEnter, function* (addEvent, action) {
+        recordApi.on(ActionTypes.TerminalInputEnter, function* (addEvent, action) {
             yield call(addEvent, 'terminal.enter');
         });
         replayApi.on('terminal.enter', function (replayContext, event) {
@@ -138,11 +139,15 @@ export default function (bundle, deps) {
 
     function TerminalViewSelector(state, props) {
         const result = {};
+        // @ts-ignore
         result.readOnly = props.preventInput;
         const stepper = deps.getCurrentStepperState(state);
         if (stepper) {
+            // @ts-ignore
             result.terminal = stepper.terminal;
+            // @ts-ignore
             result.input = stepper.inputBuffer;
+            // @ts-ignore
             result.isWaitingOnInput = stepper.isWaitingOnInput;
         }
 
@@ -153,9 +158,9 @@ export default function (bundle, deps) {
 
 /* low-level terminal state functions */
 
-export const Cursor = Immutable.Record({line: 0, column: 0});
-export const Attrs = Immutable.Record({});
-export const Cell = Immutable.Record({char: ' ', attrs: Attrs()});
+export const Cursor = Record({line: 0, column: 0});
+export const Attrs = Record({});
+export const Cell = Record({char: ' ', attrs: Attrs()});
 
 export const TermBuffer = function (options) {
     options = options || {};
@@ -164,9 +169,9 @@ export const TermBuffer = function (options) {
     const cursor = Cursor({line: 0, column: 0});
     const attrs = Attrs();
     const blankCell = Cell({char: ' ', attrs});
-    const blankLine = Immutable.List(Array(width).fill(blankCell));
-    const lines = Immutable.List(Array(height).fill(blankLine));
-    return Immutable.Map({width, height, cursor, attrs, lines}); // TODO: turn this into a Record
+    const blankLine = List(Array(width).fill(blankCell));
+    const lines = List(Array(height).fill(blankLine));
+    return Map({width, height, cursor, attrs, lines}); // TODO: turn this into a Record
 };
 
 export const writeString = function (buffer, str) {
@@ -215,7 +220,7 @@ const writeNewline = function (buffer) {
         const width = buffer.get('width');
         const attrs = buffer.get('attrs');
         const blankCell = Cell({char: ' ', attrs});
-        const blankLine = Immutable.List(Array(width).fill(blankCell));
+        const blankLine = List(Array(width).fill(blankCell));
         buffer = buffer.update('lines', lines => lines.shift().push(blankLine));
         line = height - 1;
     }

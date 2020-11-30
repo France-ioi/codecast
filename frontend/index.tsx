@@ -55,11 +55,11 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
     'Player.Tick': true
 };
 
-const {store, scope, actionTypes, views, finalize, start} = link(function (bundle, deps) {
+const {store, scope, views, finalize, start} = link(function (bundle, deps) {
 
     bundle.defineAction('init', 'System.Init');
     bundle.addReducer('init', (_state, _action) => {
-        return Map({scope, actionTypes, views});
+        return Map({scope, views});
     });
 
     bundle.include(commonBundle);
@@ -87,7 +87,7 @@ const {store, scope, actionTypes, views, finalize, start} = link(function (bundl
     }
 
 });
-finalize(scope, actionTypes);
+finalize(scope);
 
 /* In-browser API */
 const Codecast: Codecast = window.Codecast = {store, scope, restart};
@@ -121,7 +121,6 @@ function restart() {
         dispatch: store.dispatch,
         globals: scope,
         selectors: scope,
-        actionTypes,
         views
     });
 }

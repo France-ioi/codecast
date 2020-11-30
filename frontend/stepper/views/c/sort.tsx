@@ -2,7 +2,7 @@ import React from 'react';
 
 import {getList, getNumber, renderArrow, renderValue, viewExprs} from './utils';
 import {extractView} from './array_utils';
-import {SvgPan} from '../svg-pan';
+import {SvgPan} from '../SvgPan';
 import DirectiveFrame from "../DirectiveFrame";
 
 const marginLeft = 100;

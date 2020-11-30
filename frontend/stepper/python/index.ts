@@ -20,7 +20,7 @@ export default function (bundle, deps) {
         yield take('Terminal.Input.Enter');
     }
 
-    function* pythonInputSaga({actionTypes, dispatch}, {payload: {resolve}}) {
+    function* pythonInputSaga(app, {payload: {resolve}}) {
         const stepperContext = yield select(state => state.get('stepper').get('currentStepperState'));
         const isPlayerContext = (typeof stepperContext === 'undefined');
 
@@ -102,7 +102,7 @@ export default function (bundle, deps) {
     }
 
     bundle.defer(function ({recordApi, replayApi, stepperApi}) {
-        recordApi.on('StackView.Path.Toggle', function* (addEvent, action) {
+        recordApi.on(ActionTypes.StackViewPathToggle, function* (addEvent, action) {
             yield call(addEvent, 'stackview.path.toggle', action);
         });
         replayApi.on('stackview.path.toggle', function (replayContext, event) {

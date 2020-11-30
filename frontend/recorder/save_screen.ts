@@ -3,63 +3,66 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 import {asyncRequestJson} from '../utils/api';
 import {getBlob, uploadBlob} from '../utils/blobs';
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {SaveScreen} from "./SaveScreen";
 
 export default function (bundle) {
   bundle.defineAction(ActionTypes.SaveScreenEncodingStart);
-  bundle.defineAction(ActionTypes.SaveScreenEncodingProgress);
-  bundle.defineAction(ActionTypes.SaveScreenEncodingDone);
-  bundle.defineAction(ActionTypes.SaveScreenUpload);
-  bundle.defineAction(ActionTypes.SaveScreenPreparing);
-  bundle.defineAction(ActionTypes.SaveScreenEventsUploading);
-  bundle.defineAction(ActionTypes.SaveScreenEventsUploaded);
-  bundle.defineAction(ActionTypes.SaveScreenAudioUploading);
-  bundle.defineAction(ActionTypes.SaveScreenAudioUploaded);
-  bundle.defineAction(ActionTypes.SaveScreenUploadSucceeded);
-  bundle.defineAction(ActionTypes.SaveScreenUploadFailed);
-
   bundle.addReducer('saveScreenEncodingStart', function (state, action) {
     return state.update('save', save => ({...save, step: 'encoding pending', progress: 0}));
   });
 
+  bundle.defineAction(ActionTypes.SaveScreenEncodingProgress);
   bundle.addReducer('saveScreenEncodingProgress', function (state, {payload: progress}) {
     return state.update('save', save => ({...save, progress}));
   });
 
+  bundle.defineAction(ActionTypes.SaveScreenEncodingDone);
   bundle.addReducer('saveScreenEncodingDone', function (state, {payload: {audioUrl, wavAudioUrl, eventsUrl}}) {
     return state.update('save', save => ({...save, step: 'encoding done', audioUrl, wavAudioUrl, eventsUrl, progress: false}));
   });
 
+  bundle.defineAction(ActionTypes.SaveScreenUpload);
+
+  bundle.defineAction(ActionTypes.SaveScreenPreparing);
   bundle.addReducer('saveScreenPreparing', function (state, action) {
     return state.update('save', save => ({...save, step: 'upload preparing'}));
   });
 
+
+  bundle.defineAction(ActionTypes.SaveScreenEventsUploading);
   bundle.addReducer('saveScreenEventsUploading', function (state, _action) {
     return state.update('save', save => ({...save, step: 'upload events pending'}));
   });
 
+  bundle.defineAction(ActionTypes.SaveScreenEventsUploaded);
   bundle.addReducer('saveScreenEventsUploaded', function (state, {payload: {url}}) {
     return state.update('save', save => ({...save, step: 'upload events done', eventsUrl: url}));
   });
 
+  bundle.defineAction(ActionTypes.SaveScreenAudioUploading);
   bundle.addReducer('saveScreenAudioUploading', function (state, action) {
     return state.update('save', save => ({...save, step: 'upload audio pending'}));
   });
 
+  bundle.defineAction(ActionTypes.SaveScreenAudioUploaded);
   bundle.addReducer('saveScreenAudioUploaded', function (state, {payload: {url}}) {
     return state.update('save', save => ({...save, step: 'upload audio done', audioUrl: url}));
   });
 
+  bundle.defineAction(ActionTypes.SaveScreenUploadSucceeded);
   bundle.addReducer('saveScreenUploadSucceeded', function (state, {payload: {playerUrl}}) {
     return state.update('save', save => ({...save, step: 'done', playerUrl}));
   });
 
+  bundle.defineAction(ActionTypes.SaveScreenUploadFailed);
   bundle.addReducer('saveScreenUploadFailed', function (state, {payload: {error}}) {
     return state.update('save', save => ({...save, step: 'error', error}));
   });
 
   bundle.addSaga(function* saveSaga (arg) {
-    const {actionTypes} = arg;
-    yield takeLatest(actionTypes.recorderStopped, encodingSaga, arg)
+    yield takeLatest(RecorderActionTypes.RecorderStopped, encodingSaga, arg)
     yield takeLatest(ActionTypes.SaveScreenUpload, uploadSaga, arg);
   });
 
@@ -68,15 +71,15 @@ export default function (bundle) {
 
 function SaveScreenSelector (state, props) {
   const getMessage = state.get('getMessage');
-  const actionTypes = state.get('actionTypes');
   const {grants} = state.get('user');
   const {step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, error} = state.get('save');
-  return {getMessage, actionTypes, grants, step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, error};
+
+  return {getMessage, grants, step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, error};
 }
 
 function* encodingSaga ({actionTypes, selectors}) {
   yield put({type: ActionTypes.SaveScreenEncodingStart, payload: {}});
-  yield put({type: actionTypes.switchToScreen, payload: {screen: 'save'}});
+  yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'save'}});
 
   const recorder = yield select(selectors.getRecorderState);
 
@@ -93,7 +96,7 @@ function* encodingSaga ({actionTypes, selectors}) {
   const subtitles = [];
   const options = yield select(state => state.get('options'));
   const data = {version, options, events, subtitles};
-  const eventsBlob = new Blob([JSON.stringify(data)], {encoding: "UTF-8", type:"application/json;charset=UTF-8"});
+  const eventsBlob = new Blob([JSON.stringify(data)], {type:"application/json;charset=UTF-8"});
   const eventsUrl = URL.createObjectURL(eventsBlob);
 
   /* Signal that the recorder has stopped. */
@@ -112,13 +115,13 @@ function* encodingSaga ({actionTypes, selectors}) {
   }
 }
 
-function* uploadSaga ({actionTypes, selectors}, {payload: {target}}) {
+function* uploadSaga (app, action) {
   try {
     // Step 1: prepare the upload by getting the S3 form parameters
     // from the server.
     yield put({type: ActionTypes.SaveScreenPreparing});
     const save = yield select(state => state.get('save'));
-    const response = yield call(asyncRequestJson, 'upload', target);
+    const response = yield call(asyncRequestJson, 'upload', action.payload.target);
     if (response.error) {
       throw new Error(`cannot upload: ${response.error}`);
     }

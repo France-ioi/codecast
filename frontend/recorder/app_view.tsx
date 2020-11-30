@@ -1,4 +1,6 @@
 import React from 'react';
+import {RecorderApp} from "./RecorderApp";
+import {RecorderGlobalControls} from "./RecorderGlobalControls";
 
 function RecorderAppSelector (state, props) {
   const scope = state.get('scope');
@@ -24,7 +26,6 @@ function RecorderGlobalControlsSelector (state) {
 }
 
 export default function (bundle, deps) {
-  bundle.use('LoginScreen', 'RecordScreen', 'SaveScreen', 'MemoryUsage', 'Vumeter');
   bundle.defineView('RecorderApp', RecorderAppSelector, RecorderApp);
   bundle.defineView('RecorderGlobalControls', RecorderGlobalControlsSelector, RecorderGlobalControls);
 };

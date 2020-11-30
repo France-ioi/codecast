@@ -3,21 +3,32 @@ import {delay} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
 import {Vumeter} from "./Vumeter";
 
+export default function (bundle, deps) {
+  bundle.defineAction(ActionTypes.VumeterMounted);
+  bundle.addReducer(ActionTypes.VumeterMounted, vumeterMountedReducer);
+
+  bundle.addSaga(vumeterSaga);
+
+  bundle.defineView('Vumeter', VumeterSelector, Vumeter);
+};
+
+
 function VumeterSelector (state) {
   const {vumeterMounted} = state.get('scope');
   return {vumeterMounted};
 }
 
 function* vumeterSaga () {
-  const {recorderStopped, recorderPreparing, vumeterMounted} = yield select(state => state.get('scope'));
   let vumeterTask;
   let canvasContext;
 
-  yield takeEvery(vumeterMounted, function* ({payload: {element}}) {
+  // @ts-ignore
+  yield takeEvery(ActionTypes.VumeterMounted, function* ({payload: {element}}) {
     canvasContext = element && element.getContext("2d");
   });
-  yield takeEvery(recorderStopped, vumeterCleanupSaga);
-  yield takeEvery(recorderPreparing, function* ({payload: {analyser}}) {
+  yield takeEvery(ActionTypes.RecorderStopped, vumeterCleanupSaga);
+  // @ts-ignore
+  yield takeEvery(ActionTypes.RecorderPreparing, function* ({payload: {analyser}}) {
     if (!analyser) return;
     yield call(vumeterCleanupSaga);
     vumeterTask = yield fork(vumeterMonitorSaga, analyser);
@@ -61,13 +72,3 @@ function* vumeterSaga () {
 function vumeterMountedReducer (state, {payload: {element}}) {
   return state.set('vumeterElement', element);
 }
-
-export default function (bundle, deps) {
-
-  bundle.defineAction(ActionTypes.VumeterMounted);
-  bundle.addReducer(ActionTypes.VumeterMounted, vumeterMountedReducer);
-
-  bundle.addSaga(vumeterSaga);
-
-  bundle.defineView('Vumeter', VumeterSelector, Vumeter);
-};

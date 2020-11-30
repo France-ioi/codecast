@@ -1,24 +1,20 @@
 export enum ActionTypes {
-    EditorPrepare = 'Editor.Prepare',
-    EditorControlsChanged = 'Editor.Controls.Changed',
-    EditorAudioLoadProgress = 'Editor.Audio.Load.Progress',
-    EditorAudioLoaded = 'Editor.Audio.Loaded',
-    EditorPlayerReady = 'Editor.Player.Ready',
-    SetupScreenTabChanged = 'Setup.Screen.Tab.Changed',
+    Error = 'Error',
+    ErrorClear = 'Error.Clear',
 
-    EditorPropertyChanged = 'Editor.Property.Changed',
-    EditorSaveAudio = 'Editor.Save.Audio',
-    EditorSave = 'Editor.Save',
-    EditorSaveFailed = 'Editor.Save.Failed',
-    EditorSaveSucceeded = 'Editor.Save.Succeeded',
+    FullscreenEnter = 'Fullscreen.Enter',
+    FullscreenEnterSucceeded = 'Fullsreen.Enter.Succeeded',
+    FullscreenEnterFailed = 'Fullscreen.Enter.Failed',
+    FullscreenLeave = 'Fullscreen.Leave',
+    FullscreenLeaveSucceeded = 'Fullscreen.Leave.Succeeded',
+    FullscreenEnabled = 'Fullscreen.Enabled',
 
-    EditorTrimEnter = 'Editor.Trim.Enter',
-    EditorTrimReturn = 'Editor.Trim.Return',
-    EditorTrimSave = 'Editor.Trim.Save',
-    EditorTrimIntervalsChanged = 'Editor.Trim.Intervals.Changed',
-    EditorTrimMarkerAdded = 'Editor.Trim.MarkerAdded',
-    EditorTrimMarkerRemoved = 'Editor.Trim.MarkerRemoved',
-    EditorTrimIntervalChanged = 'Editor.Trim.Interval.Changed',
-    EditorTrimSavingStep = 'Editor.Trim.Saving.Step',
-    EditorTrimSavingDone = 'Editor.Trim.Saving.Done',
+    LoginFeedback = 'Login.Feedback',
+    LogoutFeedback = 'Logout.Feedback',
+
+    SystemSwitchToScreen = 'System.Switch.To.Screen',
+
+    PlatformChanged = 'Platform.Changed',
+
+    WindowResized = 'Window.Resized'
 }

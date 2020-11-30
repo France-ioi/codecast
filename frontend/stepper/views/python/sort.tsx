@@ -2,7 +2,7 @@ import React from 'react';
 
 import {getVariables, renderArrow, renderValue} from './utils';
 import {extractView} from './array_utils';
-import {SvgPan} from '../svg-pan';
+import {SvgPan} from '../SvgPan';
 import DirectiveFrame from "../DirectiveFrame";
 
 const DEFAULT_MAX_VISIBLE_CELLS = 40;

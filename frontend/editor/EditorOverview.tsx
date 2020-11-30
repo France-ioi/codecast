@@ -22,11 +22,13 @@ export class EditorOverview extends React.PureComponent<EditorOverviewProps> {
         const {version, name, events, duration, waveform, save, playerUrl, canSave} = this.props;
         return (
             <div className='vbox'>
-                <Label text={"Name"}>
+                <Label>
+                    Name
                     <input type='text' placeholder="Name" className='bp3-input bp3-fill' value={name || ''}
                            onChange={this._nameChanged}/>
                 </Label>
-                <Label text={"Player URL"}>
+                <Label>
+                    Player URL
                     <InputGroup leftIcon={IconNames.LINK} type='text' value={playerUrl} readOnly
                                 rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal
                                                             target='_blank'/>}/>

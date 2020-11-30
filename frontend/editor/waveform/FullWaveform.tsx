@@ -2,7 +2,22 @@ import React from 'react';
 
 import {canvasToTimestamp, renderCursor, renderEvents, renderMarker, renderRange} from './tools';
 
-export class FullWaveform extends React.PureComponent {
+interface FullWaveformProps {
+    onPan: Function,
+    width: number,
+    height: number,
+    duration: any,
+    position: any,
+    waveform: any,
+    events: any,
+    viewStart: any,
+    viewEnd: any,
+    intervals: any,
+    selectedMarker: any
+}
+
+export class FullWaveform extends React.PureComponent<FullWaveformProps> {
+    canvas: HTMLCanvasElement = null;
     state = {mode: 'idle'};
 
     render() {
@@ -24,6 +39,7 @@ export class FullWaveform extends React.PureComponent {
         this.canvas = canvas;
     };
     updateCanvas = () => {
+        // @ts-ignore
         this._params = render(this.props, this.canvas, this._params);
     };
     mouseDown = (event) => {
@@ -45,12 +61,13 @@ export class FullWaveform extends React.PureComponent {
         const {onPan} = this.props;
         if (onPan) {
             const rect = this.canvas.getBoundingClientRect();
+            // @ts-ignore
             onPan(canvasToTimestamp(this._params, x - rect.left));
         }
     };
 }
 
-function render(props, canvas, prevParams) {
+function render(props: FullWaveformProps, canvas, prevParams) {
     const {duration, position, waveform, events, viewStart, viewEnd, intervals, selectedMarker} = props;
     const {width, height} = canvas;
     const leftMargin = 3;
@@ -70,10 +87,13 @@ function render(props, canvas, prevParams) {
         }
     }
     if (prevParams && width === prevParams.width) {
+        // @ts-ignore
         params.miniWaveform = prevParams.miniWaveform;
     } else {
+        // @ts-ignore
         params.miniWaveform = downsampleWaveform(waveform, useableWidth);
     }
+    // @ts-ignore
     renderMiniWaveform(ctx, params, params.miniWaveform, intervals);
     if (typeof viewStart === 'number' && typeof viewEnd === 'number') {
         ctx.globalAlpha = 0.3;

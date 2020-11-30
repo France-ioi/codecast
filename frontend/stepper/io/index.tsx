@@ -9,6 +9,8 @@ import {default as TerminalBundle, TermBuffer, writeString} from './terminal';
 import {printfBuiltin} from './printf';
 import {scanfBuiltin} from './scanf';
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as StepperActionTypes} from "../actionTypes";
+import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {IOPaneOptions} from "./IOPaneOptions";
 import {InputOutputView} from "./InputOutputView";
 import {IOPane} from "./IOPane";
@@ -114,10 +116,10 @@ export default function (bundle, deps) {
 
         replayApi.onReset(function* (instant) {
             const {mode} = instant.state.get('ioPane');
-            yield put({type: deps.ioPaneModeChanged, payload: {mode}});
+            yield put({type: ActionTypes.IoPaneModeChanged, payload: {mode}});
         });
 
-        recordApi.on(deps.ioPaneModeChanged, function* (addEvent, {payload: {mode}}) {
+        recordApi.on(ActionTypes.IoPaneModeChanged, function* (addEvent, {payload: {mode}}) {
             yield call(addEvent, 'ioPane.mode', mode);
         });
         replayApi.on('ioPane.mode', function (replayContext, event) {
@@ -251,9 +253,11 @@ export default function (bundle, deps) {
 
         function* waitForInputSaga() {
             /* Set the isWaitingOnInput flag on the state. */
-            yield put({type: deps.terminalInputNeeded});
+            yield put({type: ActionTypes.TerminalInputNeeded});
+
             /* Transfer focus to the terminal. */
-            yield put({type: deps.terminalFocus});
+            yield put({type: ActionTypes.TerminalFocus});
+
             /* Wait for the user to enter a line. */
             yield take(deps.terminalInputEnter);
         }
@@ -279,7 +283,10 @@ export default function (bundle, deps) {
 
         function* reflectToOutput() {
             /* Incrementally add text produced by the stepper to the output buffer. */
-            yield takeLatest([deps.stepperProgress, deps.stepperIdle], function* (action) {
+            yield takeLatest([
+                StepperActionTypes.StepperProgress,
+                StepperActionTypes.StepperIdle
+            ], function* (action) {
                 const stepperState = yield select(deps.getCurrentStepperState);
                 const outputModel = yield select(deps.getBufferModel, 'output');
                 const oldSize = outputModel.get('document').size();
@@ -293,23 +300,30 @@ export default function (bundle, deps) {
                         end: endCursor,
                         lines: stepperState.output.substr(oldSize).split('\n')
                     };
+
                     /* Update the model to maintain length, new end cursor. */
                     yield put({type: deps.bufferEdit, buffer: 'output', delta});
                     const newEndCursor = yield select(state => deps.getBufferModel(state, 'output').get('document').endCursor());
+
                     /* Send the delta to the editor to add the new output. */
-                    yield put({type: deps.bufferModelEdit, buffer: 'output', delta});
+                    yield put({type: BufferActionTypes.BufferModelEdit, buffer: 'output', delta});
+
                     /* Move the cursor to the end of the buffer. */
                     yield put({
-                        type: deps.bufferModelSelect,
+                        type: BufferActionTypes.BufferModelSelect,
                         buffer: 'output',
                         selection: {start: newEndCursor, end: newEndCursor}
                     });
                 }
             });
             /* Reset the output document. */
-            yield takeEvery([deps.stepperRestart, deps.stepperUndo, deps.stepperRedo], function* () {
+            yield takeEvery([
+                StepperActionTypes.StepperRestart,
+                StepperActionTypes.StepperUndo,
+                StepperActionTypes.StepperRedo
+            ], function* () {
                 const model = yield select(getOutputBufferModel);
-                yield put({type: deps.bufferReset, buffer: 'output', model});
+                yield put({type: BufferActionTypes.BufferReset, buffer: 'output', model});
             });
         }
     });

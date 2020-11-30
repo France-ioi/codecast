@@ -1,5 +1,6 @@
 import React from "react";
 import {Button, FormGroup, HTMLSelect, Icon, Intent, ProgressBar, Spinner} from "@blueprintjs/core";
+import {ActionTypes} from "./actionTypes";
 
 interface SaveScreenProps {
     getMessage: any,
@@ -10,10 +11,11 @@ interface SaveScreenProps {
     playerUrl: any,
     step: any,
     error: any,
-    progress: any
+    progress: any,
+    dispatch: Function
 }
 
-class SaveScreen extends React.PureComponent<SaveScreenProps> {
+export class SaveScreen extends React.PureComponent<SaveScreenProps> {
     render() {
         const {getMessage, grants} = this.props;
         const {audioUrl, wavAudioUrl, eventsUrl, playerUrl, step, error, progress} = this.props;
@@ -119,7 +121,7 @@ class SaveScreen extends React.PureComponent<SaveScreenProps> {
         const {targetUrl} = this.state;
         const grant = this.props.grants.find(grant => grant.url === targetUrl);
         if (grant) {
-            this.props.dispatch({type: this.props.actionTypes.saveScreenUpload, payload: {target: grant}});
+            this.props.dispatch({type: ActionTypes.SaveScreenUpload, payload: {target: grant}});
         }
     };
 }

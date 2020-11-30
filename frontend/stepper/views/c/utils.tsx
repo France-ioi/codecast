@@ -154,18 +154,18 @@ export const evalExpr = function (programState, localMap, expr, asRef?) {
     if (expr[0] === 'deref') {
         const ref = evalExpr(programState, localMap, expr[1], false);
         if (ref.type.kind !== 'pointer') {
-            throw new LocalizedError('EVAL_DEREF_NONPTR');
+            throw new LocalizedError('EVAL_DEREF_NONPTR', []);
         }
         return evalRef(programState, ref, asRef);
     }
     if (expr[0] === 'subscript') {
         const arrayRef = evalExpr(programState, localMap, expr[1], false);
         if (arrayRef.type.kind !== 'pointer') {
-            throw new LocalizedError('EVAL_SUBSC_NONPTR');
+            throw new LocalizedError('EVAL_SUBSC_NONPTR', []);
         }
         const index = evalExpr(programState, localMap, expr[2], false);
         if (index.type.kind !== 'builtin') {
-            throw new LocalizedError('EVAL_SUBSC_NONBLT');
+            throw new LocalizedError('EVAL_SUBSC_NONBLT', []);
         }
         const elemType = arrayRef.type.pointee;
         const address = arrayRef.address + elemType.size * index.toInteger();
@@ -177,7 +177,7 @@ export const evalExpr = function (programState, localMap, expr, asRef?) {
         }
     }
     if (asRef) {
-        throw new LocalizedError('EVAL_ADDR_NONLVAL');
+        throw new LocalizedError('EVAL_ADDR_NONLVAL', []);
     }
     if (expr[0] === 'number') {
         return new C.IntegralValue(C.builtinTypes['int'], expr[1] | 0);
@@ -185,7 +185,7 @@ export const evalExpr = function (programState, localMap, expr, asRef?) {
     if (expr[0] === 'addrOf') {
         return evalExpr(programState, localMap, expr[1], true);
     }
-    throw new LocalizedError('EVAL_UNSUP_EXPR');
+    throw new LocalizedError('EVAL_UNSUP_EXPR', []);
 };
 
 const evalRef = function (programState, ref, asRef) {

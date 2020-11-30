@@ -73,7 +73,7 @@ export default function (bundle, deps) {
   // by the last compile operation.
   bundle.defineAction(ActionTypes.CompileClearDiagnostics);
   bundle.addReducer(ActionTypes.CompileClearDiagnostics, function (state, action) {
-    return state.update('compile', st => compileClearDiagnostics(st, action));
+    return state.update('compile', st => compileClearDiagnostics(st));
   });
 
   bundle.defineSelector('getCompileDiagnostics', state =>
@@ -100,7 +100,7 @@ export default function (bundle, deps) {
       const {platform} = yield select(state => state.get('options'));
 
       yield put({
-        type: deps.compileStarted,
+        type: ActionTypes.CompileStarted,
         source
       });
 
@@ -108,14 +108,14 @@ export default function (bundle, deps) {
       if (platform === 'python') {
         if (!source.trim()) {
           yield put({
-            type: deps.compileFailed,
+            type: ActionTypes.CompileFailed,
             response: {
               diagnostics: getMessage('EMPTY_PROGRAM')
             }
           });
         } else {
           yield put({
-            type: deps.compileSucceeded,
+            type: ActionTypes.CompileSucceeded,
             platform
           });
         }
@@ -132,12 +132,12 @@ export default function (bundle, deps) {
         response.platform = platform;
         if (response.ast) {
           yield put({
-            type: deps.compileSucceeded,
+            type: ActionTypes.CompileSucceeded,
             response,
             platform
           });
         } else {
-          yield put({type: deps.compileFailed, response});
+          yield put({type: ActionTypes.CompileFailed, response});
         }
       }
     });
@@ -150,7 +150,7 @@ export default function (bundle, deps) {
       replayContext.state = compileReset(replayContext.state, {state: compileModel});
     });
 
-    recordApi.on(deps.compileStarted, function* (addEvent, action) {
+    recordApi.on(ActionTypes.CompileStarted, function* (addEvent, action) {
       const {source} = action;
       yield call(addEvent, 'compile.start', source); // XXX should also have platform
     });
@@ -159,7 +159,7 @@ export default function (bundle, deps) {
       replayContext.state = replayContext.state.update('compile', st => compileStarted(st, action));
     });
 
-    recordApi.on(deps.compileSucceeded, function* (addEvent, action) {
+    recordApi.on(ActionTypes.CompileSucceeded, function* (addEvent, action) {
       yield call(addEvent, 'compile.success', action);
     });
     replayApi.on('compile.success', function (replayContext, event) {
@@ -168,7 +168,7 @@ export default function (bundle, deps) {
       replayContext.state = replayContext.state.update('compile', st => compileSucceeded(st, action));
     });
 
-    recordApi.on(deps.compileFailed, function* (addEvent, action) {
+    recordApi.on(ActionTypes.CompileFailed, function* (addEvent, action) {
       const {response} = action;
       yield call(addEvent, 'compile.failure', response);
     });
@@ -177,11 +177,11 @@ export default function (bundle, deps) {
       replayContext.state = replayContext.state.update('compile', st => compileFailed(st, action));
     });
 
-    recordApi.on(deps.compileClearDiagnostics, function* (addEvent, action) {
+    recordApi.on(ActionTypes.CompileClearDiagnostics, function* (addEvent, action) {
       yield call(addEvent, 'compile.clearDiagnostics');
     });
     replayApi.on('compile.clearDiagnostics', function (replayContext, event) {
-      replayContext.state = replayContext.state.update('compile', st => compileClearDiagnostics(st, {}));
+      replayContext.state = replayContext.state.update('compile', st => compileClearDiagnostics(st));
     });
 
     replayApi.on('stepper.exit', function (replayContext, event) {
@@ -190,7 +190,7 @@ export default function (bundle, deps) {
 
     replayApi.onReset(function* (instant) {
       const compileModel = instant.state.get('compile');
-      yield put({type: deps.compileReset, state: compileModel});
+      yield put({type: ActionTypes.CompileReset, state: compileModel});
     });
   });
 };
@@ -279,6 +279,6 @@ function compileFailed (state, action) {
     .set('diagnosticsHtml', toHtml(diagnostics));
 }
 
-export function compileClearDiagnostics (state, action) {
+export function compileClearDiagnostics (state) {
   return state.delete('diagnostics').delete('diagnosticsHtml');
 }

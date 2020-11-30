@@ -1,11 +1,13 @@
 import React from "react";
+import {StepperView} from "../stepper/views/StepperView";
+import {RecorderControls} from "./RecorderControls";
 
 export class RecordScreen extends React.PureComponent {
     render () {
         return (
             <div>
-                <deps.RecorderControls/>
-                <deps.StepperView/>
+                <RecorderControls />
+                <StepperView />
             </div>
         );
     }

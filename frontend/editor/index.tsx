@@ -7,6 +7,8 @@ import {extractWaveform} from './waveform/tools';
 import OverviewBundle from './overview';
 import TrimBundle from './trim';
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
+import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {EditorApp} from "./EditorApp";
 import {SetupScreen} from "./SetupScreen";
 import {EditScreen} from "./EditScreen";
@@ -41,7 +43,7 @@ export default function (bundle, deps) {
     bundle.defineView('EditScreen', EditScreenSelector, EditScreen);
 
     bundle.addSaga(function* editorSaga(app) {
-        yield takeEvery(app.actionTypes.editorPrepare, editorPrepareSaga, app);
+        yield takeEvery(ActionTypes.EditorPrepare, editorPrepareSaga, app);
 
     });
 
@@ -51,6 +53,7 @@ export default function (bundle, deps) {
 
 function editorPrepareReducer(state, {payload: {baseDataUrl}}) {
     const {baseUrl} = state.get('options');
+
     return state.set('editor', Map({
         base: baseDataUrl,
         dataUrl: baseDataUrl,
@@ -66,8 +69,7 @@ function loginFeedbackReducer(state, _action) {
     const editor = state.get('editor');
     if (editor) {
         const user = state.get('user');
-        state = state.update('editor', editor =>
-            editor.set('canSave', userHasGrant(user, editor.get('dataUrl'))));
+        state = state.update('editor', editor => editor.set('canSave', userHasGrant(user, editor.get('dataUrl'))));
     }
     return state;
 }
@@ -80,42 +82,54 @@ function userHasGrant(user, dataUrl) {
             }
         }
     }
+
     return false;
 }
 
 function editorControlsChangedReducer(state, {payload: {controls}}) {
-    return state.updateIn(['editor', 'controls'], oldControls =>
-        ({...oldControls, ...controls}));
+    return state.updateIn(['editor', 'controls'], oldControls => ({...oldControls, ...controls}));
 }
 
 function editorAudioLoadProgressReducer(state, {payload: {value}}) {
     return state.setIn(['editor', 'audioLoadProgress'], value);
 }
 
-function* editorPrepareSaga({actionTypes}, {payload: {baseDataUrl}}) {
+function* editorPrepareSaga(app, action) {
     /* Require the user to be logged in. */
     while (!(yield select(state => state.get('user')))) {
-        yield take(actionTypes.loginFeedback);
+        yield take(CommonActionTypes.LoginFeedback);
     }
-    yield put({type: actionTypes.switchToScreen, payload: {screen: 'setup'}});
-    const audioUrl = `${baseDataUrl}.mp3`;
-    const eventsUrl = `${baseDataUrl}.json`;
+
+    yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'setup'}});
+
+    const audioUrl = `${action.payload.baseDataUrl}.mp3`;
+    const eventsUrl = `${action.payload.baseDataUrl}.json`;
+
     /* Load the audio stream. */
-    const {blob: audioBlob, audioBuffer} = yield call(getAudioSaga, actionTypes, audioUrl);
+    const {blob: audioBlob, audioBuffer} = yield call(getAudioSaga, audioUrl);
     const inMemoryAudioUrl = URL.createObjectURL(audioBlob);
     const duration = audioBuffer.duration * 1000;
+
     // TODO: send progress events during extractWaveform?
     const waveform = extractWaveform(audioBuffer, Math.floor(duration * 60 / 1000));
-    yield put({type: actionTypes.editorAudioLoaded, payload: {duration, audioBlob, audioBuffer, waveform}});
+    yield put({type: ActionTypes.EditorAudioLoaded, payload: {duration, audioBlob, audioBuffer, waveform}});
+
     /* Prepare the player and wait until ready.
        This order (load audio, prepare player) is faster, the reverse
        (as of Chrome 64) leads to redundant concurrent fetches of the audio. */
-    yield put({type: actionTypes.playerPrepare, payload: {baseDataUrl, audioUrl: inMemoryAudioUrl, eventsUrl}});
-    const {payload: {data}} = yield take(actionTypes.playerReady);
-    yield put({type: actionTypes.editorPlayerReady, payload: {data}});
+    yield put({
+        type: PlayerActionTypes.PlayerPrepare,
+        payload: {
+            baseDataUrl: action.payload.baseDataUrl,
+            audioUrl: inMemoryAudioUrl, eventsUrl
+        }
+    });
+
+    const {payload: {data}} = yield take(PlayerActionTypes.PlayerReady);
+    yield put({type: ActionTypes.EditorPlayerReady, payload: {data}});
 }
 
-function* getAudioSaga(actionTypes, audioUrl) {
+function* getAudioSaga(audioUrl) {
     const chan = yield call(getAudio, audioUrl);
     while (true) {
         let event = yield take(chan);
@@ -125,7 +139,7 @@ function* getAudioSaga(actionTypes, audioUrl) {
             case 'error':
                 throw event.error;
             case 'progress':
-                yield put({type: actionTypes.editorAudioLoadProgress, payload: {value: event.value}});
+                yield put({type: ActionTypes.EditorAudioLoadProgress, payload: {value: event.value}});
                 break;
         }
     }
@@ -154,9 +168,9 @@ function EditorAppSelector(state, props) {
     const scope = state.get('scope');
     const user = state.get('user');
     const screen = state.get('screen');
-    const {LogoutButton} = scope;
     const floatingControls = state.getIn(['editor', 'controls']).floating;
     let activity, screenProp, Screen;
+
     if (!user) {
         activity = 'login';
         screenProp = 'LoginScreen';
@@ -169,10 +183,12 @@ function EditorAppSelector(state, props) {
     } else {
         Screen = () => <p>{'undefined state'}</p>;
     }
+
     if (!Screen && screenProp) {
         Screen = scope[screenProp];
     }
-    return {Screen, activity, floatingControls, LogoutButton};
+
+    return {Screen, activity, floatingControls};
 }
 
 function SetupScreenSelector(state, props) {
@@ -182,30 +198,29 @@ function SetupScreenSelector(state, props) {
         const progress = editor.get('audioLoadProgress');
         return {step: 'loading', progress};
     }
+
     const playerReady = editor.get('playerReady');
     if (!playerReady) {
         const progress = state.getIn(['player', 'progress']);
         return {step: 'preparing', progress};
     }
+
     const views = state.get('views');
-    const actionTypes = state.get('actionTypes');
     const duration = editor.get('duration');
     const tabId = editor.get('setupTabId');
     const {version, title, events} = editor.get('data');
     const waveform = editor.get('waveform');
+
     return {
-        views, actionTypes, tabId, version, title, events, duration, waveform
+        views, tabId, version, title, events, duration, waveform
     };
 }
 
 function EditScreenSelector(state, props) {
-    const {StepperView, SubtitlesBand} = state.get('scope');
     const viewportTooSmall = state.get('viewportTooSmall');
     const containerWidth = state.get('containerWidth');
     const topControls = state.getIn(['editor', 'controls']).top;
     return {
-        viewportTooSmall, containerWidth, topControls,
-        StepperView, SubtitlesBand
+        viewportTooSmall, containerWidth, topControls
     };
 }
-

@@ -3,19 +3,15 @@ import ReactDOM from "react-dom";
 import scrollIntoView from "scroll-into-view-if-needed";
 import {SubtitlePaneItemEditor} from "./SubtitlePaneItemEditor";
 import {SubtitlePaneItemViewer} from "./SubtitlePaneItemViewer";
+import {ActionTypes} from "../actionTypes";
+import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 
 interface SubtitlesEditorPaneProps {
     subtitles: any,
     currentIndex: any,
     audioTime: any,
     getMessage: any,
-    dispatch: Function,
-    playerSeek: string,
-    subtitlesItemChanged: string,
-    subtitlesItemInserted: string,
-    subtitlesItemRemoved: string,
-    subtitlesItemShifted: string,
-    subtitlesFilterTextChanged: string
+    dispatch: Function
 }
 
 export class SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPaneProps> {
@@ -86,27 +82,27 @@ export class SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPane
         this._selectedComponent = component;
     };
     _jump = (subtitle) => {
-        this.props.dispatch({type: this.props.playerSeek, payload: {audioTime: subtitle.data.start}});
+        this.props.dispatch({type: PlayerActionTypes.PlayerSeek, payload: {audioTime: subtitle.data.start}});
     };
     _changeItem = (item, text) => {
         const index = this.props.subtitles.indexOf(item);
-        this.props.dispatch({type: this.props.subtitlesItemChanged, payload: {index, text}});
+        this.props.dispatch({type: ActionTypes.SubtitlesItemChanged, payload: {index, text}});
     };
     _insertItem = (item, offset, where) => {
         const index = this.props.subtitles.indexOf(item);
-        this.props.dispatch({type: this.props.subtitlesItemInserted, payload: {index, offset, where}});
+        this.props.dispatch({type: ActionTypes.SubtitlesItemInserted, payload: {index, offset, where}});
     };
     _removeItem = (item) => {
         const index = this.props.subtitles.indexOf(item);
         const merge = index === 0 ? 'down' : 'up';
-        this.props.dispatch({type: this.props.subtitlesItemRemoved, payload: {index, merge}});
+        this.props.dispatch({type: ActionTypes.SubtitlesItemRemoved, payload: {index, merge}});
     };
     _shiftItem = (item, amount) => {
         const index = this.props.subtitles.indexOf(item);
-        this.props.dispatch({type: this.props.subtitlesItemShifted, payload: {index, amount}});
+        this.props.dispatch({type: ActionTypes.SubtitlesItemShifted, payload: {index, amount}});
     };
     _filterTextChanged = (event) => {
         const text = event.target.value;
-        this.props.dispatch({type: this.props.subtitlesFilterTextChanged, payload: {text}});
+        this.props.dispatch({type: ActionTypes.SubtitlesFilterTextChanged, payload: {text}});
     };
 }

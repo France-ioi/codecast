@@ -2,7 +2,7 @@ import React from 'react';
 
 import {extractView} from './array2d_model';
 import {renderArrow, renderValue} from './utils';
-import {SvgPan} from '../svg-pan';
+import {SvgPan} from '../SvgPan';
 import DirectiveFrame from "../DirectiveFrame";
 
 const TEXT_LINE_HEIGHT = 18;

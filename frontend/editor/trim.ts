@@ -1,18 +1,5 @@
-import React from 'react';
 import url from 'url';
 import {stringifySync} from 'subtitle';
-import {
-    AnchorButton,
-    Button,
-    Checkbox,
-    FormGroup,
-    HTMLSelect,
-    Icon,
-    Intent,
-    ProgressBar,
-    Spinner
-} from '@blueprintjs/core';
-import {IconNames} from '@blueprintjs/icons';
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
 import update from 'immutability-helper';
 
@@ -20,24 +7,27 @@ import {RECORDING_FORMAT_VERSION} from '../version';
 import {asyncRequestJson} from '../utils/api';
 import {uploadBlobChannel} from '../utils/blobs';
 import {spawnWorker} from '../utils/worker_utils';
+// @ts-ignore
 import AudioWorker from '../audio_worker/index.worker';
-import {FullWaveform} from './waveform/FullWaveform';
-import {ExpandedWaveform} from './waveform/ExpandedWaveform';
 import intervalTree from './interval_tree';
 import {findInstantIndex} from '../player/utils';
 import {postJson} from '../common/utils';
 import {findSubtitleIndex} from '../subtitles/utils';
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {ActionTypes as SubtitlesActionTypes} from "../subtitles/actionTypes";
+import {TrimEditor} from "./TrimEditor";
+import {TrimEditorControls} from "./TrimEditorControls";
+import {TrimEditorReturn} from "./TrimEditorReturn";
 
 export default function (bundle, deps) {
-
     bundle.addReducer(ActionTypes.EditorPrepare, editorPrepareReducer);
 
     bundle.defineAction(ActionTypes.EditorTrimEnter);
     bundle.defineAction(ActionTypes.EditorTrimReturn);
 
     bundle.defineAction(ActionTypes.EditorTrimSave);
-    bundle.addReducer(ActionTypes.EditorTrimSave, trimEditorSaveReducer);
+    bundle.addReducer(ActionTypes.EditorTrimSave, editorTrimSaveReducer);
 
     bundle.defineAction(ActionTypes.EditorTrimIntervalsChanged);
 
@@ -137,7 +127,6 @@ function TrimEditorSelector(state) {
 function TrimEditorControlsSelector(state, props) {
     const {width} = props;
     const {getPlayerState} = state.get('scope');
-    const actionTypes = state.get('actionTypes');
     const editor = state.get('editor');
     const player = getPlayerState(state);
     const position = Math.round(player.get('audioTime'));
@@ -159,14 +148,13 @@ function TrimEditorControlsSelector(state, props) {
     const diffToEnd = selectedInterval.end - position;
     const selectedMarker = diffToStart <= diffToEnd ? selectedInterval.start : selectedInterval.end;
     return {
-        actionTypes, position, viewStart, viewEnd, duration, waveform, events, intervals,
+        position, viewStart, viewEnd, duration, waveform, events, intervals,
         selectedMarker, selectedInterval
     };
 }
 
 function TrimEditorReturnSelector(state) {
-    const {trimEditorReturn} = state.get('actionTypes');
-    return {return: trimEditorReturn};
+    return {};
 }
 
 function trimEditorSavingStepReducer(state, {payload: {step, status, progress, error}}) {
@@ -175,22 +163,25 @@ function trimEditorSavingStepReducer(state, {payload: {step, status, progress, e
         saving[step] = {$set: status};
     }
     if (typeof progress === 'number') {
+        // @ts-ignore
         saving.progress = {$set: progress};
     }
     if (error !== undefined) {
+        // @ts-ignore
         saving.error = {$set: error};
     }
+
     return state.updateIn(['editor', 'trim'], st => update(st, {saving}));
 }
 
 function* trimSaga() {
-    const scope = yield select(state => state.get('scope'));
-    yield takeLatest(scope.trimEditorEnter, trimEditorEnterSaga);
-    yield takeLatest(scope.trimEditorReturn, trimEditorReturnSaga);
-    yield takeLatest(scope.trimEditorSave, trimEditorSaveSaga);
+    yield takeLatest(ActionTypes.EditorTrimEnter, editorTrimEnterSaga);
+    yield takeLatest(ActionTypes.EditorTrimReturn, editorTrimReturnSaga);
+    // @ts-ignore
+    yield takeLatest(ActionTypes.EditorTrimSave, editorTrimSaveReducer);
 }
 
-function* trimEditorEnterSaga(_action) {
+function* editorTrimEnterSaga(_action) {
     const {editorControlsChanged, TrimEditorControls, PlayerControls, TrimEditorReturn, switchToScreen} = yield select(state => state.get('scope'));
     /* XXX install return button */
     yield put({
@@ -204,14 +195,13 @@ function* trimEditorEnterSaga(_action) {
     yield put({type: switchToScreen, payload: {screen: 'edit'}});
 }
 
-function* trimEditorReturnSaga(_action) {
-    const {editorControlsChanged, switchToScreen} = yield select(state => state.get('scope'));
-    yield put({type: editorControlsChanged, payload: {controls: {floating: []}}});
-    yield put({type: switchToScreen, payload: {screen: 'setup'}});
+function* editorTrimReturnSaga(_action) {
+    yield put({type: ActionTypes.EditorControlsChanged, payload: {controls: {floating: []}}});
+    yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'setup'}});
 
 }
 
-function trimEditorSaveReducer(state, _action) {
+function editorTrimSaveReducer(state, _action) {
     const saving = {
         prepareUpload: null,
         uploadEvents: null,
@@ -222,6 +212,7 @@ function trimEditorSaveReducer(state, _action) {
         uploadSubtitles: null,
         progress: 0,
     };
+
     return state.updateIn(['editor', 'trim'], st => ({...st, saving}));
 }
 
@@ -236,7 +227,6 @@ function trimEditorSavingDoneReducer(state, {payload: {playerUrl}}) {
 
 function* trimEditorSaveSaga({payload: {target}}) {
     // TODO: put 'saving starts' action
-    const {trimEditorSavingDone} = yield select(state => state.get('scope'));
     try {
         const editor = yield select(state => state.get('editor'));
         const {intervals} = editor.get('trim');
@@ -258,7 +248,7 @@ function* trimEditorSaveSaga({payload: {target}}) {
         }
 
         yield call(trimSubtitleUpload, playerUrl, subtitles);
-        yield put({type: trimEditorSavingDone, payload: {playerUrl}});
+        yield put({type: ActionTypes.EditorTrimSavingDone, payload: {playerUrl}});
     } catch (ex) {
         console.log('failed', ex);
         // TODO: put 'saving failed' action
@@ -300,7 +290,9 @@ function trimEvents(data, intervals) {
         options,
         events,
         subtitles: []
-    })], {encoding: "UTF-8", type: "application/json;charset=UTF-8"});
+    })], {
+        type: "application/json;charset=UTF-8"
+    });
 }
 
 function trimSubtitles(data, intervals) {
@@ -394,39 +386,38 @@ function trimSubtitles(data, intervals) {
 }
 
 function* trimEditorUpdateSubtitles(intervals) {
+    const step = 'updateSubtitles';
+
     try {
-        const step = 'updateSubtitles';
-        const {trimEditorSavingStep, subtitlesTrimDone} = yield select(state => state.get('scope'));
-        yield put({type: trimEditorSavingStep, payload: {step, status: 'pending'}});
+        yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'pending'}});
 
         const {loaded: subtitleData} = yield select(state => state.getIn(['subtitles', 'trim']));
         const subtitles = trimSubtitles(subtitleData, intervals); // return [{key, text}]
-        yield put({type: subtitlesTrimDone, payload: {subtitles}});
-        yield put({type: trimEditorSavingStep, payload: {step, progress: 100}});
-        yield put({type: trimEditorSavingStep, payload: {step, status: 'done'}});
+        yield put({type: SubtitlesActionTypes.SubtitlesTrimDone, payload: {subtitles}});
+        yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, progress: 100}});
+        yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'done'}});
 
         return subtitles;
     } catch (error) {
         console.error('Subtitles Trim Error:', error);
-        yield put({type: trimEditorSavingStep, payload: {step, status: 'error', error: error.toString()}});
+
+        yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'error', error: error.toString()}});
     }
-    yield put({type: trimEditorSavingStep, payload: {step, status: 'error', error: 'unexpected end'}});
+
+    yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'error', error: 'unexpected end'}});
 }
 
 function* trimEditorPrepareUpload(target) {
-    const {trimEditorSavingStep} = yield select(state => state.get('scope'));
-    yield put({type: trimEditorSavingStep, payload: {step: 'prepareUpload', status: 'pending'}});
+    yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step: 'prepareUpload', status: 'pending'}});
 
     const targets = yield call(asyncRequestJson, 'upload', target);
-    yield put({type: trimEditorSavingStep, payload: {step: 'prepareUpload', status: 'done'}});
+    yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step: 'prepareUpload', status: 'done'}});
 
     return {targets, playerUrl: targets.player_url}; // XXX clean up /upload endpoint interface
 }
 
 function* trimEditorUpload(step, target, data) {
-    const {trimEditorSavingStep} = yield select(state => state.get('scope'));
-
-    yield put({type: trimEditorSavingStep, payload: {step, status: 'pending'}});
+    yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'pending'}});
     const channel = yield call(uploadBlobChannel, target, data);
 
     while (true) {
@@ -434,25 +425,26 @@ function* trimEditorUpload(step, target, data) {
         if (!event) break;
         switch (event.type) {
             case 'response':
-                yield put({type: trimEditorSavingStep, payload: {step, status: 'done'}});
+                yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'done'}});
                 channel.close();
                 return event.response;
             case 'error':
-                yield put({type: trimEditorSavingStep, payload: {step, status: 'error', error: event.error}});
+                yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'error', error: event.error}});
                 break;
             case 'progress':
-                yield put({type: trimEditorSavingStep, payload: {step, progress: event.percent / 100}});
+                yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, progress: event.percent / 100}});
                 break;
         }
     }
-    yield put({type: trimEditorSavingStep, payload: {step, status: 'error', error: 'unexpected end'}});
+
+    yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'error', error: 'unexpected end'}});
 }
 
 function* trimEditorAssembleAudio(audioBuffer, intervals) {
-    const {trimEditorSavingStep} = yield select(state => state.get('scope'));
-    yield put({type: trimEditorSavingStep, payload: {step: 'assembleAudio', status: 'pending'}});
+    yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step: 'assembleAudio', status: 'pending'}});
     const worker = yield call(spawnWorker, AudioWorker);
     const {sampleRate, numberOfChannels, duration} = audioBuffer;
+
     /* Extract the list of chunks to retain. */
     const chunks = [];
     let length = 0;
@@ -462,11 +454,14 @@ function* trimEditorAssembleAudio(audioBuffer, intervals) {
             const sourceStart = Math.round(it.start / 1000 * sampleRate);
             const sourceEnd = Math.round(Math.min(it.end / 1000, duration) * sampleRate);
             const chunkLength = sourceEnd - sourceStart;
+
             chunks.push({start: sourceStart, length: chunkLength, mute});  // add muted flag here
             length += chunkLength;
         }
     }
-    const init = yield call(worker.call, 'init', {sampleRate, numberOfChannels});
+
+    yield call(worker.call, 'init', {sampleRate, numberOfChannels});
+
     let addedLength = 0;
     for (let chunk of chunks) {
         let samples = [];
@@ -478,39 +473,42 @@ function* trimEditorAssembleAudio(audioBuffer, intervals) {
             samples.push(chunkBuffer);
         }
         addedLength += chunk.length;
+
         yield call(worker.call, 'addSamples', {samples});
-        yield put({type: trimEditorSavingStep, payload: {step: 'assembleAudio', progress: addedLength / length}});
+        yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step: 'assembleAudio', progress: addedLength / length}});
     }
-    yield put({type: trimEditorSavingStep, payload: {step: 'assembleAudio', status: 'done'}});
+
+    yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step: 'assembleAudio', status: 'done'}});
+
     return worker;
 }
 
 function* trimEditorEncodeAudio(worker) {
-    const {trimEditorSavingStep} = yield select(state => state.get('scope'));
     const step = 'encodeAudio';
-    yield put({type: trimEditorSavingStep, payload: {step, status: 'pending'}});
-    const {mp3: mp3Blob} = yield call(worker.call, 'export', {mp3: true},
-        function* ({progress}) {
-            yield put({type: trimEditorSavingStep, payload: {step, progress}});
-        });
-    yield put({type: trimEditorSavingStep, payload: {step, status: 'done'}});
+    yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'pending'}});
+    const {mp3: mp3Blob} = yield call(worker.call, 'export', {mp3: true}, function* ({progress}) {
+        yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, progress}});
+    });
+    yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'done'}});
+
     return mp3Blob;
 }
 
 function* trimSubtitleUpload(playerUrl, subtitles) {
-    const {trimEditorSavingStep} = yield select(state => state.get('scope'));
-    yield put({type: trimEditorSavingStep, payload: {step: 'uploadSubtitles', status: 'pending'}});
+    yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step: 'uploadSubtitles', status: 'pending'}});
+
     const {baseUrl} = yield select(state => state.get('options'));
     const urlParsed = url.parse(playerUrl, true);
     const base = urlParsed.query.base; //newly generated codecast's base
     const changes = {subtitles};
+
     try {
         yield call(postJson, `${baseUrl}/save`, {base, changes});
-        yield put({type: trimEditorSavingStep, payload: {step: 'uploadSubtitles', progress: 100}});
-        yield put({type: trimEditorSavingStep, payload: {step: 'uploadSubtitles', status: 'done'}});
+        yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step: 'uploadSubtitles', progress: 100}});
+        yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step: 'uploadSubtitles', status: 'done'}});
     } catch (ex) {
         yield put({
-            type: trimEditorSavingStep,
+            type: ActionTypes.EditorTrimSavingStep,
             payload: {step: 'uploadSubtitles', status: 'error', error: ex.toString()}
         });
     }

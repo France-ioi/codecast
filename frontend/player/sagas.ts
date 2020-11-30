@@ -4,59 +4,69 @@
 
 import {buffers, eventChannel} from 'redux-saga';
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
-import Immutable from 'immutable';
+import {Map} from 'immutable';
 
 import {getJson} from '../common/utils';
 import {findInstantIndex} from './utils';
+import {ActionTypes} from "./actionTypes";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 
 export default function (bundle) {
     bundle.addSaga(playerSaga);
 };
 
-function* playerSaga(app) {
-    const {actionTypes} = app;
-    yield takeLatest(actionTypes.playerPrepare, playerPrepare, app);
+function* playerSaga(action) {
+    yield takeLatest(ActionTypes.PlayerPrepare, playerPrepare, action);
+
     /* Use redux-saga takeLatest to cancel any executing replay saga. */
     const anyReplayAction = [
-        actionTypes.playerStart,
-        actionTypes.playerPause,
-        actionTypes.playerSeek
+        ActionTypes.PlayerStart,
+        ActionTypes.PlayerPause,
+        ActionTypes.PlayerSeek
     ];
-    yield takeLatest(anyReplayAction, replaySaga, app);
+    yield takeLatest(anyReplayAction, replaySaga, action);
 }
 
-function* playerPrepare(app, {payload}) {
-    const {actionTypes, selectors: {getPlayerState}, globals: {replayApi}} = app;
+function* playerPrepare(app, action) {
+    const {selectors: {getPlayerState}, globals: {replayApi}} = app;
+
     /*
       baseDataUrl is forwarded to playerReady (stored in its reducer) in order
         to serve as the base URL for subtitle files (in the player & editor).
       audioUrl, eventsUrl need to be able to be passed independently by the
         recorder, where they are "blob:" URLs.
     */
-    const {baseDataUrl, audioUrl, eventsUrl} = payload;
+    const {baseDataUrl, audioUrl} = action.payload;
+
     // Check that the player is idle.
     const player = yield select(getPlayerState);
     if (player.get('isPlaying')) {
         return;
     }
+
     // Emit a Preparing action.
-    yield put({type: actionTypes.playerPreparing});
+    yield put({type: ActionTypes.PlayerPreparing});
+
     /* Load the audio. */
     const audio = player.get('audio');
     audio.src = audioUrl;
     audio.load();
+
     /* Load the events. */
     let data;
-    if (payload.data) {
-        data = payload.data;
+    if (action.payload.data) {
+        data = action.payload.data;
     } else {
-        data = yield call(getJson, payload.eventsUrl);
+        data = yield call(getJson, action.payload.eventsUrl);
     }
+
     if (Array.isArray(data)) {
         yield put({
-            type: actionTypes.playerPrepareFailure,
+            type: ActionTypes.PlayerPrepareFailure,
             payload: {message: "recording is incompatible with this player"}
         });
+
         return;
     }
     /* Compute the future state after every event. */
@@ -68,20 +78,20 @@ function* playerPrepare(app, {payload}) {
     }
 
     yield put({
-        type: actionTypes.platformChanged,
+        type: CommonActionTypes.PlatformChanged,
         payload: platform
     });
 
-    const state = Immutable.Map({
+    const playerState = Map({
         options: {platform}
     });
 
     if (data.options) {
-        state.set('options', data.options);
+        playerState.set('options', data.options);
     }
 
     const replayContext = {
-        state,
+        playerState,
         events: data.events,
         instants: [],
         applyEvent: replayApi.applyEvent,
@@ -94,11 +104,11 @@ function* playerPrepare(app, {payload}) {
         /* The duration of the recording is the timestamp of the last event. */
         const instants = replayContext.instants;
         const duration = instants[instants.length - 1].t;
-        yield put({type: actionTypes.playerReady, payload: {baseDataUrl, duration, data, instants}});
+        yield put({type: ActionTypes.PlayerReady, payload: {baseDataUrl, duration, data, instants}});
         yield call(resetToAudioTime, app, 0);
     } catch (ex) {
         yield put({
-            type: actionTypes.playerPrepareFailure,
+            type: ActionTypes.PlayerPrepareFailure,
             payload: {message: `${ex.toString()}`, context: replayContext}
         });
         return null;
@@ -107,15 +117,18 @@ function* playerPrepare(app, {payload}) {
     }
 
     function addSaga(saga) {
+        // @ts-ignore
         let {sagas} = replayContext.instant;
         if (!sagas) {
+            // @ts-ignore
             sagas = replayContext.instant.sagas = [];
         }
+
         sagas.push(saga);
     }
 
     function* reportProgress(progress) {
-        yield put({type: actionTypes.playerPrepareProgress, payload: {progress}});
+        yield put({type: ActionTypes.PlayerPrepareProgress, payload: {progress}});
         /* Allow the display to refresh. */
         yield take(chan);
     }
@@ -171,10 +184,13 @@ function* computeInstants(replayContext) {
 
         /* Preserve the last explicitly set range. */
         if ('range' in instant) {
+            // @ts-ignore
             range = instant.range;
         } else {
+            // @ts-ignore
             instant.range = range;
         }
+        // @ts-ignore
         instant.state = replayContext.state;
 
         replayContext.instants.push(instant);
@@ -187,7 +203,7 @@ function* computeInstants(replayContext) {
 }
 
 function* replaySaga(app, {type, payload}) {
-    const {actionTypes, selectors: {getPlayerState}} = app;
+    const {selectors: {getPlayerState}} = app;
     const player = yield select(getPlayerState);
     const isPlaying = player.get('isPlaying');
     const audio = player.get('audio');
@@ -195,12 +211,12 @@ function* replaySaga(app, {type, payload}) {
     let audioTime = player.get('audioTime');
     let instant = player.get('current');
 
-    if (type === actionTypes.playerStart && !player.get('isReady')) {
+    if (type === ActionTypes.PlayerStart && !player.get('isReady')) {
         /* Prevent starting playback until ready.  Should perhaps wait until
            preparation is done, for autoplay. */
         return;
     }
-    if (type === actionTypes.playerStart) {
+    if (type === ActionTypes.PlayerStart) {
         /* If at end of stream, restart automatically. */
         if (instant.isEnd) {
             audioTime = 0;
@@ -211,28 +227,28 @@ function* replaySaga(app, {type, payload}) {
            loop. */
         yield call(resetToAudioTime, app, audioTime);
         /* Disable the stepper during playback, its states are pre-computed. */
-        yield put({type: actionTypes.stepperDisabled});
+        yield put({type: StepperActionTypes.StepperDisabled});
         /* Play the audio now that an accurate state is displayed. */
         audio.play();
-        yield put({type: actionTypes.playerStarted});
+        yield put({type: ActionTypes.PlayerStarted});
     }
 
-    if (type === actionTypes.playerPause) {
+    if (type === ActionTypes.PlayerPause) {
         /* The player is being paused.  The audio is paused first, then the
            audio time is used to reset the state accurately. */
         audio.pause();
         const audioTime = Math.round(audio.currentTime * 1000);
         yield call(resetToAudioTime, app, audioTime);
         yield call(restartStepper, app);
-        yield put({type: actionTypes.playerPaused});
+        yield put({type: ActionTypes.PlayerPaused});
         return;
     }
 
-    if (type === actionTypes.playerSeek) {
+    if (type === ActionTypes.PlayerSeek) {
         if (!isPlaying) {
             /* The stepper is disabled before a seek-while-paused, as it could be
                waiting on I/O. */
-            yield put({type: actionTypes.stepperDisabled});
+            yield put({type: StepperActionTypes.StepperDisabled});
         }
         /* Refreshing the display first then make the jump in the audio should
            make a cleaner jump, as audio will not start playing at the new
@@ -277,17 +293,16 @@ function* replaySaga(app, {type, payload}) {
     }
 
     /* Pause when the end event is reached. */
-    yield put({type: actionTypes.playerPause});
+    yield put({type: ActionTypes.PlayerPause});
 }
 
 function* replayToAudioTime(app, instants, startTime, endTime) {
-    const {actionTypes} = app;
     let instantIndex = findInstantIndex(instants, startTime);
     const nextInstantIndex = findInstantIndex(instants, endTime);
     if (instantIndex === nextInstantIndex) {
         /* Fast path: audio time has advanced but we are still at the same
            instant, just emit a tick event to update the audio time. */
-        yield put({type: actionTypes.playerTick, payload: {audioTime: endTime}});
+        yield put({type: ActionTypes.PlayerTick, payload: {audioTime: endTime}});
         return;
     }
     /* Update the DOM by replaying incremental events between (immediately
@@ -296,7 +311,7 @@ function* replayToAudioTime(app, instants, startTime, endTime) {
     while (instantIndex <= nextInstantIndex) {
         let instant = instants[instantIndex];
         if (instant.hasOwnProperty('mute')) {
-            yield put({type: actionTypes.playerMutedChanged, payload: {isMuted: instant.mute}});
+            yield put({type: ActionTypes.PlayerMutedChanged, payload: {isMuted: instant.mute}});
         }
         if (instant.hasOwnProperty('jump')) {
             yield call(jumpToAudioTime, app, instant.jump);
@@ -326,27 +341,31 @@ function* replayToAudioTime(app, instants, startTime, endTime) {
 
 /* A quick reset avoids disabling and re-enabling the stepper (which restarts
    the stepper task). */
-function* resetToAudioTime(app, audioTime, quick) {
-    const {actionTypes, globals: {replayApi}} = app;
+function* resetToAudioTime(app, audioTime, quick?: boolean) {
+    const {globals: {replayApi}} = app;
+
     /* Call playerTick to store the current audio time and to install the
        current instant's state as state.getIn(['player', 'current']). */
-    yield put({type: actionTypes.playerTick, payload: {audioTime}});
+    yield put({type: ActionTypes.PlayerTick, payload: {audioTime}});
+
     /* Call the registered reset-sagas to update any part of the state not
        handled by playerTick. */
     const instant = yield select(state => state.getIn(['player', 'current']));
+
     yield call(replayApi.reset, instant, quick);
 }
 
-function* restartStepper({actionTypes}) {
+function* restartStepper(app) {
     /* Re-enable the stepper to allow the user to interact with it. */
-    yield put({type: actionTypes.stepperEnabled});
+    yield put({type: StepperActionTypes.StepperEnabled});
+
     /* If the stepper was running and blocking on input, do a "step-into" to
        restore the blocked-on-I/O state. */
     const instant = yield select(state => state.getIn(['player', 'current']));
     if (instant.state.get('status') === 'running') {
         const {isWaitingOnInput} = instant.state.get('current');
         if (isWaitingOnInput) {
-            yield put({type: actionTypes.stepperStep, mode: 'into'});
+            yield put({type: StepperActionTypes.StepperStep, mode: 'into'});
         }
     }
 }
@@ -379,25 +398,4 @@ function requestAnimationFrames(maxDelta) {
             shutdown = true;
         };
     }, buffers.sliding(1));
-}
-
-class Modernizer {
-    constructor(events) {
-        this._events = events;
-    }
-
-    toObject() {
-        const {version, source, input, ...init} = this._events[0][2];
-        if (source || input) {
-            init.buffers = {source, input};
-        }
-        if (!init.ioPaneMode) {
-            init.ioPaneMode = 'split';
-        }
-        return {
-            version,
-            events: Array.from({[Symbol.iterator]: () => new ModernizerIterator(init, this._events.slice(1))}),
-            subtitles: false
-        };
-    }
 }

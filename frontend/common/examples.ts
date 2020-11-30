@@ -1,10 +1,12 @@
-import React from 'react';
-import {AnchorButton, Icon} from '@blueprintjs/core';
 import url from 'url';
+import {ExamplePicker} from "./ExamplePicker";
+import {ActionTypes} from "./actionTypes";
 
 export default function (bundle, deps) {
     bundle.addReducer('init', initReducer);
-    bundle.addReducer('platformChanged', platformChangedReducer);
+
+    bundle.addReducer(ActionTypes.PlatformChanged, platformChangedReducer);
+
     bundle.defineView('ExamplePicker', ExamplePickerSelector, ExamplePicker);
 }
 
@@ -18,7 +20,10 @@ function platformChangedReducer(state) {
 
 function updateExamplesState(state, examples) {
     const {callbackUrl, examplesUrl, platform, language} = state.get('options');
-    if (!examplesUrl) return false;
+    if (!examplesUrl) {
+        return false;
+    }
+
     /* Clean up the callback URL to avoid passing the current source to the
        examples selector.  Also clear 'platform' in case the user changes it
        in the selector. */
@@ -27,40 +32,26 @@ function updateExamplesState(state, examples) {
     delete fullCallbackUrl.query.source;
     delete fullCallbackUrl.query.platform;
     fullCallbackUrl.query.language = language;
+
+    // @ts-ignore
     fullCallbackUrl = url.format(fullCallbackUrl);
+
     let fullExamplesUrl = url.parse(examplesUrl, true);
     fullExamplesUrl.query.target = '_self';
     fullExamplesUrl.query.tags = platform;
     /* XXX better to pass language unchanged and have the examples app drop the country code */
     fullExamplesUrl.query.lang = language.replace(/_.*$/, '');
+    // @ts-ignore
     fullExamplesUrl.query.callback = fullCallbackUrl;
+    // @ts-ignore
     fullExamplesUrl = url.format(fullExamplesUrl);
+
     return {...examples, fullExamplesUrl};
 }
 
 function ExamplePickerSelector(state, props) {
     const getMessage = state.get('getMessage');
     const {fullExamplesUrl} = state.get('examples', {});
-    return {examplesUrl: fullExamplesUrl, getMessage};
-}
 
-class ExamplePicker extends React.PureComponent {
-    render() {
-        const {examplesUrl, disabled, getMessage} = this.props;
-        if (disabled || !examplesUrl) return false;
-        return (
-            <div>
-                <label className='bp3-label'>
-                    {getMessage('EXAMPLES_LABEL')}
-                    <AnchorButton href={examplesUrl} rightIcon='share'>
-                        {getMessage('EXAMPLES_BUTTON_TITLE')}
-                    </AnchorButton>
-                </label>
-                <p>
-                    <Icon icon='warning-sign'/>{' '}
-                    {getMessage('EXAMPLES_MESSAGE')}
-                </p>
-            </div>
-        );
-    }
+    return {examplesUrl: fullExamplesUrl, getMessage};
 }

@@ -1,5 +1,3 @@
-import React from 'react';
-
 import IntlMessageFormat from 'intl-messageformat';
 import memoize from 'lodash.memoize';
 import {LanguageSelection} from "./LanguageSelection";
@@ -7,8 +5,10 @@ import {ActionTypes} from "./actionTypes";
 
 export default function (bundle, deps) {
     bundle.addReducer('init', initReducer);
+
     bundle.defineAction(ActionTypes.LanguageSet);
     bundle.addReducer(ActionTypes.LanguageSet, setLanguageReducer);
+
     bundle.defineView('LanguageSelection', LanguageSelectionSelector, LanguageSelection);
 }
 
@@ -48,6 +48,7 @@ function initReducer(state, {payload: {options}}) {
     if (language in options && options.language in Languages) {
         language = options.language;
     }
+
     return setLanguageReducer(state, {payload: {language}});
 }
 
@@ -62,6 +63,7 @@ function setLanguageReducer(state, {payload: {language}}) {
     });
     getMessage.format = function (value) {
         if (value instanceof Error && value.name === 'LocalizedError') {
+            // @ts-ignore
             return getMessage(value.message).format(value.args);
         }
         return getMessage(value.toString());
@@ -72,14 +74,14 @@ function setLanguageReducer(state, {payload: {language}}) {
 }
 
 function LanguageSelectionSelector(state) {
-    const {setLanguage} = state.get('actionTypes');
     const language = state.get('options').language;
     const getMessage = state.get('getMessage');
-    return {setLanguage, language, getMessage};
+
+    return {language, getMessage};
 }
 
 export class LocalizedError extends Error {
-    constructor(message, args) {
+    constructor(message, public args) {
         super(message);
         this.name = 'LocalizedError';
         this.args = args;

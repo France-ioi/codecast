@@ -1,35 +1,35 @@
-import React from 'react';
-import {Button} from '@blueprintjs/core';
 import Immutable from 'immutable';
 import {buffers, eventChannel} from 'redux-saga';
 import {put, take} from 'redux-saga/effects';
+import {ActionTypes} from "./actionTypes";
+import {FullscreenButton} from "./FullscreenButton";
 
 export default function (bundle, deps) {
-
-    bundle.defineAction('enterFullscreen', 'Fullscreen.Enter');
-    bundle.defineAction('enterFullscreenSucceeded', 'Fullscreen.Enter.Succeeded');
-    bundle.defineAction('enterFullscreenFailed', 'Fullscreen.Enter.Failed');
-    bundle.defineAction('leaveFullscreen', 'Fullscreen.Leave');
-    bundle.defineAction('leaveFullscreenSucceeded', 'Fullscreen.Leave.Succeeded');
-    bundle.defineAction('fullscreenEnabled', 'Fullscreen.Enabled');
-
     bundle.addReducer('init', function (state, _action) {
         return state.set('fullscreen', Immutable.Map({active: false, enabled: false}));
     });
 
-    bundle.addReducer('enterFullscreenSucceeded', function (state, action) {
+    bundle.defineAction(ActionTypes.FullscreenEnter);
+
+    bundle.defineAction(ActionTypes.FullscreenEnterSucceeded);
+    bundle.addReducer(ActionTypes.FullscreenEnterSucceeded, function (state, action) {
         return state.setIn(['fullscreen', 'active'], true);
     });
 
-    bundle.addReducer('enterFullscreenFailed', function (state, action) {
+    bundle.defineAction(ActionTypes.FullscreenEnterFailed);
+    bundle.addReducer(ActionTypes.FullscreenEnterFailed, function (state, action) {
         return state.setIn(['fullscreen', 'enabled'], false);
     });
 
-    bundle.addReducer('leaveFullscreenSucceeded', function (state, action) {
+    bundle.defineAction(ActionTypes.FullscreenLeave);
+
+    bundle.defineAction(ActionTypes.FullscreenLeaveSucceeded);
+    bundle.addReducer(ActionTypes.FullscreenLeaveSucceeded, function (state, action) {
         return state.setIn(['fullscreen', 'active'], false);
     });
 
-    bundle.addReducer('fullscreenEnabled', function (state, action) {
+    bundle.defineAction(ActionTypes.FullscreenEnabled);
+    bundle.addReducer(ActionTypes.FullscreenEnabled, function (state, action) {
         return state.setIn(['fullscreen', 'enabled'], action.enabled);
     });
 
@@ -39,6 +39,7 @@ export default function (bundle, deps) {
         const elem = window.document;
 
         function onFullscreenChange() {
+            // @ts-ignore
             const isFullscreen = !!(elem.fullscreenElement || elem.msFullscreenElement || elem.mozFullScreenElement || elem.webkitFullscreenElement);
             listener(isFullscreen ? 'on' : 'off');
         }
@@ -65,19 +66,20 @@ export default function (bundle, deps) {
 
     bundle.addSaga(function* monitorFullscreen() {
         const elem = window.document;
+        // @ts-ignore
         const isFullscreenEnabled = !!(elem.fullscreenEnabled || elem.msFullscreenEnabled || elem.mozFullScreenEnabled || elem.webkitFullscreenEnabled);
-        yield put({type: deps.fullscreenEnabled, enabled: isFullscreenEnabled});
+        yield put({type: ActionTypes.FullscreenEnabled, enabled: isFullscreenEnabled});
         while (true) {
             let event = yield take(fullscreenMonitorChannel);
             switch (event) {
                 case 'on':
-                    yield put({type: deps.enterFullscreenSucceeded});
+                    yield put({type: ActionTypes.FullscreenEnterSucceeded});
                     break;
                 case 'error':
-                    yield put({type: deps.enterFullscreenFailed});
+                    yield put({type: ActionTypes.FullscreenEnterFailed});
                     break;
                 case 'off':
-                    yield put({type: deps.leaveFullscreenSucceeded});
+                    yield put({type: ActionTypes.FullscreenLeaveSucceeded});
                     break;
             }
         }
@@ -86,14 +88,20 @@ export default function (bundle, deps) {
     bundle.addSaga(function* watchEnterFullscreen() {
         while (true) {
             yield take(deps.enterFullscreen);
-            var elem = window.document.documentElement;
+            const elem = window.document.documentElement;
             if (elem.requestFullscreen) {
                 elem.requestFullscreen();
+                // @ts-ignore
             } else if (elem.msRequestFullscreen) {
+                // @ts-ignore
                 elem.msRequestFullscreen();
+                // @ts-ignore
             } else if (elem.mozRequestFullScreen) {
+                // @ts-ignore
                 elem.mozRequestFullScreen();
+                // @ts-ignore
             } else if (elem.webkitRequestFullscreen) {
+                // @ts-ignore
                 elem.webkitRequestFullscreen();
             }
         }
@@ -102,14 +110,20 @@ export default function (bundle, deps) {
     bundle.addSaga(function* watchLeaveFullscreen() {
         while (true) {
             yield take(deps.leaveFullscreen);
-            var elem = window.document;
+            const elem = window.document;
             if (elem.exitFullscreen) {
                 elem.exitFullscreen();
+                // @ts-ignore
             } else if (elem.msExitFullscreen) {
+                // @ts-ignore
                 elem.msExitFullscreen();
+                // @ts-ignore
             } else if (elem.mozCancelFullScreen) {
+                // @ts-ignore
                 elem.mozCancelFullScreen();
+                // @ts-ignore
             } else if (elem.webkitExitFullscreen) {
+                // @ts-ignore
                 elem.webkitExitFullscreen();
             }
         }
@@ -117,29 +131,11 @@ export default function (bundle, deps) {
 
 };
 
-class FullscreenButton extends React.PureComponent {
-    render() {
-        const {enabled, active, getMessage} = this.props;
-        const tooltip = getMessage(active ? 'EXIT_FULLSCREEN' : 'FULLSCREEN');
-        return (
-            <Button onClick={active ? this._leaveFullscreen : this._enterFullscreen} disabled={!enabled} title={tooltip}
-                    icon={active ? 'minimize' : 'fullscreen'}/>
-        );
-    }
-
-    _enterFullscreen = () => {
-        this.props.dispatch({type: this.props.enterFullscreen});
-    };
-    _leaveFullscreen = () => {
-        this.props.dispatch({type: this.props.leaveFullscreen});
-    };
-}
-
 function FullscreenButtonSelector(state, props) {
-    const {enterFullscreen, leaveFullscreen} = state.get('scope');
     const getMessage = state.get('getMessage');
     const fullscreen = state.get('fullscreen');
     const enabled = fullscreen.get('enabled');
     const active = fullscreen.get('active');
-    return {enterFullscreen, leaveFullscreen, enabled, active, getMessage};
+
+    return {enabled, active, getMessage};
 }

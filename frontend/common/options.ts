@@ -1,10 +1,12 @@
 import {stepperClear} from '../stepper/index';
 import {compileClearDiagnostics} from "../stepper/compile";
+import {ActionTypes} from "./actionTypes";
 
 export default function (bundle) {
-    bundle.defineAction('platformChanged', 'Platform.Changed');
     bundle.addReducer('init', initReducer);
-    bundle.addReducer('platformChanged', platformChangedReducer);
+
+    bundle.defineAction(ActionTypes.PlatformChanged);
+    bundle.addReducer(ActionTypes.PlatformChanged, platformChangedReducer);
 }
 
 function initReducer(state, {payload: {options}}) {

@@ -24,14 +24,20 @@ function split(tree, key) {
 function get(tree, key) {
     let start = 0, end = Infinity;
     while (tree instanceof Node) {
+        // @ts-ignore
         if (key <= tree.key) {
+            // @ts-ignore
             end = tree.key;
+            // @ts-ignore
             tree = tree.left;
         } else {
+            // @ts-ignore
             start = tree.key;
+            // @ts-ignore
             tree = tree.right;
         }
     }
+
     return {value: tree.value, start, end};
 }
 
@@ -48,21 +54,33 @@ function set(tree, key, value) {
 
 function mergeLeft(tree, key) {
     if (tree instanceof Node) {
+        // @ts-ignore
         if (key < tree.key) {
+            // @ts-ignore
             if (tree.left instanceof Node) {
+                // @ts-ignore
                 const left = mergeLeft(tree.left, key);
+                // @ts-ignore
                 return new Node(left, tree.key, tree.right);
             }
+            // @ts-ignore
         } else if (key > tree.key) {
+            // @ts-ignore
             if (tree.right instanceof Node) {
+                // @ts-ignore
                 const right = mergeLeft(tree.right, key);
+                // @ts-ignore
                 return new Node(tree.left, tree.key, right);
             }
         } else {
+            // @ts-ignore
             if (tree.left instanceof Leaf) {
+                // @ts-ignore
                 return tree.right;
             }
+            // @ts-ignore
             const {left, node} = hoistRightmost(tree.left);
+            // @ts-ignore
             return new Node(left, node.key, tree.right);
         }
     }
@@ -71,10 +89,14 @@ function mergeLeft(tree, key) {
 
 function hoistRightmost(tree) {
     if (tree instanceof Node) {
+        // @ts-ignore
         if (tree.right instanceof Leaf) {
+            // @ts-ignore
             return {left: tree.left, node: tree};
         } else {
+            // @ts-ignore
             const {left, node} = hoistRightmost(tree.right);
+            // @ts-ignore
             return {left: new Node(tree.left, tree.key, left), node};
         }
     }
@@ -85,8 +107,11 @@ function keys(tree) {
 
     function push(tree) {
         if (tree instanceof Node) {
+            // @ts-ignore
             stack.push({type: 'node', arg: tree.right});
+            // @ts-ignore
             stack.push({type: 'key', arg: tree.key});
+            // @ts-ignore
             stack.push({type: 'node', arg: tree.left});
         }
     }
@@ -115,6 +140,7 @@ function intervals(tree) {
 
     function push(tree) {
         if (tree instanceof Leaf) {
+            // @ts-ignore
             stack.push({type: 'value', arg: tree.value});
         } else {
             stack.push({type: 'node', arg: tree.right});
@@ -155,11 +181,12 @@ function intervals(tree) {
 class IntervalTree {
     keys = {[Symbol.iterator]: () => keys(this.root)};
 
-    constructor(root) {
+    constructor(public root) {
         this.root = root;
     }
 
     toString() {
+        // @ts-ignore
         return JSON.stringify(Array.from(this));
     }
 

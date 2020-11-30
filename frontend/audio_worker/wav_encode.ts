@@ -1,20 +1,20 @@
 import {floatTo16BitPCM, floatTo8BitPCM} from './utils';
+import downsample from "./downsample";
 
 // options.numChannels: 1 (mono), 2 (stereo)
 // options.sampleSize: 1 (8-bit), 2 (16-bit)
 // options.sampleRate: recordingSampleRate / {1,2,3,4,6}
 export default function encode(audioBuffer, options, progressCallback) {
-
     /* Inspect audioBuffer input. */
-    const {numberOfChannels, sampleRate, length} = audioBuffer;
-    const channels = new Array(numberOfChannels);
+    const {numberOfChannels, sampleRate} = audioBuffer;
+    let channels = new Array(numberOfChannels);
     for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber += 1) {
         channels[channelNumber] = audioBuffer.getChannelData(channelNumber);
     }
     progressCallback(0.1);
 
     /* Downsample if needed (integral dividers of 2-6 are supported). */
-    var divider = sampleRate / options.sampleRate;
+    const divider = sampleRate / options.sampleRate;
     if (divider !== 1) {
         channels = channels.map(samples => downsample(samples, divider));
     }
@@ -41,10 +41,10 @@ export default function encode(audioBuffer, options, progressCallback) {
     progressCallback(0.3);
 
     /* Allocate output buffer. */
-    var blockAlignment = options.numChannels * options.sampleSize;
-    var dataByteCount = samples.length * options.sampleSize;
-    var buffer = new ArrayBuffer(44 + dataByteCount);
-    var view = new DataView(buffer);
+    const blockAlignment = options.numChannels * options.sampleSize;
+    const dataByteCount = samples.length * options.sampleSize;
+    const buffer = new ArrayBuffer(44 + dataByteCount);
+    const view = new DataView(buffer);
 
     /* RIFF identifier */
     writeString(view, 0, "RIFF");
@@ -114,7 +114,7 @@ function interleaveSamples(channels) {
 }
 
 function writeString(view, offset, string) {
-    for (var i = 0; i < string.length; i++) {
+    for (let i = 0; i < string.length; i++) {
         view.setUint8(offset + i, string.charCodeAt(i));
     }
 }

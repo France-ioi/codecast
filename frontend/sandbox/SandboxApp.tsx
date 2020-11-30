@@ -1,5 +1,8 @@
 import React from 'react';
 import classnames from 'classnames';
+import {StepperControls} from "../stepper/views/StepperControls";
+import Menu from "../common/Menu";
+import {StepperView} from "../stepper/views/StepperView";
 
 interface SandboxAppProps {
     containerWidth: any,
@@ -23,6 +26,7 @@ export class SandboxApp extends React.PureComponent<SandboxAppProps> {
                         </div>
                     </div>
                 </div>
+
                 <StepperView />
             </div>
         );

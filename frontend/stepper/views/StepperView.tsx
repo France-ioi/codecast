@@ -3,6 +3,7 @@ import {Button, Icon} from "@blueprintjs/core";
 import PythonStackView from "../python/analysis/components/PythonStackView";
 import classnames from 'classnames';
 import {StepperViewPanes} from "./StepperViewPanes";
+import {ActionTypes} from "../actionTypes";
 
 interface StepperViewProps {
     diagnostics: any,
@@ -22,9 +23,7 @@ interface StepperViewProps {
     IOPane: any,
     windowHeight: any,
     currentStepperState: any,
-    dispatch: Function,
-    compileClearDiagnostics: string,
-    stepperExit: string
+    dispatch: Function
 }
 
 export class StepperView extends React.PureComponent<StepperViewProps> {
@@ -161,11 +160,11 @@ export class StepperView extends React.PureComponent<StepperViewProps> {
     }
 
     _onClearDiagnostics = () => {
-        this.props.dispatch({type: this.props.compileClearDiagnostics});
+        this.props.dispatch({type: ActionTypes.CompileClearDiagnostics});
     };
 
     _onStepperExit = () => {
-        this.props.dispatch({type: this.props.stepperExit});
+        this.props.dispatch({type: ActionTypes.StepperExit});
     };
 
     refContainer = (element) => {

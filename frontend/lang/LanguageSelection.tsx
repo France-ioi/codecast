@@ -1,5 +1,6 @@
 import React from "react";
 import {Languages} from "./index";
+import {ActionTypes} from "./actionTypes";
 
 interface LanguageSelectionProps {
     language: any,
@@ -31,13 +32,13 @@ export class LanguageSelection extends React.PureComponent<LanguageSelectionProp
 
     setLanguage = (event) => {
         const language = event.target.value;
-        const {closeMenu, dispatch, setLanguage} = this.props;
+        const {closeMenu, dispatch} = this.props;
         closeMenu();
         try {
             window.localStorage.language = language;
         } catch (ex) {
             // No local storage access.
         }
-        setTimeout(() => dispatch({type: setLanguage, payload: {language}}), 0);
+        setTimeout(() => dispatch({type: ActionTypes.LanguageSet, payload: {language}}), 0);
     };
 }

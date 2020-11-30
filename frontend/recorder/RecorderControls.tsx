@@ -2,6 +2,9 @@ import React from "react";
 import {Button, ButtonGroup, Icon, Slider} from "@blueprintjs/core";
 import {formatTime} from "../common/utils";
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {StepperControls} from "../stepper/views/StepperControls";
+import Menu from "../common/Menu";
 
 interface RecorderControlsProps {
     getMessage: any,
@@ -52,7 +55,7 @@ export class RecorderControls extends React.PureComponent<RecorderControlsProps>
                         <StepperControls enabled={canStep}/>
                     </div>
                     <div className='text-right' style={{flexGrow: 2}}>
-                        <Menu/>
+                        <Menu />
                     </div>
                 </div>
                 {isPlayback &&
@@ -71,7 +74,7 @@ export class RecorderControls extends React.PureComponent<RecorderControlsProps>
         if (recorderStatus === 'ready') {
             this.props.dispatch({type: ActionTypes.RecorderStart});
         } else {
-            this.props.dispatch({type: this.props.recorderResume});
+            this.props.dispatch({type: ActionTypes.RecorderResume});
         }
     };
     onPause = () => {
@@ -79,16 +82,16 @@ export class RecorderControls extends React.PureComponent<RecorderControlsProps>
         if (recorderStatus === 'recording') {
             this.props.dispatch({type: ActionTypes.RecorderPause});
         } else {
-            this.props.dispatch({type: this.props.playerPause});
+            this.props.dispatch({type: PlayerActionTypes.PlayerPause});
         }
     };
     onStartPlayback = () => {
-        this.props.dispatch({type: this.props.playerStart});
+        this.props.dispatch({type: PlayerActionTypes.PlayerStart});
     };
     onStopRecording = () => {
-        this.props.dispatch({type: this.props.recorderStop});
+        this.props.dispatch({type: ActionTypes.RecorderStop});
     };
     onSeek = (audioTime) => {
-        this.props.dispatch({type: this.props.playerSeek, payload: {audioTime}});
+        this.props.dispatch({type: PlayerActionTypes.PlayerSeek, payload: {audioTime}});
     };
 }

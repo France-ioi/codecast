@@ -1,4 +1,3 @@
-import React from 'react';
 import {StepperView} from "./StepperView";
 
 function StepperViewSelector(state, props) {

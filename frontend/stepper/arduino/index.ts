@@ -131,7 +131,7 @@ export default function (bundle, deps) {
             }
         });
 
-        recordApi.on(deps.arduinoPortConfigured, function* (addEvent, action) {
+        recordApi.on(ActionTypes.ArduinoPortConfigured, function* (addEvent, action) {
             const {index, changes} = action;
             yield call(addEvent, 'arduino.port.configured', index, changes);
         });
@@ -141,7 +141,7 @@ export default function (bundle, deps) {
             replayContext.state = arduinoPortConfigured(replayContext.state, {index, changes});
         });
 
-        recordApi.on(deps.arduinoPortChanged, function* (addEvent, action) {
+        recordApi.on(ActionTypes.ArduinoPortChanged, function* (addEvent, action) {
             const {index, changes} = action;
             yield call(addEvent, 'arduino.port.changed', index, changes);
         });
@@ -151,7 +151,7 @@ export default function (bundle, deps) {
             replayContext.state = arduinoPortChanged(replayContext.state, {index, changes});
         });
 
-        recordApi.on(deps.arduinoPortSelected, function* (addEvent, action) {
+        recordApi.on(ActionTypes.ArduinoPortSelected, function* (addEvent, action) {
             const {index} = action;
             yield call(addEvent, 'arduino.port.selected', index);
         });

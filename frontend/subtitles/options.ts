@@ -1,4 +1,3 @@
-
 export function getPersistentOptions() {
   let opts;
   try {

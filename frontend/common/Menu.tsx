@@ -1,24 +1,37 @@
 import React from 'react';
 import {Button, ButtonGroup, Dialog} from '@blueprintjs/core';
 import {isLocalMode} from "../utils/app";
+import {FullscreenButton} from "./FullscreenButton";
+import {SubtitlesMenu} from "../subtitles/SubtitlesMenu";
+import {LanguageSelection} from "../lang/LanguageSelection";
+import {ExamplePicker} from "./ExamplePicker";
+import {ActionTypes} from "./actionTypes";
 
 export default function (bundle) {
     bundle.defineView('Menu', MenuSelector, Menu);
 };
 
-class Menu extends React.PureComponent {
+interface MenuProps {
+    getMessage: Function,
+    canChangePlatform: boolean,
+    platform: string,
+    offlineDownloadUrl: string,
+    dispatch: Function
+}
+
+class Menu extends React.PureComponent<MenuProps> {
     state = {isOpen: false};
 
     render() {
-        const {getMessage, SubtitlesMenu, FullscreenButton, LanguageSelection, ExamplePicker, platform, canChangePlatform, offlineDownloadUrl} = this.props;
+        const {getMessage, platform, canChangePlatform, offlineDownloadUrl} = this.props;
         const {isOpen} = this.state;
 
         return (
             <div id='menu'>
                 <ButtonGroup>
-                    <SubtitlesMenu/>
+                    <SubtitlesMenu />
                     <Button onClick={this.openMenu} icon='menu'/>
-                    <FullscreenButton/>
+                    <FullscreenButton />
                 </ButtonGroup>
                 <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={isOpen} onClose={this.closeMenu}>
                     <div className='bp3-dialog-body'>
@@ -44,7 +57,7 @@ class Menu extends React.PureComponent {
                             {getMessage('DOWNLOAD_OFFLINE')}
                         </a>
                         }
-                        <ExamplePicker/>
+                        <ExamplePicker />
                     </div>
                 </Dialog>
             </div>
@@ -60,15 +73,13 @@ class Menu extends React.PureComponent {
     setPlatform = (event) => {
         const platform = event.target.value;
         this.props.dispatch({
-            type: this.props.platformChanged,
+            type: ActionTypes.PlatformChanged,
             payload: platform
         });
     };
 }
 
 function MenuSelector(state, props) {
-    const {FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker} = state.get('scope');
-    const {platformChanged} = state.get('actionTypes');
     const {baseUrl, baseDataUrl, platform, canChangePlatform} = state.get('options');
     const getMessage = state.get('getMessage');
 
@@ -78,7 +89,6 @@ function MenuSelector(state, props) {
     }
 
     return {
-        getMessage, FullscreenButton, SubtitlesMenu, LanguageSelection, ExamplePicker,
-        platform, canChangePlatform, platformChanged, offlineDownloadUrl
+        getMessage, platform, canChangePlatform, offlineDownloadUrl
     };
 }

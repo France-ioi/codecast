@@ -27,8 +27,8 @@ export default function (bundle, deps) {
     bundle.defineView('EditorOverview', EditorOverviewSelector, EditorOverview);
 
     bundle.addSaga(function* editorOverviewSaga(app) {
-        yield takeLatest(app.actionTypes.editorSaveAudio, editorSaveAudioSaga, app);
-        yield takeLatest(app.actionTypes.editorSave, editorSaveSaga, app);
+        yield takeLatest(ActionTypes.EditorSaveAudio, editorSaveAudioSaga, app);
+        yield takeLatest(ActionTypes.EditorSave, editorSaveSaga, app);
     });
 }
 
@@ -49,7 +49,6 @@ function editorPropertyChangedReducer(state, {payload: {key, value}}) {
 }
 
 function EditorOverviewSelector(state, props) {
-    const actionTypes = state.get('actionTypes');
     const editor = state.get('editor');
     const playerUrl = editor.get('playerUrl');
     const {version, name, events} = editor.get('data');
@@ -58,7 +57,8 @@ function EditorOverviewSelector(state, props) {
     const save = editor.get('save');
     const duration = editor.get('duration');
     const waveform = editor.get('waveform');
-    return {actionTypes, version, name, events, duration, waveform, canSave, unsaved, save, playerUrl};
+
+    return {version, name, events, duration, waveform, canSave, unsaved, save, playerUrl};
 }
 
 function editorSaveReducer(state, action) {
@@ -83,19 +83,23 @@ function* editorSaveAudioSaga(_app, _action) {
         const name = (editor.get('data').name || '').trim();
         return {id, name};
     });
+
     const saveAsName = `${name || id}.mp3`;
     const blob = yield select(state => state.getIn(['editor', 'audioBlob']));
+
     yield call(FileSaver.saveAs, blob, saveAsName);
 }
 
-function* editorSaveSaga({actionTypes}, _action) {
+function* editorSaveSaga(app, _action) {
     const {baseUrl, base, name} = yield select(function (state) {
         const {baseUrl} = state.get('options');
         const editor = state.get('editor');
         const base = editor.get('base');
         const {name} = editor.get('data');
+
         return {baseUrl, base, name};
     });
+
     const changes = {name};
     let result;
     try {
@@ -103,9 +107,11 @@ function* editorSaveSaga({actionTypes}, _action) {
     } catch (ex) {
         result = {error: ex.toString()};
     }
+
     if (result.error) {
         yield put({type: ActionTypes.EditorSaveFailed, payload: {error: result.error}});
         return;
     }
+
     yield put({type: ActionTypes.EditorSaveSucceeded});
 }

@@ -1,4 +1,4 @@
-import Immutable from 'immutable';
+import {Map, List} from 'immutable';
 
 /*
 
@@ -16,16 +16,16 @@ import Immutable from 'immutable';
 export default function (bundle) {
 
   bundle.defineSelector('getRecorderState', state =>
-    state.get('recorder', Immutable.Map())
+    state.get('recorder', Map())
   );
 
   bundle.addReducer('recorderPreparing', function (state, action) {
     const {progress} = action;
-    return state.set('recorder', Immutable.Map({status: 'preparing', progress}));
+    return state.set('recorder', Map({status: 'preparing', progress}));
   });
 
   bundle.addReducer('recorderReady', function (state, {payload: {recorderContext}}) {
-    return state.set('recorder', Immutable.Map({
+    return state.set('recorder', Map({
       status: 'ready',
       context: recorderContext,
       junkTime: 0
@@ -37,12 +37,11 @@ export default function (bundle) {
   });
 
   bundle.addReducer('recorderStarted', function (state, action) {
-    const {recorder} = state;
     return state.update('recorder', recorder => recorder
       .set('status', 'recording')
       .set('timeOffset', 0)
       .set('lastEventTime', 0)
-      .set('events', Immutable.List()))
+      .set('events', List()))
       .set('elapsed', 0);
   });
 

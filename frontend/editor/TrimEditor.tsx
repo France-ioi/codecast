@@ -9,7 +9,7 @@ interface TrimEditorProps {
     dispatch: Function
 }
 
-class TrimEditor extends React.PureComponent<TrimEditorProps> {
+export class TrimEditor extends React.PureComponent<TrimEditorProps> {
     state = {targetUrl: ''};
 
     static getDerivedStateFromProps(props, state) {

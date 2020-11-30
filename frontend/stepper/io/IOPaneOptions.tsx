@@ -2,6 +2,7 @@ import React from "react";
 import {Panel} from 'react-bootstrap';
 import {select} from "redux-saga/effects";
 import {ActionTypes} from "./actionTypes";
+import {BufferEditor} from "../../buffers/BufferEditor";
 
 interface IOPaneOptionsProps {
     dispatch?: Function,
@@ -48,7 +49,7 @@ export class IOPaneOptions extends React.PureComponent<IOPaneOptionsProps> {
                             {mode === 'split' &&
                             <div>
                                 <p>{getMessage('IOPANE_INITIAL_INPUT')}</p>
-                                <deps.BufferEditor buffer='input' mode='text' width='100%' height='150px'/>
+                                <BufferEditor buffer='input' mode='text' width='100%' height='150px'/>
                             </div>}
                         </div>
                     </div>

@@ -20,7 +20,7 @@ function initReducer(state, _action) {
     return playerClearReducer(state);
 }
 
-function playerClearReducer(state, _action) {
+function playerClearReducer(state) {
     const audio = document.createElement('video');
     const volume = audio.volume; /* XXX: load from localStorage? */
     const isMuted = audio.muted; /* XXX: load from localStorage? */

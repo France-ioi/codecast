@@ -5,23 +5,28 @@ import * as ace from 'brace';
 const Range = ace.acequire('ace/range').Range;
 
 interface EditorProps {
-
+    shield: boolean,
+    readOnly: boolean,
+    theme: string,
+    mode: string,
+    width: any,
+    height: any,
+    onSelect: Function,
+    onEdit: Function,
+    onScroll: Function,
+    onInit: Function,
+    getMessage: Function
 }
 
-class Editor extends React.PureComponent {
-
-    constructor(props) {
-        super(props);
-
-        this.editor = null;
-        this.editorNode = null;
-        this.selection = null;
-        this.marker = null;
-        this.mute = false;
-        this.scrollTop = 0;
-        this.firstVisibleRow = 0;
-        this.willUpdateSelection = false;
-    }
+export class Editor extends React.PureComponent<EditorProps> {
+    editor: any = null;
+    editorNode: any = null;
+    selection: any = null;
+    marker: any = null;
+    mute: boolean = false;
+    scrollTop: number = 0;
+    firstVisibleRow: number = 0;
+    willUpdateSelection: boolean = false;
 
     refEditor = (node) => {
         this.editorNode = node;
@@ -164,7 +169,6 @@ class Editor extends React.PureComponent {
     };
 
     componentDidMount() {
-        const {buffer} = this.props;
         const editor = this.editor = ace.edit(this.editorNode);
         const session = this.editor.getSession();
         editor.$blockScrolling = Infinity;
@@ -173,7 +177,7 @@ class Editor extends React.PureComponent {
         session.setMode(`ace/mode/${this.props.mode || 'text'}`);
         // editor.setOptions({minLines: 25, maxLines: 50});
         editor.setReadOnly(this.props.readOnly);
-        const {onInit, onSelect, onEdit, onScroll} = this.props;
+        const {onInit, onSelect, onEdit} = this.props;
         if (typeof onInit === 'function') {
             const api = {
                 reset: this.reset,
@@ -193,6 +197,8 @@ class Editor extends React.PureComponent {
         if (typeof onEdit === 'function') {
             session.on("change", this.onTextChanged);
         }
+
+        // @ts-ignore
         editor.renderer.on("afterRender", this.onAfterRender);
         editor.commands.addCommand({
             name: "escape",
@@ -205,9 +211,11 @@ class Editor extends React.PureComponent {
                 editor.blur();
             }
         });
+
         /* // Export ACE editors for debugging purposes:
         window.editors = window.editors || {};
         window.editors[buffer] = editor; */
+
         /* Force a resize, the editor will not work properly otherwise. */
         setTimeout(function () {
             editor.resize(true);
@@ -219,6 +227,7 @@ class Editor extends React.PureComponent {
             if (prevProps.readOnly !== this.props.readOnly) {
                 this.editor.setReadOnly(this.props.readOnly);
             }
+
             /* Do not auto-scroll when shielded. */
             this.editor.setAutoScrollEditorIntoView(!this.props.shield);
         }
@@ -232,11 +241,14 @@ class Editor extends React.PureComponent {
 
     render() {
         const {width, height, shield, getMessage} = this.props;
+
         return (
             <div className="editor" style={{width: width, height: height}}>
                 <div className="editor-frame" ref={this.refEditor}/>
-                <div className={classnames(['editor-shield', shield && 'editor-shield-up'])}
-                     title={getMessage('PROGRAM_CANNOT_BE_MODIFIED_WHILE_RUNNING')}/>
+                <div
+                    className={classnames(['editor-shield', shield && 'editor-shield-up'])}
+                    title={getMessage('PROGRAM_CANNOT_BE_MODIFIED_WHILE_RUNNING')}
+                />
             </div>
         );
     }
@@ -246,7 +258,8 @@ class Editor extends React.PureComponent {
 function toRange(selection) {
     return new Range(
         selection.start.row, selection.start.column,
-        selection.end.row, selection.end.column);
+        selection.end.row, selection.end.column
+    );
 }
 
 function samePosition(p1, p2) {
@@ -257,11 +270,11 @@ function sameSelection(s1, s2) {
     if (typeof s1 !== typeof s2 || !!s1 !== !!s2) {
         return false;
     }
+
     // Test for same object (and also null).
     if (s1 === s2) {
         return true;
     }
+
     return samePosition(s1.start, s2.start) && samePosition(s1.end, s2.end);
 }
-
-export default Editor;

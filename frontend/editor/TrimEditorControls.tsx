@@ -3,6 +3,7 @@ import {Button, Checkbox} from "@blueprintjs/core";
 import {ExpandedWaveform} from "./waveform/ExpandedWaveform";
 import {FullWaveform} from "./waveform/FullWaveform";
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes"
 
 interface TrimEditorControlsProps {
     position: any,
@@ -51,7 +52,7 @@ export class TrimEditorControls extends React.PureComponent<TrimEditorControlsPr
     }
 
     seekTo = (position) => {
-        this.props.dispatch({type: this.props.actionTypes.playerSeek, payload: {audioTime: position}});
+        this.props.dispatch({type: PlayerActionTypes.PlayerSeek, payload: {audioTime: position}});
     };
     addMarker = () => {
         const {position} = this.props;

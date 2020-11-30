@@ -4,6 +4,7 @@ import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects
 import {asyncRequestJson} from '../utils/api';
 import {isLocalMode} from "../utils/app";
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {StatisticsApp} from "./StatisticsApp";
 import {StatisticsScreen} from "./StatisticsScreen";
 
@@ -102,9 +103,9 @@ export default function (bundle, deps) {
     bundle.defineView('StatisticsScreen', StatisticsScreenSelector, StatisticsScreen);
 
     bundle.addSaga(function* editorSaga(app) {
-        yield takeEvery(ActionTypes.StatisticsLogLoadingData, statisticsLogLoadingDataSaga, app);
+        yield takeEvery(ActionTypes.StatisticsLogLoadingData, statisticsLogLoadingDataSaga);
         yield takeEvery(ActionTypes.StatisticsInitLogData, statisticsInitLogDataSaga, app);
-        yield takeEvery(ActionTypes.PlayerReady, statisticsPlayerReadySaga, app);
+        yield takeEvery(PlayerActionTypes.PlayerReady, statisticsPlayerReadySaga, app);
         yield takeEvery(ActionTypes.StatisticsPrepare, statisticsPrepareSaga, app);
         yield takeLatest(ActionTypes.StatisticsSearchSubmit, statisticsSearchSaga, app);
     });
@@ -184,15 +185,14 @@ function* statisticsInitLogDataSaga({actionTypes}) {
     yield put({type: actionTypes.statisticsLogDataChanged, payload: {logData}});
 }
 
-function* statisticsPlayerReadySaga({actionTypes}, {payload: {data}}) {
+function* statisticsPlayerReadySaga(app, action) {
     try {
         const logData = yield select(state => state.getIn(['statistics', 'logData']));
 
-        const name = (data.hasOwnProperty('name')) ? data.name : 'default';
-        logData.name = name;
+        logData.name = (action.payload.data.hasOwnProperty('name')) ? action.payload.data.name : 'default';
 
-        yield put({type: actionTypes.statisticsLogDataChanged, payload: {logData}});
-        yield put({type: actionTypes.statisticsLogLoadingData});
+        yield put({type: ActionTypes.StatisticsLogDataChanged, payload: {logData}});
+        yield put({type: ActionTypes.StatisticsLogLoadingData});
     } catch (error) {
         console.error('Error Codecast Load Log', error);
     }
@@ -208,8 +208,8 @@ function* statisticsLogLoadingDataSaga() {
     }
 }
 
-function* statisticsSearchSaga({actionTypes}) {
-    yield put({type: actionTypes.statisticsSearchStatusChanged, payload: {status: 'loading'}});
+function* statisticsSearchSaga(app) {
+    yield put({type: ActionTypes.StatisticsSearchStatusChanged, payload: {status: 'loading'}});
     let response;
     try {
         const {baseUrl} = yield select(state => state.get('options'));
@@ -228,15 +228,14 @@ function* statisticsSearchSaga({actionTypes}) {
         response = {error: ex.toString()};
     }
     if (response.data) {
-        yield put({type: actionTypes.statisticsSearchStatusChanged, payload: {status: 'success', data: response.data}});
+        yield put({type: ActionTypes.StatisticsSearchStatusChanged, payload: {status: 'success', data: response.data}});
     } else {
         yield put({
-            type: actionTypes.statisticsSearchStatusChanged,
+            type: ActionTypes.StatisticsSearchStatusChanged,
             payload: {status: 'failed', error: response.error}
         });
     }
 }
-
 
 function StatisticsAppSelector(state, props) {
     const scope = state.get('scope');

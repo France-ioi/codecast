@@ -11,7 +11,7 @@ import buffersBundle from '../buffers';
 import optionsBundle from './options';
 import resizeBundle from './resize';
 import fullscreenBundle from './fullscreen';
-import menuBundle from './menu';
+import menuBundle from './Menu';
 import loginBundle from './login';
 import clientApiBundle from './client_api';
 import subtitlesBundle from '../subtitles';
@@ -19,7 +19,6 @@ import examplesBundle from './examples';
 import stepperBundle from '../stepper';
 
 export default function (bundle) {
-
     bundle.include(errorBundle);
 
     /* The player and recorder bundles must be included early to allow other
@@ -45,5 +44,4 @@ export default function (bundle) {
     /* TODO: Ultimately we want to support multiple languages, which would be
        done by including a variable stepper bundle.  */
     bundle.include(stepperBundle);
-
 }

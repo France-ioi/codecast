@@ -1,6 +1,7 @@
 import React from "react";
 import {Panel} from 'react-bootstrap'
 import {Icon} from "@blueprintjs/core";
+import {BufferEditor} from "../../buffers/BufferEditor";
 
 export class InputOutputView extends React.PureComponent {
     renderHeader = () => {
@@ -24,11 +25,11 @@ export class InputOutputView extends React.PureComponent {
                 <Panel.Body>
                     <div className="row">
                         <div className="col-sm-6">
-                            <deps.BufferEditor buffer='input' readOnly={true} mode='text' width='100%'
+                            <BufferEditor buffer='input' readOnly={true} mode='text' width='100%'
                                                height='150px'/>
                         </div>
                         <div className="col-sm-6">
-                            <deps.BufferEditor buffer='output' readOnly={true} shield={true} mode='text'
+                            <BufferEditor buffer='output' readOnly={true} shield={true} mode='text'
                                                width='100%' height='150px'/>
                         </div>
                     </div>

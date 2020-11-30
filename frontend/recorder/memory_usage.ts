@@ -13,9 +13,12 @@ export default function (bundle, deps) {
     state.update('memoryUsage', (value => ({...value, ...payload}))));
 
   bundle.addSaga(function* () {
-    yield takeEvery(ActionTypes.RecorderPreparing, function* ({payload: {progress, worker}}) {
-      if (progress === 'worker_ok') {
-        const channel = worker.listen('memoryUsage', buffers.sliding(1));
+    yield takeEvery(ActionTypes.RecorderPreparing, function* (action) {
+      // @ts-ignore
+      if (action.payload.progress === 'worker_ok') {
+        // @ts-ignore
+        const channel = action.payload.worker.listen('memoryUsage', buffers.sliding(1));
+        // @ts-ignore
         yield takeEvery(channel, function* ({heapSize}) {
           yield put({type: ActionTypes.MemoryUsageChanged, payload: {workerHeapSize: heapSize}});
         });

@@ -74,7 +74,7 @@ export default function (bundle, deps) {
             }
         }
 
-        const result = {
+        return {
             getMessage,
             showStepper, showControls, controls,
             showEdit, canExit,
@@ -84,8 +84,6 @@ export default function (bundle, deps) {
             canUndo, canRedo,
             compileOrExecuteMessage
         };
-
-        return result;
     }
 
     bundle.defineView('StepperControls', StepperControlsSelector, StepperControls);

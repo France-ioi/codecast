@@ -23,21 +23,24 @@ export default function (bundle, deps) {
   /* Sagas can be registered to run when recording starts, to populate an
      'init' object which is stored in the 'start' event of the recording. */
   const startSagas = [];
+  // @ts-ignore
   recordApi.onStart = function (saga) {
     startSagas.push(saga);
   };
+  // @ts-ignore
   recordApi.start = function* () {
     const init = {};
     for (var saga of startSagas) {
       yield call(saga, init);
     }
     const event = [0, 'start', init];
-    yield put({type: deps.recorderAddEvent, event});
+    yield put({type: ActionTypes.RecorderAddEvent, event});
   };
 
   /* For each redux action a single saga handler(addEvent, action) can be
      registered to add an event to the recorded stream. */
   const actionHandlers = new Map();
+  // @ts-ignore
   recordApi.on = function (actionType, handler) {
     if (actionHandlers.has(actionType)) {
       throw new Error(`multiple record handlers for ${actionType}`);
@@ -63,7 +66,7 @@ export default function (bundle, deps) {
   bundle.addSaga(function* recordEvents () {
     const pattern = Array.from(actionHandlers.keys());
     // Wait for the recorder to be ready, grab the context.
-    yield takeLatest(ActionTypes.RecorderReady, function* ({payload: {recorderContext}}) {
+    yield takeLatest(ActionTypes.RecorderReady, function* (action) {
       // Wait for recording to actually start.
       yield take(ActionTypes.RecorderStarted);
       // Start buffering actions.
@@ -77,7 +80,7 @@ export default function (bundle, deps) {
           // Ignore events fired while not recording.
           continue;
         }
-        const audioTime = Math.round(recorderContext.audioContext.currentTime * 1000) - recorder.get('junkTime');
+        const audioTime = Math.round(action.payload.recorderContext.audioContext.currentTime * 1000) - recorder.get('junkTime');
         function* addEvent (name, ...args) {
           const event = [audioTime, name, ...args];
           yield put({type: deps.recorderAddEvent, event});
@@ -90,5 +93,4 @@ export default function (bundle, deps) {
       channel.close();
     });
   });
-
 };

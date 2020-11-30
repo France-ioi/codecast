@@ -1,6 +1,7 @@
 import {buffers, eventChannel} from 'redux-saga';
 import {put, take} from 'redux-saga/effects';
 import Immutable from 'immutable';
+import {ActionTypes} from "./actionTypes";
 
 export const mainViewGeometries = [
     {size: 'lg', width: 1140, svgScale: 1.0},
@@ -9,14 +10,18 @@ export const mainViewGeometries = [
 ];
 
 export default function (bundle, deps) {
-
     bundle.addReducer('init', function (state, _action) {
         return state
             .set('mainViewGeometry', mainViewGeometries[0])
             .set('panes', Immutable.Map());
     });
 
-    bundle.defineAction('windowResized', 'Window.Resized');
+    // Make windowResized update the global state 'size'.
+    bundle.defineAction(ActionTypes.WindowResized);
+    bundle.addReducer('windowResized', function (state, action) {
+        const {width, height} = action;
+        return state.set('windowWidth', width).set('windowHeight', height);
+    });
 
     // Event channel for resize events.
     // Only the most recent event is kept in the buffer.
@@ -39,15 +44,9 @@ export default function (bundle, deps) {
     bundle.addSaga(function* monitorResize() {
         while (true) {
             let {width, height} = yield take(resizeMonitorChannel);
-            yield put({type: deps.windowResized, width, height});
+
+            yield put({type: ActionTypes.WindowResized, width, height});
         }
-    });
-
-
-    // Make windowResized update the global state 'size'.
-    bundle.addReducer('windowResized', function (state, action) {
-        const {width, height} = action;
-        return state.set('windowWidth', width).set('windowHeight', height);
     });
 
     bundle.addLateReducer(function updateGeometry(state) {
@@ -77,6 +76,7 @@ export default function (bundle, deps) {
                     panes = panes.map(pane => pane.set('visible', false));
                     break;
                 }
+
                 geometry = mainViewGeometries[geometryIndex];
             }
         }
@@ -87,13 +87,14 @@ export default function (bundle, deps) {
             if (pane.get('visible')) {
                 containerWidth += pane.get('width');
             }
+
             return pane;
         });
+
         return state
             .set('viewportTooSmall', viewportTooSmall)
             .set('containerWidth', containerWidth)
             .set('mainViewGeometry', geometry)
             .set('panes', panes);
     });
-
 };

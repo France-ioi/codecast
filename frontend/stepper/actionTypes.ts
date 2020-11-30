@@ -25,5 +25,5 @@ export enum ActionTypes {
     CompileStarted = 'Compile.Started',
     CompileSucceeded = 'Compile.Succeeded',
     CompileFailed = 'Compile.Failed',
-    CompileClearDiagnostics = 'Compile.Clear.Diagnostics',
+    CompileClearDiagnostics = 'Compile.Clear.Diagnostics'
 }

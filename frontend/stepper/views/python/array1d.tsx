@@ -3,7 +3,7 @@ import classnames from 'classnames';
 
 import {renderArrow, renderValue} from './utils';
 import {extractView} from './array_utils';
-import {SvgPan} from '../svg-pan';
+import {SvgPan} from '../SvgPan';
 import DirectiveFrame from '../DirectiveFrame';
 
 const TEXT_LINE_HEIGHT = 18;

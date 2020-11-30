@@ -1,10 +1,10 @@
+import {ActionTypes} from "./actionTypes";
+
 export default function (bundle, deps) {
-
     // Switch to the specified screen.
-    bundle.defineAction('switchToScreen', 'System.SwitchToScreen');
+    bundle.defineAction(ActionTypes.SystemSwitchToScreen);
 
-    bundle.addReducer('switchToScreen', function (state, {payload}) {
+    bundle.addReducer(ActionTypes.SystemSwitchToScreen, function (state, {payload}) {
         return state.set('screen', payload.screen);
     });
-
 };

@@ -6,7 +6,12 @@ interface ExpandedWaveformProps {
     height: number,
     width: number,
     position: any,
-    onPan: Function
+    onPan: Function,
+    duration: any,
+    waveform: any,
+    events: any,
+    intervals: any,
+    selectedMarker: any
 }
 
 export class ExpandedWaveform extends React.PureComponent<ExpandedWaveformProps> {
@@ -52,15 +57,17 @@ export class ExpandedWaveform extends React.PureComponent<ExpandedWaveformProps>
         }
         const rect = this.canvas.getBoundingClientRect();
         const newX = event.clientX - rect.left;
+        // @ts-ignore
         const deltaT = (newX - this.state.refX) / this._params.scale;
         this.props.onPan(this.state.refT - deltaT);
     };
     updateCanvas = () => {
+        // @ts-ignore
         this._params = render(this.props, this.canvas, this._params);
     };
 }
 
-function render(props, canvas, prevParams) {
+function render(props: ExpandedWaveformProps, canvas, prevParams) {
     const {position, duration, waveform, events, intervals, selectedMarker} = props;
     const {width, height} = canvas;
     const scale = 60 / 1000; /* Fixed scale: 60 pixels per 1000ms */
