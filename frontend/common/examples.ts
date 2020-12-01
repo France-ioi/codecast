@@ -1,13 +1,12 @@
 import url from 'url';
 import {ExamplePicker} from "./ExamplePicker";
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as AppActionTypes} from '../actionTypes';
 
 export default function (bundle, deps) {
-    bundle.addReducer('init', initReducer);
+    bundle.addReducer(AppActionTypes.AppInit, initReducer);
 
     bundle.addReducer(ActionTypes.PlatformChanged, platformChangedReducer);
-
-    bundle.defineView('ExamplePicker', ExamplePickerSelector, ExamplePicker);
 }
 
 function initReducer(state, _action) {
@@ -47,11 +46,4 @@ function updateExamplesState(state, examples) {
     fullExamplesUrl = url.format(fullExamplesUrl);
 
     return {...examples, fullExamplesUrl};
-}
-
-function ExamplePickerSelector(state, props) {
-    const getMessage = state.get('getMessage');
-    const {fullExamplesUrl} = state.get('examples', {});
-
-    return {examplesUrl: fullExamplesUrl, getMessage};
 }

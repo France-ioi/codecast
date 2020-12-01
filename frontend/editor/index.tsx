@@ -9,13 +9,14 @@ import TrimBundle from './trim';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
+import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {EditorApp} from "./EditorApp";
 import {SetupScreen} from "./SetupScreen";
 import {EditScreen} from "./EditScreen";
 
 export default function (bundle, deps) {
 
-    bundle.addReducer('init', state =>
+    bundle.addReducer(AppActionTypes.AppInit, state =>
         state.set('editor', Map()));
 
     bundle.defineAction(ActionTypes.EditorPrepare);
@@ -39,7 +40,6 @@ export default function (bundle, deps) {
 
     bundle.defineView('EditorApp', EditorAppSelector, EditorApp);
 
-    bundle.defineView('SetupScreen', SetupScreenSelector, SetupScreen);
     bundle.defineView('EditScreen', EditScreenSelector, EditScreen);
 
     bundle.addSaga(function* editorSaga(app) {
@@ -189,31 +189,6 @@ function EditorAppSelector(state, props) {
     }
 
     return {Screen, activity, floatingControls};
-}
-
-function SetupScreenSelector(state, props) {
-    const editor = state.get('editor');
-    const audioLoaded = editor.get('audioLoaded');
-    if (!audioLoaded) {
-        const progress = editor.get('audioLoadProgress');
-        return {step: 'loading', progress};
-    }
-
-    const playerReady = editor.get('playerReady');
-    if (!playerReady) {
-        const progress = state.getIn(['player', 'progress']);
-        return {step: 'preparing', progress};
-    }
-
-    const views = state.get('views');
-    const duration = editor.get('duration');
-    const tabId = editor.get('setupTabId');
-    const {version, title, events} = editor.get('data');
-    const waveform = editor.get('waveform');
-
-    return {
-        views, tabId, version, title, events, duration, waveform
-    };
 }
 
 function EditScreenSelector(state, props) {

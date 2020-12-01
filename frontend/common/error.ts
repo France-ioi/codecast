@@ -7,14 +7,6 @@ export default function (bundle) {
 
     bundle.defineAction(ActionTypes.ErrorClear);
     bundle.addReducer(ActionTypes.ErrorClear, clearErrorReducer);
-
-    bundle.defineView('AppErrorBoundary', AppErrorBoundarySelector, AppErrorBoundary);
-}
-
-function AppErrorBoundarySelector(state) {
-    const lastError = state.get('lastError');
-
-    return {lastError};
 }
 
 function errorReducer(state, {payload}) {

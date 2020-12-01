@@ -1,5 +1,4 @@
 /* Line-buffered terminal */
-
 import {Map, Record, List} from 'immutable';
 import React from 'react';
 import {call, select, takeEvery} from 'redux-saga/effects';
@@ -7,7 +6,6 @@ import {ActionTypes} from "./actionTypes";
 import {TerminalView} from "./TerminalView";
 
 export default function (bundle, deps) {
-
     bundle.use(
         'getCurrentStepperState',
         'terminalInit', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'

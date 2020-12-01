@@ -4,38 +4,69 @@ import {IconNames} from "@blueprintjs/icons";
 import {formatTime} from "../common/utils";
 import {FullWaveform} from "./waveform/FullWaveform";
 import {ActionTypes} from "./actionTypes";
+import {connect} from "react-redux";
+import {AppStore} from "../store";
 
-interface EditorOverviewProps {
-    version: any,
-    name: any,
+interface EditorOverviewStateToProps {
+    version: string,
+    name: string,
     events: any,
-    duration: any,
+    duration: number,
     waveform: any,
     save: any,
-    playerUrl: any,
-    canSave: any,
+    playerUrl: string,
+    canSave: boolean
+}
+
+function mapStateToProps(state: AppStore): EditorOverviewStateToProps {
+    const editor = state.get('editor');
+    const playerUrl = editor.get('playerUrl');
+    const {version, name, events} = editor.get('data');
+    const canSave = editor.get('canSave');
+    const save = editor.get('save');
+    const duration = editor.get('duration');
+    const waveform = editor.get('waveform');
+
+    return {version, name, events, duration, waveform, canSave, save, playerUrl};
+}
+
+interface EditorOverviewDispatchToProps {
     dispatch: Function
 }
 
-export class EditorOverview extends React.PureComponent<EditorOverviewProps> {
+interface EditorOverviewProps extends EditorOverviewStateToProps, EditorOverviewDispatchToProps {
+
+}
+
+class _EditorOverview extends React.PureComponent<EditorOverviewProps> {
     render() {
         const {version, name, events, duration, waveform, save, playerUrl, canSave} = this.props;
+
         return (
             <div className='vbox'>
                 <Label>
                     Name
-                    <input type='text' placeholder="Name" className='bp3-input bp3-fill' value={name || ''}
-                           onChange={this._nameChanged}/>
+                    <input
+                        type='text'
+                        placeholder="Name"
+                        className='bp3-input bp3-fill'
+                        value={name || ''}
+                        onChange={this._nameChanged}
+                    />
                 </Label>
                 <Label>
                     Player URL
-                    <InputGroup leftIcon={IconNames.LINK} type='text' value={playerUrl} readOnly
-                                rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal
-                                                            target='_blank'/>}/>
+                    <InputGroup
+                        leftIcon={IconNames.LINK}
+                        type='text'
+                        value={playerUrl}
+                        readOnly
+                        rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal target='_blank'/>}
+                    />
                 </Label>
                 {/* list of available subtitles? */}
                 <div>
-                    <FullWaveform width={760} height={80} duration={duration} waveform={waveform} events={events}/>
+                    <FullWaveform width={760} height={80} duration={duration} waveform={waveform} events={events} />
                     <div className='hbox mb'>
                         <div className='fill'>{"Version "}<b>{version}</b></div>
                         <div className='fill'>{"Duration "}<b>{formatTime(duration)}</b></div>
@@ -49,27 +80,32 @@ export class EditorOverview extends React.PureComponent<EditorOverviewProps> {
                     </div>
                 </div>
                 {!canSave &&
-                <Callout intent={Intent.WARNING} title={"Insufficient access rights"}>
-                    {"The current user is not allowed to modify this Codecast."}
-                </Callout>}
+                    <Callout intent={Intent.WARNING} title={"Insufficient access rights"}>
+                        {"The current user is not allowed to modify this Codecast."}
+                    </Callout>
+                }
                 {save &&
-                <div className='vbox'>
-                    {save.state === 'pending' &&
-                    <div className='fill'>
-                        <Spinner size={Spinner.SIZE_SMALL}/>
-                        {"Saving, please wait…"}
-                    </div>}
-                    {save.state === 'failure' &&
-                    <div className='fill'>
-                        <Icon icon='cross' intent={Intent.DANGER}/>
-                        {"Failed to save: "}{save.error}
-                    </div>}
-                    {save.state === 'success' &&
-                    <div className='fill'>
-                        <Icon icon='tick' intent={Intent.SUCCESS}/>
-                        {"Saved."}
-                    </div>}
-                </div>}
+                    <div className='vbox'>
+                        {save.state === 'pending' &&
+                            <div className='fill'>
+                                <Spinner size={Spinner.SIZE_SMALL} />
+                                {"Saving, please wait…"}
+                            </div>
+                        }
+                        {save.state === 'failure' &&
+                            <div className='fill'>
+                                <Icon icon='cross' intent={Intent.DANGER} />
+                                {"Failed to save: "}{save.error}
+                            </div>
+                        }
+                        {save.state === 'success' &&
+                            <div className='fill'>
+                                <Icon icon='tick' intent={Intent.SUCCESS} />
+                                {"Saved."}
+                            </div>
+                        }
+                    </div>
+                }
             </div>
         );
     }
@@ -91,3 +127,5 @@ export class EditorOverview extends React.PureComponent<EditorOverviewProps> {
         dispatch({type: ActionTypes.EditorSave});
     };
 }
+
+export const EditorOverview = connect(mapStateToProps)(_EditorOverview);

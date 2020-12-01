@@ -18,11 +18,9 @@
 import * as C from 'persistent-c';
 
 export default function (bundle, deps) {
-
     bundle.use('stepperProgress');
 
     bundle.defer(function ({stepperApi}) {
-
         stepperApi.onEffect('control', function* controlHandler(stepperContext, control) {
             C.effects.doControl(stepperContext.state.programState, control);
         });
@@ -63,7 +61,5 @@ export default function (bundle, deps) {
         stepperApi.onEffect('vardecl', function* vardeclHandler(stepperContext, name, type, init) {
             C.effects.doVardecl(stepperContext.state.programState, name, type, init);
         });
-
     });
-
 };

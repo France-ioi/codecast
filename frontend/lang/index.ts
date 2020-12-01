@@ -2,14 +2,13 @@ import IntlMessageFormat from 'intl-messageformat';
 import memoize from 'lodash.memoize';
 import {LanguageSelection} from "./LanguageSelection";
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as AppActionTypes} from '../actionTypes';
 
 export default function (bundle, deps) {
-    bundle.addReducer('init', initReducer);
+    bundle.addReducer(AppActionTypes.AppInit, initReducer);
 
     bundle.defineAction(ActionTypes.LanguageSet);
     bundle.addReducer(ActionTypes.LanguageSet, setLanguageReducer);
-
-    bundle.defineView('LanguageSelection', LanguageSelectionSelector, LanguageSelection);
 }
 
 export const Languages = {
@@ -71,13 +70,6 @@ function setLanguageReducer(state, {payload: {language}}) {
     return state
         .update('options', options => ({...options, language}))
         .set('getMessage', getMessage);
-}
-
-function LanguageSelectionSelector(state) {
-    const language = state.get('options').language;
-    const getMessage = state.get('getMessage');
-
-    return {language, getMessage};
 }
 
 export class LocalizedError extends Error {

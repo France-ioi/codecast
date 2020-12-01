@@ -3,22 +3,48 @@ import {Alert, Button, Checkbox, Intent, Radio, RadioGroup, Spinner} from "@blue
 import {IconNames} from "@blueprintjs/icons";
 import {setPersistentOption} from "./options";
 import {ActionTypes} from './actionTypes';
+import {AppStore} from "../store";
+import {connect} from "react-redux";
 
-interface SubtitlesPopupProps {
+interface SubtitlesPopupStateToProps {
     availableOptions: any,
     langOptions: any,
-    loadedKey: any,
-    isLoaded: any,
-    busy: any,
-    lastError: any,
-    paneEnabled: any,
-    bandEnabled: any,
-    getMessage: any,
-    closePortal: Function,
+    loadedKey: string,
+    isLoaded: boolean,
+    busy: boolean,
+    lastError: string,
+    paneEnabled: boolean,
+    bandEnabled: boolean,
+    getMessage: Function
+}
+
+function mapStateToProps(state: AppStore): SubtitlesPopupStateToProps {
+    const {loadedKey, loading, lastError, availableOptions, langOptions, paneEnabled, bandEnabled} = state.get('subtitles');
+    const getMessage = state.get('getMessage');
+    const isLoaded = !loading && loadedKey !== 'none';
+
+    return {
+        availableOptions,
+        langOptions,
+        loadedKey,
+        isLoaded,
+        busy: !!loading,
+        lastError,
+        paneEnabled,
+        bandEnabled,
+        getMessage
+    };
+}
+
+interface SubtitlesPopupDispatchToProps {
     dispatch: Function
 }
 
-export class SubtitlesPopup extends React.PureComponent<SubtitlesPopupProps> {
+interface SubtitlesPopupProps extends SubtitlesPopupStateToProps, SubtitlesPopupDispatchToProps {
+    closePortal: Function
+}
+
+class _SubtitlesPopup extends React.PureComponent<SubtitlesPopupProps> {
     render() {
         const {availableOptions, langOptions, loadedKey, isLoaded, busy, lastError, paneEnabled, bandEnabled, getMessage} = this.props;
         const availKeys = Object.keys(availableOptions).sort();
@@ -102,3 +128,5 @@ export class SubtitlesPopup extends React.PureComponent<SubtitlesPopupProps> {
         });
     };
 }
+
+export const SubtitlesPopup = connect(mapStateToProps)(_SubtitlesPopup);

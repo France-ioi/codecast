@@ -1,19 +1,21 @@
-import Immutable from 'immutable';
+import {Map} from 'immutable';
 
 import {findInstant} from './utils';
+import {ActionTypes as AppActionTypes} from '../actionTypes';
+import {ActionTypes} from "./actionTypes";
 
 export default function (bundle, deps) {
-    bundle.addReducer('init', initReducer);
-    bundle.addReducer('playerClear', playerClearReducer);
-    bundle.addReducer('playerPreparing', playerPreparingReducer);
-    bundle.addReducer('playerPrepareProgress', playerPrepareProgressReducer);
-    bundle.addReducer('playerPrepareFailure', playerPrepareFailureReducer);
-    bundle.addReducer('playerReady', playerReadyReducer);
-    bundle.addReducer('playerStarted', playerStartedReducer);
-    bundle.addReducer('playerPaused', playerPausedReducer);
-    bundle.addReducer('playerTick', playerTickReducer);
-    bundle.addReducer('playerVolumeChanged', playerVolumeChangedReducer);
-    bundle.addReducer('playerMutedChanged', playerMutedChangedReducer);
+    bundle.addReducer(AppActionTypes.AppInit, initReducer);
+    bundle.addReducer(ActionTypes.PlayerClear, playerClearReducer);
+    bundle.addReducer(ActionTypes.PlayerPreparing, playerPreparingReducer);
+    bundle.addReducer(ActionTypes.PlayerPrepareProgress, playerPrepareProgressReducer);
+    bundle.addReducer(ActionTypes.PlayerPrepareFailure, playerPrepareFailureReducer);
+    bundle.addReducer(ActionTypes.PlayerReady, playerReadyReducer);
+    bundle.addReducer(ActionTypes.PlayerStarted, playerStartedReducer);
+    bundle.addReducer(ActionTypes.PlayerPaused, playerPausedReducer);
+    bundle.addReducer(ActionTypes.PlayerTick, playerTickReducer);
+    bundle.addReducer(ActionTypes.PlayerVolumeChanged, playerVolumeChangedReducer);
+    bundle.addReducer(ActionTypes.PlayerMutedChanged, playerMutedChangedReducer);
 }
 
 function initReducer(state, _action) {
@@ -25,7 +27,8 @@ function playerClearReducer(state) {
     const volume = audio.volume; /* XXX: load from localStorage? */
     const isMuted = audio.muted; /* XXX: load from localStorage? */
     const progress = 0;
-    return state.set('player', Immutable.Map({audio, volume, isMuted, progress}));
+
+    return state.set('player', Map({audio, volume, isMuted, progress}));
 }
 
 function playerPreparingReducer(state, _action) {
@@ -67,6 +70,7 @@ function playerPausedReducer(state, _action) {
 function playerTickReducer(state, {payload: {audioTime}}) {
     const instants = state.getIn(['player', 'instants'])
     const instant = findInstant(instants, audioTime);
+
     return state.update('player', player => player
         .set('current', instant) /* current instant */
         .set('audioTime', audioTime));
@@ -76,6 +80,7 @@ function playerVolumeChangedReducer(state, {payload: {volume}}) {
     return state.update('player', function (player) {
         const audio = player.get('audio');
         audio.volume = volume;
+
         return player.set('volume', audio.volume);
     });
 }
@@ -84,6 +89,7 @@ function playerMutedChangedReducer(state, {payload: {isMuted}}) {
     return state.update('player', function (player) {
         const audio = player.get('audio');
         audio.muted = isMuted;
+
         return player.set('isMuted', audio.muted);
     });
 }

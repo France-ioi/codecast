@@ -5,6 +5,7 @@ import {SubtitlesEditorOption} from "./SubtitlesEditorOption";
 import {SubtitlesEditorNewOption} from "./SubtitlesEditorNewOption";
 import Files from 'react-files';
 import {ActionTypes} from "./actionTypes";
+import {connect} from "react-redux";
 
 interface SubtitlesEditorProps {
     availableOptions: any,
@@ -17,7 +18,24 @@ interface SubtitlesEditorProps {
     dispatch: Function
 }
 
-export class SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
+function SubtitlesEditorSelector(state, props) {
+    const {unsaved, notify, selectedKey, availableOptions, langOptions} = state.get('subtitles');
+    const canSave = state.getIn(['editor', 'canSave']);
+    const selected = selectedKey && availableOptions[selectedKey];
+    const subtitlesText = (selected && selected.text) || '';
+
+    return {canSave, unsaved, notify, availableOptions, langOptions, selected, subtitlesText};
+}
+
+interface SetupScreenDispatchToProps {
+    dispatch: Function
+}
+
+interface SetupScreenProps extends SetupScreenStateToProps, SetupScreenDispatchToProps {
+
+}
+
+class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
     _loadInput = null;
 
     render() {
@@ -137,3 +155,5 @@ export class SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
         this.props.dispatch({type: ActionTypes.SubtitlesTextLoaded, payload: {key, file}});
     };
 }
+
+export const SubtitlesEditor = connect(mapStateToProps)(_SubtitlesEditor);

@@ -6,20 +6,39 @@ import {SubtitlesMenu} from "../subtitles/SubtitlesMenu";
 import {LanguageSelection} from "../lang/LanguageSelection";
 import {ExamplePicker} from "./ExamplePicker";
 import {ActionTypes} from "./actionTypes";
+import {connect} from "react-redux";
+import {AppStore} from "../store";
 
-export default function (bundle) {
-    bundle.defineView('Menu', MenuSelector, Menu);
-};
-
-interface MenuProps {
+interface MenuStateToProps {
     getMessage: Function,
     canChangePlatform: boolean,
     platform: string,
-    offlineDownloadUrl: string,
+    offlineDownloadUrl: string
+}
+
+function mapStateToProps(state: AppStore): MenuStateToProps {
+    const {baseUrl, baseDataUrl, platform, canChangePlatform} = state.get('options');
+    const getMessage = state.get('getMessage');
+
+    let offlineDownloadUrl = null;
+    if (!isLocalMode() && baseDataUrl) {
+        offlineDownloadUrl = baseUrl + '/offline?base=' + encodeURIComponent(baseDataUrl);
+    }
+
+    return {
+        getMessage, platform, canChangePlatform, offlineDownloadUrl
+    };
+}
+
+interface MenuDispatchToProps {
     dispatch: Function
 }
 
-class Menu extends React.PureComponent<MenuProps> {
+interface MenuProps extends MenuStateToProps, MenuDispatchToProps {
+
+}
+
+class _Menu extends React.PureComponent<MenuProps> {
     state = {isOpen: false};
 
     render() {
@@ -79,16 +98,4 @@ class Menu extends React.PureComponent<MenuProps> {
     };
 }
 
-function MenuSelector(state, props) {
-    const {baseUrl, baseDataUrl, platform, canChangePlatform} = state.get('options');
-    const getMessage = state.get('getMessage');
-
-    let offlineDownloadUrl = null;
-    if (!isLocalMode() && baseDataUrl) {
-        offlineDownloadUrl = baseUrl + '/offline?base=' + encodeURIComponent(baseDataUrl);
-    }
-
-    return {
-        getMessage, platform, canChangePlatform, offlineDownloadUrl
-    };
-}
+export const Menu = connect(mapStateToProps)(_Menu);

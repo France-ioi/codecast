@@ -2,16 +2,19 @@ import React, {ReactElement} from "react";
 import {Button, ButtonGroup, Intent} from "@blueprintjs/core";
 import {IconName} from "@blueprintjs/icons";
 import {ActionTypes} from "../actionTypes";
+import {connect} from "react-redux";
+import {AppStore} from "../../store";
+import {getStepper, isStepperInterrupting} from "../selectors";
+import * as C from 'persistent-c';
 
-interface StepperControlsProps {
-    showStepper: any,
-    getMessage: any,
-    showControls: any,
-    showEdit: any,
-    showCompile: any,
-    compileOrExecuteMessage: any,
+interface StepperControlsStateToProps {
+    getMessage: Function,
+    showStepper: boolean,
+    showControls: boolean,
+    showEdit: boolean,
+    showCompile: boolean,
+    compileOrExecuteMessage: string,
     controls: any,
-    dispatch: Function,
     canInterrupt: boolean,
     canStep: boolean,
     canExit: boolean,
@@ -20,11 +23,89 @@ interface StepperControlsProps {
     canRestart: boolean,
     canUndo: boolean,
     canRedo: boolean,
-    showExpr: boolean,
-    enabled: boolean
+    showExpr: boolean
 }
 
-export class StepperControls extends React.PureComponent<StepperControlsProps> {
+function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
+    const {enabled} = props;
+    const getMessage = state.get('getMessage');
+    const {controls, showStepper, platform} = state.get('options');
+
+    let showCompile = false, showControls = false, showEdit = false;
+    let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
+    let canInterrupt = false, canUndo = false, canRedo = false;
+    let showExpr = true;
+    let compileOrExecuteMessage = '';
+
+    if (platform === 'python') {
+        compileOrExecuteMessage = getMessage('EXECUTE');
+    } else {
+        compileOrExecuteMessage = getMessage('COMPILE');
+    }
+
+    const stepper = getStepper(state);
+    if (stepper) {
+        const status = stepper.get('status');
+        if (status === 'clear') {
+            showCompile = true;
+            canCompile = enabled;
+        } else if (status === 'idle') {
+            const currentStepperState = stepper.get('currentStepperState', {});
+
+            showEdit = true;
+            showControls = true;
+            canExit = enabled;
+
+            if (platform === 'python') {
+                // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
+                canStepOut = (currentStepperState.suspensions && (currentStepperState.suspensions.length > 1));
+                canStep = !currentStepperState.analysis.isFinished;
+                canRestart = enabled;
+                canUndo = enabled && !stepper.get('undo').isEmpty();
+                canRedo = enabled && !stepper.get('redo').isEmpty();
+                showExpr = false;
+            } else {
+                if (currentStepperState && currentStepperState.programState) {
+                    const {control, scope} = currentStepperState.programState;
+
+                    canStepOut = !!C.findClosestFunctionScope(scope);
+                    canStep = control && !!control.node;
+                    canRestart = enabled;
+                    canUndo = enabled && !stepper.get('undo').isEmpty();
+                    canRedo = enabled && !stepper.get('redo').isEmpty();
+                }
+            }
+        } else if (status === 'starting') {
+            showEdit = true;
+            showControls = true;
+        } else if (status === 'running') {
+            showEdit = true;
+            showControls = true;
+            canInterrupt = enabled && !isStepperInterrupting(state);
+        }
+    }
+
+    return {
+        getMessage,
+        showStepper, showControls, controls,
+        showEdit, canExit,
+        showExpr,
+        showCompile, canCompile,
+        canRestart, canStep, canStepOut, canInterrupt,
+        canUndo, canRedo,
+        compileOrExecuteMessage
+    };
+}
+
+interface StepperControlsDispatchToProps {
+    dispatch: Function
+}
+
+interface StepperControlsProps extends StepperControlsStateToProps, StepperControlsDispatchToProps {
+    enabled?: boolean
+}
+
+class _StepperControls extends React.PureComponent<StepperControlsProps> {
     render = () => {
         const {showStepper} = this.props;
         if (!showStepper) {
@@ -159,3 +240,5 @@ export class StepperControls extends React.PureComponent<StepperControlsProps> {
     onRedo = () => this.props.dispatch({type: ActionTypes.StepperRedo, payload: {}});
     onCompile = () => this.props.dispatch({type: ActionTypes.Compile, payload: {}});
 }
+
+export const StepperControls = connect(mapStateToProps)(_StepperControls);

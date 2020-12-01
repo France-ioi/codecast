@@ -69,8 +69,8 @@ import 'brace/theme/xcode';
 import 'brace/worker/javascript';
 
 import {compressRange, documentFromString, emptyDocument, expandRange} from './document';
-import {BufferEditor} from "./BufferEditor";
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as AppActionTypes} from "../actionTypes";
 
 const AceThemes = [
     'ambiance', 'chaos', 'chrome', 'clouds', 'clouds_midnight', 'cobalt',
@@ -94,7 +94,7 @@ const BufferState = Record({
 });
 
 export default function (bundle) {
-    bundle.addReducer('init', initReducer);
+    bundle.addReducer(AppActionTypes.AppInit, initReducer);
 
     bundle.defineAction(ActionTypes.BufferInit);
     bundle.addReducer(ActionTypes.BufferInit, bufferInitReducer);
@@ -121,20 +121,12 @@ export default function (bundle) {
 
     bundle.defineSelector('getBufferModel', getBufferModel);
 
-    bundle.defineView('BufferEditor', BufferEditorSelector, BufferEditor);
-
     bundle.addSaga(buffersSaga);
 
     bundle.defer(addRecordHooks);
     bundle.defer(addReplayHooks);
 
 };
-
-function BufferEditorSelector(state, props) {
-    const getMessage = state.get('getMessage');
-
-    return {getMessage};
-}
 
 function initReducer(state, {payload: {options: {source, input}}}) {
     state = state.set('buffers', Map({

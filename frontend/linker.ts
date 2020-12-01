@@ -1,4 +1,4 @@
-import {Store} from './store';
+import {AppStore} from './store';
 import {applyMiddleware, compose, createStore} from 'redux';
 import {default as createSagaMiddleware} from 'redux-saga';
 import {all, call} from 'redux-saga/effects';
@@ -8,14 +8,13 @@ interface Linker {
     scope: any,
     actionTypes: any,
     views: any,
-    store: Store,
+    store: AppStore,
     reducer: any
     finalize: Function
     start: Function
 }
 
 export function link(rootBuilder): Linker {
-
     // The global namespace map (name → value)
     const globalScope = {};
 
@@ -34,12 +33,6 @@ export function link(rootBuilder): Linker {
     // 'use' directives are queued and dependency objects are populated after
     // all definitions have taken effect.
     const useQueue = [];
-
-    const linkErrors = [];
-
-    function undefinedNameError(target, property) {
-        throw new Error(`use of undefined name ${property}`);
-    }
 
     function declareActionType(name) {
         if (nameForActionType.has(name)) {
@@ -124,9 +117,10 @@ export function link(rootBuilder): Linker {
         if (actionMap.has(action.type)) {
             state = actionMap.get(action.type)(state, action);
         }
+
         return state;
     };
-    const reducer = [
+    const rootReducer = [
         rootBundle._earlyReducer(),
         actionReducer,
         rootBundle._lateReducer()
@@ -147,7 +141,7 @@ export function link(rootBuilder): Linker {
     }
 
     // Create the store.
-    const store = createStore(reducer, null, compose(applyMiddleware(sagaMiddleware), ...enhancers));
+    const store = createStore(rootReducer, null, compose(applyMiddleware(sagaMiddleware), ...enhancers));
 
     window.store = store;
 
@@ -175,7 +169,7 @@ export function link(rootBuilder): Linker {
         actionTypes: typeForActionName,
         views,
         store,
-        reducer,
+        reducer: rootReducer,
         finalize,
         start
     };
@@ -351,6 +345,7 @@ class Bundle {
             const {name, reducer} = this._.actionReducers[i];
             const actionType = this.locals[name];
             const prevReducer = actionMap.get(actionType);
+
             actionMap.set(actionType, reverseCompose(prevReducer, reducer));
         }
 

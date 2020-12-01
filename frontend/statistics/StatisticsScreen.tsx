@@ -13,9 +13,10 @@ import {
 import {CSVLink} from 'react-csv';
 import {DateRangePicker} from "@blueprintjs/datetime";
 import {ActionTypes} from "./actionTypes";
+import {connect} from "react-redux";
+import {AppStore} from "../store";
 
-interface StatisticsScreenProps {
-    dispatch: Function,
+interface StatisticsScreenStateToProps {
     folders: any,
     rowData: any,
     isReady: boolean,
@@ -27,7 +28,49 @@ interface StatisticsScreenProps {
     searchStatus: any
 }
 
-export class StatisticsScreen extends React.PureComponent<StatisticsScreenProps> {
+function mapStateToProps(state: AppStore): StatisticsScreenStateToProps {
+    const statistics = state.get('statistics');
+    const user = state.get('user');
+
+    const dateRange = statistics.get('dateRange');
+
+    const folders = (user.grants || []).reduce(
+        (obj, {description, s3Bucket, uploadPath}) => {
+            obj[description] = [s3Bucket, uploadPath];
+            return obj;
+        }, {"Select a Folder": null});
+    const folderOptions = Object.keys(folders);
+    const folder = statistics.get('folder').label;
+
+    const prefix = statistics.get('prefix');
+    const isReady = statistics.get('isReady');
+
+    const rowData = statistics.getIn(['search', 'data']);
+    const searchStatus = statistics.getIn(['search', 'status']);
+    const searchError = statistics.getIn(['search', 'error']);
+
+    return {
+        isReady,
+        rowData,
+        searchError,
+        searchStatus,
+        dateRange,
+        folderOptions,
+        folder,
+        folders,
+        prefix
+    };
+}
+
+interface StatisticsScreenDispatchToProps {
+    dispatch: Function
+}
+
+interface StatisticsScreenProps extends StatisticsScreenStateToProps, StatisticsScreenDispatchToProps {
+
+}
+
+class _StatisticsScreen extends React.PureComponent<StatisticsScreenProps> {
     handleDateChange = (dateRange) => {
         const {dispatch} = this.props;
         dispatch({type: ActionTypes.StatisticsDateRangeChanged, payload: {dateRange}});
@@ -55,12 +98,13 @@ export class StatisticsScreen extends React.PureComponent<StatisticsScreenProps>
     getCSVData = () => {
         const {rowData} = this.props;
         return rowData.reduce((arr, {
-                codecast, folder, bucket, name, date_time, views, compiles, compile_time
-            }) => {
-                arr.push([date_time, new String(codecast), name, folder, bucket, views, compiles, compile_time]);
-                return arr;
-            },
-            [['DateTime', 'Codecast', 'Name', 'Folder', 'Bucket', 'Views', 'Compilations', 'Total Compile Time (ms)']]);
+            codecast, folder, bucket, name, date_time, views, compiles, compile_time
+        }) => {
+            arr.push([date_time, String(codecast), name, folder, bucket, views, compiles, compile_time]);
+
+            return arr;
+        },
+        [['DateTime', 'Codecast', 'Name', 'Folder', 'Bucket', 'Views', 'Compilations', 'Total Compile Time (ms)']]);
     }
 
     render () {
@@ -75,9 +119,7 @@ export class StatisticsScreen extends React.PureComponent<StatisticsScreenProps>
                 <h1 style={{margin: '20px 0'}}>{"Codecast Statistics"}</h1>
                 <div style={statsCss}>
                     <ControlGroup vertical={true}>
-                        <FormGroup
-                            label="Start Date - End Date"
-                        >
+                        <FormGroup label="Start Date - End Date">
                             <DateRangePicker
                                 shortcuts={true}
                                 contiguousCalendarMonths={false}
@@ -86,17 +128,11 @@ export class StatisticsScreen extends React.PureComponent<StatisticsScreenProps>
                                 value={dateRange}
                             />
                         </FormGroup>
-                        <ControlGroup fill={true} >
-                            <FormGroup
-                                label="Folder"
-                                labelFor="select-folder"
-                            >
+                        <ControlGroup fill={true}>
+                            <FormGroup label="Folder" labelFor="select-folder">
                                 <HTMLSelect value={folder} onChange={this.handleFolderChange} options={folderOptions} />
                             </FormGroup>
-                            <FormGroup
-                                label="Prefix"
-                                labelFor="input-prefix"
-                            >
+                            <FormGroup label="Prefix" labelFor="input-prefix">
                                 <InputGroup
                                     id="input-prefix"
                                     leftIcon="filter"
@@ -104,12 +140,8 @@ export class StatisticsScreen extends React.PureComponent<StatisticsScreenProps>
                                     value={prefix}
                                 />
                             </FormGroup>
-                            <FormGroup
-                                label=" "
-                            ></FormGroup>
-                            <FormGroup
-                                label=" "
-                                labelFor="btn-search">
+                            <FormGroup label=" "></FormGroup>
+                            <FormGroup label=" " labelFor="btn-search">
                                 <Button
                                     id="btn-search"
                                     text="Search"
@@ -118,14 +150,13 @@ export class StatisticsScreen extends React.PureComponent<StatisticsScreenProps>
                                     onClick={this.handleSubmit}
                                 />
                             </FormGroup>
-
                         </ControlGroup>
                     </ControlGroup>
                 </div>
                 <hr style={{width: '80%'}} />
                 <div style={{marginBottom: '30px', display: 'flex', justifyContent: 'center', flexDirection: 'column'}}>
-                    {
-                        searchStatus === 'loading' && <Spinner className="text-center" intent={Intent.PRIMARY} size={Spinner.SIZE_STANDARD} />
+                    {searchStatus === 'loading' &&
+                        <Spinner className="text-center" intent={Intent.PRIMARY} size={Spinner.SIZE_STANDARD} />
                     }
                     {rowData.length === 0 ?
                         searchStatus !== 'loading' && (
@@ -152,8 +183,7 @@ export class StatisticsScreen extends React.PureComponent<StatisticsScreenProps>
                                 </tr >
                                 </thead >
                                 <tbody>
-                                {
-                                    rowData.map(({codecast, folder, bucket, name, date_time, views, compiles, compile_time}, index) => (
+                                    {rowData.map(({codecast, folder, bucket, name, date_time, views, compiles, compile_time}, index) => (
                                         <tr key={index}>
                                             <td>{date_time}</td>
                                             <td>{codecast || '-------------'}</td>
@@ -164,10 +194,8 @@ export class StatisticsScreen extends React.PureComponent<StatisticsScreenProps>
                                             <td>{compiles}</td>
                                             <td>{compile_time}</td>
                                         </tr>
-                                    ))
-                                }
-                                {
-                                    (() => {
+                                    ))}
+                                    {(() => {
                                         const [total_views, total_compiles, total_compile_time] = rowData.reduce((totals, {views, compiles, compile_time}) => [totals[0] + views, totals[1] + compiles, totals[2] + compile_time], [0, 0, 0]);
                                         return (
                                             <tr key={rowData.length}>
@@ -181,8 +209,7 @@ export class StatisticsScreen extends React.PureComponent<StatisticsScreenProps>
                                                 <td><b>{total_compile_time.toFixed(3)}</b></td>
                                             </tr>
                                         )
-                                    })()
-                                }
+                                    })()}
                                 </tbody>
                             </HTMLTable >
                             <div>
@@ -195,12 +222,15 @@ export class StatisticsScreen extends React.PureComponent<StatisticsScreenProps>
                                     marginTop: ' 20px'
                                 }} data={this.getCSVData()} >Export CSV</CSVLink>
                             </div>
-                        </React.Fragment>)}
+                        </React.Fragment>
+                    )}
                 </div>
             </div >
         );
     }
 }
+
+export const StatisticsScreen = connect(mapStateToProps)(_StatisticsScreen);
 
 const statsCss = {
     display: 'flex',

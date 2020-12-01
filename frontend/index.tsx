@@ -8,10 +8,10 @@ import url from 'url';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
-import {Map} from 'immutable';
 import 'rc-slider/assets/index.css?global';
 
-import {Store} from './store';
+import {Map} from 'immutable';
+import {AppStore} from './store';
 import {link} from './linker';
 
 import commonBundle from './common/index';
@@ -21,9 +21,20 @@ import recorderBundle from './recorder/index';
 import editorBundle from './editor/index';
 import statisticsBundle from './statistics/index';
 import {isLocalMode} from "./utils/app";
+import {ActionTypes} from "./actionTypes";
+import {ActionTypes as CommonActionTypes} from "./common/actionTypes";
+import {ActionTypes as PlayerActionTypes} from "./player/actionTypes";
+import {ActionTypes as EditorActionTypes} from "./editor/actionTypes";
+import {ActionTypes as RecorderActionTypes} from "./recorder/actionTypes";
+import {ActionTypes as StatisticsActionTypes} from "./statistics/actionTypes";
+import {SandboxApp} from "./sandbox/SandboxApp";
+import {StatisticsApp} from "./statistics/StatisticsApp";
+import {EditorApp} from "./editor/EditorApp";
+import {PlayerApp} from "./player/PlayerApp";
+import {RecorderApp} from "./recorder/RecorderApp";
 
 interface Codecast {
-    store: Store,
+    store: AppStore,
     scope: any,
     task?: any,
     start?: Function,
@@ -56,9 +67,8 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
 };
 
 const {store, scope, views, finalize, start} = link(function (bundle, deps) {
-
-    bundle.defineAction('init', 'System.Init');
-    bundle.addReducer('init', (_state, _action) => {
+    bundle.defineAction(ActionTypes.AppInit);
+    bundle.addReducer(ActionTypes.AppInit, (_state, _action) => {
         return Map({scope, views});
     });
 
@@ -116,6 +126,7 @@ function restart() {
         Codecast.task.cancel();
         Codecast.task = null;
     }
+
     /* XXX Make a separate object for selectors in the linker? */
     Codecast.task = start({
         dispatch: store.dispatch,
@@ -126,15 +137,15 @@ function restart() {
 }
 
 function clearUrl() {
-    const currentUrl = url.parse(document.location.href, true)
-    delete currentUrl.search
-    delete currentUrl.query.source
-    window.history.replaceState(null, document.title, url.format(currentUrl))
+    const currentUrl = url.parse(document.location.href, true);
+    delete currentUrl.search;
+    delete currentUrl.query.source;
+
+    window.history.replaceState(null, document.title, url.format(currentUrl));
 }
 
 Codecast.start = function (options) {
-
-    store.dispatch({type: scope.init, payload: {options}});
+    store.dispatch({type: ActionTypes.AppInit, payload: {options}});
 
     // remove source from url wihtout reloading
     if (options.source) {
@@ -146,20 +157,20 @@ Codecast.start = function (options) {
     restart();
 
     if (!isLocalMode() && /editor|player|sandbox/.test(options.start)) {
-        store.dispatch({type: scope.statisticsInitLogData});
+        store.dispatch({type: StatisticsActionTypes.StatisticsInitLogData});
     }
 
     let App;
     switch (options.start) {
         case 'recorder':
             autoLogin();
-            store.dispatch({type: scope.recorderPrepare});
-            App = scope.RecorderApp;
+            store.dispatch({type: RecorderActionTypes.RecorderPrepare});
+            App = RecorderApp;
             break;
         case 'player':
             let audioUrl = options.audioUrl || `${options.baseDataUrl}.mp3`;
             store.dispatch({
-                type: scope.playerPrepare,
+                type: PlayerActionTypes.PlayerPrepare,
                 payload: {
                     baseDataUrl: options.baseDataUrl,
                     audioUrl: audioUrl,
@@ -167,30 +178,30 @@ Codecast.start = function (options) {
                     data: options.data
                 }
             });
-            App = scope.PlayerApp;
+            App = PlayerApp;
             break;
         case 'editor':
             autoLogin();
             store.dispatch({
-                type: scope.editorPrepare,
+                type: EditorActionTypes.EditorPrepare,
                 payload: {
                     baseDataUrl: options.baseDataUrl
                 }
             });
-            App = scope.EditorApp;
+            App = EditorApp;
             break;
         case 'statistics':
             autoLogin();
             store.dispatch({
-                type: scope.statisticsPrepare
+                type: StatisticsActionTypes.StatisticsPrepare
             });
-            App = scope.StatisticsApp;
+            App = StatisticsApp;
             break;
         case 'sandbox':
             store.dispatch({
-                type: scope.statisticsLogLoadingData
+                type: StatisticsActionTypes.StatisticsLogLoadingData
             });
-            App = scope.SandboxApp;
+            App = SandboxApp;
             break;
         default:
             App = () => <p>{"No such application: "}{options.start}</p>;
@@ -204,7 +215,8 @@ Codecast.start = function (options) {
             <AppErrorBoundary>
                 <App/>
             </AppErrorBoundary>
-        </Provider>, container);
+        </Provider>, container
+    );
 };
 
 function autoLogin() {
@@ -214,5 +226,6 @@ function autoLogin() {
     } catch (ex) {
         return;
     }
-    store.dispatch({type: scope.loginFeedback, payload: {user}});
+
+    store.dispatch({type: CommonActionTypes.LoginFeedback, payload: {user}});
 }

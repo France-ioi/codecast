@@ -1,20 +1,85 @@
 import React from "react";
 import classnames from 'classnames';
+import {connect} from "react-redux";
+import {AppStore} from "../store";
+import clickDrag from 'react-clickdrag';
 
-interface SubtitlesBandProps {
-    hidden: any,
-    active: any,
-    item: any,
-    geometry: any,
-    offsetY: any,
-    dataDrag: {
-        isMoving: any,
-    },
-    top: any,
-    textHidden: any
+interface SubtitlesBandStateToProps {
+    hidden: boolean,
+    active?: boolean,
+    item?: any,
+    geometry?: any,
+    offsetY?: number,
+    top?: number,
+    textHidden?: boolean,
+    isMoving?: boolean
 }
 
-export class SubtitlesBand extends React.PureComponent<SubtitlesBandProps> {
+function mapStateToProps(state: AppStore): SubtitlesBandStateToProps {
+    const {
+        loaded, editing, bandEnabled,
+        items, currentIndex, itemVisible, isMoving, offsetY
+    } = state.get('subtitles');
+
+    const item = items && items[currentIndex];
+    const subtitleData = item && item.data;
+    if (subtitleData && typeof subtitleData.text === 'undefined' || !loaded || (!editing && !bandEnabled)) {
+        return {hidden: true};
+    }
+
+    let textHidden = false;
+
+    const trim = state.getIn(['editor', 'trim']);
+    if (trim && trim.intervals) {
+        const interval = trim.intervals.get(subtitleData.start);
+        if (interval && (interval.value.mute || interval.value.skip)) {
+            if (interval.start <= subtitleData.start) {
+                textHidden = true;
+            }
+        }
+    }
+
+    const geometry = state.get('mainViewGeometry');
+    const windowHeight = state.get('windowHeight');
+
+    return {
+        top: windowHeight - 60,
+        active: itemVisible,
+        item,
+        isMoving,
+        offsetY,
+        geometry,
+        textHidden,
+        hidden: false
+    };
+}
+
+interface PlayerAppDispatchToProps {
+    dispatch: Function
+}
+
+interface DataDrag {
+    dataDrag: {
+        isMouseDown: boolean,
+        isMoving: boolean,
+        mouseDownPositionX: number,
+        mouseDownPositionY: number,
+        moveDeltaX: number,
+        moveDeltaY: number
+    }
+}
+
+interface SubtitlesBandProps extends SubtitlesBandStateToProps, PlayerAppDispatchToProps, DataDrag {
+
+}
+
+class _SubtitlesBand extends React.PureComponent<SubtitlesBandProps> {
+    state = {
+        band: null,
+        currentY: 0,
+        lastPositionY: 0
+    };
+
     render() {
         const {hidden} = this.props;
         if (hidden) {
@@ -34,9 +99,9 @@ export class SubtitlesBand extends React.PureComponent<SubtitlesBandProps> {
             >
                 <div className='subtitles-band-frame'>
                     {item &&
-                    <p className='subtitles-text' style={{textDecoration: textHidden ? 'line-through' : 'none'}}>
-                        {item.data.text}
-                    </p>
+                        <p className='subtitles-text' style={{textDecoration: textHidden ? 'line-through' : 'none'}}>
+                            {item.data.text}
+                        </p>
                     }
                 </div>
             </div>
@@ -49,15 +114,18 @@ export class SubtitlesBand extends React.PureComponent<SubtitlesBandProps> {
         if (nextProps.dataDrag.isMoving) {
             const newPositionY = prevState.lastPositionY + nextProps.dataDrag.moveDeltaY;
             const currentY = Math.min(nextProps.windowHeight - nextProps.top - height, Math.max(-nextProps.top, newPositionY));
+
             return {currentY};
         } else {
             const currentY = Math.min(nextProps.windowHeight - nextProps.top - height, Math.max(-nextProps.top, prevState.currentY));
+
             return {currentY, lastPositionY: currentY};
         }
     }
 
-    state = {band: null, currentY: 0, lastPositionY: 0};
     _refBand = (element) => {
         this.setState({band: element});
     };
 }
+
+export const SubtitlesBand = clickDrag(connect(mapStateToProps)(_SubtitlesBand), {touch: true});

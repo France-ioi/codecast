@@ -5,8 +5,8 @@ import {asyncRequestJson} from '../utils/api';
 import {isLocalMode} from "../utils/app";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
-import {StatisticsApp} from "./StatisticsApp";
-import {StatisticsScreen} from "./StatisticsScreen";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {ActionTypes as AppActionTypes} from "../actionTypes";
 
 interface LogData {
     type: any,
@@ -38,7 +38,7 @@ function getBrowser() {
 
     // Internet Explorer 6-11
     // @ts-ignore
-    const isIE = /*@cc_on!@*/false || !!document.documentMode;
+    const isIE = /*@cc_on!@*/!!document.documentMode;
 
     // Edge 20+
     const isEdge = !isIE && !!window.StyleMedia;
@@ -72,7 +72,7 @@ export default function (bundle, deps) {
         return;
     }
 
-    bundle.addReducer('init', (state, {payload: {options: {isStatisticsReady}}}) => {
+    bundle.addReducer(AppActionTypes.AppInit, (state, {payload: {options: {isStatisticsReady}}}) => {
         return state.set('statistics', Immutable.Map({isReady: isStatisticsReady}))
     });
 
@@ -98,16 +98,12 @@ export default function (bundle, deps) {
     bundle.defineAction(ActionTypes.StatisticsLogDataChanged);
     bundle.addReducer(ActionTypes.StatisticsLogDataChanged, statisticsLogDataChangedReducer);
 
-    bundle.defineView('StatisticsApp', StatisticsAppSelector, StatisticsApp);
-
-    bundle.defineView('StatisticsScreen', StatisticsScreenSelector, StatisticsScreen);
-
     bundle.addSaga(function* editorSaga(app) {
         yield takeEvery(ActionTypes.StatisticsLogLoadingData, statisticsLogLoadingDataSaga);
-        yield takeEvery(ActionTypes.StatisticsInitLogData, statisticsInitLogDataSaga, app);
+        yield takeEvery(ActionTypes.StatisticsInitLogData, statisticsInitLogDataSaga);
         yield takeEvery(PlayerActionTypes.PlayerReady, statisticsPlayerReadySaga, app);
-        yield takeEvery(ActionTypes.StatisticsPrepare, statisticsPrepareSaga, app);
-        yield takeLatest(ActionTypes.StatisticsSearchSubmit, statisticsSearchSaga, app);
+        yield takeEvery(ActionTypes.StatisticsPrepare, statisticsPrepareSaga);
+        yield takeLatest(ActionTypes.StatisticsSearchSubmit, statisticsSearchSaga);
     });
 }
 
@@ -145,16 +141,16 @@ function statisticsLogDataChangedReducer(state, {payload: {logData}}) {
 }
 
 
-function* statisticsPrepareSaga({actionTypes}) {
+function* statisticsPrepareSaga() {
     /* Require the user to be logged in. */
     while (!(yield select(state => state.get('user')))) {
-        yield take(actionTypes.loginFeedback);
+        yield take(CommonActionTypes.LoginFeedback);
     }
 
-    yield put({type: actionTypes.switchToScreen, payload: {screen: 'statistics'}});
+    yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'statistics'}});
 }
 
-function* statisticsInitLogDataSaga({actionTypes}) {
+function* statisticsInitLogDataSaga() {
     const options = yield select(state => state.get('options'));
     const {
         start: compileType,
@@ -182,7 +178,7 @@ function* statisticsInitLogDataSaga({actionTypes}) {
         logData.bucket = bucket;
     }
 
-    yield put({type: actionTypes.statisticsLogDataChanged, payload: {logData}});
+    yield put({type: ActionTypes.StatisticsLogDataChanged, payload: {logData}});
 }
 
 function* statisticsPlayerReadySaga(app, action) {
@@ -208,8 +204,9 @@ function* statisticsLogLoadingDataSaga() {
     }
 }
 
-function* statisticsSearchSaga(app) {
+function* statisticsSearchSaga() {
     yield put({type: ActionTypes.StatisticsSearchStatusChanged, payload: {status: 'loading'}});
+
     let response;
     try {
         const {baseUrl} = yield select(state => state.get('options'));
@@ -235,61 +232,4 @@ function* statisticsSearchSaga(app) {
             payload: {status: 'failed', error: response.error}
         });
     }
-}
-
-function StatisticsAppSelector(state, props) {
-    const scope = state.get('scope');
-    const user = state.get('user');
-    const screen = state.get('screen');
-    const {LogoutButton} = scope;
-    let activity, screenProp, Screen;
-    if (!user) {
-        activity = 'login';
-        screenProp = 'LoginScreen';
-    } else if (screen === 'statistics') {
-        activity = 'statistics';
-        screenProp = 'StatisticsScreen';
-    } else {
-        Screen = () => <p>{'undefined state'}</p>;
-    }
-    if (!Screen && screenProp) {
-        Screen = scope[screenProp];
-    }
-    return {Screen, activity, LogoutButton};
-}
-
-function StatisticsScreenSelector(state, props) {
-    const statistics = state.get('statistics');
-    const user = state.get('user');
-    const actionTypes = state.get('actionTypes');
-
-    const dateRange = statistics.get('dateRange');
-
-    const folders = (user.grants || []).reduce(
-        (obj, {description, s3Bucket, uploadPath}) => {
-            obj[description] = [s3Bucket, uploadPath];
-            return obj;
-        }, {"Select a Folder": null});
-    const folderOptions = Object.keys(folders);
-    const folder = statistics.get('folder').label;
-
-    const prefix = statistics.get('prefix');
-    const isReady = statistics.get('isReady');
-
-    const rowData = statistics.getIn(['search', 'data']);
-    const searchStatus = statistics.getIn(['search', 'status']);
-    const searchError = statistics.getIn(['search', 'error']);
-
-    return {
-        isReady,
-        rowData,
-        searchError,
-        searchStatus,
-        dateRange,
-        folderOptions,
-        folder,
-        folders,
-        prefix,
-        actionTypes
-    };
 }

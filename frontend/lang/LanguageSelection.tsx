@@ -1,18 +1,32 @@
 import React from "react";
 import {Languages} from "./index";
 import {ActionTypes} from "./actionTypes";
+import {connect} from "react-redux";
+import {AppStore} from "../store";
 
-interface LanguageSelectionProps {
-    language: any,
-    getMessage: any,
-    closeMenu: Function,
-    dispatch: Function,
-    setLanguage: any
+interface LanguageSelectionStoreToProps {
+    language: string,
+    getMessage: Function
+}
+
+function mapStateToProps(state: AppStore): LanguageSelectionStoreToProps {
+    const language = state.get('options').language;
+    const getMessage = state.get('getMessage');
+
+    return {language, getMessage};
+}
+
+interface LanguageSelectionDispatchToProps {
+    dispatch: Function
+}
+
+interface LanguageSelectionProps extends LanguageSelectionStoreToProps, LanguageSelectionDispatchToProps {
+    closeMenu: Function
 }
 
 const languageKeys = Object.keys(Languages);
 
-export class LanguageSelection extends React.PureComponent<LanguageSelectionProps> {
+class _LanguageSelection extends React.PureComponent<LanguageSelectionProps> {
     render() {
         const {language, getMessage} = this.props;
         return (
@@ -42,3 +56,5 @@ export class LanguageSelection extends React.PureComponent<LanguageSelectionProp
         setTimeout(() => dispatch({type: ActionTypes.LanguageSet, payload: {language}}), 0);
     };
 }
+
+export const LanguageSelection = connect(mapStateToProps)(_LanguageSelection);

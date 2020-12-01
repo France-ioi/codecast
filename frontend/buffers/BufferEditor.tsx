@@ -1,17 +1,27 @@
 import React from "react";
 import {Editor} from "./Editor";
 import {ActionTypes} from "./actionTypes";
+import {connect} from "react-redux";
 
-interface BufferEditorProps {
-    dispatch: Function,
+interface ExamplePickerDispatchToProps {
+    dispatch: Function
+}
+
+interface BufferEditorProps extends ExamplePickerDispatchToProps {
+    readOnly?: boolean,
+    shield?: boolean,
+    theme?: string,
+    mode: string,
+    width: any,
+    height: any,
     buffer: any
 }
 
-export class BufferEditor extends React.PureComponent<BufferEditorProps> {
+export class _BufferEditor extends React.PureComponent<BufferEditorProps> {
     onInit = (editor) => {
         const {dispatch, buffer} = this.props;
 
-        dispatch({type: ActionTypes.BufferInit, buffer, editor});
+        dispatch({type: ActionTypes.BufferInit, buffer, editor})
     };
 
     onSelect = (selection) => {
@@ -39,7 +49,14 @@ export class BufferEditor extends React.PureComponent<BufferEditorProps> {
             onEdit={this.onEdit}
             onSelect={this.onSelect}
             onScroll={this.onScroll}
-            {...this.props}
+            readOnly={this.props.readOnly}
+            shield={this.props.shield}
+            theme={this.props.theme}
+            mode={this.props.mode}
+            width={this.props.width}
+            height={this.props.height}
         />;
     };
 }
+
+export const BufferEditor = connect()(_BufferEditor);

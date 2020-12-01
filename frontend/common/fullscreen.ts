@@ -1,12 +1,13 @@
-import Immutable from 'immutable';
+import {Map} from 'immutable';
 import {buffers, eventChannel} from 'redux-saga';
 import {put, take} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {FullscreenButton} from "./FullscreenButton";
 
 export default function (bundle, deps) {
-    bundle.addReducer('init', function (state, _action) {
-        return state.set('fullscreen', Immutable.Map({active: false, enabled: false}));
+    bundle.addReducer(AppActionTypes.AppInit, function (state, _action) {
+        return state.set('fullscreen', Map({active: false, enabled: false}));
     });
 
     bundle.defineAction(ActionTypes.FullscreenEnter);
@@ -32,8 +33,6 @@ export default function (bundle, deps) {
     bundle.addReducer(ActionTypes.FullscreenEnabled, function (state, action) {
         return state.setIn(['fullscreen', 'enabled'], action.enabled);
     });
-
-    bundle.defineView('FullscreenButton', FullscreenButtonSelector, FullscreenButton);
 
     const fullscreenMonitorChannel = eventChannel(function (listener) {
         const elem = window.document;
@@ -130,12 +129,3 @@ export default function (bundle, deps) {
     })
 
 };
-
-function FullscreenButtonSelector(state, props) {
-    const getMessage = state.get('getMessage');
-    const fullscreen = state.get('fullscreen');
-    const enabled = fullscreen.get('enabled');
-    const active = fullscreen.get('active');
-
-    return {enabled, active, getMessage};
-}

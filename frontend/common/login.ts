@@ -10,9 +10,6 @@ export default function (bundle) {
 
     bundle.defineAction(ActionTypes.LogoutFeedback);
     bundle.addReducer(ActionTypes.LogoutFeedback, logoutFeedbackReducer);
-
-    bundle.defineView('LogoutButton', LogoutButtonSelector, LogoutButton);
-    bundle.defineView('LoginScreen', LoginScreenSelector, LoginScreen);
 }
 
 function loginFeedbackReducer(state, {payload: {user, error}}) {
@@ -29,17 +26,4 @@ function logoutFeedbackReducer(state, _action) {
     window.localStorage.user = '';
 
     return state.set('user', false);
-}
-
-function LoginScreenSelector(state, props) {
-    const {baseUrl, authProviders} = state.get('options');
-
-    return {baseUrl, authProviders};
-}
-
-function LogoutButtonSelector(state, props) {
-    const {baseUrl} = state.get('options');
-    const user = state.get('user');
-
-    return {user, baseUrl};
 }

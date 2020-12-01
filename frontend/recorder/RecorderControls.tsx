@@ -4,24 +4,67 @@ import {formatTime} from "../common/utils";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {StepperControls} from "../stepper/views/StepperControls";
-import Menu from "../common/Menu";
+import {connect} from "react-redux";
+import {AppStore} from "../store";
+import {Menu} from "../common/Menu";
 
-interface RecorderControlsProps {
-    getMessage: any,
-    canRecord: any,
-    canPlay: any,
-    canPause: any,
-    canStop: any,
-    canStep: any,
-    isPlayback: any,
-    playPause: any,
-    position: any,
-    duration: any,
-    recorderStatus: any,
+interface RecorderControlsStateToProps {
+    getMessage: Function,
+    canRecord: boolean,
+    canPlay: boolean,
+    canPause: boolean,
+    canStop: boolean,
+    canStep: boolean,
+    isPlayback: boolean,
+    playPause: 'play' | 'pause',
+    position: number,
+    duration: number,
+    recorderStatus: 'ready' | 'paused' | 'recording'
+}
+
+function mapStateToProps (state: AppStore): RecorderControlsStateToProps {
+    const {getRecorderState, getPlayerState} = state.get('scope');
+    const getMessage = state.get('getMessage');
+    const recorder = getRecorderState(state);
+    const recorderStatus = recorder.get('status');
+    const isPlayback = recorderStatus === 'paused';
+    let canRecord, canPlay, canPause, canStop, canStep, position, duration, playPause;
+
+    if (isPlayback) {
+        const player = getPlayerState(state);
+        const isReady = player.get('isReady');
+        const isPlaying = player.get('isPlaying');
+        canPlay = canStop = canRecord = canStep = isReady && !isPlaying;
+        canPause = isReady && isPlaying;
+        playPause = isPlaying ? 'pause' : 'play';
+        position = player.get('audioTime');
+        duration = player.get('duration');
+    } else {
+        canRecord = /ready|paused/.test(recorderStatus);
+        canStop = /recording|paused/.test(recorderStatus);
+        canPlay = recorderStatus === 'paused';
+        canPause = canStep = recorderStatus === 'recording';
+        position = duration = recorder.get('elapsed') || 0;
+        playPause = 'pause';
+    }
+
+    return {
+        getMessage,
+        recorderStatus, isPlayback, playPause,
+        canRecord, canPlay, canPause, canStop, canStep,
+        position, duration
+    };
+}
+
+interface RecorderControlsDispatchToProps {
     dispatch: Function
 }
 
-export class RecorderControls extends React.PureComponent<RecorderControlsProps> {
+interface RecorderControlsProps extends RecorderControlsStateToProps, RecorderControlsDispatchToProps {
+    enabled?: boolean
+}
+
+class _RecorderControls extends React.PureComponent<RecorderControlsProps> {
     render() {
         const {
             getMessage, canRecord, canPlay, canPause, canStop, canStep,
@@ -32,23 +75,41 @@ export class RecorderControls extends React.PureComponent<RecorderControlsProps>
                 <div className='hbox' style={{marginTop: '3px'}}>
                     <div className="controls controls-main" style={{flexGrow: 3}}>
                         <ButtonGroup>
-                            <Button onClick={this.onStartRecording} disabled={!canRecord}
-                                    title={getMessage('START_RECORDING')} icon={<Icon icon='record' color='#a01'/>}/>
-                            <Button onClick={this.onStopRecording} disabled={!canStop}
-                                    icon='stop' title={getMessage('STOP_RECORDING')}/>
-                            {playPause === 'play'
-                                ? <Button onClick={this.onStartPlayback} disabled={!canPlay}
-                                          title={getMessage('START_PLAYBACK')} icon='play'/>
-                                : <Button onClick={this.onPause} disabled={!canPause}
-                                          title={getMessage('PAUSE_PLAYBACK')} icon='pause'/>}
+                            <Button
+                                onClick={this.onStartRecording}
+                                disabled={!canRecord}
+                                title={getMessage('START_RECORDING')}
+                                icon={<Icon icon='record' color='#a01'/>}
+                            />
+                            <Button
+                                onClick={this.onStopRecording}
+                                disabled={!canStop}
+                                icon='stop'
+                                title={getMessage('STOP_RECORDING')}
+                            />
+                            {playPause === 'play' ?
+                                <Button
+                                    onClick={this.onStartPlayback}
+                                    disabled={!canPlay}
+                                    title={getMessage('START_PLAYBACK')}
+                                    icon='play'
+                                />
+                            :
+                                <Button
+                                    onClick={this.onPause}
+                                    disabled={!canPause}
+                                    title={getMessage('PAUSE_PLAYBACK')}
+                                    icon='pause'
+                                />
+                            }
                         </ButtonGroup>
                         <div className='ihbox' style={{margin: '7px 0 0 10px'}}>
                             <Icon icon='time'/>
                             <span style={{marginLeft: '4px'}}>
-                {formatTime(position)}
+                                {formatTime(position)}
                                 {isPlayback && ' / '}
                                 {isPlayback && formatTime(duration)}
-              </span>
+                            </span>
                         </div>
                     </div>
                     <div className='text-center' style={{flexGrow: 7}}>
@@ -60,9 +121,15 @@ export class RecorderControls extends React.PureComponent<RecorderControlsProps>
                 </div>
                 {isPlayback &&
                     <div className='row' style={{marginTop: '3px'}}>
-                        <Slider value={position} onChange={this.onSeek}
-                                stepSize={100} labelStepSize={30000} min={0} max={duration}
-                                labelRenderer={formatTime}/>
+                        <Slider
+                            value={position}
+                            onChange={this.onSeek}
+                            stepSize={100}
+                            labelStepSize={30000}
+                            min={0}
+                            max={duration}
+                            labelRenderer={formatTime}
+                        />
                     </div>
                 }
             </div>
@@ -95,3 +162,5 @@ export class RecorderControls extends React.PureComponent<RecorderControlsProps>
         this.props.dispatch({type: PlayerActionTypes.PlayerSeek, payload: {audioTime}});
     };
 }
+
+export const RecorderControls = connect(mapStateToProps)(_RecorderControls);

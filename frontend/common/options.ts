@@ -1,9 +1,10 @@
 import {stepperClear} from '../stepper/index';
 import {compileClearDiagnostics} from "../stepper/compile";
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as AppActionTypes} from '../actionTypes';
 
 export default function (bundle) {
-    bundle.addReducer('init', initReducer);
+    bundle.addReducer(AppActionTypes.AppInit, initReducer);
 
     bundle.defineAction(ActionTypes.PlatformChanged);
     bundle.addReducer(ActionTypes.PlatformChanged, platformChangedReducer);

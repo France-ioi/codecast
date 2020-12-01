@@ -1,6 +1,8 @@
 import React from "react";
 import {Dialog} from "@blueprintjs/core";
 import {ActionTypes} from "./actionTypes";
+import {AppStore} from "../store";
+import {connect} from "react-redux";
 
 interface AppErrorBoundaryProps {
     lastError: any,
@@ -8,7 +10,7 @@ interface AppErrorBoundaryProps {
     dispatch: Function
 }
 
-export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
+class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
     render() {
         const {lastError, children} = this.props;
         if (!lastError) {
@@ -44,3 +46,11 @@ export class AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
         this.props.dispatch({type: ActionTypes.ErrorClear});
     };
 }
+
+function mapStateToProps(state: AppStore) {
+    return {
+        lastError: state.get('lastError')
+    };
+}
+
+export const AppErrorBoundary = connect(mapStateToProps, null)(_AppErrorBoundary);

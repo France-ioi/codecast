@@ -1,7 +1,8 @@
 import {buffers, eventChannel} from 'redux-saga';
 import {put, take} from 'redux-saga/effects';
-import Immutable from 'immutable';
+import {Map} from 'immutable';
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as AppActionTypes} from '../actionTypes';
 
 export const mainViewGeometries = [
     {size: 'lg', width: 1140, svgScale: 1.0},
@@ -10,10 +11,10 @@ export const mainViewGeometries = [
 ];
 
 export default function (bundle, deps) {
-    bundle.addReducer('init', function (state, _action) {
+    bundle.addReducer(AppActionTypes.AppInit, function (state, _action) {
         return state
             .set('mainViewGeometry', mainViewGeometries[0])
-            .set('panes', Immutable.Map());
+            .set('panes', Map());
     });
 
     // Make windowResized update the global state 'size'.

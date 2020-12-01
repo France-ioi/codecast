@@ -1,17 +1,37 @@
 import React from 'react';
 import classnames from 'classnames';
 import {StepperControls} from "../stepper/views/StepperControls";
-import Menu from "../common/Menu";
 import {StepperView} from "../stepper/views/StepperView";
+import {Menu} from "../common/Menu";
+import {connect} from "react-redux";
+import {AppStore} from "../store";
 
-interface SandboxAppProps {
+interface SandboxAppStateToProps {
     containerWidth: any,
-    viewportTooSmall: any
+    viewportTooSmall: boolean
 }
 
-export class SandboxApp extends React.PureComponent<SandboxAppProps> {
+function mapStateToProps(state: AppStore): SandboxAppStateToProps {
+    const containerWidth = state.get('containerWidth');
+    const viewportTooSmall = state.get('viewportTooSmall');
+
+    return {
+        viewportTooSmall, containerWidth
+    };
+}
+
+interface SandboxAppDispatchToProps {
+    dispatch: Function
+}
+
+interface SandboxAppProps extends SandboxAppStateToProps, SandboxAppDispatchToProps {
+
+}
+
+class _SandboxApp extends React.PureComponent<SandboxAppProps> {
     render() {
         const {containerWidth, viewportTooSmall} = this.props;
+
         return (
             <div id='main' style={{width: `${containerWidth}px`}}
                  className={classnames([viewportTooSmall && 'viewportTooSmall'])}>
@@ -32,3 +52,5 @@ export class SandboxApp extends React.PureComponent<SandboxAppProps> {
         );
     };
 }
+
+export const SandboxApp = connect(mapStateToProps)(_SandboxApp);

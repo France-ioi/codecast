@@ -1,5 +1,6 @@
-import {Store as ReduxStore} from "redux";
+import {Store} from "redux";
+import {Map} from 'immutable';
 
-export interface Store extends ReduxStore {
+export interface AppStore extends Store, Map<string, any> {
 
 }

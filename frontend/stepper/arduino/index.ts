@@ -13,7 +13,6 @@ In the stepper state:
 
 */
 
-import React from 'react';
 import range from 'node-range';
 import update from 'immutability-helper';
 import {call, put, select} from 'redux-saga/effects';
@@ -22,7 +21,9 @@ import * as C from 'persistent-c';
 import './ace';
 import './style.scss';
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {ArduinoPanel} from "./ArduinoPanel";
+import {NPorts} from "./config";
 
 export enum PinMode {
   PINMODE_INPUT = 0,
@@ -31,24 +32,7 @@ export enum PinMode {
 }
 
 export default function (bundle, deps) {
-
     bundle.use('getCurrentStepperState');
-
-    const NPorts = 20;
-    const PortDefns = range(0, NPorts - 1).map(index => {
-        const label = index.toString();
-        const analog = index >= 14 && index <= 19 ? `A${index - 14}` : false;
-        let digital = null;
-        if (index <= 7) {
-            digital = `PD${index}`;
-        } else if (index <= 13) {
-            digital = `PB${index - 8}`;
-        } else if (index <= 19) {
-            digital = `PC${index - 14}`;
-        }
-
-        return {index, label, digital, analog};
-    });
 
     const initialArduinoState = {
         hardware: 'atmega328p',
@@ -57,7 +41,7 @@ export default function (bundle, deps) {
         })
     };
 
-    bundle.addReducer('init', function (state, _action) {
+    bundle.addReducer(AppActionTypes.AppInit, function (state, _action) {
         return arduinoReset(state, {state: initialArduinoState});
     });
 
@@ -94,21 +78,6 @@ export default function (bundle, deps) {
         return state.updateIn(['stepper', 'currentStepperState'], stepper =>
             update(stepper, {selectedPort: {$set: index}}));
     }
-
-    function ArduinoPanelSelector(state, props) {
-        const arduinoState = state.get('arduino');
-        const portDefns = PortDefns; /* should depend on arduinoState.hardware */
-        const portConfigs = arduinoState.ports;
-        let portStates, selectedPort;
-        const stepperState = deps.getCurrentStepperState(state);
-        if (stepperState) {
-            portStates = stepperState.ports;
-            selectedPort = stepperState.selectedPort;
-        }
-        return {portConfigs, portDefns, portStates, selectedPort};
-    }
-
-    bundle.defineView('ArduinoPanel', ArduinoPanelSelector, ArduinoPanel);
 
     bundle.defer(function ({recordApi, replayApi, stepperApi}) {
 

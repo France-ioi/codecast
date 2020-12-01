@@ -1,16 +1,36 @@
 import React from "react";
 import {AnchorButton, Icon} from "@blueprintjs/core";
+import {connect} from "react-redux";
+import {AppStore} from "../store";
 
-interface ExamplePickerProps {
+interface ExamplePickerStateToProps {
     examplesUrl: string,
-    disabled: boolean,
     getMessage: Function
 }
 
-export class ExamplePicker extends React.PureComponent<ExamplePickerProps> {
+function mapStateToProps(state: AppStore): ExamplePickerStateToProps
+{
+    const getMessage = state.get('getMessage');
+    const {fullExamplesUrl} = state.get('examples', {});
+
+    return {examplesUrl: fullExamplesUrl, getMessage};
+}
+
+interface ExamplePickerDispatchToProps {
+    dispatch: Function
+}
+
+interface ExamplePickerProps extends ExamplePickerStateToProps, ExamplePickerDispatchToProps {
+    disabled?: boolean
+}
+
+class _ExamplePicker extends React.PureComponent<ExamplePickerProps> {
     render() {
         const {examplesUrl, disabled, getMessage} = this.props;
-        if (disabled || !examplesUrl) return false;
+        if (disabled || !examplesUrl) {
+            return false;
+        }
+
         return (
             <div>
                 <label className='bp3-label'>
@@ -27,3 +47,5 @@ export class ExamplePicker extends React.PureComponent<ExamplePickerProps> {
         );
     }
 }
+
+export const ExamplePicker = connect(mapStateToProps)(_ExamplePicker);

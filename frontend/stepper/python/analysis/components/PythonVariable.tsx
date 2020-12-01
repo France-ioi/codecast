@@ -5,7 +5,7 @@ import {SkulptVariable} from "../analysis";
 
 interface PythonVariableProps {
     value: SkulptVariable,
-    path: string,
+    path?: string,
     name: string,
     visited: any,
     loadedReferences: any,
@@ -22,7 +22,7 @@ const PythonVariable = (props: PythonVariableProps): JSX.Element => {
     }
 
     let path = null;
-    if (props.hasOwnProperty('path')) {
+    if (props.path) {
         path = props.path;
     } else if (props.name) {
         path = props.name;

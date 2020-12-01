@@ -3,17 +3,17 @@ import React from 'react';
 import {canvasToTimestamp, renderCursor, renderEvents, renderMarker, renderRange} from './tools';
 
 interface FullWaveformProps {
-    onPan: Function,
+    onPan?: Function,
     width: number,
     height: number,
     duration: any,
-    position: any,
+    position?: any,
     waveform: any,
     events: any,
-    viewStart: any,
-    viewEnd: any,
-    intervals: any,
-    selectedMarker: any
+    viewStart?: any,
+    viewEnd?: any,
+    intervals?: any,
+    selectedMarker?: any
 }
 
 export class FullWaveform extends React.PureComponent<FullWaveformProps> {

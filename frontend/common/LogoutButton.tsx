@@ -1,12 +1,29 @@
 import React from "react";
 import {Icon} from "@blueprintjs/core";
+import {connect} from "react-redux";
+import {AppStore} from "../store";
 
-interface LogoutButtonProps {
+interface LogoutButtonStateToProps {
     user: any,
     baseUrl: string
 }
 
-export class LogoutButton extends React.PureComponent<LogoutButtonProps> {
+function mapStateToProps(state: AppStore): LogoutButtonStateToProps {
+    const {baseUrl} = state.get('options');
+    const user = state.get('user');
+
+    return {user, baseUrl};
+}
+
+interface LogoutButtonDispatchToProps {
+    dispatch: Function
+}
+
+interface LogoutButtonProps extends LogoutButtonStateToProps, LogoutButtonDispatchToProps {
+
+}
+
+class _LogoutButton extends React.PureComponent<LogoutButtonProps> {
     render() {
         const {user, baseUrl} = this.props;
         if (!user || !user.login) {
@@ -21,3 +38,6 @@ export class LogoutButton extends React.PureComponent<LogoutButtonProps> {
         );
     }
 }
+
+export const LogoutButton = connect(mapStateToProps)(_LogoutButton);
+

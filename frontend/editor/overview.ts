@@ -4,11 +4,13 @@ import FileSaver from 'file-saver';
 
 import {postJson} from '../common/utils';
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as EditorActionTypes} from '../editor/actionTypes';
+import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {EditorOverview} from "./EditorOverview";
 
 export default function (bundle, deps) {
-    bundle.addReducer('init', initReducer);
-    bundle.addReducer('editorPrepare', initReducer);
+    bundle.addReducer(AppActionTypes.AppInit, initReducer);
+    bundle.addReducer(EditorActionTypes.EditorPrepare, initReducer);
 
     bundle.defineAction(ActionTypes.EditorPropertyChanged);
     bundle.addReducer(ActionTypes.EditorPropertyChanged, editorPropertyChangedReducer);
@@ -23,8 +25,6 @@ export default function (bundle, deps) {
 
     bundle.defineAction(ActionTypes.EditorSaveSucceeded);
     bundle.addReducer(ActionTypes.EditorSaveSucceeded, editorSaveSucceededReducer);
-
-    bundle.defineView('EditorOverview', EditorOverviewSelector, EditorOverview);
 
     bundle.addSaga(function* editorOverviewSaga(app) {
         yield takeLatest(ActionTypes.EditorSaveAudio, editorSaveAudioSaga, app);
@@ -46,19 +46,6 @@ function editorPropertyChangedReducer(state, {payload: {key, value}}) {
                 .update('data', data => ({...data, [key]: value}))
                 .set('save', {state: 'idle'})
                 .set('unsaved', true));
-}
-
-function EditorOverviewSelector(state, props) {
-    const editor = state.get('editor');
-    const playerUrl = editor.get('playerUrl');
-    const {version, name, events} = editor.get('data');
-    const canSave = editor.get('canSave');
-    const unsaved = editor.get('unsaved');
-    const save = editor.get('save');
-    const duration = editor.get('duration');
-    const waveform = editor.get('waveform');
-
-    return {version, name, events, duration, waveform, canSave, unsaved, save, playerUrl};
 }
 
 function editorSaveReducer(state, action) {

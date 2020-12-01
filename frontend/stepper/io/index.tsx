@@ -11,25 +11,25 @@ import {scanfBuiltin} from './scanf';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as StepperActionTypes} from "../actionTypes";
 import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
+import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
+import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {IOPaneOptions} from "./IOPaneOptions";
 import {InputOutputView} from "./InputOutputView";
 import {IOPane} from "./IOPane";
 
 export default function (bundle, deps) {
-
     bundle.include(TerminalBundle);
     bundle.use(
-        'TerminalView', 'terminalInputNeeded', 'terminalInputEnter', 'terminalFocus',
-        'BufferEditor',
+        'terminalInputNeeded', 'terminalInputEnter', 'terminalFocus',
         'getCurrentStepperState', 'stepperProgress', 'stepperIdle', 'stepperInterrupt',
         'stepperRestart', 'stepperUndo', 'stepperRedo',
         'getBufferModel', 'bufferReset', 'bufferEdit', 'bufferModelEdit', 'bufferModelSelect'
     );
 
-    bundle.addReducer('init', function (state) {
+    bundle.addReducer(AppActionTypes.AppInit, function (state) {
         return state.set('ioPane', updateIoPaneState(state, {}));
     });
-    bundle.addReducer('platformChanged', function (state) {
+    bundle.addReducer(CommonActionTypes.PlatformChanged, function (state) {
         return state.update('ioPane', ioPane => updateIoPaneState(state, ioPane));
     });
 
@@ -55,15 +55,6 @@ export default function (bundle, deps) {
         };
     }
 
-    bundle.defineView('IOPane', IOPaneSelector, IOPane);
-
-    function IOPaneSelector(state, props) {
-        const stepper = deps.getCurrentStepperState(state);
-        const mode = stepper ? state.get('ioPane').mode : 'options';
-
-        return {mode};
-    }
-
     /* Options view */
 
     bundle.defineAction(ActionTypes.IoPaneModeChanged);
@@ -82,14 +73,6 @@ export default function (bundle, deps) {
     }
 
     /* Split input/output view */
-
-    bundle.defineView('InputOutputView', InputOutputViewSelector, InputOutputView);
-
-    function InputOutputViewSelector(state, props) {
-        const stepper = deps.getCurrentStepperState(state);
-        const {output} = stepper;
-        return {output};
-    }
 
     function getOutputBufferModel(state) {
         const stepper = deps.getCurrentStepperState(state);

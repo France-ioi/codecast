@@ -7,7 +7,5 @@ export enum ActionTypes {
     StatisticsPrefixChanged = 'Statistics.Prefix.Changed',
     StatisticsSearchSubmit = 'Statistics.Search.Submit',
     StatisticsSearchStatusChanged = 'Statistics.Search.Status.Changed',
-    StatisticsLogDataChanged = 'Statistics.Log.Data.Changed',
-
-
+    StatisticsLogDataChanged = 'Statistics.Log.Data.Changed'
 }

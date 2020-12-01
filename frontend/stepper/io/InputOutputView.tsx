@@ -25,17 +25,26 @@ export class InputOutputView extends React.PureComponent {
                 <Panel.Body>
                     <div className="row">
                         <div className="col-sm-6">
-                            <BufferEditor buffer='input' readOnly={true} mode='text' width='100%'
-                                               height='150px'/>
+                            <BufferEditor
+                                buffer='input'
+                                readOnly={true}
+                                mode='text'
+                                width='100%'
+                                height='150px'/>
                         </div>
                         <div className="col-sm-6">
-                            <BufferEditor buffer='output' readOnly={true} shield={true} mode='text'
-                                               width='100%' height='150px'/>
+                            <BufferEditor
+                                buffer='output'
+                                readOnly={true}
+                                shield={true}
+                                mode='text'
+                                width='100%'
+                                height='150px'
+                            />
                         </div>
                     </div>
                 </Panel.Body>
             </Panel>
         );
     };
-
 }

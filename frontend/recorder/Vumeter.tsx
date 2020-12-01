@@ -1,11 +1,16 @@
 import React from "react";
 import {ActionTypes} from "./actionTypes";
+import {connect} from "react-redux";
 
-interface VumeterProps {
+interface VumeterDispatchToProps {
     dispatch: Function
 }
 
-export class Vumeter extends React.PureComponent<VumeterProps> {
+interface VumeterProps extends VumeterDispatchToProps {
+
+}
+
+class _Vumeter extends React.PureComponent<VumeterProps> {
     _canvas = HTMLCanvasElement = null;
 
     render () {
@@ -18,3 +23,5 @@ export class Vumeter extends React.PureComponent<VumeterProps> {
         this._canvas = el;
     };
 }
+
+export const Vumeter = connect()(_Vumeter);

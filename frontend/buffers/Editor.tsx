@@ -5,8 +5,8 @@ import * as ace from 'brace';
 const Range = ace.acequire('ace/range').Range;
 
 interface EditorProps {
-    shield: boolean,
     readOnly: boolean,
+    shield: boolean,
     theme: string,
     mode: string,
     width: any,
@@ -252,7 +252,6 @@ export class Editor extends React.PureComponent<EditorProps> {
             </div>
         );
     }
-
 }
 
 function toRange(selection) {
