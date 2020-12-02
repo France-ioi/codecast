@@ -10,18 +10,15 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {ActionTypes as AppActionTypes} from '../actionTypes';
-import {EditorApp} from "./EditorApp";
-import {SetupScreen} from "./SetupScreen";
-import {EditScreen} from "./EditScreen";
 
-export default function (bundle, deps) {
-
+export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, state =>
         state.set('editor', Map()));
 
     bundle.defineAction(ActionTypes.EditorPrepare);
     bundle.addReducer(ActionTypes.EditorPrepare, editorPrepareReducer);
-    bundle.addReducer('loginFeedback', loginFeedbackReducer);
+
+    bundle.addReducer(CommonActionTypes.LoginFeedback, loginFeedbackReducer);
 
     bundle.defineAction(ActionTypes.EditorControlsChanged);
     bundle.addReducer(ActionTypes.EditorControlsChanged, editorControlsChangedReducer);
@@ -37,10 +34,6 @@ export default function (bundle, deps) {
 
     bundle.defineAction(ActionTypes.SetupScreenTabChanged);
     bundle.addReducer(ActionTypes.SetupScreenTabChanged, setupScreenTabChangedReducer);
-
-    bundle.defineView('EditorApp', EditorAppSelector, EditorApp);
-
-    bundle.defineView('EditScreen', EditScreenSelector, EditScreen);
 
     bundle.addSaga(function* editorSaga(app) {
         yield takeEvery(ActionTypes.EditorPrepare, editorPrepareSaga, app);
@@ -162,40 +155,4 @@ function editorPlayerReadyReducer(state, {payload: {data}}) {
 
 function setupScreenTabChangedReducer(state, {payload: {tabId}}) {
     return state.setIn(['editor', 'setupTabId'], tabId);
-}
-
-function EditorAppSelector(state, props) {
-    const scope = state.get('scope');
-    const user = state.get('user');
-    const screen = state.get('screen');
-    const floatingControls = state.getIn(['editor', 'controls']).floating;
-    let activity, screenProp, Screen;
-
-    if (!user) {
-        activity = 'login';
-        screenProp = 'LoginScreen';
-    } else if (screen === 'setup') {
-        activity = 'setup';
-        screenProp = 'SetupScreen';
-    } else if (screen === 'edit') {
-        activity = 'edit';
-        screenProp = 'EditScreen';
-    } else {
-        Screen = () => <p>{'undefined state'}</p>;
-    }
-
-    if (!Screen && screenProp) {
-        Screen = scope[screenProp];
-    }
-
-    return {Screen, activity, floatingControls};
-}
-
-function EditScreenSelector(state, props) {
-    const viewportTooSmall = state.get('viewportTooSmall');
-    const containerWidth = state.get('containerWidth');
-    const topControls = state.getIn(['editor', 'controls']).top;
-    return {
-        viewportTooSmall, containerWidth, topControls
-    };
 }

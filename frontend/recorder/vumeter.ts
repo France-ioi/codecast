@@ -2,7 +2,7 @@ import {call, cancel, delay, fork, takeEvery} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
 import {Vumeter} from "./Vumeter";
 
-export default function (bundle, deps) {
+export default function(bundle) {
     bundle.defineAction(ActionTypes.VumeterMounted);
     bundle.addReducer(ActionTypes.VumeterMounted, vumeterMountedReducer);
 

@@ -3,15 +3,31 @@ import {Panel} from 'react-bootstrap';
 import {select} from "redux-saga/effects";
 import {ActionTypes} from "./actionTypes";
 import {BufferEditor} from "../../buffers/BufferEditor";
+import {connect} from "react-redux";
+import {AppStore} from "../../store";
 
-interface IOPaneOptionsProps {
-    dispatch?: Function,
-    getMessage?: any,
-    mode?: any,
-    modeSelect?: any
+interface IOPaneOptionsStateToProps {
+    getMessage: any,
+    mode: string,
+    modeSelect: boolean
 }
 
-export class IOPaneOptions extends React.PureComponent<IOPaneOptionsProps> {
+function mapStateToProps(state: AppStore): IOPaneOptionsStateToProps {
+    const getMessage = state.get('getMessage');
+    const {mode, modeSelect} = state.get('ioPane');
+
+    return {getMessage, mode, modeSelect};
+}
+
+interface IOPaneOptionsDispatchToProps {
+    dispatch: Function
+}
+
+interface IOPaneOptionsProps extends IOPaneOptionsStateToProps, IOPaneOptionsDispatchToProps {
+
+}
+
+class _IOPaneOptions extends React.PureComponent<IOPaneOptionsProps> {
     modeOptions = [
         {value: 'split', label: 'IOPANE_MODE_SPLIT'},
         {value: 'terminal', label: 'IOPANE_MODE_INTERACTIVE'}
@@ -42,8 +58,12 @@ export class IOPaneOptions extends React.PureComponent<IOPaneOptionsProps> {
                                         <div className='bp3-select'>
                                             <select value={mode} onChange={this.onModeChanged}>
                                                 {this.modeOptions.map(p =>
-                                                    <option key={p.value}
-                                                            value={p.value}>{getMessage(p.label)}</option>)}
+                                                    <option
+                                                        key={p.value}
+                                                        value={p.value}
+                                                    >
+                                                        {getMessage(p.label)}
+                                                    </option>)}
                                             </select>
                                         </div>
                                     </label>
@@ -67,3 +87,5 @@ export class IOPaneOptions extends React.PureComponent<IOPaneOptionsProps> {
         );
     };
 }
+
+export const IOPaneOptions = connect(mapStateToProps)(_IOPaneOptions);

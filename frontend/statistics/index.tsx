@@ -67,7 +67,7 @@ function getBrowser() {
     }
 }
 
-export default function (bundle, deps) {
+export default function(bundle) {
     if (isLocalMode()) {
         return;
     }

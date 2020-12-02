@@ -11,6 +11,8 @@ import {StackView} from "./c/StackView";
 import {DirectivesPane} from "./DirectivesPane";
 import {connect} from "react-redux";
 import {AppStore} from "../../store";
+import {getCompileDiagnostics, getCurrentStepperState} from "../selectors";
+import {getPlayerState} from "../../player/selectors";
 
 interface StepperViewStateToProps {
     diagnostics: any,
@@ -32,7 +34,6 @@ interface StepperViewStateToProps {
 }
 
 function mapStateToProps(state: AppStore, props): StepperViewStateToProps {
-    const {getPlayerState, getCompileDiagnostics, getCurrentStepperState} = state.get('scope');
     const getMessage = state.get('getMessage');
     const geometry = state.get('mainViewGeometry');
     const panes = state.get('panes');

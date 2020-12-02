@@ -1,8 +1,6 @@
 import {delay} from 'redux-saga/effects';
 
-export default function (bundle, deps) {
-    bundle.use('stepperInterrupt');
-
+export default function(bundle) {
     bundle.defer(function ({stepperApi}) {
         stepperApi.addBuiltin('delay', function* delayBuiltin(stepperContext, millis) {
             function* delaySaga() {

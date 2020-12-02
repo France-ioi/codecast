@@ -10,7 +10,7 @@ export const mainViewGeometries = [
     {size: 'sm', width: 794, svgScale: 0.75},
 ];
 
-export default function (bundle, deps) {
+export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, function (state, _action) {
         return state
             .set('mainViewGeometry', mainViewGeometries[0])
@@ -19,7 +19,7 @@ export default function (bundle, deps) {
 
     // Make windowResized update the global state 'size'.
     bundle.defineAction(ActionTypes.WindowResized);
-    bundle.addReducer('windowResized', function (state, action) {
+    bundle.addReducer(ActionTypes.WindowResized, function (state, action) {
         const {width, height} = action;
         return state.set('windowWidth', width).set('windowHeight', height);
     });

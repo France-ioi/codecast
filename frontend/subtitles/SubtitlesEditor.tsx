@@ -6,19 +6,19 @@ import {SubtitlesEditorNewOption} from "./SubtitlesEditorNewOption";
 import Files from 'react-files';
 import {ActionTypes} from "./actionTypes";
 import {connect} from "react-redux";
+import {AppStore} from "../store";
 
-interface SubtitlesEditorProps {
-    availableOptions: any,
+interface SubtitlesEditorStateToProps {
+    availableOptions: any[],
     selected: any,
-    subtitlesText: any,
-    langOptions: any,
-    canSave: any,
-    unsaved: any,
-    notify: any,
-    dispatch: Function
+    subtitlesText: string,
+    langOptions: any[],
+    canSave: boolean,
+    unsaved: boolean,
+    notify: any
 }
 
-function SubtitlesEditorSelector(state, props) {
+function mapStateToProps(state: AppStore): SubtitlesEditorStateToProps {
     const {unsaved, notify, selectedKey, availableOptions, langOptions} = state.get('subtitles');
     const canSave = state.getIn(['editor', 'canSave']);
     const selected = selectedKey && availableOptions[selectedKey];
@@ -27,16 +27,17 @@ function SubtitlesEditorSelector(state, props) {
     return {canSave, unsaved, notify, availableOptions, langOptions, selected, subtitlesText};
 }
 
-interface SetupScreenDispatchToProps {
+interface SubtitlesEditorDispatchToProps {
     dispatch: Function
 }
 
-interface SetupScreenProps extends SetupScreenStateToProps, SetupScreenDispatchToProps {
+interface SubtitlesEditorProps extends SubtitlesEditorStateToProps, SubtitlesEditorDispatchToProps {
 
 }
 
 class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
     _loadInput = null;
+    _fileAccepts = ['.srt'];
 
     render() {
         const {availableOptions, selected, subtitlesText, langOptions, canSave, unsaved, notify} = this.props;
@@ -53,58 +54,83 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                                     option={availableOptions[key]}
                                     selected={selected && selected.key === key}
                                     onSelect={this._selectOption}
-                                />)
-                            }
+                                />
+                            )}
                             <MenuItem icon='add' text='Add language…' popoverProps={{position: Position.TOP_RIGHT}}>
                                 {langOptions.map(option =>
                                     <SubtitlesEditorNewOption
                                         key={option.value}
                                         option={option}
                                         disabled={availKeys.find(key => option.value === key)}
-                                        onSelect={this._addOption}/>)}
+                                        onSelect={this._addOption}
+                                    />
+                                )}
                             </MenuItem>
                         </Menu>
                     </div>
                     <div className='fill' style={{paddingLeft: '10px'}}>
-                        {selected
-                            ? <div>
-                                <textarea rows={7} style={{width: '100%'}} value={subtitlesText}
-                                          onChange={this._onChange}/>
+                        {selected ?
+                            <div>
+                                <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange} />
                                 <div className='buttons-bar'>
-                                    <Files onChange={this._fileChanged} accepts={this._fileAccepts}
-                                           style={{display: 'inline-block'}}><Button
-                                        icon={IconNames.UPLOAD}>{"Load"}</Button></Files>
+                                    <Files
+                                        onChange={this._fileChanged}
+                                        accepts={this._fileAccepts}
+                                        style={{display: 'inline-block'}}
+                                    >
+                                        <Button icon={IconNames.UPLOAD}>{"Load"}</Button>
+                                    </Files>
                                     <Button onClick={this._saveSelected} icon={IconNames.DOWNLOAD} text={"Save"}/>
-                                    <Button onClick={this._reloadSelected} icon={IconNames.CLOUD_DOWNLOAD}
-                                            disabled={!selected.url} text={"Revert"}/>
+                                    <Button
+                                        onClick={this._reloadSelected}
+                                        icon={IconNames.CLOUD_DOWNLOAD}
+                                        disabled={!selected.url} text={"Revert"}
+                                    />
                                     <Button onClick={this._removeSelected} icon={IconNames.CROSS} text={'Remove'}/>
                                 </div>
                             </div>
-                            : <NonIdealState
+                        :
+                            <NonIdealState
                                 icon='arrow-left'
                                 title={"No language selected"}
                                 description={"Load existing subtitles or add a new language, and click the Edit button."}
-                            />}
+                            />
+                        }
                     </div>
                 </div>
                 <div className='hbox mb' style={{textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
                     <div className='fill center'>
-                        <Button onClick={this._beginEdit} disabled={!selected} icon={IconNames.EDIT} text={"Edit"}
-                                style={{marginRight: '10px'}}/>
-                        <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"} disabled={!canSave}
-                                intent={unsaved ? Intent.PRIMARY : Intent.NONE}/>
+                        <Button
+                            onClick={this._beginEdit}
+                            disabled={!selected}
+                            icon={IconNames.EDIT}
+                            text={"Edit"}
+                            style={{marginRight: '10px'}}
+                        />
+                        <Button
+                            onClick={this._save}
+                            icon={IconNames.CLOUD_UPLOAD}
+                            text={"Save"}
+                            disabled={!canSave}
+                            intent={unsaved ? Intent.PRIMARY : Intent.NONE}
+                        />
                     </div>
                 </div>
                 {!canSave &&
-                <Callout intent={Intent.WARNING} title={"Insufficient access rights"}>
-                    {"The current user is not allowed to modify this Codecast."}
-                </Callout>}
+                    <Callout intent={Intent.WARNING} title={"Insufficient access rights"}>
+                        {"The current user is not allowed to modify this Codecast."}
+                    </Callout>
+                }
                 <div>
                     {notify.key === 'pending' &&
-                    <Callout icon={<Spinner size={Spinner.SIZE_SMALL}/>}>{"Saving, please wait."}</Callout>}
-                    {notify.key === 'success' && <Callout icon='saved' intent={Intent.SUCCESS}>{"Saved."}</Callout>}
+                        <Callout icon={<Spinner size={Spinner.SIZE_SMALL}/>}>{"Saving, please wait."}</Callout>
+                    }
+                    {notify.key === 'success' &&
+                        <Callout icon='saved' intent={Intent.SUCCESS}>{"Saved."}</Callout>
+                    }
                     {notify.key === 'failure' &&
-                    <Callout icon='warning-sign' intent={Intent.DANGER}>{"Failed to save: "}{notify.message}</Callout>}
+                        <Callout icon='warning-sign' intent={Intent.DANGER}>{"Failed to save: "}{notify.message}</Callout>
+                    }
                 </div>
             </div>
         );
@@ -141,6 +167,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
     };
     _onChange = (event) => {
         const text = event.target.value;
+
         this.props.dispatch({type: ActionTypes.SubtitlesTextChanged, payload: {text, unsaved: true}});
     };
     _beginEdit = () => {
@@ -149,7 +176,6 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
     _save = () => {
         this.props.dispatch({type: ActionTypes.SubtitlesEditorSave});
     };
-    _fileAccepts = ['.srt'];
     _fileChanged = ([file]) => {
         const key = this.props.selected.key;
         this.props.dispatch({type: ActionTypes.SubtitlesTextLoaded, payload: {key, file}});

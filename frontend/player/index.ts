@@ -1,9 +1,7 @@
-import playerSelectors from './selectors';
 import playerReducers from './reducers';
 import playerSagas from './sagas';
 
-export default function (bundle, deps) {
-    bundle.include(playerSelectors);
+export default function(bundle) {
     bundle.include(playerReducers);
     bundle.include(playerSagas);
 };

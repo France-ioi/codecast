@@ -4,17 +4,38 @@ import {Icon} from "@blueprintjs/core";
 import {writeString} from "./terminal";
 import {ActionTypes} from "./actionTypes";
 import {PureTerminal} from "./PureTerminal";
+import {getCurrentStepperState} from "../selectors";
+import {connect} from "react-redux";
+import {AppStore} from "../../store";
 
-interface TerminalViewProps {
-    dispatch?: Function,
-    preventInput: boolean,
+interface TerminalViewStateToProps {
     isWaitingOnInput?: boolean,
     terminal?: any,
-    input?: any
+    input?: string
 }
 
-export class TerminalView extends React.PureComponent<TerminalViewProps> {
+function mapStateToProps(state: AppStore): TerminalViewStateToProps {
+    const stepper = getCurrentStepperState(state);
+    if (stepper) {
+        return {
+            terminal: stepper.terminal,
+            input: stepper.inputBuffer,
+            isWaitingOnInput: stepper.isWaitingOnInput
+        }
+    }
 
+    return {};
+}
+
+interface TerminalViewDispatchToProps {
+    dispatch: Function
+}
+
+interface TerminalViewProps extends TerminalViewStateToProps, TerminalViewDispatchToProps {
+    preventInput: boolean
+}
+
+class _TerminalView extends React.PureComponent<TerminalViewProps> {
     onTermInit = (iface) => {
         this.props.dispatch({type: ActionTypes.TerminalInit, iface});
     };
@@ -35,6 +56,7 @@ export class TerminalView extends React.PureComponent<TerminalViewProps> {
     };
     renderHeader = () => {
         const {isWaitingOnInput} = this.props;
+
         return (
             <div className="row">
                 <div className="col-sm-12">
@@ -49,17 +71,24 @@ export class TerminalView extends React.PureComponent<TerminalViewProps> {
     render() {
         const {terminal, input} = this.props;
         const buffer = terminal && writeString(terminal, input);
+
         return (
             <Panel>
                 <Panel.Heading>{this.renderHeader()}</Panel.Heading>
                 <Panel.Body>
                     <div className="row">
                         <div className="col-sm-12">
-                            {buffer
-                                ?
-                                <PureTerminal buffer={buffer} onInit={this.onTermInit} onKeyPress={this.onTermChar}
-                                              onBackspace={this.onTermBS} onEnter={this.onTermEnter}/>
-                                : <p>{"no buffer"}</p>}
+                            {buffer ?
+                                <PureTerminal
+                                    buffer={buffer}
+                                    onInit={this.onTermInit}
+                                    onKeyPress={this.onTermChar}
+                                    onBackspace={this.onTermBS}
+                                    onEnter={this.onTermEnter}
+                                />
+                            :
+                                <p>{"no buffer"}</p>
+                            }
                         </div>
                     </div>
                 </Panel.Body>
@@ -67,3 +96,5 @@ export class TerminalView extends React.PureComponent<TerminalViewProps> {
         );
     }
 }
+
+export const TerminalView = connect(mapStateToProps)(_TerminalView);

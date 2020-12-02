@@ -4,18 +4,41 @@ import {findInstant} from './utils';
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes} from "./actionTypes";
 
-export default function (bundle, deps) {
+export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, initReducer);
+
+    bundle.defineAction(ActionTypes.PlayerClear);
     bundle.addReducer(ActionTypes.PlayerClear, playerClearReducer);
+
+    bundle.defineAction(ActionTypes.PlayerPreparing);
     bundle.addReducer(ActionTypes.PlayerPreparing, playerPreparingReducer);
+
+    bundle.defineAction(ActionTypes.PlayerPrepareProgress);
     bundle.addReducer(ActionTypes.PlayerPrepareProgress, playerPrepareProgressReducer);
+
+    bundle.defineAction(ActionTypes.PlayerPrepareFailure);
     bundle.addReducer(ActionTypes.PlayerPrepareFailure, playerPrepareFailureReducer);
+
+    bundle.defineAction(ActionTypes.PlayerReady);
     bundle.addReducer(ActionTypes.PlayerReady, playerReadyReducer);
+
+    bundle.defineAction(ActionTypes.PlayerStarted);
     bundle.addReducer(ActionTypes.PlayerStarted, playerStartedReducer);
+
+    bundle.defineAction(ActionTypes.PlayerPaused);
     bundle.addReducer(ActionTypes.PlayerPaused, playerPausedReducer);
+
+    bundle.defineAction(ActionTypes.PlayerTick);
     bundle.addReducer(ActionTypes.PlayerTick, playerTickReducer);
+
+    bundle.defineAction(ActionTypes.PlayerVolumeChanged);
     bundle.addReducer(ActionTypes.PlayerVolumeChanged, playerVolumeChangedReducer);
+
+    bundle.defineAction(ActionTypes.PlayerMutedChanged);
     bundle.addReducer(ActionTypes.PlayerMutedChanged, playerMutedChangedReducer);
+
+    bundle.defineAction(ActionTypes.PlayerSeek);
+    bundle.defineAction(ActionTypes.PlayerSeeked);
 }
 
 function initReducer(state, _action) {

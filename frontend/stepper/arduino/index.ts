@@ -22,7 +22,6 @@ import './ace';
 import './style.scss';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
-import {ArduinoPanel} from "./ArduinoPanel";
 import {NPorts} from "./config";
 
 export enum PinMode {
@@ -31,9 +30,7 @@ export enum PinMode {
   PINMODE_INPUT_PULLUP = 2
 }
 
-export default function (bundle, deps) {
-    bundle.use('getCurrentStepperState');
-
+export default function(bundle) {
     const initialArduinoState = {
         hardware: 'atmega328p',
         ports: range(0, NPorts - 1).map(_ => {
@@ -96,7 +93,7 @@ export default function (bundle, deps) {
         replayApi.onReset(function* (instant) {
             const arduinoState = instant.state.get('arduino');
             if (arduinoState) {
-                yield put({type: deps.arduinoReset, state: arduinoState});
+                yield put({type: ActionTypes.ArduinoReset, state: arduinoState});
             }
         });
 
@@ -173,7 +170,6 @@ export default function (bundle, deps) {
             yield ['digitalWrite', pin.toInteger(), level.toInteger()];
         });
         stepperApi.onEffect('digitalWrite', function* digitalWriteEffect(stepperContext, pin, level) {
-            const port = stepperContext.state.ports[pin];
             stepperContext.state = update(stepperContext.state,
                 {
                     ports: {

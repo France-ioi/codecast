@@ -1,6 +1,6 @@
 import {ActionTypes} from "./actionTypes";
 
-export default function (bundle, deps) {
+export default function(bundle) {
     // Switch to the specified screen.
     bundle.defineAction(ActionTypes.SystemSwitchToScreen);
 

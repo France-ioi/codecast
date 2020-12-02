@@ -81,9 +81,6 @@ export default function (bundle) {
     bundle.addReducer(ActionTypes.SubtitlesSave, subtitlesSaveReducer);
 
     bundle.addSaga(subtitlesEditorSaga);
-
-    bundle.defineView('SubtitlesEditorReturn', SubtitlesEditorReturnSelector, SubtitlesEditorReturn);
-    bundle.defineView('SubtitlesEditorPane', SubtitlesEditorPaneSelector, SubtitlesEditorPane);
 }
 
 function clearNotify(subtitles) {
@@ -425,20 +422,4 @@ function* subtitlesSaveOptionSaga(_app, action) {
     const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
 
     yield call(FileSaver.saveAs, blob, `${action.payload.key}.srt`);
-}
-
-function SubtitlesEditorReturnSelector(state) {
-    return {};
-}
-
-function SubtitlesEditorPaneSelector(state, props) {
-    const getMessage = state.get('getMessage');
-    const {items, currentIndex, audioTime} = state.get('subtitles');
-
-    return {
-        getMessage,
-        subtitles: items,
-        currentIndex,
-        audioTime
-    };
 }

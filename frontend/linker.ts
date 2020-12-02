@@ -1,14 +1,11 @@
-import {AppStore} from './store';
 import {applyMiddleware, compose, createStore} from 'redux';
 import {default as createSagaMiddleware} from 'redux-saga';
 import {all, call} from 'redux-saga/effects';
-import {connect} from 'react-redux';
 
 interface Linker {
     scope: any,
     actionTypes: any,
-    views: any,
-    store: AppStore,
+    store: any,
     reducer: any
     finalize: Function
     start: Function
@@ -105,10 +102,7 @@ export function link(rootBuilder): Linker {
     rootBundle._seal();
 
     /* Views can depend on selector definitions, so inject them in a second phase. */
-    injectAll(['action', 'selector', 'value']);
-    const views = {};
-    rootBundle._linkViews(views);
-    injectAll('views');
+    injectAll(['action', 'value']);
 
     // Compose the reducer now that all actions have been defined.
     const actionMap = new Map();
@@ -167,7 +161,6 @@ export function link(rootBuilder): Linker {
     return {
         scope: globalScope,
         actionTypes: typeForActionName,
-        views,
         store,
         reducer: rootReducer,
         finalize,
@@ -193,7 +186,6 @@ class Bundle {
             earlyReducers: [],
             actionReducers: [],
             lateReducers: [],
-            views: [],
             defers: [],
             sagas: [],
             sealed: false
@@ -226,27 +218,11 @@ class Bundle {
         this.use(name);
     }
 
-    defineSelector(name, value) {
-        this._assertNotSealed();
-        this._.linker.publish('selector', name, value);
-        this.use(name);
-    }
-
     defineAction(name) {
         this._assertNotSealed();
         this._.linker.declareActionType(name);
         this._.linker.publish('action', name, name);
         this.use(name);
-    }
-
-    defineView(name, selector, view) {
-        this._assertNotSealed();
-        if (view === undefined) {
-            view = selector;
-            selector = undefined;
-        }
-        this.use(name);
-        this._.views.push({name, view, selector});
     }
 
     addReducer(name, reducer) {
@@ -293,30 +269,6 @@ class Bundle {
     _assertNotSealed() {
         if (this._.sealed) {
             throw new Error('Dynamically calling epic-linker directives is not supported.');
-        }
-    }
-
-    _linkViews(views) {
-        // Define and connect views.
-        for (let i = 0; i < this._.views.length; i += 1) {
-            let {name, selector, view} = this._.views[i];
-            if (selector !== undefined) {
-                if (typeof selector === 'string') {
-                    selector = this.locals[selector];
-                }
-                if (typeof selector !== 'function') {
-                    throw new Error(`invalid selector for view ${name}`);
-                }
-                view = connect(selector)(view);
-            }
-            view.displayName = `View(${name})`;
-            this._.linker.publish('view', name, view);
-            views[name] = view;
-        }
-
-        // Define and connect views in included bundles.
-        for (let i = 0; i < this._.bundles.length; i += 1) {
-            this._.bundles[i]._linkViews(views);
         }
     }
 

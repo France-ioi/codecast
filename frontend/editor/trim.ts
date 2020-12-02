@@ -16,11 +16,8 @@ import {findSubtitleIndex} from '../subtitles/utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as SubtitlesActionTypes} from "../subtitles/actionTypes";
-import {TrimEditor} from "./TrimEditor";
-import {TrimEditorControls} from "./TrimEditorControls";
-import {TrimEditorReturn} from "./TrimEditorReturn";
 
-export default function (bundle, deps) {
+export default function(bundle) {
     bundle.addReducer(ActionTypes.EditorPrepare, editorPrepareReducer);
 
     bundle.defineAction(ActionTypes.EditorTrimEnter);
@@ -40,9 +37,6 @@ export default function (bundle, deps) {
     bundle.defineAction(ActionTypes.EditorTrimIntervalChanged);
     bundle.addReducer(ActionTypes.EditorTrimIntervalChanged, trimEditorIntervalChangedReducer);
 
-    bundle.defineView('TrimEditor', TrimEditorSelector, TrimEditor);
-    bundle.defineView('TrimEditorControls', TrimEditorControlsSelector, TrimEditorControls);
-    bundle.defineView('TrimEditorReturn', TrimEditorReturnSelector, TrimEditorReturn);
     bundle.addSaga(trimSaga);
 
     bundle.defineAction(ActionTypes.EditorTrimSavingStep);
@@ -85,7 +79,7 @@ function trimEditorIntervalChangedReducer(state, {payload: {position, value}}) {
 function addJumpInstants(instants, intervals) {
     /* Clear existing annotations (also copy the Array we will mutate). */
     instants = instants.filter(instant => instant.event);
-    let skip = false, skipStart, skipTarget;
+    let skip = false, skipStart;
     for (let interval of intervals) {
         const mute = interval.value.mute;
         insertAnnotation(Math.max(1, interval.start), {mute});
@@ -114,47 +108,6 @@ function addJumpInstants(instants, intervals) {
         }
         instants[index] = {...instants[index], ...data};
     }
-}
-
-function TrimEditorSelector(state) {
-    const {trimEditorEnter, trimEditorSave} = state.get('scope');
-    const {saving} = state.getIn(['editor', 'trim']);
-    const user = state.get('user');
-    const grants = user && user.grants || [];
-    return {trimEditorEnter, trimEditorSave, saving, grants};
-}
-
-function TrimEditorControlsSelector(state, props) {
-    const {width} = props;
-    const {getPlayerState} = state.get('scope');
-    const editor = state.get('editor');
-    const player = getPlayerState(state);
-    const position = Math.round(player.get('audioTime'));
-    const duration = player.get('duration');
-    const waveform = editor.get('waveform');
-    const {events} = editor.get('data');
-    const {intervals} = editor.get('trim');
-    const visibleDuration = width * 1000 / 60;
-    let viewStart = position - visibleDuration / 2;
-    let viewEnd = position + visibleDuration / 2;
-    if (viewStart < 0) {
-        viewStart = 0;
-    } else if (viewEnd > duration) {
-        viewStart = Math.max(0, duration - visibleDuration);
-    }
-    viewEnd = viewStart + visibleDuration;
-    const selectedInterval = intervals.get(position);
-    const diffToStart = position - selectedInterval.start;
-    const diffToEnd = selectedInterval.end - position;
-    const selectedMarker = diffToStart <= diffToEnd ? selectedInterval.start : selectedInterval.end;
-    return {
-        position, viewStart, viewEnd, duration, waveform, events, intervals,
-        selectedMarker, selectedInterval
-    };
-}
-
-function TrimEditorReturnSelector(state) {
-    return {};
 }
 
 function trimEditorSavingStepReducer(state, {payload: {step, status, progress, error}}) {

@@ -11,7 +11,6 @@ import buffersBundle from '../buffers';
 import optionsBundle from './options';
 import resizeBundle from './resize';
 import fullscreenBundle from './fullscreen';
-import menuBundle from './Menu';
 import loginBundle from './login';
 import clientApiBundle from './client_api';
 import subtitlesBundle from '../subtitles';
@@ -35,7 +34,6 @@ export default function (bundle) {
     bundle.include(buffersBundle);
     bundle.include(resizeBundle);
     bundle.include(fullscreenBundle);
-    bundle.include(menuBundle);
     bundle.include(loginBundle);
     bundle.include(clientApiBundle);
     bundle.include(subtitlesBundle);

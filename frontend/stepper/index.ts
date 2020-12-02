@@ -48,11 +48,9 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {getCurrentStepperState, getStepper} from "./selectors";
+import {getCurrentStepperState, getStepper, getSyntaxTree, isStepperInterrupting} from "./selectors";
 
-export default function (bundle) {
-    bundle.use('getBufferModel');
-
+export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, initReducer);
 
     /* Sent when the stepper task is started */
@@ -525,8 +523,9 @@ function* stepperDisabledSaga() {
 
 function* stepperInteractSaga(app, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
     /* Has the stepper been interrupted? */
-    if (yield select(app.selectors.isStepperInterrupting)) {
+    if (yield select(isStepperInterrupting)) {
         yield call(reject, new StepperError('interrupt', 'interrupted'));
+
         return;
     }
 
@@ -541,7 +540,7 @@ function* stepperInteractSaga(app, {payload: {stepperContext, arg}, meta: {resol
 
     /* Update stepperContext.state from the global state to avoid discarding
        the effects of user interaction. */
-    stepperContext.state = yield select(app.selectors.getCurrentStepperState);
+    stepperContext.state = yield select(getCurrentStepperState);
 
     if (stepperContext.state.platform === 'python' && arg) {
         stepperContext.state.output = arg.output;
@@ -722,7 +721,7 @@ function updateRange(replayContext) {
 }
 
 function postLink(scope) {
-    const {recordApi, replayApi, stepperApi, getSyntaxTree} = scope;
+    const {recordApi, replayApi, stepperApi} = scope;
 
     recordApi.onStart(function* (init) {
         /* TODO: store stepper options in init */

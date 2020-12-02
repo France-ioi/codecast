@@ -1,5 +1,5 @@
-export default function (bundle) {
-    bundle.defineSelector('getPlayerState', state =>
-        state.get('player')
-    );
-};
+import {AppStore} from "../store";
+
+export function getPlayerState(state: AppStore) {
+    return state.get('player');
+}

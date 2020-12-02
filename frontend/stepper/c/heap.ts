@@ -4,6 +4,23 @@ const uint = C.builtinTypes['unsigned int'];
 const uintPtr = C.pointerType(uint);
 const headerSize = 4;
 
+export default function(bundle) {
+    bundle.defer(function ({stepperApi}) {
+        stepperApi.onInit(function (stepperState, globalState) {
+            const {platform} = globalState.get('options');
+
+            if (platform === 'unix' || platform === 'arduino') {
+                const {programState, options} = stepperState;
+
+                heapInit(programState, options.stackSize);
+            }
+        });
+
+        stepperApi.addBuiltin('malloc', mallocBuiltin);
+        stepperApi.addBuiltin('free', freeBuiltin);
+    });
+};
+
 /*
 Block properties:
   - ref: reference to the block header
@@ -142,20 +159,3 @@ function* freeBuiltin(stepperContext, ref) {
 
     yield* effects;
 }
-
-export default function (bundle, deps) {
-    bundle.defer(function ({stepperApi}) {
-        stepperApi.onInit(function (stepperState, globalState) {
-            const {platform} = globalState.get('options');
-
-            if (platform === 'unix' || platform === 'arduino') {
-                const {programState, options} = stepperState;
-
-                heapInit(programState, options.stackSize);
-            }
-        });
-
-        stepperApi.addBuiltin('malloc', mallocBuiltin);
-        stepperApi.addBuiltin('free', freeBuiltin);
-    });
-};

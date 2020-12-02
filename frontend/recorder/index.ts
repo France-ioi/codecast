@@ -3,22 +3,18 @@ import {Map} from 'immutable';
 import saveScreenComponent from './save_screen';
 import recorderStore from './store';
 import recorderSagas from './sagas';
-import RecordScreen from './record_screen';
-import RecorderAppBundle from './app_view';
 import MemoryUsageBundle from './memory_usage';
 import VumeterBundle from './vumeter';
 import ScreensBundle from '../common/screens';
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 
-export default function (bundle, deps) {
+export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, state =>
         state.set('recorder', Map()));
 
     bundle.include(saveScreenComponent);
     bundle.include(recorderStore);
     bundle.include(recorderSagas);
-    bundle.include(RecordScreen);
-    bundle.include(RecorderAppBundle);
     bundle.include(MemoryUsageBundle);
     bundle.include(VumeterBundle);
     bundle.include(ScreensBundle);

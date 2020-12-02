@@ -4,7 +4,7 @@ import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects
 import * as C from 'persistent-c';
 
 import {documentFromString} from '../../buffers/document';
-import {DocumentModel} from '../../buffers/index';
+import {DocumentModel} from '../../buffers';
 import {default as TerminalBundle, TermBuffer, writeString} from './terminal';
 import {printfBuiltin} from './printf';
 import {scanfBuiltin} from './scanf';
@@ -13,18 +13,11 @@ import {ActionTypes as StepperActionTypes} from "../actionTypes";
 import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
-import {IOPaneOptions} from "./IOPaneOptions";
-import {InputOutputView} from "./InputOutputView";
-import {IOPane} from "./IOPane";
+import {getCurrentStepperState} from "../selectors";
+import {getBufferModel} from "../../buffers/selectors";
 
-export default function (bundle, deps) {
+export default function(bundle) {
     bundle.include(TerminalBundle);
-    bundle.use(
-        'terminalInputNeeded', 'terminalInputEnter', 'terminalFocus',
-        'getCurrentStepperState', 'stepperProgress', 'stepperIdle', 'stepperInterrupt',
-        'stepperRestart', 'stepperUndo', 'stepperRedo',
-        'getBufferModel', 'bufferReset', 'bufferEdit', 'bufferModelEdit', 'bufferModelSelect'
-    );
 
     bundle.addReducer(AppActionTypes.AppInit, function (state) {
         return state.set('ioPane', updateIoPaneState(state, {}));
@@ -64,18 +57,10 @@ export default function (bundle, deps) {
         return state.update('ioPane', ioPane => ({...ioPane, mode}));
     }
 
-    bundle.defineView('IOPaneOptions', IOPaneOptionsSelector, IOPaneOptions);
-
-    function IOPaneOptionsSelector(state) {
-        const getMessage = state.get('getMessage');
-        const {mode, modeSelect} = state.get('ioPane');
-        return {getMessage, mode, modeSelect};
-    }
-
     /* Split input/output view */
 
     function getOutputBufferModel(state) {
-        const stepper = deps.getCurrentStepperState(state);
+        const stepper = getCurrentStepperState(state);
         const {output} = stepper;
         const doc = documentFromString(output);
         const endCursor = doc.endCursor();
@@ -132,7 +117,7 @@ export default function (bundle, deps) {
 
         function* syncOutputBufferSaga(instant) {
             const model = instant.state.getIn(['buffers', 'output', 'model']);
-            yield put({type: deps.bufferReset, buffer: 'output', model});
+            yield put({type: BufferActionTypes.BufferReset, buffer: 'output', model});
         }
 
         /* Set up the terminal or input. */
@@ -145,7 +130,7 @@ export default function (bundle, deps) {
                 stepperState.terminal = TermBuffer({lines: 10, width: 80});
                 stepperState.inputBuffer = "";
             } else {
-                const inputModel = deps.getBufferModel(globalState, 'input');
+                const inputModel = getBufferModel(globalState, 'input');
                 let input = inputModel.get('document').toString().trimRight();
                 if (input.length !== 0) {
                     input = input + "\n";
@@ -242,7 +227,7 @@ export default function (bundle, deps) {
             yield put({type: ActionTypes.TerminalFocus});
 
             /* Wait for the user to enter a line. */
-            yield take(deps.terminalInputEnter);
+            yield take(ActionTypes.TerminalInputEnter);
         }
 
         stepperApi.onEffect('ungets', function* ungetsHandler(stepperContext, count) {
@@ -270,8 +255,8 @@ export default function (bundle, deps) {
                 StepperActionTypes.StepperProgress,
                 StepperActionTypes.StepperIdle
             ], function* (action) {
-                const stepperState = yield select(deps.getCurrentStepperState);
-                const outputModel = yield select(deps.getBufferModel, 'output');
+                const stepperState = yield select(getCurrentStepperState);
+                const outputModel = yield select(getBufferModel, 'output');
                 const oldSize = outputModel.get('document').size();
                 const newSize = stepperState.output.length;
                 if (oldSize !== newSize) {
@@ -285,8 +270,8 @@ export default function (bundle, deps) {
                     };
 
                     /* Update the model to maintain length, new end cursor. */
-                    yield put({type: deps.bufferEdit, buffer: 'output', delta});
-                    const newEndCursor = yield select(state => deps.getBufferModel(state, 'output').get('document').endCursor());
+                    yield put({type: BufferActionTypes.BufferEdit, buffer: 'output', delta});
+                    const newEndCursor = yield select(state => getBufferModel(state, 'output').get('document').endCursor());
 
                     /* Send the delta to the editor to add the new output. */
                     yield put({type: BufferActionTypes.BufferModelEdit, buffer: 'output', delta});

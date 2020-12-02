@@ -15,7 +15,6 @@ import {AppStore} from './store';
 import {link} from './linker';
 
 import commonBundle from './common/index';
-import sandboxBundle from './sandbox/index';
 import playerBundle from './player/index';
 import recorderBundle from './recorder/index';
 import editorBundle from './editor/index';
@@ -66,14 +65,13 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
     'Player.Tick': true
 };
 
-const {store, scope, views, finalize, start} = link(function (bundle, deps) {
+const {store, scope, finalize, start} = link(function (bundle) {
     bundle.defineAction(ActionTypes.AppInit);
     bundle.addReducer(ActionTypes.AppInit, (_state, _action) => {
-        return Map({scope, views});
+        return Map({scope});
     });
 
     bundle.include(commonBundle);
-    bundle.include(sandboxBundle);
     bundle.include(playerBundle);
     bundle.include(recorderBundle);
     bundle.include(editorBundle);
@@ -130,9 +128,7 @@ function restart() {
     /* XXX Make a separate object for selectors in the linker? */
     Codecast.task = start({
         dispatch: store.dispatch,
-        globals: scope,
-        selectors: scope,
-        views
+        globals: scope
     });
 }
 

@@ -4,7 +4,7 @@ import {LanguageSelection} from "./LanguageSelection";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 
-export default function (bundle, deps) {
+export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, initReducer);
 
     bundle.defineAction(ActionTypes.LanguageSet);

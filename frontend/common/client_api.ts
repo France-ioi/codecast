@@ -1,7 +1,7 @@
 import {buffers, eventChannel} from 'redux-saga';
 import {put, take} from 'redux-saga/effects'
 
-export default function (bundle, deps) {
+export default function(bundle) {
     const messageChannel = eventChannel(function (listener) {
         const onMessage = function (event) {
             const {source, data} = event;

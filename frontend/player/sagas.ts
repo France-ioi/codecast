@@ -11,6 +11,7 @@ import {findInstantIndex} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
+import {getPlayerState} from "./selectors";
 
 export default function (bundle) {
     bundle.addSaga(playerSaga);
@@ -29,7 +30,7 @@ function* playerSaga(action) {
 }
 
 function* playerPrepare(app, action) {
-    const {selectors: {getPlayerState}, globals: {replayApi}} = app;
+    const { globals: {replayApi}} = app;
 
     /*
       baseDataUrl is forwarded to playerReady (stored in its reducer) in order
@@ -203,7 +204,6 @@ function* computeInstants(replayContext) {
 }
 
 function* replaySaga(app, {type, payload}) {
-    const {selectors: {getPlayerState}} = app;
     const player = yield select(getPlayerState);
     const isPlaying = player.get('isPlaying');
     const audio = player.get('audio');
@@ -372,7 +372,7 @@ function* restartStepper(app) {
 
 function* jumpToAudioTime(app, audioTime) {
     /* Jump and full reset to the specified audioTime. */
-    const player = yield select(app.selectors.getPlayerState);
+    const player = yield select(getPlayerState);
     audioTime = Math.max(0, Math.min(player.get('duration'), audioTime));
     const audio = player.get('audio');
     audio.currentTime = audioTime / 1000;

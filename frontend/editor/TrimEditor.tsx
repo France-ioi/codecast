@@ -2,14 +2,31 @@ import React from "react";
 import {AnchorButton, Button, FormGroup, HTMLSelect, Icon, Intent, ProgressBar, Spinner} from "@blueprintjs/core";
 import {IconNames} from "@blueprintjs/icons";
 import {ActionTypes} from "./actionTypes";
+import {connect} from "react-redux";
+import {AppStore} from "../store";
 
-interface TrimEditorProps {
+interface TrimEditorStateToProps {
     saving: any,
-    grants: any,
+    grants: any[]
+}
+
+function mapStateToProps(state: AppStore): TrimEditorStateToProps {
+    const {saving} = state.getIn(['editor', 'trim']);
+    const user = state.get('user');
+    const grants = user && user.grants || [];
+
+    return {saving, grants};
+}
+
+interface TrimEditorDispatchToProps {
     dispatch: Function
 }
 
-export class TrimEditor extends React.PureComponent<TrimEditorProps> {
+interface TrimEditorProps extends TrimEditorStateToProps, TrimEditorDispatchToProps {
+
+}
+
+class _TrimEditor extends React.PureComponent<TrimEditorProps> {
     state = {targetUrl: ''};
 
     static getDerivedStateFromProps(props, state) {
@@ -46,19 +63,21 @@ export class TrimEditor extends React.PureComponent<TrimEditorProps> {
                         {stepRows}
                     </div>
                     {saving.done &&
-                    <div style={{textAlign: 'center'}}>
-                        <AnchorButton href={saving.playerUrl} target='_blank' text="Open in player"/>
-                    </div>}
+                        <div style={{textAlign: 'center'}}>
+                            <AnchorButton href={saving.playerUrl} target='_blank' text="Open in player"/>
+                        </div>
+                    }
                 </div>
             );
         }
         return (
             <div>
-                <Button onClick={this._beginEdit} icon={IconNames.EDIT} text={"Edit"}/>
+                <Button onClick={this._beginEdit} icon={IconNames.EDIT} text={"Edit"} />
                 <FormGroup label="Target">
-                    <HTMLSelect options={grantOptions} value={targetUrl} onChange={this.handleTargetChange}/>
+                    <HTMLSelect options={grantOptions} value={targetUrl} onChange={this.handleTargetChange} />
                 </FormGroup>
-                <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"}/>
+                <Button onClick={this._save} icon={IconNames.CLOUD_UPLOAD} text={"Save"} />
+
                 {savingView}
             </div>
         );
@@ -78,6 +97,8 @@ export class TrimEditor extends React.PureComponent<TrimEditorProps> {
         }
     };
 }
+
+export const TrimEditor = connect(mapStateToProps)(_TrimEditor);
 
 const savingSteps = [
     {key: 'prepareUpload', label: "Preparing upload"},

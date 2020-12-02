@@ -13,20 +13,11 @@ import AudioWorker from '../audio_worker/index.worker';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
+import {getPlayerState} from "../player/selectors";
+import {getRecorderState} from "./selectors";
 
 export default function (bundle, deps) {
-
-    bundle.use(
-        'error', 'recordApi', 'switchToScreen',
-        'getRecorderState', 'getPlayerState',
-        'recorderPrepare', 'recorderPreparing', 'recorderReady',
-        'recorderTick',
-        'recorderStart', 'recorderStarting', 'recorderStarted',
-        'recorderPause', 'recorderPausing', 'recorderPaused',
-        'recorderStop', 'recorderStopping', 'recorderStopped',
-        'recorderTruncate',
-        'playerPrepare', 'playerPause', 'playerPaused', 'playerClear', 'playerReady'
-    );
+    bundle.use('recordApi');
 
     function* recorderPrepare() {
         try {
@@ -34,10 +25,10 @@ export default function (bundle, deps) {
             yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'record'}});
 
             // Clean up any previous audioContext and worker.
-            const recorder = yield select(deps.getRecorderState);
+            const recorder = yield select(getRecorderState);
             let recorderContext = recorder.get('context');
             if (recorderContext) {
-                const {audioContext: oldAudioContext, worker: oldWorker} = recorderContext;
+                const {worker: oldWorker} = recorderContext;
                 // @ts-ignore
                 if (oldContext) {
                     // @ts-ignore
@@ -108,7 +99,7 @@ export default function (bundle, deps) {
     function* recorderStart() {
         try {
             // The user clicked the "start recording" button.
-            const recorder = yield select(deps.getRecorderState);
+            const recorder = yield select(getRecorderState);
             const recorderStatus = recorder.get('status');
             if (recorderStatus !== 'ready') {
                 console.log('not ready', recorder);
@@ -133,14 +124,16 @@ export default function (bundle, deps) {
 
     function* recorderStop() {
         try {
-            let recorder = yield select(deps.getRecorderState);
+            let recorder = yield select(getRecorderState);
             let recorderStatus = recorder.get('status');
             if (!/recording|paused/.test(recorderStatus)) {
                 /* Stop request in invalid state. */
                 return;
             }
+
             /* Signal that the recorder is stopping. */
             yield put({type: ActionTypes.RecorderStopping});
+
             const {audioContext} = recorder.get('context');
             if (recorderStatus === 'recording') {
                 /* Suspend the audio context to stop recording audio buffers. */
@@ -149,9 +142,10 @@ export default function (bundle, deps) {
             if (recorderStatus === 'paused') {
                 /* When stopping while paused, the recording is truncated at the
                    playback position */
-                const audioTime = yield select(st => deps.getPlayerState(st).get('audioTime'));
+                const audioTime = yield select(st => getPlayerState(st).get('audioTime'));
                 yield call(truncateRecording, audioTime, null);
             }
+
             /* Signal that the recorder has stopped. */
             yield put({type: ActionTypes.RecorderStopped, payload: {}});
         } catch (error) {
@@ -162,7 +156,7 @@ export default function (bundle, deps) {
 
     function* recorderPause() {
         try {
-            const recorder = yield select(deps.getRecorderState);
+            const recorder = yield select(getRecorderState);
             if (recorder.get('status') !== 'recording') {
                 return;
             }
@@ -215,9 +209,9 @@ export default function (bundle, deps) {
 
     function* recorderResume() {
         try {
-            const recorder = yield select(deps.getRecorderState);
+            const recorder = yield select(getRecorderState);
             const recorderStatus = recorder.get('status');
-            const player = yield select(deps.getPlayerState);
+            const player = yield select(getPlayerState);
             const isPlaying = player.get('isPlaying');
             if (recorderStatus !== 'paused' || isPlaying) {
                 console.log('bad state', recorderStatus);
@@ -227,7 +221,7 @@ export default function (bundle, deps) {
             /* Pause the player (even if already paused) to make sure the state
                accurately represents the instant in the recording. */
             yield put({type: PlayerActionTypes.PlayerPause});
-            yield take(deps.playerPaused);
+            yield take(PlayerActionTypes.PlayerPaused);
 
             /* Clear the player's state. */
             yield put({type: PlayerActionTypes.PlayerClear});
@@ -250,7 +244,7 @@ export default function (bundle, deps) {
     }
 
     function* truncateRecording(audioTime, instant) {
-        const {worker} = yield select(st => deps.getRecorderState(st).get('context'));
+        const {worker} = yield select(st => getRecorderState(st).get('context'));
         yield call(worker.call, 'truncate', {position: audioTime / 1000});
         if (instant) {
             const position = instant.pos + 1;
@@ -284,7 +278,7 @@ export default function (bundle, deps) {
         state.setIn(['recorder', 'suspendedAt'], audioTime));
 
     bundle.addSaga(function* watchRecorderPrepare() {
-        yield takeLatest(deps.recorderPrepare, recorderPrepare);
+        yield takeLatest(ActionTypes.RecorderPrepare, recorderPrepare);
     });
 
     bundle.addSaga(function* recorderTicker() {

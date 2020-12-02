@@ -7,20 +7,45 @@ import {IconNames} from "@blueprintjs/icons";
 import {SubtitlePaneItem} from "./SubtitlePaneItem";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {connect} from "react-redux";
+import {AppStore} from "../store";
 
-interface SubtitlesPaneProps {
-    subtitles: any,
-    currentIndex: any,
-    editing: any,
-    audioTime: any,
-    filterText: any,
-    filterRegexp: any,
-    getMessage: any,
-    windowHeight: any,
+interface SubtitlesPaneStateToProps {
+    subtitles: any[],
+    currentIndex: number,
+    editing?: boolean,
+    audioTime: number,
+    filterText: string,
+    filterRegexp: string,
+    windowHeight: number,
+    getMessage: Function
+}
+
+function mapStateToProps(state: AppStore): SubtitlesPaneStateToProps {
+    const getMessage = state.get('getMessage');
+    const windowHeight = state.get('windowHeight');
+    const {filteredItems, currentIndex, audioTime, filterText, filterRegexp} = state.get('subtitles');
+
+    return {
+        getMessage,
+        subtitles: filteredItems,
+        currentIndex,
+        audioTime,
+        filterText,
+        filterRegexp,
+        windowHeight
+    };
+}
+
+interface SubtitlesPaneDispatchToProps {
     dispatch: Function
 }
 
-export class SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
+interface SubtitlesPaneProps extends SubtitlesPaneStateToProps, SubtitlesPaneDispatchToProps {
+
+}
+
+class _SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
     _selectedComponent: any = null;
 
     render() {
@@ -29,12 +54,15 @@ export class SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
         return (
             <div className='subtitles-pane vbox' style={{height: `${windowHeight - 89}px`}}>
                 {!editing &&
-                <InputGroup leftIcon={IconNames.SEARCH} type='text' onChange={this._filterTextChanged}
-                            value={filterText}/>
+                    <InputGroup
+                        leftIcon={IconNames.SEARCH}
+                        type='text'
+                        onChange={this._filterTextChanged}
+                        value={filterText}
+                    />
                 }
                 <div className='subtitles-pane-items fill'>
-                    {subtitles &&
-                    subtitles.map((subtitle, index) => {
+                    {subtitles && subtitles.map((subtitle, index) => {
                         const selected = (currentIndex === index);
                         if (!editing) {
                             const ref = selected && this._refSelected;
@@ -67,11 +95,10 @@ export class SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
                             item={subtitle}
                             onJump={this._jump}
                         />;
-                    })
-                    }
+                    })}
                 </div>
                 {!subtitles &&
-                <p>{getMessage('CLOSED_CAPTIONS_NOT_LOADED')}</p>
+                    <p>{getMessage('CLOSED_CAPTIONS_NOT_LOADED')}</p>
                 }
             </div>
         );
@@ -98,22 +125,29 @@ export class SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
     };
     _changeItem = (item, text) => {
         const index = this.props.subtitles.indexOf(item);
+
         this.props.dispatch({type: ActionTypes.SubtitlesItemChanged, payload: {index, text}});
     };
     _insertItem = (item, offset, where) => {
         const index = this.props.subtitles.indexOf(item);
+
         this.props.dispatch({type: ActionTypes.SubtitlesItemInserted, payload: {index, offset, where}});
     };
     _removeItem = (item, merge) => {
         const index = this.props.subtitles.indexOf(item);
+
         this.props.dispatch({type: ActionTypes.SubtitlesItemRemoved, payload: {index, merge}});
     };
     _shiftItem = (item, amount) => {
         const index = this.props.subtitles.indexOf(item);
+
         this.props.dispatch({type: ActionTypes.SubtitlesItemShifted, payload: {index, amount}});
     };
     _filterTextChanged = (event) => {
         const text = event.target.value;
+
         this.props.dispatch({type: ActionTypes.SubtitlesFilterTextChanged, payload: {text}});
     };
 }
+
+export const SubtitlesPane = connect(mapStateToProps)(_SubtitlesPane);

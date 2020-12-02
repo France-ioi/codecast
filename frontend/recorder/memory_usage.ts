@@ -1,11 +1,9 @@
 import {put, takeEvery} from 'redux-saga/effects';
 import {buffers} from 'redux-saga';
-import {MemoryUsage} from "./MemoryUsage";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 
-export default function (bundle, deps) {
-    bundle.use('recorderPreparing');
+export default function(bundle) {
     bundle.defineAction(ActionTypes.MemoryUsageChanged);
 
     bundle.addReducer(AppActionTypes.AppInit, (state) => state.set('memoryUsage', {heapSize: 0}));

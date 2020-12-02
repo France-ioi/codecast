@@ -3,14 +3,8 @@ import {Map, Record, List} from 'immutable';
 import React from 'react';
 import {call, select, takeEvery} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
-import {TerminalView} from "./TerminalView";
 
-export default function (bundle, deps) {
-    bundle.use(
-        'getCurrentStepperState',
-        'terminalInit', 'terminalInputKey', 'terminalInputBackspace', 'terminalInputEnter'
-    );
-
+export default function(bundle) {
     bundle.defineAction(ActionTypes.TerminalInit);
     bundle.addReducer(ActionTypes.TerminalInit, function (state, action) {
         const {iface} = action;
@@ -20,7 +14,7 @@ export default function (bundle, deps) {
 
     bundle.defineAction(ActionTypes.TerminalFocus);
     bundle.addSaga(function* () {
-        yield takeEvery(deps.terminalFocus, function* () {
+        yield takeEvery(ActionTypes.TerminalFocus, function* () {
             const iface = yield select(state => state.get('terminal'));
             if (iface) {
                 iface.focus();
@@ -132,26 +126,6 @@ export default function (bundle, deps) {
         });
 
     });
-
-    bundle.defineView('TerminalView', TerminalViewSelector, TerminalView);
-
-    function TerminalViewSelector(state, props) {
-        const result = {};
-        // @ts-ignore
-        result.readOnly = props.preventInput;
-        const stepper = deps.getCurrentStepperState(state);
-        if (stepper) {
-            // @ts-ignore
-            result.terminal = stepper.terminal;
-            // @ts-ignore
-            result.input = stepper.inputBuffer;
-            // @ts-ignore
-            result.isWaitingOnInput = stepper.isWaitingOnInput;
-        }
-
-        return result;
-    }
-
 };
 
 /* low-level terminal state functions */

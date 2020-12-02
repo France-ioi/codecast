@@ -7,6 +7,8 @@ import {StepperControls} from "../stepper/views/StepperControls";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {Menu} from "../common/Menu";
+import {getPlayerState} from "../player/selectors";
+import {getRecorderState} from "./selectors";
 
 interface RecorderControlsStateToProps {
     getMessage: Function,
@@ -23,7 +25,6 @@ interface RecorderControlsStateToProps {
 }
 
 function mapStateToProps (state: AppStore): RecorderControlsStateToProps {
-    const {getRecorderState, getPlayerState} = state.get('scope');
     const getMessage = state.get('getMessage');
     const recorder = getRecorderState(state);
     const recorderStatus = recorder.get('status');

@@ -4,22 +4,59 @@ import {ExpandedWaveform} from "./waveform/ExpandedWaveform";
 import {FullWaveform} from "./waveform/FullWaveform";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes"
+import {connect} from "react-redux";
+import {AppStore} from "../store";
 
-interface TrimEditorControlsProps {
-    position: any,
-    viewStart: any,
-    viewEnd: any,
-    duration: any,
+interface TrimEditorControlsStateToProps {
+    position: number,
+    viewStart: number,
+    viewEnd: number,
+    duration: number,
     waveform: any,
     events: any,
-    width: any,
     intervals: any,
-    selectedMarker: any,
-    selectedInterval: any,
+    selectedMarker: number,
+    selectedInterval: any
+}
+
+function mapStateToProps(state: AppStore, props): TrimEditorControlsStateToProps {
+    const {width} = props;
+    const editor = state.get('editor');
+    const player = state.get('player');
+    const position = Math.round(player.get('audioTime'));
+    const duration = player.get('duration');
+    const waveform = editor.get('waveform');
+    const {events} = editor.get('data');
+    const {intervals} = editor.get('trim');
+    const visibleDuration = width * 1000 / 60;
+    let viewStart = position - visibleDuration / 2;
+    let viewEnd = position + visibleDuration / 2;
+    if (viewStart < 0) {
+        viewStart = 0;
+    } else if (viewEnd > duration) {
+        viewStart = Math.max(0, duration - visibleDuration);
+    }
+    viewEnd = viewStart + visibleDuration;
+    const selectedInterval = intervals.get(position);
+    const diffToStart = position - selectedInterval.start;
+    const diffToEnd = selectedInterval.end - position;
+    const selectedMarker = diffToStart <= diffToEnd ? selectedInterval.start : selectedInterval.end;
+
+    return {
+        position, viewStart, viewEnd, duration, waveform, events, intervals,
+        selectedMarker, selectedInterval
+    };
+}
+
+interface TrimEditorControlsDispatchToProps {
     dispatch: Function
 }
 
-export class TrimEditorControls extends React.PureComponent<TrimEditorControlsProps> {
+interface TrimEditorControlsProps extends TrimEditorControlsStateToProps, TrimEditorControlsDispatchToProps {
+    width: number
+}
+
+class _TrimEditorControls extends React.PureComponent<TrimEditorControlsProps> {
     render() {
         const {position, viewStart, viewEnd, duration, waveform, events, width, intervals, selectedMarker, selectedInterval} = this.props;
         return (
@@ -38,15 +75,29 @@ export class TrimEditorControls extends React.PureComponent<TrimEditorControlsPr
                     </div>
                 </div>
                 <ExpandedWaveform
-                    height={100} width={width} position={position} duration={duration}
+                    height={100}
+                    width={width}
+                    position={position}
+                    duration={duration}
                     selectedMarker={selectedMarker}
-                    waveform={waveform} events={events} intervals={intervals}
-                    onPan={this.seekTo}/>
+                    waveform={waveform}
+                    events={events}
+                    intervals={intervals}
+                    onPan={this.seekTo}
+                />
                 <FullWaveform
-                    height={60} width={width} position={position} duration={duration}
-                    selectedMarker={selectedMarker} viewStart={viewStart} viewEnd={viewEnd}
-                    waveform={waveform} events={events} intervals={intervals}
-                    onPan={this.seekTo}/>
+                    height={60}
+                    width={width}
+                    position={position}
+                    duration={duration}
+                    selectedMarker={selectedMarker}
+                    viewStart={viewStart}
+                    viewEnd={viewEnd}
+                    waveform={waveform}
+                    events={events}
+                    intervals={intervals}
+                    onPan={this.seekTo}
+                />
             </div>
         );
     }
@@ -66,6 +117,7 @@ export class TrimEditorControls extends React.PureComponent<TrimEditorControlsPr
         const {position, selectedInterval} = this.props;
         const skip = event.target.checked;
         let {value} = selectedInterval;
+
         this.props.dispatch({
             type: ActionTypes.EditorTrimIntervalChanged,
             payload: {position, value: {...value, skip}}
@@ -75,9 +127,12 @@ export class TrimEditorControls extends React.PureComponent<TrimEditorControlsPr
         const {position, selectedInterval} = this.props;
         let {value} = selectedInterval;
         const mute = event.target.checked;
+
         this.props.dispatch({
             type: ActionTypes.EditorTrimIntervalChanged,
             payload: {position, value: {...value, mute}}
         });
     };
 }
+
+export const TrimEditorControls = connect(mapStateToProps)(_TrimEditorControls);

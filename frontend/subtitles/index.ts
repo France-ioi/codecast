@@ -74,10 +74,9 @@ function updateSubtitlesPaneVisibility(state) {
        Player: the subtitles pane is visible if subtitles are loaded,
                and if the pane is enabled in the CC settings. */
     const enabled = editing || (isLoaded && paneEnabled);
-    const View = state.get('scope')[editing ? 'SubtitlesEditorPane' : 'SubtitlesPane'];
     const width = 200;
 
-    return state.setIn(['panes', 'subtitles'], Immutable.Map({View, enabled, width}));
+    return state.setIn(['panes', 'subtitles'], Immutable.Map({editing, enabled, width}));
 }
 
 function subtitlesBandEnabledChangedReducer(state, {payload: {value}}) {

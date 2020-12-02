@@ -5,16 +5,37 @@ import {SubtitlePaneItemEditor} from "./SubtitlePaneItemEditor";
 import {SubtitlePaneItemViewer} from "./SubtitlePaneItemViewer";
 import {ActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
+import {connect} from "react-redux";
+import {AppStore} from "../../store";
 
-interface SubtitlesEditorPaneProps {
-    subtitles: any,
-    currentIndex: any,
-    audioTime: any,
-    getMessage: any,
+interface SubtitlesEditorPaneStateToProps {
+    subtitles: any[],
+    currentIndex: number,
+    audioTime: number,
+    getMessage: Function
+}
+
+function mapStateToProps(state: AppStore): SubtitlesEditorPaneStateToProps {
+    const getMessage = state.get('getMessage');
+    const {items, currentIndex, audioTime} = state.get('subtitles');
+
+    return {
+        getMessage,
+        subtitles: items,
+        currentIndex,
+        audioTime
+    };
+}
+
+interface SubtitlesEditorPaneDispatchToProps {
     dispatch: Function
 }
 
-export class SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPaneProps> {
+interface SubtitlesEditorPaneProps extends SubtitlesEditorPaneStateToProps, SubtitlesEditorPaneDispatchToProps {
+
+}
+
+class _SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPaneProps> {
     _selectedComponent: SubtitlePaneItemEditor = null;
 
     render() {
@@ -106,3 +127,5 @@ export class SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPane
         this.props.dispatch({type: ActionTypes.SubtitlesFilterTextChanged, payload: {text}});
     };
 }
+
+export const SubtitlesEditorPane = connect(mapStateToProps)(_SubtitlesEditorPane);

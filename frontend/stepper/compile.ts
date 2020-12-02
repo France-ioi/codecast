@@ -23,10 +23,9 @@ import {TextEncoder} from "text-encoding-utf-8";
 import {stepperClear} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
+import {getBufferModel} from "../buffers/selectors";
 
-export default function (bundle, deps) {
-    bundle.use('getBufferModel');
-
+export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, function (state, _action) {
         return state.set('compile', compileClear());
     });
@@ -77,26 +76,10 @@ export default function (bundle, deps) {
         return state.update('compile', st => compileClearDiagnostics(st));
     });
 
-    bundle.defineSelector('getCompileDiagnostics', state =>
-        state.getIn(['compile', 'diagnosticsHtml'])
-    );
-
-    bundle.defineSelector('getSyntaxTree', state =>
-        state.getIn(['compile', 'syntaxTree'])
-    );
-
-    bundle.defineSelector('isCompiled', function (state) {
-        return /busy|done/.test(getCompileStatus(state));
-    });
-
-    function getCompileStatus(state) {
-        return state.getIn(['compile', 'status']);
-    }
-
     bundle.addSaga(function* watchCompile() {
-        yield takeLatest(deps.compile, function* (action) {
+        yield takeLatest(ActionTypes.Compile, function* (action) {
             const getMessage = yield select(state => state.get('getMessage'));
-            const sourceModel = yield select(deps.getBufferModel, 'source');
+            const sourceModel = yield select(getBufferModel, 'source');
             const source = sourceModel.get('document').toString();
             const {platform} = yield select(state => state.get('options'));
 

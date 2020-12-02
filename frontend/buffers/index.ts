@@ -71,6 +71,7 @@ import 'brace/worker/javascript';
 import {compressRange, documentFromString, emptyDocument, expandRange} from './document';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
+import {getBufferModel} from "./selectors";
 
 const AceThemes = [
     'ambiance', 'chaos', 'chrome', 'clouds', 'clouds_midnight', 'cobalt',
@@ -118,8 +119,6 @@ export default function (bundle) {
     bundle.defineAction(ActionTypes.BufferModelSelect);
     bundle.defineAction(ActionTypes.BufferModelScroll);
     bundle.defineAction(ActionTypes.BufferHighlight);
-
-    bundle.defineSelector('getBufferModel', getBufferModel);
 
     bundle.addSaga(buffersSaga);
 
@@ -193,10 +192,6 @@ function loadBufferModel(dump) {
         selection: expandRange(dump.selection),
         firstVisibleRow: dump.firstVisibleRow || 0
     });
-}
-
-function getBufferModel(state, buffer) {
-    return state.getIn(['buffers', buffer, 'model']);
 }
 
 function getBufferEditor(state, buffer) {

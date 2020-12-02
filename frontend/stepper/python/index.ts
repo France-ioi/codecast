@@ -8,7 +8,7 @@ import {ActionTypes} from './actionTypes';
 
 const pythonInterpreterChannel = channel();
 
-export default function (bundle, deps) {
+export default function(bundle) {
     bundle.defineAction(ActionTypes.PythonInput);
 
     function* waitForInputSaga() {
@@ -20,7 +20,7 @@ export default function (bundle, deps) {
         yield take('Terminal.Input.Enter');
     }
 
-    function* pythonInputSaga(app, {payload: {resolve}}) {
+    function* pythonInputSaga(app, action) {
         const stepperContext = yield select(state => state.get('stepper').get('currentStepperState'));
         const isPlayerContext = (typeof stepperContext === 'undefined');
 
@@ -46,7 +46,7 @@ export default function (bundle, deps) {
                 }
 
                 window.currentPythonRunner._futureInputValue = futureInputValue;
-                resolve(futureInputValue);
+                action.payload.resolve(futureInputValue);
 
                 return;
             } else {
@@ -65,11 +65,11 @@ export default function (bundle, deps) {
         window.currentPythonRunner._inputPos = nextNL + 1;
 
         // Resolve the promise of the input that was passed in the action.
-        resolve(line);
+        action.payload.resolve(line);
     }
 
     bundle.addSaga(function* pythonMainSaga(args) {
-        yield takeEvery(deps.pythonInput, pythonInputSaga, args);
+        yield takeEvery(ActionTypes.PythonInput, pythonInputSaga, args);
     });
 
     bundle.addSaga(function* watchPythonInterpreterChannel() {

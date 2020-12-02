@@ -1,11 +1,5 @@
 import {List} from 'immutable';
 
-export const documentFromString = function (text: string): Document {
-    return new Document(List<string>(text.split('\n')));
-};
-
-export const emptyDocument = documentFromString('');
-
 class Document {
     constructor(public lines: List<string>) {
         this.lines = lines;
@@ -75,6 +69,12 @@ class Document {
         return {row, column};
     };
 }
+
+export const documentFromString = function (text: string): Document {
+    return new Document(List<string>(text.split('\n')));
+};
+
+export const emptyDocument = documentFromString('');
 
 export const compressRange = function (range) {
     const {start, end} = range;

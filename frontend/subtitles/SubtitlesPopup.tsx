@@ -57,12 +57,15 @@ class _SubtitlesPopup extends React.PureComponent<SubtitlesPopupProps> {
                     </div>
                     <div className='menu-popup-title'>
                         {getMessage('CLOSED_CAPTIONS_TITLE')}
-                        {busy && <Spinner size={Spinner.SIZE_SMALL}/>}
+                        {busy &&
+                            <Spinner size={Spinner.SIZE_SMALL}/>
+                        }
                     </div>
                     <RadioGroup name='subtitles' selectedValue={loadedKey} onChange={this._selectSubtitles}>
                         <Radio value='none' label={getMessage('CLOSED_CAPTIONS_OFF')}/>
                         {availKeys.map(function (key) {
                             const option = langOptions.find(option => option.value === key);
+
                             return (
                                 <Radio key={key} value={option.value}>
                                     {option.label}
@@ -70,7 +73,9 @@ class _SubtitlesPopup extends React.PureComponent<SubtitlesPopupProps> {
                             );
                         })}
                     </RadioGroup>
-                    {lastError && <Alert intent={Intent.DANGER}>{lastError}</Alert>}
+                    {lastError &&
+                        <Alert intent={Intent.DANGER}>{lastError}</Alert>
+                    }
                     <div>
                         <Checkbox disabled={!isLoaded} checked={paneEnabled} onChange={this._changePaneEnabled}>
                             {getMessage('CLOSED_CAPTIONS_SHOW_PANE')}
@@ -82,12 +87,13 @@ class _SubtitlesPopup extends React.PureComponent<SubtitlesPopupProps> {
                         </Checkbox>
                     </div>
                     {isLoaded &&
-                    <div style={{textAlign: 'center'}}>
-                        <a href={availableOptions[loadedKey].url} className='bp3-button bp3-small bp3-icon-download'
-                           target='_blank' download>
-                            {getMessage('CLOSED_CAPTIONS_DOWNLOAD_SELECTED')}
-                        </a>
-                    </div>}
+                        <div style={{textAlign: 'center'}}>
+                            <a href={availableOptions[loadedKey].url} className='bp3-button bp3-small bp3-icon-download'
+                               target='_blank' download>
+                                {getMessage('CLOSED_CAPTIONS_DOWNLOAD_SELECTED')}
+                            </a>
+                        </div>
+                    }
                 </div>
             </div>
         );

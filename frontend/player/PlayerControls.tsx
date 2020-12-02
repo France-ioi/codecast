@@ -20,7 +20,7 @@ interface PlayerControlsStateToProps {
 
 function mapStateToProps(state: AppStore): PlayerControlsStateToProps {
     const getMessage = state.get('getMessage');
-    const player = state.get('scope').getPlayerState(state);
+    const player = state.get('player');
     const isReady = player.get('isReady');
     const isPlaying = player.get('isPlaying');
     const currentInstant = player.get('current');

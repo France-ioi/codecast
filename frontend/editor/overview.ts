@@ -8,7 +8,7 @@ import {ActionTypes as EditorActionTypes} from '../editor/actionTypes';
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {EditorOverview} from "./EditorOverview";
 
-export default function (bundle, deps) {
+export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, initReducer);
     bundle.addReducer(EditorActionTypes.EditorPrepare, initReducer);
 

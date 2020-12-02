@@ -5,7 +5,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {FullscreenButton} from "./FullscreenButton";
 
-export default function (bundle, deps) {
+export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, function (state, _action) {
         return state.set('fullscreen', Map({active: false, enabled: false}));
     });
@@ -86,7 +86,8 @@ export default function (bundle, deps) {
 
     bundle.addSaga(function* watchEnterFullscreen() {
         while (true) {
-            yield take(deps.enterFullscreen);
+            yield take(ActionTypes.FullscreenEnter);
+
             const elem = window.document.documentElement;
             if (elem.requestFullscreen) {
                 elem.requestFullscreen();
@@ -108,7 +109,8 @@ export default function (bundle, deps) {
 
     bundle.addSaga(function* watchLeaveFullscreen() {
         while (true) {
-            yield take(deps.leaveFullscreen);
+            yield take(ActionTypes.FullscreenLeave);
+
             const elem = window.document;
             if (elem.exitFullscreen) {
                 elem.exitFullscreen();

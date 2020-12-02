@@ -14,8 +14,7 @@
 import {actionChannel, call, put, select, take, takeLatest} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
 
-export default function (bundle, deps) {
-
+export default function(bundle) {
     /* Recorder API */
     const recordApi = {};
     bundle.defineValue('recordApi', recordApi);
@@ -62,7 +61,6 @@ export default function (bundle, deps) {
         );
     });
 
-    bundle.use('recorderReady', 'recorderStarted')
     bundle.addSaga(function* recordEvents() {
         const pattern = Array.from(actionHandlers.keys());
         // Wait for the recorder to be ready, grab the context.
@@ -84,7 +82,7 @@ export default function (bundle, deps) {
 
                 function* addEvent(name, ...args) {
                     const event = [audioTime, name, ...args];
-                    yield put({type: deps.recorderAddEvent, event});
+                    yield put({type: ActionTypes.RecorderAddEvent, event});
                     if (name === 'end') {
                         done = true;
                     }
