@@ -18,7 +18,7 @@
 import * as C from 'persistent-c';
 
 export default function(bundle) {
-    bundle.defer(function ({stepperApi}) {
+    bundle.defer(function({stepperApi}) {
         stepperApi.onEffect('control', function* controlHandler(stepperContext, control) {
             C.effects.doControl(stepperContext.state.programState, control);
         });

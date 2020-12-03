@@ -1,14 +1,15 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import {InputGroup} from "@blueprintjs/core";
 import {SubtitlePaneItemEditor} from "./views/SubtitlePaneItemEditor";
 import {SubtitlePaneItemViewer} from "./views/SubtitlePaneItemViewer";
-import ReactDOM from "react-dom";
 import {IconNames} from "@blueprintjs/icons";
 import {SubtitlePaneItem} from "./SubtitlePaneItem";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
+import {NodeCue} from "subtitle";
 
 interface SubtitlesPaneStateToProps {
     subtitles: any[],
@@ -120,26 +121,26 @@ class _SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
     _refSelected = (component) => {
         this._selectedComponent = component;
     };
-    _jump = (subtitle) => {
-        this.props.dispatch({type: PlayerActionTypes.PlayerSeek, payload: {audioTime: subtitle.start}});
+    _jump = (subtitle: NodeCue) => {
+        this.props.dispatch({type: PlayerActionTypes.PlayerSeek, payload: {audioTime: subtitle.data.start}});
     };
-    _changeItem = (item, text) => {
-        const index = this.props.subtitles.indexOf(item);
+    _changeItem = (subtitle: NodeCue, text) => {
+        const index = this.props.subtitles.indexOf(subtitle);
 
         this.props.dispatch({type: ActionTypes.SubtitlesItemChanged, payload: {index, text}});
     };
-    _insertItem = (item, offset, where) => {
-        const index = this.props.subtitles.indexOf(item);
+    _insertItem = (subtitle: NodeCue, offset, where) => {
+        const index = this.props.subtitles.indexOf(subtitle);
 
         this.props.dispatch({type: ActionTypes.SubtitlesItemInserted, payload: {index, offset, where}});
     };
-    _removeItem = (item, merge) => {
-        const index = this.props.subtitles.indexOf(item);
+    _removeItem = (subtitle: NodeCue, merge) => {
+        const index = this.props.subtitles.indexOf(subtitle);
 
         this.props.dispatch({type: ActionTypes.SubtitlesItemRemoved, payload: {index, merge}});
     };
-    _shiftItem = (item, amount) => {
-        const index = this.props.subtitles.indexOf(item);
+    _shiftItem = (subtitle: NodeCue, amount) => {
+        const index = this.props.subtitles.indexOf(subtitle);
 
         this.props.dispatch({type: ActionTypes.SubtitlesItemShifted, payload: {index, amount}});
     };

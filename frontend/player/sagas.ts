@@ -13,7 +13,7 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {getPlayerState} from "./selectors";
 
-export default function (bundle) {
+export default function(bundle) {
     bundle.addSaga(playerSaga);
 };
 
@@ -30,7 +30,7 @@ function* playerSaga(action) {
 }
 
 function* playerPrepare(app, action) {
-    const { globals: {replayApi}} = app;
+    const {globals: {replayApi}} = app;
 
     /*
       baseDataUrl is forwarded to playerReady (stored in its reducer) in order
@@ -83,16 +83,16 @@ function* playerPrepare(app, action) {
         payload: platform
     });
 
-    const playerState = Map({
+    const state = Map({
         options: {platform}
     });
 
     if (data.options) {
-        playerState.set('options', data.options);
+        state.set('options', data.options);
     }
 
     const replayContext = {
-        playerState,
+        state,
         events: data.events,
         instants: [],
         applyEvent: replayApi.applyEvent,
@@ -180,7 +180,8 @@ function* computeInstants(replayContext) {
 
         const instant = {t, pos, event};
         replayContext.instant = instant;
-        console.log('-------- REPLAY ---- EVENT ----', key, event)
+
+        console.log('-------- REPLAY ---- EVENT ----', key, event);
         yield call(replayContext.applyEvent, key, replayContext, event);
 
         /* Preserve the last explicitly set range. */
@@ -260,6 +261,7 @@ function* replaySaga(app, {type, payload}) {
                waiting on I/O. */
             yield call(restartStepper, app);
         }
+
         audio.currentTime = audioTime / 1000;
         if (!isPlaying) {
             return;
@@ -382,7 +384,7 @@ function* jumpToAudioTime(app, audioTime) {
 function requestAnimationFrames(maxDelta) {
     let shutdown = false;
     let lastTimestamp = 0;
-    return eventChannel(function (emitter) {
+    return eventChannel(function(emitter) {
         function onAnimationFrame(timestamp) {
             if (timestamp >= lastTimestamp + maxDelta) {
                 lastTimestamp = timestamp;
@@ -394,7 +396,7 @@ function requestAnimationFrames(maxDelta) {
         }
 
         window.requestAnimationFrame(onAnimationFrame);
-        return function () {
+        return function() {
             shutdown = true;
         };
     }, buffers.sliding(1));

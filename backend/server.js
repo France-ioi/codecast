@@ -38,17 +38,18 @@ function buildApp(config, store, callback) {
         // Development route: /build is managed by webpack
         const webpack = require('webpack');
         const webpackDevMiddleware = require('webpack-dev-middleware');
-        const webpackConfig = require('../webpack.config.js');
+        const webpackConfig = require('../webpack.config.js')(undefined, {
+            mode: (config.isDevelopment) ? 'development' : 'production'
+        });
         const compiler = webpack(webpackConfig);
 
         const instance = webpackDevMiddleware(compiler, {
             publicPath: (webpackConfig.output.publicPath === '.') ? '.' : '/build/'
         });
 
-        // app.use('/build', webpackDevMiddleware(compiler));
         console.log('publicPath: ', webpackConfig.output.publicPath);
-        app.use(instance);
 
+        app.use(instance);
     } else {
         // Production route: /build serves static files in build/
         app.use('/build', express.static(path.join(rootDir, 'build')));
@@ -80,7 +81,6 @@ function buildApp(config, store, callback) {
 }
 
 function addBackendRoutes(app, config, store) {
-
     app.get('/', function (req, res) {
         buildOptions(config, req, 'sandbox', function (err, options) {
             res.render('index', {
@@ -287,18 +287,21 @@ function addBackendRoutes(app, config, store) {
 
     statisticsApi.post('/logLoadingData', function (req, res) {
         config.getUserConfig(req, async function (err, userConfig) {
-            if (err) return res.json({error: err.toString()});
+            if (err) {
+                return res.json({error: err.toString()});
+            }
+
             try {
                 const {logData} = req.body;
                 logData.referer = logData.referer || (req.headers.referer || null)
                 logLoadingData(config, logData);
+
                 return res.json({});
             } catch (err) {
                 return res.json({error: err.toString()});
             }
         });
     });
-
 
     app.use('/statistics/api', statisticsApi);
 
@@ -358,7 +361,9 @@ function addBackendRoutes(app, config, store) {
                         if (platform === 'arduino') {
                             ast = Arduino.transform(ast);
                         }
+
                         directives.enrichSyntaxTree(source, ast);
+
                         res.json({ast: ast, diagnostics: convert.toHtml(errorChunks.join(''))});
                     } catch (err) {
                         res.json({error: err.toString()});
@@ -372,9 +377,7 @@ function addBackendRoutes(app, config, store) {
             errorSent = true;
             res.json({error: err.toString()});
         });
-
     });
-
 }
 
 fs.readFile('config.json', 'utf8', function (err, data) {
@@ -386,10 +389,13 @@ fs.readFile('config.json', 'utf8', function (err, data) {
     const config = JSON.parse(data);
     config.isDevelopment = process.env.NODE_ENV !== 'production';
     config.rootDir = path.resolve(path.dirname(__dirname));
+
     console.log(`running in ${config.isDevelopment ? 'development' : 'production'} mode`);
+
     if (!config.playerUrl) {
         config.playerUrl = `${config.baseUrl}/player`;
     }
+
     const workerStore = startWorker(config);
     buildApp(config, workerStore, function (err, app) {
         if (err) {

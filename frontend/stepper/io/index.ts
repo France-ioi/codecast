@@ -1,4 +1,3 @@
-import React from 'react';
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 
 import * as C from 'persistent-c';
@@ -19,10 +18,10 @@ import {getBufferModel} from "../../buffers/selectors";
 export default function(bundle) {
     bundle.include(TerminalBundle);
 
-    bundle.addReducer(AppActionTypes.AppInit, function (state) {
+    bundle.addReducer(AppActionTypes.AppInit, function(state) {
         return state.set('ioPane', updateIoPaneState(state, {}));
     });
-    bundle.addReducer(CommonActionTypes.PlatformChanged, function (state) {
+    bundle.addReducer(CommonActionTypes.PlatformChanged, function(state) {
         return state.update('ioPane', ioPane => updateIoPaneState(state, ioPane));
     });
 
@@ -72,12 +71,12 @@ export default function(bundle) {
         });
     }
 
-    bundle.defer(function ({recordApi, replayApi, stepperApi}) {
+    bundle.defer(function({recordApi, replayApi, stepperApi}) {
 
         recordApi.onStart(function* (init) {
             init.ioPaneMode = yield select(state => state.get('ioPane').mode);
         });
-        replayApi.on('start', function (replayContext, event) {
+        replayApi.on('start', function(replayContext, event) {
             const {ioPaneMode} = event[2];
             replayContext.state = ioPaneModeChanged(replayContext.state, {payload: {mode: ioPaneMode}});
         });
@@ -90,7 +89,7 @@ export default function(bundle) {
         recordApi.on(ActionTypes.IoPaneModeChanged, function* (addEvent, {payload: {mode}}) {
             yield call(addEvent, 'ioPane.mode', mode);
         });
-        replayApi.on('ioPane.mode', function (replayContext, event) {
+        replayApi.on('ioPane.mode', function(replayContext, event) {
             const mode = event[2];
             replayContext.state = ioPaneModeChanged(replayContext.state, {payload: {mode}});
         });
@@ -121,7 +120,7 @@ export default function(bundle) {
         }
 
         /* Set up the terminal or input. */
-        stepperApi.onInit(function (stepperState, globalState) {
+        stepperApi.onInit(function(stepperState, globalState) {
             const {mode} = globalState.get('ioPane');
 
             stepperState.inputPos = 0;

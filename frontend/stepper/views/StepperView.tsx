@@ -1,6 +1,6 @@
 import React from "react";
 import {Button, Icon} from "@blueprintjs/core";
-import PythonStackView from "../python/analysis/components/PythonStackView";
+import {PythonStackView} from "../python/analysis/components/PythonStackView";
 import classnames from 'classnames';
 import {StepperViewPanes} from "./StepperViewPanes";
 import {ActionTypes} from "../actionTypes";
@@ -225,6 +225,7 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
                         </div>
                     </div>
                 </div>
+
                 <StepperViewPanes panes={panes}/>
             </div>
         );

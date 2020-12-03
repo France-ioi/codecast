@@ -1,12 +1,12 @@
 /* Line-buffered terminal */
-import {Map, Record, List} from 'immutable';
 import React from 'react';
+import {Map, Record, List} from 'immutable';
 import {call, select, takeEvery} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
 
 export default function(bundle) {
     bundle.defineAction(ActionTypes.TerminalInit);
-    bundle.addReducer(ActionTypes.TerminalInit, function (state, action) {
+    bundle.addReducer(ActionTypes.TerminalInit, function(state, action) {
         const {iface} = action;
 
         return state.set('terminal', iface);
@@ -26,7 +26,7 @@ export default function(bundle) {
     bundle.addReducer(ActionTypes.TerminalInputNeeded, terminalInputNeeded);
 
     function terminalInputNeeded(state) {
-        return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
+        return state.updateIn(['stepper', 'currentStepperState'], function(stepper) {
             return {...stepper, isWaitingOnInput: true};
         });
     }
@@ -37,7 +37,7 @@ export default function(bundle) {
     function terminalInputKey(state, action) {
         const {key} = action;
 
-        return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
+        return state.updateIn(['stepper', 'currentStepperState'], function(stepper) {
             return {...stepper, inputBuffer: stepper.inputBuffer + key};
         });
     }
@@ -46,7 +46,7 @@ export default function(bundle) {
     bundle.addReducer(ActionTypes.TerminalInputBackspace, terminalInputBackspace);
 
     function terminalInputBackspace(state) {
-        return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
+        return state.updateIn(['stepper', 'currentStepperState'], function(stepper) {
             return {...stepper, inputBuffer: stepper.inputBuffer.slice(0, -1)};
         });
     }
@@ -55,7 +55,7 @@ export default function(bundle) {
     bundle.addReducer(ActionTypes.TerminalInputEnter, terminalInputEnter);
 
     function terminalInputEnter(state) {
-        return state.updateIn(['stepper', 'currentStepperState'], function (stepper) {
+        return state.updateIn(['stepper', 'currentStepperState'], function(stepper) {
             const inputLine = stepper.inputBuffer + '\n'
             const newInput = stepper.input + inputLine;
 
@@ -94,19 +94,19 @@ export default function(bundle) {
         });
     }
 
-    bundle.defer(function ({recordApi, replayApi}) {
+    bundle.defer(function({recordApi, replayApi}) {
 
         recordApi.on(ActionTypes.TerminalInputNeeded, function* (addEvent, action) {
             yield call(addEvent, 'terminal.wait');
         });
-        replayApi.on('terminal.wait', function (replayContext, event) {
+        replayApi.on('terminal.wait', function(replayContext, event) {
             replayContext.state = terminalInputNeeded(replayContext.state);
         });
 
         recordApi.on(ActionTypes.TerminalInputKey, function* (addEvent, action) {
             yield call(addEvent, 'terminal.key', action.key);
         });
-        replayApi.on('terminal.key', function (replayContext, event) {
+        replayApi.on('terminal.key', function(replayContext, event) {
             const key = event[2];
             replayContext.state = terminalInputKey(replayContext.state, {key});
         });
@@ -114,14 +114,14 @@ export default function(bundle) {
         recordApi.on(ActionTypes.TerminalInputBackspace, function* (addEvent, action) {
             yield call(addEvent, 'terminal.backspace');
         });
-        replayApi.on('terminal.backspace', function (replayContext, event) {
+        replayApi.on('terminal.backspace', function(replayContext, event) {
             replayContext.state = terminalInputBackspace(replayContext.state);
         });
 
         recordApi.on(ActionTypes.TerminalInputEnter, function* (addEvent, action) {
             yield call(addEvent, 'terminal.enter');
         });
-        replayApi.on('terminal.enter', function (replayContext, event) {
+        replayApi.on('terminal.enter', function(replayContext, event) {
             replayContext.state = terminalInputEnter(replayContext.state);
         });
 
@@ -134,7 +134,7 @@ export const Cursor = Record({line: 0, column: 0});
 export const Attrs = Record({});
 export const Cell = Record({char: ' ', attrs: Attrs()});
 
-export const TermBuffer = function (options) {
+export const TermBuffer = function(options) {
     options = options || {};
     const width = options.width || 80;
     const height = options.lines || 24;
@@ -146,14 +146,14 @@ export const TermBuffer = function (options) {
     return Map({width, height, cursor, attrs, lines}); // TODO: turn this into a Record
 };
 
-export const writeString = function (buffer, str) {
+export const writeString = function(buffer, str) {
     for (let i = 0; i < str.length; i += 1) {
         buffer = writeChar(buffer, str[i]);
     }
     return buffer;
 };
 
-export const writeChar = function (buffer, char) {
+export const writeChar = function(buffer, char) {
 
     if (char === '\n') {
         return writeNewline(buffer);
@@ -182,7 +182,7 @@ export const writeChar = function (buffer, char) {
     return writeNewline(buffer);
 };
 
-const writeNewline = function (buffer) {
+const writeNewline = function(buffer) {
     // Move the cursor to the beginning of the next line.
     const height = buffer.get('height');
     let cursor = buffer.get('cursor').set('column', 0);

@@ -1,7 +1,6 @@
 import {ActionTypes} from "./actionTypes";
-import {AppErrorBoundary} from "./AppErrorBoundary";
 
-export default function (bundle) {
+export default function(bundle) {
     bundle.defineAction(ActionTypes.Error);
     bundle.addReducer(ActionTypes.Error, errorReducer);
 

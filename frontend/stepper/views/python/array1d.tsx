@@ -4,7 +4,7 @@ import classnames from 'classnames';
 import {renderArrow, renderValue} from './utils';
 import {extractView} from './array_utils';
 import {SvgPan} from '../SvgPan';
-import DirectiveFrame from '../DirectiveFrame';
+import {DirectiveFrame} from '../DirectiveFrame';
 
 const TEXT_LINE_HEIGHT = 18;
 const TEXT_BASELINE = 5; // from bottom

@@ -23,7 +23,7 @@ export default function(bundle) {
        'init' object which is stored in the 'start' event of the recording. */
     const startSagas = [];
     // @ts-ignore
-    recordApi.onStart = function (saga) {
+    recordApi.onStart = function(saga) {
         startSagas.push(saga);
     };
     // @ts-ignore
@@ -40,21 +40,21 @@ export default function(bundle) {
        registered to add an event to the recorded stream. */
     const actionHandlers = new Map();
     // @ts-ignore
-    recordApi.on = function (actionType, handler) {
+    recordApi.on = function(actionType, handler) {
         if (actionHandlers.has(actionType)) {
             throw new Error(`multiple record handlers for ${actionType}`);
         }
         actionHandlers.set(actionType, handler);
     };
     bundle.defineAction(ActionTypes.RecorderAddEvent);
-    bundle.addReducer(ActionTypes.RecorderAddEvent, function (state, action) {
+    bundle.addReducer(ActionTypes.RecorderAddEvent, function(state, action) {
         const {event} = action;
         return state.updateIn(['recorder', 'events'], events => events.push(event));
     });
 
     // Truncate the event stream at the given position (milliseconds).
     bundle.defineAction(ActionTypes.RecorderTruncate);
-    bundle.addReducer(ActionTypes.RecorderTruncate, function (state, {payload: {position, audioTime}}) {
+    bundle.addReducer(ActionTypes.RecorderTruncate, function(state, {payload: {position, audioTime}}) {
         return state.update('recorder', recorder => recorder
             .update('events', events => events.slice(0, position))
             .set('junkTime', recorder.get('suspendedAt') - audioTime)
@@ -71,13 +71,15 @@ export default function(bundle) {
             const channel = yield actionChannel(pattern);
             let done = false;
             while (!done) {
-                const action = yield take(channel);
+                const recordAction = yield take(channel);
                 const recorder = yield select(st => st.get('recorder'));
                 const status = recorder.get('status');
                 if (status !== 'recording') {
                     // Ignore events fired while not recording.
                     continue;
                 }
+
+                // @ts-ignore
                 const audioTime = Math.round(action.payload.recorderContext.audioContext.currentTime * 1000) - recorder.get('junkTime');
 
                 function* addEvent(name, ...args) {
@@ -88,7 +90,7 @@ export default function(bundle) {
                     }
                 }
 
-                yield call(actionHandlers.get(action.type), addEvent, action);
+                yield call(actionHandlers.get(recordAction.type), addEvent, recordAction);
             }
             channel.close();
         });

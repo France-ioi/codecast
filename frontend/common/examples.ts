@@ -30,6 +30,7 @@ function updateExamplesState(state, examples) {
     delete fullCallbackUrl.search; // force url.format to rebuild the search string
     delete fullCallbackUrl.query.source;
     delete fullCallbackUrl.query.platform;
+
     fullCallbackUrl.query.language = language;
 
     // @ts-ignore
@@ -38,12 +39,15 @@ function updateExamplesState(state, examples) {
     let fullExamplesUrl = url.parse(examplesUrl, true);
     fullExamplesUrl.query.target = '_self';
     fullExamplesUrl.query.tags = platform;
+
     /* XXX better to pass language unchanged and have the examples app drop the country code */
     fullExamplesUrl.query.lang = language.replace(/_.*$/, '');
+
     // @ts-ignore
     fullExamplesUrl.query.callback = fullCallbackUrl;
+
     // @ts-ignore
     fullExamplesUrl = url.format(fullExamplesUrl);
-
+console.log(fullExamplesUrl);
     return {...examples, fullExamplesUrl};
 }

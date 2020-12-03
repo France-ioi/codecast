@@ -3,12 +3,12 @@ import audioDecode from 'audio-decode';
 import {eventChannel} from 'redux-saga'
 
 export function readFileAsText(file) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
         const reader = new FileReader();
-        reader.onload = function (event) {
+        reader.onload = function(event) {
             resolve(event.target.result);
         };
-        reader.onerror = function (event) {
+        reader.onerror = function(event) {
             reject(event.target.error);
         };
         reader.readAsText(file, 'utf-8');
@@ -16,10 +16,10 @@ export function readFileAsText(file) {
 }
 
 export function getJson(path) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
         var req = request.get(path);
         req.set('Accept', 'application/json');
-        req.end(function (err, res) {
+        req.end(function(err, res) {
             if (err) {
                 reject({err, res});
             } else {
@@ -30,7 +30,7 @@ export function getJson(path) {
 }
 
 export function postJson(url, data) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
         request.post(url)
             .send(data)
             .set('Accept', 'application/json')
@@ -45,9 +45,9 @@ export function getAudio(path) {
             .accept('audio')
             .responseType('blob')
             .on('progress', e => emitter({type: 'progress', value: e.percent / 100}))
-            .end(function (error, response) {
+            .end(function(error, response) {
                 if (error) return emitter({type: 'error', error});
-                audioDecode(response.body, function (error, audioBuffer) {
+                audioDecode(response.body, function(error, audioBuffer) {
                     if (error) return emitter({type: 'error', error});
                     emitter({type: 'done', audioBuffer, blob: response.body});
                 });

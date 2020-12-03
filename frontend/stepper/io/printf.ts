@@ -195,7 +195,7 @@ function justify(op, arg, sign, prefix, suffix) {
 /*
 TODO: write a test suite
 
-!function () {
+!function() {
   const programState = C.start({decls: []});
 
   const fmtVal = C.stringValue('>%f<');

@@ -1,7 +1,7 @@
 import React from "react";
 import {Icon} from "@blueprintjs/core";
 import classnames from 'classnames';
-import { LogoutButton } from "../common/LogoutButton";
+import {LogoutButton} from "../common/LogoutButton";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {LoginScreen} from "../common/LoginScreen";

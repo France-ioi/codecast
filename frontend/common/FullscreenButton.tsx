@@ -2,8 +2,7 @@ import React from "react";
 import {Button} from "@blueprintjs/core";
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
-import {connect, MapDispatchToPropsFactory} from "react-redux";
-import {Dispatch} from "redux";
+import {connect} from "react-redux";
 
 interface FullscreenButtonStateToProps {
     getMessage: Function,

@@ -3,14 +3,14 @@ import {call, take} from 'redux-saga/effects';
 import {buffers, eventChannel} from 'redux-saga';
 
 export function spawnWorker(Worker) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
         const worker = new Worker();
-        worker.onerror = function (event) {
+        worker.onerror = function(event) {
             worker.onerror = null;
             worker.onmessage = null;
             reject('worker failed to initialize');
         };
-        worker.onmessage = function (event) {
+        worker.onmessage = function(event) {
             worker.onerror = null;
             worker.onmessage = null;
             /* The worker is expected to post a null message once initialized,
@@ -37,7 +37,7 @@ class WorkerError extends Error {
 function wrapWorker(worker) {
     const emitter = new EventEmitter2();
     let nextTransactionId = 1;
-    worker.onmessage = function (message) {
+    worker.onmessage = function(message) {
         if (typeof message.data.id === 'string') {
             emitter.emit(message.data.id, message.data);
         }
@@ -52,9 +52,9 @@ function wrapWorker(worker) {
     }
 
     function listen(id, buffer?) {
-        return eventChannel(function (listener) {
+        return eventChannel(function(listener) {
             emitter.on(id, listener);
-            return function () {
+            return function() {
                 emitter.off(id, listener);
             };
         }, buffer || buffers.expanding(1));

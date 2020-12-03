@@ -5,8 +5,8 @@ const uintPtr = C.pointerType(uint);
 const headerSize = 4;
 
 export default function(bundle) {
-    bundle.defer(function ({stepperApi}) {
-        stepperApi.onInit(function (stepperState, globalState) {
+    bundle.defer(function({stepperApi}) {
+        stepperApi.onInit(function(stepperState, globalState) {
             const {platform} = globalState.get('options');
 
             if (platform === 'unix' || platform === 'arduino') {
@@ -30,7 +30,7 @@ Block properties:
   - start: address of the first byte of the block's data area
   - end: address of the last byte of the block's data area
 */
-const getBlock = function (programState, ref) {
+const getBlock = function(programState, ref) {
     const header = C.readValue(programState, ref).toInteger();
 
     const size = header & ~3;
@@ -46,17 +46,17 @@ const getBlock = function (programState, ref) {
     return {ref, free, start, end, size, next};
 };
 
-const getFirstBlock = function (programState) {
+const getFirstBlock = function(programState) {
     const ref = new C.PointerValue(uintPtr, programState.heapStart);
 
     return getBlock(programState, ref);
 };
 
-const canAllocate = function (block, nBytes) {
+const canAllocate = function(block, nBytes) {
     return block.free && block.size - headerSize >= nBytes;
 };
 
-const allocateBlock = function (effects, block, nBytes) {
+const allocateBlock = function(effects, block, nBytes) {
     // Align the block on a 4-byte boundary.
     nBytes = (nBytes + 3) & ~3;
     let netSize = headerSize + nBytes;
@@ -81,7 +81,7 @@ const allocateBlock = function (effects, block, nBytes) {
     return new C.PointerValue(C.voidPtr, block.start);
 };
 
-const freeBlock = function (effects, block, prev, next) {
+const freeBlock = function(effects, block, prev, next) {
     let ref = block.ref;
     let size = block.size;
 

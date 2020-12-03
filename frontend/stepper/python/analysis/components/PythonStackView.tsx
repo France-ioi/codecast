@@ -1,5 +1,5 @@
 import * as React from 'react';
-import PythonFunctionView from "./PythonFunctionView";
+import {PythonFunctionView} from "./PythonFunctionView";
 import {Button, ButtonGroup} from "@blueprintjs/core";
 import {SkulptAnalysis} from "../analysis";
 
@@ -8,7 +8,7 @@ interface PythonStackViewProps {
     analysis: SkulptAnalysis
 }
 
-const PythonStackView = (props: PythonStackViewProps): JSX.Element => {
+export const PythonStackView = (props: PythonStackViewProps): JSX.Element => {
     const firstVisible = 0;
     const tailCount = 0;
 
@@ -42,5 +42,3 @@ const PythonStackView = (props: PythonStackViewProps): JSX.Element => {
         </div>
     );
 };
-
-export default PythonStackView;

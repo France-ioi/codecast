@@ -243,12 +243,14 @@ function getNodeRange(state) {
         if (!control || !control.node) {
             return null;
         }
+
         const focusDepth = state.controls.getIn(['stack', 'focusDepth'], 0);
         if (focusDepth === 0) {
             return control.node[1].range;
         } else {
             const {functionCallStack} = state.analysis;
             const stackFrame = functionCallStack.get(functionCallStack.size - focusDepth);
+
             return stackFrame.get('scope').cont.node[1].range;
         }
     }
@@ -392,7 +394,7 @@ function stepperInterruptedReducer(state, action) {
 }
 
 function stepperUndoReducer(state) {
-    return state.update('stepper', function (stepper) {
+    return state.update('stepper', function(stepper) {
         const undo = stepper.get('undo');
         if (undo.isEmpty()) {
             return state;
@@ -407,7 +409,7 @@ function stepperUndoReducer(state) {
 }
 
 function stepperRedoReducer(state) {
-    return state.update('stepper', function (stepper) {
+    return state.update('stepper', function(stepper) {
         const redo = stepper.get('redo');
         if (redo.isEmpty()) {
             return stepper;
@@ -427,7 +429,7 @@ function stepperConfigureReducer(state, action) {
 }
 
 function stepperStackUpReducer(state) {
-    return state.updateIn(['stepper', 'currentStepperState'], function (stepperState) {
+    return state.updateIn(['stepper', 'currentStepperState'], function(stepperState) {
         let {controls, analysis} = stepperState;
         let focusDepth = controls.getIn(['stack', 'focusDepth']);
         if (focusDepth > 0) {
@@ -441,7 +443,7 @@ function stepperStackUpReducer(state) {
 }
 
 function stepperStackDownReducer(state) {
-    return state.updateIn(['stepper', 'currentStepperState'], function (stepperState) {
+    return state.updateIn(['stepper', 'currentStepperState'], function(stepperState) {
         let {controls, analysis} = stepperState;
         const stackDepth = analysis.functionCallStack.size;
         let focusDepth = controls.getIn(['stack', 'focusDepth']);
@@ -457,13 +459,13 @@ function stepperStackDownReducer(state) {
 
 function stepperViewControlsChangedReducer(state, action) {
     const {key, update} = action;
-    return state.updateIn(['stepper', 'currentStepperState'], function (stepperState) {
+    return state.updateIn(['stepper', 'currentStepperState'], function(stepperState) {
         let {controls} = stepperState;
         if (controls.has(key)) {
-            controls = controls.update(key, function (viewControls) {
+            controls = controls.update(key, function(viewControls) {
                 // Do not use viewControls.merge as it applies Immutable.fromJS
                 // to all values.
-                Object.keys(update).forEach(function (name) {
+                Object.keys(update).forEach(function(name) {
                     viewControls = viewControls.set(name, update[name]);
                 });
                 return viewControls;
@@ -506,6 +508,7 @@ function* recorderStoppingSaga() {
 function* stepperEnabledSaga(args, action) {
     /* Start the new stepper task. */
     const newTask = yield fork(rootStepperSaga, args);
+
     yield put({type: ActionTypes.StepperTaskStarted, payload: {task: newTask}});
 }
 
@@ -726,7 +729,7 @@ function postLink(scope) {
     recordApi.onStart(function* (init) {
         /* TODO: store stepper options in init */
     });
-    replayApi.on('start', function (replayContext, event) {
+    replayApi.on('start', function(replayContext, event) {
         /* TODO: restore stepper options from event[2] */
         const stepperState = stepperClear();
         replayContext.state = stepperResetReducer(replayContext.state, {payload: {stepperState}});
@@ -740,7 +743,7 @@ function postLink(scope) {
     recordApi.on(ActionTypes.StepperExit, function* (addEvent, action) {
         yield call(addEvent, 'stepper.exit');
     });
-    replayApi.on('stepper.exit', function (replayContext, event) {
+    replayApi.on('stepper.exit', function(replayContext, event) {
         replayContext.state = stepperExitReducer(replayContext.state);
         /* Clear the highlighted range when the stepper terminates. */
         replayContext.instant.range = null;
@@ -749,7 +752,7 @@ function postLink(scope) {
     recordApi.on(ActionTypes.StepperRestart, function* (addEvent, action) {
         yield call(addEvent, 'stepper.restart');
     });
-    replayApi.on('stepper.restart', async function (replayContext, event) {
+    replayApi.on('stepper.restart', async function(replayContext, event) {
         const stepperState = await buildState(replayContext.state);
 
         replayContext.state = stepperRestartReducer(replayContext.state, {payload: {stepperState}});
@@ -759,7 +762,7 @@ function postLink(scope) {
         const {mode} = action;
         yield call(addEvent, 'stepper.step', mode);
     });
-    replayApi.on('stepper.step', function (replayContext, event) {
+    replayApi.on('stepper.step', function(replayContext, event) {
         return new Promise((resolve, reject) => {
             const mode = event[2];
             replayContext.stepperDone = resolve;
@@ -772,7 +775,7 @@ function postLink(scope) {
                     stepperEventReplayed(replayContext);
                 });
             });
-            performStep(replayContext.stepperContext, mode).then(function () {
+            performStep(replayContext.stepperContext, mode).then(function() {
                 let currentStepperState = replayContext.state.getIn(['stepper', 'currentStepperState']);
 
                 if (currentStepperState.platform === 'python' && window.currentPythonRunner._printedDuringStep) {
@@ -790,7 +793,7 @@ function postLink(scope) {
 
                 replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
                 stepperEventReplayed(replayContext);
-            }, function (error) {
+            }, function(error) {
                 if (!(error instanceof StepperError)) {
                     return reject(error);
                 }
@@ -809,7 +812,7 @@ function postLink(scope) {
     recordApi.on(ActionTypes.StepperProgress, function* (addEvent, {payload: {stepperContext}}) {
         yield call(addEvent, 'stepper.progress', stepperContext.lineCounter);
     });
-    replayApi.on('stepper.progress', function (replayContext, event) {
+    replayApi.on('stepper.progress', function(replayContext, event) {
         return new Promise((resolve, reject) => {
             replayContext.stepperDone = resolve;
             replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
@@ -821,7 +824,7 @@ function postLink(scope) {
 
                     stepperEventReplayed(replayContext);
                 });
-            }, function () {
+            }, function() {
                 replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
                 stepperEventReplayed(replayContext);
             });
@@ -831,7 +834,7 @@ function postLink(scope) {
     recordApi.on(ActionTypes.StepperInterrupt, function* (addEvent, action) {
         yield call(addEvent, 'stepper.interrupt');
     });
-    replayApi.on('stepper.interrupt', function (replayContext, event) {
+    replayApi.on('stepper.interrupt', function(replayContext, event) {
         /* Prevent the subsequent stepper.idle event from running the stepper until
            completion. */
         const {stepperContext} = replayContext;
@@ -842,7 +845,7 @@ function postLink(scope) {
     recordApi.on(ActionTypes.StepperIdle, function* (addEvent, {payload: {stepperContext}}) {
         yield call(addEvent, 'stepper.idle', stepperContext.lineCounter);
     });
-    replayApi.on('stepper.idle', function (replayContext, event) {
+    replayApi.on('stepper.idle', function(replayContext, event) {
         return new Promise((resolve, reject) => {
             replayContext.stepperDone = resolve;
             replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
@@ -851,7 +854,7 @@ function postLink(scope) {
                 return new Promise((cont) => {
                     cont(true);
                 });
-            }, function () {
+            }, function() {
                 replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
                 stepperEventReplayed(replayContext);
             });
@@ -884,7 +887,7 @@ function postLink(scope) {
     recordApi.on(ActionTypes.StepperUndo, function* (addEvent, action) {
         yield call(addEvent, 'stepper.undo');
     });
-    replayApi.on('stepper.undo', function (replayContext, event) {
+    replayApi.on('stepper.undo', function(replayContext, event) {
         replayContext.state = stepperUndoReducer(replayContext.state);
         updateRange(replayContext);
     });
@@ -892,7 +895,7 @@ function postLink(scope) {
     recordApi.on(ActionTypes.StepperRedo, function* (addEvent, action) {
         yield call(addEvent, 'stepper.redo');
     });
-    replayApi.on('stepper.redo', function (replayContext, event) {
+    replayApi.on('stepper.redo', function(replayContext, event) {
         replayContext.state = stepperRedoReducer(replayContext.state);
         updateRange(replayContext);
     });
@@ -900,7 +903,7 @@ function postLink(scope) {
     recordApi.on(ActionTypes.StepperStackUp, function* (addEvent, action) {
         yield call(addEvent, 'stepper.stack.up');
     });
-    replayApi.on('stepper.stack.up', function (replayContext, event) {
+    replayApi.on('stepper.stack.up', function(replayContext, event) {
         replayContext.state = stepperStackUpReducer(replayContext.state);
         updateRange(replayContext);
     });
@@ -908,7 +911,7 @@ function postLink(scope) {
     recordApi.on(ActionTypes.StepperStackDown, function* (addEvent, action) {
         yield call(addEvent, 'stepper.stack.down');
     });
-    replayApi.on('stepper.stack.down', function (replayContext, event) {
+    replayApi.on('stepper.stack.down', function(replayContext, event) {
         replayContext.state = stepperStackDownReducer(replayContext.state);
         updateRange(replayContext);
     });
@@ -918,13 +921,13 @@ function postLink(scope) {
         const {key, update} = action;
         yield call(addEvent, 'stepper.view.update', key, update);
     });
-    replayApi.on('stepper.view.update', function (replayContext, event) {
+    replayApi.on('stepper.view.update', function(replayContext, event) {
         const key = event[2];
         const update = event[3];
         replayContext.state = stepperViewControlsChangedReducer(replayContext.state, {key, update});
     });
 
-    stepperApi.onInit(function (stepperState, globalState) {
+    stepperApi.onInit(function(stepperState, globalState) {
         const {platform} = globalState.get('options');
 
         switch (platform) {

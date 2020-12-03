@@ -9,7 +9,7 @@ import {getPersistentOptions, setPersistentOption} from './options';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 
-export default function (bundle) {
+export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, initReducer);
 
     bundle.include(loadingBundle);
@@ -26,29 +26,27 @@ export default function (bundle) {
 
     bundle.defineAction(ActionTypes.SubtitlesBandEnabledChanged);
     bundle.addReducer(ActionTypes.SubtitlesBandEnabledChanged, subtitlesBandEnabledChangedReducer);
-
 }
 
 function initReducer(state, action) {
     const {paneEnabled, bandEnabled} = getPersistentOptions();
-    return state
-        .set('subtitles', {
-            langOptions: [
-                {value: 'fr-FR', label: "Français", countryCode: 'fr'},
-                {value: 'en-US', label: "English", countryCode: 'us'},
-            ],
-            editing: false,
-            paneEnabled,
-            bandEnabled,
-            /* player-specific */
-            filterText: '',
-            filterRegexp: null,
-            /* editor-specific */
-            notify: {},
-            trim: {
-                loaded: [],
-            },
-        });
+    return state.set('subtitles', {
+        langOptions: [
+            {value: 'fr-FR', label: "Français", countryCode: 'fr'},
+            {value: 'en-US', label: "English", countryCode: 'us'},
+        ],
+        editing: false,
+        paneEnabled,
+        bandEnabled,
+        /* player-specific */
+        filterText: '',
+        filterRegexp: null,
+        /* editor-specific */
+        notify: {},
+        trim: {
+            loaded: [],
+        },
+    });
 }
 
 function subtitlesEditingChangedReducer(state, {payload: {editing}}) {
@@ -76,7 +74,9 @@ function updateSubtitlesPaneVisibility(state) {
     const enabled = editing || (isLoaded && paneEnabled);
     const width = 200;
 
-    return state.setIn(['panes', 'subtitles'], Immutable.Map({editing, enabled, width}));
+    let view = (editing) ? 'editor' : 'subtitles';
+
+    return state.setIn(['panes', 'subtitles'], Immutable.Map({view, editing, enabled, width}));
 }
 
 function subtitlesBandEnabledChangedReducer(state, {payload: {value}}) {

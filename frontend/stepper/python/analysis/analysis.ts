@@ -43,7 +43,7 @@ const SKULPT_ANALYSIS_DEBUG = 0;
  *
  * @returns {Object}
  */
-export const analyseSkulptState = function (suspensions, lastAnalysis, newStepNum): SkulptAnalysis {
+export const analyseSkulptState = function(suspensions, lastAnalysis, newStepNum): SkulptAnalysis {
     // @ts-ignore
     if (SKULPT_ANALYSIS_DEBUG === 2) {
         console.log('[¥¥¥¥¥¥¥] Building analysis');
@@ -96,7 +96,7 @@ export const analyseSkulptState = function (suspensions, lastAnalysis, newStepNu
  *
  * @returns {boolean}
  */
-const isProgramSuspension = function (suspension) {
+const isProgramSuspension = function(suspension) {
     return suspension.hasOwnProperty('$lineno');
 };
 
@@ -111,7 +111,7 @@ const isProgramSuspension = function (suspension) {
  *
  * @returns {{args: *, variables: Map, name: string, openedPaths: Map<any, any>, currentLine: *}}
  */
-export const analyseSkulptScope = function (suspension, lastAnalysis, newStepNum, suspensionIdx, scopeIndex): SkulptScope {
+export const analyseSkulptScope = function(suspension, lastAnalysis, newStepNum, suspensionIdx, scopeIndex): SkulptScope {
     // @ts-ignore
     if (SKULPT_ANALYSIS_DEBUG === 2) {
         console.log('////// Analyse scope...');
@@ -283,7 +283,7 @@ const sortArgumentsFirst = (variableNames, args) => {
  *
  * @return {Array} A copy of the suspensions.
  */
-export const getSkulptSuspensionsCopy = function (suspensions) {
+export const getSkulptSuspensionsCopy = function(suspensions) {
     const copies = [];
     for (let suspensionIdx in suspensions) {
         const suspension = suspensions[suspensionIdx];
@@ -301,7 +301,7 @@ export const getSkulptSuspensionsCopy = function (suspensions) {
  *
  * @param analysis
  */
-export const clearLoadedReferences = function (analysis) {
+export const clearLoadedReferences = function(analysis) {
     const clearedAnalysis = {
         ...analysis,
         functionCallStack: List()

@@ -66,7 +66,7 @@ interface HeapNode {
  (up to `options.cursorRows` rows are used)
 
  */
-export const extractView = function (context, name, options) {
+export const extractView = function(context, name, options) {
     const {analysis} = context;
 
     // Normalize options.
@@ -155,7 +155,7 @@ export const extractView = function (context, name, options) {
       visible cells.
 
 */
-export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
+export const ArrayViewBuilder = function(nbVisibleCells, nbCells) {
 
     // The spread is the number of cells around a marker which receive extra
     // points.
@@ -182,7 +182,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
         }
     }
 
-    this.addMarker = function (index, points, rank) {
+    this.addMarker = function(index, points, rank) {
         // Add points to the marked cell.
         addPointsAndRank(index, points, rank);
         // Also spread points arround the marked cell.
@@ -199,24 +199,29 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
         }
     };
 
-    this.getSelection = function () {
+    this.getSelection = function() {
         // Insert the marked cells in a heap.
         const heap = new FibonacciHeap<HeapNode, any>(compareHeapNodes);
         Object.keys(cells).forEach(index => heap.insert(cells[index]));
+
         // Build the result array containing the selected indexes.
         const result = [];
         let spaceLeft = nbVisibleCells - 1; // subtract 1 for the implicit gap
         while (spaceLeft > 0) {
             let node = heap.extractMinimum();
-            if (node === undefined) {
+            if (!node) {
                 break;
             }
+
             let {index} = node.key;
+
             // Find the position in result where the index can be inserted.
             let pos = findInsertionIndex(index, result);
+
             // Does the inserted index extend a sequence on the left or right?
             let leftExt = index === 0 || result[pos - 1] === index - 1;
             let rightExt = index === nbCells || result[pos] === index + 1;
+
             // There are 3 cases to consider:
             // - leftExt  rightExt
             //    true     true    the element replaces a gap and takes no extra space
@@ -227,7 +232,9 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
             if (spaceUsed > spaceLeft) {
                 break;
             }
+
             result.splice(pos, 0, index);
+
             spaceLeft -= spaceUsed;
         }
         if (spaceLeft > 0) {
@@ -235,8 +242,10 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
             // Ensure there is at least 1 element in result.
             if (result.length === 0 || result[0] !== 0) {
                 result.splice(0, 0, 0);
+
                 spaceLeft -= 1;
             }
+
             let nextIndex = result[0] + 1, i = 1;
             while (spaceLeft > 0 && nextIndex < nbCells) {
                 const index = result[i];
@@ -247,6 +256,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
                         break;
                     }
                 }
+
                 i += 1;
                 nextIndex += 1;
             }
@@ -261,7 +271,9 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
                 // If a gap of size 1 is detected, use the missing index.
                 const filler = result[i] === nextIndex + 1 ? nextIndex : '…'; // TODO: Is this useful ?
                 result.splice(i, 0, filler);
+
                 i += 1;
+
                 // Reset nextIndex to the start of the sequence after the gap.
                 nextIndex = result[i];
             }
@@ -276,15 +288,16 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
  array.splice(index, 0, element)
  keeps array sorted according to comparer.
  */
-const findInsertionIndex = function (element, array, comparer?) {
+const findInsertionIndex = function(element, array, comparer?) {
     if (array.length === 0) {
         return -1;
     }
     if (comparer === undefined) {
-        comparer = function (a, b) {
+        comparer = function(a, b) {
             return a < b ? -1 : a > b ? 1 : 0;
         };
     }
+
     // The value of end is 1 beyond the last element in the search interval.
     let start = 0;
     let end = array.length;
@@ -306,7 +319,7 @@ const findInsertionIndex = function (element, array, comparer?) {
     }
 }
 
-const compareHeapNodes = function (a, b) {
+const compareHeapNodes = function(a, b) {
     const cellA = a.key;
     const cellB = b.key;
     if (cellA.points > cellB.points) {
@@ -334,9 +347,9 @@ const compareHeapNodes = function (a, b) {
    with an index argument for each cell of the array (described by arrayBase,
    elemCount, and elemSize) that the ref intersects.
  */
-export const mapArray1D = function (arrayBase, elemCount, elemSize) {
+export const mapArray1D = function(arrayBase, elemCount, elemSize) {
     const arrayLimit = arrayBase + (elemCount * elemSize) - 1;
-    return function (ref, callback) {
+    return function(ref, callback) {
         // Skip if [array] < [ref]
         const {address, type} = ref;
         if (arrayLimit < address) return;
@@ -363,11 +376,11 @@ export const mapArray1D = function (arrayBase, elemCount, elemSize) {
 //   minIndex, maxIndex
 // Only cursors whose value is in the range [minIndex, maxIndex] are considered.
 // The calculated value is then subject to the minIndex/maxIndex constraint.
-export const getCursorMap = function (analysis, cursorNames, options) {
+export const getCursorMap = function(analysis, cursorNames, options) {
     const {minIndex, maxIndex} = options;
     const cursorMap = [];  // spare array
 
-    cursorNames.forEach(function (name) {
+    cursorNames.forEach(function(name) {
         const cursorVariable = getVariable(analysis, name);
         if (!cursorVariable) {
             return;
@@ -397,13 +410,13 @@ export const getCursorMap = function (analysis, cursorNames, options) {
 
 // Returns an array of up to maxVisibleCells indices between 0 and elemCount
 // (inclusive), prioritizing cells that have memory operations or cursors.
-const getSelection = function (maxVisibleCells, elemCount, cursorMap, pointsByKind) {
+const getSelection = function(maxVisibleCells, elemCount, cursorMap, pointsByKind) {
     const builder = new ArrayViewBuilder(maxVisibleCells, elemCount);
 
     builder.addMarker(0, pointsByKind.first);
     builder.addMarker(elemCount, pointsByKind.last);
 
-    cursorMap.forEach(function (cursor) {
+    cursorMap.forEach(function(cursor) {
         builder.addMarker(cursor.index, pointsByKind.cursor);
     });
 
@@ -414,10 +427,10 @@ const getSelection = function (maxVisibleCells, elemCount, cursorMap, pointsByKi
 // Each cursor is modified to contain a 'col' field giving its position in
 // the selection, and a 'row' field such that adjacent cursors are on a
 // different row (up to `cursorRows` rows are used).
-export const finalizeCursors = function (selection, cursorMap, cursorRows) {
+export const finalizeCursors = function(selection, cursorMap, cursorRows) {
     const staggerAll = true; // XXX could be an option
     let nextStaggerCol, cursorRow = 0;
-    selection.forEach(function (index, col) {
+    selection.forEach(function(index, col) {
         if (col === undefined) {
             col = index;
         }

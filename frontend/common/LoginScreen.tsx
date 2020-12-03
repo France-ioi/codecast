@@ -1,5 +1,5 @@
-import {ButtonGroup} from "@blueprintjs/core";
 import React from "react";
+import {ButtonGroup} from "@blueprintjs/core";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 

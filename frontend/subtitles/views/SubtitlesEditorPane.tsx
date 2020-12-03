@@ -7,6 +7,7 @@ import {ActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../../store";
+import {NodeCue} from "subtitle";
 
 interface SubtitlesEditorPaneStateToProps {
     subtitles: any[],
@@ -102,24 +103,28 @@ class _SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPaneProps>
     _refSelected = (component) => {
         this._selectedComponent = component;
     };
-    _jump = (subtitle) => {
+    _jump = (subtitle: NodeCue) => {
         this.props.dispatch({type: PlayerActionTypes.PlayerSeek, payload: {audioTime: subtitle.data.start}});
     };
-    _changeItem = (item, text) => {
-        const index = this.props.subtitles.indexOf(item);
+    _changeItem = (subtitle: NodeCue, text) => {
+        const index = this.props.subtitles.indexOf(subtitle);
+
         this.props.dispatch({type: ActionTypes.SubtitlesItemChanged, payload: {index, text}});
     };
-    _insertItem = (item, offset, where) => {
-        const index = this.props.subtitles.indexOf(item);
+    _insertItem = (subtitle: NodeCue, offset, where) => {
+        const index = this.props.subtitles.indexOf(subtitle);
+
         this.props.dispatch({type: ActionTypes.SubtitlesItemInserted, payload: {index, offset, where}});
     };
-    _removeItem = (item) => {
-        const index = this.props.subtitles.indexOf(item);
+    _removeItem = (subtitle: NodeCue) => {
+        const index = this.props.subtitles.indexOf(subtitle);
         const merge = index === 0 ? 'down' : 'up';
+
         this.props.dispatch({type: ActionTypes.SubtitlesItemRemoved, payload: {index, merge}});
     };
-    _shiftItem = (item, amount) => {
-        const index = this.props.subtitles.indexOf(item);
+    _shiftItem = (subtitle: NodeCue, amount) => {
+        const index = this.props.subtitles.indexOf(subtitle);
+
         this.props.dispatch({type: ActionTypes.SubtitlesItemShifted, payload: {index, amount}});
     };
     _filterTextChanged = (event) => {

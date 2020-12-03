@@ -4,7 +4,7 @@ export default function(bundle) {
     // Switch to the specified screen.
     bundle.defineAction(ActionTypes.SystemSwitchToScreen);
 
-    bundle.addReducer(ActionTypes.SystemSwitchToScreen, function (state, {payload}) {
+    bundle.addReducer(ActionTypes.SystemSwitchToScreen, function(state, {payload}) {
         return state.set('screen', payload.screen);
     });
 };

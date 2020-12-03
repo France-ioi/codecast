@@ -10,7 +10,7 @@ import {filterItems, getSubtitles, updateCurrentItem} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 
-export default function (bundle) {
+export default function(bundle) {
     /* Clear (unload) the currently loaded subtitles, if any. */
     bundle.defineAction(ActionTypes.SubtitlesCleared);
     bundle.addReducer(ActionTypes.SubtitlesCleared, subtitlesClearedReducer);

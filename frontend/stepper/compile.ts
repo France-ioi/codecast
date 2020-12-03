@@ -26,7 +26,7 @@ import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "../buffers/selectors";
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, function (state, _action) {
+    bundle.addReducer(AppActionTypes.AppInit, function(state, _action) {
         return state.set('compile', compileClear());
     });
 
@@ -35,7 +35,7 @@ export default function(bundle) {
 
     // Clear the 'compile' state.
     bundle.defineAction(ActionTypes.CompileClear);
-    bundle.addReducer(ActionTypes.CompileClear, function (state, action) {
+    bundle.addReducer(ActionTypes.CompileClear, function(state, action) {
         return state.set('compile', compileClear());
     });
 
@@ -49,19 +49,19 @@ export default function(bundle) {
 
     // Started translation of {source}.
     bundle.defineAction(ActionTypes.CompileStarted);
-    bundle.addReducer(ActionTypes.CompileStarted, function (state, action) {
+    bundle.addReducer(ActionTypes.CompileStarted, function(state, action) {
         return state.update('compile', st => compileStarted(st, action));
     });
 
     // Succeeded translating {source} to {syntaxTree}.
     bundle.defineAction(ActionTypes.CompileSucceeded);
-    bundle.addReducer(ActionTypes.CompileSucceeded, function (state, action) {
+    bundle.addReducer(ActionTypes.CompileSucceeded, function(state, action) {
         return state.update('compile', st => compileSucceeded(st, action));
     });
 
     // Failed to compile {source} with {error}.
     bundle.defineAction(ActionTypes.CompileFailed);
-    bundle.addReducer(ActionTypes.CompileFailed, function (state, action) {
+    bundle.addReducer(ActionTypes.CompileFailed, function(state, action) {
         const newState = state.update('compile', st => compileFailed(st, action));
 
         newState.set('stepper', stepperClear());
@@ -72,7 +72,7 @@ export default function(bundle) {
     // Clear the diagnostics (compilation errors and warnings) returned
     // by the last compile operation.
     bundle.defineAction(ActionTypes.CompileClearDiagnostics);
-    bundle.addReducer(ActionTypes.CompileClearDiagnostics, function (state, action) {
+    bundle.addReducer(ActionTypes.CompileClearDiagnostics, function(state, action) {
         return state.update('compile', st => compileClearDiagnostics(st));
     });
 
@@ -127,9 +127,9 @@ export default function(bundle) {
         });
     });
 
-    bundle.defer(function ({recordApi, replayApi}) {
+    bundle.defer(function({recordApi, replayApi}) {
 
-        replayApi.on('start', function (replayContext, event) {
+        replayApi.on('start', function(replayContext, event) {
             const compileModel = compileClear();
             replayContext.state = compileReset(replayContext.state, {state: compileModel});
         });
@@ -138,7 +138,7 @@ export default function(bundle) {
             const {source} = action;
             yield call(addEvent, 'compile.start', source); // XXX should also have platform
         });
-        replayApi.on(['stepper.compile', 'compile.start'], function (replayContext, event) {
+        replayApi.on(['stepper.compile', 'compile.start'], function(replayContext, event) {
             const action = {source: event[2]};
             replayContext.state = replayContext.state.update('compile', st => compileStarted(st, action));
         });
@@ -146,7 +146,7 @@ export default function(bundle) {
         recordApi.on(ActionTypes.CompileSucceeded, function* (addEvent, action) {
             yield call(addEvent, 'compile.success', action);
         });
-        replayApi.on('compile.success', function (replayContext, event) {
+        replayApi.on('compile.success', function(replayContext, event) {
             const action = event[2];
 
             replayContext.state = replayContext.state.update('compile', st => compileSucceeded(st, action));
@@ -156,7 +156,7 @@ export default function(bundle) {
             const {response} = action;
             yield call(addEvent, 'compile.failure', response);
         });
-        replayApi.on('compile.failure', function (replayContext, event) {
+        replayApi.on('compile.failure', function(replayContext, event) {
             const action = {response: event[2]};
             replayContext.state = replayContext.state.update('compile', st => compileFailed(st, action));
         });
@@ -164,11 +164,11 @@ export default function(bundle) {
         recordApi.on(ActionTypes.CompileClearDiagnostics, function* (addEvent, action) {
             yield call(addEvent, 'compile.clearDiagnostics');
         });
-        replayApi.on('compile.clearDiagnostics', function (replayContext, event) {
+        replayApi.on('compile.clearDiagnostics', function(replayContext, event) {
             replayContext.state = replayContext.state.update('compile', st => compileClearDiagnostics(st));
         });
 
-        replayApi.on('stepper.exit', function (replayContext, event) {
+        replayApi.on('stepper.exit', function(replayContext, event) {
             replayContext.state = replayContext.state.update('compile', compileClear);
         });
 
@@ -179,7 +179,7 @@ export default function(bundle) {
     });
 };
 
-const addNodeRanges = function (source, syntaxTree) {
+const addNodeRanges = function(source, syntaxTree) {
     // Assign a {row, column} position to each byte offset in the source.
     // The UTF-8 encoding indicates the byte length of each character, so we could
     // use it to maintain a counter of how many bytes to skip before incrementing

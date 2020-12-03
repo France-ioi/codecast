@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Map} from 'immutable';
-import PythonVariableValue from "./PythonVariableValue";
+import {PythonVariableValue} from "./PythonVariableValue";
 import {SkulptScope} from "../analysis";
 
 interface PythonFunctionHeaderProps {
@@ -9,7 +9,7 @@ interface PythonFunctionHeaderProps {
     scopeIndex: number
 }
 
-const PythonFunctionHeader = (props: PythonFunctionHeaderProps): JSX.Element => {
+export const PythonFunctionHeader = (props: PythonFunctionHeaderProps): JSX.Element => {
     const argCount = props.func.args.length;
 
     const args = props.func.args.map((name) => {
@@ -35,7 +35,7 @@ const PythonFunctionHeader = (props: PythonFunctionHeaderProps): JSX.Element => 
                   </span>
               ) : null}
                 <span>
-                    {args.map(function (argument, index) {
+                    {args.map(function(argument, index) {
                         const loadedReferences = {};
 
                         return (
@@ -59,5 +59,3 @@ const PythonFunctionHeader = (props: PythonFunctionHeaderProps): JSX.Element => 
         </div>
     );
 };
-
-export default PythonFunctionHeader;

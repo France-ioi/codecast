@@ -24,7 +24,7 @@ export const StackFrame = Record({
     directives: List()
 });
 
-export const analyseState = function (programState): AnalysisC {
+export const analyseState = function(programState): AnalysisC {
     const functionCallStack = analyseScope(programState.scope);
     const result: AnalysisC = {functionCallStack};
     if (programState.direction === 'out') {
@@ -42,7 +42,7 @@ export const analyseState = function (programState): AnalysisC {
   Recursively analyse the interpreter's scope structure and build convenient
   Immutable data structures. Good candidate for memoisation.
 */
-const analyseScope = function (scope) {
+const analyseScope = function(scope) {
     if (!scope) {
         return List();
     }
@@ -69,9 +69,9 @@ const analyseScope = function (scope) {
         }
         case 'variable': {
             const {name, type, ref} = scope;
-            functionCallStack = functionCallStack.update(functionCallStack.size - 1, function (stackFrame) {
+            functionCallStack = functionCallStack.update(functionCallStack.size - 1, function(stackFrame) {
                 // Append the name to the list of local names, taking care of shadowing.
-                stackFrame = stackFrame.update('localNames', function (localNames) {
+                stackFrame = stackFrame.update('localNames', function(localNames) {
                     const i = localNames.indexOf(name);
                     if (-1 !== i) {
                         localNames = localNames.delete(i);
@@ -89,7 +89,7 @@ const analyseScope = function (scope) {
     return functionCallStack;
 };
 
-export const collectDirectives = function (functionCallStack, focusDepth) {
+export const collectDirectives = function(functionCallStack, focusDepth) {
     const ordered = [];
     const functionCallStackMap = {};
     // StackFrames are collected in reverse order, so that the directive's render
@@ -97,7 +97,7 @@ export const collectDirectives = function (functionCallStack, focusDepth) {
     for (let depth = functionCallStack.size - 1 - focusDepth; depth >= 0; depth -= 1) {
         const stackFrame = functionCallStack.get(depth);
         const directives = stackFrame.get('directives');
-        directives.forEach(function (directive) {
+        directives.forEach(function(directive) {
             const {key} = directive;
             if (key in functionCallStackMap) {
                 functionCallStackMap[key].push(stackFrame);

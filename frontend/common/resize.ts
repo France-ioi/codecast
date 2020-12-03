@@ -11,7 +11,7 @@ export const mainViewGeometries = [
 ];
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, function (state, _action) {
+    bundle.addReducer(AppActionTypes.AppInit, function(state, _action) {
         return state
             .set('mainViewGeometry', mainViewGeometries[0])
             .set('panes', Map());
@@ -19,14 +19,15 @@ export default function(bundle) {
 
     // Make windowResized update the global state 'size'.
     bundle.defineAction(ActionTypes.WindowResized);
-    bundle.addReducer(ActionTypes.WindowResized, function (state, action) {
+    bundle.addReducer(ActionTypes.WindowResized, function(state, action) {
         const {width, height} = action;
+
         return state.set('windowWidth', width).set('windowHeight', height);
     });
 
     // Event channel for resize events.
     // Only the most recent event is kept in the buffer.
-    const resizeMonitorChannel = eventChannel(function (listener) {
+    const resizeMonitorChannel = eventChannel(function(listener) {
         function onResize() {
             const width = window.innerWidth;
             const height = window.innerHeight;
@@ -34,9 +35,11 @@ export default function(bundle) {
         }
 
         window.addEventListener('resize', onResize);
+
         // Add an initial event to the channel.
         onResize();
-        return function () {
+
+        return function() {
             window.removeEventListener('resize', onResize);
         };
     }, buffers.sliding(1));
@@ -51,36 +54,47 @@ export default function(bundle) {
     });
 
     bundle.addLateReducer(function updateGeometry(state) {
-        if (!state) return state;
+        if (!state) {
+            return state;
+        }
+
         /* Default to the largest geometry, no visible panes. */
         let geometry = mainViewGeometries[0];
         let panes = state.get('panes');
         let viewportTooSmall = false;
+
         const windowWidth = state.get('windowWidth');
         if (windowWidth) {
             let mainViewWidth = windowWidth;
+
             /* Account for width of enabled panes. */
             panes = panes.map(pane => {
                 if (!pane.get('enabled')) {
                     return pane.set('visible', false)
                 }
+
                 mainViewWidth -= pane.get('width') + 10;
+
                 return pane.set('visible', true);
             });
+
             /* Find the largest main-view geometry that fits the available space. */
             let geometryIndex = 0;
             while (geometry.width > mainViewWidth) {
                 geometryIndex += 1;
+
                 if (geometryIndex === mainViewGeometries.length) {
                     /* Screen is too small, use the smallest geometry and hide all panes. */
                     viewportTooSmall = true;
                     panes = panes.map(pane => pane.set('visible', false));
+
                     break;
                 }
 
                 geometry = mainViewGeometries[geometryIndex];
             }
         }
+
         /* Compute the container width */
         /* XXX is this still needed? */
         let containerWidth = geometry.width;

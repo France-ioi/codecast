@@ -2,7 +2,7 @@
 
 import {call} from 'redux-saga/effects';
 
-export default function (bundle) {
+export default function(bundle) {
     const replayApi = {};
     bundle.defineValue('replayApi', replayApi);
 
@@ -12,7 +12,7 @@ export default function (bundle) {
        player context. */
     const eventHandlers = new Map();
     // @ts-ignore
-    replayApi.on = function (keys, saga) {
+    replayApi.on = function(keys, saga) {
         if (typeof keys === 'string') {
             keys = [keys];
         }
@@ -43,7 +43,7 @@ export default function (bundle) {
        reset the state to a specific instant. */
     const resetSagas = [];
     // @ts-ignore
-    replayApi.onReset = function (saga) {
+    replayApi.onReset = function(saga) {
         resetSagas.push(saga);
     };
     // @ts-ignore

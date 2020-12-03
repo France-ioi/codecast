@@ -18,7 +18,7 @@ interface ViewElement {
     previous?: any
 }
 
-export const readScalarBasic = function (programState, refType, address): ViewElement {
+export const readScalarBasic = function(programState, refType, address): ViewElement {
     // Produce a 'basic stored scalar value' object whose shape is
     //   {kind, ref, current}
     // where:
@@ -31,7 +31,7 @@ export const readScalarBasic = function (programState, refType, address): ViewEl
     return {kind, ref, current};
 };
 
-export const readScalar = function (context, refType, address) {
+export const readScalar = function(context, refType, address) {
     // Produce a 'stored scalar value' object whose shape is
     //   {kind, ref, current, previous, load, store}
     // where:
@@ -41,7 +41,7 @@ export const readScalar = function (context, refType, address) {
     //   - 'previous' holds the previous value (if 'store' is defined)
     const {programState, lastProgramState} = context;
     const result = readScalarBasic(programState, refType, address);
-    programState.memoryLog.forEach(function (entry, i) {
+    programState.memoryLog.forEach(function(entry, i) {
         /* FIXME: when ref is a pointer type, the length of the value written
                   to it should be used to decide if the ranges intersect */
         if (refsIntersect(result.ref, entry[1])) {
@@ -60,7 +60,7 @@ export const readScalar = function (context, refType, address) {
     return result;
 };
 
-export const readValue = function (context, refType, address, limits) {
+export const readValue = function(context, refType, address, limits) {
     const type = refType.pointee;
     if (type.kind === 'array') {
         if (type.count === undefined) {
@@ -81,7 +81,7 @@ export const readValue = function (context, refType, address, limits) {
     return readScalar(context, refType, address);
 };
 
-export const readArray = function (context, arrayType, address, limits) {
+export const readArray = function(context, arrayType, address, limits) {
     const elemCount = arrayType.count.toInteger();
     const elemType = arrayType.elem;
     const elemSize = elemType.size;
@@ -103,7 +103,7 @@ export const readArray = function (context, arrayType, address, limits) {
     return cells;
 };
 
-export const readRecord = function (context, recordType, address, limits) {
+export const readRecord = function(context, recordType, address, limits) {
     const fields = [];
     for (let fieldName of recordType.fields) {
         const {offset, type} = recordType.fieldMap[fieldName];
@@ -121,7 +121,7 @@ export const readRecord = function (context, recordType, address, limits) {
 };
 
 
-export const refsIntersect = function (ref1, ref2) {
+export const refsIntersect = function(ref1, ref2) {
     const base1 = ref1.address, limit1 = base1 + ref1.type.pointee.size - 1;
     const base2 = ref2.address, limit2 = base2 + ref2.type.pointee.size - 1;
     const result = (base1 <= base2) ? (base2 <= limit1) : (base1 <= limit2);
@@ -136,7 +136,7 @@ export const refsIntersect = function (ref1, ref2) {
  is returned.
  If any error occurs, an Error is thrown.
  */
-export const evalExpr = function (programState, localMap, expr, asRef?) {
+export const evalExpr = function(programState, localMap, expr, asRef?) {
     if (expr[0] === 'ident') {
         const name = expr[1];
         const decl = localMap.get(name);
@@ -147,8 +147,10 @@ export const evalExpr = function (programState, localMap, expr, asRef?) {
                     return evalRef(programState, value, asRef);
                 }
             }
+
             throw new LocalizedError('EVAL_REF_UNDEF_VAR', {name});
         }
+
         return evalRef(programState, decl.ref, asRef);
     }
     if (expr[0] === 'deref') {
@@ -156,6 +158,7 @@ export const evalExpr = function (programState, localMap, expr, asRef?) {
         if (ref.type.kind !== 'pointer') {
             throw new LocalizedError('EVAL_DEREF_NONPTR', []);
         }
+
         return evalRef(programState, ref, asRef);
     }
     if (expr[0] === 'subscript') {
@@ -163,10 +166,12 @@ export const evalExpr = function (programState, localMap, expr, asRef?) {
         if (arrayRef.type.kind !== 'pointer') {
             throw new LocalizedError('EVAL_SUBSC_NONPTR', []);
         }
+
         const index = evalExpr(programState, localMap, expr[2], false);
         if (index.type.kind !== 'builtin') {
             throw new LocalizedError('EVAL_SUBSC_NONBLT', []);
         }
+
         const elemType = arrayRef.type.pointee;
         const address = arrayRef.address + elemType.size * index.toInteger();
         const ref = C.makeRef(elemType, address);
@@ -185,10 +190,11 @@ export const evalExpr = function (programState, localMap, expr, asRef?) {
     if (expr[0] === 'addrOf') {
         return evalExpr(programState, localMap, expr[1], true);
     }
+
     throw new LocalizedError('EVAL_UNSUP_EXPR', []);
 };
 
-const evalRef = function (programState, ref, asRef) {
+const evalRef = function(programState, ref, asRef) {
     if (asRef) {
         if (ref.type.pointee.kind === 'array') {
             // Taking the address of an array, returns a decayed pointer to the array.
@@ -206,11 +212,11 @@ const evalRef = function (programState, ref, asRef) {
     }
 };
 
-const strParensIf = function (cond, str) {
+const strParensIf = function(cond, str) {
     return cond ? `(${str})` : str;
 };
 
-export const stringifyExpr = function (expr, precedence?) {
+export const stringifyExpr = function(expr, precedence?) {
     precedence = precedence || 0;
     if (expr[0] === 'parens') {
         return strParensIf(true, stringifyExpr(expr[1], 0));
@@ -232,10 +238,10 @@ export const stringifyExpr = function (expr, precedence?) {
     return JSON.stringify(expr);
 };
 
-export const viewExprs = function (programState, stackFrame, exprs) {
+export const viewExprs = function(programState, stackFrame, exprs) {
     const localMap = stackFrame.get('localMap');
     const views = [];
-    exprs.forEach(function (expr) {
+    exprs.forEach(function(expr) {
         const label = stringifyExpr(expr, 0);
         try {
             const value = evalExpr(programState, localMap, expr, false);
@@ -247,7 +253,7 @@ export const viewExprs = function (programState, stackFrame, exprs) {
     return views;
 };
 
-export const viewStackFrame = function (context, stackFrame, options) {
+export const viewStackFrame = function(context, stackFrame, options) {
     const view = {
         key: stackFrame.get('scope').key,
         func: stackFrame.get('func'),
@@ -259,7 +265,7 @@ export const viewStackFrame = function (context, stackFrame, options) {
     if (options.locals) {
         const localMap = stackFrame.get('localMap');
         const locals = view.locals = [];
-        stackFrame.get('localNames').forEach(function (name) {
+        stackFrame.get('localNames').forEach(function(name) {
             const {type, ref} = localMap.get(name);
             // type and ref.type.pointee are assumed identical
             locals.push(viewVariable(context, name, type, ref.address));
@@ -269,7 +275,7 @@ export const viewStackFrame = function (context, stackFrame, options) {
     return view;
 };
 
-export const viewVariable = function (context, name, type, address) {
+export const viewVariable = function(context, name, type, address) {
     const limits = {scalars: 0, maxScalars: 15};
     return {
         name,
@@ -281,11 +287,11 @@ export const viewVariable = function (context, name, type, address) {
 
 //
 
-const parensIf = function (cond, elem) {
+const parensIf = function(cond, elem) {
     return cond ? <span>{'('}{elem}{')'}</span> : elem;
 };
 
-export const renderValue = function (value) {
+export const renderValue = function(value) {
     if (value === undefined) {
         return 'noval';
     }
@@ -351,7 +357,7 @@ export function StoredValue({value}) {
     return <span className='value'>{`unknown value kind ${value.kind}`}</span>;
 }
 
-export const renderDeclType = function (type, subject, prec) {
+export const renderDeclType = function(type, subject, prec) {
     switch (type.kind) {
         case 'function':
             // TODO: print param types?
@@ -388,7 +394,7 @@ export function FunctionCall({func, args}) {
       {func.name}
             {'('}
             <span>
-        {args.map(function (value, i) {
+        {args.map(function(value, i) {
             return (
                 <span key={i}>
               {renderValue(value)}
@@ -402,14 +408,14 @@ export function FunctionCall({func, args}) {
     );
 }
 
-export const getIdent = function (expr, noVal?) {
+export const getIdent = function(expr, noVal?) {
     if (!expr) {
         return noVal;
     }
     return expr[0] === 'ident' ? expr[1] : noVal;
 };
 
-export const getNumber = function (expr, options) {
+export const getNumber = function(expr, options) {
     let noVal;
     if (typeof options === 'object') {
         noVal = options.noVal;
@@ -437,7 +443,7 @@ export const getNumber = function (expr, options) {
     return noVal;
 };
 
-export const getList = function (expr, noVal) {
+export const getList = function(expr, noVal) {
     if (!expr) {
         return noVal;
     }
@@ -463,7 +469,7 @@ export function ShowVar(props) {
     );
 }
 
-const computeArrowPoints = function (p, headSize, tailSize) {
+const computeArrowPoints = function(p, headSize, tailSize) {
     const dx1 = headSize;
     const dy1 = headSize;
     const dx2 = headSize / 5;
@@ -476,7 +482,7 @@ const arrowDirFunc = {
     left: (dx, dy) => `${+dy},${+dx}`,
     right: (dx, dy) => `${-dy},${+dx}`
 };
-export const renderArrow = function (x, y, dir, headSize, tailSize, style?) {
+export const renderArrow = function(x, y, dir, headSize, tailSize, style?) {
     const ps = computeArrowPoints(arrowDirFunc[dir], headSize, tailSize);
 
     return <polygon points={ps} transform={`translate(${x},${y})`} {...style} />;

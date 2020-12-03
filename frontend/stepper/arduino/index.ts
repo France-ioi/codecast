@@ -38,7 +38,7 @@ export default function(bundle) {
         })
     };
 
-    bundle.addReducer(AppActionTypes.AppInit, function (state, _action) {
+    bundle.addReducer(AppActionTypes.AppInit, function(state, _action) {
         return arduinoReset(state, {state: initialArduinoState});
     });
 
@@ -76,7 +76,7 @@ export default function(bundle) {
             update(stepper, {selectedPort: {$set: index}}));
     }
 
-    bundle.defer(function ({recordApi, replayApi, stepperApi}) {
+    bundle.defer(function({recordApi, replayApi, stepperApi}) {
 
         recordApi.onStart(function* (init) {
             const {platform} = yield select(state => state.get('options'));
@@ -84,7 +84,7 @@ export default function(bundle) {
                 init.arduino = yield select(state => state.get('arduino'));
             }
         });
-        replayApi.on('start', function (replayContext, event) {
+        replayApi.on('start', function(replayContext, event) {
             const {arduino} = event[2];
             if (arduino) {
                 replayContext.state = arduinoReset(replayContext.state, {state: arduino});
@@ -101,7 +101,7 @@ export default function(bundle) {
             const {index, changes} = action;
             yield call(addEvent, 'arduino.port.configured', index, changes);
         });
-        replayApi.on('arduino.port.configured', function (replayContext, event) {
+        replayApi.on('arduino.port.configured', function(replayContext, event) {
             const index = event[2];
             const changes = event[3];
             replayContext.state = arduinoPortConfigured(replayContext.state, {index, changes});
@@ -111,7 +111,7 @@ export default function(bundle) {
             const {index, changes} = action;
             yield call(addEvent, 'arduino.port.changed', index, changes);
         });
-        replayApi.on('arduino.port.changed', function (replayContext, event) {
+        replayApi.on('arduino.port.changed', function(replayContext, event) {
             const index = event[2];
             const changes = event[3];
             replayContext.state = arduinoPortChanged(replayContext.state, {index, changes});
@@ -121,15 +121,15 @@ export default function(bundle) {
             const {index} = action;
             yield call(addEvent, 'arduino.port.selected', index);
         });
-        replayApi.on('arduino.port.selected', function (replayContext, event) {
+        replayApi.on('arduino.port.selected', function(replayContext, event) {
             const index = event[2];
             replayContext.state = arduinoPortSelected(replayContext.state, {index});
         });
 
-        stepperApi.onInit(function (stepperState, globalState) {
+        stepperApi.onInit(function(stepperState, globalState) {
             const arduinoState = globalState.get('arduino');
             if (arduinoState) {
-                stepperState.ports = range(0, NPorts - 1).map(function (index) {
+                stepperState.ports = range(0, NPorts - 1).map(function(index) {
                     /* Copy peripheral config on stepper init. */
                     const {peripheral} = arduinoState.ports[index];
                     return {direction: 0, output: 0, input: 0, peripheral};

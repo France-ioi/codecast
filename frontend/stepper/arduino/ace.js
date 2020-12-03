@@ -1,7 +1,7 @@
 ace.define("ace/mode/arduino", [
         "require", "exports", "module",
         "ace/lib/oop", "ace/mode/c_cpp", "ace/mode/c_cpp_highlight_rules"],
-    function (acequire, exports, module) {
+    function(acequire, exports, module) {
         "use strict";
 
         var oop = acequire("ace/lib/oop");
@@ -46,7 +46,7 @@ ace.define("ace/mode/arduino", [
         };
         oop.inherits(Mode, CCppMode);
 
-        (function () {
+        (function() {
             this.$id = "ace/mode/arduino";
         }).call(Mode.prototype);
 

@@ -1,6 +1,6 @@
 import React from "react";
 import {Button} from "@blueprintjs/core";
-import { PortalWithState } from 'react-portal';
+import {PortalWithState} from 'react-portal';
 import {SubtitlesPopup} from "./SubtitlesPopup";
 import {AppStore} from "../store";
 import {connect} from "react-redux";

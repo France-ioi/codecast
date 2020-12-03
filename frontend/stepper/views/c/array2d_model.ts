@@ -3,7 +3,7 @@ import * as C from 'persistent-c';
 import {evalExpr, readScalarBasic, stringifyExpr} from './utils';
 import {getCursorMap} from './array_utils';
 
-export const extractView = function (context, stackFrame, refExpr, options) {
+export const extractView = function(context, stackFrame, refExpr, options) {
     const {getMessage} = options;
     const {programState} = context;
     const localMap = stackFrame.get('localMap');
@@ -11,7 +11,12 @@ export const extractView = function (context, stackFrame, refExpr, options) {
     try {
         ref = evalExpr(programState, localMap, refExpr, false);
     } catch (ex) {
-        return {error: getMessage('ARRAY2D_EXPR_NOVAL').format({expr: stringifyExpr(refExpr), ex})};
+        return {
+            error: getMessage('ARRAY2D_EXPR_NOVAL').format({
+                expr: stringifyExpr(refExpr),
+                ex: getMessage.format(ex)
+            })
+        };
     }
     // By the array-value decaying rule, ref should be a pointer.
     if (ref.type.kind !== 'pointer') {
@@ -70,10 +75,10 @@ export const extractView = function (context, stackFrame, refExpr, options) {
    with arguments (row, col) for each cell of the array (described by arrayBase,
    nRows, nCols, and cellSize) that the ref intersects.
  */
-const mapArray2D = function (arrayBase, nRows, nCols, cellSize) {
+const mapArray2D = function(arrayBase, nRows, nCols, cellSize) {
     const rowSize = nCols * cellSize;
     const arrayLimit = arrayBase + (nRows * rowSize) - 1;
-    return function (ref, callback) {
+    return function(ref, callback) {
         // Skip if [array] < [ref]
         const {address, type} = ref;
         if (arrayLimit < address) return;
@@ -100,14 +105,14 @@ const mapArray2D = function (arrayBase, nRows, nCols, cellSize) {
 
 // Returns a map keyed by `${row},${col}` whose values are objects giving
 // the greatest rank in the memory log of a 'load' or 'store' operation.
-const getOpsArray2D = function (programState, address, nRows, nCols, cellSize) {
+const getOpsArray2D = function(programState, address, nRows, nCols, cellSize) {
     // Go through the memory log, translate memory-operation references into
     // (row, col) pairs, and save the cell load/store operations in cellOpsMap.
     const cellOpsMap = [];
     const forEachCell = mapArray2D(address, nRows, nCols, cellSize);
-    programState.memoryLog.forEach(function (entry, i) {
+    programState.memoryLog.forEach(function(entry, i) {
         const op = entry[0]; // 'load' or 'store'
-        forEachCell(entry[1], function (row, col) {
+        forEachCell(entry[1], function(row, col) {
             const key = `${row},${col}`;
             let cellOps;
             if (key in cellOpsMap) {
@@ -125,7 +130,7 @@ const getOpsArray2D = function (programState, address, nRows, nCols, cellSize) {
 // a row with properties {index, address, content}, where `content` is array of
 // objects each representing a cell with keys {index,address,content},
 // where `content` is as the documented result of `readScalar`.
-const readArray2D = function (context, arrayType, address, rowCount, colCount, cellType) {
+const readArray2D = function(context, arrayType, address, rowCount, colCount, cellType) {
     const {programState, lastProgramState} = context;
     const cellSize = cellType.size;
     const mops = getOpsArray2D(programState, address, rowCount, colCount, cellSize);

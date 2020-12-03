@@ -63,7 +63,7 @@ class _SubtitlesPopup extends React.PureComponent<SubtitlesPopupProps> {
                     </div>
                     <RadioGroup name='subtitles' selectedValue={loadedKey} onChange={this._selectSubtitles}>
                         <Radio value='none' label={getMessage('CLOSED_CAPTIONS_OFF')}/>
-                        {availKeys.map(function (key) {
+                        {availKeys.map(function(key) {
                             const option = langOptions.find(option => option.value === key);
 
                             return (

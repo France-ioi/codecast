@@ -1,5 +1,5 @@
-import DirectiveFrame from "./DirectiveFrame";
 import React from "react";
+import {DirectiveFrame} from "./DirectiveFrame";
 import {ShowVar as C_ShowVar} from "./c/utils";
 import {Array1D as C_Array1D} from "./c/array1d";
 import {Array2D as C_Array2D} from "./c/array2d";

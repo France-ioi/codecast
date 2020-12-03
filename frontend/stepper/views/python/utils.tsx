@@ -8,7 +8,7 @@ import React from 'react';
  *
  * @return {object|null}
  */
-export const getLoadedReferencesFromVariable = function (analysis, name) {
+export const getLoadedReferencesFromVariable = function(analysis, name) {
     // Check in the last (the current) and the first (which is the global) scopes.
 
     const nbScopes = analysis.functionCallStack.size;
@@ -30,7 +30,7 @@ export const getLoadedReferencesFromVariable = function (analysis, name) {
  *
  * @return {object|null}
  */
-export const getVariable = function (analysis, name) {
+export const getVariable = function(analysis, name) {
     // Check in the last (the current) and the first (which is the global) scopes.
 
     const nbScopes = analysis.functionCallStack.size;
@@ -50,7 +50,7 @@ export const getVariable = function (analysis, name) {
  *
  * @return {object|null}
  */
-export const getVariables = function (analysis, names) {
+export const getVariables = function(analysis, names) {
     return names.map((name) => {
         return {
             name,
@@ -67,7 +67,7 @@ export const getVariables = function (analysis, names) {
  *
  * @return {object|null}
  */
-const getVariableInScope = function (scope, name) {
+const getVariableInScope = function(scope, name) {
     if (scope.variables.has(name)) {
         return scope.variables.get(name);
     }
@@ -75,7 +75,7 @@ const getVariableInScope = function (scope, name) {
     return null;
 };
 
-export const renderValue = function (value) {
+export const renderValue = function(value) {
     if (value === undefined) {
         return 'noval';
     }
@@ -86,7 +86,7 @@ export const renderValue = function (value) {
     return value.toString();
 };
 
-const computeArrowPoints = function (p, headSize, tailSize) {
+const computeArrowPoints = function(p, headSize, tailSize) {
     const dx1 = headSize;
     const dy1 = headSize;
     const dx2 = headSize / 5;
@@ -100,7 +100,7 @@ const arrowDirFunc = {
     left: (dx, dy) => `${+dy},${+dx}`,
     right: (dx, dy) => `${-dy},${+dx}`
 };
-export const renderArrow = function (x: number, y: number, dir: 'right' | 'down' | 'up' | 'left', headSize: number, tailSize: number, style?: {}) {
+export const renderArrow = function(x: number, y: number, dir: 'right' | 'down' | 'up' | 'left', headSize: number, tailSize: number, style?: {}) {
     const ps = computeArrowPoints(arrowDirFunc[dir], headSize, tailSize);
 
     return <polygon points={ps} transform={`translate(${x},${y})`} {...style} />;

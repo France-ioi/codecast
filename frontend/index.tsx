@@ -1,7 +1,3 @@
-import 'es5-shim';
-import 'es6-shim';
-import 'array.prototype.fill'; // Array.prototype.fill
-import 'es6-symbol/implement'; // Symbol.iterator
 import './style.scss';
 
 import url from 'url';
@@ -13,7 +9,6 @@ import 'rc-slider/assets/index.css?global';
 import {Map} from 'immutable';
 import {AppStore} from './store';
 import {link} from './linker';
-
 import commonBundle from './common/index';
 import playerBundle from './player/index';
 import recorderBundle from './recorder/index';
@@ -31,6 +26,7 @@ import {StatisticsApp} from "./statistics/StatisticsApp";
 import {EditorApp} from "./editor/EditorApp";
 import {PlayerApp} from "./player/PlayerApp";
 import {RecorderApp} from "./recorder/RecorderApp";
+import {AppErrorBoundary} from "./common/AppErrorBoundary";
 
 interface Codecast {
     store: AppStore,
@@ -65,7 +61,7 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
     'Player.Tick': true
 };
 
-const {store, scope, finalize, start} = link(function (bundle) {
+const {store, scope, finalize, start} = link(function(bundle) {
     bundle.defineAction(ActionTypes.AppInit);
     bundle.addReducer(ActionTypes.AppInit, (_state, _action) => {
         return Map({scope});
@@ -78,7 +74,7 @@ const {store, scope, finalize, start} = link(function (bundle) {
     bundle.include(statisticsBundle);
 
     if (process.env.NODE_ENV === 'development') {
-        bundle.addEarlyReducer(function (state, action) {
+        bundle.addEarlyReducer(function(state, action) {
             if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
                 console.log('action', action);
             }
@@ -93,7 +89,6 @@ const {store, scope, finalize, start} = link(function (bundle) {
          */
         // installDevTools(Immutable);
     }
-
 });
 finalize(scope);
 
@@ -140,7 +135,7 @@ function clearUrl() {
     window.history.replaceState(null, document.title, url.format(currentUrl));
 }
 
-Codecast.start = function (options) {
+Codecast.start = function(options) {
     store.dispatch({type: ActionTypes.AppInit, payload: {options}});
 
     // remove source from url wihtout reloading
@@ -156,12 +151,15 @@ Codecast.start = function (options) {
         store.dispatch({type: StatisticsActionTypes.StatisticsInitLogData});
     }
 
-    let App;
+    let appDisplay;
     switch (options.start) {
         case 'recorder':
             autoLogin();
+
             store.dispatch({type: RecorderActionTypes.RecorderPrepare});
-            App = RecorderApp;
+
+            appDisplay = <RecorderApp />;
+
             break;
         case 'player':
             let audioUrl = options.audioUrl || `${options.baseDataUrl}.mp3`;
@@ -174,42 +172,52 @@ Codecast.start = function (options) {
                     data: options.data
                 }
             });
-            App = PlayerApp;
+
+            appDisplay = <PlayerApp />;
+
             break;
         case 'editor':
             autoLogin();
+
             store.dispatch({
                 type: EditorActionTypes.EditorPrepare,
                 payload: {
                     baseDataUrl: options.baseDataUrl
                 }
             });
-            App = EditorApp;
+
+            appDisplay = <EditorApp />;
+
             break;
         case 'statistics':
             autoLogin();
+
             store.dispatch({
                 type: StatisticsActionTypes.StatisticsPrepare
             });
-            App = StatisticsApp;
+
+            appDisplay = <StatisticsApp />;
+
             break;
         case 'sandbox':
             store.dispatch({
                 type: StatisticsActionTypes.StatisticsLogLoadingData
             });
-            App = SandboxApp;
+
+            appDisplay = <SandboxApp />;
+
             break;
         default:
-            App = () => <p>{"No such application: "}{options.start}</p>;
+            appDisplay = () => <p>{"No such application: "}{options.start}</p>;
+
             break;
     }
 
-    const {AppErrorBoundary} = scope;
     const container = document.getElementById('react-container');
     ReactDOM.render(
         <Provider store={store}>
             <AppErrorBoundary>
-                <App/>
+                {appDisplay}
             </AppErrorBoundary>
         </Provider>, container
     );

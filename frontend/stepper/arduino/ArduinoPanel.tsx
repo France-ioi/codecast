@@ -63,7 +63,7 @@ class _ArduinoPanel extends React.PureComponent<ArduinoPanelProps> {
         return (
             <form>
                 <div className='arduino-ports'>
-                    {portDefns.map(function (defn, index) {
+                    {portDefns.map(function(defn, index) {
                         const config = portConfigs[index];
                         const state = portStates[index];
                         return (

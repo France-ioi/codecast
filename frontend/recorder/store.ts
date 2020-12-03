@@ -14,15 +14,15 @@ import {ActionTypes} from "./actionTypes";
 
 */
 
-export default function (bundle) {
+export default function(bundle) {
     bundle.defineAction(ActionTypes.RecorderPreparing);
-    bundle.addReducer(ActionTypes.RecorderPreparing, function (state, action) {
+    bundle.addReducer(ActionTypes.RecorderPreparing, function(state, action) {
         const {progress} = action;
         return state.set('recorder', Map({status: 'preparing', progress}));
     });
 
     bundle.defineAction(ActionTypes.RecorderReady);
-    bundle.addReducer(ActionTypes.RecorderReady, function (state, {payload: {recorderContext}}) {
+    bundle.addReducer(ActionTypes.RecorderReady, function(state, {payload: {recorderContext}}) {
         return state.set('recorder', Map({
             status: 'ready',
             context: recorderContext,
@@ -31,12 +31,12 @@ export default function (bundle) {
     });
 
     bundle.defineAction(ActionTypes.RecorderStarting);
-    bundle.addReducer(ActionTypes.RecorderStarting, function (state, action) {
+    bundle.addReducer(ActionTypes.RecorderStarting, function(state, action) {
         return state.setIn(['recorder', 'status'], 'starting');
     });
 
     bundle.defineAction(ActionTypes.RecorderStarted);
-    bundle.addReducer(ActionTypes.RecorderStarted, function (state, action) {
+    bundle.addReducer(ActionTypes.RecorderStarted, function(state, action) {
         return state.update('recorder', recorder => recorder
             .set('status', 'recording')
             .set('timeOffset', 0)
@@ -46,17 +46,17 @@ export default function (bundle) {
     });
 
     bundle.defineAction(ActionTypes.RecorderStartFailed);
-    bundle.addReducer(ActionTypes.RecorderStartFailed, function (state, action) {
+    bundle.addReducer(ActionTypes.RecorderStartFailed, function(state, action) {
         return state.setIn(['recorder', 'status'], 'start_failed');
     });
 
     bundle.defineAction(ActionTypes.RecorderStopping);
-    bundle.addReducer(ActionTypes.RecorderStopping, function (state, action) {
+    bundle.addReducer(ActionTypes.RecorderStopping, function(state, action) {
         return state.setIn(['recorder', 'status'], 'stopping');
     });
 
     bundle.defineAction(ActionTypes.RecorderStopped);
-    bundle.addReducer(ActionTypes.RecorderStopped, function (state, action) {
+    bundle.addReducer(ActionTypes.RecorderStopped, function(state, action) {
         return state.setIn(['recorder', 'status'], 'stopped');
     });
 
@@ -71,7 +71,7 @@ export default function (bundle) {
     );
 
     bundle.defineAction(ActionTypes.RecorderTick);
-    bundle.addReducer(ActionTypes.RecorderTick, function (state, action) {
+    bundle.addReducer(ActionTypes.RecorderTick, function(state, action) {
         const {elapsed} = action;
 
         return state.setIn(['recorder', 'elapsed'], elapsed);

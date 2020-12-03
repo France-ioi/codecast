@@ -33,9 +33,9 @@ import * as C from 'persistent-c';
 import adt from 'adt';
 
 import {evalExpr, getList, getNumber, renderArrow, renderValue} from './utils';
-import { finalizeCursors, getCursorMap} from './array_utils';
+import {finalizeCursors, getCursorMap} from './array_utils';
 import {enumerateHeapBlocks} from '../../c/heap';
-import DirectiveFrame from "../DirectiveFrame";
+import {DirectiveFrame} from "../DirectiveFrame";
 
 interface MemoryCell {
     previous?: any,
@@ -54,7 +54,7 @@ interface MemoryOps {
     store?: any
 }
 
-const List = adt.data(function () {
+const List = adt.data(function() {
     return {
         Nil: null,
         Cons: {
@@ -86,7 +86,7 @@ function formatByte(byte) {
  */
 function saveByteMemoryOps(byteOps, memoryLog, address) {
     const ops = byteOps[address] = {};
-    memoryLog.forEach(function (entry, i) {
+    memoryLog.forEach(function(entry, i) {
         const ref = entry[1];
         const base = ref.address;
         if (base <= address) {
@@ -100,23 +100,17 @@ function saveByteMemoryOps(byteOps, memoryLog, address) {
 }
 
 function getByteRangeOps(byteOps, start, end) {
-    let load, store;
+    let load = -1, store = -1;
     for (let address = start; address <= end; address += 1) {
         const ops = byteOps[address];
+
         if (ops) {
-            load = maxDefinedRank(load, ops.load);
-            store = maxDefinedRank(store, ops.store);
+            load = Math.max(load, ops.load);
+            store = Math.max(store, ops.store);
         }
     }
-    return {load, store};
-}
 
-function maxDefinedRank(r1, r2) {
-    if (r1 === undefined)
-        return r2;
-    if (r2 === undefined)
-        return r1;
-    return Math.max(r1, r2);
+    return {load, store};
 }
 
 function viewValue(context, byteOps, ref) {
@@ -163,7 +157,7 @@ function formatLabelShort(name, path) {
     return '?';
 }
 
-const formatLabel = function (name, path) {
+const formatLabel = function(name, path) {
     const elems = [];
     while (!path.isNil) {
         const elem = path.get(0);
@@ -348,11 +342,11 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
         const {programState} = context;
         // Pretend currentAddress is just past the left of the visible area.
         const currentAddress = centerAddress - nBytesShown / 2;
-        let nextAddress;
+        let nextAddress = -1;
         let maxAddress = currentAddress;
         for (let marker of allMarkers(programState, localMap, cursorExprs)) {
-            const {kind, address} = marker;
-            if (address < currentAddress && (nextAddress === undefined || address > nextAddress)) {
+            const {address} = marker;
+            if ((address < currentAddress) && (address > nextAddress)) {
                 nextAddress = address;
             }
             if (address > maxAddress) {
@@ -374,11 +368,11 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
         const {programState} = context;
         // Pretend currentAddress is just past the right of the visible area.
         const currentAddress = centerAddress + nBytesShown / 2;
-        let nextAddress;
+        let nextAddress = -1;
         let minAddress = currentAddress;
         for (let marker of allMarkers(programState, localMap, cursorExprs)) {
-            const {kind, address} = marker;
-            if (currentAddress < address && (nextAddress === undefined || address < nextAddress)) {
+            const {address} = marker;
+            if ((currentAddress) < address && (address < nextAddress)) {
                 nextAddress = address;
             }
             if (address < minAddress) {
@@ -477,7 +471,7 @@ function GridDrawer({marginLeft, cellWidth, cellHeight}, y0) {
     const x0 = marginLeft;
     const y1 = y0 + cellHeight;
     return {
-        drawCellBorder: function (startCol, endCol) {
+        drawCellBorder: function(startCol, endCol) {
             const lx = x0 + startCol * cellWidth;
             rx = x0 + endCol * cellWidth;
             finalEndCol = endCol;
@@ -485,12 +479,12 @@ function GridDrawer({marginLeft, cellWidth, cellHeight}, y0) {
             hs.push({key: `ht${startCol}`, x1: lx, x2: rx, y: y0});
             hs.push({key: `hb${startCol}`, x1: lx, x2: rx, y: y1});
         },
-        fillCellBackground: function (startCol, endCol, className) {
+        fillCellBackground: function(startCol, endCol, className) {
             const x = x0 + startCol * cellWidth;
             const w = (endCol - startCol) * cellWidth;
             rs.push({key: `r${startCol}`, x, w, className});
         },
-        addCellClassName: function (col, className) {
+        addCellClassName: function(col, className) {
             const key = `v${col}`;
             if (key in ccs) {
                 ccs[key] = ccs[key] + ' ' + className;
@@ -498,7 +492,7 @@ function GridDrawer({marginLeft, cellWidth, cellHeight}, y0) {
                 ccs[key] = className;
             }
         },
-        finalize: function () {
+        finalize: function() {
             // Add the right border of the last cell.
             if (finalEndCol !== undefined) {
                 vs.push({key: `v${finalEndCol}`, x: rx, y1: y0, y2: y1});
@@ -590,7 +584,7 @@ function ExtraRow({layout, index, extraRow}) {
     const {size, cells} = extraRow;
     const x0 = layout.marginLeft;
     const y0 = layout.extraRowsTop + index * layout.cellHeight;
-    const width = size * layout.cellWidth;
+
     for (let cell of cells) {
         const {address} = cell;
         const x = x0 + address * layout.cellWidth;
@@ -600,6 +594,7 @@ function ExtraRow({layout, index, extraRow}) {
             </g>
         );
     }
+
     return <g className='extraRow'>{elements}</g>;
 }
 
@@ -611,6 +606,7 @@ function drawCellContent(cell, className, format, layout) {
     const y1 = y0 + layout.textLineHeight;
     const h1 = (layout.textLineHeight - layout.textBaseline) / 3;
     const currentClasses = classnames(['current-value', load !== undefined && 'value-load']);
+
     return (
         <g className={className}>
             {store !== undefined &&
@@ -637,7 +633,7 @@ function Cursors({layout, cursorRows, cursorMap}) {
         const x1 = layout.cellWidth / 2;
         const y1 = row * layout.textLineHeight + layout.textLineHeight - layout.textBaseline;
         const y2 = cursorRows * layout.textLineHeight + layout.minArrowHeight;
-        const fillColor = '#eef';
+
         elements.push(
             <g key={`c${index}`} transform={`translate(${x0},${y0})`} className='cursor'>
                 <text x={x1} y={y1}>{labels.join(",")}</text>
@@ -645,6 +641,7 @@ function Cursors({layout, cursorRows, cursorMap}) {
             </g>
         );
     }
+
     return <g className='cursors'>{elements}</g>;
 }
 
@@ -653,6 +650,7 @@ function clipCenterAddress({nBytesShown, context}, address) {
     address = Math.max(0, address);
     address = Math.min(context.programState.memory.size - 1, address);
     //address += nBytesShown / 2;
+
     return address;
 }
 
@@ -753,12 +751,14 @@ function extractView(layout, context, localMap, options) {
     const {programState, lastProgramState} = context;
     const {memory, memoryLog} = programState;
     const oldMemory = lastProgramState.memory;
-    const {nBytesShown, extraBytes, maxAddress, cursorRows} = options;
+    const {nBytesShown, extraBytes, maxAddress} = options;
     const centerAddress = options.centerAddress;
     let startAddress = Math.max(0, centerAddress - nBytesShown / 2);
+
     if (startAddress + nBytesShown >= maxAddress) {
         startAddress = maxAddress - nBytesShown + 1;
     }
+
     let endAddress = Math.min(maxAddress, Math.floor(startAddress + nBytesShown + extraBytes - 1));
     const cells = [];
     const byteOps = []; // sparse array of {load,store} objects
@@ -768,24 +768,30 @@ function extractView(layout, context, localMap, options) {
         if (address === centerAddress) {
             cell.center = true;
         }
+
         const ops: MemoryOps = saveByteMemoryOps(byteOps, memoryLog, address);
         cell.load = ops.load;
         if (ops.store !== undefined) {
             cell.store = ops.store;
             cell.previous = oldMemory.get(address);
         }
+
         cells.push(cell);
     }
+
     const bytes = {startAddress, endAddress, cells};
+
     // Build the cursor views.
-    const cursorMap = getCursorMap(
-        programState, localMap, options.cursorExprs, {
-            minIndex: startAddress, maxIndex: endAddress,
-            address: 0, cellSize: 1
-        });
+    const cursorMap = getCursorMap(programState, localMap, options.cursorExprs, {
+        minIndex: startAddress, maxIndex: endAddress,
+        address: 0, cellSize: 1
+    });
+
     finalizeCursors(range(startAddress, endAddress + 1), cursorMap, options.cursorRows);
+
     // Build the variables view.
     const variables = viewVariables(context, byteOps, startAddress, endAddress, options);
+
     // Build the extra-type views.
     const extraRows = [];
     for (let expr of options.extraExprs) {
@@ -799,20 +805,25 @@ function extractView(layout, context, localMap, options) {
             //console.log('failed to evaluate extra expression', expr, ex);
         }
     }
+
     // Add heap structure annotations to bytes.
     const heapMap = viewHeapFlags(programState, startAddress, endAddress);
+
     setCellClasses(bytes, cursorMap, heapMap);
+
     return {bytes, cursorMap, variables, extraRows};
 }
 
 function viewVariables(context, byteOps, startAddress, endAddress, options) {
     const cells = [];
-    const {memory, globalMap} = context.programState;
+    const {globalMap} = context.programState;
     let {scope} = context.programState;
+
     // Materialize the stack pointer.
     if (scope) {
         cells.push({sep: 'sp', address: scope.limit});
     }
+
     // Go up the stack until we find an area that contains startAddress.
     while (scope && scope.limit < startAddress) {
         const {type} = scope;
@@ -821,6 +832,7 @@ function viewVariables(context, byteOps, startAddress, endAddress, options) {
         }
         scope = scope.parent;
     }
+
     // View cells until a stack area starts past endAddress.
     while (scope && scope.limit <= endAddress) {
         const {limit, kind} = scope;
@@ -837,9 +849,10 @@ function viewVariables(context, byteOps, startAddress, endAddress, options) {
                 cells.push({sep: 'function', address: limit});
                 break;
         }
+
         scope = scope.parent;
     }
-    Object.keys(globalMap).forEach(function (name) {
+    Object.keys(globalMap).forEach(function(name) {
         /* Values in globalMap are BuiltinValue and PointerValue, and we only
            care about pointers. */
         const ref = globalMap[name];
@@ -847,6 +860,7 @@ function viewVariables(context, byteOps, startAddress, endAddress, options) {
             viewVariable(name, ref);
         }
     });
+
     return {cells};
 
     function viewVariable(name, ref) {

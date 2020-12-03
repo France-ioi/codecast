@@ -41,15 +41,13 @@ interface StepperContext {
     lineCounter: number
 }
 
-export default function (bundle) {
-
+export default function(bundle) {
     bundle.defineValue('stepperApi', {
         onInit, /* (stepperState, globalState) -- add an init callback */
         addSaga, /* (saga) -- add a stepper saga */
         onEffect, /* (name, handler: function* (stepperContext, …args)) -- register an effect */
         addBuiltin, /* (name, handler: function* (stepperContext, …args)) -- register a builtin */
     });
-
 }
 
 const initCallbacks = [];

@@ -33,7 +33,7 @@ function GetAudio() {
     var parse;
     var mpg;
 
-    this.setModules = function (parse2, mpg2) {
+    this.setModules = function(parse2, mpg2) {
         parse = parse2;
         mpg = mpg2;
     }
@@ -45,7 +45,7 @@ function Parse() {
     var id3;
     var pre;
 
-    this.setModules = function (ver2, id32, pre2) {
+    this.setModules = function(ver2, id32, pre2) {
         ver = ver2;
         id3 = id32;
         pre = pre2;
@@ -59,7 +59,7 @@ function ID3Tag() {
     var bits;
     var ver;
 
-    this.setModules = function (_bits, _ver) {
+    this.setModules = function(_bits, _ver) {
         bits = _bits;
         ver = _ver;
     }
@@ -116,7 +116,7 @@ function Mp3Encoder(channels, samplerate, kbps) {
     var mp3buf_size = 0 | (1.25 * maxSamples + 7200);
     var mp3buf = new_byte(mp3buf_size);
 
-    this.encodeBuffer = function (left, right) {
+    this.encodeBuffer = function(left, right) {
         if (channels == 1) {
             right = left;
         }
@@ -131,7 +131,7 @@ function Mp3Encoder(channels, samplerate, kbps) {
         return new Int8Array(mp3buf.subarray(0, _sz));
     };
 
-    this.flush = function () {
+    this.flush = function() {
         var _sz = lame.lame_encode_flush(gfp, mp3buf, 0, mp3buf_size);
         return new Int8Array(mp3buf.subarray(0, _sz));
     };
@@ -153,7 +153,7 @@ WavHeader.WAVE = fourccToInt("WAVE");
 WavHeader.fmt_ = fourccToInt("fmt ");
 WavHeader.data = fourccToInt("data");
 
-WavHeader.readHeader = function (dataView) {
+WavHeader.readHeader = function(dataView) {
     var w = new WavHeader();
 
     var header = dataView.getUint32(0, false);

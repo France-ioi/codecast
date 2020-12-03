@@ -4,10 +4,22 @@ import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {connect} from "react-redux";
 
-interface AppErrorBoundaryProps {
-    lastError: any,
-    children: any,
+interface AppErrorBoundaryStateToProps {
+    lastError: any
+}
+
+function mapStateToProps(state: AppStore): AppErrorBoundaryStateToProps {
+    return {
+        lastError: state.get('lastError')
+    };
+}
+
+interface AppErrorBoundaryDispatchToProps {
     dispatch: Function
+}
+
+interface AppErrorBoundaryProps extends AppErrorBoundaryStateToProps, AppErrorBoundaryDispatchToProps {
+    children?: any,
 }
 
 class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
@@ -16,7 +28,9 @@ class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
         if (!lastError) {
             return children;
         }
+
         const {source, error, info} = lastError;
+
         return (
             <div className='error-wrapper'>
                 <Dialog
@@ -29,13 +43,19 @@ class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
                         <p>{"Source: "}{source}</p>
                         <p style={{fontWeight: 'bold'}}>{(error || '').toString()}</p>
                         {source === 'react' &&
-                        <pre>{"Component stack:"}{info.componentStack}</pre>}
+                            <pre>{"Component stack:"}{info.componentStack}</pre>
+                        }
                     </div>
                 </Dialog>
                 {source !== 'react' &&
-                <div className='error-wrapper'>{children}</div>}
+                    <div className='error-wrapper'>{children}</div>
+                }
             </div>
         );
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true };
     }
 
     componentDidCatch(error, info) {
@@ -47,10 +67,4 @@ class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
     };
 }
 
-function mapStateToProps(state: AppStore) {
-    return {
-        lastError: state.get('lastError')
-    };
-}
-
-export const AppErrorBoundary = connect(mapStateToProps, null)(_AppErrorBoundary);
+export const AppErrorBoundary = connect(mapStateToProps)(_AppErrorBoundary);

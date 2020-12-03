@@ -1,10 +1,6 @@
-import React from 'react';
-import {ButtonGroup, Icon} from '@blueprintjs/core';
 import {ActionTypes} from "./actionTypes";
-import {LogoutButton} from "./LogoutButton";
-import {LoginScreen} from "./LoginScreen";
 
-export default function (bundle) {
+export default function(bundle) {
     bundle.defineAction(ActionTypes.LoginFeedback);
     bundle.addReducer(ActionTypes.LoginFeedback, loginFeedbackReducer);
 

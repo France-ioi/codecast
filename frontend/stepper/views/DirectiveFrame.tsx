@@ -5,12 +5,12 @@ import {Button} from "@blueprintjs/core";
 interface DirectiveFrameProps {
     directive?: any,
     controls?: any,
-    title?: any,
-    hasFullView?: any,
+    title?: string,
+    hasFullView?: boolean,
     onChange?: Function
 }
 
-class DirectiveFrame extends React.PureComponent<DirectiveFrameProps> {
+export class DirectiveFrame extends React.PureComponent<DirectiveFrameProps> {
     onToggleFullView = () => {
         const {directive, controls, onChange} = this.props;
         const update = {fullView: !controls.get('fullView')};
@@ -51,5 +51,3 @@ class DirectiveFrame extends React.PureComponent<DirectiveFrameProps> {
         );
     }
 }
-
-export default DirectiveFrame;

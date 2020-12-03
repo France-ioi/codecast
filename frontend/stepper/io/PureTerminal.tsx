@@ -55,10 +55,10 @@ export class PureTerminal extends React.PureComponent<PureTerminalProps> {
         return (
             <div ref={this.refTerminal} className="terminal" tabIndex={1} onKeyDown={this.onKeyDown}
                  onKeyUp={this.onKeyUp} onKeyPress={this.onKeyPress}>
-                {buffer.get('lines').map(function (line, i) {
+                {buffer.get('lines').map(function(line, i) {
                     return (
                         <div key={i} className="terminal-line" style={{width: '720px'}}>
-                            {line.map(function (cell, j) {
+                            {line.map(function(cell, j) {
                                 if (i == ci && j == cj) {
                                     return <span key={j} className="terminal-cursor">{cell.get('char')}</span>;
                                 }

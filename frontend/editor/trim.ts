@@ -79,10 +79,13 @@ function trimEditorIntervalChangedReducer(state, {payload: {position, value}}) {
 function addJumpInstants(instants, intervals) {
     /* Clear existing annotations (also copy the Array we will mutate). */
     instants = instants.filter(instant => instant.event);
+
     let skip = false, skipStart;
     for (let interval of intervals) {
         const mute = interval.value.mute;
+
         insertAnnotation(Math.max(1, interval.start), {mute});
+
         if (skip !== interval.value.skip) {
             if (!skip) {
                 skipStart = Math.max(1, interval.start);
@@ -96,16 +99,19 @@ function addJumpInstants(instants, intervals) {
     if (skip) {
         insertAnnotation(skipStart, {jump: instants[instants.length - 1].t})
     }
+
     return instants;
 
     function insertAnnotation(t, data) {
         let index = findInstantIndex(instants, t);
+
         /* Insert an annotation at the requested position, if necessary. */
         if (instants[index].t < t || instants[index].event) {
             const state = instants[index].state;
             index += 1;
             instants.splice(index, 0, {t, state});
         }
+
         instants[index] = {...instants[index], ...data};
     }
 }
@@ -127,31 +133,27 @@ function trimEditorSavingStepReducer(state, {payload: {step, status, progress, e
     return state.updateIn(['editor', 'trim'], st => update(st, {saving}));
 }
 
-function* trimSaga() {
+function* trimSaga(app) {
     yield takeLatest(ActionTypes.EditorTrimEnter, editorTrimEnterSaga);
     yield takeLatest(ActionTypes.EditorTrimReturn, editorTrimReturnSaga);
-    // @ts-ignore
-    yield takeLatest(ActionTypes.EditorTrimSave, editorTrimSaveReducer);
+    yield takeLatest(ActionTypes.EditorTrimSave, editorTrimSaveSaga);
 }
 
 function* editorTrimEnterSaga(_action) {
-    const {editorControlsChanged, TrimEditorControls, PlayerControls, TrimEditorReturn, switchToScreen} = yield select(state => state.get('scope'));
     /* XXX install return button */
     yield put({
-        type: editorControlsChanged, payload: {
-            controls: {
-                top: [TrimEditorControls, PlayerControls],
-                floating: [TrimEditorReturn]
-            }
+        type: ActionTypes.EditorControlsChanged,
+        payload: {
+            controls: 'trim'
         }
     });
-    yield put({type: switchToScreen, payload: {screen: 'edit'}});
+
+    yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'edit'}});
 }
 
 function* editorTrimReturnSaga(_action) {
-    yield put({type: ActionTypes.EditorControlsChanged, payload: {controls: {floating: []}}});
+    yield put({type: ActionTypes.EditorControlsChanged, payload: {controls: 'none'}});
     yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'setup'}});
-
 }
 
 function editorTrimSaveReducer(state, _action) {
@@ -178,15 +180,15 @@ function trimEditorSavingDoneReducer(state, {payload: {playerUrl}}) {
     }));
 }
 
-function* trimEditorSaveSaga({payload: {target}}) {
+function* editorTrimSaveSaga(action) {
     // TODO: put 'saving starts' action
     try {
         const editor = yield select(state => state.get('editor'));
         const {intervals} = editor.get('trim');
-        const {targets, playerUrl} = yield call(trimEditorPrepareUpload, target);
+        const {targets, playerUrl} = yield call(trimEditorPrepareUpload, action.payload.target);
         const data = editor.get('data');
         const eventsBlob = trimEvents(data, intervals);
-
+        debugger;
         yield call(trimEditorUpload, 'uploadEvents', targets.events, eventsBlob);
 
         const audioBuffer = editor.get('audioBuffer');

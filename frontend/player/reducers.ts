@@ -100,7 +100,7 @@ function playerTickReducer(state, {payload: {audioTime}}) {
 }
 
 function playerVolumeChangedReducer(state, {payload: {volume}}) {
-    return state.update('player', function (player) {
+    return state.update('player', function(player) {
         const audio = player.get('audio');
         audio.volume = volume;
 
@@ -109,7 +109,7 @@ function playerVolumeChangedReducer(state, {payload: {volume}}) {
 }
 
 function playerMutedChangedReducer(state, {payload: {isMuted}}) {
-    return state.update('player', function (player) {
+    return state.update('player', function(player) {
         const audio = player.get('audio');
         audio.muted = isMuted;
 

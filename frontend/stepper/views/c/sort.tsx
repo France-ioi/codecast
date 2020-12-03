@@ -3,7 +3,7 @@ import React from 'react';
 import {getList, getNumber, renderArrow, renderValue, viewExprs} from './utils';
 import {extractView} from './array_utils';
 import {SvgPan} from '../SvgPan';
-import DirectiveFrame from "../DirectiveFrame";
+import {DirectiveFrame} from "../DirectiveFrame";
 
 const marginLeft = 100;
 const marginTop = 4;
@@ -168,7 +168,7 @@ export class SortView extends React.PureComponent<SortViewProps> {
         view.nbCells = view.cells.length;
         // Find the largest cell value.
         let maxValue = 0;
-        view.cells.forEach(function (cell) {
+        view.cells.forEach(function(cell) {
             if (cell.content) {
                 const {kind, current} = cell.content;
                 if (kind === 'scalar' && 'number' in current) {

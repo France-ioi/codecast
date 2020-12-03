@@ -30,7 +30,7 @@ function getBrowser() {
 
     // Safari 3.0+ "[object HTMLElementConstructor]"
     // @ts-ignore
-    const isSafari = /constructor/i.test(window.HTMLElement) || (function (p) {
+    const isSafari = /constructor/i.test(window.HTMLElement) || (function(p) {
         return p.toString() === "[object SafariRemoteNotification]";
     })
     // @ts-ignore

@@ -3,7 +3,7 @@ import React from 'react';
 import {extractView} from './array2d_model';
 import {getList, getNumber, renderArrow, renderValue} from './utils';
 import {SvgPan} from '../SvgPan';
-import DirectiveFrame from "../DirectiveFrame";
+import {DirectiveFrame} from "../DirectiveFrame";
 
 const textLineHeight = 18;
 const textBaseline = 5; // from bottom
@@ -42,12 +42,12 @@ interface Array2DParams {
 function drawCells(view) {
     const {rows} = view;
     const elements = [];
-    rows.forEach(function (row, i) {
+    rows.forEach(function(row, i) {
         const rowIndex = row.index;
         const y1 = textLineHeight * 1 - textBaseline;
         const y1a = y1 - strikeThroughHeight;
         const y2 = textLineHeight * 2 - textBaseline;
-        row.content.forEach(function (cell, j) {
+        row.content.forEach(function(cell, j) {
             const colIndex = cell.index;
             const {content} = cell;
             const x = 0.5 * cellWidth;
@@ -179,7 +179,6 @@ interface Array2DProps {
 }
 
 export class Array2D extends React.PureComponent<Array2DProps> {
-
     render() {
         const {scale, directive, functionCallStack, context, getMessage} = this.props;
         const {byName, byPos} = directive;
@@ -193,10 +192,12 @@ export class Array2D extends React.PureComponent<Array2DProps> {
         const extractedView = extractView(context, functionCallStack[0], expr, view);
         Object.assign(view, extractedView);
         if (view.error) {
+            console.log(view.error);
             return (
                 <DirectiveFrame {...this.props}>
                     <div className='clearfix'>{view.error}</div>
-                </DirectiveFrame>);
+                </DirectiveFrame>
+            );
         }
 
         const {rowCount, colCount, rowInfoMap, colInfoMap} = view;
@@ -236,5 +237,4 @@ export class Array2D extends React.PureComponent<Array2DProps> {
         vPan -= dy / cellHeight;
         this.props.onChange(this.props.directive, {hPan, vPan});
     };
-
 }

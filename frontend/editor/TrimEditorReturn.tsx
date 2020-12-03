@@ -1,12 +1,17 @@
 import React from "react";
 import {Button} from "@blueprintjs/core";
 import {ActionTypes} from "./actionTypes";
+import {connect} from "react-redux";
 
-interface TrimEditorReturnProps {
+interface TrimEditorReturnDispatchToProps {
     dispatch: Function
 }
 
-export class TrimEditorReturn extends React.PureComponent<TrimEditorReturnProps> {
+interface TrimEditorReturnProps extends TrimEditorReturnDispatchToProps {
+
+}
+
+class _TrimEditorReturn extends React.PureComponent<TrimEditorReturnProps> {
     render() {
         return <Button onClick={this._return} icon='direction-left' text='Back'/>;
     }
@@ -15,3 +20,5 @@ export class TrimEditorReturn extends React.PureComponent<TrimEditorReturnProps>
         this.props.dispatch({type: ActionTypes.EditorTrimReturn});
     };
 }
+
+export const TrimEditorReturn = connect()(_TrimEditorReturn);

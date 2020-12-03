@@ -3,11 +3,11 @@ import {Editor} from "./Editor";
 import {ActionTypes} from "./actionTypes";
 import {connect} from "react-redux";
 
-interface ExamplePickerDispatchToProps {
+interface BufferEditorDispatchToProps {
     dispatch: Function
 }
 
-interface BufferEditorProps extends ExamplePickerDispatchToProps {
+interface BufferEditorProps extends BufferEditorDispatchToProps {
     readOnly?: boolean,
     shield?: boolean,
     theme?: string,

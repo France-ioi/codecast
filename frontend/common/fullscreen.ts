@@ -6,35 +6,35 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {FullscreenButton} from "./FullscreenButton";
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, function (state, _action) {
+    bundle.addReducer(AppActionTypes.AppInit, function(state, _action) {
         return state.set('fullscreen', Map({active: false, enabled: false}));
     });
 
     bundle.defineAction(ActionTypes.FullscreenEnter);
 
     bundle.defineAction(ActionTypes.FullscreenEnterSucceeded);
-    bundle.addReducer(ActionTypes.FullscreenEnterSucceeded, function (state, action) {
+    bundle.addReducer(ActionTypes.FullscreenEnterSucceeded, function(state, action) {
         return state.setIn(['fullscreen', 'active'], true);
     });
 
     bundle.defineAction(ActionTypes.FullscreenEnterFailed);
-    bundle.addReducer(ActionTypes.FullscreenEnterFailed, function (state, action) {
+    bundle.addReducer(ActionTypes.FullscreenEnterFailed, function(state, action) {
         return state.setIn(['fullscreen', 'enabled'], false);
     });
 
     bundle.defineAction(ActionTypes.FullscreenLeave);
 
     bundle.defineAction(ActionTypes.FullscreenLeaveSucceeded);
-    bundle.addReducer(ActionTypes.FullscreenLeaveSucceeded, function (state, action) {
+    bundle.addReducer(ActionTypes.FullscreenLeaveSucceeded, function(state, action) {
         return state.setIn(['fullscreen', 'active'], false);
     });
 
     bundle.defineAction(ActionTypes.FullscreenEnabled);
-    bundle.addReducer(ActionTypes.FullscreenEnabled, function (state, action) {
+    bundle.addReducer(ActionTypes.FullscreenEnabled, function(state, action) {
         return state.setIn(['fullscreen', 'enabled'], action.enabled);
     });
 
-    const fullscreenMonitorChannel = eventChannel(function (listener) {
+    const fullscreenMonitorChannel = eventChannel(function(listener) {
         const elem = window.document;
 
         function onFullscreenChange() {
@@ -53,7 +53,7 @@ export default function(bundle) {
         elem.addEventListener('fullscreenerror', onFullscreenError);
         elem.addEventListener('mozfullscreenerror', onFullscreenError);
         elem.addEventListener('webkitfullscreenerror', onFullscreenError);
-        return function () {
+        return function() {
             elem.removeEventListener('fullscreenchange', onFullscreenChange);
             elem.removeEventListener('mozfullscreenchange', onFullscreenChange);
             elem.removeEventListener('webkitfullscreenchange', onFullscreenChange);

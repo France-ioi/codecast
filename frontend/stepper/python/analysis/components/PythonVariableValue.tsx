@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Map} from 'immutable';
-import PythonVariable from "./PythonVariable";
+import {PythonVariable} from "./PythonVariable";
 import {connect} from "react-redux";
 import {isLoaded} from "../helpers";
 import {isEmptyObject} from "../../../../utils/javascript";
@@ -18,7 +18,7 @@ interface PythonVariableValueProps {
     visited: any
 }
 
-class PythonVariableValue extends React.PureComponent<PythonVariableValueProps> {
+class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps> {
     constructor(props) {
         super(props);
 
@@ -231,7 +231,7 @@ class PythonVariableValue extends React.PureComponent<PythonVariableValueProps> 
 
                     return (
                         <span key={index}>
-                            <ConnectedPythonVariableValue
+                            <PythonVariableValue
                                 cur={element.cur}
                                 old={element.old}
                                 visited={visited}
@@ -311,7 +311,7 @@ class PythonVariableValue extends React.PureComponent<PythonVariableValueProps> 
             return (
                 <React.Fragment>
                     {wasVisited ? '...' : (
-                        <ConnectedPythonVariableValue
+                        <PythonVariableValue
                             cur={this.props.cur.$d}
                             old={old}
                             visited={visited}
@@ -338,7 +338,7 @@ class PythonVariableValue extends React.PureComponent<PythonVariableValueProps> 
                 <React.Fragment>
                     <span className="value-iterator">&lt;{iteratorType}&gt;</span>
                     (
-                    <ConnectedPythonVariableValue
+                    <PythonVariableValue
                         cur={this.props.cur.myobj}
                         old={old}
                         loadedReferences={loadedReferences}
@@ -381,6 +381,4 @@ const mapDispatchToProps = (dispatch) => {
     }
 }
 
-const ConnectedPythonVariableValue = connect(null, mapDispatchToProps)(PythonVariableValue);
-
-export default ConnectedPythonVariableValue;
+export const PythonVariableValue = connect(null, mapDispatchToProps)(_PythonVariableValue);

@@ -18,12 +18,13 @@ export class SubtitlePaneItem extends React.PureComponent<SubtitlePaneItemProps>
         const showTimestamps = false;
 
         return (
-            <p className={classnames(['subtitles-item', selected && 'subtitles-item-selected'])}
-               onClick={this._onClick}>
-                {showTimestamps && <span className='subtitles-timestamp'>{formatTime(start)}</span>}
+            <p className={classnames(['subtitles-item', selected && 'subtitles-item-selected'])} onClick={this._onClick}>
+                {showTimestamps &&
+                    <span className='subtitles-timestamp'>{formatTime(start)}</span>
+                }
                 <span className='subtitles-text'>
-          <Highlight search={highlight || ''}>{text}</Highlight>
-        </span>
+                    <Highlight search={highlight || ''}>{text}</Highlight>
+                </span>
             </p>
         );
     }

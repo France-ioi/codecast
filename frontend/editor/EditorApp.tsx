@@ -7,6 +7,8 @@ import {AppStore} from "../store";
 import {SetupScreen} from "./SetupScreen";
 import {LoginScreen} from "../common/LoginScreen";
 import {EditScreen} from "./EditScreen";
+import {TrimEditorReturn} from "./TrimEditorReturn";
+import {SubtitlesEditorReturn} from "../subtitles/SubtitlesEditorReturn";
 
 enum EditorAppActivity {
     None,
@@ -17,13 +19,13 @@ enum EditorAppActivity {
 
 interface EditorAppStateToProps {
     activity: EditorAppActivity,
-    floatingControls: any
+    controls: 'none' | 'trim' | 'subtitles'
 }
 
 function mapStateToProps(state: AppStore): EditorAppStateToProps {
     const user = state.get('user');
     const screen = state.get('screen');
-    const floatingControls = state.getIn(['editor', 'controls']).floating;
+    const controls = state.getIn(['editor', 'controls']);
 
     let activity = EditorAppActivity.None;
     if (!user) {
@@ -34,7 +36,7 @@ function mapStateToProps(state: AppStore): EditorAppStateToProps {
         activity = EditorAppActivity.Edit;
     }
 
-    return {activity, floatingControls};
+    return {activity, controls};
 }
 
 interface EditorAppDispatchToProps {
@@ -49,7 +51,7 @@ class _EditorApp extends React.PureComponent<EditorAppProps> {
     state = {collapsed: false};
 
     render() {
-        const {activity, floatingControls} = this.props;
+        const {activity, controls} = this.props;
         const {collapsed} = this.state;
 
         const iconName = (collapsed) ? 'chevron-down' : 'chevron-up';
@@ -63,6 +65,13 @@ class _EditorApp extends React.PureComponent<EditorAppProps> {
             screen = <EditScreen />;
         }
 
+        let displayControls = null;
+        if (controls === 'trim') {
+            displayControls = <TrimEditorReturn />;
+        } else if (controls === 'subtitles') {
+            displayControls = <SubtitlesEditorReturn />;
+        }
+
         return (
             <div id='editor-app'>
                 <div id='floating-controls' className={classnames({collapsed})}>
@@ -70,9 +79,8 @@ class _EditorApp extends React.PureComponent<EditorAppProps> {
                         <Icon icon={iconName}/>
                     </span>
                     <div className='btn-group'>
-                        {floatingControls.map((Component, i) =>
-                            <Component key={i} />
-                        )}
+                        {displayControls}
+
                         {(activity === EditorAppActivity.Setup || activity === EditorAppActivity.Edit) &&
                             <LogoutButton />
                         }

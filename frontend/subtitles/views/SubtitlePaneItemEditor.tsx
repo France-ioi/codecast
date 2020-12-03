@@ -1,5 +1,5 @@
-import {NodeCue} from "subtitle";
 import React from "react";
+import {NodeCue} from "subtitle";
 import {Button} from "@blueprintjs/core";
 import {IconNames} from "@blueprintjs/icons";
 import {formatTimeLong} from "../../common/utils";

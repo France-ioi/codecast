@@ -16,7 +16,7 @@ import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {getPlayerState} from "../player/selectors";
 import {getRecorderState} from "./selectors";
 
-export default function (bundle, deps) {
+export default function(bundle, deps) {
     bundle.use('recordApi');
 
     function* recorderPrepare() {
@@ -77,7 +77,7 @@ export default function (bundle, deps) {
                 }
             });
             // Set up the ScriptProcessor to divert all buffers to the worker.
-            scriptProcessor.onaudioprocess = function (event) {
+            scriptProcessor.onaudioprocess = function(event) {
                 // dispatch event
                 // TODO: use same number of channels as in createScriptProcessor
                 const ch0 = event.inputBuffer.getChannelData(0);
@@ -306,13 +306,12 @@ export default function (bundle, deps) {
         yield takeEvery(ActionTypes.RecorderResume, recorderResume);
     });
 
-    bundle.defer(function ({replayApi}) {
-        replayApi.on('end', function (replayContext, event) {
+    bundle.defer(function({replayApi}) {
+        replayApi.on('end', function(replayContext, event) {
             replayContext.instant.isEnd = true;
             replayContext.state = replayContext.state.set('stopped', true);
         });
     });
-
 };
 
 function getAudioStream() {
@@ -324,7 +323,7 @@ function getAudioStream() {
         // Use deprecated API taking two callbacks.
         // @ts-ignore
       const getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-        return new Promise(function (resolve, reject) {
+        return new Promise(function(resolve, reject) {
             getUserMedia.call(navigator, constraints, resolve, reject);
         });
     }

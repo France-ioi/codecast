@@ -10,7 +10,7 @@ class Document {
             return 0;
         }
 
-        return this.lines.reduce(function (a, v) {
+        return this.lines.reduce(function(a, v) {
             return (a + v.length + 1);
         }, 0) - 1;
     };
@@ -70,13 +70,13 @@ class Document {
     };
 }
 
-export const documentFromString = function (text: string): Document {
+export const documentFromString = function(text: string): Document {
     return new Document(List<string>(text.split('\n')));
 };
 
 export const emptyDocument = documentFromString('');
 
-export const compressRange = function (range) {
+export const compressRange = function(range) {
     const {start, end} = range;
     if (start.row === end.row && start.column === end.column) {
         return [start.row, start.column];
@@ -85,7 +85,7 @@ export const compressRange = function (range) {
     }
 };
 
-export const expandRange = function (range) {
+export const expandRange = function(range) {
     if (range.length === 2) {
         const pos = {row: range[0], column: range[1]};
         return {start: pos, end: pos};

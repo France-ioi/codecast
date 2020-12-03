@@ -53,7 +53,7 @@ function editorPrepareReducer(state, {payload: {baseDataUrl}}) {
         playerUrl: `${baseUrl}/player?base=${encodeURIComponent(baseDataUrl)}`,
         setupTabId: 'setup-tab-infos',
         audioLoadProgress: 0,
-        controls: {floating: [], top: []},
+        controls: 'none',
         canSave: userHasGrant(state.get('user'), baseDataUrl)
     }));
 }
@@ -80,7 +80,7 @@ function userHasGrant(user, dataUrl) {
 }
 
 function editorControlsChangedReducer(state, {payload: {controls}}) {
-    return state.updateIn(['editor', 'controls'], oldControls => ({...oldControls, ...controls}));
+    return state.setIn(['editor', 'controls'], controls);
 }
 
 function editorAudioLoadProgressReducer(state, {payload: {value}}) {
@@ -119,6 +119,7 @@ function* editorPrepareSaga(app, action) {
     });
 
     const {payload: {data}} = yield take(PlayerActionTypes.PlayerReady);
+
     yield put({type: ActionTypes.EditorPlayerReady, payload: {data}});
 }
 

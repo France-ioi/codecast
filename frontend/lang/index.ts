@@ -17,10 +17,10 @@ export const Languages = {
 };
 
 const Message = {
-    toString: function () {
+    toString: function() {
         return this._m;
     },
-    format: function (...args) {
+    format: function(...args) {
         if (!this._f) {
             this._f = new IntlMessageFormat(this._m, this._l);
         }
@@ -55,12 +55,12 @@ function setLanguageReducer(state, {payload: {language}}) {
     if (!Languages[language]) language = 'en-US';
     const localizedMessage = Object.create(Message,
         {_l: {writable: false, configurable: false, value: language}});
-    const getMessage = memoize(function (message, defaultText) {
+    const getMessage = memoize(function(message, defaultText) {
         const value = Languages[language][message] || defaultText || `L:${message}`;
         return Object.create(localizedMessage,
             {_m: {writable: false, configurable: false, value}});
     });
-    getMessage.format = function (value) {
+    getMessage.format = function(value) {
         if (value instanceof Error && value.name === 'LocalizedError') {
             // @ts-ignore
             return getMessage(value.message).format(value.args);

@@ -6,7 +6,7 @@ import {put, select, takeLatest} from 'redux-saga/effects';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {ActionTypes} from "./actionTypes";
 
-export default function (bundle) {
+export default function(bundle) {
     /* Initialize the available options from the recording's data when the
        player is ready. */
     bundle.addReducer(PlayerActionTypes.PlayerReady, playerReadyReducer);
@@ -38,7 +38,7 @@ function playerReadyReducer(state, {payload: {baseDataUrl, data}}) {
     const availableOptions = {};
     const {langOptions} = state.get('subtitles');
 
-    (data.subtitles || []).forEach(function (key) {
+    (data.subtitles || []).forEach(function(key) {
         const url = `${baseDataUrl}_${key}.srt`;
         const option = langOptions.find(option => option.value === key);
         availableOptions[key] = {key, url, ...option};
@@ -58,19 +58,19 @@ function playerReadyReducer(state, {payload: {baseDataUrl, data}}) {
 function playerSeekedReducer(state, action) {
     const {seekTo} = action;
 
-    return state.update('subtitles', function (subtitles) {
+    return state.update('subtitles', function(subtitles) {
         return updateCurrentItem(subtitles, seekTo);
     });
 }
 
 function playerTickReducer(state, {payload: {audioTime}}) {
-    return state.update('subtitles', function (subtitles) {
+    return state.update('subtitles', function(subtitles) {
         return updateCurrentItem(subtitles, audioTime);
     });
 }
 
 function subtitlesTextChangedReducer(state, {payload: {text}}) {
-    return state.update('subtitles', function (subtitles) {
+    return state.update('subtitles', function(subtitles) {
         const {selectedKey: key} = subtitles;
 
         return update(subtitles, {availableOptions: {[key]: {text: {$set: text}}}});

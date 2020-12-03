@@ -101,16 +101,16 @@ export default function(bundle) {
         });
     }
 
-    bundle.defer(function ({recordApi, replayApi, stepperApi}) {
+    bundle.defer(function({recordApi, replayApi, stepperApi}) {
         recordApi.on(ActionTypes.StackViewPathToggle, function* (addEvent, action) {
             yield call(addEvent, 'stackview.path.toggle', action);
         });
-        replayApi.on('stackview.path.toggle', function (replayContext, event) {
+        replayApi.on('stackview.path.toggle', function(replayContext, event) {
             const action = event[2];
             replayContext.state = stackViewPathToggle(replayContext.state, action);
         });
 
-        stepperApi.onInit(function (stepperState, globalState) {
+        stepperApi.onInit(function(stepperState, globalState) {
             const {platform} = globalState.get('options');
             const sourceModel = globalState.getIn(['buffers', 'source', 'model']);
             const source = sourceModel.get('document').toString();

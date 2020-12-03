@@ -56,7 +56,7 @@ class _SetupScreen extends React.PureComponent<SetupScreenProps> {
     render() {
         const {step, progress} = this.props;
 
-        if (step) {
+        if (step === 'loading' || step === 'preparing') {
             return (
                 <div className='cc-container'>
                     {step === 'loading' &&

@@ -40,10 +40,10 @@ export function filterItems(items, re) {
 }
 
 export function getSubtitles(url) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
         const req = request.get(url);
         req.set('Accept', 'text/plain'); // XXX mime-type for srt?
-        req.end(function (err, res) {
+        req.end(function(err, res) {
             if (err && err.statusCode === 200) {
                 return resolve(err.rawResponse);
             }

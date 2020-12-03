@@ -94,7 +94,7 @@ const BufferState = Record({
     editor: null
 });
 
-export default function (bundle) {
+export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, initReducer);
 
     bundle.defineAction(ActionTypes.BufferInit);
@@ -124,7 +124,6 @@ export default function (bundle) {
 
     bundle.defer(addRecordHooks);
     bundle.defer(addReplayHooks);
-
 };
 
 function initReducer(state, {payload: {options: {source, input}}}) {
@@ -312,20 +311,19 @@ function addRecordHooks({recordApi}) {
 }
 
 function addReplayHooks({replayApi}) {
-    replayApi.on('start', function (replayContext, event) {
+    replayApi.on('start', function(replayContext, event) {
         const {buffers} = event[2];
         const sourceModel = buffers && buffers.source ? loadBufferModel(buffers.source) : DocumentModel();
         const inputModel = buffers && buffers.input ? loadBufferModel(buffers.input) : DocumentModel();
         const outputModel = DocumentModel();
 
-        replayContext.state = replayContext.state.set('buffers',
-            Map({
-                source: Map({model: sourceModel}),
-                input: Map({model: inputModel}),
-                output: Map({model: outputModel})
-            }));
+        replayContext.state = replayContext.state.set('buffers', Map({
+            source: Map({model: sourceModel}),
+            input: Map({model: inputModel}),
+            output: Map({model: outputModel})
+        }));
     });
-    replayApi.on('buffer.select', function (replayContext, event) {
+    replayApi.on('buffer.select', function(replayContext, event) {
         // XXX use reducer imported from common/buffers
         const buffer = event[2];
         const selection = expandRange(event[3]);
@@ -335,7 +333,7 @@ function addReplayHooks({replayApi}) {
             yield put({type: ActionTypes.BufferModelSelect, buffer, selection});
         });
     });
-    replayApi.on(['buffer.insert', 'buffer.delete'], function (replayContext, event) {
+    replayApi.on(['buffer.insert', 'buffer.delete'], function(replayContext, event) {
         // XXX use reducer imported from common/buffers
         const buffer = event[2];
         const range = expandRange(event[3]);
@@ -361,7 +359,7 @@ function addReplayHooks({replayApi}) {
             });
         }
     });
-    replayApi.on('buffer.scroll', function (replayContext, event) {
+    replayApi.on('buffer.scroll', function(replayContext, event) {
         // XXX use reducer imported from common/buffers
         const buffer = event[2];
         const firstVisibleRow = event[3];

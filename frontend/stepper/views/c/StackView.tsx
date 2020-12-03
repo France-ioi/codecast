@@ -93,7 +93,7 @@ class _StackView extends React.PureComponent<StackViewProps> {
         const {analysis, firstVisible, firstExpanded, maxVisible, maxExpanded} = this.props;
         let {functionCallStack} = analysis;
         /* Hide function calls that have no position in user code. */
-        functionCallStack = functionCallStack.filter(function (stackFrame) {
+        functionCallStack = functionCallStack.filter(function(stackFrame) {
             return stackFrame.get('func').body[1].range;
         });
 
@@ -101,7 +101,7 @@ class _StackView extends React.PureComponent<StackViewProps> {
         functionCallStack = functionCallStack.reverse();
         const beyondVisible = Math.min(functionCallStack.size, firstVisible + maxVisible);
         const tailCount = functionCallStack.size - beyondVisible;
-        const views = functionCallStack.slice(firstVisible, beyondVisible).map(function (stackFrame, depth) {
+        const views = functionCallStack.slice(firstVisible, beyondVisible).map(function(stackFrame, depth) {
             const focus = depth >= firstExpanded && depth < firstExpanded + maxExpanded;
             const view = viewStackFrame(context, stackFrame, {locals: focus});
             view.focus = focus;

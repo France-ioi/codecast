@@ -2,8 +2,8 @@ import {buffers, eventChannel} from 'redux-saga';
 import {put, take} from 'redux-saga/effects'
 
 export default function(bundle) {
-    const messageChannel = eventChannel(function (listener) {
-        const onMessage = function (event) {
+    const messageChannel = eventChannel(function(listener) {
+        const onMessage = function(event) {
             const {source, data} = event;
             let message;
             if (typeof data === 'object') {
@@ -19,7 +19,7 @@ export default function(bundle) {
         };
 
         window.addEventListener('message', onMessage);
-        return function () {
+        return function() {
             window.removeEventListener('message', onMessage);
         };
     }, buffers.expanding(1));

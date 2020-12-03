@@ -9,15 +9,11 @@ import FileSaver from 'file-saver';
 
 import {postJson} from '../common/utils';
 import {getSubtitles, updateCurrentItem} from './utils';
-import {SubtitlesEditorPane} from "./views/SubtitlesEditorPane";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import {PlayerControls} from "../player/PlayerControls";
-import {SubtitlesEditor} from "./SubtitlesEditor";
-import {SubtitlesEditorReturn} from "./SubtitlesEditorReturn";
 
-export default function (bundle) {
+export default function(bundle) {
     bundle.defineAction(ActionTypes.SubtitlesSelected);
     bundle.addReducer(ActionTypes.SubtitlesSelected, subtitlesSelectedReducer);
 
@@ -96,7 +92,7 @@ function subtitlesSelectedReducer(state, {payload: {option}}) {
 }
 
 function subtitlesAddOptionReducer(state, {payload: {key, select}}) {
-    return state.update('subtitles', function (subtitles) {
+    return state.update('subtitles', function(subtitles) {
         const option = subtitles.availableOptions[key];
         if (!option) {
             const base = subtitles.langOptions.find(option => option.value === key);
@@ -113,7 +109,7 @@ function subtitlesAddOptionReducer(state, {payload: {key, select}}) {
 }
 
 function subtitlesRemoveOptionReducer(state, {payload: {key}}) {
-    return state.update('subtitles', function (subtitles) {
+    return state.update('subtitles', function(subtitles) {
         const changes: Spec<any> = {availableOptions: {[key]: {removed: {$set: true}}}};
         if (subtitles.selectedKey === key) {
             changes.selectedKey = {$set: null};
@@ -130,7 +126,7 @@ function subtitlesTextChangedReducer(state, {payload: {text, unsaved}}) {
         changes.unsaved = {$set: unsaved}
     }
 
-    return state.update('subtitles', function (subtitles) {
+    return state.update('subtitles', function(subtitles) {
         const {selectedKey: key} = subtitles;
 
         return setUnsaved(clearNotify(update(subtitles, {availableOptions: {[key]: changes}})));
@@ -138,13 +134,13 @@ function subtitlesTextChangedReducer(state, {payload: {text, unsaved}}) {
 }
 
 function subtitlesItemChangedReducer(state, {payload: {index, text}}) {
-    return state.update('subtitles', function (subtitles) {
+    return state.update('subtitles', function(subtitles) {
         return update(subtitles, {items: {[index]: {data: {text: {$set: text}}}}});
     });
 }
 
 function subtitlesItemInsertedReducer(state, {payload: {index, offset, where}}) {
-    return state.update('subtitles', function (subtitles) {
+    return state.update('subtitles', function(subtitles) {
         const {data: {start, end, text}} = subtitles.items[index];
         const split = start + offset;
         if (start > split && split > end) {
@@ -216,7 +212,7 @@ function subtitlesItemInsertedReducer(state, {payload: {index, offset, where}}) 
 }
 
 function subtitlesItemRemovedReducer(state, {payload: {index, merge}}) {
-    return state.update('subtitles', function (subtitles) {
+    return state.update('subtitles', function(subtitles) {
         if (index === 0 && merge === 'up') {
             return subtitles;
         }
@@ -256,7 +252,7 @@ function subtitlesItemRemovedReducer(state, {payload: {index, merge}}) {
 }
 
 function subtitlesItemShiftedReducer(state, {payload: {index, amount}}) {
-    return state.update('subtitles', function (subtitles) {
+    return state.update('subtitles', function(subtitles) {
         if (index === 0) {
             return subtitles;
         }
@@ -286,7 +282,7 @@ function subtitlesItemShiftedReducer(state, {payload: {index, amount}}) {
 }
 
 function subtitlesSaveReducer(state, action) {
-    return state.update('subtitles', function (subtitles) {
+    return state.update('subtitles', function(subtitles) {
         const {selectedKey: key, items} = subtitles;
         const text = stringifySync(items, {
             format: 'SRT'
@@ -347,7 +343,9 @@ function* subtitlesEditorEnterSaga(state, _action) {
     yield put({type: ActionTypes.SubtitlesEditingChanged, payload: {editing: true}});
     yield put({
         type: EditorActionTypes.EditorControlsChanged,
-        payload: {controls: {top: [PlayerControls], floating: [SubtitlesEditorReturn]}}
+        payload: {
+            controls: 'subtitles'
+        }
     });
     yield put({type: ActionTypes.SubtitlesReload});
     yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'edit'}});
@@ -356,12 +354,12 @@ function* subtitlesEditorEnterSaga(state, _action) {
 function* subtitlesEditorReturnSaga(state, _action) {
     yield put({type: ActionTypes.SubtitlesSave});
     yield put({type: ActionTypes.SubtitlesEditingChanged, payload: {editing: false}});
-    yield put({type: EditorActionTypes.EditorControlsChanged, payload: {controls: {floating: []}}});
+    yield put({type: EditorActionTypes.EditorControlsChanged, payload: {controls: 'none'}});
     yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'setup'}});
 }
 
 function* subtitlesEditorSaveSaga(state, _action) {
-    const {baseUrl, base, subtitles} = yield select(function (state) {
+    const {baseUrl, base, subtitles} = yield select(function(state) {
         const {baseUrl} = state.get('options');
         const editor = state.get('editor');
         const base = editor.get('base');

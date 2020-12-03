@@ -1,7 +1,7 @@
 import {delay} from 'redux-saga/effects';
 
 export default function(bundle) {
-    bundle.defer(function ({stepperApi}) {
+    bundle.defer(function({stepperApi}) {
         stepperApi.addBuiltin('delay', function* delayBuiltin(stepperContext, millis) {
             function* delaySaga() {
                 yield delay(millis.toInteger());
@@ -11,4 +11,4 @@ export default function(bundle) {
             yield ['interact', {saga: delaySaga}];
         });
     });
-};
+}

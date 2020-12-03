@@ -64,7 +64,7 @@ function editorSaveSucceededReducer(state, action) {
 }
 
 function* editorSaveAudioSaga(_app, _action) {
-    const {id, name} = yield select(function (state) {
+    const {id, name} = yield select(function(state) {
         const editor = state.get('editor');
         const id = editor.get('base').replace(/^.*\//, '');
         const name = (editor.get('data').name || '').trim();
@@ -78,7 +78,7 @@ function* editorSaveAudioSaga(_app, _action) {
 }
 
 function* editorSaveSaga(app, _action) {
-    const {baseUrl, base, name} = yield select(function (state) {
+    const {baseUrl, base, name} = yield select(function(state) {
         const {baseUrl} = state.get('options');
         const editor = state.get('editor');
         const base = editor.get('base');

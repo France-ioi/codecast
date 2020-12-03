@@ -19,7 +19,7 @@ var lastHeapSize = 0;
 /* On load, respond to a null message with a null message to indicate that
    the worker loaded successfully.  Subsequent message are handled by the
    messageHandler function below. */
-self.onmessage = function (e) {
+self.onmessage = function(e) {
     if (e.data === null) {
         self.onmessage = messageHandler;
         self.postMessage(null);
@@ -44,7 +44,7 @@ function messageHandler(e) {
                 break;
             case 'export': {
                 result = {};
-                const audioBuffer = recording.getAudioBuffer(function (progress) {
+                const audioBuffer = recording.getAudioBuffer(function(progress) {
                     t.send({step: 'copy', progress});
                 });
                 result.duration = audioBuffer.duration;
@@ -52,12 +52,12 @@ function messageHandler(e) {
                     result.raw = exportRaw(audioBuffer, payload.raw);
                 }
                 if (payload.wav) {
-                    result.wav = exportWav(audioBuffer, payload.wav, function (progress) {
+                    result.wav = exportWav(audioBuffer, payload.wav, function(progress) {
                         t.send({step: 'wav', progress});
                     });
                 }
                 if (payload.mp3) {
-                    result.mp3 = exportMp3(audioBuffer, payload.mp3, function (progress) {
+                    result.mp3 = exportMp3(audioBuffer, payload.mp3, function(progress) {
                         t.send({step: 'mp3', progress});
                     });
                 }
@@ -77,13 +77,13 @@ function Transaction(id) {
     this._id = id;
 }
 
-Transaction.prototype.done = function (payload) {
+Transaction.prototype.done = function(payload) {
     self.postMessage({id: this._id, done: true, payload});
 };
-Transaction.prototype.send = function (payload) {
+Transaction.prototype.send = function(payload) {
     self.postMessage({id: this._id, done: false, payload});
 };
-Transaction.prototype.fail = function (error) {
+Transaction.prototype.fail = function(error) {
     self.postMessage({id: this._id, done: true, error});
 };
 

@@ -107,7 +107,7 @@ export function link(rootBuilder): Linker {
     // Compose the reducer now that all actions have been defined.
     const actionMap = new Map();
     rootBundle._buildActionMap(actionMap);
-    const actionReducer = function (state, action) {
+    const actionReducer = function(state, action) {
         if (actionMap.has(action.type)) {
             state = actionMap.get(action.type)(state, action);
         }
@@ -146,7 +146,7 @@ export function link(rootBuilder): Linker {
 
     /* Collect the sagas.  The root task is returned, suggested use is:
 
-        start().done.catch(function (error) {
+        start().done.catch(function(error) {
           // notify user that the application has crashed and offer
           // to restart it by calling start() again.
         });

@@ -118,7 +118,7 @@ function keys(tree) {
 
     push(tree);
     return {
-        next: function () {
+        next: function() {
             while (stack.length > 0) {
                 const {type, arg} = stack.pop();
                 switch (type) {
@@ -151,7 +151,7 @@ function intervals(tree) {
 
     push(tree);
     return {
-        next: function () {
+        next: function() {
             let result;
             while (stack.length > 0) {
                 const {type, arg} = stack.pop();
@@ -211,7 +211,7 @@ class IntervalTree {
   As of babel 7.0.0-beta.36, the ES6 class syntax
     [Symbol.iterator]() { return intervals(this.root); }
   incorrectly defines a property named 'undefined'.  */
-IntervalTree.prototype[Symbol.iterator] = function () {
+IntervalTree.prototype[Symbol.iterator] = function() {
     return intervals(this.root);
 };
 

@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Map} from 'immutable';
-import PythonVariable from "./PythonVariable";
+import {PythonVariable} from "./PythonVariable";
 import {SkulptScope} from "../analysis";
 
 interface PythonFunctionLocalsProps {
@@ -10,7 +10,7 @@ interface PythonFunctionLocalsProps {
     scopeIndex: number
 }
 
-const PythonFunctionLocals = (props: PythonFunctionLocalsProps): JSX.Element => {
+export const PythonFunctionLocals = (props: PythonFunctionLocalsProps): JSX.Element => {
     const variables = props.func.variables.entrySeq().map(([name, value]) => {
         if (value.cur !== undefined &&
             !(value.cur instanceof Sk.builtin.module) &&
@@ -44,5 +44,3 @@ const PythonFunctionLocals = (props: PythonFunctionLocalsProps): JSX.Element => 
         </div>
     );
 };
-
-export default PythonFunctionLocals;

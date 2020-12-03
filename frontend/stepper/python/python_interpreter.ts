@@ -9,7 +9,7 @@ if (!window.hasOwnProperty('currentPythonContext')) {
 if (!window.hasOwnProperty('currentPythonRunner')) {
     window.currentPythonRunner = null;
 }
-export default function (context) {
+export default function(context) {
     this.context = context;
     this._code = '';
     this._editor_filename = "<stdin>";
@@ -89,7 +89,7 @@ export default function (context) {
                 if (!blockList.length) {
                     continue;
                 }
-                let modContents = "var $builtinmodule = function (name) {\n\nvar mod = {};\nmod.__package__ = Sk.builtin.none.none$;\n";
+                let modContents = "var $builtinmodule = function(name) {\n\nvar mod = {};\nmod.__package__ = Sk.builtin.none.none$;\n";
                 if (!this._argumentsByBlock[generatorName]) {
                     this._argumentsByBlock[generatorName] = {};
                 }
@@ -169,13 +169,13 @@ export default function (context) {
 
     this._definePythonNumber = () => {
         // Create a class which behaves as a Number, but can have extra properties
-        this.pythonNumber = function (val) {
+        this.pythonNumber = function(val) {
             this.val = Number(val);
         };
         this.pythonNumber.prototype = Object.create(Number.prototype);
 
         function makePrototype(func) {
-            return function () {
+            return function() {
                 return Number.prototype[func].call(this.val);
             }
         }
@@ -197,7 +197,7 @@ export default function (context) {
                     args.push(that._createPrimitive(arguments[i]));
                 }
 
-                let retp = new Promise(function (resolve, reject) {
+                let retp = new Promise(function(resolve, reject) {
                     let p = Sk.misceval.asyncToPromise(() => {
                         return val.tp$call(args);
                     });
@@ -282,7 +282,7 @@ export default function (context) {
         this._paused = true;
         var listenerFunc = null;
         var that = this;
-        listenerFunc = function (e) {
+        listenerFunc = function(e) {
             target.removeEventListener(eventName, listenerFunc);
             that.noDelay(callback, func(e));
         };
@@ -546,7 +546,7 @@ export default function (context) {
         Sk.running = false;
         if (Sk.runQueue && Sk.runQueue.length > 0) {
             var nextExec = Sk.runQueue.shift();
-            setTimeout(function () {
+            setTimeout(function() {
                 nextExec.ctrl.runCodes(nextExec.codes);
             }, 100);
         }
@@ -638,7 +638,7 @@ export default function (context) {
         this._debugger.add_breakpoint(this._editor_filename + '.py', bp, '0', isTemporary);
     };
 
-    this._asyncCallback = function () {
+    this._asyncCallback = function() {
         return Sk.importMainWithBody(this._editor_filename, true, this._code, true);
     };
 
@@ -649,7 +649,7 @@ export default function (context) {
      *
      * @return {boolean}
      */
-    this.isSynchronizedWithAnalysis = function (analysis) {
+    this.isSynchronizedWithAnalysis = function(analysis) {
         // Must be at the same step number and have the same source code.
 
         const analysisStepNum = analysis.stepNum;

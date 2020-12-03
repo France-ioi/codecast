@@ -17,7 +17,7 @@ import subtitlesBundle from '../subtitles';
 import examplesBundle from './examples';
 import stepperBundle from '../stepper';
 
-export default function (bundle) {
+export default function(bundle) {
     bundle.include(errorBundle);
 
     /* The player and recorder bundles must be included early to allow other
@@ -28,6 +28,7 @@ export default function (bundle) {
     /* The options bundle must be included before the lang and stepper bundles
        (see ioPane). */
     bundle.include(optionsBundle);
+
     /* The language bundle must be included before the examples bundle. */
     bundle.include(langBundle);
 

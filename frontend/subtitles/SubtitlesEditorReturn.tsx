@@ -1,12 +1,17 @@
 import React from "react";
 import {Button} from "@blueprintjs/core";
 import {ActionTypes} from "./actionTypes";
+import {connect} from "react-redux";
 
-interface SubtitlesEditorReturnProps {
+interface SubtitlesEditorReturnDispatchToProps {
     dispatch: Function
 }
 
-export class SubtitlesEditorReturn extends React.PureComponent<SubtitlesEditorReturnProps> {
+interface SubtitlesEditorReturnProps extends SubtitlesEditorReturnDispatchToProps {
+
+}
+
+class _SubtitlesEditorReturn extends React.PureComponent<SubtitlesEditorReturnProps> {
     render() {
         return <Button onClick={this._return} icon='direction-left' text='Back'/>;
     }
@@ -15,3 +20,5 @@ export class SubtitlesEditorReturn extends React.PureComponent<SubtitlesEditorRe
         this.props.dispatch({type: ActionTypes.SubtitlesEditorReturn});
     };
 }
+
+export const SubtitlesEditorReturn = connect()(_SubtitlesEditorReturn);

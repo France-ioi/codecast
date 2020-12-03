@@ -68,7 +68,7 @@ interface HeapNode {
  (up to `options.cursorRows` rows are used)
 
  */
-export const extractView = function (context, stackFrame, refExpr, options) {
+export const extractView = function(context, stackFrame, refExpr, options) {
     const {programState} = context;
     const localMap = stackFrame.get('localMap');
     // Normalize options.
@@ -173,7 +173,7 @@ export const extractView = function (context, stackFrame, refExpr, options) {
       visible cells.
 
 */
-export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
+export const ArrayViewBuilder = function(nbVisibleCells, nbCells) {
 
     // The spread is the number of cells around a marker which receive extra
     // points.
@@ -200,7 +200,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
         }
     }
 
-    this.addMarker = function (index, points, rank) {
+    this.addMarker = function(index, points, rank) {
         // Add points to the marked cell.
         addPointsAndRank(index, points, rank);
         // Also spread points arround the marked cell.
@@ -217,7 +217,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
         }
     };
 
-    this.getSelection = function () {
+    this.getSelection = function() {
         // Insert the marked cells in a heap.
         const heap = new FibonacciHeap<HeapNode, any>(compareHeapNodes);
         Object.keys(cells).forEach(index => heap.insert(cells[index]));
@@ -226,15 +226,19 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
         let spaceLeft = nbVisibleCells - 1; // subtract 1 for the implicit gap
         while (spaceLeft > 0) {
             let node = heap.extractMinimum();
-            if (node === undefined) {
+            if (!node) {
                 break;
             }
+
             let {index} = node.key;
+
             // Find the position in result where the index can be inserted.
             let pos = findInsertionIndex(index, result);
+
             // Does the inserted index extend a sequence on the left or right?
             let leftExt = index === 0 || result[pos - 1] === index - 1;
             let rightExt = index === nbCells || result[pos] === index + 1;
+
             // There are 3 cases to consider:
             // - leftExt  rightExt
             //    true     true    the element replaces a gap and takes no extra space
@@ -245,7 +249,9 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
             if (spaceUsed > spaceLeft) {
                 break;
             }
+
             result.splice(pos, 0, index);
+
             spaceLeft -= spaceUsed;
         }
         if (spaceLeft > 0) {
@@ -255,6 +261,7 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
                 result.splice(0, 0, 0);
                 spaceLeft -= 1;
             }
+
             let nextIndex = result[0] + 1, i = 1;
             while (spaceLeft > 0 && nextIndex < nbCells) {
                 const index = result[i];
@@ -265,10 +272,12 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
                         break;
                     }
                 }
+
                 i += 1;
                 nextIndex += 1;
             }
         }
+
         // Make gaps explicit.
         let i = 0, nextIndex = 0;
         while (nextIndex < nbCells) {
@@ -280,13 +289,13 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
                 const filler = result[i] === nextIndex + 1 ? nextIndex : '…';
                 result.splice(i, 0, filler);
                 i += 1;
+
                 // Reset nextIndex to the start of the sequence after the gap.
                 nextIndex = result[i];
             }
         }
         return result;
     };
-
 };
 
 /** findInsertionIndex(element, array, comparer) returns a value of index
@@ -294,12 +303,12 @@ export const ArrayViewBuilder = function (nbVisibleCells, nbCells) {
  array.splice(index, 0, element)
  keeps array sorted according to comparer.
  */
-const findInsertionIndex = function (element, array, comparer?) {
+const findInsertionIndex = function(element, array, comparer?) {
     if (array.length === 0) {
         return -1;
     }
     if (comparer === undefined) {
-        comparer = function (a, b) {
+        comparer = function(a, b) {
             return a < b ? -1 : a > b ? 1 : 0;
         };
     }
@@ -324,7 +333,7 @@ const findInsertionIndex = function (element, array, comparer?) {
     }
 }
 
-const compareHeapNodes = function (a: HeapNode, b: HeapNode) {
+const compareHeapNodes = function(a: HeapNode, b: HeapNode) {
     const cellA = a.key;
     const cellB = b.key;
     if (cellA.points > cellB.points) {
@@ -352,9 +361,9 @@ const compareHeapNodes = function (a: HeapNode, b: HeapNode) {
    with an index argument for each cell of the array (described by arrayBase,
    elemCount, and elemSize) that the ref intersects.
  */
-export const mapArray1D = function (arrayBase, elemCount, elemSize) {
+export const mapArray1D = function(arrayBase, elemCount, elemSize) {
     const arrayLimit = arrayBase + (elemCount * elemSize) - 1;
-    return function (ref, callback) {
+    return function(ref, callback) {
         // Skip if [array] < [ref]
         const {address, type} = ref;
         if (arrayLimit < address) return;
@@ -383,7 +392,7 @@ export interface Cell {
 }
 
 // Read an 1D array of scalars.
-export const readArray1D = function (context, arrayBase, elemType, elemCount, selection, mops) {
+export const readArray1D = function(context, arrayBase, elemType, elemCount, selection, mops) {
     const {programState, lastProgramState} = context;
     const elemSize = elemType.size;
     const elemRefType = C.pointerType(elemType);
@@ -392,7 +401,7 @@ export const readArray1D = function (context, arrayBase, elemType, elemCount, se
     if (selection === undefined) {
         selection = range(0, elemCount + 1);
     }
-    selection.forEach(function (index, position) {
+    selection.forEach(function(index, position) {
         if (position === undefined)
             position = index;
         if (index === '…') {
@@ -423,14 +432,14 @@ export const readArray1D = function (context, arrayBase, elemType, elemCount, se
 
 // Returns a map keyed by cell index, and whose values are objects giving
 // the greatest rank in the memory log of a 'load' or 'store' operation.
-const getOpsArray1D = function (programState, address, elemCount, elemSize) {
+const getOpsArray1D = function(programState, address, elemCount, elemSize) {
     // Go through the memory log, translate memory-operation references into
     // array cells indexes, and save the cell load/store operations in cellOps.
     const cellOpsMap = [];
     const forEachCell = mapArray1D(address, elemCount, elemSize);
-    programState.memoryLog.forEach(function (entry, i) {
+    programState.memoryLog.forEach(function(entry, i) {
         const op = entry[0]; // 'load' or 'store'
-        forEachCell(entry[1], function (index) {
+        forEachCell(entry[1], function(index) {
             let cellOps;
             if (index in cellOpsMap) {
                 cellOps = cellOpsMap[index];
@@ -454,12 +463,12 @@ const getOpsArray1D = function (programState, address, elemCount, elemSize) {
 // `cellSize` (in bytes).  The calculated value is then subject to the
 // minIndex/maxIndex constraint.
 // If the `address` option is not given, then pointer values are not used.
-export const getCursorMap = function (programState, localMap, cursorExprs, options) {
+export const getCursorMap = function(programState, localMap, cursorExprs, options) {
     const {minIndex, maxIndex, address, cellSize, cellSizeMod} = options;
     const allowPointers = typeof address === 'number';
     const haveCellSizeMod = typeof cellSizeMod === 'number';
     const cursorMap = [];  // spare array
-    cursorExprs.forEach(function (expr) {
+    cursorExprs.forEach(function(expr) {
         let cursorValue;
         try {
             cursorValue = evalExpr(programState, localMap, expr);
@@ -496,11 +505,11 @@ export const getCursorMap = function (programState, localMap, cursorExprs, optio
 
 // Returns an array of up to maxVisibleCells indices between 0 and elemCount
 // (inclusive), prioritizing cells that have memory operations or cursors.
-const getSelection = function (maxVisibleCells, elemCount, cellOpsMap, cursorMap, pointsByKind) {
+const getSelection = function(maxVisibleCells, elemCount, cellOpsMap, cursorMap, pointsByKind) {
     const builder = new ArrayViewBuilder(maxVisibleCells, elemCount);
     builder.addMarker(0, pointsByKind.first);
     builder.addMarker(elemCount, pointsByKind.last);
-    cellOpsMap.forEach(function (ops) {
+    cellOpsMap.forEach(function(ops) {
         if ('load' in ops) {
             builder.addMarker(ops.index, pointsByKind.load, ops.load);
         }
@@ -508,7 +517,7 @@ const getSelection = function (maxVisibleCells, elemCount, cellOpsMap, cursorMap
             builder.addMarker(ops.index, pointsByKind.store, ops.store);
         }
     });
-    cursorMap.forEach(function (cursor) {
+    cursorMap.forEach(function(cursor) {
         builder.addMarker(cursor.index, pointsByKind.cursor);
     });
     return builder.getSelection();
@@ -518,10 +527,10 @@ const getSelection = function (maxVisibleCells, elemCount, cellOpsMap, cursorMap
 // Each cursor is modified to contain a 'col' field giving its position in
 // the selection, and a 'row' field such that adjacent cursors are on a
 // different row (up to `cursorRows` rows are used).
-export const finalizeCursors = function (selection, cursorMap, cursorRows) {
+export const finalizeCursors = function(selection, cursorMap, cursorRows) {
     const staggerAll = true; // XXX could be an option
     let nextStaggerCol, cursorRow = 0;
-    selection.forEach(function (index, col) {
+    selection.forEach(function(index, col) {
         if (col === undefined)
             col = index;
         if (index in cursorMap) {

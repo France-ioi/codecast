@@ -1,10 +1,23 @@
 import React from 'react';
 import classnames from 'classnames';
 import * as ace from 'brace';
+import {connect} from "react-redux";
+import {AppStore} from "../store";
 
 const Range = ace.acequire('ace/range').Range;
 
-interface EditorProps {
+interface EditorStateToProps {
+    getMessage: Function
+}
+
+function mapStateToProps(state: AppStore): EditorStateToProps
+{
+    return {
+        getMessage: state.get('getMessage'),
+    }
+}
+
+interface EditorProps extends EditorStateToProps {
     readOnly: boolean,
     shield: boolean,
     theme: string,
@@ -14,11 +27,10 @@ interface EditorProps {
     onSelect: Function,
     onEdit: Function,
     onScroll: Function,
-    onInit: Function,
-    getMessage: Function
+    onInit: Function
 }
 
-export class Editor extends React.PureComponent<EditorProps> {
+class _Editor extends React.PureComponent<EditorProps> {
     editor: any = null;
     editorNode: any = null;
     selection: any = null;
@@ -207,7 +219,7 @@ export class Editor extends React.PureComponent<EditorProps> {
                 mac: "Esc",
                 sender: "htmleditor"
             },
-            exec: function (editor) {
+            exec: function(editor) {
                 editor.blur();
             }
         });
@@ -217,7 +229,7 @@ export class Editor extends React.PureComponent<EditorProps> {
         window.editors[buffer] = editor; */
 
         /* Force a resize, the editor will not work properly otherwise. */
-        setTimeout(function () {
+        setTimeout(function() {
             editor.resize(true);
         }, 0);
     };
@@ -253,6 +265,8 @@ export class Editor extends React.PureComponent<EditorProps> {
         );
     }
 }
+
+export const Editor = connect(mapStateToProps)(_Editor);
 
 function toRange(selection) {
     return new Range(

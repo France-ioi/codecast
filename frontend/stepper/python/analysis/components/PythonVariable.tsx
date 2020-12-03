@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {Map} from 'immutable';
-import PythonVariableValue from "./PythonVariableValue";
+import {PythonVariableValue} from "./PythonVariableValue";
 import {SkulptVariable} from "../analysis";
 
 interface PythonVariableProps {
@@ -13,7 +13,7 @@ interface PythonVariableProps {
     openedPaths: Map<string, boolean>
 }
 
-const PythonVariable = (props: PythonVariableProps): JSX.Element => {
+export const PythonVariable = (props: PythonVariableProps): JSX.Element => {
     let classes = 'variable-container';
     if (props.value.cur instanceof Sk.builtin.object) {
         if (props.value.cur.hasOwnProperty('$d') || props.value.cur instanceof Sk.builtin.dict) {
@@ -50,5 +50,3 @@ const PythonVariable = (props: PythonVariableProps): JSX.Element => {
         </span>
     )
 }
-
-export default PythonVariable;

@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {Map} from 'immutable';
-import PythonFunctionHeader from "./PythonFunctionHeader";
-import PythonFunctionLocals from "./PythonFunctionLocals";
+import {PythonFunctionHeader} from "./PythonFunctionHeader";
+import {PythonFunctionLocals} from "./PythonFunctionLocals";
 import {SkulptScope} from "../analysis";
 
 interface PythonFunctionViewProps {
@@ -11,7 +11,7 @@ interface PythonFunctionViewProps {
     loadedReferences: any
 }
 
-const PythonFunctionView = (props: PythonFunctionViewProps): JSX.Element => {
+export const PythonFunctionView = (props: PythonFunctionViewProps): JSX.Element => {
     return (
         <div className="stack-frame stack-frame-focused">
             <PythonFunctionHeader
@@ -28,5 +28,3 @@ const PythonFunctionView = (props: PythonFunctionViewProps): JSX.Element => {
         </div>
     );
 };
-
-export default PythonFunctionView;

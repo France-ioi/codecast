@@ -7,19 +7,19 @@ import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {getRecorderState} from "./selectors";
 
-export default function (bundle) {
+export default function(bundle) {
     bundle.defineAction(ActionTypes.SaveScreenEncodingStart);
-    bundle.addReducer(ActionTypes.SaveScreenEncodingStart, function (state, action) {
+    bundle.addReducer(ActionTypes.SaveScreenEncodingStart, function(state, action) {
         return state.update('save', save => ({...save, step: 'encoding pending', progress: 0}));
     });
 
     bundle.defineAction(ActionTypes.SaveScreenEncodingProgress);
-    bundle.addReducer(ActionTypes.SaveScreenEncodingProgress, function (state, {payload: progress}) {
+    bundle.addReducer(ActionTypes.SaveScreenEncodingProgress, function(state, {payload: progress}) {
         return state.update('save', save => ({...save, progress}));
     });
 
     bundle.defineAction(ActionTypes.SaveScreenEncodingDone);
-    bundle.addReducer(ActionTypes.SaveScreenEncodingDone, function (state, {payload: {audioUrl, wavAudioUrl, eventsUrl}}) {
+    bundle.addReducer(ActionTypes.SaveScreenEncodingDone, function(state, {payload: {audioUrl, wavAudioUrl, eventsUrl}}) {
         return state.update('save', save => ({
             ...save,
             step: 'encoding done',
@@ -33,38 +33,37 @@ export default function (bundle) {
     bundle.defineAction(ActionTypes.SaveScreenUpload);
 
     bundle.defineAction(ActionTypes.SaveScreenPreparing);
-    bundle.addReducer(ActionTypes.SaveScreenPreparing, function (state, action) {
+    bundle.addReducer(ActionTypes.SaveScreenPreparing, function(state, action) {
         return state.update('save', save => ({...save, step: 'upload preparing'}));
     });
 
-
     bundle.defineAction(ActionTypes.SaveScreenEventsUploading);
-    bundle.addReducer(ActionTypes.SaveScreenEventsUploading, function (state, _action) {
+    bundle.addReducer(ActionTypes.SaveScreenEventsUploading, function(state, _action) {
         return state.update('save', save => ({...save, step: 'upload events pending'}));
     });
 
     bundle.defineAction(ActionTypes.SaveScreenEventsUploaded);
-    bundle.addReducer(ActionTypes.SaveScreenEventsUploaded, function (state, {payload: {url}}) {
+    bundle.addReducer(ActionTypes.SaveScreenEventsUploaded, function(state, {payload: {url}}) {
         return state.update('save', save => ({...save, step: 'upload events done', eventsUrl: url}));
     });
 
     bundle.defineAction(ActionTypes.SaveScreenAudioUploading);
-    bundle.addReducer(ActionTypes.SaveScreenAudioUploading, function (state, action) {
+    bundle.addReducer(ActionTypes.SaveScreenAudioUploading, function(state, action) {
         return state.update('save', save => ({...save, step: 'upload audio pending'}));
     });
 
     bundle.defineAction(ActionTypes.SaveScreenAudioUploaded);
-    bundle.addReducer(ActionTypes.SaveScreenAudioUploaded, function (state, {payload: {url}}) {
+    bundle.addReducer(ActionTypes.SaveScreenAudioUploaded, function(state, {payload: {url}}) {
         return state.update('save', save => ({...save, step: 'upload audio done', audioUrl: url}));
     });
 
     bundle.defineAction(ActionTypes.SaveScreenUploadSucceeded);
-    bundle.addReducer(ActionTypes.SaveScreenUploadSucceeded, function (state, {payload: {playerUrl}}) {
+    bundle.addReducer(ActionTypes.SaveScreenUploadSucceeded, function(state, {payload: {playerUrl}}) {
         return state.update('save', save => ({...save, step: 'done', playerUrl}));
     });
 
     bundle.defineAction(ActionTypes.SaveScreenUploadFailed);
-    bundle.addReducer(ActionTypes.SaveScreenUploadFailed, function (state, {payload: {error}}) {
+    bundle.addReducer(ActionTypes.SaveScreenUploadFailed, function(state, {payload: {error}}) {
         return state.update('save', save => ({...save, step: 'error', error}));
     });
 
