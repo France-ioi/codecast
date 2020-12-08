@@ -49,7 +49,7 @@ module.exports = {
     'LANGUAGE:': "Langue : ",
     EXAMPLES_LABEL: "Exemples: ",
     EXAMPLES_BUTTON_TITLE: "Afficher la liste",
-    EXAMPLES_MESSAGE: "charger un exemple interrompt toute activité en cours",
+    EXAMPLES_MESSAGE: "Charger un exemple interrompt toute activité en cours",
     EVAL_REF_UNDEF_VAR: "reference à la variable non définie {name}",
     EVAL_DEREF_NONPTR: "tentative de déréferencer une valeur non-pointeur",
     EVAL_SUBSC_NONPTR: "tentative d'indexer une valeur non-pointeur",
@@ -72,6 +72,7 @@ module.exports = {
     PYTHON_ARRAY1D_REF_NOT_LIST: "la variable {name} n'est pas une liste",
     PYTHON_ARRAY2D_REF_UNDEFINED: "la variable {name} n'est pas définie",
     PYTHON_ARRAY2D_REF_NOT_LIST: "la variable {name} n'est pas une liste",
+    DIRECTIVE_ERROR: "Une erreur a eu lieu lors de l'interprétation de la vue : ",
 
     SUBTITLES_FAILED_TO_LOAD: "le chargement des sous-titres a échoue",
     CLOSED_CAPTIONS_TOOLTIP: "sous-titres",

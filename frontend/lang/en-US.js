@@ -49,7 +49,7 @@ module.exports = {
     'LANGUAGE:': "Language: ",
     EXAMPLES_LABEL: "Examples: ",
     EXAMPLES_BUTTON_TITLE: "View list",
-    EXAMPLES_MESSAGE: "loading an example interrupts any pending action",
+    EXAMPLES_MESSAGE: "Loading an example interrupts any pending action",
     EVAL_REF_UNDEF_VAR: "reference to undefined variable {name}",
     EVAL_DEREF_NONPTR: "attempt to dereference non-pointer value",
     EVAL_SUBSC_NONPTR: "attempt to subscript non-pointer",
@@ -72,6 +72,7 @@ module.exports = {
     PYTHON_ARRAY1D_REF_NOT_LIST: "the variable {name} is not a list",
     PYTHON_ARRAY2D_REF_UNDEFINED: "the variable {name} is undefined",
     PYTHON_ARRAY2D_REF_NOT_LIST: "the variable {name} is not a list",
+    DIRECTIVE_ERROR: "An error occured while interpreting the view : ",
 
     SUBTITLES_FAILED_TO_LOAD: "subtitles failed to load",
     CLOSED_CAPTIONS_TOOLTIP: "captions",

@@ -52,7 +52,10 @@ function initReducer(state, {payload: {options}}) {
 }
 
 function setLanguageReducer(state, {payload: {language}}) {
-    if (!Languages[language]) language = 'en-US';
+    if (!Languages[language]) {
+        language = 'en-US';
+    }
+
     const localizedMessage = Object.create(Message,
         {_l: {writable: false, configurable: false, value: language}});
     const getMessage = memoize(function(message, defaultText) {
@@ -60,6 +63,7 @@ function setLanguageReducer(state, {payload: {language}}) {
         return Object.create(localizedMessage,
             {_m: {writable: false, configurable: false, value}});
     });
+
     getMessage.format = function(value) {
         if (value instanceof Error && value.name === 'LocalizedError') {
             // @ts-ignore
@@ -67,6 +71,7 @@ function setLanguageReducer(state, {payload: {language}}) {
         }
         return getMessage(value.toString());
     }
+
     return state
         .update('options', options => ({...options, language}))
         .set('getMessage', getMessage);

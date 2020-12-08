@@ -237,8 +237,8 @@ export class Array2D extends React.PureComponent<Array2DProps> {
         const {byName, byPos} = directive;
         const {rowCursors, colCursors} = byName;
         const height = (byName.height) ? byName.height : 'auto';
-        const rowCount = parseInt(byName.rows);
-        const colCount = parseInt(byName.cols);
+        const rowCount = (byName.rows) ? parseInt(byName.rows) : 0;
+        const colCount = (byName.cols) ? parseInt(byName.cols) : 0;
         const view: Array2DParams = {rowCursors, colCursors, rowCount, colCount, height, getMessage};
         const {hPan, vPan} = this.getPosition();
 
@@ -253,7 +253,7 @@ export class Array2D extends React.PureComponent<Array2DProps> {
         }
 
         const {rowInfoMap, colInfoMap} = view;
-        const svgHeight = GRID_TOP + (rowCount + 1) * CELL_HEIGHT;
+        const svgHeight = GRID_TOP + (view.rowCount + 1) * CELL_HEIGHT;
         const divHeight = ((height === 'auto' ? svgHeight : height) * scale) + 'px';
 
         return (

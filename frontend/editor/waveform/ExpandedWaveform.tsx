@@ -50,11 +50,15 @@ export class ExpandedWaveform extends React.PureComponent<ExpandedWaveformProps>
         this.setState({mode: 'idle'});
     };
     mouseMove = (event) => {
-        if (this.state.mode === 'idle') return;
-        if (event.buttons === 0) {
-            this.setState({mode: 'idle'});
+        if (this.state.mode === 'idle') {
             return;
         }
+        if (event.buttons === 0) {
+            this.setState({mode: 'idle'});
+
+            return;
+        }
+
         const rect = this.canvas.getBoundingClientRect();
         const newX = event.clientX - rect.left;
         // @ts-ignore

@@ -50,11 +50,15 @@ export class FullWaveform extends React.PureComponent<FullWaveformProps> {
         this.setState({mode: 'idle'});
     };
     mouseMove = (event) => {
-        if (this.state.mode === 'idle') return;
-        if (event.buttons === 0) {
-            this.setState({mode: 'idle'});
+        if (this.state.mode === 'idle') {
             return;
         }
+        if (event.buttons === 0) {
+            this.setState({mode: 'idle'});
+
+            return;
+        }
+
         this.panned(event.clientX);
     };
     panned = (x) => {

@@ -2,7 +2,7 @@ import {getLoadedReferencesFromVariable, getVariable} from './utils';
 import {getCursorMap} from './array_utils';
 
 export const extractView = function(context, name, options) {
-    const {getMessage, rowCount, colCount} = options;
+    const {getMessage} = options;
     const {analysis} = context;
 
     const ref = getVariable(analysis, name);
@@ -13,6 +13,9 @@ export const extractView = function(context, name, options) {
     if (!(ref.cur instanceof Sk.builtin.list)) {
         return {error: getMessage('PYTHON_ARRAY2D_REF_NOT_LIST').format({name})};
     }
+
+    const rowCount = (options.rowCount) ? options.rowCount : ref.cur.v.length;
+    const colCount = (options.colCount) ? options.colCount : ref.cur.v[0].v.length;
 
     // Inspect cursors.
     const rowInfoMap = getCursorMap(analysis, options.rowCursors, {

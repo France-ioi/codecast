@@ -1,3 +1,5 @@
+import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
+
 export const VIEW_DIRECTIVE_PREFIX = '_VIEW_';
 
 const PR = require('packrattle');

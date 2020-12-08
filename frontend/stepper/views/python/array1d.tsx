@@ -201,11 +201,14 @@ export class Array1D extends React.PureComponent<Array1DProps> {
                         <g className="array1d">
                             <Grid view={view} cellWidth={cellWidth}/>
                             <g className="cursors">
-                                {view.cursorMap.map((cursor, index) => <Cursor key={index} view={view}
-                                                                               cursor={cursor}/>)}
+                                {view.cursorMap.map((cursor, index) =>
+                                    <Cursor key={index} view={view} cursor={cursor} />
+                                )}
                             </g>
                             <g className="cells">
-                                {view.ref.cur.v.map((cell, index) => <Cell key={index} index={index} view={view}/>)}
+                                {view.ref.cur.v.map((cell, index) =>
+                                    <Cell key={index} index={index} view={view} />
+                                )}
                             </g>
                         </g>
                     </SvgPan>
