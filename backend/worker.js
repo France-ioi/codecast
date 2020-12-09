@@ -8,8 +8,10 @@ function reducer(state, action) {
     switch (action.type) {
         case 'INIT':
             state = {};
+
             break;
     }
+
     return state;
 }
 
@@ -26,9 +28,11 @@ function* saveSaga({payload: {target, id, changes, req, res}}) {
         if (!changes) {
             return res.json({error: 'no changes'});
         }
+
         const {s3Bucket, uploadPath} = target;
         const s3JsonKey = `${uploadPath}/${id}.json`;
         const s3 = upload.makeS3Client(target);
+
         /* TODO: support updating data: fetch json, apply requested changes, putObject */
         const {Body, VersionId} = yield call(upload.getObject, s3, {Bucket: s3Bucket, Key: s3JsonKey});
         const data = JSON.parse(Body);
@@ -52,8 +56,10 @@ function* saveSaga({payload: {target, id, changes, req, res}}) {
                         ContentType: 'text/plain', Body: text
                     });
                 }
+
                 subtitleKeys.push(langKey);
             }
+
             data.subtitles = subtitleKeys;
         }
         yield call(upload.putObject, s3, {
@@ -62,6 +68,7 @@ function* saveSaga({payload: {target, id, changes, req, res}}) {
             ContentType: 'application/json',
             Body: JSON.stringify(data)
         });
+
         res.json({done: true});
     } catch (ex) {
         res.json({error: ex.toString()});
@@ -75,7 +82,9 @@ export default function start(options) {
         null,
         applyMiddleware(sagaMiddleware)
     );
+
     store.dispatch({type: 'INIT', payload: {options}});
     sagaMiddleware.run(mainSaga);
+
     return store;
 };

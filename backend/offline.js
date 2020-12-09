@@ -8,7 +8,6 @@ import {buildCommonOptions} from './options';
 const request = require('request');
 
 export default function (app, config, store) {
-
     app.use('/offline.zip', express.static(path.join(config.rootDir, 'offline.zip')));
 
     app.get('/offline', function (req, res) {

@@ -4,7 +4,10 @@ function getDB(config) {
     return new Promise((resolve, reject) => {
         const db = mysql.createConnection(config.database);
         db.connect(async function (err) {
-            if (err) reject(err);
+            if (err) {
+                reject(err);
+            }
+
             try {
                 resolve(db);
             } catch (err) {
@@ -165,9 +168,11 @@ export function statisticsSearch({grants}, config, params) {
             let whereQueryParts = [];
             if (params.folder) {
                 const [bucket, folder] = params.folder;
+
                 whereQueryParts.push(`\`folder\` = '${folder}' AND \`bucket\` IN ('${bucket}', 'none')`);
             } else {
                 const buckets = ['none'], folders = ['none'];
+
                 for (const {uploadPath, s3Bucket} of grants) {
                     if (!buckets.includes(s3Bucket)) {
                         buckets.push(s3Bucket);
@@ -176,6 +181,7 @@ export function statisticsSearch({grants}, config, params) {
                         folders.push(uploadPath);
                     }
                 }
+
                 whereQueryParts.push(`\`folder\` IN ('${folders.join('\',\'')}') AND \`bucket\` IN ('${buckets.join('\',\'')}')`);
             }
             if (params.prefix) {
@@ -183,6 +189,7 @@ export function statisticsSearch({grants}, config, params) {
             }
             if (params.dateRange) {
                 const [start, end] = params.dateRange;
+
                 if (start && end) {
                     whereQueryParts.push(`CAST(\`date_time\` AS DATE) BETWEEN '${start}' AND '${end}'`);
                 }
@@ -210,6 +217,7 @@ export function statisticsSearch({grants}, config, params) {
                 db.end();
                 if (err) {
                     console.error('Statistics:DB:Search:Query failed', err);
+
                     reject('Statistics DB Search Query failed');
                 } else {
                     const data = [];
@@ -225,15 +233,14 @@ export function statisticsSearch({grants}, config, params) {
                             compile_time: row.compile_time,
                         });
                     }
+
                     resolve({data});
                 }
             });
         } catch (err) {
             console.error('Statistics:Search failed', err);
+
             reject('Statistics Search failed');
         }
     });
 }
-
-
-

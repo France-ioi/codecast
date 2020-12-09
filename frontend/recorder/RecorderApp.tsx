@@ -10,7 +10,7 @@ import {AppStore} from "../store";
 
 interface RecorderAppStateToProps {
     screen: string,
-    user: any
+    user: any | false
 }
 
 function mapStateToProps(state: AppStore): RecorderAppStateToProps {
@@ -31,6 +31,7 @@ interface RecorderAppProps extends RecorderAppStateToProps, RecorderAppDispatchT
 class _RecorderApp extends React.PureComponent<RecorderAppProps> {
     render () {
         let screenView = null;
+        console.log(this.props.user);
         if (!this.props.user) {
             screenView = <LoginScreen />;
         } else if (this.props.screen === 'record') {

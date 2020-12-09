@@ -1,6 +1,6 @@
 import {call, put, select, takeLatest} from 'redux-saga/effects';
 import {RECORDING_FORMAT_VERSION} from '../version';
-import {asyncRequestJson} from '../utils/api';
+import {asyncGetJson, asyncRequestJson} from '../utils/api';
 import {getBlob, uploadBlob} from '../utils/blobs';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
@@ -68,10 +68,22 @@ export default function(bundle) {
     });
 
     bundle.addSaga(function* saveSaga(arg) {
-        yield takeLatest(RecorderActionTypes.RecorderStopped, encodingSaga)
+        yield takeLatest(RecorderActionTypes.RecorderStopped, encodingSaga);
+        yield takeLatest(RecorderActionTypes.SaveScreenEncodingDone, ensureLoggedSaga);
         yield takeLatest(ActionTypes.SaveScreenUpload, uploadSaga, arg);
     });
-};
+}
+
+function* ensureLoggedSaga() {
+    const {baseUrl} = yield select(state => state.get('options'));
+
+    const response = yield call(asyncGetJson, baseUrl + '/me', []);
+    if (response.user) {
+        yield put({type: CommonActionTypes.LoginFeedback, payload: {user: response.user}});
+    } else {
+        yield put({type: CommonActionTypes.LoginFeedback, payload: {user: false}});
+    }
+}
 
 function* encodingSaga() {
     yield put({type: ActionTypes.SaveScreenEncodingStart, payload: {}});

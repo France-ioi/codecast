@@ -12,10 +12,12 @@ function traverse(kind, attrs, children) {
         } else if (child[0] === 'CXXMemberCallExpr') {
             // rewrite Serial.method(…) into Serial_method(…)
             newChildren.push(rewriteCXXMemberCallExpr(...child));
+
             continue;
         }
         newChildren.push(child);
     }
+
     return [kind, attrs, newChildren];
 }
 
@@ -25,6 +27,7 @@ function rewriteCXXMemberCallExpr(kind, attrs, children) {
     if ('MemberExpr' === calleeExpr[0]) {
         const memberName = calleeExpr[2][0];
         const objExpr = calleeExpr[2][1];
+
         if ('DeclRefExpr' === objExpr[0]) {
             const objName = objExpr[2][0];
             const newName = ['Name', {
@@ -41,6 +44,7 @@ function rewriteCXXMemberCallExpr(kind, attrs, children) {
     } else {
         console.log('CXXMemberCallExpr: expected MemberExpr');
     }
+
     return [kind, attrs, children];
 }
 

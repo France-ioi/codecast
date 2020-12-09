@@ -1,7 +1,6 @@
 import url from 'url';
 
 export function buildCommonOptions(start, query) {
-
     const options = {
         start,
         showStepper: true,
@@ -96,5 +95,6 @@ export function parseCodecastUrl(base) {
     const idPos = pathname.lastIndexOf('/');
     const uploadPath = pathname.slice(1, idPos); // skip leading '/'
     const id = pathname.slice(idPos + 1);
+
     return {s3Bucket, uploadPath, id};
 }

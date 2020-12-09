@@ -58,6 +58,7 @@ g.directiveArgByName = PR.seq(g.ident, g.equals, g.expr).map(function (match) {
 g.directiveArg = PR.alt(g.directiveArgByName, g.directiveArgByPos);
 g.directiveArgs = PR.repeatSeparated(g.directiveArg, g.coma, {min: 0}).map(function (match) {
     var byPos = [], byName = {};
+
     match.forEach(function (arg) {
         if ('name' in arg) {
             byName[arg.name] = arg.value;
@@ -65,6 +66,7 @@ g.directiveArgs = PR.repeatSeparated(g.directiveArg, g.coma, {min: 0}).map(funct
             byPos.push(arg.value);
         }
     });
+
     return {byName, byPos};
 });
 g.directiveAssignment = PR.seq(g.ident, g.equals).map(function (match) {
@@ -74,6 +76,7 @@ g.directive = PR.seq(g.directiveAssignment.optional(), g.ident, g.lparen, g.dire
     var key = match[0];
     var kind = match[1];
     var args = match[3] || {byPos: [], byName: {}};
+
     return {key: key, kind: kind, byPos: args.byPos, byName: args.byName};
 });
 
@@ -85,6 +88,7 @@ var computeLineOffsets = function (lines) {
         offset += line.length + 1;
     });
     lineOffsets.push(offset);
+
     return lineOffsets;
 };
 
@@ -113,6 +117,7 @@ var getPositionFromOffset = function (lineOffsets, offset) {
             throw 'bug';
         }
     }
+
     return {line: iLeft, column: offset - lineOffsets[iLeft]};
 };
 
@@ -155,6 +160,7 @@ module.exports.enrichSyntaxTree = function (source, ast) {
                     }
                     lineNo += 1;
                 }
+
                 if (functionNode) {
                     // For the first block inside a function, attach the directives
                     // to the function instead of the block.  This is to allow the
@@ -166,7 +172,9 @@ module.exports.enrichSyntaxTree = function (source, ast) {
                 }
             }
         }
+
         node[2].forEach(findBlocks);
     };
+
     findBlocks(ast);
 };

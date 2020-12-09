@@ -17,7 +17,6 @@ ALTER TABLE user_configs ADD UNIQUE INDEX `ix_user_configs_user_id` (`user_id`);
 */
 
 module.exports = function (app, config, callback) {
-
     const oauthClientCache = {};
 
     app.set('trust proxy', 1) // trust first proxy
@@ -29,8 +28,10 @@ module.exports = function (app, config, callback) {
         if (req.params.provider === 'guest') {
             return guestUserLogin(req, res);
         }
+
         const {client} = getOauthConfig(req.params.provider);
         const state = req.session.oauth_state = randomstring.generate();
+
         res.redirect(client.code.getUri({state}));
     });
 
@@ -59,22 +60,33 @@ module.exports = function (app, config, callback) {
                     method: 'GET',
                     url: authConfig.identityProviderUri
                 }), function (err, response, body) {
-                    if (err) return res.render('after_login', {error: err.toString()});
-                    if (response.statusCode != 200) return res.status(response.statusCode).send(body);
+                    if (err) {
+                        return res.render('after_login', {error: err.toString()});
+                    }
+                    if (response.statusCode != 200) {
+                        return res.status(response.statusCode).send(body);
+                    }
+
                     let identity;
                     try {
                         identity = JSON.parse(body);
                     } catch (ex) {
                         if (err) return res.render('after_login', {error: 'malformed user profile'});
                     }
+
                     req.session.identity = identity;
                     req.session.user_id = identity.id;
                     if (process.env.NODE_ENV === 'development') {
                         console.log('user_id :', identity.id);
                     }
+
                     getUserConfig(identity.id, function (err, userConfig) {
-                        if (err) return res.render('after_login', {error: err.toString()});
+                        if (err) {
+                            return res.render('after_login', {error: err.toString()});
+                        }
+
                         req.session.grants = userConfig.grants;
+
                         res.render('after_login', {user: getFrontendUser(req.session)});
                     })
                 });
@@ -84,13 +96,23 @@ module.exports = function (app, config, callback) {
             });
     });
 
+    /**
+     * Get the current logged user object.
+     */
+    app.get('/me', function (req, res) {
+        res.json({
+            user: getFrontendUser(req.session)
+        });
+    });
+
     app.get('/logout', function (req, res) {
         const {provider} = req.session;
         let logoutUri;
         if (provider && provider !== 'guest') {
             logoutUri = getOauthConfig(provider).config.logoutUri;
         }
-        req.session.destroy(function (err) {
+
+        req.session.destroy(function(err) {
             res.render('after_logout', {
                 rebaseUrl: config.rebaseUrl,
                 logoutUri
@@ -103,10 +125,12 @@ module.exports = function (app, config, callback) {
         if (!authConfig) {
             throw new Error(`unknown auth provider ${provider}`);
         }
+
         let client = oauthClientCache[provider];
         if (!client) {
             client = oauthClientCache[provider] = new ClientOAuth2(authConfig.oauth2);
         }
+
         return {config: authConfig, client};
     }
 
@@ -118,6 +142,7 @@ module.exports = function (app, config, callback) {
         if (session.grants) {
             for (let grant of session.grants) {
                 const {type, s3Bucket, s3Region, uploadPath} = grant;
+
                 grants.push({
                     description: `s3:${s3Bucket}/${uploadPath}`,
                     url: `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}/`,
@@ -125,13 +150,16 @@ module.exports = function (app, config, callback) {
                 });
             }
         }
+
         return {id, login, grants};
     }
 
     config.optionsHook = function (req, options, callback) {
         const authProviders = Object.keys(config.auth);
         authProviders.push('guest');
+
         const user = getFrontendUser(req.session);
+
         callback(null, {...options, authProviders, user});
     };
 
@@ -159,6 +187,7 @@ module.exports = function (app, config, callback) {
                     if (err.code === 'ER_NO_SUCH_TABLE') {
                         return queryLegacyUserConfig();
                     }
+
                     return done('database error');
                 }
                 if (rows.length === 0) {
@@ -175,30 +204,37 @@ module.exports = function (app, config, callback) {
                         uploadPath: row.path
                     });
                 }
+
                 done();
             });
         }
 
         function queryLegacyUserConfig() {
             const q = "SELECT value FROM user_configs WHERE user_id = ? LIMIT 1";
+
             db.query(q, [user_id], function (err, rows) {
                 if (err) return done('database error ' + err);
                 if (rows.length === 1) {
                     try {
                         const grant = JSON.parse(rows[0].value);
                         grant.type = "s3";
+
                         grants.push(grant);
                     } catch (ex) {
                         return done('parse error');
                     }
                 }
+
                 done();
             });
         }
 
         function done(err) {
             db.end();
-            if (err) return callback(err);
+            if (err) {
+                return callback(err);
+            }
+
             callback(null, {grants});
         }
     }

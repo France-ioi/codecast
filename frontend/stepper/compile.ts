@@ -107,8 +107,9 @@ export default function(bundle) {
                 try {
                     const logData = yield select(state => state.getIn(['statistics', 'logData']));
                     const postData = {source, platform, logData};
-                    /* XXX replace 'translate' with a computed absolute path */
-                    response = yield call(asyncRequestJson, '/next/compile', postData);
+                    const {baseUrl} = yield select(state => state.get('options'));
+
+                    response = yield call(asyncRequestJson, baseUrl + '/compile', postData);
                 } catch (ex) {
                     response = {error: ex.toString()};
                 }
