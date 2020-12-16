@@ -19,13 +19,13 @@ interface EditorOverviewStateToProps {
 }
 
 function mapStateToProps(state: AppStore): EditorOverviewStateToProps {
-    const editor = state.get('editor');
-    const playerUrl = editor.get('playerUrl');
-    const {version, name, events} = editor.get('data');
-    const canSave = editor.get('canSave');
-    const save = editor.get('save');
-    const duration = editor.get('duration');
-    const waveform = editor.get('waveform');
+    const editor = state.editor;
+    const playerUrl = editor.playerUrl;
+    const {version, name, events} = editor.data;
+    const canSave = editor.canSave;
+    const save = editor.save;
+    const duration = editor.duration;
+    const waveform = editor.waveform;
 
     return {version, name, events, duration, waveform, canSave, save, playerUrl};
 }

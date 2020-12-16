@@ -2,11 +2,20 @@ import {put, takeEvery} from 'redux-saga/effects';
 import {buffers} from 'redux-saga';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
+import produce from "immer";
+import {AppStore} from "../store";
+
+export const initialStateMemoryUsage = {
+    heapSize: 0
+};
 
 export default function(bundle) {
     bundle.defineAction(ActionTypes.MemoryUsageChanged);
 
-    bundle.addReducer(AppActionTypes.AppInit, (state) => state.set('memoryUsage', {heapSize: 0}));
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
+        draft.memoryUsage = initialStateMemoryUsage;
+    }));
+
     bundle.addReducer(ActionTypes.MemoryUsageChanged, (state, {payload}) =>
         state.update('memoryUsage', (value => ({...value, ...payload}))));
 

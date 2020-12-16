@@ -7,6 +7,8 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
+import produce from "immer";
+import {AppStore} from "../store";
 
 interface LogData {
     type: any,
@@ -67,14 +69,20 @@ function getBrowser() {
     }
 }
 
+export const initialStateStatistics = {
+    isReady: false,
+    logData: undefined as LogData
+};
+
 export default function(bundle) {
     if (isLocalMode()) {
         return;
     }
 
-    bundle.addReducer(AppActionTypes.AppInit, (state, {payload: {options: {isStatisticsReady}}}) => {
-        return state.set('statistics', Immutable.Map({isReady: isStatisticsReady}))
-    });
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore, {payload: {options: {isStatisticsReady}}}) => {
+        draft.statistics = initialStateStatistics;
+        draft.statistics.isReady = isStatisticsReady;
+    }));
 
     bundle.defineAction(ActionTypes.StatisticsInitLogData);
     bundle.defineAction(ActionTypes.StatisticsLogLoadingData);
@@ -96,7 +104,9 @@ export default function(bundle) {
     bundle.addReducer(ActionTypes.StatisticsSearchStatusChanged, statisticsSearchStatusChangedReducer);
 
     bundle.defineAction(ActionTypes.StatisticsLogDataChanged);
-    bundle.addReducer(ActionTypes.StatisticsLogDataChanged, statisticsLogDataChangedReducer);
+    bundle.addReducer(ActionTypes.StatisticsLogDataChanged, produce((draft, {payload: {logData}}) => {
+        draft.statistics.logData = logData;
+    }));
 
     bundle.addSaga(function* editorSaga(app) {
         yield takeEvery(ActionTypes.StatisticsLogLoadingData, statisticsLogLoadingDataSaga);
@@ -136,11 +146,6 @@ function statisticsSearchStatusChangedReducer(state, {payload}) {
     return state.setIn(['statistics', 'search'], {data: [], error: null, ...payload});
 }
 
-function statisticsLogDataChangedReducer(state, {payload: {logData}}) {
-    return state.setIn(['statistics', 'logData'], logData);
-}
-
-
 function* statisticsPrepareSaga() {
     /* Require the user to be logged in. */
     while (!(yield select(state => state.get('user')))) {
@@ -151,7 +156,7 @@ function* statisticsPrepareSaga() {
 }
 
 function* statisticsInitLogDataSaga() {
-    const options = yield select(state => state.get('options'));
+    const options = yield select(state => state.options);
     const {
         start: compileType,
         language,
@@ -196,8 +201,9 @@ function* statisticsPlayerReadySaga(app, action) {
 
 function* statisticsLogLoadingDataSaga() {
     try {
-        const {baseUrl} = yield select(state => state.get('options'));
-        const logData = yield select(state => state.getIn(['statistics', 'logData']));
+        const {baseUrl} = yield select(state => state.options);
+        const logData = yield select(state => state.statistics.logData);
+
         yield call(asyncRequestJson, `${baseUrl}/statistics/api/logLoadingData`, {logData});
     } catch (error) {
         console.error('Error Codecast Load Log', error);

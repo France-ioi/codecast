@@ -1,16 +1,21 @@
-import React from 'react';
 import {call, put, select, takeLatest} from 'redux-saga/effects';
 import FileSaver from 'file-saver';
-
 import {postJson} from '../common/utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from '../editor/actionTypes';
 import {ActionTypes as AppActionTypes} from '../actionTypes';
-import {EditorOverview} from "./EditorOverview";
+import produce from "immer";
+import {AppStore} from "../store";
+import {initialStateEditor} from "./index";
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, initReducer);
-    bundle.addReducer(EditorActionTypes.EditorPrepare, initReducer);
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
+        draft.editor = initialStateEditor;
+    }));
+
+    bundle.addReducer(EditorActionTypes.EditorPrepare, produce((draft: AppStore) => {
+        draft.editor = initialStateEditor;
+    }));
 
     bundle.defineAction(ActionTypes.EditorPropertyChanged);
     bundle.addReducer(ActionTypes.EditorPropertyChanged, editorPropertyChangedReducer);
@@ -30,12 +35,6 @@ export default function(bundle) {
         yield takeLatest(ActionTypes.EditorSaveAudio, editorSaveAudioSaga, app);
         yield takeLatest(ActionTypes.EditorSave, editorSaveSaga, app);
     });
-}
-
-function initReducer(state) {
-    return state.update('editor', editor => editor
-        .set('save', {state: 'idle'})
-        .set('unsaved', false));
 }
 
 function editorPropertyChangedReducer(state, {payload: {key, value}}) {

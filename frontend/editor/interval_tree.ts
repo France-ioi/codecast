@@ -178,7 +178,7 @@ function intervals(tree) {
     };
 }
 
-class IntervalTree {
+export class IntervalTree {
     keys = {[Symbol.iterator]: () => keys(this.root)};
 
     constructor(public root) {

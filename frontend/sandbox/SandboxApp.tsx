@@ -7,13 +7,13 @@ import {connect} from "react-redux";
 import {AppStore} from "../store";
 
 interface SandboxAppStateToProps {
-    containerWidth: any,
+    containerWidth: number,
     viewportTooSmall: boolean
 }
 
 function mapStateToProps(state: AppStore): SandboxAppStateToProps {
-    const containerWidth = state.get('containerWidth');
-    const viewportTooSmall = state.get('viewportTooSmall');
+    const containerWidth = state.containerWidth;
+    const viewportTooSmall = state.viewportTooSmall;
 
     return {
         viewportTooSmall, containerWidth

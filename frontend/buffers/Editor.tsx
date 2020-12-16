@@ -13,7 +13,7 @@ interface EditorStateToProps {
 function mapStateToProps(state: AppStore): EditorStateToProps
 {
     return {
-        getMessage: state.get('getMessage'),
+        getMessage: state.getMessage,
     }
 }
 

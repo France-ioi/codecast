@@ -1,26 +1,60 @@
-import {Map} from 'immutable';
-
 import {findInstant} from './utils';
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes} from "./actionTypes";
+import produce from "immer";
+import {AppStore} from "../store";
+
+export const initialStatePlayer = {
+    audio: null as HTMLVideoElement,
+    volume: 100,
+    isMuted: false,
+    progress: 0,
+    audioTime: 0,
+    duration: 0,
+    data: null as any, // TODO: type
+    instants: null as any[], // TODO: type
+    current: null as any, // TODO: type
+    isReady: false,
+    error: null as {
+        message: '',
+        source: 'prepare'
+    }
+}
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, initReducer);
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
+        playerClear(draft);
+    }));
 
     bundle.defineAction(ActionTypes.PlayerClear);
-    bundle.addReducer(ActionTypes.PlayerClear, playerClearReducer);
+    bundle.addReducer(ActionTypes.PlayerClear, produce((draft: AppStore) => {
+        playerClear(draft);
+    }));
 
     bundle.defineAction(ActionTypes.PlayerPreparing);
-    bundle.addReducer(ActionTypes.PlayerPreparing, playerPreparingReducer);
+    bundle.addReducer(ActionTypes.PlayerPreparing, produce((draft: AppStore) => {
+        draft.player.isReady = false;
+    }));
 
     bundle.defineAction(ActionTypes.PlayerPrepareProgress);
     bundle.addReducer(ActionTypes.PlayerPrepareProgress, playerPrepareProgressReducer);
 
     bundle.defineAction(ActionTypes.PlayerPrepareFailure);
-    bundle.addReducer(ActionTypes.PlayerPrepareFailure, playerPrepareFailureReducer);
+    bundle.addReducer(ActionTypes.PlayerPrepareFailure, produce((draft, {payload: {message}}) => {
+        draft.player.error = {
+            source: 'prepare',
+            message
+        };
+    }));
 
     bundle.defineAction(ActionTypes.PlayerReady);
-    bundle.addReducer(ActionTypes.PlayerReady, playerReadyReducer);
+    bundle.addReducer(ActionTypes.PlayerReady, produce((draft: AppStore, {payload: {duration, data, instants}}) => {
+        draft.player.audioTime = 0;
+        draft.player.duration = duration;
+        draft.player.data = data;
+        draft.player.instants = instants;
+        draft.player.current = instants[0];
+    }));
 
     bundle.defineAction(ActionTypes.PlayerStarted);
     bundle.addReducer(ActionTypes.PlayerStarted, playerStartedReducer);
@@ -41,38 +75,17 @@ export default function(bundle) {
     bundle.defineAction(ActionTypes.PlayerSeeked);
 }
 
-function initReducer(state, _action) {
-    return playerClearReducer(state);
-}
-
-function playerClearReducer(state) {
+function playerClear(draft: AppStore) {
     const audio = document.createElement('video');
-    const volume = audio.volume; /* XXX: load from localStorage? */
-    const isMuted = audio.muted; /* XXX: load from localStorage? */
-    const progress = 0;
 
-    return state.set('player', Map({audio, volume, isMuted, progress}));
-}
-
-function playerPreparingReducer(state, _action) {
-    return state.setIn(['player', 'isReady'], false);
+    draft.player.audio = audio;
+    draft.player.volume = audio.volume; /* TODO: load from localStorage? */
+    draft.player.isMuted = audio.muted; /* TODO: load from localStorage? */
+    draft.player.progress = 0;
 }
 
 function playerPrepareProgressReducer(state, {payload: {progress}}) {
     return state.setIn(['player', 'progress'], progress);
-}
-
-function playerPrepareFailureReducer(state, {payload: {message}}) {
-    return state.setIn(['player', 'error'], {source: 'prepare', message});
-}
-
-function playerReadyReducer(state, {payload: {duration, data, instants}}) {
-    return state.update('player', player => updateStatus(player
-        .set('audioTime', 0)
-        .set('duration', duration)
-        .set('data', data)
-        .set('instants', instants)
-        .set('current', instants[0])));
 }
 
 function updateStatus(player) {

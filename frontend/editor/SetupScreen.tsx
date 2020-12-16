@@ -14,10 +14,10 @@ interface SetupScreenStateToProps {
 }
 
 function mapStateToProps(state: AppStore): SetupScreenStateToProps {
-    const editor = state.get('editor');
-    const audioLoaded = editor.get('audioLoaded');
+    const editor = state.editor;
+    const audioLoaded = editor.audioLoaded;
     if (!audioLoaded) {
-        const progress = editor.get('audioLoadProgress');
+        const progress = editor.audioLoadProgress;
 
         return {
             step: 'loading',
@@ -25,9 +25,9 @@ function mapStateToProps(state: AppStore): SetupScreenStateToProps {
         };
     }
 
-    const playerReady = editor.get('playerReady');
+    const playerReady = editor.playerReady;
     if (!playerReady) {
-        const progress = state.getIn(['player', 'progress']);
+        const progress = state.player.progress;
 
         return {
             step: 'preparing',
@@ -35,7 +35,7 @@ function mapStateToProps(state: AppStore): SetupScreenStateToProps {
         };
     }
 
-    const tabId = editor.get('setupTabId');
+    const tabId = editor.setupTabId;
 
     return {
         step: 'ready',

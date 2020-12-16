@@ -1,24 +1,24 @@
 import url from 'url';
-import {ExamplePicker} from "./ExamplePicker";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
+import produce from "immer";
+
+export const initialStateExamples = {
+    fullExamplesUrl: ''
+};
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, initReducer);
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft) => {
+        draft.examples = updateExamplesState(draft, {});
+    }));
 
-    bundle.addReducer(ActionTypes.PlatformChanged, platformChangedReducer);
-}
-
-function initReducer(state, _action) {
-    return state.set('examples', updateExamplesState(state, {}));
-}
-
-function platformChangedReducer(state) {
-    return state.update('examples', examples => updateExamplesState(state, examples));
+    bundle.addReducer(ActionTypes.PlatformChanged, produce((draft) => {
+        draft.examples = updateExamplesState(draft, draft.examples);
+    }));
 }
 
 function updateExamplesState(state, examples) {
-    const {callbackUrl, examplesUrl, platform, language} = state.get('options');
+    const {callbackUrl, examplesUrl, platform, language} = state.options;
     if (!examplesUrl) {
         return false;
     }
@@ -48,6 +48,6 @@ function updateExamplesState(state, examples) {
 
     // @ts-ignore
     fullExamplesUrl = url.format(fullExamplesUrl);
-console.log(fullExamplesUrl);
+
     return {...examples, fullExamplesUrl};
 }

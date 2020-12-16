@@ -13,7 +13,6 @@ Shape of the 'compile' state:
 
 */
 
-import {Map} from 'immutable';
 import {call, put, select, takeLatest} from 'redux-saga/effects';
 
 import {asyncRequestJson} from '../utils/api';
@@ -24,11 +23,16 @@ import {stepperClear} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "../buffers/selectors";
+import produce from "immer";
+
+export const initialStateCompile = {
+    status: 'clear'
+};
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, function(state, _action) {
-        return state.set('compile', compileClear());
-    });
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft) => {
+        draft.compile = compileClear();
+    }));
 
     // Requested translation of given {source}.
     bundle.defineAction(ActionTypes.Compile);
@@ -230,12 +234,15 @@ const addNodeRanges = function(source, syntaxTree) {
     return traverse(syntaxTree);
 };
 
-function compileClear() {
-    return Map({status: 'clear'});
+export function compileClear() {
+    return {
+        status: 'clear'
+    };
 }
 
 function compileStarted(state, action) {
     const {source} = action;
+
     return state.set('status', 'running').set('source', source);
 }
 

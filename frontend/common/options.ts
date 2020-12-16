@@ -1,29 +1,19 @@
 import {stepperClear} from '../stepper';
-import {compileClearDiagnostics} from "../stepper/compile";
+import {compileClear} from "../stepper/compile";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
+import produce from "immer";
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, initReducer);
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft, {payload: {options}}) => {
+        draft.options = options;
+    }));
 
     bundle.defineAction(ActionTypes.PlatformChanged);
-    bundle.addReducer(ActionTypes.PlatformChanged, platformChangedReducer);
-}
+    bundle.addReducer(ActionTypes.PlatformChanged, produce((draft, {payload: platform}) => {
+        draft.options.platform = platform;
 
-function initReducer(state, {payload: {options}}) {
-    return state.set('options', options);
-}
-
-function platformChangedReducer(state, {payload: platform}) {
-    let newOptions = state.update('options', options => {
-        return {
-            ...options,
-            platform: platform
-        };
-    });
-
-    newOptions = newOptions.update('stepper', stepperClear);
-    newOptions = newOptions.update('compile', compile => compileClearDiagnostics(compile));
-
-    return newOptions;
+        draft.stepper = stepperClear();
+        draft.compile = compileClear();
+    }));
 }

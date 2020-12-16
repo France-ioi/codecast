@@ -6,17 +6,18 @@ import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {TrimEditorControls} from "./TrimEditorControls";
 import {PlayerControls} from "../player/PlayerControls";
+import {EditorControl} from "./index";
 
 interface EditScreenStateToProps {
     containerWidth: any,
     viewportTooSmall: any,
-    controls: 'none' | 'trim' | 'subtitles'
+    controls: EditorControl
 }
 
 function mapStateToProps(state: AppStore): EditScreenStateToProps {
-    const viewportTooSmall = state.get('viewportTooSmall');
-    const containerWidth = state.get('containerWidth');
-    const controls = state.getIn(['editor', 'controls']);
+    const viewportTooSmall = state.viewportTooSmall;
+    const containerWidth = state.containerWidth;
+    const controls = state.editor.controls;
 
     return {
         viewportTooSmall, containerWidth, controls

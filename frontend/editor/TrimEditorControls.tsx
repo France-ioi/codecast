@@ -21,13 +21,13 @@ interface TrimEditorControlsStateToProps {
 
 function mapStateToProps(state: AppStore, props): TrimEditorControlsStateToProps {
     const {width} = props;
-    const editor = state.get('editor');
-    const player = state.get('player');
-    const position = Math.round(player.get('audioTime'));
-    const duration = player.get('duration');
-    const waveform = editor.get('waveform');
-    const {events} = editor.get('data');
-    const {intervals} = editor.get('trim');
+    const editor = state.editor;
+    const player = state.player;
+    const position = Math.round(player.audioTime);
+    const duration = player.duration;
+    const waveform = editor.waveform;
+    const {events} = editor.data;
+    const {intervals} = editor.trim;
     const visibleDuration = width * 1000 / 60;
     let viewStart = position - visibleDuration / 2;
     let viewEnd = position + visibleDuration / 2;

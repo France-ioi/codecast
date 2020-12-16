@@ -5,6 +5,7 @@ export function getPersistentOptions() {
     } catch (ex) {
         // nothing
     }
+
     return opts || {
         paneEnabled: false,
         bandEnabled: true,

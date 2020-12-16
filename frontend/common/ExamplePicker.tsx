@@ -10,8 +10,8 @@ interface ExamplePickerStateToProps {
 
 function mapStateToProps(state: AppStore): ExamplePickerStateToProps
 {
-    const getMessage = state.get('getMessage');
-    const {fullExamplesUrl} = state.get('examples', {});
+    const getMessage = state.getMessage;
+    const {fullExamplesUrl} = state.examples;
 
     return {examplesUrl: fullExamplesUrl, getMessage};
 }

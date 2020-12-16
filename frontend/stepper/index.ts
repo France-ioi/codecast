@@ -41,7 +41,7 @@ import PythonBundle, {getNewOutput, getNewTerminal} from './python';
 
 /* TODO: clean-up */
 import {analyseState, collectDirectives} from './c/analysis';
-import {analyseSkulptState, getSkulptSuspensionsCopy} from "./python/analysis/analysis";
+import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
 import {parseDirectives} from "./python/directives";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
@@ -49,9 +49,38 @@ import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getCurrentStepperState, getStepper, getSyntaxTree, isStepperInterrupting} from "./selectors";
+import produce from "immer";
+import {CodecastPlatform} from "../store";
+
+// TODO: Separate the needs per platform (stepperState.python, stepperState.c, etc)
+export const initialStateStepperState = {
+    platform: 'python' as CodecastPlatform,
+    inputPos: 0, // Only used for python
+    output: '', // Only used for python
+    terminal: {}, // Only used for python
+    suspensions: [] as any[],  // Only used for python // TODO: Don't put this in the store
+    programState: {} as any, // Only used for unix, arduino
+    analysis: {} as SkulptAnalysis, // Only used for python
+    directives: {
+        ordered: [] as any[],
+        functionCallStack: null as any
+    }
+};
+
+type StepperStatus = 'clear' | 'idle' | 'starting' | 'running';
+
+export const initialStateStepper = {
+    status: 'clear' as StepperStatus,
+    undo: [],
+    redo: [],
+    initialStepperState: initialStateStepperState,
+    currentStepperState: initialStateStepperState
+};
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, initReducer);
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft) => {
+        draft.stepper = initialStateStepper;
+    }));
 
     /* Sent when the stepper task is started */
     bundle.defineAction(ActionTypes.StepperTaskStarted);
@@ -210,11 +239,11 @@ function enrichStepperState(stepperState, context) {
 }
 
 export function stepperClear() {
-    return Map({
+    return {
         status: 'clear',
-        undo: List(),
-        redo: List()
-    });
+        undo: [],
+        redo: []
+    };
 }
 
 function getNodeRange(state) {
@@ -267,10 +296,6 @@ function stringifyError(error) {
 }
 
 /* Reducers */
-
-function initReducer(state, _action) {
-    return state.set('stepper', stepperClear());
-}
 
 function stepperRestartReducer(state, {payload: {stepperState}}) {
     const {platform} = state.get('options');
@@ -352,7 +377,7 @@ function stepperProgressReducer(state, {payload: {stepperContext}}) {
     // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
     if (stepperState.hasOwnProperty('platform') && stepperState.platform === 'python') {
         const storeStepper = getStepper(state);
-        const storeCurrentStepperState = storeStepper.get('currentStepperState');
+        const storeCurrentStepperState = storeStepper.currentStepperState;
 
         const storeTerminal = window.currentPythonRunner._terminal;
         const storeOutput = storeCurrentStepperState.output;

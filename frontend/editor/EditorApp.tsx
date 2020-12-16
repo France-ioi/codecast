@@ -9,6 +9,7 @@ import {LoginScreen} from "../common/LoginScreen";
 import {EditScreen} from "./EditScreen";
 import {TrimEditorReturn} from "./TrimEditorReturn";
 import {SubtitlesEditorReturn} from "../subtitles/SubtitlesEditorReturn";
+import {EditorControl} from "./index";
 
 enum EditorAppActivity {
     None,
@@ -19,13 +20,13 @@ enum EditorAppActivity {
 
 interface EditorAppStateToProps {
     activity: EditorAppActivity,
-    controls: 'none' | 'trim' | 'subtitles'
+    controls: EditorControl
 }
 
 function mapStateToProps(state: AppStore): EditorAppStateToProps {
-    const user = state.get('user');
-    const screen = state.get('screen');
-    const controls = state.getIn(['editor', 'controls']);
+    const user = state.user;
+    const screen = state.screen;
+    const controls = state.editor.controls;
 
     let activity = EditorAppActivity.None;
     if (!user) {

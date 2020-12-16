@@ -19,16 +19,16 @@ interface PlayerControlsStateToProps {
 }
 
 function mapStateToProps(state: AppStore): PlayerControlsStateToProps {
-    const getMessage = state.get('getMessage');
-    const player = state.get('player');
-    const isReady = player.get('isReady');
-    const isPlaying = player.get('isPlaying');
-    const currentInstant = player.get('current');
+    const getMessage = state.getMessage;
+    const player = state.player;
+    const isReady = player.isReady;
+    const isPlaying = player.isPlaying;
+    const currentInstant = player.current;
     const isAtEnd = currentInstant && currentInstant.isEnd;
-    const audioTime = player.get('audioTime');
-    const duration = player.get('duration');
-    const volume = player.get('volume');
-    const isMuted = player.get('isMuted');
+    const audioTime = player.audioTime;
+    const duration = player.duration;
+    const volume = player.volume;
+    const isMuted = player.isMuted;
 
     return {getMessage, isReady, isPlaying, isAtEnd, audioTime, duration, volume, isMuted};
 }

@@ -1,36 +1,76 @@
 import React from 'react';
-import {Map} from 'immutable';
 import {call, put, select, take, takeEvery} from 'redux-saga/effects';
-
 import {getAudio} from '../common/utils';
 import {extractWaveform} from './waveform/tools';
 import OverviewBundle from './overview';
-import TrimBundle from './trim';
+import TrimBundle, {initialStateTrimSaving, TrimSavingStep} from './trim';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
-import {ActionTypes as AppActionTypes} from '../actionTypes';
+import produce from "immer";
+import {AppStore} from "../store";
+import {IntervalTree} from "./interval_tree";
+
+export type EditorControl = 'none' | 'trim' | 'subtitles';
+
+export const initialStateEditor = {
+    save: {
+        state: 'idle'
+    },
+    unsaved: false,
+    controls: 'none' as EditorControl,
+    audioLoadProgress: 0,
+    setupTabId: 'setup-tab-infos',
+    base: '',
+    dataUrl: '',
+    playerUrl: '',
+    canSave: false,
+    audioLoaded: false,
+    duration: 0,
+    audioBlob: null as any, // TODO: type
+    audioBuffer: null as any,// TODO: type
+    waveform: new Float32Array(),
+    playerReady: false,
+    data: null as any, // TODO: type
+    trim: initialStateTrimSaving
+};
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, state =>
-        state.set('editor', Map()));
-
     bundle.defineAction(ActionTypes.EditorPrepare);
-    bundle.addReducer(ActionTypes.EditorPrepare, editorPrepareReducer);
+    bundle.addReducer(ActionTypes.EditorPrepare, produce((draft: AppStore, {payload: {baseDataUrl}}) => {
+        const {baseUrl} = draft.options;
+
+        draft.editor = initialStateEditor;
+        draft.editor.base = baseDataUrl;
+        draft.editor.dataUrl = baseDataUrl;
+        draft.editor.playerUrl = `${baseUrl}/player?base=${encodeURIComponent(baseDataUrl)}`;
+        draft.editor.canSave = userHasGrant(draft.user, baseDataUrl);
+    }));
 
     bundle.addReducer(CommonActionTypes.LoginFeedback, loginFeedbackReducer);
 
     bundle.defineAction(ActionTypes.EditorControlsChanged);
-    bundle.addReducer(ActionTypes.EditorControlsChanged, editorControlsChangedReducer);
+    bundle.addReducer(ActionTypes.EditorControlsChanged, produce((draft: AppStore, {payload: {controls}}) => {
+        draft.editor.controls = controls;
+    }));
 
     bundle.defineAction(ActionTypes.EditorAudioLoadProgress);
     bundle.addReducer(ActionTypes.EditorAudioLoadProgress, editorAudioLoadProgressReducer);
 
     bundle.defineAction(ActionTypes.EditorAudioLoaded);
-    bundle.addReducer(ActionTypes.EditorAudioLoaded, editorAudioLoadedReducer);
+    bundle.addReducer(ActionTypes.EditorAudioLoaded, produce((draft: AppStore, {payload: {duration, audioBlob, audioBuffer, waveform}}) => {
+        draft.editor.audioLoaded = true;
+        draft.editor.duration = duration;
+        draft.editor.audioBlob = audioBlob;
+        draft.editor.audioBuffer = audioBuffer;
+        draft.editor.waveform = waveform;
+    }));
 
     bundle.defineAction(ActionTypes.EditorPlayerReady);
-    bundle.addReducer(ActionTypes.EditorPlayerReady, editorPlayerReadyReducer);
+    bundle.addReducer(ActionTypes.EditorPlayerReady, produce((draft: AppStore, {payload: {data}}) => {
+        draft.editor.playerReady = true;
+        draft.editor.data = data;
+    }));
 
     bundle.defineAction(ActionTypes.SetupScreenTabChanged);
     bundle.addReducer(ActionTypes.SetupScreenTabChanged, setupScreenTabChangedReducer);
@@ -43,20 +83,6 @@ export default function(bundle) {
     bundle.include(OverviewBundle);
     bundle.include(TrimBundle);
 };
-
-function editorPrepareReducer(state, {payload: {baseDataUrl}}) {
-    const {baseUrl} = state.get('options');
-
-    return state.set('editor', Map({
-        base: baseDataUrl,
-        dataUrl: baseDataUrl,
-        playerUrl: `${baseUrl}/player?base=${encodeURIComponent(baseDataUrl)}`,
-        setupTabId: 'setup-tab-infos',
-        audioLoadProgress: 0,
-        controls: 'none',
-        canSave: userHasGrant(state.get('user'), baseDataUrl)
-    }));
-}
 
 function loginFeedbackReducer(state, _action) {
     const editor = state.get('editor');
@@ -77,10 +103,6 @@ function userHasGrant(user, dataUrl) {
     }
 
     return false;
-}
-
-function editorControlsChangedReducer(state, {payload: {controls}}) {
-    return state.setIn(['editor', 'controls'], controls);
 }
 
 function editorAudioLoadProgressReducer(state, {payload: {value}}) {
@@ -137,21 +159,6 @@ function* getAudioSaga(audioUrl) {
                 break;
         }
     }
-}
-
-function editorAudioLoadedReducer(state, {payload: {duration, audioBlob, audioBuffer, waveform}}) {
-    return state.update('editor', editor => editor
-        .set('audioLoaded', true)
-        .set('duration', duration)
-        .set('audioBlob', audioBlob)
-        .set('audioBuffer', audioBuffer)
-        .set('waveform', waveform));
-}
-
-function editorPlayerReadyReducer(state, {payload: {data}}) {
-    return state.update('editor', editor => editor
-        .set('playerReady', true)
-        .set('data', data));
 }
 
 function setupScreenTabChangedReducer(state, {payload: {tabId}}) {

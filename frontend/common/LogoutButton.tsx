@@ -9,8 +9,8 @@ interface LogoutButtonStateToProps {
 }
 
 function mapStateToProps(state: AppStore): LogoutButtonStateToProps {
-    const {baseUrl} = state.get('options');
-    const user = state.get('user');
+    const {baseUrl} = state.options;
+    const user = state.user;
 
     return {user, baseUrl};
 }

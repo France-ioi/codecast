@@ -127,11 +127,14 @@ export default function(bundle) {
 };
 
 function initReducer(state, {payload: {options: {source, input}}}) {
-    state = state.set('buffers', Map({
-        source: BufferState(),
-        input: BufferState(),
-        output: BufferState()
-    }));
+    state = {
+        ...state,
+        buffers: {
+            source: BufferState(),
+            input: BufferState(),
+            output: BufferState()
+        }
+    }
 
     if (source) {
         state = bufferLoadReducer(state, {buffer: 'source', text: source || ''});

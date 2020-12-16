@@ -28,8 +28,8 @@ interface StepperControlsStateToProps {
 
 function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     const {enabled} = props;
-    const getMessage = state.get('getMessage');
-    const {controls, showStepper, platform} = state.get('options');
+    const getMessage = state.getMessage;
+    const {controls, showStepper, platform} = state.options;
 
     let showCompile = false, showControls = false, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
@@ -45,12 +45,12 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
 
     const stepper = getStepper(state);
     if (stepper) {
-        const status = stepper.get('status');
+        const status = stepper.status;
         if (status === 'clear') {
             showCompile = true;
             canCompile = enabled;
         } else if (status === 'idle') {
-            const currentStepperState = stepper.get('currentStepperState', {});
+            const currentStepperState = stepper.currentStepperState;
 
             showEdit = true;
             showControls = true;
@@ -61,8 +61,8 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
                 canStepOut = (currentStepperState.suspensions && (currentStepperState.suspensions.length > 1));
                 canStep = !currentStepperState.analysis.isFinished;
                 canRestart = enabled;
-                canUndo = enabled && !stepper.get('undo').isEmpty();
-                canRedo = enabled && !stepper.get('redo').isEmpty();
+                canUndo = enabled && (stepper.undo.length > 0);
+                canRedo = enabled && (stepper.redo.length > 0);
                 showExpr = false;
             } else {
                 if (currentStepperState && currentStepperState.programState) {
@@ -71,8 +71,8 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
                     canStepOut = !!C.findClosestFunctionScope(scope);
                     canStep = control && !!control.node;
                     canRestart = enabled;
-                    canUndo = enabled && !stepper.get('undo').isEmpty();
-                    canRedo = enabled && !stepper.get('redo').isEmpty();
+                    canUndo = enabled && (stepper.undo.length > 0);
+                    canRedo = enabled && (stepper.redo.length > 0);
                 }
             }
         } else if (status === 'starting') {

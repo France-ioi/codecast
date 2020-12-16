@@ -17,8 +17,8 @@ interface MenuStateToProps {
 }
 
 function mapStateToProps(state: AppStore): MenuStateToProps {
-    const {baseUrl, baseDataUrl, platform, canChangePlatform} = state.get('options');
-    const getMessage = state.get('getMessage');
+    const {baseUrl, baseDataUrl, platform, canChangePlatform} = state.options;
+    const getMessage = state.getMessage;
 
     let offlineDownloadUrl = null;
     if (!isLocalMode() && baseDataUrl) {

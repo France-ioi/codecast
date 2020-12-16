@@ -11,8 +11,8 @@ interface TrimEditorStateToProps {
 }
 
 function mapStateToProps(state: AppStore): TrimEditorStateToProps {
-    const {saving} = state.getIn(['editor', 'trim']);
-    const user = state.get('user');
+    const {saving} = state.editor.trim;
+    const user = state.user;
     const grants = user && user.grants || [];
 
     return {saving, grants};

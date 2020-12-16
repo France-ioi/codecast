@@ -14,19 +14,20 @@ import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {getCurrentStepperState} from "../selectors";
 import {getBufferModel} from "../../buffers/selectors";
+import produce from "immer";
 
 export default function(bundle) {
     bundle.include(TerminalBundle);
 
-    bundle.addReducer(AppActionTypes.AppInit, function(state) {
-        return state.set('ioPane', updateIoPaneState(state, {}));
-    });
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft) => {
+        draft.ioPanes = updateIoPaneState(draft, {});
+    }));
     bundle.addReducer(CommonActionTypes.PlatformChanged, function(state) {
         return state.update('ioPane', ioPane => updateIoPaneState(state, ioPane));
     });
 
     function updateIoPaneState(state, ioPane) {
-        const {platform} = state.get('options');
+        const {platform} = state.options;
         if (platform === 'python') {
             return {
                 //mode: 'split',

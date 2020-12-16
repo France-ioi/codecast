@@ -1,20 +1,34 @@
 import IntlMessageFormat from 'intl-messageformat';
 import memoize from 'lodash.memoize';
-import {LanguageSelection} from "./LanguageSelection";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
-
-export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, initReducer);
-
-    bundle.defineAction(ActionTypes.LanguageSet);
-    bundle.addReducer(ActionTypes.LanguageSet, setLanguageReducer);
-}
+import produce from "immer";
+import {AppStore} from "../store";
 
 export const Languages = {
     'en-US': require('./en-US.js'),
     'fr-FR': require('./fr-FR.js'),
 };
+
+export default function(bundle) {
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft, {payload: {options}}) => {
+        let language = 'en-US';
+        if (navigator.language in Languages) {
+            language = navigator.language;
+        }
+        if (window.localStorage.language && window.localStorage.language in Languages) {
+            language = window.localStorage.language;
+        }
+        if (language in options && options.language in Languages) {
+            language = options.language;
+        }
+
+        return setLanguageReducer(draft, {payload: {language}});
+    }));
+
+    bundle.defineAction(ActionTypes.LanguageSet);
+    bundle.addReducer(ActionTypes.LanguageSet, produce(setLanguageReducer));
+}
 
 const Message = {
     toString: function() {
@@ -36,32 +50,28 @@ Object.defineProperty(Message, 's', {
     }
 });
 
-function initReducer(state, {payload: {options}}) {
-    let language = 'en-US';
-    if (navigator.language in Languages) {
-        language = navigator.language;
-    }
-    if (window.localStorage.language && window.localStorage.language in Languages) {
-        language = window.localStorage.language;
-    }
-    if (language in options && options.language in Languages) {
-        language = options.language;
-    }
-
-    return setLanguageReducer(state, {payload: {language}});
-}
-
-function setLanguageReducer(state, {payload: {language}}) {
+function setLanguageReducer(draft: AppStore, {payload: {language}}) {
     if (!Languages[language]) {
         language = 'en-US';
     }
 
-    const localizedMessage = Object.create(Message,
-        {_l: {writable: false, configurable: false, value: language}});
+    const localizedMessage = Object.create(Message, {
+        _l: {
+            writable: false,
+            configurable: false,
+            value: language
+        }
+    });
     const getMessage = memoize(function(message, defaultText) {
         const value = Languages[language][message] || defaultText || `L:${message}`;
-        return Object.create(localizedMessage,
-            {_m: {writable: false, configurable: false, value}});
+
+        return Object.create(localizedMessage, {
+            _m: {
+                writable: false,
+                configurable: false,
+                value
+            }
+        });
     });
 
     getMessage.format = function(value) {
@@ -69,12 +79,12 @@ function setLanguageReducer(state, {payload: {language}}) {
             // @ts-ignore
             return getMessage(value.message).format(value.args);
         }
+
         return getMessage(value.toString());
     }
 
-    return state
-        .update('options', options => ({...options, language}))
-        .set('getMessage', getMessage);
+    draft.options.language = language;
+    draft.getMessage = getMessage;
 }
 
 export class LocalizedError extends Error {

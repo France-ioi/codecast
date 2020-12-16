@@ -1,10 +1,15 @@
 import {ActionTypes} from "./actionTypes";
+import produce from "immer";
+
+type Screen = 'setup' | 'edit';
+
+export const initialStateScreen: Screen = 'setup';
 
 export default function(bundle) {
     // Switch to the specified screen.
     bundle.defineAction(ActionTypes.SystemSwitchToScreen);
 
-    bundle.addReducer(ActionTypes.SystemSwitchToScreen, function(state, {payload}) {
-        return state.set('screen', payload.screen);
-    });
+    bundle.addReducer(ActionTypes.SystemSwitchToScreen, produce((draft, {payload: screen}) => {
+        draft.screen = screen;
+    }));
 };

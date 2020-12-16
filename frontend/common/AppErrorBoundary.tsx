@@ -10,7 +10,7 @@ interface AppErrorBoundaryStateToProps {
 
 function mapStateToProps(state: AppStore): AppErrorBoundaryStateToProps {
     return {
-        lastError: state.get('lastError')
+        lastError: state.lastError
     };
 }
 

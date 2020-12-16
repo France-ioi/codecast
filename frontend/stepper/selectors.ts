@@ -1,7 +1,7 @@
 import {AppStore} from '../store';
 
 export function getStepper(state: AppStore) {
-    return state.get('stepper')
+    return state.stepper;
 }
 
 export function getCurrentStepperState(state: AppStore) {

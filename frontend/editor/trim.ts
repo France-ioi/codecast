@@ -9,16 +9,41 @@ import {uploadBlobChannel} from '../utils/blobs';
 import {spawnWorker} from '../utils/worker_utils';
 // @ts-ignore
 import AudioWorker from '../audio_worker/index.worker';
-import intervalTree from './interval_tree';
+import intervalTree, {IntervalTree} from './interval_tree';
 import {findInstantIndex} from '../player/utils';
 import {postJson} from '../common/utils';
 import {findSubtitleIndex} from '../subtitles/utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as SubtitlesActionTypes} from "../subtitles/actionTypes";
+import produce from "immer";
+import {AppStore} from "../store";
+
+export type TrimSavingStep = null | keyof typeof initialStateSavingStepStatus;
+export type StepStatus = null | 'done' | 'pending' | 'error';
+
+const initialStateSavingStepStatus = {
+    prepareUpload: null as StepStatus,
+    encodeAudio: null as StepStatus,
+    assembleAudio: null as StepStatus,
+    uploadSubtitles: null as StepStatus,
+    uploadEvents: null as StepStatus,
+    uploadAudio: null as StepStatus
+}
+
+export const initialStateTrimSaving = {
+    intervals: null as IntervalTree,
+    saving: {
+        ...initialStateSavingStepStatus,
+        progress: 0,
+        error: '',
+    }
+}
 
 export default function(bundle) {
-    bundle.addReducer(ActionTypes.EditorPrepare, editorPrepareReducer);
+    bundle.addReducer(ActionTypes.EditorPrepare, produce((draft: AppStore) => {
+        draft.editor.trim.intervals = intervalTree({skip: false, mute: false});
+    }));
 
     bundle.defineAction(ActionTypes.EditorTrimEnter);
     bundle.defineAction(ActionTypes.EditorTrimReturn);
@@ -40,17 +65,25 @@ export default function(bundle) {
     bundle.addSaga(trimSaga);
 
     bundle.defineAction(ActionTypes.EditorTrimSavingStep);
-    bundle.addReducer(ActionTypes.EditorTrimSavingStep, trimEditorSavingStepReducer);
+    bundle.addReducer(ActionTypes.EditorTrimSavingStep, produce((draft: AppStore, {payload: {step, status, progress, error}}) => {
+        const {saving} = initialStateTrimSaving;
+
+        if (status !== undefined) {
+            saving[step] = status;
+        }
+        if (typeof progress === 'number') {
+            saving.progress = progress;
+        }
+        if (error !== undefined) {
+            saving.error = error;
+        }
+
+        draft.editor.trim.saving = saving;
+    }));
 
     bundle.defineAction(ActionTypes.EditorTrimSavingDone);
     bundle.addReducer(ActionTypes.EditorTrimSavingDone, trimEditorSavingDoneReducer);
-
 };
-
-function editorPrepareReducer(state) {
-    const intervals = intervalTree({skip: false, mute: false});
-    return state.setIn(['editor', 'trim'], {intervals});
-}
 
 function trimEditorMarkerAddedReducer(state, {payload: {position}}) {
     return state.updateIn(['editor', 'trim'], st => ({
@@ -114,23 +147,6 @@ function addJumpInstants(instants, intervals) {
 
         instants[index] = {...instants[index], ...data};
     }
-}
-
-function trimEditorSavingStepReducer(state, {payload: {step, status, progress, error}}) {
-    const saving = {};
-    if (status !== undefined) {
-        saving[step] = {$set: status};
-    }
-    if (typeof progress === 'number') {
-        // @ts-ignore
-        saving.progress = {$set: progress};
-    }
-    if (error !== undefined) {
-        // @ts-ignore
-        saving.error = {$set: error};
-    }
-
-    return state.updateIn(['editor', 'trim'], st => update(st, {saving}));
 }
 
 function* trimSaga(app) {

@@ -24,12 +24,12 @@ interface PlayerAppStateToProps {
 }
 
 function mapStateToProps(state: AppStore): PlayerAppStateToProps {
-    const viewportTooSmall = state.get('viewportTooSmall');
-    const containerWidth = state.get('containerWidth');
-    const player = state.get('player');
-    const isReady = player.get('isReady');
-    const progress = player.get('progress');
-    const error = player.get('error');
+    const viewportTooSmall = state.viewportTooSmall;
+    const containerWidth = state.containerWidth;
+    const player = state.player;
+    const isReady = player.isReady;
+    const progress = player.progress;
+    const error = player.error;
 
     return {
         viewportTooSmall, containerWidth, isReady, progress, error

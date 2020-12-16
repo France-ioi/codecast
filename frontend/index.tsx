@@ -64,7 +64,15 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
 const {store, scope, finalize, start} = link(function(bundle) {
     bundle.defineAction(ActionTypes.AppInit);
     bundle.addReducer(ActionTypes.AppInit, (_state, _action) => {
-        return Map({scope});
+        return {};
+
+        // return {
+        //     recordApi: scope.recordApi,
+        //     replayApi: scope.replayApi,
+        //     stepperApi: scope.stepperApi
+        // };
+
+        // return Map({scope});
     });
 
     bundle.include(commonBundle);

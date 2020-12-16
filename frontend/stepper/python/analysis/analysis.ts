@@ -3,7 +3,10 @@ import {VIEW_DIRECTIVE_PREFIX} from "../directives";
 
 export interface SkulptAnalysis {
     functionCallStack: List<SkulptScope>,
-    stepNum: number
+    stepNum: number,
+    code: '',
+    lines: string[],
+    isFinished: boolean
 }
 
 export interface SkulptVariable {

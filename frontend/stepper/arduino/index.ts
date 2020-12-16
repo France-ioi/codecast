@@ -23,6 +23,7 @@ import './style.scss';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {NPorts} from "./config";
+import produce from "immer";
 
 export enum PinMode {
   PINMODE_INPUT = 0,
@@ -38,16 +39,14 @@ export default function(bundle) {
         })
     };
 
-    bundle.addReducer(AppActionTypes.AppInit, function(state, _action) {
-        return arduinoReset(state, {state: initialArduinoState});
-    });
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft) => {
+        draft.arduino = initialArduinoState;
+    }));
 
     bundle.defineAction(ActionTypes.ArduinoReset);
-    bundle.addReducer(ActionTypes.ArduinoReset, arduinoReset);
-
-    function arduinoReset(state, action) {
-        return state.set('arduino', action.state);
-    }
+    bundle.addReducer(ActionTypes.ArduinoReset, produce((draft) => {
+        draft.arduino = initialArduinoState;
+    }));
 
     bundle.defineAction(ActionTypes.ArduinoPortConfigured);
     bundle.addReducer(ActionTypes.ArduinoPortConfigured, arduinoPortConfigured);
@@ -87,7 +86,7 @@ export default function(bundle) {
         replayApi.on('start', function(replayContext, event) {
             const {arduino} = event[2];
             if (arduino) {
-                replayContext.state = arduinoReset(replayContext.state, {state: arduino});
+                replayContext.state.arduino = arduino;
             }
         });
         replayApi.onReset(function* (instant) {

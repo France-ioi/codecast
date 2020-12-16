@@ -8,9 +8,30 @@ import editorBundle from './editor';
 import {getPersistentOptions, setPersistentOption} from './options';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
+import produce from "immer";
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, initReducer);
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft) => {
+        const {paneEnabled, bandEnabled} = getPersistentOptions();
+
+        draft.subtitles = {
+            langOptions: [
+                {value: 'fr-FR', label: "Français", countryCode: 'fr'},
+                {value: 'en-US', label: "English", countryCode: 'us'},
+            ],
+            editing: false,
+            paneEnabled,
+            bandEnabled,
+            /* player-specific */
+            filterText: '',
+            filterRegexp: null,
+            /* editor-specific */
+            notify: {},
+            trim: {
+                loaded: [],
+            },
+        };
+    }));
 
     bundle.include(loadingBundle);
     bundle.include(paneBundle);
@@ -26,27 +47,6 @@ export default function(bundle) {
 
     bundle.defineAction(ActionTypes.SubtitlesBandEnabledChanged);
     bundle.addReducer(ActionTypes.SubtitlesBandEnabledChanged, subtitlesBandEnabledChangedReducer);
-}
-
-function initReducer(state, action) {
-    const {paneEnabled, bandEnabled} = getPersistentOptions();
-    return state.set('subtitles', {
-        langOptions: [
-            {value: 'fr-FR', label: "Français", countryCode: 'fr'},
-            {value: 'en-US', label: "English", countryCode: 'us'},
-        ],
-        editing: false,
-        paneEnabled,
-        bandEnabled,
-        /* player-specific */
-        filterText: '',
-        filterRegexp: null,
-        /* editor-specific */
-        notify: {},
-        trim: {
-            loaded: [],
-        },
-    });
 }
 
 function subtitlesEditingChangedReducer(state, {payload: {editing}}) {

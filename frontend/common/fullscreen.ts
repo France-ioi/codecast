@@ -1,38 +1,43 @@
-import {Map} from 'immutable';
 import {buffers, eventChannel} from 'redux-saga';
 import {put, take} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
-import {FullscreenButton} from "./FullscreenButton";
+import produce from "immer";
+import {AppStore} from "../store";
+
+export const initialStateFullscreen = {
+    active: false,
+    enabled: false
+};
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, function(state, _action) {
-        return state.set('fullscreen', Map({active: false, enabled: false}));
-    });
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
+        draft.fullscreen = initialStateFullscreen;
+    }));
 
     bundle.defineAction(ActionTypes.FullscreenEnter);
 
     bundle.defineAction(ActionTypes.FullscreenEnterSucceeded);
-    bundle.addReducer(ActionTypes.FullscreenEnterSucceeded, function(state, action) {
-        return state.setIn(['fullscreen', 'active'], true);
-    });
+    bundle.addReducer(ActionTypes.FullscreenEnterSucceeded, produce((draft: AppStore) => {
+        draft.fullscreen.active = true;
+    }));
 
     bundle.defineAction(ActionTypes.FullscreenEnterFailed);
-    bundle.addReducer(ActionTypes.FullscreenEnterFailed, function(state, action) {
-        return state.setIn(['fullscreen', 'enabled'], false);
-    });
+    bundle.addReducer(ActionTypes.FullscreenEnterFailed, produce((draft: AppStore) => {
+        draft.fullscreen.enabled = false;
+    }));
 
     bundle.defineAction(ActionTypes.FullscreenLeave);
 
     bundle.defineAction(ActionTypes.FullscreenLeaveSucceeded);
-    bundle.addReducer(ActionTypes.FullscreenLeaveSucceeded, function(state, action) {
-        return state.setIn(['fullscreen', 'active'], false);
-    });
+    bundle.addReducer(ActionTypes.FullscreenLeaveSucceeded, produce((draft: AppStore) => {
+        draft.fullscreen.active = false;
+    }));
 
     bundle.defineAction(ActionTypes.FullscreenEnabled);
-    bundle.addReducer(ActionTypes.FullscreenEnabled, function(state, action) {
-        return state.setIn(['fullscreen', 'enabled'], action.enabled);
-    });
+    bundle.addReducer(ActionTypes.FullscreenEnabled, produce((draft: AppStore, action) => {
+        draft.fullscreen.enabled = action.enabled;
+    }));
 
     const fullscreenMonitorChannel = eventChannel(function(listener) {
         const elem = window.document;
@@ -129,5 +134,4 @@ export default function(bundle) {
             }
         }
     })
-
 };

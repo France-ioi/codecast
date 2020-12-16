@@ -1,25 +1,36 @@
 import {ActionTypes} from "./actionTypes";
+import produce from "immer";
+import {AppStore} from "../store";
+
+export interface User {
+    id: number,
+    login: string,
+    grants: {
+        description: string,
+        url: string,
+        type: 's3',
+        s3Bucket: string,
+        s3Region: string,
+        uploadPath: string
+    }[]
+}
+
+export const initialStateUser = false as User | false;
 
 export default function(bundle) {
     bundle.defineAction(ActionTypes.LoginFeedback);
-    bundle.addReducer(ActionTypes.LoginFeedback, loginFeedbackReducer);
+    bundle.addReducer(ActionTypes.LoginFeedback, produce((draft: AppStore, {payload: {user, error}}) => {
+        if (!error) {
+            window.localStorage.user = JSON.stringify(user);
+
+            return draft.user = user;
+        }
+    }));
 
     bundle.defineAction(ActionTypes.LogoutFeedback);
-    bundle.addReducer(ActionTypes.LogoutFeedback, logoutFeedbackReducer);
-}
+    bundle.addReducer(ActionTypes.LogoutFeedback, produce((draft: AppStore) => {
+        window.localStorage.user = '';
 
-function loginFeedbackReducer(state, {payload: {user, error}}) {
-    if (error) {
-        return state;
-    }
-
-    window.localStorage.user = JSON.stringify(user);
-
-    return state.set('user', user);
-}
-
-function logoutFeedbackReducer(state, _action) {
-    window.localStorage.user = '';
-
-    return state.set('user', false);
+        draft.user = initialStateUser;
+    }));
 }

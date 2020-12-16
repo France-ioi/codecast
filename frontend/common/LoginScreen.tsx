@@ -5,11 +5,11 @@ import {AppStore} from "../store";
 
 interface LoginScreenStateToProps {
     baseUrl: string,
-    authProviders: any
+    authProviders: string[]
 }
 
 function mapStateToProps(state: AppStore): LoginScreenStateToProps {
-    const {baseUrl, authProviders} = state.get('options');
+    const {baseUrl, authProviders} = state.options;
 
     return {baseUrl, authProviders};
 }

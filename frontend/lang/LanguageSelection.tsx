@@ -10,8 +10,8 @@ interface LanguageSelectionStoreToProps {
 }
 
 function mapStateToProps(state: AppStore): LanguageSelectionStoreToProps {
-    const language = state.get('options').language;
-    const getMessage = state.get('getMessage');
+    const language = state.options.language;
+    const getMessage = state.getMessage;
 
     return {language, getMessage};
 }
