@@ -3,15 +3,22 @@ import {initialStateMemoryUsage} from "./recorder/memory_usage";
 import {initialStateEditor} from "./editor";
 import {initialStateStatistics} from "./statistics";
 import {initialStateFullscreen} from "./common/fullscreen";
-import {initialStateError} from "./common/error";
+import {Error, initialStateError} from "./common/error";
 import {mainViewGeometries} from "./common/resize";
 import {Languages} from './lang';
-import {initialStateStepper} from "./stepper";
+import {initialStateStepper, StepperTask} from "./stepper";
 import {initialStateCompile} from "./stepper/compile";
 import {initialStateExamples} from "./common/examples";
 import {initialStateUser} from "./common/login";
 import {initialStateScreen} from "./common/screens";
 import {initialStatePlayer} from "./player/reducers";
+import {initialStateRecorder} from "./recorder/store";
+import {initialStateBuffers} from "./buffers";
+import {initialStateArduino} from "./stepper/arduino";
+import {initialStateIoPane} from "./stepper/io";
+import {initialStateSubtitles} from "./subtitles";
+import {initialStateSave} from "./recorder/save_screen";
+import {initialStateTerminal} from "./stepper/io/terminal";
 
 export type CodecastPlatform = 'python' | 'unix' | 'arduino';
 
@@ -29,21 +36,38 @@ export interface CodecastOptions {
     showIO: boolean,
     showStack: boolean,
     showStepper: boolean,
+    showViews: boolean,
     user: typeof initialStateUser // TODO: Why is this in options AND in store.user and not only in store.user ?
+    start: string,
+    codecastData: {
+        codecast: string,
+        folder: string,
+        bucket: string
+    },
+    origin: string
 }
 
 export interface AppStore extends Store {
-    lastError: typeof initialStateError
+    lastError: undefined | Error
     memoryUsage: typeof initialStateMemoryUsage,
     editor: typeof initialStateEditor,
     statistics: typeof initialStateStatistics,
     fullscreen: typeof initialStateFullscreen
     stepper: typeof initialStateStepper,
+    stepperTask: StepperTask,
     compile: typeof initialStateCompile,
     examples: typeof initialStateExamples,
     user: typeof initialStateUser,
     screen: typeof initialStateScreen,
-    player: typeof initialStatePlayer
+    player: typeof initialStatePlayer,
+    recorder: typeof initialStateRecorder,
+    buffers: typeof initialStateBuffers,
+    arduino: typeof initialStateArduino,
+    ioPane: typeof initialStateIoPane,
+    subtitles: typeof initialStateSubtitles,
+    save: typeof initialStateSave,
+    terminal: typeof initialStateTerminal,
+    vumeterElement: any,
 
     options: CodecastOptions,
 

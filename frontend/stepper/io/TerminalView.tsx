@@ -36,25 +36,29 @@ interface TerminalViewProps extends TerminalViewStateToProps, TerminalViewDispat
 }
 
 class _TerminalView extends React.PureComponent<TerminalViewProps> {
-    onTermInit = (iface) => {
+    onTermInit(iface) {
         this.props.dispatch({type: ActionTypes.TerminalInit, iface});
-    };
-    onTermChar = (key) => {
+    }
+
+    onTermChar(key) {
         if (!this.props.preventInput) {
             this.props.dispatch({type: ActionTypes.TerminalInputKey, key});
         }
-    };
-    onTermBS = () => {
+    }
+
+    onTermBS() {
         if (!this.props.preventInput) {
             this.props.dispatch({type: ActionTypes.TerminalInputBackspace});
         }
-    };
-    onTermEnter = () => {
+    }
+
+    onTermEnter() {
         if (!this.props.preventInput) {
             this.props.dispatch({type: ActionTypes.TerminalInputEnter});
         }
-    };
-    renderHeader = () => {
+    }
+
+    renderHeader() {
         const {isWaitingOnInput} = this.props;
 
         return (
@@ -66,7 +70,7 @@ class _TerminalView extends React.PureComponent<TerminalViewProps> {
                 </div>
             </div>
         );
-    };
+    }
 
     render() {
         const {terminal, input} = this.props;

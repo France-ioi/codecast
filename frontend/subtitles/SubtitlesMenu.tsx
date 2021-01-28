@@ -11,15 +11,15 @@ interface FullscreenButtonStateToProps {
 }
 
 function mapStateToProps(state: AppStore): FullscreenButtonStateToProps {
-    const getMessage = state.get('getMessage');
+    const getMessage = state.getMessage;
     let hidden = false;
 
-    const subtitles = state.get('subtitles');
+    const subtitles = state.subtitles;
     if (subtitles.editing) {
         hidden = true;
     }
 
-    const playerData = state.getIn(['player', 'data']);
+    const playerData = state.player.data;
     if (!playerData || !playerData.subtitles || playerData.subtitles.length === 0) {
         hidden = true;
     }

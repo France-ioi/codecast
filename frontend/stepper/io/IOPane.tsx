@@ -12,7 +12,7 @@ interface IOPaneStateToProps {
 
 function mapStateToProps(state: AppStore): IOPaneStateToProps {
     const stepper = getCurrentStepperState(state);
-    const mode = stepper ? state.get('ioPane').mode : 'options';
+    const mode = stepper ? state.ioPane.mode : 'options';
 
     return {mode};
 }

@@ -19,73 +19,75 @@ import {asyncRequestJson} from '../utils/api';
 
 import {toHtml} from "../utils/sanitize";
 import {TextEncoder} from "text-encoding-utf-8";
-import {stepperClear} from "./index";
+import {clearStepper} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "../buffers/selectors";
 import produce from "immer";
+import {AppStore} from "../store";
+
+enum CompileStatus {
+    Clear = 'clear',
+    Running = 'running',
+    Done = 'done',
+    Error = 'error'
+}
 
 export const initialStateCompile = {
-    status: 'clear'
+    status: CompileStatus.Clear,
+    diagnostics: '',
+    diagnosticsHtml: '' as string | {__html: string},
+    source: '',
+    syntaxTree: null as any // TODO: type
 };
 
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft) => {
-        draft.compile = compileClear();
-    }));
+    function initReducer(draft: AppStore): void {
+        draft.compile = initialStateCompile;
+    }
+
+    bundle.addReducer(AppActionTypes.AppInit, produce(initReducer));
 
     // Requested translation of given {source}.
     bundle.defineAction(ActionTypes.Compile);
 
     // Clear the 'compile' state.
     bundle.defineAction(ActionTypes.CompileClear);
-    bundle.addReducer(ActionTypes.CompileClear, function(state, action) {
-        return state.set('compile', compileClear());
-    });
+    bundle.addReducer(ActionTypes.CompileClear, produce(initReducer));
 
     // Reset the 'compile' state.
     bundle.defineAction(ActionTypes.CompileReset);
-    bundle.addReducer(ActionTypes.CompileReset, compileReset);
+    bundle.addReducer(ActionTypes.CompileReset, produce(compileResetReducer));
 
-    function compileReset(state, action) {
-        return state.set('compile', action.state);
+    function compileResetReducer(draft: AppStore, action): void {
+        draft.compile = action.state;
     }
 
     // Started translation of {source}.
     bundle.defineAction(ActionTypes.CompileStarted);
-    bundle.addReducer(ActionTypes.CompileStarted, function(state, action) {
-        return state.update('compile', st => compileStarted(st, action));
-    });
+    bundle.addReducer(ActionTypes.CompileStarted, produce(compileStartedReducer));
 
     // Succeeded translating {source} to {syntaxTree}.
     bundle.defineAction(ActionTypes.CompileSucceeded);
-    bundle.addReducer(ActionTypes.CompileSucceeded, function(state, action) {
-        return state.update('compile', st => compileSucceeded(st, action));
-    });
+    bundle.addReducer(ActionTypes.CompileSucceeded, produce(compileSucceededReducer));
 
     // Failed to compile {source} with {error}.
     bundle.defineAction(ActionTypes.CompileFailed);
-    bundle.addReducer(ActionTypes.CompileFailed, function(state, action) {
-        const newState = state.update('compile', st => compileFailed(st, action));
-
-        newState.set('stepper', stepperClear());
-
-        return newState;
-    });
+    bundle.addReducer(ActionTypes.CompileFailed, produce(compileFailedReducer));
 
     // Clear the diagnostics (compilation errors and warnings) returned
     // by the last compile operation.
     bundle.defineAction(ActionTypes.CompileClearDiagnostics);
-    bundle.addReducer(ActionTypes.CompileClearDiagnostics, function(state, action) {
-        return state.update('compile', st => compileClearDiagnostics(st));
-    });
+    bundle.addReducer(ActionTypes.CompileClearDiagnostics, produce(compileClearDiagnosticsReducer));
 
     bundle.addSaga(function* watchCompile() {
-        yield takeLatest(ActionTypes.Compile, function* (action) {
-            const getMessage = yield select(state => state.get('getMessage'));
-            const sourceModel = yield select(getBufferModel, 'source');
-            const source = sourceModel.get('document').toString();
-            const {platform} = yield select(state => state.get('options'));
+        yield takeLatest(ActionTypes.Compile, function* () {
+            let state: AppStore = yield select();
+
+            const getMessage = state.getMessage;
+            const sourceModel = getBufferModel(state, 'source');
+            const source = sourceModel.document.toString();
+            const {platform} = state.options;
 
             yield put({
                 type: ActionTypes.CompileStarted,
@@ -108,10 +110,11 @@ export default function(bundle) {
                     });
                 }
             } else {
+                state = yield select();
                 try {
-                    const logData = yield select(state => state.getIn(['statistics', 'logData']));
+                    const logData = state.statistics.logData;
                     const postData = {source, platform, logData};
-                    const {baseUrl} = yield select(state => state.get('options'));
+                    const {baseUrl} = state.options;
 
                     response = yield call(asyncRequestJson, baseUrl + '/compile', postData);
                 } catch (ex) {
@@ -133,19 +136,19 @@ export default function(bundle) {
     });
 
     bundle.defer(function({recordApi, replayApi}) {
-
-        replayApi.on('start', function(replayContext, event) {
-            const compileModel = compileClear();
-            replayContext.state = compileReset(replayContext.state, {state: compileModel});
+        replayApi.on('start', function(replayContext) {
+            replayContext.state = produce(compileResetReducer.bind(replayContext.state, {state: initialStateCompile}));
         });
 
         recordApi.on(ActionTypes.CompileStarted, function* (addEvent, action) {
             const {source} = action;
+
             yield call(addEvent, 'compile.start', source); // XXX should also have platform
         });
         replayApi.on(['stepper.compile', 'compile.start'], function(replayContext, event) {
             const action = {source: event[2]};
-            replayContext.state = replayContext.state.update('compile', st => compileStarted(st, action));
+
+            replayContext.state = produce(compileStartedReducer.bind(replayContext.state, action));
         });
 
         recordApi.on(ActionTypes.CompileSucceeded, function* (addEvent, action) {
@@ -154,7 +157,7 @@ export default function(bundle) {
         replayApi.on('compile.success', function(replayContext, event) {
             const action = event[2];
 
-            replayContext.state = replayContext.state.update('compile', st => compileSucceeded(st, action));
+            replayContext.state = produce(compileSucceededReducer.bind(replayContext.state, action));
         });
 
         recordApi.on(ActionTypes.CompileFailed, function* (addEvent, action) {
@@ -163,22 +166,23 @@ export default function(bundle) {
         });
         replayApi.on('compile.failure', function(replayContext, event) {
             const action = {response: event[2]};
-            replayContext.state = replayContext.state.update('compile', st => compileFailed(st, action));
+            replayContext.state = produce(compileFailedReducer.bind(replayContext.state, action));
         });
 
-        recordApi.on(ActionTypes.CompileClearDiagnostics, function* (addEvent, action) {
+        recordApi.on(ActionTypes.CompileClearDiagnostics, function* (addEvent) {
             yield call(addEvent, 'compile.clearDiagnostics');
         });
-        replayApi.on('compile.clearDiagnostics', function(replayContext, event) {
-            replayContext.state = replayContext.state.update('compile', st => compileClearDiagnostics(st));
+        replayApi.on('compile.clearDiagnostics', function(replayContext) {
+            replayContext.state = produce(compileClearDiagnosticsReducer.bind(replayContext.state));
         });
 
-        replayApi.on('stepper.exit', function(replayContext, event) {
-            replayContext.state = replayContext.state.update('compile', compileClear);
+        replayApi.on('stepper.exit', function(replayContext) {
+            replayContext.state = produce(initReducer.bind(replayContext.state));
         });
 
         replayApi.onReset(function* (instant) {
             const compileModel = instant.state.get('compile');
+
             yield put({type: ActionTypes.CompileReset, state: compileModel});
         });
     });
@@ -228,51 +232,47 @@ const addNodeRanges = function(source, syntaxTree) {
         const range = begin && end && {start: positions[begin], end: positions[end]};
         newNode[1] = {...attrs, range};
         newNode[2] = node[2].map(traverse);
+
         return newNode;
     }
 
     return traverse(syntaxTree);
 };
 
-export function compileClear() {
-    return {
-        status: 'clear'
-    };
-}
-
-function compileStarted(state, action) {
+function compileStartedReducer(draft: AppStore, action): void {
     const {source} = action;
 
-    return state.set('status', 'running').set('source', source);
+    draft.compile.status = CompileStatus.Running;
+    draft.compile.source = source;
 }
 
-export function compileSucceeded(state, action) {
+function compileSucceededReducer(draft: AppStore, action): void {
     if (action.platform === 'python') {
-        return state
-            .set('status', 'done')
-            .set('diagnostics', '')
-            .set('diagnosticsHtml', '');
+        draft.compile.status = CompileStatus.Done;
+        draft.compile.diagnostics = '';
+        draft.compile.diagnosticsHtml = '';
     } else {
         const {ast, diagnostics} = action.response;
-        const source = state.get('source');
+        const source = draft.compile.source;
 
-        return state
-            .set('status', 'done')
-            .set('syntaxTree', addNodeRanges(source, ast))
-            .set('diagnostics', diagnostics)
-            .set('diagnosticsHtml', diagnostics && toHtml(diagnostics));
+        draft.compile.status = CompileStatus.Done;
+        draft.compile.syntaxTree = addNodeRanges(source, ast);
+        draft.compile.diagnostics = diagnostics;
+        draft.compile.diagnosticsHtml = diagnostics && toHtml(diagnostics);
     }
 }
 
-function compileFailed(state, action) {
+function compileFailedReducer(draft: AppStore, action): void {
     const {diagnostics} = action.response;
 
-    return state
-        .set('status', 'error')
-        .set('diagnostics', diagnostics)
-        .set('diagnosticsHtml', toHtml(diagnostics));
+    draft.compile.status = CompileStatus.Error;
+    draft.compile.diagnostics = diagnostics;
+    draft.compile.diagnosticsHtml = toHtml(diagnostics);
+
+    clearStepper(draft.stepper);
 }
 
-export function compileClearDiagnostics(state) {
-    return state.delete('diagnostics').delete('diagnosticsHtml');
+function compileClearDiagnosticsReducer(draft: AppStore): void {
+    draft.compile.diagnostics = '';
+    draft.compile.diagnosticsHtml = '';
 }

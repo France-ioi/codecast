@@ -4,7 +4,9 @@
   - instants[i].t < time
   - instants[i].t < instants[i+1].t  (if i+1 !== instants.length)
 */
-export function findInstantIndex(instants, time) {
+import {PlayerInstant} from "./reducers";
+
+export function findInstantIndex(instants: PlayerInstant[], time: number): number {
     let low = 0, high = instants.length;
     while (low + 1 < high) {
         const mid = (low + high) / 2 | 0;
@@ -15,6 +17,7 @@ export function findInstantIndex(instants, time) {
             high = mid;
         }
     }
+
     let instant = instants[low];
     if (instant) {
         /* Return the last instant of a run with equal timestamps. */
@@ -25,10 +28,12 @@ export function findInstantIndex(instants, time) {
             low += 1;
         }
     }
+
     return low;
 }
 
-export function findInstant(instants, time) {
+export function findInstant(instants: PlayerInstant[], time: number): PlayerInstant {
     const index = findInstantIndex(instants, time);
+
     return instants[index];
 }

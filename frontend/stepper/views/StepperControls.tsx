@@ -6,6 +6,7 @@ import {connect} from "react-redux";
 import {AppStore} from "../../store";
 import {getStepper, isStepperInterrupting} from "../selectors";
 import * as C from 'persistent-c';
+import {StepperStepMode} from "../index";
 
 interface StepperControlsStateToProps {
     getMessage: Function,
@@ -228,11 +229,11 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
         );
     };
 
-    onStepRun = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: 'run'}});
-    onStepExpr = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: 'expr'}});
-    onStepInto = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: 'into'}});
-    onStepOut = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: 'out'}});
-    onStepOver = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: 'over'}});
+    onStepRun = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});
+    onStepExpr = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Expr}});
+    onStepInto = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into}});
+    onStepOut = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Out}});
+    onStepOver = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Over}});
     onInterrupt = () => this.props.dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
     onRestart = () => this.props.dispatch({type: ActionTypes.StepperRestart, payload: {}});
     onEdit = () => this.props.dispatch({type: ActionTypes.StepperExit, payload: {}});

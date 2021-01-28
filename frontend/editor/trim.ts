@@ -28,7 +28,8 @@ const initialStateSavingStepStatus = {
     assembleAudio: null as StepStatus,
     uploadSubtitles: null as StepStatus,
     uploadEvents: null as StepStatus,
-    uploadAudio: null as StepStatus
+    uploadAudio: null as StepStatus,
+    updateSubtitles: null as StepStatus
 }
 
 export const initialStateTrimSaving = {
@@ -37,6 +38,8 @@ export const initialStateTrimSaving = {
         ...initialStateSavingStepStatus,
         progress: 0,
         error: '',
+        done: false,
+        playerUrl: ''
     }
 }
 
@@ -49,18 +52,18 @@ export default function(bundle) {
     bundle.defineAction(ActionTypes.EditorTrimReturn);
 
     bundle.defineAction(ActionTypes.EditorTrimSave);
-    bundle.addReducer(ActionTypes.EditorTrimSave, editorTrimSaveReducer);
+    bundle.addReducer(ActionTypes.EditorTrimSave, produce(editorTrimSaveReducer));
 
     bundle.defineAction(ActionTypes.EditorTrimIntervalsChanged);
 
     bundle.defineAction(ActionTypes.EditorTrimMarkerAdded);
-    bundle.addReducer(ActionTypes.EditorTrimMarkerAdded, trimEditorMarkerAddedReducer);
+    bundle.addReducer(ActionTypes.EditorTrimMarkerAdded, produce(trimEditorMarkerAddedReducer));
 
     bundle.defineAction(ActionTypes.EditorTrimMarkerRemoved);
-    bundle.addReducer(ActionTypes.EditorTrimMarkerRemoved, trimEditorMarkerRemovedReducer);
+    bundle.addReducer(ActionTypes.EditorTrimMarkerRemoved, produce(trimEditorMarkerRemovedReducer));
 
     bundle.defineAction(ActionTypes.EditorTrimIntervalChanged);
-    bundle.addReducer(ActionTypes.EditorTrimIntervalChanged, trimEditorIntervalChangedReducer);
+    bundle.addReducer(ActionTypes.EditorTrimIntervalChanged, produce(trimEditorIntervalChangedReducer));
 
     bundle.addSaga(trimSaga);
 
@@ -82,31 +85,26 @@ export default function(bundle) {
     }));
 
     bundle.defineAction(ActionTypes.EditorTrimSavingDone);
-    bundle.addReducer(ActionTypes.EditorTrimSavingDone, trimEditorSavingDoneReducer);
+    bundle.addReducer(ActionTypes.EditorTrimSavingDone, produce(trimEditorSavingDoneReducer));
 };
 
-function trimEditorMarkerAddedReducer(state, {payload: {position}}) {
-    return state.updateIn(['editor', 'trim'], st => ({
-        ...st,
-        intervals: st.intervals.split(position)
-    }));
+function trimEditorMarkerAddedReducer(draft: AppStore, {payload: {position}}): void {
+    draft.editor.trim.intervals = draft.editor.trim.intervals.split(position);
 }
 
-function trimEditorMarkerRemovedReducer(state, {payload: {position}}) {
-    return state.updateIn(['editor', 'trim'], st =>
-        ({...st, intervals: st.intervals.mergeLeft(position)})
-    );
+function trimEditorMarkerRemovedReducer(draft: AppStore, {payload: {position}}) {
+    draft.editor.trim.intervals = draft.editor.trim.intervals.mergeLeft(position);
 }
 
-function trimEditorIntervalChangedReducer(state, {payload: {position, value}}) {
+function trimEditorIntervalChangedReducer(draft: AppStore, {payload: {position, value}}): void {
     /* TODO: update instants in the player, to add/remove jump at position */
-    let {intervals} = state.getIn(['editor', 'trim']);
+    let {intervals} = draft.editor.trim;
     intervals = intervals.set(position, value);
-    let instants = state.getIn(['player', 'instants']);
+    let instants = draft.player.instants;
     instants = addJumpInstants(instants, intervals);
-    return state
-        .updateIn(['editor', 'trim'], st => ({...st, intervals}))
-        .setIn(['player', 'instants'], instants);
+
+    draft.editor.trim.intervals = intervals;
+    draft.player.instants = instants;
 }
 
 function addJumpInstants(instants, intervals) {
@@ -172,42 +170,36 @@ function* editorTrimReturnSaga(_action) {
     yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'setup'}});
 }
 
-function editorTrimSaveReducer(state, _action) {
-    const saving = {
-        prepareUpload: null,
-        uploadEvents: null,
-        assembleAudio: null,
-        encodeAudio: null,
-        uploadAudio: null,
-        updateSubtitles: null,
-        uploadSubtitles: null,
-        progress: 0,
-    };
-
-    return state.updateIn(['editor', 'trim'], st => ({...st, saving}));
+function editorTrimSaveReducer(draft: AppStore): void {
+    draft.editor.trim.saving.prepareUpload = null;
+    draft.editor.trim.saving.uploadEvents = null;
+    draft.editor.trim.saving.assembleAudio = null;
+    draft.editor.trim.saving.encodeAudio = null;
+    draft.editor.trim.saving.uploadAudio = null;
+    draft.editor.trim.saving.updateSubtitles = null;
+    draft.editor.trim.saving.uploadSubtitles = null;
+    draft.editor.trim.saving.progress = 0;
 }
 
-function trimEditorSavingDoneReducer(state, {payload: {playerUrl}}) {
-    return state.updateIn(['editor', 'trim'], st => update(st, {
-        saving: {
-            done: {$set: true},
-            playerUrl: {$set: playerUrl}
-        }
-    }));
+function trimEditorSavingDoneReducer(draft: AppStore, {payload: {playerUrl}}): void {
+    draft.editor.trim.saving.done = true;
+    draft.editor.trim.saving.playerUrl = playerUrl;
 }
 
 function* editorTrimSaveSaga(action) {
     // TODO: put 'saving starts' action
     try {
-        const editor = yield select(state => state.get('editor'));
-        const {intervals} = editor.get('trim');
+        let state: AppStore = yield select();
+        const editor = state.editor;
+        const {intervals} = editor.trim;
         const {targets, playerUrl} = yield call(trimEditorPrepareUpload, action.payload.target);
-        const data = editor.get('data');
+
+        const data = editor.data;
         const eventsBlob = trimEvents(data, intervals);
-        debugger;
+
         yield call(trimEditorUpload, 'uploadEvents', targets.events, eventsBlob);
 
-        const audioBuffer = editor.get('audioBuffer');
+        const audioBuffer = editor.audioBuffer;
         const worker = yield call(trimEditorAssembleAudio, audioBuffer, intervals);
         const mp3Blob = yield call(trimEditorEncodeAudio, worker);
 
@@ -245,12 +237,14 @@ function trimEvents(data, intervals) {
                 break;
             }
         }
+
         event = event.slice();
         if (interval.value.skip) {
             event[0] = start;
         } else {
             event[0] = start + (event[0] - interval.start);
         }
+
         events.push(event);
     }
 
@@ -267,7 +261,6 @@ function trimEvents(data, intervals) {
 }
 
 function trimSubtitles(data, intervals) {
-
     function updateSubtitle(items, intervals) {
         const last = items[items.length - 1].data.end;
         let start = items[0].data.start;
@@ -362,8 +355,10 @@ function* trimEditorUpdateSubtitles(intervals) {
     try {
         yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'pending'}});
 
-        const {loaded: subtitleData} = yield select(state => state.getIn(['subtitles', 'trim']));
+        const state: AppStore = yield select();
+        const {loaded: subtitleData} = state.subtitles.trim;
         const subtitles = trimSubtitles(subtitleData, intervals); // return [{key, text}]
+
         yield put({type: SubtitlesActionTypes.SubtitlesTrimDone, payload: {subtitles}});
         yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, progress: 100}});
         yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'done'}});
@@ -457,6 +452,7 @@ function* trimEditorAssembleAudio(audioBuffer, intervals) {
 function* trimEditorEncodeAudio(worker) {
     const step = 'encodeAudio';
     yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, status: 'pending'}});
+
     const {mp3: mp3Blob} = yield call(worker.call, 'export', {mp3: true}, function* ({progress}) {
         yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step, progress}});
     });
@@ -468,13 +464,15 @@ function* trimEditorEncodeAudio(worker) {
 function* trimSubtitleUpload(playerUrl, subtitles) {
     yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step: 'uploadSubtitles', status: 'pending'}});
 
-    const {baseUrl} = yield select(state => state.get('options'));
+    const state: AppStore = yield select();
+    const {baseUrl} = state.options;
     const urlParsed = url.parse(playerUrl, true);
     const base = urlParsed.query.base; //newly generated codecast's base
     const changes = {subtitles};
 
     try {
         yield call(postJson, `${baseUrl}/save`, {base, changes});
+
         yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step: 'uploadSubtitles', progress: 100}});
         yield put({type: ActionTypes.EditorTrimSavingStep, payload: {step: 'uploadSubtitles', status: 'done'}});
     } catch (ex) {

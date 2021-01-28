@@ -1,7 +1,7 @@
 import {ActionTypes} from "./actionTypes";
 import produce from "immer";
 
-type Screen = 'setup' | 'edit';
+type Screen = 'setup' | 'edit' | 'statistics';
 
 export const initialStateScreen: Screen = 'setup';
 

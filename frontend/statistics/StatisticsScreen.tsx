@@ -29,25 +29,25 @@ interface StatisticsScreenStateToProps {
 }
 
 function mapStateToProps(state: AppStore): StatisticsScreenStateToProps {
-    const statistics = state.get('statistics');
-    const user = state.get('user');
+    const statistics = state.statistics;
+    const user = state.user;
 
-    const dateRange = statistics.get('dateRange');
+    const dateRange = statistics.dateRange;
 
-    const folders = (user.grants || []).reduce(
+    const folders = (user ? user.grants : []).reduce(
         (obj, {description, s3Bucket, uploadPath}) => {
             obj[description] = [s3Bucket, uploadPath];
             return obj;
         }, {"Select a Folder": null});
     const folderOptions = Object.keys(folders);
-    const folder = statistics.get('folder').label;
+    const folder = statistics.folder.label;
 
-    const prefix = statistics.get('prefix');
-    const isReady = statistics.get('isReady');
+    const prefix = statistics.prefix;
+    const isReady = statistics.isReady;
 
-    const rowData = statistics.getIn(['search', 'data']);
-    const searchStatus = statistics.getIn(['search', 'status']);
-    const searchError = statistics.getIn(['search', 'error']);
+    const rowData = statistics.search.data;
+    const searchStatus = statistics.search.status;
+    const searchError = statistics.search.error;
 
     return {
         isReady,

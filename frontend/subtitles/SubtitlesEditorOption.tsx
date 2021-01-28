@@ -19,7 +19,7 @@ export class SubtitlesEditorOption extends React.PureComponent<SubtitlesEditorOp
         );
     }
 
-    _select = (event) => {
+    _select = () => {
         this.props.onSelect(this.props.option);
     };
 }

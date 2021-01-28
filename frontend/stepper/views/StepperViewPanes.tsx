@@ -12,12 +12,12 @@ export class StepperViewPanes extends React.PureComponent<StepperViewPanesProps>
 
         return (
             <div id='mainView-panes'>
-                {panes.entrySeq().map(([key, pane]) => {
-                    if (!pane.get('visible')) {
+                {panes.map(([key, pane]) => {
+                    if (!pane.visible) {
                         return false;
                     }
 
-                    const view = pane.get('view');
+                    const view = pane.view;
                     const paneStyle = {
                         width: `${pane.get('width')}px`
                     };

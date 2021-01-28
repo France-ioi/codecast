@@ -14,7 +14,7 @@ export class SubtitlesEditorNewOption extends React.PureComponent<SubtitlesEdito
         return <MenuItem text={text} disabled={disabled} onClick={this._add}/>;
     }
 
-    _add = (event) => {
+    _add = () => {
         this.props.onSelect(this.props.option);
     };
 }

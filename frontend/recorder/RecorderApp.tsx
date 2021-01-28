@@ -7,15 +7,16 @@ import {SaveScreen} from "./SaveScreen";
 import {RecordScreen} from "./RecordScreen";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
+import {User} from "../common/login";
 
 interface RecorderAppStateToProps {
     screen: string,
-    user: any | false
+    user: User | false
 }
 
 function mapStateToProps(state: AppStore): RecorderAppStateToProps {
-    const user = state.get('user');
-    const screen = state.get('screen');
+    const user = state.user;
+    const screen = state.screen;
 
     return {user, screen};
 }

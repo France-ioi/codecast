@@ -1,18 +1,20 @@
 import request from 'superagent';
+import {initialStateSubtitles} from "./index";
 
-export function updateCurrentItem(subtitles, audioTime?) {
-    if (!subtitles.items) {
-        return subtitles;
+export function updateCurrentItem(subtitles: typeof initialStateSubtitles, audioTime?: number): void {
+    if (subtitles.items) {
+        if (audioTime === undefined) {
+            audioTime = subtitles.audioTime;
+        }
+
+        const currentIndex = findSubtitleIndex(subtitles.items, audioTime);
+        const currentItem = subtitles.items[currentIndex];
+        const itemVisible = currentItem && (currentItem.data.start <= audioTime) && (audioTime <= currentItem.data.end);
+
+        subtitles.audioTime = audioTime;
+        subtitles.currentIndex = currentIndex;
+        subtitles.itemVisible = itemVisible;
     }
-    if (audioTime === undefined) {
-        audioTime = subtitles.audioTime;
-    }
-
-    const currentIndex = findSubtitleIndex(subtitles.items, audioTime);
-    const currentItem = subtitles.items[currentIndex];
-    const itemVisible = currentItem && currentItem.data.start <= audioTime && audioTime <= currentItem.data.end;
-
-    return {...subtitles, audioTime, currentIndex, itemVisible};
 }
 
 export function findSubtitleIndex(items, time) {

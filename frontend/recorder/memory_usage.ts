@@ -16,8 +16,9 @@ export default function(bundle) {
         draft.memoryUsage = initialStateMemoryUsage;
     }));
 
-    bundle.addReducer(ActionTypes.MemoryUsageChanged, (state, {payload}) =>
-        state.update('memoryUsage', (value => ({...value, ...payload}))));
+    bundle.addReducer(ActionTypes.MemoryUsageChanged, produce((draft: AppStore, {payload}) => {
+        draft.memoryUsage = payload;
+    }));
 
     bundle.addSaga(function* () {
         yield takeEvery(ActionTypes.RecorderPreparing, function* (action) {

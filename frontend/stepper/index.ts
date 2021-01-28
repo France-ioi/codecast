@@ -50,102 +50,144 @@ import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getCurrentStepperState, getStepper, getSyntaxTree, isStepperInterrupting} from "./selectors";
 import produce from "immer";
-import {CodecastPlatform} from "../store";
+import {AppStore, CodecastPlatform} from "../store";
+import {TermBuffer} from "./io/terminal";
 
-// TODO: Separate the needs per platform (stepperState.python, stepperState.c, etc)
-export const initialStateStepperState = {
+export interface StepperTask {
+
+}
+
+export enum StepperStepMode {
+    Run = 'run',
+    Expr = 'expr',
+    Into = 'into',
+    Out = 'out',
+    Over = 'over'
+}
+
+export interface StepperDirectives {
+    ordered: any[],
+    functionCallStack: any, // C
+    functionCallStackMap: any // Python
+}
+
+// TODO: Separate the needs per platform (StepperStatePython, StepperStateC, etc)
+const initialStateStepperState = {
     platform: 'python' as CodecastPlatform,
     inputPos: 0, // Only used for python
+    input: '',
     output: '', // Only used for python
-    terminal: {}, // Only used for python
+    terminal: null as TermBuffer, // Only used for python
     suspensions: [] as any[],  // Only used for python // TODO: Don't put this in the store
-    programState: {} as any, // Only used for unix, arduino
-    analysis: {} as SkulptAnalysis, // Only used for python
+    programState: {} as any, // Only used for c
+    lastProgramState: {} as any, // Only used for c
+    ports: [] as any[], // Only used for arduino
+    selectedPort: {} as any, // Only used for arduino
+    controls: {
+        stack: {
+            focusDepth: 0
+        } as any, // TODO: type
+    }, // Only used for c
+    analysis: null as SkulptAnalysis, // Only used for python
     directives: {
-        ordered: [] as any[],
-        functionCallStack: null as any
-    }
+        ordered: [],
+        functionCallStack: null,
+        functionCallStackMap: null
+    } as StepperDirectives,
+    inputBuffer: '',
+    isWaitingOnInput: false,
+    error: ''
 };
 
-type StepperStatus = 'clear' | 'idle' | 'starting' | 'running';
+enum StepperStatus {
+    Clear = 'clear',
+    Idle = 'idle',
+    Starting = 'starting',
+    Running = 'running'
+}
 
 export const initialStateStepper = {
-    status: 'clear' as StepperStatus,
+    status: StepperStatus.Clear,
     undo: [],
     redo: [],
     initialStepperState: initialStateStepperState,
-    currentStepperState: initialStateStepperState
+    currentStepperState: null as typeof initialStateStepperState,
+    interrupting: false,
+    mode: null as StepperStepMode,
+    options: {} as any // TODO: Is this used ? If yes, put the type.
 };
 
+function initReducer(draft: AppStore): void {
+    draft.stepper = initialStateStepper;
+}
+
 export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft) => {
-        draft.stepper = initialStateStepper;
-    }));
+    bundle.addReducer(AppActionTypes.AppInit, produce(initReducer));
 
     /* Sent when the stepper task is started */
     bundle.defineAction(ActionTypes.StepperTaskStarted);
-    bundle.addReducer(ActionTypes.StepperTaskStarted, stepperTaskStartedReducer);
+    bundle.addReducer(ActionTypes.StepperTaskStarted, produce(stepperTaskStartedReducer));
 
     /* Sent when the stepper task is cancelled */
     bundle.defineAction(ActionTypes.StepperTaskCancelled);
-    bundle.addReducer(ActionTypes.StepperTaskCancelled, stepperTaskCancelledReducer);
+    bundle.addReducer(ActionTypes.StepperTaskCancelled, produce(stepperTaskCancelledReducer));
 
     // Sent when the stepper's state is initialized.
     bundle.defineAction(ActionTypes.StepperRestart);
-    bundle.addReducer(ActionTypes.StepperRestart, stepperRestartReducer);
+    bundle.addReducer(ActionTypes.StepperRestart, produce(stepperRestartReducer));
 
     // Restore a saved or computed state.
     bundle.defineAction(ActionTypes.StepperReset);
-    bundle.addReducer(ActionTypes.StepperReset, stepperResetReducer);
+    bundle.addReducer(ActionTypes.StepperReset, produce(stepperResetReducer));
 
     // Sent when the user requested stepping in a given mode.
     bundle.defineAction(ActionTypes.StepperStep);
-    bundle.addReducer(ActionTypes.StepperStep, stepperStepReducer);
+    bundle.addReducer(ActionTypes.StepperStep, produce(stepperStepReducer));
 
     // Sent when the stepper has started evaluating a step.
     bundle.defineAction(ActionTypes.StepperStarted);
-    bundle.addReducer(ActionTypes.StepperStarted, stepperStartedReducer);
+    bundle.addReducer(ActionTypes.StepperStarted, produce(stepperStartedReducer));
 
     bundle.defineAction(ActionTypes.StepperInteract);
 
     // Sent when the stepper has been evaluating for a while without completing a step.
     bundle.defineAction(ActionTypes.StepperProgress);
-    bundle.addReducer(ActionTypes.StepperProgress, stepperProgressReducer);
+    bundle.addReducer(ActionTypes.StepperProgress, produce(stepperProgressReducer));
 
     // Sent when the stepper has completed a step and is idle again.
     bundle.defineAction(ActionTypes.StepperIdle);
-    bundle.addReducer(ActionTypes.StepperIdle, stepperIdleReducer);
+    bundle.addReducer(ActionTypes.StepperIdle, produce(stepperIdleReducer));
 
     // Sent when the user exits the stepper.
     bundle.defineAction(ActionTypes.StepperExit);
-    bundle.addReducer(ActionTypes.StepperExit, stepperExitReducer);
+    bundle.addReducer(ActionTypes.StepperExit, produce(stepperExitReducer));
 
     // Sent when the user interrupts the stepper.
     bundle.defineAction(ActionTypes.StepperInterrupt);
-    bundle.addReducer(ActionTypes.StepperInterrupt, stepperInterruptReducer);
+    bundle.addReducer(ActionTypes.StepperInterrupt, produce(stepperInterruptReducer));
 
     bundle.defineAction(ActionTypes.StepperInterrupted);
-    bundle.addReducer(ActionTypes.StepperInterrupted, stepperInterruptedReducer);
+    bundle.addReducer(ActionTypes.StepperInterrupted, produce(stepperInterruptedReducer));
 
     bundle.defineAction(ActionTypes.StepperUndo);
-    bundle.addReducer(ActionTypes.StepperUndo, stepperUndoReducer);
+    bundle.addReducer(ActionTypes.StepperUndo, produce(stepperUndoReducer));
 
     bundle.defineAction(ActionTypes.StepperRedo);
-    bundle.addReducer(ActionTypes.StepperRedo, stepperRedoReducer);
+    bundle.addReducer(ActionTypes.StepperRedo, produce(stepperRedoReducer));
 
     bundle.defineAction(ActionTypes.StepperConfigure);
-    bundle.addReducer(ActionTypes.StepperConfigure, stepperConfigureReducer);
+    bundle.addReducer(ActionTypes.StepperConfigure, produce(stepperConfigureReducer));
 
     /* BEGIN view stuff to move out of here */
 
     bundle.defineAction(ActionTypes.StepperStackUp);
-    bundle.addReducer(ActionTypes.StepperStackUp, stepperStackUpReducer);
+    bundle.addReducer(ActionTypes.StepperStackUp, produce(stepperStackUpReducer));
 
     bundle.defineAction(ActionTypes.StepperStackDown);
-    bundle.addReducer(ActionTypes.StepperStackDown, stepperStackDownReducer);
+    bundle.addReducer(ActionTypes.StepperStackDown, produce(stepperStackDownReducer));
 
     bundle.defineAction(ActionTypes.StepperViewControlsChanged);
-    bundle.addReducer(ActionTypes.StepperViewControlsChanged, stepperViewControlsChangedReducer);
+    bundle.addReducer(ActionTypes.StepperViewControlsChanged, produce(stepperViewControlsChangedReducer));
 
     /* END view stuff to move out of here */
 
@@ -226,7 +268,7 @@ function enrichStepperState(stepperState, context) {
         }
     } else {
         const analysis = stepperState.analysis = analyseState(programState);
-        const focusDepth = controls.getIn(['stack', 'focusDepth'], 0);
+        const focusDepth = controls.stack.focusDepth;
         stepperState.directives = collectDirectives(analysis.functionCallStack, focusDepth);
 
         // TODO? initialize controls for each directive added,
@@ -238,20 +280,18 @@ function enrichStepperState(stepperState, context) {
     return stepperState;
 }
 
-export function stepperClear() {
-    return {
-        status: 'clear',
-        undo: [],
-        redo: []
-    };
+export function clearStepper(stepper: typeof initialStateStepper) {
+    stepper.status = StepperStatus.Clear;
+    stepper.undo = [];
+    stepper.redo = [];
 }
 
-function getNodeRange(state) {
-    if (!state) {
+function getNodeRange(stepperState: typeof initialStateStepperState) {
+    if (!stepperState) {
         return null;
     }
 
-    if (state.hasOwnProperty('platform') && state.platform === 'python') {
+    if (stepperState.platform === 'python') {
         const suspension = window.currentPythonRunner.getCurrentSuspension();
         if (!suspension) {
             return null;
@@ -268,19 +308,20 @@ function getNodeRange(state) {
             }
         };
     } else {
-        const {control} = state.programState;
+        const {control} = stepperState.programState;
         if (!control || !control.node) {
             return null;
         }
 
-        const focusDepth = state.controls.getIn(['stack', 'focusDepth'], 0);
+        const focusDepth = stepperState.controls.stack.focusDepth;
         if (focusDepth === 0) {
             return control.node[1].range;
         } else {
-            const {functionCallStack} = state.analysis;
+            const {functionCallStack} = stepperState.analysis;
             const stackFrame = functionCallStack.get(functionCallStack.size - focusDepth);
 
-            return stackFrame.get('scope').cont.node[1].range;
+            // @ts-ignore
+            return stackFrame.scope.cont.node[1].range;
         }
     }
 }
@@ -297,8 +338,8 @@ function stringifyError(error) {
 
 /* Reducers */
 
-function stepperRestartReducer(state, {payload: {stepperState}}) {
-    const {platform} = state.get('options');
+function stepperRestartReducer(draft: AppStore, {payload: {stepperState}}): void {
+    const {platform} = draft.options;
 
     if (stepperState) {
         stepperState = enrichStepperState(stepperState, 'Stepper.Restart');
@@ -308,11 +349,11 @@ function stepperRestartReducer(state, {payload: {stepperState}}) {
         }
     } else {
         if (platform === 'python') {
-            stepperState = state.getIn(['stepper', 'initialStepperState']);
+            stepperState = draft.stepper.initialStepperState;
             stepperState.inputPos = 0;
 
-            const sourceModel = state.get('buffers').get('source').get('model');
-            const source = sourceModel.get('document').toString();
+            const sourceModel = draft.buffers.source.model;
+            const source = sourceModel.document.toString();
 
             /**
              * Add a last instruction at the end of the code so Skupt will generate a Suspension state
@@ -325,46 +366,42 @@ function stepperRestartReducer(state, {payload: {stepperState}}) {
 
             window.currentPythonRunner.initCodes([pythonSource]);
         } else {
-            stepperState = state.getIn(['stepper', 'initialStepperState']);
+            stepperState = draft.stepper.initialStepperState;
         }
     }
 
-    return state.set('stepper', Map({
-        status: 'idle',
-        initialStepperState: stepperState,
-        currentStepperState: stepperState,
-        undo: state.getIn(['stepper', 'undo']), /* preserve undo stack */
-        redo: List()
-    }));
+    draft.stepper.status = StepperStatus.Idle;
+    draft.stepper.initialStepperState = stepperState;
+    draft.stepper.currentStepperState = stepperState;
+    draft.stepper.redo = [];
 }
 
-function stepperTaskStartedReducer(state, {payload: {task}}) {
-    return state.set('stepperTask', task);
+function stepperTaskStartedReducer(draft: AppStore, {payload: {task}}): void {
+    draft.stepperTask = task;
 }
 
-function stepperTaskCancelledReducer(state, _action) {
-    return state.set('stepperTask', null);
+function stepperTaskCancelledReducer(draft: AppStore): void {
+    draft.stepperTask = null;
 }
 
-function stepperResetReducer(state, {payload: {stepperState}}) {
-    return state.set('stepper', stepperState);
+function stepperResetReducer(draft: AppStore, {payload: {stepperState}}): void {
+    draft.stepper = stepperState;
 }
 
-function stepperStepReducer(state, _action) {
+function stepperStepReducer(draft: AppStore): void {
     /* No check for 'idle' status, the player must be able to step while
        the status is 'running'. */
-    return state.setIn(['stepper', 'status'], 'starting');
+    draft.stepper.status = StepperStatus.Starting;
 }
 
-function stepperStartedReducer(state, action) {
-    return state.update('stepper', stepper => stepper
-        .set('status', 'running')
-        .set('mode', action.mode)
-        .set('redo', List())
-        .update('undo', undo => undo.unshift(stepper.get('currentStepperState'))));
+function stepperStartedReducer(draft: AppStore, action): void {
+    draft.stepper.status = StepperStatus.Running;
+    draft.stepper.mode = action.mode;
+    draft.stepper.redo = [];
+    draft.stepper.undo.unshift(draft.stepper.currentStepperState);
 }
 
-function stepperProgressReducer(state, {payload: {stepperContext}}) {
+function stepperProgressReducer(draft: AppStore, {payload: {stepperContext}}): void {
     if (stepperContext.state.hasOwnProperty('platform') && stepperContext.state.platform === 'python') {
         // Save scope.
         stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
@@ -376,7 +413,7 @@ function stepperProgressReducer(state, {payload: {stepperContext}}) {
 
     // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
     if (stepperState.hasOwnProperty('platform') && stepperState.platform === 'python') {
-        const storeStepper = getStepper(state);
+        const storeStepper = draft.stepper;
         const storeCurrentStepperState = storeStepper.currentStepperState;
 
         const storeTerminal = window.currentPythonRunner._terminal;
@@ -386,120 +423,98 @@ function stepperProgressReducer(state, {payload: {stepperContext}}) {
         stepperState.output = storeOutput;
     }
 
-    return state.update('stepper', stepper => {
-        return stepper.set('currentStepperState', stepperState);
-    });
+    return draft.stepper.currentStepperState = stepperState;
 }
 
-function stepperIdleReducer(state, {payload: {stepperContext}}) {
+function stepperIdleReducer(draft: AppStore, {payload: {stepperContext}}): void {
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
-    const stepperState = enrichStepperState(stepperContext.state, 'Stepper.Idle');
-    return state.update('stepper', stepper => stepper
-        .set('currentStepperState', stepperState)
-        .set('status', 'idle')
-        .delete('mode'));
+    draft.stepper.currentStepperState = enrichStepperState(stepperContext.state, 'Stepper.Idle');
+    draft.stepper.status = StepperStatus.Idle;
+    draft.stepper.mode = null;
 }
 
-function stepperExitReducer(state) {
-    return state.update('stepper', st => stepperClear());
+function stepperExitReducer(draft: AppStore): void {
+    clearStepper(draft.stepper);
 }
 
-function stepperInterruptReducer(state, action) {
+function stepperInterruptReducer(draft: AppStore): void {
     // Cannot interrupt while idle.
-    if (state.getIn(['stepper', 'status']) === 'idle') {
-        return state;
+    if (draft.stepper.status != StepperStatus.Idle) {
+        draft.stepper.interrupting = true;
     }
-
-    return state.setIn(['stepper', 'interrupting'], true);
 }
 
-function stepperInterruptedReducer(state, action) {
-    return state.setIn(['stepper', 'interrupting'], false);
+function stepperInterruptedReducer(draft: AppStore): void {
+    draft.stepper.interrupting = false;
 }
 
-function stepperUndoReducer(state) {
-    return state.update('stepper', function(stepper) {
-        const undo = stepper.get('undo');
-        if (undo.isEmpty()) {
-            return state;
-        }
-        const currentStepperState = stepper.get('currentStepperState');
-        const stepperState = undo.first();
-        return stepper
-            .set('currentStepperState', stepperState)
-            .set('undo', undo.shift())
-            .set('redo', stepper.get('redo').unshift(currentStepperState));
-    });
+function stepperUndoReducer(draft: AppStore): void {
+    const undo = draft.stepper.undo;
+    if (undo.length) {
+        const currentStepperState = draft.stepper.currentStepperState;
+
+        draft.stepper.currentStepperState = undo.shift();
+        draft.stepper.redo.unshift(currentStepperState);
+    }
 }
 
-function stepperRedoReducer(state) {
-    return state.update('stepper', function(stepper) {
-        const redo = stepper.get('redo');
-        if (redo.isEmpty()) {
-            return stepper;
-        }
-        const stepperState = redo.first();
-        const currentStepperState = stepper.get('currentStepperState');
-        return stepper
-            .set('currentStepperState', stepperState)
-            .set('redo', redo.shift())
-            .set('undo', stepper.get('undo').unshift(currentStepperState));
-    });
+function stepperRedoReducer(draft: AppStore): void {
+    const redo = draft.stepper.redo;
+    if (redo.length) {
+        const currentStepperState = draft.stepper.currentStepperState;
+
+        draft.stepper.currentStepperState = redo.shift();
+        draft.stepper.undo.unshift(currentStepperState);
+    }
 }
 
-function stepperConfigureReducer(state, action) {
+function stepperConfigureReducer(draft: AppStore, action): void {
     const {options} = action;
-    return state.set('stepper.options', Map(options));
+
+    return draft.stepper.options = options;
 }
 
-function stepperStackUpReducer(state) {
-    return state.updateIn(['stepper', 'currentStepperState'], function(stepperState) {
-        let {controls, analysis} = stepperState;
-        let focusDepth = controls.getIn(['stack', 'focusDepth']);
-        if (focusDepth > 0) {
-            focusDepth -= 1;
-            controls = controls.setIn(['stack', 'focusDepth'], focusDepth);
-            const directives = collectDirectives(analysis.functionCallStack, focusDepth);
-            stepperState = {...stepperState, controls, directives};
-        }
-        return stepperState;
-    });
+function stepperStackUpReducer(draft: AppStore): void {
+    let {controls, analysis} = draft.stepper.currentStepperState;
+    let focusDepth = controls.stack.focusDepth;
+    if (focusDepth > 0) {
+        focusDepth -= 1;
+
+        controls.stack.focusDepth = focusDepth;
+
+        const directives = collectDirectives(analysis.functionCallStack, focusDepth);
+        draft.stepper.currentStepperState.controls = controls;
+        draft.stepper.currentStepperState.directives = directives;
+    }
 }
 
-function stepperStackDownReducer(state) {
-    return state.updateIn(['stepper', 'currentStepperState'], function(stepperState) {
-        let {controls, analysis} = stepperState;
-        const stackDepth = analysis.functionCallStack.size;
-        let focusDepth = controls.getIn(['stack', 'focusDepth']);
-        if (focusDepth + 1 < stackDepth) {
-            focusDepth += 1;
-            controls = controls.setIn(['stack', 'focusDepth'], focusDepth);
-            const directives = collectDirectives(analysis.functionCallStack, focusDepth);
-            stepperState = {...stepperState, controls, directives};
-        }
-        return stepperState;
-    });
+function stepperStackDownReducer(draft: AppStore): void {
+    let {controls, analysis} = draft.stepper.currentStepperState;
+    const stackDepth = analysis.functionCallStack.size;
+    let focusDepth = controls.stack.focusDepth;
+    if (focusDepth + 1 < stackDepth) {
+        focusDepth += 1;
+
+        controls.stack.focusDepth = focusDepth;
+
+        const directives = collectDirectives(analysis.functionCallStack, focusDepth);
+        draft.stepper.currentStepperState.controls = controls;
+        draft.stepper.currentStepperState.directives = directives;
+    }
 }
 
-function stepperViewControlsChangedReducer(state, action) {
+function stepperViewControlsChangedReducer(draft: AppStore, action): void {
     const {key, update} = action;
-    return state.updateIn(['stepper', 'currentStepperState'], function(stepperState) {
-        let {controls} = stepperState;
-        if (controls.has(key)) {
-            controls = controls.update(key, function(viewControls) {
-                // Do not use viewControls.merge as it applies Immutable.fromJS
-                // to all values.
-                Object.keys(update).forEach(function(name) {
-                    viewControls = viewControls.set(name, update[name]);
-                });
-                return viewControls;
-            });
-        } else {
-            controls = controls.set(key, Map(update));
-        }
-        return {...stepperState, controls};
-    });
+
+    let {controls} = draft.stepper.currentStepperState;
+    if (controls[key]) {
+        Object.keys(update).forEach(function(name) {
+            controls[key][name] = update[name];
+        });
+    } else {
+        controls[key] = update;
+    }
 }
 
 /* saga */
@@ -508,13 +523,13 @@ function* compileSucceededSaga() {
     try {
         yield put({type: ActionTypes.StepperDisabled});
         /* Build the stepper state. This automatically runs into user source code. */
-        const globalState = yield select(st => st);
+        let state: AppStore = yield select();
 
-        let stepperState = yield call(buildState, globalState);
+        let stepperState = yield call(buildState, state);
 
         // buildState may have triggered an error.
-        const newGlobalState = yield select(st => st);
-        if (newGlobalState.get('compile').get('status') !== 'error') {
+        state = yield select();
+        if (state.compile.status !== 'error') {
             /* Enable the stepper */
             yield put({type: ActionTypes.StepperEnabled});
             yield put({type: ActionTypes.StepperRestart, payload: {stepperState}});
@@ -530,7 +545,7 @@ function* recorderStoppingSaga() {
     yield put({type: ActionTypes.StepperDisabled});
 }
 
-function* stepperEnabledSaga(args, action) {
+function* stepperEnabledSaga(args) {
     /* Start the new stepper task. */
     const newTask = yield fork(rootStepperSaga, args);
 
@@ -538,20 +553,28 @@ function* stepperEnabledSaga(args, action) {
 }
 
 function* stepperDisabledSaga() {
+    const state: AppStore = yield select();
+
     /* Cancel the stepper task if still running. */
-    const oldTask = yield select(state => state.stepperTask);
+    const oldTask = state.stepperTask;
     if (oldTask) {
+        // @ts-ignore
         yield cancel(oldTask);
+
         yield put({type: ActionTypes.StepperTaskCancelled});
     }
+
     /* Clear source highlighting. */
     const startPos = {row: 0, column: 0};
+
     yield put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
 }
 
 function* stepperInteractSaga(app, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
+    let state: AppStore = yield select();
+
     /* Has the stepper been interrupted? */
-    if (yield select(isStepperInterrupting)) {
+    if (isStepperInterrupting(state)) {
         yield call(reject, new StepperError('interrupt', 'interrupted'));
 
         return;
@@ -559,6 +582,7 @@ function* stepperInteractSaga(app, {payload: {stepperContext, arg}, meta: {resol
 
     /* Emit a progress action so that an up-to-date state gets displayed. */
     yield put({type: ActionTypes.StepperProgress, payload: {stepperContext}});
+
     /* Run the provided saga if any, or wait until next animation frame. */
     const saga = arg.saga || stepperWaitSaga;
     const {completed, interrupted} = yield (race({
@@ -568,7 +592,8 @@ function* stepperInteractSaga(app, {payload: {stepperContext, arg}, meta: {resol
 
     /* Update stepperContext.state from the global state to avoid discarding
        the effects of user interaction. */
-    stepperContext.state = yield select(getCurrentStepperState);
+    state = yield select();
+    stepperContext.state = getCurrentStepperState(state);
 
     if (stepperContext.state.platform === 'python' && arg) {
         stepperContext.state.output = arg.output;
@@ -592,8 +617,10 @@ function* stepperWaitSaga() {
     yield delay(0);
 }
 
-function* stepperInterruptSaga(app, action) {
-    const curStepperState = yield select(getCurrentStepperState);
+function* stepperInterruptSaga() {
+    const state = yield select();
+
+    const curStepperState = getCurrentStepperState(state);
     if (!curStepperState) {
         return;
     }
@@ -640,11 +667,13 @@ function* stepperInterruptSaga(app, action) {
 }
 
 function* stepperStepSaga(app, action) {
-    const stepper = yield select(getStepper);
-    if (stepper.get('status') === 'starting') {
+    const state = yield select();
+
+    const stepper = getStepper(state);
+    if (stepper.status === StepperStatus.Starting) {
         yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
-        const stepperContext = makeContext(stepper.get('currentStepperState'), interact);
+        const stepperContext = makeContext(stepper.currentStepperState, interact);
 
         /**
          * Before we do a step, we check if the state in analysis is the same as the one in the python runner.
@@ -718,13 +747,14 @@ function* stepperStepSaga(app, action) {
 function* stepperExitSaga() {
     /* Disabled the stepper. */
     yield put({type: ActionTypes.StepperDisabled});
+
     /* Clear the compile state. */
     yield put({type: ActionTypes.CompileClear});
 }
 
 function* updateSourceHighlightSaga() {
-    const state = yield select();
-    const stepperState = state.get('stepper').get('currentStepperState');
+    const state: AppStore = yield select();
+    const stepperState = state.stepper.currentStepperState;
 
     const range = getNodeRange(stepperState);
 
@@ -751,57 +781,63 @@ function updateRange(replayContext) {
 function postLink(scope) {
     const {recordApi, replayApi, stepperApi} = scope;
 
-    recordApi.onStart(function* (init) {
+    recordApi.onStart(function* () {
         /* TODO: store stepper options in init */
     });
-    replayApi.on('start', function(replayContext, event) {
+    replayApi.on('start', function(replayContext) {
         /* TODO: restore stepper options from event[2] */
-        const stepperState = stepperClear();
-        replayContext.state = stepperResetReducer(replayContext.state, {payload: {stepperState}});
+        replayContext.state = produce(initReducer.bind(replayContext.state));
     });
     replayApi.onReset(function* (instant) {
         const stepperState = instant.state.get('stepper');
+
         yield put({type: ActionTypes.StepperReset, payload: {stepperState}});
         yield put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: instant.range});
     });
 
-    recordApi.on(ActionTypes.StepperExit, function* (addEvent, action) {
+    recordApi.on(ActionTypes.StepperExit, function* (addEvent) {
         yield call(addEvent, 'stepper.exit');
     });
-    replayApi.on('stepper.exit', function(replayContext, event) {
-        replayContext.state = stepperExitReducer(replayContext.state);
+    replayApi.on('stepper.exit', function(replayContext) {
+        replayContext.state = produce(stepperExitReducer.bind(replayContext.state));
+
         /* Clear the highlighted range when the stepper terminates. */
         replayContext.instant.range = null;
     });
 
-    recordApi.on(ActionTypes.StepperRestart, function* (addEvent, action) {
+    recordApi.on(ActionTypes.StepperRestart, function* (addEvent) {
         yield call(addEvent, 'stepper.restart');
     });
-    replayApi.on('stepper.restart', async function(replayContext, event) {
+    replayApi.on('stepper.restart', async function(replayContext) {
         const stepperState = await buildState(replayContext.state);
 
-        replayContext.state = stepperRestartReducer(replayContext.state, {payload: {stepperState}});
+        replayContext.state = produce(stepperRestartReducer.bind(replayContext.state, {payload: {stepperState}}));
     });
 
     recordApi.on(ActionTypes.StepperStarted, function* (addEvent, action) {
         const {mode} = action;
+
         yield call(addEvent, 'stepper.step', mode);
     });
     replayApi.on('stepper.step', function(replayContext, event) {
         return new Promise((resolve, reject) => {
             const mode = event[2];
+
             replayContext.stepperDone = resolve;
-            replayContext.state = stepperStartedReducer(replayContext.state, {mode});
+            replayContext.state = produce(stepperStartedReducer.bind(replayContext.state, {mode}));
+
             const stepperState = getCurrentStepperState(replayContext.state);
             replayContext.stepperContext = makeContext(stepperState, function interact(_) {
                 return new Promise((cont) => {
                     stepperSuspend(replayContext.stepperContext, cont);
-                    replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+
+                    replayContext.state = produce(stepperProgressReducer.bind(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}}));
+
                     stepperEventReplayed(replayContext);
                 });
             });
             performStep(replayContext.stepperContext, mode).then(function() {
-                let currentStepperState = replayContext.state.getIn(['stepper', 'currentStepperState']);
+                let currentStepperState = replayContext.state.stepper.currentStepperState;
 
                 if (currentStepperState.platform === 'python' && window.currentPythonRunner._printedDuringStep) {
                     replayContext.state.updateIn(['stepper', 'currentStepperState'], (currentStepperState) => {
@@ -816,7 +852,7 @@ function postLink(scope) {
                     });
                 }
 
-                replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+                replayContext.state = produce(stepperIdleReducer.bind(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}}));
                 stepperEventReplayed(replayContext);
             }, function(error) {
                 if (!(error instanceof StepperError)) {
@@ -828,7 +864,8 @@ function postLink(scope) {
                 if (error.condition === 'error') {
                     replayContext.stepperContext.state.error = error.message;
                 }
-                replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+
+                replayContext.state = produce(stepperIdleReducer.bind(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}}));
                 stepperEventReplayed(replayContext);
             });
         });
@@ -837,32 +874,34 @@ function postLink(scope) {
     recordApi.on(ActionTypes.StepperProgress, function* (addEvent, {payload: {stepperContext}}) {
         yield call(addEvent, 'stepper.progress', stepperContext.lineCounter);
     });
-    replayApi.on('stepper.progress', function(replayContext, event) {
-        return new Promise((resolve, reject) => {
+
+    replayApi.on('stepper.progress', function(replayContext) {
+        return new Promise((resolve) => {
             replayContext.stepperDone = resolve;
             replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
-            stepperResume(replayContext.stepperContext, function interact(args) {
+            stepperResume(replayContext.stepperContext, function interact() {
                 return new Promise((cont) => {
                     stepperSuspend(replayContext.stepperContext, cont);
 
-                    replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+                    replayContext.state = produce(stepperProgressReducer.bind(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}}));
 
                     stepperEventReplayed(replayContext);
                 });
             }, function() {
-                replayContext.state = stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+                replayContext.state = produce(stepperProgressReducer.bind(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}}));
                 stepperEventReplayed(replayContext);
             });
         });
     });
 
-    recordApi.on(ActionTypes.StepperInterrupt, function* (addEvent, action) {
+    recordApi.on(ActionTypes.StepperInterrupt, function* (addEvent) {
         yield call(addEvent, 'stepper.interrupt');
     });
-    replayApi.on('stepper.interrupt', function(replayContext, event) {
+    replayApi.on('stepper.interrupt', function(replayContext) {
         /* Prevent the subsequent stepper.idle event from running the stepper until
            completion. */
         const {stepperContext} = replayContext;
+
         stepperContext.interact = null;
         stepperContext.resume = null;
     });
@@ -870,8 +909,9 @@ function postLink(scope) {
     recordApi.on(ActionTypes.StepperIdle, function* (addEvent, {payload: {stepperContext}}) {
         yield call(addEvent, 'stepper.idle', stepperContext.lineCounter);
     });
-    replayApi.on('stepper.idle', function(replayContext, event) {
-        return new Promise((resolve, reject) => {
+
+    replayApi.on('stepper.idle', function(replayContext) {
+        return new Promise((resolve) => {
             replayContext.stepperDone = resolve;
             replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
             /* Set the interact callback to resume the stepper until completion. */
@@ -880,7 +920,7 @@ function postLink(scope) {
                     cont(true);
                 });
             }, function() {
-                replayContext.state = stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+                replayContext.state = produce(stepperIdleReducer.bind(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}}));
                 stepperEventReplayed(replayContext);
             });
         });
@@ -909,51 +949,55 @@ function postLink(scope) {
         }
     }
 
-    recordApi.on(ActionTypes.StepperUndo, function* (addEvent, action) {
+    recordApi.on(ActionTypes.StepperUndo, function* (addEvent) {
         yield call(addEvent, 'stepper.undo');
     });
-    replayApi.on('stepper.undo', function(replayContext, event) {
-        replayContext.state = stepperUndoReducer(replayContext.state);
+    replayApi.on('stepper.undo', function(replayContext) {
+        replayContext.state = produce(stepperUndoReducer.bind(replayContext.state));
+
         updateRange(replayContext);
     });
 
-    recordApi.on(ActionTypes.StepperRedo, function* (addEvent, action) {
+    recordApi.on(ActionTypes.StepperRedo, function* (addEvent) {
         yield call(addEvent, 'stepper.redo');
     });
-    replayApi.on('stepper.redo', function(replayContext, event) {
-        replayContext.state = stepperRedoReducer(replayContext.state);
+    replayApi.on('stepper.redo', function(replayContext) {
+        replayContext.state = produce(stepperRedoReducer.bind(replayContext.state));
+
         updateRange(replayContext);
     });
 
-    recordApi.on(ActionTypes.StepperStackUp, function* (addEvent, action) {
+    recordApi.on(ActionTypes.StepperStackUp, function* (addEvent) {
         yield call(addEvent, 'stepper.stack.up');
     });
-    replayApi.on('stepper.stack.up', function(replayContext, event) {
-        replayContext.state = stepperStackUpReducer(replayContext.state);
+    replayApi.on('stepper.stack.up', function(replayContext) {
+        replayContext.state = produce(stepperStackUpReducer.bind(replayContext.state));
         updateRange(replayContext);
     });
 
-    recordApi.on(ActionTypes.StepperStackDown, function* (addEvent, action) {
+    recordApi.on(ActionTypes.StepperStackDown, function* (addEvent) {
         yield call(addEvent, 'stepper.stack.down');
     });
-    replayApi.on('stepper.stack.down', function(replayContext, event) {
-        replayContext.state = stepperStackDownReducer(replayContext.state);
+    replayApi.on('stepper.stack.down', function(replayContext) {
+        replayContext.state = produce(stepperStackDownReducer.bind(replayContext.state));
         updateRange(replayContext);
     });
 
     /* TODO: move out of here? */
     recordApi.on(ActionTypes.StepperViewControlsChanged, function* (addEvent, action) {
         const {key, update} = action;
+
         yield call(addEvent, 'stepper.view.update', key, update);
     });
     replayApi.on('stepper.view.update', function(replayContext, event) {
         const key = event[2];
         const update = event[3];
-        replayContext.state = stepperViewControlsChangedReducer(replayContext.state, {key, update});
+
+        replayContext.state = produce(stepperViewControlsChangedReducer.bind(replayContext.state, {key, update}));
     });
 
-    stepperApi.onInit(function(stepperState, globalState) {
-        const {platform} = globalState.get('options');
+    stepperApi.onInit(function(stepperState, state: AppStore) {
+        const {platform} = state.options;
 
         switch (platform) {
             case 'python':
@@ -962,17 +1006,20 @@ function postLink(scope) {
 
                 break;
             default:
-                const syntaxTree = getSyntaxTree(globalState);
+                const syntaxTree = getSyntaxTree(state);
                 const options = stepperState.options = {
                     memorySize: 0x10000,
                     stackSize: 4096,
                 };
+
                 /* Set up the programState. */
                 const emptyProgramState = stepperState.lastProgramState = C.makeCore(options.memorySize);
+
                 /* Execute declarations and copy strings into memory */
                 const initialProgramState = stepperState.programState = {...emptyProgramState};
                 const decls = syntaxTree[2];
                 C.execDecls(initialProgramState, decls);
+
                 /* Set up the call to the main function. */
                 C.setupCall(initialProgramState, 'main');
 
@@ -984,8 +1031,9 @@ function postLink(scope) {
         // @ts-ignore
         yield takeEvery(ActionTypes.StepperInteract, stepperInteractSaga, args);
         yield takeEvery(ActionTypes.StepperStep, stepperStepSaga, args);
-        yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga, args);
+        yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga);
         yield takeEvery(ActionTypes.StepperExit, stepperExitSaga);
+
         /* Highlight the range of the current source fragment. */
         yield takeLatest([
             ActionTypes.StepperProgress,

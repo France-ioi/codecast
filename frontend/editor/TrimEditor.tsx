@@ -13,7 +13,7 @@ interface TrimEditorStateToProps {
 function mapStateToProps(state: AppStore): TrimEditorStateToProps {
     const {saving} = state.editor.trim;
     const user = state.user;
-    const grants = user && user.grants || [];
+    const grants = user ? user.grants : [];
 
     return {saving, grants};
 }

@@ -12,8 +12,8 @@ interface StatisticsAppStateToProps {
 }
 
 function mapStateToProps(state: AppStore): StatisticsAppStateToProps {
-    const user = state.get('user');
-    const screen = state.get('screen');
+    const user = state.user;
+    const screen = state.screen;
 
     let activity;
     if (!user) {

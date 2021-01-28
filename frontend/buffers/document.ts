@@ -1,6 +1,31 @@
 import {List} from 'immutable';
+import {immerable} from "immer";
 
-class Document {
+interface Range {
+    row: number,
+    column: number
+}
+
+export class Selection {
+    [immerable] = true;
+
+    public constructor(
+        public start: Range = {
+            row: 0,
+            column: 0
+        },
+        public end: Range = {
+            row: 0,
+            column: 0
+        }
+    ) {
+
+    }
+}
+
+export class Document {
+    [immerable] = true;
+
     constructor(public lines: List<string>) {
         this.lines = lines;
     }
@@ -13,11 +38,12 @@ class Document {
         return this.lines.reduce(function(a, v) {
             return (a + v.length + 1);
         }, 0) - 1;
-    };
+    }
 
     toString(): string {
         return this.lines.toJS().join('\n');
-    };
+    }
+
     applyDelta(delta): Document {
         const docLines = this.lines;
         const row = delta.start.row;
@@ -28,17 +54,19 @@ class Document {
             const lines = delta.lines;
             const nLines = lines.length;
             if (nLines === 1) {
-                return new Document(
-                    docLines.set(row, line.substring(0, startColumn) + lines[0] + line.substring(startColumn)));
+                return new Document(docLines.set(row, line.substring(0, startColumn) + lines[0] + line.substring(startColumn)));
             } else {
                 const args = [row, 1].concat(delta.lines);
+
                 docLines.splice.apply(docLines, args);
                 docLines[row] = line.substring(0, startColumn) + docLines[row];
                 docLines[row + delta.lines.length - 1] += line.substring(startColumn);
+
                 return new Document(
                     docLines.splice.apply(docLines, args)
-                        .update(row, firstLine => line.substring(0, startColumn) + firstLine)
-                        .update(row + nLines - 1, lastLine => lastLine + line.substring(startColumn)));
+                    .update(row, firstLine => line.substring(0, startColumn) + firstLine)
+                    .update(row + nLines - 1, lastLine => lastLine + line.substring(startColumn))
+                );
             }
         }
 
@@ -50,13 +78,17 @@ class Document {
                     docLines.set(row, line.substring(0, startColumn) + line.substring(endColumn)));
             } else {
                 return new Document(
-                    docLines.splice(row, endRow - row + 1,
-                        line.substring(0, startColumn) + docLines.get(endRow).substring(endColumn)));
+                    docLines.splice(
+                        row,
+                        endRow - row + 1,
+                        line.substring(0, startColumn) + docLines.get(endRow).substring(endColumn)
+                    )
+                );
             }
         }
 
         return this;
-    };
+    }
 
     endCursor() {
         if (this.lines.size === 0) {
@@ -67,7 +99,7 @@ class Document {
         const column = this.lines.get(row).length;
 
         return {row, column};
-    };
+    }
 }
 
 export const documentFromString = function(text: string): Document {
@@ -85,13 +117,15 @@ export const compressRange = function(range) {
     }
 };
 
-export const expandRange = function(range) {
+export const expandRange = function(range): Selection {
     if (range.length === 2) {
         const pos = {row: range[0], column: range[1]};
-        return {start: pos, end: pos};
+
+        return new Selection(pos, pos);
     } else {
         const start = {row: range[0], column: range[1]};
         const end = {row: range[2], column: range[3]};
-        return {start, end};
+
+        return new Selection(start, end);
     }
 };

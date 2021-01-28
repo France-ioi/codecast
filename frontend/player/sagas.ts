@@ -4,7 +4,6 @@
 
 import {buffers, eventChannel} from 'redux-saga';
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
-import {Map} from 'immutable';
 
 import {getJson} from '../common/utils';
 import {findInstantIndex} from './utils';
@@ -12,10 +11,22 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {getPlayerState} from "./selectors";
+import {StepperState, StepperStepMode} from "../stepper";
+import {AppStore} from "../store";
+import {PlayerInstant} from "./reducers";
 
 export default function(bundle) {
     bundle.addSaga(playerSaga);
 };
+
+export interface ReplayContext {
+    state: StepperState,
+    events: any[],
+    instants: PlayerInstant[],
+    applyEvent: Function,
+    addSaga: Function,
+    reportProgress: Function,
+}
 
 function* playerSaga(action) {
     yield takeLatest(ActionTypes.PlayerPrepare, playerPrepare, action);
@@ -26,6 +37,7 @@ function* playerSaga(action) {
         ActionTypes.PlayerPause,
         ActionTypes.PlayerSeek
     ];
+
     yield takeLatest(anyReplayAction, replaySaga, action);
 }
 
@@ -41,8 +53,9 @@ function* playerPrepare(app, action) {
     const {baseDataUrl, audioUrl} = action.payload;
 
     // Check that the player is idle.
-    const player = yield select(getPlayerState);
-    if (player.get('isPlaying')) {
+    const state: AppStore = yield select();
+    const player = getPlayerState(state);
+    if (player.isPlaying) {
         return;
     }
 
@@ -50,7 +63,7 @@ function* playerPrepare(app, action) {
     yield put({type: ActionTypes.PlayerPreparing});
 
     /* Load the audio. */
-    const audio = player.get('audio');
+    const audio = player.audio;
     audio.src = audioUrl;
     audio.load();
 
@@ -83,16 +96,18 @@ function* playerPrepare(app, action) {
         payload: platform
     });
 
-    const state = Map({
-        options: {platform}
-    });
+    const replayState = {
+        options: {
+            platform
+        }
+    };
 
     if (data.options) {
-        state.set('options', data.options);
+        replayState.options = data.options;
     }
 
-    const replayContext = {
-        state,
+    const replayContext: ReplayContext = {
+        state: replayState,
         events: data.events,
         instants: [],
         applyEvent: replayApi.applyEvent,
@@ -102,10 +117,12 @@ function* playerPrepare(app, action) {
 
     try {
         yield call(computeInstants, replayContext);
+
         /* The duration of the recording is the timestamp of the last event. */
         const instants = replayContext.instants;
         const duration = instants[instants.length - 1].t;
         yield put({type: ActionTypes.PlayerReady, payload: {baseDataUrl, duration, data, instants}});
+
         yield call(resetToAudioTime, app, 0);
     } catch (ex) {
         yield put({
@@ -130,6 +147,7 @@ function* playerPrepare(app, action) {
 
     function* reportProgress(progress) {
         yield put({type: ActionTypes.PlayerPrepareProgress, payload: {progress}});
+
         /* Allow the display to refresh. */
         yield take(chan);
     }
@@ -205,14 +223,15 @@ function* computeInstants(replayContext) {
 }
 
 function* replaySaga(app, {type, payload}) {
-    const player = yield select(getPlayerState);
-    const isPlaying = player.get('isPlaying');
-    const audio = player.get('audio');
-    const instants = player.get('instants');
-    let audioTime = player.get('audioTime');
-    let instant = player.get('current');
+    const state: AppStore = yield select();
+    const player = getPlayerState(state);
+    const isPlaying = player.isPlaying;
+    const audio = player.audio;
+    const instants = player.instants;
+    let audioTime = player.audioTime;
+    let instant = player.current;
 
-    if (type === ActionTypes.PlayerStart && !player.get('isReady')) {
+    if (type === ActionTypes.PlayerStart && !player.isReady) {
         /* Prevent starting playback until ready.  Should perhaps wait until
            preparation is done, for autoplay. */
         return;
@@ -227,10 +246,13 @@ function* replaySaga(app, {type, payload}) {
            clear any possible changes to the state prior to entering the update
            loop. */
         yield call(resetToAudioTime, app, audioTime);
+
         /* Disable the stepper during playback, its states are pre-computed. */
         yield put({type: StepperActionTypes.StepperDisabled});
+
         /* Play the audio now that an accurate state is displayed. */
         audio.play();
+
         yield put({type: ActionTypes.PlayerStarted});
     }
 
@@ -238,10 +260,13 @@ function* replaySaga(app, {type, payload}) {
         /* The player is being paused.  The audio is paused first, then the
            audio time is used to reset the state accurately. */
         audio.pause();
+
         const audioTime = Math.round(audio.currentTime * 1000);
+
         yield call(resetToAudioTime, app, audioTime);
-        yield call(restartStepper, app);
+        yield call(restartStepper);
         yield put({type: ActionTypes.PlayerPaused});
+
         return;
     }
 
@@ -254,7 +279,7 @@ function* replaySaga(app, {type, payload}) {
         /* Refreshing the display first then make the jump in the audio should
            make a cleaner jump, as audio will not start playing at the new
            position until the new state has been rendered. */
-        const audioTime = Math.max(0, Math.min(player.get('duration'), payload.audioTime));
+        const audioTime = Math.max(0, Math.min(player.duration, payload.audioTime));
         yield call(resetToAudioTime, app, audioTime);
         if (!isPlaying) {
             /* The stepper is restarted after a seek-while-paused, in case it is
@@ -273,13 +298,14 @@ function* replaySaga(app, {type, payload}) {
     /* The periodic update loop runs until cancelled by another replay action. */
     const chan = yield call(requestAnimationFrames, 50);
     try {
-        while (!(yield select(state => state.getIn(['player', 'current']).isEnd))) {
+        while (!(yield select((state: AppStore) => state.player.current.isEnd))) {
             /* Use the audio time as reference. */
             let endTime = Math.round(audio.currentTime * 1000);
             if (audio.ended) {
                 /* Extend a short audio to the timestamp of the last event. */
                 endTime = instants[instants.length - 1].t;
             }
+
             if (endTime < audioTime || audioTime + 2000 < endTime) {
                 /* Audio time has jumped. */
                 yield call(resetToAudioTime, app, endTime);
@@ -287,7 +313,9 @@ function* replaySaga(app, {type, payload}) {
                 /* Continuous playback. */
                 yield call(replayToAudioTime, app, instants, audioTime, endTime);
             }
+
             audioTime = endTime;
+
             yield take(chan);
         }
     } finally {
@@ -305,8 +333,10 @@ function* replayToAudioTime(app, instants, startTime, endTime) {
         /* Fast path: audio time has advanced but we are still at the same
            instant, just emit a tick event to update the audio time. */
         yield put({type: ActionTypes.PlayerTick, payload: {audioTime: endTime}});
+
         return;
     }
+
     /* Update the DOM by replaying incremental events between (immediately
        after) `instant` and up to (including) `nextInstant`. */
     instantIndex += 1;
@@ -317,8 +347,10 @@ function* replayToAudioTime(app, instants, startTime, endTime) {
         }
         if (instant.hasOwnProperty('jump')) {
             yield call(jumpToAudioTime, app, instant.jump);
+
             return;
         }
+
         if (instant.sagas) {
             /* Keep in mind that the instant's saga runs *prior* to the call
                to resetToAudioTime below, and should not rely on the global
@@ -332,8 +364,10 @@ function* replayToAudioTime(app, instants, startTime, endTime) {
             endTime = instant.t;
             break;
         }
+
         instantIndex += 1;
     }
+
     /* Perform a quick reset to update the editor models without pushing
        the new state to the editors instances (they are assumed to have
        been synchronized by replaying individual events).
@@ -352,32 +386,36 @@ function* resetToAudioTime(app, audioTime, quick?: boolean) {
 
     /* Call the registered reset-sagas to update any part of the state not
        handled by playerTick. */
-    const instant = yield select(state => state.getIn(['player', 'current']));
+    const state: AppStore = yield select();
+    const instant = state.player.current;
 
     yield call(replayApi.reset, instant, quick);
 }
 
-function* restartStepper(app) {
+function* restartStepper() {
     /* Re-enable the stepper to allow the user to interact with it. */
     yield put({type: StepperActionTypes.StepperEnabled});
 
     /* If the stepper was running and blocking on input, do a "step-into" to
        restore the blocked-on-I/O state. */
-    const instant = yield select(state => state.getIn(['player', 'current']));
-    if (instant.state.get('status') === 'running') {
-        const {isWaitingOnInput} = instant.state.get('current');
+    const state: AppStore = yield select();
+    const instant = state.player.current;
+    if (instant.state.status === 'running') {
+        const {isWaitingOnInput} = instant.state.current;
         if (isWaitingOnInput) {
-            yield put({type: StepperActionTypes.StepperStep, mode: 'into'});
+            yield put({type: StepperActionTypes.StepperStep, mode: StepperStepMode.Into});
         }
     }
 }
 
 function* jumpToAudioTime(app, audioTime) {
     /* Jump and full reset to the specified audioTime. */
-    const player = yield select(getPlayerState);
-    audioTime = Math.max(0, Math.min(player.get('duration'), audioTime));
-    const audio = player.get('audio');
+    const state: AppStore = yield select();
+    const player = getPlayerState(state);
+    audioTime = Math.max(0, Math.min(player.duration, audioTime));
+    const audio = player.audio;
     audio.currentTime = audioTime / 1000;
+
     yield call(resetToAudioTime, app, audioTime);
 }
 

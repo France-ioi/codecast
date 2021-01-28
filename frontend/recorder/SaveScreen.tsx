@@ -3,6 +3,7 @@ import {Button, FormGroup, HTMLSelect, Icon, Intent, ProgressBar, Spinner} from 
 import {ActionTypes} from "./actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
+import {SaveStep} from "./save_screen";
 
 interface SaveScreenStateToProps {
     getMessage: Function,
@@ -17,9 +18,9 @@ interface SaveScreenStateToProps {
 }
 
 function mapStateToProps(state: AppStore): SaveScreenStateToProps {
-    const getMessage = state.get('getMessage');
-    const {grants} = state.get('user');
-    const {step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, error} = state.get('save');
+    const getMessage = state.getMessage;
+    const grants = (state.user) ? state.user.grants : [];
+    const {step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, error} = state.save;
 
     return {getMessage, grants, step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, error};
 }
@@ -40,37 +41,37 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
         const grantOptions = grants.map(({url, description}) => ({value: url, label: description}));
         let message = null, canUpload = false, busy = false;
         switch (step) {
-            case 'encoding pending':
+            case SaveStep.EncodingPending:
                 message = "Encoding, please wait…";
                 busy = true;
                 // PROGRESS
                 break;
-            case 'encoding done':
+            case SaveStep.EncodingDone:
                 message = "Encoding complete, ready to upload.";
                 canUpload = true;
                 break;
-            case 'upload preparing':
+            case SaveStep.UploadPreparing:
                 message = "Preparing to upload…";
                 busy = true;
                 break;
-            case 'upload events pending':
+            case SaveStep.UploadEventsPending:
                 message = "Uploading events…";
                 busy = true;
                 break;
-            case 'upload events done':
+            case SaveStep.UploadEventsDone:
                 message = "Uploading events… done.";
                 break;
-            case 'upload audio pending':
+            case SaveStep.UploadAudioPending:
                 message = "Uploading audio…";
                 busy = true;
                 break;
-            case 'upload audio done':
+            case SaveStep.UploadAudioDone:
                 message = "Uploading audio done.";
                 break;
-            case 'done':
+            case SaveStep.Done:
                 message = "Save complete.";
                 break;
-            case 'error':
+            case SaveStep.Error:
                 message = (
                     <div>
                         <p>{"An error has occured."}</p>

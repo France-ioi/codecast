@@ -17,8 +17,8 @@ interface SubtitlesEditorPaneStateToProps {
 }
 
 function mapStateToProps(state: AppStore): SubtitlesEditorPaneStateToProps {
-    const getMessage = state.get('getMessage');
-    const {items, currentIndex, audioTime} = state.get('subtitles');
+    const getMessage = state.getMessage;
+    const {items, currentIndex, audioTime} = state.subtitles;
 
     return {
         getMessage,

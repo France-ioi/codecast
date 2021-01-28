@@ -1,3 +1,5 @@
+import {immerable} from "immer";
+
 function Node(left, key, right) {
     this.left = left;
     this.key = key;
@@ -179,6 +181,7 @@ function intervals(tree) {
 }
 
 export class IntervalTree {
+    [immerable] = true;
     keys = {[Symbol.iterator]: () => keys(this.root)};
 
     constructor(public root) {

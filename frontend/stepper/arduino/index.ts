@@ -24,6 +24,8 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {NPorts} from "./config";
 import produce from "immer";
+import {AppStore} from "../../store";
+import {PlayerInstant} from "../../player/reducers";
 
 export enum PinMode {
   PINMODE_INPUT = 0,
@@ -31,56 +33,56 @@ export enum PinMode {
   PINMODE_INPUT_PULLUP = 2
 }
 
-export default function(bundle) {
-    const initialArduinoState = {
-        hardware: 'atmega328p',
-        ports: range(0, NPorts - 1).map(_ => {
-            return {peripheral: {type: 'none'}};
-        })
-    };
+export const initialStateArduino = {
+    hardware: 'atmega328p',
+    ports: range(0, NPorts - 1).map(_ => {
+        return {peripheral: {type: 'none'}};
+    })
+};
 
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft) => {
-        draft.arduino = initialArduinoState;
+export default function(bundle) {
+    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
+        draft.arduino = initialStateArduino;
     }));
 
     bundle.defineAction(ActionTypes.ArduinoReset);
-    bundle.addReducer(ActionTypes.ArduinoReset, produce((draft) => {
-        draft.arduino = initialArduinoState;
+    bundle.addReducer(ActionTypes.ArduinoReset, produce((draft: AppStore) => {
+        draft.arduino = initialStateArduino;
     }));
 
     bundle.defineAction(ActionTypes.ArduinoPortConfigured);
-    bundle.addReducer(ActionTypes.ArduinoPortConfigured, arduinoPortConfigured);
+    bundle.addReducer(ActionTypes.ArduinoPortConfigured, produce(arduinoPortConfiguredReducer));
 
-    function arduinoPortConfigured(state, action) {
+    function arduinoPortConfiguredReducer(draft: AppStore, action): void {
         const {index, changes} = action;
-        return state.update('arduino', arduino =>
-            update(arduino, {ports: {[index]: changes}}));
+
+        draft.arduino.ports[index] = changes;
     }
 
     bundle.defineAction(ActionTypes.ArduinoPortChanged);
-    bundle.addReducer(ActionTypes.ArduinoPortChanged, arduinoPortChanged);
+    bundle.addReducer(ActionTypes.ArduinoPortChanged, produce(arduinoPortChangedReducer));
 
-    function arduinoPortChanged(state, action) {
+    function arduinoPortChangedReducer(draft: AppStore, action): void {
         const {index, changes} = action;
-        return state.updateIn(['stepper', 'currentStepperState'], stepper =>
-            update(stepper, {ports: {[index]: changes}}));
+
+        draft.stepper.currentStepperState.ports[index] = changes;
     }
 
     bundle.defineAction(ActionTypes.ArduinoPortSelected);
-    bundle.addReducer(ActionTypes.ArduinoPortSelected, arduinoPortSelected);
+    bundle.addReducer(ActionTypes.ArduinoPortSelected, produce(arduinoPortSelectedReducer));
 
-    function arduinoPortSelected(state, action) {
+    function arduinoPortSelectedReducer(draft: AppStore, action): void {
         const {index} = action;
-        return state.updateIn(['stepper', 'currentStepperState'], stepper =>
-            update(stepper, {selectedPort: {$set: index}}));
+
+        draft.stepper.currentStepperState.selectedPort = index;
     }
 
     bundle.defer(function({recordApi, replayApi, stepperApi}) {
-
         recordApi.onStart(function* (init) {
-            const {platform} = yield select(state => state.get('options'));
+            const state: AppStore = yield select();
+            const {platform} = state.options;
             if (platform === 'arduino') {
-                init.arduino = yield select(state => state.get('arduino'));
+                init.arduino = state.arduino;
             }
         });
         replayApi.on('start', function(replayContext, event) {
@@ -89,8 +91,8 @@ export default function(bundle) {
                 replayContext.state.arduino = arduino;
             }
         });
-        replayApi.onReset(function* (instant) {
-            const arduinoState = instant.state.get('arduino');
+        replayApi.onReset(function* (instant: PlayerInstant) {
+            const arduinoState = instant.state.arduino;
             if (arduinoState) {
                 yield put({type: ActionTypes.ArduinoReset, state: arduinoState});
             }
@@ -98,42 +100,52 @@ export default function(bundle) {
 
         recordApi.on(ActionTypes.ArduinoPortConfigured, function* (addEvent, action) {
             const {index, changes} = action;
+
             yield call(addEvent, 'arduino.port.configured', index, changes);
         });
         replayApi.on('arduino.port.configured', function(replayContext, event) {
             const index = event[2];
             const changes = event[3];
-            replayContext.state = arduinoPortConfigured(replayContext.state, {index, changes});
+
+            replayContext.state = produce(arduinoPortConfiguredReducer.bind(replayContext.state, {index, changes}));
         });
 
         recordApi.on(ActionTypes.ArduinoPortChanged, function* (addEvent, action) {
             const {index, changes} = action;
+
             yield call(addEvent, 'arduino.port.changed', index, changes);
         });
         replayApi.on('arduino.port.changed', function(replayContext, event) {
             const index = event[2];
             const changes = event[3];
-            replayContext.state = arduinoPortChanged(replayContext.state, {index, changes});
+
+            replayContext.state = produce(arduinoPortChangedReducer.bind(replayContext.state, {index, changes}));
         });
 
         recordApi.on(ActionTypes.ArduinoPortSelected, function* (addEvent, action) {
             const {index} = action;
+
             yield call(addEvent, 'arduino.port.selected', index);
         });
         replayApi.on('arduino.port.selected', function(replayContext, event) {
             const index = event[2];
-            replayContext.state = arduinoPortSelected(replayContext.state, {index});
+
+            replayContext.state = produce(arduinoPortSelectedReducer.bind(replayContext.state, {index}));
         });
 
-        stepperApi.onInit(function(stepperState, globalState) {
-            const arduinoState = globalState.get('arduino');
+        stepperApi.onInit(function(stepperState, state: AppStore) {
+            const arduinoState = state.arduino;
             if (arduinoState) {
                 stepperState.ports = range(0, NPorts - 1).map(function(index) {
                     /* Copy peripheral config on stepper init. */
                     const {peripheral} = arduinoState.ports[index];
+
                     return {direction: 0, output: 0, input: 0, peripheral};
                 });
-                stepperState.serial = {speed: false};
+
+                stepperState.serial = {
+                    speed: false
+                };
             }
         });
 
@@ -154,6 +166,7 @@ export default function(bundle) {
                     output = 1;
                     break;
             }
+
             stepperContext.state = update(stepperContext.state,
                 {
                     ports: {
@@ -181,6 +194,7 @@ export default function(bundle) {
 
         stepperApi.addBuiltin('digitalRead', function* digitalReadBuiltin(stepperContext, pin) {
             const level = yield ['digitalRead', pin.toInteger()];
+
             yield ['result', new C.IntegralValue(C.builtinTypes['int'], level)];
         });
         stepperApi.onEffect('digitalRead', function* digitalReadEffect(stepperContext, pin) {
@@ -189,12 +203,15 @@ export default function(bundle) {
                 /* Pin configured as output, read driver level. */
                 return port.output;
             }
+
             /* TODO: read peripheral */
+
             return (stepperContext.state.ports[pin].input >= 0.8) ? 1 : 0;
         });
 
         stepperApi.addBuiltin('analogRead', function* analogReadBuiltin(stepperContext, pin) {
             const level = yield ['analogRead', pin.toInteger()];
+
             yield ['result', new C.IntegralValue(C.builtinTypes['int'], level)];
         });
         stepperApi.onEffect('analogRead', function* analogReadEffect(stepperContext, pin) {
@@ -206,6 +223,7 @@ export default function(bundle) {
             if (port.peripheral.type === 'slider') {
                 return Math.round(port.input * 1023);
             }
+
             /* Assume no peripheral connected, read pull-up. */
             return (port.output === 1 ? 1023 : 0);
         });
@@ -220,6 +238,7 @@ export default function(bundle) {
 
         stepperApi.addBuiltin('Serial_print', function* (stepperContext, value, base) {
             const str = stringifyValue(stepperContext.state.programState, value, base);
+
             if (stepperContext.state.serial.speed) {
                 yield ['write', str];
             }
@@ -227,6 +246,7 @@ export default function(bundle) {
 
         stepperApi.addBuiltin('Serial_println', function* (stepperContext, value, base) {
             const str = stringifyValue(stepperContext.state.programState, value, base) + '\n';
+
             if (stepperContext.state.serial.speed) {
                 yield ['write', str];
             }
@@ -237,15 +257,14 @@ export default function(bundle) {
                 yield ['write', String.fromCharCode(value.toInteger())];
             }
         });
-
-    })
-
+    });
 };
 
 function stringifyValue(programState, value, base) {
     if (!value) {
         return '';
     }
+
     let str;
     switch (value.type.kind) {
         case 'pointer':
@@ -286,5 +305,6 @@ function stringifyValue(programState, value, base) {
             console.log('handle type', value.type.kind);
             str = value.toString();
     }
+
     return str;
 }

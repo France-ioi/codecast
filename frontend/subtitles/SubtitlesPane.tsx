@@ -23,9 +23,9 @@ interface SubtitlesPaneStateToProps {
 }
 
 function mapStateToProps(state: AppStore): SubtitlesPaneStateToProps {
-    const getMessage = state.get('getMessage');
-    const windowHeight = state.get('windowHeight');
-    const {filteredItems, currentIndex, audioTime, filterText, filterRegexp} = state.get('subtitles');
+    const getMessage = state.getMessage;
+    const windowHeight = state.windowHeight;
+    const {filteredItems, currentIndex, audioTime, filterText, filterRegexp} = state.subtitles;
 
     return {
         getMessage,

@@ -6,14 +6,15 @@ import {Alignment, Navbar, NavbarGroup} from "@blueprintjs/core";
 import {ActionTypes} from "../actionTypes";
 import {connect} from "react-redux";
 import {getCurrentStepperState} from "../selectors";
+import {AppStore} from "../../store";
 
 interface DirectivesPaneStateToProps {
     stepperState: any,
     getMessage: Function
 }
 
-function mapStateToProps(state): DirectivesPaneStateToProps {
-    const getMessage = state.get('getMessage');
+function mapStateToProps(state: AppStore): DirectivesPaneStateToProps {
+    const getMessage = state.getMessage;
     const stepperState = getCurrentStepperState(state);
 
     return {

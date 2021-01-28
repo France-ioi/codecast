@@ -19,8 +19,8 @@ interface SubtitlesEditorStateToProps {
 }
 
 function mapStateToProps(state: AppStore): SubtitlesEditorStateToProps {
-    const {unsaved, notify, selectedKey, availableOptions, langOptions} = state.get('subtitles');
-    const canSave = state.getIn(['editor', 'canSave']);
+    const {unsaved, notify, selectedKey, availableOptions, langOptions} = state.subtitles;
+    const canSave = state.editor.canSave;
     const selected = selectedKey && availableOptions[selectedKey];
     const subtitlesText = (selected && selected.text) || '';
 

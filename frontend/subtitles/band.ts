@@ -1,33 +1,27 @@
-import clickDrag from 'react-clickdrag';
 import {ActionTypes} from "./actionTypes";
-import {SubtitlesBand} from "./SubtitlesBand";
+import produce from "immer";
+import {AppStore} from "../store";
 
 export default function(bundle) {
-
     bundle.defineAction(ActionTypes.SubtitlesBandBeginMove);
-    bundle.addReducer(ActionTypes.SubtitlesBandBeginMove, subtitlesBandBeginMoveReducer);
+    bundle.addReducer(ActionTypes.SubtitlesBandBeginMove, produce(subtitlesBandBeginMoveReducer));
 
     bundle.defineAction(ActionTypes.SubtitlesBandEndMove);
-    bundle.addReducer(ActionTypes.SubtitlesBandEndMove, subtitlesBandEndMoveReducer);
+    bundle.addReducer(ActionTypes.SubtitlesBandEndMove, produce(subtitlesBandEndMoveReducer));
 
     bundle.defineAction(ActionTypes.SubtitlesBandMoved);
-    bundle.addReducer(ActionTypes.SubtitlesBandMoved, subtitlesBandMovedReducer);
+    bundle.addReducer(ActionTypes.SubtitlesBandMoved, produce(subtitlesBandMovedReducer));
 }
 
-function subtitlesBandBeginMoveReducer(state, {payload: {y}}) {
-    return state.update('subtitles', function(subtitles) {
-        return {...subtitles, isMoving: true, startY: y};
-    });
+function subtitlesBandBeginMoveReducer(draft: AppStore, {payload: {y}}): void {
+    draft.subtitles.isMoving = true;
+    draft.subtitles.startY = y;
 }
 
-function subtitlesBandEndMoveReducer(state, _action) {
-    return state.update('subtitles', function(subtitles) {
-        return {...subtitles, isMoving: false};
-    });
+function subtitlesBandEndMoveReducer(draft: AppStore): void {
+    draft.subtitles.isMoving = false;
 }
 
-function subtitlesBandMovedReducer(state, {payload: {y}}) {
-    return state.update('subtitles', function(subtitles) {
-        return {...subtitles, offsetY: 10 - (y - subtitles.startY)};
-    });
+function subtitlesBandMovedReducer(draft: AppStore, {payload: {y}}): void {
+    draft.subtitles.offsetY = 10 - (y - draft.subtitles.startY);
 }

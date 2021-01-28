@@ -1,5 +1,3 @@
-import {Map} from 'immutable';
-
 import saveScreenComponent from './save_screen';
 import recorderStore from './store';
 import recorderSagas from './sagas';

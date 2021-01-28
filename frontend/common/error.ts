@@ -3,11 +3,13 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import produce from "immer";
 import {AppStore} from "../store";
 
-export const initialStateError = {
-    error: '',
-    source: '',
-    info: ''
+export interface Error {
+    error: string,
+    source: string,
+    info: string
 }
+
+export const initialStateError = undefined;
 
 export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {

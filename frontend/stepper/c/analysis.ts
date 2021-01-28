@@ -7,6 +7,7 @@ A `Stored Value` can have one of these shapes:
 */
 
 import {Record, List, Map} from 'immutable';
+import {StepperDirectives} from "../index";
 
 interface AnalysisC {
     functionCallStack: any,
@@ -89,7 +90,7 @@ const analyseScope = function(scope) {
     return functionCallStack;
 };
 
-export const collectDirectives = function(functionCallStack, focusDepth) {
+export const collectDirectives = function(functionCallStack, focusDepth): StepperDirectives {
     const ordered = [];
     const functionCallStackMap = {};
     // StackFrames are collected in reverse order, so that the directive's render
@@ -107,5 +108,9 @@ export const collectDirectives = function(functionCallStack, focusDepth) {
             }
         })
     }
-    return {ordered, functionCallStackMap};
+    return {
+        ordered,
+        functionCallStackMap,
+        functionCallStack: null
+    };
 };

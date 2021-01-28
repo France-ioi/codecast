@@ -13,8 +13,8 @@ interface IOPaneOptionsStateToProps {
 }
 
 function mapStateToProps(state: AppStore): IOPaneOptionsStateToProps {
-    const getMessage = state.get('getMessage');
-    const {mode, modeSelect} = state.get('ioPane');
+    const getMessage = state.getMessage;
+    const {mode, modeSelect} = state.ioPane;
 
     return {getMessage, mode, modeSelect};
 }

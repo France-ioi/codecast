@@ -13,6 +13,9 @@
 
 import {actionChannel, call, put, select, take, takeLatest} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
+import {AppStore} from "../store";
+import produce from "immer";
+import {RecorderStatus} from "./store";
 
 export default function(bundle) {
     /* Recorder API */
@@ -29,7 +32,7 @@ export default function(bundle) {
     // @ts-ignore
     recordApi.start = function* () {
         const init = {};
-        for (var saga of startSagas) {
+        for (let saga of startSagas) {
             yield call(saga, init);
         }
         const event = [0, 'start', init];
@@ -47,19 +50,18 @@ export default function(bundle) {
         actionHandlers.set(actionType, handler);
     };
     bundle.defineAction(ActionTypes.RecorderAddEvent);
-    bundle.addReducer(ActionTypes.RecorderAddEvent, function(state, action) {
+    bundle.addReducer(ActionTypes.RecorderAddEvent, produce((draft: AppStore, action) => {
         const {event} = action;
-        return state.updateIn(['recorder', 'events'], events => events.push(event));
-    });
+
+        draft.recorder.events.push(event);
+    }));
 
     // Truncate the event stream at the given position (milliseconds).
     bundle.defineAction(ActionTypes.RecorderTruncate);
-    bundle.addReducer(ActionTypes.RecorderTruncate, function(state, {payload: {position, audioTime}}) {
-        return state.update('recorder', recorder => recorder
-            .update('events', events => events.slice(0, position))
-            .set('junkTime', recorder.get('suspendedAt') - audioTime)
-        );
-    });
+    bundle.addReducer(ActionTypes.RecorderTruncate, produce((draft: AppStore, {payload: {position, audioTime}}) => {
+        draft.recorder.events = draft.recorder.events.slice(0, position);
+        draft.recorder.junkTime = (draft.recorder.suspendedAt - audioTime);
+    }));
 
     bundle.addSaga(function* recordEvents() {
         const pattern = Array.from(actionHandlers.keys());
@@ -72,15 +74,16 @@ export default function(bundle) {
             let done = false;
             while (!done) {
                 const recordAction = yield take(channel);
-                const recorder = yield select(st => st.get('recorder'));
-                const status = recorder.get('status');
-                if (status !== 'recording') {
+                const state: AppStore = yield select();
+                const recorder = state.recorder;
+                const status = recorder.status;
+                if (status !== RecorderStatus.Recording) {
                     // Ignore events fired while not recording.
                     continue;
                 }
 
                 // @ts-ignore
-                const audioTime = Math.round(action.payload.recorderContext.audioContext.currentTime * 1000) - recorder.get('junkTime');
+                const audioTime = Math.round(action.payload.recorderContext.audioContext.currentTime * 1000) - recorder.junkTime;
 
                 function* addEvent(name, ...args) {
                     const event = [audioTime, name, ...args];
@@ -92,7 +95,8 @@ export default function(bundle) {
 
                 yield call(actionHandlers.get(recordAction.type), addEvent, recordAction);
             }
+
             channel.close();
         });
     });
-};
+}

@@ -1,5 +1,5 @@
-import {stepperClear} from '../stepper';
-import {compileClear} from "../stepper/compile";
+import {clearStepper} from '../stepper';
+import {initialStateCompile} from "../stepper/compile";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import produce from "immer";
@@ -13,7 +13,8 @@ export default function(bundle) {
     bundle.addReducer(ActionTypes.PlatformChanged, produce((draft, {payload: platform}) => {
         draft.options.platform = platform;
 
-        draft.stepper = stepperClear();
-        draft.compile = compileClear();
+        clearStepper(draft.stepper);
+
+        draft.compile = initialStateCompile;
     }));
 }

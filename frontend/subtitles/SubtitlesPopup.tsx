@@ -19,8 +19,8 @@ interface SubtitlesPopupStateToProps {
 }
 
 function mapStateToProps(state: AppStore): SubtitlesPopupStateToProps {
-    const {loadedKey, loading, lastError, availableOptions, langOptions, paneEnabled, bandEnabled} = state.get('subtitles');
-    const getMessage = state.get('getMessage');
+    const {loadedKey, loading, lastError, availableOptions, langOptions, paneEnabled, bandEnabled} = state.subtitles;
+    const getMessage = state.getMessage;
     const isLoaded = !loading && loadedKey !== 'none';
 
     return {

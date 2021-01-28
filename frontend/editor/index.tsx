@@ -3,19 +3,26 @@ import {call, put, select, take, takeEvery} from 'redux-saga/effects';
 import {getAudio} from '../common/utils';
 import {extractWaveform} from './waveform/tools';
 import OverviewBundle from './overview';
-import TrimBundle, {initialStateTrimSaving, TrimSavingStep} from './trim';
+import TrimBundle, {initialStateTrimSaving} from './trim';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import produce from "immer";
 import {AppStore} from "../store";
-import {IntervalTree} from "./interval_tree";
 
 export type EditorControl = 'none' | 'trim' | 'subtitles';
 
+export enum EditorSaveState {
+    Idle = 'idle',
+    Pending = 'pending',
+    Success = 'success',
+    Failure = 'failure'
+}
+
 export const initialStateEditor = {
     save: {
-        state: 'idle'
+        state: EditorSaveState.Idle,
+        error: ''
     },
     unsaved: false,
     controls: 'none' as EditorControl,
@@ -47,7 +54,7 @@ export default function(bundle) {
         draft.editor.canSave = userHasGrant(draft.user, baseDataUrl);
     }));
 
-    bundle.addReducer(CommonActionTypes.LoginFeedback, loginFeedbackReducer);
+    bundle.addReducer(CommonActionTypes.LoginFeedback, produce(loginFeedbackReducer));
 
     bundle.defineAction(ActionTypes.EditorControlsChanged);
     bundle.addReducer(ActionTypes.EditorControlsChanged, produce((draft: AppStore, {payload: {controls}}) => {
@@ -55,7 +62,7 @@ export default function(bundle) {
     }));
 
     bundle.defineAction(ActionTypes.EditorAudioLoadProgress);
-    bundle.addReducer(ActionTypes.EditorAudioLoadProgress, editorAudioLoadProgressReducer);
+    bundle.addReducer(ActionTypes.EditorAudioLoadProgress, produce(editorAudioLoadProgressReducer));
 
     bundle.defineAction(ActionTypes.EditorAudioLoaded);
     bundle.addReducer(ActionTypes.EditorAudioLoaded, produce((draft: AppStore, {payload: {duration, audioBlob, audioBuffer, waveform}}) => {
@@ -73,7 +80,7 @@ export default function(bundle) {
     }));
 
     bundle.defineAction(ActionTypes.SetupScreenTabChanged);
-    bundle.addReducer(ActionTypes.SetupScreenTabChanged, setupScreenTabChangedReducer);
+    bundle.addReducer(ActionTypes.SetupScreenTabChanged, produce(setupScreenTabChangedReducer));
 
     bundle.addSaga(function* editorSaga(app) {
         yield takeEvery(ActionTypes.EditorPrepare, editorPrepareSaga, app);
@@ -84,16 +91,13 @@ export default function(bundle) {
     bundle.include(TrimBundle);
 };
 
-function loginFeedbackReducer(state, _action) {
-    const editor = state.get('editor');
-    if (editor) {
-        const user = state.get('user');
-        state = state.update('editor', editor => editor.set('canSave', userHasGrant(user, editor.get('dataUrl'))));
+function loginFeedbackReducer(draft: AppStore): void {
+    if (draft.editor) {
+        draft.editor.canSave = userHasGrant(draft.user,draft.editor.dataUrl);
     }
-    return state;
 }
 
-function userHasGrant(user, dataUrl) {
+function userHasGrant(user, dataUrl): boolean {
     if (user && user.grants && dataUrl) {
         for (let grant of user.grants) {
             if (dataUrl.startsWith(grant.url)) {
@@ -105,13 +109,13 @@ function userHasGrant(user, dataUrl) {
     return false;
 }
 
-function editorAudioLoadProgressReducer(state, {payload: {value}}) {
-    return state.setIn(['editor', 'audioLoadProgress'], value);
+function editorAudioLoadProgressReducer(draft: AppStore, {payload: {value}}): void {
+    draft.editor.audioLoadProgress = value;
 }
 
 function* editorPrepareSaga(app, action) {
     /* Require the user to be logged in. */
-    while (!(yield select(state => state.get('user')))) {
+    while (!(yield select((state: AppStore) => state.user))) {
         yield take(CommonActionTypes.LoginFeedback);
     }
 
@@ -161,6 +165,6 @@ function* getAudioSaga(audioUrl) {
     }
 }
 
-function setupScreenTabChangedReducer(state, {payload: {tabId}}) {
-    return state.setIn(['editor', 'setupTabId'], tabId);
+function setupScreenTabChangedReducer(draft: AppStore, {payload: {tabId}}): void {
+    draft.editor.setupTabId = tabId;
 }

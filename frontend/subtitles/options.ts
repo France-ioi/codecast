@@ -15,5 +15,6 @@ export function getPersistentOptions() {
 export function setPersistentOption(key, value) {
     const opts = getPersistentOptions();
     opts[key] = value;
+
     window.localStorage.subtitles = JSON.stringify(opts);
 }

@@ -3,6 +3,12 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes} from "./actionTypes";
 import produce from "immer";
 import {AppStore} from "../store";
+import {StepperState} from "../stepper";
+
+export interface PlayerInstant {
+    isEnd: boolean,
+    state: StepperState
+}
 
 export const initialStatePlayer = {
     audio: null as HTMLVideoElement,
@@ -12,9 +18,10 @@ export const initialStatePlayer = {
     audioTime: 0,
     duration: 0,
     data: null as any, // TODO: type
-    instants: null as any[], // TODO: type
-    current: null as any, // TODO: type
+    instants: null as PlayerInstant[],
+    current: null as PlayerInstant,
     isReady: false,
+    isPlaying: false,
     error: null as {
         message: '',
         source: 'prepare'
@@ -23,6 +30,8 @@ export const initialStatePlayer = {
 
 export default function(bundle) {
     bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
+        draft.player = initialStatePlayer;
+
         playerClear(draft);
     }));
 
@@ -37,10 +46,12 @@ export default function(bundle) {
     }));
 
     bundle.defineAction(ActionTypes.PlayerPrepareProgress);
-    bundle.addReducer(ActionTypes.PlayerPrepareProgress, playerPrepareProgressReducer);
+    bundle.addReducer(ActionTypes.PlayerPrepareProgress, produce((draft: AppStore, {payload: {progress}}) => {
+        draft.player.progress = progress;
+    }));
 
     bundle.defineAction(ActionTypes.PlayerPrepareFailure);
-    bundle.addReducer(ActionTypes.PlayerPrepareFailure, produce((draft, {payload: {message}}) => {
+    bundle.addReducer(ActionTypes.PlayerPrepareFailure, produce((draft: AppStore, {payload: {message}}) => {
         draft.player.error = {
             source: 'prepare',
             message
@@ -57,75 +68,48 @@ export default function(bundle) {
     }));
 
     bundle.defineAction(ActionTypes.PlayerStarted);
-    bundle.addReducer(ActionTypes.PlayerStarted, playerStartedReducer);
+    bundle.addReducer(ActionTypes.PlayerStarted, produce((draft: AppStore) => {
+        draft.player.isPlaying = true;
+    }));
 
     bundle.defineAction(ActionTypes.PlayerPaused);
-    bundle.addReducer(ActionTypes.PlayerPaused, playerPausedReducer);
+    bundle.addReducer(ActionTypes.PlayerPaused, produce((draft: AppStore) => {
+        draft.player.isPlaying = false;
+    }));
 
     bundle.defineAction(ActionTypes.PlayerTick);
-    bundle.addReducer(ActionTypes.PlayerTick, playerTickReducer);
+    bundle.addReducer(ActionTypes.PlayerTick, produce((draft: AppStore, {payload: {audioTime}}) => {
+        const instants = draft.player.instants;
+
+        draft.player.current = findInstant(instants, audioTime);
+        draft.player.audioTime = audioTime;
+    }));
 
     bundle.defineAction(ActionTypes.PlayerVolumeChanged);
-    bundle.addReducer(ActionTypes.PlayerVolumeChanged, playerVolumeChangedReducer);
+    bundle.addReducer(ActionTypes.PlayerVolumeChanged, produce((draft: AppStore, {payload: {volume}}) => {
+        const audio = draft.player.audio;
+        audio.volume = volume;
+
+        draft.player.volume = audio.volume;
+    }));
 
     bundle.defineAction(ActionTypes.PlayerMutedChanged);
-    bundle.addReducer(ActionTypes.PlayerMutedChanged, playerMutedChangedReducer);
+    bundle.addReducer(ActionTypes.PlayerMutedChanged, produce((draft: AppStore, {payload: {isMuted}}) => {
+        const audio = draft.player.audio;
+        audio.muted = isMuted;
+
+        draft.player.isMuted = audio.muted;
+    }));
 
     bundle.defineAction(ActionTypes.PlayerSeek);
     bundle.defineAction(ActionTypes.PlayerSeeked);
 }
 
-function playerClear(draft: AppStore) {
+function playerClear(draft: AppStore): void {
     const audio = document.createElement('video');
 
     draft.player.audio = audio;
     draft.player.volume = audio.volume; /* TODO: load from localStorage? */
     draft.player.isMuted = audio.muted; /* TODO: load from localStorage? */
     draft.player.progress = 0;
-}
-
-function playerPrepareProgressReducer(state, {payload: {progress}}) {
-    return state.setIn(['player', 'progress'], progress);
-}
-
-function updateStatus(player) {
-    if (player.get('data') && player.get('duration')) {
-        player = player.set('isReady', true);
-    }
-    return player;
-}
-
-function playerStartedReducer(state, _action) {
-    return state.setIn(['player', 'isPlaying'], true);
-}
-
-function playerPausedReducer(state, _action) {
-    return state.setIn(['player', 'isPlaying'], false);
-}
-
-function playerTickReducer(state, {payload: {audioTime}}) {
-    const instants = state.getIn(['player', 'instants'])
-    const instant = findInstant(instants, audioTime);
-
-    return state.update('player', player => player
-        .set('current', instant) /* current instant */
-        .set('audioTime', audioTime));
-}
-
-function playerVolumeChangedReducer(state, {payload: {volume}}) {
-    return state.update('player', function(player) {
-        const audio = player.get('audio');
-        audio.volume = volume;
-
-        return player.set('volume', audio.volume);
-    });
-}
-
-function playerMutedChangedReducer(state, {payload: {isMuted}}) {
-    return state.update('player', function(player) {
-        const audio = player.get('audio');
-        audio.muted = isMuted;
-
-        return player.set('isMuted', audio.muted);
-    });
 }

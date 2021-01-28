@@ -34,15 +34,15 @@ interface StepperViewStateToProps {
 }
 
 function mapStateToProps(state: AppStore, props): StepperViewStateToProps {
-    const getMessage = state.get('getMessage');
-    const geometry = state.get('mainViewGeometry');
-    const panes = state.get('panes');
+    const getMessage = state.getMessage;
+    const geometry = state.mainViewGeometry;
+    const panes = state.panes;
     const diagnostics = getCompileDiagnostics(state);
     const stepperDisplay = getCurrentStepperState(state);
     const haveStepper = !!stepperDisplay;
     const error = haveStepper && stepperDisplay.error;
     const readOnly = haveStepper || props.preventInput;
-    const {showIO, showViews, showStack, platform} = state.get('options');
+    const {showIO, showViews, showStack, platform} = state.options;
     const arduinoEnabled = platform === 'arduino';
 
     /* TODO: make number of visible rows in source editor configurable. */
@@ -71,8 +71,8 @@ function mapStateToProps(state: AppStore, props): StepperViewStateToProps {
        by some actions (specifically, highlighting).
     */
     const player = getPlayerState(state);
-    const preventInput = player.get('isPlaying');
-    const windowHeight = state.get('windowHeight');
+    const preventInput = player.isPlaying;
+    const windowHeight = state.windowHeight;
 
     return {
         diagnostics, haveStepper, readOnly, error, getMessage, geometry, panes, preventInput, sourceRowHeight,

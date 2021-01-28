@@ -17,14 +17,14 @@ interface StackViewStateToProps {
 }
 
 function mapStateToProps(state: AppStore): StackViewStateToProps {
-    const getMessage = state.get('getMessage');
+    const getMessage = state.getMessage;
     const stepperState = getCurrentStepperState(state);
     if (!stepperState) {
         return {getMessage};
     }
 
     const {programState, lastProgramState, analysis, controls} = stepperState;
-    const stackControls = controls.get('stack');
+    const stackControls = controls.stack;
     const focusDepth = stackControls ? stackControls.get('focusDepth', 0) : 0;
     const firstVisible = Math.max(0, focusDepth - 5);
 

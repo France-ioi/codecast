@@ -43,7 +43,8 @@ declare global {
         currentPythonRunner: any,
         currentPythonContext: any,
         languageStrings: any,
-        quickAlgoInterface: any
+        quickAlgoInterface: any,
+
     }
 }
 
@@ -63,7 +64,7 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
 
 const {store, scope, finalize, start} = link(function(bundle) {
     bundle.defineAction(ActionTypes.AppInit);
-    bundle.addReducer(ActionTypes.AppInit, (_state, _action) => {
+    bundle.addReducer(ActionTypes.AppInit, () => {
         return {};
 
         // return {

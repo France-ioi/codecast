@@ -16,7 +16,7 @@ interface ArduinoPanelStateToProps {
 }
 
 function mapStateToProps(state: AppStore): ArduinoPanelStateToProps {
-    const arduinoState = state.get('arduino');
+    const arduinoState = state.arduino;
     const portDefns = PortDefns; /* should depend on arduinoState.hardware */
     const portConfigs = arduinoState.ports;
     let portStates, selectedPort;

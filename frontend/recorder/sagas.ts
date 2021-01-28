@@ -15,9 +15,69 @@ import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {getPlayerState} from "../player/selectors";
 import {getRecorderState} from "./selectors";
+import produce from "immer";
+import {AppStore} from "../store";
+import {RecorderStatus} from "./store";
 
 export default function(bundle, deps) {
     bundle.use('recordApi');
+
+    bundle.defineAction(ActionTypes.RecorderResume);
+
+    bundle.defineAction(ActionTypes.RecorderResuming);
+    bundle.addReducer(ActionTypes.RecorderResuming, produce((draft: AppStore) => {
+        draft.recorder.status = RecorderStatus.Resuming;
+    }));
+
+    bundle.defineAction(ActionTypes.RecorderResumed);
+    bundle.addReducer(ActionTypes.RecorderResumed, produce((draft: AppStore) => {
+        draft.recorder.status = RecorderStatus.Recording;
+    }));
+
+    bundle.defineAction(ActionTypes.AudioContextSuspended);
+    bundle.addReducer(ActionTypes.AudioContextSuspended, produce((draft: AppStore, {payload: {audioTime}}) => {
+        draft.recorder.suspendedAt = audioTime;
+    }));
+
+    bundle.addSaga(function* watchRecorderPrepare() {
+        yield takeLatest(ActionTypes.RecorderPrepare, recorderPrepare);
+    });
+
+    bundle.addSaga(function* recorderTicker() {
+        const {payload: {recorderContext}} = yield take(ActionTypes.RecorderReady);
+        while (true) {
+            yield take(ActionTypes.RecorderStarted);
+            while (true) {
+                const outcome = yield race({
+                    tick: delay(1000),
+                    stopped: take(ActionTypes.RecorderStopped)
+                });
+                if ('stopped' in outcome) {
+                    break;
+                }
+
+                const state: AppStore = yield select();
+                const junkTime = state.recorder.junkTime;
+                const elapsed = Math.round(recorderContext.audioContext.currentTime * 1000) - junkTime;
+
+                yield put({type: ActionTypes.RecorderTick, elapsed});
+            }
+        }
+    });
+
+    bundle.addSaga(function* watchRecorderActions() {
+        yield takeEvery(ActionTypes.RecorderStart, recorderStart);
+        yield takeEvery(ActionTypes.RecorderStop, recorderStop);
+        yield takeEvery(ActionTypes.RecorderPause, recorderPause);
+        yield takeEvery(ActionTypes.RecorderResume, recorderResume);
+    });
+
+    bundle.defer(function({replayApi}) {
+        replayApi.on('end', function(replayContext, event) {
+            replayContext.instant.isEnd = true;
+            replayContext.state = replayContext.state.set('stopped', true);
+        });
+    });
 
     function* recorderPrepare() {
         try {
@@ -25,8 +85,9 @@ export default function(bundle, deps) {
             yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'record'}});
 
             // Clean up any previous audioContext and worker.
-            const recorder = yield select(getRecorderState);
-            let recorderContext = recorder.get('context');
+            const state: AppStore = yield select();
+            const recorder = getRecorderState(state);
+            let recorderContext = recorder.context;
             if (recorderContext) {
                 const {worker: oldWorker} = recorderContext;
                 // @ts-ignore
@@ -38,7 +99,7 @@ export default function(bundle, deps) {
                     yield call(oldWorker.kill);
                 }
                 // TODO: put an action to clean up the old recorderContext, in case
-                //       the saga fails before recorderReady is sent.
+                // the saga fails before recorderReady is sent.
             }
 
             yield put({type: ActionTypes.RecorderPreparing, payload: {progress: 'start'}});
@@ -53,29 +114,33 @@ export default function(bundle, deps) {
             const audioContext = new AudioContext();
             const source = audioContext.createMediaStreamSource(stream);
             const analyser = audioContext.createAnalyser();
-            const scriptProcessor = audioContext.createScriptProcessor(
-                /*bufferSize*/ 4096, /*numberOfInputChannels*/ 2, /*numberOfOutputChannels*/ 2);
+            const scriptProcessor = audioContext.createScriptProcessor(4096, 2, 2);
             source.connect(analyser);
             source.connect(scriptProcessor);
             analyser.smoothingTimeConstant = 0.8;
             analyser.fftSize = 1024;
             scriptProcessor.connect(audioContext.destination);
+
             yield call(() => audioContext.suspend());
             yield put({type: ActionTypes.RecorderPreparing, payload: {progress: 'audio_ok'}});
+
             // Set up a worker to hold and encode the buffers.
             const worker = yield call(spawnWorker, AudioWorker);
             yield put({type: ActionTypes.RecorderPreparing, payload: {progress: 'worker_ok', worker}});
+
             // Initialize the worker.
             yield call(worker.call, 'init', {
                 sampleRate: audioContext.sampleRate,
                 numberOfChannels: source.channelCount
             });
+
             // XXX create a channel to which input buffers are posted.
             yield put({
                 type: ActionTypes.RecorderPreparing, payload: {
                     progress: 'worker_init_ok', analyser
                 }
             });
+
             // Set up the ScriptProcessor to divert all buffers to the worker.
             scriptProcessor.onaudioprocess = function(event) {
                 // dispatch event
@@ -84,11 +149,13 @@ export default function(bundle, deps) {
                 const ch1 = event.inputBuffer.getChannelData(1);
                 worker.post('addSamples', {samples: [ch0, ch1]});
             };
+
             // Signal that the recorder is ready to start, storing the new context.
             // /!\  Chrome: store a reference to the scriptProcessor node to prevent
             //      the browser from garbage-collection the node (which seems to
             //      occur even though the node is still connected).
             recorderContext = {audioContext, worker, scriptProcessor};
+
             yield put({type: ActionTypes.RecorderReady, payload: {recorderContext}});
         } catch (error) {
             // XXX send a specialized event and allow retrying recorderPrepare
@@ -99,17 +166,20 @@ export default function(bundle, deps) {
     function* recorderStart() {
         try {
             // The user clicked the "start recording" button.
-            const recorder = yield select(getRecorderState);
-            const recorderStatus = recorder.get('status');
-            if (recorderStatus !== 'ready') {
+            const state: AppStore = yield select();
+            const recorder = getRecorderState(state);
+            const recorderStatus = recorder.status;
+            if (recorderStatus !== RecorderStatus.Ready) {
                 console.log('not ready', recorder);
+
                 return;
             }
+
             // Signal that the recorder is starting.
             yield put({type: ActionTypes.RecorderStarting});
 
             // Resume the audio context to start recording audio buffers.
-            yield call(resumeAudioContext, recorder.get('context').audioContext);
+            yield call(resumeAudioContext, recorder.context.audioContext);
 
             // Signal that recording has started.
             yield put({type: ActionTypes.RecorderStarted});
@@ -124,8 +194,9 @@ export default function(bundle, deps) {
 
     function* recorderStop() {
         try {
-            let recorder = yield select(getRecorderState);
-            let recorderStatus = recorder.get('status');
+            let state: AppStore = yield select();
+            let recorder = getRecorderState(state);
+            let recorderStatus = recorder.status;
             if (!/recording|paused/.test(recorderStatus)) {
                 /* Stop request in invalid state. */
                 return;
@@ -134,7 +205,7 @@ export default function(bundle, deps) {
             /* Signal that the recorder is stopping. */
             yield put({type: ActionTypes.RecorderStopping});
 
-            const {audioContext} = recorder.get('context');
+            const {audioContext} = recorder.context;
             if (recorderStatus === 'recording') {
                 /* Suspend the audio context to stop recording audio buffers. */
                 yield call(suspendAudioContext, audioContext);
@@ -142,7 +213,9 @@ export default function(bundle, deps) {
             if (recorderStatus === 'paused') {
                 /* When stopping while paused, the recording is truncated at the
                    playback position */
-                const audioTime = yield select(st => getPlayerState(st).get('audioTime'));
+                state = yield select();
+                const audioTime = getPlayerState(state).audioTime;
+
                 yield call(truncateRecording, audioTime, null);
             }
 
@@ -156,13 +229,16 @@ export default function(bundle, deps) {
 
     function* recorderPause() {
         try {
-            const recorder = yield select(getRecorderState);
-            if (recorder.get('status') !== 'recording') {
+            let state: AppStore = yield select();
+            const recorder = getRecorderState(state);
+            if (recorder.status !== RecorderStatus.Recording) {
                 return;
             }
+
             // Signal that the recorder is pausing.
             yield put({type: ActionTypes.RecorderPausing});
-            const {audioContext, worker} = recorder.get('context');
+
+            const {audioContext, worker} = recorder.context;
             yield call(suspendAudioContext, audioContext);
 
             // Obtain the URL to a (WAV-encoded) audio object from the worker.
@@ -171,16 +247,19 @@ export default function(bundle, deps) {
 
             // Get a URL for events.
             const endTime = Math.floor(duration * 1000);
-            const events = recorder.get('events').push([endTime, 'end']);
+            const events = recorder.events.push([endTime, 'end']);
             const version = RECORDING_FORMAT_VERSION;
-            const options = yield select(state => state.get('options'));
+            state = yield select();
+            const options = state.options;
             const data = {version, options, events, subtitles: []};
             const eventsBlob = new Blob([JSON.stringify(data)], {
                 type: "application/json;charset=UTF-8"
             });
             const eventsUrl = URL.createObjectURL(eventsBlob);
+
             // Prepare the player to use the audio and event streams, wait till ready.
             yield put({type: PlayerActionTypes.PlayerPrepare, payload: {audioUrl, eventsUrl}});
+
             yield take(PlayerActionTypes.PlayerReady);
 
             // Signal that the recorder is paused.
@@ -195,26 +274,16 @@ export default function(bundle, deps) {
         }
     }
 
-    bundle.defineAction(ActionTypes.RecorderResume);
-
-    bundle.defineAction(ActionTypes.RecorderResuming);
-    bundle.addReducer(ActionTypes.RecorderResuming, (state, action) =>
-        state.setIn(['recorder', 'status'], 'resuming')
-    );
-
-    bundle.defineAction(ActionTypes.RecorderResumed);
-    bundle.addReducer(ActionTypes.RecorderResumed, (state, action) =>
-        state.setIn(['recorder', 'status'], 'recording')
-    );
-
     function* recorderResume() {
         try {
-            const recorder = yield select(getRecorderState);
-            const recorderStatus = recorder.get('status');
-            const player = yield select(getPlayerState);
-            const isPlaying = player.get('isPlaying');
-            if (recorderStatus !== 'paused' || isPlaying) {
+            const state: AppStore = yield select();
+            const recorder = getRecorderState(state);
+            const recorderStatus = recorder.status;
+            const player = getPlayerState(state);
+            const isPlaying = player.isPlaying;
+            if (recorderStatus !== RecorderStatus.Paused || isPlaying) {
                 console.log('bad state', recorderStatus);
+
                 return;
             }
 
@@ -230,10 +299,10 @@ export default function(bundle, deps) {
             yield put({type: ActionTypes.RecorderResuming});
 
             /* Truncate the recording at the current playback position. */
-            yield call(truncateRecording, player.get('audioTime'), player.get('current'));
+            yield call(truncateRecording, player.audioTime, player.current);
 
             /* Resume the audio context to resume recording audio buffers. */
-            yield call(resumeAudioContext, recorder.get('context').audioContext);
+            yield call(resumeAudioContext, recorder.context.audioContext);
 
             // Signal that recording has resumed.
             yield put({type: ActionTypes.RecorderResumed});
@@ -244,10 +313,14 @@ export default function(bundle, deps) {
     }
 
     function* truncateRecording(audioTime, instant) {
-        const {worker} = yield select(st => getRecorderState(st).get('context'));
+        const state: AppStore = yield select();
+        const {worker} = getRecorderState(state).context;
+
         yield call(worker.call, 'truncate', {position: audioTime / 1000});
+
         if (instant) {
             const position = instant.pos + 1;
+
             yield put({type: ActionTypes.RecorderTruncate, payload: {audioTime, position}});
         }
     }
@@ -268,50 +341,11 @@ export default function(bundle, deps) {
 
     function* suspendAudioContext(audioContext) {
         yield call(() => audioContext.suspend());
+
         const audioTime = Math.round(audioContext.currentTime * 1000);
 
         yield put({type: ActionTypes.AudioContextSuspended, payload: {audioTime}})
     }
-
-    bundle.defineAction(ActionTypes.AudioContextSuspended);
-    bundle.addReducer(ActionTypes.AudioContextSuspended, (state, {payload: {audioTime}}) =>
-        state.setIn(['recorder', 'suspendedAt'], audioTime));
-
-    bundle.addSaga(function* watchRecorderPrepare() {
-        yield takeLatest(ActionTypes.RecorderPrepare, recorderPrepare);
-    });
-
-    bundle.addSaga(function* recorderTicker() {
-        const {payload: {recorderContext}} = yield take(ActionTypes.RecorderReady);
-        while (true) {
-            yield take(ActionTypes.RecorderStarted);
-            while (true) {
-                const outcome = yield race({
-                    tick: delay(1000),
-                    stopped: take(ActionTypes.RecorderStopped)
-                });
-                if ('stopped' in outcome)
-                    break;
-                const junkTime = yield select(st => st.getIn(['recorder', 'junkTime']));
-                const elapsed = Math.round(recorderContext.audioContext.currentTime * 1000) - junkTime;
-                yield put({type: ActionTypes.RecorderTick, elapsed});
-            }
-        }
-    });
-
-    bundle.addSaga(function* watchRecorderActions() {
-        yield takeEvery(ActionTypes.RecorderStart, recorderStart);
-        yield takeEvery(ActionTypes.RecorderStop, recorderStop);
-        yield takeEvery(ActionTypes.RecorderPause, recorderPause);
-        yield takeEvery(ActionTypes.RecorderResume, recorderResume);
-    });
-
-    bundle.defer(function({replayApi}) {
-        replayApi.on('end', function(replayContext, event) {
-            replayContext.instant.isEnd = true;
-            replayContext.state = replayContext.state.set('stopped', true);
-        });
-    });
 };
 
 function getAudioStream() {

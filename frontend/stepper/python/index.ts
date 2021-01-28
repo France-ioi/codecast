@@ -5,6 +5,8 @@ import {writeString} from "../io/terminal";
 import PythonInterpreter from "./python_interpreter";
 
 import {ActionTypes} from './actionTypes';
+import produce from "immer";
+import {AppStore} from "../../store";
 
 const pythonInterpreterChannel = channel();
 
@@ -21,7 +23,8 @@ export default function(bundle) {
     }
 
     function* pythonInputSaga(app, action) {
-        const stepperContext = yield select(state => state.get('stepper').get('currentStepperState'));
+        const state: AppStore = yield select();
+        const stepperContext = state.stepper.currentStepperState;
         const isPlayerContext = (typeof stepperContext === 'undefined');
 
         let terminal = window.currentPythonRunner._terminal;
@@ -80,25 +83,12 @@ export default function(bundle) {
     });
 
     bundle.defineAction(ActionTypes.StackViewPathToggle);
-    bundle.addReducer(ActionTypes.StackViewPathToggle, stackViewPathToggle);
+    bundle.addReducer(ActionTypes.StackViewPathToggle, produce(stackViewPathToggleReducer));
 
-    function stackViewPathToggle(state, action) {
+    function stackViewPathToggleReducer(draft: AppStore, action): void {
         const {scopeIndex, path, isOpened} = action.payload;
 
-        return state.updateIn(['stepper', 'currentStepperState'], currentStepperState => {
-            return {
-                ...currentStepperState,
-                analysis: {
-                    ...currentStepperState.analysis,
-                    functionCallStack: currentStepperState.analysis.functionCallStack.update(scopeIndex, curFunctionCallStack => {
-                        return {
-                            ...curFunctionCallStack,
-                            openedPaths: curFunctionCallStack.openedPaths.set(path, isOpened)
-                        };
-                    })
-                }
-            }
-        });
+        draft.stepper.currentStepperState.analysis.functionCallStack[scopeIndex].openedPaths[path] = isOpened;
     }
 
     bundle.defer(function({recordApi, replayApi, stepperApi}) {
@@ -107,13 +97,14 @@ export default function(bundle) {
         });
         replayApi.on('stackview.path.toggle', function(replayContext, event) {
             const action = event[2];
-            replayContext.state = stackViewPathToggle(replayContext.state, action);
+
+            replayContext.state = produce(stackViewPathToggleReducer.bind(replayContext.state, action));
         });
 
-        stepperApi.onInit(function(stepperState, globalState) {
-            const {platform} = globalState.get('options');
-            const sourceModel = globalState.getIn(['buffers', 'source', 'model']);
-            const source = sourceModel.get('document').toString();
+        stepperApi.onInit(function(stepperState, state: AppStore) {
+            const {platform} = state.options;
+            const sourceModel = state.buffers.source.model;
+            const source = sourceModel.document.toString();
 
             if (platform === 'python') {
                 const context = {

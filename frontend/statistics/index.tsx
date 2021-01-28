@@ -1,5 +1,4 @@
 import React from 'react';
-import Immutable from 'immutable';
 import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 import {asyncRequestJson} from '../utils/api';
 import {isLocalMode} from "../utils/app";
@@ -18,7 +17,8 @@ interface LogData {
     resolution: any,
     folder?: any,
     codecast?: any,
-    bucket?: any
+    bucket?: any,
+    name?: string
 }
 
 function getBrowser() {
@@ -71,7 +71,18 @@ function getBrowser() {
 
 export const initialStateStatistics = {
     isReady: false,
-    logData: undefined as LogData
+    logData: undefined as LogData,
+    dateRange: [null, null],
+    folder: {
+        label: 'Select a Folder',
+        value: null
+    },
+    prefix: '',
+    search: {
+        status: 'success',
+        data: [],
+        error: null
+    }
 };
 
 export default function(bundle) {
@@ -88,20 +99,32 @@ export default function(bundle) {
     bundle.defineAction(ActionTypes.StatisticsLogLoadingData);
 
     bundle.defineAction(ActionTypes.StatisticsPrepare);
-    bundle.addReducer(ActionTypes.StatisticsPrepare, statisticsPrepareReducer);
+    bundle.addReducer(ActionTypes.StatisticsPrepare, produce((draft: AppStore) => {
+        draft.statistics.dateRange = [null, null];
+        draft.statistics.folder = {
+            label: 'Select a Folder',
+            value: null
+        };
+        draft.statistics.prefix = '';
+        draft.statistics.search = {
+            status: 'success',
+            data: [],
+            error: null
+        };
+    }));
 
     bundle.defineAction(ActionTypes.StatisticsDateRangeChanged);
-    bundle.addReducer(ActionTypes.StatisticsDateRangeChanged, statisticsDateRangeChangedReducer);
+    bundle.addReducer(ActionTypes.StatisticsDateRangeChanged, produce(statisticsDateRangeChangedReducer));
 
     bundle.defineAction(ActionTypes.StatisticsFolderChanged);
-    bundle.addReducer(ActionTypes.StatisticsFolderChanged, statisticsFolderChangedReducer);
+    bundle.addReducer(ActionTypes.StatisticsFolderChanged, produce(statisticsFolderChangedReducer));
 
     bundle.defineAction(ActionTypes.StatisticsPrefixChanged);
-    bundle.addReducer(ActionTypes.StatisticsPrefixChanged, statisticsPrefixChangedReducer);
+    bundle.addReducer(ActionTypes.StatisticsPrefixChanged, produce(statisticsPrefixChangedReducer));
 
     bundle.defineAction(ActionTypes.StatisticsSearchSubmit);
     bundle.defineAction(ActionTypes.StatisticsSearchStatusChanged);
-    bundle.addReducer(ActionTypes.StatisticsSearchStatusChanged, statisticsSearchStatusChangedReducer);
+    bundle.addReducer(ActionTypes.StatisticsSearchStatusChanged, produce(statisticsSearchStatusChangedReducer));
 
     bundle.defineAction(ActionTypes.StatisticsLogDataChanged);
     bundle.addReducer(ActionTypes.StatisticsLogDataChanged, produce((draft, {payload: {logData}}) => {
@@ -117,38 +140,26 @@ export default function(bundle) {
     });
 }
 
-function statisticsPrepareReducer(state) {
-    return state.update('statistics', statistics =>
-        statistics
-            .set('dateRange', [null, null])
-            .set('folder', {label: "Select a Folder", value: null})
-            .set('prefix', '')
-            .set('search', {
-                status: 'success',
-                data: [],
-                error: null,
-            }));
+function statisticsDateRangeChangedReducer(draft: AppStore, {payload: {dateRange}}): void {
+    draft.statistics.dateRange = dateRange;
 }
 
-function statisticsDateRangeChangedReducer(state, {payload: {dateRange}}) {
-    return state.setIn(['statistics', 'dateRange'], dateRange);
+function statisticsFolderChangedReducer(draft: AppStore, {payload: {folder}}): void {
+    draft.statistics.folder = folder;
 }
 
-function statisticsFolderChangedReducer(state, {payload: {folder}}) {
-    return state.setIn(['statistics', 'folder'], folder);
+function statisticsPrefixChangedReducer(draft: AppStore, {payload: {prefix}}): void {
+    draft.statistics.prefix = prefix;
 }
 
-function statisticsPrefixChangedReducer(state, {payload: {prefix}}) {
-    return state.setIn(['statistics', 'prefix'], prefix);
-}
-
-function statisticsSearchStatusChangedReducer(state, {payload}) {
-    return state.setIn(['statistics', 'search'], {data: [], error: null, ...payload});
+function statisticsSearchStatusChangedReducer(draft: AppStore): void {
+    draft.statistics.search.data = [];
+    draft.statistics.search.error = null;
 }
 
 function* statisticsPrepareSaga() {
     /* Require the user to be logged in. */
-    while (!(yield select(state => state.get('user')))) {
+    while (!(yield select((state: AppStore) => state.user))) {
         yield take(CommonActionTypes.LoginFeedback);
     }
 
@@ -156,7 +167,8 @@ function* statisticsPrepareSaga() {
 }
 
 function* statisticsInitLogDataSaga() {
-    const options = yield select(state => state.options);
+    const state: AppStore = yield select();
+    const options = state.options;
     const {
         start: compileType,
         language,
@@ -188,7 +200,8 @@ function* statisticsInitLogDataSaga() {
 
 function* statisticsPlayerReadySaga(app, action) {
     try {
-        const logData = yield select(state => state.getIn(['statistics', 'logData']));
+        const state: AppStore = yield select();
+        const logData = state.statistics.logData;
 
         logData.name = (action.payload.data.hasOwnProperty('name')) ? action.payload.data.name : 'default';
 
@@ -201,8 +214,9 @@ function* statisticsPlayerReadySaga(app, action) {
 
 function* statisticsLogLoadingDataSaga() {
     try {
-        const {baseUrl} = yield select(state => state.options);
-        const logData = yield select(state => state.statistics.logData);
+        const state: AppStore = yield select();
+        const {baseUrl} = state.options;
+        const logData = state.statistics.logData;
 
         yield call(asyncRequestJson, `${baseUrl}/statistics/api/logLoadingData`, {logData});
     } catch (error) {
@@ -215,12 +229,13 @@ function* statisticsSearchSaga() {
 
     let response;
     try {
-        const {baseUrl} = yield select(state => state.get('options'));
+        const state: AppStore = yield select();
+        const {baseUrl} = state.options;
 
-        const statistics = yield select(state => state.get('statistics'));
-        const dateRange = statistics.get('dateRange').map(date => date && date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate());
-        const folder = statistics.get('folder').value;
-        const prefix = statistics.get('prefix');
+        const statistics = state.statistics;
+        const dateRange = statistics.dateRange.map(date => date && date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate());
+        const folder = statistics.folder.value;
+        const prefix = statistics.prefix;
 
         response = yield call(asyncRequestJson, `${baseUrl}/statistics/api/search`, {
             dateRange,

@@ -3,17 +3,18 @@
    items ({start, end, text} objects, timestamps in milliseconds) */
 import {parseSync, stringifySync} from 'subtitle';
 import {call, put, select, takeLatest} from 'redux-saga/effects';
-import update from 'immutability-helper';
 
 import {readFileAsText} from '../common/utils';
 import {filterItems, getSubtitles, updateCurrentItem} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
+import produce from "immer";
+import {AppStore} from "../store";
 
 export default function(bundle) {
     /* Clear (unload) the currently loaded subtitles, if any. */
     bundle.defineAction(ActionTypes.SubtitlesCleared);
-    bundle.addReducer(ActionTypes.SubtitlesCleared, subtitlesClearedReducer);
+    bundle.addReducer(ActionTypes.SubtitlesCleared, produce(subtitlesClearedReducer));
 
     /* subtitlesLoadFromText({key, text}) loads SRT subtitles from a string. */
     bundle.defineAction(ActionTypes.SubtitlesLoadFromText);
@@ -31,90 +32,73 @@ export default function(bundle) {
     bundle.defineAction(ActionTypes.SubtitlesReload);
 
     bundle.defineAction(ActionTypes.SubtitlesLoadStarted);
-    bundle.addReducer(ActionTypes.SubtitlesLoadStarted, subtitlesLoadStartedReducer);
+    bundle.addReducer(ActionTypes.SubtitlesLoadStarted, produce(subtitlesLoadStartedReducer));
 
     bundle.defineAction(ActionTypes.SubtitlesLoadSucceeded);
-    bundle.addReducer(ActionTypes.SubtitlesLoadSucceeded, subtitlesLoadSucceededReducer);
+    bundle.addReducer(ActionTypes.SubtitlesLoadSucceeded, produce(subtitlesLoadSucceededReducer));
 
     bundle.defineAction(ActionTypes.SubtitlesLoadFailed);
-    bundle.addReducer(ActionTypes.SubtitlesLoadFailed, subtitlesLoadFailedReducer);
+    bundle.addReducer(ActionTypes.SubtitlesLoadFailed, produce(subtitlesLoadFailedReducer));
 
     bundle.defineAction(ActionTypes.SubtitlesLoadForTrimSucceeded);
-    bundle.addReducer(ActionTypes.SubtitlesLoadForTrimSucceeded, subtitlesLoadForTrimSucceededReducer);
+    bundle.addReducer(ActionTypes.SubtitlesLoadForTrimSucceeded, produce(subtitlesLoadForTrimSucceededReducer));
 
     bundle.defineAction(ActionTypes.SubtitlesTrimDone);
-    bundle.addReducer(ActionTypes.SubtitlesTrimDone, subtitlesTrimDoneReducer);
+    bundle.addReducer(ActionTypes.SubtitlesTrimDone, produce(subtitlesTrimDoneReducer));
 
     bundle.addSaga(subtitlesLoadSaga);
 }
 
-function subtitlesClearedReducer(state, _action) {
-    return state.update('subtitles', subtitles => (
-        {...subtitles, loaded: false, text: '', items: [], filteredItems: [], currentIndex: 0, loadedKey: 'none'}));
+function subtitlesClearedReducer(draft: AppStore): void {
+    draft.subtitles.loaded = false;
+    draft.subtitles.text = '';
+    draft.subtitles.items = [];
+    draft.subtitles.filteredItems = [];
+    draft.subtitles.currentIndex = 0;
+    draft.subtitles.loadedKey = 'none';
 }
 
-function subtitlesLoadStartedReducer(state, {payload: {key}}) {
-    return state.update('subtitles', subtitles => (
-        {...subtitles, loaded: false, loading: key, lastError: false}));
+function subtitlesLoadStartedReducer(draft: AppStore, {payload: {key}}): void {
+    draft.subtitles.loaded = false;
+    draft.subtitles.loading = key;
+    draft.subtitles.lastError = '';
 }
 
-function subtitlesLoadSucceededReducer(state, {payload: {key, text, items}}) {
-    return state
-        .update('subtitles', subtitles => (
-            updateCurrentItem({
-                ...subtitles,
-                loaded: true,
-                loading: false,
-                loadedKey: key,
-                text,
-                items,
-                filteredItems: filterItems(items, subtitles.filterRegexp)
-            })
-        ));
+function subtitlesLoadSucceededReducer(draft: AppStore, {payload: {key, text, items}}): void {
+    draft.subtitles.loaded = true;
+    draft.subtitles.loading = false;
+    draft.subtitles.loadedKey = key;
+    draft.subtitles.text = text;
+    draft.subtitles.items = items;
+    draft.subtitles.filteredItems = filterItems(items, draft.subtitles.filterRegexp);
+
+    updateCurrentItem(draft.subtitles);
 }
 
-function subtitlesLoadFailedReducer(state, {payload: {error}}) {
-    let errorText = state.get('getMessage')('SUBTITLES_FAILED_TO_LOAD').s;
+function subtitlesLoadFailedReducer(draft: AppStore, {payload: {error}}): void {
+    let errorText = draft.getMessage('SUBTITLES_FAILED_TO_LOAD').s;
     if (error.res) {
         errorText = `${errorText} (${error.res.statusCode})`;
     }
 
-    return state.update('subtitles', subtitles => ({
-        ...subtitles,
-        loaded: false,
-        loading: false,
-        lastError: errorText,
-        text: errorText,
-        loadedKey: 'none'
-    }));
+    draft.subtitles.loaded = false;
+    draft.subtitles.loading = false;
+    draft.subtitles.lastError = errorText;
+    draft.subtitles.text = errorText;
+    draft.subtitles.loadedKey = 'none';
 }
 
-function subtitlesLoadForTrimSucceededReducer(state, {payload: {key, items}}) {
-    return state.update('subtitles', subtitles =>
-        update(subtitles, {
-            trim: {
-                loaded: {$push: [{key, items}]}
-            }
-        })
-    );
+function subtitlesLoadForTrimSucceededReducer(draft: AppStore, {payload: {key, items}}): void {
+    draft.subtitles.trim.loaded.push({key, items})
 }
 
-function subtitlesTrimDoneReducer(state, {payload: {subtitles: data}}) {
-    return state
-        .update('subtitles', subtitles => {
-            const updateObj = {};
-            for (const {key, text} of data) {
-                updateObj[key] = {text: {$set: text}, unsaved: {$set: true}}
-            }
-
-            if (data.length > 0) {
-                return update(subtitles, {
-                    availableOptions: updateObj
-                })
-            } else {
-                return subtitles
-            }
-        });
+function subtitlesTrimDoneReducer(draft: AppStore, {payload: {subtitles: data}}): void {
+    if (data.length) {
+        for (const {key, text} of data) {
+            draft.subtitles.availableOptions[key].text = text;
+            draft.subtitles.availableOptions[key].unsaved = true;
+        }
+    }
 }
 
 function* subtitlesLoadSaga() {
@@ -191,14 +175,15 @@ function* subtitlesLoadFromFileSaga(action) {
 }
 
 function* subtitlesReloadSaga(_action) {
-    const {selectedKey: key, availableOptions} = yield select(state => state.get('subtitles'));
+    const state: AppStore = yield select();
+    const {selectedKey: key, availableOptions} = state.subtitles;
 
     if (key) {
         /* Generate an initial item covering the entire recording (needed because
            the editor works by splitting existing items at a specific position). */
         let text = (availableOptions[key].text || '').trim();
         if (!text) {
-            const data = yield select(state => state.getIn(['player', 'data']));
+            const data = state.player.data;
 
             text = stringifySync([{
                 data: {
@@ -206,9 +191,9 @@ function* subtitlesReloadSaga(_action) {
                     end: data.events[data.events.length - 1][0],
                     text: ''
                 },
-                type: "cue"
+                type: 'cue'
             }], {
-                format: "SRT"
+                format: 'SRT'
             });
         }
 
@@ -217,7 +202,8 @@ function* subtitlesReloadSaga(_action) {
 }
 
 function* subtitlesLoadForTrimSaga(_action) {
-    const {availableOptions} = yield select(state => state.get('subtitles'));
+    const state: AppStore = yield select();
+    const {availableOptions} = state.subtitles;
     const availKeys = Object.keys(availableOptions).sort();
 
     for (const key of availKeys) {

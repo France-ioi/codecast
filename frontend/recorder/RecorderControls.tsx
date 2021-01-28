@@ -9,6 +9,7 @@ import {AppStore} from "../store";
 import {Menu} from "../common/Menu";
 import {getPlayerState} from "../player/selectors";
 import {getRecorderState} from "./selectors";
+import {RecorderStatus} from "./store";
 
 interface RecorderControlsStateToProps {
     getMessage: Function,
@@ -21,31 +22,31 @@ interface RecorderControlsStateToProps {
     playPause: 'play' | 'pause',
     position: number,
     duration: number,
-    recorderStatus: 'ready' | 'paused' | 'recording'
+    recorderStatus: RecorderStatus
 }
 
 function mapStateToProps (state: AppStore): RecorderControlsStateToProps {
-    const getMessage = state.get('getMessage');
+    const getMessage = state.getMessage;
     const recorder = getRecorderState(state);
-    const recorderStatus = recorder.get('status');
-    const isPlayback = recorderStatus === 'paused';
+    const recorderStatus = recorder.status;
+    const isPlayback = recorderStatus === RecorderStatus.Paused;
     let canRecord, canPlay, canPause, canStop, canStep, position, duration, playPause;
 
     if (isPlayback) {
         const player = getPlayerState(state);
-        const isReady = player.get('isReady');
-        const isPlaying = player.get('isPlaying');
+        const isReady = player.isReady;
+        const isPlaying = player.isPlaying;
         canPlay = canStop = canRecord = canStep = isReady && !isPlaying;
         canPause = isReady && isPlaying;
         playPause = isPlaying ? 'pause' : 'play';
-        position = player.get('audioTime');
-        duration = player.get('duration');
+        position = player.audioTime;
+        duration = player.duration;
     } else {
         canRecord = /ready|paused/.test(recorderStatus);
         canStop = /recording|paused/.test(recorderStatus);
-        canPlay = recorderStatus === 'paused';
-        canPause = canStep = recorderStatus === 'recording';
-        position = duration = recorder.get('elapsed') || 0;
+        canPlay = recorderStatus === RecorderStatus.Paused;
+        canPause = canStep = recorderStatus === RecorderStatus.Recording;
+        position = duration = recorder.elapsed || 0;
         playPause = 'pause';
     }
 
@@ -139,7 +140,7 @@ class _RecorderControls extends React.PureComponent<RecorderControlsProps> {
 
     onStartRecording = () => {
         const {recorderStatus} = this.props;
-        if (recorderStatus === 'ready') {
+        if (recorderStatus === RecorderStatus.Ready) {
             this.props.dispatch({type: ActionTypes.RecorderStart});
         } else {
             this.props.dispatch({type: ActionTypes.RecorderResume});
@@ -147,7 +148,7 @@ class _RecorderControls extends React.PureComponent<RecorderControlsProps> {
     };
     onPause = () => {
         const {recorderStatus} = this.props;
-        if (recorderStatus === 'recording') {
+        if (recorderStatus === RecorderStatus.Recording) {
             this.props.dispatch({type: ActionTypes.RecorderPause});
         } else {
             this.props.dispatch({type: PlayerActionTypes.PlayerPause});

@@ -1,4 +1,5 @@
 import * as C from 'persistent-c';
+import {AppStore} from "../../store";
 
 const uint = C.builtinTypes['unsigned int'];
 const uintPtr = C.pointerType(uint);
@@ -6,8 +7,8 @@ const headerSize = 4;
 
 export default function(bundle) {
     bundle.defer(function({stepperApi}) {
-        stepperApi.onInit(function(stepperState, globalState) {
-            const {platform} = globalState.get('options');
+        stepperApi.onInit(function(stepperState, state: AppStore) {
+            const {platform} = state.options;
 
             if (platform === 'unix' || platform === 'arduino') {
                 const {programState, options} = stepperState;

@@ -19,7 +19,7 @@ function mapStateToProps(state: AppStore): SubtitlesBandStateToProps {
     const {
         loaded, editing, bandEnabled,
         items, currentIndex, itemVisible, isMoving, offsetY
-    } = state.get('subtitles');
+    } = state.subtitles;
 
     const item = items && items[currentIndex];
     const subtitleData = item && item.data;
@@ -29,7 +29,7 @@ function mapStateToProps(state: AppStore): SubtitlesBandStateToProps {
 
     let textHidden = false;
 
-    const trim = state.getIn(['editor', 'trim']);
+    const trim = state.editor.trim;
     if (trim && trim.intervals) {
         const interval = trim.intervals.get(subtitleData.start);
         if (interval && (interval.value.mute || interval.value.skip)) {
@@ -39,8 +39,8 @@ function mapStateToProps(state: AppStore): SubtitlesBandStateToProps {
         }
     }
 
-    const geometry = state.get('mainViewGeometry');
-    const windowHeight = state.get('windowHeight');
+    const geometry = state.mainViewGeometry;
+    const windowHeight = state.windowHeight;
 
     return {
         top: windowHeight - 60,

@@ -8,8 +8,8 @@ interface MemoryUsageStateToProps {
 }
 
 function mapStateToProps(state: AppStore): MemoryUsageStateToProps {
-    const getMessage = state.get('getMessage');
-    const {heapSize} = state.get('memoryUsage');
+    const getMessage = state.getMessage;
+    const {heapSize} = state.memoryUsage;
 
     return {
         getMessage,

@@ -11,30 +11,11 @@ import * as C from 'persistent-c';
 import {all, call} from 'redux-saga/effects';
 import {getNewOutput, getNewTerminal} from "./python";
 import {clearLoadedReferences} from "./python/analysis/analysis";
-
-interface StepperState {
-    platform: string,
-    error?: string
-}
-
-interface StepperStatePython extends StepperState {
-    platform: 'python',
-    analysis: any,
-    suspensions: any,
-    terminal: any,
-    input: any,
-    inputPos: number
-}
-
-interface StepperStateC extends StepperState {
-    platform: 'unix' | 'arduino',
-    programState: any,
-    lastProgramState: any,
-    controls: any
-}
+import {AppStore} from "../store";
+import {StepperState} from "./index";
 
 interface StepperContext {
-    state: StepperStatePython | StepperStateC,
+    state: StepperState,
     interrupted?: boolean,
     interact: Function,
     position: any,
@@ -43,8 +24,8 @@ interface StepperContext {
 
 export default function(bundle) {
     bundle.defineValue('stepperApi', {
-        onInit, /* (stepperState, globalState) -- add an init callback */
-        addSaga, /* (saga) -- add a stepper saga */
+        onInit,
+        addSaga,
         onEffect, /* (name, handler: function* (stepperContext, …args)) -- register an effect */
         addBuiltin, /* (name, handler: function* (stepperContext, …args)) -- register a builtin */
     });
@@ -56,13 +37,13 @@ const effectHandlers = new Map();
 const builtinHandlers = new Map();
 
 /* Register a setup callback for the stepper's initial state. */
-function onInit(callback) {
+function onInit(callback: (stepperState: {}, state: AppStore) => void): void {
     initCallbacks.push(callback);
 }
 
 /* Build a stepper state from the given init data. */
-export async function buildState(globalState): Promise<StepperStateC | StepperStatePython> {
-    const {platform} = globalState.get('options');
+export async function buildState(state: AppStore): Promise<StepperState> {
+    const {platform} = state.options;
 
     /*
      * Call all the init callbacks. Pass the global state so the player can
@@ -71,13 +52,13 @@ export async function buildState(globalState): Promise<StepperStateC | StepperSt
      */
     const curStepperState: StepperState = {
         platform
-    };
+    } as StepperState;
     for (let callback of initCallbacks) {
-        callback(curStepperState, globalState);
+        callback(curStepperState, state);
     }
 
     // TODO: Make something so that the initCallbacks doesn't obscure the creation of stepperState.
-    const stepperState = curStepperState as (StepperStateC | StepperStatePython);
+    const stepperState = curStepperState as StepperState;
 
     /* Run until in user code */
     const stepperContext = {
