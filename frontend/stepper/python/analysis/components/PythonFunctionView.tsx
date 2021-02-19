@@ -1,5 +1,4 @@
 import * as React from 'react';
-import {Map} from 'immutable';
 import {PythonFunctionHeader} from "./PythonFunctionHeader";
 import {PythonFunctionLocals} from "./PythonFunctionLocals";
 import {SkulptScope} from "../analysis";
@@ -7,7 +6,9 @@ import {SkulptScope} from "../analysis";
 interface PythonFunctionViewProps {
     func: SkulptScope,
     scopeIndex: number,
-    openedPaths: Map<string, boolean>,
+    openedPaths: {
+        [key: string]: boolean
+    },
     loadedReferences: any
 }
 

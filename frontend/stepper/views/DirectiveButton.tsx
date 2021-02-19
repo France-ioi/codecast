@@ -10,7 +10,7 @@ interface DirectiveButtonProps {
 export class DirectiveButton extends React.PureComponent<DirectiveButtonProps> {
     render() {
         const {directive, controls} = this.props;
-        const hide = controls.get('hide', false);
+        const hide = controls.hide;
 
         return (
             <Button small minimal active={!hide} text={directive.key} onClick={this.onClick}/>

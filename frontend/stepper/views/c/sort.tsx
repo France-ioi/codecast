@@ -4,6 +4,7 @@ import {getList, getNumber, renderArrow, renderValue, viewExprs} from './utils';
 import {extractView} from './array_utils';
 import {SvgPan} from '../SvgPan';
 import {DirectiveFrame} from "../DirectiveFrame";
+import {StepperControls} from "../../index";
 
 const marginLeft = 100;
 const marginTop = 4;
@@ -130,7 +131,7 @@ function Threshold({view, threshold}: ThresholdProps) {
 }
 
 interface SortViewProps {
-    controls: any,
+    controls: StepperControls,
     directive: any,
     functionCallStack: any,
     context: any,
@@ -148,7 +149,7 @@ export class SortView extends React.PureComponent<SortViewProps> {
 
         // Controls
         //   - fullView: read and render all cells
-        const fullView = controls.get('fullView');
+        const fullView = controls.fullView;
 
         const {byName, byPos} = directive;
         const expr = byPos[0];
@@ -206,11 +207,12 @@ export class SortView extends React.PureComponent<SortViewProps> {
     }
 
     getPosition = () => {
-        return this.props.controls.get('cellPan', 0);
+        return this.props.controls.cellPan;
     };
 
     onPan = (startPosition, dx) => {
         const cellPan = startPosition - (dx / (barWidth + barSpacing));
+
         this.props.onChange(this.props.directive, {cellPan});
     };
 }

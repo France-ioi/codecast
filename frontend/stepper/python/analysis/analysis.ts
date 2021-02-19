@@ -1,8 +1,7 @@
-import {List, Map} from 'immutable';
 import {VIEW_DIRECTIVE_PREFIX} from "../directives";
 
 export interface SkulptAnalysis {
-    functionCallStack: List<SkulptScope>,
+    functionCallStack: SkulptScope[],
     stepNum: number,
     code: '',
     lines: string[],
@@ -15,12 +14,16 @@ export interface SkulptVariable {
 }
 
 export interface SkulptScope {
-    variables: Map<string, SkulptVariable>,
+    variables: {
+        [key: string]: SkulptVariable
+    },
     directives: any[],
     name: string,
     args: string[],
-    openedPaths: Map<string, boolean>,
-    loadedReferences: number[],
+    openedPaths: {
+        [key: string]: boolean
+    },
+    loadedReferences: any, // TODO: Add type
     currentLine: number,
     suspensionIdx: number,
     scopeIndex: number
@@ -40,13 +43,13 @@ const SKULPT_ANALYSIS_DEBUG = 0;
 /**
  * Transforms the skulpt state (the suspensions) to something readable with the variables content.
  *
- * @param {Array}  suspensions  The skulpt suspensions.
- * @param {Object} lastAnalysis The last analysis (this function on the precedent step).
- * @param {int}    newStepNum   The new Skulpt step number.
+ * @param suspensions  The skulpt suspensions.
+ * @param lastAnalysis The last analysis (this function on the precedent step).
+ * @param newStepNum   The new Skulpt step number.
  *
- * @returns {Object}
+ * @returns SkulptAnalysis
  */
-export const analyseSkulptState = function(suspensions, lastAnalysis, newStepNum): SkulptAnalysis {
+export const analyseSkulptState = function(suspensions: any[], lastAnalysis: SkulptAnalysis, newStepNum: number): SkulptAnalysis {
     // @ts-ignore
     if (SKULPT_ANALYSIS_DEBUG === 2) {
         console.log('[¥¥¥¥¥¥¥] Building analysis');
@@ -54,7 +57,7 @@ export const analyseSkulptState = function(suspensions, lastAnalysis, newStepNum
         console.log(lastAnalysis);
     }
 
-    let functionCallStack = List<SkulptScope>();
+    let functionCallStack: SkulptScope[] = [];
 
     if (suspensions) {
         let scopeIndex = 0;
@@ -65,13 +68,13 @@ export const analyseSkulptState = function(suspensions, lastAnalysis, newStepNum
             }
 
             let lastScopeAnalysis = null;
-            if (lastAnalysis && lastAnalysis.functionCallStack.size > scopeIndex) {
-                lastScopeAnalysis = lastAnalysis.functionCallStack.get(scopeIndex);
+            if (lastAnalysis && lastAnalysis.functionCallStack.length > scopeIndex) {
+                lastScopeAnalysis = lastAnalysis.functionCallStack[scopeIndex];
             }
 
             const analysedScope = analyseSkulptScope(suspension, lastScopeAnalysis, newStepNum, suspensionIdx, scopeIndex);
 
-            functionCallStack = functionCallStack.push(analysedScope);
+            functionCallStack.push(analysedScope);
 
             scopeIndex++;
         }
@@ -99,22 +102,22 @@ export const analyseSkulptState = function(suspensions, lastAnalysis, newStepNum
  *
  * @returns {boolean}
  */
-const isProgramSuspension = function(suspension) {
+const isProgramSuspension = function(suspension): boolean {
     return suspension.hasOwnProperty('$lineno');
 };
 
 /**
  * Transforms the skulpt scope (one suspension) to something readable with the variables content.
  *
- * @param {Object} suspension   The skulpt suspension.
- * @param {Object} lastAnalysis The last analysis (this function on the precedent step and the same scope).
- * @param {int}    newStepNum   The new Skulpt step number.
+ * @param suspension    The skulpt suspension.
+ * @param lastAnalysis  The last analysis (this function on the precedent step and the same scope).
+ * @param newStepNum    The new Skulpt step number.
  * @param suspensionIdx
  * @param scopeIndex
  *
- * @returns {{args: *, variables: Map, name: string, openedPaths: Map<any, any>, currentLine: *}}
+ * @returns SkulptScope
  */
-export const analyseSkulptScope = function(suspension, lastAnalysis, newStepNum, suspensionIdx, scopeIndex): SkulptScope {
+export const analyseSkulptScope = function(suspension: any, lastAnalysis: SkulptScope, newStepNum: number, suspensionIdx: number, scopeIndex: number): SkulptScope {
     // @ts-ignore
     if (SKULPT_ANALYSIS_DEBUG === 2) {
         console.log('////// Analyse scope...');
@@ -122,7 +125,7 @@ export const analyseSkulptScope = function(suspension, lastAnalysis, newStepNum,
         console.log(lastAnalysis);
     }
 
-    let variables = Map<string, SkulptVariable>();
+    let variables: {[key: string]: SkulptVariable} = {};
 
     let name = suspension._name;
     if (name === '<module>') {
@@ -151,7 +154,7 @@ export const analyseSkulptScope = function(suspension, lastAnalysis, newStepNum,
 
         let lastValue = null;
         if (lastAnalysis) {
-            lastValue = lastAnalysis.variables.get(variableName);
+            lastValue = lastAnalysis.variables[variableName];
             if (lastValue) {
                 lastValue = lastValue.cur;
             } else {
@@ -159,10 +162,10 @@ export const analyseSkulptScope = function(suspension, lastAnalysis, newStepNum,
             }
         }
 
-        variables = variables.set(variableName, {
+        variables[variableName] ={
             cur: value,
             old: lastValue
-        });
+        };
     }
 
     // The references of loaded objects and variables within the step.
@@ -172,11 +175,9 @@ export const analyseSkulptScope = function(suspension, lastAnalysis, newStepNum,
     }
 
     // Opened objects / lists in the variables view.
-    let openedPaths;
+    let openedPaths: {[key: string]: boolean} = {};
     if (lastAnalysis) {
         openedPaths = lastAnalysis.openedPaths;
-    } else {
-        openedPaths = Map<string, boolean>();
     }
 
     const analysis: SkulptScope = {
@@ -228,7 +229,7 @@ const variablesBeginWithIgnore = [
  *
  * @returns {Array}
  */
-const filterInternalVariables = (variableNames) => {
+const filterInternalVariables = (variableNames: string[]): string[] => {
     return variableNames.filter((name) => {
         let ignore = false;
         for (let variableBeginWithIgnore of variablesBeginWithIgnore) {
@@ -264,7 +265,7 @@ const getDirectiveVariables = (variables) => {
  *
  * @return {Array}
  */
-const sortArgumentsFirst = (variableNames, args) => {
+const sortArgumentsFirst = (variableNames: string[], args) => {
     return variableNames.sort((a, b) => {
         const aIsArg = (args.indexOf(a) !== -1);
         const bIsArg = (args.indexOf(b) !== -1);
@@ -304,18 +305,18 @@ export const getSkulptSuspensionsCopy = function(suspensions) {
  *
  * @param analysis
  */
-export const clearLoadedReferences = function(analysis) {
+export const clearLoadedReferences = function(analysis: SkulptAnalysis) {
     const clearedAnalysis = {
         ...analysis,
-        functionCallStack: List()
+        functionCallStack: []
     };
-    for (let idx = 0; idx < analysis.functionCallStack.size; idx++) {
+    for (let idx = 0; idx < analysis.functionCallStack.length; idx++) {
         const clearedFunctionCallStack = {
-            ...analysis.functionCallStack.get(idx),
+            ...analysis.functionCallStack[idx],
             loadedReferences: {}
         }
 
-        clearedAnalysis.functionCallStack = clearedAnalysis.functionCallStack.push(clearedFunctionCallStack);
+        clearedAnalysis.functionCallStack.push(clearedFunctionCallStack);
     }
 
     return clearedAnalysis;

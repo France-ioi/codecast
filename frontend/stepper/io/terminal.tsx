@@ -1,6 +1,6 @@
 /* Line-buffered terminal */
 import React from 'react';
-import {call, put, select, takeEvery} from 'redux-saga/effects';
+import {call, select, takeEvery} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
 import produce, {immerable} from "immer";
 import {AppStore} from "../../store";
@@ -9,8 +9,9 @@ export const initialStateTerminal = {} as any;
 
 export default function(bundle) {
     bundle.defineAction(ActionTypes.TerminalInit);
-    bundle.addReducer(ActionTypes.TerminalInit, produce((draft: AppStore) => {
+    bundle.addReducer(ActionTypes.TerminalInit, produce((draft: AppStore, {terminalElement}) => {
         draft.terminal = initialStateTerminal;
+        draft.terminalElement = terminalElement;
     }));
 
     bundle.defineAction(ActionTypes.TerminalFocus);
@@ -19,9 +20,8 @@ export default function(bundle) {
         yield takeEvery(ActionTypes.TerminalFocus, function* () {
             const state: AppStore = yield select();
 
-            const iface = state.terminal;
-            if (iface) {
-                iface.focus();
+            if (state.terminalElement) {
+                state.terminalElement.focus();
             }
         });
     });
@@ -92,7 +92,7 @@ export default function(bundle) {
             yield call(addEvent, 'terminal.wait');
         });
         replayApi.on('terminal.wait', function(replayContext) {
-            replayContext.state = produce(terminalInputNeededReducer.bind(replayContext.state));
+            replayContext.state = produce(terminalInputNeededReducer.bind(this, replayContext.state));
         });
 
         recordApi.on(ActionTypes.TerminalInputKey, function* (addEvent, action) {
@@ -101,21 +101,21 @@ export default function(bundle) {
         replayApi.on('terminal.key', function(replayContext, event) {
             const key = event[2];
 
-            replayContext.state = produce(terminalInputKeyReducer.bind(replayContext.state, {key}));
+            replayContext.state = produce(terminalInputKeyReducer.bind(this, replayContext.state, {key}));
         });
 
         recordApi.on(ActionTypes.TerminalInputBackspace, function* (addEvent) {
             yield call(addEvent, 'terminal.backspace');
         });
         replayApi.on('terminal.backspace', function(replayContext) {
-            replayContext.state = produce(terminalInputBackspaceReducer.bind(replayContext.state));
+            replayContext.state = produce(terminalInputBackspaceReducer.bind(this, replayContext.state));
         });
 
         recordApi.on(ActionTypes.TerminalInputEnter, function* (addEvent) {
             yield call(addEvent, 'terminal.enter');
         });
         replayApi.on('terminal.enter', function(replayContext) {
-            replayContext.state = produce(terminalInputEnterReducer.bind(replayContext.state));
+            replayContext.state = produce(terminalInputEnterReducer.bind(this, replayContext.state));
         });
     });
 };
@@ -175,7 +175,7 @@ export const writeString = produce((draft: TermBuffer, str: string) => {
     }
 });
 
-const writeChar = produce((draft: TermBuffer, char) => {
+const writeChar = (draft: TermBuffer, char: string) => {
     if (char === '\n') {
         writeNewline(draft);
     } else if (char === '\r') {
@@ -193,9 +193,9 @@ const writeChar = produce((draft: TermBuffer, char) => {
             writeNewline(draft);
         }
     }
-});
+};
 
-const writeNewline = produce((draft: TermBuffer) => {
+const writeNewline = (draft: TermBuffer) => {
     // Move the cursor to the beginning of the next line.
     draft.cursor.column = 0;
     draft.cursor.line++;
@@ -210,4 +210,4 @@ const writeNewline = produce((draft: TermBuffer) => {
 
         draft.cursor.line = draft.height - 1;
     }
-});
+};

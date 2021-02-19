@@ -13,7 +13,7 @@ import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {getPlayerState} from "./selectors";
 import {StepperState, StepperStepMode} from "../stepper";
 import {AppStore} from "../store";
-import {PlayerInstant} from "./reducers";
+import {PlayerInstant} from "./index";
 
 export default function(bundle) {
     bundle.addSaga(playerSaga);
@@ -23,6 +23,7 @@ export interface ReplayContext {
     state: StepperState,
     events: any[],
     instants: PlayerInstant[],
+    instant: PlayerInstant,
     applyEvent: Function,
     addSaga: Function,
     reportProgress: Function,
@@ -106,7 +107,9 @@ function* playerPrepare(app, action) {
         replayState.options = data.options;
     }
 
+    console.error('what is state ?');
     const replayContext: ReplayContext = {
+        // @ts-ignore
         state: replayState,
         events: data.events,
         instants: [],
@@ -135,10 +138,8 @@ function* playerPrepare(app, action) {
     }
 
     function addSaga(saga) {
-        // @ts-ignore
         let {sagas} = replayContext.instant;
         if (!sagas) {
-            // @ts-ignore
             sagas = replayContext.instant.sagas = [];
         }
 
@@ -196,21 +197,20 @@ function* computeInstants(replayContext) {
          */
         const key = event[1].replace('translate.', 'compile.');
 
-        const instant = {t, pos, event};
+        const instant: PlayerInstant = {t, pos, event} as PlayerInstant;
         replayContext.instant = instant;
 
         console.log('-------- REPLAY ---- EVENT ----', key, event);
         yield call(replayContext.applyEvent, key, replayContext, event);
 
         /* Preserve the last explicitly set range. */
+        // TODO: Is this used ?
         if ('range' in instant) {
-            // @ts-ignore
             range = instant.range;
         } else {
-            // @ts-ignore
             instant.range = range;
         }
-        // @ts-ignore
+
         instant.state = replayContext.state;
 
         replayContext.instants.push(instant);
@@ -284,7 +284,7 @@ function* replaySaga(app, {type, payload}) {
         if (!isPlaying) {
             /* The stepper is restarted after a seek-while-paused, in case it is
                waiting on I/O. */
-            yield call(restartStepper, app);
+            yield call(restartStepper);
         }
 
         audio.currentTime = audioTime / 1000;
@@ -381,7 +381,7 @@ function* resetToAudioTime(app, audioTime, quick?: boolean) {
     const {globals: {replayApi}} = app;
 
     /* Call playerTick to store the current audio time and to install the
-       current instant's state as state.getIn(['player', 'current']). */
+       current instant's state as state.player.current */
     yield put({type: ActionTypes.PlayerTick, payload: {audioTime}});
 
     /* Call the registered reset-sagas to update any part of the state not
@@ -400,7 +400,11 @@ function* restartStepper() {
        restore the blocked-on-I/O state. */
     const state: AppStore = yield select();
     const instant = state.player.current;
+
+    //TODO: Is this used ?
+    // @ts-ignore
     if (instant.state.status === 'running') {
+        // @ts-ignore
         const {isWaitingOnInput} = instant.state.current;
         if (isWaitingOnInput) {
             yield put({type: StepperActionTypes.StepperStep, mode: StepperStepMode.Into});

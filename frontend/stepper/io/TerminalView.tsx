@@ -36,29 +36,29 @@ interface TerminalViewProps extends TerminalViewStateToProps, TerminalViewDispat
 }
 
 class _TerminalView extends React.PureComponent<TerminalViewProps> {
-    onTermInit(iface) {
-        this.props.dispatch({type: ActionTypes.TerminalInit, iface});
+    onTermInit = (terminalElement) => {
+        this.props.dispatch({type: ActionTypes.TerminalInit, terminalElement});
     }
 
-    onTermChar(key) {
+    onTermChar = (key) => {
         if (!this.props.preventInput) {
             this.props.dispatch({type: ActionTypes.TerminalInputKey, key});
         }
     }
 
-    onTermBS() {
+    onTermBS = () => {
         if (!this.props.preventInput) {
             this.props.dispatch({type: ActionTypes.TerminalInputBackspace});
         }
     }
 
-    onTermEnter() {
+    onTermEnter = () => {
         if (!this.props.preventInput) {
             this.props.dispatch({type: ActionTypes.TerminalInputEnter});
         }
     }
 
-    renderHeader() {
+    renderHeader = () => {
         const {isWaitingOnInput} = this.props;
 
         return (
@@ -72,9 +72,9 @@ class _TerminalView extends React.PureComponent<TerminalViewProps> {
         );
     }
 
-    render() {
+    render = () => {
         const {terminal, input} = this.props;
-        const buffer = terminal && writeString(terminal, input);
+        const terminalBuffer = terminal && writeString(terminal, input);
 
         return (
             <Panel>
@@ -82,9 +82,9 @@ class _TerminalView extends React.PureComponent<TerminalViewProps> {
                 <Panel.Body>
                     <div className="row">
                         <div className="col-sm-12">
-                            {buffer ?
+                            {terminalBuffer ?
                                 <PureTerminal
-                                    buffer={buffer}
+                                    terminalBuffer={terminalBuffer}
                                     onInit={this.onTermInit}
                                     onKeyPress={this.onTermChar}
                                     onBackspace={this.onTermBS}

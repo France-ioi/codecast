@@ -310,12 +310,12 @@ function* subtitlesEditorReturnSaga(state, _action) {
     yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'setup'}});
 }
 
-function* subtitlesEditorSaveSaga(state, _action) {
-    const {baseUrl, base, subtitles} = yield select(function(state) {
-        const {baseUrl} = state.get('options');
-        const editor = state.get('editor');
-        const base = editor.get('base');
-        const subtitles = Object.values(state.get('subtitles').availableOptions);
+function* subtitlesEditorSaveSaga(state: AppStore, _action) {
+    const {baseUrl, base, subtitles} = yield select(function(state: AppStore) {
+        const {baseUrl} = state.options;
+        const editor = state.editor;
+        const base = editor.base;
+        const subtitles = Object.values(state.subtitles.availableOptions);
 
         return {baseUrl, base, subtitles};
     });

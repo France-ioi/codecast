@@ -17,6 +17,7 @@ import {getCurrentStepperState} from "../selectors";
 import {getBufferModel} from "../../buffers/selectors";
 import produce from "immer";
 import {AppStore} from "../../store";
+import {PlayerInstant} from "../../player";
 
 export type IoMode = 'terminal' | 'split';
 
@@ -77,10 +78,10 @@ export default function(bundle) {
         replayApi.on('start', function(replayContext, event) {
             const {ioPaneMode} = event[2];
 
-            replayContext.state = produce(ioPaneModeChangedReducer.bind(replayContext.state, {payload: {mode: ioPaneMode}}));
+            replayContext.state = produce(ioPaneModeChangedReducer.bind(this, replayContext.state, {payload: {mode: ioPaneMode}}));
         });
 
-        replayApi.onReset(function* (instant) {
+        replayApi.onReset(function* (instant: PlayerInstant) {
             const {mode} = instant.state.ioPane;
 
             yield put({type: ActionTypes.IoPaneModeChanged, payload: {mode}});
@@ -92,7 +93,7 @@ export default function(bundle) {
         replayApi.on('ioPane.mode', function(replayContext, event) {
             const mode = event[2];
 
-            replayContext.state = produce(ioPaneModeChangedReducer.bind(replayContext.state, {payload: {mode}}));
+            replayContext.state = produce(ioPaneModeChangedReducer.bind(this, replayContext.state, {payload: {mode}}));
         });
 
         replayApi.on(['stepper.progress', 'stepper.idle', 'stepper.restart', 'stepper.undo', 'stepper.redo'], function replaySyncOutput(replayContext) {
@@ -105,19 +106,19 @@ export default function(bundle) {
                    (3) make the output editor fetch its model from the stepper state.
                    It is not clear which option is best.
                 */
-                replayContext.state = syncOutputBuffer(replayContext.state);
+                replayContext.state = produce(syncOutputBufferReducer.bind(this, replayContext.state));
                 replayContext.addSaga(syncOutputBufferSaga);
             }
         });
 
-        function syncOutputBuffer(state) {
-            const model = getOutputBufferModel(state);
+        function syncOutputBufferReducer(draft: AppStore): void {
+            const model = getOutputBufferModel(draft);
 
-            return state.setIn(['buffers', 'output', 'model'], model);
+            draft.buffers.output.model = model;
         }
 
         function* syncOutputBufferSaga(instant) {
-            const model = instant.state.getIn(['buffers', 'output', 'model']);
+            const model = instant.state.buffers.model;
 
             yield put({type: BufferActionTypes.BufferReset, buffer: 'output', model});
         }
@@ -133,7 +134,7 @@ export default function(bundle) {
                 stepperState.inputBuffer = "";
             } else {
                 const inputModel = getBufferModel(state, 'input');
-                let input = inputModel.get('document').toString().trimRight();
+                let input = inputModel.document.toString().trimRight();
                 if (input.length !== 0) {
                     input = input + "\n";
                 }

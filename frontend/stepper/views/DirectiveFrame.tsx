@@ -1,10 +1,11 @@
 import React from 'react';
 import {Panel} from "react-bootstrap";
 import {Button} from "@blueprintjs/core";
+import {StepperControls} from "../index";
 
 interface DirectiveFrameProps {
     directive?: any,
-    controls?: any,
+    controls?: StepperControls,
     title?: string,
     hasFullView?: boolean,
     onChange?: Function
@@ -13,14 +14,14 @@ interface DirectiveFrameProps {
 export class DirectiveFrame extends React.PureComponent<DirectiveFrameProps> {
     onToggleFullView = () => {
         const {directive, controls, onChange} = this.props;
-        const update = {fullView: !controls.get('fullView')};
+        const update = {fullView: !controls.fullView};
         onChange(directive, update);
     };
 
     render() {
         const {directive, controls, title, hasFullView} = this.props;
         const {key} = directive;
-        const fullView = controls.get('fullView');
+        const fullView = controls.fullView;
         const style = {width: '100%'};
         const width = directive.byName['width'];
         if (width && width[0] === 'number') {

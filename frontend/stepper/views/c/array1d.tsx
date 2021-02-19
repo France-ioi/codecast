@@ -5,6 +5,7 @@ import {getList, getNumber, renderArrow, renderValue} from './utils';
 import {extractView} from './array_utils';
 import {SvgPan} from '../SvgPan';
 import {DirectiveFrame} from "../DirectiveFrame";
+import {StepperControls} from "../../index";
 
 // @11px, line height 15, offset 12
 const textLineHeight = 18;
@@ -112,7 +113,7 @@ function Cursor({view, cursor}) {
 }
 
 interface Array1DProps {
-    controls: any,
+    controls: StepperControls,
     directive: any,
     functionCallStack: any,
     context: any,
@@ -127,7 +128,7 @@ export class Array1D extends React.PureComponent<Array1DProps> {
     render() {
         const {controls, directive, functionCallStack, context, scale, getMessage} = this.props;
         const topStackFrame = functionCallStack[0];
-        const fullView = controls.get('fullView');
+        const fullView = controls.fullView;
         const cellPan = this.getPosition();
         const {byName, byPos} = directive;
         const expr = byPos[0];
@@ -170,7 +171,7 @@ export class Array1D extends React.PureComponent<Array1DProps> {
     }
 
     getPosition = () => {
-        return this.props.controls.get('cellPan', 0);
+        return this.props.controls.cellPan;
     };
 
     onPan = (startPosition, dx) => {

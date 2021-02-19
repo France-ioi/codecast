@@ -25,7 +25,7 @@ function mapStateToProps(state: AppStore): StackViewStateToProps {
 
     const {programState, lastProgramState, analysis, controls} = stepperState;
     const stackControls = controls.stack;
-    const focusDepth = stackControls ? stackControls.get('focusDepth', 0) : 0;
+    const focusDepth = stackControls ? stackControls.focusDepth : 0;
     const firstVisible = Math.max(0, focusDepth - 5);
 
     return {

@@ -4,6 +4,7 @@ import {extractView} from './array2d_model';
 import {getList, getNumber, renderArrow, renderValue} from './utils';
 import {SvgPan} from '../SvgPan';
 import {DirectiveFrame} from "../DirectiveFrame";
+import {StepperControls} from "../../index";
 
 const textLineHeight = 18;
 const textBaseline = 5; // from bottom
@@ -174,7 +175,7 @@ interface Array2DProps {
     functionCallStack: any,
     context: any,
     getMessage: any,
-    controls: any,
+    controls: StepperControls,
     onChange: Function
 }
 
@@ -227,14 +228,16 @@ export class Array2D extends React.PureComponent<Array2DProps> {
 
     getPosition = () => {
         const {controls} = this.props;
-        const hPan = controls.get('hPan', 0);
-        const vPan = controls.get('vPan', 0);
+        const hPan = controls.hPan;
+        const vPan = controls.vPan;
+
         return {hPan, vPan};
     };
 
     onPan = ({hPan, vPan}, dx, dy) => {
         hPan -= dx / cellWidth;
         vPan -= dy / cellHeight;
+
         this.props.onChange(this.props.directive, {hPan, vPan});
     };
 }

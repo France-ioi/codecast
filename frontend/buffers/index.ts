@@ -27,7 +27,6 @@ user interaction change the view.
 */
 
 import {call, put, select, takeEvery} from 'redux-saga/effects';
-import {Map} from 'immutable';
 import {compressRange, Document, documentFromString, emptyDocument, expandRange, Selection} from "./document";
 
 import 'brace';
@@ -74,6 +73,7 @@ import {getBufferModel} from "./selectors";
 import produce, {immerable} from "immer";
 import {AppStore} from "../store";
 import {ReplayContext} from "../player/sagas";
+import {PlayerInstant} from "../player";
 
 const AceThemes = [
     'ambiance', 'chaos', 'chrome', 'clouds', 'clouds_midnight', 'cobalt',
@@ -100,12 +100,14 @@ export class DocumentModel {
 class BufferState {
     [immerable] = true;
 
-    model = new DocumentModel();
+    constructor(public model = new DocumentModel()) {
+
+    }
 
     editor = null;
 }
 
-export const initialStateBuffers = {
+export const initialStateBuffers: {[key: string]: BufferState} = {
     source: new BufferState(),
     input: new BufferState(),
     output: new BufferState()
@@ -165,7 +167,7 @@ function bufferLoadReducer(draft: AppStore, action): void {
 function bufferResetReducer(draft: AppStore, action): void {
     const {buffer, model} = action;
 
-    draft.buffers[buffer].buffer.model = model;
+    draft.buffers[buffer].model = model;
 }
 
 function bufferEditReducer(draft: AppStore, action): void {
@@ -192,7 +194,7 @@ function loadBufferModel(dump) {
 }
 
 function getBufferEditor(state, buffer) {
-    return state.getIn(['buffers', buffer, 'editor']);
+    return state.buffers[buffer].editor;
 }
 
 function* buffersSaga() {
@@ -329,11 +331,15 @@ function addReplayHooks({replayApi}) {
         const inputModel = buffers && buffers.input ? loadBufferModel(buffers.input) : new DocumentModel();
         const outputModel = new DocumentModel();
 
-        replayContext.state = replayContext.state.'buffers', Map({
-            source: Map({model: sourceModel}),
-            input: Map({model: inputModel}),
-            output: Map({model: outputModel})
-        }));
+        console.error('is this correct ?');
+        // @ts-ignore
+        replayContext.state = replayContext.state.buffers = {
+            source: new BufferState(sourceModel),
+            // @ts-ignore
+            input: new BufferState(inputModel),
+            // @ts-ignore
+            output: new BufferState(outputModel)
+        };
     });
     replayApi.on('buffer.select', function(replayContext, event) {
         // XXX use reducer imported from common/buffers
@@ -366,7 +372,7 @@ function addReplayHooks({replayApi}) {
         }
 
         if (delta) {
-            replayContext.state = produce(bufferEditReducer.bind(replayContext.state, {buffer, delta}));
+            replayContext.state = produce(bufferEditReducer.bind(this, replayContext.state, {buffer, delta}));
             replayContext.addSaga(function* () {
                 yield put({type: ActionTypes.BufferModelEdit, buffer, delta});
             });
@@ -382,10 +388,11 @@ function addReplayHooks({replayApi}) {
             yield put({type: ActionTypes.BufferModelScroll, buffer, firstVisibleRow});
         });
     });
-    replayApi.onReset(function* ({state, range}, quick) {
+    replayApi.onReset(function* ({state, range}: PlayerInstant, quick) {
         /* Reset all buffers. */
         for (let buffer of ['source', 'input', 'output']) {
-            const model = state.getIn(['buffers', buffer, 'model']);
+            const model = state.buffers[buffer].model;
+
             yield put({type: ActionTypes.BufferReset, buffer, model, quiet: quick});
         }
         if (range) {

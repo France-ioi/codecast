@@ -4,13 +4,12 @@ Constants (until microcontroller hardware is configurable):
 - PortDefns[portNumber] → {index, label, digital, analog}
 
 In the global state:
-- globalState.get('arduino').ports[portNumber] →
+- globalState.arduino.ports[portNumber] →
     {peripheral: {type, …}}
 
 In the stepper state:
 - stepperState.ports[portNumber] →
     {direction, output, input}
-
 */
 
 import range from 'node-range';
@@ -25,7 +24,7 @@ import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {NPorts} from "./config";
 import produce from "immer";
 import {AppStore} from "../../store";
-import {PlayerInstant} from "../../player/reducers";
+import {PlayerInstant} from "../../player";
 
 export enum PinMode {
   PINMODE_INPUT = 0,
@@ -92,6 +91,8 @@ export default function(bundle) {
             }
         });
         replayApi.onReset(function* (instant: PlayerInstant) {
+            console.error('What to do here ?');
+            // @ts-ignore
             const arduinoState = instant.state.arduino;
             if (arduinoState) {
                 yield put({type: ActionTypes.ArduinoReset, state: arduinoState});
@@ -107,7 +108,7 @@ export default function(bundle) {
             const index = event[2];
             const changes = event[3];
 
-            replayContext.state = produce(arduinoPortConfiguredReducer.bind(replayContext.state, {index, changes}));
+            replayContext.state = produce(arduinoPortConfiguredReducer.bind(this, replayContext.state, {index, changes}));
         });
 
         recordApi.on(ActionTypes.ArduinoPortChanged, function* (addEvent, action) {
@@ -119,7 +120,7 @@ export default function(bundle) {
             const index = event[2];
             const changes = event[3];
 
-            replayContext.state = produce(arduinoPortChangedReducer.bind(replayContext.state, {index, changes}));
+            replayContext.state = produce(arduinoPortChangedReducer.bind(this, replayContext.state, {index, changes}));
         });
 
         recordApi.on(ActionTypes.ArduinoPortSelected, function* (addEvent, action) {
@@ -130,7 +131,7 @@ export default function(bundle) {
         replayApi.on('arduino.port.selected', function(replayContext, event) {
             const index = event[2];
 
-            replayContext.state = produce(arduinoPortSelectedReducer.bind(replayContext.state, {index}));
+            replayContext.state = produce(arduinoPortSelectedReducer.bind(this, replayContext.state, {index}));
         });
 
         stepperApi.onInit(function(stepperState, state: AppStore) {

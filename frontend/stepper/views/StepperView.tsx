@@ -11,7 +11,6 @@ import {StackView} from "./c/StackView";
 import {DirectivesPane} from "./DirectivesPane";
 import {connect} from "react-redux";
 import {AppStore} from "../../store";
-import {getCompileDiagnostics, getCurrentStepperState} from "../selectors";
 import {getPlayerState} from "../../player/selectors";
 
 interface StepperViewStateToProps {
@@ -19,7 +18,6 @@ interface StepperViewStateToProps {
     readOnly: boolean,
     sourceMode: string,
     sourceRowHeight: number,
-    haveStepper: boolean,
     error: string,
     getMessage: Function,
     geometry: any,
@@ -37,11 +35,10 @@ function mapStateToProps(state: AppStore, props): StepperViewStateToProps {
     const getMessage = state.getMessage;
     const geometry = state.mainViewGeometry;
     const panes = state.panes;
-    const diagnostics = getCompileDiagnostics(state);
-    const stepperDisplay = getCurrentStepperState(state);
-    const haveStepper = !!stepperDisplay;
-    const error = haveStepper && stepperDisplay.error;
-    const readOnly = haveStepper || props.preventInput;
+    const diagnostics = state.compile.diagnosticsHtml;
+    const currentStepperState = state.stepper.currentStepperState;
+    const error = currentStepperState && currentStepperState.error;
+    const readOnly = currentStepperState || props.preventInput;
     const {showIO, showViews, showStack, platform} = state.options;
     const arduinoEnabled = platform === 'arduino';
 
@@ -75,9 +72,9 @@ function mapStateToProps(state: AppStore, props): StepperViewStateToProps {
     const windowHeight = state.windowHeight;
 
     return {
-        diagnostics, haveStepper, readOnly, error, getMessage, geometry, panes, preventInput, sourceRowHeight,
+        diagnostics, readOnly, error, getMessage, geometry, panes, preventInput, sourceRowHeight,
         sourceMode, showStack, arduinoEnabled, showViews, showIO, windowHeight,
-        currentStepperState: stepperDisplay,
+        currentStepperState,
     };
 }
 
@@ -96,7 +93,7 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
     render() {
         const {
             diagnostics, readOnly, sourceMode, sourceRowHeight,
-            preventInput, haveStepper, error, getMessage, geometry, panes,
+            preventInput, error, getMessage, geometry, panes,
             windowHeight, currentStepperState,
             showStack, arduinoEnabled, showViews, showIO
         } = this.props;
@@ -105,7 +102,7 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
         const sourcePanelHeader = (
             <span>
                 {getMessage('SOURCE')}
-                {haveStepper && <span>{' '}<Icon icon='lock'/></span>}
+                {currentStepperState && <span>{' '}<Icon icon='lock'/></span>}
             </span>
         );
         const diagnosticsPanelHeader = (
@@ -207,7 +204,7 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
                                             <span>
                                               {/* microchip icon */}
                                                 {"Arduino"}
-                                                {haveStepper && <span>{' '}<Icon icon='lock'/></span>}
+                                                {currentStepperState && <span>{' '}<Icon icon='lock'/></span>}
                                             </span>
                                         </div>
                                         <div className='panel-body'>

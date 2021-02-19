@@ -1,5 +1,4 @@
 import * as React from 'react';
-import {Map} from 'immutable';
 import {PythonVariable} from "./PythonVariable";
 import {connect} from "react-redux";
 import {isLoaded} from "../helpers";
@@ -9,7 +8,9 @@ import {ActionTypes} from "../../actionTypes";
 interface PythonVariableValueProps {
     cur: any,
     old: any,
-    openedPaths: Map<string, boolean>,
+    openedPaths: {
+        [key: string]: boolean
+    },
     path: string,
     defaultopened?: boolean,
     toggle: Function,
@@ -37,8 +38,8 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
     isOpened = () => {
         let opened = false;
         if (this.props.cur.hasOwnProperty('_uuid')) {
-            if (this.props.openedPaths.has(this.props.path)) {
-                opened = this.props.openedPaths.get(this.props.path);
+            if (this.props.openedPaths.hasOwnProperty(this.props.path)) {
+                opened = this.props.openedPaths[this.props.path];
             } else if (this.props.hasOwnProperty('defaultopened')) {
                 opened = this.props.defaultopened;
             } else if (this.props.cur instanceof Sk.builtin.list || this.props.cur instanceof Sk.builtin.tuple) {

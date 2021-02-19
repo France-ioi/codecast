@@ -25,6 +25,7 @@ import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "../buffers/selectors";
 import produce from "immer";
 import {AppStore} from "../store";
+import {PlayerInstant} from "../player";
 
 enum CompileStatus {
     Clear = 'clear',
@@ -137,7 +138,7 @@ export default function(bundle) {
 
     bundle.defer(function({recordApi, replayApi}) {
         replayApi.on('start', function(replayContext) {
-            replayContext.state = produce(compileResetReducer.bind(replayContext.state, {state: initialStateCompile}));
+            replayContext.state = produce(compileResetReducer.bind(this, replayContext.state, {state: initialStateCompile}));
         });
 
         recordApi.on(ActionTypes.CompileStarted, function* (addEvent, action) {
@@ -148,7 +149,7 @@ export default function(bundle) {
         replayApi.on(['stepper.compile', 'compile.start'], function(replayContext, event) {
             const action = {source: event[2]};
 
-            replayContext.state = produce(compileStartedReducer.bind(replayContext.state, action));
+            replayContext.state = produce(compileStartedReducer.bind(this, replayContext.state, action));
         });
 
         recordApi.on(ActionTypes.CompileSucceeded, function* (addEvent, action) {
@@ -157,7 +158,7 @@ export default function(bundle) {
         replayApi.on('compile.success', function(replayContext, event) {
             const action = event[2];
 
-            replayContext.state = produce(compileSucceededReducer.bind(replayContext.state, action));
+            replayContext.state = produce(compileSucceededReducer.bind(this, replayContext.state, action));
         });
 
         recordApi.on(ActionTypes.CompileFailed, function* (addEvent, action) {
@@ -166,22 +167,22 @@ export default function(bundle) {
         });
         replayApi.on('compile.failure', function(replayContext, event) {
             const action = {response: event[2]};
-            replayContext.state = produce(compileFailedReducer.bind(replayContext.state, action));
+            replayContext.state = produce(compileFailedReducer.bind(this, replayContext.state, action));
         });
 
         recordApi.on(ActionTypes.CompileClearDiagnostics, function* (addEvent) {
             yield call(addEvent, 'compile.clearDiagnostics');
         });
         replayApi.on('compile.clearDiagnostics', function(replayContext) {
-            replayContext.state = produce(compileClearDiagnosticsReducer.bind(replayContext.state));
+            replayContext.state = produce(compileClearDiagnosticsReducer.bind(this, replayContext.state));
         });
 
         replayApi.on('stepper.exit', function(replayContext) {
-            replayContext.state = produce(initReducer.bind(replayContext.state));
+            replayContext.state = produce(initReducer.bind(this, replayContext.state));
         });
 
-        replayApi.onReset(function* (instant) {
-            const compileModel = instant.state.get('compile');
+        replayApi.onReset(function* (instant: PlayerInstant) {
+            const compileModel = instant.state.compile;
 
             yield put({type: ActionTypes.CompileReset, state: compileModel});
         });

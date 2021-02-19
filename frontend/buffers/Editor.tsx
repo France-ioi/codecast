@@ -128,8 +128,10 @@ class _Editor extends React.PureComponent<EditorProps> {
     };
 
     focus = () => {
-        if (!this.editor)
+        if (!this.editor) {
             return;
+        }
+
         this.editor.focus();
     };
 

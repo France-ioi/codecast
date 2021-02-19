@@ -1,5 +1,4 @@
 import React from "react";
-import Immutable from "immutable";
 import {DirectiveButton} from "./DirectiveButton";
 import {DirectivePanel} from "./DirectivePanel";
 import {Alignment, Navbar, NavbarGroup} from "@blueprintjs/core";
@@ -38,8 +37,11 @@ class _DirectivesPane extends React.PureComponent<DirectivesPaneProps> {
     };
 
     toggleView = (key) => {
-        const controls = this.props.stepperState.controls.get(key, Immutable.Map());
-        const update = {hide: !controls.get('hide', false)};
+        const controls = (this.props.stepperState.controls.hasOwnProperty(key)) ? this.props.stepperState.controls[key] : {};
+        const update = {
+            hide: !controls.hide
+        };
+
         this.props.dispatch({type: ActionTypes.StepperViewControlsChanged, key, update});
     };
 
@@ -55,7 +57,7 @@ class _DirectivesPane extends React.PureComponent<DirectivesPaneProps> {
         const buttons = [], panels = [];
         for (let directive of ordered) {
             const {key} = directive;
-            const dirControls = controls.get(key, Immutable.Map());
+            const dirControls = (controls.hasOwnProperty(key)) ? controls[key] : {};
 
             buttons.push(
                 <DirectiveButton

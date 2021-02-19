@@ -24,7 +24,7 @@ const pythonDirectiveViewDict = {
 
 export function DirectivePanel({scale, directive, controls, context, functionCallStack, platform, getMessage, onChange}) {
     const {kind} = directive;
-    const hide = controls.get('hide', false);
+    const hide = controls.hide;
     if (hide) {
         return null;
     }

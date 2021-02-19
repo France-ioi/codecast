@@ -1,4 +1,4 @@
-import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
+import {SkulptAnalysis} from "./analysis/analysis";
 
 export const VIEW_DIRECTIVE_PREFIX = '_VIEW_';
 
@@ -89,16 +89,16 @@ g.directive = PR.seq(g.directiveAssignment.optional(), g.ident, g.lparen, g.dire
  *
  * @returns {[]}
  */
-export const parseDirectives = function(analysis) {
+export const parseDirectives = function(analysis: SkulptAnalysis) {
     /**
      * Search for directives in the current and in the global callstack.
      * Put the current first so it overrides directives in the global scope.
      */
     const activeFunctionCallStacks = [];
-    if (analysis.functionCallStack.size > 1) {
-        activeFunctionCallStacks.push(analysis.functionCallStack.last()); // Active.
+    if (analysis.functionCallStack.length > 1) {
+        activeFunctionCallStacks.push(analysis.functionCallStack[analysis.functionCallStack.length - 1]); // Active.
     }
-    activeFunctionCallStacks.push(analysis.functionCallStack.get(0)); // Global.
+    activeFunctionCallStacks.push(analysis.functionCallStack[0]); // Global.
 
     let nextId = 1;
     let directives = [];

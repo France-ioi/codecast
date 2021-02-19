@@ -12,7 +12,7 @@ import {all, call} from 'redux-saga/effects';
 import {getNewOutput, getNewTerminal} from "./python";
 import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore} from "../store";
-import {StepperState} from "./index";
+import {initialStepperStateControls, StepperState} from "./index";
 
 interface StepperContext {
     state: StepperState,
@@ -119,15 +119,17 @@ function getNodeStartRow(state) {
     if (!state) {
         return undefined;
     }
+
     const {control} = state.programState;
     if (!control || !control.node) {
         return undefined;
     }
+
     const {range} = control.node[1];
     return range && range.start.row;
 }
 
-export function makeContext(state, interact): StepperContext {
+export function makeContext(state: StepperState, interact: Function): StepperContext {
     console.log('**********  MAKE CONTEXT  **********', state);
 
     if (state.platform === 'python') {
@@ -158,7 +160,7 @@ export function makeContext(state, interact): StepperContext {
 
 function resetControls(controls) {
     /* Reset the controls before a step is started. */
-    return controls.setIn(['stack', 'focusDepth'], 0);
+    return initialStepperStateControls;
 }
 
 async function executeEffects(stepperContext, iterator) {

@@ -1,5 +1,5 @@
 import {call} from 'redux-saga/effects';
-import {PlayerInstant} from "./reducers";
+import {PlayerInstant} from "./index";
 
 export default function(bundle) {
     /* For each event a number of handlers can be registered.

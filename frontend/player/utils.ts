@@ -4,7 +4,7 @@
   - instants[i].t < time
   - instants[i].t < instants[i+1].t  (if i+1 !== instants.length)
 */
-import {PlayerInstant} from "./reducers";
+import {PlayerInstant} from "./index";
 
 export function findInstantIndex(instants: PlayerInstant[], time: number): number {
     let low = 0, high = instants.length;

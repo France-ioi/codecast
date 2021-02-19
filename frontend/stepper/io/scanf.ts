@@ -1,6 +1,5 @@
 import {parse as P, text as PT} from 'bennu';
 import {stream} from 'nu-stream';
-import assert from 'assert';
 import * as C from 'persistent-c';
 
 /* Generator that iterates over the elements of the string argument. */
@@ -133,7 +132,6 @@ export function* scanf(fmt, ...args) {
         }
 
         /* Handle placeholders. */
-        assert(spec.kind === 'p');
         let {width} = spec;
 
         if (spec.type === 'n') {

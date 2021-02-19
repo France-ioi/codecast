@@ -1,11 +1,12 @@
 import * as React from 'react';
-import {Map} from 'immutable';
 import {PythonVariableValue} from "./PythonVariableValue";
 import {SkulptScope} from "../analysis";
 
 interface PythonFunctionHeaderProps {
     func: SkulptScope,
-    openedPaths: Map<string, boolean>,
+    openedPaths: {
+        [key: string]: boolean
+    },
     scopeIndex: number
 }
 
@@ -14,7 +15,7 @@ export const PythonFunctionHeader = (props: PythonFunctionHeaderProps): JSX.Elem
 
     const args = props.func.args.map((name) => {
         const argument = {
-            ...props.func.variables.get(name),
+            ...props.func.variables[name],
             path: null
         };
 

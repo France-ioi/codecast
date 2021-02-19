@@ -121,7 +121,14 @@ export function link(rootBuilder): Linker {
     ].reduce(reverseCompose, null);
 
     // Compose the enhancers.
-    const sagaMiddleware = createSagaMiddleware();
+    const sagaMiddleware = createSagaMiddleware({
+        onError: (error) => {
+            console.log(error);
+            setImmediate(() => {
+                throw error;
+            });
+        }
+    });
 
     // Store is too huge for this extension to work properly.
     // const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;

@@ -43,7 +43,6 @@ export class _BufferEditor extends React.PureComponent<BufferEditorProps> {
     };
 
     render() {
-        // @ts-ignore
         return <Editor
             onInit={this.onInit}
             onEdit={this.onEdit}

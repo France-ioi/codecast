@@ -98,13 +98,12 @@ export default function(bundle) {
         replayApi.on('stackview.path.toggle', function(replayContext, event) {
             const action = event[2];
 
-            replayContext.state = produce(stackViewPathToggleReducer.bind(replayContext.state, action));
+            replayContext.state = produce(stackViewPathToggleReducer.bind(this, replayContext.state, action));
         });
 
         stepperApi.onInit(function(stepperState, state: AppStore) {
             const {platform} = state.options;
-            const sourceModel = state.buffers.source.model;
-            const source = sourceModel.document.toString();
+            const source = state.buffers.source.model.document.toString();
 
             if (platform === 'python') {
                 const context = {

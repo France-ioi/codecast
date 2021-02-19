@@ -1,11 +1,12 @@
 import React from "react";
+import {TermBuffer} from "./terminal";
 
 interface PureTerminalProps {
     onInit: Function,
     onBackspace: Function,
     onEnter: Function,
     onKeyPress: Function,
-    buffer: any
+    terminalBuffer: TermBuffer
 }
 
 export class PureTerminal extends React.PureComponent<PureTerminalProps> {
@@ -49,20 +50,21 @@ export class PureTerminal extends React.PureComponent<PureTerminalProps> {
     };
 
     render() {
-        const {buffer} = this.props;
-        const cursor = buffer.get('cursor');
-        const ci = cursor.get('line'), cj = cursor.get('column');
+        const {terminalBuffer} = this.props;
+        const cursor = terminalBuffer.cursor;
+        const ci = cursor.line, cj = cursor.column;
         return (
             <div ref={this.refTerminal} className="terminal" tabIndex={1} onKeyDown={this.onKeyDown}
                  onKeyUp={this.onKeyUp} onKeyPress={this.onKeyPress}>
-                {buffer.get('lines').map(function(line, i) {
+                {terminalBuffer.lines.map(function(line, i) {
                     return (
                         <div key={i} className="terminal-line" style={{width: '720px'}}>
                             {line.map(function(cell, j) {
                                 if (i == ci && j == cj) {
-                                    return <span key={j} className="terminal-cursor">{cell.get('char')}</span>;
+                                    return <span key={j} className="terminal-cursor">{cell.char}</span>;
                                 }
-                                return <span key={j}>{cell.get('char')}</span>;
+
+                                return <span key={j}>{cell.char}</span>;
                             })}
                         </div>
                     );

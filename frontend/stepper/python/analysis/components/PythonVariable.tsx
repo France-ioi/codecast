@@ -1,5 +1,4 @@
 import * as React from 'react';
-import {Map} from 'immutable';
 import {PythonVariableValue} from "./PythonVariableValue";
 import {SkulptVariable} from "../analysis";
 
@@ -10,7 +9,9 @@ interface PythonVariableProps {
     visited: any,
     loadedReferences: any,
     scopeIndex: number,
-    openedPaths: Map<string, boolean>
+    openedPaths: {
+        [key: string]: boolean
+    }
 }
 
 export const PythonVariable = (props: PythonVariableProps): JSX.Element => {

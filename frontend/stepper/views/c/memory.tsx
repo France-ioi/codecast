@@ -719,7 +719,7 @@ function MemoryViewSelector({scale, directive, context, controls, functionCallSt
     layout.right = layout.marginLeft + layout.cellWidth * (maxAddress + 1);
     layout.bottom = layout.extraRowsTop + layout.extraRowsHeight - layout.cellMargin + layout.marginBottom;
 
-    let centerAddress = controls.get('centerAddress');
+    let centerAddress = controls.centerAddress;
     if (centerAddress === undefined) {
         centerAddress = clipCenterAddress({nBytesShown, context}, getNumber(byName.start, nBytesShown / 2));
     }

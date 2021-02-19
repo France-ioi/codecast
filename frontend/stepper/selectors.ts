@@ -1,21 +1,14 @@
 import {AppStore} from '../store';
+import {initialStateStepper, StepperState} from "./index";
 
-export function getStepper(state: AppStore) {
+export function getStepper(state: AppStore): typeof initialStateStepper{
     return state.stepper;
 }
 
-export function getCurrentStepperState(state: AppStore) {
+export function getCurrentStepperState(state: AppStore): StepperState {
     return state.stepper.currentStepperState;
 }
 
 export function isStepperInterrupting(state: AppStore) {
     return state.stepper.interrupting;
-}
-
-export function getCompileDiagnostics(state: AppStore) {
-    return state.compile.diagnosticsHtml;
-}
-
-export function getSyntaxTree(state: AppStore) {
-    return state.compile.syntaxTree;
 }

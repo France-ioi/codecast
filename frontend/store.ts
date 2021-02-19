@@ -3,7 +3,7 @@ import {initialStateMemoryUsage} from "./recorder/memory_usage";
 import {initialStateEditor} from "./editor";
 import {initialStateStatistics} from "./statistics";
 import {initialStateFullscreen} from "./common/fullscreen";
-import {Error, initialStateError} from "./common/error";
+import {Error} from "./common/error";
 import {mainViewGeometries} from "./common/resize";
 import {Languages} from './lang';
 import {initialStateStepper, StepperTask} from "./stepper";
@@ -11,7 +11,7 @@ import {initialStateCompile} from "./stepper/compile";
 import {initialStateExamples} from "./common/examples";
 import {initialStateUser} from "./common/login";
 import {initialStateScreen} from "./common/screens";
-import {initialStatePlayer} from "./player/reducers";
+import {initialStatePlayer} from "./player";
 import {initialStateRecorder} from "./recorder/store";
 import {initialStateBuffers} from "./buffers";
 import {initialStateArduino} from "./stepper/arduino";
@@ -67,6 +67,7 @@ export interface AppStore extends Store {
     subtitles: typeof initialStateSubtitles,
     save: typeof initialStateSave,
     terminal: typeof initialStateTerminal,
+    terminalElement: any,
     vumeterElement: any,
 
     options: CodecastOptions,

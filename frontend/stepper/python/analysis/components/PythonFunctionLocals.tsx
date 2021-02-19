@@ -1,17 +1,18 @@
 import * as React from 'react';
-import {Map} from 'immutable';
 import {PythonVariable} from "./PythonVariable";
 import {SkulptScope} from "../analysis";
 
 interface PythonFunctionLocalsProps {
     loadedReferences: any,
     func: SkulptScope,
-    openedPaths: Map<string, boolean>,
+    openedPaths: {
+        [key: string]: boolean
+    },
     scopeIndex: number
 }
 
 export const PythonFunctionLocals = (props: PythonFunctionLocalsProps): JSX.Element => {
-    const variables = props.func.variables.entrySeq().map(([name, value]) => {
+    const variables = Object.entries(props.func.variables).map(([name, value]) => {
         if (value.cur !== undefined &&
             !(value.cur instanceof Sk.builtin.module) &&
             !(value.cur instanceof Sk.builtin.func)

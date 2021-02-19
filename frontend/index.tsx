@@ -5,8 +5,6 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
 import 'rc-slider/assets/index.css?global';
-
-import {Map} from 'immutable';
 import {AppStore} from './store';
 import {link} from './linker';
 import commonBundle from './common/index';
@@ -27,6 +25,13 @@ import {EditorApp} from "./editor/EditorApp";
 import {PlayerApp} from "./player/PlayerApp";
 import {RecorderApp} from "./recorder/RecorderApp";
 import {AppErrorBoundary} from "./common/AppErrorBoundary";
+import {setAutoFreeze} from "immer";
+
+/**
+ * TODO: This should be removed.
+ * Search for "TODO: Immer:" to find the reason.
+ */
+setAutoFreeze(false);
 
 interface Codecast {
     store: AppStore,
@@ -54,12 +59,12 @@ declare global {
  * @type {Object}
  */
 const DEBUG_IGNORE_ACTIONS_MAP = {
-    'Window.Resized': true,
-    'Buffer.Reset': true,
-    'Buffer.Highlight': true,
-    'Buffer.Init': true,
-    'Buffer.Model.Edit': true,
-    'Player.Tick': true
+    // 'Window.Resized': true,
+    // 'Buffer.Reset': true,
+    // 'Buffer.Highlight': true,
+    // 'Buffer.Init': true,
+    // 'Buffer.Model.Edit': true,
+    // 'Player.Tick': true
 };
 
 const {store, scope, finalize, start} = link(function(bundle) {
