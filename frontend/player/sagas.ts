@@ -17,6 +17,7 @@ import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
 import {StepperContext} from "../stepper/api";
 import {App} from "../index";
+import produce from "immer";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -210,9 +211,31 @@ function* computeInstants(replayContext: ReplayContext) {
         replayContext.instant = instant;
 
         console.log('-------- REPLAY ---- EVENT ----', key, event);
-        console.log('replayContextState', replayContext.state);
+        console.log('replayContext', replayContext);
+
+        // const immerFunc = async function (replayContext, event) {
+        //     const nextState = await produce(replayContext.state, async (draftState: AppStoreReplay) => {
+        //         replayContext.state = draftState;
+        //
+        //         for (let func of funcs) {
+        //             await func(replayContext, event);
+        //         }
+        //     });
+        //
+        //     replayContext.state = nextState;
+        // }
+        //
+        // yield call(immerFunc, replayContext, event);
+        // }
+
+        const nextState = produce(replayContext, (draft: AppStoreReplay) => {
+
+        });
+        
         yield call(replayContext.applyEvent, key, replayContext, event);
-        console.log('replayContextState_after', replayContext.state);
+
+
+        console.log('replayContext_after', replayContext);
 
         /* Preserve the last explicitly set range. */
         // TODO: Is this used ?

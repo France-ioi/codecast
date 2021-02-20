@@ -36,24 +36,7 @@ const replayApi = {
         if (eventHandlers.has(key)) {
             const funcs = eventHandlers.get(key);
             for (let func of funcs) {
-                // TODO: immer magic
-                console.log('immer call');
-                const nextState = produce(replayContext.state, (draftState: AppStoreReplay) => {
-                    const immerReplayContext = {
-                        ...replayContext,
-                        state: draftState
-                    };
-
-                    call(func, replayContext, event);
-                });
-                console.log('nextState', nextState);
-
-                replayContext.state = nextState;
-
-                yield;
-
-
-                // yield call(func, replayContext, event);
+                yield call(func, replayContext, event);
             }
         } else {
             console.log(`event ${key} ignored (no replay handler)`);

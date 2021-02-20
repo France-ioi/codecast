@@ -26,7 +26,7 @@ export default function(bundle: Bundle) {
     function* pythonInputSaga(app: App, action) {
         const state: AppStore = yield select();
         const stepperContext = state.stepper.currentStepperState;
-        const isPlayerContext = (typeof stepperContext === 'undefined');
+        const isPlayerContext = (stepperContext == null);
 
         let terminal = window.currentPythonRunner._terminal;
         let input = window.currentPythonRunner._input;

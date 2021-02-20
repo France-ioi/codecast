@@ -95,8 +95,6 @@ export default function(bundle: Bundle) {
             }
         });
         replayApi.onReset(function* (instant: PlayerInstant) {
-            console.error('What to do here ?');
-            // @ts-ignore
             const arduinoState = instant.state.arduino;
             if (arduinoState) {
                 yield put({type: ActionTypes.ArduinoReset, state: arduinoState});

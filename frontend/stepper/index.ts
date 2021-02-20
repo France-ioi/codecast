@@ -868,6 +868,7 @@ function postLink(app: App) {
                     stepperEventReplayed(replayContext);
                 });
             });
+            console.log('put stepperContext', replayContext);
             performStep(replayContext.stepperContext, mode).then(function() {
                 let currentStepperState = replayContext.state.stepper.currentStepperState;
 

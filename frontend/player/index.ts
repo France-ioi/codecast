@@ -44,6 +44,10 @@ export default function(bundle: Bundle) {
         state.player.data = data;
         state.player.instants = instants;
         state.player.current = instants[0];
+
+        if (state.player.data && state.player.duration) {
+            state.player.isReady = true;
+        }
     });
 
     bundle.defineAction(ActionTypes.PlayerStarted);
