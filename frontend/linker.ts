@@ -3,11 +3,14 @@ import {default as createSagaMiddleware} from 'redux-saga';
 import {all, call} from 'redux-saga/effects';
 import produce from "immer";
 import {App} from "./index";
+import {AppStore} from "./store";
 
-interface Linker {
-    scope: any,
-    actionTypes: any,
-    store: any,
+export interface Linker {
+    scope: App,
+    actionTypes: {
+        [key: string]: string
+    },
+    store: AppStore,
     reducer: any
     finalize: Function
     start: Function
@@ -167,10 +170,12 @@ export function link(rootBuilder): Linker {
         return sagaMiddleware.run(rootSaga, args);
     }
 
+    debugger;
+
     return {
-        scope: globalScope,
+        scope: globalScope as App,
         actionTypes: typeForActionName,
-        store,
+        store: store as AppStore,
         reducer: rootReducer,
         finalize,
         start

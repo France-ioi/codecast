@@ -388,7 +388,7 @@ function* replayToAudioTime(app, instants: PlayerInstant[], startTime: number, e
 
 /* A quick reset avoids disabling and re-enabling the stepper (which restarts
    the stepper task). */
-function* resetToAudioTime(app, audioTime, quick?: boolean) {
+function* resetToAudioTime(app, audioTime: number, quick?: boolean) {
     const {globals: {replayApi}} = app;
 
     /* Call playerTick to store the current audio time and to install the
