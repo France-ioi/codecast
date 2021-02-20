@@ -47,39 +47,44 @@ export interface CodecastOptions {
     origin: string
 }
 
-export interface AppStore extends Store {
-    lastError: undefined | Error
+export interface AppStoreReplay {
+    ioPane: typeof initialStateIoPane,
+    arduino: typeof initialStateArduino,
+    buffers: typeof initialStateBuffers,
+    stepper: typeof initialStateStepper,
+    compile: typeof initialStateCompile,
+
+    options: CodecastOptions,
+
+    stopped: boolean
+}
+
+export interface AppStore extends Store, AppStoreReplay {
+    lastError: undefined | Error,
     memoryUsage: typeof initialStateMemoryUsage,
     editor: typeof initialStateEditor,
     statistics: typeof initialStateStatistics,
-    fullscreen: typeof initialStateFullscreen
-    stepper: typeof initialStateStepper,
+    fullscreen: typeof initialStateFullscreen,
     stepperTask: StepperTask,
-    compile: typeof initialStateCompile,
     examples: typeof initialStateExamples,
     user: typeof initialStateUser,
     screen: typeof initialStateScreen,
     player: typeof initialStatePlayer,
     recorder: typeof initialStateRecorder,
-    buffers: typeof initialStateBuffers,
-    arduino: typeof initialStateArduino,
-    ioPane: typeof initialStateIoPane,
     subtitles: typeof initialStateSubtitles,
     save: typeof initialStateSave,
     terminal: typeof initialStateTerminal,
     terminalElement: any,
     vumeterElement: any,
 
-    options: CodecastOptions,
-
     // TODO: Put the following in a "window" attribute instead of at the root of the store
-    mainViewGeometry: typeof mainViewGeometries[0]
+    mainViewGeometry: typeof mainViewGeometries[0],
     panes: any[],
     windowWidth: number,
     windowHeight: number,
     containerWidth: number,
-    viewportTooSmall: boolean
+    viewportTooSmall: boolean,
 
     // TODO: Function should not be inside the store.
-    getMessage: Function;
+    getMessage: Function
 }

@@ -5,12 +5,12 @@ import MemoryUsageBundle from './memory_usage';
 import VumeterBundle from './vumeter';
 import ScreensBundle from '../common/screens';
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import produce from "immer";
+import {Bundle} from "../linker";
 
-export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft) => {
-        draft.recorder = {};
-    }));
+export default function(bundle: Bundle) {
+    bundle.addReducer(AppActionTypes.AppInit, (state) => {
+        state.recorder = {};
+    });
 
     bundle.include(saveScreenComponent);
     bundle.include(recorderStore);

@@ -32,7 +32,7 @@ interface RecorderAppProps extends RecorderAppStateToProps, RecorderAppDispatchT
 class _RecorderApp extends React.PureComponent<RecorderAppProps> {
     render () {
         let screenView = null;
-        console.log(this.props.user);
+        console.log(this.props.user, this.props.screen);
         if (!this.props.user) {
             screenView = <LoginScreen />;
         } else if (this.props.screen === 'record') {

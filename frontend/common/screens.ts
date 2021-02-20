@@ -1,15 +1,15 @@
 import {ActionTypes} from "./actionTypes";
-import produce from "immer";
+import {Bundle} from "../linker";
 
 type Screen = 'setup' | 'edit' | 'statistics';
 
 export const initialStateScreen: Screen = 'setup';
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     // Switch to the specified screen.
-    bundle.defineAction(ActionTypes.SystemSwitchToScreen);
+    bundle.defineAction(ActionTypes.AppSwitchToScreen);
 
-    bundle.addReducer(ActionTypes.SystemSwitchToScreen, produce((draft, {payload: screen}) => {
-        draft.screen = screen;
-    }));
+    bundle.addReducer(ActionTypes.AppSwitchToScreen, (state, {payload: {screen: screenName}}) => {
+        state.screen = screenName;
+    });
 };

@@ -14,54 +14,56 @@
 import {actionChannel, call, put, select, take, takeLatest} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
-import produce from "immer";
 import {RecorderStatus} from "./store";
+import {Bundle} from "../linker";
 
-export default function(bundle) {
-    /* Recorder API */
-    const recordApi = {};
-    bundle.defineValue('recordApi', recordApi);
+/* Sagas can be registered to run when recording starts, to populate an
+   'init' object which is stored in the 'start' event of the recording. */
+const startSagas = [];
 
-    /* Sagas can be registered to run when recording starts, to populate an
-       'init' object which is stored in the 'start' event of the recording. */
-    const startSagas = [];
-    // @ts-ignore
-    recordApi.onStart = function(saga) {
+/* For each redux action a single saga handler(addEvent, action) can be
+   registered to add an event to the recorded stream. */
+const actionHandlers = new Map();
+
+/* Recorder API */
+const recordApi = {
+    onStart: function(saga) {
         startSagas.push(saga);
-    };
-    // @ts-ignore
-    recordApi.start = function* () {
+    },
+    start: function* () {
         const init = {};
         for (let saga of startSagas) {
             yield call(saga, init);
         }
         const event = [0, 'start', init];
         yield put({type: ActionTypes.RecorderAddEvent, event});
-    };
-
-    /* For each redux action a single saga handler(addEvent, action) can be
-       registered to add an event to the recorded stream. */
-    const actionHandlers = new Map();
-    // @ts-ignore
-    recordApi.on = function(actionType, handler) {
+    },
+    on: function(actionType: string, handler) {
         if (actionHandlers.has(actionType)) {
             throw new Error(`multiple record handlers for ${actionType}`);
         }
         actionHandlers.set(actionType, handler);
-    };
+    }
+};
+
+export type RecordApi = typeof recordApi;
+
+export default function(bundle: Bundle) {
+    bundle.defineValue('recordApi', recordApi);
+
     bundle.defineAction(ActionTypes.RecorderAddEvent);
-    bundle.addReducer(ActionTypes.RecorderAddEvent, produce((draft: AppStore, action) => {
+    bundle.addReducer(ActionTypes.RecorderAddEvent, (state: AppStore, action) => {
         const {event} = action;
 
-        draft.recorder.events.push(event);
-    }));
+        state.recorder.events.push(event);
+    });
 
     // Truncate the event stream at the given position (milliseconds).
     bundle.defineAction(ActionTypes.RecorderTruncate);
-    bundle.addReducer(ActionTypes.RecorderTruncate, produce((draft: AppStore, {payload: {position, audioTime}}) => {
-        draft.recorder.events = draft.recorder.events.slice(0, position);
-        draft.recorder.junkTime = (draft.recorder.suspendedAt - audioTime);
-    }));
+    bundle.addReducer(ActionTypes.RecorderTruncate, (state: AppStore, {payload: {position, audioTime}}) => {
+        state.recorder.events = state.recorder.events.slice(0, position);
+        state.recorder.junkTime = (state.recorder.suspendedAt - audioTime);
+    });
 
     bundle.addSaga(function* recordEvents() {
         const pattern = Array.from(actionHandlers.keys());

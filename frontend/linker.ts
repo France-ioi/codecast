@@ -1,6 +1,8 @@
 import {applyMiddleware, compose, createStore} from 'redux';
 import {default as createSagaMiddleware} from 'redux-saga';
 import {all, call} from 'redux-saga/effects';
+import produce from "immer";
+import {App} from "./index";
 
 interface Linker {
     scope: any,
@@ -179,7 +181,7 @@ function undeclaredDependencyError(target, property) {
     throw new Error(`use of undeclared dependency ${property}`);
 }
 
-class Bundle {
+export class Bundle {
     builder: any;
     locals: any;
     _:any;
@@ -204,6 +206,7 @@ class Bundle {
         const bundle = new Bundle(this._.linker, builder);
         this._.bundles.push(bundle);
         builder(bundle, bundle.locals);
+
         return bundle.locals;
     }
 
@@ -216,6 +219,7 @@ class Bundle {
         this._assertNotSealed();
         const target = makeSafeProxy({}, undeclaredDependencyError);
         this._.linker.declareUse(target, names);
+
         return target;
     }
 
@@ -232,24 +236,33 @@ class Bundle {
         this.use(name);
     }
 
-    addReducer(name, reducer) {
+    addReducer(name: string, reducer: any) {
         this._assertNotSealed();
         if (reducer === undefined) {
             this._.lateReducers.push(name); // name is the reducer function
         } else {
+            const immerReducer = produce(reducer);
+
             this.use(name);
-            this._.actionReducers.push({name, reducer});
+            this._.actionReducers.push({
+                name,
+                reducer: immerReducer
+            });
         }
     }
 
     addEarlyReducer(reducer) {
+        const immerReducer = produce(reducer);
+
         this._assertNotSealed();
-        this._.earlyReducers.push(reducer);
+        this._.earlyReducers.push(immerReducer);
     }
 
     addLateReducer(reducer) {
+        const immerReducer = produce(reducer);
+
         this._assertNotSealed();
-        this._.lateReducers.push(reducer);
+        this._.lateReducers.push(immerReducer);
     }
 
     addSaga(saga) {
@@ -262,7 +275,7 @@ class Bundle {
         this._.linker.addEnhancer(enhancer);
     }
 
-    defer(callback) {
+    defer(callback: (app: App) => void): void {
         this._assertNotSealed();
         this._.defers.push(callback);
     }

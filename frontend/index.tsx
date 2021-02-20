@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
 import 'rc-slider/assets/index.css?global';
 import {AppStore} from './store';
-import {link} from './linker';
+import {Bundle, link} from './linker';
 import commonBundle from './common/index';
 import playerBundle from './player/index';
 import recorderBundle from './recorder/index';
@@ -26,6 +26,9 @@ import {PlayerApp} from "./player/PlayerApp";
 import {RecorderApp} from "./recorder/RecorderApp";
 import {AppErrorBoundary} from "./common/AppErrorBoundary";
 import {setAutoFreeze} from "immer";
+import {ReplayApi} from "./player/replay";
+import {RecordApi} from "./recorder/record";
+import {StepperApi} from "./stepper/api";
 
 /**
  * TODO: This should be removed.
@@ -39,6 +42,12 @@ interface Codecast {
     task?: any,
     start?: Function,
     restart: Function
+}
+
+export interface App {
+    recordApi: RecordApi,
+    replayApi: ReplayApi,
+    stepperApi: StepperApi
 }
 
 declare global {
@@ -67,7 +76,7 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
     // 'Player.Tick': true
 };
 
-const {store, scope, finalize, start} = link(function(bundle) {
+const {store, scope, finalize, start} = link(function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.AppInit);
     bundle.addReducer(ActionTypes.AppInit, () => {
         return {};
@@ -92,16 +101,7 @@ const {store, scope, finalize, start} = link(function(bundle) {
             if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
                 console.log('action', action);
             }
-
-            return state;
         });
-
-        /**
-         * Enable Immutable debug dev-tools.
-         *
-         * @see https://github.com/andrewdavey/immutable-devtools
-         */
-        // installDevTools(Immutable);
     }
 });
 finalize(scope);

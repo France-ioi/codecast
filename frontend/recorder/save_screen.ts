@@ -7,8 +7,8 @@ import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getRecorderState} from "./selectors";
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
 export enum SaveStep {
     EncodingPending = 'encoding pending',
@@ -32,71 +32,71 @@ export const initialStateSave = {
     error: ''
 };
 
-export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
-        draft.save = initialStateSave;
-    }));
+export default function(bundle: Bundle) {
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
+        state.save = initialStateSave;
+    });
 
     bundle.defineAction(ActionTypes.SaveScreenEncodingStart);
-    bundle.addReducer(ActionTypes.SaveScreenEncodingStart, produce((draft: AppStore) => {
-        draft.save.step = SaveStep.EncodingPending;
-        draft.save.progress = 0;
-    }));
+    bundle.addReducer(ActionTypes.SaveScreenEncodingStart, (state: AppStore) => {
+        state.save.step = SaveStep.EncodingPending;
+        state.save.progress = 0;
+    });
 
     bundle.defineAction(ActionTypes.SaveScreenEncodingProgress);
-    bundle.addReducer(ActionTypes.SaveScreenEncodingProgress, produce((draft: AppStore, {payload: progress}) => {
-        draft.save.progress = progress;
-    }));
+    bundle.addReducer(ActionTypes.SaveScreenEncodingProgress, (state: AppStore, {payload: progress}) => {
+        state.save.progress = progress;
+    });
 
     bundle.defineAction(ActionTypes.SaveScreenEncodingDone);
-    bundle.addReducer(ActionTypes.SaveScreenEncodingDone, produce((draft: AppStore, {payload: {audioUrl, wavAudioUrl, eventsUrl}}) => {
-        draft.save.step = SaveStep.EncodingDone;
-        draft.save.audioUrl = audioUrl;
-        draft.save.wavAudioUrl = wavAudioUrl;
-        draft.save.eventsUrl = eventsUrl;
-        draft.save.progress = 0;
-    }));
+    bundle.addReducer(ActionTypes.SaveScreenEncodingDone, (state: AppStore, {payload: {audioUrl, wavAudioUrl, eventsUrl}}) => {
+        state.save.step = SaveStep.EncodingDone;
+        state.save.audioUrl = audioUrl;
+        state.save.wavAudioUrl = wavAudioUrl;
+        state.save.eventsUrl = eventsUrl;
+        state.save.progress = 0;
+    });
 
     bundle.defineAction(ActionTypes.SaveScreenUpload);
 
     bundle.defineAction(ActionTypes.SaveScreenPreparing);
-    bundle.addReducer(ActionTypes.SaveScreenPreparing, produce((draft: AppStore) => {
-        draft.save.step = SaveStep.UploadPreparing;
-    }));
+    bundle.addReducer(ActionTypes.SaveScreenPreparing, (state: AppStore) => {
+        state.save.step = SaveStep.UploadPreparing;
+    });
 
     bundle.defineAction(ActionTypes.SaveScreenEventsUploading);
-    bundle.addReducer(ActionTypes.SaveScreenEventsUploading, produce((draft: AppStore) => {
-        draft.save.step = SaveStep.UploadEventsPending;
-    }));
+    bundle.addReducer(ActionTypes.SaveScreenEventsUploading, (state: AppStore) => {
+        state.save.step = SaveStep.UploadEventsPending;
+    });
 
     bundle.defineAction(ActionTypes.SaveScreenEventsUploaded);
-    bundle.addReducer(ActionTypes.SaveScreenEventsUploaded, produce((draft: AppStore, {payload: {url}}) => {
-        draft.save.step = SaveStep.UploadEventsDone;
-        draft.save.eventsUrl = url;
-    }));
+    bundle.addReducer(ActionTypes.SaveScreenEventsUploaded, (state: AppStore, {payload: {url}}) => {
+        state.save.step = SaveStep.UploadEventsDone;
+        state.save.eventsUrl = url;
+    });
 
     bundle.defineAction(ActionTypes.SaveScreenAudioUploading);
-    bundle.addReducer(ActionTypes.SaveScreenAudioUploading, produce((draft: AppStore) => {
-        draft.save.step = SaveStep.UploadAudioPending;
-    }));
+    bundle.addReducer(ActionTypes.SaveScreenAudioUploading, (state: AppStore) => {
+        state.save.step = SaveStep.UploadAudioPending;
+    });
 
     bundle.defineAction(ActionTypes.SaveScreenAudioUploaded);
-    bundle.addReducer(ActionTypes.SaveScreenAudioUploaded, produce((draft: AppStore, {payload: {url}}) => {
-        draft.save.step = SaveStep.UploadAudioDone;
-        draft.save.audioUrl = url;
-    }));
+    bundle.addReducer(ActionTypes.SaveScreenAudioUploaded, (state: AppStore, {payload: {url}}) => {
+        state.save.step = SaveStep.UploadAudioDone;
+        state.save.audioUrl = url;
+    });
 
     bundle.defineAction(ActionTypes.SaveScreenUploadSucceeded);
-    bundle.addReducer(ActionTypes.SaveScreenUploadSucceeded, produce((draft: AppStore, {payload: {playerUrl}}) => {
-        draft.save.step = SaveStep.Done;
-        draft.save.playerUrl = playerUrl;
-    }));
+    bundle.addReducer(ActionTypes.SaveScreenUploadSucceeded, (state: AppStore, {payload: {playerUrl}}) => {
+        state.save.step = SaveStep.Done;
+        state.save.playerUrl = playerUrl;
+    });
 
     bundle.defineAction(ActionTypes.SaveScreenUploadFailed);
-    bundle.addReducer(ActionTypes.SaveScreenUploadFailed, produce((draft: AppStore, {payload: {error}}) => {
-        draft.save.step = SaveStep.Error;
-        draft.save.error = error;
-    }));
+    bundle.addReducer(ActionTypes.SaveScreenUploadFailed, (state: AppStore, {payload: {error}}) => {
+        state.save.step = SaveStep.Error;
+        state.save.error = error;
+    });
 
     bundle.addSaga(function* saveSaga(arg) {
         yield takeLatest(RecorderActionTypes.RecorderStopped, encodingSaga);
@@ -119,7 +119,7 @@ function* ensureLoggedSaga() {
 
 function* encodingSaga() {
     yield put({type: ActionTypes.SaveScreenEncodingStart, payload: {}});
-    yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'save'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'save'}});
 
     const state: AppStore = yield select();
     const recorder = getRecorderState(state);
@@ -133,7 +133,10 @@ function* encodingSaga() {
     /* Ensure the 'end' event occurs before the end of the audio track. */
     const version = RECORDING_FORMAT_VERSION;
     const endTime = Math.floor(duration * 1000);
-    const events = recorder.events.push([endTime, 'end']);
+
+    let events = [...recorder.events];
+    events.push([endTime, 'end']);
+
     const subtitles = [];
     const options = state.options;
     const data = {version, options, events, subtitles};

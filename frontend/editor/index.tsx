@@ -7,8 +7,8 @@ import TrimBundle, {initialStateTrimSaving} from './trim';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
 export type EditorControl = 'none' | 'trim' | 'subtitles';
 
@@ -42,45 +42,45 @@ export const initialStateEditor = {
     trim: initialStateTrimSaving
 };
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.EditorPrepare);
-    bundle.addReducer(ActionTypes.EditorPrepare, produce((draft: AppStore, {payload: {baseDataUrl}}) => {
-        const {baseUrl} = draft.options;
+    bundle.addReducer(ActionTypes.EditorPrepare, (state: AppStore, {payload: {baseDataUrl}}) => {
+        const {baseUrl} = state.options;
 
-        draft.editor = initialStateEditor;
-        draft.editor.base = baseDataUrl;
-        draft.editor.dataUrl = baseDataUrl;
-        draft.editor.playerUrl = `${baseUrl}/player?base=${encodeURIComponent(baseDataUrl)}`;
-        draft.editor.canSave = userHasGrant(draft.user, baseDataUrl);
-    }));
+        state.editor = initialStateEditor;
+        state.editor.base = baseDataUrl;
+        state.editor.dataUrl = baseDataUrl;
+        state.editor.playerUrl = `${baseUrl}/player?base=${encodeURIComponent(baseDataUrl)}`;
+        state.editor.canSave = userHasGrant(state.user, baseDataUrl);
+    });
 
-    bundle.addReducer(CommonActionTypes.LoginFeedback, produce(loginFeedbackReducer));
+    bundle.addReducer(CommonActionTypes.LoginFeedback, loginFeedbackReducer);
 
     bundle.defineAction(ActionTypes.EditorControlsChanged);
-    bundle.addReducer(ActionTypes.EditorControlsChanged, produce((draft: AppStore, {payload: {controls}}) => {
-        draft.editor.controls = controls;
-    }));
+    bundle.addReducer(ActionTypes.EditorControlsChanged, (state: AppStore, {payload: {controls}}) => {
+        state.editor.controls = controls;
+    });
 
     bundle.defineAction(ActionTypes.EditorAudioLoadProgress);
-    bundle.addReducer(ActionTypes.EditorAudioLoadProgress, produce(editorAudioLoadProgressReducer));
+    bundle.addReducer(ActionTypes.EditorAudioLoadProgress, editorAudioLoadProgressReducer);
 
     bundle.defineAction(ActionTypes.EditorAudioLoaded);
-    bundle.addReducer(ActionTypes.EditorAudioLoaded, produce((draft: AppStore, {payload: {duration, audioBlob, audioBuffer, waveform}}) => {
-        draft.editor.audioLoaded = true;
-        draft.editor.duration = duration;
-        draft.editor.audioBlob = audioBlob;
-        draft.editor.audioBuffer = audioBuffer;
-        draft.editor.waveform = waveform;
-    }));
+    bundle.addReducer(ActionTypes.EditorAudioLoaded, (state: AppStore, {payload: {duration, audioBlob, audioBuffer, waveform}}) => {
+        state.editor.audioLoaded = true;
+        state.editor.duration = duration;
+        state.editor.audioBlob = audioBlob;
+        state.editor.audioBuffer = audioBuffer;
+        state.editor.waveform = waveform;
+    });
 
     bundle.defineAction(ActionTypes.EditorPlayerReady);
-    bundle.addReducer(ActionTypes.EditorPlayerReady, produce((draft: AppStore, {payload: {data}}) => {
-        draft.editor.playerReady = true;
-        draft.editor.data = data;
-    }));
+    bundle.addReducer(ActionTypes.EditorPlayerReady, (state: AppStore, {payload: {data}}) => {
+        state.editor.playerReady = true;
+        state.editor.data = data;
+    });
 
     bundle.defineAction(ActionTypes.SetupScreenTabChanged);
-    bundle.addReducer(ActionTypes.SetupScreenTabChanged, produce(setupScreenTabChangedReducer));
+    bundle.addReducer(ActionTypes.SetupScreenTabChanged, setupScreenTabChangedReducer);
 
     bundle.addSaga(function* editorSaga(app) {
         yield takeEvery(ActionTypes.EditorPrepare, editorPrepareSaga, app);
@@ -91,9 +91,9 @@ export default function(bundle) {
     bundle.include(TrimBundle);
 };
 
-function loginFeedbackReducer(draft: AppStore): void {
-    if (draft.editor) {
-        draft.editor.canSave = userHasGrant(draft.user,draft.editor.dataUrl);
+function loginFeedbackReducer(state: AppStore): void {
+    if (state.editor) {
+        state.editor.canSave = userHasGrant(state.user, state.editor.dataUrl);
     }
 }
 
@@ -109,8 +109,8 @@ function userHasGrant(user, dataUrl): boolean {
     return false;
 }
 
-function editorAudioLoadProgressReducer(draft: AppStore, {payload: {value}}): void {
-    draft.editor.audioLoadProgress = value;
+function editorAudioLoadProgressReducer(state: AppStore, {payload: {value}}): void {
+    state.editor.audioLoadProgress = value;
 }
 
 function* editorPrepareSaga(app, action) {
@@ -119,7 +119,7 @@ function* editorPrepareSaga(app, action) {
         yield take(CommonActionTypes.LoginFeedback);
     }
 
-    yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'setup'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'setup'}});
 
     const audioUrl = `${action.payload.baseDataUrl}.mp3`;
     const eventsUrl = `${action.payload.baseDataUrl}.json`;
@@ -165,6 +165,6 @@ function* getAudioSaga(audioUrl) {
     }
 }
 
-function setupScreenTabChangedReducer(draft: AppStore, {payload: {tabId}}): void {
-    draft.editor.setupTabId = tabId;
+function setupScreenTabChangedReducer(state: AppStore, {payload: {tabId}}): void {
+    state.editor.setupTabId = tabId;
 }

@@ -1,8 +1,6 @@
 import url from 'url';
 import {stringifySync} from 'subtitle';
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
-import update from 'immutability-helper';
-
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {asyncRequestJson} from '../utils/api';
 import {uploadBlobChannel} from '../utils/blobs';
@@ -16,8 +14,8 @@ import {findSubtitleIndex} from '../subtitles/utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as SubtitlesActionTypes} from "../subtitles/actionTypes";
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
 export type TrimSavingStep = null | keyof typeof initialStateSavingStepStatus;
 export type StepStatus = null | 'done' | 'pending' | 'error';
@@ -43,32 +41,32 @@ export const initialStateTrimSaving = {
     }
 }
 
-export default function(bundle) {
-    bundle.addReducer(ActionTypes.EditorPrepare, produce((draft: AppStore) => {
-        draft.editor.trim.intervals = intervalTree({skip: false, mute: false});
-    }));
+export default function(bundle: Bundle) {
+    bundle.addReducer(ActionTypes.EditorPrepare, (state: AppStore) => {
+        state.editor.trim.intervals = intervalTree({skip: false, mute: false});
+    });
 
     bundle.defineAction(ActionTypes.EditorTrimEnter);
     bundle.defineAction(ActionTypes.EditorTrimReturn);
 
     bundle.defineAction(ActionTypes.EditorTrimSave);
-    bundle.addReducer(ActionTypes.EditorTrimSave, produce(editorTrimSaveReducer));
+    bundle.addReducer(ActionTypes.EditorTrimSave, editorTrimSaveReducer);
 
     bundle.defineAction(ActionTypes.EditorTrimIntervalsChanged);
 
     bundle.defineAction(ActionTypes.EditorTrimMarkerAdded);
-    bundle.addReducer(ActionTypes.EditorTrimMarkerAdded, produce(trimEditorMarkerAddedReducer));
+    bundle.addReducer(ActionTypes.EditorTrimMarkerAdded, trimEditorMarkerAddedReducer);
 
     bundle.defineAction(ActionTypes.EditorTrimMarkerRemoved);
-    bundle.addReducer(ActionTypes.EditorTrimMarkerRemoved, produce(trimEditorMarkerRemovedReducer));
+    bundle.addReducer(ActionTypes.EditorTrimMarkerRemoved, trimEditorMarkerRemovedReducer);
 
     bundle.defineAction(ActionTypes.EditorTrimIntervalChanged);
-    bundle.addReducer(ActionTypes.EditorTrimIntervalChanged, produce(trimEditorIntervalChangedReducer));
+    bundle.addReducer(ActionTypes.EditorTrimIntervalChanged, trimEditorIntervalChangedReducer);
 
     bundle.addSaga(trimSaga);
 
     bundle.defineAction(ActionTypes.EditorTrimSavingStep);
-    bundle.addReducer(ActionTypes.EditorTrimSavingStep, produce((draft: AppStore, {payload: {step, status, progress, error}}) => {
+    bundle.addReducer(ActionTypes.EditorTrimSavingStep, (state: AppStore, {payload: {step, status, progress, error}}) => {
         const {saving} = initialStateTrimSaving;
 
         if (status !== undefined) {
@@ -81,30 +79,30 @@ export default function(bundle) {
             saving.error = error;
         }
 
-        draft.editor.trim.saving = saving;
-    }));
+        state.editor.trim.saving = saving;
+    });
 
     bundle.defineAction(ActionTypes.EditorTrimSavingDone);
-    bundle.addReducer(ActionTypes.EditorTrimSavingDone, produce(trimEditorSavingDoneReducer));
+    bundle.addReducer(ActionTypes.EditorTrimSavingDone, trimEditorSavingDoneReducer);
 };
 
-function trimEditorMarkerAddedReducer(draft: AppStore, {payload: {position}}): void {
-    draft.editor.trim.intervals = draft.editor.trim.intervals.split(position);
+function trimEditorMarkerAddedReducer(state: AppStore, {payload: {position}}): void {
+    state.editor.trim.intervals = state.editor.trim.intervals.split(position);
 }
 
-function trimEditorMarkerRemovedReducer(draft: AppStore, {payload: {position}}) {
-    draft.editor.trim.intervals = draft.editor.trim.intervals.mergeLeft(position);
+function trimEditorMarkerRemovedReducer(state: AppStore, {payload: {position}}) {
+    state.editor.trim.intervals = state.editor.trim.intervals.mergeLeft(position);
 }
 
-function trimEditorIntervalChangedReducer(draft: AppStore, {payload: {position, value}}): void {
+function trimEditorIntervalChangedReducer(state: AppStore, {payload: {position, value}}): void {
     /* TODO: update instants in the player, to add/remove jump at position */
-    let {intervals} = draft.editor.trim;
+    let {intervals} = state.editor.trim;
     intervals = intervals.set(position, value);
-    let instants = draft.player.instants;
+    let instants = state.player.instants;
     instants = addJumpInstants(instants, intervals);
 
-    draft.editor.trim.intervals = intervals;
-    draft.player.instants = instants;
+    state.editor.trim.intervals = intervals;
+    state.player.instants = instants;
 }
 
 function addJumpInstants(instants, intervals) {
@@ -147,7 +145,7 @@ function addJumpInstants(instants, intervals) {
     }
 }
 
-function* trimSaga(app) {
+function* trimSaga() {
     yield takeLatest(ActionTypes.EditorTrimEnter, editorTrimEnterSaga);
     yield takeLatest(ActionTypes.EditorTrimReturn, editorTrimReturnSaga);
     yield takeLatest(ActionTypes.EditorTrimSave, editorTrimSaveSaga);
@@ -162,28 +160,28 @@ function* editorTrimEnterSaga(_action) {
         }
     });
 
-    yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'edit'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'edit'}});
 }
 
 function* editorTrimReturnSaga(_action) {
     yield put({type: ActionTypes.EditorControlsChanged, payload: {controls: 'none'}});
-    yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'setup'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'setup'}});
 }
 
-function editorTrimSaveReducer(draft: AppStore): void {
-    draft.editor.trim.saving.prepareUpload = null;
-    draft.editor.trim.saving.uploadEvents = null;
-    draft.editor.trim.saving.assembleAudio = null;
-    draft.editor.trim.saving.encodeAudio = null;
-    draft.editor.trim.saving.uploadAudio = null;
-    draft.editor.trim.saving.updateSubtitles = null;
-    draft.editor.trim.saving.uploadSubtitles = null;
-    draft.editor.trim.saving.progress = 0;
+function editorTrimSaveReducer(state: AppStore): void {
+    state.editor.trim.saving.prepareUpload = null;
+    state.editor.trim.saving.uploadEvents = null;
+    state.editor.trim.saving.assembleAudio = null;
+    state.editor.trim.saving.encodeAudio = null;
+    state.editor.trim.saving.uploadAudio = null;
+    state.editor.trim.saving.updateSubtitles = null;
+    state.editor.trim.saving.uploadSubtitles = null;
+    state.editor.trim.saving.progress = 0;
 }
 
-function trimEditorSavingDoneReducer(draft: AppStore, {payload: {playerUrl}}): void {
-    draft.editor.trim.saving.done = true;
-    draft.editor.trim.saving.playerUrl = playerUrl;
+function trimEditorSavingDoneReducer(state: AppStore, {payload: {playerUrl}}): void {
+    state.editor.trim.saving.done = true;
+    state.editor.trim.saving.playerUrl = playerUrl;
 }
 
 function* editorTrimSaveSaga(action) {

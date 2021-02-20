@@ -2,8 +2,8 @@ import {buffers, eventChannel} from 'redux-saga';
 import {put, take} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
 export const mainViewGeometries = [
     {size: 'lg', width: 1140, svgScale: 1.0},
@@ -21,22 +21,22 @@ export const initialStateWindow = {
     viewportTooSmall: false
 }
 
-export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
-        draft.mainViewGeometry = initialStateWindow.mainViewGeometry;
-        draft.panes = initialStateWindow.panes;
-        draft.windowWidth = initialStateWindow.windowWidth;
-        draft.windowHeight = initialStateWindow.windowHeight;
-    }));
+export default function(bundle: Bundle) {
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
+        state.mainViewGeometry = initialStateWindow.mainViewGeometry;
+        state.panes = initialStateWindow.panes;
+        state.windowWidth = initialStateWindow.windowWidth;
+        state.windowHeight = initialStateWindow.windowHeight;
+    });
 
     // Make windowResized update the global state 'size'.
     bundle.defineAction(ActionTypes.WindowResized);
-    bundle.addReducer(ActionTypes.WindowResized, produce((draft: AppStore, action) => {
+    bundle.addReducer(ActionTypes.WindowResized, (state: AppStore, action) => {
         const {width, height} = action;
 
-        draft.windowWidth = width;
-        draft.windowHeight = height;
-    }));
+        state.windowWidth = width;
+        state.windowHeight = height;
+    });
 
     // Event channel for resize events.
     // Only the most recent event is kept in the buffer.
@@ -66,17 +66,17 @@ export default function(bundle) {
         }
     });
 
-    bundle.addLateReducer(produce(function updateGeometry(draft) {
-        if (!draft) {
-            return draft;
+    bundle.addLateReducer(function updateGeometry(state: AppStore) {
+        if (!state) {
+            return state;
         }
 
         /* Default to the largest geometry, no visible panes. */
         let geometry = mainViewGeometries[0];
-        let panes = draft.panes;
+        let panes = state.panes;
         let viewportTooSmall = false;
 
-        const windowWidth = draft.windowWidth;
+        const windowWidth = state.windowWidth;
         if (windowWidth) {
             let mainViewWidth = windowWidth;
 
@@ -125,9 +125,9 @@ export default function(bundle) {
             return pane;
         });
 
-        draft.viewportTooSmall = viewportTooSmall;
-        draft.containerWidth = containerWidth;
-        draft.mainViewGeometry = geometry;
-        draft.panes = panes;
-    }));
-};
+        state.viewportTooSmall = viewportTooSmall;
+        state.containerWidth = containerWidth;
+        state.mainViewGeometry = geometry;
+        state.panes = panes;
+    });
+}

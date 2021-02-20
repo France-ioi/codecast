@@ -2,88 +2,83 @@ import playerSagas from './sagas';
 import {findInstant} from './utils';
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes} from "./actionTypes";
-import produce from "immer";
-import {AppStore, CodecastOptions} from "../store";
-import {StepperState} from "../stepper";
-import {initialStateArduino} from "../stepper/arduino";
-import {initialStateBuffers} from "../buffers";
-import {initialStateCompile} from "../stepper/compile";
-import {initialStateIoPane} from "../stepper/io";
+import {AppStore, AppStoreReplay} from "../store";
+import {Bundle} from "../linker";
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.include(playerSagas);
 
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
-        draft.player = initialStatePlayer;
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
+        state.player = initialStatePlayer;
 
-        playerClear(draft);
-    }));
+        playerClear(state);
+    });
 
     bundle.defineAction(ActionTypes.PlayerClear);
-    bundle.addReducer(ActionTypes.PlayerClear, produce((draft: AppStore) => {
-        playerClear(draft);
-    }));
+    bundle.addReducer(ActionTypes.PlayerClear, (state: AppStore) => {
+        playerClear(state);
+    });
 
     bundle.defineAction(ActionTypes.PlayerPreparing);
-    bundle.addReducer(ActionTypes.PlayerPreparing, produce((draft: AppStore) => {
-        draft.player.isReady = false;
-    }));
+    bundle.addReducer(ActionTypes.PlayerPreparing, (state: AppStore) => {
+        state.player.isReady = false;
+    });
 
     bundle.defineAction(ActionTypes.PlayerPrepareProgress);
-    bundle.addReducer(ActionTypes.PlayerPrepareProgress, produce((draft: AppStore, {payload: {progress}}) => {
-        draft.player.progress = progress;
-    }));
+    bundle.addReducer(ActionTypes.PlayerPrepareProgress, (state: AppStore, {payload: {progress}}) => {
+        state.player.progress = progress;
+    });
 
     bundle.defineAction(ActionTypes.PlayerPrepareFailure);
-    bundle.addReducer(ActionTypes.PlayerPrepareFailure, produce((draft: AppStore, {payload: {message}}) => {
-        draft.player.error = {
+    bundle.addReducer(ActionTypes.PlayerPrepareFailure, (state: AppStore, {payload: {message}}) => {
+        state.player.error = {
             source: 'prepare',
             message
         };
-    }));
+    });
 
     bundle.defineAction(ActionTypes.PlayerReady);
-    bundle.addReducer(ActionTypes.PlayerReady, produce((draft: AppStore, {payload: {duration, data, instants}}) => {
-        draft.player.audioTime = 0;
-        draft.player.duration = duration;
-        draft.player.data = data;
-        draft.player.instants = instants;
-        draft.player.current = instants[0];
-    }));
+    bundle.addReducer(ActionTypes.PlayerReady, (state: AppStore, {payload: {duration, data, instants}}) => {
+        state.player.audioTime = 0;
+        state.player.duration = duration;
+        state.player.data = data;
+        state.player.instants = instants;
+        state.player.current = instants[0];
+    });
 
     bundle.defineAction(ActionTypes.PlayerStarted);
-    bundle.addReducer(ActionTypes.PlayerStarted, produce((draft: AppStore) => {
-        draft.player.isPlaying = true;
-    }));
+    bundle.addReducer(ActionTypes.PlayerStarted, (state: AppStore) => {
+        state.player.isPlaying = true;
+    });
 
     bundle.defineAction(ActionTypes.PlayerPaused);
-    bundle.addReducer(ActionTypes.PlayerPaused, produce((draft: AppStore) => {
-        draft.player.isPlaying = false;
-    }));
+    bundle.addReducer(ActionTypes.PlayerPaused, (state: AppStore) => {
+        state.player.isPlaying = false;
+    });
 
     bundle.defineAction(ActionTypes.PlayerTick);
-    bundle.addReducer(ActionTypes.PlayerTick, produce((draft: AppStore, {payload: {audioTime}}) => {
-        const instants = draft.player.instants;
+    bundle.addReducer(ActionTypes.PlayerTick, (state: AppStore, {payload: {audioTime}}) => {
+        const instants = state.player.instants;
 
-        draft.player.current = findInstant(instants, audioTime);
-        draft.player.audioTime = audioTime;
-    }));
+        state.player.current = findInstant(instants, audioTime);
+        state.player.audioTime = audioTime;
+    });
 
     bundle.defineAction(ActionTypes.PlayerVolumeChanged);
-    bundle.addReducer(ActionTypes.PlayerVolumeChanged, produce((draft: AppStore, {payload: {volume}}) => {
-        const audio = draft.player.audio;
+    bundle.addReducer(ActionTypes.PlayerVolumeChanged, (state: AppStore, {payload: {volume}}) => {
+        const audio = state.player.audio;
         audio.volume = volume;
 
-        draft.player.volume = audio.volume;
-    }));
+        state.player.volume = audio.volume;
+    });
 
     bundle.defineAction(ActionTypes.PlayerMutedChanged);
-    bundle.addReducer(ActionTypes.PlayerMutedChanged, produce((draft: AppStore, {payload: {isMuted}}) => {
-        const audio = draft.player.audio;
+    bundle.addReducer(ActionTypes.PlayerMutedChanged, (state: AppStore, {payload: {isMuted}}) => {
+        const audio = state.player.audio;
         audio.muted = isMuted;
 
-        draft.player.isMuted = audio.muted;
-    }));
+        state.player.isMuted = audio.muted;
+    });
 
     bundle.defineAction(ActionTypes.PlayerSeek);
     bundle.defineAction(ActionTypes.PlayerSeeked);
@@ -95,15 +90,10 @@ export interface PlayerInstant {
     pos: number, // index
     event: any[], // [t, eventName, args...]
     range?: any, // TODO: What is this ?
-    state: {
-        arduino: typeof initialStateArduino,
-        buffers: typeof initialStateBuffers,
-        compile: typeof initialStateCompile,
-        ioPane: typeof initialStateIoPane,
-        options: CodecastOptions,
-        stepper: StepperState
-    },
-    sagas: Function[]
+    state: AppStoreReplay,
+    sagas: any[],
+    jump?: boolean,
+    mute?: boolean
 }
 
 export const initialStatePlayer = {
@@ -124,11 +114,11 @@ export const initialStatePlayer = {
     }
 }
 
-function playerClear(draft: AppStore): void {
+function playerClear(state: AppStore): void {
     const audio = document.createElement('video');
 
-    draft.player.audio = audio;
-    draft.player.volume = audio.volume; /* TODO: load from localStorage? */
-    draft.player.isMuted = audio.muted; /* TODO: load from localStorage? */
-    draft.player.progress = 0;
+    state.player.audio = audio;
+    state.player.volume = audio.volume; /* TODO: load from localStorage? */
+    state.player.isMuted = audio.muted; /* TODO: load from localStorage? */
+    state.player.progress = 0;
 }

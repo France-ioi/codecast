@@ -1,11 +1,11 @@
 import {call, cancel, delay, fork, takeEvery} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.VumeterMounted);
-    bundle.addReducer(ActionTypes.VumeterMounted, produce(vumeterMountedReducer));
+    bundle.addReducer(ActionTypes.VumeterMounted, vumeterMountedReducer);
 
     bundle.addSaga(vumeterSaga);
 };
@@ -61,6 +61,6 @@ function* vumeterSaga() {
     }
 }
 
-function vumeterMountedReducer(draft: AppStore, {payload: {element}}): void {
-    draft.vumeterElement = element;
+function vumeterMountedReducer(state: AppStore, {payload: {element}}): void {
+    state.vumeterElement = element;
 }

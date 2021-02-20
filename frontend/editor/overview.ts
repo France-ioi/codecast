@@ -4,32 +4,32 @@ import {postJson} from '../common/utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from '../editor/actionTypes';
 import {ActionTypes as AppActionTypes} from '../actionTypes';
-import produce from "immer";
 import {AppStore} from "../store";
 import {EditorSaveState, initialStateEditor} from "./index";
+import {Bundle} from "../linker";
 
-export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
-        draft.editor = initialStateEditor;
-    }));
+export default function(bundle: Bundle) {
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
+        state.editor = initialStateEditor;
+    });
 
-    bundle.addReducer(EditorActionTypes.EditorPrepare, produce((draft: AppStore) => {
-        draft.editor = initialStateEditor;
-    }));
+    bundle.addReducer(EditorActionTypes.EditorPrepare, (state: AppStore) => {
+        state.editor = initialStateEditor;
+    });
 
     bundle.defineAction(ActionTypes.EditorPropertyChanged);
-    bundle.addReducer(ActionTypes.EditorPropertyChanged, produce(editorPropertyChangedReducer));
+    bundle.addReducer(ActionTypes.EditorPropertyChanged, editorPropertyChangedReducer);
 
     bundle.defineAction(ActionTypes.EditorSaveAudio);
 
     bundle.defineAction(ActionTypes.EditorSave);
-    bundle.addReducer(ActionTypes.EditorSave, produce(editorSaveReducer));
+    bundle.addReducer(ActionTypes.EditorSave, editorSaveReducer);
 
     bundle.defineAction(ActionTypes.EditorSaveFailed);
-    bundle.addReducer(ActionTypes.EditorSaveFailed, produce(editorSaveFailedReducer));
+    bundle.addReducer(ActionTypes.EditorSaveFailed, editorSaveFailedReducer);
 
     bundle.defineAction(ActionTypes.EditorSaveSucceeded);
-    bundle.addReducer(ActionTypes.EditorSaveSucceeded, produce(editorSaveSucceededReducer));
+    bundle.addReducer(ActionTypes.EditorSaveSucceeded, editorSaveSucceededReducer);
 
     bundle.addSaga(function* editorOverviewSaga() {
         yield takeLatest(ActionTypes.EditorSaveAudio, editorSaveAudioSaga);
@@ -37,26 +37,26 @@ export default function(bundle) {
     });
 }
 
-function editorPropertyChangedReducer(draft: AppStore, {payload: {key, value}}): void {
-    if (draft.editor.save.state != EditorSaveState.Pending) {
-        draft.editor.data[key] = value;
-        draft.editor.save.state = EditorSaveState.Idle;
-        draft.editor.unsaved = true;
+function editorPropertyChangedReducer(state: AppStore, {payload: {key, value}}): void {
+    if (state.editor.save.state != EditorSaveState.Pending) {
+        state.editor.data[key] = value;
+        state.editor.save.state = EditorSaveState.Idle;
+        state.editor.unsaved = true;
     }
 }
 
-function editorSaveReducer(draft: AppStore): void {
-    draft.editor.save.state = EditorSaveState.Pending;
+function editorSaveReducer(state: AppStore): void {
+    state.editor.save.state = EditorSaveState.Pending;
 }
 
-function editorSaveFailedReducer(draft: AppStore, {payload: {error}}) {
-    draft.editor.save.state = EditorSaveState.Failure;
-    draft.editor.save.error = error;
+function editorSaveFailedReducer(state: AppStore, {payload: {error}}) {
+    state.editor.save.state = EditorSaveState.Failure;
+    state.editor.save.error = error;
 }
 
-function editorSaveSucceededReducer(draft: AppStore): void {
-    draft.editor.save.state = EditorSaveState.Success;
-    draft.editor.unsaved = false;
+function editorSaveSucceededReducer(state: AppStore): void {
+    state.editor.save.state = EditorSaveState.Success;
+    state.editor.unsaved = false;
 }
 
 function* editorSaveAudioSaga() {

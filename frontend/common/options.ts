@@ -2,19 +2,19 @@ import {clearStepper} from '../stepper';
 import {initialStateCompile} from "../stepper/compile";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
-import produce from "immer";
+import {Bundle} from "../linker";
 
-export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft, {payload: {options}}) => {
-        draft.options = options;
-    }));
+export default function(bundle: Bundle) {
+    bundle.addReducer(AppActionTypes.AppInit, (state, {payload: {options}}) => {
+        state.options = options;
+    });
 
     bundle.defineAction(ActionTypes.PlatformChanged);
-    bundle.addReducer(ActionTypes.PlatformChanged, produce((draft, {payload: platform}) => {
-        draft.options.platform = platform;
+    bundle.addReducer(ActionTypes.PlatformChanged, (state, {payload: platform}) => {
+        state.options.platform = platform;
 
-        clearStepper(draft.stepper);
+        clearStepper(state.stepper);
 
-        draft.compile = initialStateCompile;
-    }));
+        state.compile = initialStateCompile;
+    });
 }

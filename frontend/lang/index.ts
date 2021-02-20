@@ -2,16 +2,16 @@ import IntlMessageFormat from 'intl-messageformat';
 import memoize from 'lodash.memoize';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
 export const Languages = {
     'en-US': require('./en-US.js'),
     'fr-FR': require('./fr-FR.js'),
 };
 
-export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft, {payload: {options}}) => {
+export default function(bundle: Bundle) {
+    bundle.addReducer(AppActionTypes.AppInit, (state, {payload: {options}}) => {
         let language = 'en-US';
         if (navigator.language in Languages) {
             language = navigator.language;
@@ -23,11 +23,11 @@ export default function(bundle) {
             language = options.language;
         }
 
-        return setLanguageReducer(draft, {payload: {language}});
-    }));
+        return setLanguageReducer(state, {payload: {language}});
+    });
 
     bundle.defineAction(ActionTypes.LanguageSet);
-    bundle.addReducer(ActionTypes.LanguageSet, produce(setLanguageReducer));
+    bundle.addReducer(ActionTypes.LanguageSet, setLanguageReducer);
 }
 
 const Message = {
@@ -50,7 +50,7 @@ Object.defineProperty(Message, 's', {
     }
 });
 
-function setLanguageReducer(draft: AppStore, {payload: {language}}) {
+function setLanguageReducer(state: AppStore, {payload: {language}}) {
     if (!Languages[language]) {
         language = 'en-US';
     }
@@ -83,8 +83,8 @@ function setLanguageReducer(draft: AppStore, {payload: {language}}) {
         return getMessage(value.toString());
     }
 
-    draft.options.language = language;
-    draft.getMessage = getMessage;
+    state.options.language = language;
+    state.getMessage = getMessage;
 }
 
 export class LocalizedError extends Error {

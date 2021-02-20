@@ -1,7 +1,6 @@
-import {List} from 'immutable';
 import {ActionTypes} from "./actionTypes";
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
 /*
 
@@ -41,65 +40,65 @@ export const initialStateRecorder = {
     events: [] as any[] // TODO: type
 }
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.RecorderPreparing);
-    bundle.addReducer(ActionTypes.RecorderPreparing, produce((draft: AppStore, action) => {
+    bundle.addReducer(ActionTypes.RecorderPreparing, (state: AppStore, action) => {
         const {progress} = action;
 
-        draft.recorder.status = RecorderStatus.Preparing;
-        draft.recorder.progress = progress;
-    }));
+        state.recorder.status = RecorderStatus.Preparing;
+        state.recorder.progress = progress;
+    });
 
     bundle.defineAction(ActionTypes.RecorderReady);
-    bundle.addReducer(ActionTypes.RecorderReady, produce((draft: AppStore, {payload: {recorderContext}}) => {
-        draft.recorder.status = RecorderStatus.Ready;
-        draft.recorder.context = recorderContext;
-        draft.recorder.junkTime = 0;
-    }));
+    bundle.addReducer(ActionTypes.RecorderReady, (state: AppStore, {payload: {recorderContext}}) => {
+        state.recorder.status = RecorderStatus.Ready;
+        state.recorder.context = recorderContext;
+        state.recorder.junkTime = 0;
+    });
 
     bundle.defineAction(ActionTypes.RecorderStarting);
-    bundle.addReducer(ActionTypes.RecorderStarting, produce((draft: AppStore) => {
-        draft.recorder.status = RecorderStatus.Starting;
-    }));
+    bundle.addReducer(ActionTypes.RecorderStarting, (state: AppStore) => {
+        state.recorder.status = RecorderStatus.Starting;
+    });
 
     bundle.defineAction(ActionTypes.RecorderStarted);
-    bundle.addReducer(ActionTypes.RecorderStarted, produce((draft: AppStore) => {
-        draft.recorder.status = RecorderStatus.Recording;
-        draft.recorder.timeOffset = 0;
-        draft.recorder.lastEventTime = 0;
-        draft.recorder.events = [];
-        draft.recorder.elapsed = 0;
-    }));
+    bundle.addReducer(ActionTypes.RecorderStarted, (state: AppStore) => {
+        state.recorder.status = RecorderStatus.Recording;
+        state.recorder.timeOffset = 0;
+        state.recorder.lastEventTime = 0;
+        state.recorder.events = [];
+        state.recorder.elapsed = 0;
+    });
 
     bundle.defineAction(ActionTypes.RecorderStartFailed);
-    bundle.addReducer(ActionTypes.RecorderStartFailed, produce((draft: AppStore) => {
-        draft.recorder.status = RecorderStatus.StartFailed;
-    }));
+    bundle.addReducer(ActionTypes.RecorderStartFailed, (state: AppStore) => {
+        state.recorder.status = RecorderStatus.StartFailed;
+    });
 
     bundle.defineAction(ActionTypes.RecorderStopping);
-    bundle.addReducer(ActionTypes.RecorderStopping, produce((draft: AppStore) => {
-        draft.recorder.status = RecorderStatus.Stopping;
-    }));
+    bundle.addReducer(ActionTypes.RecorderStopping, (state: AppStore) => {
+        state.recorder.status = RecorderStatus.Stopping;
+    });
 
     bundle.defineAction(ActionTypes.RecorderStopped);
-    bundle.addReducer(ActionTypes.RecorderStopped, produce((draft: AppStore) => {
-        draft.recorder.status = RecorderStatus.Stopped;
-    }));
+    bundle.addReducer(ActionTypes.RecorderStopped, (state: AppStore) => {
+        state.recorder.status = RecorderStatus.Stopped;
+    });
 
     bundle.defineAction(ActionTypes.RecorderPausing);
-    bundle.addReducer(ActionTypes.RecorderPausing, produce((draft: AppStore) => {
-        draft.recorder.status = RecorderStatus.Pausing;
-    }));
+    bundle.addReducer(ActionTypes.RecorderPausing, (state: AppStore) => {
+        state.recorder.status = RecorderStatus.Pausing;
+    });
 
     bundle.defineAction(ActionTypes.RecorderPaused);
-    bundle.addReducer(ActionTypes.RecorderPaused, produce((draft: AppStore) => {
-        draft.recorder.status = RecorderStatus.Paused;
-    }));
+    bundle.addReducer(ActionTypes.RecorderPaused, (state: AppStore) => {
+        state.recorder.status = RecorderStatus.Paused;
+    });
 
     bundle.defineAction(ActionTypes.RecorderTick);
-    bundle.addReducer(ActionTypes.RecorderTick, produce((draft: AppStore, action) => {
+    bundle.addReducer(ActionTypes.RecorderTick, (state: AppStore, action) => {
         const {elapsed} = action;
 
-        draft.recorder.elapsed = elapsed;
-    }));
+        state.recorder.elapsed = elapsed;
+    });
 };

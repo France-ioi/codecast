@@ -11,22 +11,26 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {getPlayerState} from "./selectors";
-import {StepperState, StepperStepMode} from "../stepper";
-import {AppStore} from "../store";
+import {StepperStepMode} from "../stepper";
+import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "./index";
+import {Bundle} from "../linker";
+import {StepperContext} from "../stepper/api";
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
 };
 
 export interface ReplayContext {
-    state: StepperState,
+    state: AppStoreReplay,
     events: any[],
     instants: PlayerInstant[],
     instant: PlayerInstant,
-    applyEvent: Function,
+    applyEvent: any,
     addSaga: Function,
-    reportProgress: Function,
+    reportProgress: any,
+    stepperDone: any,
+    stepperContext: StepperContext
 }
 
 function* playerSaga(action) {
@@ -107,12 +111,13 @@ function* playerPrepare(app, action) {
         replayState.options = data.options;
     }
 
-    console.error('what is state ?');
     const replayContext: ReplayContext = {
-        // @ts-ignore
-        state: replayState,
+        state: replayState as AppStore,
         events: data.events,
         instants: [],
+        instant: null,
+        stepperContext: null,
+        stepperDone: null,
         applyEvent: replayApi.applyEvent,
         addSaga,
         reportProgress,
@@ -128,10 +133,13 @@ function* playerPrepare(app, action) {
 
         yield call(resetToAudioTime, app, 0);
     } catch (ex) {
+        console.log(ex);
+
         yield put({
             type: ActionTypes.PlayerPrepareFailure,
             payload: {message: `${ex.toString()}`, context: replayContext}
         });
+
         return null;
     } finally {
         chan.close();
@@ -154,7 +162,7 @@ function* playerPrepare(app, action) {
     }
 }
 
-function* computeInstants(replayContext) {
+function* computeInstants(replayContext: ReplayContext) {
     /* CONSIDER: create a redux store, use the replayApi to convert each event
        to an action that is dispatched to the store (which must have an
        appropriate reducer) plus an optional saga to be called during playback. */
@@ -201,7 +209,9 @@ function* computeInstants(replayContext) {
         replayContext.instant = instant;
 
         console.log('-------- REPLAY ---- EVENT ----', key, event);
+        console.log('replayContextState', replayContext.state);
         yield call(replayContext.applyEvent, key, replayContext, event);
+        console.log('replayContextState_after', replayContext.state);
 
         /* Preserve the last explicitly set range. */
         // TODO: Is this used ?
@@ -326,7 +336,7 @@ function* replaySaga(app, {type, payload}) {
     yield put({type: ActionTypes.PlayerPause});
 }
 
-function* replayToAudioTime(app, instants, startTime, endTime) {
+function* replayToAudioTime(app, instants: PlayerInstant[], startTime: number, endTime: number) {
     let instantIndex = findInstantIndex(instants, startTime);
     const nextInstantIndex = findInstantIndex(instants, endTime);
     if (instantIndex === nextInstantIndex) {
@@ -346,6 +356,7 @@ function* replayToAudioTime(app, instants, startTime, endTime) {
             yield put({type: ActionTypes.PlayerMutedChanged, payload: {isMuted: instant.mute}});
         }
         if (instant.hasOwnProperty('jump')) {
+            // @ts-ignore
             yield call(jumpToAudioTime, app, instant.jump);
 
             return;
@@ -412,7 +423,7 @@ function* restartStepper() {
     }
 }
 
-function* jumpToAudioTime(app, audioTime) {
+function* jumpToAudioTime(app, audioTime: number) {
     /* Jump and full reset to the specified audioTime. */
     const state: AppStore = yield select();
     const player = getPlayerState(state);

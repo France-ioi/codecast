@@ -16,8 +16,9 @@ import clientApiBundle from './client_api';
 import subtitlesBundle from '../subtitles';
 import examplesBundle from './examples';
 import stepperBundle from '../stepper';
+import {Bundle} from "../linker";
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.include(errorBundle);
 
     /* The player and recorder bundles must be included early to allow other

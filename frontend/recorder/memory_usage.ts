@@ -2,23 +2,23 @@ import {put, takeEvery} from 'redux-saga/effects';
 import {buffers} from 'redux-saga';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
 export const initialStateMemoryUsage = {
     heapSize: 0
 };
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.MemoryUsageChanged);
 
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
-        draft.memoryUsage = initialStateMemoryUsage;
-    }));
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
+        state.memoryUsage = initialStateMemoryUsage;
+    });
 
-    bundle.addReducer(ActionTypes.MemoryUsageChanged, produce((draft: AppStore, {payload}) => {
-        draft.memoryUsage = payload;
-    }));
+    bundle.addReducer(ActionTypes.MemoryUsageChanged, (state: AppStore, {payload}) => {
+        state.memoryUsage = payload;
+    });
 
     bundle.addSaga(function* () {
         yield takeEvery(ActionTypes.RecorderPreparing, function* (action) {

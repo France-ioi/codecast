@@ -15,9 +15,10 @@ import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {getPlayerState} from "../player/selectors";
 import {getRecorderState} from "./selectors";
-import produce from "immer";
 import {AppStore} from "../store";
 import {RecorderStatus} from "./store";
+import {ReplayContext} from "../player/sagas";
+import {App} from "../index";
 
 export default function(bundle, deps) {
     bundle.use('recordApi');
@@ -25,19 +26,19 @@ export default function(bundle, deps) {
     bundle.defineAction(ActionTypes.RecorderResume);
 
     bundle.defineAction(ActionTypes.RecorderResuming);
-    bundle.addReducer(ActionTypes.RecorderResuming, produce((draft: AppStore) => {
-        draft.recorder.status = RecorderStatus.Resuming;
-    }));
+    bundle.addReducer(ActionTypes.RecorderResuming, (state: AppStore) => {
+        state.recorder.status = RecorderStatus.Resuming;
+    });
 
     bundle.defineAction(ActionTypes.RecorderResumed);
-    bundle.addReducer(ActionTypes.RecorderResumed, produce((draft: AppStore) => {
-        draft.recorder.status = RecorderStatus.Recording;
-    }));
+    bundle.addReducer(ActionTypes.RecorderResumed, (state: AppStore) => {
+        state.recorder.status = RecorderStatus.Recording;
+    });
 
     bundle.defineAction(ActionTypes.AudioContextSuspended);
-    bundle.addReducer(ActionTypes.AudioContextSuspended, produce((draft: AppStore, {payload: {audioTime}}) => {
-        draft.recorder.suspendedAt = audioTime;
-    }));
+    bundle.addReducer(ActionTypes.AudioContextSuspended, (state: AppStore, {payload: {audioTime}}) => {
+        state.recorder.suspendedAt = audioTime;
+    });
 
     bundle.addSaga(function* watchRecorderPrepare() {
         yield takeLatest(ActionTypes.RecorderPrepare, recorderPrepare);
@@ -72,17 +73,17 @@ export default function(bundle, deps) {
         yield takeEvery(ActionTypes.RecorderResume, recorderResume);
     });
 
-    bundle.defer(function({replayApi}) {
-        replayApi.on('end', function(replayContext, event) {
+    bundle.defer(function({replayApi}: App) {
+        replayApi.on('end', function(replayContext: ReplayContext) {
             replayContext.instant.isEnd = true;
-            replayContext.state = replayContext.state.set('stopped', true);
+            replayContext.state.stopped = true;
         });
     });
 
     function* recorderPrepare() {
         try {
             /* Show 'record' screen to user. */
-            yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'record'}});
+            yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'record'}});
 
             // Clean up any previous audioContext and worker.
             const state: AppStore = yield select();
@@ -269,7 +270,7 @@ export default function(bundle, deps) {
             yield put({type: CommonActionTypes.Error, source: 'recorderPause', error});
         }
 
-        function* pauseExportProgressSaga(progress) {
+        function* pauseExportProgressSaga() {
             // console.log('pause', progress);
         }
     }

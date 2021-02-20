@@ -12,7 +12,7 @@ export enum ActionTypes {
     LoginFeedback = 'Login.Feedback',
     LogoutFeedback = 'Logout.Feedback',
 
-    SystemSwitchToScreen = 'System.Switch.To.Screen',
+    AppSwitchToScreen = 'App.Switch.To.Screen',
 
     PlatformChanged = 'Platform.Changed',
 

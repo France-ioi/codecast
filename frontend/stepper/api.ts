@@ -11,24 +11,30 @@ import * as C from 'persistent-c';
 import {all, call} from 'redux-saga/effects';
 import {getNewOutput, getNewTerminal} from "./python";
 import {clearLoadedReferences} from "./python/analysis/analysis";
-import {AppStore} from "../store";
+import {AppStore, AppStoreReplay} from "../store";
 import {initialStepperStateControls, StepperState} from "./index";
+import {Bundle} from "../linker";
 
-interface StepperContext {
+export interface StepperContext {
     state: StepperState,
     interrupted?: boolean,
-    interact: Function,
+    interact: Function | null,
+    resume: Function | null,
     position: any,
     lineCounter: number
 }
 
-export default function(bundle) {
-    bundle.defineValue('stepperApi', {
-        onInit,
-        addSaga,
-        onEffect, /* (name, handler: function* (stepperContext, …args)) -- register an effect */
-        addBuiltin, /* (name, handler: function* (stepperContext, …args)) -- register a builtin */
-    });
+const stepperApi = {
+    onInit,
+    addSaga,
+    onEffect,
+    addBuiltin,
+};
+
+export type StepperApi = typeof stepperApi;
+
+export default function(bundle: Bundle) {
+    bundle.defineValue('stepperApi', stepperApi);
 }
 
 const initCallbacks = [];
@@ -37,12 +43,12 @@ const effectHandlers = new Map();
 const builtinHandlers = new Map();
 
 /* Register a setup callback for the stepper's initial state. */
-function onInit(callback: (stepperState: {}, state: AppStore) => void): void {
+function onInit(callback: (stepperState: StepperState, state: AppStore) => void): void {
     initCallbacks.push(callback);
 }
 
 /* Build a stepper state from the given init data. */
-export async function buildState(state: AppStore): Promise<StepperState> {
+export async function buildState(state: AppStoreReplay): Promise<StepperState> {
     const {platform} = state.options;
 
     /*
@@ -61,10 +67,13 @@ export async function buildState(state: AppStore): Promise<StepperState> {
     const stepperState = curStepperState as StepperState;
 
     /* Run until in user code */
-    const stepperContext = {
+    const stepperContext: StepperContext = {
         state: stepperState,
-        interact
-    };
+        interact,
+        resume: null,
+        position: 0,
+        lineCounter: 0
+    } as StepperContext;
 
     if (stepperContext.state.platform === 'python') {
         return stepperContext.state;
@@ -92,7 +101,7 @@ export async function buildState(state: AppStore): Promise<StepperState> {
 }
 
 /* Register a saga to run inside the stepper task. */
-function addSaga(saga) {
+function addSaga(saga): void {
     stepperSagas.push(saga);
 }
 
@@ -103,29 +112,30 @@ export function* rootStepperSaga(...args) {
 
 /* An effect is a generator that may alter the stepperContext/state/programState, and
    yield further effects. */
-function onEffect(name, handler) {
+function onEffect(name: string, handler: (stepperContext: StepperContext, ...args) => void): void {
     /* TODO: guard against duplicate effects? allow multiple handlers for a
              single effect? */
     effectHandlers.set(name, handler);
 }
 
 /* Register a builtin. A builtin is a generator that yields effects. */
-function addBuiltin(name, handler) {
+function addBuiltin(name: string, handler: (stepperContext: StepperContext, ...args) => void): void {
     /* TODO: guard against duplicate builtins */
     builtinHandlers.set(name, handler);
 }
 
-function getNodeStartRow(state) {
-    if (!state) {
+function getNodeStartRow(stepperState: StepperState) {
+    if (!stepperState) {
         return undefined;
     }
 
-    const {control} = state.programState;
+    const {control} = stepperState.programState;
     if (!control || !control.node) {
         return undefined;
     }
 
     const {range} = control.node[1];
+
     return range && range.start.row;
 }
 
@@ -140,6 +150,7 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
                 controls: resetControls(state.controls)
             },
             interact,
+            resume: null,
             position: getNodeStartRow(state),
             lineCounter: 0
         };
@@ -152,6 +163,7 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
                 controls: resetControls(state.controls)
             },
             interact,
+            resume: null,
             position: getNodeStartRow(state),
             lineCounter: 0
         };
@@ -163,7 +175,7 @@ function resetControls(controls) {
     return initialStepperStateControls;
 }
 
-async function executeEffects(stepperContext, iterator) {
+async function executeEffects(stepperContext: StepperContext, iterator) {
     let lastResult;
     while (true) {
         /* Pull the next effect from the builtin's iterator. */
@@ -192,7 +204,7 @@ async function executeEffects(stepperContext, iterator) {
     }
 }
 
-async function executeSingleStep(stepperContext) {
+async function executeSingleStep(stepperContext: StepperContext) {
     if (isStuck(stepperContext.state)) {
         throw new StepperError('stuck', 'execution cannot proceed');
     }
@@ -257,7 +269,7 @@ async function executeSingleStep(stepperContext) {
     }
 }
 
-async function stepUntil(stepperContext, stopCond = undefined) {
+async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
     let stop = false;
     while (true) {
         if (isStuck(stepperContext.state)) {
@@ -283,14 +295,14 @@ async function stepUntil(stepperContext, stopCond = undefined) {
     }
 }
 
-async function stepExpr(stepperContext) {
+async function stepExpr(stepperContext: StepperContext) {
     // Take a first step.
     await executeSingleStep(stepperContext);
     // Step into the next expression.
     await stepUntil(stepperContext, C.intoNextExpr);
 }
 
-async function stepInto(stepperContext) {
+async function stepInto(stepperContext: StepperContext) {
     // Take a first step.
     await executeSingleStep(stepperContext);
 
@@ -302,7 +314,7 @@ async function stepInto(stepperContext) {
     }
 }
 
-async function stepOut(stepperContext) {
+async function stepOut(stepperContext: StepperContext) {
     // The program must be running.
     if (!isStuck(stepperContext.state)) {
         if (stepperContext.state.platform === 'python') {
@@ -329,7 +341,7 @@ async function stepOut(stepperContext) {
     return stepperContext;
 }
 
-async function stepOver(stepperContext) {
+async function stepOver(stepperContext: StepperContext) {
     if (stepperContext.state.platform === 'python') {
         if (stepperContext.state.suspensions) {
             const nbSuspensions = stepperContext.state.suspensions.length;
@@ -363,7 +375,7 @@ async function stepOver(stepperContext) {
     }
 }
 
-export async function performStep(stepperContext, mode) {
+export async function performStep(stepperContext: StepperContext, mode) {
     switch (mode) {
         case 'run':
             await stepUntil(stepperContext);
@@ -384,19 +396,19 @@ export async function performStep(stepperContext, mode) {
 }
 
 
-function isStuck(state) {
-    if (state.platform === 'python') {
-        return state.analysis.isFinished;
+function isStuck(stepperState: StepperState): boolean {
+    if (stepperState.platform === 'python') {
+        return stepperState.analysis.isFinished;
     } else {
-        return !state.programState.control;
+        return !stepperState.programState.control;
     }
 }
 
-function inUserCode(state) {
-    if (state.platform === 'python') {
+function inUserCode(stepperState: StepperState) {
+    if (stepperState.platform === 'python') {
         return true;
     } else {
-        return !!state.programState.control.node[1].begin;
+        return !!stepperState.programState.control.node[1].begin;
     }
 }
 

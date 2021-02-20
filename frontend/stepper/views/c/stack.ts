@@ -1,11 +1,11 @@
-export default function(bundle) {
-    bundle.defer(function({stepperApi}) {
-        stepperApi.onInit(function(stepperState) {
-            stepperState.controls = {
-                stack: {
-                    focusDepth: 0
-                }
-            };
+import {initialStepperStateControls, StepperState} from "../../index";
+import {Bundle} from "../../../linker";
+import {App} from "../../../index";
+
+export default function(bundle: Bundle) {
+    bundle.defer(function({stepperApi}: App) {
+        stepperApi.onInit(function(stepperState: StepperState) {
+            stepperState.controls = initialStepperStateControls;
         });
     });
 };

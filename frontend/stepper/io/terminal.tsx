@@ -3,16 +3,19 @@ import React from 'react';
 import {call, select, takeEvery} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
 import produce, {immerable} from "immer";
-import {AppStore} from "../../store";
+import {AppStore, AppStoreReplay} from "../../store";
+import {ReplayContext} from "../../player/sagas";
+import {Bundle} from "../../linker";
+import {App} from "../../index";
 
 export const initialStateTerminal = {} as any;
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.TerminalInit);
-    bundle.addReducer(ActionTypes.TerminalInit, produce((draft: AppStore, {terminalElement}) => {
-        draft.terminal = initialStateTerminal;
-        draft.terminalElement = terminalElement;
-    }));
+    bundle.addReducer(ActionTypes.TerminalInit, (state: AppStore, {terminalElement}) => {
+        state.terminal = initialStateTerminal;
+        state.terminalElement = terminalElement;
+    });
 
     bundle.defineAction(ActionTypes.TerminalFocus);
 
@@ -27,38 +30,38 @@ export default function(bundle) {
     });
 
     bundle.defineAction(ActionTypes.TerminalInputNeeded);
-    bundle.addReducer(ActionTypes.TerminalInputNeeded, produce(terminalInputNeededReducer));
+    bundle.addReducer(ActionTypes.TerminalInputNeeded, terminalInputNeededReducer);
 
-    function terminalInputNeededReducer(draft: AppStore): void {
-        draft.stepper.currentStepperState.isWaitingOnInput = true;
+    function terminalInputNeededReducer(state: AppStoreReplay): void {
+        state.stepper.currentStepperState.isWaitingOnInput = true;
     }
 
     bundle.defineAction(ActionTypes.TerminalInputKey);
-    bundle.addReducer(ActionTypes.TerminalInputKey, produce(terminalInputKeyReducer));
+    bundle.addReducer(ActionTypes.TerminalInputKey, terminalInputKeyReducer);
 
-    function terminalInputKeyReducer(draft: AppStore, action) {
+    function terminalInputKeyReducer(state: AppStoreReplay, action) {
         const {key} = action;
 
-        draft.stepper.currentStepperState.inputBuffer = draft.stepper.currentStepperState.inputBuffer + key;
+        state.stepper.currentStepperState.inputBuffer = state.stepper.currentStepperState.inputBuffer + key;
     }
 
     bundle.defineAction(ActionTypes.TerminalInputBackspace);
-    bundle.addReducer(ActionTypes.TerminalInputBackspace, produce(terminalInputBackspaceReducer));
+    bundle.addReducer(ActionTypes.TerminalInputBackspace, terminalInputBackspaceReducer);
 
-    function terminalInputBackspaceReducer(draft: AppStore): void {
-        draft.stepper.currentStepperState.inputBuffer = draft.stepper.currentStepperState.inputBuffer.slice(0, -1)
+    function terminalInputBackspaceReducer(state: AppStoreReplay): void {
+        state.stepper.currentStepperState.inputBuffer = state.stepper.currentStepperState.inputBuffer.slice(0, -1)
     }
 
     bundle.defineAction(ActionTypes.TerminalInputEnter);
-    bundle.addReducer(ActionTypes.TerminalInputEnter, produce(terminalInputEnterReducer));
+    bundle.addReducer(ActionTypes.TerminalInputEnter, terminalInputEnterReducer);
 
-    function terminalInputEnterReducer(draft: AppStore): void {
-        const inputLine = draft.stepper.currentStepperState.inputBuffer + '\n'
-        const newInput = draft.stepper.currentStepperState.input + inputLine;
+    function terminalInputEnterReducer(state: AppStoreReplay): void {
+        const inputLine = state.stepper.currentStepperState.inputBuffer + '\n'
+        const newInput = state.stepper.currentStepperState.input + inputLine;
 
         let newTerminal;
-        let newInputPos = draft.stepper.currentStepperState.inputPos;
-        if (draft.stepper.currentStepperState.platform === 'python') {
+        let newInputPos = state.stepper.currentStepperState.inputPos;
+        if (state.stepper.currentStepperState.platform === 'python') {
             newTerminal = writeString(window.currentPythonRunner._terminal, inputLine);
 
             /**
@@ -77,45 +80,45 @@ export default function(bundle) {
             window.currentPythonRunner._input = newInput;
             window.currentPythonRunner._terminal = newTerminal;
         } else {
-            newTerminal = writeString(draft.stepper.currentStepperState.terminal, inputLine);
+            newTerminal = writeString(state.stepper.currentStepperState.terminal, inputLine);
         }
 
-        draft.stepper.currentStepperState.inputBuffer = '';
-        draft.stepper.currentStepperState.input = newInput;
-        draft.stepper.currentStepperState.inputPos = newInputPos;
-        draft.stepper.currentStepperState.terminal = newTerminal;
-        draft.stepper.currentStepperState.isWaitingOnInput = false;
+        state.stepper.currentStepperState.inputBuffer = '';
+        state.stepper.currentStepperState.input = newInput;
+        state.stepper.currentStepperState.inputPos = newInputPos;
+        state.stepper.currentStepperState.terminal = newTerminal;
+        state.stepper.currentStepperState.isWaitingOnInput = false;
     }
 
-    bundle.defer(function({recordApi, replayApi}) {
+    bundle.defer(function({recordApi, replayApi}: App) {
         recordApi.on(ActionTypes.TerminalInputNeeded, function* (addEvent) {
             yield call(addEvent, 'terminal.wait');
         });
-        replayApi.on('terminal.wait', function(replayContext) {
-            replayContext.state = produce(terminalInputNeededReducer.bind(this, replayContext.state));
+        replayApi.on('terminal.wait', function(replayContext: ReplayContext) {
+            terminalInputNeededReducer(replayContext.state);
         });
 
         recordApi.on(ActionTypes.TerminalInputKey, function* (addEvent, action) {
             yield call(addEvent, 'terminal.key', action.key);
         });
-        replayApi.on('terminal.key', function(replayContext, event) {
+        replayApi.on('terminal.key', function(replayContext: ReplayContext, event) {
             const key = event[2];
 
-            replayContext.state = produce(terminalInputKeyReducer.bind(this, replayContext.state, {key}));
+            terminalInputKeyReducer(replayContext.state, {key});
         });
 
         recordApi.on(ActionTypes.TerminalInputBackspace, function* (addEvent) {
             yield call(addEvent, 'terminal.backspace');
         });
-        replayApi.on('terminal.backspace', function(replayContext) {
-            replayContext.state = produce(terminalInputBackspaceReducer.bind(this, replayContext.state));
+        replayApi.on('terminal.backspace', function(replayContext: ReplayContext) {
+            terminalInputBackspaceReducer(replayContext.state);
         });
 
         recordApi.on(ActionTypes.TerminalInputEnter, function* (addEvent) {
             yield call(addEvent, 'terminal.enter');
         });
-        replayApi.on('terminal.enter', function(replayContext) {
-            replayContext.state = produce(terminalInputEnterReducer.bind(this, replayContext.state));
+        replayApi.on('terminal.enter', function(replayContext: ReplayContext) {
+            terminalInputEnterReducer(replayContext.state);
         });
     });
 };
@@ -169,45 +172,45 @@ export class TermBuffer {
     }
 }
 
-export const writeString = produce((draft: TermBuffer, str: string) => {
+export const writeString = produce((termBuffer: TermBuffer, str: string) => {
     for (let i = 0; i < str.length; i += 1) {
-        writeChar(draft, str[i]);
+        writeChar(termBuffer, str[i]);
     }
 });
 
-const writeChar = (draft: TermBuffer, char: string) => {
+const writeChar = (termBuffer: TermBuffer, char: string) => {
     if (char === '\n') {
-        writeNewline(draft);
+        writeNewline(termBuffer);
     } else if (char === '\r') {
         // Move the cursor to the beginning of the current line.
-        draft.cursor.column = 0;
+        termBuffer.cursor.column = 0;
     } else {
         // Write the caracter using the current attributes and
         // move the cursor.
-        draft.lines[draft.cursor.line][draft.cursor.column] = new Cell(char, draft.attrs);
+        termBuffer.lines[termBuffer.cursor.line][termBuffer.cursor.column] = new Cell(char, termBuffer.attrs);
 
-        const newColumn = draft.cursor.column + 1;
-        if (newColumn < draft.width) {
-            draft.cursor.column = newColumn;
+        const newColumn = termBuffer.cursor.column + 1;
+        if (newColumn < termBuffer.width) {
+            termBuffer.cursor.column = newColumn;
         } else {
-            writeNewline(draft);
+            writeNewline(termBuffer);
         }
     }
 };
 
-const writeNewline = (draft: TermBuffer) => {
+const writeNewline = (termBuffer: TermBuffer) => {
     // Move the cursor to the beginning of the next line.
-    draft.cursor.column = 0;
-    draft.cursor.line++;
+    termBuffer.cursor.column = 0;
+    termBuffer.cursor.line++;
 
     // Scroll by one line if needed.
-    if (draft.cursor.line === draft.height) {
-        const blankCell = new Cell(' ', draft.attrs);
-        const blankLine = new Array(draft.width).fill(blankCell);
+    if (termBuffer.cursor.line === termBuffer.height) {
+        const blankCell = new Cell(' ', termBuffer.attrs);
+        const blankLine = new Array(termBuffer.width).fill(blankCell);
 
-        draft.lines.shift();
-        draft.lines.push(blankLine);
+        termBuffer.lines.shift();
+        termBuffer.lines.push(blankLine);
 
-        draft.cursor.line = draft.height - 1;
+        termBuffer.cursor.line = termBuffer.height - 1;
     }
 };

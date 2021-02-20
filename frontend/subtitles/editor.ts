@@ -3,30 +3,28 @@
  */
 
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
-import update, {Spec} from 'immutability-helper';
 import {stringifySync} from 'subtitle';
 import FileSaver from 'file-saver';
-
 import {postJson} from '../common/utils';
 import {getSubtitles, updateCurrentItem} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import produce from "immer";
 import {AppStore} from "../store";
 import {initialStateSubtitles} from "./index";
+import {Bundle} from "../linker";
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.SubtitlesSelected);
-    bundle.addReducer(ActionTypes.SubtitlesSelected, produce(subtitlesSelectedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesSelected, subtitlesSelectedReducer);
 
     /* subtitlesAddOption adds a subtitles option to loaded recording. */
     bundle.defineAction(ActionTypes.SubtitlesAddOption);
-    bundle.addReducer(ActionTypes.SubtitlesAddOption, produce(subtitlesAddOptionReducer));
+    bundle.addReducer(ActionTypes.SubtitlesAddOption, subtitlesAddOptionReducer);
 
     /* subtitlesRemoveOption removes a subtitles option from the loaded recording. */
     bundle.defineAction(ActionTypes.SubtitlesRemoveOption);
-    bundle.addReducer(ActionTypes.SubtitlesRemoveOption, produce(subtitlesRemoveOptionReducer));
+    bundle.addReducer(ActionTypes.SubtitlesRemoveOption, subtitlesRemoveOptionReducer);
 
     /* subtitlesSaveOptions {key} opens a Save file dialog to save the current
        text for the subtitles option with the given key. */
@@ -42,7 +40,7 @@ export default function(bundle) {
        selected subtitles is changed.  If `unsaved` is a boolean the corresponding
        flag is set accordingly. */
     bundle.defineAction(ActionTypes.SubtitlesTextChanged);
-    bundle.addReducer(ActionTypes.SubtitlesTextChanged, produce(subtitlesTextChangedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesTextChanged, subtitlesTextChangedReducer);
 
     /* subtitlesEditorEnter switches to the subtitles editor view (player
        view with added controls to edit subtitle items for the selected
@@ -53,31 +51,31 @@ export default function(bundle) {
     bundle.defineAction(ActionTypes.SubtitlesEditorReturn);
 
     bundle.defineAction(ActionTypes.SubtitlesItemChanged);
-    bundle.addReducer(ActionTypes.SubtitlesItemChanged, produce(subtitlesItemChangedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesItemChanged, subtitlesItemChangedReducer);
 
     bundle.defineAction(ActionTypes.SubtitlesItemInserted);
-    bundle.addReducer(ActionTypes.SubtitlesItemInserted, produce(subtitlesItemInsertedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesItemInserted, subtitlesItemInsertedReducer);
 
     bundle.defineAction(ActionTypes.SubtitlesItemRemoved);
-    bundle.addReducer(ActionTypes.SubtitlesItemRemoved, produce(subtitlesItemRemovedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesItemRemoved, subtitlesItemRemovedReducer);
 
     bundle.defineAction(ActionTypes.SubtitlesItemShifted);
-    bundle.addReducer(ActionTypes.SubtitlesItemShifted, produce(subtitlesItemShiftedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesItemShifted, subtitlesItemShiftedReducer);
 
     /* subtitlesEditorSave is dispatched when the user clicks the 'Save' button
        on the setup screen. */
     bundle.defineAction(ActionTypes.SubtitlesEditorSave);
-    bundle.addReducer(ActionTypes.SubtitlesEditorSave, produce(subtitlesEditorSaveReducer));
+    bundle.addReducer(ActionTypes.SubtitlesEditorSave, subtitlesEditorSaveReducer);
 
     bundle.defineAction(ActionTypes.SubtitlesEditorSaveFailed);
-    bundle.addReducer(ActionTypes.SubtitlesEditorSaveFailed, produce(subtitlesEditorSaveFailedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesEditorSaveFailed, subtitlesEditorSaveFailedReducer);
 
     bundle.defineAction(ActionTypes.SubtitlesEditorSaveSucceeded);
-    bundle.addReducer(ActionTypes.SubtitlesEditorSaveSucceeded, produce(subtitlesEditorSaveSucceededReducer));
+    bundle.addReducer(ActionTypes.SubtitlesEditorSaveSucceeded, subtitlesEditorSaveSucceededReducer);
 
     /* subtitlesSave is dispatched when returning from the editor to the screen. */
     bundle.defineAction(ActionTypes.SubtitlesSave);
-    bundle.addReducer(ActionTypes.SubtitlesSave, produce(subtitlesSaveReducer));
+    bundle.addReducer(ActionTypes.SubtitlesSave, subtitlesSaveReducer);
 
     bundle.addSaga(subtitlesEditorSaga);
 }
@@ -93,61 +91,62 @@ function setUnsaved(subtitles: typeof initialStateSubtitles) {
     subtitles.unsaved = true;
 }
 
-function subtitlesSelectedReducer(draft: AppStore, {payload: {option}}): void {
-    clearNotify(draft.subtitles);
-    draft.subtitles.selectedKey = option.key;
+function subtitlesSelectedReducer(state: AppStore, {payload: {option}}): void {
+    clearNotify(state.subtitles);
+
+    state.subtitles.selectedKey = option.key;
 }
 
-function subtitlesAddOptionReducer(draft: AppStore, {payload: {key, select}}): void {
-    const option = draft.subtitles.availableOptions[key];
+function subtitlesAddOptionReducer(state: AppStore, {payload: {key, select}}): void {
+    const option = state.subtitles.availableOptions[key];
     if (!option) {
-        const base = draft.subtitles.langOptions.find(option => option.value === key);
+        const base = state.subtitles.langOptions.find(option => option.value === key);
 
-        draft.subtitles.availableOptions[key] = {
+        state.subtitles.availableOptions[key] = {
             key,
             text: '',
             unsaved: true,
             ...base
         }
     } else if (option.removed) {
-        draft.subtitles.availableOptions[key].removed = false;
+        state.subtitles.availableOptions[key].removed = false;
     }
-    if (select && draft.subtitles.availableOptions[key]) {
-        draft.subtitles.selectedKey = key;
+    if (select && state.subtitles.availableOptions[key]) {
+        state.subtitles.selectedKey = key;
     }
 
-    setUnsaved(draft.subtitles);
-    clearNotify(draft.subtitles);
+    setUnsaved(state.subtitles);
+    clearNotify(state.subtitles);
 }
 
-function subtitlesRemoveOptionReducer(draft: AppStore, {payload: {key}}): void {
-    draft.subtitles.availableOptions[key].removed = true;
-    if (draft.subtitles.selectedKey === key) {
-        draft.subtitles.selectedKey = null;
+function subtitlesRemoveOptionReducer(state: AppStore, {payload: {key}}): void {
+    state.subtitles.availableOptions[key].removed = true;
+    if (state.subtitles.selectedKey === key) {
+        state.subtitles.selectedKey = null;
     }
 
-    clearNotify(draft.subtitles);
+    clearNotify(state.subtitles);
 }
 
 
-function subtitlesTextChangedReducer(draft: AppStore, {payload: {text, unsaved}}): void {
-    const {selectedKey: key} = draft.subtitles;
+function subtitlesTextChangedReducer(state: AppStore, {payload: {text, unsaved}}): void {
+    const {selectedKey: key} = state.subtitles;
 
-    draft.subtitles.availableOptions[key].text = text;
+    state.subtitles.availableOptions[key].text = text;
     if (typeof unsaved === 'boolean') {
-        draft.subtitles.availableOptions[key].unsaved = unsaved;
+        state.subtitles.availableOptions[key].unsaved = unsaved;
     }
 
-    setUnsaved(draft.subtitles);
-    clearNotify(draft.subtitles);
+    setUnsaved(state.subtitles);
+    clearNotify(state.subtitles);
 }
 
-function subtitlesItemChangedReducer(draft: AppStore, {payload: {index, text}}): void {
-    draft.subtitles.items[index].data.text = text;
+function subtitlesItemChangedReducer(state: AppStore, {payload: {index, text}}): void {
+    state.subtitles.items[index].data.text = text;
 }
 
-function subtitlesItemInsertedReducer(draft: AppStore, {payload: {index, offset, where}}): void {
-    const {data: {start, end, text}} = draft.subtitles.items[index];
+function subtitlesItemInsertedReducer(state: AppStore, {payload: {index, offset, where}}): void {
+    const {data: {start, end, text}} = state.subtitles.items[index];
     const split = start + offset;
     if (start > split && split > end) {
         return;
@@ -155,7 +154,7 @@ function subtitlesItemInsertedReducer(draft: AppStore, {payload: {index, offset,
 
     let jumpTo = start;
     if (where === 'below') {
-        draft.subtitles.items = draft.subtitles.items.splice(index, 1, {
+        state.subtitles.items = state.subtitles.items.splice(index, 1, {
             data: {
                 start,
                 end: split - 1,
@@ -174,7 +173,7 @@ function subtitlesItemInsertedReducer(draft: AppStore, {payload: {index, offset,
         jumpTo = split;
     }
     if (where === 'above') {
-        draft.subtitles.items = draft.subtitles.items.splice(index, 1, {
+        state.subtitles.items = state.subtitles.items.splice(index, 1, {
             data: {
                 start,
                 end: split - 1,
@@ -193,24 +192,24 @@ function subtitlesItemInsertedReducer(draft: AppStore, {payload: {index, offset,
         jumpTo = start;
     }
 
-    return updateCurrentItem(draft.subtitles, jumpTo);
+    return updateCurrentItem(state.subtitles, jumpTo);
 }
 
-function subtitlesItemRemovedReducer(draft: AppStore, {payload: {index, merge}}): void {
+function subtitlesItemRemovedReducer(state: AppStore, {payload: {index, merge}}): void {
     if (index === 0 && merge === 'up') {
         return;
     }
-    if (index === draft.subtitles.items.length - 1 && merge === 'down') {
+    if (index === state.subtitles.items.length - 1 && merge === 'down') {
         return;
     }
 
     const otherIndex = merge === 'up' ? index - 1 : index + 1;
     const firstIndex = Math.min(index, otherIndex);
-    const {start} = draft.subtitles.items[firstIndex].data;
-    const {end} = draft.subtitles.items[firstIndex + 1].data;
-    const {text} = draft.subtitles.items[otherIndex].data;
+    const {start} = state.subtitles.items[firstIndex].data;
+    const {end} = state.subtitles.items[firstIndex + 1].data;
+    const {text} = state.subtitles.items[otherIndex].data;
 
-    draft.subtitles.items.splice(firstIndex, 2, {
+    state.subtitles.items.splice(firstIndex, 2, {
         data: {
             start,
             end,
@@ -219,12 +218,12 @@ function subtitlesItemRemovedReducer(draft: AppStore, {payload: {index, merge}})
         type: 'cue'
     });
 
-    const audioTime = draft.player.audioTime;
+    const audioTime = state.player.audioTime;
 
-    updateCurrentItem(draft.subtitles, audioTime);
+    updateCurrentItem(state.subtitles, audioTime);
 }
 
-function subtitlesItemShiftedReducer(draft: AppStore, {payload: {index, amount}}): void {
+function subtitlesItemShiftedReducer(state: AppStore, {payload: {index, amount}}): void {
     if (index === 0) {
         return;
     }
@@ -236,35 +235,35 @@ function subtitlesItemShiftedReducer(draft: AppStore, {payload: {index, amount}}
     /* The current item is not updated, otherwise its start could move
        backwards past audioTime, causing the item not to remain current,
        and disturbing further user action on the same item. */
-    draft.subtitles.items[index - 1].data.end = shift(draft.subtitles.items[index - 1].data.end);
-    draft.subtitles.items[index].data.start = shift(draft.subtitles.items[index].data.start);
+    state.subtitles.items[index - 1].data.end = shift(state.subtitles.items[index - 1].data.end);
+    state.subtitles.items[index].data.start = shift(state.subtitles.items[index].data.start);
 }
 
-function subtitlesSaveReducer(draft: AppStore): void {
-    const {selectedKey: key, items} = draft.subtitles;
+function subtitlesSaveReducer(state: AppStore): void {
+    const {selectedKey: key, items} = state.subtitles;
     const text = stringifySync(items, {
         format: 'SRT'
     });
 
-    clearNotify(draft.subtitles);
+    clearNotify(state.subtitles);
 
-    draft.subtitles.availableOptions[key].text = text;
+    state.subtitles.availableOptions[key].text = text;
 }
 
-function subtitlesEditorSaveReducer(draft: AppStore): void {
-    draft.subtitles.notify.key = 'pending';
+function subtitlesEditorSaveReducer(state: AppStore): void {
+    state.subtitles.notify.key = 'pending';
 }
 
-function subtitlesEditorSaveFailedReducer(draft: AppStore, {payload: {error}}): void {
-    draft.subtitles.notify.key = 'failure';
-    draft.subtitles.notify.message = error.toString();
+function subtitlesEditorSaveFailedReducer(state: AppStore, {payload: {error}}): void {
+    state.subtitles.notify.key = 'failure';
+    state.subtitles.notify.message = error.toString();
 }
 
-function subtitlesEditorSaveSucceededReducer(draft: AppStore): void {
-    draft.subtitles.unsaved = false;
-    draft.subtitles.notify.key = 'success';
+function subtitlesEditorSaveSucceededReducer(state: AppStore): void {
+    state.subtitles.unsaved = false;
+    state.subtitles.notify.key = 'success';
 
-    clearAllUnsaved(draft.subtitles.availableOptions);
+    clearAllUnsaved(state.subtitles.availableOptions);
 }
 
 function clearAllUnsaved(options: typeof initialStateSubtitles.availableOptions) {
@@ -300,14 +299,14 @@ function* subtitlesEditorEnterSaga(state, _action) {
         }
     });
     yield put({type: ActionTypes.SubtitlesReload});
-    yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'edit'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'edit'}});
 }
 
 function* subtitlesEditorReturnSaga(state, _action) {
     yield put({type: ActionTypes.SubtitlesSave});
     yield put({type: ActionTypes.SubtitlesEditingChanged, payload: {editing: false}});
     yield put({type: EditorActionTypes.EditorControlsChanged, payload: {controls: 'none'}});
-    yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'setup'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'setup'}});
 }
 
 function* subtitlesEditorSaveSaga(state: AppStore, _action) {

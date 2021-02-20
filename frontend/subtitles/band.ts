@@ -1,27 +1,27 @@
 import {ActionTypes} from "./actionTypes";
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.SubtitlesBandBeginMove);
-    bundle.addReducer(ActionTypes.SubtitlesBandBeginMove, produce(subtitlesBandBeginMoveReducer));
+    bundle.addReducer(ActionTypes.SubtitlesBandBeginMove, subtitlesBandBeginMoveReducer);
 
     bundle.defineAction(ActionTypes.SubtitlesBandEndMove);
-    bundle.addReducer(ActionTypes.SubtitlesBandEndMove, produce(subtitlesBandEndMoveReducer));
+    bundle.addReducer(ActionTypes.SubtitlesBandEndMove, subtitlesBandEndMoveReducer);
 
     bundle.defineAction(ActionTypes.SubtitlesBandMoved);
-    bundle.addReducer(ActionTypes.SubtitlesBandMoved, produce(subtitlesBandMovedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesBandMoved, subtitlesBandMovedReducer);
 }
 
-function subtitlesBandBeginMoveReducer(draft: AppStore, {payload: {y}}): void {
-    draft.subtitles.isMoving = true;
-    draft.subtitles.startY = y;
+function subtitlesBandBeginMoveReducer(state: AppStore, {payload: {y}}): void {
+    state.subtitles.isMoving = true;
+    state.subtitles.startY = y;
 }
 
-function subtitlesBandEndMoveReducer(draft: AppStore): void {
-    draft.subtitles.isMoving = false;
+function subtitlesBandEndMoveReducer(state: AppStore): void {
+    state.subtitles.isMoving = false;
 }
 
-function subtitlesBandMovedReducer(draft: AppStore, {payload: {y}}): void {
-    draft.subtitles.offsetY = 10 - (y - draft.subtitles.startY);
+function subtitlesBandMovedReducer(state: AppStore, {payload: {y}}): void {
+    state.subtitles.offsetY = 10 - (y - state.subtitles.startY);
 }

@@ -1,4 +1,5 @@
 import * as C from 'persistent-c';
+import {StepperContext} from "../api";
 
 // not supported:
 // - '*' width
@@ -14,7 +15,7 @@ const re = {
 
 const formatCache = new Map();
 
-export function* printfBuiltin(stepperContext, fmtRef, ...args) {
+export function* printfBuiltin(stepperContext: StepperContext, fmtRef, ...args) {
     const {programState} = stepperContext.state;
     const fmt = C.readString(programState.memory, fmtRef);
     if (!formatCache.has(fmt)) {

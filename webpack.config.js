@@ -146,8 +146,8 @@ const config = module.exports = (env, argv) => {
         ],
         // Note : splitChunks breaks the audio recording.
         //
-        // optimization: {
-        //     splitChunks: {
+        optimization: {
+            splitChunks: {
         //         cacheGroups: {
         //             commons: {
         //                 test: /[\\/]node_modules[\\/]/,
@@ -155,8 +155,8 @@ const config = module.exports = (env, argv) => {
         //                 chunks: 'all'
         //             }
         //         }
-        //     }
-        // },
+            }
+        },
         stats: {
             assets: false,
             cached: false,

@@ -1,13 +1,17 @@
 import * as C from 'persistent-c';
 import {AppStore} from "../../store";
+import {StepperContext} from "../api";
+import {StepperState} from "../index";
+import {Bundle} from "../../linker";
+import {App} from "../../index";
 
 const uint = C.builtinTypes['unsigned int'];
 const uintPtr = C.pointerType(uint);
 const headerSize = 4;
 
-export default function(bundle) {
-    bundle.defer(function({stepperApi}) {
-        stepperApi.onInit(function(stepperState, state: AppStore) {
+export default function(bundle: Bundle) {
+    bundle.defer(function({stepperApi}: App) {
+        stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
             const {platform} = state.options;
 
             if (platform === 'unix' || platform === 'arduino') {
@@ -119,7 +123,7 @@ export const enumerateHeapBlocks = function* (programState) {
     }
 };
 
-function* mallocBuiltin(stepperContext, nBytes) {
+function* mallocBuiltin(stepperContext: StepperContext, nBytes) {
     const {programState} = stepperContext.state;
     nBytes = nBytes.toInteger();
     const effects = [];
@@ -137,7 +141,7 @@ function* mallocBuiltin(stepperContext, nBytes) {
     yield ['result', result];
 }
 
-function* freeBuiltin(stepperContext, ref) {
+function* freeBuiltin(stepperContext: StepperContext, ref) {
     // The block chain is traversed for these reasons:
     // * prevent heap corruption;
     // * locate the block immediately before the freed block,

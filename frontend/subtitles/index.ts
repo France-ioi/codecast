@@ -1,5 +1,3 @@
-import Immutable from 'immutable';
-
 import loadingBundle from './loading';
 import paneBundle from './pane';
 import bandBundle from './band';
@@ -8,8 +6,8 @@ import editorBundle from './editor';
 import {getPersistentOptions, setPersistentOption} from './options';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
 export const initialStateSubtitles = {
     langOptions: [
@@ -48,14 +46,14 @@ export const initialStateSubtitles = {
     loading: false
 };
 
-export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
+export default function(bundle: Bundle) {
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
         const {paneEnabled, bandEnabled} = getPersistentOptions();
 
-        draft.subtitles = initialStateSubtitles;
-        draft.subtitles.paneEnabled = paneEnabled;
-        draft.subtitles.bandEnabled = bandEnabled;
-    }));
+        state.subtitles = initialStateSubtitles;
+        state.subtitles.paneEnabled = paneEnabled;
+        state.subtitles.bandEnabled = bandEnabled;
+    });
 
     bundle.include(loadingBundle);
     bundle.include(paneBundle);
@@ -64,31 +62,31 @@ export default function(bundle) {
     bundle.include(editorBundle);
 
     bundle.defineAction(ActionTypes.SubtitlesEditingChanged);
-    bundle.addReducer(ActionTypes.SubtitlesEditingChanged, produce(subtitlesEditingChangedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesEditingChanged, subtitlesEditingChangedReducer);
 
     bundle.defineAction(ActionTypes.SubtitlesPaneEnabledChanged);
-    bundle.addReducer(ActionTypes.SubtitlesPaneEnabledChanged, produce(subtitlesPaneEnabledChangedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesPaneEnabledChanged, subtitlesPaneEnabledChangedReducer);
 
     bundle.defineAction(ActionTypes.SubtitlesBandEnabledChanged);
-    bundle.addReducer(ActionTypes.SubtitlesBandEnabledChanged, produce(subtitlesBandEnabledChangedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesBandEnabledChanged, subtitlesBandEnabledChangedReducer);
 }
 
-function subtitlesEditingChangedReducer(draft: AppStore, {payload: {editing}}): void {
-    draft.subtitles.editing = editing;
+function subtitlesEditingChangedReducer(state: AppStore, {payload: {editing}}): void {
+    state.subtitles.editing = editing;
 
-    draftUpdateSubtitlesPaneVisibility(draft);
+    updateSubtitlesPaneVisibility(state);
 }
 
-function subtitlesPaneEnabledChangedReducer(draft: AppStore, {payload: {value}}): void {
-    draft.subtitles.paneEnabled = value;
+function subtitlesPaneEnabledChangedReducer(state: AppStore, {payload: {value}}): void {
+    state.subtitles.paneEnabled = value;
 
-    draftUpdateSubtitlesPaneVisibility(draft);
+    updateSubtitlesPaneVisibility(state);
 
     setPersistentOption('paneEnabled', value);
 }
 
-function draftUpdateSubtitlesPaneVisibility(draft: AppStore) {
-    const {editing, loading, loadedKey, paneEnabled} = draft.subtitles;
+function updateSubtitlesPaneVisibility(state: AppStore) {
+    const {editing, loading, loadedKey, paneEnabled} = state.subtitles;
     const isLoaded = !loading && loadedKey !== 'none';
 
     /* Editor: the subtitles editor pane is always visible.
@@ -99,11 +97,11 @@ function draftUpdateSubtitlesPaneVisibility(draft: AppStore) {
 
     let view = (editing) ? 'editor' : 'subtitles';
 
-    draft.panes['subtitles'] = {view, editing, enabled, width};
+    state.panes['subtitles'] = {view, editing, enabled, width};
 }
 
-function subtitlesBandEnabledChangedReducer(draft: AppStore, {payload: {value}}): void {
+function subtitlesBandEnabledChangedReducer(state: AppStore, {payload: {value}}): void {
     setPersistentOption('bandEnabled', value);
 
-    draft.subtitles.bandEnabled = value;
+    state.subtitles.bandEnabled = value;
 }

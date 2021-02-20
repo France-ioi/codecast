@@ -1,16 +1,17 @@
 import {channel} from 'redux-saga';
 import {call, put, select, take, takeEvery} from 'redux-saga/effects';
-
 import {writeString} from "../io/terminal";
 import PythonInterpreter from "./python_interpreter";
-
 import {ActionTypes} from './actionTypes';
-import produce from "immer";
-import {AppStore} from "../../store";
+import {AppStore, AppStoreReplay} from "../../store";
+import {ReplayContext} from "../../player/sagas";
+import {StepperState} from "../index";
+import {Bundle} from "../../linker";
+import {App} from "../../index";
 
 const pythonInterpreterChannel = channel();
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.PythonInput);
 
     function* waitForInputSaga() {
@@ -83,25 +84,25 @@ export default function(bundle) {
     });
 
     bundle.defineAction(ActionTypes.StackViewPathToggle);
-    bundle.addReducer(ActionTypes.StackViewPathToggle, produce(stackViewPathToggleReducer));
+    bundle.addReducer(ActionTypes.StackViewPathToggle, stackViewPathToggleReducer);
 
-    function stackViewPathToggleReducer(draft: AppStore, action): void {
+    function stackViewPathToggleReducer(state: AppStoreReplay, action): void {
         const {scopeIndex, path, isOpened} = action.payload;
 
-        draft.stepper.currentStepperState.analysis.functionCallStack[scopeIndex].openedPaths[path] = isOpened;
+        state.stepper.currentStepperState.analysis.functionCallStack[scopeIndex].openedPaths[path] = isOpened;
     }
 
-    bundle.defer(function({recordApi, replayApi, stepperApi}) {
+    bundle.defer(function({recordApi, replayApi, stepperApi}: App) {
         recordApi.on(ActionTypes.StackViewPathToggle, function* (addEvent, action) {
             yield call(addEvent, 'stackview.path.toggle', action);
         });
-        replayApi.on('stackview.path.toggle', function(replayContext, event) {
+        replayApi.on('stackview.path.toggle', function(replayContext: ReplayContext, event) {
             const action = event[2];
 
-            replayContext.state = produce(stackViewPathToggleReducer.bind(this, replayContext.state, action));
+            stackViewPathToggleReducer(replayContext.state, action);
         });
 
-        stepperApi.onInit(function(stepperState, state: AppStore) {
+        stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
             const {platform} = state.options;
             const source = state.buffers.source.model.document.toString();
 
@@ -132,7 +133,8 @@ export default function(bundle) {
 
                 stepperState.directives = {
                     ordered: [],
-                    functionCallStackMap: {}
+                    functionCallStackMap: {},
+                    functionCallStack: {}
                 };
 
                 /**

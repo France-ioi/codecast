@@ -1,6 +1,7 @@
 import {parse as P, text as PT} from 'bennu';
 import {stream} from 'nu-stream';
 import * as C from 'persistent-c';
+import {StepperContext} from "../api";
 
 /* Generator that iterates over the elements of the string argument. */
 function* iterate(s) {
@@ -281,7 +282,7 @@ function unterminatedStringValue(string) {
     return new C.ArrayValue(C.arrayType(charType, lenValue), chars);
 }
 
-export function* scanfBuiltin(stepperContext, fmtRef, ...args) {
+export function* scanfBuiltin(stepperContext: StepperContext, fmtRef, ...args) {
     const {programState} = stepperContext.state;
     const fmt = C.readString(programState.memory, fmtRef);
     let it = scanf(fmt, ...args), step, nextVal;

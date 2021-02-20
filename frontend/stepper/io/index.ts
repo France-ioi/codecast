@@ -2,9 +2,8 @@ import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects
 
 import * as C from 'persistent-c';
 
-import {documentFromString} from '../../buffers/document';
+import {documentFromString, Selection} from '../../buffers/document';
 import {DocumentModel} from '../../buffers';
-import {Selection} from "../../buffers/document";
 import {default as TerminalBundle, TermBuffer, writeString} from './terminal';
 import {printfBuiltin} from './printf';
 import {scanfBuiltin} from './scanf';
@@ -15,9 +14,13 @@ import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {getCurrentStepperState} from "../selectors";
 import {getBufferModel} from "../../buffers/selectors";
-import produce from "immer";
-import {AppStore} from "../../store";
+import {AppStore, AppStoreReplay} from "../../store";
 import {PlayerInstant} from "../../player";
+import {ReplayContext} from "../../player/sagas";
+import {StepperContext} from "../api";
+import {StepperState} from "../index";
+import {Bundle} from "../../linker";
+import {App} from "../../index";
 
 export type IoMode = 'terminal' | 'split';
 
@@ -26,41 +29,41 @@ export const initialStateIoPane = {
     modeSelect: false
 };
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.include(TerminalBundle);
 
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
-        draft.ioPane = initialStateIoPane;
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
+        state.ioPane = initialStateIoPane;
 
-        updateIoPaneState(draft);
-    }));
-    bundle.addReducer(CommonActionTypes.PlatformChanged, produce((draft: AppStore) => {
-        updateIoPaneState(draft);
-    }));
+        updateIoPaneState(state);
+    });
+    bundle.addReducer(CommonActionTypes.PlatformChanged, (state: AppStore) => {
+        updateIoPaneState(state);
+    });
 
-    function updateIoPaneState(draft: AppStore) {
-        const {platform} = draft.options;
+    function updateIoPaneState(state: AppStore) {
+        const {platform} = state.options;
 
         if (platform === 'arduino') {
             /* Arduino is forced to terminal mode. */
-            draft.ioPane.mode = 'terminal';
-            draft.ioPane.modeSelect = false;
+            state.ioPane.mode = 'terminal';
+            state.ioPane.modeSelect = false;
         } else {
-            draft.ioPane.modeSelect = true;
+            state.ioPane.modeSelect = true;
         }
     }
 
     /* Options view */
     bundle.defineAction(ActionTypes.IoPaneModeChanged);
-    bundle.addReducer(ActionTypes.IoPaneModeChanged, produce(ioPaneModeChangedReducer));
+    bundle.addReducer(ActionTypes.IoPaneModeChanged, ioPaneModeChangedReducer);
 
-    function ioPaneModeChangedReducer(draft: AppStore, {payload: {mode}}): void {
-        draft.ioPane.mode = mode;
+    function ioPaneModeChangedReducer(state: AppStoreReplay, {payload: {mode}}): void {
+        state.ioPane.mode = mode;
     }
 
     /* Split input/output view */
 
-    function getOutputBufferModel(state: AppStore): DocumentModel {
+    function getOutputBufferModel(state: AppStoreReplay): DocumentModel {
         const stepper = getCurrentStepperState(state);
         const {output} = stepper;
         const doc = documentFromString(output);
@@ -69,16 +72,17 @@ export default function(bundle) {
         return new DocumentModel(doc, new Selection(endCursor, endCursor), endCursor.row);
     }
 
-    bundle.defer(function({recordApi, replayApi, stepperApi}) {
+    bundle.defer(function({recordApi, replayApi, stepperApi}: App) {
         recordApi.onStart(function* (init) {
             const state: AppStore = yield select();
 
             init.ioPaneMode = state.ioPane.mode;
         });
-        replayApi.on('start', function(replayContext, event) {
+        replayApi.on('start', function(replayContext: ReplayContext, event) {
             const {ioPaneMode} = event[2];
 
-            replayContext.state = produce(ioPaneModeChangedReducer.bind(this, replayContext.state, {payload: {mode: ioPaneMode}}));
+            replayContext.state.ioPane = initialStateIoPane;
+            ioPaneModeChangedReducer(replayContext.state, {payload: {mode: ioPaneMode}});
         });
 
         replayApi.onReset(function* (instant: PlayerInstant) {
@@ -90,13 +94,13 @@ export default function(bundle) {
         recordApi.on(ActionTypes.IoPaneModeChanged, function* (addEvent, {payload: {mode}}) {
             yield call(addEvent, 'ioPane.mode', mode);
         });
-        replayApi.on('ioPane.mode', function(replayContext, event) {
+        replayApi.on('ioPane.mode', function(replayContext: ReplayContext, event) {
             const mode = event[2];
 
-            replayContext.state = produce(ioPaneModeChangedReducer.bind(this, replayContext.state, {payload: {mode}}));
+            ioPaneModeChangedReducer(replayContext.state, {payload: {mode}});
         });
 
-        replayApi.on(['stepper.progress', 'stepper.idle', 'stepper.restart', 'stepper.undo', 'stepper.redo'], function replaySyncOutput(replayContext) {
+        replayApi.on(['stepper.progress', 'stepper.idle', 'stepper.restart', 'stepper.undo', 'stepper.redo'], function replaySyncOutput(replayContext: ReplayContext) {
             if (replayContext.state.ioPane.mode === 'split') {
                 /* Consider: pushing updates from the stepper state to the output buffer
                    in the global state adds complexity.  Three options:
@@ -106,15 +110,13 @@ export default function(bundle) {
                    (3) make the output editor fetch its model from the stepper state.
                    It is not clear which option is best.
                 */
-                replayContext.state = produce(syncOutputBufferReducer.bind(this, replayContext.state));
+                syncOutputBufferReducer(replayContext.state);
                 replayContext.addSaga(syncOutputBufferSaga);
             }
         });
 
-        function syncOutputBufferReducer(draft: AppStore): void {
-            const model = getOutputBufferModel(draft);
-
-            draft.buffers.output.model = model;
+        function syncOutputBufferReducer(state: AppStoreReplay): void {
+            state.buffers.output.model = getOutputBufferModel(state);
         }
 
         function* syncOutputBufferSaga(instant) {
@@ -124,7 +126,7 @@ export default function(bundle) {
         }
 
         /* Set up the terminal or input. */
-        stepperApi.onInit(function(stepperState, state: AppStore) {
+        stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
             const {mode} = state.ioPane;
 
             stepperState.inputPos = 0;
@@ -145,14 +147,14 @@ export default function(bundle) {
 
         stepperApi.addBuiltin('printf', printfBuiltin);
 
-        stepperApi.addBuiltin('putchar', function* putcharBuiltin(stepperContext, charCode) {
+        stepperApi.addBuiltin('putchar', function* putcharBuiltin(stepperContext: StepperContext, charCode) {
             const ch = String.fromCharCode(charCode.toInteger());
 
             yield ['write', ch];
             yield ['result', charCode];
         });
 
-        stepperApi.addBuiltin('puts', function* putsBuiltin(stepperContext, strRef) {
+        stepperApi.addBuiltin('puts', function* putsBuiltin(stepperContext: StepperContext, strRef) {
             const str = C.readString(stepperContext.state.programState.memory, strRef) + '\n';
             yield ['write', str];
 
@@ -162,7 +164,7 @@ export default function(bundle) {
 
         stepperApi.addBuiltin('scanf', scanfBuiltin);
 
-        stepperApi.onEffect('write', function* writeEffect(stepperContext, text) {
+        stepperApi.onEffect('write', function* writeEffect(stepperContext: StepperContext, text) {
             const {state} = stepperContext;
             if (state.terminal) {
                 state.terminal = writeString(state.terminal, text);
@@ -178,7 +180,7 @@ export default function(bundle) {
              */
         });
 
-        stepperApi.addBuiltin('gets', function* getsBuiltin(stepperContext, ref) {
+        stepperApi.addBuiltin('gets', function* getsBuiltin(stepperContext: StepperContext, ref) {
             const line = yield ['gets'];
             let result = C.nullPointer;
             if (line !== null) {
@@ -203,7 +205,7 @@ export default function(bundle) {
             yield ['result', new C.IntegralValue(C.builtinTypes['int'], result)];
         });
 
-        stepperApi.onEffect('gets', function* getsEffect(stepperContext) {
+        stepperApi.onEffect('gets', function* getsEffect(stepperContext: StepperContext) {
             let {state} = stepperContext;
             let {input, inputPos} = state;
             let nextNL = input.indexOf('\n', inputPos);
@@ -241,7 +243,7 @@ export default function(bundle) {
             yield take(ActionTypes.TerminalInputEnter);
         }
 
-        stepperApi.onEffect('ungets', function* ungetsHandler(stepperContext, count) {
+        stepperApi.onEffect('ungets', function* ungetsHandler(stepperContext: StepperContext, count) {
             stepperContext.state.inputPos -= count;
         });
 
@@ -275,8 +277,7 @@ export default function(bundle) {
                 const oldSize = outputModel.document.size();
                 const newSize = stepperState.output.length;
                 if (oldSize !== newSize) {
-                    const outputDoc = outputModel.document;
-                    const endCursor = outputDoc.endCursor();
+                    const endCursor = outputModel.document.endCursor();
                     const delta = {
                         action: 'insert',
                         start: endCursor,

@@ -6,8 +6,8 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
 interface LogData {
     type: any,
@@ -85,51 +85,51 @@ export const initialStateStatistics = {
     }
 };
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     if (isLocalMode()) {
         return;
     }
 
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore, {payload: {options: {isStatisticsReady}}}) => {
-        draft.statistics = initialStateStatistics;
-        draft.statistics.isReady = isStatisticsReady;
-    }));
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {options: {isStatisticsReady}}}) => {
+        state.statistics = initialStateStatistics;
+        state.statistics.isReady = isStatisticsReady;
+    });
 
     bundle.defineAction(ActionTypes.StatisticsInitLogData);
     bundle.defineAction(ActionTypes.StatisticsLogLoadingData);
 
     bundle.defineAction(ActionTypes.StatisticsPrepare);
-    bundle.addReducer(ActionTypes.StatisticsPrepare, produce((draft: AppStore) => {
-        draft.statistics.dateRange = [null, null];
-        draft.statistics.folder = {
+    bundle.addReducer(ActionTypes.StatisticsPrepare, (state: AppStore) => {
+        state.statistics.dateRange = [null, null];
+        state.statistics.folder = {
             label: 'Select a Folder',
             value: null
         };
-        draft.statistics.prefix = '';
-        draft.statistics.search = {
+        state.statistics.prefix = '';
+        state.statistics.search = {
             status: 'success',
             data: [],
             error: null
         };
-    }));
+    });
 
     bundle.defineAction(ActionTypes.StatisticsDateRangeChanged);
-    bundle.addReducer(ActionTypes.StatisticsDateRangeChanged, produce(statisticsDateRangeChangedReducer));
+    bundle.addReducer(ActionTypes.StatisticsDateRangeChanged, statisticsDateRangeChangedReducer);
 
     bundle.defineAction(ActionTypes.StatisticsFolderChanged);
-    bundle.addReducer(ActionTypes.StatisticsFolderChanged, produce(statisticsFolderChangedReducer));
+    bundle.addReducer(ActionTypes.StatisticsFolderChanged, statisticsFolderChangedReducer);
 
     bundle.defineAction(ActionTypes.StatisticsPrefixChanged);
-    bundle.addReducer(ActionTypes.StatisticsPrefixChanged, produce(statisticsPrefixChangedReducer));
+    bundle.addReducer(ActionTypes.StatisticsPrefixChanged, statisticsPrefixChangedReducer);
 
     bundle.defineAction(ActionTypes.StatisticsSearchSubmit);
     bundle.defineAction(ActionTypes.StatisticsSearchStatusChanged);
-    bundle.addReducer(ActionTypes.StatisticsSearchStatusChanged, produce(statisticsSearchStatusChangedReducer));
+    bundle.addReducer(ActionTypes.StatisticsSearchStatusChanged, statisticsSearchStatusChangedReducer);
 
     bundle.defineAction(ActionTypes.StatisticsLogDataChanged);
-    bundle.addReducer(ActionTypes.StatisticsLogDataChanged, produce((draft, {payload: {logData}}) => {
-        draft.statistics.logData = logData;
-    }));
+    bundle.addReducer(ActionTypes.StatisticsLogDataChanged, (state, {payload: {logData}}) => {
+        state.statistics.logData = logData;
+    });
 
     bundle.addSaga(function* editorSaga(app) {
         yield takeEvery(ActionTypes.StatisticsLogLoadingData, statisticsLogLoadingDataSaga);
@@ -140,21 +140,21 @@ export default function(bundle) {
     });
 }
 
-function statisticsDateRangeChangedReducer(draft: AppStore, {payload: {dateRange}}): void {
-    draft.statistics.dateRange = dateRange;
+function statisticsDateRangeChangedReducer(state: AppStore, {payload: {dateRange}}): void {
+    state.statistics.dateRange = dateRange;
 }
 
-function statisticsFolderChangedReducer(draft: AppStore, {payload: {folder}}): void {
-    draft.statistics.folder = folder;
+function statisticsFolderChangedReducer(state: AppStore, {payload: {folder}}): void {
+    state.statistics.folder = folder;
 }
 
-function statisticsPrefixChangedReducer(draft: AppStore, {payload: {prefix}}): void {
-    draft.statistics.prefix = prefix;
+function statisticsPrefixChangedReducer(state: AppStore, {payload: {prefix}}): void {
+    state.statistics.prefix = prefix;
 }
 
-function statisticsSearchStatusChangedReducer(draft: AppStore): void {
-    draft.statistics.search.data = [];
-    draft.statistics.search.error = null;
+function statisticsSearchStatusChangedReducer(state: AppStore): void {
+    state.statistics.search.data = [];
+    state.statistics.search.error = null;
 }
 
 function* statisticsPrepareSaga() {
@@ -163,7 +163,7 @@ function* statisticsPrepareSaga() {
         yield take(CommonActionTypes.LoginFeedback);
     }
 
-    yield put({type: CommonActionTypes.SystemSwitchToScreen, payload: {screen: 'statistics'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'statistics'}});
 }
 
 function* statisticsInitLogDataSaga() {

@@ -1,20 +1,20 @@
 import url from 'url';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
-import produce from "immer";
+import {Bundle} from "../linker";
 
 export const initialStateExamples = {
     fullExamplesUrl: ''
 };
 
-export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft) => {
-        draft.examples = updateExamplesState(draft, {});
-    }));
+export default function(bundle: Bundle) {
+    bundle.addReducer(AppActionTypes.AppInit, (state) => {
+        state.examples = updateExamplesState(state, {});
+    });
 
-    bundle.addReducer(ActionTypes.PlatformChanged, produce((draft) => {
-        draft.examples = updateExamplesState(draft, draft.examples);
-    }));
+    bundle.addReducer(ActionTypes.PlatformChanged, (state) => {
+        state.examples = updateExamplesState(state, state.examples);
+    });
 }
 
 function updateExamplesState(state, examples) {

@@ -1,7 +1,7 @@
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
 export interface Error {
     error: string,
@@ -11,20 +11,20 @@ export interface Error {
 
 export const initialStateError = undefined;
 
-export default function(bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, produce((draft: AppStore) => {
-        draft.lastError = initialStateError;
-    }));
+export default function(bundle: Bundle) {
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
+        state.lastError = initialStateError;
+    });
 
     bundle.defineAction(ActionTypes.Error);
-    bundle.addReducer(ActionTypes.Error, produce((draft: AppStore, {payload}) => {
+    bundle.addReducer(ActionTypes.Error, (state: AppStore, {payload}) => {
         console.log("GENERIC ERROR", payload);
 
-        draft.lastError = payload;
-    }));
+        state.lastError = payload;
+    });
 
     bundle.defineAction(ActionTypes.ErrorClear);
-    bundle.addReducer(ActionTypes.ErrorClear, produce((draft: AppStore) => {
-        draft.lastError = initialStateError;
-    }));
+    bundle.addReducer(ActionTypes.ErrorClear, (state: AppStore) => {
+        state.lastError = initialStateError;
+    });
 }

@@ -3,21 +3,21 @@ import {getPersistentOptions} from './options';
 import {put, select, takeLatest} from 'redux-saga/effects';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {ActionTypes} from "./actionTypes";
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     /* Initialize the available options from the recording's data when the
        player is ready. */
-    bundle.addReducer(PlayerActionTypes.PlayerReady, produce(playerReadyReducer));
+    bundle.addReducer(PlayerActionTypes.PlayerReady, playerReadyReducer);
 
     /* Update the index of the current item when the player's position
        has changed due to user interaction. */
-    bundle.addReducer(PlayerActionTypes.PlayerSeeked, produce(playerSeekedReducer));
+    bundle.addReducer(PlayerActionTypes.PlayerSeeked, playerSeekedReducer);
 
     /* Update the index of the current item when the player's position
        has changed due to time advancing. */
-    bundle.addReducer(PlayerActionTypes.PlayerTick, produce(playerTickReducer));
+    bundle.addReducer(PlayerActionTypes.PlayerTick, playerTickReducer);
 
     bundle.addSaga(function* () {
         /* When the player is ready, automatically reload the last selected
@@ -35,9 +35,9 @@ export default function(bundle) {
     });
 }
 
-function playerReadyReducer(draft: AppStore, {payload: {baseDataUrl, data}}): void {
+function playerReadyReducer(state: AppStore, {payload: {baseDataUrl, data}}): void {
     const availableOptions = [];
-    const {langOptions} = draft.subtitles;
+    const {langOptions} = state.subtitles;
 
     (data.subtitles || []).forEach(function(key) {
         const url = `${baseDataUrl}_${key}.srt`;
@@ -46,19 +46,19 @@ function playerReadyReducer(draft: AppStore, {payload: {baseDataUrl, data}}): vo
         availableOptions[key] = {key, url, ...option};
     });
 
-    draft.subtitles.availableOptions = availableOptions;
-    draft.subtitles.items = [];
-    draft.subtitles.filteredItems = [];
-    draft.subtitles.currentIndex = 0;
-    draft.subtitles.loadedKey = 'none';
+    state.subtitles.availableOptions = availableOptions;
+    state.subtitles.items = [];
+    state.subtitles.filteredItems = [];
+    state.subtitles.currentIndex = 0;
+    state.subtitles.loadedKey = 'none';
 }
 
-function playerSeekedReducer(draft: AppStore, action): void {
+function playerSeekedReducer(state: AppStore, action): void {
     const {seekTo} = action;
 
-    updateCurrentItem(draft.subtitles, seekTo);
+    updateCurrentItem(state.subtitles, seekTo);
 }
 
-function playerTickReducer(draft: AppStore, {payload: {audioTime}}): void {
-    return updateCurrentItem(draft.subtitles, audioTime);
+function playerTickReducer(state: AppStore, {payload: {audioTime}}): void {
+    return updateCurrentItem(state.subtitles, audioTime);
 }

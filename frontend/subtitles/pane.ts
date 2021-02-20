@@ -1,25 +1,25 @@
 import {filterItems} from './utils';
 import {ActionTypes} from "./actionTypes";
-import produce from "immer";
 import {AppStore} from "../store";
+import {Bundle} from "../linker";
 
-export default function(bundle) {
+export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.SubtitlesFilterTextChanged);
-    bundle.addReducer(ActionTypes.SubtitlesFilterTextChanged, produce(subtitlesFilterTextChangedReducer));
+    bundle.addReducer(ActionTypes.SubtitlesFilterTextChanged, subtitlesFilterTextChangedReducer);
 }
 
-function subtitlesFilterTextChangedReducer(draft: AppStore, {payload: {text}}): void {
+function subtitlesFilterTextChangedReducer(state: AppStore, {payload: {text}}): void {
     let re = null;
     if (text) {
         try {
             re = new RegExp(text, 'i');
         } catch (ex) {
             /* silently ignore error, keep last regexp */
-            re = draft.subtitles.filterRegexp;
+            re = state.subtitles.filterRegexp;
         }
     }
 
-    draft.subtitles.filterText = text;
-    draft.subtitles.filterRegexp = re;
-    draft.subtitles.filteredItems = filterItems(draft.subtitles.items, re)
+    state.subtitles.filterText = text;
+    state.subtitles.filterRegexp = re;
+    state.subtitles.filteredItems = filterItems(state.subtitles.items, re)
 }
