@@ -601,7 +601,7 @@ function* stepperDisabledSaga() {
     yield put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
 }
 
-function* stepperInteractSaga(app, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
+function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
     let state: AppStore = yield select();
     /* Has the stepper been interrupted? */
     if (isStepperInterrupting(state)) {
@@ -698,7 +698,7 @@ function* stepperInterruptSaga() {
     }
 }
 
-function* stepperStepSaga(app, action) {
+function* stepperStepSaga(app: App, action) {
     const state = yield select();
 
     const stepper = getStepper(state);

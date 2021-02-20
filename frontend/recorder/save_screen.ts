@@ -9,6 +9,7 @@ import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getRecorderState} from "./selectors";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {App} from "../index";
 
 export enum SaveStep {
     EncodingPending = 'encoding pending',
@@ -159,7 +160,7 @@ function* encodingSaga() {
     }
 }
 
-function* uploadSaga(app, action) {
+function* uploadSaga(app: App, action) {
     try {
         // Step 1: prepare the upload by getting the S3 form parameters
         // from the server.

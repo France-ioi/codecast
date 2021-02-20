@@ -9,6 +9,7 @@ import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {App} from "../index";
 
 export type EditorControl = 'none' | 'trim' | 'subtitles';
 
@@ -82,7 +83,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.SetupScreenTabChanged);
     bundle.addReducer(ActionTypes.SetupScreenTabChanged, setupScreenTabChangedReducer);
 
-    bundle.addSaga(function* editorSaga(app) {
+    bundle.addSaga(function* editorSaga(app: App) {
         yield takeEvery(ActionTypes.EditorPrepare, editorPrepareSaga, app);
 
     });
@@ -97,7 +98,7 @@ function loginFeedbackReducer(state: AppStore): void {
     }
 }
 
-function userHasGrant(user, dataUrl): boolean {
+function userHasGrant(user, dataUrl: string): boolean {
     if (user && user.grants && dataUrl) {
         for (let grant of user.grants) {
             if (dataUrl.startsWith(grant.url)) {
@@ -113,7 +114,7 @@ function editorAudioLoadProgressReducer(state: AppStore, {payload: {value}}): vo
     state.editor.audioLoadProgress = value;
 }
 
-function* editorPrepareSaga(app, action) {
+function* editorPrepareSaga(app: App, action) {
     /* Require the user to be logged in. */
     while (!(yield select((state: AppStore) => state.user))) {
         yield take(CommonActionTypes.LoginFeedback);
@@ -149,7 +150,7 @@ function* editorPrepareSaga(app, action) {
     yield put({type: ActionTypes.EditorPlayerReady, payload: {data}});
 }
 
-function* getAudioSaga(audioUrl) {
+function* getAudioSaga(audioUrl: string) {
     const chan = yield call(getAudio, audioUrl);
     while (true) {
         let event = yield take(chan);

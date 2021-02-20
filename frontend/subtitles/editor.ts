@@ -13,6 +13,7 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {AppStore} from "../store";
 import {initialStateSubtitles} from "./index";
 import {Bundle} from "../linker";
+import {App} from "../index";
 
 export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.SubtitlesSelected);
@@ -367,7 +368,7 @@ function* subtitlesTextLoadedSaga(state, action) {
     }
 }
 
-function* subtitlesSaveOptionSaga(_app, action) {
+function* subtitlesSaveOptionSaga(app: App, action) {
     const state: AppStore = yield select();
     const {text} = state.subtitles.availableOptions[action.payload.key];
     const blob = new Blob([text], {type: "text/plain;charset=utf-8"});

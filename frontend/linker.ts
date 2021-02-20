@@ -18,7 +18,7 @@ export interface Linker {
 
 export function link(rootBuilder): Linker {
     // The global namespace map (name → value)
-    const globalScope = {};
+    const globalScope = {} as App;
 
     // Type map (value|selector|action|view) used to stage injections.
     const typeMap = new Map();
@@ -170,7 +170,7 @@ export function link(rootBuilder): Linker {
         return sagaMiddleware.run(rootSaga, args);
     }
 
-    debugger;
+    globalScope.dispatch = store.dispatch;
 
     return {
         scope: globalScope as App,

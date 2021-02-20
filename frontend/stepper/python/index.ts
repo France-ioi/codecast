@@ -23,7 +23,7 @@ export default function(bundle: Bundle) {
         yield take('Terminal.Input.Enter');
     }
 
-    function* pythonInputSaga(app, action) {
+    function* pythonInputSaga(app: App, action) {
         const state: AppStore = yield select();
         const stepperContext = state.stepper.currentStepperState;
         const isPlayerContext = (typeof stepperContext === 'undefined');

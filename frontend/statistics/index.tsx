@@ -8,6 +8,7 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {App} from "../index";
 
 interface LogData {
     type: any,
@@ -131,7 +132,7 @@ export default function(bundle: Bundle) {
         state.statistics.logData = logData;
     });
 
-    bundle.addSaga(function* editorSaga(app) {
+    bundle.addSaga(function* editorSaga(app: App) {
         yield takeEvery(ActionTypes.StatisticsLogLoadingData, statisticsLogLoadingDataSaga);
         yield takeEvery(ActionTypes.StatisticsInitLogData, statisticsInitLogDataSaga);
         yield takeEvery(PlayerActionTypes.PlayerReady, statisticsPlayerReadySaga, app);
@@ -198,7 +199,7 @@ function* statisticsInitLogDataSaga() {
     yield put({type: ActionTypes.StatisticsLogDataChanged, payload: {logData}});
 }
 
-function* statisticsPlayerReadySaga(app, action) {
+function* statisticsPlayerReadySaga(app: App, action) {
     try {
         const state: AppStore = yield select();
         const logData = state.statistics.logData;

@@ -16,6 +16,7 @@ import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
 import {StepperContext} from "../stepper/api";
+import {App} from "../index";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -46,8 +47,8 @@ function* playerSaga(action) {
     yield takeLatest(anyReplayAction, replaySaga, action);
 }
 
-function* playerPrepare(app, action) {
-    const {globals: {replayApi}} = app;
+function* playerPrepare(app: App, action) {
+    const {replayApi} = app;
 
     /*
       baseDataUrl is forwarded to playerReady (stored in its reducer) in order
@@ -232,7 +233,7 @@ function* computeInstants(replayContext: ReplayContext) {
     }
 }
 
-function* replaySaga(app, {type, payload}) {
+function* replaySaga(app: App, {type, payload}) {
     const state: AppStore = yield select();
     const player = getPlayerState(state);
     const isPlaying = player.isPlaying;
@@ -336,7 +337,7 @@ function* replaySaga(app, {type, payload}) {
     yield put({type: ActionTypes.PlayerPause});
 }
 
-function* replayToAudioTime(app, instants: PlayerInstant[], startTime: number, endTime: number) {
+function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: number, endTime: number) {
     let instantIndex = findInstantIndex(instants, startTime);
     const nextInstantIndex = findInstantIndex(instants, endTime);
     if (instantIndex === nextInstantIndex) {
@@ -388,8 +389,8 @@ function* replayToAudioTime(app, instants: PlayerInstant[], startTime: number, e
 
 /* A quick reset avoids disabling and re-enabling the stepper (which restarts
    the stepper task). */
-function* resetToAudioTime(app, audioTime: number, quick?: boolean) {
-    const {globals: {replayApi}} = app;
+function* resetToAudioTime(app: App, audioTime: number, quick?: boolean) {
+    const {replayApi} = app;
 
     /* Call playerTick to store the current audio time and to install the
        current instant's state as state.player.current */
@@ -423,7 +424,7 @@ function* restartStepper() {
     }
 }
 
-function* jumpToAudioTime(app, audioTime: number) {
+function* jumpToAudioTime(app: App, audioTime: number) {
     /* Jump and full reset to the specified audioTime. */
     const state: AppStore = yield select();
     const player = getPlayerState(state);

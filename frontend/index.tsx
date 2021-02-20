@@ -47,7 +47,8 @@ interface Codecast {
 export interface App {
     recordApi: RecordApi,
     replayApi: ReplayApi,
-    stepperApi: StepperApi
+    stepperApi: StepperApi,
+    dispatch: Function
 }
 
 declare global {
@@ -135,10 +136,7 @@ function restart() {
     }
 
     /* XXX Make a separate object for selectors in the linker? */
-    Codecast.task = start({
-        dispatch: store.dispatch,
-        globals: scope
-    });
+    Codecast.task = start(scope);
 }
 
 function clearUrl() {
