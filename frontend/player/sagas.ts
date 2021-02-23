@@ -17,7 +17,8 @@ import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
 import {StepperContext} from "../stepper/api";
 import {App} from "../index";
-import produce from "immer";
+import {createDraft, finishDraft} from "immer";
+import {ReplayApi} from "./replay";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -126,7 +127,7 @@ function* playerPrepare(app: App, action) {
     };
 
     try {
-        yield call(computeInstants, replayContext);
+        yield call(computeInstants, replayApi, replayContext);
 
         /* The duration of the recording is the timestamp of the last event. */
         const instants = replayContext.instants;
@@ -164,7 +165,7 @@ function* playerPrepare(app: App, action) {
     }
 }
 
-function* computeInstants(replayContext: ReplayContext) {
+function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
     /* CONSIDER: create a redux store, use the replayApi to convert each event
        to an action that is dispatched to the store (which must have an
        appropriate reducer) plus an optional saga to be called during playback. */
@@ -213,27 +214,38 @@ function* computeInstants(replayContext: ReplayContext) {
         console.log('-------- REPLAY ---- EVENT ----', key, event);
         console.log('replayContext', replayContext);
 
-        // const immerFunc = async function (replayContext, event) {
-        //     const nextState = await produce(replayContext.state, async (draftState: AppStoreReplay) => {
-        //         replayContext.state = draftState;
-        //
-        //         for (let func of funcs) {
-        //             await func(replayContext, event);
-        //         }
-        //     });
-        //
-        //     replayContext.state = nextState;
-        // }
-        //
-        // yield call(immerFunc, replayContext, event);
-        // }
+        if (key === 'stepper.step' || key === 'stepper.progress' || key === 'stepper.idle') {
+            /**
+             * Those event are trickier than the other ones because they copy a piece of state (state.stepper.currentStepperStep)
+             * and then reuse it in future events. We cannot copy a piece of immer draft and use it later.
+             * The choice made is to update the state in a more granular way in those events, so that the copied piece
+             * is a piece of the real state and not one of a immer draft.
+             * I would have been better to not copy the stepper at all but it seems like this would imply a huge
+             * refactor of the player.
+             */
 
-        const nextState = produce(replayContext, (draft: AppStoreReplay) => {
+            yield call(replayApi.applyEvent, key, replayContext, event);
+        } else {
+            const originalState = replayContext.state;
+            const draft = createDraft(originalState);
 
-        });
-        
-        yield call(replayContext.applyEvent, key, replayContext, event);
+            // @ts-ignore
+            replayContext.state = draft;
 
+            yield call(replayApi.applyEvent, key, replayContext, event);
+            console.log('EVENT APPLIED !');
+
+            // @ts-ignore
+            replayContext.state = finishDraft(draft);
+
+            if (replayContext.state === originalState) {
+                console.log('same');
+            } else {
+                console.log('diff !');
+            }
+        }
+
+        // yield call(replayApi.applyEvent, key, replayContext, event);
 
         console.log('replayContext_after', replayContext);
 

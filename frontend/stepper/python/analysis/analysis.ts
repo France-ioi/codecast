@@ -91,7 +91,7 @@ export const analyseSkulptState = function(suspensions: any[], lastAnalysis: Sku
         console.log(analysis);
     }
 
-    return Object.freeze(analysis);
+    return analysis;
 };
 
 /**

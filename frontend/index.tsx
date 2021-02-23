@@ -31,7 +31,7 @@ import {RecordApi} from "./recorder/record";
 import {StepperApi} from "./stepper/api";
 
 /**
- * TODO: This should be removed.
+ * TODO: This should be removed if possible.
  * Search for "TODO: Immer:" to find the reason.
  */
 setAutoFreeze(false);

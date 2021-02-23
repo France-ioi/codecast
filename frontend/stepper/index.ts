@@ -62,6 +62,7 @@ import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
+import produce from "immer";
 
 export interface StepperTask {
 
@@ -247,17 +248,11 @@ export default function(bundle: Bundle) {
  *
  * @param stepperState The stepper statee.
  * @param {string} context The context (Stepper.Progress, Stepper.Restart, Stepper.Idle).
- *
- * @returns The new stepper state with analysis.
  */
-function enrichStepperState(stepperState, context) {
-    stepperState = {...stepperState};
-    if (!stepperState.hasOwnProperty('controls')) {
-        stepperState.controls = {};
-    }
+function enrichStepperState(stepperState, context: 'Stepper.Restart' | 'Stepper.Progress' | 'Stepper.Idle') {
     const {programState, controls} = stepperState;
     if (!programState) {
-        return stepperState;
+        return;
     }
 
     /* TODO: extend stepper API to add enrichers that run here */
@@ -266,27 +261,22 @@ function enrichStepperState(stepperState, context) {
             // Don't reanalyse after program is finished :
             // keep the last state of the stack and set isFinished state.
             if (window.currentPythonRunner._isFinished) {
-                stepperState.analysis = {
-                    ...stepperState.analysis,
-                    isFinished: true
-                }
+                stepperState.analysis.isFinished = true;
             } else {
                 stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
-                stepperState.directives = {
-                    ordered: parseDirectives(stepperState.analysis),
-                    functionCallStackMap: null
-                };
+                stepperState.directives.ordered = parseDirectives(stepperState.analysis);
+                stepperState.directives.functionCallStackMap = null;
             }
         }
 
         if (!stepperState.analysis) {
-            stepperState.analysis = {
+            stepperState.analysis =  {
                 functionCallStack: [],
                 code: window.currentPythonRunner._code,
                 lines: window.currentPythonRunner._code.split("\n"),
                 stepNum: 0,
                 isFinished: false
-            }
+            };
 
             stepperState.lastAnalysis = {
                 functionCallStack: [],
@@ -294,7 +284,7 @@ function enrichStepperState(stepperState, context) {
                 lines: window.currentPythonRunner._code.split("\n"),
                 stepNum: 0,
                 isFinished: false
-            }
+            };
         }
     } else {
         const analysis = stepperState.analysis = analyseState(programState);
@@ -305,9 +295,7 @@ function enrichStepperState(stepperState, context) {
         //       clear controls for each directive removed (except 'stack').
     }
 
-    console.log(stepperState);
-
-    return stepperState;
+    console.log('enrichStepperState', stepperState);
 }
 
 export function clearStepper(stepper: typeof initialStateStepper) {
@@ -374,7 +362,7 @@ function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}})
     const {platform} = state.options;
 
     if (stepperState) {
-        stepperState = enrichStepperState(stepperState, 'Stepper.Restart');
+        enrichStepperState(stepperState, 'Stepper.Restart');
 
         if (platform === 'python') {
             // TODO: Check restart.
@@ -439,28 +427,28 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     }
 
     // Set new currentStepperState state and go back to idle.
-    // Returns a new references.
-    const stepperState = enrichStepperState(stepperContext.state, 'Stepper.Progress');
+    enrichStepperState(stepperContext.state, 'Stepper.Progress');
 
     // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
-    if (stepperState.platform === 'python') {
+    if (stepperContext.state.platform === 'python') {
         const storeStepper = state.stepper;
         const storeCurrentStepperState = storeStepper.currentStepperState;
 
         const storeTerminal = window.currentPythonRunner._terminal;
         const storeOutput = storeCurrentStepperState.output;
 
-        stepperState.terminal = storeTerminal;
-        stepperState.output = storeOutput;
+        stepperContext.state.terminal = storeTerminal;
+        stepperContext.state.output = storeOutput;
     }
 
-    state.stepper.currentStepperState = stepperState;
+    state.stepper.currentStepperState = stepperContext.state;
 }
 
 function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}): void {
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
-    state.stepper.currentStepperState = enrichStepperState(stepperContext.state, 'Stepper.Idle');
+    enrichStepperState(stepperContext.state, 'Stepper.Idle');
+    state.stepper.currentStepperState = stepperContext.state;
     state.stepper.status = StepperStatus.Idle;
     state.stepper.mode = null;
 }
@@ -856,28 +844,34 @@ function postLink(app: App) {
             const mode = event[2];
 
             replayContext.stepperDone = resolve;
-            stepperStartedReducer(replayContext.state, {mode});
+            replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
+                stepperStartedReducer(draft, {mode});
+            });
 
-            const stepperState = getCurrentStepperState(replayContext.state);
-            replayContext.stepperContext = makeContext(stepperState, function interact(_) {
+            replayContext.stepperContext = makeContext(replayContext.state.stepper.currentStepperState, function interact(_) {
                 return new Promise((cont) => {
                     stepperSuspend(replayContext.stepperContext, cont);
 
-                    stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+                    replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
+                        stepperProgressReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
+                    });
 
                     stepperEventReplayed(replayContext);
                 });
             });
             console.log('put stepperContext', replayContext);
             performStep(replayContext.stepperContext, mode).then(function() {
-                let currentStepperState = replayContext.state.stepper.currentStepperState;
+                replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
+                    let currentStepperState = draft.stepper.currentStepperState;
 
-                if (currentStepperState.platform === 'python' && window.currentPythonRunner._printedDuringStep) {
-                    replayContext.state.stepper.currentStepperState.output = getNewOutput(currentStepperState, window.currentPythonRunner._printedDuringStep);
-                    replayContext.state.stepper.currentStepperState.terminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
-                }
+                    if (currentStepperState.platform === 'python' && window.currentPythonRunner._printedDuringStep) {
+                        draft.stepper.currentStepperState.output = getNewOutput(currentStepperState, window.currentPythonRunner._printedDuringStep);
+                        draft.stepper.currentStepperState.terminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
+                    }
 
-                stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+                    stepperIdleReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
+                });
+
                 stepperEventReplayed(replayContext);
             }, function(error) {
                 if (!(error instanceof StepperError)) {
@@ -890,7 +884,10 @@ function postLink(app: App) {
                     replayContext.stepperContext.state.error = error.message;
                 }
 
-                stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+                replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
+                    stepperIdleReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
+                });
+
                 stepperEventReplayed(replayContext);
             });
         });
@@ -908,12 +905,17 @@ function postLink(app: App) {
                 return new Promise((cont) => {
                     stepperSuspend(replayContext.stepperContext, cont);
 
-                    stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+                    replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
+                        stepperProgressReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
+                    });
 
                     stepperEventReplayed(replayContext);
                 });
             }, function() {
-                stepperProgressReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+                replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
+                    stepperProgressReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
+                });
+
                 stepperEventReplayed(replayContext);
             });
         });
@@ -939,13 +941,17 @@ function postLink(app: App) {
         return new Promise((resolve) => {
             replayContext.stepperDone = resolve;
             replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
+
             /* Set the interact callback to resume the stepper until completion. */
             stepperResume(replayContext.stepperContext, function interact(_) {
                 return new Promise((cont) => {
                     cont(true);
                 });
             }, function() {
-                stepperIdleReducer(replayContext.state, {payload: {stepperContext: replayContext.stepperContext}});
+                replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
+                    stepperIdleReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
+                });
+
                 stepperEventReplayed(replayContext);
             });
         });

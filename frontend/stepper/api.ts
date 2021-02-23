@@ -141,8 +141,15 @@ function getNodeStartRow(stepperState: StepperState) {
 
 export function makeContext(state: StepperState, interact: Function): StepperContext {
     console.log('**********  MAKE CONTEXT  **********', state);
+    /**
+     * TODO: We create a new state object here and not mutate the state. This is intended.
+     * The commented code can be deleted if... it works.
+     */
 
     if (state.platform === 'python') {
+        // state.lastAnalysis = clearLoadedReferences(state.analysis);
+        // state.controls = resetControls(state.controls);
+
         return {
             state: {
                 ...state,
@@ -155,6 +162,10 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
             lineCounter: 0
         };
     } else {
+        // state.programState = C.clearMemoryLog(state.programState);
+        // state.lastProgramState = state.programState;
+        // state.controls = resetControls(state.controls);
+
         return {
             state: {
                 ...state,
@@ -166,8 +177,16 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
             resume: null,
             position: getNodeStartRow(state),
             lineCounter: 0
-        };
+        }
     }
+
+    // return {
+    //     state,
+    //     interact,
+    //     resume: null,
+    //     position: getNodeStartRow(state),
+    //     lineCounter: 0
+    // };
 }
 
 function resetControls(controls) {
