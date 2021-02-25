@@ -5,7 +5,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
 import 'rc-slider/assets/index.css?global';
-import {AppStore} from './store';
+import {AppStore, AppStoreReplay} from './store';
 import {Bundle, link} from './linker';
 import commonBundle from './common/index';
 import playerBundle from './player/index';
@@ -80,15 +80,7 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
 const {store, scope, finalize, start} = link(function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.AppInit);
     bundle.addReducer(ActionTypes.AppInit, () => {
-        return {};
-
-        // return {
-        //     recordApi: scope.recordApi,
-        //     replayApi: scope.replayApi,
-        //     stepperApi: scope.stepperApi
-        // };
-
-        // return Map({scope});
+        // return {};
     });
 
     bundle.include(commonBundle);
@@ -98,7 +90,7 @@ const {store, scope, finalize, start} = link(function(bundle: Bundle) {
     bundle.include(statisticsBundle);
 
     if (process.env.NODE_ENV === 'development') {
-        bundle.addEarlyReducer(function(state, action) {
+        bundle.addEarlyReducer(function(state: AppStoreReplay, action): void {
             if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
                 console.log('action', action);
             }

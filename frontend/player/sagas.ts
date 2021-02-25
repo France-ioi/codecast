@@ -259,6 +259,8 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
 
         instant.state = replayContext.state;
 
+        Object.freeze(instant);
+
         replayContext.instants.push(instant);
         progress = Math.round(pos * 50 / events.length + t * 50 / duration) / 100;
         if (progress !== lastProgress) {

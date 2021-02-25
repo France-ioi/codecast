@@ -62,7 +62,7 @@ import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
-import produce from "immer";
+import {produce} from "immer";
 
 export interface StepperTask {
 
@@ -77,7 +77,7 @@ export enum StepperStepMode {
 }
 
 export interface StepperDirectives {
-    ordered: any[],
+    ordered: readonly any[],
     functionCallStack: any, // C
     functionCallStackMap: any // Python
 }
@@ -104,13 +104,13 @@ const initialStateStepperState = {
     input: '',
     output: '', // Only used for python
     terminal: null as TermBuffer, // Only used for python
-    suspensions: [] as any[],  // Only used for python // TODO: Don't put this in the store
+    suspensions: [] as readonly any[],  // Only used for python // TODO: Don't put this in the store
     programState: {} as any, // Only used for c
     lastProgramState: {} as any, // Only used for c
     ports: [] as any[], // Only used for arduino
     selectedPort: {} as any, // Only used for arduino
     controls: initialStepperStateControls, // Only used for c
-    analysis: null as SkulptAnalysis, // Only used for python
+    analysis: null as SkulptAnalysis | any,
     lastAnalysis: null as SkulptAnalysis, // Only used for python
     directives: {
         ordered: [],
@@ -126,7 +126,8 @@ const initialStateStepperState = {
     options: { // Only used for c
         memorySize: 0x10000,
         stackSize: 4096
-    }
+    },
+    isFinished: false // Only used for python
 };
 
 export type StepperState = typeof initialStateStepperState;
@@ -246,10 +247,10 @@ export default function(bundle: Bundle) {
 /**
  * Enrich, analysis the current stepper state.
  *
- * @param stepperState The stepper statee.
+ * @param stepperState The stepper state.
  * @param {string} context The context (Stepper.Progress, Stepper.Restart, Stepper.Idle).
  */
-function enrichStepperState(stepperState, context: 'Stepper.Restart' | 'Stepper.Progress' | 'Stepper.Idle') {
+function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restart' | 'Stepper.Progress' | 'Stepper.Idle'): StepperState {
     const {programState, controls} = stepperState;
     if (!programState) {
         return;
@@ -261,11 +262,14 @@ function enrichStepperState(stepperState, context: 'Stepper.Restart' | 'Stepper.
             // Don't reanalyse after program is finished :
             // keep the last state of the stack and set isFinished state.
             if (window.currentPythonRunner._isFinished) {
-                stepperState.analysis.isFinished = true;
+                stepperState.isFinished = true;
             } else {
                 stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
-                stepperState.directives.ordered = parseDirectives(stepperState.analysis);
-                stepperState.directives.functionCallStackMap = null;
+                stepperState.directives = {
+                    ordered: parseDirectives(stepperState.analysis),
+                    functionCallStackMap: null,
+                    functionCallStack: null
+                };
             }
         }
 
@@ -274,16 +278,14 @@ function enrichStepperState(stepperState, context: 'Stepper.Restart' | 'Stepper.
                 functionCallStack: [],
                 code: window.currentPythonRunner._code,
                 lines: window.currentPythonRunner._code.split("\n"),
-                stepNum: 0,
-                isFinished: false
+                stepNum: 0
             };
 
             stepperState.lastAnalysis = {
                 functionCallStack: [],
                 code: window.currentPythonRunner._code,
                 lines: window.currentPythonRunner._code.split("\n"),
-                stepNum: 0,
-                isFinished: false
+                stepNum: 0
             };
         }
     } else {
@@ -363,6 +365,10 @@ function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}})
 
     if (stepperState) {
         enrichStepperState(stepperState, 'Stepper.Restart');
+        /**
+         * TODO: stepperState comes from an action so it's not an immer draft. The whole process could be cleaner.
+         */
+        stepperState = {...stepperState};
 
         if (platform === 'python') {
             // TODO: Check restart.
@@ -428,14 +434,15 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
 
     // Set new currentStepperState state and go back to idle.
     enrichStepperState(stepperContext.state, 'Stepper.Progress');
+    /**
+     * TODO: stepperState comes from an action so it's not an immer draft. The whole process could be cleaner.
+     */
+    stepperContext.state = {...stepperContext.state};
 
     // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
     if (stepperContext.state.platform === 'python') {
-        const storeStepper = state.stepper;
-        const storeCurrentStepperState = storeStepper.currentStepperState;
-
         const storeTerminal = window.currentPythonRunner._terminal;
-        const storeOutput = storeCurrentStepperState.output;
+        const storeOutput = state.stepper.currentStepperState.output;
 
         stepperContext.state.terminal = storeTerminal;
         stepperContext.state.output = storeOutput;
@@ -448,6 +455,11 @@ function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}):
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
     enrichStepperState(stepperContext.state, 'Stepper.Idle');
+    /**
+     * TODO: stepperState comes from an action so it's not an immer draft. The whole process could be cleaner.
+     */
+    stepperContext.state = {...stepperContext.state};
+
     state.stepper.currentStepperState = stepperContext.state;
     state.stepper.status = StepperStatus.Idle;
     state.stepper.mode = null;

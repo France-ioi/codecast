@@ -123,7 +123,7 @@ export const parseDirectives = function(analysis: SkulptAnalysis) {
         }
     }
 
-    return directives;
+    return Object.freeze(directives);
 };
 
 /**

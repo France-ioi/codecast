@@ -11,7 +11,6 @@ export interface Linker {
         [key: string]: string
     },
     store: AppStore,
-    reducer: any
     finalize: Function
     start: Function
 }
@@ -147,7 +146,7 @@ export function link(rootBuilder): Linker {
     }
 
     // Create the store.
-    const store = createStore(rootReducer, null, compose(applyMiddleware(sagaMiddleware), ...enhancers));
+    const store = createStore(produce(rootReducer), {}, compose(applyMiddleware(sagaMiddleware), ...enhancers));
 
     window.store = store;
 
@@ -176,7 +175,6 @@ export function link(rootBuilder): Linker {
         scope: globalScope as App,
         actionTypes: typeForActionName,
         store: store as AppStore,
-        reducer: rootReducer,
         finalize,
         start
     };
@@ -246,28 +244,22 @@ export class Bundle {
         if (reducer === undefined) {
             this._.lateReducers.push(name); // name is the reducer function
         } else {
-            const immerReducer = produce(reducer);
-
             this.use(name);
             this._.actionReducers.push({
                 name,
-                reducer: immerReducer
+                reducer: reducer
             });
         }
     }
 
     addEarlyReducer(reducer) {
-        const immerReducer = produce(reducer);
-
         this._assertNotSealed();
-        this._.earlyReducers.push(immerReducer);
+        this._.earlyReducers.push(reducer);
     }
 
     addLateReducer(reducer) {
-        const immerReducer = produce(reducer);
-
         this._assertNotSealed();
-        this._.lateReducers.push(immerReducer);
+        this._.lateReducers.push(reducer);
     }
 
     addSaga(saga) {
@@ -385,7 +377,11 @@ function directCompose(secondReducer, firstReducer) {
     if (!secondReducer) {
         return firstReducer;
     }
-    return (state, action) => secondReducer(firstReducer(state, action), action);
+
+    return (state, action) => {
+        firstReducer(state, action);
+        secondReducer(state, action);
+    }
 }
 
 function reverseCompose(firstReducer, secondReducer) {
@@ -395,5 +391,9 @@ function reverseCompose(firstReducer, secondReducer) {
     if (!secondReducer) {
         return firstReducer;
     }
-    return (state, action) => secondReducer(firstReducer(state, action), action);
+
+    return (state, action) => {
+        firstReducer(state, action);
+        secondReducer(state, action);
+    }
 }

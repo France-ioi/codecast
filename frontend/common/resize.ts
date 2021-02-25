@@ -67,8 +67,8 @@ export default function(bundle: Bundle) {
     });
 
     bundle.addLateReducer(function updateGeometry(state: AppStore) {
-        if (!state) {
-            return state;
+        if (!state.panes) {
+            return;
         }
 
         /* Default to the largest geometry, no visible panes. */

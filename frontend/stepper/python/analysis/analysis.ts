@@ -4,8 +4,7 @@ export interface SkulptAnalysis {
     functionCallStack: SkulptScope[],
     stepNum: number,
     code: '',
-    lines: string[],
-    isFinished: boolean
+    lines: string[]
 }
 
 export interface SkulptVariable {
@@ -49,7 +48,7 @@ const SKULPT_ANALYSIS_DEBUG = 0;
  *
  * @returns SkulptAnalysis
  */
-export const analyseSkulptState = function(suspensions: any[], lastAnalysis: SkulptAnalysis, newStepNum: number): SkulptAnalysis {
+export const analyseSkulptState = function(suspensions: readonly any[], lastAnalysis: SkulptAnalysis, newStepNum: number): SkulptAnalysis {
     // @ts-ignore
     if (SKULPT_ANALYSIS_DEBUG === 2) {
         console.log('[¥¥¥¥¥¥¥] Building analysis');
@@ -91,7 +90,7 @@ export const analyseSkulptState = function(suspensions: any[], lastAnalysis: Sku
         console.log(analysis);
     }
 
-    return analysis;
+    return Object.freeze(analysis);
 };
 
 /**
@@ -297,7 +296,7 @@ export const getSkulptSuspensionsCopy = function(suspensions) {
         };
     }
 
-    return copies;
+    return Object.freeze(copies);
 }
 
 /**

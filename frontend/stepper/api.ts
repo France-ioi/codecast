@@ -153,7 +153,7 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
         return {
             state: {
                 ...state,
-                lastAnalysis: clearLoadedReferences(state.analysis),
+                lastAnalysis: Object.freeze(clearLoadedReferences(state.analysis)),
                 controls: resetControls(state.controls)
             },
             interact,
@@ -170,7 +170,7 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
             state: {
                 ...state,
                 programState: C.clearMemoryLog(state.programState),
-                lastProgramState: state.programState,
+                lastProgramState: Object.freeze(state.programState),
                 controls: resetControls(state.controls)
             },
             interact,
@@ -417,7 +417,7 @@ export async function performStep(stepperContext: StepperContext, mode) {
 
 function isStuck(stepperState: StepperState): boolean {
     if (stepperState.platform === 'python') {
-        return stepperState.analysis.isFinished;
+        return stepperState.isFinished;
     } else {
         return !stepperState.programState.control;
     }

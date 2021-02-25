@@ -1,7 +1,7 @@
 import {getLoadedReferencesFromVariable, getVariable} from './utils';
 import {getCursorMap} from './array_utils';
 
-export const extractView = function(context, name, options) {
+export const extractView = function(context, name: string, options) {
     const {getMessage} = options;
     const {analysis} = context;
 

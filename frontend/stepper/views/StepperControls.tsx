@@ -59,7 +59,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
             if (platform === 'python') {
                 // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
                 canStepOut = (currentStepperState.suspensions && (currentStepperState.suspensions.length > 1));
-                canStep = !currentStepperState.analysis.isFinished;
+                canStep = !currentStepperState.isFinished;
                 canRestart = enabled;
                 canUndo = enabled && (stepper.undo.length > 0);
                 canRedo = enabled && (stepper.redo.length > 0);

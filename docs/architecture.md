@@ -2,3 +2,4 @@ The *addReduder* function uses *immer* internally, so all reducers are written b
 
 For replays, a subset of the store is used. Its type is *AppStoreReplay*. The main application store is of type *AppStore*, which extends *AppStore*.
 
+Performance tricks for immer : https://immerjs.github.io/immer/docs/performance#pre-freeze-data

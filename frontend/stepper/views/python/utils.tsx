@@ -1,4 +1,5 @@
 import React from 'react';
+import {SkulptAnalysis, SkulptScope, SkulptVariable} from "../../python/analysis/analysis";
 
 /**
  * Gets the scope's loaded references from a variable name.
@@ -8,17 +9,18 @@ import React from 'react';
  *
  * @return {object|null}
  */
-export const getLoadedReferencesFromVariable = function(analysis, name) {
+export const getLoadedReferencesFromVariable = function(analysis: SkulptAnalysis, name: string): SkulptVariable {
     // Check in the last (the current) and the first (which is the global) scopes.
 
-    const nbScopes = analysis.functionCallStack.size;
-    if (getVariableInScope(analysis.functionCallStack.get(nbScopes - 1), name)) {
-        return analysis.functionCallStack.get(nbScopes - 1).loadedReferences;
+    const nbScopes = analysis.functionCallStack.length;
+    if (getVariableInScope(analysis.functionCallStack[nbScopes - 1], name)) {
+        return analysis.functionCallStack[nbScopes - 1].loadedReferences;
     }
-    if (nbScopes > 1 && getVariableInScope(analysis.functionCallStack.get(0), name)) {
-        return analysis.functionCallStack.get(0).loadedReferences;
+    if (nbScopes > 1 && getVariableInScope(analysis.functionCallStack[0], name)) {
+        return analysis.functionCallStack[0].loadedReferences;
     }
 
+    // @ts-ignore
     return {};
 };
 
@@ -30,13 +32,16 @@ export const getLoadedReferencesFromVariable = function(analysis, name) {
  *
  * @return {object|null}
  */
-export const getVariable = function(analysis, name) {
+export const getVariable = function(analysis: SkulptAnalysis, name: string): SkulptVariable {
     // Check in the last (the current) and the first (which is the global) scopes.
 
-    const nbScopes = analysis.functionCallStack.size;
-    let variable = getVariableInScope(analysis.functionCallStack.get(nbScopes - 1), name);
+    const nbScopes = analysis.functionCallStack.length;
+    let variable = null;
+    if (nbScopes) {
+        variable = getVariableInScope(analysis.functionCallStack[nbScopes - 1], name);
+    }
     if (!variable && nbScopes > 1) {
-        variable = getVariableInScope(analysis.functionCallStack.get(0), name);
+        variable = getVariableInScope(analysis.functionCallStack[0], name);
     }
 
     return variable;
@@ -50,7 +55,7 @@ export const getVariable = function(analysis, name) {
  *
  * @return {object|null}
  */
-export const getVariables = function(analysis, names) {
+export const getVariables = function(analysis: SkulptAnalysis, names: string[]): {name: string, value: SkulptVariable}[] {
     return names.map((name) => {
         return {
             name,
@@ -67,9 +72,9 @@ export const getVariables = function(analysis, names) {
  *
  * @return {object|null}
  */
-const getVariableInScope = function(scope, name) {
-    if (scope.variables.has(name)) {
-        return scope.variables.get(name);
+const getVariableInScope = function(scope: SkulptScope, name: string): SkulptVariable {
+    if (scope.variables.hasOwnProperty(name)) {
+        return scope.variables[name];
     }
 
     return null;

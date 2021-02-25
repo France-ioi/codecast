@@ -160,8 +160,6 @@ export const getCursorMap = function(analysis, cursorNames, options) {
         }
     });
 
-    console.log(cursorMap);
-
     return cursorMap;
 };
 
@@ -170,8 +168,6 @@ export const getCursorMap = function(analysis, cursorNames, options) {
 // the selection, and a 'row' field such that adjacent cursors are on a
 // different row (up to `cursorRows` rows are used).
 export const finalizeCursors = function(selection, cursorMap, cursorRows) {
-    console.log(selection, cursorMap, cursorRows);
-
     const staggerAll = true; // XXX could be an option
     let nextStaggerCol, cursorRow = 0;
     selection.forEach(function(index, col) {

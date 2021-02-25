@@ -6,7 +6,7 @@ A `Stored Value` can have one of these shapes:
 
 */
 
-import {Record, List, Map} from 'immutable';
+import {List, Map, Record} from 'immutable';
 import {StepperDirectives} from "../index";
 
 interface AnalysisC {
@@ -47,7 +47,9 @@ const analyseScope = function(scope) {
     if (!scope) {
         return List();
     }
+
     let functionCallStack = analyseScope(scope.parent);
+
     // 'function' and 'block' scopes have directives,
     // 'function' scopes clears the active directives.
     switch (scope.kind) {
@@ -61,6 +63,7 @@ const analyseScope = function(scope) {
                 args,
                 directives: List(scope.directives)
             }));
+
             break;
         }
         case 'block': {
@@ -78,15 +81,19 @@ const analyseScope = function(scope) {
                         localNames = localNames.delete(i);
                     }
                     localNames = localNames.push(name);
+
                     return localNames;
                 });
+
                 // Associate the name with a (frozen) {type, ref} object.
                 stackFrame = stackFrame.setIn(['localMap', name], Object.freeze({type, ref}));
+
                 return stackFrame;
             });
             break;
         }
     }
+
     return functionCallStack;
 };
 
@@ -108,9 +115,10 @@ export const collectDirectives = function(functionCallStack, focusDepth): Steppe
             }
         })
     }
-    return {
+
+    return Object.freeze({
         ordered,
         functionCallStackMap,
         functionCallStack: null
-    };
+    });
 };
