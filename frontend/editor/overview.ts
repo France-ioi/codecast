@@ -14,7 +14,8 @@ export default function(bundle: Bundle) {
     });
 
     bundle.addReducer(EditorActionTypes.EditorPrepare, (state: AppStore) => {
-        state.editor = initialStateEditor;
+        state.editor.save.state = EditorSaveState.Idle;
+        state.editor.unsaved = false;
     });
 
     bundle.defineAction(ActionTypes.EditorPropertyChanged);

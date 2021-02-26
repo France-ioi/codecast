@@ -36,14 +36,18 @@ export default function(bundle: Bundle) {
 }
 
 function playerReadyReducer(state: AppStore, {payload: {baseDataUrl, data}}): void {
-    const availableOptions = [];
+    const availableOptions = {};
     const {langOptions} = state.subtitles;
 
     (data.subtitles || []).forEach(function(key) {
         const url = `${baseDataUrl}_${key}.srt`;
         const option = langOptions.find(option => option.value === key);
 
-        availableOptions[key] = {key, url, ...option};
+        availableOptions[key] = {
+            key,
+            url,
+            ...option
+        };
     });
 
     state.subtitles.availableOptions = availableOptions;

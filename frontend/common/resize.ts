@@ -14,7 +14,7 @@ export const mainViewGeometries = [
 // TODO: Put in a store's attribute "window" instead of in the root of the store.
 export const initialStateWindow = {
     mainViewGeometry: mainViewGeometries[0],
-    panes: [],
+    panes: {},
     windowWidth: 0,
     windowHeight: 0,
     containerWidth: 0,
@@ -81,7 +81,9 @@ export default function(bundle: Bundle) {
             let mainViewWidth = windowWidth;
 
             /* Account for width of enabled panes. */
-            panes = panes.map(pane => {
+            Object.keys(panes).map((key) => {
+                const pane = panes[key];
+
                 if (!pane.enabled) {
                     pane.visible = false
                 } else {
@@ -89,8 +91,6 @@ export default function(bundle: Bundle) {
 
                     pane.visible = true;
                 }
-
-                return pane;
             });
 
             /* Find the largest main-view geometry that fits the available space. */
@@ -101,10 +101,10 @@ export default function(bundle: Bundle) {
                 if (geometryIndex === mainViewGeometries.length) {
                     /* Screen is too small, use the smallest geometry and hide all panes. */
                     viewportTooSmall = true;
-                    panes = panes.map(pane => {
-                        pane.visible = false;
+                    Object.keys(panes).map((key: string) => {
+                        const pane = panes[key];
 
-                        return pane;
+                        pane.visible = false;
                     });
 
                     break;
@@ -117,12 +117,12 @@ export default function(bundle: Bundle) {
         /* Compute the container width */
         /* XXX is this still needed? */
         let containerWidth = geometry.width;
-        panes = panes.map(pane => {
+        Object.keys(panes).map((key: string) => {
+            const pane = panes[key];
+
             if (pane.visible) {
                 containerWidth += pane.width;
             }
-
-            return pane;
         });
 
         state.viewportTooSmall = viewportTooSmall;

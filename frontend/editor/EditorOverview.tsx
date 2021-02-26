@@ -41,7 +41,6 @@ interface EditorOverviewProps extends EditorOverviewStateToProps, EditorOverview
 class _EditorOverview extends React.PureComponent<EditorOverviewProps> {
     render() {
         const {version, name, events, duration, waveform, save, playerUrl, canSave} = this.props;
-
         return (
             <div className='vbox'>
                 <Label>

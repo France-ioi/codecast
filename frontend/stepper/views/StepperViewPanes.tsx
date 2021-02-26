@@ -1,9 +1,10 @@
 import React from "react";
 import {SubtitlesEditorPane} from "../../subtitles/views/SubtitlesEditorPane";
 import {SubtitlesPane} from "../../subtitles/SubtitlesPane";
+import {Panes} from "../../store";
 
 interface StepperViewPanesProps {
-    panes: any
+    panes: Panes
 }
 
 export class StepperViewPanes extends React.PureComponent<StepperViewPanesProps> {
@@ -12,14 +13,16 @@ export class StepperViewPanes extends React.PureComponent<StepperViewPanesProps>
 
         return (
             <div id='mainView-panes'>
-                {panes.map(([key, pane]) => {
+                {Object.keys(panes).map((key: string) => {
+                    const pane = panes[key];
+
                     if (!pane.visible) {
                         return false;
                     }
 
                     const view = pane.view;
                     const paneStyle = {
-                        width: `${pane.get('width')}px`
+                        width: `${pane.width}px`
                     };
 
                     let displayView = null;

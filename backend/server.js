@@ -376,9 +376,11 @@ function addBackendRoutes(app, config, store) {
                 } else {
                     try {
                         const endTime = process.hrtime(startTime);
-                        logData.compile_time = (endTime[0] * 1000) + (endTime[1] / 1000000);
-                        logData.referer = logData.referer || req.headers.referer;
-                        logCompileData(config, logData);
+                        if (logData) {
+                            logData.compile_time = (endTime[0] * 1000) + (endTime[1] / 1000000);
+                            logData.referer = logData.referer || req.headers.referer;
+                            logCompileData(config, logData);
+                        }
 
                         let ast = JSON.parse(chunks.join(''));
                         const convert = new AnsiToHtml();

@@ -49,6 +49,7 @@ export default function(bundle: Bundle) {
 
         stepperApi.onEffect('call', function* callHandler(stepperContext: StepperContext, cont, values) {
             C.effects.doCall(stepperContext.state.programState, cont, values);
+
             /* XXX disable this code and leave directives in block */
             const bodyNode = values[0].decl;
             stepperContext.state.programState.scope.directives = bodyNode[1].directives || [];

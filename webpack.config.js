@@ -8,7 +8,16 @@ const config = module.exports = (env, argv) => {
         argv.mode = 'development';
     }
 
+    process.env.NODE_ENV = argv.mode;
+    console.log('process.env.NODE_ENV=', process.env.NODE_ENV);
+
     const isDev = (argv.mode === 'development');
+    if (isDev) {
+        process.env.NODE_ENV = 'development';
+    } else {
+        process.env.NODE_ENV = 'production';
+    }
+
     console.log('isDevelopment ?', isDev);
 
     const jsonConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'));
@@ -138,6 +147,9 @@ const config = module.exports = (env, argv) => {
             ]
         },
         plugins: [
+            new webpack.DefinePlugin({
+                'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+            }),
             new webpack.NoEmitOnErrorsPlugin(),
             new webpack.ProvidePlugin({
                 Buffer: ['buffer', 'Buffer'],

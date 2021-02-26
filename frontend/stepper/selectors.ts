@@ -9,6 +9,6 @@ export function getCurrentStepperState(state: AppStoreReplay): StepperState {
     return state.stepper.currentStepperState;
 }
 
-export function isStepperInterrupting(state: AppStore) {
+export function isStepperInterrupting(state: AppStore): boolean {
     return state.stepper.interrupting;
 }

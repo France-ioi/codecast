@@ -43,7 +43,7 @@ import DelayBundle from './delay';
 import HeapBundle from './c/heap';
 import IoBundle from './io/index';
 import ViewsBundle from './views/index';
-import ArduinoBundle from './arduino';
+import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle, {getNewOutput, getNewTerminal} from './python';
 
 /* TODO: clean-up */
@@ -93,8 +93,9 @@ export const initialStepperStateControls = {
     cellPan: 0
 };
 
-// TOOD: This type is used in directives but it may actually be a different type.
-// If you work on those, be sure to investigate this.
+/**
+ * TODO: This type is used in directives but it may actually be a different type that is used there.
+ */
 export type StepperControls = typeof initialStepperStateControls;
 
 // TODO: Separate the needs per platform (StepperStatePython, StepperStateC, etc)
@@ -107,7 +108,7 @@ const initialStateStepperState = {
     suspensions: [] as readonly any[],  // Only used for python // TODO: Don't put this in the store
     programState: {} as any, // Only used for c
     lastProgramState: {} as any, // Only used for c
-    ports: [] as any[], // Only used for arduino
+    ports: [] as ArduinoPort[], // Only used for arduino
     selectedPort: {} as any, // Only used for arduino
     controls: initialStepperStateControls, // Only used for c
     analysis: null as SkulptAnalysis | any,
@@ -361,6 +362,7 @@ function stringifyError(error) {
 /* Reducers */
 
 function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}}): void {
+    console.log('stepperRestartReducer');
     const {platform} = state.options;
 
     if (stepperState) {
@@ -427,6 +429,13 @@ function stepperStartedReducer(state: AppStoreReplay, action): void {
 }
 
 function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext}}): void {
+    console.log('stepperProgressReducer');
+
+    /**
+     * TODO: stepperState comes from an action so it's not an immer draft.
+     */
+    stepperContext.state = {...stepperContext.state};
+
     if (stepperContext.state.platform === 'python') {
         // Save scope.
         stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
@@ -434,10 +443,6 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
 
     // Set new currentStepperState state and go back to idle.
     enrichStepperState(stepperContext.state, 'Stepper.Progress');
-    /**
-     * TODO: stepperState comes from an action so it's not an immer draft. The whole process could be cleaner.
-     */
-    stepperContext.state = {...stepperContext.state};
 
     // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
     if (stepperContext.state.platform === 'python') {
@@ -448,10 +453,13 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         stepperContext.state.output = storeOutput;
     }
 
+    console.log(stepperContext.state);
+
     state.stepper.currentStepperState = stepperContext.state;
 }
 
 function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}): void {
+    console.log('stepperIdleReducer');
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
     enrichStepperState(stepperContext.state, 'Stepper.Idle');
@@ -636,6 +644,9 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
 
     /* Check whether to interrupt or resume the stepper. */
     if (interrupted) {
+        /**
+         * It is strange to use reject() for a behavior that is normal (pausing the stepper).
+         */
         yield call(reject, new StepperError('interrupt', 'interrupted'));
     } else {
         /* Continue stepper execution, passing the saga's return value as the
@@ -692,10 +703,10 @@ function* stepperInterruptSaga() {
             stepperContext.state.input = window.currentPythonRunner._input;
             stepperContext.state.terminal = window.currentPythonRunner._terminal;
             stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
-
-            yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
         }
     }
+
+    yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
 }
 
 function* stepperStepSaga(app: App, action) {
@@ -750,6 +761,7 @@ function* stepperStepSaga(app: App, action) {
             }
             if (ex.condition === 'interrupt') {
                 stepperContext.interrupted = true;
+
                 yield put({type: ActionTypes.StepperInterrupted});
             }
             if (ex.condition === 'error') {
@@ -843,7 +855,9 @@ function postLink(app: App) {
     replayApi.on('stepper.restart', async function(replayContext: ReplayContext) {
         const stepperState = await buildState(replayContext.state);
 
-        stepperRestartReducer(replayContext.state, {payload: {stepperState}});
+        replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
+            stepperRestartReducer(draft, {payload: {stepperState}});
+        });
     });
 
     recordApi.on(ActionTypes.StepperStarted, function* (addEvent, action) {

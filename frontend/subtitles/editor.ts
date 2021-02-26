@@ -11,7 +11,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {AppStore} from "../store";
-import {initialStateSubtitles} from "./index";
+import {initialStateSubtitles, SubtitlesOption, SubtitlesOptions} from "./index";
 import {Bundle} from "../linker";
 import {App} from "../index";
 
@@ -20,16 +20,16 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.SubtitlesSelected, subtitlesSelectedReducer);
 
     /* subtitlesAddOption adds a subtitles option to loaded recording. */
-    bundle.defineAction(ActionTypes.SubtitlesAddOption);
-    bundle.addReducer(ActionTypes.SubtitlesAddOption, subtitlesAddOptionReducer);
+    bundle.defineAction(ActionTypes.SubtitlesOptionAdd);
+    bundle.addReducer(ActionTypes.SubtitlesOptionAdd, subtitlesAddOptionReducer);
 
     /* subtitlesRemoveOption removes a subtitles option from the loaded recording. */
-    bundle.defineAction(ActionTypes.SubtitlesRemoveOption);
-    bundle.addReducer(ActionTypes.SubtitlesRemoveOption, subtitlesRemoveOptionReducer);
+    bundle.defineAction(ActionTypes.SubtitlesOptionRemove);
+    bundle.addReducer(ActionTypes.SubtitlesOptionRemove, subtitlesRemoveOptionReducer);
 
     /* subtitlesSaveOptions {key} opens a Save file dialog to save the current
        text for the subtitles option with the given key. */
-    bundle.defineAction(ActionTypes.SubtitlesSaveOption);
+    bundle.defineAction(ActionTypes.SubtitlesOptionSave);
 
     /* subtitlesTextReverted {key, url} reloads subtitles from the cloud. */
     bundle.defineAction(ActionTypes.SubtitlesTextReverted);
@@ -107,6 +107,8 @@ function subtitlesAddOptionReducer(state: AppStore, {payload: {key, select}}): v
             key,
             text: '',
             unsaved: true,
+            removed: false,
+            url : '',
             ...base
         }
     } else if (option.removed) {
@@ -155,7 +157,7 @@ function subtitlesItemInsertedReducer(state: AppStore, {payload: {index, offset,
 
     let jumpTo = start;
     if (where === 'below') {
-        state.subtitles.items = state.subtitles.items.splice(index, 1, {
+        state.subtitles.items.splice(index, 1, {
             data: {
                 start,
                 end: split - 1,
@@ -174,7 +176,7 @@ function subtitlesItemInsertedReducer(state: AppStore, {payload: {index, offset,
         jumpTo = split;
     }
     if (where === 'above') {
-        state.subtitles.items = state.subtitles.items.splice(index, 1, {
+        state.subtitles.items.splice(index, 1, {
             data: {
                 start,
                 end: split - 1,
@@ -267,7 +269,7 @@ function subtitlesEditorSaveSucceededReducer(state: AppStore): void {
     clearAllUnsaved(state.subtitles.availableOptions);
 }
 
-function clearAllUnsaved(options: typeof initialStateSubtitles.availableOptions) {
+function clearAllUnsaved(options: SubtitlesOptions) {
     for (let key of Object.keys(options)) {
         options[key].unsaved = false;
     }
@@ -280,7 +282,7 @@ function* subtitlesEditorSaga(state) {
     yield takeLatest(ActionTypes.SubtitlesEditorReturn, subtitlesEditorReturnSaga, state);
     yield takeLatest(ActionTypes.SubtitlesTextReverted, subtitlesTextRevertedSaga, state);
     yield takeLatest(ActionTypes.SubtitlesTextLoaded, subtitlesTextLoadedSaga, state);
-    yield takeLatest(ActionTypes.SubtitlesSaveOption, subtitlesSaveOptionSaga, state);
+    yield takeLatest(ActionTypes.SubtitlesOptionSave, subtitlesSaveOptionSaga, state);
 }
 
 function* subtitlesSelectedSaga(state, action) {
@@ -315,7 +317,9 @@ function* subtitlesEditorSaveSaga(state: AppStore, _action) {
         const {baseUrl} = state.options;
         const editor = state.editor;
         const base = editor.base;
-        const subtitles = Object.values(state.subtitles.availableOptions);
+        const subtitles = Object.values(state.subtitles.availableOptions).filter((subtitlesOption: SubtitlesOption) => {
+            return !subtitlesOption.removed;
+        });
 
         return {baseUrl, base, subtitles};
     });

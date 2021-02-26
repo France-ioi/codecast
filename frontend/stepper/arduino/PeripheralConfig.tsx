@@ -1,6 +1,7 @@
 import React from "react";
 import {Button, Icon} from "@blueprintjs/core";
 import classnames from 'classnames';
+import {ArduinoPortPeripheralType} from "./index";
 
 interface PeripheralConfigProps {
     defn: any,
@@ -9,13 +10,13 @@ interface PeripheralConfigProps {
     onChange: Function
 }
 
-const peripheralTypes = ['none', 'slider', 'LED', 'button'];
+const peripheralTypes = [ArduinoPortPeripheralType.None, ArduinoPortPeripheralType.Slider, ArduinoPortPeripheralType.Led, ArduinoPortPeripheralType.Button];
 const ledColors = ['red', 'amber', 'yellow', 'green', 'blue', 'white'];
 const peripheralDefault = {
-    none: {type: 'none'},
-    LED: {type: 'LED', color: ledColors[0]},
-    button: {type: 'button'},
-    slider: {type: 'slider'}
+    none: {type: ArduinoPortPeripheralType.None},
+    LED: {type: ArduinoPortPeripheralType.Led, color: ledColors[0]},
+    button: {type: ArduinoPortPeripheralType.Button},
+    slider: {type: ArduinoPortPeripheralType.Slider}
 };
 
 export class PeripheralConfig extends React.PureComponent<PeripheralConfigProps> {

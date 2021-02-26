@@ -214,7 +214,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         console.log('-------- REPLAY ---- EVENT ----', key, event);
         console.log('replayContext', replayContext);
 
-        if (key === 'stepper.step' || key === 'stepper.progress' || key === 'stepper.idle') {
+        if (key === 'stepper.step' || key === 'stepper.progress' || key === 'stepper.idle' || key === 'stepper.restart') {
             /**
              * Those event are trickier than the other ones because they copy a piece of state (state.stepper.currentStepperStep)
              * and then reuse it in future events. We cannot copy a piece of immer draft and use it later.

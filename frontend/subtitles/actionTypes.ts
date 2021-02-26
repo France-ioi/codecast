@@ -8,9 +8,9 @@ export enum ActionTypes {
     SubtitlesBandMoved = 'Subtitles.Band.Moved',
 
     SubtitlesSelected = 'Subtitles.Selected',
-    SubtitlesAddOption = 'Subtitles.AddOption',
-    SubtitlesRemoveOption = 'Subtitles.Option.Remove',
-    SubtitlesSaveOption = 'Subtitles.Option.Save',
+    SubtitlesOptionAdd = 'Subtitles.Option.Add',
+    SubtitlesOptionRemove = 'Subtitles.Option.Remove',
+    SubtitlesOptionSave = 'Subtitles.Option.Save',
     SubtitlesTextReverted = 'Subtitles.Text.Reverted',
     SubtitlesTextLoaded = 'Subtitles.Text.Load',
     SubtitlesTextChanged = 'Subtitles.Text.Changed',

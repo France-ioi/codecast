@@ -7,9 +7,10 @@ import Files from 'react-files';
 import {ActionTypes} from "./actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
+import {SubtitlesOptions} from "./index";
 
 interface SubtitlesEditorStateToProps {
-    availableOptions: any[],
+    availableOptions: SubtitlesOptions,
     selected: any,
     subtitlesText: string,
     langOptions: any[],
@@ -149,7 +150,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
     };
     _addOption = (option) => {
         const key = option.value;
-        this.props.dispatch({type: ActionTypes.SubtitlesAddOption, payload: {key, select: true}});
+        this.props.dispatch({type: ActionTypes.SubtitlesOptionAdd, payload: {key, select: true}});
     };
     _reloadSelected = () => {
         const {selected: {key, url}} = this.props;
@@ -157,12 +158,12 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
     };
     _saveSelected = () => {
         const {selected: {key}} = this.props;
-        this.props.dispatch({type: ActionTypes.SubtitlesSaveOption, payload: {key}});
+        this.props.dispatch({type: ActionTypes.SubtitlesOptionSave, payload: {key}});
     };
     _removeSelected = () => {
         const {selected: {key}} = this.props;
         if (confirm(`Confirm remove of language ${key}?`)) {
-            this.props.dispatch({type: ActionTypes.SubtitlesRemoveOption, payload: {key}});
+            this.props.dispatch({type: ActionTypes.SubtitlesOptionRemove, payload: {key}});
         }
     };
     _onChange = (event) => {

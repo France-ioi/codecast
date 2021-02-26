@@ -142,14 +142,10 @@ function getNodeStartRow(stepperState: StepperState) {
 export function makeContext(state: StepperState, interact: Function): StepperContext {
     console.log('**********  MAKE CONTEXT  **********', state);
     /**
-     * TODO: We create a new state object here and not mutate the state. This is intended.
-     * The commented code can be deleted if... it works.
+     * TODO: We create a new state object here instead of mutatating the state. This is intended.
      */
 
     if (state.platform === 'python') {
-        // state.lastAnalysis = clearLoadedReferences(state.analysis);
-        // state.controls = resetControls(state.controls);
-
         return {
             state: {
                 ...state,
@@ -162,10 +158,6 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
             lineCounter: 0
         };
     } else {
-        // state.programState = C.clearMemoryLog(state.programState);
-        // state.lastProgramState = state.programState;
-        // state.controls = resetControls(state.controls);
-
         return {
             state: {
                 ...state,
@@ -179,14 +171,6 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
             lineCounter: 0
         }
     }
-
-    // return {
-    //     state,
-    //     interact,
-    //     resume: null,
-    //     position: getNodeStartRow(state),
-    //     lineCounter: 0
-    // };
 }
 
 function resetControls(controls) {
@@ -210,15 +194,13 @@ async function executeEffects(stepperContext: StepperContext, iterator) {
             if (!builtinHandlers.has(builtin)) {
                 throw new StepperError('error', `unknown builtin ${builtin}`);
             }
-            lastResult = await executeEffects(stepperContext,
-                builtinHandlers.get(builtin)(stepperContext, ...value.slice(2)));
+            lastResult = await executeEffects(stepperContext, builtinHandlers.get(builtin)(stepperContext, ...value.slice(2)));
         } else {
             /* Call the effect handler, feed the result back into the iterator. */
             if (!effectHandlers.has(name)) {
                 throw new StepperError('error', `unhandled effect ${name}`);
             }
-            lastResult = await executeEffects(stepperContext,
-                effectHandlers.get(name)(stepperContext, ...value.slice(1)));
+            lastResult = await executeEffects(stepperContext, effectHandlers.get(name)(stepperContext, ...value.slice(1)));
         }
     }
 }

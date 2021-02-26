@@ -8,6 +8,22 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {NodeCue} from "subtitle";
+
+export type SubtitlesOption = {
+    key: string,
+    text: string,
+    unsaved: boolean,
+    countryCode: string,
+    label: string,
+    value: string,
+    removed: boolean,
+    url: string
+}
+
+export type SubtitlesOptions = {
+    [key: string]: SubtitlesOption
+}
 
 export const initialStateSubtitles = {
     langOptions: [
@@ -29,7 +45,7 @@ export const initialStateSubtitles = {
         loaded: [],
     },
     text: '',
-    items: [],
+    items: [] as NodeCue[],
     currentIndex: 0,
     audioTime: 0,
     loaded: false,
@@ -38,7 +54,7 @@ export const initialStateSubtitles = {
     startY: 0,
     offsetY: 0,
     unsaved: false,
-    availableOptions: [], // TODO: type
+    availableOptions: {} as SubtitlesOptions,
     selectedKey: 0,
     filteredItems: [],
     loadedKey: 'none',
@@ -97,7 +113,13 @@ function updateSubtitlesPaneVisibility(state: AppStore) {
 
     let view = (editing) ? 'editor' : 'subtitles';
 
-    state.panes['subtitles'] = {view, editing, enabled, width};
+    state.panes['subtitles'] = {
+        view,
+        editing,
+        enabled,
+        width,
+        visible: false
+    };
 }
 
 function subtitlesBandEnabledChangedReducer(state: AppStore, {payload: {value}}): void {

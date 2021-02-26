@@ -10,7 +10,7 @@ import {AppStore} from "../../store";
 import {NodeCue} from "subtitle";
 
 interface SubtitlesEditorPaneStateToProps {
-    subtitles: any[],
+    subtitles: NodeCue[],
     currentIndex: number,
     audioTime: number,
     getMessage: Function

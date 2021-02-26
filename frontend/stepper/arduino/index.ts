@@ -13,10 +13,9 @@ In the stepper state:
 */
 
 import range from 'node-range';
-import update from 'immutability-helper';
 import {call, put, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
-
+import update from 'immutability-helper';
 import './ace';
 import './style.scss';
 import {ActionTypes} from "./actionTypes";
@@ -31,16 +30,34 @@ import {Bundle} from "../../linker";
 import {App} from "../../index";
 
 export enum PinMode {
-  PINMODE_INPUT = 0,
-  PINMODE_OUTPUT = 1,
-  PINMODE_INPUT_PULLUP = 2
+  Input = 0,
+  Output = 1,
+  InputPullup = 2
 }
+
+export enum ArduinoPortPeripheralType {
+    None = 'none',
+    Button = 'button',
+    Led = 'LED',
+    Slider = 'slider'
+}
+
+export type ArduinoPortPeripheral = {
+    type: ArduinoPortPeripheralType
+};
+
+export type ArduinoPort = {
+    direction: PinMode,
+    input: 0 | 1,
+    output: 0 | 1,
+    peripheral: ArduinoPortPeripheral
+};
 
 export const initialStateArduino = {
     hardware: 'atmega328p',
     ports: range(0, NPorts - 1).map(_ => {
-        return {peripheral: {type: 'none'}};
-    })
+        return {peripheral: {type: ArduinoPortPeripheralType.None}};
+    }) as {peripheral: ArduinoPortPeripheral}[]
 };
 
 export default function(bundle: Bundle) {
@@ -49,8 +66,8 @@ export default function(bundle: Bundle) {
     });
 
     bundle.defineAction(ActionTypes.ArduinoReset);
-    bundle.addReducer(ActionTypes.ArduinoReset, (state: AppStore) => {
-        state.arduino = initialStateArduino;
+    bundle.addReducer(ActionTypes.ArduinoReset, (state: AppStore, action) => {
+        state.arduino = action.state;
     });
 
     bundle.defineAction(ActionTypes.ArduinoPortConfigured);
@@ -59,7 +76,8 @@ export default function(bundle: Bundle) {
     function arduinoPortConfiguredReducer(state: AppStoreReplay, action): void {
         const {index, changes} = action;
 
-        state.arduino.ports[index] = changes;
+        // Change has the shape of an immutable update parameter. We keep it to be compatible with old records.
+        state.arduino.ports[index].peripheral = changes.peripheral.$set;
     }
 
     bundle.defineAction(ActionTypes.ArduinoPortChanged);
@@ -68,7 +86,8 @@ export default function(bundle: Bundle) {
     function arduinoPortChangedReducer(state: AppStoreReplay, action): void {
         const {index, changes} = action;
 
-        state.stepper.currentStepperState.ports[index] = changes;
+        // Change has the shape of an immutable update parameter. We keep it to be compatible with old records.
+        state.stepper.currentStepperState.ports[index].input = changes.input.$set;
     }
 
     bundle.defineAction(ActionTypes.ArduinoPortSelected);
@@ -89,6 +108,8 @@ export default function(bundle: Bundle) {
             }
         });
         replayApi.on('start', function(replayContext: ReplayContext, event) {
+            replayContext.state.arduino = initialStateArduino;
+
             const {arduino} = event[2];
             if (arduino) {
                 replayContext.state.arduino = arduino;
@@ -143,7 +164,12 @@ export default function(bundle: Bundle) {
                     /* Copy peripheral config on stepper init. */
                     const {peripheral} = arduinoState.ports[index];
 
-                    return {direction: 0, output: 0, input: 0, peripheral};
+                    return {
+                        direction: 0,
+                        output: 0,
+                        input: 0,
+                        peripheral
+                    };
                 });
 
                 stepperState.serial = {
@@ -158,41 +184,41 @@ export default function(bundle: Bundle) {
         stepperApi.onEffect('pinMode', function* pinModeEffect(stepperContext: StepperContext, pin, mode) {
             let {direction, output} = stepperContext.state.ports[pin];
             switch (mode) {
-                case PinMode.PINMODE_INPUT:
+                case PinMode.Input:
                     direction = 0;
                     break;
-                case PinMode.PINMODE_OUTPUT:
+                case PinMode.Output:
                     direction = 1;
                     break;
-                case PinMode.PINMODE_INPUT_PULLUP:
+                case PinMode.InputPullup:
                     direction = 0;
                     output = 1;
                     break;
             }
 
-            stepperContext.state = update(stepperContext.state,
-                {
-                    ports: {
-                        [pin]: {
-                            direction: {$set: direction},
-                            output: {$set: output}
-                        }
+            stepperContext.state = update(stepperContext.state, {
+                ports: {
+                    [pin]: {
+                        direction: {$set: direction},
+                        output: {$set: output}
                     }
-                });
+                }
+            });
         });
 
         stepperApi.addBuiltin('digitalWrite', function* digitalWriteBuiltin(stepperContext: StepperContext, pin, level) {
             yield ['digitalWrite', pin.toInteger(), level.toInteger()];
         });
         stepperApi.onEffect('digitalWrite', function* digitalWriteEffect(stepperContext: StepperContext, pin, level) {
-            stepperContext.state = update(stepperContext.state,
-                {
-                    ports: {
-                        [pin]: {
-                            output: {$set: level}
+            stepperContext.state = update(stepperContext.state, {
+                ports: {
+                    [pin]: {
+                        output: {
+                            $set: level
                         }
                     }
-                });
+                }
+            });
         });
 
         stepperApi.addBuiltin('digitalRead', function* digitalReadBuiltin(stepperContext: StepperContext, pin) {
@@ -223,7 +249,7 @@ export default function(bundle: Bundle) {
                 /* Pin configured as output, read 0. */
                 return 0;
             }
-            if (port.peripheral.type === 'slider') {
+            if (port.peripheral.type === ArduinoPortPeripheralType.Slider) {
                 return Math.round(port.input * 1023);
             }
 
@@ -235,7 +261,13 @@ export default function(bundle: Bundle) {
             yield ['serialBegin', speed.toInteger()];
         });
         stepperApi.onEffect('serialBegin', function* (stepperContext: StepperContext, speed) {
-            stepperContext.state.serial.speed = speed;
+            stepperContext.state = update(stepperContext.state, {
+                serial: {
+                    speed: {
+                        $set: speed
+                    }
+                }
+            });
         });
 
         stepperApi.addBuiltin('Serial_print', function* (stepperContext: StepperContext, value, base) {

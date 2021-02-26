@@ -47,6 +47,16 @@ export interface CodecastOptions {
     origin: string
 }
 
+export interface Panes {
+    [key: string]: {
+        view: string,
+        editing: boolean,
+        enabled: boolean,
+        width: number,
+        visible: boolean
+    }
+}
+
 export interface AppStoreReplay {
     ioPane: typeof initialStateIoPane,
     arduino: typeof initialStateArduino,
@@ -79,7 +89,7 @@ export interface AppStore extends Store, AppStoreReplay {
 
     // TODO: Put the following in a "window" attribute instead of at the root of the store
     mainViewGeometry: typeof mainViewGeometries[0],
-    panes: any[],
+    panes: Panes,
     windowWidth: number,
     windowHeight: number,
     containerWidth: number,
