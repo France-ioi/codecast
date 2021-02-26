@@ -12,9 +12,9 @@ import Recording from './recording';
 import mp3_encode from './mp3_encode';
 import wav_encode from './wav_encode';
 
-var recording = null;
-var memoryUsageInterval = null;
-var lastHeapSize = 0;
+let recording = null;
+let memoryUsageInterval = null;
+let lastHeapSize = 0;
 
 /* On load, respond to a null message with a null message to indicate that
    the worker loaded successfully.  Subsequent message are handled by the
@@ -29,25 +29,32 @@ self.onmessage = function(e) {
 function messageHandler(e) {
     const {id, command, payload} = e.data;
     const t = new Transaction(id);
+
     try {
         let result = false;
         switch (command) {
             case 'init':
                 result = init(payload);
+
                 break;
             case 'addSamples':
                 recording.addSamples(payload.samples);
+
                 result = true;
+
                 break;
             case 'truncate':
                 result = recording.truncateAt(payload.position);
+
                 break;
             case 'export': {
                 result = {};
                 const audioBuffer = recording.getAudioBuffer(function(progress) {
                     t.send({step: 'copy', progress});
                 });
+
                 result.duration = audioBuffer.duration;
+
                 if (payload.raw) {
                     result.raw = exportRaw(audioBuffer, payload.raw);
                 }
@@ -61,12 +68,14 @@ function messageHandler(e) {
                         t.send({step: 'mp3', progress});
                     });
                 }
+
                 break;
             }
             case 'cleanup':
                 result = cleanup();
                 break;
         }
+
         t.done(result);
     } catch (error) {
         t.fail(error);
@@ -89,11 +98,14 @@ Transaction.prototype.fail = function(error) {
 
 function init({sampleRate, numberOfChannels}) {
     cleanup();
+
     if (numberOfChannels > 2) {
         throw new Error('invalid number of channels');
     }
+
     recording = new Recording({numberOfChannels, sampleRate});
     memoryUsageInterval = setInterval(reportMemoryUsage, 1000);
+
     return true;
 }
 
@@ -104,7 +116,11 @@ function reportMemoryUsage() {
     }
     if (heapSize !== lastHeapSize) {
         lastHeapSize = heapSize;
-        self.postMessage({id: 'memoryUsage', done: false, payload: heapSize});
+        self.postMessage({
+            id: 'memoryUsage',
+            done: false,
+            payload: heapSize
+        });
     }
 }
 
@@ -113,6 +129,7 @@ function cleanup() {
     if (memoryUsageInterval !== null) {
         clearInterval(memoryUsageInterval);
     }
+
     return true;
 }
 
@@ -122,6 +139,7 @@ function exportRaw(audioBuffer) {
     for (let channelNumber = 0; channelNumber < numberOfChannels; channelNumber += 1) {
         result.channels.push(audioBuffer.getChannelData(channelNumber));
     }
+
     return result;
 }
 
@@ -134,6 +152,7 @@ function exportWav(audioBuffer, options, progressCallback) {
             sampleSize: 2,
         };
     }
+
     return wav_encode(audioBuffer, options, progressCallback);
 }
 
@@ -143,5 +162,6 @@ function exportMp3(audioBuffer, options, progressCallback) {
             outputRate: 128 /*kbps*/,
         };
     }
+
     return mp3_encode(audioBuffer, options, progressCallback);
 }

@@ -212,7 +212,6 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         replayContext.instant = instant;
 
         console.log('-------- REPLAY ---- EVENT ----', key, event);
-        console.log('replayContext', replayContext);
 
         if (key === 'stepper.step' || key === 'stepper.progress' || key === 'stepper.idle' || key === 'stepper.restart') {
             /**
@@ -237,17 +236,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
 
             // @ts-ignore
             replayContext.state = finishDraft(draft);
-
-            if (replayContext.state === originalState) {
-                console.log('same');
-            } else {
-                console.log('diff !');
-            }
         }
-
-        // yield call(replayApi.applyEvent, key, replayContext, event);
-
-        console.log('replayContext_after', replayContext);
 
         /* Preserve the last explicitly set range. */
         // TODO: Is this used ?

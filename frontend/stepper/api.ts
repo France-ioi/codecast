@@ -14,6 +14,7 @@ import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay} from "../store";
 import {initialStepperStateControls, StepperState} from "./index";
 import {Bundle} from "../linker";
+import {createDraft, finishDraft} from "immer";
 
 export interface StepperContext {
     state: StepperState,
@@ -194,12 +195,14 @@ async function executeEffects(stepperContext: StepperContext, iterator) {
             if (!builtinHandlers.has(builtin)) {
                 throw new StepperError('error', `unknown builtin ${builtin}`);
             }
+
             lastResult = await executeEffects(stepperContext, builtinHandlers.get(builtin)(stepperContext, ...value.slice(2)));
         } else {
             /* Call the effect handler, feed the result back into the iterator. */
             if (!effectHandlers.has(name)) {
                 throw new StepperError('error', `unhandled effect ${name}`);
             }
+
             lastResult = await executeEffects(stepperContext, effectHandlers.get(name)(stepperContext, ...value.slice(1)));
         }
     }

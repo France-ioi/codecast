@@ -17,7 +17,7 @@ export default function(bundle: Bundle) {
     });
 
     bundle.addReducer(ActionTypes.MemoryUsageChanged, (state: AppStore, {payload}) => {
-        state.memoryUsage = payload;
+        state.memoryUsage.heapSize = payload.heapSize;
     });
 
     bundle.addSaga(function* () {
@@ -27,8 +27,14 @@ export default function(bundle: Bundle) {
                 // @ts-ignore
                 const channel = action.payload.worker.listen('memoryUsage', buffers.sliding(1));
                 // @ts-ignore
-                yield takeEvery(channel, function* ({heapSize}) {
-                    yield put({type: ActionTypes.MemoryUsageChanged, payload: {workerHeapSize: heapSize}});
+                yield takeEvery(channel, function* (action) {
+                    yield put({
+                        type: ActionTypes.MemoryUsageChanged,
+                        payload: {
+                            // @ts-ignore
+                            heapSize: action.payload
+                        }
+                    });
                 });
             }
         });
