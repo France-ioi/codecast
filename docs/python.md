@@ -41,7 +41,7 @@ Displays a list as a 2D-table.
 Example :
 
 ```
-_VIEW_matrix = "showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=5, cols=3)"
+_VIEW_matrix = "showArray2D(matrix, rowCursors=[line], colCursors=[col])"
 matrix = [[2, 1, 1], [1, -1, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]]
 for line in range(2, 5):
     for col in range(0, 3):
@@ -54,8 +54,8 @@ The arguments are :
 (an arrow will point on the corresponding line).
 - colCursors : A list of variable names that contains the column-indexes we want to put an emphasis on
 (an arrow will point on the corresponding column).
-- rows : The number of rows
-- cols : The number of columns
+- rows : (optional) = The number of rows
+- cols : (optional) = The number of columns
 - height (optional) = The height of the view in px (default : special value "auto")
 
 

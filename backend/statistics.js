@@ -1,10 +1,13 @@
 const mysql = require('mysql');
 
-function getDB (config) {
+function getDB(config) {
     return new Promise((resolve, reject) => {
         const db = mysql.createConnection(config.database);
         db.connect(async function (err) {
-            if (err) reject(err);
+            if (err) {
+                reject(err);
+            }
+
             try {
                 resolve(db);
             } catch (err) {
@@ -15,7 +18,7 @@ function getDB (config) {
     });
 }
 
-export async function logLoadingData (config, logData) {
+export async function logLoadingData(config, logData) {
     let db;
     try {
         db = await getDB(config);
@@ -79,13 +82,12 @@ export async function logLoadingData (config, logData) {
         }
     } catch (err) {
         console.error('Statistics:DB:Codecast:Log failed', err);
-    }
-    finally {
+    } finally {
         db.end();
     }
 }
 
-export async function logCompileData (config, logData) {
+export async function logCompileData(config, logData) {
     let db;
     try {
         db = await getDB(config);
@@ -159,20 +161,27 @@ export async function logCompileData (config, logData) {
     }
 }
 
-export function statisticsSearch ({grants}, config, params) {
+export function statisticsSearch({grants}, config, params) {
     return new Promise(async (resolve, reject) => {
         try {
             const db = await getDB(config);
             let whereQueryParts = [];
             if (params.folder) {
                 const [bucket, folder] = params.folder;
+
                 whereQueryParts.push(`\`folder\` = '${folder}' AND \`bucket\` IN ('${bucket}', 'none')`);
             } else {
                 const buckets = ['none'], folders = ['none'];
+
                 for (const {uploadPath, s3Bucket} of grants) {
-                    if (!buckets.includes(s3Bucket)) {buckets.push(s3Bucket);}
-                    if (!folders.includes(uploadPath)) {folders.push(uploadPath);}
+                    if (!buckets.includes(s3Bucket)) {
+                        buckets.push(s3Bucket);
+                    }
+                    if (!folders.includes(uploadPath)) {
+                        folders.push(uploadPath);
+                    }
                 }
+
                 whereQueryParts.push(`\`folder\` IN ('${folders.join('\',\'')}') AND \`bucket\` IN ('${buckets.join('\',\'')}')`);
             }
             if (params.prefix) {
@@ -180,6 +189,7 @@ export function statisticsSearch ({grants}, config, params) {
             }
             if (params.dateRange) {
                 const [start, end] = params.dateRange;
+
                 if (start && end) {
                     whereQueryParts.push(`CAST(\`date_time\` AS DATE) BETWEEN '${start}' AND '${end}'`);
                 }
@@ -207,6 +217,7 @@ export function statisticsSearch ({grants}, config, params) {
                 db.end();
                 if (err) {
                     console.error('Statistics:DB:Search:Query failed', err);
+
                     reject('Statistics DB Search Query failed');
                 } else {
                     const data = [];
@@ -222,15 +233,14 @@ export function statisticsSearch ({grants}, config, params) {
                             compile_time: row.compile_time,
                         });
                     }
+
                     resolve({data});
                 }
             });
         } catch (err) {
             console.error('Statistics:Search failed', err);
+
             reject('Statistics Search failed');
         }
     });
 }
-
-
-

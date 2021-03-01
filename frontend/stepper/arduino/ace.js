@@ -1,6 +1,6 @@
-ace.define("ace/mode/arduino",[
-    "require","exports","module",
-    "ace/lib/oop","ace/mode/c_cpp","ace/mode/c_cpp_highlight_rules"],
+ace.define("ace/mode/arduino", [
+        "require", "exports", "module",
+        "ace/lib/oop", "ace/mode/c_cpp", "ace/mode/c_cpp_highlight_rules"],
     function(acequire, exports, module) {
         "use strict";
 
@@ -11,7 +11,7 @@ ace.define("ace/mode/arduino",[
         var CstyleBehaviour = acequire("ace/mode/behaviour/cstyle").CstyleBehaviour;
         var CStyleFoldMode = acequire("ace/mode/folding/cstyle").FoldMode;
 
-        function ArduinoHighlightRules () {
+        function ArduinoHighlightRules() {
             this.$rules = new c_cppHighlightRules().getRules();
             this.$rules.start.unshift({
                 token: "constant.c++.arduino",
@@ -38,7 +38,7 @@ ace.define("ace/mode/arduino",[
         };
         oop.inherits(ArduinoHighlightRules, c_cppHighlightRules);
 
-        function Mode () {
+        function Mode() {
             this.HighlightRules = ArduinoHighlightRules;
             this.$outdent = new MatchingBraceOutdent();
             this.$behaviour = new CstyleBehaviour();

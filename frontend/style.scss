@@ -1,8 +1,9 @@
 @import url('~typeface-inconsolata');
 @import url('~typeface-open-sans');
 
-$font-family-sans-serif: 'Open Sans';
+$font-family-sans-serif: 'Open Sans', sans-serif;
 $font-family-monospace: 'Inconsolata';
+$font-family-console: 'Lucida Console', Monaco, sans-serif;
 
 $screen-lg-min: 1200px;  // lg: normal/wide format
 $font-size-lg: 18px;
@@ -20,7 +21,11 @@ $container-sm: $screen-sm-min;
 $grid-gutter-width: 6px;
 $nav-link-padding: 7px 12px;
 
-$bootstrap-sass-asset-helper: '~/bootstrap-sass/assets';
+// @see https://stackoom.com/question/3REF0/%E5%8D%87%E7%BA%A7%E5%88%B0Angular-%E5%90%8E-CssSyntaxError
+$bootstrap-sass-asset-helper: false;
+$icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
+$icon-font-name: "glyphicons-halflings-regular";
+
 @import '~bootstrap-sass/assets/stylesheets/bootstrap';
 
 @import "~@blueprintjs/core/lib/css/blueprint.css";
@@ -533,9 +538,8 @@ span + .value-previous {
 }
 
 svg {
-
-  font-family: "Open Sans";
   font-size: 13px;
+  font-family: $font-family-sans-serif;
 
   /* Common to all directives */
   .grid {
@@ -701,7 +705,7 @@ svg {
   background: #fff;
   z-index: 6;
   .subtitles-timestamp {
-    font-family: 'Lucida Console', Monaco, monospace;
+    font-family: $font-family-console;
     font-size: 12px;
     text-align: center;
     background-color: #efefef;
@@ -743,7 +747,7 @@ svg {
       p {
         display: inline-block;
         margin-bottom: 0;
-        font-family: 'Lucida Console', Monaco, monospace;
+        font-family: $font-family-console;
         font-size: 12px;
       }
     }
