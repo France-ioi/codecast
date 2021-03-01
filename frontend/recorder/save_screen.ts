@@ -7,9 +7,16 @@ import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getRecorderState} from "./selectors";
-import {AppStore} from "../store";
+import {AppStore, CodecastOptions} from "../store";
 import {Bundle} from "../linker";
 import {App} from "../index";
+
+export type CodecastRecord = {
+    version: string,
+    events: any[],
+    options: CodecastOptions,
+    subtitles: any[]
+}
 
 export enum SaveStep {
     EncodingPending = 'encoding pending',
@@ -140,7 +147,12 @@ function* encodingSaga() {
 
     const subtitles = [];
     const options = state.options;
-    const data = {version, options, events, subtitles};
+    const data = {
+        version,
+        options,
+        events,
+        subtitles
+    } as CodecastRecord;
     const eventsBlob = new Blob([JSON.stringify(data)], {type: "application/json;charset=UTF-8"});
     const eventsUrl = URL.createObjectURL(eventsBlob);
 
@@ -182,7 +194,8 @@ function* uploadSaga(app: App, action) {
 
         // Upload the audio file.
         yield put({type: ActionTypes.SaveScreenAudioUploading});
-        const audioBlob = yield call(getBlob, save.audioUrl);
+        const audioBlob: Blob = yield call(getBlob, save.audioUrl);
+
         yield call(uploadBlob, response.audio, audioBlob);
         yield put({type: ActionTypes.SaveScreenEventsUploaded, payload: {url: response.audio.public_url}});
 

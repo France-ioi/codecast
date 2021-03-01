@@ -24,7 +24,7 @@ The stepper's state has the following shape:
 
 */
 
-import {apply, call, delay, fork, put, race, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
+import {apply, call, cancel, delay, fork, put, race, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 import * as C from 'persistent-c';
 
 import {
@@ -45,8 +45,6 @@ import IoBundle from './io/index';
 import ViewsBundle from './views/index';
 import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle, {getNewOutput, getNewTerminal} from './python';
-
-/* TODO: clean-up */
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
 import {parseDirectives} from "./python/directives";
@@ -294,8 +292,7 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
         const focusDepth = controls.stack.focusDepth;
         stepperState.directives = collectDirectives(analysis.functionCallStack, focusDepth);
 
-        // TODO? initialize controls for each directive added,
-        //       clear controls for each directive removed (except 'stack').
+        // TODO? initialize controls for each directive added, clear controls for each directive removed (except 'stack').
     }
 
     console.log('enrichStepperState', stepperState);
@@ -368,13 +365,9 @@ function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}})
     if (stepperState) {
         enrichStepperState(stepperState, 'Stepper.Restart');
         /**
-         * TODO: stepperState comes from an action so it's not an immer draft. The whole process could be cleaner.
+         * StepperState comes from an action so it's not an immer draft.
          */
         stepperState = {...stepperState};
-
-        if (platform === 'python') {
-            // TODO: Check restart.
-        }
     } else {
         if (platform === 'python') {
             stepperState = state.stepper.initialStepperState;
@@ -464,7 +457,7 @@ function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}):
     /* XXX Call enrichStepperState prior to calling the reducer. */
     enrichStepperState(stepperContext.state, 'Stepper.Idle');
     /**
-     * TODO: stepperState comes from an action so it's not an immer draft. The whole process could be cleaner.
+     * TODO: stepperState comes from an action so it's not an immer draft.
      */
     stepperContext.state = {...stepperContext.state};
 
@@ -592,16 +585,16 @@ function* stepperEnabledSaga(args) {
 }
 
 function* stepperDisabledSaga() {
-    // const state: AppStore = yield select();
+    const state: AppStore = yield select();
 
     /* Cancel the stepper task if still running. */
-    // const oldTask = state.stepperTask;
-    // if (oldTask) {
-    //     // @ts-ignore
-    //     yield cancel(oldTask);
-    //
-    //     yield put({type: ActionTypes.StepperTaskCancelled});
-    // }
+    const oldTask = state.stepperTask;
+    if (oldTask) {
+        // @ts-ignore
+        yield cancel(oldTask);
+
+        yield put({type: ActionTypes.StepperTaskCancelled});
+    }
 
     /* Clear source highlighting. */
     const startPos = {row: 0, column: 0};
@@ -611,6 +604,7 @@ function* stepperDisabledSaga() {
 
 function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
     let state: AppStore = yield select();
+
     /* Has the stepper been interrupted? */
     if (isStepperInterrupting(state)) {
         yield call(reject, new StepperError('interrupt', 'interrupted'));
@@ -682,8 +676,6 @@ function* stepperInterruptSaga() {
      */
     if (stepperContext.state.platform === 'python') {
         if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
-            // TODO: Support error.
-
             window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
 
             window.currentPythonRunner._input = stepperContext.state.input;
@@ -726,10 +718,6 @@ function* stepperStepSaga(app: App, action) {
          */
         if (stepperContext.state.platform === 'python') {
             if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
-                // TODO: Check if it works with the input.
-
-                // TODO: Support error.
-
                 window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
 
                 window.currentPythonRunner._input = stepperContext.state.input;
@@ -1040,7 +1028,6 @@ function postLink(app: App) {
         updateRange(replayContext);
     });
 
-    /* TODO: move out of here? */
     recordApi.on(ActionTypes.StepperViewControlsChanged, function* (addEvent, action) {
         const {key, update} = action;
 

@@ -14,13 +14,14 @@ import {StepperView} from "../stepper/views/StepperView";
 import {SubtitlesBand} from "../subtitles/SubtitlesBand";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
+import {PlayerError} from "./index";
 
 interface PlayerAppStateToProps {
-    containerWidth: any,
-    viewportTooSmall: any,
-    isReady: any,
-    progress: any,
-    error: any
+    containerWidth: number,
+    viewportTooSmall: boolean,
+    isReady: boolean,
+    progress: number,
+    error: PlayerError
 }
 
 function mapStateToProps(state: AppStore): PlayerAppStateToProps {
@@ -32,7 +33,11 @@ function mapStateToProps(state: AppStore): PlayerAppStateToProps {
     const error = player.error;
 
     return {
-        viewportTooSmall, containerWidth, isReady, progress, error
+        viewportTooSmall,
+        containerWidth,
+        isReady,
+        progress,
+        error
     };
 }
 

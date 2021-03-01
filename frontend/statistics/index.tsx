@@ -203,11 +203,12 @@ function* statisticsPlayerReadySaga(app: App, action) {
     try {
         const state: AppStore = yield select();
         const logData = state.statistics.logData;
+        if (logData) {
+            logData.name = (action.payload.data.hasOwnProperty('name')) ? action.payload.data.name : 'default';
 
-        logData.name = (action.payload.data.hasOwnProperty('name')) ? action.payload.data.name : 'default';
-
-        yield put({type: ActionTypes.StatisticsLogDataChanged, payload: {logData}});
-        yield put({type: ActionTypes.StatisticsLogLoadingData});
+            yield put({type: ActionTypes.StatisticsLogDataChanged, payload: {logData}});
+            yield put({type: ActionTypes.StatisticsLogLoadingData});
+        }
     } catch (error) {
         console.error('Error Codecast Load Log', error);
     }

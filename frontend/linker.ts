@@ -47,10 +47,6 @@ export function link(rootBuilder): Linker {
         useQueue.push([target, names]);
     }
 
-    function addEnhancer(enhancer) {
-        enhancers.push(enhancer);
-    }
-
     /* Publish a value in the global scope. */
     function publish(type, name, value) {
         if (name in globalScope) {
@@ -98,7 +94,7 @@ export function link(rootBuilder): Linker {
 
     // Call the root builder with a root bundle.
     // This will directly defines all actions and selectors.
-    const linker = {publish, declareUse, declareActionType, addEnhancer, lookup};
+    const linker = {publish, declareUse, declareActionType, lookup};
     const rootBundle = new Bundle(linker, rootBuilder);
     rootBuilder(rootBundle, rootBundle.locals);
 
@@ -133,12 +129,6 @@ export function link(rootBuilder): Linker {
             });
         }
     });
-
-    // Store is too huge for this extension to work properly.
-    // const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-    // let enhancer = composeEnhancers(
-    //    applyMiddleware(sagaMiddleware)
-    // );
 
     const userTimingMiddleware = () => (next) => (action) => {
         if (performance.mark === undefined) {
@@ -285,11 +275,6 @@ export class Bundle {
         this._.sagas.push(saga);
     };
 
-    addEnhancer(enhancer) {
-        this._assertNotSealed();
-        this._.linker.addEnhancer(enhancer);
-    }
-
     defer(callback: (app: App) => void): void {
         this._assertNotSealed();
         this._.defers.push(callback);
@@ -298,8 +283,6 @@ export class Bundle {
     lookup(name) {
         return this._.linker.lookup(name);
     }
-
-    /* TODO: hide this Bundle methods */
 
     _assertNotSealed() {
         if (this._.sealed) {

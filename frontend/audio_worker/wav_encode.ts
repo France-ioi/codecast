@@ -18,6 +18,7 @@ export default function encode(audioBuffer, options, progressCallback) {
     if (divider !== 1) {
         channels = channels.map(samples => downsample(samples, divider));
     }
+
     progressCallback(0.2);
 
     /* Adapt number of channels and order samples (still using Float32Array). */
@@ -38,6 +39,7 @@ export default function encode(audioBuffer, options, progressCallback) {
         default:
             throw new Error(`unsupported channels conversion`);
     }
+
     progressCallback(0.3);
 
     /* Allocate output buffer. */
@@ -84,6 +86,7 @@ export default function encode(audioBuffer, options, progressCallback) {
             floatTo16BitPCM(view, 44, samples);
             break;
     }
+
     progressCallback(1);
 
     return new Blob([buffer], {type: "audio/wav"});
@@ -97,6 +100,7 @@ function averageSamples(channels) {
     for (let index = 0; index < inputLength; index++) {
         result[index++] = (samplesL[index] + samplesR[index]) / 2;
     }
+
     return result;
 }
 
@@ -110,6 +114,7 @@ function interleaveSamples(channels) {
         result[outputIndex++] = samplesL[index];
         result[outputIndex++] = samplesR[index];
     }
+
     return result;
 }
 

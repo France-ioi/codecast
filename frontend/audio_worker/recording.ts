@@ -29,7 +29,7 @@ export default class Recording {
         };
     };
 
-    getAudioBuffer(progressCallback) {
+    getAudioBuffer(progressCallback): AudioBuffer {
         const {length, sampleRate, numberOfChannels, channels} = this;
         const audioBuffer = new AudioBuffer({length, sampleRate, numberOfChannels});
         const samplesToCopy = length * numberOfChannels;
@@ -40,11 +40,13 @@ export default class Recording {
                 audioBuffer.copyToChannel(chunk, channelNumber, position);
                 position += chunk.length;
                 samplesCopied += chunk.length
+
                 if (typeof progressCallback === 'function') {
                     progressCallback(samplesCopied / samplesToCopy);
                 }
             }
         }
+
         return audioBuffer;
     }
 
@@ -84,21 +86,25 @@ export default class Recording {
                 const posInChunk = truncPos - startPos;
                 if (posInChunk < chunk.length) {
                     for (let iChannel = 0; iChannel < numberOfChannels; iChannel += 1) {
-                        channels[iChannel].chunks[iChunk] =
-                            channels[iChannel].chunks[iChunk].slice(0, posInChunk);
+                        channels[iChannel].chunks[iChunk] = channels[iChannel].chunks[iChunk].slice(0, posInChunk);
                     }
                 }
+
                 /* Trim immediately past current chunk. */
                 for (let iChannel = 0; iChannel < numberOfChannels; iChannel += 1) {
                     channels[iChannel].chunks.splice(iChunk + 1);
                 }
+
                 /* Update length and duration. */
                 this.length = truncPos;
                 this.duration = truncPos / sampleRate;
+
                 return true;
             }
+
             startPos = endPos;
         }
+
         return false;
     }
 }

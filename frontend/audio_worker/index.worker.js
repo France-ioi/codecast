@@ -29,23 +29,18 @@ self.onmessage = function(e) {
 function messageHandler(e) {
     const {id, command, payload} = e.data;
     const t = new Transaction(id);
-
     try {
         let result = false;
         switch (command) {
             case 'init':
                 result = init(payload);
-
                 break;
             case 'addSamples':
                 recording.addSamples(payload.samples);
-
                 result = true;
-
                 break;
             case 'truncate':
                 result = recording.truncateAt(payload.position);
-
                 break;
             case 'export': {
                 result = {};
@@ -73,6 +68,7 @@ function messageHandler(e) {
             }
             case 'cleanup':
                 result = cleanup();
+
                 break;
         }
 
@@ -116,16 +112,13 @@ function reportMemoryUsage() {
     }
     if (heapSize !== lastHeapSize) {
         lastHeapSize = heapSize;
-        self.postMessage({
-            id: 'memoryUsage',
-            done: false,
-            payload: heapSize
-        });
+        self.postMessage({id: 'memoryUsage', done: false, payload: heapSize});
     }
 }
 
 function cleanup() {
     recording = null;
+
     if (memoryUsageInterval !== null) {
         clearInterval(memoryUsageInterval);
     }

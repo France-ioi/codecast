@@ -10,6 +10,7 @@ export default function downsample(samples, divider) {
         } else {
             fir.sampleIn(0);
         }
+
         // Time to output a sample?
         ++counter;
         if (counter === divider) {
@@ -17,6 +18,7 @@ export default function downsample(samples, divider) {
             samplesOut[iSampleOut++] = fir.sampleOut();
         }
     }
+
     return samplesOut;
 }
 

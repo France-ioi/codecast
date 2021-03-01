@@ -16,11 +16,9 @@ export enum ActionTypes {
     MemoryUsageChanged = 'Memory.Usage.Changed',
 
     RecorderPrepare = 'Recorder.Prepare',
-    SwitchToRecordScreen = 'Recorder.Switch',
     RecorderStart = 'Recorder.Start',
     RecorderPause = 'Recorder.Pause',
     RecorderStop = 'Recorder.Stop',
-    RecorderBack = 'Recorder.Back',
     RecorderPreparing = 'Recorder.Preparing',
     RecorderReady = 'Recorder.Ready',
     RecorderStarting = 'Recorder.Starting',

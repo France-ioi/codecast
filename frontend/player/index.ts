@@ -4,6 +4,7 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes} from "./actionTypes";
 import {AppStore, AppStoreReplay} from "../store";
 import {Bundle} from "../linker";
+import {CodecastRecord} from "../recorder/save_screen";
 
 export default function(bundle: Bundle) {
     bundle.include(playerSagas);
@@ -33,7 +34,8 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.PlayerPrepareFailure, (state: AppStore, {payload: {message}}) => {
         state.player.error = {
             source: 'prepare',
-            message
+            message,
+            details: ''
         };
     });
 
@@ -100,6 +102,12 @@ export interface PlayerInstant {
     mute?: boolean
 }
 
+export type PlayerError = {
+    message: string,
+    source: string,
+    details: string
+}
+
 export const initialStatePlayer = {
     audio: null as HTMLVideoElement,
     volume: 100,
@@ -107,15 +115,12 @@ export const initialStatePlayer = {
     progress: 0,
     audioTime: 0,
     duration: 0,
-    data: null as any, // TODO: type
+    data: null as CodecastRecord,
     instants: null as PlayerInstant[],
     current: null as PlayerInstant,
     isReady: false,
     isPlaying: false,
-    error: null as {
-        message: '',
-        source: 'prepare'
-    }
+    error: null as PlayerError
 }
 
 function playerClear(state: AppStore): void {

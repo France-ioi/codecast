@@ -111,10 +111,6 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
                 if (this.props.old && this.props.old instanceof Sk.builtin.dict) {
                     const oldBucket = this.props.old.buckets[hashKey];
                     if (oldBucket) {
-                        // if (oldBucket.items[0].lhs.v === element.lhs.v) {
-                        //    TODO: Is this check usefull ?
-                        // }
-
                         old = oldBucket.items[0].rhs;
                     }
                 }

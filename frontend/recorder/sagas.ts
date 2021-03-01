@@ -1,15 +1,9 @@
-/* TODO: figure out why the 'end' event seems to be inserted when the recording
-         is paused, not when the recording is actually stopped
-         => because 'end' is added by recorderStopping
-*/
-
 import {call, delay, put, race, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
 
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {spawnWorker} from '../utils/worker_utils';
 // @ts-ignore
 import AudioWorker from '../audio_worker/index.worker';
-// import AudioWorker from 'worker-loader?inline!../audio_worker';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
@@ -99,8 +93,7 @@ export default function(bundle, deps) {
                 if (oldWorker) {
                     yield call(oldWorker.kill);
                 }
-                // TODO: put an action to clean up the old recorderContext, in case
-                // the saga fails before recorderReady is sent.
+                // TODO: put an action to clean up the old recorderContext, in case the saga fails before recorderReady is sent.
             }
 
             yield put({type: ActionTypes.RecorderPreparing, payload: {progress: 'start'}});
@@ -211,14 +204,8 @@ export default function(bundle, deps) {
                 /* Suspend the audio context to stop recording audio buffers. */
                 yield call(suspendAudioContext, audioContext);
             }
-            if (recorderStatus === 'paused') {
-                /* When stopping while paused, the recording is truncated at the
-                   playback position */
-                state = yield select();
-                const audioTime = getPlayerState(state).audioTime;
 
-                yield call(truncateRecording, audioTime, null);
-            }
+            // If the record was paused, the audio context is already suspended.
 
             /* Signal that the recorder has stopped. */
             yield put({type: ActionTypes.RecorderStopped, payload: {}});
@@ -248,11 +235,17 @@ export default function(bundle, deps) {
 
             // Get a URL for events.
             const endTime = Math.floor(duration * 1000);
-            const events = recorder.events.push([endTime, 'end']);
+            recorder.events.push([endTime, 'end']);
+
             const version = RECORDING_FORMAT_VERSION;
             state = yield select();
             const options = state.options;
-            const data = {version, options, events, subtitles: []};
+            const data = {
+                version,
+                options,
+                events: recorder.events,
+                subtitles: []
+            };
             const eventsBlob = new Blob([JSON.stringify(data)], {
                 type: "application/json;charset=UTF-8"
             });
@@ -295,6 +288,8 @@ export default function(bundle, deps) {
 
             /* Clear the player's state. */
             yield put({type: PlayerActionTypes.PlayerClear});
+
+            recorder.events.pop(); // Remove the 'end' event put at the end when paused.
 
             /* Signal that the recorder is resuming. */
             yield put({type: ActionTypes.RecorderResuming});

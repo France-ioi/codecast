@@ -1,7 +1,7 @@
 import superagent from 'superagent';
 import {buffers, END, eventChannel} from 'redux-saga';
 
-export function getBlob(url) {
+export function getBlob(url: string): Promise<Blob> {
     return new Promise(function(resolve, reject) {
         const xhr = new XMLHttpRequest();
         xhr.responseType = 'blob';
@@ -11,12 +11,13 @@ export function getBlob(url) {
         xhr.onerror = function(err) {
             reject(err);
         }
+
         xhr.open('GET', url);
         xhr.send();
     });
 }
 
-export function uploadBlob(upload, blob) {
+export function uploadBlob(upload, blob: Blob) {
     return new Promise(function(resolve, reject) {
         const formData = new FormData();
         const params = upload.params;
@@ -24,9 +25,14 @@ export function uploadBlob(upload, blob) {
             formData.append(key, params[key]);
         });
         formData.append('file', blob);
-        superagent.post(upload.form_url).send(formData)
+
+        superagent.post(upload.form_url)
+            .send(formData)
             .end(function(err, response) {
-                if (err) return reject(err);
+                if (err) {
+                    return reject(err);
+                }
+
                 resolve(response);
             });
     });
@@ -39,7 +45,8 @@ export function uploadBlobChannel({params, form_url}, blob) {
             formData.append(key, params[key]);
         });
         formData.append('file', blob);
-        var request = superagent.post(form_url);
+
+        const request = superagent.post(form_url);
         request.send(formData)
             .on('progress', function(event) {
                 listener({type: 'progress', percent: event.percent});
@@ -52,6 +59,7 @@ export function uploadBlobChannel({params, form_url}, blob) {
                 }
                 listener(END);
             });
+
         return () => {
             request.abort();
         };

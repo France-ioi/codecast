@@ -31,13 +31,13 @@ export enum RecorderStatus {
 export const initialStateRecorder = {
     progress: 0,
     status: null as RecorderStatus,
-    context: null as any, // TODO: type
+    context: null as any,
     junkTime: 0,
     elapsed: 0,
     suspendedAt: 0,
     timeOffset: 0,
     lastEventTime: 0,
-    events: [] as any[] // TODO: type
+    events: [] as any[]
 }
 
 export default function(bundle: Bundle) {

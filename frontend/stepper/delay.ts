@@ -10,7 +10,6 @@ export default function(bundle: Bundle) {
                 yield delay(millis.toInteger());
             }
 
-            /* TODO: is there something to do during replay? */
             yield ['interact', {saga: delaySaga}];
         });
     });

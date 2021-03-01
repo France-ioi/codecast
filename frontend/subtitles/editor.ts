@@ -278,7 +278,7 @@ function clearAllUnsaved(options: SubtitlesOptions) {
 function* subtitlesEditorSaga(state) {
     yield takeLatest(ActionTypes.SubtitlesSelected, subtitlesSelectedSaga, state);
     yield takeLatest(ActionTypes.SubtitlesEditorEnter, subtitlesEditorEnterSaga, state);
-    yield takeLatest(ActionTypes.SubtitlesEditorSave, subtitlesEditorSaveSaga, state);
+    yield takeLatest(ActionTypes.SubtitlesEditorSave, subtitlesEditorSaveSaga);
     yield takeLatest(ActionTypes.SubtitlesEditorReturn, subtitlesEditorReturnSaga, state);
     yield takeLatest(ActionTypes.SubtitlesTextReverted, subtitlesTextRevertedSaga, state);
     yield takeLatest(ActionTypes.SubtitlesTextLoaded, subtitlesTextLoadedSaga, state);
@@ -312,16 +312,14 @@ function* subtitlesEditorReturnSaga(state, _action) {
     yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'setup'}});
 }
 
-function* subtitlesEditorSaveSaga(state: AppStore, _action) {
-    const {baseUrl, base, subtitles} = yield select(function(state: AppStore) {
-        const {baseUrl} = state.options;
-        const editor = state.editor;
-        const base = editor.base;
-        const subtitles = Object.values(state.subtitles.availableOptions).filter((subtitlesOption: SubtitlesOption) => {
-            return !subtitlesOption.removed;
-        });
+function* subtitlesEditorSaveSaga() {
+    const state: AppStore = yield select();
 
-        return {baseUrl, base, subtitles};
+    const {baseUrl} = state.options;
+    const editor = state.editor;
+    const base = editor.base;
+    const subtitles = Object.values(state.subtitles.availableOptions).filter((subtitlesOption: SubtitlesOption) => {
+        return !subtitlesOption.removed;
     });
 
     const changes = {subtitles};

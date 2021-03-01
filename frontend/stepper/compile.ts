@@ -41,7 +41,7 @@ export const initialStateCompile = {
     diagnostics: '',
     diagnosticsHtml: '' as string | {__html: string},
     source: '',
-    syntaxTree: null as any // TODO: type
+    syntaxTree: null as any
 };
 
 export default function(bundle: Bundle) {

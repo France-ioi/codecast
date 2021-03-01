@@ -61,29 +61,25 @@ function editorSaveSucceededReducer(state: AppStore): void {
 }
 
 function* editorSaveAudioSaga() {
-    const {id, name} = yield select((state: AppStore) => {
-        const editor = state.editor;
-        const id = editor.base.replace(/^.*\//, '');
-        const name = (editor.data.name || '').trim();
+    const state: AppStore = yield select();
 
-        return {id, name};
-    });
+    const editor = state.editor;
+    const id = editor.base.replace(/^.*\//, '');
+    const name = (editor.data.name || '').trim();
 
     const saveAsName = `${name || id}.mp3`;
-    const blob = yield select((state: AppStore) => state.editor.audioBlob);
+    const blob = state.editor.audioBlob;
 
     yield call(FileSaver.saveAs, blob, saveAsName);
 }
 
 function* editorSaveSaga() {
-    const {baseUrl, base, name} = yield select((state: AppStore) => {
-        const {baseUrl} = state.options;
-        const editor = state.editor;
-        const base = editor.base;
-        const {name} = editor.data;
+    const state: AppStore = yield select();
 
-        return {baseUrl, base, name};
-    });
+    const {baseUrl} = state.options;
+    const editor = state.editor;
+    const base = editor.base;
+    const {name} = editor.data;
 
     const changes = {name};
     let result;

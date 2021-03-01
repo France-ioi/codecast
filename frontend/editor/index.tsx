@@ -35,11 +35,11 @@ export const initialStateEditor = {
     canSave: false,
     audioLoaded: false,
     duration: 0,
-    audioBlob: null as any, // TODO: type
-    audioBuffer: null as any,// TODO: type
+    audioBlob: null as any,
+    audioBuffer: null as any,
     waveform: new Float32Array(),
     playerReady: false,
-    data: null as any, // TODO: type
+    data: null as any,
     trim: initialStateTrimSaving
 };
 

@@ -2,8 +2,6 @@ import {call} from 'redux-saga/effects';
 import {PlayerInstant} from "./index";
 import {ReplayContext} from "./sagas";
 import {Bundle} from "../linker";
-import produce from "immer";
-import {AppStoreReplay} from "../store";
 
 /* For each event a number of handlers can be registered.
        An event is replayed by calling (in registration order) the handlers

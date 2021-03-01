@@ -110,7 +110,6 @@ export default function(context) {
                     modContents += this._skulptifyHandler(code, generatorName, blockName, nbsArgs, type);
                 }
 
-                // TODO :: allow selection of constants available in a task
                 if (this.context.customConstants && this.context.customConstants[generatorName]) {
                     let constList = this.context.customConstants[generatorName];
                     for (let iConst = 0; iConst < constList.length; iConst++) {

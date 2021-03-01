@@ -17,7 +17,6 @@ import {ActionTypes as SubtitlesActionTypes} from "../subtitles/actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
 
-export type TrimSavingStep = null | keyof typeof initialStateSavingStepStatus;
 export type StepStatus = null | 'done' | 'pending' | 'error';
 
 const initialStateSavingStepStatus = {
@@ -122,6 +121,7 @@ function addJumpInstants(instants, intervals) {
                 /* At jump target. */
                 insertAnnotation(skipStart, {jump: interval.start, mute});
             }
+
             skip = interval.value.skip;
         }
     }

@@ -82,6 +82,7 @@ function* playerPrepare(app: App, action) {
     } else {
         data = yield call(getJson, action.payload.eventsUrl);
     }
+    data = Object.freeze(data);
 
     if (Array.isArray(data)) {
         yield put({
@@ -254,6 +255,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         progress = Math.round(pos * 50 / events.length + t * 50 / duration) / 100;
         if (progress !== lastProgress) {
             lastProgress = progress;
+
             yield call(replayContext.reportProgress, progress);
         }
     }

@@ -15,9 +15,9 @@ export function readFileAsText(file) {
     });
 }
 
-export function getJson(path) {
+export function getJson(path: string) {
     return new Promise(function(resolve, reject) {
-        var req = request.get(path);
+        const req = request.get(path);
         req.set('Accept', 'application/json');
         req.end(function(err, res) {
             if (err) {
@@ -29,7 +29,7 @@ export function getJson(path) {
     });
 }
 
-export function postJson(url, data) {
+export function postJson(url: string, data) {
     return new Promise(function(resolve, reject) {
         request.post(url)
             .send(data)
@@ -39,7 +39,7 @@ export function postJson(url, data) {
     });
 }
 
-export function getAudio(path) {
+export function getAudio(path: string) {
     return eventChannel(emitter => {
         request.get(path)
             .accept('audio')
@@ -61,18 +61,23 @@ function zeroPad2(n) {
 }
 
 export function formatTime(ms) {
-    if (typeof ms !== 'number' || Number.isNaN(ms)) return '—';
+    if (typeof ms !== 'number' || Number.isNaN(ms)) {
+        return '—';
+    }
+
     let s = Math.round(ms / 1000);
     const m = Math.floor(s / 60);
     s -= m * 60;
+
     return `${zeroPad2(m)}:${zeroPad2(s)}`;
 }
 
-export function formatTimeLong(ms) {
+export function formatTimeLong(ms: number) {
     let tenths = Math.round(ms / 100);
     let s = Math.floor(tenths / 10);
     const m = Math.floor(s / 60);
     tenths -= s * 10;
     s -= m * 60;
+
     return `${zeroPad2(m)}:${zeroPad2(s)}.${tenths}`;
 }

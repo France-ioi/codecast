@@ -14,7 +14,6 @@ import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay} from "../store";
 import {initialStepperStateControls, StepperState} from "./index";
 import {Bundle} from "../linker";
-import {createDraft, finishDraft} from "immer";
 
 export interface StepperContext {
     state: StepperState,
@@ -114,8 +113,7 @@ export function* rootStepperSaga(...args) {
 /* An effect is a generator that may alter the stepperContext/state/programState, and
    yield further effects. */
 function onEffect(name: string, handler: (stepperContext: StepperContext, ...args) => void): void {
-    /* TODO: guard against duplicate effects? allow multiple handlers for a
-             single effect? */
+    /* TODO: guard against duplicate effects? allow multiple handlers for a single effect? */
     effectHandlers.set(name, handler);
 }
 
@@ -143,7 +141,7 @@ function getNodeStartRow(stepperState: StepperState) {
 export function makeContext(state: StepperState, interact: Function): StepperContext {
     console.log('**********  MAKE CONTEXT  **********', state);
     /**
-     * TODO: We create a new state object here instead of mutatating the state. This is intended.
+     * We create a new state object here instead of mutatating the state. This is intended.
      */
 
     if (state.platform === 'python') {
@@ -237,7 +235,7 @@ async function executeSingleStep(stepperContext: StepperContext) {
         // Warning : The interact event retrieves the state from the global state again.
         // It means : we need to pass the changes so it can update it.
         await stepperContext.interact({
-            position: 0, // TODO: Need real position ?
+            position: 0,
             output: newOutput,
             //terminal: newTerminal,
             inputPos: newInputPos,

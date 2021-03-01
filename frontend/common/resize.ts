@@ -11,7 +11,7 @@ export const mainViewGeometries = [
     {size: 'sm', width: 794, svgScale: 0.75},
 ];
 
-// TODO: Put in a store's attribute "window" instead of in the root of the store.
+// TODO: It would be better to put this in a store's attribute "window" instead of in the root of the store.
 export const initialStateWindow = {
     mainViewGeometry: mainViewGeometries[0],
     panes: {},

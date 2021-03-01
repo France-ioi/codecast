@@ -6,8 +6,6 @@ import {getLoadedReferencesFromVariable, getVariable} from './utils';
  extractView(context, name, options) looks up `name` in `stackFrame` and
  builds a view depending on the `options` given.
 
- TODO: look up in in globals if `name` not defined in `stackFrame`.
-
  The return value is an object of shape {cells, cursors} where `cells`
  is an array in which each element is either a cell-content object or the
  string '…' to indicate a gap in a sequence of indexes.

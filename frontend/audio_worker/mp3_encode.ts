@@ -17,16 +17,21 @@ export default function encode(audioBuffer, options, progressCallback) {
             progressCallback(completion);
             lastCompletion = completion;
         }
+
         floatTo16BitPCM(leftView, 0, audioBuffer.getChannelData(0).subarray(i, i + blockSize));
         floatTo16BitPCM(rightView, 0, audioBuffer.getChannelData(1).subarray(i, i + blockSize));
+
         mp3buf = encoder.encodeBuffer(leftArray, rightArray);
+
         if (mp3buf.length > 0) {
             outputBuffers.push(mp3buf);
         }
     }
+
     mp3buf = encoder.flush();
     if (mp3buf.length > 0) {
         outputBuffers.push(mp3buf);
     }
+
     return new Blob(outputBuffers, {type: "audio/mpeg"});
 }
