@@ -233,7 +233,6 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
             replayContext.state = draft;
 
             yield call(replayApi.applyEvent, key, replayContext, event);
-            console.log('EVENT APPLIED !');
 
             // @ts-ignore
             replayContext.state = finishDraft(draft);

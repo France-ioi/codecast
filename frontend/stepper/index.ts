@@ -294,8 +294,6 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
 
         // TODO? initialize controls for each directive added, clear controls for each directive removed (except 'stack').
     }
-
-    console.log('enrichStepperState', stepperState);
 }
 
 export function clearStepper(stepper: typeof initialStateStepper) {
@@ -359,7 +357,6 @@ function stringifyError(error) {
 /* Reducers */
 
 function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}}): void {
-    console.log('stepperRestartReducer');
     const {platform} = state.options;
 
     if (stepperState) {
@@ -422,8 +419,6 @@ function stepperStartedReducer(state: AppStoreReplay, action): void {
 }
 
 function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext}}): void {
-    console.log('stepperProgressReducer');
-
     /**
      * TODO: stepperState comes from an action so it's not an immer draft.
      */
@@ -452,7 +447,6 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
 }
 
 function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}): void {
-    console.log('stepperIdleReducer');
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
     enrichStepperState(stepperContext.state, 'Stepper.Idle');
@@ -873,7 +867,7 @@ function postLink(app: App) {
                     stepperEventReplayed(replayContext);
                 });
             });
-            console.log('put stepperContext', replayContext);
+
             performStep(replayContext.stepperContext, mode).then(function() {
                 replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
                     let currentStepperState = draft.stepper.currentStepperState;

@@ -338,8 +338,6 @@ function addReplayHooks({replayApi}: App) {
         replayContext.state.buffers.source.model = sourceModel;
         replayContext.state.buffers.input.model = inputModel;
         replayContext.state.buffers.output.model = outputModel;
-
-        console.log('start', replayContext.state.buffers);
     });
     replayApi.on('buffer.select', function(replayContext: ReplayContext, event) {
         // XXX use reducer imported from common/buffers

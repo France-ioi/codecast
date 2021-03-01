@@ -139,7 +139,6 @@ function getNodeStartRow(stepperState: StepperState) {
 }
 
 export function makeContext(state: StepperState, interact: Function): StepperContext {
-    console.log('**********  MAKE CONTEXT  **********', state);
     /**
      * We create a new state object here instead of mutatating the state. This is intended.
      */
@@ -212,8 +211,6 @@ async function executeSingleStep(stepperContext: StepperContext) {
     }
 
     if (stepperContext.state.platform === 'python') {
-        console.log('EXECUTE STEP', stepperContext.state);
-
         window.currentPythonRunner._input = stepperContext.state.input;
         window.currentPythonRunner._inputPos = stepperContext.state.inputPos;
         window.currentPythonRunner._terminal = stepperContext.state.terminal;
