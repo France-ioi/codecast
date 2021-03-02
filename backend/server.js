@@ -350,6 +350,7 @@ function addBackendRoutes(app, config, store) {
         const chunks = [];
         const errorChunks = [];
         let errorSent = false;
+
         cp.stdout.on('data', function (chunk) {
             chunks.push(chunk);
         });
@@ -357,11 +358,17 @@ function addBackendRoutes(app, config, store) {
             errorChunks.push(chunk);
         });
         cp.stdin.on('error', function (err) {
+            if (errorSent) {
+                return;
+            }
+
             errorSent = true;
             res.json({error: err.toString()});
         });
         cp.stdin.write(source, function (err) {
-            if (err) return;
+            if (err) {
+                console.error(err);
+            }
             cp.stdin.end();
         });
         cp.on('close', function (code) {
@@ -371,7 +378,6 @@ function addBackendRoutes(app, config, store) {
             if (code === 0) {
                 if (chunks.length === 0) {
                     const convert = new AnsiToHtml();
-
                     res.json({diagnostics: convert.toHtml(errorChunks.join(''))});
                 } else {
                     try {
@@ -389,7 +395,6 @@ function addBackendRoutes(app, config, store) {
                         }
 
                         directives.enrichSyntaxTree(source, ast);
-
                         res.json({ast: ast, diagnostics: convert.toHtml(errorChunks.join(''))});
                     } catch (err) {
                         res.json({error: err.toString()});
@@ -400,6 +405,10 @@ function addBackendRoutes(app, config, store) {
             }
         });
         cp.on('error', function (err) {
+            console.error(err);
+            if (errorSent) {
+                return;
+            }
             errorSent = true;
             res.json({error: err.toString()});
         });
