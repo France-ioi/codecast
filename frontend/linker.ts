@@ -28,9 +28,6 @@ export function link(rootBuilder): Linker {
     // object mapping (action name → action type)
     const typeForActionName = {};
 
-    // Enhancers have a flat structure.
-    const enhancers = [];
-
     // 'use' directives are queued and dependency objects are populated after
     // all definitions have taken effect.
     const useQueue = [];
@@ -148,13 +145,14 @@ export function link(rootBuilder): Linker {
         return result;
     }
 
-    let enhancer = applyMiddleware(sagaMiddleware, userTimingMiddleware);
-    for (let other of enhancers) {
-        enhancer = compose(enhancer, other);
-    }
-
     // Create the store.
-    const store = createStore(produce(rootReducer), {}, compose(applyMiddleware(sagaMiddleware), ...enhancers));
+    const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+
+    const store = createStore(
+        produce(rootReducer),
+        {},
+        composeEnhancers(applyMiddleware(sagaMiddleware, userTimingMiddleware))
+    );
 
     window.store = store;
 
