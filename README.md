@@ -14,30 +14,65 @@ version will remain readable.
 [Python documentation](docs/python.md)
 
 
-## Quick start
+## Setup
 
-(Build `c-to-json` and copy the executable at the root of this project.)
+Get the current version of `c-to-json` to the root of this project. You can retrieve the last compiled version (linux) like so:
 
-Current version of `c-to-json` doesn't build, you can retrieve the last compiled version (linux) like so :
+```
+curl -O https://codecast.france-ioi.org/next/c-to-json
+chmod +x c-to-json
+sudo apt-get install libncurses5
+```
 
-
-    curl -O https://codecast.france-ioi.org/next/c-to-json
-    sha1sum c-to-json 
-    d517a2e95a13ab66fe106443c12aff9764026944  c-to-json
+## Configuration
 
 Copy `config.json.template` to `config.json` and edit it.
 
 If not using HTTPS, set session.cookie.secure to false.
 
-If not using oauth2, remove keys "database", "session" and "auth" and
-fill in settings in "configs" and "tokens".
+If not using oauth2, set "auth" to `{}`: you'll be able to use the guest mode only.
 
-If using oauth2, fill in settings in "database", "session" and "auth",
-and remove keys "configs" and "tokens".  Use oauth2_schema.sql, and
-add rows in user_configs where value is a json object with keys
+### AWS S3 bucket
+
+To be able to store recordings and play them, you'll need an AWS S3 bucket.
+
+Create an AWS account and then a S3 bucket.
+
+In the "Permissions" section of your bucket, setup this CORS configuration:
+
+```
+[
+    {
+        "AllowedHeaders": [
+            "*"
+        ],
+        "AllowedMethods": [
+            "PUT",
+            "POST",
+            "DELETE"
+        ],
+        "AllowedOrigins": [
+            "*"
+        ],
+        "ExposeHeaders": []
+    }
+]
+```
+
+In the "Permissions" section of your bucket, you'll also want to edit "block public access" and disable blocking all public access.
+
+Then generate AWS credentials in "My Security Credentials" > "Access keys" and use these credentiels to fill in the `config.json` file.
+
+### Database
+
+Create a local MySQL database and import the file `db_schema.sql` into it.
+Add rows in `user_configs` where value is a json object with keys
 "s3AccessKeyId", "s3SecretAccessKey", "s3Region", "s3Bucket", and
 "uploadPath".  The row with user_id 0 is used for guest settings.
 
+Fill the `config.json` file with your database credentials.
+
+### Old documentation
 
 1. setup codecast-examples project and proxy it
 to '/examples' also install a cors plugin in your browser to get rid of cors issues.
@@ -47,32 +82,18 @@ to '/examples' also install a cors plugin in your browser to get rid of cors iss
 3. for uploading your own codecast for your dev setup, use "/dev-upload" url, add in backend/server.js, instructions are in there
 
 
-Add a CORS configuration for your domain in the AWS S3 bucket's Permissions :
-
-```
-<CORSConfiguration>
- <CORSRule>
-   <AllowedOrigin>http://www.example1.com</AllowedOrigin>
-
-   <AllowedMethod>PUT</AllowedMethod>
-   <AllowedMethod>POST</AllowedMethod>
-   <AllowedMethod>DELETE</AllowedMethod>
-
-   <AllowedHeader>*</AllowedHeader>
- </CORSRule>
-</CORSConfiguration>
-```
+## Install project and run
 
 To install and run the project, or after an update, run:
 
     yarn install
-    yarn run build
+    yarn dev
+
+To build the project for production use, run:
+
+    yarn install
+    yarn build
     yarn start
-
-For development "npm run build" is not needed as webpack is configured
-to watch the source files. Use the following :
-
-    yarn run dev
 
 
 ## Offline use
