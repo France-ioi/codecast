@@ -264,22 +264,6 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             )
         }
 
-        if (this.props.cur instanceof Sk.builtin.str) {
-            let classes = 'value-string';
-            if (!isEmptyObject(this.props.loadedReferences)) {
-                classes = ' value-loaded';
-            }
-
-            return (
-                <React.Fragment>
-                    <span className={classes}>"{this.props.cur.v}"</span>
-                    {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
-                        <span className="value-previous">"{this.props.old.v}"</span>
-                        : null}
-                </React.Fragment>
-            )
-        }
-
         if (this.props.cur instanceof Sk.builtin.object && this.props.cur.hasOwnProperty('$d')) {
             /**
              * An object's representation is as follow :
@@ -352,6 +336,27 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
         let classes = 'value-scalar';
         if (!isEmptyObject(this.props.loadedReferences)) {
             classes = ' value-loaded';
+        }
+
+        if (this.props.cur instanceof Sk.builtin.str) {
+            return (
+                <React.Fragment>
+                    <span className={classes}>"{this.props.cur.v}"</span>
+                    {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
+                        <span className="value-previous">"{this.props.old.v}"</span>
+                        : null}
+                </React.Fragment>
+            )
+        }
+        if (this.props.cur instanceof Sk.builtin.bool) {
+            return (
+                <React.Fragment>
+                    <span className={classes}>{Sk.misceval.isTrue(this.props.cur.v) ? 'True' : 'False'}</span>
+                    {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
+                        <span className="value-previous">{Sk.misceval.isTrue(this.props.old.v) ? 'True' : 'False'}</span>
+                        : null}
+                </React.Fragment>
+            )
         }
 
         return (
