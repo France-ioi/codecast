@@ -180,7 +180,7 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
                         <span className="object-toggle" onClick={this.toggleOpened}>
                             <span className="toggle-icon">▸</span>
                             <span className="value-object-closed">
-                                &lt;obj&gt;
+                                &lt;dict&gt;
                             </span>
                         </span>
                     )}
