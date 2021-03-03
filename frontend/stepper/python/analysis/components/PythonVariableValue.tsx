@@ -359,6 +359,17 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             )
         }
 
+        if (this.props.cur instanceof Sk.builtin.float_) {
+            return (
+                <React.Fragment>
+                    <span className={classes}>{String(this.props.cur.v).indexOf('.') !== -1 ? this.props.cur.v : this.props.cur.v + '.0'}</span>
+                    {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
+                        <span className="value-previous">{String(this.props.old.v).indexOf('.') !== -1 ? this.props.old.v : this.props.old.v + '.0'}</span>
+                        : null}
+                </React.Fragment>
+            )
+        }
+
         return (
             <React.Fragment>
                 <span className={classes}>{this.props.cur.v}</span>
