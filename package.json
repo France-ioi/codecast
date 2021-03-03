@@ -60,7 +60,7 @@
     "persistent-c": "^11.3.0",
     "pretty-error": "^2.1.2",
     "process": "^0.11.10",
-    "pug": "^3.0.0",
+    "pug": "^3.0.1",
     "query-string": "^6.13.7",
     "randomstring": "^1.1.5",
     "rc-slider": "^9.6.3",
