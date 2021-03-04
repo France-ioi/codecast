@@ -345,7 +345,7 @@ export default function(context) {
 
     this._configure = () => {
         Sk.configure({
-            output: this.logPrint,
+            output: this.print,
             inputfun: this.onInput,
             inputfunTakesPrompt: true,
             debugout: this._onDebugOut,
@@ -367,7 +367,7 @@ export default function(context) {
         this.context.callCallback = this.noDelay.bind(this);
     };
 
-    this.logPrint = (message) => {
+    this.print = (message) => {
         if (message.trim() === 'Program execution complete') {
             this._isFinished = true;
         } else {

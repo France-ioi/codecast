@@ -128,7 +128,7 @@ Sk.Debugger.prototype.updatePromiseReference = function (object) {
 
 Sk.Debugger.prototype.print = function (txt) {
     if (this.output_callback != null) {
-        this.output_callback.logPrint(txt + "\n");
+        this.output_callback.print(txt + "\n");
     }
 };
 
