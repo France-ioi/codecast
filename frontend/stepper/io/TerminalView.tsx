@@ -1,5 +1,5 @@
 import React from "react";
-import {Panel} from 'react-bootstrap';
+import {Card} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
 import {writeString} from "./terminal";
 import {ActionTypes} from "./actionTypes";
@@ -77,9 +77,9 @@ class _TerminalView extends React.PureComponent<TerminalViewProps> {
         const terminalBuffer = terminal && writeString(terminal, input);
 
         return (
-            <Panel>
-                <Panel.Heading>{this.renderHeader()}</Panel.Heading>
-                <Panel.Body>
+            <Card>
+                <Card.Header>{this.renderHeader()}</Card.Header>
+                <Card.Body>
                     <div className="row">
                         <div className="col-sm-12">
                             {terminalBuffer ?
@@ -95,8 +95,8 @@ class _TerminalView extends React.PureComponent<TerminalViewProps> {
                             }
                         </div>
                     </div>
-                </Panel.Body>
-            </Panel>
+                </Card.Body>
+            </Card>
         );
     }
 }

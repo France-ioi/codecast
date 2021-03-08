@@ -129,11 +129,11 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
                         <div className="row">
                             {showStack &&
                                 <div className="col-sm-3">
-                                    <div className='panel panel-default'>
-                                        <div className='panel-heading'>
+                                    <div className='card'>
+                                        <div className='card-header'>
                                             <span>{getMessage('VARIABLES')}</span>
                                         </div>
-                                        <div className='panel-body'>
+                                        <div className='card-body'>
                                             {(currentStepperState && currentStepperState.platform === 'python')
                                                 ? <PythonStackView
                                                     height={sourceRowHeight}
@@ -148,11 +148,11 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
                                 </div>
                             }
                             <div className={showStack ? "col-sm-9" : "col-sm-12"}>
-                                <div className='panel panel-default'>
-                                    <div className='panel-heading'>
+                                <div className='card'>
+                                    <div className='card-header'>
                                         {sourcePanelHeader}
                                     </div>
-                                    <div className='panel-body'>
+                                    <div className='card-body'>
                                         <BufferEditor
                                             buffer='source'
                                             readOnly={readOnly}
@@ -169,11 +169,11 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
                         {diagnostics &&
                             <div className="row">
                                 <div className="col-sm-12">
-                                    <div className='panel panel-danger'>
-                                        <div className='panel-heading'>
+                                    <div className='card bg-danger'>
+                                        <div className='card-header'>
                                             {diagnosticsPanelHeader}
                                         </div>
-                                        <div className='panel-body'>
+                                        <div className='card-body'>
                                             <div className='diagnostics'
                                                  style={{whiteSpace: 'pre', fontSize: '16px', padding: '5px'}}
                                                  dangerouslySetInnerHTML={diagnostics}/>
@@ -185,11 +185,11 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
                         {error &&
                             <div className="row">
                                 <div className="col-sm-12">
-                                    <div className='panel panel-danger'>
-                                        <div className='panel-heading'>
+                                    <div className='card bg-danger'>
+                                        <div className='card-header'>
                                             {stepperErrorPanelHeader}
                                         </div>
-                                        <div className='panel-body'>
+                                        <div className='card-body'>
                                             <pre>{error}</pre>
                                         </div>
                                     </div>
@@ -199,15 +199,15 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
                         {arduinoEnabled &&
                             <div className="row">
                                 <div className="col-sm-12">
-                                    <div className='panel panel-default'>
-                                        <div className='panel-heading'>
+                                    <div className='card'>
+                                        <div className='card-header'>
                                             <span>
                                               {/* microchip icon */}
                                                 {"Arduino"}
                                                 {currentStepperState && <span>{' '}<Icon icon='lock'/></span>}
                                             </span>
                                         </div>
-                                        <div className='panel-body'>
+                                        <div className='card-body'>
                                             <ArduinoPanel preventInput={preventInput} />
                                         </div>
                                     </div>

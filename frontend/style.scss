@@ -5,28 +5,21 @@ $font-family-sans-serif: 'Open Sans', sans-serif;
 $font-family-monospace: 'Inconsolata';
 $font-family-console: 'Lucida Console', Monaco, sans-serif;
 
-$screen-lg-min: 1200px;  // lg: normal/wide format
-$font-size-lg: 18px;
-$line-height-lg: 25px;
+$font-size-base: 1rem;
+$font-size-lg: $font-size-base * 1.12 !default;
+$font-size-sm: $font-size-base * .875 !default;
 
-$screen-md-min: 1024px;  // md: narrow format
-$font-size-md: 14px;
-$line-height-md: 20px;
+$grid-breakpoints: (
+  xs: 0,
+  sm: 576px,
+  md: 800px,
+  lg: 1024px,
+  xl: 1200px
+) !default;
 
-$screen-sm-min: 800px;   // sm: FUN format
-$font-size-sm: 12px;
-$line-height-sm: 17px;
-
-$container-sm: $screen-sm-min;
 $grid-gutter-width: 6px;
-$nav-link-padding: 7px 12px;
 
-// @see https://stackoom.com/question/3REF0/%E5%8D%87%E7%BA%A7%E5%88%B0Angular-%E5%90%8E-CssSyntaxError
-$bootstrap-sass-asset-helper: false;
-$icon-font-path: "~bootstrap-sass/assets/fonts/bootstrap/";
-$icon-font-name: "glyphicons-halflings-regular";
-
-@import '~bootstrap-sass/assets/stylesheets/bootstrap';
+@import "node_modules/bootstrap/scss/bootstrap";
 
 @import "~@blueprintjs/core/lib/css/blueprint.css";
 @import "~@blueprintjs/icons/lib/css/blueprint-icons.css";
@@ -143,18 +136,18 @@ body#app, #app h1, #app h2, #app h3 {
 }
 
 // Override bootstrap style
-#app .panel {
+#app .card {
   position: relative;
 }
-#app .panel, #app .navbar {
+#app .card, #app .navbar {
   margin-bottom: 6px;
   border-radius: 0;
 }
-#app .panel-heading {
+#app .card-header {
   line-height: 1;
   padding: 2px 4px;
 }
-#app .panel-body {
+#app .card-body {
   padding: 0;
   min-height: 14px;
 }
@@ -293,7 +286,7 @@ span + .value-previous {
 
 .vardecl {
   overflow: hidden;
-  max-height: 2 * $line-height-lg;
+  max-height: 2 * ceil($line-height-lg * $font-size-lg);
 }
 .vardecl-object {
   max-height: none;
@@ -388,20 +381,20 @@ span + .value-previous {
 .mainView-lg {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-lg;
-    line-height: $line-height-lg;
+    line-height: ceil($line-height-lg * $font-size-lg);
   }
 }
 
 .mainView-md {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
-    font-size: $font-size-md;
-    line-height: $line-height-md;
+    font-size: $font-size-base;
+    line-height: ceil($line-height-base * $font-size-base);
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 7px;
   }
   .vardecl {
-    max-height: 2 * $line-height-md;
+    max-height: 2 * ceil($line-height-base * $font-size-base);
   }
   .vardecl-object {
     max-height: none;
@@ -411,7 +404,7 @@ span + .value-previous {
 .mainView-sm {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-sm;
-    line-height: $line-height-sm;
+    line-height: ceil($line-height-sm * $font-size-sm);
   }
   .terminal-line, .terminal-placeholder {
     width: 60 * 6px;

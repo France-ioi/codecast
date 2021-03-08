@@ -1,5 +1,5 @@
 import React from "react";
-import {Panel} from 'react-bootstrap'
+import {Card} from 'react-bootstrap'
 import {Icon} from "@blueprintjs/core";
 import {BufferEditor} from "../../buffers/BufferEditor";
 
@@ -18,11 +18,11 @@ export class InputOutputView extends React.PureComponent {
 
     render() {
         return (
-            <Panel>
-                <Panel.Heading>
+            <Card>
+                <Card.Header>
                     {this.renderHeader()}
-                </Panel.Heading>
-                <Panel.Body>
+                </Card.Header>
+                <Card.Body>
                     <div className="row">
                         <div className="col-sm-6">
                             <BufferEditor
@@ -43,8 +43,8 @@ export class InputOutputView extends React.PureComponent {
                             />
                         </div>
                     </div>
-                </Panel.Body>
-            </Panel>
+                </Card.Body>
+            </Card>
         );
     };
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import {Panel} from "react-bootstrap";
+import {Card} from "react-bootstrap";
 import {Button} from "@blueprintjs/core";
 import {StepperControls} from "../index";
 
@@ -30,8 +30,8 @@ export class DirectiveFrame extends React.PureComponent<DirectiveFrameProps> {
 
         return (
             <div key={key} className='directive-view' style={style}>
-                <Panel className='directive'>
-                    <Panel.Heading>
+                <Card className='directive'>
+                    <Card.Header>
                         <div className="directive-header">
                             <div className="pull-right">
                                 {hasFullView &&
@@ -43,11 +43,11 @@ export class DirectiveFrame extends React.PureComponent<DirectiveFrameProps> {
                                 {title || key}
                             </div>
                         </div>
-                    </Panel.Heading>
-                    <Panel.Body>
+                    </Card.Header>
+                    <Card.Body>
                         {this.props.children}
-                    </Panel.Body>
-                </Panel>
+                    </Card.Body>
+                </Card>
             </div>
         );
     }

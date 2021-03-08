@@ -1,5 +1,5 @@
 import React from "react";
-import {Panel} from 'react-bootstrap';
+import {Card} from 'react-bootstrap';
 import {select} from "redux-saga/effects";
 import {ActionTypes} from "./actionTypes";
 import {BufferEditor} from "../../buffers/BufferEditor";
@@ -43,9 +43,9 @@ class _IOPaneOptions extends React.PureComponent<IOPaneOptionsProps> {
         const headerTitle = getMessage(modeSelect ? 'IOPANE_SELECT_TERMINAL_TITLE' : 'IOPANE_FORCED_TERMINAL_TITLE');
 
         return (
-            <Panel>
-                <Panel.Heading>{headerTitle}</Panel.Heading>
-                <Panel.Body>
+            <Card>
+                <Card.Header>{headerTitle}</Card.Header>
+                <Card.Body>
                     <div className="row">
                         <div className="col-sm-12">
                             {!modeSelect &&
@@ -82,8 +82,8 @@ class _IOPaneOptions extends React.PureComponent<IOPaneOptionsProps> {
                             }
                         </div>
                     </div>
-                </Panel.Body>
-            </Panel>
+                </Card.Body>
+            </Card>
         );
     };
 }
