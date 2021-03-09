@@ -37,19 +37,37 @@ function buildApp(config, store, callback) {
     if (config.isDevelopment) {
         // Development route: /build is managed by webpack
         const webpack = require('webpack');
-        const webpackDevMiddleware = require('webpack-dev-middleware');
         const webpackConfig = require('../webpack.config.js')(undefined, {
-            mode: (config.isDevelopment) ? 'development' : 'production'
+            mode: 'development',
         });
-        const compiler = webpack(webpackConfig);
+        const ReactRefreshPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
-        const instance = webpackDevMiddleware(compiler, {
-            publicPath: (webpackConfig.output.publicPath === '.') ? '.' : '/build/'
-        });
+        webpackConfig.entry.index.unshift(`webpack-hot-middleware/client?path=${config.baseUrl}/__webpack_hmr`);
+        webpackConfig.plugins.push(new webpack.HotModuleReplacementPlugin());
+        webpackConfig.plugins.push(new ReactRefreshPlugin({
+            overlay: {
+                sockIntegration: 'whm',
+            },
+        }),);
+        const compiler = webpack(webpackConfig);
 
         console.log('publicPath: ', webpackConfig.output.publicPath);
 
-        app.use(instance);
+        app.use(
+          require('webpack-dev-middleware')(compiler, {
+              publicPath: (webpackConfig.output.publicPath === '.') ? '.' : '/build/',
+              headers: {'Access-Control-Allow-Origin': '*'},
+          })
+        );
+
+        app.use(
+          require('webpack-hot-middleware')(compiler, {
+              path: '/__webpack_hmr',
+              heartbeat: 10 * 1000,
+              noInfo: false,
+              quiet: false,
+          })
+        );
     } else {
         // Production route: /build serves static files in build/
         app.use('/build', express.static(path.join(rootDir, 'build')));

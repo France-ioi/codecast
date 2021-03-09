@@ -6,6 +6,7 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
 const smp = new SpeedMeasurePlugin();
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 module.exports = (env, argv) => {
     if (!argv.mode) {
@@ -41,7 +42,7 @@ module.exports = (env, argv) => {
             extensions: ['.tsx', '.ts', '.js']
         },
         entry: {
-            index: './frontend/index.tsx'
+            index: ['./frontend/index.tsx'],
         },
         output: {
             path: path.join(__dirname, 'build'),
@@ -73,7 +74,7 @@ module.exports = (env, argv) => {
                         {
                             loader: 'babel-loader',
                             options: {
-                                babelrc: true
+                                babelrc: true,
                             }
                         }
                     ]
