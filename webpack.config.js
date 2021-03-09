@@ -47,7 +47,8 @@ module.exports = (env, argv) => {
         output: {
             path: path.join(__dirname, 'build'),
             publicPath: publicPath,
-            filename: '[name].js'
+            filename: '[name].js',
+            ...(isDev ? {pathinfo: false} : {}),
         },
         devtool: isDev ? 'inline-source-map' : undefined,
         module: {
@@ -63,6 +64,7 @@ module.exports = (env, argv) => {
                     loader: 'ts-loader',
                     exclude: /node_modules/,
                     options: {
+                        happyPackMode: true,
                         transpileOnly: true,
                         experimentalWatchApi: true,
                     },
@@ -172,16 +174,7 @@ module.exports = (env, argv) => {
         optimization: {
             removeAvailableModules: false,
             removeEmptyChunks: false,
-            // splitChunks: false,
-            splitChunks: {
-        //         cacheGroups: {
-        //             commons: {
-        //                 test: /[\\/]node_modules[\\/]/,
-        //                 name: 'vendors',
-        //                 chunks: 'all'
-        //             }
-        //         }
-            }
+            splitChunks: false,
         },
         stats: {
             assets: false,

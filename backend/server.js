@@ -64,8 +64,6 @@ function buildApp(config, store, callback) {
           require('webpack-hot-middleware')(compiler, {
               path: '/__webpack_hmr',
               heartbeat: 10 * 1000,
-              noInfo: false,
-              quiet: false,
           })
         );
     } else {
