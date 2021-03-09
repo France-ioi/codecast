@@ -2,8 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const SRC = path.resolve(__dirname, "frontend");
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
+const smp = new SpeedMeasurePlugin();
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
-const config = module.exports = (env, argv) => {
+module.exports = (env, argv) => {
     if (!argv.mode) {
         argv.mode = 'development';
     }
@@ -55,8 +59,12 @@ const config = module.exports = (env, argv) => {
                 },
                 {
                     test: /\.tsx?$/,
-                    use: 'ts-loader',
+                    loader: 'ts-loader',
                     exclude: /node_modules/,
+                    options: {
+                        transpileOnly: true,
+                        experimentalWatchApi: true,
+                    },
                 },
                 {
                     test: /\.js$/,
@@ -154,11 +162,16 @@ const config = module.exports = (env, argv) => {
             new webpack.ProvidePlugin({
                 Buffer: ['buffer', 'Buffer'],
                 process: ['process']
-            })
+            }),
+            new ForkTsCheckerWebpackPlugin(),
+            // new BundleAnalyzerPlugin(),
         ],
         // Note : splitChunks breaks the audio recording.
         //
         optimization: {
+            removeAvailableModules: false,
+            removeEmptyChunks: false,
+            // splitChunks: false,
             splitChunks: {
         //         cacheGroups: {
         //             commons: {
