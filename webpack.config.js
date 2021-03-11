@@ -2,11 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const webpack = require('webpack');
 const SRC = path.resolve(__dirname, "frontend");
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+
+// To analyse webpack speed and build size
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
 const smp = new SpeedMeasurePlugin();
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
-const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 module.exports = (env, argv) => {
     if (!argv.mode) {
@@ -83,36 +84,17 @@ module.exports = (env, argv) => {
                 },
                 {
                     test: /\.css$/,
-                    oneOf: [
+                    use: [
                         {
-                            resourceQuery: /^\?global$/,
-                            use: [
-                                {
-                                    loader: 'style-loader'
-                                }, {
-                                    loader: 'css-loader',
-                                    options: {
-                                        modules: false, sourceMap: isDev
-                                    }
-                                },
-                            ]
+                            loader: 'style-loader'
+                        }, {
+                            loader: 'css-loader',
+                            options: {
+                                modules: false,
+                                sourceMap: isDev,
+                            }
                         },
-                        {
-                            use: [
-                                {
-                                    loader: 'style-loader'
-                                }, {
-                                    loader: 'css-loader',
-                                    options: {
-                                        modules: true,
-                                        sourceMap: isDev,
-                                        importLoaders: 1,
-                                        localIdentName: '[name]__[local]___[hash:base64:5]'
-                                    }
-                                },
-                            ]
-                        }
-                    ]
+                    ],
                 },
                 {
                     test: /\.scss$/,
