@@ -1,5 +1,9 @@
 .task {
   background: #f1f2f7;
+  &.container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
 
   .task-header {
     font-size: 18px;
@@ -71,7 +75,7 @@
       border-top-left-radius: 5px;
       border-bottom-left-radius: 5px;
       margin-bottom: .7rem;
-      padding: 0 8px 0 3px;
+      padding: 0 6px 0 3px;
       &.is-blue {
         background: #4e94e3;
       }
@@ -83,5 +87,10 @@
         }
       }
     }
+  }
+
+  pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
+    font-size: $font-size-lg;
+    line-height: ceil($line-height-lg * $font-size-lg);
   }
 }
