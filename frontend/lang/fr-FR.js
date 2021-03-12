@@ -86,5 +86,9 @@ module.exports = {
     PLATFORM_UNIX: "Unix",
     PLATFORM_ARDUINO: "Arduino",
     PLATFORM_PYTHON: "Python",
-    EMPTY_PROGRAM: "Le programme est vide."
+    EMPTY_PROGRAM: "Le programme est vide.",
+
+    KEYWORD: 'mot-clé',
+    CONSTANT: "constante",
+    VARIABLE: "variable",
 };

@@ -88,9 +88,15 @@
       }
     }
   }
+}
 
-  pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
-    font-size: $font-size-lg;
-    line-height: ceil($line-height-lg * $font-size-lg);
+pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
+  font-size: $font-size-lg;
+  line-height: $line-height-lg;
+}
+
+.ace_editor {
+  .ace_completion-highlight {
+    color: #2d69c7 !important;
   }
 }

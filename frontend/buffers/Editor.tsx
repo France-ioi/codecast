@@ -3,6 +3,7 @@ import classnames from 'classnames';
 import * as ace from 'brace';
 import {connect} from "react-redux";
 import {AppStore} from "../store";
+import {addAutocompletion} from "./editorAutocompletion";
 
 const Range = ace.acequire('ace/range').Range;
 
@@ -24,6 +25,7 @@ interface EditorProps extends EditorStateToProps {
     mode: string,
     width: any,
     height: any,
+    disableAutocompletion?: boolean,
     onSelect: Function,
     onEdit: Function,
     onScroll: Function,
@@ -184,13 +186,22 @@ class _Editor extends React.PureComponent<EditorProps> {
 
     componentDidMount() {
         const editor = this.editor = ace.edit(this.editorNode);
+        if (!this.props.disableAutocompletion) {
+            addAutocompletion(this.props.getMessage, null, null, {});
+        }
         const session = this.editor.getSession();
         editor.$blockScrolling = Infinity;
         // editor.setBehavioursEnabled(false);
         editor.setTheme(`ace/theme/${this.props.theme || 'github'}`);
         session.setMode(`ace/mode/${this.props.mode || 'text'}`);
         // editor.setOptions({minLines: 25, maxLines: 50});
-        editor.setReadOnly(this.props.readOnly);
+        editor.setOptions({
+            readOnly: !!this.props.readOnly,
+            enableBasicAutocompletion: !this.props.disableAutocompletion,
+            enableLiveAutocompletion: !this.props.disableAutocompletion,
+            enableSnippets: false,
+        });
+
         const {onInit, onSelect, onEdit} = this.props;
         if (typeof onInit === 'function') {
             const api = {
@@ -225,6 +236,24 @@ class _Editor extends React.PureComponent<EditorProps> {
                 editor.blur();
             }
         });
+
+        if (!this.props.disableAutocompletion) {
+            // @ts-ignore
+            let completer = editor.completer;
+            // we resize the completer window, because some functions are too big so we need more place:
+            if (!completer) {
+                // make sure completer is initialized
+                editor.execCommand("startAutocomplete");
+                // @ts-ignore
+                completer = editor.completer;
+                completer.detach();
+            }
+            completer.popup.container.style.width = "22%";
+
+            // removal of return for autocomplete
+            if (completer.keyboardHandler.commandKeyBinding.return)
+                delete completer.keyboardHandler.commandKeyBinding.return;
+        }
 
         /* // Export ACE editors for debugging purposes:
         window.editors = window.editors || {};
