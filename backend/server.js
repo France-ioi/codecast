@@ -111,6 +111,16 @@ function addBackendRoutes(app, config, store) {
         });
     });
 
+    app.get('/task', function (req, res) {
+        buildOptions(config, req, 'task', function (err, options) {
+            res.render('index', {
+                development: config.isDevelopment,
+                rebaseUrl: config.rebaseUrl,
+                options
+            });
+        });
+    });
+
     app.get('/player', function (req, res) {
         buildOptions(config, req, 'player', function (err, options) {
             if (err) {

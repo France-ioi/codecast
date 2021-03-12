@@ -1,0 +1,120 @@
+.subtitles-pane {
+  height: 100%;
+  border: 1px solid #ccc;
+  margin-left: 5px;
+  padding: 5px;
+  background: #fff;
+  z-index: 6;
+  .subtitles-timestamp {
+    font-family: $font-family-console;
+    font-size: 12px;
+    text-align: center;
+    background-color: #efefef;
+    border: 1px solid #ddd;
+    margin-top: 3px;
+    .col-sm-6 {
+      padding: 0;
+      &:first-child {
+        border-right: 1px solid #fff;
+      }
+    }
+  }
+  .subtitles-item-editor,
+  .subtitles-item-viewer {
+    .btn-xs {
+      border: 0;
+      border-radius: 0;
+      padding: 1px 2px;
+    }
+  }
+  .subtitles-item-editor {
+    margin: 15px 0;
+    .subtitles-timestamp .subtitles-timestamp-start,
+    .subtitles-timestamp .subtitles-timestamp-end {
+      padding: 0 3px;
+      line-height: 24px;
+    }
+    .subtitles-timestamp button.bp3-button.bp3-small {
+      min-width: auto;
+    }
+    textarea.subtitles-text {
+      margin-left: -3px; /*match bootstrap row margin left -3px*/
+      resize: vertical;
+      color: #2a2aff;
+    }
+    .subtitles-split {
+      text-align: center;
+      line-height: 1;
+      p {
+        display: inline-block;
+        margin-bottom: 0;
+        font-family: $font-family-console;
+        font-size: 12px;
+      }
+    }
+  }
+  .subtitles-item-viewer {
+    .subtitles-timestamp .subtitles-timestamp-start,
+    .subtitles-timestamp .subtitles-timestamp-end {
+      padding: 0 6px;
+    }
+    .subtitles-text {
+      max-height: 40px;
+      display: block;
+      overflow: hidden;
+      line-height: 14px;
+      padding: 3px 0;
+      font-size: 11px;
+    }
+  }
+}
+.subtitles-pane-items {
+  overflow-x: hidden;
+  overflow-y: scroll;
+  margin-top: 5px;
+  height: calc(100% - 35px); /* 5px + height(input) */
+  background: #f8f8f8;
+}
+.subtitles-item {
+  cursor: pointer;
+  font-size: 12px;
+}
+.subtitles-item:hover {
+  background: #eee;
+}
+.subtitles-item-selected {
+  background: #ccc;
+}
+.subtitles-band {
+  position: fixed;
+  width: 1164px;
+  z-index: 6;
+  cursor: grab;
+  cursor: -webkit-grab;
+  cursor: -moz-grab;
+  cursor: -o-grab;
+  padding: 10px 0;
+  opacity: 0.8;
+  background-color: #222;
+  color: #ff4;
+  border-radius: 7px;
+}
+.subtitles-band-frame {
+  //background: #eee;
+  font-size: 20px;
+  padding: 2px 6px;
+  //border: 1px solid #ccc;
+  text-align: left;
+}
+.subtitles-band-moving {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+  cursor: -moz-grabbing;
+  cursor: -o-grabbing;
+}
+.subtitles-band-inactive {
+  color: #777;
+}
+.subtitles-band p {
+  margin: 0;
+}

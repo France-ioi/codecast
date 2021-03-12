@@ -20,6 +20,7 @@ import {ActionTypes as EditorActionTypes} from "./editor/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "./recorder/actionTypes";
 import {ActionTypes as StatisticsActionTypes} from "./statistics/actionTypes";
 import {SandboxApp} from "./sandbox/SandboxApp";
+import {TaskApp} from "./task/TaskApp";
 import {StatisticsApp} from "./statistics/StatisticsApp";
 import {EditorApp} from "./editor/EditorApp";
 import {PlayerApp} from "./player/PlayerApp";
@@ -210,6 +211,11 @@ Codecast.start = function(options) {
             });
 
             appDisplay = <SandboxApp />;
+
+            break;
+
+        case 'task':
+            appDisplay = <TaskApp />;
 
             break;
         default:

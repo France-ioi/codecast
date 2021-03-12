@@ -1,0 +1,87 @@
+.task {
+  background: #f1f2f7;
+
+  .task-header {
+    font-size: 18px;
+    font-weight: bold;
+    height: 50px;
+    display: flex;
+    padding-left: 20px;
+    align-items: center;
+    .task-header__quick {
+      color: #7c7c7c;
+    }
+    .task-header__algo {
+      color: #4e94e3;
+    }
+  }
+
+  .task-body {
+    height: calc(100vh - 50px);
+  }
+
+  .task-menu-left {
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .task-mission {
+    padding: 40px;
+    color: #7c7c7c;
+
+    h1 {
+      color: #30242B;
+      margin-bottom: 1rem;
+    }
+  }
+
+  hr {
+    width: 100%;
+    border-bottom: solid 1px #e7e7e7;
+  }
+
+  .player-controls {
+    border-top: solid 1px #e7e7e7;
+    padding: 10px;
+
+    .controls {
+      display: flex;
+      .controls-stepper-wrapper {
+        flex: 1 0;
+      }
+    }
+  }
+
+  .task-visualisation {
+    flex: 1 0;
+    padding: 40px;
+  }
+
+  .menu-app {
+    position: absolute;
+    top: 40px;
+    right: 0;
+    z-index: 10;
+    display: flex;
+    align-items: flex-start;
+
+    .menu-task-element {
+      background: #4a4a4a;
+      border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px;
+      margin-bottom: .7rem;
+      padding: 0 8px 0 3px;
+      &.is-blue {
+        background: #4e94e3;
+      }
+      .bp3-button {
+        background: transparent !important;
+        box-shadow: none !important;
+        .bp3-icon {
+          color: #fff !important;
+        }
+      }
+    }
+  }
+}
