@@ -22,12 +22,14 @@ interface TaskAppStateToProps {
     windowHeight: any,
     currentStepperState: any,
     preventInput: any,
+    fullScreenActive: boolean,
 }
 
 function mapStateToProps(state: AppStore): TaskAppStateToProps {
     const getMessage = state.getMessage;
     const geometry = state.mainViewGeometry;
     const panes = state.panes;
+    const fullScreenActive = state.fullscreen.active;
     const currentStepperState = state.stepper.currentStepperState;
     const error = currentStepperState && currentStepperState.error;
     const readOnly = !!currentStepperState;
@@ -62,7 +64,7 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
     return {
         readOnly, error, getMessage, geometry, panes, preventInput, sourceRowHeight,
         sourceMode, showStack, arduinoEnabled, showViews, showIO, windowHeight,
-        currentStepperState,
+        currentStepperState, fullScreenActive,
     };
 }
 
@@ -80,11 +82,11 @@ class _TaskApp extends React.PureComponent<TaskAppProps> {
             readOnly, sourceMode, sourceRowHeight,
             preventInput, error, getMessage, geometry, panes,
             windowHeight, currentStepperState,
-            showStack, arduinoEnabled, showViews, showIO
+            showStack, arduinoEnabled, showViews, showIO, fullScreenActive,
         } = this.props;
 
         return (
-            <Container fluid className="task">
+            <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''}`}>
                 <div className="task-header">
                     <span className="task-header__quick">QUICK</span>
                     <span className="task-header__algo">ALGO</span>
@@ -108,7 +110,7 @@ class _TaskApp extends React.PureComponent<TaskAppProps> {
                             <StepperControls enabled={true}/>
                         </div>
                     </Col>
-                    <Col md={9}>
+                    <Col md={fullScreenActive ? 12 : 9}>
                         <BufferEditor
                             buffer='source'
                             readOnly={readOnly}

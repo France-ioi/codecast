@@ -88,6 +88,18 @@
       }
     }
   }
+
+  &.full-screen {
+    .task-header {
+      display: none;
+    }
+    .task-menu-left {
+      display: none;
+    }
+    .task-body {
+      height: 100vh;
+    }
+  }
 }
 
 pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
