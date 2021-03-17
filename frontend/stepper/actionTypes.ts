@@ -19,6 +19,8 @@ export enum ActionTypes {
     StepperViewControlsChanged = 'Stepper.View.Controls.Changed',
     StepperEnabled = 'Stepper.Enabled',
     StepperDisabled = 'Stepper.Disabled',
+    StepperSpeedChanged = 'Stepper.Speed.Changed',
+    StepperControlsChanged = 'Stepper.Controls.Changed',
     Compile = 'Compile',
     CompileClear = 'Compile.Clear',
     CompileReset = 'Compile.Reset',

@@ -31,6 +31,8 @@ const stepperApi = {
     addBuiltin,
 };
 
+const delay = delay => new Promise((resolve) => setTimeout(resolve, delay));
+
 export type StepperApi = typeof stepperApi;
 
 export default function(bundle: Bundle) {
@@ -268,8 +270,9 @@ async function executeSingleStep(stepperContext: StepperContext) {
     }
 }
 
-async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
+async function stepUntil(stepperContext: StepperContext, stopCond = undefined, speed?: number) {
     let stop = false;
+    let first = true;
     while (true) {
         if (isStuck(stepperContext.state)) {
             return;
@@ -290,7 +293,11 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
             return;
         }
 
+        if (!first) {
+            await delay(225 - speed);
+        }
         await executeSingleStep(stepperContext);
+        first = false;
     }
 }
 
@@ -374,10 +381,10 @@ async function stepOver(stepperContext: StepperContext) {
     }
 }
 
-export async function performStep(stepperContext: StepperContext, mode) {
+export async function performStep(stepperContext: StepperContext, mode, speed?: number) {
     switch (mode) {
         case 'run':
-            await stepUntil(stepperContext);
+            await stepUntil(stepperContext, undefined, speed);
             break;
         case 'into':
             await stepInto(stepperContext);

@@ -74,6 +74,11 @@ export enum StepperStepMode {
     Over = 'over'
 }
 
+export enum StepperControlsType {
+    Normal = 'normal',
+    StepByStep = 'step_by_step',
+}
+
 export interface StepperDirectives {
     ordered: readonly any[],
     functionCallStack: any, // C
@@ -140,13 +145,15 @@ enum StepperStatus {
 
 export const initialStateStepper = {
     status: StepperStatus.Clear,
+    speed: 0,
     undo: [],
     redo: [],
     initialStepperState: initialStateStepperState,
     currentStepperState: null as typeof initialStateStepperState,
     interrupting: false,
     mode: null as StepperStepMode,
-    options: {} as any // TODO: Is this used ? If yes, put the type.
+    options: {} as any, // TODO: Is this used ? If yes, put the type.
+    controls: StepperControlsType.Normal,
 };
 
 function initReducer(state: AppStoreReplay): void {
@@ -209,6 +216,12 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.StepperConfigure);
     bundle.addReducer(ActionTypes.StepperConfigure, stepperConfigureReducer);
+
+    bundle.defineAction(ActionTypes.StepperSpeedChanged);
+    bundle.addReducer(ActionTypes.StepperSpeedChanged, stepperSpeedChangedReducer);
+
+    bundle.defineAction(ActionTypes.StepperControlsChanged);
+    bundle.addReducer(ActionTypes.StepperControlsChanged, stepperControlsChangedReducer);
 
     /* BEGIN view stuff to move out of here */
 
@@ -501,6 +514,14 @@ function stepperConfigureReducer(state: AppStore, action): void {
     return state.stepper.options = options;
 }
 
+function stepperSpeedChangedReducer(state: AppStore, {payload: {speed}}): void {
+    return state.stepper.speed = speed;
+}
+
+function stepperControlsChangedReducer(state: AppStore, {payload: {controls}}): void {
+    return state.stepper.controls = controls;
+}
+
 function stepperStackUpReducer(state: AppStoreReplay): void {
     let {controls, analysis} = state.stepper.currentStepperState;
     let focusDepth = controls.stack.focusDepth;
@@ -735,7 +756,7 @@ function* stepperStepSaga(app: App, action) {
         }
 
         try {
-            yield call(performStep, stepperContext, action.payload.mode);
+            yield call(performStep, stepperContext, action.payload.mode, stepper.speed);
         } catch (ex) {
             console.log('stepperStepSaga has catched', ex);
             if (!(ex instanceof StepperError)) {

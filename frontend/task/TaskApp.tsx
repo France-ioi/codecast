@@ -32,7 +32,7 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
     const fullScreenActive = state.fullscreen.active;
     const currentStepperState = state.stepper.currentStepperState;
     const error = currentStepperState && currentStepperState.error;
-    const readOnly = !!currentStepperState;
+    const readOnly = false;
     const {showIO, showViews, showStack, platform} = state.options;
     const arduinoEnabled = platform === 'arduino';
 
@@ -107,7 +107,7 @@ class _TaskApp extends React.PureComponent<TaskAppProps> {
                         </div>
 
                         <div className="player-controls">
-                            <StepperControls enabled={true}/>
+                            <StepperControls enabled={true} newControls={true}/>
                         </div>
                     </Col>
                     <Col md={fullScreenActive ? 12 : 9}>
