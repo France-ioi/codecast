@@ -641,6 +641,7 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
        the effects of user interaction. */
     state = yield select();
     stepperContext.state = getCurrentStepperState(state);
+    stepperContext.speed = getStepper(state).speed;
     if (stepperContext.state.platform === 'python' && arg) {
         // TODO: Immer: This here breaks when the state is frozen.
         // So this should probably be removed, if input, output and terminal are working without this.
@@ -677,7 +678,7 @@ function* stepperInterruptSaga() {
         return;
     }
 
-    const stepperContext = makeContext(curStepperState, () => {
+    const stepperContext = makeContext(getStepper(state), () => {
         return new Promise((resolve) => {
             resolve(true);
         });
@@ -723,7 +724,7 @@ function* stepperStepSaga(app: App, action) {
     if (stepper.status === StepperStatus.Starting) {
         yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
-        const stepperContext = makeContext(stepper.currentStepperState, interact);
+        const stepperContext = makeContext(stepper, interact);
 
         /**
          * Before we do a step, we check if the state in analysis is the same as the one in the python runner.
@@ -877,7 +878,7 @@ function postLink(app: App) {
                 stepperStartedReducer(draft, {mode});
             });
 
-            replayContext.stepperContext = makeContext(replayContext.state.stepper.currentStepperState, function interact(_) {
+            replayContext.stepperContext = makeContext(replayContext.state.stepper, function interact(_) {
                 return new Promise((cont) => {
                     stepperSuspend(replayContext.stepperContext, cont);
 

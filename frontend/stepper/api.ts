@@ -12,7 +12,7 @@ import {all, call} from 'redux-saga/effects';
 import {getNewOutput, getNewTerminal} from "./python";
 import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay} from "../store";
-import {initialStepperStateControls, StepperState} from "./index";
+import {initialStateStepper, initialStepperStateControls, StepperState} from "./index";
 import {Bundle} from "../linker";
 
 export interface StepperContext {
@@ -21,7 +21,8 @@ export interface StepperContext {
     interact: Function | null,
     resume: Function | null,
     position: any,
-    lineCounter: number
+    lineCounter: number,
+    speed?: number,
 }
 
 const stepperApi = {
@@ -74,7 +75,8 @@ export async function buildState(state: AppStoreReplay): Promise<StepperState> {
         interact,
         resume: null,
         position: 0,
-        lineCounter: 0
+        lineCounter: 0,
+        speed: state.stepper.speed,
     } as StepperContext;
 
     if (stepperContext.state.platform === 'python') {
@@ -140,10 +142,12 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(state: StepperState, interact: Function): StepperContext {
+export function makeContext(stepper: typeof initialStateStepper, interact: Function): StepperContext {
     /**
      * We create a new state object here instead of mutatating the state. This is intended.
      */
+
+    const state = stepper.currentStepperState;
 
     if (state.platform === 'python') {
         return {
@@ -155,7 +159,8 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
             interact,
             resume: null,
             position: getNodeStartRow(state),
-            lineCounter: 0
+            lineCounter: 0,
+            speed: stepper.speed,
         };
     } else {
         return {
@@ -168,7 +173,8 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
             interact,
             resume: null,
             position: getNodeStartRow(state),
-            lineCounter: 0
+            lineCounter: 0,
+            speed: stepper.speed,
         }
     }
 }
@@ -294,7 +300,7 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined, s
         }
 
         if (!first) {
-            await delay(225 - speed);
+            await delay(225 - stepperContext.speed);
         }
         await executeSingleStep(stepperContext);
         first = false;
