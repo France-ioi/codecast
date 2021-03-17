@@ -57,6 +57,8 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
         const status = stepper.status;
         speed = stepper.speed;
         controlsType = stepper.controls;
+        canRestart = enabled && 'clear' !== status && stepper.currentStepperState !== stepper.initialStepperState;
+
         if (status === 'clear') {
             showCompile = true;
             canCompile = enabled;
@@ -70,7 +72,6 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
                 // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
                 canStepOut = (currentStepperState.suspensions && (currentStepperState.suspensions.length > 1));
                 canStep = !currentStepperState.isFinished;
-                canRestart = enabled;
                 canUndo = enabled && (stepper.undo.length > 0);
                 canRedo = enabled && (stepper.redo.length > 0);
                 showExpr = false;
@@ -80,7 +81,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
 
                     canStepOut = !!C.findClosestFunctionScope(scope);
                     canStep = control && !!control.node;
-                    canRestart = enabled;
+                    canRestart = enabled && (stepper.currentStepperState !== stepper.initialStepperState);
                     canUndo = enabled && (stepper.undo.length > 0);
                     canRedo = enabled && (stepper.redo.length > 0);
                 }
@@ -132,7 +133,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
                 <div className="controls-stepper-wrapper">
                     {showControls && <div className="controls-stepper-execution">
                         <div className="small-buttons">
-                            {this._button('restart', this.onRestart, getMessage('CONTROL_RESTART'), 'stop')}
+                            {this._button('restart', this.onStop, getMessage('CONTROL_RESTART'), 'stop')}
                         </div>
                         <div className="big-buttons">
                             {!canInterrupt && this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), 'play')}
@@ -314,12 +315,14 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
     onStepOver = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Over}});
     onInterrupt = () => this.props.dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
     onRestart = () => this.props.dispatch({type: ActionTypes.StepperRestart, payload: {}});
+    onStop = () => this.props.dispatch({type: ActionTypes.StepperExit, payload: {}});
     onEdit = () => this.props.dispatch({type: ActionTypes.StepperExit, payload: {}});
     onUndo = () => this.props.dispatch({type: ActionTypes.StepperUndo, payload: {}});
     onRedo = () => this.props.dispatch({type: ActionTypes.StepperRedo, payload: {}});
     onCompile = () => this.props.dispatch({type: ActionTypes.Compile, payload: {}});
     onStepByStep = () => {
-        this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.StepByStep}});
+        const newControls = this.props.controlsType === StepperControlsType.Normal ? StepperControlsType.StepByStep : StepperControlsType.Normal;
+        this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: newControls}});
         if (this.props.showCompile) {
             this.props.dispatch({type: ActionTypes.Compile, payload: {}});
             this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});

@@ -1093,6 +1093,9 @@ function postLink(app: App) {
         yield takeEvery(ActionTypes.StepperStep, stepperStepSaga, args);
         yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga);
         yield takeEvery(ActionTypes.StepperExit, stepperExitSaga);
+        yield takeEvery(BufferActionTypes.BufferEdit, function* () {
+            yield put({type: ActionTypes.StepperExit, payload: {}});
+        });
 
         /* Highlight the range of the current source fragment. */
         yield takeLatest([
