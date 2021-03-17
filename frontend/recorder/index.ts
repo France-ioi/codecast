@@ -2,7 +2,7 @@ import saveScreenComponent from './save_screen';
 import recorderStore from './store';
 import recorderSagas from './sagas';
 import MemoryUsageBundle from './memory_usage';
-import VumeterBundle from './vumeter';
+import VumeterBundle from './vu_meter';
 import ScreensBundle from '../common/screens';
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {Bundle} from "../linker";
