@@ -38,7 +38,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     let showCompile = false, showControls = false, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
     let canInterrupt = false, canUndo = false, canRedo = false;
-    let showExpr = true;
+    let showExpr = platform !== 'python';
     let compileOrExecuteMessage = '';
     let speed = 0;
     let controlsType = StepperControlsType.Normal;
@@ -50,7 +50,6 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     }
 
     showControls = true;
-    canStep = true;
 
     const stepper = getStepper(state);
     if (stepper) {
@@ -62,6 +61,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
         if (status === 'clear') {
             showCompile = true;
             canCompile = enabled;
+            canStep = true;
         } else if (status === 'idle') {
             const currentStepperState = stepper.currentStepperState;
 
@@ -74,7 +74,6 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
                 canStep = !currentStepperState.isFinished;
                 canUndo = enabled && (stepper.undo.length > 0);
                 canRedo = enabled && (stepper.redo.length > 0);
-                showExpr = false;
             } else {
                 if (currentStepperState && currentStepperState.programState) {
                     const {control, scope} = currentStepperState.programState;
