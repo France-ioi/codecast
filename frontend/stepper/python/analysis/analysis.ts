@@ -24,6 +24,7 @@ export interface SkulptScope {
     },
     loadedReferences: any, // TODO: Add type
     currentLine: number,
+    currentColumn: number,
     suspensionIdx: number,
     scopeIndex: number
 }
@@ -186,6 +187,7 @@ export const analyseSkulptScope = function(suspension: any, lastAnalysis: Skulpt
         args,
         openedPaths,
         loadedReferences,
+        currentColumn: suspension.$colno,
         currentLine: suspension.$lineno,
         suspensionIdx,
         scopeIndex

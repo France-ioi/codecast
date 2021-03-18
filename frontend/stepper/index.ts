@@ -323,18 +323,22 @@ function getNodeRange(stepperState: typeof initialStateStepperState) {
     }
 
     if (stepperState.platform === 'python') {
-        const suspension = window.currentPythonRunner.getCurrentSuspension();
-        if (!suspension) {
+        const {functionCallStack} = stepperState.analysis;
+        const stackFrame = functionCallStack[functionCallStack.length - 1];
+        if (!stackFrame) {
             return null;
         }
 
+        const line = stackFrame.currentLine;
+        const columnNumber = stackFrame.currentColumn;
+
         return {
             start: {
-                row: (suspension.$lineno - 1),
-                column: suspension.$colno,
+                row: (line - 1),
+                column: columnNumber,
             },
             end: {
-                row: (suspension.$lineno - 1),
+                row: (line - 1),
                 column: 100,
             }
         };
