@@ -27,6 +27,7 @@ interface StepperControlsStateToProps {
     canRedo: boolean,
     showExpr: boolean,
     speed: number,
+    isFinished: boolean,
     controlsType: StepperControlsType,
 }
 
@@ -38,6 +39,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     let showCompile = false, showControls = false, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
     let canInterrupt = false, canUndo = false, canRedo = false;
+    let isFinished = false;
     let showExpr = platform !== 'python';
     let compileOrExecuteMessage = '';
     let speed = 0;
@@ -65,6 +67,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
         } else if (status === 'idle') {
             const currentStepperState = stepper.currentStepperState;
 
+            isFinished = !!currentStepperState.isFinished;
             showEdit = true;
             showControls = true;
             canExit = enabled;
@@ -104,6 +107,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
         canRestart, canStep, canStepOut, canInterrupt,
         canUndo, canRedo,
         compileOrExecuteMessage,
+        isFinished,
         speed,
         controlsType,
     };
@@ -175,7 +179,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
                                 {this._button('undo', this.onUndo, getMessage('CONTROL_UNDO'), 'undo', null, 'is-small')}
                                 {this._button('redo', this.onRedo, getMessage('CONTROL_REDO'), 'redo', null, 'is-small')}
                             </React.Fragment>}
-                            {this._button('fast_forward', this.onStepByStep, getMessage('CONTROL_GO_TO_END'), <span className="bp3-icon"><svg
+                            {this._button('go_to_end', this.onGoToEnd, getMessage('CONTROL_GO_TO_END'), <span className="bp3-icon"><svg
                                 data-icon="fast-forward" viewBox="0 0 640 512">
                                 <path fill="currentColor" d="M512 76v360c0 6.6-5.4 12-12 12h-40c-6.6 0-12-5.4-12-12V284.1L276.5 440.6c-20.6 17.2-52.5 2.8-52.5-24.6V284.1L52.5 440.6C31.9 457.8 0 443.4 0 416V96c0-27.4 31.9-41.7 52.5-24.6L224 226.8V96c0-27.4 31.9-41.7 52.5-24.6L448 226.8V76c0-6.6 5.4-12 12-12h40c6.6 0 12 5.4 12 12z"/>
                             </svg></span>)}
@@ -269,6 +273,9 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
             case 'compile':
                 disabled = !this.props.canCompile;
                 break;
+            case 'go_to_end':
+                disabled = this.props.isFinished;
+                break;
         }
 
         if (controls) {
@@ -306,7 +313,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
         if (this.props.showCompile) {
             await this.props.dispatch({type: ActionTypes.Compile, payload: {}});
         }
-        this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}})
+        this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run, speed: this.props.speed}});
     };
     onStepExpr = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Expr}});
     onStepInto = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into}});
@@ -326,6 +333,15 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
             this.props.dispatch({type: ActionTypes.Compile, payload: {}});
             this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});
         }
+    };
+    onGoToEnd = async () => {
+        if (this.props.showCompile) {
+            await this.props.dispatch({type: ActionTypes.Compile, payload: {}});
+        }
+        await this.props.dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
+        setTimeout(() => {
+            this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});
+        }, 250);
     };
     onChangeSpeed = (speed) => this.props.dispatch({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
 }

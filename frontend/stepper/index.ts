@@ -761,7 +761,7 @@ function* stepperStepSaga(app: App, action) {
         }
 
         try {
-            yield call(performStep, stepperContext, action.payload.mode, stepper.speed);
+            yield call(performStep, stepperContext, action.payload.mode, action.payload.speed);
         } catch (ex) {
             console.log('stepperStepSaga has catched', ex);
             if (!(ex instanceof StepperError)) {
