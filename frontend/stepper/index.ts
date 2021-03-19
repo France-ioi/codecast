@@ -451,11 +451,10 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
 
     // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
     if (stepperContext.state.platform === 'python') {
-        const storeTerminal = window.currentPythonRunner._terminal;
-        const storeOutput = state.stepper.currentStepperState.output;
-
-        stepperContext.state.terminal = storeTerminal;
-        stepperContext.state.output = storeOutput;
+        stepperContext.state.terminal = window.currentPythonRunner._terminal;
+        if (state.stepper.currentStepperState) {
+            stepperContext.state.output = state.stepper.currentStepperState.output;
+        }
     }
 
     console.log(stepperContext.state);

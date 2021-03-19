@@ -29,7 +29,7 @@ import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
 
-enum CompileStatus {
+export enum CompileStatus {
     Clear = 'clear',
     Running = 'running',
     Done = 'done',

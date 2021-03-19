@@ -6,6 +6,8 @@ import {AppStore} from "../store";
 import {Container, Row, Col} from 'react-bootstrap';
 import {BufferEditor} from "../buffers/BufferEditor";
 import {getPlayerState} from "../player/selectors";
+import {Icon} from "@blueprintjs/core";
+import {ActionTypes} from "../stepper/actionTypes";
 
 interface TaskAppStateToProps {
     readOnly: boolean,
@@ -23,6 +25,7 @@ interface TaskAppStateToProps {
     currentStepperState: any,
     preventInput: any,
     fullScreenActive: boolean,
+    diagnostics: any,
 }
 
 function mapStateToProps(state: AppStore): TaskAppStateToProps {
@@ -31,10 +34,11 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
     const panes = state.panes;
     const fullScreenActive = state.fullscreen.active;
     const currentStepperState = state.stepper.currentStepperState;
-    const error = currentStepperState && currentStepperState.error;
     const readOnly = false;
     const {showIO, showViews, showStack, platform} = state.options;
     const arduinoEnabled = platform === 'arduino';
+    const diagnostics = state.compile.diagnosticsHtml;
+    const error = currentStepperState && currentStepperState.error;
 
     /* TODO: make number of visible rows in source editor configurable. */
     const sourceRowHeight = Math.ceil(16 * 25); // 12*25 for /next
@@ -64,7 +68,7 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
     return {
         readOnly, error, getMessage, geometry, panes, preventInput, sourceRowHeight,
         sourceMode, showStack, arduinoEnabled, showViews, showIO, windowHeight,
-        currentStepperState, fullScreenActive,
+        currentStepperState, fullScreenActive, diagnostics,
     };
 }
 
@@ -79,11 +83,12 @@ interface TaskAppProps extends TaskAppStateToProps, TaskAppDispatchToProps {
 class _TaskApp extends React.PureComponent<TaskAppProps> {
     render() {
         const {
-            readOnly, sourceMode, sourceRowHeight,
-            preventInput, error, getMessage, geometry, panes,
-            windowHeight, currentStepperState,
-            showStack, arduinoEnabled, showViews, showIO, fullScreenActive,
+            readOnly, sourceMode, error,
+            preventInput, fullScreenActive,
+            diagnostics,
         } = this.props;
+
+        const hasError = !!(error || diagnostics);
 
         return (
             <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''}`}>
@@ -108,6 +113,18 @@ class _TaskApp extends React.PureComponent<TaskAppProps> {
 
                         <div className="player-controls">
                             <StepperControls enabled={true} newControls={true}/>
+                            {hasError && <div className="error-message">
+                                <button type="button" className="close-button" onClick={this._onClearDiagnostics}>
+                                    <Icon icon="cross"/>
+                                </button>
+                                <div className="message-wrapper">
+                                    <Icon icon="notifications" className="bell-icon"/>
+                                    <div className="message">
+                                        {diagnostics && <div dangerouslySetInnerHTML={diagnostics}/>}
+                                        {error && <div>{error}</div>}
+                                    </div>
+                                </div>
+                            </div>}
                         </div>
                     </Col>
                     <Col md={fullScreenActive ? 12 : 9}>
@@ -128,6 +145,10 @@ class _TaskApp extends React.PureComponent<TaskAppProps> {
                 </Row>
             </Container>
         );
+    };
+
+    _onClearDiagnostics = () => {
+        this.props.dispatch({type: ActionTypes.CompileClearDiagnostics});
     };
 }
 

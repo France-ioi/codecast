@@ -8,6 +8,7 @@ import {getStepper, isStepperInterrupting} from "../selectors";
 import * as C from 'persistent-c';
 import {StepperControlsType, StepperStepMode} from "../index";
 import {formatTime} from "../../common/utils";
+import {CompileStatus} from "../compile";
 
 interface StepperControlsStateToProps {
     getMessage: Function,
@@ -29,12 +30,14 @@ interface StepperControlsStateToProps {
     speed: number,
     isFinished: boolean,
     controlsType: StepperControlsType,
+    compileStatus: CompileStatus,
 }
 
 function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     const {enabled} = props;
     const getMessage = state.getMessage;
     const {controls, showStepper, platform} = state.options;
+    const compileStatus = state.compile.status;
 
     let showCompile = false, showControls = false, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
@@ -110,6 +113,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
         isFinished,
         speed,
         controlsType,
+        compileStatus,
     };
 }
 
@@ -239,22 +243,18 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
                 break;
             case 'run':
                 disabled = !this.props.canStep;
-
                 break;
             case 'into':
                 disabled = !this.props.canStep;
                 break;
             case 'over':
                 disabled = !this.props.canStep;
-
                 break;
             case 'expr':
                 disabled = !this.props.canStep;
-
                 if (!this.props.showExpr) {
                     style.display = 'none';
                 }
-
                 break;
             case 'out':
                 disabled = !(this.props.canStep && this.props.canStepOut);
@@ -302,8 +302,8 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
     };
 
     onStepRun = async () => {
-        if (this.props.showCompile) {
-            await this.props.dispatch({type: ActionTypes.Compile, payload: {}});
+        if (!await this.compileIfNecessary()) {
+            return;
         }
         await this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         await this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run, speed: this.props.speed}});
@@ -324,14 +324,14 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
     onCompile = () => this.props.dispatch({type: ActionTypes.Compile, payload: {}});
     onStepByStep = async () => {
         await this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.StepByStep}});
-        if (this.props.showCompile) {
-            await this.props.dispatch({type: ActionTypes.Compile, payload: {}});
+        if (!await this.compileIfNecessary()) {
+            return;
         }
         await this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into}})
     };
     onGoToEnd = async () => {
-        if (this.props.showCompile) {
-            await this.props.dispatch({type: ActionTypes.Compile, payload: {}});
+        if (!await this.compileIfNecessary()) {
+            return;
         }
         await this.props.dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
         await this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
@@ -340,6 +340,17 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
         }, 250);
     };
     onChangeSpeed = (speed) => this.props.dispatch({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
+
+    compileIfNecessary = async () => {
+        if (this.props.showCompile) {
+            await this.props.dispatch({type: ActionTypes.Compile, payload: {}});
+            if (this.props.compileStatus === CompileStatus.Error) {
+                return false;
+            }
+        }
+
+        return true;
+    };
 }
 
 export const StepperControls = connect(mapStateToProps)(_StepperControls);
