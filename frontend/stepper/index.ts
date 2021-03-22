@@ -36,7 +36,7 @@ import {
     StepperContext,
     StepperError
 } from './api';
-import CompileBundle from './compile';
+import CompileBundle, {CompileStatus} from './compile';
 import EffectsBundle from './c/effects';
 
 import DelayBundle from './delay';
@@ -136,7 +136,7 @@ const initialStateStepperState = {
 
 export type StepperState = typeof initialStateStepperState;
 
-enum StepperStatus {
+export enum StepperStatus {
     Clear = 'clear',
     Idle = 'idle',
     Starting = 'starting',
@@ -457,9 +457,10 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         }
     }
 
-    console.log(stepperContext.state);
-
     state.stepper.currentStepperState = stepperContext.state;
+    if (state.compile.status === CompileStatus.Error) {
+        state.stepper.currentStepperState.isFinished = false;
+    }
 }
 
 function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}): void {

@@ -19,7 +19,7 @@ import {asyncRequestJson} from '../utils/api';
 
 import {toHtml} from "../utils/sanitize";
 import {TextEncoder} from "text-encoding-utf-8";
-import {clearStepper, StepperControlsType} from "./index";
+import {clearStepper, StepperStatus} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "../buffers/selectors";
@@ -28,6 +28,7 @@ import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
+import {isStepperInterrupting} from "./selectors";
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -138,8 +139,10 @@ export default function(bundle: Bundle) {
         });
 
         yield takeEvery(ActionTypes.CompileFailed, function* () {
-            yield put({type: ActionTypes.StepperExit, payload: {}});
-            yield put({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
+            let state: AppStore = yield select();
+            if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
+                yield put({type: ActionTypes.StepperInterrupt, payload: {}});
+            }
         });
     });
 
