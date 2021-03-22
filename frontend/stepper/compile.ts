@@ -13,13 +13,13 @@ Shape of the 'compile' state:
 
 */
 
-import {call, put, select, takeLatest} from 'redux-saga/effects';
+import {call, put, select, takeLatest, takeEvery} from 'redux-saga/effects';
 
 import {asyncRequestJson} from '../utils/api';
 
 import {toHtml} from "../utils/sanitize";
 import {TextEncoder} from "text-encoding-utf-8";
-import {clearStepper} from "./index";
+import {clearStepper, StepperControlsType} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "../buffers/selectors";
@@ -135,6 +135,11 @@ export default function(bundle: Bundle) {
                     yield put({type: ActionTypes.CompileFailed, response});
                 }
             }
+        });
+
+        yield takeEvery(ActionTypes.CompileFailed, function* () {
+            yield put({type: ActionTypes.StepperExit, payload: {}});
+            yield put({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         });
     });
 

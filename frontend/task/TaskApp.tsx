@@ -113,7 +113,7 @@ class _TaskApp extends React.PureComponent<TaskAppProps> {
 
                         <div className="player-controls">
                             <StepperControls enabled={true} newControls={true}/>
-                            {hasError && <div className="error-message">
+                            {hasError && <div className="error-message" onClick={this._onClearDiagnostics}>
                                 <button type="button" className="close-button" onClick={this._onClearDiagnostics}>
                                     <Icon icon="cross"/>
                                 </button>
