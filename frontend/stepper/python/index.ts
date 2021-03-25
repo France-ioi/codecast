@@ -10,6 +10,8 @@ import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
+import {extractLevelSpecific, getRunningContext} from "../../task";
+import {DelayFactory} from '../../utils/sleep';
 
 const pythonInterpreterChannel = channel();
 
@@ -109,29 +111,26 @@ export default function(bundle: Bundle) {
             const source = state.buffers['source'].model.document.toString();
 
             if (platform === 'python') {
-                const context = {
-                    infos: {},
-                    aceEditor: null,
-                    onError: (diagnostics) => {
-                        const response = {diagnostics};
+                const context = getRunningContext();
+                context.onError = (diagnostics) => {
+                    const response = {diagnostics};
 
-                        pythonInterpreterChannel.put({
-                            type: CompileActionTypes.CompileFailed,
-                            response
-                        });
-                    },
-                    onInput: () => {
-                        return new Promise((resolve, reject) => {
-                            pythonInterpreterChannel.put({
-                                type: ActionTypes.PythonInput,
-                                payload: {
-                                    resolve: resolve,
-                                    reject: reject
-                                }
-                            });
-                        });
-                    }
+                    pythonInterpreterChannel.put({
+                        type: CompileActionTypes.CompileFailed,
+                        response
+                    });
                 };
+                context.onInput = () => {
+                    return new Promise((resolve, reject) => {
+                        pythonInterpreterChannel.put({
+                            type: ActionTypes.PythonInput,
+                            payload: {
+                                resolve: resolve,
+                                reject: reject
+                            }
+                        });
+                    });
+                }
 
                 stepperState.directives = {
                     ordered: [],

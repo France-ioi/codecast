@@ -73,6 +73,7 @@ function buildApp(config, store, callback) {
 
     /* Serve static assets. */
     app.use('/assets', express.static(path.join(rootDir, 'assets')));
+    app.use('/bebras-modules', express.static(path.join(rootDir, 'bebras-modules')));
     config.rebaseUrl = function (url) {
         return `${config.baseUrl}/${url}`;
     }
@@ -113,7 +114,7 @@ function addBackendRoutes(app, config, store) {
 
     app.get('/task', function (req, res) {
         buildOptions(config, req, 'task', function (err, options) {
-            res.render('index', {
+            res.render('task', {
                 development: config.isDevelopment,
                 rebaseUrl: config.rebaseUrl,
                 options

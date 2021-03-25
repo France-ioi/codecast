@@ -1,0 +1,3 @@
+[submodule "bebras-modules"]
+	path = bebras-modules
+	url = https://github.com/France-ioi/bebras-modules/

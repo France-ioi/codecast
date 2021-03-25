@@ -9,6 +9,7 @@ if (!window.hasOwnProperty('currentPythonContext')) {
 if (!window.hasOwnProperty('currentPythonRunner')) {
     window.currentPythonRunner = null;
 }
+
 export default function(context) {
     this.context = context;
     this._code = '';
@@ -36,6 +37,37 @@ export default function(context) {
     this.onError = context.onError;
 
     var that = this;
+
+    this._skulptifyHandler = function (name, generatorName, blockName, nbArgs, type) {
+        if(-1 === this._definedFunctions.indexOf(name)) { this._definedFunctions.push(name); }
+
+        var handler = '';
+        handler += "\tcurrentPythonContext.runner.checkArgs('" + name + "', '" + generatorName + "', '" + blockName + "', arguments);";
+
+        handler += "\n\tvar susp = new Sk.misceval.Suspension();";
+        handler += "\n\tvar result = Sk.builtin.none.none$;";
+
+        // If there are arguments, convert them from Skulpt format to the libs format
+        handler += "\n\tvar args = Array.prototype.slice.call(arguments);";
+        handler += "\n\tfor(var i=0; i<args.length; i++) { args[i] = currentPythonContext.runner.skToJs(args[i]); };";
+
+        handler += "\n\tsusp.resume = function() { return result; };";
+        handler += "\n\tsusp.data = {type: 'Sk.promise', promise: new Promise(function(resolve) {";
+        handler += "\n\targs.push(resolve);";
+
+        // Count actions
+        if(type == 'actions') {
+            handler += "\n\tcurrentPythonContext.runner._nbActions += 1;";
+        }
+
+        handler += "\n\ttry {";
+        handler += '\n\t\tcurrentPythonContext["' + generatorName + '"]["' + blockName + '"].apply(currentPythonContext, args);';
+        handler += "\n\t} catch (e) {";
+        handler += "\n\t\tcurrentPythonContext.runner._onStepError(e); console.error(e)}";
+        handler += '\n\t}).then(function (value) {\nresult = value;\nreturn value;\n })};';
+        handler += '\n\treturn susp;';
+        return '\nmod.' + name + ' = new Sk.builtin.func(function () {\n' + handler + '\n});\n';
+    };
 
     this._skulptifyConst = (name, value) => {
         let handler = '';
@@ -267,6 +299,16 @@ export default function(context) {
         this._timeouts.push(timeoutId);
     };
 
+    this.returnCallback = (callback, value) => {
+        var primitive = this._createPrimitive(value);
+        if (primitive !== Sk.builtin.none.none$) {
+            this._resetCallstackOnNextStep = true;
+            this.reportValue(value);
+        }
+
+        callback(primitive);
+    };
+
     this.waitDelay = (callback, value, delay) => {
         this._paused = true;
         if (delay > 0) {
@@ -370,6 +412,11 @@ export default function(context) {
     this.print = (message) => {
         if (message.trim() === 'Program execution complete') {
             this._isFinished = true;
+            try {
+                this.context.infos.checkEndCondition(this.context, true);
+            } catch (e) {
+                this._onStepError(e);
+            }
         } else {
             this._printedDuringStep += message;
         }
