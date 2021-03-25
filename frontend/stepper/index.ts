@@ -589,6 +589,7 @@ function* compileSucceededSaga() {
         }
     } catch (error) {
         yield put({type: CommonActionTypes.Error, payload: {source: 'stepper', error}});
+        console.error(error);
     }
 }
 
