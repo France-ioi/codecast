@@ -1,0 +1,30 @@
+name: Development checks
+
+on:
+- push
+- pull_request
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup node
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.14.x
+    - name: Cache node modules
+      uses: actions/cache@v2
+      with:
+        path: node_modules
+        key: v1-npm-deps-${{ hashFiles('yarn.lock') }}
+        restore-keys: v1-npm-deps-
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+    - name: Copy default config file
+      run: cp config.json.template config.json
+    - name: Build app
+      run: webpack --mode=production
+
