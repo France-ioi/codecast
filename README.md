@@ -86,11 +86,13 @@ to '/examples' also install a cors plugin in your browser to get rid of cors iss
 
 To install and run the project, or after an update, run:
 
+    git submodule update --init
     yarn install
     yarn dev
 
 To build the project for production use, run:
 
+    git submodule update --init
     yarn install
     yarn build
     yarn start
