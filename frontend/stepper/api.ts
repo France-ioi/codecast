@@ -12,7 +12,7 @@ import {all, call} from 'redux-saga/effects';
 import {getNewOutput, getNewTerminal} from "./python";
 import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay} from "../store";
-import {initialStepperStateControls, StepperState} from "./index";
+import {initialStateStepper, initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
 
 export interface StepperContext {
@@ -21,7 +21,8 @@ export interface StepperContext {
     interact: Function | null,
     resume: Function | null,
     position: any,
-    lineCounter: number
+    lineCounter: number,
+    speed?: number,
 }
 
 const stepperApi = {
@@ -30,6 +31,8 @@ const stepperApi = {
     onEffect,
     addBuiltin,
 };
+
+const delay = delay => new Promise((resolve) => setTimeout(resolve, delay));
 
 export type StepperApi = typeof stepperApi;
 
@@ -72,7 +75,8 @@ export async function buildState(state: AppStoreReplay): Promise<StepperState> {
         interact,
         resume: null,
         position: 0,
-        lineCounter: 0
+        lineCounter: 0,
+        speed: state.stepper.speed,
     } as StepperContext;
 
     if (stepperContext.state.platform === 'python') {
@@ -138,10 +142,12 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(state: StepperState, interact: Function): StepperContext {
+export function makeContext(stepper: Stepper, interact: Function): StepperContext {
     /**
      * We create a new state object here instead of mutatating the state. This is intended.
      */
+
+    const state = stepper.currentStepperState;
 
     if (state.platform === 'python') {
         return {
@@ -153,7 +159,8 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
             interact,
             resume: null,
             position: getNodeStartRow(state),
-            lineCounter: 0
+            lineCounter: 0,
+            speed: stepper.speed,
         };
     } else {
         return {
@@ -166,7 +173,8 @@ export function makeContext(state: StepperState, interact: Function): StepperCon
             interact,
             resume: null,
             position: getNodeStartRow(state),
-            lineCounter: 0
+            lineCounter: 0,
+            speed: stepper.speed,
         }
     }
 }
@@ -268,8 +276,9 @@ async function executeSingleStep(stepperContext: StepperContext) {
     }
 }
 
-async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
+async function stepUntil(stepperContext: StepperContext, stopCond = undefined, speed?: number) {
     let stop = false;
+    let first = true;
     while (true) {
         if (isStuck(stepperContext.state)) {
             return;
@@ -290,7 +299,11 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
             return;
         }
 
+        if (!first && null !== speed && undefined !== speed) {
+            await delay(225 - stepperContext.speed);
+        }
         await executeSingleStep(stepperContext);
+        first = false;
     }
 }
 
@@ -374,10 +387,10 @@ async function stepOver(stepperContext: StepperContext) {
     }
 }
 
-export async function performStep(stepperContext: StepperContext, mode) {
+export async function performStep(stepperContext: StepperContext, mode, speed?: number) {
     switch (mode) {
         case 'run':
-            await stepUntil(stepperContext);
+            await stepUntil(stepperContext, undefined, speed);
             break;
         case 'into':
             await stepInto(stepperContext);

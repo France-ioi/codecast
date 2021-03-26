@@ -13,13 +13,13 @@ Shape of the 'compile' state:
 
 */
 
-import {call, put, select, takeLatest} from 'redux-saga/effects';
+import {call, put, select, takeLatest, takeEvery} from 'redux-saga/effects';
 
 import {asyncRequestJson} from '../utils/api';
 
 import {toHtml} from "../utils/sanitize";
 import {TextEncoder} from "text-encoding-utf-8";
-import {clearStepper} from "./index";
+import {clearStepper, StepperStatus} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "../buffers/selectors";
@@ -28,8 +28,9 @@ import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
+import {isStepperInterrupting} from "./selectors";
 
-enum CompileStatus {
+export enum CompileStatus {
     Clear = 'clear',
     Running = 'running',
     Done = 'done',
@@ -134,6 +135,13 @@ export default function(bundle: Bundle) {
                 } else {
                     yield put({type: ActionTypes.CompileFailed, response});
                 }
+            }
+        });
+
+        yield takeEvery(ActionTypes.CompileFailed, function* () {
+            let state: AppStore = yield select();
+            if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
+                yield put({type: ActionTypes.StepperInterrupt, payload: {}});
             }
         });
     });

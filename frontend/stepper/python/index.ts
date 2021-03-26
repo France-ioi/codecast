@@ -3,6 +3,8 @@ import {call, put, select, take, takeEvery} from 'redux-saga/effects';
 import {writeString} from "../io/terminal";
 import PythonInterpreter from "./python_interpreter";
 import {ActionTypes} from './actionTypes';
+import {ActionTypes as CompileActionTypes} from '../actionTypes';
+import {ActionTypes as IoActionTypes} from '../io/actionTypes';
 import {AppStore, AppStoreReplay} from "../../store";
 import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
@@ -16,11 +18,11 @@ export default function(bundle: Bundle) {
 
     function* waitForInputSaga() {
         /* Set the isWaitingOnInput flag on the state. */
-        yield put({type: 'Terminal.Input.Needed'});
+        yield put({type: IoActionTypes.TerminalInputNeeded});
         /* Transfer focus to the terminal. */
-        yield put({type: 'Terminal.Focus'});
+        yield put({type: IoActionTypes.TerminalFocus});
         /* Wait for the user to enter a line. */
-        yield take('Terminal.Input.Enter');
+        yield take(IoActionTypes.TerminalInputEnter);
     }
 
     function* pythonInputSaga(app: App, action) {
@@ -114,14 +116,14 @@ export default function(bundle: Bundle) {
                         const response = {diagnostics};
 
                         pythonInterpreterChannel.put({
-                            type: 'Compile.Failed',
+                            type: CompileActionTypes.CompileFailed,
                             response
                         });
                     },
                     onInput: () => {
                         return new Promise((resolve, reject) => {
                             pythonInterpreterChannel.put({
-                                type: 'Python.Input',
+                                type: ActionTypes.PythonInput,
                                 payload: {
                                     resolve: resolve,
                                     reject: reject

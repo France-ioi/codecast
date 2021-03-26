@@ -40,6 +40,8 @@ module.exports = {
     CONTROL_OUT: "step out",
     CONTROL_OVER: "step over",
     CONTROL_INTERRUPT: "interrompre",
+    CONTROL_STEP_BY_STEP: "pas à pas",
+    CONTROL_GO_TO_END: "aller à la fin",
     CONTROL_RESTART: "redémarrer",
     CONTROL_UNDO: "annuler",
     CONTROL_REDO: "refaire",

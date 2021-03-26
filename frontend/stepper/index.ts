@@ -36,7 +36,7 @@ import {
     StepperContext,
     StepperError
 } from './api';
-import CompileBundle from './compile';
+import CompileBundle, {CompileStatus} from './compile';
 import EffectsBundle from './c/effects';
 
 import DelayBundle from './delay';
@@ -72,6 +72,11 @@ export enum StepperStepMode {
     Into = 'into',
     Out = 'out',
     Over = 'over'
+}
+
+export enum StepperControlsType {
+    Normal = 'normal',
+    StepByStep = 'step_by_step',
 }
 
 export interface StepperDirectives {
@@ -131,7 +136,7 @@ const initialStateStepperState = {
 
 export type StepperState = typeof initialStateStepperState;
 
-enum StepperStatus {
+export enum StepperStatus {
     Clear = 'clear',
     Idle = 'idle',
     Starting = 'starting',
@@ -140,14 +145,18 @@ enum StepperStatus {
 
 export const initialStateStepper = {
     status: StepperStatus.Clear,
+    speed: 0,
     undo: [],
     redo: [],
     initialStepperState: initialStateStepperState,
-    currentStepperState: null as typeof initialStateStepperState,
+    currentStepperState: null as StepperState,
     interrupting: false,
     mode: null as StepperStepMode,
-    options: {} as any // TODO: Is this used ? If yes, put the type.
+    options: {} as any, // TODO: Is this used ? If yes, put the type.
+    controls: StepperControlsType.Normal,
 };
+
+export type Stepper = typeof initialStateStepper;
 
 function initReducer(state: AppStoreReplay): void {
     state.stepper = initialStateStepper;
@@ -209,6 +218,12 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.StepperConfigure);
     bundle.addReducer(ActionTypes.StepperConfigure, stepperConfigureReducer);
+
+    bundle.defineAction(ActionTypes.StepperSpeedChanged);
+    bundle.addReducer(ActionTypes.StepperSpeedChanged, stepperSpeedChangedReducer);
+
+    bundle.defineAction(ActionTypes.StepperControlsChanged);
+    bundle.addReducer(ActionTypes.StepperControlsChanged, stepperControlsChangedReducer);
 
     /* BEGIN view stuff to move out of here */
 
@@ -296,7 +311,7 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
     }
 }
 
-export function clearStepper(stepper: typeof initialStateStepper) {
+export function clearStepper(stepper: Stepper) {
     stepper.status = StepperStatus.Clear;
     stepper.undo = [];
     stepper.redo = [];
@@ -304,24 +319,28 @@ export function clearStepper(stepper: typeof initialStateStepper) {
     stepper.currentStepperState = null;
 }
 
-function getNodeRange(stepperState: typeof initialStateStepperState) {
+function getNodeRange(stepperState: StepperState) {
     if (!stepperState) {
         return null;
     }
 
     if (stepperState.platform === 'python') {
-        const suspension = window.currentPythonRunner.getCurrentSuspension();
-        if (!suspension) {
+        const {functionCallStack} = stepperState.analysis;
+        const stackFrame = functionCallStack[functionCallStack.length - 1];
+        if (!stackFrame) {
             return null;
         }
 
+        const line = stackFrame.currentLine;
+        const columnNumber = stackFrame.currentColumn;
+
         return {
             start: {
-                row: (suspension.$lineno - 1),
-                column: suspension.$colno,
+                row: (line - 1),
+                column: columnNumber,
             },
             end: {
-                row: (suspension.$lineno - 1),
+                row: (line - 1),
                 column: 100,
             }
         };
@@ -434,16 +453,16 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
 
     // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
     if (stepperContext.state.platform === 'python') {
-        const storeTerminal = window.currentPythonRunner._terminal;
-        const storeOutput = state.stepper.currentStepperState.output;
-
-        stepperContext.state.terminal = storeTerminal;
-        stepperContext.state.output = storeOutput;
+        stepperContext.state.terminal = window.currentPythonRunner._terminal;
+        if (state.stepper.currentStepperState) {
+            stepperContext.state.output = state.stepper.currentStepperState.output;
+        }
     }
 
-    console.log(stepperContext.state);
-
     state.stepper.currentStepperState = stepperContext.state;
+    if (state.compile.status === CompileStatus.Error) {
+        state.stepper.currentStepperState.isFinished = false;
+    }
 }
 
 function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}): void {
@@ -499,6 +518,14 @@ function stepperConfigureReducer(state: AppStore, action): void {
     const {options} = action;
 
     return state.stepper.options = options;
+}
+
+function stepperSpeedChangedReducer(state: AppStore, {payload: {speed}}): void {
+    return state.stepper.speed = speed;
+}
+
+function stepperControlsChangedReducer(state: AppStore, {payload: {controls}}): void {
+    return state.stepper.controls = controls;
 }
 
 function stepperStackUpReducer(state: AppStoreReplay): void {
@@ -620,6 +647,7 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
        the effects of user interaction. */
     state = yield select();
     stepperContext.state = getCurrentStepperState(state);
+    stepperContext.speed = getStepper(state).speed;
     if (stepperContext.state.platform === 'python' && arg) {
         // TODO: Immer: This here breaks when the state is frozen.
         // So this should probably be removed, if input, output and terminal are working without this.
@@ -656,7 +684,7 @@ function* stepperInterruptSaga() {
         return;
     }
 
-    const stepperContext = makeContext(curStepperState, () => {
+    const stepperContext = makeContext(getStepper(state), () => {
         return new Promise((resolve) => {
             resolve(true);
         });
@@ -702,7 +730,7 @@ function* stepperStepSaga(app: App, action) {
     if (stepper.status === StepperStatus.Starting) {
         yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
-        const stepperContext = makeContext(stepper.currentStepperState, interact);
+        const stepperContext = makeContext(stepper, interact);
 
         /**
          * Before we do a step, we check if the state in analysis is the same as the one in the python runner.
@@ -735,7 +763,7 @@ function* stepperStepSaga(app: App, action) {
         }
 
         try {
-            yield call(performStep, stepperContext, action.payload.mode);
+            yield call(performStep, stepperContext, action.payload.mode, action.payload.speed);
         } catch (ex) {
             console.log('stepperStepSaga has catched', ex);
             if (!(ex instanceof StepperError)) {
@@ -856,7 +884,7 @@ function postLink(app: App) {
                 stepperStartedReducer(draft, {mode});
             });
 
-            replayContext.stepperContext = makeContext(replayContext.state.stepper.currentStepperState, function interact(_) {
+            replayContext.stepperContext = makeContext(replayContext.state.stepper, function interact(_) {
                 return new Promise((cont) => {
                     stepperSuspend(replayContext.stepperContext, cont);
 
@@ -1071,6 +1099,9 @@ function postLink(app: App) {
         yield takeEvery(ActionTypes.StepperStep, stepperStepSaga, args);
         yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga);
         yield takeEvery(ActionTypes.StepperExit, stepperExitSaga);
+        yield takeEvery(BufferActionTypes.BufferEdit, function* () {
+            yield put({type: ActionTypes.StepperExit, payload: {}});
+        });
 
         /* Highlight the range of the current source fragment. */
         yield takeLatest([

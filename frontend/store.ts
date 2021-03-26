@@ -6,7 +6,7 @@ import {initialStateFullscreen} from "./common/fullscreen";
 import {Error} from "./common/error";
 import {mainViewGeometries} from "./common/resize";
 import {Languages} from './lang';
-import {initialStateStepper, StepperTask} from "./stepper";
+import {Stepper, StepperTask} from "./stepper";
 import {initialStateCompile} from "./stepper/compile";
 import {initialStateExamples} from "./common/examples";
 import {initialStateUser} from "./common/login";
@@ -61,7 +61,7 @@ export interface AppStoreReplay {
     ioPane: typeof initialStateIoPane,
     arduino: typeof initialStateArduino,
     buffers: typeof initialStateBuffers,
-    stepper: typeof initialStateStepper,
+    stepper: Stepper,
     compile: typeof initialStateCompile,
 
     options: CodecastOptions,
