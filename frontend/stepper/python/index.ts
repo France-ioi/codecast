@@ -10,8 +10,7 @@ import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
-import {extractLevelSpecific, getRunningContext} from "../../task";
-import {DelayFactory} from '../../utils/sleep';
+import {getRunningContext} from "../../task";
 
 const pythonInterpreterChannel = channel();
 

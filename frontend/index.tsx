@@ -67,6 +67,7 @@ declare global {
         quickAlgoLibraries: any,
         quickAlgoLibrariesList: any,
         stringsLanguage: any,
+        getContext: Function,
     }
 }
 

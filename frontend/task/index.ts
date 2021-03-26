@@ -1,6 +1,3 @@
-import {takeEvery} from 'redux-saga/effects';
-import {Bundle} from "../linker";
-import {ActionTypes} from "./actionTypes";
 import {DelayFactory} from "../utils/sleep";
 
 export interface QuickAlgoContext {
@@ -239,8 +236,8 @@ export function quickAlgoInit() {
                     return gc.apply(gc, arguments);
                 }
             } else {
-                if (getContext) {
-                    return getContext.apply(getContext, arguments);
+                if (window.getContext) {
+                    return window.getContext.apply(window.getContext, arguments);
                 } else {
                     throw "No context registered!";
                 }
@@ -440,9 +437,8 @@ export function extractLevelSpecific(item, level) {
     console.error("Invalid type for shared property");
 }
 
-export function getRunningContext () {
-    // Feature data beyond
-    const subTask = {
+export function getFixtureData () {
+    return {
         gridInfos: {
             hideSaveOrLoad: true,
             conceptViewer: true,
@@ -451,7 +447,7 @@ export function getRunningContext () {
             includeBlocks: {
                 groupByCategory: false  ,
                 generatedBlocks: {
-                    printer: ["print","read"]
+                    printer: ["print","read","manipulate"]
                 },
                 standardBlocks: {
                     includeAll: false,
@@ -484,7 +480,7 @@ export function getRunningContext () {
                     rate = 1;
                     if (context.nbMoves > 100) {
                         rate /= 2;
-                        message += languageStrings.messages.moreThan100Moves;
+                        message += window.languageStrings.messages.moreThan100Moves;
                     }
                 }
                 return {
@@ -514,12 +510,24 @@ export function getRunningContext () {
             ],
         }
     };
-
+}
+export function getRunningContext () {
     const curLevel = 'easy';
+    const subTask = getFixtureData();
     const levelGridInfos = extractLevelSpecific(subTask.gridInfos, curLevel);
     const display = true;
 
-    let context = window.quickAlgoLibraries.getContext(display, levelGridInfos, curLevel);
+    let context;
+    try {
+        context = window.quickAlgoLibraries.getContext(display, levelGridInfos, curLevel);
+    } catch (e) {
+        context = {
+            infos: {},
+            reset: function () {
+            },
+        };
+    }
+
     context.aceEditor = null;
     context.messagePrefixFailure = '';
     context.messagePrefixSuccess = '';
@@ -534,12 +542,18 @@ export function getRunningContext () {
     return context;
 }
 
-function* taskLoadSaga() {
-    quickAlgoInit();
+export function getAutocompletionParameters () {
+    const curLevel = 'easy';
+    const context = getRunningContext();
+    const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, curLevel);
+
+    return {
+        includeBlocks: curIncludeBlocks,
+        strings: context.strings,
+        constants: context.customConstants,
+    };
 }
 
-export default function (bundle: Bundle) {
-    bundle.addSaga(function* () {
-        yield takeEvery(ActionTypes.TaskLoad, taskLoadSaga);
-    });
+export default function () {
+    quickAlgoInit();
 }
