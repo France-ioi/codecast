@@ -4,7 +4,7 @@ import * as ace from 'brace';
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {addAutocompletion} from "./editorAutocompletion";
-import { getAutocompletionParameters, getIncludeBlocks } from '../task';
+import {getAutocompletionParameters} from '../task';
 
 const Range = ace.acequire('ace/range').Range;
 
