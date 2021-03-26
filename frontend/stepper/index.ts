@@ -149,12 +149,14 @@ export const initialStateStepper = {
     undo: [],
     redo: [],
     initialStepperState: initialStateStepperState,
-    currentStepperState: null as typeof initialStateStepperState,
+    currentStepperState: null as StepperState,
     interrupting: false,
     mode: null as StepperStepMode,
     options: {} as any, // TODO: Is this used ? If yes, put the type.
     controls: StepperControlsType.Normal,
 };
+
+export type Stepper = typeof initialStateStepper;
 
 function initReducer(state: AppStoreReplay): void {
     state.stepper = initialStateStepper;
@@ -309,7 +311,7 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
     }
 }
 
-export function clearStepper(stepper: typeof initialStateStepper) {
+export function clearStepper(stepper: Stepper) {
     stepper.status = StepperStatus.Clear;
     stepper.undo = [];
     stepper.redo = [];
@@ -317,7 +319,7 @@ export function clearStepper(stepper: typeof initialStateStepper) {
     stepper.currentStepperState = null;
 }
 
-function getNodeRange(stepperState: typeof initialStateStepperState) {
+function getNodeRange(stepperState: StepperState) {
     if (!stepperState) {
         return null;
     }

@@ -12,7 +12,7 @@ import {all, call} from 'redux-saga/effects';
 import {getNewOutput, getNewTerminal} from "./python";
 import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay} from "../store";
-import {initialStateStepper, initialStepperStateControls, StepperState} from "./index";
+import {initialStateStepper, initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
 
 export interface StepperContext {
@@ -142,7 +142,7 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: typeof initialStateStepper, interact: Function): StepperContext {
+export function makeContext(stepper: Stepper, interact: Function): StepperContext {
     /**
      * We create a new state object here instead of mutatating the state. This is intended.
      */
