@@ -4,6 +4,7 @@ import * as ace from 'brace';
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {addAutocompletion} from "./editorAutocompletion";
+import { getAutocompletionParameters, getIncludeBlocks } from '../task';
 
 const Range = ace.acequire('ace/range').Range;
 
@@ -187,7 +188,8 @@ class _Editor extends React.PureComponent<EditorProps> {
     componentDidMount() {
         const editor = this.editor = ace.edit(this.editorNode);
         if (!this.props.disableAutocompletion) {
-            addAutocompletion(this.props.getMessage, null, null, {});
+            const {includeBlocks, strings, constants} = getAutocompletionParameters();
+            addAutocompletion(this.props.getMessage, includeBlocks, constants, strings);
         }
         const session = this.editor.getSession();
         editor.$blockScrolling = Infinity;

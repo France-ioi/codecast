@@ -12,5 +12,8 @@
     "jsx": "react",
     "allowJs": true
   },
+  "exclude": [
+    "bebras-modules"
+  ],
   "$schema": "https://json.schemastore.org/tsconfig"
 }

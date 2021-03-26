@@ -167,12 +167,13 @@ function getSnippet(proto) {
 
 export const getFunctionsInfo = function (functionName, strings, ignoreDoc = false) {
     let blockDesc = '', funcProto = '', blockHelp = '';
-    const docGenerator = createDocGenerator(null, strings);
-    if (!ignoreDoc && docGenerator) {
-        blockDesc = docGenerator.blockDescription(functionName);
-        funcProto = blockDesc.substring(blockDesc.indexOf('<code>') + 6, blockDesc.indexOf('</code>'));
-        blockHelp = blockDesc.substring(blockDesc.indexOf('</code>') + 7);
-    } else {
+    const docGenerator = false;
+    // const docGenerator = createDocGenerator(null, strings);
+    // if (!ignoreDoc && docGenerator) {
+    //     blockDesc = docGenerator.blockDescription(functionName);
+    //     funcProto = blockDesc.substring(blockDesc.indexOf('<code>') + 6, blockDesc.indexOf('</code>'));
+    //     blockHelp = blockDesc.substring(blockDesc.indexOf('</code>') + 7);
+    // } else {
         let blockName = functionName;
         let funcCode = (!ignoreDoc && strings.code[blockName]) || blockName;
         blockDesc = (!ignoreDoc && strings.description[blockName]);
@@ -194,7 +195,7 @@ export const getFunctionsInfo = function (functionName, strings, ignoreDoc = fal
                 blockDesc = '<code>' + funcProto + '</code> : ' + blockHelp;
             }
         }
-    }
+    // }
     
     return {
         desc: blockDesc,
@@ -215,7 +216,7 @@ export const addAutocompletion = function (getMessage, includeBlocks, customCons
             for (let categoryIndex of Object.keys(includeBlocks.generatedBlocks)) {
                 for (let funIndex of Object.keys(includeBlocks.generatedBlocks[categoryIndex])) {
                     let fun = includeBlocks.generatedBlocks[categoryIndex][funIndex];
-                    let funInfos = getFunctionsInfo(fun, false,  strings);
+                    let funInfos = getFunctionsInfo(fun, strings, false);
                     let funProto = funInfos.proto;
                     let funHelp = funInfos.help;
                     let funSnippet = getSnippet(funProto);

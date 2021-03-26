@@ -63,7 +63,7 @@ module.exports = (env, argv) => {
                 {
                     test: /\.tsx?$/,
                     loader: 'ts-loader',
-                    exclude: /node_modules/,
+                    include: SRC,
                     options: {
                         happyPackMode: true,
                         transpileOnly: true,
@@ -148,7 +148,7 @@ module.exports = (env, argv) => {
                 Buffer: ['buffer', 'Buffer'],
                 process: ['process']
             }),
-            new ForkTsCheckerWebpackPlugin(),
+            // new ForkTsCheckerWebpackPlugin(),
             // new BundleAnalyzerPlugin(),
         ],
         // Note : splitChunks breaks the audio recording.

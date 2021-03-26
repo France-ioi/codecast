@@ -82,10 +82,6 @@ interface TaskAppProps extends TaskAppStateToProps, TaskAppDispatchToProps {
 }
 
 class _TaskApp extends React.PureComponent<TaskAppProps> {
-    componentDidMount = () => {
-        this.props.dispatch({type: ActionTypes.TaskLoad});
-    }
-
     render() {
         const {
             readOnly, sourceMode, error,
