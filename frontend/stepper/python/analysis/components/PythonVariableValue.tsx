@@ -341,9 +341,9 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
         if (this.props.cur instanceof Sk.builtin.str) {
             return (
                 <React.Fragment>
-                    <span className={classes}>"{this.props.cur.v}"</span>
+                    <span className={classes}>&quot;{this.props.cur.v}&quot;</span>
                     {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
-                        <span className="value-previous">"{this.props.old.v}"</span>
+                        <span className="value-previous">&quot;{this.props.old.v}&quot;</span>
                         : null}
                 </React.Fragment>
             )

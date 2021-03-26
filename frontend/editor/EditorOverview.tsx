@@ -60,7 +60,7 @@ class _EditorOverview extends React.PureComponent<EditorOverviewProps> {
                         type='text'
                         value={playerUrl}
                         readOnly
-                        rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal target='_blank'/>}
+                        rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
                     />
                 </Label>
                 {/* list of available subtitles? */}
