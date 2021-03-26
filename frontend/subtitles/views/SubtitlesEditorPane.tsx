@@ -88,6 +88,7 @@ class _SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPaneProps>
     componentDidUpdate(prevProps) {
         if (this.props.currentIndex !== prevProps.currentIndex) {
             if (this._selectedComponent) {
+                // eslint-disable-next-line
                 const domNode = ReactDOM.findDOMNode(this._selectedComponent);
 
                 if (domNode instanceof Element) {

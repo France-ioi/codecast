@@ -219,7 +219,9 @@ Codecast.start = function(options) {
 
             break;
         default:
-            appDisplay = () => <p>{"No such application: "}{options.start}</p>;
+            appDisplay = function AppDisplay () {
+                return <p>{"No such application: "}{options.start}</p>;
+            };
 
             break;
     }

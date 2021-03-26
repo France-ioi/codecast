@@ -72,7 +72,7 @@ class _Menu extends React.PureComponent<MenuProps> {
                         </div>
                         }
                         {offlineDownloadUrl &&
-                        <a href={offlineDownloadUrl} target="_blank">
+                        <a href={offlineDownloadUrl} target="_blank" rel="noreferrer">
                             {getMessage('DOWNLOAD_OFFLINE')}
                         </a>
                         }

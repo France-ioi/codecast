@@ -64,7 +64,7 @@ class _TrimEditor extends React.PureComponent<TrimEditorProps> {
                     </div>
                     {saving.done &&
                         <div style={{textAlign: 'center'}}>
-                            <AnchorButton href={saving.playerUrl} target='_blank' text="Open in player"/>
+                            <AnchorButton href={saving.playerUrl} target='_blank' text="Open in player" rel="noreferrer"/>
                         </div>
                     }
                 </div>
