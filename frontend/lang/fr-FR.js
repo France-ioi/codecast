@@ -49,6 +49,8 @@ module.exports = {
     SETTINGS_MENU_TITLE: "Réglages",
     DOWNLOAD_OFFLINE: "Télécharger pour utiliser l'application sans connexion : Extraire le zip et ouvrir index.html dans votre navigateur.",
     'LANGUAGE:': "Langue : ",
+    MENU_LANGUAGE: "Langue",
+    MENU_RECORDER: "Enregistrement",
     EXAMPLES_LABEL: "Exemples: ",
     EXAMPLES_BUTTON_TITLE: "Afficher la liste",
     EXAMPLES_MESSAGE: "Charger un exemple interrompt toute activité en cours",
