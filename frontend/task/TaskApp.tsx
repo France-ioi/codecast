@@ -1,14 +1,14 @@
 import React from 'react';
 import {StepperControls} from "../stepper/views/StepperControls";
-import {MenuTask} from "../common/MenuTask";
+import {MenuIconsTask} from "../common/MenuIconsTask";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {Container, Row, Col} from 'react-bootstrap';
 import {BufferEditor} from "../buffers/BufferEditor";
 import {getPlayerState} from "../player/selectors";
-import {ActionTypes} from "./actionTypes";
 import {Icon} from "@blueprintjs/core";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
+import {MenuTask} from "../common/MenuTask";
 
 interface TaskAppStateToProps {
     readOnly: boolean,
@@ -81,7 +81,13 @@ interface TaskAppProps extends TaskAppStateToProps, TaskAppDispatchToProps {
 
 }
 
-class _TaskApp extends React.PureComponent<TaskAppProps> {
+interface TaskAppState {
+    menuOpen: boolean,
+}
+
+class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
+    state = {menuOpen: false};
+
     render() {
         const {
             readOnly, sourceMode, error,
@@ -93,63 +99,72 @@ class _TaskApp extends React.PureComponent<TaskAppProps> {
 
         return (
             <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''}`}>
-                <div className="task-header">
-                    <span className="task-header__quick">QUICK</span>
-                    <span className="task-header__algo">ALGO</span>
-                </div>
+                <div className="task-section">
+                    <div className="task-header">
+                        <span className="task-header__quick">QUICK</span>
+                        <span className="task-header__algo">ALGO</span>
+                    </div>
 
-                <Row className="task-body" noGutters>
-                    <Col md={3} className="task-menu-left">
-                        <div className="task-mission">
-                            <h1>Votre mission</h1>
+                    <Row className="task-body" noGutters>
+                        <Col md={3} className="task-menu-left">
+                            <div className="task-mission">
+                                <h1>Votre mission</h1>
 
-                            <p>Programmez le robot ci-dessous pour qu'il atteigne l'étoile, en sautant de plateforme en plateforme.</p>
-                        </div>
+                                <p>Programmez le robot ci-dessous pour qu'il atteigne l'étoile, en sautant de plateforme en plateforme.</p>
+                            </div>
 
-                        <hr/>
+                            <hr/>
 
-                        <div className="task-visualisation">
-                            <div id="grid"/>
-                        </div>
+                            <div className="task-visualisation">
+                                <div id="grid"/>
+                            </div>
 
-                        <div className="player-controls">
-                            <StepperControls enabled={true} newControls={true}/>
-                            {hasError && <div className="error-message" onClick={this._onClearDiagnostics}>
-                                <button type="button" className="close-button" onClick={this._onClearDiagnostics}>
+                            <div className="player-controls">
+                                <StepperControls enabled={true} newControls={true}/>
+                                {hasError && <div className="error-message" onClick={this._onClearDiagnostics}>
+                                  <button type="button" className="close-button" onClick={this._onClearDiagnostics}>
                                     <Icon icon="cross"/>
-                                </button>
-                                <div className="message-wrapper">
+                                  </button>
+                                  <div className="message-wrapper">
                                     <Icon icon="notifications" className="bell-icon"/>
                                     <div className="message">
                                         {diagnostics && <div dangerouslySetInnerHTML={diagnostics}/>}
                                         {error && <div>{error}</div>}
                                     </div>
-                                </div>
-                            </div>}
-                        </div>
-                    </Col>
-                    <Col md={fullScreenActive ? 12 : 9}>
-                        <BufferEditor
-                            buffer='source'
-                            readOnly={readOnly}
-                            shield={preventInput}
-                            mode={sourceMode}
-                            theme={'textmate'}
-                            width='100%'
-                            height='100%'
-                        />
+                                  </div>
+                                </div>}
+                            </div>
+                        </Col>
+                        <Col md={fullScreenActive ? 12 : 9}>
+                            <BufferEditor
+                                buffer='source'
+                                readOnly={readOnly}
+                                shield={preventInput}
+                                mode={sourceMode}
+                                theme={'textmate'}
+                                width='100%'
+                                height='100%'
+                            />
+                        </Col>
+                    </Row>
 
-                        <div className="menu-app">
-                            <MenuTask/>
-                        </div>
-                    </Col>
-                </Row>
+                    <div className="task-footer">
+                        Recorder
+                    </div>
+                </div>
+                <MenuTask/>
             </Container>
         );
     };
 
     _onClearDiagnostics = () => {
         this.props.dispatch({type: StepperActionTypes.CompileClearDiagnostics});
+    };
+
+    toggleMenu = () => {
+        this.setState(prevState => ({
+            menuOpen: !prevState.menuOpen,
+        }));
     };
 }
 

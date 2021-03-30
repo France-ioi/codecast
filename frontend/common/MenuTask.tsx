@@ -1,22 +1,21 @@
 import React from 'react';
-import {Button, Dialog} from '@blueprintjs/core';
+import {Dialog, Icon} from '@blueprintjs/core';
 import {isLocalMode} from "../utils/app";
-import {FullscreenButton} from "./FullscreenButton";
-import {SubtitlesMenu} from "../subtitles/SubtitlesMenu";
 import {LanguageSelection} from "../lang/LanguageSelection";
 import {ExamplePicker} from "./ExamplePicker";
 import {ActionTypes} from "./actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
+import {MenuIconsTask} from "./MenuIconsTask";
 
-interface MenuStateToProps {
+interface MenuTaskStateToProps {
     getMessage: Function,
     canChangePlatform: boolean,
     platform: string,
-    offlineDownloadUrl: string
+    offlineDownloadUrl: string,
 }
 
-function mapStateToProps(state: AppStore): MenuStateToProps {
+function mapStateToProps(state: AppStore): MenuTaskStateToProps {
     const {baseUrl, baseDataUrl, platform, canChangePlatform} = state.options;
     const getMessage = state.getMessage;
 
@@ -30,71 +29,95 @@ function mapStateToProps(state: AppStore): MenuStateToProps {
     };
 }
 
-interface MenuDispatchToProps {
+interface MenuTaskDispatchToProps {
     dispatch: Function
 }
 
-interface MenuProps extends MenuStateToProps, MenuDispatchToProps {
+interface MenuTaskState {
+    settingsOpen: boolean,
+    menuOpen: boolean,
+}
+
+interface MenuTaskProps extends MenuTaskStateToProps, MenuTaskDispatchToProps {
 
 }
 
-class _MenuTask extends React.PureComponent<MenuProps> {
-    state = {isOpen: false};
+class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
+    state = {
+        settingsOpen: false,
+        menuOpen: false,
+    };
 
     render() {
         const {getMessage, platform, canChangePlatform, offlineDownloadUrl} = this.props;
-        const {isOpen} = this.state;
+        const {settingsOpen} = this.state;
 
         return (
-            <div id='menu'>
-                <div className="menu-task-elements">
-                    <div className="menu-task-element is-blue">
-                        <FullscreenButton />
-                    </div>
-                    <div className="menu-task-element">
-                        <SubtitlesMenu />
-                    </div>
-                    <div className="menu-task-element">
-                        <Button onClick={this.openMenu} icon='menu'/>
-                    </div>
+            <div className={`menu-container ${this.state.menuOpen ? 'is-open' : ''}`}>
+                <div className="menu-icons">
+                    <MenuIconsTask
+                        toggleMenu={this.toggleMenu}
+                    />
                 </div>
-                <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={isOpen} onClose={this.closeMenu}>
-                    <div className='bp3-dialog-body'>
-                        <div style={{marginBottom: '10px'}}>
-                            <LanguageSelection closeMenu={this.closeMenu}/>
-                        </div>
-                        {canChangePlatform &&
-                        <div>
-                            <label className='bp3-label'>
-                                {getMessage('PLATFORM_SETTING')}
-                                <div className='bp3-select'>
-                                    <select onChange={this.setPlatform} value={platform}>
+                <div className={`task-menu`}>
+                    <div className="menu-item" onClick={this.toggleSettings}>
+                        <Icon icon="globe"/>
+                        <span>{getMessage('MENU_LANGUAGE')}</span>
+                    </div>
+                    <div className="menu-item">
+                        <Icon icon="record"/>
+                        <span>{getMessage('MENU_RECORDER')}</span>
+                    </div>
+                    <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={settingsOpen} onClose={this.closeSettings}>
+                        <div className='bp3-dialog-body'>
+                            <div style={{marginBottom: '10px'}}>
+                                <LanguageSelection closeMenu={this.closeSettings}/>
+                            </div>
+                            {canChangePlatform &&
+                                <div>
+                                  <label className='bp3-label'>
+                                      {getMessage('PLATFORM_SETTING')}
+                                    <div className='bp3-select'>
+                                      <select onChange={this.setPlatform} value={platform}>
                                         <option value='python'>{getMessage('PLATFORM_PYTHON')}</option>
                                         <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
                                         <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
-                                    </select>
+                                      </select>
+                                    </div>
+                                  </label>
                                 </div>
-                            </label>
+                            }
+                            {offlineDownloadUrl &&
+                                <a href={offlineDownloadUrl} target="_blank">
+                                    {getMessage('DOWNLOAD_OFFLINE')}
+                                </a>
+                            }
+                            <ExamplePicker />
                         </div>
-                        }
-                        {offlineDownloadUrl &&
-                        <a href={offlineDownloadUrl} target="_blank">
-                            {getMessage('DOWNLOAD_OFFLINE')}
-                        </a>
-                        }
-                        <ExamplePicker />
-                    </div>
-                </Dialog>
+                    </Dialog>
+                </div>
             </div>
         );
     }
 
-    openMenu = () => {
-        this.setState({isOpen: true});
+    toggleSettings = () => {
+        this.setState(prevState => ({
+            settingsOpen: !prevState.settingsOpen,
+        }));
     };
-    closeMenu = () => {
-        this.setState({isOpen: false});
+
+    toggleMenu = () => {
+        this.setState(prevState => ({
+            menuOpen: !prevState.menuOpen,
+        }));
     };
+
+    closeSettings = () => {
+        this.setState({
+            settingsOpen: false,
+        });
+    };
+
     setPlatform = (event) => {
         const platform = event.target.value;
         this.props.dispatch({

@@ -4,11 +4,24 @@ html {
   margin: 0 !important;
 }
 
+body {
+  overflow: hidden;
+}
+
 .task {
   background: #f1f2f7;
+  height: 100vh;
+
+  .task-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0;
+  }
+
   &.container-fluid {
     padding-left: 0 !important;
     padding-right: 0 !important;
+    display: flex;
   }
 
   .task-header {
@@ -27,7 +40,7 @@ html {
   }
 
   .task-body {
-    height: calc(100vh - 50px);
+    flex: 1 0;
   }
 
   .task-menu-left {
@@ -220,10 +233,30 @@ html {
     padding: 40px;
   }
 
-  .menu-app {
+  &.full-screen {
+    .task-header, .task-footer, .task-menu-left {
+      display: none;
+    }
+    .task-body {
+      height: 100vh;
+    }
+  }
+
+  .menu-container {
+    position: absolute;
+    right: 0;
+    height: 100%;
+    transform: translate(200px);
+    transition: transform ease-in .2s;
+    &.is-open {
+      transform: translate(0px);
+    }
+  }
+
+  .menu-icons {
     position: absolute;
     top: 40px;
-    right: 0;
+    right: 200px;
     z-index: 10;
     display: flex;
     align-items: flex-start;
@@ -247,15 +280,33 @@ html {
     }
   }
 
-  &.full-screen {
-    .task-header {
-      display: none;
-    }
-    .task-menu-left {
-      display: none;
-    }
-    .task-body {
-      height: 100vh;
+  .task-menu {
+    width: 200px;
+    height: 100%;
+    box-shadow: 2px 0 0 #000 inset;
+    background-color: #4a4a4a;
+    color: #FFF;
+    margin-left: 200px;
+
+    .menu-item {
+      flex: 1 1 0;
+      padding: 20px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      align-items: center;
+      border-top: 1px solid #5c5c5c;
+      cursor: pointer;
+      text-align: center;
+
+      .bp3-icon {
+        margin-bottom: .3em;
+        svg {
+          width: 32px;
+          height: 32px;
+        }
+      }
     }
   }
 }
