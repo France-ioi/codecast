@@ -21,7 +21,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.LoginFeedback);
     bundle.addReducer(ActionTypes.LoginFeedback, (state: AppStore, {payload: {user, error}}): void => {
         if (!error) {
-            window.localStorage.user = JSON.stringify(user);
+            window.localStorage.setItem('user', JSON.stringify(user));
 
             state.user = user;
         }
@@ -29,7 +29,7 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.LogoutFeedback);
     bundle.addReducer(ActionTypes.LogoutFeedback, (state: AppStore): void => {
-        window.localStorage.user = '';
+        window.localStorage.setItem('user', '');
 
         state.user = initialStateUser;
     });

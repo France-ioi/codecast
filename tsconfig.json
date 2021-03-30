@@ -2,10 +2,22 @@
   "compilerOptions": {
     "outDir": "./build/",
     "sourceMap": true,
-    //"noImplicitAny": true,
     "module": "commonjs",
     "target": "ES6",
-    //"strict": true,
+
+    "strict": true, // enable all strict rules, unless they are explicitely disabled (below). there should not be any of such exceptions.
+    "noImplicitAny": false, // temporirly disabled, should fix code and remove this line
+    "noImplicitThis": false, // temporirly disabled, should fix code and remove this line
+    "strictFunctionTypes": false, // temporirly disabled, should fix code and remove this line
+    "strictNullChecks": false, // temporirly disabled, should fix code and remove this line
+    "strictPropertyInitialization": false, // temporirly disabled, should fix code and remove this line
+
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    /// noUnusedLocals and noUnusedParameters are too restrictive (no way to add exceptions) so they should be checked by the eslint
+
     "esModuleInterop": true,
     //"skipLibCheck": true,
     //"forceConsistentCasingInFileNames": true

@@ -49,7 +49,7 @@ class _LanguageSelection extends React.PureComponent<LanguageSelectionProps> {
         const {closeMenu, dispatch} = this.props;
         closeMenu();
         try {
-            window.localStorage.language = language;
+            window.localStorage.setItem('language', language);
         } catch (ex) {
             // No local storage access.
         }

@@ -40,7 +40,7 @@ const getBlock = function(programState, ref) {
 
     const size = header & ~3;
     if (size === 0) {
-        return;
+        return null;
     }
 
     const free = 0 !== (header & 1);

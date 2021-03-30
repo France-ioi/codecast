@@ -16,8 +16,8 @@ export default function(bundle: Bundle) {
         if (navigator.language in Languages) {
             language = navigator.language;
         }
-        if (window.localStorage.language && window.localStorage.language in Languages) {
-            language = window.localStorage.language;
+        if (window.localStorage.getItem('language') && window.localStorage.getItem('language') in Languages) {
+            language = window.localStorage.getItem('language');
         }
         if (language in options && options.language in Languages) {
             language = options.language;

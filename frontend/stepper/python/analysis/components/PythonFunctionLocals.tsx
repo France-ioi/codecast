@@ -35,6 +35,8 @@ export const PythonFunctionLocals = (props: PythonFunctionLocalsProps): JSX.Elem
                 </li>
             );
         }
+
+        return null;
     });
 
     return (

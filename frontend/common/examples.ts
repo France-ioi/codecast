@@ -28,23 +28,23 @@ function updateExamplesState(state, examples) {
        in the selector. */
     let fullCallbackUrl = url.parse(callbackUrl, true);
     delete fullCallbackUrl.search; // force url.format to rebuild the search string
-    delete fullCallbackUrl.query.source;
-    delete fullCallbackUrl.query.platform;
+    delete fullCallbackUrl.query['source'];
+    delete fullCallbackUrl.query['platform'];
 
-    fullCallbackUrl.query.language = language;
+    fullCallbackUrl.query['language'] = language;
 
     // @ts-ignore
     fullCallbackUrl = url.format(fullCallbackUrl);
 
     let fullExamplesUrl = url.parse(examplesUrl, true);
-    fullExamplesUrl.query.target = '_self';
-    fullExamplesUrl.query.tags = platform;
+    fullExamplesUrl.query['target'] = '_self';
+    fullExamplesUrl.query['tags'] = platform;
 
     /* XXX better to pass language unchanged and have the examples app drop the country code */
-    fullExamplesUrl.query.lang = language.replace(/_.*$/, '');
+    fullExamplesUrl.query['lang'] = language.replace(/_.*$/, '');
 
     // @ts-ignore
-    fullExamplesUrl.query.callback = fullCallbackUrl;
+    fullExamplesUrl.query['callback'] = fullCallbackUrl;
 
     // @ts-ignore
     fullExamplesUrl = url.format(fullExamplesUrl);

@@ -148,7 +148,11 @@ module.exports = (env, argv) => {
                 Buffer: ['buffer', 'Buffer'],
                 process: ['process']
             }),
-            new ForkTsCheckerWebpackPlugin(),
+            new ForkTsCheckerWebpackPlugin({
+                typescript: {
+                    memoryLimit: 4096,
+                }
+            }),
             // new BundleAnalyzerPlugin(),
         ],
         // Note : splitChunks breaks the audio recording.
