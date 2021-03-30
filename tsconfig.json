@@ -14,6 +14,8 @@
 
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
     /// noUnusedLocals and noUnusedParameters are too restrictive (no way to add exceptions) so they should be checked by the eslint
 
     "esModuleInterop": true,
