@@ -116,7 +116,7 @@ export default function(bundle: Bundle) {
         });
 
         function syncOutputBufferReducer(state: AppStoreReplay): void {
-            state.buffers.output.model = getOutputBufferModel(state);
+            state.buffers['output'].model = getOutputBufferModel(state);
         }
 
         function* syncOutputBufferSaga(instant) {

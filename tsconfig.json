@@ -2,7 +2,6 @@
   "compilerOptions": {
     "outDir": "./build/",
     "sourceMap": true,
-    //"noImplicitAny": true,
     "module": "commonjs",
     "target": "ES6",
 
@@ -15,8 +14,6 @@
 
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
-    "noPropertyAccessFromIndexSignature": false, // temporirly disabled, should be enabled (only 25 errors, easily fixable)
-    "noImplicitReturns": false, // temporirly disabled, should be enabled (only 5 errors, easily fixable)
     /// noUnusedLocals and noUnusedParameters are too restrictive (no way to add exceptions) so they should be checked by the eslint
 
     "esModuleInterop": true,

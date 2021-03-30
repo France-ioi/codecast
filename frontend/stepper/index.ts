@@ -249,7 +249,7 @@ export default function(bundle: Bundle) {
  * @param stepperState The stepper state.
  * @param {string} context The context (Stepper.Progress, Stepper.Restart, Stepper.Idle).
  */
-function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restart' | 'Stepper.Progress' | 'Stepper.Idle'): StepperState {
+function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restart' | 'Stepper.Progress' | 'Stepper.Idle'): void {
     const {programState, controls} = stepperState;
     if (!programState) {
         return;
@@ -345,7 +345,7 @@ function getNodeRange(stepperState: typeof initialStateStepperState) {
 }
 
 function stringifyError(error) {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env['NODE_ENV'] === 'production') {
         return error.toString();
     }
     if (error && error.stack) {
@@ -370,7 +370,7 @@ function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}})
             stepperState = state.stepper.initialStepperState;
             stepperState.inputPos = 0;
 
-            const source = state.buffers.source.model.document.toString();
+            const source = state.buffers['source'].model.document.toString();
 
             /**
              * Add a last instruction at the end of the code so Skupt will generate a Suspension state

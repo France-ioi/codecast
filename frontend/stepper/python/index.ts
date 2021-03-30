@@ -104,7 +104,7 @@ export default function(bundle: Bundle) {
 
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
             const {platform} = state.options;
-            const source = state.buffers.source.model.document.toString();
+            const source = state.buffers['source'].model.document.toString();
 
             if (platform === 'python') {
                 const context = {
