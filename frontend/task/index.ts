@@ -1,4 +1,11 @@
 import {DelayFactory} from "../utils/sleep";
+import {ActionTypes} from "./actionTypes";
+import {AppStore} from "../store";
+import {Bundle} from "../linker";
+import {ActionTypes as AppActionTypes} from "../actionTypes";
+import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
+import {put, select, takeEvery} from "redux-saga/effects";
+import {getRecorderState} from "../recorder/selectors";
 
 export interface QuickAlgoContext {
     display: boolean,
@@ -32,6 +39,10 @@ export interface QuickAlgoContext {
 export interface Subtask {
     gridInfos: any,
     data: any,
+}
+
+export interface TaskState {
+    recordingEnabled: boolean,
 }
 
 // Merges arrays by values
@@ -554,6 +565,28 @@ export function getAutocompletionParameters () {
     };
 }
 
-export default function () {
+export default function (bundle: Bundle) {
     quickAlgoInit();
+
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
+        state.task = {
+            recordingEnabled: false,
+        };
+    });
+
+    bundle.defineAction(ActionTypes.TaskRecordingEnabledChange);
+
+    bundle.addReducer(ActionTypes.TaskRecordingEnabledChange, (state: AppStore, {payload: {enabled}}) => {
+        state.task.recordingEnabled = enabled;
+    });
+
+    bundle.addSaga(function* () {
+        yield takeEvery(ActionTypes.TaskRecordingEnabledChange, function* () {
+            const state = yield select();
+            const recorderState = getRecorderState(state);
+            if (!recorderState.status) {
+                yield put({type: RecorderActionTypes.RecorderPrepare});
+            }
+        });
+    });
 }

@@ -19,6 +19,7 @@ import {initialStateIoPane} from "./stepper/io";
 import {initialStateSubtitles} from "./subtitles";
 import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
+import {TaskState} from "./task";
 
 export type CodecastPlatform = 'python' | 'unix' | 'arduino';
 
@@ -86,6 +87,7 @@ export interface AppStore extends Store, AppStoreReplay {
     terminal: typeof initialStateTerminal,
     terminalElement: any,
     vumeterElement: any,
+    task: TaskState,
 
     // TODO: Put the following in a "window" attribute instead of at the root of the store
     mainViewGeometry: typeof mainViewGeometries[0],

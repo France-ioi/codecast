@@ -309,6 +309,44 @@ body {
       }
     }
   }
+
+  .task-recorder-controls {
+    display: flex;
+    align-items: center;
+    background: #4a4a4a;
+
+    .controls-recorder {
+      display: flex;
+      align-items: center;
+      padding: 5px 0;
+
+      .bp3-button {
+        background: transparent !important;
+        box-shadow: none !important;
+        border-right: solid 1px black;
+        padding: 5px 15px;
+        .bp3-icon {
+          color: #fff !important;
+          svg {
+            width: 18px;
+            height: 18px;
+          }
+        }
+      }
+    }
+
+    .controls-time {
+      display: flex;
+      align-items: center;
+      color: #fff;
+      font-size: 0.8em;
+      padding-left: 10px;
+      svg {
+        width: 12px;
+        height: 12px;
+      }
+    }
+  }
 }
 
 pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {

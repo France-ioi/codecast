@@ -1,6 +1,5 @@
 import React from 'react';
 import {StepperControls} from "../stepper/views/StepperControls";
-import {MenuIconsTask} from "../common/MenuIconsTask";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {Container, Row, Col} from 'react-bootstrap';
@@ -8,7 +7,8 @@ import {BufferEditor} from "../buffers/BufferEditor";
 import {getPlayerState} from "../player/selectors";
 import {Icon} from "@blueprintjs/core";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
-import {MenuTask} from "../common/MenuTask";
+import {MenuTask} from "./MenuTask";
+import {RecorderControlsTask} from "./RecorderControlsTask";
 
 interface TaskAppStateToProps {
     readOnly: boolean,
@@ -27,6 +27,7 @@ interface TaskAppStateToProps {
     preventInput: any,
     fullScreenActive: boolean,
     diagnostics: any,
+    recordingEnabled: boolean,
 }
 
 function mapStateToProps(state: AppStore): TaskAppStateToProps {
@@ -40,6 +41,7 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
     const arduinoEnabled = platform === 'arduino';
     const diagnostics = state.compile.diagnosticsHtml;
     const error = currentStepperState && currentStepperState.error;
+    const recordingEnabled = state.task.recordingEnabled;
 
     /* TODO: make number of visible rows in source editor configurable. */
     const sourceRowHeight = Math.ceil(16 * 25); // 12*25 for /next
@@ -69,7 +71,7 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
     return {
         readOnly, error, getMessage, geometry, panes, preventInput, sourceRowHeight,
         sourceMode, showStack, arduinoEnabled, showViews, showIO, windowHeight,
-        currentStepperState, fullScreenActive, diagnostics,
+        currentStepperState, fullScreenActive, diagnostics, recordingEnabled,
     };
 }
 
@@ -92,7 +94,7 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
         const {
             readOnly, sourceMode, error,
             preventInput, fullScreenActive,
-            diagnostics,
+            diagnostics, recordingEnabled,
         } = this.props;
 
         const hasError = !!(error || diagnostics);
@@ -148,9 +150,11 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
                         </Col>
                     </Row>
 
-                    <div className="task-footer">
-                        Recorder
-                    </div>
+                    {recordingEnabled &&
+                        <div className="task-footer">
+                          <RecorderControlsTask/>
+                        </div>
+                    }
                 </div>
                 <MenuTask/>
             </Container>

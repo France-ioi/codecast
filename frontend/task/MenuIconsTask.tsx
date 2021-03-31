@@ -1,6 +1,6 @@
 import React from 'react';
 import {Button} from '@blueprintjs/core';
-import {FullscreenButton} from "./FullscreenButton";
+import {FullscreenButton} from "../common/FullscreenButton";
 import {SubtitlesMenu} from "../subtitles/SubtitlesMenu";
 import {connect} from "react-redux";
 
