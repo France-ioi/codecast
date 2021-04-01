@@ -119,12 +119,19 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
         this.props.dispatch({
             type: ActionTypes.TaskRecordingEnabledChange,
             payload: {enabled: !this.props.recordingEnabled}
-        })
+        });
+        this.closeMenu();
     }
 
     closeSettings = () => {
         this.setState({
             settingsOpen: false,
+        });
+    };
+
+    closeMenu = () => {
+        this.setState({
+            menuOpen: false,
         });
     };
 

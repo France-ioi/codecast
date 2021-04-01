@@ -8,6 +8,7 @@ import {AppStore} from "../store";
 import {getPlayerState} from "../player/selectors";
 import {getRecorderState} from "../recorder/selectors";
 import {RecorderStatus} from "../recorder/store";
+import {MemoryUsage} from "../recorder/MemoryUsage";
 
 interface RecorderControlsTaskStateToProps {
     getMessage: Function,
@@ -67,7 +68,7 @@ interface RecorderControlsTaskProps extends RecorderControlsTaskStateToProps, Re
 class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProps> {
     render() {
         const {
-            getMessage, canRecord, canPlay, canPause, canStop, canStep,
+            getMessage, canRecord, canPlay, canPause, canStop,
             isPlayback, playPause, position, duration
         } = this.props;
         return (
@@ -102,26 +103,34 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
                             />
                         }
                     </ButtonGroup>
-                    <div className="controls-time">
-                        <Icon icon='time'/>
-                        <span style={{marginLeft: '4px'}}>
-                            {formatTime(position)}
-                            {isPlayback && ' / '}
-                            {isPlayback && formatTime(duration)}
-                        </span>
-                    </div>
+                </div>
+                <div className="memory-usage">
+                    <MemoryUsage />
+                </div>
+                <div className="controls-time">
+                    <Icon icon='time'/>
+                    <span style={{marginLeft: '4px'}}>
+                        {formatTime(position)}
+                    </span>
                 </div>
                 {isPlayback &&
-                    <div className='row'>
-                      <Slider
-                        value={position}
-                        onChange={this.onSeek}
-                        stepSize={100}
-                        labelStepSize={30000}
-                        min={0}
-                        max={duration}
-                        labelRenderer={formatTime}
-                      />
+                  <div className="player-slider-container">
+                    <Slider
+                      value={position}
+                      onChange={this.onSeek}
+                      stepSize={100}
+                      labelStepSize={30000}
+                      min={0}
+                      max={duration}
+                      labelRenderer={formatTime}
+                    />
+                  </div>
+                }
+                {isPlayback &&
+                    <div className="controls-time">
+                        <span style={{marginLeft: '4px'}}>
+                            {isPlayback && formatTime(duration)}
+                        </span>
                     </div>
                 }
             </div>
