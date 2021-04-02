@@ -785,7 +785,11 @@ function* stepperStepSaga(app: App, action) {
             stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
         }
 
-        yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
+        const newState = yield select();
+        const newStepper = getStepper(newState);
+        if (StepperStatus.Clear !== newStepper.status) {
+            yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
+        }
 
         function interact(arg) {
             return new Promise((resolve, reject) => {

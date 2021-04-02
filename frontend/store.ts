@@ -86,6 +86,7 @@ export interface AppStore extends Store, AppStoreReplay {
     terminal: typeof initialStateTerminal,
     terminalElement: any,
     vumeterElement: any,
+    task: any,
 
     // TODO: Put the following in a "window" attribute instead of at the root of the store
     mainViewGeometry: typeof mainViewGeometries[0],

@@ -10,7 +10,6 @@ import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
-import {getRunningContext} from "../../task";
 
 const pythonInterpreterChannel = channel();
 
@@ -110,7 +109,8 @@ export default function(bundle: Bundle) {
             const source = state.buffers['source'].model.document.toString();
 
             if (platform === 'python') {
-                const context = getRunningContext();
+                const context = state.task.context;
+                context.reset();
                 context.onError = (diagnostics) => {
                     const response = {diagnostics};
 
