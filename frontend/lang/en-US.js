@@ -24,7 +24,7 @@ module.exports = {
     STOP_RECORDING: "Stop recording",
     ENCODING_IN_PROGRESS: "Encoding in progress, please wait.",
     ENCODING_COMPLETE: "Encoding complete, ready to upload.",
-    PREPARING_RECORDING: "Preparing recording…",
+    UPLOADING_PREPARING: "Preparing recording...",
     UPLOADING_EVENTS: "Uploading events…",
     UPLOADING_EVENTS_DONE: "Upload events... done.",
     UPLOADING_AUDIO: "Uploading audio...",

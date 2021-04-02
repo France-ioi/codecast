@@ -92,6 +92,7 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
                         className='bp3-input bp3-fill'
                         value={eventsUrl || ''}
                         readOnly
+                        onFocus={this.handleFocus}
                     />
                 </FormGroup>
                 <FormGroup labelFor='audioUrlInput' label={"URL audio"}>
@@ -101,6 +102,7 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
                         className='bp3-input bp3-fill'
                         value={audioUrl || ''}
                         readOnly
+                        onFocus={this.handleFocus}
                     />
                 </FormGroup>
                 {wavAudioUrl &&
@@ -111,6 +113,7 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
                         className='bp3-input bp3-fill'
                         value={wavAudioUrl || ''}
                         readOnly
+                        onFocus={this.handleFocus}
                     />
                 </FormGroup>}
                 <FormGroup label="Target">
@@ -146,7 +149,7 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
 
                 {playerUrl &&
                     <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')} className="mt-4">
-                        <input id='playerUrlInput' type='text' className='bp3-input bp3-fill' value={playerUrl} readOnly/>
+                        <input id='playerUrlInput' type='text' className='bp3-input bp3-fill' value={playerUrl} readOnly onFocus={this.handleFocus}/>
                     </FormGroup>
                 }
             </form>
@@ -166,6 +169,8 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
     handleTargetChange = (event) => {
         this.setState({targetUrl: event.target.value});
     };
+
+    handleFocus = (event) => event.target.select();
 
     onUpload = () => {
         const {targetUrl} = this.state;
