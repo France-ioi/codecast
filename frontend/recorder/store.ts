@@ -41,6 +41,11 @@ export const initialStateRecorder = {
 }
 
 export default function(bundle: Bundle) {
+    bundle.defineAction(ActionTypes.RecorderPrepare);
+    bundle.addReducer(ActionTypes.RecorderPrepare, (state: AppStore) => {
+        state.recorder.elapsed = 0;
+    });
+
     bundle.defineAction(ActionTypes.RecorderPreparing);
     bundle.addReducer(ActionTypes.RecorderPreparing, (state: AppStore, action) => {
         const {progress} = action;

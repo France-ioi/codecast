@@ -171,6 +171,7 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
     };
     onCancel = () => {
         this.props.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Record}});
+        this.props.dispatch({type: RecorderActionTypes.RecorderPrepare});
     };
     onStartPlayback = () => {
         this.props.dispatch({type: PlayerActionTypes.PlayerStart});

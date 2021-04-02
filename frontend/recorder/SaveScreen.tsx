@@ -30,7 +30,7 @@ interface SaveScreenDispatchToProps {
 }
 
 interface SaveScreenProps extends SaveScreenStateToProps, SaveScreenDispatchToProps {
-    onCancel: () => void,
+    onCancel?: () => void,
 }
 
 export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
@@ -118,7 +118,7 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
                 </FormGroup>
                 <div className="encoding-status">
                     {busy ?
-                        <Spinner size={Spinner.SIZE_SMALL} />
+                        <Spinner size={Spinner.SIZE_SMALL} className="mr-2" />
                     : (step === 'done' ?
                         <Icon icon='tick' intent={Intent.SUCCESS} />
                     : null)}

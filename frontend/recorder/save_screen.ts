@@ -50,6 +50,7 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.SaveScreenEncodingStart, (state: AppStore) => {
         state.save.step = SaveStep.EncodingPending;
         state.save.progress = 0;
+        state.save.playerUrl = '';
     });
 
     bundle.defineAction(ActionTypes.SaveScreenEncodingProgress);

@@ -45,7 +45,7 @@ export default function(bundle: Bundle) {
         state.player.duration = duration;
         state.player.data = data;
         state.player.instants = instants;
-        state.player.current = instants[0];
+        state.player.current = instants.length ? instants[0] : null;
 
         if (state.player.data && state.player.duration) {
             state.player.isReady = true;
@@ -127,6 +127,7 @@ function playerClear(state: AppStore): void {
     const audio = document.createElement('video');
 
     state.player.audio = audio;
+    state.player.audioTime = 0;
     state.player.volume = audio.volume; /* TODO: load from localStorage? */
     state.player.isMuted = audio.muted; /* TODO: load from localStorage? */
     state.player.progress = 0;
