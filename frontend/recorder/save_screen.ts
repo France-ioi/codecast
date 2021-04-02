@@ -10,6 +10,7 @@ import {getRecorderState} from "./selectors";
 import {AppStore, CodecastOptions} from "../store";
 import {Bundle} from "../linker";
 import {App} from "../index";
+import {Screen} from "../common/screens";
 
 export type CodecastRecord = {
     version: string,
@@ -127,7 +128,7 @@ function* ensureLoggedSaga() {
 
 function* encodingSaga() {
     yield put({type: ActionTypes.SaveScreenEncodingStart, payload: {}});
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'save'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Save}});
 
     const state: AppStore = yield select();
     const recorder = getRecorderState(state);

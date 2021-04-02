@@ -30,7 +30,7 @@ interface SaveScreenDispatchToProps {
 }
 
 interface SaveScreenProps extends SaveScreenStateToProps, SaveScreenDispatchToProps {
-
+    onCancel: () => void,
 }
 
 export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
@@ -42,39 +42,39 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
         let message = null, canUpload = false, busy = false;
         switch (step) {
             case SaveStep.EncodingPending:
-                message = "Encoding, please wait…";
+                message = getMessage('ENCODING_IN_PROGRESS');
                 busy = true;
                 // PROGRESS
                 break;
             case SaveStep.EncodingDone:
-                message = "Encoding complete, ready to upload.";
+                message = getMessage('ENCODING_COMPLETE');
                 canUpload = true;
                 break;
             case SaveStep.UploadPreparing:
-                message = "Preparing to upload…";
+                message = getMessage('UPLOADING_PREPARING');
                 busy = true;
                 break;
             case SaveStep.UploadEventsPending:
-                message = "Uploading events…";
+                message = getMessage('UPLOADING_EVENTS');
                 busy = true;
                 break;
             case SaveStep.UploadEventsDone:
-                message = "Uploading events… done.";
+                message = getMessage('UPLOADING_EVENTS_DONE');
                 break;
             case SaveStep.UploadAudioPending:
-                message = "Uploading audio…";
+                message = getMessage('UPLOADING_AUDIO');
                 busy = true;
                 break;
             case SaveStep.UploadAudioDone:
-                message = "Uploading audio done.";
+                message = getMessage('UPLOADING_AUDIO_DONE');
                 break;
             case SaveStep.Done:
-                message = "Save complete.";
+                message = getMessage('UPLOADING_COMPLETE');
                 break;
             case SaveStep.Error:
                 message = (
                     <div>
-                        <p>{"An error has occured."}</p>
+                        <p>{getMessage('UPLOADING_ERROR')}</p>
                         <pre>{error.stack}</pre>
                     </div>
                 );
@@ -84,7 +84,7 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
 
         /* TODO: select target among user grants */
         return (
-            <form>
+            <form className="save-screen">
                 <FormGroup labelFor='eventsUrlInput' label={"URL évènements"}>
                     <input
                         id='eventsUrlInput'
@@ -116,13 +116,7 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
                 <FormGroup label="Target">
                     <HTMLSelect options={grantOptions} value={targetUrl} onChange={this.handleTargetChange}/>
                 </FormGroup>
-                <Button
-                    onClick={this.onUpload}
-                    disabled={!canUpload}
-                    intent={canUpload ? Intent.PRIMARY : Intent.NONE}
-                    icon='floppy-disk' text="Save"
-                />
-                <div>
+                <div className="encoding-status">
                     {busy ?
                         <Spinner size={Spinner.SIZE_SMALL} />
                     : (step === 'done' ?
@@ -131,11 +125,27 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
 
                     {message}
                 </div>
-                {typeof progress === 'number' &&
+                {typeof progress === 'number' && 'done' !== step &&
                     <ProgressBar value={progress}/>
                 }
+                <div className="mt-4">
+                    {canUpload && <Button
+                        onClick={this.onUpload}
+                        intent={canUpload ? Intent.PRIMARY : Intent.NONE}
+                        icon='floppy-disk'
+                        className="mr-2"
+                        text={getMessage('UPLOADING_BUTTON')}
+                    />}
+                    <Button
+                        onClick={this.props.onCancel}
+                        intent={'done' !== step ? Intent.DANGER : Intent.NONE}
+                        icon='cross'
+                        text={'done' === step ? getMessage('CLOSE') : getMessage('CANCEL')}
+                    />
+                </div>
+
                 {playerUrl &&
-                    <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')}>
+                    <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')} className="mt-4">
                         <input id='playerUrlInput' type='text' className='bp3-input bp3-fill' value={playerUrl} readOnly/>
                     </FormGroup>
                 }

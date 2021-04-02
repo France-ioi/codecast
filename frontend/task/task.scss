@@ -312,7 +312,7 @@ body {
 
   .task-recorder-controls {
     display: flex;
-    align-items: center;
+    align-items: stretch;
     background: #4a4a4a;
 
     .controls-recorder {
@@ -426,5 +426,21 @@ pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
 .ace_editor {
   .ace_completion-highlight {
     color: $primary !important;
+  }
+}
+
+.save-screen {
+  input[type="text"] {
+    user-select: all;
+  }
+
+  .encoding-status {
+    margin-top: 20px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    .bp3-icon {
+      margin-right: 8px;
+    }
   }
 }

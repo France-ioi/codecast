@@ -68,7 +68,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
                         <span>{getMessage('MENU_LANGUAGE')}</span>
                     </div>
                     <div className="menu-item" onClick={this.toggleRecording}>
-                        <Icon icon="record"/>
+                        <Icon icon="record" color="#ff001f"/>
                         <span>{getMessage('MENU_RECORDER')}</span>
                     </div>
                     <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={settingsOpen} onClose={this.closeSettings}>

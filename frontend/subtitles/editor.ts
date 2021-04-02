@@ -14,6 +14,7 @@ import {AppStore} from "../store";
 import {initialStateSubtitles, SubtitlesOption, SubtitlesOptions} from "./index";
 import {Bundle} from "../linker";
 import {App} from "../index";
+import {Screen} from "../common/screens";
 
 export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.SubtitlesSelected);
@@ -302,14 +303,14 @@ function* subtitlesEditorEnterSaga(state, _action) {
         }
     });
     yield put({type: ActionTypes.SubtitlesReload});
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'edit'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Edit}});
 }
 
 function* subtitlesEditorReturnSaga(state, _action) {
     yield put({type: ActionTypes.SubtitlesSave});
     yield put({type: ActionTypes.SubtitlesEditingChanged, payload: {editing: false}});
     yield put({type: EditorActionTypes.EditorControlsChanged, payload: {controls: 'none'}});
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'setup'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Setup}});
 }
 
 function* subtitlesEditorSaveSaga() {

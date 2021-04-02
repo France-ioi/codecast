@@ -82,7 +82,7 @@ export function buildOptions(config, req, start, callback) {
     if (/sandbox|editor|statistics/.test(start)) {
         options.isStatisticsReady = !!config.database;
     }
-    if (/recorder|editor|statistics/.test(start)) {
+    if (/recorder|editor|statistics|task/.test(start)) {
         return config.optionsHook(req, options, callback);
     } else {
         return callback(null, options);

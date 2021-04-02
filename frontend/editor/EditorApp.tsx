@@ -10,6 +10,7 @@ import {EditScreen} from "./EditScreen";
 import {TrimEditorReturn} from "./TrimEditorReturn";
 import {SubtitlesEditorReturn} from "../subtitles/SubtitlesEditorReturn";
 import {EditorControl} from "./index";
+import {Screen} from "../common/screens";
 
 enum EditorAppActivity {
     None,
@@ -31,9 +32,9 @@ function mapStateToProps(state: AppStore): EditorAppStateToProps {
     let activity = EditorAppActivity.None;
     if (!user) {
         activity = EditorAppActivity.Login;
-    } else if (screen === 'setup') {
+    } else if (screen === Screen.Setup) {
         activity = EditorAppActivity.Setup;
-    } else if (screen === 'edit') {
+    } else if (screen === Screen.Edit) {
         activity = EditorAppActivity.Edit;
     }
 

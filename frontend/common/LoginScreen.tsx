@@ -5,13 +5,15 @@ import {AppStore} from "../store";
 
 interface LoginScreenStateToProps {
     baseUrl: string,
-    authProviders: string[]
+    authProviders: string[],
+    getMessage: Function,
 }
 
 function mapStateToProps(state: AppStore): LoginScreenStateToProps {
     const {baseUrl, authProviders} = state.options;
+    const getMessage = state.getMessage;
 
-    return {baseUrl, authProviders};
+    return {baseUrl, authProviders, getMessage};
 }
 
 interface LoginScreenDispatchToProps {
@@ -24,11 +26,11 @@ interface LoginScreenProps extends LoginScreenStateToProps, LoginScreenDispatchT
 
 class _LoginScreen extends React.PureComponent<LoginScreenProps> {
     render() {
-        const {baseUrl, authProviders} = this.props;
+        const {baseUrl, authProviders, getMessage} = this.props;
+
         return (
-            <div className='cc-login'>
-                <h1 style={{margin: '20px 0'}}>{"Codecast"}</h1>
-                <h3 style={{margin: '0 0 10px 0'}}>{"Select a login option"}</h3>
+            <div>
+                <h3 style={{margin: '0 0 10px 0'}}>{getMessage('USER_SELECT_LOGIN_METHOD')}</h3>
 
                 <ButtonGroup large={true} vertical={true}>
                     {authProviders && authProviders.map((provider) =>

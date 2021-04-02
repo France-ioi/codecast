@@ -16,6 +16,7 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as SubtitlesActionTypes} from "../subtitles/actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {Screen} from "../common/screens";
 
 export type StepStatus = null | 'done' | 'pending' | 'error';
 
@@ -160,12 +161,12 @@ function* editorTrimEnterSaga(_action) {
         }
     });
 
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'edit'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Edit}});
 }
 
 function* editorTrimReturnSaga(_action) {
     yield put({type: ActionTypes.EditorControlsChanged, payload: {controls: 'none'}});
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'setup'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Setup}});
 }
 
 function editorTrimSaveReducer(state: AppStore): void {

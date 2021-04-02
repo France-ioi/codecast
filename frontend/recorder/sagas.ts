@@ -13,6 +13,7 @@ import {AppStore} from "../store";
 import {RecorderStatus} from "./store";
 import {ReplayContext} from "../player/sagas";
 import {App} from "../index";
+import {Screen} from "../common/screens";
 
 export default function(bundle, deps) {
     bundle.use('recordApi');
@@ -77,7 +78,7 @@ export default function(bundle, deps) {
     function* recorderPrepare() {
         try {
             /* Show 'record' screen to user. */
-            yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'record'}});
+            yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Record}});
 
             // Clean up any previous audioContext and worker.
             const state: AppStore = yield select();
