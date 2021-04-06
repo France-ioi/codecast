@@ -7,6 +7,7 @@ import {BufferEditor} from "../buffers/BufferEditor";
 import {getPlayerState} from "../player/selectors";
 import {Icon} from "@blueprintjs/core";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
+import {ActionTypes} from "./actionTypes";
 import {MenuTask} from "./MenuTask";
 import {RecorderControlsTask} from "./RecorderControlsTask";
 
@@ -112,7 +113,7 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
                             <div className="task-mission">
                                 <h1>Votre mission</h1>
 
-                                <p>Programmez le robot ci-dessous pour qu'il atteigne l'étoile, en sautant de plateforme en plateforme.</p>
+                                <p>Programmez le robot ci-dessous pour qu&#39;il atteigne l&#39;étoile, en sautant de plateforme en plateforme.</p>
                             </div>
 
                             <hr/>
@@ -160,6 +161,10 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
             </Container>
         );
     };
+
+    componentDidMount() {
+        this.props.dispatch({type: ActionTypes.TaskLoad});
+    }
 
     _onClearDiagnostics = () => {
         this.props.dispatch({type: StepperActionTypes.CompileClearDiagnostics});

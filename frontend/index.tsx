@@ -54,7 +54,7 @@ export interface App {
 }
 
 declare global {
-    interface Window {
+    interface Window extends WindowLocalStorage {
         store: any,
         Codecast: Codecast,
         currentPythonRunner: any,
@@ -97,7 +97,7 @@ const {store, scope, finalize, start} = link(function(bundle: Bundle) {
     bundle.include(editorBundle);
     bundle.include(statisticsBundle);
 
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
         bundle.addEarlyReducer(function(state: AppStoreReplay, action): void {
             if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
                 console.log('action', action);
@@ -142,7 +142,7 @@ function restart() {
 function clearUrl() {
     const currentUrl = url.parse(document.location.href, true);
     delete currentUrl.search;
-    delete currentUrl.query.source;
+    delete currentUrl.query['source'];
 
     window.history.replaceState(null, document.title, url.format(currentUrl));
 }
@@ -225,7 +225,9 @@ Codecast.start = function(options) {
 
             break;
         default:
-            appDisplay = () => <p>{"No such application: "}{options.start}</p>;
+            appDisplay = function AppDisplay () {
+                return <p>{"No such application: "}{options.start}</p>;
+            };
 
             break;
     }
@@ -243,7 +245,7 @@ Codecast.start = function(options) {
 function autoLogin() {
     let user = null;
     try {
-        user = JSON.parse(window.localStorage.user || 'null');
+        user = JSON.parse(window.localStorage.getItem('user') || 'null');
     } catch (ex) {
         return;
     }

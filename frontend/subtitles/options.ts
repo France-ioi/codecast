@@ -1,7 +1,7 @@
 export function getPersistentOptions() {
     let opts;
     try {
-        opts = JSON.parse(window.localStorage.subtitles);
+        opts = JSON.parse(window.localStorage.getItem('subtitles'));
     } catch (ex) {
         // nothing
     }
@@ -16,5 +16,5 @@ export function setPersistentOption(key, value) {
     const opts = getPersistentOptions();
     opts[key] = value;
 
-    window.localStorage.subtitles = JSON.stringify(opts);
+    window.localStorage.setItem('subtitles', JSON.stringify(opts));
 }

@@ -68,6 +68,8 @@ function getBrowser() {
     if (isChrome) {
         return 'Chrome: (' + navigator.userAgent + ')';
     }
+
+    return null;
 }
 
 export const initialStateStatistics = {

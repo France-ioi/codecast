@@ -465,7 +465,7 @@ function* trimSubtitleUpload(playerUrl, subtitles) {
     const state: AppStore = yield select();
     const {baseUrl} = state.options;
     const urlParsed = url.parse(playerUrl, true);
-    const base = urlParsed.query.base; //newly generated codecast's base
+    const base = urlParsed.query['base']; //newly generated codecast's base
     const changes = {subtitles};
 
     try {

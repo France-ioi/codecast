@@ -1,7 +1,9 @@
 import {DelayFactory} from "../utils/sleep";
+import {extractLevelSpecific, mergeIntoArray, mergeIntoObject} from "./utils";
+import StringRotation from './fixtures/14_strings_05_rotation';
 import {ActionTypes} from "./actionTypes";
-import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {AppStore} from "../store";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {put, select, takeEvery} from "redux-saga/effects";
@@ -34,54 +36,13 @@ export interface QuickAlgoContext {
     stringsLanguage?: any,
     runner?: any,
     propagate?: Function,
-}
-
-export interface Subtask {
-    gridInfos: any,
-    data: any,
+    onError?: Function,
+    onInput?: Function,
 }
 
 export interface TaskState {
     recordingEnabled: boolean,
-}
-
-// Merges arrays by values
-// (Flat-Copy only)
-function mergeIntoArray(into, other) {
-    for (let iOther in other) {
-        let intoContains = false;
-
-        for (let iInto in into) {
-            if (other[iOther] == into[iInto]) {
-                intoContains = true;
-            }
-        }
-
-        if (!intoContains) {
-            into.push(other[iOther]);
-        }
-    }
-}
-
-// Merges objects into each other similar to $.extend, but
-// merges Arrays differently (see above)
-// (Deep-Copy only)
-function mergeIntoObject(into, other) {
-    for (let property in other) {
-        if (other[property] instanceof Array) {
-            if (!(into[property] instanceof Array)) {
-                into[property] = [];
-            }
-            mergeIntoArray(into[property], other[property]);
-        }
-        if (other[property] instanceof Object) {
-            if (!(into[property] instanceof Object)) {
-                into[property] = {};
-            }
-            mergeIntoObject(into[property], other[property]);
-        }
-        into[property] = other[property];
-    }
+    context?: QuickAlgoContext,
 }
 
 export function quickAlgoInit() {
@@ -396,135 +357,13 @@ export function quickAlgoInit() {
     }
 }
 
-export function extractLevelSpecific(item, level) {
-    if ((typeof item != "object")) {
-        return item;
-    }
-    if (Array.isArray(item)) {
-        return item.map((val) => {
-            return extractLevelSpecific(val, level);
-        });
-    }
-    if (item.shared === undefined) {
-        if (item[level] === undefined) {
-            let newItem = {};
-            for (let prop in item) {
-                newItem[prop] = extractLevelSpecific(item[prop], level);
-            }
-            return newItem;
-        }
-        return extractLevelSpecific(item[level], level);
-    }
-    if (Array.isArray(item.shared)) {
-        let newItem = [];
-        for (let iElem = 0; iElem < item.shared.length; iElem++) {
-            newItem.push(extractLevelSpecific(item.shared[iElem], level));
-        }
-        if (item[level] != undefined) {
-            if (!Array.isArray(item[level])) {
-                console.error("Incompatible types when merging shared and " + level);
-            }
-            for (let iElem = 0; iElem < item[level].length; iElem++) {
-                newItem.push(extractLevelSpecific(item[level][iElem], level));
-            }
-        }
-        return newItem;
-    }
-    if (typeof item.shared == "object") {
-        let newItem = {};
-        for (let prop in item.shared) {
-            newItem[prop] = extractLevelSpecific(item.shared[prop], level);
-        }
-        if (item[level] != undefined) {
-            if (typeof item[level] != "object") {
-                console.error("Incompatible types when merging shared and " + level);
-            }
-            for (let prop in item[level]) {
-                newItem[prop] = extractLevelSpecific(item[level][prop], level);
-            }
-        }
-        return newItem;
-    }
-    console.error("Invalid type for shared property");
+function taskUpdateContextReducer(state: AppStore, {payload: {context}}): void {
+    state.task.context = context;
 }
 
-export function getFixtureData () {
-    return {
-        gridInfos: {
-            hideSaveOrLoad: true,
-            conceptViewer: true,
-            actionDelay: 200,
-            maxIterWithoutAction: 5000,
-            includeBlocks: {
-                groupByCategory: false  ,
-                generatedBlocks: {
-                    printer: ["print","read","manipulate"]
-                },
-                standardBlocks: {
-                    includeAll: false,
-                    wholeCategories: {
-                        easy: ["variables"],
-                        medium: ["variables"],
-                        hard: ["variables"]
-                    },
-                    singleBlocks: ["text", "logic_compare", "controls_if_else","controls_repeat","lists_repeat", "lists_getIndex", "lists_setIndex","text_length","text_join","text_charAt"]
-                },
-                variables: {
-                },
-                pythonAdditionalFunctions: ["len"]
-            },
-            maxInstructions: {easy:40, medium:40, hard: 100},
-            checkEndEveryTurn: false,
-            checkEndCondition: function(context, lastTurn) {
-                if (!lastTurn) return;
-
-                // throws, if something is wrong …
-                context.checkOutputHelper();
-
-                // Seems like everything is okay: Right number of lines and all lines match …
-                context.success = true;
-                throw(window.languageStrings.messages.outputCorrect);
-            },
-            computeGrade: function(context, message) {
-                var rate = 0;
-                if (context.success) {
-                    rate = 1;
-                    if (context.nbMoves > 100) {
-                        rate /= 2;
-                        message += window.languageStrings.messages.moreThan100Moves;
-                    }
-                }
-                return {
-                    successRate: rate,
-                    message: message
-                };
-            }
-        },
-        data: {
-            easy: [
-                {
-                    input: "grecon\nenghar\nennejuli\nlanmer\nbottur\nonth\nnettesaumo\neuli\nroiebaud\nvevi\n",
-                    output: "congre\nhareng\njulienne\nmerlan\nturbot\nthon\nsaumonette\nlieu\nbaudroie\nvive\n"
-                }
-            ],
-            medium: [
-                {
-                    input: "ndeama\norneaubig\notbul\nuecoq\nteaucou\nsinour\nourdepal\nonclepét\nirepra\nlinetel\n",
-                    output: "amande\nbigorneau\nbulot\ncoque\ncouteau\noursin\npalourde\npétoncle\npraire\ntelline\n"
-                }
-            ],
-            hard: [
-                {
-                    input: "néegraia\nleaigc\ntteerevc\nssesicrevé\nesbrac\nasbamg\nstesuangol\neautourt\ntinessangoul\nlesltrié\n",
-                    output: "araignée\ncigale\ncrevette\nécrevisses\ncrabes\ngambas\nlangoustes\ntourteau\nlangoustines\nétrilles\n"
-                }
-            ],
-        }
-    };
-}
-export function getRunningContext () {
+export function createContext () {
     const curLevel = 'easy';
-    const subTask = getFixtureData();
+    const subTask = StringRotation;
     const levelGridInfos = extractLevelSpecific(subTask.gridInfos, curLevel);
     const display = true;
 
@@ -553,9 +392,8 @@ export function getRunningContext () {
     return context;
 }
 
-export function getAutocompletionParameters () {
+export function getAutocompletionParameters (context) {
     const curLevel = 'easy';
-    const context = getRunningContext();
     const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, curLevel);
 
     return {
@@ -574,13 +412,22 @@ export default function (bundle: Bundle) {
         };
     });
 
-    bundle.defineAction(ActionTypes.TaskRecordingEnabledChange);
+    bundle.defineAction(ActionTypes.TaskLoad);
 
+    bundle.defineAction(ActionTypes.TaskUpdateContext);
+    bundle.addReducer(ActionTypes.TaskUpdateContext, taskUpdateContextReducer);
+
+    bundle.defineAction(ActionTypes.TaskRecordingEnabledChange);
     bundle.addReducer(ActionTypes.TaskRecordingEnabledChange, (state: AppStore, {payload: {enabled}}) => {
         state.task.recordingEnabled = enabled;
     });
 
     bundle.addSaga(function* () {
+        yield takeEvery(ActionTypes.TaskLoad, function* () {
+            const context = createContext();
+            yield put({type: ActionTypes.TaskUpdateContext, payload: {context}});
+        });
+
         yield takeEvery(ActionTypes.TaskRecordingEnabledChange, function* () {
             const state = yield select();
             const recorderState = getRecorderState(state);

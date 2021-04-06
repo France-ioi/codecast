@@ -89,7 +89,7 @@ class _SubtitlesPopup extends React.PureComponent<SubtitlesPopupProps> {
                     {isLoaded &&
                         <div style={{textAlign: 'center'}}>
                             <a href={availableOptions[loadedKey].url} className='bp3-button bp3-small bp3-icon-download'
-                               target='_blank' download>
+                               target='_blank' rel="noreferrer" download>
                                 {getMessage('CLOSED_CAPTIONS_DOWNLOAD_SELECTED')}
                             </a>
                         </div>

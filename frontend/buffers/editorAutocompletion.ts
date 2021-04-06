@@ -1,5 +1,4 @@
 import * as ace from 'brace';
-import {createDocGenerator} from "../common/docGenerator";
 
 const pythonForbiddenBlocks = {
     'dicts': {
@@ -168,6 +167,9 @@ function getSnippet(proto) {
 export const getFunctionsInfo = function (functionName, strings, ignoreDoc = false) {
     let blockDesc = '', funcProto = '', blockHelp = '';
     const docGenerator = false;
+    // TODO: When we'll start working on blockly processing lib, we'll need to integrate its custom doc generator
+    // For now, we'll leave it commented
+
     // const docGenerator = createDocGenerator(null, strings);
     // if (!ignoreDoc && docGenerator) {
     //     blockDesc = docGenerator.blockDescription(functionName);
