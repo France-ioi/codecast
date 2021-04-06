@@ -85,7 +85,7 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
         /* TODO: select target among user grants */
         return (
             <form className="save-screen">
-                <FormGroup labelFor='eventsUrlInput' label={"URL évènements"}>
+                <FormGroup labelFor='eventsUrlInput' label={getMessage('UPLOADING_URL_EVENTS')}>
                     <input
                         id='eventsUrlInput'
                         type='text'
@@ -95,7 +95,7 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
                         onFocus={this.handleFocus}
                     />
                 </FormGroup>
-                <FormGroup labelFor='audioUrlInput' label={"URL audio"}>
+                <FormGroup labelFor='audioUrlInput' label={getMessage('UPLOADING_URL_AUDIO_MP3')}>
                     <input
                         id='audioUrlInput'
                         type='text'
@@ -106,7 +106,7 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
                     />
                 </FormGroup>
                 {wavAudioUrl &&
-                <FormGroup labelFor='wavAudioUrlInput' label={"URL audio (wav)"}>
+                <FormGroup labelFor='wavAudioUrlInput' label={getMessage('UPLOADING_URL_AUDIO_WAV')}>
                     <input
                         id='wavAudioUrlInput'
                         type='text'
