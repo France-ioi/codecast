@@ -148,6 +148,10 @@ class _TaskApp extends React.PureComponent<TaskAppProps> {
         );
     };
 
+    componentDidMount() {
+        this.props.dispatch({type: ActionTypes.TaskLoad});
+    }
+
     _onClearDiagnostics = () => {
         this.props.dispatch({type: StepperActionTypes.CompileClearDiagnostics});
     };

@@ -222,10 +222,6 @@ Codecast.start = function(options) {
             break;
 
         case 'task':
-            store.dispatch({
-                type: TaskActionTypes.TaskLoad,
-            });
-
             appDisplay = <TaskApp />;
 
             break;
