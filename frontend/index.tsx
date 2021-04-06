@@ -19,7 +19,6 @@ import {ActionTypes as PlayerActionTypes} from "./player/actionTypes";
 import {ActionTypes as EditorActionTypes} from "./editor/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "./recorder/actionTypes";
 import {ActionTypes as StatisticsActionTypes} from "./statistics/actionTypes";
-import {ActionTypes as TaskActionTypes} from "./task/actionTypes";
 import {SandboxApp} from "./sandbox/SandboxApp";
 import {TaskApp} from "./task/TaskApp";
 import {StatisticsApp} from "./statistics/StatisticsApp";
