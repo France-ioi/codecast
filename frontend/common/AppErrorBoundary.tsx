@@ -5,12 +5,14 @@ import {AppStore} from "../store";
 import {connect} from "react-redux";
 
 interface AppErrorBoundaryStateToProps {
-    lastError: any
+    lastError: any,
+    getMessage: Function,
 }
 
 function mapStateToProps(state: AppStore): AppErrorBoundaryStateToProps {
     return {
-        lastError: state.lastError
+        lastError: state.lastError,
+        getMessage: state.getMessage,
     };
 }
 
@@ -24,7 +26,7 @@ interface AppErrorBoundaryProps extends AppErrorBoundaryStateToProps, AppErrorBo
 
 class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
     render() {
-        const {lastError, children} = this.props;
+        const {lastError, children, getMessage} = this.props;
         if (!lastError) {
             return children;
         }
@@ -37,7 +39,7 @@ class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
                     icon="error"
                     isOpen={true}
                     onClose={this._clearError}
-                    title={"Something went wrong"}
+                    title={getMessage('AN_ERROR_OCCURRED')}
                 >
                     <div className='bp3-dialog-body'>
                         <p>{"Source: "}{source}</p>

@@ -314,6 +314,7 @@ body {
     display: flex;
     align-items: center;
     background: #4a4a4a;
+    padding-left: 2px;
 
     .controls-recorder {
       display: flex;
@@ -334,8 +335,13 @@ body {
         .bp3-icon {
           color: #fff !important;
           svg {
-            width: 18px;
-            height: 18px;
+            width: 28px;
+            height: 28px;
+          }
+          &.bp3-icon-floppy-disk svg {
+            width: 22px;
+            height: 22px;
+            margin: 3px;
           }
         }
       }
@@ -345,13 +351,13 @@ body {
       display: flex;
       align-items: center;
       color: #fff;
-      font-size: 0.8em;
+      font-size: 0.9em;
       padding-left: 10px;
       padding-right: 10px;
       white-space: nowrap;
       svg {
-        width: 12px;
-        height: 12px;
+        width: 16px;
+        height: 16px;
       }
     }
 
@@ -359,7 +365,7 @@ body {
       display: flex;
       align-items: center;
       color: #fff;
-      font-size: 0.8em;
+      font-size: 0.9em;
       padding-left: 10px;
       padding-right: 10px;
       white-space: nowrap;

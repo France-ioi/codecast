@@ -153,7 +153,7 @@ export default function(bundle, deps) {
             yield put({type: ActionTypes.RecorderReady, payload: {recorderContext}});
         } catch (error) {
             // XXX send a specialized event and allow retrying recorderPrepare
-            yield put({type: CommonActionTypes.Error, source: 'recorderPrepare', error});
+            yield put({type: CommonActionTypes.Error, payload: {source: 'recorderPrepare', error}});
         }
     }
 
@@ -182,7 +182,7 @@ export default function(bundle, deps) {
             yield call(deps.recordApi.start);
         } catch (error) {
             // XXX generic error
-            yield put({type: CommonActionTypes.Error, source: 'recorderStart', error});
+            yield put({type: CommonActionTypes.Error, payload: {source: 'recorderStart', error}});
         }
     }
 
@@ -211,7 +211,7 @@ export default function(bundle, deps) {
             yield put({type: ActionTypes.RecorderStopped, payload: {}});
         } catch (error) {
             // XXX generic error
-            yield put({type: CommonActionTypes.Error, source: 'recorderStop', error});
+            yield put({type: CommonActionTypes.Error, payload: {source: 'recorderStop', error}});
         }
     }
 
@@ -260,7 +260,7 @@ export default function(bundle, deps) {
             yield put({type: ActionTypes.RecorderPaused});
         } catch (error) {
             // XXX generic error
-            yield put({type: CommonActionTypes.Error, source: 'recorderPause', error});
+            yield put({type: CommonActionTypes.Error, payload: {source: 'recorderPause', error}});
         }
 
         function* pauseExportProgressSaga() {
@@ -304,7 +304,7 @@ export default function(bundle, deps) {
             yield put({type: ActionTypes.RecorderResumed});
         } catch (error) {
             // XXX generic error
-            yield put({type: CommonActionTypes.Error, source: 'recorderResume', error});
+            yield put({type: CommonActionTypes.Error, payload: {source: 'recorderResume', error}});
         }
     }
 

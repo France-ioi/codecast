@@ -81,12 +81,6 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
                             title={getMessage('START_RECORDING')}
                             icon={<Icon icon='record' color='#ff001f'/>}
                         />
-                        <Button
-                            onClick={this.onStopRecording}
-                            disabled={!canStop}
-                            icon='stop'
-                            title={getMessage('STOP_RECORDING')}
-                        />
                         {playPause === 'play' ?
                             <Button
                                 onClick={this.onStartPlayback}
@@ -102,6 +96,12 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
                                 icon='pause'
                             />
                         }
+                        <Button
+                            onClick={this.onStopRecording}
+                            disabled={!canStop}
+                            icon='floppy-disk'
+                            title={getMessage('SAVE_RECORDING')}
+                        />
                     </ButtonGroup>
                 </div>
                 <div className="memory-usage">
