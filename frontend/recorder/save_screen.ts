@@ -199,7 +199,7 @@ function* uploadSaga(app: App, action) {
         const audioBlob: Blob = yield call(getBlob, save.audioUrl);
 
         yield call(uploadBlob, response.audio, audioBlob);
-        yield put({type: ActionTypes.SaveScreenEventsUploaded, payload: {url: response.audio.public_url}});
+        yield put({type: ActionTypes.SaveScreenAudioUploaded, payload: {url: response.audio.public_url}});
 
         // Signal completion.
         yield put({type: ActionTypes.SaveScreenUploadSucceeded, payload: {playerUrl: response.player_url}});
