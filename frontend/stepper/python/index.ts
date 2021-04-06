@@ -109,29 +109,27 @@ export default function(bundle: Bundle) {
             const source = state.buffers['source'].model.document.toString();
 
             if (platform === 'python') {
-                const context = {
-                    infos: {},
-                    aceEditor: null,
-                    onError: (diagnostics) => {
-                        const response = {diagnostics};
+                const context = state.task.context;
+                context.reset();
+                context.onError = (diagnostics) => {
+                    const response = {diagnostics};
 
-                        pythonInterpreterChannel.put({
-                            type: CompileActionTypes.CompileFailed,
-                            response
-                        });
-                    },
-                    onInput: () => {
-                        return new Promise((resolve, reject) => {
-                            pythonInterpreterChannel.put({
-                                type: ActionTypes.PythonInput,
-                                payload: {
-                                    resolve: resolve,
-                                    reject: reject
-                                }
-                            });
-                        });
-                    }
+                    pythonInterpreterChannel.put({
+                        type: CompileActionTypes.CompileFailed,
+                        response
+                    });
                 };
+                context.onInput = () => {
+                    return new Promise((resolve, reject) => {
+                        pythonInterpreterChannel.put({
+                            type: ActionTypes.PythonInput,
+                            payload: {
+                                resolve: resolve,
+                                reject: reject
+                            }
+                        });
+                    });
+                }
 
                 stepperState.directives = {
                     ordered: [],

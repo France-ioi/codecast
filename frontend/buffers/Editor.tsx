@@ -4,17 +4,19 @@ import * as ace from 'brace';
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {addAutocompletion} from "./editorAutocompletion";
+import {getAutocompletionParameters, QuickAlgoContext} from '../task';
 
 const Range = ace.acequire('ace/range').Range;
 
 interface EditorStateToProps {
-    getMessage: Function
+    getMessage: Function,
+    context: QuickAlgoContext,
 }
 
-function mapStateToProps(state: AppStore): EditorStateToProps
-{
+function mapStateToProps(state: AppStore): EditorStateToProps {
     return {
         getMessage: state.getMessage,
+        context: state.task.context,
     }
 }
 
@@ -186,8 +188,9 @@ class _Editor extends React.PureComponent<EditorProps> {
 
     componentDidMount() {
         const editor = this.editor = ace.edit(this.editorNode);
-        if (!this.props.disableAutocompletion) {
-            addAutocompletion(this.props.getMessage, null, null, {});
+        if (!this.props.disableAutocompletion && this.props.context) {
+            const {includeBlocks, strings, constants} = getAutocompletionParameters(this.props.context);
+            addAutocompletion(this.props.getMessage, includeBlocks, constants, strings);
         }
         const session = this.editor.getSession();
         editor.$blockScrolling = Infinity;

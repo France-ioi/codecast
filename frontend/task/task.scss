@@ -1,5 +1,9 @@
 $primary: #4e94e3;
 
+html {
+  margin: 0 !important;
+}
+
 .task {
   background: #f1f2f7;
   &.container-fluid {

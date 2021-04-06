@@ -14,6 +14,7 @@ import fullscreenBundle from './fullscreen';
 import loginBundle from './login';
 import clientApiBundle from './client_api';
 import subtitlesBundle from '../subtitles';
+import taskBundle from '../task';
 import examplesBundle from './examples';
 import stepperBundle from '../stepper';
 import {Bundle} from "../linker";
@@ -41,7 +42,7 @@ export default function(bundle: Bundle) {
     bundle.include(subtitlesBundle);
     bundle.include(examplesBundle);
 
-    /* TODO: Ultimately we want to support multiple languages, which would be
-       done by including a variable stepper bundle.  */
+    bundle.include(taskBundle);
+
     bundle.include(stepperBundle);
 }

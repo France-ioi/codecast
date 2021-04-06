@@ -6,8 +6,9 @@ import {AppStore} from "../store";
 import {Container, Row, Col} from 'react-bootstrap';
 import {BufferEditor} from "../buffers/BufferEditor";
 import {getPlayerState} from "../player/selectors";
+import {ActionTypes} from "./actionTypes";
 import {Icon} from "@blueprintjs/core";
-import {ActionTypes} from "../stepper/actionTypes";
+import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 
 interface TaskAppStateToProps {
     readOnly: boolean,
@@ -108,7 +109,7 @@ class _TaskApp extends React.PureComponent<TaskAppProps> {
                         <hr/>
 
                         <div className="task-visualisation">
-                            <h1>Visualisation 1</h1>
+                            <div id="grid"/>
                         </div>
 
                         <div className="player-controls">
@@ -147,8 +148,12 @@ class _TaskApp extends React.PureComponent<TaskAppProps> {
         );
     };
 
+    componentDidMount() {
+        this.props.dispatch({type: ActionTypes.TaskLoad});
+    }
+
     _onClearDiagnostics = () => {
-        this.props.dispatch({type: ActionTypes.CompileClearDiagnostics});
+        this.props.dispatch({type: StepperActionTypes.CompileClearDiagnostics});
     };
 }
 

@@ -19,6 +19,7 @@ import {ActionTypes as PlayerActionTypes} from "./player/actionTypes";
 import {ActionTypes as EditorActionTypes} from "./editor/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "./recorder/actionTypes";
 import {ActionTypes as StatisticsActionTypes} from "./statistics/actionTypes";
+import {ActionTypes as TaskActionTypes} from "./task/actionTypes";
 import {SandboxApp} from "./sandbox/SandboxApp";
 import {TaskApp} from "./task/TaskApp";
 import {StatisticsApp} from "./statistics/StatisticsApp";
@@ -30,6 +31,7 @@ import {setAutoFreeze} from "immer";
 import {ReplayApi} from "./player/replay";
 import {RecordApi} from "./recorder/record";
 import {StepperApi} from "./stepper/api";
+import {QuickAlgoContext} from "./task";
 
 /**
  * TODO: This should be removed if possible.
@@ -62,6 +64,11 @@ declare global {
         quickAlgoInterface: any,
         __REDUX_DEVTOOLS_EXTENSION__: any,
         __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: any,
+        quickAlgoContext: (display: boolean, infos: any) => QuickAlgoContext,
+        quickAlgoLibraries: any,
+        quickAlgoLibrariesList: any,
+        stringsLanguage: any,
+        getContext: Function,
     }
 }
 
