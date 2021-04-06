@@ -91,7 +91,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
                                 </div>
                             }
                             {offlineDownloadUrl &&
-                                <a href={offlineDownloadUrl} target="_blank">
+                                <a href={offlineDownloadUrl} target="_blank" rel="noreferrer">
                                     {getMessage('DOWNLOAD_OFFLINE')}
                                 </a>
                             }
