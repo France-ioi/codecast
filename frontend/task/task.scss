@@ -309,6 +309,113 @@ body {
       }
     }
   }
+
+  .task-recorder-controls {
+    display: flex;
+    align-items: center;
+    background: #4a4a4a;
+
+    .controls-recorder {
+      display: flex;
+      align-items: center;
+
+      .bp3-button {
+        background: transparent !important;
+        box-shadow: none !important;
+        border-right: solid 1px black;
+        padding: 10px 15px;
+        &:hover {
+          background-clip: padding-box;
+          background-color: #848484 !important;
+        }
+        &[disabled] {
+          opacity: 0.5;
+        }
+        .bp3-icon {
+          color: #fff !important;
+          svg {
+            width: 28px;
+            height: 28px;
+          }
+          &.bp3-icon-floppy-disk svg {
+            width: 22px;
+            height: 22px;
+            margin: 3px;
+          }
+        }
+      }
+    }
+
+    .controls-time {
+      display: flex;
+      align-items: center;
+      color: #fff;
+      font-size: 0.9em;
+      padding-left: 10px;
+      padding-right: 10px;
+      white-space: nowrap;
+      svg {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .memory-usage {
+      display: flex;
+      align-items: center;
+      color: #fff;
+      font-size: 0.9em;
+      padding-left: 10px;
+      padding-right: 10px;
+      white-space: nowrap;
+      border-right: solid 1px black;
+    }
+
+    .player-slider-container {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 0 10px;
+    }
+
+    .bp3-slider {
+      height: 12px !important;
+      min-width: initial;
+      .bp3-slider-axis, .bp3-slider-label {
+        display: none;
+      }
+      .bp3-slider-progress {
+        height: 12px;
+        border-radius: 500px;
+        background: #30242B;
+      }
+      .bp3-slider-track {
+        height: 12px;
+        top: 0;
+      }
+      .bp3-slider-handle {
+        background: $primary;
+        border-radius: 50px;
+        width: 30px;
+        outline: none;
+        transform: translate(-7px, 0);
+        top: -2px;
+        &:after {
+          content: '';
+          display: block;
+          color: white;
+          position: absolute;
+          left: 8px;
+          top: 7px;
+          right: 8px;
+          border-bottom: solid 3px white;
+        }
+      }
+      .bp3-slider-progress.bp3-intent-primary {
+        background-color: $primary;
+      }
+    }
+  }
 }
 
 pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {

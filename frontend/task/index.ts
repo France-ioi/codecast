@@ -3,9 +3,11 @@ import {extractLevelSpecific, mergeIntoArray, mergeIntoObject} from "./utils";
 import StringRotation from './fixtures/14_strings_05_rotation';
 import {ActionTypes} from "./actionTypes";
 import {Bundle} from "../linker";
-import {put, takeEvery} from "redux-saga/effects";
 import {AppStore} from "../store";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
+import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
+import {put, select, takeEvery} from "redux-saga/effects";
+import {getRecorderState} from "../recorder/selectors";
 
 export interface QuickAlgoContext {
     display: boolean,
@@ -34,6 +36,13 @@ export interface QuickAlgoContext {
     stringsLanguage?: any,
     runner?: any,
     propagate?: Function,
+    onError?: Function,
+    onInput?: Function,
+}
+
+export interface TaskState {
+    recordingEnabled: boolean,
+    context?: QuickAlgoContext,
 }
 
 export function quickAlgoInit() {
@@ -348,6 +357,10 @@ export function quickAlgoInit() {
     }
 }
 
+function taskUpdateContextReducer(state: AppStore, {payload: {context}}): void {
+    state.task.context = context;
+}
+
 export function createContext () {
     const curLevel = 'easy';
     const subTask = StringRotation;
@@ -390,15 +403,13 @@ export function getAutocompletionParameters (context) {
     };
 }
 
-function taskUpdateContextReducer(state: AppStore, {payload: {context}}): void {
-    state.task.context = context;
-}
-
 export default function (bundle: Bundle) {
     quickAlgoInit();
 
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.task = {};
+        state.task = {
+            recordingEnabled: false,
+        };
     });
 
     bundle.defineAction(ActionTypes.TaskLoad);
@@ -406,10 +417,23 @@ export default function (bundle: Bundle) {
     bundle.defineAction(ActionTypes.TaskUpdateContext);
     bundle.addReducer(ActionTypes.TaskUpdateContext, taskUpdateContextReducer);
 
+    bundle.defineAction(ActionTypes.TaskRecordingEnabledChange);
+    bundle.addReducer(ActionTypes.TaskRecordingEnabledChange, (state: AppStore, {payload: {enabled}}) => {
+        state.task.recordingEnabled = enabled;
+    });
+
     bundle.addSaga(function* () {
         yield takeEvery(ActionTypes.TaskLoad, function* () {
             const context = createContext();
             yield put({type: ActionTypes.TaskUpdateContext, payload: {context}});
+        });
+
+        yield takeEvery(ActionTypes.TaskRecordingEnabledChange, function* () {
+            const state = yield select();
+            const recorderState = getRecorderState(state);
+            if (!recorderState.status) {
+                yield put({type: RecorderActionTypes.RecorderPrepare});
+            }
         });
     });
 }

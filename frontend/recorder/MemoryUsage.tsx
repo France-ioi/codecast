@@ -28,7 +28,7 @@ interface MemoryUsageProps extends MemoryUsageStateToProps, MemoryUsageDispatchT
 export class _MemoryUsage extends React.PureComponent<MemoryUsageProps> {
     render() {
         const {getMessage, heapSize} = this.props;
-        return (<div id='memory-usage' title={getMessage('MEMORY_USAGE')}>{heapSize}{" MiB"}</div>);
+        return (<div title={getMessage('MEMORY_USAGE')}>{heapSize}{" MiB"}</div>);
     }
 }
 

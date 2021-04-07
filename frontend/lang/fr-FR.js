@@ -10,6 +10,7 @@ module.exports = {
     ERROR: 'Erreur',
     FULLSCREEN: "plein écran",
     EXIT_FULLSCREEN: "sortie de plein-écran",
+    SAVE_RECORDING: "Sauvegarder l'enregistrement",
     AN_ERROR_OCCURRED: "Une erreur est survenue !",
     MEMORY_USAGE: "Utilisation mémoire",
     PROGRAM_CANNOT_BE_MODIFIED_WHILE_RUNNING: "Le programme ne peut pas être modifié pendant qu'il s'exécute.",

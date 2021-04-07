@@ -2,8 +2,9 @@ import React from 'react';
 import {Dialog, Icon} from '@blueprintjs/core';
 import {isLocalMode} from "../utils/app";
 import {LanguageSelection} from "../lang/LanguageSelection";
-import {ExamplePicker} from "./ExamplePicker";
+import {ExamplePicker} from "../common/ExamplePicker";
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {MenuIconsTask} from "./MenuIconsTask";
@@ -13,11 +14,13 @@ interface MenuTaskStateToProps {
     canChangePlatform: boolean,
     platform: string,
     offlineDownloadUrl: string,
+    recordingEnabled: boolean,
 }
 
 function mapStateToProps(state: AppStore): MenuTaskStateToProps {
     const {baseUrl, baseDataUrl, platform, canChangePlatform} = state.options;
     const getMessage = state.getMessage;
+    const recordingEnabled = state.task.recordingEnabled;
 
     let offlineDownloadUrl = null;
     if (!isLocalMode() && baseDataUrl) {
@@ -25,7 +28,7 @@ function mapStateToProps(state: AppStore): MenuTaskStateToProps {
     }
 
     return {
-        getMessage, platform, canChangePlatform, offlineDownloadUrl
+        getMessage, platform, canChangePlatform, offlineDownloadUrl, recordingEnabled,
     };
 }
 
@@ -64,7 +67,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
                         <Icon icon="globe"/>
                         <span>{getMessage('MENU_LANGUAGE')}</span>
                     </div>
-                    <div className="menu-item">
+                    <div className="menu-item" onClick={this.toggleRecording}>
                         <Icon icon="record"/>
                         <span>{getMessage('MENU_RECORDER')}</span>
                     </div>
@@ -112,16 +115,30 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
         }));
     };
 
+    toggleRecording = () => {
+        this.props.dispatch({
+            type: ActionTypes.TaskRecordingEnabledChange,
+            payload: {enabled: !this.props.recordingEnabled}
+        });
+        this.closeMenu();
+    }
+
     closeSettings = () => {
         this.setState({
             settingsOpen: false,
         });
     };
 
+    closeMenu = () => {
+        this.setState({
+            menuOpen: false,
+        });
+    };
+
     setPlatform = (event) => {
         const platform = event.target.value;
         this.props.dispatch({
-            type: ActionTypes.PlatformChanged,
+            type: CommonActionTypes.PlatformChanged,
             payload: platform
         });
     };
