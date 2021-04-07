@@ -6,6 +6,7 @@ import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {LoginScreen} from "../common/LoginScreen";
 import {StatisticsScreen} from "./StatisticsScreen";
+import {Screen} from "../common/screens";
 
 interface StatisticsAppStateToProps {
     activity: string
@@ -18,7 +19,7 @@ function mapStateToProps(state: AppStore): StatisticsAppStateToProps {
     let activity;
     if (!user) {
         activity = 'login';
-    } else if (screen === 'statistics') {
+    } else if (screen === Screen.Statistics) {
         activity = 'statistics';
     }
 

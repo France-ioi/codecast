@@ -30,7 +30,7 @@ interface SaveScreenDispatchToProps {
 }
 
 interface SaveScreenProps extends SaveScreenStateToProps, SaveScreenDispatchToProps {
-
+    onCancel?: () => void,
 }
 
 export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
@@ -42,39 +42,39 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
         let message = null, canUpload = false, busy = false;
         switch (step) {
             case SaveStep.EncodingPending:
-                message = "Encoding, please wait…";
+                message = getMessage('ENCODING_IN_PROGRESS');
                 busy = true;
                 // PROGRESS
                 break;
             case SaveStep.EncodingDone:
-                message = "Encoding complete, ready to upload.";
+                message = getMessage('ENCODING_COMPLETE');
                 canUpload = true;
                 break;
             case SaveStep.UploadPreparing:
-                message = "Preparing to upload…";
+                message = getMessage('UPLOADING_PREPARING');
                 busy = true;
                 break;
             case SaveStep.UploadEventsPending:
-                message = "Uploading events…";
+                message = getMessage('UPLOADING_EVENTS');
                 busy = true;
                 break;
             case SaveStep.UploadEventsDone:
-                message = "Uploading events… done.";
+                message = getMessage('UPLOADING_EVENTS_DONE');
                 break;
             case SaveStep.UploadAudioPending:
-                message = "Uploading audio…";
+                message = getMessage('UPLOADING_AUDIO');
                 busy = true;
                 break;
             case SaveStep.UploadAudioDone:
-                message = "Uploading audio done.";
+                message = getMessage('UPLOADING_AUDIO_DONE');
                 break;
             case SaveStep.Done:
-                message = "Save complete.";
+                message = getMessage('UPLOADING_COMPLETE');
                 break;
             case SaveStep.Error:
                 message = (
                     <div>
-                        <p>{"An error has occured."}</p>
+                        <p>{getMessage('UPLOADING_ERROR')}</p>
                         <pre>{error.stack}</pre>
                     </div>
                 );
@@ -84,59 +84,82 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
 
         /* TODO: select target among user grants */
         return (
-            <form>
-                <FormGroup labelFor='eventsUrlInput' label={"URL évènements"}>
+            <form className="save-screen">
+                <FormGroup labelFor='eventsUrlInput' label={getMessage('UPLOADING_URL_EVENTS')}>
                     <input
                         id='eventsUrlInput'
                         type='text'
                         className='bp3-input bp3-fill'
                         value={eventsUrl || ''}
                         readOnly
+                        onFocus={this.handleFocus}
                     />
                 </FormGroup>
-                <FormGroup labelFor='audioUrlInput' label={"URL audio"}>
+                <FormGroup labelFor='audioUrlInput' label={getMessage('UPLOADING_URL_AUDIO_MP3')}>
                     <input
                         id='audioUrlInput'
                         type='text'
                         className='bp3-input bp3-fill'
                         value={audioUrl || ''}
                         readOnly
+                        onFocus={this.handleFocus}
                     />
                 </FormGroup>
                 {wavAudioUrl &&
-                <FormGroup labelFor='wavAudioUrlInput' label={"URL audio (wav)"}>
+                <FormGroup labelFor='wavAudioUrlInput' label={getMessage('UPLOADING_URL_AUDIO_WAV')}>
                     <input
                         id='wavAudioUrlInput'
                         type='text'
                         className='bp3-input bp3-fill'
                         value={wavAudioUrl || ''}
                         readOnly
+                        onFocus={this.handleFocus}
                     />
                 </FormGroup>}
                 <FormGroup label="Target">
                     <HTMLSelect options={grantOptions} value={targetUrl} onChange={this.handleTargetChange}/>
                 </FormGroup>
-                <Button
-                    onClick={this.onUpload}
-                    disabled={!canUpload}
-                    intent={canUpload ? Intent.PRIMARY : Intent.NONE}
-                    icon='floppy-disk' text="Save"
-                />
-                <div>
+                <div className="encoding-status">
                     {busy ?
-                        <Spinner size={Spinner.SIZE_SMALL} />
+                        <Spinner size={Spinner.SIZE_SMALL} className="mr-2" />
                     : (step === 'done' ?
                         <Icon icon='tick' intent={Intent.SUCCESS} />
                     : null)}
 
                     {message}
                 </div>
-                {typeof progress === 'number' &&
+                {typeof progress === 'number' && 'done' !== step &&
                     <ProgressBar value={progress}/>
                 }
+                <div className="mt-4">
+                    {canUpload && <Button
+                        onClick={this.onUpload}
+                        intent={canUpload ? Intent.PRIMARY : Intent.NONE}
+                        icon='floppy-disk'
+                        className="mr-2"
+                        text={getMessage('UPLOADING_BUTTON')}
+                    />}
+                    {'done' !== step &&
+                        <Button
+                          onClick={this.props.onCancel}
+                          intent={Intent.DANGER}
+                          icon={'trash'}
+                          text={getMessage('DELETE_RECORDING')}
+                        />
+                    }
+                    {'done' === step &&
+                        <Button
+                          onClick={this.props.onCancel}
+                          intent={Intent.NONE}
+                          icon="cross"
+                          text={getMessage('CLOSE')}
+                        />
+                    }
+                </div>
+
                 {playerUrl &&
-                    <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')}>
-                        <input id='playerUrlInput' type='text' className='bp3-input bp3-fill' value={playerUrl} readOnly/>
+                    <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')} className="mt-4">
+                        <input id='playerUrlInput' type='text' className='bp3-input bp3-fill' value={playerUrl} readOnly onFocus={this.handleFocus}/>
                     </FormGroup>
                 }
             </form>
@@ -156,6 +179,8 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
     handleTargetChange = (event) => {
         this.setState({targetUrl: event.target.value});
     };
+
+    handleFocus = (event) => event.target.select();
 
     onUpload = () => {
         const {targetUrl} = this.state;

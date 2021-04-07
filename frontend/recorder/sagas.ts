@@ -13,6 +13,7 @@ import {AppStore} from "../store";
 import {RecorderStatus} from "./store";
 import {ReplayContext} from "../player/sagas";
 import {App} from "../index";
+import {Screen} from "../common/screens";
 
 export default function(bundle, deps) {
     bundle.use('recordApi');
@@ -39,7 +40,6 @@ export default function(bundle, deps) {
     });
 
     bundle.addSaga(function* recorderTicker() {
-        const {payload: {recorderContext}} = yield take(ActionTypes.RecorderReady);
         while (true) {
             yield take(ActionTypes.RecorderStarted);
             while (true) {
@@ -53,6 +53,7 @@ export default function(bundle, deps) {
 
                 const state: AppStore = yield select();
                 const junkTime = state.recorder.junkTime;
+                const recorderContext = state.recorder.context;
                 const elapsed = Math.round(recorderContext.audioContext.currentTime * 1000) - junkTime;
 
                 yield put({type: ActionTypes.RecorderTick, elapsed});
@@ -77,7 +78,7 @@ export default function(bundle, deps) {
     function* recorderPrepare() {
         try {
             /* Show 'record' screen to user. */
-            yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'record'}});
+            yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Record}});
 
             // Clean up any previous audioContext and worker.
             const state: AppStore = yield select();
@@ -85,11 +86,6 @@ export default function(bundle, deps) {
             let recorderContext = recorder.context;
             if (recorderContext) {
                 const {worker: oldWorker} = recorderContext;
-                // @ts-ignore
-                if (oldContext) {
-                    // @ts-ignore
-                    oldContext.close();
-                }
                 if (oldWorker) {
                     yield call(oldWorker.kill);
                 }
@@ -97,6 +93,7 @@ export default function(bundle, deps) {
             }
 
             yield put({type: ActionTypes.RecorderPreparing, payload: {progress: 'start'}});
+            yield put({type: ActionTypes.MemoryUsageChanged, payload: {heapSize: 0}});
 
             // Attempt to obtain an audio stream.  The async call will complete once
             // the user has granted permission to use the microphone.

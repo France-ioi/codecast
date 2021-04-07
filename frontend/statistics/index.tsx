@@ -9,6 +9,7 @@ import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
 import {App} from "../index";
+import {Screen} from "../common/screens";
 
 interface LogData {
     type: any,
@@ -166,7 +167,7 @@ function* statisticsPrepareSaga() {
         yield take(CommonActionTypes.LoginFeedback);
     }
 
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'statistics'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Statistics}});
 }
 
 function* statisticsInitLogDataSaga() {

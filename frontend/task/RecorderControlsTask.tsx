@@ -1,5 +1,5 @@
 import React from "react";
-import {Button, ButtonGroup, Icon, Slider} from "@blueprintjs/core";
+import {Button, ButtonGroup, Dialog, Icon, Slider} from "@blueprintjs/core";
 import {formatTime} from "../common/utils";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -9,6 +9,11 @@ import {getPlayerState} from "../player/selectors";
 import {getRecorderState} from "../recorder/selectors";
 import {RecorderStatus} from "../recorder/store";
 import {MemoryUsage} from "../recorder/MemoryUsage";
+import {SaveScreen} from "../recorder/SaveScreen";
+import {Screen} from "../common/screens";
+import {User} from "../common/login";
+import {LoginScreen} from "../common/LoginScreen";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 
 interface RecorderControlsTaskStateToProps {
     getMessage: Function,
@@ -21,11 +26,15 @@ interface RecorderControlsTaskStateToProps {
     playPause: 'play' | 'pause',
     position: number,
     duration: number,
-    recorderStatus: RecorderStatus
+    recorderStatus: RecorderStatus,
+    screen: Screen,
+    user: User | false,
 }
 
 function mapStateToProps (state: AppStore): RecorderControlsTaskStateToProps {
     const getMessage = state.getMessage;
+    const screen = state.screen;
+    const user = state.user;
     const recorder = getRecorderState(state);
     const recorderStatus = recorder.status;
     const isPlayback = recorderStatus === RecorderStatus.Paused;
@@ -53,7 +62,7 @@ function mapStateToProps (state: AppStore): RecorderControlsTaskStateToProps {
         getMessage,
         recorderStatus, isPlayback, playPause,
         canRecord, canPlay, canPause, canStop, canStep,
-        position, duration
+        position, duration, screen, user,
     };
 }
 
@@ -69,8 +78,9 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
     render() {
         const {
             getMessage, canRecord, canPlay, canPause, canStop,
-            isPlayback, playPause, position, duration
+            isPlayback, playPause, position, duration, screen, user,
         } = this.props;
+
         return (
             <div className="task-recorder-controls">
                 <div className="controls-recorder">
@@ -133,6 +143,12 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
                         </span>
                     </div>
                 }
+
+                <Dialog isOpen={Screen.Save === screen} title={getMessage("UPLOADING_TITLE")} isCloseButtonShown={false}>
+                    <div style={{margin: '20px 20px 0 20px'}}>
+                        {this.props.user ? <SaveScreen onCancel={this.onCancel}/> : <LoginScreen/>}
+                    </div>
+                </Dialog>
             </div>
         );
     }
@@ -152,6 +168,10 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
         } else {
             this.props.dispatch({type: PlayerActionTypes.PlayerPause});
         }
+    };
+    onCancel = () => {
+        this.props.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Record}});
+        this.props.dispatch({type: RecorderActionTypes.RecorderPrepare});
     };
     onStartPlayback = () => {
         this.props.dispatch({type: PlayerActionTypes.PlayerStart});

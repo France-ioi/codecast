@@ -10,6 +10,7 @@ import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
 import {App} from "../index";
+import {Screen} from "../common/screens";
 
 export type EditorControl = 'none' | 'trim' | 'subtitles';
 
@@ -120,7 +121,7 @@ function* editorPrepareSaga(app: App, action) {
         yield take(CommonActionTypes.LoginFeedback);
     }
 
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'setup'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Setup}});
 
     const audioUrl = `${action.payload.baseDataUrl}.mp3`;
     const eventsUrl = `${action.payload.baseDataUrl}.json`;

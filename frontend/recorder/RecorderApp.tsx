@@ -8,6 +8,7 @@ import {RecordScreen} from "./RecordScreen";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {User} from "../common/login";
+import {Screen} from "../common/screens";
 
 interface RecorderAppStateToProps {
     screen: string,
@@ -35,9 +36,9 @@ class _RecorderApp extends React.PureComponent<RecorderAppProps> {
 
         if (!this.props.user) {
             screenView = <LoginScreen />;
-        } else if (this.props.screen === 'record') {
+        } else if (this.props.screen === Screen.Record) {
             screenView = <RecordScreen />;
-        } else if (this.props.screen === 'save') {
+        } else if (this.props.screen === Screen.Save) {
             screenView = <SaveScreen />;
         }
 

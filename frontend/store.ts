@@ -10,7 +10,7 @@ import {Stepper, StepperTask} from "./stepper";
 import {initialStateCompile} from "./stepper/compile";
 import {initialStateExamples} from "./common/examples";
 import {initialStateUser} from "./common/login";
-import {initialStateScreen} from "./common/screens";
+import {Screen} from "./common/screens";
 import {initialStatePlayer} from "./player";
 import {initialStateRecorder} from "./recorder/store";
 import {initialStateBuffers} from "./buffers";
@@ -79,7 +79,7 @@ export interface AppStore extends Store, AppStoreReplay {
     stepperTask: StepperTask,
     examples: typeof initialStateExamples,
     user: typeof initialStateUser,
-    screen: typeof initialStateScreen,
+    screen: Screen,
     player: typeof initialStatePlayer,
     recorder: typeof initialStateRecorder,
     subtitles: typeof initialStateSubtitles,

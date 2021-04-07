@@ -10,6 +10,7 @@ import {getRecorderState} from "./selectors";
 import {AppStore, CodecastOptions} from "../store";
 import {Bundle} from "../linker";
 import {App} from "../index";
+import {Screen} from "../common/screens";
 
 export type CodecastRecord = {
     version: string,
@@ -49,6 +50,7 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.SaveScreenEncodingStart, (state: AppStore) => {
         state.save.step = SaveStep.EncodingPending;
         state.save.progress = 0;
+        state.save.playerUrl = '';
     });
 
     bundle.defineAction(ActionTypes.SaveScreenEncodingProgress);
@@ -127,7 +129,7 @@ function* ensureLoggedSaga() {
 
 function* encodingSaga() {
     yield put({type: ActionTypes.SaveScreenEncodingStart, payload: {}});
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: 'save'}});
+    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Save}});
 
     const state: AppStore = yield select();
     const recorder = getRecorderState(state);
@@ -197,7 +199,7 @@ function* uploadSaga(app: App, action) {
         const audioBlob: Blob = yield call(getBlob, save.audioUrl);
 
         yield call(uploadBlob, response.audio, audioBlob);
-        yield put({type: ActionTypes.SaveScreenEventsUploaded, payload: {url: response.audio.public_url}});
+        yield put({type: ActionTypes.SaveScreenAudioUploaded, payload: {url: response.audio.public_url}});
 
         // Signal completion.
         yield put({type: ActionTypes.SaveScreenUploadSucceeded, payload: {playerUrl: response.player_url}});

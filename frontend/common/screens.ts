@@ -1,9 +1,13 @@
 import {ActionTypes} from "./actionTypes";
 import {Bundle} from "../linker";
 
-type Screen = 'setup' | 'edit' | 'statistics';
-
-export const initialStateScreen: Screen = 'setup';
+export enum Screen {
+    Setup = 'setup',
+    Edit = 'edit',
+    Statistics = 'statistics',
+    Record = 'record',
+    Save = 'save',
+}
 
 export default function(bundle: Bundle) {
     // Switch to the specified screen.
