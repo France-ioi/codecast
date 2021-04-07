@@ -8,7 +8,7 @@ module.exports = {
     TERMINAL: 'Terminal',
     MESSAGES: 'Messages',
     ERROR: 'Error',
-    CLOSE: 'Fermer',
+    CLOSE: 'Close',
     FULLSCREEN: "fullscreen",
     EXIT_FULLSCREEN: "exit fullscreen",
     SAVE_RECORDING: "Save recording",
