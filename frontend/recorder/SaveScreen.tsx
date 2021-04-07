@@ -139,12 +139,22 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
                         className="mr-2"
                         text={getMessage('UPLOADING_BUTTON')}
                     />}
-                    <Button
-                        onClick={this.props.onCancel}
-                        intent={'done' !== step ? Intent.DANGER : Intent.NONE}
-                        icon='cross'
-                        text={'done' === step ? getMessage('CLOSE') : getMessage('CANCEL')}
-                    />
+                    {'done' !== step &&
+                        <Button
+                          onClick={this.props.onCancel}
+                          intent={Intent.DANGER}
+                          icon={'trash'}
+                          text={getMessage('DELETE_RECORDING')}
+                        />
+                    }
+                    {'done' === step &&
+                        <Button
+                          onClick={this.props.onCancel}
+                          intent={Intent.NONE}
+                          icon="cross"
+                          text={getMessage('CLOSE')}
+                        />
+                    }
                 </div>
 
                 {playerUrl &&
