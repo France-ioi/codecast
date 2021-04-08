@@ -8,6 +8,8 @@ import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {put, select, takeEvery} from "redux-saga/effects";
 import {getRecorderState} from "../recorder/selectors";
+import {App} from "../index";
+import {PlayerInstant} from "../player";
 
 export interface QuickAlgoContext {
     display: boolean,
@@ -38,11 +40,14 @@ export interface QuickAlgoContext {
     propagate?: Function,
     onError?: Function,
     onInput?: Function,
+    getCurrentState?: () => any,
+    reloadState?: (state: any) => void,
 }
 
 export interface TaskState {
     recordingEnabled: boolean,
     context?: QuickAlgoContext,
+    state?: any,
 }
 
 export function quickAlgoInit() {
@@ -433,6 +438,21 @@ export default function (bundle: Bundle) {
             const recorderState = getRecorderState(state);
             if (!recorderState.status) {
                 yield put({type: RecorderActionTypes.RecorderPrepare});
+            }
+        });
+
+        yield takeEvery(ActionTypes.TaskContextStateReload, function* (action) {
+            const state = yield select();
+            // @ts-ignore
+            state.task.context.reloadState(action.payload.state);
+        });
+    });
+
+    bundle.defer(function({replayApi}: App) {
+        replayApi.onReset(function* (instant: PlayerInstant) {
+            const taskData = instant.state.task;
+            if (taskData && taskData.state) {
+                yield put({type: ActionTypes.TaskContextStateReload, payload: {state: taskData.state}});
             }
         });
     });

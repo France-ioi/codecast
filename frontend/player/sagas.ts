@@ -105,10 +105,17 @@ function* playerPrepare(app: App, action) {
         payload: platform
     });
 
+    const context = state.task.context;
+    context.display = false;
+
     const replayState = {
         options: {
             platform
-        }
+        },
+        task: {
+            context,
+            state: {...state.task.context.getCurrentState()},
+        },
     };
 
     if (data.options) {
@@ -129,6 +136,8 @@ function* playerPrepare(app: App, action) {
 
     try {
         yield call(computeInstants, replayApi, replayContext);
+
+        context.display = true;
 
         /* The duration of the recording is the timestamp of the last event. */
         const instants = replayContext.instants;

@@ -64,6 +64,7 @@ export interface AppStoreReplay {
     buffers: typeof initialStateBuffers,
     stepper: Stepper,
     compile: typeof initialStateCompile,
+    task: TaskState,
 
     options: CodecastOptions,
 

@@ -131,7 +131,8 @@ const initialStateStepperState = {
         memorySize: 0x10000,
         stackSize: 4096
     },
-    isFinished: false // Only used for python
+    isFinished: false, // Only used for python
+    contextState: {} as any,
 };
 
 export type StepperState = typeof initialStateStepperState;
@@ -459,6 +460,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         }
     }
 
+    state.task.state = {...state.task.context.getCurrentState()};
     state.stepper.currentStepperState = stepperContext.state;
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;
