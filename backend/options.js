@@ -75,7 +75,7 @@ export function buildOptions(config, req, start, callback) {
         options.examplesUrl = config.examplesUrl;
     }
     if (/editor|player/.test(start)) {
-        options.baseDataUrl = req.query.base;
+        options.baseDataUrl = req.query.recording;
         const {s3Bucket: bucket, uploadPath: folder, id: codecast} = parseCodecastUrl(options.baseDataUrl);
         options.codecastData = {bucket, folder, codecast};
     }
@@ -83,6 +83,10 @@ export function buildOptions(config, req, start, callback) {
         options.isStatisticsReady = !!config.database;
     }
     if (/recorder|editor|statistics|task/.test(start)) {
+        if (req.query.recording) {
+            options.baseDataUrl = req.query.recording;
+        }
+
         return config.optionsHook(req, options, callback);
     } else {
         return callback(null, options);

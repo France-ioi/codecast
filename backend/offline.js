@@ -11,11 +11,11 @@ export default function (app, config, store) {
     app.use('/offline.zip', express.static(path.join(config.rootDir, 'offline.zip')));
 
     app.get('/offline', function (req, res) {
-        const baseUrl = req.query.base;
+        const baseUrl = req.query.recording;
 
         const manifestUrl = editURL(config.baseUrl, function (obj) {
             obj.pathname = urlJoin(obj.pathname, 'offline/manifest');
-            obj.query.base = baseUrl;
+            obj.query.recording = baseUrl;
         });
 
         const builderUrl = editURL(config.builderUrl, function (obj) {
@@ -48,7 +48,7 @@ export default function (app, config, store) {
                     to: {file: urlJoin(ownPath, 'index.html')},
                 },
                 {
-                    from: {url: `${query.base}.mp3`},
+                    from: {url: `${query.recording}.mp3`},
                     to: {file: urlJoin(ownPath, 'audio.mp3')},
                 }
             ]
@@ -68,7 +68,7 @@ export default function (app, config, store) {
             const options = buildCommonOptions('player', query);
             options.audioUrl = urlJoin(pathReverse(sharedPath), ownPath, "audio.mp3");
 
-            request(`${query.base}.json`, function (err, response, body) {
+            request(`${query.recording}.json`, function (err, response, body) {
                 if (err) {
                     return res.status(400).send(err.toString());
                 }

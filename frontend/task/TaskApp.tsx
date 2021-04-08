@@ -1,22 +1,25 @@
 import React from 'react';
 import {StepperControls} from "../stepper/views/StepperControls";
 import {connect} from "react-redux";
-import {AppStore} from "../store";
+import {AppStore, CodecastOptions} from "../store";
 import {Container, Row, Col} from 'react-bootstrap';
 import {BufferEditor} from "../buffers/BufferEditor";
 import {getPlayerState} from "../player/selectors";
-import {Icon} from "@blueprintjs/core";
+import {Dialog, Icon, Intent, ProgressBar} from "@blueprintjs/core";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {ActionTypes} from "./actionTypes";
 import {MenuTask} from "./MenuTask";
 import {RecorderControlsTask} from "./RecorderControlsTask";
+import {SubtitlesBand} from "../subtitles/SubtitlesBand";
+import {PlayerError} from "../player";
+import {PlayerControlsTask} from "./PlayerControlsTask";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 
 interface TaskAppStateToProps {
     readOnly: boolean,
     sourceMode: string,
     sourceRowHeight: number,
     error: string,
-    getMessage: Function,
     geometry: any,
     panes: any,
     showStack: boolean,
@@ -29,6 +32,12 @@ interface TaskAppStateToProps {
     fullScreenActive: boolean,
     diagnostics: any,
     recordingEnabled: boolean,
+    playerEnabled: boolean,
+    isPlayerReady: boolean,
+    playerProgress: number,
+    playerError: PlayerError,
+    getMessage: Function,
+    options: CodecastOptions,
 }
 
 function mapStateToProps(state: AppStore): TaskAppStateToProps {
@@ -43,6 +52,7 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
     const diagnostics = state.compile.diagnosticsHtml;
     const error = currentStepperState && currentStepperState.error;
     const recordingEnabled = state.task.recordingEnabled;
+    const playerEnabled = !!state.options.baseDataUrl;
 
     /* TODO: make number of visible rows in source editor configurable. */
     const sourceRowHeight = Math.ceil(16 * 25); // 12*25 for /next
@@ -67,12 +77,18 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
 
     const player = getPlayerState(state);
     const preventInput = player.isPlaying;
+    const isPlayerReady = player.isReady;
+    const playerProgress = player.progress;
+    const playerError = player.error;
     const windowHeight = state.windowHeight;
+    const options = state.options;
 
     return {
-        readOnly, error, getMessage, geometry, panes, preventInput, sourceRowHeight,
+        readOnly, error, getMessage, geometry, panes, sourceRowHeight,
         sourceMode, showStack, arduinoEnabled, showViews, showIO, windowHeight,
         currentStepperState, fullScreenActive, diagnostics, recordingEnabled,
+        preventInput, isPlayerReady, playerProgress, playerError, playerEnabled,
+        options,
     };
 }
 
@@ -96,6 +112,8 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
             readOnly, sourceMode, error,
             preventInput, fullScreenActive,
             diagnostics, recordingEnabled,
+            playerProgress, isPlayerReady,
+            playerEnabled, getMessage,
         } = this.props;
 
         const hasError = !!(error || diagnostics);
@@ -156,24 +174,43 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
                           <RecorderControlsTask/>
                         </div>
                     }
+
+                    {playerEnabled && isPlayerReady &&
+                        <div className="task-footer">
+                          <PlayerControlsTask/>
+                          <SubtitlesBand/>
+                        </div>
+                    }
                 </div>
                 <MenuTask/>
+
+                <Dialog isOpen={playerEnabled && !isPlayerReady} title={getMessage('PLAYER_PREPARING')} isCloseButtonShown={false}>
+                    <div style={{margin: '20px 20px 0 20px'}}>
+                        <ProgressBar value={playerProgress} intent={Intent.SUCCESS}/>
+                    </div>
+                </Dialog>
             </Container>
         );
     };
 
     componentDidMount() {
         this.props.dispatch({type: ActionTypes.TaskLoad});
+
+        if (this.props.options.baseDataUrl) {
+            let audioUrl = `${this.props.options.baseDataUrl}.mp3`;
+            this.props.dispatch({
+                type: PlayerActionTypes.PlayerPrepare,
+                payload: {
+                    baseDataUrl: this.props.options.baseDataUrl,
+                    audioUrl: audioUrl,
+                    eventsUrl: `${this.props.options.baseDataUrl}.json`,
+                }
+            });
+        }
     }
 
     _onClearDiagnostics = () => {
         this.props.dispatch({type: StepperActionTypes.CompileClearDiagnostics});
-    };
-
-    toggleMenu = () => {
-        this.setState(prevState => ({
-            menuOpen: !prevState.menuOpen,
-        }));
     };
 }
 

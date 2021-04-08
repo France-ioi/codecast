@@ -52,7 +52,7 @@ export default function(bundle: Bundle) {
         state.editor = initialStateEditor;
         state.editor.base = baseDataUrl;
         state.editor.dataUrl = baseDataUrl;
-        state.editor.playerUrl = `${baseUrl}/player?base=${encodeURIComponent(baseDataUrl)}`;
+        state.editor.playerUrl = `${baseUrl}/task?recording=${encodeURIComponent(baseDataUrl)}`;
         state.editor.canSave = userHasGrant(state.user, baseDataUrl);
     });
 
