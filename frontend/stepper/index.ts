@@ -693,34 +693,8 @@ function* stepperInterruptSaga() {
         });
     });
 
-    /**
-     * Before we do a step, we check if the state in analysis is the same as the one in the python runner.
-     *
-     * If it is different, it means the analysis has been overwritten by playing a record, and so
-     * we need to move the python runner to the same point before we can to a step.
-     */
     if (stepperContext.state.platform === 'python') {
-        if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
-            window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
-
-            window.currentPythonRunner._input = stepperContext.state.input;
-            window.currentPythonRunner._inputPos = 0;
-            window.currentPythonRunner._terminal = stepperContext.state.terminal;
-
-            window.currentPythonRunner._synchronizingAnalysis = true;
-            while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
-                yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, []);
-
-                if (window.currentPythonRunner._isFinished) {
-                    break;
-                }
-            }
-            window.currentPythonRunner._synchronizingAnalysis = false;
-
-            stepperContext.state.input = window.currentPythonRunner._input;
-            stepperContext.state.terminal = window.currentPythonRunner._terminal;
-            stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
-        }
+        yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
     }
 
     yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
@@ -734,35 +708,8 @@ function* stepperStepSaga(app: App, action) {
         yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
         const stepperContext = makeContext(stepper, interact);
-
-        /**
-         * Before we do a step, we check if the state in analysis is the same as the one in the python runner.
-         *
-         * If it is different, it means the analysis has been overwritten by playing a record, and so
-         * we need to move the python runner to the same point before we can to a step.
-         */
         if (stepperContext.state.platform === 'python') {
-            if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
-                window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
-
-                window.currentPythonRunner._input = stepperContext.state.input;
-                window.currentPythonRunner._inputPos = 0;
-                window.currentPythonRunner._terminal = stepperContext.state.terminal;
-
-                window.currentPythonRunner._synchronizingAnalysis = true;
-                while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
-                    yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, []);
-
-                    if (window.currentPythonRunner._isFinished) {
-                        break;
-                    }
-                }
-                window.currentPythonRunner._synchronizingAnalysis = false;
-
-                stepperContext.state.input = window.currentPythonRunner._input;
-                stepperContext.state.terminal = window.currentPythonRunner._terminal;
-                stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
-            }
+            yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
         }
 
         try {
@@ -802,6 +749,39 @@ function* stepperStepSaga(app: App, action) {
                 });
             });
         }
+    }
+}
+
+/**
+ * Before we do a step, we check if the state in analysis is the same as the one in the python runner.
+ *
+ * If it is different, it means the analysis has been overwritten by playing a record, and so
+ * we need to move the python runner to the same point before we can to a step.
+ */
+function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContext) {
+    if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
+        const taskContext = yield select((state: AppStore) => state.task.context);
+        taskContext.reset();
+
+        window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
+
+        window.currentPythonRunner._input = stepperContext.state.input;
+        window.currentPythonRunner._inputPos = 0;
+        window.currentPythonRunner._terminal = stepperContext.state.terminal;
+
+        window.currentPythonRunner._synchronizingAnalysis = true;
+        while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
+            yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, []);
+
+            if (window.currentPythonRunner._isFinished) {
+                break;
+            }
+        }
+        window.currentPythonRunner._synchronizingAnalysis = false;
+
+        stepperContext.state.input = window.currentPythonRunner._input;
+        stepperContext.state.terminal = window.currentPythonRunner._terminal;
+        stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
     }
 }
 
