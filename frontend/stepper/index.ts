@@ -204,6 +204,9 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.StepperExit);
     bundle.addReducer(ActionTypes.StepperExit, stepperExitReducer);
 
+    bundle.defineAction(ActionTypes.StepperError);
+    bundle.addReducer(ActionTypes.StepperError, stepperInterruptReducer);
+
     // Sent when the user interrupts the stepper.
     bundle.defineAction(ActionTypes.StepperInterrupt);
     bundle.addReducer(ActionTypes.StepperInterrupt, stepperInterruptReducer);
@@ -850,7 +853,7 @@ function postLink(app: App) {
         yield call(addEvent, 'stepper.restart');
     });
     replayApi.on('stepper.restart', async function(replayContext: ReplayContext) {
-        const stepperState = await buildState(replayContext.state);
+        const stepperState = await buildState(replayContext.state, true);
 
         replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
             stepperRestartReducer(draft, {payload: {stepperState}});

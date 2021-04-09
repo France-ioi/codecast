@@ -104,7 +104,7 @@ export default function(bundle: Bundle) {
             stackViewPathToggleReducer(replayContext.state, action);
         });
 
-        stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
+        stepperApi.onInit(function(stepperState: StepperState, state: AppStore, replay: boolean = false) {
             const {platform} = state.options;
             const source = state.buffers['source'].model.document.toString();
 
@@ -112,7 +112,15 @@ export default function(bundle: Bundle) {
                 const context = state.task.context;
                 context.reset();
                 context.onError = (diagnostics) => {
+                    if (replay) {
+                        return;
+                    }
+
                     const response = {diagnostics};
+
+                    pythonInterpreterChannel.put({
+                        type: CompileActionTypes.StepperError,
+                    });
 
                     pythonInterpreterChannel.put({
                         type: CompileActionTypes.CompileFailed,
