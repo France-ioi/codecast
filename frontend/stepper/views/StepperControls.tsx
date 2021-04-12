@@ -328,14 +328,13 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
     onRedo = () => this.props.dispatch({type: ActionTypes.StepperRedo, payload: {}});
     onCompile = () => this.props.dispatch({type: ActionTypes.Compile, payload: {}});
     onStepByStep = async () => {
-        if (this.props.controlsType !== StepperControlsType.StepByStep) {
-            await this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.StepByStep}});
-        }
-
         if (!await this.compileIfNecessary()) {
             return;
         }
 
+        if (this.props.controlsType !== StepperControlsType.StepByStep) {
+            await this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.StepByStep}});
+        }
         if (this.props.canStep) {
             this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into}});
         } else {
@@ -346,8 +345,12 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
         if (!await this.compileIfNecessary()) {
             return;
         }
-        await this.props.dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
-        await this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
+        if (this.props.controlsType !== StepperControlsType.Normal) {
+            await this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
+        }
+        if (!this.props.canStep) {
+            await this.props.dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
+        }
         setTimeout(() => {
             this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});
         }, 250);

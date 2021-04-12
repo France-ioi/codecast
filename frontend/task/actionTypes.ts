@@ -3,6 +3,6 @@ export enum ActionTypes {
   TaskSuccess = 'Task.Success',
   TaskSuccessClear = 'Task.Success.Clear',
   TaskUpdateContext = 'Task.UpdateContext',
-  TaskContextStateReload = 'Task.Context.State.Reload',
+  TaskReset = 'Task.Reset',
   TaskRecordingEnabledChange = 'Task.Recording.Enabled.Change',
 }
