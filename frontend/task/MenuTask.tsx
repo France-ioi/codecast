@@ -51,12 +51,30 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
         menuOpen: false,
     };
 
+    private wrapperRef: React.RefObject<HTMLDivElement>;
+
+    constructor(props) {
+        super(props);
+
+        this.wrapperRef = React.createRef();
+        this.setWrapperRef = this.setWrapperRef.bind(this);
+        this.handleClickOutside = this.handleClickOutside.bind(this);
+    }
+
+    componentDidMount() {
+        document.addEventListener('mousedown', this.handleClickOutside);
+    }
+
+    componentWillUnmount() {
+        document.removeEventListener('mousedown', this.handleClickOutside);
+    }
+
     render() {
         const {getMessage, platform, canChangePlatform, offlineDownloadUrl} = this.props;
         const {settingsOpen} = this.state;
 
         return (
-            <div className={`menu-container ${this.state.menuOpen ? 'is-open' : ''}`}>
+            <div ref={this.wrapperRef} className={`menu-container ${this.state.menuOpen ? 'is-open' : ''}`}>
                 <div className="menu-icons">
                     <MenuIconsTask
                         toggleMenu={this.toggleMenu}
@@ -101,6 +119,21 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
                 </div>
             </div>
         );
+    }
+
+    setWrapperRef(node) {
+        this.wrapperRef = node;
+    }
+
+    handleClickOutside(event) {
+        if (
+            this.wrapperRef
+            && !this.wrapperRef.current.contains(event.target)
+            && !event.target.closest('.bp3-portal')
+            && this.state.menuOpen
+        ) {
+            this.closeMenu();
+        }
     }
 
     toggleSettings = () => {
