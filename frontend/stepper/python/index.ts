@@ -5,6 +5,7 @@ import PythonInterpreter from "./python_interpreter";
 import {ActionTypes} from './actionTypes';
 import {ActionTypes as CompileActionTypes} from '../actionTypes';
 import {ActionTypes as IoActionTypes} from '../io/actionTypes';
+import {ActionTypes as TaskActionTypes} from '../../task/actionTypes';
 import {AppStore, AppStoreReplay} from "../../store";
 import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
@@ -116,15 +117,28 @@ export default function(bundle: Bundle) {
                         return;
                     }
 
-                    const response = {diagnostics};
-
                     pythonInterpreterChannel.put({
-                        type: CompileActionTypes.StepperError,
+                        type: CompileActionTypes.StepperInterrupting,
                     });
 
+                    const response = {diagnostics};
                     pythonInterpreterChannel.put({
                         type: CompileActionTypes.CompileFailed,
                         response
+                    });
+                };
+                context.onSuccess = (message) => {
+                    if (replay) {
+                        return;
+                    }
+
+                    pythonInterpreterChannel.put({
+                        type: CompileActionTypes.StepperInterrupting,
+                    });
+
+                    pythonInterpreterChannel.put({
+                        type: TaskActionTypes.TaskSuccess,
+                        payload: {message},
                     });
                 };
                 context.onInput = () => {

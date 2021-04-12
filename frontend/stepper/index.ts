@@ -204,8 +204,8 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.StepperExit);
     bundle.addReducer(ActionTypes.StepperExit, stepperExitReducer);
 
-    bundle.defineAction(ActionTypes.StepperError);
-    bundle.addReducer(ActionTypes.StepperError, stepperInterruptReducer);
+    bundle.defineAction(ActionTypes.StepperInterrupting);
+    bundle.addReducer(ActionTypes.StepperInterrupting, stepperInterruptReducer);
 
     // Sent when the user interrupts the stepper.
     bundle.defineAction(ActionTypes.StepperInterrupt);
@@ -490,7 +490,7 @@ function stepperExitReducer(state: AppStoreReplay): void {
 
 function stepperInterruptReducer(state: AppStore): void {
     // Cannot interrupt while idle.
-    if (state.stepper.status != StepperStatus.Idle) {
+    if (state.stepper.status !== StepperStatus.Idle) {
         state.stepper.interrupting = true;
     }
 }

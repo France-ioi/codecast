@@ -10,6 +10,7 @@ import {put, select, takeEvery} from "redux-saga/effects";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PlayerInstant} from "../player";
+import {clearStepper} from "../stepper";
 
 export interface QuickAlgoContext {
     display: boolean,
@@ -38,6 +39,7 @@ export interface QuickAlgoContext {
     stringsLanguage?: any,
     runner?: any,
     propagate?: Function,
+    onSuccess?: Function,
     onError?: Function,
     onInput?: Function,
     getCurrentState?: () => any,
@@ -48,6 +50,8 @@ export interface TaskState {
     recordingEnabled: boolean,
     context?: QuickAlgoContext,
     state?: any,
+    success?: boolean,
+    successMessage?: string,
 }
 
 export function quickAlgoInit() {
@@ -425,6 +429,19 @@ export default function (bundle: Bundle) {
     bundle.defineAction(ActionTypes.TaskRecordingEnabledChange);
     bundle.addReducer(ActionTypes.TaskRecordingEnabledChange, (state: AppStore, {payload: {enabled}}) => {
         state.task.recordingEnabled = enabled;
+    });
+
+    bundle.defineAction(ActionTypes.TaskSuccess);
+    bundle.addReducer(ActionTypes.TaskSuccess, (state: AppStore, {payload: {message}}) => {
+        state.task.success = true;
+        state.task.successMessage = message;
+        clearStepper(state.stepper);
+    });
+
+    bundle.defineAction(ActionTypes.TaskSuccessClear);
+    bundle.addReducer(ActionTypes.TaskSuccessClear, (state: AppStore) => {
+        state.task.success = false;
+        state.task.successMessage = null;
     });
 
     bundle.addSaga(function* () {

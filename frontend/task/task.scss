@@ -484,3 +484,39 @@ pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     }
   }
 }
+
+.simple-dialog {
+  border-radius: 5px;
+  background: #fff;
+  color: #787878;
+  padding: 20px;
+  width: 680px;
+
+  .simple-dialog-success {
+    color: green;
+    font-weight: bold;
+  }
+
+  .simple-dialog-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .simple-dialog-button {
+    padding: 5px 15px;
+    background-color: $primary;
+    color: #fff;
+    border-radius: 100px;
+    border: none;
+    box-shadow: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    .bp3-icon {
+      margin-right: 5px;
+    }
+  }
+}

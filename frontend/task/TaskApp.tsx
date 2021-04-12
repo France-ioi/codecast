@@ -38,6 +38,8 @@ interface TaskAppStateToProps {
     playerError: PlayerError,
     getMessage: Function,
     options: CodecastOptions,
+    taskSuccess: boolean,
+    taskSuccessMessage: string,
 }
 
 function mapStateToProps(state: AppStore): TaskAppStateToProps {
@@ -53,6 +55,8 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
     const error = currentStepperState && currentStepperState.error;
     const recordingEnabled = state.task.recordingEnabled;
     const playerEnabled = !!state.options.baseDataUrl;
+    const taskSuccess = state.task.success;
+    const taskSuccessMessage = state.task.successMessage;
 
     /* TODO: make number of visible rows in source editor configurable. */
     const sourceRowHeight = Math.ceil(16 * 25); // 12*25 for /next
@@ -88,7 +92,7 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
         sourceMode, showStack, arduinoEnabled, showViews, showIO, windowHeight,
         currentStepperState, fullScreenActive, diagnostics, recordingEnabled,
         preventInput, isPlayerReady, playerProgress, playerError, playerEnabled,
-        options,
+        options, taskSuccess, taskSuccessMessage,
     };
 }
 
@@ -114,6 +118,7 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
             diagnostics, recordingEnabled,
             playerProgress, isPlayerReady,
             playerEnabled, getMessage,
+            taskSuccess, taskSuccessMessage,
         } = this.props;
 
         const hasError = !!(error || diagnostics);
@@ -189,6 +194,17 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
                         <ProgressBar value={playerProgress} intent={Intent.SUCCESS}/>
                     </div>
                 </Dialog>
+
+                <Dialog isOpen={taskSuccess} className="simple-dialog" onClose={this.closeTaskSuccess}>
+                    <p className="simple-dialog-success">{taskSuccessMessage}</p>
+
+                    <div className="simple-dialog-buttons">
+                        <button className="simple-dialog-button" onClick={this.closeTaskSuccess}>
+                            <Icon icon="small-tick" iconSize={24}/>
+                            <span>Ok</span>
+                        </button>
+                    </div>
+                </Dialog>
             </Container>
         );
     };
@@ -211,6 +227,10 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
 
     _onClearDiagnostics = () => {
         this.props.dispatch({type: StepperActionTypes.CompileClearDiagnostics});
+    };
+
+    closeTaskSuccess = () => {
+        this.props.dispatch({type: ActionTypes.TaskSuccessClear});
     };
 }
 
