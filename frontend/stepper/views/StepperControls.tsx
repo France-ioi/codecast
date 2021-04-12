@@ -332,12 +332,11 @@ class _StepperControls extends React.PureComponent<StepperControlsProps> {
             await this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.StepByStep}});
         }
 
-        const compile = this.props.canCompile;
         if (!await this.compileIfNecessary()) {
             return;
         }
 
-        if (!compile && this.props.canStep) {
+        if (this.props.canStep) {
             this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into}});
         } else {
             await this.props.dispatch({type: ActionTypes.StepperInterrupt, payload: {}});

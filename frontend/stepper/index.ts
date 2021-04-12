@@ -529,7 +529,7 @@ function stepperSpeedChangedReducer(state: AppStoreReplay, {payload: {speed}}): 
     return state.stepper.speed = speed;
 }
 
-function stepperControlsChangedReducer(state: AppStore, {payload: {controls}}): void {
+function stepperControlsChangedReducer(state: AppStoreReplay, {payload: {controls}}): void {
     return state.stepper.controls = controls;
 }
 
@@ -1061,6 +1061,17 @@ function postLink(app: App) {
         const speed = event[2];
 
         stepperSpeedChangedReducer(replayContext.state, {payload: {speed}});
+    });
+
+    recordApi.on(ActionTypes.StepperControlsChanged, function* (addEvent, action) {
+        const {payload: {controls}} = action;
+
+        yield call(addEvent, 'stepper.controls.changed', controls);
+    });
+    replayApi.on('stepper.controls.changed', function(replayContext: ReplayContext, event) {
+        const controls = event[2];
+
+        stepperControlsChangedReducer(replayContext.state, {payload: {controls}});
     });
 
     stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
