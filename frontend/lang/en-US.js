@@ -106,4 +106,6 @@ module.exports = {
     EMPTY_PROGRAM: "The program is empty.",
 
     USER_SELECT_LOGIN_METHOD: "Select a login option:",
+    TASK_DESCRIPTION: 'Instructions',
+    TASK_VARIABLES: 'Variables',
 };

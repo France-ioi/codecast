@@ -22,7 +22,7 @@ interface MultiVisualizationState {
     currentVisualization: string,
 }
 
-const CustomToggle = React.forwardRef<HTMLAnchorElement, {onClick: Function}>(({children, onClick}, ref) => (
+const _CustomToggle = ({children, onClick}, ref) => (
     <a
         href=""
         ref={ref}
@@ -35,7 +35,9 @@ const CustomToggle = React.forwardRef<HTMLAnchorElement, {onClick: Function}>(({
         {children}
         <span className="multi-visualization-toggle-caret">&#x25bc;</span>
     </a>
-));
+);
+
+const CustomToggle = React.forwardRef<HTMLAnchorElement, {onClick: Function}>(_CustomToggle);
 
 class _MultiVisualization extends React.PureComponent<MultiVisualizationProps, MultiVisualizationState> {
     state = {
@@ -76,7 +78,7 @@ class _MultiVisualization extends React.PureComponent<MultiVisualizationProps, M
 
                     <Dropdown.Menu>
                         {visualizations.map(visualization =>
-                            <Dropdown.Item onClick={() => this.selectVisualization(visualization.id)}>
+                            <Dropdown.Item key={visualization.id} onClick={() => this.selectVisualization(visualization.id)}>
                                 {visualization.icon && <Icon icon={visualization.icon as IconName}/>}
                                 <span>{visualization.title}</span>
                             </Dropdown.Item>

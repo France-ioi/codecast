@@ -110,4 +110,7 @@ module.exports = {
     KEYWORD: 'mot-clé',
     CONSTANT: "constante",
     VARIABLE: "variable",
+
+    TASK_DESCRIPTION: 'Énoncé',
+    TASK_VARIABLES: 'Variables',
 };

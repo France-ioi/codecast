@@ -141,12 +141,12 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
                     <Row className="task-body" noGutters>
                         <Col md={3} className="task-menu-left">
                             <MultiVisualization className="visualization-container" advisedVisualization={advisedVisualization}>
-                                <div className="task-mission" data-title="Instructions" data-id="instructions" data-icon="align-left">
+                                <div className="task-mission" data-title={getMessage('TASK_DESCRIPTION')} data-id="instructions" data-icon="align-left">
                                     <h1>Votre mission</h1>
 
                                     <p>Programmez le robot ci-dessous pour qu&#39;il atteigne l&#39;étoile, en sautant de plateforme en plateforme.</p>
                                 </div>
-                                <div data-title="Variables" data-id="variables" data-icon="code">
+                                <div data-title={getMessage('TASK_VARIABLES')} data-id="variables" data-icon="code">
                                     {(this.props.currentStepperState && this.props.currentStepperState.platform === 'python')
                                         ? <PythonStackView
                                             height={this.props.sourceRowHeight}
