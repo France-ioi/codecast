@@ -5,7 +5,8 @@ import {SkulptAnalysis} from "../analysis";
 
 interface PythonStackViewProps {
     height: number,
-    analysis: SkulptAnalysis
+    analysis: SkulptAnalysis,
+    showStackControls?: boolean,
 }
 
 export const PythonStackView = (props: PythonStackViewProps): JSX.Element => {
@@ -13,13 +14,15 @@ export const PythonStackView = (props: PythonStackViewProps): JSX.Element => {
     const tailCount = 0;
 
     return (
-        <div className="stack-view" style={{height: props.height}}>
-            <div className="stack-controls">
-                <ButtonGroup>
+        <div className="stack-view" style={{maxHeight: props.height}}>
+            {props.showStackControls &&
+                <div className="stack-controls">
+                  <ButtonGroup>
                     <Button minimal small title="navigate up the stack" icon='arrow-up'/>
                     <Button minimal small title="navigate down the stack" icon='arrow-down'/>
-                </ButtonGroup>
-            </div>
+                  </ButtonGroup>
+                </div>
+            }
             {firstVisible > 0 &&
             <div key='tail' className="scope-ellipsis">
                 {'… +'}{firstVisible}
@@ -38,7 +41,6 @@ export const PythonStackView = (props: PythonStackViewProps): JSX.Element => {
             <div key='tail' className="scope-ellipsis">
                 {'… +'}{tailCount}
             </div>}
-            <div className="stack-bottom"/>
         </div>
     );
 };

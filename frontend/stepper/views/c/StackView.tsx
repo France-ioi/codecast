@@ -44,7 +44,8 @@ interface StackViewDispatchToProps {
 
 interface StackViewProps extends StackViewStateToProps, StackViewDispatchToProps {
     height: any,
-    maxVisible: any
+    maxVisible: any,
+    showStackControls?: boolean,
 }
 
 class _StackView extends React.PureComponent<StackViewProps> {
@@ -72,7 +73,7 @@ class _StackView extends React.PureComponent<StackViewProps> {
         const {context, height, getMessage} = this.props;
         if (!context) {
             return (
-                <div className="stack-view" style={{height}}>
+                <div className="stack-view" style={{maxHeight: height}}>
                     <p>{getMessage('PROGRAM_STOPPED')}</p>
                 </div>
             );
@@ -81,7 +82,7 @@ class _StackView extends React.PureComponent<StackViewProps> {
         const {programState} = context;
         if (programState.error) {
             return (
-                <div className="stack-view" style={{height}}>
+                <div className="stack-view" style={{maxHeight: height}}>
                     <Alert intent={Intent.DANGER} onClose={this.onExit}>
                         <h4>{getMessage('ERROR')}</h4>
                         <p>{programState.error.toString()}</p>
@@ -112,13 +113,15 @@ class _StackView extends React.PureComponent<StackViewProps> {
         const {callReturn} = this.props.analysis;
 
         return (
-            <div className="stack-view" style={{height}}>
-                <div className="stack-controls">
-                    <ButtonGroup>
+            <div className="stack-view" style={{maxHeight: height}}>
+                {this.props.showStackControls &&
+                    <div className="stack-controls">
+                      <ButtonGroup>
                         <Button minimal small onClick={this.onStackUp} title="navigate up the stack" icon='arrow-up'/>
                         <Button minimal small onClick={this.onStackDown} title="navigate down the stack" icon='arrow-down'/>
-                    </ButtonGroup>
-                </div>
+                      </ButtonGroup>
+                    </div>
+                }
                 {callReturn && <CallReturn view={callReturn}/>}
                 {firstVisible > 0 &&
                 <div key='tail' className="scope-ellipsis">
@@ -130,7 +133,6 @@ class _StackView extends React.PureComponent<StackViewProps> {
                 <div key='tail' className="scope-ellipsis">
                     {'… +'}{tailCount}
                 </div>}
-                <div className="stack-bottom"/>
             </div>
         );
     };

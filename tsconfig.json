@@ -25,7 +25,8 @@
     "allowJs": true
   },
   "exclude": [
-    "bebras-modules"
+    "bebras-modules",
+    "build",
   ],
   "$schema": "https://json.schemastore.org/tsconfig"
 }
