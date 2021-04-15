@@ -124,20 +124,20 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
                     </span>
                 </div>
                 {isPlayback &&
-                  <div className="player-slider-container">
-                    <Slider
-                      value={position}
-                      onChange={this.onSeek}
-                      stepSize={100}
-                      labelStepSize={30000}
-                      min={0}
-                      max={duration}
-                      labelRenderer={formatTime}
-                    />
-                  </div>
+                    <div className="player-slider-container">
+                      <Slider
+                        value={position}
+                        onChange={this.onSeek}
+                        stepSize={100}
+                        labelStepSize={30000}
+                        min={0}
+                        max={duration}
+                        labelRenderer={formatTime}
+                      />
+                    </div>
                 }
                 {isPlayback &&
-                    <div className="controls-time">
+                    <div className="controls-time time-duration">
                         <span style={{marginLeft: '4px'}}>
                             {isPlayback && formatTime(duration)}
                         </span>

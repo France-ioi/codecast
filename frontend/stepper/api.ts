@@ -51,7 +51,7 @@ function onInit(callback: (stepperState: StepperState, state: AppStore) => void)
 }
 
 /* Build a stepper state from the given init data. */
-export async function buildState(state: AppStoreReplay): Promise<StepperState> {
+export async function buildState(state: AppStoreReplay, replay: boolean = false): Promise<StepperState> {
     const {platform} = state.options;
 
     /*
@@ -63,7 +63,7 @@ export async function buildState(state: AppStoreReplay): Promise<StepperState> {
         platform
     } as StepperState;
     for (let callback of initCallbacks) {
-        callback(curStepperState, state);
+        callback(curStepperState, state, replay);
     }
 
     // TODO: Make something so that the initCallbacks doesn't obscure the creation of stepperState.

@@ -7,6 +7,7 @@ import AudioWorker from '../audio_worker/index.worker';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
+import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
 import {getPlayerState} from "../player/selectors";
 import {getRecorderState} from "./selectors";
 import {AppStore} from "../store";
@@ -14,6 +15,7 @@ import {RecorderStatus} from "./store";
 import {ReplayContext} from "../player/sagas";
 import {App} from "../index";
 import {Screen} from "../common/screens";
+import {StepperStatus} from "../stepper";
 
 export default function(bundle, deps) {
     bundle.use('recordApi');
@@ -164,6 +166,10 @@ export default function(bundle, deps) {
                 console.log('not ready', recorder);
 
                 return;
+            }
+
+            if (state.stepper && state.stepper.status !== StepperStatus.Clear) {
+                yield put({type: StepperActionTypes.StepperExit});
             }
 
             // Signal that the recorder is starting.

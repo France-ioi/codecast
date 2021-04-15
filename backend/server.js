@@ -197,7 +197,7 @@ function addBackendRoutes(app, config, store) {
                     upload.getMp3UploadForm(s3client, s3Bucket, uploadPath, function (err, audio) {
                         if (err) return res.json({error: err.toString()});
                         const baseUrl = `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}`;
-                        const player_url = `${config.playerUrl}?base=${encodeURIComponent(baseUrl)}`;
+                        const player_url = `${config.playerUrl}?recording=${encodeURIComponent(baseUrl)}`;
                         res.json({player_url, events, audio});
                     });
                 });
@@ -455,7 +455,7 @@ fs.readFile('config.json', 'utf8', function (err, data) {
     console.log(`running in ${config.isDevelopment ? 'development' : 'production'} mode`);
 
     if (!config.playerUrl) {
-        config.playerUrl = `${config.baseUrl}/player`;
+        config.playerUrl = `${config.baseUrl}/task`;
     }
 
     const workerStore = startWorker(config);

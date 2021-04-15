@@ -131,7 +131,8 @@ const initialStateStepperState = {
         memorySize: 0x10000,
         stackSize: 4096
     },
-    isFinished: false // Only used for python
+    isFinished: false, // Only used for python
+    contextState: {} as any,
 };
 
 export type StepperState = typeof initialStateStepperState;
@@ -202,6 +203,9 @@ export default function(bundle: Bundle) {
     // Sent when the user exits the stepper.
     bundle.defineAction(ActionTypes.StepperExit);
     bundle.addReducer(ActionTypes.StepperExit, stepperExitReducer);
+
+    bundle.defineAction(ActionTypes.StepperInterrupting);
+    bundle.addReducer(ActionTypes.StepperInterrupting, stepperInterruptReducer);
 
     // Sent when the user interrupts the stepper.
     bundle.defineAction(ActionTypes.StepperInterrupt);
@@ -459,6 +463,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         }
     }
 
+    state.task.state = {...state.task.context.getCurrentState()};
     state.stepper.currentStepperState = stepperContext.state;
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;
@@ -485,7 +490,7 @@ function stepperExitReducer(state: AppStoreReplay): void {
 
 function stepperInterruptReducer(state: AppStore): void {
     // Cannot interrupt while idle.
-    if (state.stepper.status != StepperStatus.Idle) {
+    if (state.stepper.status !== StepperStatus.Idle) {
         state.stepper.interrupting = true;
     }
 }
@@ -520,11 +525,11 @@ function stepperConfigureReducer(state: AppStore, action): void {
     return state.stepper.options = options;
 }
 
-function stepperSpeedChangedReducer(state: AppStore, {payload: {speed}}): void {
+function stepperSpeedChangedReducer(state: AppStoreReplay, {payload: {speed}}): void {
     return state.stepper.speed = speed;
 }
 
-function stepperControlsChangedReducer(state: AppStore, {payload: {controls}}): void {
+function stepperControlsChangedReducer(state: AppStoreReplay, {payload: {controls}}): void {
     return state.stepper.controls = controls;
 }
 
@@ -691,34 +696,8 @@ function* stepperInterruptSaga() {
         });
     });
 
-    /**
-     * Before we do a step, we check if the state in analysis is the same as the one in the python runner.
-     *
-     * If it is different, it means the analysis has been overwritten by playing a record, and so
-     * we need to move the python runner to the same point before we can to a step.
-     */
     if (stepperContext.state.platform === 'python') {
-        if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
-            window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
-
-            window.currentPythonRunner._input = stepperContext.state.input;
-            window.currentPythonRunner._inputPos = 0;
-            window.currentPythonRunner._terminal = stepperContext.state.terminal;
-
-            window.currentPythonRunner._synchronizingAnalysis = true;
-            while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
-                yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, []);
-
-                if (window.currentPythonRunner._isFinished) {
-                    break;
-                }
-            }
-            window.currentPythonRunner._synchronizingAnalysis = false;
-
-            stepperContext.state.input = window.currentPythonRunner._input;
-            stepperContext.state.terminal = window.currentPythonRunner._terminal;
-            stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
-        }
+        yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
     }
 
     yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
@@ -732,35 +711,8 @@ function* stepperStepSaga(app: App, action) {
         yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
         const stepperContext = makeContext(stepper, interact);
-
-        /**
-         * Before we do a step, we check if the state in analysis is the same as the one in the python runner.
-         *
-         * If it is different, it means the analysis has been overwritten by playing a record, and so
-         * we need to move the python runner to the same point before we can to a step.
-         */
         if (stepperContext.state.platform === 'python') {
-            if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
-                window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
-
-                window.currentPythonRunner._input = stepperContext.state.input;
-                window.currentPythonRunner._inputPos = 0;
-                window.currentPythonRunner._terminal = stepperContext.state.terminal;
-
-                window.currentPythonRunner._synchronizingAnalysis = true;
-                while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
-                    yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, []);
-
-                    if (window.currentPythonRunner._isFinished) {
-                        break;
-                    }
-                }
-                window.currentPythonRunner._synchronizingAnalysis = false;
-
-                stepperContext.state.input = window.currentPythonRunner._input;
-                stepperContext.state.terminal = window.currentPythonRunner._terminal;
-                stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
-            }
+            yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
         }
 
         try {
@@ -800,6 +752,39 @@ function* stepperStepSaga(app: App, action) {
                 });
             });
         }
+    }
+}
+
+/**
+ * Before we do a step, we check if the state in analysis is the same as the one in the python runner.
+ *
+ * If it is different, it means the analysis has been overwritten by playing a record, and so
+ * we need to move the python runner to the same point before we can to a step.
+ */
+function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContext) {
+    if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
+        const taskContext = yield select((state: AppStore) => state.task.context);
+        taskContext.reset();
+
+        window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
+
+        window.currentPythonRunner._input = stepperContext.state.input;
+        window.currentPythonRunner._inputPos = 0;
+        window.currentPythonRunner._terminal = stepperContext.state.terminal;
+
+        window.currentPythonRunner._synchronizingAnalysis = true;
+        while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
+            yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, []);
+
+            if (window.currentPythonRunner._isFinished) {
+                break;
+            }
+        }
+        window.currentPythonRunner._synchronizingAnalysis = false;
+
+        stepperContext.state.input = window.currentPythonRunner._input;
+        stepperContext.state.terminal = window.currentPythonRunner._terminal;
+        stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
     }
 }
 
@@ -868,7 +853,7 @@ function postLink(app: App) {
         yield call(addEvent, 'stepper.restart');
     });
     replayApi.on('stepper.restart', async function(replayContext: ReplayContext) {
-        const stepperState = await buildState(replayContext.state);
+        const stepperState = await buildState(replayContext.state, true);
 
         replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
             stepperRestartReducer(draft, {payload: {stepperState}});
@@ -1065,6 +1050,28 @@ function postLink(app: App) {
         const update = event[3];
 
         stepperViewControlsChangedReducer(replayContext.state, {key, update});
+    });
+
+    recordApi.on(ActionTypes.StepperSpeedChanged, function* (addEvent, action) {
+        const {payload: {speed}} = action;
+
+        yield call(addEvent, 'stepper.speed.changed', speed);
+    });
+    replayApi.on('stepper.speed.changed', function(replayContext: ReplayContext, event) {
+        const speed = event[2];
+
+        stepperSpeedChangedReducer(replayContext.state, {payload: {speed}});
+    });
+
+    recordApi.on(ActionTypes.StepperControlsChanged, function* (addEvent, action) {
+        const {payload: {controls}} = action;
+
+        yield call(addEvent, 'stepper.controls.changed', controls);
+    });
+    replayApi.on('stepper.controls.changed', function(replayContext: ReplayContext, event) {
+        const controls = event[2];
+
+        stepperControlsChangedReducer(replayContext.state, {payload: {controls}});
     });
 
     stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {

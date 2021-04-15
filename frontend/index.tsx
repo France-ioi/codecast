@@ -60,7 +60,6 @@ declare global {
         currentPythonRunner: any,
         currentPythonContext: any,
         languageStrings: any,
-        quickAlgoInterface: any,
         __REDUX_DEVTOOLS_EXTENSION__: any,
         __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: any,
         quickAlgoContext: (display: boolean, infos: any) => QuickAlgoContext,

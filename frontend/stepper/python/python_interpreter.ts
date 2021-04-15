@@ -35,6 +35,7 @@ export default function(context) {
     this._synchronizingAnalysis = false;
     this.onInput = context.onInput;
     this.onError = context.onError;
+    this.onSuccess = context.onSuccess;
 
     var that = this;
 
@@ -664,16 +665,11 @@ export default function(context) {
 
         // Transform message depending on whether we successfully
         if (this.context.success) {
-            message = '<span style="color:green;font-weight:bold">' + message + '</span>';
+            this.onSuccess(message);
         } else {
             message = this.context.messagePrefixFailure + message;
+            this.onError(message);
         }
-
-        if (window.quickAlgoInterface) {
-            window.quickAlgoInterface.setPlayPause(false);
-        }
-
-        this.onError(message);
 
         if (typeof callback === 'function') {
             callback();

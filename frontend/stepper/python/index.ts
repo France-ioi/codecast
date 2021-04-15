@@ -5,6 +5,7 @@ import PythonInterpreter from "./python_interpreter";
 import {ActionTypes} from './actionTypes';
 import {ActionTypes as CompileActionTypes} from '../actionTypes';
 import {ActionTypes as IoActionTypes} from '../io/actionTypes';
+import {ActionTypes as TaskActionTypes} from '../../task/actionTypes';
 import {AppStore, AppStoreReplay} from "../../store";
 import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
@@ -104,7 +105,7 @@ export default function(bundle: Bundle) {
             stackViewPathToggleReducer(replayContext.state, action);
         });
 
-        stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
+        stepperApi.onInit(function(stepperState: StepperState, state: AppStore, replay: boolean = false) {
             const {platform} = state.options;
             const source = state.buffers['source'].model.document.toString();
 
@@ -112,11 +113,32 @@ export default function(bundle: Bundle) {
                 const context = state.task.context;
                 context.reset();
                 context.onError = (diagnostics) => {
-                    const response = {diagnostics};
+                    if (replay) {
+                        return;
+                    }
 
+                    pythonInterpreterChannel.put({
+                        type: CompileActionTypes.StepperInterrupting,
+                    });
+
+                    const response = {diagnostics};
                     pythonInterpreterChannel.put({
                         type: CompileActionTypes.CompileFailed,
                         response
+                    });
+                };
+                context.onSuccess = (message) => {
+                    if (replay) {
+                        return;
+                    }
+
+                    pythonInterpreterChannel.put({
+                        type: CompileActionTypes.StepperInterrupting,
+                    });
+
+                    pythonInterpreterChannel.put({
+                        type: TaskActionTypes.TaskSuccess,
+                        payload: {message},
                     });
                 };
                 context.onInput = () => {

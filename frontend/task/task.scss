@@ -336,7 +336,7 @@ body {
             width: 28px;
             height: 28px;
           }
-          &.bp3-icon-floppy-disk svg {
+          &.bp3-icon-floppy-disk svg, &.bp3-icon-repeat svg {
             width: 22px;
             height: 22px;
             margin: 3px;
@@ -357,6 +357,9 @@ body {
         width: 16px;
         height: 16px;
       }
+      &.time-duration {
+        padding-right: 20px;
+      }
     }
 
     .memory-usage {
@@ -374,7 +377,34 @@ body {
       display: flex;
       align-items: center;
       width: 100%;
-      padding: 0 10px;
+      padding: 0 15px;
+    }
+
+    .controls-mute {
+      border-right: solid 1px black;
+      .bp3-button {
+        border-right: none;
+        .bp3-icon {
+          color: #fff !important;
+          svg {
+            width: 22px;
+            height: 22px;
+            margin: 3px;
+          }
+        }
+      }
+    }
+
+    .player-controls-volume {
+      width: 120px;
+      padding: 0 20px 0 10px;
+      .bp3-slider-handle {
+        display: block;
+        width: 20px !important;
+        &:after {
+          border-bottom: none !important;
+        }
+      }
     }
 
     .bp3-slider {
@@ -440,6 +470,42 @@ pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     align-items: center;
     .bp3-icon {
       margin-right: 8px;
+    }
+  }
+}
+
+.simple-dialog {
+  border-radius: 5px;
+  background: #fff;
+  color: #787878;
+  padding: 20px;
+  width: 680px;
+
+  .simple-dialog-success {
+    color: green;
+    font-weight: bold;
+  }
+
+  .simple-dialog-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .simple-dialog-button {
+    padding: 5px 15px;
+    background-color: $primary;
+    color: #fff;
+    border-radius: 100px;
+    border: none;
+    box-shadow: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    .bp3-icon {
+      margin-right: 5px;
     }
   }
 }

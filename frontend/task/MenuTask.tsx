@@ -15,20 +15,22 @@ interface MenuTaskStateToProps {
     platform: string,
     offlineDownloadUrl: string,
     recordingEnabled: boolean,
+    playerEnabled: boolean,
 }
 
 function mapStateToProps(state: AppStore): MenuTaskStateToProps {
     const {baseUrl, baseDataUrl, platform, canChangePlatform} = state.options;
     const getMessage = state.getMessage;
     const recordingEnabled = state.task.recordingEnabled;
+    const playerEnabled = !!state.options.baseDataUrl;
 
     let offlineDownloadUrl = null;
     if (!isLocalMode() && baseDataUrl) {
-        offlineDownloadUrl = baseUrl + '/offline?base=' + encodeURIComponent(baseDataUrl);
+        offlineDownloadUrl = baseUrl + '/offline?recording=' + encodeURIComponent(baseDataUrl);
     }
 
     return {
-        getMessage, platform, canChangePlatform, offlineDownloadUrl, recordingEnabled,
+        getMessage, platform, canChangePlatform, offlineDownloadUrl, recordingEnabled, playerEnabled,
     };
 }
 
@@ -70,7 +72,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
     }
 
     render() {
-        const {getMessage, platform, canChangePlatform, offlineDownloadUrl} = this.props;
+        const {getMessage, platform, canChangePlatform, offlineDownloadUrl, playerEnabled} = this.props;
         const {settingsOpen} = this.state;
 
         return (
@@ -85,10 +87,10 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
                         <Icon icon="globe"/>
                         <span>{getMessage('MENU_LANGUAGE')}</span>
                     </div>
-                    <div className="menu-item" onClick={this.toggleRecording}>
+                    {!playerEnabled && <div className="menu-item" onClick={this.toggleRecording}>
                         <Icon icon="record" color="#ff001f"/>
                         <span>{getMessage('MENU_RECORDER')}</span>
-                    </div>
+                    </div>}
                     <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={settingsOpen} onClose={this.closeSettings}>
                         <div className='bp3-dialog-body'>
                             <div style={{marginBottom: '10px'}}>

@@ -22,7 +22,7 @@ function mapStateToProps(state: AppStore): MenuStateToProps {
 
     let offlineDownloadUrl = null;
     if (!isLocalMode() && baseDataUrl) {
-        offlineDownloadUrl = baseUrl + '/offline?base=' + encodeURIComponent(baseDataUrl);
+        offlineDownloadUrl = baseUrl + '/offline?recording=' + encodeURIComponent(baseDataUrl);
     }
 
     return {
