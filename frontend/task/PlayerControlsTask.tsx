@@ -97,7 +97,7 @@ class _PlayerControlsTask extends React.PureComponent<PlayerControlsTaskProps> {
                             max={1}
                             labelRenderer={false}
                             stepSize={0.01}
-                            disabled={!isReady}
+                            disabled={!isReady || isMuted}
                         />
                     </div>
                 </div>
