@@ -50,7 +50,7 @@ body {
   }
 
   .task-mission {
-    padding: 40px;
+    padding: 30px;
     color: #7c7c7c;
 
     h1 {
@@ -280,6 +280,10 @@ body {
     }
   }
 
+  .visualization-container {
+    padding: 10px 15px 0;
+  }
+
   .task-menu {
     width: 200px;
     height: 100%;
@@ -507,5 +511,42 @@ pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     .bp3-icon {
       margin-right: 5px;
     }
+  }
+}
+
+.multi-visualization {
+  .multi-visualization-toggle {
+    font-size: 16px;
+    color: #7c7c7c;
+    font-weight: 600;
+    text-decoration: none !important;
+    .multi-visualization-toggle-caret {
+      color: $primary;
+      font-size: 14px;
+      margin-left: 3px;
+    }
+  }
+  .dropdown-menu {
+    background-color: #4a4a4a;
+    padding: 0 !important;
+    .dropdown-item {
+      color: white;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      padding: 0.3rem 0.8rem;
+      &:not(:last-child) {
+        border-bottom: solid 1px #30242B;
+      }
+      .bp3-icon {
+        margin-right: 10px;
+      }
+      &:hover, &:active {
+        background-color: rgba(48, 36, 43, 0.8);
+      }
+    }
+  }
+  .multi-visualization-content {
+    margin-top: 10px;
   }
 }

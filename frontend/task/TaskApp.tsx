@@ -2,7 +2,7 @@ import React from 'react';
 import {StepperControls} from "../stepper/views/StepperControls";
 import {connect} from "react-redux";
 import {AppStore, CodecastOptions} from "../store";
-import {Container, Row, Col} from 'react-bootstrap';
+import {Col, Container, Row} from 'react-bootstrap';
 import {BufferEditor} from "../buffers/BufferEditor";
 import {getPlayerState} from "../player/selectors";
 import {Dialog, Icon, Intent, ProgressBar} from "@blueprintjs/core";
@@ -14,6 +14,10 @@ import {SubtitlesBand} from "../subtitles/SubtitlesBand";
 import {PlayerError} from "../player";
 import {PlayerControlsTask} from "./PlayerControlsTask";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {MultiVisualization} from "./MultiVisualization";
+import {PythonStackView} from "../stepper/python/analysis/components/PythonStackView";
+import {StackView} from "../stepper/views/c/StackView";
+import {StepperStatus} from "../stepper";
 
 interface TaskAppStateToProps {
     readOnly: boolean,
@@ -40,6 +44,7 @@ interface TaskAppStateToProps {
     options: CodecastOptions,
     taskSuccess: boolean,
     taskSuccessMessage: string,
+    advisedVisualization: string,
 }
 
 function mapStateToProps(state: AppStore): TaskAppStateToProps {
@@ -87,12 +92,14 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
     const windowHeight = state.windowHeight;
     const options = state.options;
 
+    const advisedVisualization = !state.stepper || state.stepper.status === StepperStatus.Clear ? 'instructions' : 'variables';
+
     return {
         readOnly, error, getMessage, geometry, panes, sourceRowHeight,
         sourceMode, showStack, arduinoEnabled, showViews, showIO, windowHeight,
         currentStepperState, fullScreenActive, diagnostics, recordingEnabled,
         preventInput, isPlayerReady, playerProgress, playerError, playerEnabled,
-        options, taskSuccess, taskSuccessMessage,
+        options, taskSuccess, taskSuccessMessage, advisedVisualization,
     };
 }
 
@@ -118,7 +125,7 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
             diagnostics, recordingEnabled,
             playerProgress, isPlayerReady,
             playerEnabled, getMessage,
-            taskSuccess, taskSuccessMessage,
+            taskSuccess, taskSuccessMessage, advisedVisualization,
         } = this.props;
 
         const hasError = !!(error || diagnostics);
@@ -133,11 +140,24 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
 
                     <Row className="task-body" noGutters>
                         <Col md={3} className="task-menu-left">
-                            <div className="task-mission">
-                                <h1>Votre mission</h1>
+                            <MultiVisualization className="visualization-container" advisedVisualization={advisedVisualization}>
+                                <div className="task-mission" data-title={getMessage('TASK_DESCRIPTION')} data-id="instructions" data-icon="align-left">
+                                    <h1>Votre mission</h1>
 
-                                <p>Programmez le robot ci-dessous pour qu&#39;il atteigne l&#39;étoile, en sautant de plateforme en plateforme.</p>
-                            </div>
+                                    <p>Programmez le robot ci-dessous pour qu&#39;il atteigne l&#39;étoile, en sautant de plateforme en plateforme.</p>
+                                </div>
+                                <div data-title={getMessage('TASK_VARIABLES')} data-id="variables" data-icon="code">
+                                    {(this.props.currentStepperState && this.props.currentStepperState.platform === 'python')
+                                        ? <PythonStackView
+                                            height={this.props.sourceRowHeight}
+                                            analysis={this.props.currentStepperState.analysis}
+                                        />
+                                        : <StackView
+                                            height={this.props.sourceRowHeight}
+                                        />
+                                    }
+                                </div>
+                            </MultiVisualization>
 
                             <hr/>
 
