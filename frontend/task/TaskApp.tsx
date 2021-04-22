@@ -1,12 +1,9 @@
 import React from 'react';
-import {StepperControls} from "../stepper/views/StepperControls";
 import {connect} from "react-redux";
 import {AppStore, CodecastOptions} from "../store";
-import {Col, Container, Row} from 'react-bootstrap';
-import {BufferEditor} from "../buffers/BufferEditor";
+import {Container} from 'react-bootstrap';
 import {getPlayerState} from "../player/selectors";
 import {Dialog, Icon, Intent, ProgressBar} from "@blueprintjs/core";
-import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {ActionTypes} from "./actionTypes";
 import {MenuTask} from "./MenuTask";
 import {RecorderControlsTask} from "./RecorderControlsTask";
@@ -14,10 +11,8 @@ import {SubtitlesBand} from "../subtitles/SubtitlesBand";
 import {PlayerError} from "../player";
 import {PlayerControlsTask} from "./PlayerControlsTask";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
-import {MultiVisualization} from "./MultiVisualization";
-import {PythonStackView} from "../stepper/python/analysis/components/PythonStackView";
-import {StackView} from "../stepper/views/c/StackView";
 import {StepperStatus} from "../stepper";
+import {LayoutLoader} from "./layout/LayoutLoader";
 
 interface TaskAppStateToProps {
     readOnly: boolean,
@@ -128,8 +123,6 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
             taskSuccess, taskSuccessMessage, advisedVisualization,
         } = this.props;
 
-        const hasError = !!(error || diagnostics);
-
         return (
             <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''}`}>
                 <div className="task-section">
@@ -138,61 +131,9 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
                         <span className="task-header__algo">ALGO</span>
                     </div>
 
-                    <Row className="task-body" noGutters>
-                        <Col md={3} className="task-menu-left">
-                            <MultiVisualization className="visualization-container" advisedVisualization={advisedVisualization}>
-                                <div className="task-mission" data-title={getMessage('TASK_DESCRIPTION')} data-id="instructions" data-icon="align-left">
-                                    <h1>Votre mission</h1>
-
-                                    <p>Programmez le robot ci-dessous pour qu&#39;il atteigne l&#39;étoile, en sautant de plateforme en plateforme.</p>
-                                </div>
-                                <div data-title={getMessage('TASK_VARIABLES')} data-id="variables" data-icon="code">
-                                    {(this.props.currentStepperState && this.props.currentStepperState.platform === 'python')
-                                        ? <PythonStackView
-                                            height={this.props.sourceRowHeight}
-                                            analysis={this.props.currentStepperState.analysis}
-                                        />
-                                        : <StackView
-                                            height={this.props.sourceRowHeight}
-                                        />
-                                    }
-                                </div>
-                            </MultiVisualization>
-
-                            <hr/>
-
-                            <div className="task-visualisation">
-                                <div id="grid"/>
-                            </div>
-
-                            <div className="player-controls">
-                                <StepperControls enabled={true} newControls={true}/>
-                                {hasError && <div className="error-message" onClick={this._onClearDiagnostics}>
-                                  <button type="button" className="close-button" onClick={this._onClearDiagnostics}>
-                                    <Icon icon="cross"/>
-                                  </button>
-                                  <div className="message-wrapper">
-                                    <Icon icon="notifications" className="bell-icon"/>
-                                    <div className="message">
-                                        {diagnostics && <div dangerouslySetInnerHTML={diagnostics}/>}
-                                        {error && <div>{error}</div>}
-                                    </div>
-                                  </div>
-                                </div>}
-                            </div>
-                        </Col>
-                        <Col md={fullScreenActive ? 12 : 9}>
-                            <BufferEditor
-                                buffer='source'
-                                readOnly={readOnly}
-                                shield={preventInput}
-                                mode={sourceMode}
-                                theme={'textmate'}
-                                width='100%'
-                                height='100%'
-                            />
-                        </Col>
-                    </Row>
+                    <div className="task-body">
+                        <LayoutLoader/>
+                    </div>
 
                     {recordingEnabled &&
                         <div className="task-footer">
@@ -244,10 +185,6 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
             });
         }
     }
-
-    _onClearDiagnostics = () => {
-        this.props.dispatch({type: StepperActionTypes.CompileClearDiagnostics});
-    };
 
     closeTaskSuccess = () => {
         this.props.dispatch({type: ActionTypes.TaskSuccessClear});

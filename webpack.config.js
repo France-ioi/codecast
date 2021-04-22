@@ -136,8 +136,14 @@ module.exports = (env, argv) => {
                     use: [
                         {loader: 'file-loader?context=public&name=images/[name].[ext]'}
                     ]
-                }
-            ]
+                },
+                {
+                    test: /\.xml$/,
+                    use : [
+                        {loader: 'raw-loader'}
+                    ],
+                },
+            ],
         },
         plugins: [
             new webpack.DefinePlugin({

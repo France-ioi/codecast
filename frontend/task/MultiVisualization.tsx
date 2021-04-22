@@ -3,9 +3,13 @@ import {connect} from "react-redux";
 import {Dropdown} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
 import {IconName} from "@blueprintjs/icons";
+import {ActionTypes} from "./layout/actionTypes";
+import {AppStore} from "../store";
 
-function mapStateToProps() {
-
+function mapStateToProps(state: AppStore) {
+    return {
+        preferredVisualizations: state.layout.preferredVisualizations,
+    };
 }
 
 interface MultiVisualizationDispatchToProps {
@@ -94,9 +98,7 @@ class _MultiVisualization extends React.PureComponent<MultiVisualizationProps, M
     }
 
     selectVisualization = (id: string) => {
-        this.setState({
-            currentVisualization: id,
-        });
+        this.props.dispatch({type: ActionTypes.LayoutVisualizationSelected, payload: {visualization: id}})
     };
 }
 
