@@ -7,7 +7,7 @@ import {PythonStackView} from "../../stepper/python/analysis/components/PythonSt
 import {StackView} from "../../stepper/views/c/StackView";
 import {DOMParser} from 'xmldom';
 import {createElement, ReactElement, ReactNode} from 'react';
-import {AppStore, CodecastOptions} from "../../store";
+import {AppStore} from "../../store";
 import {ControlsAndErrors} from "../ControlsAndErrors";
 import {Bundle} from "../../linker";
 import {ActionTypes} from "./actionTypes";
@@ -242,11 +242,9 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 ...attrs,
             },
             props: {
-                height: layoutProps.sourceRowHeight,
                 analysis: layoutProps.currentStepperState ? layoutProps.currentStepperState.analysis : null,
             },
         }),
-        // <DirectivesPane scale={1}/>
     });
 
     let layoutXml = require('./DefaultLayoutDesktop.xml').default;
