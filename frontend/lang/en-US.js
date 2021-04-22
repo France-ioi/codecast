@@ -108,4 +108,5 @@ module.exports = {
     USER_SELECT_LOGIN_METHOD: "Select a login option:",
     TASK_DESCRIPTION: 'Instructions',
     TASK_VARIABLES: 'Variables',
+    TASK_VISUALIZATION: "Visualization {number}",
 };

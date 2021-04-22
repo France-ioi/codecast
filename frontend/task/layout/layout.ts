@@ -7,12 +7,10 @@ import {PythonStackView} from "../../stepper/python/analysis/components/PythonSt
 import {StackView} from "../../stepper/views/c/StackView";
 import {DOMParser} from 'xmldom';
 import {createElement, ReactElement, ReactNode} from 'react';
-import {PlayerError} from "../../player";
 import {AppStore, CodecastOptions} from "../../store";
 import {ControlsAndErrors} from "../ControlsAndErrors";
 import {Bundle} from "../../linker";
 import {ActionTypes} from "./actionTypes";
-import {QuickAlgoContext} from "../index";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 
 function validateConverters(converters: Converters): boolean {
@@ -152,32 +150,16 @@ interface Converters {
     [key: string]: (attrs: object) => ({type: ReactNode, metadata?: LayoutElementMetadata, props?: object})
 }
 
-interface LayoutProps {
+export interface LayoutProps {
     readOnly: boolean,
     sourceMode: string,
     sourceRowHeight: number,
     error: string,
-    geometry: any,
-    panes: any,
-    showStack: boolean,
-    arduinoEnabled: boolean,
-    showViews: boolean,
-    showIO: boolean,
-    windowHeight: any,
     currentStepperState: any,
     preventInput: any,
     fullScreenActive: boolean,
     diagnostics: any,
-    recordingEnabled: boolean,
-    playerEnabled: boolean,
-    isPlayerReady: boolean,
-    playerProgress: number,
-    playerError: PlayerError,
     getMessage: Function,
-    options: CodecastOptions,
-    taskSuccess: boolean,
-    taskSuccessMessage: string,
-    advisedVisualization: string,
 }
 
 export interface LayoutElementMetadata {
@@ -186,6 +168,11 @@ export interface LayoutElementMetadata {
     icon?: string,
     overflow?: boolean,
     desiredSize?: string,
+}
+
+export interface LayoutVisualization {
+    metadata: LayoutElementMetadata,
+    element: ReactElement,
 }
 
 export function createLayout(layoutProps: LayoutProps): ReactElement {
@@ -239,6 +226,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 id: 'instructions',
                 title: layoutProps.getMessage('TASK_DESCRIPTION'),
                 icon: 'align-left',
+                ...attrs,
             },
         }),
         ContextVisualization: (attrs) => ({
@@ -266,18 +254,20 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         layoutXml = '<Editor/>';
     }
 
-    console.log(layoutXml);
-    const xmlParsed = xmlToReact.convert(layoutXml);
-    console.log({xmlParsed});
-
-    return xmlParsed;
+    return xmlToReact.convert(layoutXml);
 }
 
 function layoutVisualizationSelectedReducer(state: AppStore, {payload: {visualization}}) {
-    if (-1 !== state.layout.preferredVisualizations.indexOf(visualization)) {
-        state.layout.preferredVisualizations.splice(state.layout.preferredVisualizations.indexOf(visualization), 1);
+    makeVisualizationAsPreferred(state.layout.preferredVisualizations, visualization);
+}
+
+export function makeVisualizationAsPreferred(visualizations: string[], visualization: string): string[] {
+    if (-1 !== visualizations.indexOf(visualization)) {
+        visualizations.splice(visualizations.indexOf(visualization), 1);
     }
-    state.layout.preferredVisualizations.push(visualization);
+    visualizations.push(visualization);
+
+    return visualizations;
 }
 
 export interface LayoutState {

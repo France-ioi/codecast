@@ -113,4 +113,5 @@ module.exports = {
 
     TASK_DESCRIPTION: 'Énoncé',
     TASK_VARIABLES: 'Variables',
+    TASK_VISUALIZATION: "Visualisation {number}",
 };

@@ -4,12 +4,10 @@ import {Dropdown} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
 import {IconName} from "@blueprintjs/icons";
 import {ActionTypes} from "./layout/actionTypes";
-import {AppStore} from "../store";
+import {LayoutVisualization} from "./layout/layout";
 
-function mapStateToProps(state: AppStore) {
-    return {
-        preferredVisualizations: state.layout.preferredVisualizations,
-    };
+function mapStateToProps() {
+    return {};
 }
 
 interface MultiVisualizationDispatchToProps {
@@ -17,13 +15,9 @@ interface MultiVisualizationDispatchToProps {
 }
 
 interface MultiVisualizationProps extends MultiVisualizationDispatchToProps {
-    children: React.ReactElement<{'data-title': string, 'data-id': string, 'data-icon'?: string}, any>[],
     className?: string,
-    advisedVisualization?: string,
-}
-
-interface MultiVisualizationState {
-    currentVisualization: string,
+    currentVisualization: LayoutVisualization,
+    visualizations: LayoutVisualization[],
 }
 
 const _CustomToggle = ({children, onClick}, ref) => (
@@ -43,55 +37,25 @@ const _CustomToggle = ({children, onClick}, ref) => (
 
 const CustomToggle = React.forwardRef<HTMLAnchorElement, {onClick: Function}>(_CustomToggle);
 
-class _MultiVisualization extends React.PureComponent<MultiVisualizationProps, MultiVisualizationState> {
-    state = {
-        currentVisualization: null,
-    };
-
-    componentDidUpdate(prevProps) {
-        if (prevProps.advisedVisualization !== this.props.advisedVisualization && this.props.advisedVisualization) {
-            this.setState({
-                currentVisualization: this.props.advisedVisualization,
-            })
-        }
-    }
-
+class _MultiVisualization extends React.PureComponent<MultiVisualizationProps> {
     render() {
-        const visualizations = React.Children.map(this.props.children, child => {
-            return {
-                id: child.props['data-id'],
-                title: child.props['data-title'],
-                icon: child.props['data-icon'],
-                element: child,
-            };
-        });
-
-        if (!visualizations) {
-            return null;
-        }
-
-        let currentVisualization = visualizations.find(visualization => (this.state.currentVisualization ?? this.props.advisedVisualization) === visualization.id);
-        if (!currentVisualization) {
-            currentVisualization = visualizations[0];
-        }
-
         return (
             <div className={`multi-visualization ${this.props.className}`}>
                 <Dropdown>
-                    <Dropdown.Toggle as={CustomToggle}>{currentVisualization.title}</Dropdown.Toggle>
+                    <Dropdown.Toggle as={CustomToggle}>{this.props.currentVisualization.metadata.title}</Dropdown.Toggle>
 
                     <Dropdown.Menu>
-                        {visualizations.map(visualization =>
-                            <Dropdown.Item key={visualization.id} onClick={() => this.selectVisualization(visualization.id)}>
-                                {visualization.icon && <Icon icon={visualization.icon as IconName}/>}
-                                <span>{visualization.title}</span>
+                        {this.props.visualizations.map(({metadata}) =>
+                            <Dropdown.Item key={metadata.id} onClick={() => this.selectVisualization(metadata.id)}>
+                                {metadata.icon && <Icon icon={metadata.icon as IconName}/>}
+                                <span>{metadata.title}</span>
                             </Dropdown.Item>
                         )}
                     </Dropdown.Menu>
                 </Dropdown>
 
                 <div className="multi-visualization-content">
-                    {currentVisualization.element}
+                    {this.props.currentVisualization.element}
                 </div>
             </div>
         );
