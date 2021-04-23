@@ -1,8 +1,12 @@
 .relative-layout {
   display: flex;
   align-items: stretch;
-  flex: 1 0;
   &.is-vertical {
     flex-direction: column;
   }
+}
+
+.directives-container {
+  display: flex;
+  align-items: stretch;
 }

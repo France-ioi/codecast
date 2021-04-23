@@ -12,7 +12,7 @@ import {all, call} from 'redux-saga/effects';
 import {getNewOutput, getNewTerminal} from "./python";
 import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay} from "../store";
-import {initialStateStepper, initialStepperStateControls, Stepper, StepperState} from "./index";
+import {initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
 
 export interface StepperContext {

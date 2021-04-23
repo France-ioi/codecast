@@ -12,6 +12,7 @@ import {ControlsAndErrors} from "../ControlsAndErrors";
 import {Bundle} from "../../linker";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
+import {StepperState} from "../../stepper";
 
 function validateConverters(converters: Converters): boolean {
     if (typeof converters !== 'object' || !converters) {
@@ -91,7 +92,7 @@ function visitNode(node, index, converters, data): ReactElement {
     const children = getChildren(node);
     const visitChildren = (child, childIndex) => visitNode(child, childIndex, converters, data);
     const childElements = children.map(visitChildren).filter(child => null !== child);
-    if ((type === ZoneLayout || type === RelativeLayout) && !childElements.length) {
+    if ((type === ZoneLayout || type === RelativeLayout) && !childElements.length && !(props.directives && props.directives.length)) {
         return null;
     }
 
@@ -147,7 +148,7 @@ class XMLToReact {
 }
 
 interface Converters {
-    [key: string]: (attrs: object) => ({type: ReactNode, metadata?: LayoutElementMetadata, props?: object})
+    [key: string]: (attrs: object, data?: any) => ({type: ReactNode, metadata?: LayoutElementMetadata, props?: object})
 }
 
 export interface LayoutProps {
@@ -155,7 +156,7 @@ export interface LayoutProps {
     sourceMode: string,
     sourceRowHeight: number,
     error: string,
-    currentStepperState: any,
+    currentStepperState: StepperState,
     preventInput: any,
     fullScreenActive: boolean,
     diagnostics: any,
@@ -191,10 +192,23 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 orientation: RelativeLayoutOrientation.VERTICAL,
             }
         }),
-        ZoneLayout: (attrs) => ({
-            type: ZoneLayout,
-            metadata: attrs,
-        }),
+        ZoneLayout: (attrs, {directivesByZone}) => {
+            let directivesInZone = [];
+            if (attrs['name'] in directivesByZone) {
+                directivesInZone = [...directivesInZone, ...directivesByZone[attrs['name']]];
+            }
+            if (attrs['default'] && 'default' in directivesByZone) {
+                directivesInZone = [...directivesInZone, ...directivesByZone['default']];
+            }
+
+            return {
+                type: ZoneLayout,
+                props: {
+                    directives: directivesInZone,
+                },
+                metadata: attrs,
+            }
+        },
         ControlsAndErrors: (attrs) => ({
             type: ControlsAndErrors,
             metadata: {
@@ -247,12 +261,25 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         }),
     });
 
+    const directivesByZone = {};
+    if (layoutProps.currentStepperState) {
+        const {directives} = layoutProps.currentStepperState;
+        const {ordered} = directives;
+        for (let directive of ordered) {
+            const zone = directive.byName['zone'] ?? 'default';
+            if (!(zone in directivesByZone)) {
+                directivesByZone[zone] = [];
+            }
+            directivesByZone[zone].push(directive);
+        }
+    }
+
     let layoutXml = require('./DefaultLayoutDesktop.xml').default;
     if (layoutProps.fullScreenActive) {
         layoutXml = '<Editor/>';
     }
 
-    return xmlToReact.convert(layoutXml);
+    return xmlToReact.convert(layoutXml, {directivesByZone});
 }
 
 function layoutVisualizationSelectedReducer(state: AppStore, {payload: {visualization}}) {

@@ -47,7 +47,7 @@ import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle, {getNewOutput, getNewTerminal} from './python';
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
-import {parseDirectives} from "./python/directives";
+import {Directive, parseDirectives} from "./python/directives";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
@@ -80,7 +80,7 @@ export enum StepperControlsType {
 }
 
 export interface StepperDirectives {
-    ordered: readonly any[],
+    ordered: readonly Directive[],
     functionCallStack: any, // C
     functionCallStackMap: any // Python
 }

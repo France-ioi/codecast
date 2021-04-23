@@ -16,9 +16,9 @@
         <ZoneLayout name="center">
             <Editor/>
         </ZoneLayout>
-        <ZoneLayout name="center-bottom"/>
+        <ZoneLayout name="center-bottom" default="true"/>
     </VerticalLayout>
-    <VerticalLayout>
+    <VerticalLayout desiredSize="40%">
         <ZoneLayout name="top-right"/>
         <ZoneLayout name="center-right"/>
         <ZoneLayout name="bottom-right"/>
