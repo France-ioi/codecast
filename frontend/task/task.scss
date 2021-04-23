@@ -43,9 +43,14 @@ body {
 
   .task-body {
     flex: 1 0;
+    min-height: 0;
     height: calc(100vh - 50px);
     background: #fff;
     display: flex;
+  }
+
+  .task-footer {
+    min-height: 0;
   }
 
   .task-zone-left, .task-zone-right {
