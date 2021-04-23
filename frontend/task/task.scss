@@ -258,6 +258,7 @@ body {
     position: absolute;
     right: 0;
     height: 100%;
+    z-index: 5;
     transform: translate(200px);
     transition: transform ease-in .2s;
     &.is-open {

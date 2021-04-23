@@ -230,8 +230,8 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 shield: layoutProps.preventInput,
                 mode: layoutProps.sourceMode,
                 theme: 'textmate',
-                width: '100%',
-                height: '100%',
+                requiredWidth: '100%',
+                requiredHeight: '100%',
             }
         }),
         Instructions: (attrs) => ({

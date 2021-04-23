@@ -2,6 +2,7 @@ import React from "react";
 import {Editor} from "./Editor";
 import {ActionTypes} from "./actionTypes";
 import {connect} from "react-redux";
+import {withResizeDetector} from 'react-resize-detector/build/withPolyfill';
 
 interface BufferEditorDispatchToProps {
     dispatch: Function
@@ -12,12 +13,22 @@ interface BufferEditorProps extends BufferEditorDispatchToProps {
     shield?: boolean,
     theme?: string,
     mode: string,
-    width: any,
-    height: any,
-    buffer: any
+    requiredWidth: any,
+    requiredHeight: any,
+    width?: number,
+    height?: number,
+    buffer: any,
 }
 
 export class _BufferEditor extends React.PureComponent<BufferEditorProps> {
+    componentDidUpdate(prevProps) {
+        const {width, height} = this.props;
+        if (width !== prevProps.width || height !== prevProps.height) {
+            const {dispatch, buffer} = this.props;
+            dispatch({type: ActionTypes.BufferResize, buffer});
+        }
+    }
+
     onInit = (editor) => {
         const {dispatch, buffer} = this.props;
 
@@ -52,10 +63,10 @@ export class _BufferEditor extends React.PureComponent<BufferEditorProps> {
             shield={this.props.shield}
             theme={this.props.theme}
             mode={this.props.mode}
-            width={this.props.width}
-            height={this.props.height}
+            width={this.props.requiredWidth}
+            height={this.props.requiredHeight}
         />;
     };
 }
 
-export const BufferEditor = connect()(_BufferEditor);
+export const BufferEditor = connect()(withResizeDetector(_BufferEditor));

@@ -7,7 +7,8 @@
         <ZoneLayout name="center-left">
             <ContextVisualization/>
         </ZoneLayout>
-        <ZoneLayout name="bottom-left">
+        <ZoneLayout name="bottom-left"/>
+        <ZoneLayout>
             <ControlsAndErrors/>
         </ZoneLayout>
     </VerticalLayout>
