@@ -568,3 +568,16 @@ pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     margin-top: 10px;
   }
 }
+
+.directive.card {
+  padding: 10px 10px 0;
+  .card-header {
+    font-size: 16px;
+    color: #7c7c7c;
+    font-weight: 600;
+    text-decoration: none !important;
+    margin-bottom: 5px;
+    background: none !important;
+    border-bottom: none !important;
+  }
+}
