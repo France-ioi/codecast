@@ -463,7 +463,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         }
     }
 
-    state.task.state = {...state.task.context.getCurrentState()};
+    state.task.state = state.task.context && state.task.context.getCurrentState ? {...state.task.context.getCurrentState()} : {};
     state.stepper.currentStepperState = stepperContext.state;
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;

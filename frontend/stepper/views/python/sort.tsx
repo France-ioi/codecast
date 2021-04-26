@@ -241,7 +241,7 @@ export class SortView extends React.PureComponent<SortViewProps> {
     }
 
     getPosition = () => {
-        return this.props.controls.cellPan;
+        return this.props.controls.cellPan ? Number(this.props.controls.cellPan) : 0;
     };
 
     onPan = (startPosition, dx) => {

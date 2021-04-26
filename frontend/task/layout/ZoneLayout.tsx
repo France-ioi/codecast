@@ -6,6 +6,7 @@ import {LayoutElementMetadata, LayoutVisualization} from "./layout";
 import {Directive} from "../../stepper/python/directives";
 import {DirectivePanel} from "../../stepper/views/DirectivePanel";
 import {StepperState} from "../../stepper";
+import {ActionTypes} from "../../stepper/actionTypes";
 
 function mapStateToProps(state: AppStore) {
     return {
@@ -21,7 +22,11 @@ interface ZoneLayoutStateToProps {
     currentStepperState: StepperState,
 }
 
-interface ZoneLayoutProps extends ZoneLayoutStateToProps {
+interface ZoneLayoutDispatchToProps {
+    dispatch: Function
+}
+
+interface ZoneLayoutProps extends ZoneLayoutStateToProps, ZoneLayoutDispatchToProps {
     name: string,
     metadata: LayoutElementMetadata,
     directives?: Directive[],
@@ -90,7 +95,7 @@ class _ZoneLayout extends React.PureComponent<ZoneLayoutProps> {
                                         functionCallStack={functionCallStack}
                                         platform={platform}
                                         getMessage={this.props.getMessage}
-                                        onChange={() => {}}
+                                        onChange={this.onControlsChange}
                                     />
                                 );
                             })}
@@ -142,6 +147,11 @@ class _ZoneLayout extends React.PureComponent<ZoneLayoutProps> {
             );
         }
     }
+
+    onControlsChange = (directive, update) => {
+        const {key} = directive;
+        this.props.dispatch({type: ActionTypes.StepperViewControlsChanged, key, update});
+    };
 }
 
 export const ZoneLayout = connect(mapStateToProps)(_ZoneLayout);
