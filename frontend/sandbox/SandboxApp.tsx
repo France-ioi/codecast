@@ -5,6 +5,7 @@ import {StepperView} from "../stepper/views/StepperView";
 import {Menu} from "../common/Menu";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
+import {ActionTypes} from "../task/actionTypes";
 
 interface SandboxAppStateToProps {
     containerWidth: number,
@@ -51,6 +52,10 @@ class _SandboxApp extends React.PureComponent<SandboxAppProps> {
             </div>
         );
     };
+
+    componentDidMount() {
+        this.props.dispatch({type: ActionTypes.TaskLoad});
+    }
 }
 
 export const SandboxApp = connect(mapStateToProps)(_SandboxApp);

@@ -15,6 +15,7 @@ import loginBundle from './login';
 import clientApiBundle from './client_api';
 import subtitlesBundle from '../subtitles';
 import taskBundle from '../task';
+import layoutBundle from '../task/layout/layout';
 import examplesBundle from './examples';
 import stepperBundle from '../stepper';
 import {Bundle} from "../linker";
@@ -43,6 +44,7 @@ export default function(bundle: Bundle) {
     bundle.include(examplesBundle);
 
     bundle.include(taskBundle);
+    bundle.include(layoutBundle);
 
     bundle.include(stepperBundle);
 }
