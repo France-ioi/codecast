@@ -436,13 +436,8 @@ span + .value-previous {
   margin-right: 8px;
 }
 
-.directive-view {
-  float: left;
-  overflow: hidden;
-}
 .directive-view > .directive {
   position: relative;
-  margin-right: 5px;
 }
 .directive-title {
   /* reserve space for the btn-xs buttons */

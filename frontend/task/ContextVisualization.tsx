@@ -27,6 +27,13 @@ export class _ContextVisualization extends React.PureComponent<ContextVisualizat
             </div>
         );
     }
+
+    static computeDimensions(width: number, height: number) {
+        return {
+            taken: {width, height},
+            minimum: {width: 200, height: 200},
+        }
+    }
 }
 
 export const ContextVisualization = connect(mapStateToProps)(_ContextVisualization);

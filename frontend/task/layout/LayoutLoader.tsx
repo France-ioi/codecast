@@ -1,51 +1,30 @@
 import React from "react";
 import {connect} from "react-redux";
 import {AppStore} from "../../store";
-import {getPlayerState} from "../../player/selectors";
-import {createLayout, LayoutProps} from "./layout";
+import {createLayout} from "./layout";
 import {StepperStatus} from "../../stepper";
 import {ActionTypes} from "./actionTypes";
+import {withResizeDetector} from 'react-resize-detector/build/withPolyfill';
+import {Directive} from "../../stepper/python/directives";
 
-interface LayoutLoaderStateToProps extends LayoutProps {
+interface LayoutLoaderStateToProps {
     advisedVisualization: string,
+    orderedDirectives: readonly Directive[],
+    fullScreenActive: boolean,
+    getMessage: Function,
+    preferredVisualizations: string[],
 }
 
 function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     const getMessage = state.getMessage;
     const fullScreenActive = state.fullscreen.active;
     const currentStepperState = state.stepper.currentStepperState;
-    const readOnly = false;
-    const {platform} = state.options;
-    const diagnostics = state.compile.diagnosticsHtml;
-    const error = currentStepperState && currentStepperState.error;
-    const sourceRowHeight = Math.ceil(16 * 25); // 12*25 for /next
-
-    let mode;
-    switch (platform) {
-        case 'arduino':
-            mode = 'arduino';
-
-            break;
-        case 'python':
-            mode = 'python';
-
-            break;
-        default:
-            mode = 'c_cpp';
-
-            break;
-    }
-
-    const sourceMode = mode;
-
-    const player = getPlayerState(state);
-    const preventInput = player.isPlaying;
-
+    const orderedDirectives = currentStepperState ? currentStepperState.directives.ordered : [];
     const advisedVisualization = !state.stepper || state.stepper.status === StepperStatus.Clear ? 'instructions' : 'variables';
+    const preferredVisualizations = state.layout.preferredVisualizations;
 
     return {
-        readOnly, error, getMessage, sourceRowHeight, sourceMode,
-        currentStepperState, fullScreenActive, diagnostics, preventInput, advisedVisualization,
+        getMessage, orderedDirectives, fullScreenActive, advisedVisualization, preferredVisualizations,
     };
 }
 
@@ -54,6 +33,8 @@ interface LayoutLoaderDispatchToProps {
 }
 
 interface LayoutLoaderProps extends LayoutLoaderStateToProps, LayoutLoaderDispatchToProps {
+    width: number,
+    height: number,
 }
 
 class _LayoutLoader extends React.PureComponent<LayoutLoaderProps> {
@@ -71,4 +52,15 @@ class _LayoutLoader extends React.PureComponent<LayoutLoaderProps> {
     }
 }
 
-export const LayoutLoader = connect(mapStateToProps)(_LayoutLoader);
+// We need to manually check if directives are the same because the current stepper state is rewritten
+// at each stepper execution step
+function areEqual(prevProps, nextProps) {
+    return prevProps.advisedVisualization === nextProps.advisedVisualization
+        && prevProps.fullScreenActive === nextProps.fullScreenActive
+        && prevProps.preferredVisualizations === nextProps.preferredVisualizations
+        && JSON.stringify(prevProps.orderedDirectives) === JSON.stringify(nextProps.orderedDirectives)
+        && prevProps.width === nextProps.width
+        && prevProps.height === nextProps.height;
+}
+
+export const LayoutLoader = connect(mapStateToProps)(withResizeDetector(React.memo(_LayoutLoader, areEqual)));

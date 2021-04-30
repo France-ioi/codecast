@@ -72,7 +72,7 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
                     </div>
 
                     <div className="task-body">
-                        <LayoutLoader/>
+                        <LayoutLoader width={null} height={null}/>
                     </div>
 
                     {recordingEnabled &&
