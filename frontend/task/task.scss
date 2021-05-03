@@ -250,11 +250,6 @@ body {
     padding: 20px;
   }
 
-  .visualization-slot {
-    overflow: auto;
-    flex-basis: 50%;
-  }
-
   &.full-screen {
     .task-header, .task-footer, .task-zone-left {
       display: none;
