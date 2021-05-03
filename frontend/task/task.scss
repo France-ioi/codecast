@@ -106,6 +106,7 @@ body {
       display: flex;
       align-items: center;
       margin-right: 10px;
+      max-width: 300px;
       .player-slider-container {
         display: flex;
         align-items: center;
@@ -543,4 +544,9 @@ pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     background: none !important;
     border-bottom: none !important;
   }
+}
+
+// Responsive
+.layout-mobile-horizontal .controls-stepper, .layout-mobile-vertical .controls-stepper, .layout-tablet-vertical .controls-stepper {
+  justify-content: center;
 }

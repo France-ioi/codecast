@@ -1,16 +1,17 @@
 <VerticalLayout>
     <HorizontalLayout>
-        <ZoneLayout name="top-left,center-top,top-right,center-left,center,center-right" default="true" desiredSize="40%">
+        <ZoneLayout name="top-left,center-top,center-left" default="true" desiredSize="40%">
             <Instructions/>
             <Variables/>
         </ZoneLayout>
-        <ZoneLayout name="bottom-left,center-bottom,bottom-right" desiredSize="60%">
+        <ZoneLayout name="top-right,center-bottom,center-right" desiredSize="60%">
             <ContextVisualization/>
         </ZoneLayout>
     </HorizontalLayout>
-    <ZoneLayout>
+    <ZoneLayout name="center">
         <Editor/>
     </ZoneLayout>
+    <ZoneLayout name="bottom-left,bottom-right"/>
     <ZoneLayout desiredSize="80px">
         <ControlsAndErrors/>
     </ZoneLayout>
