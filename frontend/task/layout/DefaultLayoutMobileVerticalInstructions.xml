@@ -1,13 +1,12 @@
 <VerticalLayout>
     <ZoneLayout name="top-left,center-top,top-right,center-left,center,center-right,bottom-left,center-bottom,bottom-right" default="true">
         <ContextVisualization/>
-    </ZoneLayout>
-    <ZoneLayout>
-        <Instructions/>
         <Variables/>
-        <Editor/>
     </ZoneLayout>
-    <ZoneLayout desiredSize="80px">
+    <ZoneLayout desiredSize="40%">
+        <Instructions/>
+    </ZoneLayout>
+    <ZoneLayout desiredSize="50px">
         <ControlsAndErrors/>
     </ZoneLayout>
 </VerticalLayout>

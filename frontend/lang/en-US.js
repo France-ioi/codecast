@@ -52,6 +52,7 @@ module.exports = {
     CONTROL_INTO: "step into",
     CONTROL_OUT: "step out",
     CONTROL_OVER: "step over",
+    CONTROL_SPEED: "speed",
     CONTROL_INTERRUPT: "interrupt",
     CONTROL_STEP_BY_STEP: "step by step",
     CONTROL_GO_TO_END: "go to end",

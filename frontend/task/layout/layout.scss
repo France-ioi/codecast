@@ -94,4 +94,49 @@ $primary: #4e94e3;
   }
 }
 
+.layout-empty {
+  width: 100%;
+  height: 100%;
+}
 
+.mode-selector {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  border-top: solid 1px #e7e7e7;
+
+  .mode {
+    flex: 0 1 51px;
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    font-size: 16px;
+    background-color: #4a4a4a;
+    color: #fff;
+    position: relative;
+    height: 100%;
+    > svg {
+      height: 18px;
+      width: 18px;
+    }
+    .label {
+      text-transform: uppercase;
+      margin-left: 10px;
+      font-weight: bold;
+    }
+    &.is-active {
+      background: #4a90e2;
+      flex: 2 0 auto;
+    }
+    &:not(.is-active) + .mode:not(.is-active) {
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 1px 0px 0px 0px #000 inset;
+    }
+    &:not(.is-active) {
+      justify-content: center;
+      cursor: pointer;
+    }
+  }
+}

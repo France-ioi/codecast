@@ -56,6 +56,7 @@ module.exports = {
     CONTROL_STEP_BY_STEP: "pas à pas",
     CONTROL_GO_TO_END: "aller à la fin",
     CONTROL_RESTART: "redémarrer",
+    CONTROL_SPEED: "vitesse",
     CONTROL_UNDO: "annuler",
     CONTROL_REDO: "refaire",
     PROGRAM_STOPPED: "Programme arrêté.",

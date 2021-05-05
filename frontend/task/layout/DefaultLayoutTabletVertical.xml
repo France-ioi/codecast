@@ -12,7 +12,7 @@
         <Editor/>
     </ZoneLayout>
     <ZoneLayout name="bottom-left,bottom-right"/>
-    <ZoneLayout desiredSize="80px">
+    <ZoneLayout desiredSize="60px">
         <ControlsAndErrors/>
     </ZoneLayout>
 </VerticalLayout>

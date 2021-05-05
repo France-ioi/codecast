@@ -55,6 +55,7 @@ export interface LayoutProps {
     height: number,
     preferredVisualizations: string[],
     layoutType: LayoutType,
+    layoutMobileMode: LayoutMobileMode,
 }
 
 export interface LayoutElementMetadata {
@@ -541,6 +542,27 @@ function buildZonesLayout(node: XmlParserNode, data: BuildZoneLayoutData): React
     return reactTree;
 }
 
+function capitalizeFirstLetter(string: string): string {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function getAppropriateXmlLayout(layoutType: LayoutType, layoutMobileMode: LayoutMobileMode): string {
+    if (LayoutType.Desktop === layoutType) {
+        return 'DefaultLayoutDesktop.xml';
+    }
+    if (LayoutType.TabletVertical === layoutType) {
+        return 'DefaultLayoutTabletVertical.xml';
+    }
+    if (LayoutType.MobileVertical === layoutType) {
+        return 'DefaultLayoutMobileVertical' + capitalizeFirstLetter(layoutMobileMode)  + '.xml';
+    }
+    if (LayoutType.MobileHorizontal === layoutType) {
+        return 'DefaultLayoutMobileHorizontal' + capitalizeFirstLetter(layoutMobileMode) + '.xml';
+    }
+
+    throw 'Unable to load appropriate XML layout file for this configuration';
+}
+
 export function createLayout(layoutProps: LayoutProps): ReactElement {
     const xmlToReact = new XMLToReact({
         HorizontalLayout: (attrs) => ({
@@ -576,7 +598,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
             metadata: {
                 id: 'editor',
                 title: layoutProps.getMessage('TASK_EDITOR'),
-                icon: 'code',
+                icon: 'edit',
                 ...attrs,
             },
         }),
@@ -585,7 +607,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
             metadata: {
                 id: 'instructions',
                 title: layoutProps.getMessage('TASK_DESCRIPTION'),
-                icon: 'align-left',
+                icon: 'document',
                 ...attrs,
             },
         }),
@@ -598,16 +620,17 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
             metadata: {
                 id: 'variables',
                 title: layoutProps.getMessage('TASK_VARIABLES'),
-                icon: 'search',
+                icon: 'code',
                 ...attrs,
             },
         }),
     });
 
     const directivesByZone = {};
+    const availableZones = ['top-right', 'top-left', 'center-top', 'center', 'center-bottom', 'center-left', 'center-right', 'bottom-left', 'bottom-right'];
     if (layoutProps.orderedDirectives) {
         for (let directive of layoutProps.orderedDirectives) {
-            const zone = directive.byName['zone'] ?? 'default';
+            const zone = directive.byName['zone'] && availableZones.indexOf(directive.byName['zone']) !== -1 ? directive.byName['zone'] : 'default';
             if (!(zone in directivesByZone)) {
                 directivesByZone[zone] = [];
             }
@@ -615,14 +638,8 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         }
     }
 
-    const layouts = {
-        desktop: 'DefaultLayoutDesktop.xml',
-        'mobile-horizontal': 'DefaultLayoutMobileHorizontal.xml',
-        'mobile-vertical': 'DefaultLayoutMobileVertical.xml',
-        'tablet-vertical': 'DefaultLayoutTabletVertical.xml',
-    }
-
-    let layoutXml = require('./' + layouts[layoutProps.layoutType]).default;
+    const layout = getAppropriateXmlLayout(layoutProps.layoutType, layoutProps.layoutMobileMode);
+    let layoutXml = require('./' + layout).default;
     if (layoutProps.fullScreenActive) {
         layoutXml = '<Editor/>';
     }
@@ -640,6 +657,10 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
 
 function layoutVisualizationSelectedReducer(state: AppStore, {payload: {visualization}}) {
     makeVisualizationAsPreferred(state.layout.preferredVisualizations, visualization);
+}
+
+function layoutMobileModeChangedReducer(state: AppStore, {payload: {mobileMode}}) {
+    state.layout.mobileMode = mobileMode;
 }
 
 export function makeVisualizationAsPreferred(visualizations: string[], visualization: string): string[] {
@@ -670,9 +691,16 @@ export enum LayoutType {
     MobileVertical = 'mobile-vertical',
 }
 
+export enum LayoutMobileMode {
+    Instructions = 'instructions',
+    Editor = 'editor',
+    Player = 'player',
+}
+
 export interface LayoutState {
     preferredVisualizations: string[], // least preferred at the beginning, most preferred at the end
     type: LayoutType,
+    mobileMode: LayoutMobileMode,
 }
 
 export default function (bundle: Bundle) {
@@ -680,9 +708,13 @@ export default function (bundle: Bundle) {
         state.layout = {
             preferredVisualizations: [],
             type: LayoutType.Desktop,
+            mobileMode: LayoutMobileMode.Instructions,
         };
     });
 
     bundle.defineAction(ActionTypes.LayoutVisualizationSelected);
     bundle.addReducer(ActionTypes.LayoutVisualizationSelected, layoutVisualizationSelectedReducer);
+
+    bundle.defineAction(ActionTypes.LayoutMobileModeChanged);
+    bundle.addReducer(ActionTypes.LayoutMobileModeChanged, layoutMobileModeChangedReducer);
 };
