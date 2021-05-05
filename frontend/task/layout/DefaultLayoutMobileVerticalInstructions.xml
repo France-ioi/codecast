@@ -6,7 +6,7 @@
     <ZoneLayout desiredSize="40%">
         <Instructions/>
     </ZoneLayout>
-    <ZoneLayout desiredSize="50px">
+    <ZoneLayout desiredSize="50px" overflow="false">
         <ControlsAndErrors/>
     </ZoneLayout>
 </VerticalLayout>

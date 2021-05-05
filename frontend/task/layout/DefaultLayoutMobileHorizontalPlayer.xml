@@ -10,7 +10,7 @@
             <Editor/>
         </ZoneLayout>
     </HorizontalLayout>
-    <ZoneLayout desiredSize="50px">
+    <ZoneLayout desiredSize="50px" overflow="false">
         <ControlsAndErrors/>
     </ZoneLayout>
 </VerticalLayout>

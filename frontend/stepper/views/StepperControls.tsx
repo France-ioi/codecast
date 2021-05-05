@@ -151,24 +151,18 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
         const speedDisplayed = LayoutType.MobileVertical !== layoutType || this.state.speedDisplayed;
 
         return newControls ?
-            (<div className="controls controls-stepper">
+            (<div className={`controls controls-stepper ${controlsType}`}>
                 {showControls && <React.Fragment>
                     {(LayoutType.MobileVertical !== layoutType || !this.state.speedDisplayed) &&
                         <React.Fragment>
-                          <div className="small-buttons">
-                              {this._button('restart', this.onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faStop}/>)}
-                          </div>
-                          <div className="big-buttons">
-                              {!canInterrupt && this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), <FontAwesomeIcon icon={faPlay}/>)}
-                              {canInterrupt && this._button('interrupt', this.onInterrupt, getMessage('CONTROL_INTERRUPT'), <FontAwesomeIcon icon={faPause}/>)}
-                              {this._button('step_by_step', this.onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faShoePrints}/>)}
-                          </div>
+                              {this._button('restart', this.onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faStop}/>, null, 'is-small')}
+                              {!canInterrupt && this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
+                              {canInterrupt && this._button('interrupt', this.onInterrupt, getMessage('CONTROL_INTERRUPT'), <FontAwesomeIcon icon={faPause}/>, null, 'is-big')}
+                              {this._button('step_by_step', this.onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
                         </React.Fragment>
                     }
                     {controlsType === StepperControlsType.Normal && LayoutType.MobileVertical === layoutType &&
-                        <div className="big-buttons">
-                            {this._button('speed', this.onToggleSpeed, getMessage('CONTROL_SPEED'), <FontAwesomeIcon icon={faTachometerAlt}/>)}
-                        </div>
+                        this._button('speed', this.onToggleSpeed, getMessage('CONTROL_SPEED'), <FontAwesomeIcon icon={faTachometerAlt}/>, null, 'is-big')
                     }
                     {speedDisplayed && controlsType === StepperControlsType.Normal && <div className="speed-slider is-extended">
                         <div className="player-slider-container">
@@ -186,22 +180,22 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
                         </div>
                     </div>}
                     {controlsType === StepperControlsType.StepByStep &&
-                        <div className="small-buttons is-extended">
+                        <React.Fragment>
                             {this._button('expr', this.onStepExpr, getMessage('CONTROL_EXPR'), <i
-                                className="control-icon fi fi-step-expr"/>)}
+                                className="control-icon fi fi-step-expr"/>, null, 'is-small')}
                             {this._button('out', this.onStepOut, getMessage('CONTROL_OUT'), <i
                                 className="control-icon fi fi-step-out"/>, null, 'is-small')}
                             {this._button('over', this.onStepOver, getMessage('CONTROL_OVER'), <i
                                 className="control-icon fi fi-step-over"/>, null, 'is-small')}
                             {this._button('undo', this.onUndo, getMessage('CONTROL_UNDO'), 'undo', null, 'is-small')}
                             {this._button('redo', this.onRedo, getMessage('CONTROL_REDO'), 'redo', null, 'is-small')}
-                        </div>
+                        </React.Fragment>
                     }
-                    {(LayoutType.MobileVertical !== layoutType || !this.state.speedDisplayed) &&
-                        <div className="small-buttons is-narrow">
-                            {this._button('go_to_end', this.onGoToEnd, getMessage('CONTROL_GO_TO_END'), <FontAwesomeIcon icon={faFastForward}/>)
+                    {(LayoutType.MobileVertical !== layoutType || (!this.state.speedDisplayed && controlsType === StepperControlsType.Normal)) &&
+                        <React.Fragment>
+                            {this._button('go_to_end', this.onGoToEnd, getMessage('CONTROL_GO_TO_END'), <FontAwesomeIcon icon={faFastForward}/>, null, 'is-small')
                             }
-                        </div>
+                        </React.Fragment>
                     }
                 </React.Fragment>}
             </div>)
@@ -306,16 +300,17 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
         }
 
         return (
-            <Button
-                className={classNames}
-                onClick={onClick}
-                style={style}
-                disabled={disabled}
-                intent={intent}
-                title={title}
-                icon={icon}
-                text={text}
-            />
+            <div className="control-button-container" style={style}>
+                <Button
+                    className={classNames}
+                    onClick={onClick}
+                    disabled={disabled}
+                    intent={intent}
+                    title={title}
+                    icon={icon}
+                    text={text}
+                />
+            </div>
         );
     };
 

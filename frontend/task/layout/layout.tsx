@@ -67,11 +67,6 @@ export interface LayoutElementMetadata {
     stackingOrientation?: RelativeLayoutOrientation,
 }
 
-export interface LayoutVisualization {
-    metadata: LayoutElementMetadata,
-    element: ReactElement,
-}
-
 export interface LayoutVisualizationGroup {
     allocatedWidth?: number,
     allocatedHeight?: number,
@@ -108,7 +103,13 @@ function getAttributes(node) {
     const result = {};
 
     Array.from(attributes)
-        .forEach(({ name, value }) => {
+        .forEach(({name, value}) => {
+            if ('true' === value) {
+                value = true;
+            }
+            if ('false' === value) {
+                value = false;
+            }
             result[name] = value;
         });
 
@@ -579,12 +580,10 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 orientation: RelativeLayoutOrientation.VERTICAL,
             }
         }),
-        ZoneLayout: (attrs) => {
-            return {
-                type: ZoneLayout,
-                metadata: attrs,
-            }
-        },
+        ZoneLayout: (attrs) => ({
+            type: ZoneLayout,
+            metadata: attrs,
+        }),
         ControlsAndErrors: (attrs) => ({
             type: ControlsAndErrors,
             metadata: {

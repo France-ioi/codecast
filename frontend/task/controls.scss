@@ -20,9 +20,15 @@ $primary: #4a90e2;
   display: flex;
   align-items: center;
   width: 100%;
+  &.normal {
+    max-width: 550px;
+  }
+  &.step_by_step {
+    width: initial;
+  }
 
   > .is-extended {
-    flex: 1 0;
+    flex: 10 0;
   }
 
   > .is-narrow {
@@ -91,11 +97,15 @@ $primary: #4a90e2;
     }
   }
 
-  .big-buttons {
-    white-space: nowrap;
+  .control-button-container {
+    flex: 1 0;
   }
 
   .bp3-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
     border-radius: 500px;
     background: $primary;
     color: white;
@@ -116,7 +126,7 @@ $primary: #4a90e2;
     }
   }
 
-  .small-buttons .bp3-button {
+  .bp3-button.is-small {
     height: 30px;
     width: 30px;
     svg {
@@ -145,9 +155,6 @@ $primary: #4a90e2;
         border-bottom-color: $primary;
       }
     }
-    .controls-stepper {
-      padding: 0;
-    }
     .bp3-slider-progress {
       background: rgba(92, 112, 128, 0.76) !important;
     }
@@ -165,6 +172,21 @@ $primary: #4a90e2;
 
   .speed-slider {
     margin: 0;
+  }
+}
+
+.layout-mobile-vertical.task {
+  .controls-stepper {
+    padding: 0 8px;
+  }
+  .controls-stepper.step_by_step {
+    padding: 0 5px;
+    width: 100%;
+    .bp3-button {
+      margin-right: 0px;
+      width: 30px;
+      height: 30px;
+    }
   }
 }
 
