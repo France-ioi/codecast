@@ -22,10 +22,13 @@ import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
 
-export type IoMode = 'terminal' | 'split';
+export enum IoMode {
+    Terminal = 'terminal',
+    Split = 'split',
+}
 
 export const initialStateIoPane = {
-    mode: 'terminal' as IoMode,
+    mode: IoMode.Terminal,
     modeSelect: false
 };
 
@@ -46,7 +49,7 @@ export default function(bundle: Bundle) {
 
         if (platform === 'arduino') {
             /* Arduino is forced to terminal mode. */
-            state.ioPane.mode = 'terminal';
+            state.ioPane.mode = IoMode.Terminal;
             state.ioPane.modeSelect = false;
         } else {
             state.ioPane.modeSelect = true;
@@ -101,7 +104,7 @@ export default function(bundle: Bundle) {
         });
 
         replayApi.on(['stepper.progress', 'stepper.idle', 'stepper.restart', 'stepper.undo', 'stepper.redo'], function replaySyncOutput(replayContext: ReplayContext) {
-            if (replayContext.state.ioPane.mode === 'split') {
+            if (replayContext.state.ioPane.mode === IoMode.Split) {
                 /* Consider: pushing updates from the stepper state to the output buffer
                    in the global state adds complexity.  Three options:
                    (1) dispatch a recorded 'buffer' action when the output changes, so
@@ -130,7 +133,7 @@ export default function(bundle: Bundle) {
             const {mode} = state.ioPane;
 
             stepperState.inputPos = 0;
-            if (mode === 'terminal') {
+            if (mode === IoMode.Terminal) {
                 stepperState.input = "";
                 stepperState.terminal = new TermBuffer({lines: 10, width: 80});
                 stepperState.inputBuffer = "";
@@ -259,7 +262,7 @@ export default function(bundle: Bundle) {
 
             const {mode} = state.ioPane;
 
-            if (mode === 'split') {
+            if (mode === IoMode.Split) {
                 yield call(reflectToOutput);
             }
         });

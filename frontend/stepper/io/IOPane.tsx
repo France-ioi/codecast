@@ -5,6 +5,7 @@ import {IOPaneOptions} from "./IOPaneOptions";
 import {connect} from "react-redux";
 import {AppStore} from "../../store";
 import {getCurrentStepperState} from "../selectors";
+import {IoMode} from "./index";
 
 interface IOPaneStateToProps {
     mode: string
@@ -30,9 +31,9 @@ class _IOPane extends React.PureComponent<IOPaneProps> {
         const {preventInput} = this.props;
 
         switch (this.props.mode) {
-            case 'terminal':
+            case IoMode.Terminal:
                 return <TerminalView preventInput={preventInput} />;
-            case 'split':
+            case IoMode.Split:
                 return <InputOutputView />;
             default:
                 return <IOPaneOptions />;

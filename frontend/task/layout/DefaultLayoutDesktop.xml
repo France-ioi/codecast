@@ -5,6 +5,7 @@
             <Variables/>
         </ZoneLayout>
         <ZoneLayout name="center-left">
+            <InputOutput/>
             <ContextVisualization/>
         </ZoneLayout>
         <ZoneLayout name="bottom-left"/>

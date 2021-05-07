@@ -11,20 +11,24 @@ import {AppStore} from "../../store";
 interface TerminalViewStateToProps {
     isWaitingOnInput?: boolean,
     terminal?: any,
-    input?: string
+    input?: string,
+    getMessage: Function,
 }
 
 function mapStateToProps(state: AppStore): TerminalViewStateToProps {
     const stepper = getCurrentStepperState(state);
     if (stepper) {
         return {
+            getMessage: state.getMessage,
             terminal: stepper.terminal,
             input: stepper.inputBuffer,
             isWaitingOnInput: stepper.isWaitingOnInput
         }
     }
 
-    return {};
+    return {
+        getMessage: state.getMessage,
+    };
 }
 
 interface TerminalViewDispatchToProps {
@@ -59,14 +63,15 @@ class _TerminalView extends React.PureComponent<TerminalViewProps> {
     }
 
     renderHeader = () => {
-        const {isWaitingOnInput} = this.props;
+        const {isWaitingOnInput, getMessage} = this.props;
 
         return (
             <div className="row">
-                <div className="col-sm-12">
-                    {'Terminal'}
+                <div className="col-sm-12 terminal-view-header">
+                    {getMessage('IOPANE_TERMINAL')}
                     {isWaitingOnInput &&
-                    <Icon icon='console'/>}
+                        <Icon icon='console'/>
+                    }
                 </div>
             </div>
         );

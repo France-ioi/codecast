@@ -15,6 +15,7 @@ import {ZoneLayoutVisualizationGroup} from "./ZoneLayoutVisualizationGroup";
 import {LayoutStackView} from "./LayoutStackView";
 import {LayoutEditor} from "./LayoutEditor";
 import {LayoutDirective} from "./LayoutDirective";
+import {LayoutIOPane} from "./LayoutIOPane";
 
 interface Dimensions {
     width: number,
@@ -620,6 +621,15 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 id: 'variables',
                 title: layoutProps.getMessage('TASK_VARIABLES'),
                 icon: 'code',
+                ...attrs,
+            },
+        }),
+        InputOutput: (attrs) => ({
+            type: LayoutIOPane,
+            metadata: {
+                id: 'io',
+                title: layoutProps.getMessage('TASK_IO'),
+                icon: 'console',
                 ...attrs,
             },
         }),

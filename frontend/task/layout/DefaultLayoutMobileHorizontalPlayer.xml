@@ -2,6 +2,7 @@
     <HorizontalLayout>
         <VerticalLayout desiredSize="50%">
             <ZoneLayout name="top-left,center-left,bottom-left,center-right,center-top,top-right,center-bottom,bottom-right,center" default="true">
+                <InputOutput/>
                 <ContextVisualization/>
                 <Variables/>
             </ZoneLayout>

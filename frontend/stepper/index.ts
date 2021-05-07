@@ -1111,8 +1111,12 @@ function postLink(app: App) {
         yield takeEvery(ActionTypes.StepperStep, stepperStepSaga, args);
         yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga);
         yield takeEvery(ActionTypes.StepperExit, stepperExitSaga);
-        yield takeEvery(BufferActionTypes.BufferEdit, function* () {
-            yield put({type: ActionTypes.StepperExit, payload: {}});
+        yield takeEvery(BufferActionTypes.BufferEdit, function* (action) {
+            // @ts-ignore
+            const {buffer} = action;
+            if (buffer === 'source') {
+                yield put({type: ActionTypes.StepperExit, payload: {}});
+            }
         });
 
         /* Highlight the range of the current source fragment. */

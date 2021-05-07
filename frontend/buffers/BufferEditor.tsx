@@ -18,6 +18,7 @@ interface BufferEditorProps extends BufferEditorDispatchToProps {
     width?: number,
     height?: number,
     buffer: any,
+    hasAutocompletion?: boolean,
 }
 
 export class _BufferEditor extends React.PureComponent<BufferEditorProps> {
@@ -65,6 +66,7 @@ export class _BufferEditor extends React.PureComponent<BufferEditorProps> {
             mode={this.props.mode}
             width={this.props.requiredWidth}
             height={this.props.requiredHeight}
+            hasAutocompletion={this.props.hasAutocompletion}
         />;
     };
 }

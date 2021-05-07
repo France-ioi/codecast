@@ -5,6 +5,7 @@ import {ActionTypes} from "./actionTypes";
 import {BufferEditor} from "../../buffers/BufferEditor";
 import {connect} from "react-redux";
 import {AppStore} from "../../store";
+import {IoMode} from "./index";
 
 interface IOPaneOptionsStateToProps {
     getMessage: any,
@@ -29,8 +30,8 @@ interface IOPaneOptionsProps extends IOPaneOptionsStateToProps, IOPaneOptionsDis
 
 class _IOPaneOptions extends React.PureComponent<IOPaneOptionsProps> {
     modeOptions = [
-        {value: 'split', label: 'IOPANE_MODE_SPLIT'},
-        {value: 'terminal', label: 'IOPANE_MODE_INTERACTIVE'}
+        {value: IoMode.Split, label: 'IOPANE_MODE_SPLIT'},
+        {value: IoMode.Terminal, label: 'IOPANE_MODE_INTERACTIVE'}
     ];
 
     onModeChanged = (event) => {
@@ -69,7 +70,7 @@ class _IOPaneOptions extends React.PureComponent<IOPaneOptionsProps> {
                                     </label>
                                 </form>
                             }
-                            {mode === 'split' &&
+                            {mode === IoMode.Split &&
                                 <div>
                                     <p>{getMessage('IOPANE_INITIAL_INPUT')}</p>
                                     <BufferEditor

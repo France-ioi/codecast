@@ -5,9 +5,12 @@ import {LanguageSelection} from "../lang/LanguageSelection";
 import {ExamplePicker} from "../common/ExamplePicker";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {MenuIconsTask} from "./MenuIconsTask";
+import {select} from "redux-saga/effects";
+import {IoMode} from "../stepper/io";
 
 interface MenuTaskStateToProps {
     getMessage: Function,
@@ -16,6 +19,8 @@ interface MenuTaskStateToProps {
     offlineDownloadUrl: string,
     recordingEnabled: boolean,
     playerEnabled: boolean,
+    ioMode: IoMode,
+    ioModeSelect: boolean,
 }
 
 function mapStateToProps(state: AppStore): MenuTaskStateToProps {
@@ -23,6 +28,7 @@ function mapStateToProps(state: AppStore): MenuTaskStateToProps {
     const getMessage = state.getMessage;
     const recordingEnabled = state.task.recordingEnabled;
     const playerEnabled = !!state.options.baseDataUrl;
+    const {mode: ioMode, modeSelect: ioModeSelect} = state.ioPane;
 
     let offlineDownloadUrl = null;
     if (!isLocalMode() && baseDataUrl) {
@@ -30,7 +36,7 @@ function mapStateToProps(state: AppStore): MenuTaskStateToProps {
     }
 
     return {
-        getMessage, platform, canChangePlatform, offlineDownloadUrl, recordingEnabled, playerEnabled,
+        getMessage, platform, canChangePlatform, offlineDownloadUrl, recordingEnabled, playerEnabled, ioMode, ioModeSelect,
     };
 }
 
@@ -53,6 +59,11 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
         menuOpen: false,
     };
 
+    modeOptions = [
+        {value: IoMode.Split, label: 'IOPANE_MODE_SPLIT'},
+        {value: IoMode.Terminal, label: 'IOPANE_MODE_INTERACTIVE'}
+    ];
+
     private wrapperRef: React.RefObject<HTMLDivElement>;
 
     constructor(props) {
@@ -72,7 +83,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
     }
 
     render() {
-        const {getMessage, platform, canChangePlatform, offlineDownloadUrl, playerEnabled} = this.props;
+        const {getMessage, platform, canChangePlatform, offlineDownloadUrl, playerEnabled, ioMode, ioModeSelect} = this.props;
         const {settingsOpen} = this.state;
 
         return (
@@ -84,8 +95,8 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
                 </div>
                 <div className={`task-menu`}>
                     <div className="menu-item" onClick={this.toggleSettings}>
-                        <Icon icon="globe"/>
-                        <span>{getMessage('MENU_LANGUAGE')}</span>
+                        <Icon icon="cog"/>
+                        <span>{getMessage('MENU_SETTINGS')}</span>
                     </div>
                     {!playerEnabled && <div className="menu-item" onClick={this.toggleRecording}>
                         <Icon icon="record" color="#ff001f"/>
@@ -105,6 +116,24 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
                                         <option value='python'>{getMessage('PLATFORM_PYTHON')}</option>
                                         <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
                                         <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
+                                      </select>
+                                    </div>
+                                  </label>
+                                </div>
+                            }
+                            {ioModeSelect &&
+                                <div>
+                                  <label className='bp3-label'>
+                                      {getMessage('IOPANE_MODE')}
+                                    <div className='bp3-select'>
+                                      <select value={ioMode} onChange={this.onIOModeChanged}>
+                                          {this.modeOptions.map(p =>
+                                              <option
+                                                  key={p.value}
+                                                  value={p.value}
+                                              >
+                                                  {getMessage(p.label)}
+                                              </option>)}
                                       </select>
                                     </div>
                                   </label>
@@ -176,6 +205,11 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
             type: CommonActionTypes.PlatformChanged,
             payload: platform
         });
+    };
+
+    onIOModeChanged = (event) => {
+        const mode = event.target.value;
+        this.props.dispatch({type: IOActionTypes.IoPaneModeChanged, payload: {mode}});
     };
 }
 
