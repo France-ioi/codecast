@@ -29,8 +29,8 @@ export class InputOutputView extends React.PureComponent {
                                 buffer='input'
                                 readOnly={true}
                                 mode='text'
-                                width='100%'
-                                height='150px'/>
+                                requiredWidth='100%'
+                                requiredHeight='150px'/>
                         </div>
                         <div className="col-sm-6">
                             <BufferEditor
@@ -38,8 +38,8 @@ export class InputOutputView extends React.PureComponent {
                                 readOnly={true}
                                 shield={true}
                                 mode='text'
-                                width='100%'
-                                height='150px'
+                                requiredWidth='100%'
+                                requiredHeight='150px'
                             />
                         </div>
                     </div>

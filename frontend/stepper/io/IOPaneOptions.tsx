@@ -75,8 +75,8 @@ class _IOPaneOptions extends React.PureComponent<IOPaneOptionsProps> {
                                     <BufferEditor
                                         buffer='input'
                                         mode='text'
-                                        width='100%'
-                                        height='150px'
+                                        requiredWidth='100%'
+                                        requiredHeight='150px'
                                     />
                                 </div>
                             }

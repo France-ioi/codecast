@@ -159,8 +159,8 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
                                             shield={preventInput}
                                             mode={sourceMode}
                                             theme={'textmate'}
-                                            width='100%'
-                                            height={sourceRowHeight}
+                                            requiredWidth='100%'
+                                            requiredHeight={sourceRowHeight}
                                         />
                                     </div>
                                 </div>

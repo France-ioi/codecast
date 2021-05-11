@@ -8,5 +8,6 @@ export enum ActionTypes {
     BufferModelEdit = 'Buffer.Model.Edit',
     BufferModelSelect = 'Buffer.Model.Select',
     BufferModelScroll = 'Buffer.Model.Scroll',
-    BufferHighlight = 'Buffer.Highlight'
+    BufferHighlight = 'Buffer.Highlight',
+    BufferResize = 'Buffer.Resize',
 }

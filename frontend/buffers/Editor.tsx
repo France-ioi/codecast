@@ -148,6 +148,14 @@ class _Editor extends React.PureComponent<EditorProps> {
         });
     };
 
+    resize = () => {
+        if (!this.editor) {
+            return;
+        }
+
+        this.editor.resize(true);
+    };
+
     setSelection = (selection_) => {
         this.wrapModelToEditor(() => {
             if (sameSelection(this.selection, selection_)) {
@@ -215,6 +223,7 @@ class _Editor extends React.PureComponent<EditorProps> {
                 scrollToLine: this.scrollToLine,
                 getSelectionRange: this.getSelectionRange,
                 highlight: this.highlight,
+                resize: this.resize,
             };
             onInit(api);
         }

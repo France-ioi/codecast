@@ -1,10 +1,9 @@
-import React from 'react';
+import React, {ReactElement} from 'react';
 import {connect} from "react-redux";
 import {Dropdown} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
 import {IconName} from "@blueprintjs/icons";
-import {ActionTypes} from "./layout/actionTypes";
-import {LayoutVisualization} from "./layout/layout";
+import {ActionTypes} from "./actionTypes";
 
 function mapStateToProps() {
     return {};
@@ -16,8 +15,7 @@ interface MultiVisualizationDispatchToProps {
 
 interface MultiVisualizationProps extends MultiVisualizationDispatchToProps {
     className?: string,
-    currentVisualization: LayoutVisualization,
-    visualizations: LayoutVisualization[],
+    currentVisualizationGroup: number,
 }
 
 const _CustomToggle = ({children, onClick}, ref) => (
@@ -39,13 +37,15 @@ const CustomToggle = React.forwardRef<HTMLAnchorElement, {onClick: Function}>(_C
 
 class _MultiVisualization extends React.PureComponent<MultiVisualizationProps> {
     render() {
+        const elements: ReactElement[] = React.Children.toArray(this.props.children) as ReactElement[];
+
         return (
-            <div className={`multi-visualization ${this.props.className}`}>
+            <div className={`multi-visualization ${this.props.className ? this.props.className : ''}`}>
                 <Dropdown>
-                    <Dropdown.Toggle as={CustomToggle}>{this.props.currentVisualization.metadata.title}</Dropdown.Toggle>
+                    <Dropdown.Toggle as={CustomToggle}>{this.props.children[this.props.currentVisualizationGroup].props.metadata.title}</Dropdown.Toggle>
 
                     <Dropdown.Menu>
-                        {this.props.visualizations.map(({metadata}) =>
+                        {elements.map(({props: {metadata}}) =>
                             <Dropdown.Item key={metadata.id} onClick={() => this.selectVisualization(metadata.id)}>
                                 {metadata.icon && <Icon icon={metadata.icon as IconName}/>}
                                 <span>{metadata.title}</span>
@@ -55,7 +55,7 @@ class _MultiVisualization extends React.PureComponent<MultiVisualizationProps> {
                 </Dropdown>
 
                 <div className="multi-visualization-content">
-                    {this.props.currentVisualization.element}
+                    {this.props.children[this.props.currentVisualizationGroup]}
                 </div>
             </div>
         );

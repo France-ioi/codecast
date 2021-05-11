@@ -79,8 +79,15 @@ g.directive = PR.seq(g.directiveAssignment.optional(), g.ident, g.lparen, g.dire
     const kind = match[1];
     const args = match[3] || {byPos: [], byName: {}};
 
-    return {key: key, kind: kind, byPos: args.byPos, byName: args.byName};
+    return {key: key, kind: kind, byPos: args.byPos, byName: args.byName} as Directive;
 });
+
+export interface Directive {
+    key: string,
+    kind: string,
+    byPos: any,
+    byName: {[key: string]: any},
+}
 
 /**
  * Gets the currently active directives.

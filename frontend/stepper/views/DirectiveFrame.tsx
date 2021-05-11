@@ -33,12 +33,12 @@ export class DirectiveFrame extends React.PureComponent<DirectiveFrameProps> {
                 <Card className='directive'>
                     <Card.Header>
                         <div className="directive-header">
-                            <div className="pull-right">
-                                {hasFullView &&
-                                <Button onClick={this.onToggleFullView} small>
-                                    {fullView ? 'min' : 'max'}
-                                </Button>}
-                            </div>
+                            {/*<div className="pull-right">*/}
+                            {/*    {hasFullView &&*/}
+                            {/*    <Button onClick={this.onToggleFullView} small>*/}
+                            {/*        {fullView ? 'min' : 'max'}*/}
+                            {/*    </Button>}*/}
+                            {/*</div>*/}
                             <div className="directive-title">
                                 {title || key}
                             </div>

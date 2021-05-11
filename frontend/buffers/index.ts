@@ -267,6 +267,16 @@ function* buffersSaga() {
             editor.highlight(range);
         }
     });
+    yield takeEvery(ActionTypes.BufferResize, function* (action) {
+        const state: AppStore = yield select();
+
+        // @ts-ignore
+        const {buffer} = action;
+        const editor = getBufferEditor(state, buffer);
+        if (editor) {
+            editor.resize();
+        }
+    });
 }
 
 function resetEditor(editor, model: DocumentModel) {

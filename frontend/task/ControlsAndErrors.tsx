@@ -3,15 +3,27 @@ import {StepperControls} from "../stepper/views/StepperControls";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {connect} from "react-redux";
 import {Icon} from "@blueprintjs/core";
+import {StepperStatus} from "../stepper";
+import {AppStore} from "../store";
 
-interface ControlsAndErrorsProps {
-    dispatch: Function,
+interface ControlsAndErrorsStateToProps {
     error: string,
     diagnostics: any,
 }
 
-function mapStateToProps() {
-    return {};
+interface ControlsAndErrorsProps extends ControlsAndErrorsStateToProps {
+    dispatch: Function,
+}
+
+function mapStateToProps(state: AppStore): ControlsAndErrorsStateToProps {
+    const diagnostics = state.compile.diagnosticsHtml;
+    const currentStepperState = state.stepper.currentStepperState;
+    const error = currentStepperState && currentStepperState.error;
+
+    return {
+        error,
+        diagnostics,
+    };
 }
 
 class _ControlsAndErrors extends React.PureComponent<ControlsAndErrorsProps> {

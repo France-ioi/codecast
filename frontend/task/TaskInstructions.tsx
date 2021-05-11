@@ -10,4 +10,11 @@ export class TaskInstructions extends React.PureComponent {
             </div>
         );
     }
+
+    static computeDimensions(width: number, height: number) {
+        return {
+            taken: {width, height},
+            minimum: {width: 200, height: 100},
+        }
+    }
 }
