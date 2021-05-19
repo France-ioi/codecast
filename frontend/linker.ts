@@ -4,6 +4,7 @@ import {all, call} from 'redux-saga/effects';
 import produce from "immer";
 import {App} from "./index";
 import {AppStore} from "./store";
+import {quickAlgoLibraries} from "./task/libs/quickalgo_librairies";
 
 export interface Linker {
     scope: App,
@@ -119,6 +120,9 @@ export function link(rootBuilder): Linker {
 
     // Compose the enhancers.
     const sagaMiddleware = createSagaMiddleware({
+        context: {
+            quickAlgoLibraries,
+        },
         onError: (error) => {
             console.log(error);
             setImmediate(() => {

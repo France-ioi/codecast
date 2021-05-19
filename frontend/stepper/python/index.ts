@@ -11,6 +11,7 @@ import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
+import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
 
 const pythonInterpreterChannel = channel();
 
@@ -110,7 +111,7 @@ export default function(bundle: Bundle) {
             const source = state.buffers['source'].model.document.toString();
 
             if (platform === 'python') {
-                const context = state.task.context;
+                const context = quickAlgoLibraries.getContext();
                 context.reset();
                 context.onError = (diagnostics) => {
                     if (replay) {

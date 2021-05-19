@@ -4,21 +4,22 @@ import * as ace from 'brace';
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {addAutocompletion} from "./editorAutocompletion";
-import {getAutocompletionParameters, QuickAlgoContext} from '../task';
+import {getAutocompletionParameters} from '../task';
 import {LayoutType} from "../task/layout/layout";
+import {quickAlgoLibraries, QuickAlgoLibrary} from "../task/libs/quickalgo_librairies";
 
 const Range = ace.acequire('ace/range').Range;
 
 interface EditorStateToProps {
     getMessage: Function,
-    context: QuickAlgoContext,
+    context: QuickAlgoLibrary,
     layoutType: LayoutType,
 }
 
 function mapStateToProps(state: AppStore): EditorStateToProps {
     return {
         getMessage: state.getMessage,
-        context: state.task.context,
+        context: quickAlgoLibraries.getContext(),
         layoutType: state.layout.type,
     };
 }

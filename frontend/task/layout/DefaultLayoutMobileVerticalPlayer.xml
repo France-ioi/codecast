@@ -1,6 +1,5 @@
 <VerticalLayout>
     <ZoneLayout name="top-left,center-top,top-right,center-left,center,center-right,bottom-left,center-bottom,bottom-right" default="true">
-        <InputOutput/>
         <ContextVisualization/>
         <Variables/>
     </ZoneLayout>

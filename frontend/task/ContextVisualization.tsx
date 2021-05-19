@@ -1,29 +1,18 @@
 import React from "react";
-import {connect} from "react-redux";
-import {AppStore} from "../store";
-import {QuickAlgoContext} from "./index";
+import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
 
-function mapStateToProps(state: AppStore) {
-    return {
-        context: state.task && state.task.context ? state.task.context : null
-    };
-}
-
-interface ContextVisualizationProps {
-    context: QuickAlgoContext,
-}
-
-export class _ContextVisualization extends React.PureComponent<ContextVisualizationProps> {
+export class ContextVisualization extends React.PureComponent {
     componentDidMount() {
-        if (this.props.context) {
-            this.props.context.reset();
-        }
+        quickAlgoLibraries.reset();
     }
 
     render() {
+        const Visualization = quickAlgoLibraries.getVisualization();
+
         return (
             <div className="task-visualisation">
-                <div id="grid"/>
+                {/*<div id="grid"/>*/}
+                <Visualization/>
             </div>
         );
     }
@@ -35,5 +24,3 @@ export class _ContextVisualization extends React.PureComponent<ContextVisualizat
         }
     }
 }
-
-export const ContextVisualization = connect(mapStateToProps)(_ContextVisualization);

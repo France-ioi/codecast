@@ -5,7 +5,6 @@
             <Variables/>
         </ZoneLayout>
         <ZoneLayout name="top-right,center-bottom,center-right" desiredSize="60%">
-            <InputOutput/>
             <ContextVisualization/>
         </ZoneLayout>
     </HorizontalLayout>

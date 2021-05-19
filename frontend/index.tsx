@@ -30,7 +30,6 @@ import {setAutoFreeze} from "immer";
 import {ReplayApi} from "./player/replay";
 import {RecordApi} from "./recorder/record";
 import {StepperApi} from "./stepper/api";
-import {QuickAlgoContext} from "./task";
 
 /**
  * TODO: This should be removed if possible.
@@ -62,7 +61,6 @@ declare global {
         languageStrings: any,
         __REDUX_DEVTOOLS_EXTENSION__: any,
         __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: any,
-        quickAlgoContext: (display: boolean, infos: any) => QuickAlgoContext,
         quickAlgoLibraries: any,
         quickAlgoLibrariesList: any,
         stringsLanguage: any,

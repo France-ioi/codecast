@@ -64,7 +64,7 @@ export default function(context) {
         handler += "\n\ttry {";
         handler += '\n\t\tcurrentPythonContext["' + generatorName + '"]["' + blockName + '"].apply(currentPythonContext, args);';
         handler += "\n\t} catch (e) {";
-        handler += "\n\t\tcurrentPythonContext.runner._onStepError(e); console.error(e)}";
+        handler += "\n\t\tconsole.error(e);currentPythonContext.runner._onStepError(e)}";
         handler += '\n\t}).then(function (value) {\nresult = value;\nreturn value;\n })};';
         handler += '\n\treturn susp;';
         return '\nmod.' + name + ' = new Sk.builtin.func(function () {\n' + handler + '\n});\n';

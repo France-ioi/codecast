@@ -61,6 +61,7 @@ import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {produce} from "immer";
+import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 
 export interface StepperTask {
 
@@ -463,7 +464,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         }
     }
 
-    state.task.state = state.task.context && state.task.context.getCurrentState ? {...state.task.context.getCurrentState()} : {};
+    state.task.state = quickAlgoLibraries.getContext() && quickAlgoLibraries.getContext().getCurrentState ? {...quickAlgoLibraries.getContext().getCurrentState()} : {};
     state.stepper.currentStepperState = stepperContext.state;
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;
@@ -763,7 +764,7 @@ function* stepperStepSaga(app: App, action) {
  */
 function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContext) {
     if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
-        const taskContext = yield select((state: AppStore) => state.task.context);
+        const taskContext = quickAlgoLibraries.getContext();
         taskContext.reset();
 
         window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
