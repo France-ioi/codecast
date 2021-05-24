@@ -105,8 +105,8 @@ function getAttributes(node) {
 
     const result = {};
 
-    Array.from(attributes)
-        .forEach(({ name, value }) => {
+    Array.from<{name: string, value: string}>(attributes)
+        .forEach(({name, value}) => {
             result[name] = value;
         });
 

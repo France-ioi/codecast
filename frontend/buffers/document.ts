@@ -56,7 +56,7 @@ export class Document {
             if (nLines === 1) {
                 return new Document(docLines.set(row, line.substring(0, startColumn) + lines[0] + line.substring(startColumn)));
             } else {
-                const args = [row, 1].concat(delta.lines);
+                const args = [row, 1, ...delta.lines] as [number, number, ...string[]];
 
                 docLines.splice.apply(docLines, args);
                 docLines[row] = line.substring(0, startColumn) + docLines[row];
