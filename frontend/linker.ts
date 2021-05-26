@@ -4,7 +4,6 @@ import produce from "immer";
 import {App} from "./index";
 import {AppStore} from "./store";
 import {configureStore} from "@reduxjs/toolkit";
-import printerSlice from "./task/libs/printer/printer_slice";
 import taskSlice from "./task/task_slice";
 
 export interface Linker {
@@ -153,7 +152,6 @@ export function link(rootBuilder): Linker {
         let newState = immerRootReducer(state, action);
 
         return customCombineReducers({
-            printerLib: printerSlice,
             task: taskSlice,
         })(newState, action);
     };
