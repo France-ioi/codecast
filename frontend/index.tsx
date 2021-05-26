@@ -30,6 +30,7 @@ import {setAutoFreeze} from "immer";
 import {ReplayApi} from "./player/replay";
 import {RecordApi} from "./recorder/record";
 import {StepperApi} from "./stepper/api";
+import {EnhancedStore} from "@reduxjs/toolkit";
 
 /**
  * TODO: This should be removed if possible.
@@ -54,7 +55,7 @@ export interface App {
 
 declare global {
     interface Window extends WindowLocalStorage {
-        store: any,
+        store: EnhancedStore<AppStore>,
         Codecast: Codecast,
         currentPythonRunner: any,
         currentPythonContext: any,

@@ -114,8 +114,8 @@ function* playerPrepare(app: App, action) {
             platform
         },
         task: {
-            context,
             state: context && context.getCurrentState ? {...context.getCurrentState()} : {},
+            success: false,
         },
     };
 

@@ -1,18 +1,44 @@
 import {extractLevelSpecific} from "./utils";
 import StringRotation from './fixtures/14_strings_05_rotation';
-import {ActionTypes} from "./actionTypes";
 import {Bundle} from "../linker";
-import {AppStore, AppStoreReplay} from "../store";
-import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, getContext} from "redux-saga/effects";
+import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
+import {call, put, select, takeEvery, all, fork} from "redux-saga/effects";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PlayerInstant} from "../player";
-import {clearStepper} from "../stepper";
 import {ReplayContext} from "../player/sagas";
 import {PrinterLib} from "./libs/printer/printer_lib";
+import {AppAction} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
+import {
+    recordingEnabledChange, TaskState,
+    taskSuccess,
+    taskSuccessClear,
+    taskSuccessClearReducer,
+    taskSuccessReducer, updateCurrentTest
+} from "./task_slice";
+
+export enum ActionTypes {
+    TaskLoad = 'task/load',
+    TaskReset = 'task/reset',
+}
+
+export interface TaskResetAction extends AppAction {
+    type: ActionTypes.TaskReset;
+    payload: TaskState;
+}
+
+export const taskLoad = () => ({
+    type: ActionTypes.TaskLoad,
+});
+
+export const taskReset = (
+    taskData: TaskState,
+): TaskResetAction => ({
+    type: ActionTypes.TaskReset,
+    payload: taskData,
+});
 
 export interface QuickAlgoContext {
     display: boolean,
@@ -48,14 +74,6 @@ export interface QuickAlgoContext {
     reloadState?: (state: any) => void,
 }
 
-export interface TaskState {
-    recordingEnabled: boolean,
-    context?: QuickAlgoLibrary,
-    state?: any,
-    success?: boolean,
-    successMessage?: string,
-}
-
 // @ts-ignore
 if (!String.prototype.format) {
     // @ts-ignore
@@ -76,18 +94,7 @@ if (!String.prototype.format) {
     }
 }
 
-function taskSuccessReducer(state: AppStoreReplay, {payload: {message}}): void {
-    state.task.success = true;
-    state.task.successMessage = message;
-    clearStepper(state.stepper);
-}
-
-function taskSuccessClearReducer(state: AppStoreReplay): void {
-    state.task.success = false;
-    state.task.successMessage = null;
-}
-
-export function createContext (quickAlgoLibraries: QuickAlgoLibraries) {
+function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
     const curLevel = 'easy';
     const subTask = StringRotation;
     const levelGridInfos = extractLevelSpecific(subTask.gridInfos, curLevel);
@@ -101,7 +108,10 @@ export function createContext (quickAlgoLibraries: QuickAlgoLibraries) {
         quickAlgoLibraries.addLibrary(defaultLib);
     }
 
-    quickAlgoLibraries.reset(subTask.data[curLevel][0]);
+    const testData = subTask.data[curLevel][0];
+    yield put(updateCurrentTest(testData));
+    console.log('ici reset', testData);
+    quickAlgoLibraries.reset(testData);
 }
 
 export function getAutocompletionParameters (context) {
@@ -116,32 +126,20 @@ export function getAutocompletionParameters (context) {
 }
 
 export default function (bundle: Bundle) {
-    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.task = {
-            recordingEnabled: false,
-        };
-    });
-
-    bundle.defineAction(ActionTypes.TaskLoad);
-
-    bundle.defineAction(ActionTypes.TaskRecordingEnabledChange);
-    bundle.addReducer(ActionTypes.TaskRecordingEnabledChange, (state: AppStore, {payload: {enabled}}) => {
-        state.task.recordingEnabled = enabled;
-    });
-
-    bundle.defineAction(ActionTypes.TaskSuccess);
-    bundle.addReducer(ActionTypes.TaskSuccess, taskSuccessReducer);
-
-    bundle.defineAction(ActionTypes.TaskSuccessClear);
-    bundle.addReducer(ActionTypes.TaskSuccessClear, taskSuccessClearReducer);
-
     bundle.addSaga(function* () {
         yield takeEvery(ActionTypes.TaskLoad, function* () {
-            const quickAlgoLibraries = yield getContext('quickAlgoLibraries');
-            createContext(quickAlgoLibraries);
+            yield call(createContext, quickAlgoLibraries);
+            const sagas = quickAlgoLibraries.getSagas();
+            yield fork(function* () {
+                yield all(sagas);
+            });
         });
 
-        yield takeEvery(ActionTypes.TaskRecordingEnabledChange, function* () {
+        yield takeEvery(recordingEnabledChange.type, function* (payload) {
+            if (!payload) {
+                return;
+            }
+
             const state = yield select();
             const recorderState = getRecorderState(state);
             if (!recorderState.status) {
@@ -149,13 +147,16 @@ export default function (bundle: Bundle) {
             }
         });
 
-        // @ts-ignore
-        yield takeEvery(ActionTypes.TaskReset, function* ({payload: {state: taskData}}) {
-            const state = yield select();
-            state.task.success = taskData.success;
-            state.task.successMessage = taskData.successMessage;
-            if (taskData.state) {
-                quickAlgoLibraries.getContext().reloadState(taskData.state);
+        yield takeEvery(taskSuccess.type, function* () {
+            yield put({type: StepperActionTypes.StepperExit});
+        });
+
+        yield takeEvery(ActionTypes.TaskReset, function* (action: TaskResetAction) {
+            const taskData = action.payload;
+            if (taskData.success) {
+                yield put(taskSuccess(taskData.successMessage));
+            } else {
+                yield put(taskSuccessClear());
             }
         });
     });
@@ -164,26 +165,27 @@ export default function (bundle: Bundle) {
         replayApi.onReset(function* (instant: PlayerInstant) {
             const taskData = instant.state.task;
             if (taskData) {
-                yield put({type: ActionTypes.TaskReset, payload: {state: taskData}});
+                console.log('ici, repare this', taskData);
+                yield put(taskReset(taskData));
             }
         });
 
-        recordApi.on(ActionTypes.TaskSuccess, function* (addEvent, action) {
-            const {payload: {message}} = action;
+        recordApi.on(taskSuccess.type, function* (addEvent, action) {
+            const {payload} = action;
 
-            yield call(addEvent, 'task.success', message);
+            yield call(addEvent, 'task.success', payload);
         });
         replayApi.on('task.success', function (replayContext: ReplayContext, event) {
             const message = event[2];
 
-            taskSuccessReducer(replayContext.state, {payload: {message}});
+            taskSuccessReducer(replayContext.state.task, taskSuccess(message));
         });
 
-        recordApi.on(ActionTypes.TaskSuccessClear, function* (addEvent) {
+        recordApi.on(taskSuccessClear.type, function* (addEvent) {
             yield call(addEvent, 'task.success.clear');
         });
         replayApi.on('task.success.clear', function (replayContext: ReplayContext) {
-            taskSuccessClearReducer(replayContext.state);
+            taskSuccessClearReducer(replayContext.state.task);
         });
     });
 }

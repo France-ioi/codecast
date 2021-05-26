@@ -3,7 +3,6 @@ import {Dialog, Icon} from '@blueprintjs/core';
 import {isLocalMode} from "../utils/app";
 import {LanguageSelection} from "../lang/LanguageSelection";
 import {ExamplePicker} from "../common/ExamplePicker";
-import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
 import {connect} from "react-redux";
@@ -11,6 +10,7 @@ import {AppStore} from "../store";
 import {MenuIconsTask} from "./MenuIconsTask";
 import {select} from "redux-saga/effects";
 import {IoMode} from "../stepper/io";
+import {recordingEnabledChange} from "./task_slice";
 
 interface MenuTaskStateToProps {
     getMessage: Function,
@@ -180,10 +180,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
     };
 
     toggleRecording = () => {
-        this.props.dispatch({
-            type: ActionTypes.TaskRecordingEnabledChange,
-            payload: {enabled: !this.props.recordingEnabled}
-        });
+        this.props.dispatch(recordingEnabledChange(!this.props.recordingEnabled));
         this.closeMenu();
     }
 

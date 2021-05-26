@@ -1,8 +1,15 @@
 import React from "react";
-import {LayoutIOPane} from "../layout/LayoutIOPane";
-import {QuickAlgoLibrary} from "./quickalgo_librairies";
-
-// Printer lib version 3 : React-way
+import {InputOutputVisualization} from "./InputOutputVisualization";
+import {QuickAlgoLibrary} from "../quickalgo_librairies";
+import {fork, put, select, take, takeEvery} from "redux-saga/effects";
+import {AppStore} from "../../../store";
+import {channel} from "redux-saga";
+import {ActionTypes} from "../../../buffers/actionTypes";
+import {ActionTypes as TaskActionTypes, TaskResetAction} from "../../index";
+import {documentFromString} from "../../../buffers/document";
+import {DocumentModel} from "../../../buffers";
+import {updateCurrentTest} from "../../task_slice";
+import {taskReset} from "../../index";
 
 function escapeHtml(unsafe) {
     return unsafe
@@ -12,6 +19,26 @@ function escapeHtml(unsafe) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
 }
+
+enum PrinterLibAction {
+    readLine = 'readLine',
+    getInput = 'getInput',
+    printLine = 'printLine',
+    reset = 'reset',
+}
+
+const inputBufferLib = 'printerLibInput';
+const outputBufferLib = 'printerLibOutput';
+const inputBufferLibTest = 'printerLibTestInput';
+
+interface ExecutionChannelMessage {
+    action: PrinterLibAction,
+    payload?: any,
+    resolve?: Function,
+    reject?: Function,
+}
+
+const executionChannel = channel<ExecutionChannelMessage>();
 
 const localLanguageStrings = {
     fr: {
@@ -118,7 +145,6 @@ export class PrinterLib extends QuickAlgoLibrary {
     cells: any;
     texts: any;
     scale: number;
-    firstLineHighlight: any;
     libOptions: any;
     showIfMutator: boolean;
     printer: any;
@@ -146,13 +172,11 @@ export class PrinterLib extends QuickAlgoLibrary {
         this.cells = [];
         this.texts = [];
         this.scale = 1;
-        this.firstLineHighlight = null;
         this.libOptions = infos.libOptions ? infos.libOptions : {};
 
         this.printer = {
             input_text: "",
             output_text: "",
-            input_reset: true,
             commonPrint: this.commonPrint,
             print: this.print,
             print_end: this.print_end,
@@ -195,16 +219,11 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     reset(taskInfos) {
+        console.log('reset printer lib', taskInfos);
         this.success = false;
-        if (this.display) {
-            this.resetDisplay();
-        } else {
-            // resetItems();
-        }
 
-        this.printer.output_text = "";
         this.printer.input_text = "";
-        this.printer.input_reset = true;
+        this.printer.output_text = "";
 
         if (taskInfos) {
             this.taskInfos = taskInfos;
@@ -212,188 +231,99 @@ export class PrinterLib extends QuickAlgoLibrary {
         if (this.taskInfos && this.taskInfos.input) {
             this.printer.input_text = this.taskInfos.input;
         }
-        this.updateScale();
+
+        if (this.display) {
+            executionChannel.put({
+                action: PrinterLibAction.reset,
+            });
+        }
     };
 
     getCurrentState() {
         return {
-            input_text: this.printer.input_text,
-            output_text: this.printer.output_text,
-            input_reset: this.printer.input_reset,
+            input: this.printer.input_text,
+            output: this.printer.output_text,
         };
     };
 
     reloadState(data): void {
-        this.printer.input_text = data.input_text;
-        this.printer.output_text = data.output_text;
-        this.printer.input_reset = data.input_reset;
-        this.updateScale();
+        const {input, output} = data;
+        this.printer.input_text = input;
+        this.printer.output_text = output;
     };
 
     resetDisplay() {
-        // this.delayFactory.destroyAll();
 
-        $("#grid").html(
-            '<div style="width: 400px; margin: 0; padding: 0; overflow: hidden; text-align: left;">' +
-            '  <div style="width: 175px; height: 200px; padding: 5px; margin: 5px; border: 1px solid black; overflow-y: auto; float: right;">' +
-            '    <div style="font-size:small">Output:</div>' +
-            '    <pre id="output" style="margin:0px;">a</pre>' +
-            '  </div>' +
-            '  <div style="width: 175px; height: 200px; padding: 5px; margin: 5px; border: 1px solid black; overflow-y: auto; float: right;">' +
-            '    <div style="font-size:small">Input:</div>' +
-            (this.libOptions.highlightRead ? '    <pre id="inputHighlight" style="margin: 0px; background-color: lightgray; border-bottom: 1px solid black;"></pre>' : '') +
-            '    <pre id="input" style="margin: 0px;">a</pre>' +
-            '  </div>' +
-            '</div>')
-
-        $("#output").html("");
-        $("#input").html("");
-        $("#inputHighlight").html("");
-        this.firstLineHighlight = null;
-
-        // this.blocklyHelper.updateSize();
-        this.updateScale();
     };
 
-    commonPrint(args, end, callback) {
-        if (this.lost) {
-            return;
-        }
-
-        // Fix display of arrays
-        const valueToStr = function(value) {
-            if (value && value.length !== undefined && typeof value == 'object') {
-                let oldValue = value;
-                value = [];
-                for (let i=0; i < oldValue.length; i++) {
-                    if (oldValue[i] && typeof oldValue[i].v != 'undefined') {
-                        // When used inside Skulpt (Python mode)
-                        value.push(oldValue[i].v);
-                    } else {
-                        value.push(oldValue[i]);
-                    }
-                    value[i] = valueToStr(value[i]);
-                }
-                return '[' + value.join(', ') + ']';
-            } else if (value && value.isFloat && Math.floor(value) == value) {
-                return value + '.0';
-            } else if (value === true) {
-                return 'True';
-            } else if (value === false) {
-                return 'False';
-            }
-            return value;
-        }
-
-        let text = '';
-        for (let i=0; i < args.length; i++) {
-            text += (i > 0 ? ' ' : '') + valueToStr(args[i]);
-        }
-
-        this.printer.output_text += text + end;
-        this.updateScale();
-        this.waitDelay(callback);
+    commonPrint(args, end) {
+        return new Promise<null>((resolve, reject) => {
+            executionChannel.put({
+                action: PrinterLibAction.printLine,
+                payload: {args, end},
+                resolve,
+                reject
+            });
+        });
     }
 
-    print() {
-        this.commonPrint(Array.prototype.slice.call(arguments, 0, -1), "\n", arguments[arguments.length-1]);
+    async print() {
+        await this.commonPrint(Array.prototype.slice.call(arguments, 0, -1), "\n");
+        this.waitDelay(arguments[arguments.length-1]);
     }
 
-    print_end() {
+    async print_end() {
         if(arguments.length > 1) {
-            this.commonPrint(Array.prototype.slice.call(arguments, 0, -2), arguments[arguments.length-2], arguments[arguments.length-1]);
+            await this.commonPrint(Array.prototype.slice.call(arguments, 0, -2), arguments[arguments.length-2]);
+            this.waitDelay(arguments[arguments.length-1]);
         } else {
-            this.commonPrint([], "\n", arguments[arguments.length-1]);
+            await this.commonPrint([], "\n");
+            this.waitDelay(arguments[arguments.length-1]);
         }
     }
 
-    commonRead() {
-        let result;
-
-        if(this.taskInfos.freeInput && this.display) {
-            if(this.printer.input_reset) {
-                // First read, reset input display
-                this.printer.input_text = '';
-                this.printer.input_reset = false;
-            }
-            result = window.prompt(this.strings.messages.inputPrompt);
-            this.printer.input_text += result + '\n';
-        } else {
-            // This test has a predefined input
-            result = "";
-            let index = this.printer.input_text.indexOf('\n');
-
-            if (index < 0) {
-                if(!this.printer.input_text) {
-                    throw this.strings.messages.inputEmpty;
-                }
-                result = this.printer.input_text;
-                this.printer.input_text = "";
-            }
-            else {
-                result = this.printer.input_text.substring(0,index);
-                this.printer.input_text = this.printer.input_text.substring(index+1);
-            }
-        }
-
-        if (this.libOptions.highlightRead) {
-            this.firstLineHighlight = result;
-        }
-
-        this.updateScale();
-
-        return result;
+    commonRead(action: PrinterLibAction = PrinterLibAction.readLine) {
+        return new Promise<string>((resolve, reject) => {
+            executionChannel.put({action, resolve, reject});
+        });
     }
 
-    read(callback) {
-        const str = this.commonRead();
-
+    async read(callback) {
+        const str = await this.commonRead();
         this.waitDelay(callback, str);
     }
 
-
-    readInteger(callback) {
-        const num = parseInt(this.commonRead());
-
-        this.waitDelay(callback, num);
+    async readInteger(callback) {
+        const result = await this.commonRead();
+        this.waitDelay(callback, parseInt(result));
     }
 
-    readFloat(callback) {
-        const num = parseFloat(this.commonRead());
-
-        this.waitDelay(callback, num);
+    async readFloat(callback) {
+        const result = await this.commonRead();
+        this.waitDelay(callback, parseFloat(result));
     }
 
-    eof(callback) {
-        let index = this.printer.input_text.indexOf('\n');
-
-        if (index < 0) {
-            this.waitDelay(callback, true);
-        }
-
-        this.waitDelay(callback, false);
+    async eof(callback) {
+        const result = await this.commonRead(PrinterLibAction.getInput);
+        this.waitDelay(callback, -1 === result.indexOf('\n'));
     }
 
     charToAscii(char, callback) {
         const number = char.charCodeAt(0);
-
         this.waitDelay(callback, number);
     }
 
     asciiToChar(number, callback) {
         const char = String.fromCharCode(number);
-
         this.waitDelay(callback, char);
     }
 
     charToNumber(char, callback) {
         const number = char.charCodeAt(0) - 65;
-
         this.waitDelay(callback, number);
     }
     numberToChar(number, callback) {
         const char = String.fromCharCode(number + 65);
-
         this.waitDelay(callback, char);
     }
 
@@ -401,21 +331,17 @@ export class PrinterLib extends QuickAlgoLibrary {
         if (!this.display) {
             return;
         }
-
-        // Codecast.store.dispatch({type: ActionTypes.BufferReset, buffer: 'printer-input', model: this.printer.input_text});
-        // Codecast.store.dispatch({type: ActionTypes.BufferReset, buffer: 'printer-output', model: this.printer.output_text});
-        $("#output").text(this.printer.output_text);
-        $("#input").text(this.printer.input_text);
-        $("#inputHighlight").text(this.firstLineHighlight ? this.firstLineHighlight : '');
     };
 
     checkOutputHelper() {
+        const state = window.store.getState();
+        const currentOutputText = state.buffers[outputBufferLib].model.document.toString();
+
+        console.log('output', currentOutputText, this);
         let expectedLines = this.taskInfos.output.replace(/\s*$/,"").split("\n");
-        let actualLines = this.printer.output_text.replace(/\s*$/,"").split("\n");
+        let actualLines = currentOutputText.replace(/\s*$/,"").split("\n");
 
-        let iLine = 0;
-
-        for (iLine = 0; iLine < expectedLines.length && iLine < actualLines.length; iLine++) {
+        for (let iLine = 0; iLine < expectedLines.length && iLine < actualLines.length; iLine++) {
             let expectedLine = expectedLines[iLine].replace(/\s*$/,"");
             let actualLine = actualLines[iLine].replace(/\s*$/,"");
 
@@ -463,7 +389,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     getComponent() {
-        return LayoutIOPane;
+        return InputOutputVisualization;
     }
 
     provideBlocklyColours() {
@@ -488,5 +414,159 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
 
         return super.provideBlocklyColours();
+    }
+
+    *executionChannelSaga(context) {
+        while (true) {
+            const {action, payload, resolve, reject} = yield take(executionChannel);
+            const inputValue = context.printer.input_text;
+            const outputValue = context.printer.output_text;
+
+            switch (action) {
+                case PrinterLibAction.getInput: {
+                    resolve(this.printer.input_text);
+                    break;
+                }
+                case PrinterLibAction.readLine: {
+                    let result = "";
+                    let index = inputValue.indexOf('\n');
+                    if (index === -1) {
+                        if (!inputValue) {
+                            reject(context.strings.messages.inputEmpty);
+                            continue;
+                        }
+                        result = inputValue;
+                        context.printer.input_text = '';
+                    } else {
+                        result = inputValue.substring(0, index);
+                        context.printer.input_text = inputValue.substring(index + 1);
+                    }
+
+                    if (context.display) {
+                        const doc = documentFromString(context.printer.input_text);
+                        yield put({
+                            type: ActionTypes.BufferReset,
+                            buffer: inputBufferLib,
+                            model: new DocumentModel(doc)
+                        });
+                    }
+
+                    resolve(result);
+                    break;
+                }
+                case PrinterLibAction.reset: {
+                    const currentTest = yield select((state: AppStore) => state.task.currentTest);
+                    const inputTestDocument = documentFromString(currentTest.input);
+                    yield put({
+                        type: ActionTypes.BufferReset,
+                        buffer: inputBufferLibTest,
+                        model: new DocumentModel(inputTestDocument)
+                    });
+
+                    yield put({
+                        type: ActionTypes.BufferReset,
+                        buffer: inputBufferLib,
+                        model: new DocumentModel(documentFromString(context.printer.input_text))
+                    });
+                    yield put({
+                        type: ActionTypes.BufferReset,
+                        buffer: outputBufferLib,
+                        model: new DocumentModel(documentFromString(context.printer.output_text))
+                    });
+                    break;
+                }
+                case PrinterLibAction.printLine: {
+                    if (context.lost) {
+                        return;
+                    }
+
+                    // Fix display of arrays
+                    const valueToStr = function(value) {
+                        if (value && value.length !== undefined && typeof value == 'object') {
+                            let oldValue = value;
+                            value = [];
+                            for (let i=0; i < oldValue.length; i++) {
+                                if (oldValue[i] && typeof oldValue[i].v != 'undefined') {
+                                    // When used inside Skulpt (Python mode)
+                                    value.push(oldValue[i].v);
+                                } else {
+                                    value.push(oldValue[i]);
+                                }
+                                value[i] = valueToStr(value[i]);
+                            }
+                            return '[' + value.join(', ') + ']';
+                        } else if (value && value.isFloat && Math.floor(value) == value) {
+                            return value + '.0';
+                        } else if (value === true) {
+                            return 'True';
+                        } else if (value === false) {
+                            return 'False';
+                        }
+                        return value;
+                    }
+
+                    let text = '';
+                    for (let i=0; i < payload.args.length; i++) {
+                        text += (i > 0 ? ' ' : '') + valueToStr(payload.args[i]);
+                    }
+
+                    context.printer.output_text = outputValue + text + payload.end;
+
+                    if (context.display) {
+                        const doc = documentFromString(context.printer.output_text);
+                        yield put({
+                            type: ActionTypes.BufferReset,
+                            buffer: outputBufferLib,
+                            model: new DocumentModel(doc)
+                        });
+                    }
+
+                    resolve();
+                    break;
+                }
+                default:
+                    throw 'Unknown action';
+            }
+        }
+    }
+
+    *getSaga() {
+        const context = this;
+        yield fork(this.executionChannelSaga, this);
+
+        yield takeEvery(ActionTypes.BufferEdit, function* (action) {
+            // @ts-ignore
+            const {buffer} = action;
+            if (inputBufferLibTest !== buffer) {
+                return;
+            }
+
+            const inputValue = yield select((state: AppStore) => state.buffers[inputBufferLibTest].model.document.toString());
+            yield put(updateCurrentTest({input: inputValue}));
+        });
+
+        yield takeEvery(TaskActionTypes.TaskReset, function* (action: TaskResetAction) {
+            const taskData = action.payload;
+            if (!taskData.state) {
+                return;
+            }
+
+            context.reloadState(taskData.state);
+            console.log('reset task state', taskData);
+
+            const inputDocument = documentFromString(context.printer.input_text);
+            yield put({
+                type: ActionTypes.BufferReset,
+                buffer: inputBufferLib,
+                model: new DocumentModel(inputDocument)
+            });
+
+            const outputDocument = documentFromString(context.printer.output_text);
+            yield put({
+                type: ActionTypes.BufferReset,
+                buffer: outputBufferLib,
+                model: new DocumentModel(outputDocument)
+            });
+        });
     }
 }

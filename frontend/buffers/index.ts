@@ -119,6 +119,12 @@ export const initialStateBuffers: {[key: string]: BufferState} = {
     output: new BufferState()
 };
 
+function initBufferIfNeeded(state: AppStore, buffer: string) {
+    if (!(buffer in state.buffers)) {
+        state.buffers[buffer] = new BufferState();
+    }
+}
+
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {options: {source, input}}}) => {
         state.buffers = initialStateBuffers;
@@ -134,6 +140,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.BufferInit);
     bundle.addReducer(ActionTypes.BufferInit, (state: AppStore, action) => {
         const {buffer, editor} = action;
+        initBufferIfNeeded(state, buffer);
 
         state.buffers[buffer].editor = editor;
     });
@@ -166,13 +173,13 @@ export default function(bundle: Bundle) {
 
 function bufferLoadReducer(state: AppStore, action): void {
     const {buffer, text} = action;
-
+    initBufferIfNeeded(state, buffer);
     state.buffers[buffer].model = new DocumentModel(documentFromString(text));
 }
 
 function bufferResetReducer(state: AppStore, action): void {
     const {buffer, model} = action;
-
+    initBufferIfNeeded(state, buffer);
     state.buffers[buffer].model = model;
 }
 
@@ -293,21 +300,16 @@ function addRecordHooks({recordApi}: App) {
     recordApi.onStart(function* (init) {
         const state: AppStore = yield select();
 
-        const sourceModel = getBufferModel(state, 'source');
-        const inputModel = getBufferModel(state, 'input');
+        init.buffers = {};
+        for (let bufferName of Object.keys(state.buffers)) {
+            const bufferModel = getBufferModel(state, bufferName);
 
-        init.buffers = {
-            source: {
-                document: sourceModel.document.toString(),
-                selection: compressRange(sourceModel.selection),
-                firstVisibleRow: sourceModel.firstVisibleRow
-            },
-            input: {
-                document: inputModel.document.toString(),
-                selection: compressRange(inputModel.selection),
-                firstVisibleRow: inputModel.firstVisibleRow
+            init.buffers[bufferName] = {
+                document: bufferModel.document.toString(),
+                selection: compressRange(bufferModel.selection),
+                firstVisibleRow: bufferModel.firstVisibleRow
             }
-        };
+        }
     });
     recordApi.on(ActionTypes.BufferSelect, function* (addEvent, action) {
         const {buffer, selection} = action;
@@ -343,15 +345,14 @@ function addRecordHooks({recordApi}: App) {
 function addReplayHooks({replayApi}: App) {
     replayApi.on('start', function(replayContext: ReplayContext, event) {
         const {buffers} = event[2];
-        const sourceModel = buffers && buffers.source ? loadBufferModel(buffers.source) : new DocumentModel();
-        const inputModel = buffers && buffers.input ? loadBufferModel(buffers.input) : new DocumentModel();
-        const outputModel = new DocumentModel();
-
         replayContext.state.buffers = initialStateBuffers;
 
-        replayContext.state.buffers['source'].model = sourceModel;
-        replayContext.state.buffers['input'].model = inputModel;
-        replayContext.state.buffers['output'].model = outputModel;
+        for (let bufferName of Object.keys(buffers)) {
+            if (!(bufferName in replayContext.state.buffers)) {
+                replayContext.state.buffers[bufferName] = new BufferState();
+            }
+            replayContext.state.buffers[bufferName].model = buffers && buffers[bufferName] ? loadBufferModel(buffers[bufferName]) : new DocumentModel();
+        }
     });
     replayApi.on('buffer.select', function(replayContext: ReplayContext, event) {
         // XXX use reducer imported from common/buffers

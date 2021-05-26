@@ -17,7 +17,7 @@ export class QuickAlgoLibraries {
         this.applyOnLibraries('reset', [taskInfos]);
     }
 
-    resetDisplay(taskInfos) {
+    resetDisplay(taskInfos = null) {
         this.applyOnLibraries('resetDisplay', [taskInfos]);
     }
 
@@ -35,6 +35,17 @@ export class QuickAlgoLibraries {
         }
 
         return null;
+    }
+
+    getSagas() {
+        const sagas = [];
+        for (let library of this.libraries) {
+            if (library.getSaga()) {
+                sagas.push(library.getSaga());
+            }
+        }
+
+        return sagas;
     }
 }
 
@@ -180,5 +191,21 @@ export class QuickAlgoLibrary {
     };
 
     reloadState(state: any): void {
+    }
+
+    getSaga() {
+        return null;
+    }
+
+    onError(diagnostics: any): void {
+
+    }
+
+    onSuccess(message: any): void {
+
+    }
+
+    onInput(): void {
+
     }
 }

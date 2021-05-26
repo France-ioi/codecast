@@ -1,26 +1,17 @@
-import React from "react";
+import React, {useEffect} from "react";
 import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
 
-export class ContextVisualization extends React.PureComponent {
-    componentDidMount() {
-        quickAlgoLibraries.reset();
-    }
+export function ContextVisualization() {
+    const Visualization = quickAlgoLibraries.getVisualization();
 
-    render() {
-        const Visualization = quickAlgoLibraries.getVisualization();
+    useEffect(() => {
+        quickAlgoLibraries.resetDisplay();
+    });
 
-        return (
-            <div className="task-visualisation">
-                {/*<div id="grid"/>*/}
-                <Visualization/>
-            </div>
-        );
-    }
-
-    static computeDimensions(width: number, height: number) {
-        return {
-            taken: {width, height},
-            minimum: {width: 200, height: 200},
-        }
-    }
+    return (
+        <div className="task-visualisation">
+            {/*<div id="grid"/>*/}
+            <Visualization/>
+        </div>
+    );
 }

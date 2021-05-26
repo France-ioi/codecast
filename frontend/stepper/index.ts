@@ -320,6 +320,7 @@ export function clearStepper(stepper: Stepper) {
     stepper.status = StepperStatus.Clear;
     stepper.undo = [];
     stepper.redo = [];
+    stepper.interrupting = false;
     stepper.initialStepperState = null;
     stepper.currentStepperState = null;
 }

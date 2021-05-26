@@ -62,9 +62,10 @@ export default function(context) {
         }
 
         handler += "\n\ttry {";
-        handler += '\n\t\tcurrentPythonContext["' + generatorName + '"]["' + blockName + '"].apply(currentPythonContext, args);';
+        handler += '\n\t\tconst result = currentPythonContext["' + generatorName + '"]["' + blockName + '"].apply(currentPythonContext, args);';
+        handler += '\n\t\tif (result instanceof Promise) result.catch((e) => { currentPythonContext.runner._onStepError(e) })';
         handler += "\n\t} catch (e) {";
-        handler += "\n\t\tconsole.error(e);currentPythonContext.runner._onStepError(e)}";
+        handler += "\n\t\tcurrentPythonContext.runner._onStepError(e)}";
         handler += '\n\t}).then(function (value) {\nresult = value;\nreturn value;\n })};';
         handler += '\n\treturn susp;';
         return '\nmod.' + name + ' = new Sk.builtin.func(function () {\n' + handler + '\n});\n';
@@ -648,6 +649,7 @@ export default function(context) {
     };
 
     this._onStepError = (message, callback) => {
+        console.error(message);
         context.onExecutionEnd && context.onExecutionEnd();
         // We always get there, even on a success
         this.stop();
