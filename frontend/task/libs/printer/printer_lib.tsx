@@ -9,7 +9,6 @@ import {ActionTypes as TaskActionTypes, TaskResetAction} from "../../index";
 import {documentFromString} from "../../../buffers/document";
 import {DocumentModel} from "../../../buffers";
 import {updateCurrentTest} from "../../task_slice";
-import {taskReset} from "../../index";
 
 function escapeHtml(unsafe) {
     return unsafe
@@ -552,21 +551,22 @@ export class PrinterLib extends QuickAlgoLibrary {
             }
 
             context.reloadState(taskData.state);
-            console.log('reset task state', taskData);
 
-            const inputDocument = documentFromString(context.printer.input_text);
-            yield put({
-                type: ActionTypes.BufferReset,
-                buffer: inputBufferLib,
-                model: new DocumentModel(inputDocument)
-            });
+            if (context.display) {
+                const inputDocument = documentFromString(context.printer.input_text);
+                yield put({
+                    type: ActionTypes.BufferReset,
+                    buffer: inputBufferLib,
+                    model: new DocumentModel(inputDocument)
+                });
 
-            const outputDocument = documentFromString(context.printer.output_text);
-            yield put({
-                type: ActionTypes.BufferReset,
-                buffer: outputBufferLib,
-                model: new DocumentModel(outputDocument)
-            });
+                const outputDocument = documentFromString(context.printer.output_text);
+                yield put({
+                    type: ActionTypes.BufferReset,
+                    buffer: outputBufferLib,
+                    model: new DocumentModel(outputDocument)
+                });
+            }
         });
     }
 }

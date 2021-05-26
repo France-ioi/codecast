@@ -150,23 +150,19 @@ export default function (bundle: Bundle) {
         yield takeEvery(taskSuccess.type, function* () {
             yield put({type: StepperActionTypes.StepperExit});
         });
-
-        yield takeEvery(ActionTypes.TaskReset, function* (action: TaskResetAction) {
-            const taskData = action.payload;
-            if (taskData.success) {
-                yield put(taskSuccess(taskData.successMessage));
-            } else {
-                yield put(taskSuccessClear());
-            }
-        });
     });
 
     bundle.defer(function({replayApi, recordApi}: App) {
         replayApi.onReset(function* (instant: PlayerInstant) {
             const taskData = instant.state.task;
             if (taskData) {
-                console.log('ici, repare this', taskData);
                 yield put(taskReset(taskData));
+                yield put(updateCurrentTest(taskData.currentTest));
+                if (taskData.success) {
+                    yield put(taskSuccess(taskData.successMessage));
+                } else {
+                    yield put(taskSuccessClear());
+                }
             }
         });
 
