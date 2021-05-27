@@ -7,16 +7,15 @@ import {call, put, select, takeEvery, all, fork} from "redux-saga/effects";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PlayerInstant} from "../player";
-import {ReplayContext} from "../player/sagas";
 import {PrinterLib} from "./libs/printer/printer_lib";
 import {AppAction} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import {
-    recordingEnabledChange, TaskState,
+    recordingEnabledChange,
+    TaskState,
     taskSuccess,
     taskSuccessClear,
-    taskSuccessClearReducer,
-    taskSuccessReducer, updateCurrentTest
+    updateCurrentTest
 } from "./task_slice";
 
 export enum ActionTypes {
@@ -39,40 +38,6 @@ export const taskReset = (
     type: ActionTypes.TaskReset,
     payload: taskData,
 });
-
-export interface QuickAlgoContext {
-    display: boolean,
-    infos: any,
-    nbCodes: number,
-    nbNodes: number,
-    setLocalLanguageStrings?: Function,
-    strings?: any,
-    importLanguageStrings?: Function,
-    getConceptList?: Function,
-    changeDelay?: Function,
-    waitDelay?: Function,
-    callCallback?: Function,
-    setCurNode?: Function,
-    debug_alert?: Function,
-    reset?: Function,
-    resetDisplay?: Function,
-    updateScale?: Function,
-    unload?: Function,
-    provideBlocklyColours?: Function,
-    localLanguageStrings?: any,
-    customBlocks?: any,
-    customConstants?: any,
-    conceptList?: any,
-    curNode?: any,
-    stringsLanguage?: any,
-    runner?: any,
-    propagate?: Function,
-    onSuccess?: Function,
-    onError?: Function,
-    onInput?: Function,
-    getCurrentState?: () => any,
-    reloadState?: (state: any) => void,
-}
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -110,7 +75,6 @@ function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
 
     const testData = subTask.data[curLevel][0];
     yield put(updateCurrentTest(testData));
-    console.log('ici reset', testData);
     quickAlgoLibraries.reset(testData);
 }
 
@@ -152,7 +116,7 @@ export default function (bundle: Bundle) {
         });
     });
 
-    bundle.defer(function({replayApi, recordApi}: App) {
+    bundle.defer(function({replayApi}: App) {
         replayApi.onReset(function* (instant: PlayerInstant) {
             const taskData = instant.state.task;
             if (taskData) {
@@ -164,24 +128,6 @@ export default function (bundle: Bundle) {
                     yield put(taskSuccessClear());
                 }
             }
-        });
-
-        recordApi.on(taskSuccess.type, function* (addEvent, action) {
-            const {payload} = action;
-
-            yield call(addEvent, 'task.success', payload);
-        });
-        replayApi.on('task.success', function (replayContext: ReplayContext, event) {
-            const message = event[2];
-
-            taskSuccessReducer(replayContext.state.task, taskSuccess(message));
-        });
-
-        recordApi.on(taskSuccessClear.type, function* (addEvent) {
-            yield call(addEvent, 'task.success.clear');
-        });
-        replayApi.on('task.success.clear', function (replayContext: ReplayContext) {
-            taskSuccessClearReducer(replayContext.state.task);
         });
     });
 }

@@ -9,6 +9,7 @@ import {ActionTypes as TaskActionTypes, TaskResetAction} from "../../index";
 import {documentFromString} from "../../../buffers/document";
 import {DocumentModel} from "../../../buffers";
 import {updateCurrentTest} from "../../task_slice";
+import {terminalInit} from "./printer_terminal_slice";
 
 function escapeHtml(unsafe) {
     return unsafe
@@ -472,6 +473,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                         buffer: outputBufferLib,
                         model: new DocumentModel(documentFromString(context.printer.output_text))
                     });
+                    yield put(terminalInit(null));
                     break;
                 }
                 case PrinterLibAction.printLine: {

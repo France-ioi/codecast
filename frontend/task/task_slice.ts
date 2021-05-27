@@ -48,9 +48,9 @@ export const {
     updateCurrentTest,
 } = taskSlice.actions;
 
-export const {
-    taskSuccess: taskSuccessReducer,
-    taskSuccessClear: taskSuccessClearReducer,
-} = taskSlice.caseReducers;
+export const taskRecordableActions = [
+    'taskSuccess',
+    'taskSuccessClear',
+];
 
-export default taskSlice.reducer;
+export default taskSlice;

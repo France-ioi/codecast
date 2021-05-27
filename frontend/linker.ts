@@ -5,6 +5,7 @@ import {App} from "./index";
 import {AppStore} from "./store";
 import {configureStore} from "@reduxjs/toolkit";
 import taskSlice from "./task/task_slice";
+import printerTerminalSlice from "./task/libs/printer/printer_terminal_slice";
 
 export interface Linker {
     scope: App,
@@ -121,7 +122,7 @@ export function link(rootBuilder): Linker {
     // Compose the enhancers.
     const sagaMiddleware = createSagaMiddleware({
         onError: (error) => {
-            console.log(error);
+            console.error(error);
             setImmediate(() => {
                 throw error;
             });
@@ -152,7 +153,8 @@ export function link(rootBuilder): Linker {
         let newState = immerRootReducer(state, action);
 
         return customCombineReducers({
-            task: taskSlice,
+            [taskSlice.name]: taskSlice.reducer,
+            [printerTerminalSlice.name]: printerTerminalSlice.reducer,
         })(newState, action);
     };
 
