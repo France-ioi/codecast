@@ -57,7 +57,7 @@ export function PureTerminal(props: PureTerminalProps) {
              onKeyUp={onKeyUp} onKeyPress={onKeyPress}>
             {terminalBuffer.lines.map(function(line, i) {
                 return (
-                    <div key={i} className="terminal-line" style={{width: '720px'}}>
+                    <div key={i} className="terminal-line" style={{width: '100%'}}>
                         {line.map(function(cell, j) {
                             if (i == ci && j == cj) {
                                 return <span key={j} className="terminal-cursor">{cell.char}</span>;

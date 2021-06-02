@@ -8,24 +8,33 @@ import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PlayerInstant} from "../player";
 import {PrinterLib} from "./libs/printer/printer_lib";
-import {AppAction} from "../store";
+import {AppAction, AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
-import {
-    recordingEnabledChange,
+import taskSlice, {
+    recordingEnabledChange, taskInitialState, taskRecordableActions,
     TaskState,
     taskSuccess,
     taskSuccessClear,
     updateCurrentTest
 } from "./task_slice";
+import {addAutoRecordingBehaviour} from "../recorder/record";
+import {ReplayContext} from "../player/sagas";
+import {DocumentModel, initialStateBuffers} from "../buffers";
 
 export enum ActionTypes {
     TaskLoad = 'task/load',
     TaskReset = 'task/reset',
+    TaskInputEntered = 'task/inputEntered',
 }
 
 export interface TaskResetAction extends AppAction {
     type: ActionTypes.TaskReset;
     payload: TaskState;
+}
+
+export interface TaskInputEnteredAction extends AppAction {
+    type: ActionTypes.TaskInputEntered;
+    payload: string;
 }
 
 export const taskLoad = () => ({
@@ -37,6 +46,13 @@ export const taskReset = (
 ): TaskResetAction => ({
     type: ActionTypes.TaskReset,
     payload: taskData,
+});
+
+export const taskInputEntered = (
+    input: string
+): TaskInputEnteredAction => ({
+    type: ActionTypes.TaskInputEntered,
+    payload: input,
 });
 
 // @ts-ignore
@@ -59,9 +75,10 @@ if (!String.prototype.format) {
     }
 }
 
+const subTask = StringRotation;
+const curLevel = 'easy';
+
 function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
-    const curLevel = 'easy';
-    const subTask = StringRotation;
     const levelGridInfos = extractLevelSpecific(subTask.gridInfos, curLevel);
     const display = true;
 
@@ -73,9 +90,14 @@ function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
         quickAlgoLibraries.addLibrary(defaultLib);
     }
 
-    const testData = subTask.data[curLevel][0];
+    const testData = getTaskTest();
+    console.log('create context', testData);
     yield put(updateCurrentTest(testData));
     quickAlgoLibraries.reset(testData);
+}
+
+function getTaskTest() {
+    return subTask.data[curLevel][0];
 }
 
 export function getAutocompletionParameters (context) {
@@ -90,10 +112,10 @@ export function getAutocompletionParameters (context) {
 }
 
 export default function (bundle: Bundle) {
-    bundle.addSaga(function* () {
+    bundle.addSaga(function* (app: App) {
         yield takeEvery(ActionTypes.TaskLoad, function* () {
             yield call(createContext, quickAlgoLibraries);
-            const sagas = quickAlgoLibraries.getSagas();
+            const sagas = quickAlgoLibraries.getSagas(app);
             yield fork(function* () {
                 yield all(sagas);
             });
@@ -116,18 +138,22 @@ export default function (bundle: Bundle) {
         });
     });
 
-    bundle.defer(function({replayApi}: App) {
-        replayApi.onReset(function* (instant: PlayerInstant) {
-            const taskData = instant.state.task;
-            if (taskData) {
-                yield put(taskReset(taskData));
-                yield put(updateCurrentTest(taskData.currentTest));
-                if (taskData.success) {
-                    yield put(taskSuccess(taskData.successMessage));
-                } else {
-                    yield put(taskSuccessClear());
-                }
-            }
+    bundle.defer(function(app: App) {
+        addAutoRecordingBehaviour(app, {
+            sliceName: taskSlice.name,
+            actionNames: taskRecordableActions,
+            actions: taskSlice.actions,
+            reducers: taskSlice.caseReducers,
+            onResetDisabled: true,
+        });
+
+        const context = quickAlgoLibraries.getContext();
+
+        app.replayApi.on('start', function(replayContext: ReplayContext) {
+            replayContext.state.task = {
+                currentTest: getTaskTest(),
+                state: context && context.getCurrentState ? {...context.getCurrentState()} : {},
+            };
         });
     });
 }

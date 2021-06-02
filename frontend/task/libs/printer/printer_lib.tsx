@@ -1,15 +1,27 @@
 import React from "react";
 import {InputOutputVisualization} from "./InputOutputVisualization";
 import {QuickAlgoLibrary} from "../quickalgo_librairies";
-import {fork, put, select, take, takeEvery} from "redux-saga/effects";
+import {call, fork, put, select, take, takeEvery} from "redux-saga/effects";
 import {AppStore} from "../../../store";
 import {channel} from "redux-saga";
 import {ActionTypes} from "../../../buffers/actionTypes";
-import {ActionTypes as TaskActionTypes, TaskResetAction} from "../../index";
+import {ActionTypes as TaskActionTypes, taskInputEntered, taskReset, TaskResetAction} from "../../index";
 import {documentFromString} from "../../../buffers/document";
 import {DocumentModel} from "../../../buffers";
-import {updateCurrentTest} from "../../task_slice";
-import {terminalInit} from "./printer_terminal_slice";
+import taskSlice, {taskInputNeeded, taskSuccess, taskSuccessClear, updateCurrentTest} from "../../task_slice";
+import printerTerminalSlice, {
+    printerTerminalInitialState,
+    printerTerminalRecordableActions,
+    terminalFocus,
+    terminalInit,
+    terminalInputEnter,
+    terminalPrintLine
+} from "./printer_terminal_slice";
+import {App} from "../../../index";
+import {PlayerInstant} from "../../../player";
+import {addAutoRecordingBehaviour} from "../../../recorder/record";
+import {IoMode} from "../../../stepper/io";
+import {ReplayContext} from "../../../player/sagas";
 
 function escapeHtml(unsafe) {
     return unsafe
@@ -29,7 +41,8 @@ enum PrinterLibAction {
 
 const inputBufferLib = 'printerLibInput';
 const outputBufferLib = 'printerLibOutput';
-const inputBufferLibTest = 'printerLibTestInput';
+export const inputBufferLibTest = 'printerLibTestInput';
+export const outputBufferLibTest = 'printerLibTestOutput';
 
 interface ExecutionChannelMessage {
     action: PrinterLibAction,
@@ -219,7 +232,6 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     reset(taskInfos) {
-        console.log('reset printer lib', taskInfos);
         this.success = false;
 
         this.printer.input_text = "";
@@ -334,10 +346,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     };
 
     checkOutputHelper() {
-        const state = window.store.getState();
-        const currentOutputText = state.buffers[outputBufferLib].model.document.toString();
-
-        console.log('output', currentOutputText, this);
+        const currentOutputText = this.printer.output_text;
         let expectedLines = this.taskInfos.output.replace(/\s*$/,"").split("\n");
         let actualLines = currentOutputText.replace(/\s*$/,"").split("\n");
 
@@ -416,134 +425,182 @@ export class PrinterLib extends QuickAlgoLibrary {
         return super.provideBlocklyColours();
     }
 
+    *getInputSaga(context) {
+        yield put(taskInputNeeded(true));
+        if (context.display) {
+            yield put(terminalFocus());
+        }
+
+        const {payload: inputValue} = yield take(TaskActionTypes.TaskInputEntered);
+
+        return inputValue;
+    }
+
     *executionChannelSaga(context) {
         while (true) {
-            const {action, payload, resolve, reject} = yield take(executionChannel);
-            const inputValue = context.printer.input_text;
-            const outputValue = context.printer.output_text;
-
-            switch (action) {
-                case PrinterLibAction.getInput: {
-                    resolve(this.printer.input_text);
-                    break;
-                }
-                case PrinterLibAction.readLine: {
-                    let result = "";
-                    let index = inputValue.indexOf('\n');
-                    if (index === -1) {
-                        if (!inputValue) {
-                            reject(context.strings.messages.inputEmpty);
-                            continue;
-                        }
-                        result = inputValue;
-                        context.printer.input_text = '';
-                    } else {
-                        result = inputValue.substring(0, index);
-                        context.printer.input_text = inputValue.substring(index + 1);
-                    }
-
-                    if (context.display) {
-                        const doc = documentFromString(context.printer.input_text);
-                        yield put({
-                            type: ActionTypes.BufferReset,
-                            buffer: inputBufferLib,
-                            model: new DocumentModel(doc)
-                        });
-                    }
-
-                    resolve(result);
-                    break;
-                }
-                case PrinterLibAction.reset: {
-                    const currentTest = yield select((state: AppStore) => state.task.currentTest);
-                    const inputTestDocument = documentFromString(currentTest.input);
-                    yield put({
-                        type: ActionTypes.BufferReset,
-                        buffer: inputBufferLibTest,
-                        model: new DocumentModel(inputTestDocument)
-                    });
-
-                    yield put({
-                        type: ActionTypes.BufferReset,
-                        buffer: inputBufferLib,
-                        model: new DocumentModel(documentFromString(context.printer.input_text))
-                    });
-                    yield put({
-                        type: ActionTypes.BufferReset,
-                        buffer: outputBufferLib,
-                        model: new DocumentModel(documentFromString(context.printer.output_text))
-                    });
-                    yield put(terminalInit(null));
-                    break;
-                }
-                case PrinterLibAction.printLine: {
-                    if (context.lost) {
-                        return;
-                    }
-
-                    // Fix display of arrays
-                    const valueToStr = function(value) {
-                        if (value && value.length !== undefined && typeof value == 'object') {
-                            let oldValue = value;
-                            value = [];
-                            for (let i=0; i < oldValue.length; i++) {
-                                if (oldValue[i] && typeof oldValue[i].v != 'undefined') {
-                                    // When used inside Skulpt (Python mode)
-                                    value.push(oldValue[i].v);
-                                } else {
-                                    value.push(oldValue[i]);
-                                }
-                                value[i] = valueToStr(value[i]);
-                            }
-                            return '[' + value.join(', ') + ']';
-                        } else if (value && value.isFloat && Math.floor(value) == value) {
-                            return value + '.0';
-                        } else if (value === true) {
-                            return 'True';
-                        } else if (value === false) {
-                            return 'False';
-                        }
-                        return value;
-                    }
-
-                    let text = '';
-                    for (let i=0; i < payload.args.length; i++) {
-                        text += (i > 0 ? ' ' : '') + valueToStr(payload.args[i]);
-                    }
-
-                    context.printer.output_text = outputValue + text + payload.end;
-
-                    if (context.display) {
-                        const doc = documentFromString(context.printer.output_text);
-                        yield put({
-                            type: ActionTypes.BufferReset,
-                            buffer: outputBufferLib,
-                            model: new DocumentModel(doc)
-                        });
-                    }
-
-                    resolve();
-                    break;
-                }
-                default:
-                    throw 'Unknown action';
-            }
+            const parameters = yield take(executionChannel);
+            yield fork(context.handleRequest, context, parameters);
         }
     }
 
-    *getSaga() {
+    *handleRequest(context, parameters) {
+        const {action, payload, resolve, reject} = parameters;
+        const outputValue = context.printer.output_text;
+
+        switch (action) {
+            case PrinterLibAction.getInput: {
+                const ioMode = yield select((state: AppStore) => state.ioPane.mode);
+                const inputValue = IoMode.Split === ioMode ? context.printer.input_text : yield call(context.getInputSaga, context);
+                resolve(inputValue);
+                break;
+            }
+            case PrinterLibAction.readLine: {
+                const ioMode = yield select((state: AppStore) => state.ioPane.mode);
+                const inputValue = IoMode.Split === ioMode ? context.printer.input_text : yield call(context.getInputSaga, context);
+                let result = "";
+                let index = inputValue.indexOf('\n');
+                if (index === -1) {
+                    if (!inputValue) {
+                        reject(context.strings.messages.inputEmpty);
+                        return;
+                    }
+                    result = inputValue;
+                    context.printer.input_text = '';
+                } else {
+                    result = inputValue.substring(0, index);
+                    context.printer.input_text = inputValue.substring(index + 1);
+                }
+
+                if (context.display) {
+                    const doc = documentFromString(context.printer.input_text);
+                    yield put({
+                        type: ActionTypes.BufferReset,
+                        buffer: inputBufferLib,
+                        model: new DocumentModel(doc)
+                    });
+                }
+
+                resolve(result);
+                break;
+            }
+            case PrinterLibAction.reset: {
+                const currentTest = yield select((state: AppStore) => state.task.currentTest);
+                const inputTestDocument = documentFromString(currentTest.input);
+                yield put({
+                    type: ActionTypes.BufferReset,
+                    buffer: inputBufferLibTest,
+                    model: new DocumentModel(inputTestDocument)
+                });
+
+                const outputTestDocument = documentFromString(currentTest.output);
+                yield put({
+                    type: ActionTypes.BufferReset,
+                    buffer: outputBufferLibTest,
+                    model: new DocumentModel(outputTestDocument)
+                });
+
+                yield put({
+                    type: ActionTypes.BufferReset,
+                    buffer: inputBufferLib,
+                    model: new DocumentModel(documentFromString(context.printer.input_text))
+                });
+                yield put({
+                    type: ActionTypes.BufferReset,
+                    buffer: outputBufferLib,
+                    model: new DocumentModel(documentFromString(context.printer.output_text))
+                });
+                yield put(terminalInit(null));
+                break;
+            }
+            case PrinterLibAction.printLine: {
+                if (context.lost) {
+                    return;
+                }
+
+                // Fix display of arrays
+                const valueToStr = function(value) {
+                    if (value && value.length !== undefined && typeof value == 'object') {
+                        let oldValue = value;
+                        value = [];
+                        for (let i=0; i < oldValue.length; i++) {
+                            if (oldValue[i] && typeof oldValue[i].v != 'undefined') {
+                                // When used inside Skulpt (Python mode)
+                                value.push(oldValue[i].v);
+                            } else {
+                                value.push(oldValue[i]);
+                            }
+                            value[i] = valueToStr(value[i]);
+                        }
+                        return '[' + value.join(', ') + ']';
+                    } else if (value && value.isFloat && Math.floor(value) == value) {
+                        return value + '.0';
+                    } else if (value === true) {
+                        return 'True';
+                    } else if (value === false) {
+                        return 'False';
+                    }
+                    return value;
+                }
+
+                let text = '';
+                for (let i=0; i < payload.args.length; i++) {
+                    text += (i > 0 ? ' ' : '') + valueToStr(payload.args[i]);
+                }
+
+                context.printer.output_text = outputValue + text + payload.end;
+
+                if (context.display) {
+                    const doc = documentFromString(context.printer.output_text);
+                    yield put({
+                        type: ActionTypes.BufferReset,
+                        buffer: outputBufferLib,
+                        model: new DocumentModel(doc)
+                    });
+                    yield put(terminalPrintLine(text + payload.end))
+                }
+
+                resolve();
+                break;
+            }
+            default:
+                throw 'Unknown action';
+        }
+    }
+
+    *getSaga(app: App) {
         const context = this;
         yield fork(this.executionChannelSaga, this);
 
         yield takeEvery(ActionTypes.BufferEdit, function* (action) {
             // @ts-ignore
             const {buffer} = action;
-            if (inputBufferLibTest !== buffer) {
-                return;
+            if (inputBufferLibTest === buffer) {
+                const inputValue = yield select((state: AppStore) => state.buffers[inputBufferLibTest].model.document.toString());
+                yield put(updateCurrentTest({input: inputValue}));
             }
+            if (outputBufferLibTest === buffer) {
+                const outputValue = yield select((state: AppStore) => state.buffers[outputBufferLibTest].model.document.toString());
+                yield put(updateCurrentTest({output: outputValue}));
+            }
+        });
 
-            const inputValue = yield select((state: AppStore) => state.buffers[inputBufferLibTest].model.document.toString());
-            yield put(updateCurrentTest({input: inputValue}));
+        // For replay purposes
+        app.replayApi.on('buffer.edit', function(replayContext: ReplayContext, event) {
+            const buffer = event[0];
+            if (inputBufferLibTest === buffer) {
+                const inputValue = replayContext.state.buffers[buffer].model.document.toString();
+                taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({input: inputValue}));
+            }
+            if (outputBufferLibTest === buffer) {
+                const outputValue = replayContext.state.buffers[buffer].model.document.toString();
+                taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({output: outputValue}));
+            }
+        });
+
+        yield takeEvery(terminalInputEnter.type, function* (action) {
+            const inputValue = yield select((state: AppStore) => state.printerTerminal.lastInput);
+            yield put(taskInputNeeded(false));
+            yield put(taskInputEntered(inputValue));
         });
 
         yield takeEvery(TaskActionTypes.TaskReset, function* (action: TaskResetAction) {
@@ -555,19 +612,57 @@ export class PrinterLib extends QuickAlgoLibrary {
             context.reloadState(taskData.state);
 
             if (context.display) {
-                const inputDocument = documentFromString(context.printer.input_text);
-                yield put({
-                    type: ActionTypes.BufferReset,
-                    buffer: inputBufferLib,
-                    model: new DocumentModel(inputDocument)
-                });
+                if (context.printer.input_text) {
+                    const inputDocument = documentFromString(context.printer.input_text);
+                    yield put({
+                        type: ActionTypes.BufferReset,
+                        buffer: inputBufferLib,
+                        model: new DocumentModel(inputDocument)
+                    });
+                }
 
-                const outputDocument = documentFromString(context.printer.output_text);
-                yield put({
-                    type: ActionTypes.BufferReset,
-                    buffer: outputBufferLib,
-                    model: new DocumentModel(outputDocument)
-                });
+                if (context.printer.output_text) {
+                    const outputDocument = documentFromString(context.printer.output_text);
+                    yield put({
+                        type: ActionTypes.BufferReset,
+                        buffer: outputBufferLib,
+                        model: new DocumentModel(outputDocument)
+                    });
+                }
+            }
+        });
+
+        addAutoRecordingBehaviour(app, {
+            sliceName: printerTerminalSlice.name,
+            actionNames: printerTerminalRecordableActions,
+            actions: printerTerminalSlice.actions,
+            reducers: printerTerminalSlice.caseReducers,
+            initialState: printerTerminalInitialState,
+        });
+
+        app.replayApi.onReset(function* (instant: PlayerInstant) {
+            const taskData = instant.state.task;
+            if (taskData) {
+                yield put(taskReset(taskData));
+                yield put(updateCurrentTest(taskData.currentTest));
+                if (taskData.success) {
+                    yield put(taskSuccess(taskData.successMessage));
+                } else {
+                    yield put(taskSuccessClear());
+                }
+                yield put(taskInputNeeded(taskData.inputNeeded));
+            }
+        });
+
+        app.replayApi.on('start', function(replayContext: ReplayContext, event) {
+            const {buffers} = event[2];
+            if (buffers[inputBufferLibTest]) {
+                const inputValue = buffers[inputBufferLibTest].document;
+                taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({input: inputValue}));
+            }
+            if (buffers[outputBufferLibTest]) {
+                const outputValue = buffers[outputBufferLibTest].document;
+                taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({output: outputValue}));
             }
         });
     }

@@ -1,4 +1,5 @@
 import {ReactElement} from "react";
+import {App} from "../../index";
 
 //TODO: Handle multiples libraries at once.
 // For now, we only use 1 library
@@ -37,11 +38,11 @@ export class QuickAlgoLibraries {
         return null;
     }
 
-    getSagas() {
+    getSagas(app: App) {
         const sagas = [];
         for (let library of this.libraries) {
-            if (library.getSaga()) {
-                sagas.push(library.getSaga());
+            if (library.getSaga(app)) {
+                sagas.push(library.getSaga(app));
             }
         }
 
@@ -193,7 +194,7 @@ export class QuickAlgoLibrary {
     reloadState(state: any): void {
     }
 
-    getSaga() {
+    getSaga(app: App) {
         return null;
     }
 

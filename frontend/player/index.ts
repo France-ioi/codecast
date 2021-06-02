@@ -2,9 +2,26 @@ import playerSagas from './sagas';
 import {findInstant} from './utils';
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes} from "./actionTypes";
-import {AppStore, AppStoreReplay} from "../store";
+import {AppAction, AppStore, AppStoreReplay} from "../store";
 import {Bundle} from "../linker";
 import {CodecastRecord} from "../recorder/save_screen";
+
+export interface PlayerResetPayload {
+    sliceName: string,
+    state: unknown,
+}
+
+export interface PlayerResetAction extends AppAction {
+    type: ActionTypes.PlayerReset;
+    payload: PlayerResetPayload;
+}
+
+export const playerReset = (
+    payload: PlayerResetPayload,
+): PlayerResetAction => ({
+    type: ActionTypes.PlayerReset,
+    payload,
+});
 
 export default function(bundle: Bundle) {
     bundle.include(playerSagas);
@@ -88,6 +105,11 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.PlayerSeek);
     bundle.defineAction(ActionTypes.PlayerSeeked);
+
+    bundle.defineAction(ActionTypes.PlayerReset);
+    bundle.addReducer(ActionTypes.PlayerReset, (state: AppStore, {payload: {sliceName, state: newState}}) => {
+        state[sliceName] = newState;
+    });
 };
 
 export interface PlayerInstant {

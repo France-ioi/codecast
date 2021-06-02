@@ -8,7 +8,7 @@
             <ContextVisualization/>
         </ZoneLayout>
         <ZoneLayout name="bottom-left"/>
-        <ZoneLayout desiredSize="60px">
+        <ZoneLayout desiredSize="60px" overflow="false">
             <ControlsAndErrors/>
         </ZoneLayout>
     </VerticalLayout>

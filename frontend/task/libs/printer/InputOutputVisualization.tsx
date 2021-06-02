@@ -5,20 +5,16 @@ import {getCurrentStepperState} from "../../../stepper/selectors";
 import {IoMode} from "../../../stepper/io";
 import {BufferEditor} from "../../../buffers/BufferEditor";
 import {useAppSelector} from "../../../hooks";
+import {inputBufferLibTest, outputBufferLibTest} from "./printer_lib";
 
-interface InputOutputVisualizationProps {
-    preventInput: any
-}
-
-export function InputOutputVisualization(props: InputOutputVisualizationProps) {
+export function InputOutputVisualization() {
     const ioMode = useAppSelector(state => state.ioPane.mode);
     const hasStepper = useAppSelector(state => !!getCurrentStepperState(state));
     const getMessage = useAppSelector(state => state.getMessage);
-    const {preventInput} = props;
 
     if (hasStepper) {
         if (IoMode.Terminal === ioMode) {
-            return <TerminalView preventInput={preventInput}/>;
+            return <TerminalView/>;
         }
         if (IoMode.Split === ioMode) {
             return <InputOutputView/>;
@@ -30,7 +26,15 @@ export function InputOutputVisualization(props: InputOutputVisualizationProps) {
             <div>
                 <p>{getMessage('IOPANE_INITIAL_INPUT')}</p>
                 <BufferEditor
-                    buffer='printerLibTestInput'
+                    buffer={inputBufferLibTest}
+                    mode='text'
+                    requiredWidth='100%'
+                    requiredHeight='150px'
+                />
+
+                <p className="mt-4">{getMessage('IOPANE_INITIAL_OUTPUT')}</p>
+                <BufferEditor
+                    buffer={outputBufferLibTest}
                     mode='text'
                     requiredWidth='100%'
                     requiredHeight='150px'

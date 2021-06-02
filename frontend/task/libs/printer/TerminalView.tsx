@@ -2,27 +2,21 @@ import React from "react";
 import {Card} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
 import {writeString} from "../../../stepper/io/terminal";
-import {ActionTypes} from "../../../stepper/io/actionTypes";
 import {PureTerminal} from "./PureTerminal";
-import {getCurrentStepperState} from "../../../stepper/selectors";
 import {useDispatch} from "react-redux";
 import {AppStore} from "../../../store";
 import {useAppSelector} from "../../../hooks";
-import {terminalInit, terminalInputBackSpace, terminalInputKey} from "./printer_terminal_slice";
+import {terminalInit, terminalInputBackSpace, terminalInputEnter, terminalInputKey} from "./printer_terminal_slice";
+import {getPlayerState} from "../../../player/selectors";
 
-interface TerminalViewProps {
-    preventInput: boolean
-}
-
-export function TerminalView(props: TerminalViewProps) {
+export function TerminalView() {
     const getMessage = useAppSelector((state: AppStore) => state.getMessage);
-    const stepper = useAppSelector((state: AppStore) => getCurrentStepperState(state));
-    let isWaitingOnInput = false;
     let input = useAppSelector((state: AppStore) => state.printerTerminal.inputBuffer);
     let terminal = useAppSelector((state: AppStore) => state.printerTerminal.terminal);
-    if (stepper) {
-        isWaitingOnInput = stepper.isWaitingOnInput;
-    }
+    let inputNeeded = useAppSelector((state: AppStore) => state.task.inputNeeded);
+
+    const player = useAppSelector((state: AppStore) => getPlayerState(state));
+    const preventInput = player && player.isPlaying;
 
     const dispatch = useDispatch();
 
@@ -31,20 +25,20 @@ export function TerminalView(props: TerminalViewProps) {
     }
 
     const onTermChar = (key) => {
-        if (!props.preventInput) {
+        if (!preventInput) {
             dispatch(terminalInputKey(key));
         }
     }
 
     const onTermBS = () => {
-        if (!props.preventInput) {
+        if (!preventInput) {
             dispatch(terminalInputBackSpace());
         }
     }
 
     const onTermEnter = () => {
-        if (!props.preventInput) {
-            dispatch({type: ActionTypes.TerminalInputEnter});
+        if (!preventInput) {
+            dispatch(terminalInputEnter());
         }
     }
 
@@ -53,7 +47,7 @@ export function TerminalView(props: TerminalViewProps) {
             <div className="row">
                 <div className="col-sm-12 terminal-view-header">
                     {getMessage('IOPANE_TERMINAL')}
-                    {isWaitingOnInput &&
+                    {inputNeeded &&
                         <Icon icon='console'/>
                     }
                 </div>

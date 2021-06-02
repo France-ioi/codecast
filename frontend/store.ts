@@ -67,6 +67,7 @@ export interface AppStoreReplay {
     stepper: Stepper,
     compile: typeof initialStateCompile,
     task: TaskState,
+    printerTerminal: PrinterTerminalState,
 
     options: CodecastOptions,
 

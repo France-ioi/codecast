@@ -224,7 +224,6 @@ function* buffersSaga() {
     });
     yield takeEvery(ActionTypes.BufferReset, function* (action) {
         const state: AppStore = yield select();
-
         // @ts-ignore
         const {buffer, model, quiet} = action;
         if (!quiet) {
@@ -364,7 +363,7 @@ function addReplayHooks({replayApi}: App) {
             yield put({type: ActionTypes.BufferModelSelect, buffer, selection});
         });
     });
-    replayApi.on(['buffer.insert', 'buffer.delete'], function(replayContext: ReplayContext, event) {
+    replayApi.on(['buffer.insert', 'buffer.delete'], function*(replayContext: ReplayContext, event) {
         // XXX use reducer imported from common/buffers
         const buffer = event[2];
         const range = expandRange(event[3]);
@@ -386,6 +385,7 @@ function addReplayHooks({replayApi}: App) {
 
         if (delta) {
             bufferEditReducer(replayContext.state, {buffer, delta});
+            yield call(replayApi.applyEvent,'buffer.edit', replayContext, [buffer]);
 
             replayContext.addSaga(function* () {
                 yield put({type: ActionTypes.BufferModelEdit, buffer, delta});
@@ -404,7 +404,7 @@ function addReplayHooks({replayApi}: App) {
     });
     replayApi.onReset(function* ({state, range}: PlayerInstant, quick) {
         /* Reset all buffers. */
-        for (let buffer of ['source', 'input', 'output']) {
+        for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer].model;
 
             yield put({type: ActionTypes.BufferReset, buffer, model, quiet: quick});

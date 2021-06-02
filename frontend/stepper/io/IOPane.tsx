@@ -32,7 +32,7 @@ class _IOPane extends React.PureComponent<IOPaneProps> {
 
         switch (this.props.mode) {
             case IoMode.Terminal:
-                return <TerminalView preventInput={preventInput} />;
+                return <TerminalView/>;
             case IoMode.Split:
                 return <InputOutputView />;
             default:
