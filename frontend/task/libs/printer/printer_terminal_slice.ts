@@ -37,15 +37,14 @@ export const printerTerminalSlice = createSlice({
             }
         },
         terminalInputEnter(state) {
-            console.log('terminal input enter');
-            const inputLine = state.inputBuffer + '\n';
-            state.terminal = writeString(state.terminal, inputLine);
             state.lastInput = state.inputBuffer;
             state.inputBuffer = '';
-            // state.stepper.currentStepperState.isWaitingOnInput = false;
         },
         terminalPrintLine(state, action: PayloadAction<string>) {
             state.terminal = writeString(state.terminal, action.payload);
+        },
+        terminalReset(state, action: PayloadAction<TermBuffer>) {
+            state.terminal = action.payload;
         },
     },
 });
@@ -57,11 +56,13 @@ export const {
     terminalFocus,
     terminalInputEnter,
     terminalPrintLine,
+    terminalReset,
 } = printerTerminalSlice.actions;
 
 export const printerTerminalRecordableActions = [
     'terminalInputKey',
     'terminalInputBackSpace',
+    'terminalInputEnter',
     'terminalFocus',
 ];
 

@@ -932,7 +932,6 @@ function postLink(app: App) {
                 return new Promise((cont) => {
                     stepperSuspend(replayContext.stepperContext, cont);
 
-
                     replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
                         stepperProgressReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
                     });

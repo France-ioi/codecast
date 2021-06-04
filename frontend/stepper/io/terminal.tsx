@@ -114,12 +114,12 @@ export default function(bundle: Bundle) {
             terminalInputBackspaceReducer(replayContext.state);
         });
 
-        recordApi.on(ActionTypes.TerminalInputEnter, function* (addEvent) {
-            yield call(addEvent, 'terminal.enter');
-        });
-        replayApi.on('terminal.enter', function(replayContext: ReplayContext) {
-            terminalInputEnterReducer(replayContext.state);
-        });
+        // recordApi.on(ActionTypes.TerminalInputEnter, function* (addEvent) {
+        //     yield call(addEvent, 'terminal.enter');
+        // });
+        // replayApi.on('terminal.enter', function(replayContext: ReplayContext) {
+        //     terminalInputEnterReducer(replayContext.state);
+        // });
     });
 };
 

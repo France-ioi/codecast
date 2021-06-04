@@ -15,13 +15,14 @@ import printerTerminalSlice, {
     terminalFocus,
     terminalInit,
     terminalInputEnter,
-    terminalPrintLine
+    terminalPrintLine, terminalReset
 } from "./printer_terminal_slice";
 import {App} from "../../../index";
 import {PlayerInstant} from "../../../player";
 import {addAutoRecordingBehaviour} from "../../../recorder/record";
 import {IoMode} from "../../../stepper/io";
 import {ReplayContext} from "../../../player/sagas";
+import {TermBuffer, writeString} from "../../../stepper/io/terminal";
 
 function escapeHtml(unsafe) {
     return unsafe
@@ -37,6 +38,22 @@ enum PrinterLibAction {
     getInput = 'getInput',
     printLine = 'printLine',
     reset = 'reset',
+}
+
+enum PrinterLineEventType {
+    input = 'input',
+    output = 'output',
+}
+
+enum PrinterLineEventSource {
+    initial = 'initial',
+    runtime = 'runtime',
+}
+
+interface PrinterLineEvent {
+    type: PrinterLineEventType,
+    content: string,
+    source?: PrinterLineEventSource,
 }
 
 const inputBufferLib = 'printerLibInput';
@@ -188,8 +205,8 @@ export class PrinterLib extends QuickAlgoLibrary {
         this.libOptions = infos.libOptions ? infos.libOptions : {};
 
         this.printer = {
-            input_text: "",
-            output_text: "",
+            ioEvents: [] as PrinterLineEvent[],
+            terminal: null,
             commonPrint: this.commonPrint,
             print: this.print,
             print_end: this.print_end,
@@ -234,14 +251,14 @@ export class PrinterLib extends QuickAlgoLibrary {
     reset(taskInfos) {
         this.success = false;
 
-        this.printer.input_text = "";
-        this.printer.output_text = "";
+        this.printer.ioEvents = [];
 
         if (taskInfos) {
             this.taskInfos = taskInfos;
         }
         if (this.taskInfos && this.taskInfos.input) {
-            this.printer.input_text = this.taskInfos.input;
+            console.log('push initial state', this.taskInfos.input);
+            this.printer.ioEvents.push({type: PrinterLineEventType.input, content: this.taskInfos.input, source: PrinterLineEventSource.initial});
         }
 
         if (this.display) {
@@ -253,15 +270,12 @@ export class PrinterLib extends QuickAlgoLibrary {
 
     getCurrentState() {
         return {
-            input: this.printer.input_text,
-            output: this.printer.output_text,
-        };
+            events: this.printer.ioEvents,
+        }
     };
 
     reloadState(data): void {
-        const {input, output} = data;
-        this.printer.input_text = input;
-        this.printer.output_text = output;
+        this.printer.ioEvents = data.events ?? [];
     };
 
     resetDisplay() {
@@ -345,8 +359,54 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
     };
 
+    getInputText() {
+        return this.printer.ioEvents
+            .filter(event => PrinterLineEventType.input === event.type && PrinterLineEventSource.initial === event.source)
+            .map(event => event.content)
+            .join("");
+    }
+
+    getFirstInput() {
+        const inputEvents = this.printer.ioEvents
+            .filter(event => PrinterLineEventType.input === event.type && PrinterLineEventSource.initial === event.source)
+            .map(event => event.content);
+
+        return inputEvents.length ? inputEvents[0] : null;
+    }
+
+    popFirstInput() {
+        const firstInputIndex = this.printer.ioEvents.findIndex(event => PrinterLineEventType.input === event.type && PrinterLineEventSource.initial === event.source);
+        if (-1 !== firstInputIndex) {
+            this.printer.ioEvents.splice(firstInputIndex, 1);
+        }
+    }
+
+    replaceFirstInput(newValue: string) {
+        const firstInputIndex = this.printer.ioEvents.findIndex(event => PrinterLineEventType.input === event.type && PrinterLineEventSource.initial === event.source);
+        if (-1 !== firstInputIndex) {
+            this.printer.ioEvents.splice(firstInputIndex, 1, {
+                ...this.printer.ioEvents[firstInputIndex],
+                content: newValue,
+            });
+        }
+    }
+
+    getOutputText() {
+        return this.printer.ioEvents
+            .filter(event => PrinterLineEventType.output === event.type)
+            .map(event => event.content)
+            .join("");
+    }
+
+    getTerminalText() {
+        return this.printer.ioEvents
+            .filter(event => PrinterLineEventSource.runtime === event.source)
+            .map(event => event.content)
+            .join("");
+    }
+
     checkOutputHelper() {
-        const currentOutputText = this.printer.output_text;
+        const currentOutputText = this.getOutputText();
         let expectedLines = this.taskInfos.output.replace(/\s*$/,"").split("\n");
         let actualLines = currentOutputText.replace(/\s*$/,"").split("\n");
 
@@ -433,7 +493,36 @@ export class PrinterLib extends QuickAlgoLibrary {
 
         const {payload: inputValue} = yield take(TaskActionTypes.TaskInputEntered);
 
+        context.printer.ioEvents = [
+            ...context.printer.ioEvents,
+            {type: PrinterLineEventType.input, content: inputValue + "\n", source: PrinterLineEventSource.runtime},
+        ];
+        
+        yield call(context.syncInputOutputBuffers, context);
+
         return inputValue;
+    }
+
+    *syncInputOutputBuffers(context) {
+        console.log('sync input', context.getInputText());
+        const inputDocument = documentFromString(context.getInputText());
+        yield put({
+            type: ActionTypes.BufferReset,
+            buffer: inputBufferLib,
+            model: new DocumentModel(inputDocument)
+        });
+
+        const outputDocument = documentFromString(context.getOutputText());
+        yield put({
+            type: ActionTypes.BufferReset,
+            buffer: outputBufferLib,
+            model: new DocumentModel(outputDocument)
+        });
+
+        let termBuffer = new TermBuffer({lines: 10, width: 60});
+        termBuffer = writeString(termBuffer, context.getTerminalText());
+        console.log('update buffers', context.getTerminalText(), termBuffer, context.printer.ioEvents);
+        yield put(terminalReset(termBuffer));
     }
 
     *executionChannelSaga(context) {
@@ -445,34 +534,39 @@ export class PrinterLib extends QuickAlgoLibrary {
 
     *handleRequest(context, parameters) {
         const {action, payload, resolve, reject} = parameters;
-        const outputValue = context.printer.output_text;
 
         switch (action) {
             case PrinterLibAction.getInput: {
                 const ioMode = yield select((state: AppStore) => state.ioPane.mode);
-                const inputValue = IoMode.Split === ioMode ? context.printer.input_text : yield call(context.getInputSaga, context);
+                const inputValue = IoMode.Split === ioMode ? context.getInputText() : yield call(context.getInputSaga, context);
                 resolve(inputValue);
                 break;
             }
             case PrinterLibAction.readLine: {
                 const ioMode = yield select((state: AppStore) => state.ioPane.mode);
-                const inputValue = IoMode.Split === ioMode ? context.printer.input_text : yield call(context.getInputSaga, context);
-                let result = "";
-                let index = inputValue.indexOf('\n');
-                if (index === -1) {
-                    if (!inputValue) {
-                        reject(context.strings.messages.inputEmpty);
-                        return;
+                let result = '';
+                if (IoMode.Split === ioMode) {
+                    let inputValue = context.getFirstInput();
+                    console.log('first input', inputValue);
+                    let index = inputValue.indexOf("\n");
+                    if (index === -1) {
+                        if (!inputValue) {
+                            reject(context.strings.messages.inputEmpty);
+                            return;
+                        }
+                        result = inputValue;
+                        context.popFirstInput();
+                    } else {
+                        result = inputValue.substring(0, index);
+                        context.replaceFirstInput(inputValue.substring(index + 1));
+                        console.log('replace first', result);
                     }
-                    result = inputValue;
-                    context.printer.input_text = '';
                 } else {
-                    result = inputValue.substring(0, index);
-                    context.printer.input_text = inputValue.substring(index + 1);
+                    result = yield call(context.getInputSaga, context);
                 }
 
                 if (context.display) {
-                    const doc = documentFromString(context.printer.input_text);
+                    const doc = documentFromString(context.getInputText());
                     yield put({
                         type: ActionTypes.BufferReset,
                         buffer: inputBufferLib,
@@ -499,16 +593,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                     model: new DocumentModel(outputTestDocument)
                 });
 
-                yield put({
-                    type: ActionTypes.BufferReset,
-                    buffer: inputBufferLib,
-                    model: new DocumentModel(documentFromString(context.printer.input_text))
-                });
-                yield put({
-                    type: ActionTypes.BufferReset,
-                    buffer: outputBufferLib,
-                    model: new DocumentModel(documentFromString(context.printer.output_text))
-                });
+                yield call(context.syncInputOutputBuffers, context);
                 yield put(terminalInit(null));
                 break;
             }
@@ -547,10 +632,13 @@ export class PrinterLib extends QuickAlgoLibrary {
                     text += (i > 0 ? ' ' : '') + valueToStr(payload.args[i]);
                 }
 
-                context.printer.output_text = outputValue + text + payload.end;
+                context.printer.ioEvents = [
+                    ...context.printer.ioEvents,
+                    {type: PrinterLineEventType.output, content: text + payload.end, source: PrinterLineEventSource.runtime},
+                ];
 
                 if (context.display) {
-                    const doc = documentFromString(context.printer.output_text);
+                    const doc = documentFromString(context.getOutputText());
                     yield put({
                         type: ActionTypes.BufferReset,
                         buffer: outputBufferLib,
@@ -598,7 +686,10 @@ export class PrinterLib extends QuickAlgoLibrary {
         });
 
         yield takeEvery(terminalInputEnter.type, function* (action) {
+            console.log('take every terminal input enter');
             const inputValue = yield select((state: AppStore) => state.printerTerminal.lastInput);
+
+            // yield put(terminalInputEnter()); // empty buffer
             yield put(taskInputNeeded(false));
             yield put(taskInputEntered(inputValue));
         });
@@ -612,23 +703,7 @@ export class PrinterLib extends QuickAlgoLibrary {
             context.reloadState(taskData.state);
 
             if (context.display) {
-                if (context.printer.input_text) {
-                    const inputDocument = documentFromString(context.printer.input_text);
-                    yield put({
-                        type: ActionTypes.BufferReset,
-                        buffer: inputBufferLib,
-                        model: new DocumentModel(inputDocument)
-                    });
-                }
-
-                if (context.printer.output_text) {
-                    const outputDocument = documentFromString(context.printer.output_text);
-                    yield put({
-                        type: ActionTypes.BufferReset,
-                        buffer: outputBufferLib,
-                        model: new DocumentModel(outputDocument)
-                    });
-                }
+                yield call(context.syncInputOutputBuffers, context);
             }
         });
 

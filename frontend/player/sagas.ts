@@ -262,7 +262,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
                 if (nonHandledWaitingPromises.length) {
                     const nonHandledWaitingPromise = nonHandledWaitingPromises[0];
                     nonHandledWaitingPromise.handled = true;
-                    yield put(taskInputEntered(replayContext.state.printerTerminal.inputBuffer));
+                    yield put(taskInputEntered(replayContext.state.printerTerminal.lastInput));
                     yield nonHandledWaitingPromise;
                 }
             }
