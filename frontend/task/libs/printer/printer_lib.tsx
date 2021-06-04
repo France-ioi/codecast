@@ -6,8 +6,7 @@ import {AppStore} from "../../../store";
 import {channel} from "redux-saga";
 import {ActionTypes} from "../../../buffers/actionTypes";
 import {ActionTypes as TaskActionTypes, taskInputEntered, taskReset, TaskResetAction} from "../../index";
-import {documentFromString} from "../../../buffers/document";
-import {DocumentModel} from "../../../buffers";
+import {documentModelFromString} from "../../../buffers";
 import taskSlice, {taskInputNeeded, taskSuccess, taskSuccessClear, updateCurrentTest} from "../../task_slice";
 import printerTerminalSlice, {
     printerTerminalInitialState,
@@ -504,24 +503,20 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     *syncInputOutputBuffers(context) {
-        console.log('sync input', context.getInputText());
-        const inputDocument = documentFromString(context.getInputText());
         yield put({
             type: ActionTypes.BufferReset,
             buffer: inputBufferLib,
-            model: new DocumentModel(inputDocument)
+            model: documentModelFromString(context.getInputText()),
         });
 
-        const outputDocument = documentFromString(context.getOutputText());
         yield put({
             type: ActionTypes.BufferReset,
             buffer: outputBufferLib,
-            model: new DocumentModel(outputDocument)
+            model: documentModelFromString(context.getOutputText()),
         });
 
         let termBuffer = new TermBuffer({lines: 10, width: 60});
         termBuffer = writeString(termBuffer, context.getTerminalText());
-        console.log('update buffers', context.getTerminalText(), termBuffer, context.printer.ioEvents);
         yield put(terminalReset(termBuffer));
     }
 
@@ -566,11 +561,10 @@ export class PrinterLib extends QuickAlgoLibrary {
                 }
 
                 if (context.display) {
-                    const doc = documentFromString(context.getInputText());
                     yield put({
                         type: ActionTypes.BufferReset,
                         buffer: inputBufferLib,
-                        model: new DocumentModel(doc)
+                        model: documentModelFromString(context.getInputText()),
                     });
                 }
 
@@ -579,18 +573,16 @@ export class PrinterLib extends QuickAlgoLibrary {
             }
             case PrinterLibAction.reset: {
                 const currentTest = yield select((state: AppStore) => state.task.currentTest);
-                const inputTestDocument = documentFromString(currentTest.input);
                 yield put({
                     type: ActionTypes.BufferReset,
                     buffer: inputBufferLibTest,
-                    model: new DocumentModel(inputTestDocument)
+                    model: documentModelFromString(currentTest.input),
                 });
 
-                const outputTestDocument = documentFromString(currentTest.output);
                 yield put({
                     type: ActionTypes.BufferReset,
                     buffer: outputBufferLibTest,
-                    model: new DocumentModel(outputTestDocument)
+                    model: documentModelFromString(currentTest.output),
                 });
 
                 yield call(context.syncInputOutputBuffers, context);
@@ -638,11 +630,10 @@ export class PrinterLib extends QuickAlgoLibrary {
                 ];
 
                 if (context.display) {
-                    const doc = documentFromString(context.getOutputText());
                     yield put({
                         type: ActionTypes.BufferReset,
                         buffer: outputBufferLib,
-                        model: new DocumentModel(doc)
+                        model: documentModelFromString(context.getOutputText()),
                     });
                     yield put(terminalPrintLine(text + payload.end))
                 }

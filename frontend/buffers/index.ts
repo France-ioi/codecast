@@ -113,6 +113,12 @@ class BufferState {
     editor = null;
 }
 
+export const documentModelFromString = function (text: string): DocumentModel {
+    const doc = documentFromString(text);
+
+    return new DocumentModel(doc);
+}
+
 export const initialStateBuffers: {[key: string]: BufferState} = {
     source: new BufferState(),
     input: new BufferState(),
