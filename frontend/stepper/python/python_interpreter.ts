@@ -79,7 +79,6 @@ export default function(context) {
             var result = Sk.builtin.none.none$;
 
             var args = Array.prototype.slice.call(arguments);
-            for(var i=0; i<args.length; i++) { args[i] = window.currentPythonContext.runner.skToJs(args[i]); };
 
             susp.resume = function() { return result; };
             susp.data = {
@@ -179,8 +178,9 @@ export default function(context) {
                     modContents += this._skulptifyHandler(code, generatorName, blockName, nbsArgs, type);
 
                     // We do want to override Python's naturel input and output to replace them with our own modules
-                    if (generatorName === 'printer') {
-                        Sk.builtins[code] = this._createBuiltin(code, generatorName, blockName, nbsArgs, type);
+                    if (generatorName === 'printer' && ('input' === code || 'print' === code)) {
+                        const newCode = 'print' === code ? 'customPrint' : code;
+                        Sk.builtins[newCode] = this._createBuiltin(code, generatorName, blockName, nbsArgs, type);
                     }
                 }
 
@@ -460,6 +460,9 @@ export default function(context) {
                 this._onStepError(e);
             }
         } else {
+            if (message) {
+                Sk.builtins['customPrint'](message.trim());
+            }
             this._printedDuringStep += message;
         }
     };
