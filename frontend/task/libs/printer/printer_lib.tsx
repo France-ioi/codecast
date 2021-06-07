@@ -258,7 +258,6 @@ export class PrinterLib extends QuickAlgoLibrary {
             this.taskInfos = taskInfos;
         }
         if (this.taskInfos && this.taskInfos.input) {
-            console.log('push initial state', this.taskInfos.input);
             this.printer.ioEvents.push({type: PrinterLineEventType.input, content: this.taskInfos.input, source: PrinterLineEventSource.initial});
         }
         if (appState && appState.ioPane.mode) {
