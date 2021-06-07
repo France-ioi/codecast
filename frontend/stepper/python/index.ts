@@ -113,7 +113,7 @@ export default function(bundle: Bundle) {
 
             if (platform === 'python') {
                 const context = quickAlgoLibraries.getContext();
-                context.reset(currentTest);
+                context.reset(currentTest, state);
 
                 context.onError = (diagnostics) => {
                     if (replay) {

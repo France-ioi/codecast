@@ -177,6 +177,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     libOptions: any;
     showIfMutator: boolean;
     printer: any;
+    ioMode: IoMode;
 
     constructor (display, infos) {
         super(display, infos);
@@ -201,6 +202,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         this.cells = [];
         this.texts = [];
         this.scale = 1;
+        this.ioMode = null;
         this.libOptions = infos.libOptions ? infos.libOptions : {};
 
         this.printer = {
@@ -247,7 +249,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
     }
 
-    reset(taskInfos) {
+    reset(taskInfos, appState: AppStore = null) {
         this.success = false;
 
         this.printer.ioEvents = [];
@@ -258,6 +260,9 @@ export class PrinterLib extends QuickAlgoLibrary {
         if (this.taskInfos && this.taskInfos.input) {
             console.log('push initial state', this.taskInfos.input);
             this.printer.ioEvents.push({type: PrinterLineEventType.input, content: this.taskInfos.input, source: PrinterLineEventSource.initial});
+        }
+        if (appState && appState.ioPane.mode) {
+            this.ioMode = appState.ioPane.mode;
         }
 
         if (this.display) {
@@ -496,8 +501,10 @@ export class PrinterLib extends QuickAlgoLibrary {
             ...context.printer.ioEvents,
             {type: PrinterLineEventType.input, content: inputValue + "\n", source: PrinterLineEventSource.runtime},
         ];
-        
-        yield call(context.syncInputOutputBuffers, context);
+
+        if (context.display) {
+            yield call(context.syncInputOutputBuffers, context);
+        }
 
         return inputValue;
     }
@@ -532,15 +539,13 @@ export class PrinterLib extends QuickAlgoLibrary {
 
         switch (action) {
             case PrinterLibAction.getInput: {
-                const ioMode = yield select((state: AppStore) => state.ioPane.mode);
-                const inputValue = IoMode.Split === ioMode ? context.getInputText() : yield call(context.getInputSaga, context);
+                const inputValue = IoMode.Split === context.ioMode ? context.getInputText() : yield call(context.getInputSaga, context);
                 resolve(inputValue);
                 break;
             }
             case PrinterLibAction.readLine: {
-                const ioMode = yield select((state: AppStore) => state.ioPane.mode);
                 let result = '';
-                if (IoMode.Split === ioMode) {
+                if (IoMode.Split === context.ioMode) {
                     let inputValue = context.getFirstInput();
                     console.log('first input', inputValue);
                     let index = inputValue.indexOf("\n");
