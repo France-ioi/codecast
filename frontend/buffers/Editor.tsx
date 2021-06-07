@@ -113,10 +113,8 @@ class _Editor extends React.PureComponent<EditorProps> {
 
     reset = (value, selection, firstVisibleRow) => {
         this.wrapModelToEditor(() => {
-            this.editor.setValue(value);
+            this.editor.getSession().setValue(value);
             this.editor.resize(true);
-            // Work-around for strange ACE behavior?
-            this.selection = null;
             this.setSelection(selection);
             this.firstVisibleRow = firstVisibleRow;
             this.editor.scrollToLine(firstVisibleRow);
