@@ -126,7 +126,7 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
                 {isPlayback &&
                     <div className="player-slider-container">
                       <Slider
-                        value={position}
+                        value={Math.min(position, duration)}
                         onChange={this.onSeek}
                         stepSize={100}
                         labelStepSize={30000}
