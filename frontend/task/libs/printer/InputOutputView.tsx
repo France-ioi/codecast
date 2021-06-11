@@ -25,14 +25,14 @@ export function InputOutputView() {
                 </Card.Body>
             </Card>
             <Card>
-                <Card.Header>
+                <Card.Header className="terminal-view-header">
                     {getMessage("IOPANE_OUTPUT")}
+                    <Icon icon='lock'/>
                 </Card.Header>
                 <Card.Body>
                     <BufferEditor
                         buffer='printerLibOutput'
                         readOnly={true}
-                        shield={true}
                         mode='text'
                         requiredWidth='100%'
                         requiredHeight='150px'

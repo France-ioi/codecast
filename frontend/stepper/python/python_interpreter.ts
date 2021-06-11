@@ -454,11 +454,6 @@ export default function(context) {
     this.print = (message) => {
         if (message.trim() === 'Program execution complete') {
             this._isFinished = true;
-            try {
-                this.context.infos.checkEndCondition(this.context, true);
-            } catch (e) {
-                this._onStepError(e);
-            }
         } else {
             if (message) {
                 Sk.builtins['customPrint'](message.trim());

@@ -298,17 +298,20 @@ export class PrinterLib extends QuickAlgoLibrary {
 
     async print() {
         await this.commonPrint(Array.prototype.slice.call(arguments, 0, -1), "\n");
+        console.log('arguments', arguments, 'callback', arguments[arguments.length-1]);
         this.waitDelay(arguments[arguments.length-1]);
     }
 
-    async print_end() {
-        if(arguments.length > 1) {
-            await this.commonPrint(Array.prototype.slice.call(arguments, 0, -2), arguments[arguments.length-2]);
-            this.waitDelay(arguments[arguments.length-1]);
-        } else {
-            await this.commonPrint([], "\n");
-            this.waitDelay(arguments[arguments.length-1]);
-        }
+    print_end() {
+        return new Promise(() => {
+            if(arguments.length > 1) {
+                this.commonPrint(Array.prototype.slice.call(arguments, 0, -2), arguments[arguments.length-2]);
+                this.waitDelay(arguments[arguments.length-1]);
+            } else {
+                this.commonPrint([], "\n");
+                this.waitDelay(arguments[arguments.length-1]);
+            }
+        })
     }
 
     commonRead(action: PrinterLibAction = PrinterLibAction.readLine) {

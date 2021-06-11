@@ -84,10 +84,10 @@ function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
 
     try {
         const printerLib = new PrinterLib(display, levelGridInfos);
-        quickAlgoLibraries.addLibrary(printerLib);
+        quickAlgoLibraries.addLibrary(printerLib, 'printer');
     } catch (e) {
         const defaultLib = new QuickAlgoLibrary(display, levelGridInfos);
-        quickAlgoLibraries.addLibrary(defaultLib);
+        quickAlgoLibraries.addLibrary(defaultLib, 'default');
     }
 
     const testData = getTaskTest();

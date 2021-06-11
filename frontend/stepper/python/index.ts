@@ -111,10 +111,10 @@ export default function(bundle: Bundle) {
             const source = state.buffers['source'].model.document.toString();
             const currentTest = state.task.currentTest;
 
-            if (platform === 'python') {
-                const context = quickAlgoLibraries.getContext();
-                context.reset(currentTest, state);
+            const context = quickAlgoLibraries.getContext();
+            context.reset(currentTest, state);
 
+            if (platform === 'python') {
                 context.onError = (diagnostics) => {
                     if (replay) {
                         return;

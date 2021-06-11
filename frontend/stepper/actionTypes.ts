@@ -23,6 +23,7 @@ export enum ActionTypes {
     StepperSpeedChanged = 'Stepper.Speed.Changed',
     StepperControlsChanged = 'Stepper.Controls.Changed',
     Compile = 'Compile',
+    CompileWait = 'Compile.Wait',
     CompileClear = 'Compile.Clear',
     CompileReset = 'Compile.Reset',
     CompileStarted = 'Compile.Started',

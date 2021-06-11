@@ -195,6 +195,8 @@ async function executeEffects(stepperContext: StepperContext, iterator) {
         const name = value[0];
         if (name === 'interact') {
             lastResult = await stepperContext.interact(value[1] || {});
+        } else if (name === 'promise') {
+            lastResult = await value[1];
         } else if (name === 'builtin') {
             const builtin = value[1];
             if (!builtinHandlers.has(builtin)) {
@@ -213,7 +215,7 @@ async function executeEffects(stepperContext: StepperContext, iterator) {
     }
 }
 
-async function executeSingleStep(stepperContext: StepperContext) {
+async function executeSingleStep(stepperContext: StepperContext, makeInteract: boolean = true) {
     if (isStuck(stepperContext.state)) {
         throw new StepperError('stuck', 'execution cannot proceed');
     }
@@ -261,7 +263,7 @@ async function executeSingleStep(stepperContext: StepperContext) {
 
         /* Update the current position in source code. */
         const position = getNodeStartRow(stepperContext.state);
-        if (position !== undefined && position !== stepperContext.position) {
+        if (makeInteract) {
             stepperContext.position = position;
             stepperContext.lineCounter += 1;
 
@@ -276,9 +278,10 @@ async function executeSingleStep(stepperContext: StepperContext) {
     }
 }
 
-async function stepUntil(stepperContext: StepperContext, stopCond = undefined, speed?: number) {
+async function stepUntil(stepperContext: StepperContext, stopCond = undefined, useSpeed: boolean = false) {
     let stop = false;
     let first = true;
+    let delayCondition = 0;
     while (true) {
         if (isStuck(stepperContext.state)) {
             return;
@@ -299,10 +302,32 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined, s
             return;
         }
 
-        if (!first && null !== speed && undefined !== speed) {
-            await delay(225 - stepperContext.speed);
+        let makeDelay = false;
+        if (useSpeed && !first && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255) {
+            if (stepperContext.state.platform === 'unix') {
+                if (C.outOfCurrentStmt(stepperContext.state.programState) && 0 === delayCondition) {
+                    delayCondition++;
+                }
+                if (C.intoNextStmt(stepperContext.state.programState) && 1 === delayCondition) {
+                    makeDelay = true;
+                    delayCondition = 0;
+                }
+            } else {
+                makeDelay = true;
+            }
+
+            if (makeDelay) {
+                if (stepperContext.state.platform === 'unix') {
+                    const position = getNodeStartRow(stepperContext.state);
+                    await stepperContext.interact({
+                        position,
+                    });
+                }
+                await delay(255 - stepperContext.speed);
+            }
         }
-        await executeSingleStep(stepperContext);
+
+        await executeSingleStep(stepperContext, false);
         first = false;
     }
 }
@@ -387,10 +412,10 @@ async function stepOver(stepperContext: StepperContext) {
     }
 }
 
-export async function performStep(stepperContext: StepperContext, mode, speed?: number) {
+export async function performStep(stepperContext: StepperContext, mode, useSpeed: boolean = false) {
     switch (mode) {
         case 'run':
-            await stepUntil(stepperContext, undefined, speed);
+            await stepUntil(stepperContext, undefined, useSpeed);
             break;
         case 'into':
             await stepInto(stepperContext);

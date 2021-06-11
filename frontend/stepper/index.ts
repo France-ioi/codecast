@@ -48,7 +48,7 @@ import PythonBundle, {getNewOutput, getNewTerminal} from './python';
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
 import {Directive, parseDirectives} from "./python/directives";
-import {ActionTypes} from "./actionTypes";
+import {ActionTypes as CompileActionTypes, ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
@@ -62,6 +62,7 @@ import {Bundle} from "../linker";
 import {App} from "../index";
 import {produce} from "immer";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
+import {taskSuccess} from "../task/task_slice";
 
 export interface StepperTask {
 
@@ -104,7 +105,7 @@ export type StepperControls = typeof initialStepperStateControls;
 
 // TODO: Separate the needs per platform (StepperStatePython, StepperStateC, etc)
 const initialStateStepperState = {
-    platform: 'python' as CodecastPlatform,
+    platform: 'unix' as CodecastPlatform,
     inputPos: 0, // Only used for python
     input: '',
     output: '', // Only used for python
@@ -612,7 +613,7 @@ function* stepperEnabledSaga(args) {
     yield put({type: ActionTypes.StepperTaskStarted, payload: {task: newTask}});
 }
 
-function* stepperDisabledSaga() {
+export function* stepperDisabledSaga() {
     const state: AppStore = yield select();
 
     /* Cancel the stepper task if still running. */
@@ -717,7 +718,7 @@ function* stepperStepSaga(app: App, action) {
         }
 
         try {
-            yield call(performStep, stepperContext, action.payload.mode, action.payload.speed);
+            yield call(performStep, stepperContext, action.payload.mode, action.payload.useSpeed);
         } catch (ex) {
             console.log('stepperStepSaga has catched', ex);
             if (!(ex instanceof StepperError)) {
@@ -736,6 +737,29 @@ function* stepperStepSaga(app: App, action) {
         if (stepperContext.state.platform === 'python') {
             // Save scope.
             stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
+        } else if (stepperContext.state.platform === 'unix') {
+            stepperContext.state.isFinished = !stepperContext.state.programState.control;
+        }
+
+        if (stepperContext.state.isFinished) {
+            console.log('check end condition');
+            const taskContext = quickAlgoLibraries.getContext();
+            if (taskContext && taskContext.infos.checkEndCondition) {
+                try {
+                    taskContext.infos.checkEndCondition(taskContext, true);
+                } catch (message) {
+                    // @ts-ignore
+                    if (taskContext.success) {
+                        yield put(taskSuccess(message));
+                    } else {
+                        const response = {diagnostics: message};
+                        yield put({
+                            type: CompileActionTypes.CompileFailed,
+                            response
+                        });
+                    }
+                }
+            }
         }
 
         const newState = yield select();

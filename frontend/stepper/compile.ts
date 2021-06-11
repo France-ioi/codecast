@@ -13,13 +13,13 @@ Shape of the 'compile' state:
 
 */
 
-import {call, put, select, takeLatest, takeEvery} from 'redux-saga/effects';
+import {call, put, select, takeLatest, takeEvery, take, race, delay} from 'redux-saga/effects';
 
 import {asyncRequestJson} from '../utils/api';
 
 import {toHtml} from "../utils/sanitize";
 import {TextEncoder} from "text-encoding-utf-8";
-import {clearStepper, StepperStatus} from "./index";
+import {clearStepper, stepperDisabledSaga, StepperStatus} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "../buffers/selectors";
@@ -84,6 +84,8 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.CompileClearDiagnostics);
     bundle.addReducer(ActionTypes.CompileClearDiagnostics, compileClearDiagnosticsReducer);
 
+    bundle.defineAction(ActionTypes.CompileWait);
+
     bundle.addSaga(function* watchCompile() {
         yield takeLatest(ActionTypes.Compile, function* () {
             let state: AppStore = yield select();
@@ -143,6 +145,17 @@ export default function(bundle: Bundle) {
             if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
                 yield put({type: ActionTypes.StepperInterrupt, payload: {}});
             }
+            yield call(stepperDisabledSaga);
+        });
+
+        // @ts-ignore
+        yield takeEvery(ActionTypes.CompileWait, function* ({payload: {callback}}) {
+            yield put({type: ActionTypes.Compile, payload: {}});
+            const outcome = yield race({
+                succeeded: take(ActionTypes.StepperRestart),
+                failed: take(ActionTypes.CompileFailed),
+            });
+            callback('succeeded' in outcome);
         });
     });
 

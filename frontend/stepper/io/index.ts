@@ -21,6 +21,8 @@ import {StepperContext} from "../api";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
+import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
+import {PrinterLib} from "../../task/libs/printer/printer_lib";
 
 export enum IoMode {
     Terminal = 'terminal',
@@ -168,12 +170,24 @@ export default function(bundle: Bundle) {
         stepperApi.addBuiltin('scanf', scanfBuiltin);
 
         stepperApi.onEffect('write', function* writeEffect(stepperContext: StepperContext, text) {
-            const {state} = stepperContext;
-            if (state.terminal) {
-                state.terminal = writeString(state.terminal, text);
-            } else {
-                state.output = state.output + text;
-            }
+            console.log('effect write', text);
+
+            // @ts-ignore
+            const context: PrinterLib = quickAlgoLibraries.getContext('printer');
+
+            console.log('do write');
+            yield ['promise', new Promise((resolve) => {
+                console.log('call print_end');
+                // @ts-ignore
+                context.print_end(text, "", resolve); // In C, printf doesn't add \n by default in the end
+            })];
+
+            // const {state} = stepperContext;
+            // if (state.terminal) {
+            //     state.terminal = writeString(state.terminal, text);
+            // } else {
+            //     state.output = state.output + text;
+            // }
             /* TODO: update the output buffer model
                If running interactively, we must alter the actual global state.
                If pre-computing states for replay, we must alter the (computed) global
@@ -209,30 +223,54 @@ export default function(bundle: Bundle) {
         });
 
         stepperApi.onEffect('gets', function* getsEffect(stepperContext: StepperContext) {
-            let {state} = stepperContext;
-            let {input, inputPos} = state;
-            let nextNL = input.indexOf('\n', inputPos);
-            while (-1 === nextNL) {
-                if (!state.terminal || !stepperContext.interact) {
-                    /* non-interactive, end of input */
-                    return null;
-                }
+            // let {state} = stepperContext;
+            // let {input, inputPos} = state;
+            // let nextNL = input.indexOf('\n', inputPos);
+            // while (-1 === nextNL) {
+            //     if (!state.terminal || !stepperContext.interact) {
+            //         /* non-interactive, end of input */
+            //         return null;
+            //     }
 
                 /* During replay no action is needed, the stepper will suspended until
                    input events supply the necessary input. */
-                yield ['interact', {saga: waitForInputSaga}];
+                // yield ['interact', {saga: waitForInputSaga}];
 
-                /* Parse the next line from updated stepper state. */
-                state = stepperContext.state;
-                input = state.input;
-                inputPos = state.inputPos;
-                nextNL = input.indexOf('\n', inputPos);
-            }
+                // @ts-ignore
+                const context: PrinterLib = quickAlgoLibraries.getContext('printer');
 
-            const line = input.substring(inputPos, nextNL);
-            state.inputPos = nextNL + 1;
+                console.log('before interact');
 
-            return line;
+                let result;
+
+                yield ['interact', {saga: function*() {
+                        yield call(() => {
+                            return new Promise((resolve) => {
+                                // @ts-ignore
+                                context.read((elm) => {
+                                    console.log('is read', elm);
+                                    result = elm;
+                                    resolve(elm);
+                                });
+                            })
+                        });
+                    }}];
+
+                return result;
+
+                // console.log('go here', state.input);
+                // /* Parse the next line from updated stepper state. */
+                // state = stepperContext.state;
+                // input = state.input;
+                // inputPos = state.inputPos;
+                // nextNL = input.indexOf('\n', inputPos);
+                // console.log('find next nl', nextNL);
+            // }
+            //
+            // const line = input.substring(inputPos, nextNL);
+            // state.inputPos = nextNL + 1;
+            //
+            // return line;
         });
 
         function* waitForInputSaga() {
