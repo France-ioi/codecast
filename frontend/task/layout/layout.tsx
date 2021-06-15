@@ -104,7 +104,7 @@ function getAttributes(node) {
 
     const result = {};
 
-    Array.from(attributes)
+    Array.from<{name: string, value: any}>(attributes)
         .forEach(({name, value}) => {
             if ('true' === value) {
                 value = true;

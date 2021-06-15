@@ -1,4 +1,4 @@
-import React, {ReactElement} from 'react';
+import React, {ReactElement, ReactNode} from 'react';
 import {connect} from "react-redux";
 import {Dropdown} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
@@ -33,7 +33,7 @@ const _CustomToggle = ({children, onClick}, ref) => (
     </a>
 );
 
-const CustomToggle = React.forwardRef<HTMLAnchorElement, {onClick: Function}>(_CustomToggle);
+const CustomToggle = React.forwardRef<HTMLAnchorElement, {children: ReactNode, onClick: Function}>(_CustomToggle);
 
 class _MultiVisualization extends React.PureComponent<MultiVisualizationProps> {
     render() {

@@ -1,5 +1,5 @@
 import * as C from 'persistent-c';
-import {FibonacciHeap} from '@tyriar/fibonacci-heap';
+import {FibonacciHeap, INode} from '@tyriar/fibonacci-heap';
 import range from 'node-range';
 
 import {evalExpr, readScalarBasic, stringifyExpr} from './utils';
@@ -333,7 +333,7 @@ const findInsertionIndex = function(element, array, comparer?) {
     }
 }
 
-const compareHeapNodes = function(a: HeapNode, b: HeapNode) {
+const compareHeapNodes = function(a: INode<HeapNode, any>, b: INode<HeapNode, any>) {
     const cellA = a.key;
     const cellB = b.key;
     if (cellA.points > cellB.points) {
