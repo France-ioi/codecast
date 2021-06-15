@@ -5,19 +5,22 @@ import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {addAutocompletion} from "./editorAutocompletion";
 import {getAutocompletionParameters, QuickAlgoContext} from '../task';
+import {LayoutType} from "../task/layout/layout";
 
 const Range = ace.acequire('ace/range').Range;
 
 interface EditorStateToProps {
     getMessage: Function,
     context: QuickAlgoContext,
+    layoutType: LayoutType,
 }
 
 function mapStateToProps(state: AppStore): EditorStateToProps {
     return {
         getMessage: state.getMessage,
         context: state.task.context,
-    }
+        layoutType: state.layout.type,
+    };
 }
 
 interface EditorProps extends EditorStateToProps {
@@ -205,6 +208,9 @@ class _Editor extends React.PureComponent<EditorProps> {
         // editor.setBehavioursEnabled(false);
         editor.setTheme(`ace/theme/${this.props.theme || 'github'}`);
         session.setMode(`ace/mode/${this.props.mode || 'text'}`);
+        if (LayoutType.MobileHorizontal === this.props.layoutType || LayoutType.MobileVertical === this.props.layoutType) {
+            editor.setFontSize('16px');
+        }
         // editor.setOptions({minLines: 25, maxLines: 50});
         editor.setOptions({
             readOnly: !!this.props.readOnly,
@@ -260,7 +266,9 @@ class _Editor extends React.PureComponent<EditorProps> {
                 completer = editor.completer;
                 completer.detach();
             }
-            completer.popup.container.style.width = "22%";
+            if (completer && completer.popup) {
+                completer.popup.container.style.width = "22%";
+            }
 
             // removal of return for autocomplete
             if (completer.keyboardHandler.commandKeyBinding.return)

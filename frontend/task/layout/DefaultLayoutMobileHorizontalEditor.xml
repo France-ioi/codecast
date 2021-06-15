@@ -1,0 +1,8 @@
+<VerticalLayout>
+    <ZoneLayout>
+        <Editor/>
+    </ZoneLayout>
+    <ZoneLayout desiredSize="50px" overflow="false">
+        <ControlsAndErrors/>
+    </ZoneLayout>
+</VerticalLayout>

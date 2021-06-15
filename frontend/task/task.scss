@@ -1,6 +1,13 @@
-$primary: #4e94e3;
+$primary: #4a90e2;
 
 @import "./layout/layout.scss";
+@import "./controls.scss";
+
+@mixin mobile {
+  @media screen and (max-width: 767px) {
+    @content
+  }
+}
 
 html {
   margin: 0 !important;
@@ -16,6 +23,7 @@ body {
 
   .task-section {
     display: flex;
+    width: 100vw;
     flex-direction: column;
     flex: 1 0;
   }
@@ -59,7 +67,10 @@ body {
   }
 
   .task-mission {
-    padding: 30px;
+    padding: 20px;
+    @include mobile {
+      padding: 15px;
+    }
     color: #7c7c7c;
 
     h1 {
@@ -73,131 +84,6 @@ body {
     border-bottom: solid 1px #e7e7e7;
   }
 
-  .controls-and-errors {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-  }
-
-  .controls-stepper {
-    border-top: solid 1px #e7e7e7;
-    padding: 15px 10px;
-    display: flex;
-    align-items: center;
-    width: 100%;
-
-    > .is-extended {
-      flex: 1 0;
-    }
-
-    > .is-narrow {
-      flex: 0 1;
-    }
-
-    .speed-slider {
-      background-color: rgba(0,0,0,0.10);
-      box-shadow: 1px 1px 0 0 rgb(0 0 0 / 10%) inset;
-      border-radius: 5px;
-      font-size: 18px;
-      color: #4a4a4a;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      margin-right: 10px;
-      .player-slider-container {
-        display: flex;
-        align-items: center;
-        width: 100%;
-      }
-      .bp3-slider-axis, .bp3-slider-label {
-        display: none;
-      }
-      .bp3-slider {
-        height: 13px;
-        min-width: initial;
-      }
-      .bp3-slider-track {
-        height: 3px;
-      }
-      .bp3-slider-handle {
-        background: $primary;
-        border-radius: 50px;
-        width: 30px;
-        outline: none;
-        transform: translate(-7px, 0);
-        top: -2px;
-        &:after {
-          content: '';
-          display: block;
-          color: white;
-          position: absolute;
-          left: 8px;
-          top: 7px;
-          right: 8px;
-          border-bottom: solid 3px white;
-        }
-      }
-      .bp3-slider-progress.bp3-intent-primary {
-        background-color: $primary;
-      }
-      .extremity {
-        opacity: 0.5;
-        &.extremity-left {
-          margin-right: 20px;
-        }
-        &.extremity-right {
-          margin-left: 20px;
-        }
-        svg {
-          width: 20px;
-          height: 20px;
-        }
-      }
-    }
-
-    .big-buttons {
-      margin-right: 20px;
-      white-space: nowrap;
-    }
-
-    .bp3-button {
-      border-radius: 500px;
-      background: $primary;
-      color: white;
-      height: 40px;
-      width: 40px;
-      margin: 0 4px;
-      border: none;
-      box-shadow: none !important;
-      i, .bp3-icon {
-        font-size: 22px;
-        svg {
-          width: 22px;
-          height: 22px;
-        }
-        color: inherit !important;
-      }
-      &[disabled] {
-        opacity: 0.3;
-      }
-    }
-
-    .small-buttons .bp3-button {
-      height: 30px;
-      width: 30px;
-      i, .bp3-icon, svg {
-        font-size: 15px;
-        svg {
-          width: 15px;
-          height: 15px;
-        }
-        color: inherit !important;
-      }
-    }
-  }
-
   .error-message {
     position: absolute;
     right: 0;
@@ -205,7 +91,7 @@ body {
     left: 0;
     padding: 14px 0;
     color: #fff;
-    z-index: 1;
+    z-index: 4;
     border-radius: 5px 5px 0 0;
     line-height: 1.1em;
     background-color: #efa124;
@@ -248,11 +134,9 @@ body {
 
   .task-visualisation {
     padding: 20px;
-  }
-
-  .visualization-slot {
-    overflow: auto;
-    flex-basis: 50%;
+    @include mobile {
+      padding: 0;
+    }
   }
 
   &.full-screen {
@@ -265,14 +149,14 @@ body {
   }
 
   .menu-container {
-    position: absolute;
+    position: fixed;
     right: 0;
     height: 100%;
     z-index: 10;
-    transform: translate(200px);
+    transform: translate3d(100%, 0, 0);
     transition: transform ease-in .2s;
     &.is-open {
-      transform: translate(0px);
+      transform: translate3d(0, 0, 0);
     }
   }
 
@@ -547,5 +431,17 @@ pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     margin-bottom: 5px;
     background: none !important;
     border-bottom: none !important;
+  }
+}
+
+
+@include mobile {
+  .bp3-dialog {
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    .bp3-dialog-header {
+      border-radius: 0;
+    }
   }
 }

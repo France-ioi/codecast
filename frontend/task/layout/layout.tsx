@@ -54,6 +54,8 @@ export interface LayoutProps {
     width: number,
     height: number,
     preferredVisualizations: string[],
+    layoutType: LayoutType,
+    layoutMobileMode: LayoutMobileMode,
 }
 
 export interface LayoutElementMetadata {
@@ -63,11 +65,6 @@ export interface LayoutElementMetadata {
     overflow?: boolean,
     desiredSize?: string,
     stackingOrientation?: RelativeLayoutOrientation,
-}
-
-export interface LayoutVisualization {
-    metadata: LayoutElementMetadata,
-    element: ReactElement,
 }
 
 export interface LayoutVisualizationGroup {
@@ -105,8 +102,14 @@ function getAttributes(node) {
 
     const result = {};
 
-    Array.from<{name: string, value: string}>(attributes)
+    Array.from<{name: string, value: any}>(attributes)
         .forEach(({name, value}) => {
+            if ('true' === value) {
+                value = true;
+            }
+            if ('false' === value) {
+                value = false;
+            }
             result[name] = value;
         });
 
@@ -224,11 +227,16 @@ function createVisualizationGroupsForZone(node: XmlParserNode, data: BuildZoneLa
     }
 
     let zoneDirectives = [];
-    if (metadata['name'] in directivesByZone) {
-        zoneDirectives = directivesByZone[metadata['name']];
+    if (metadata['name']) {
+        for (let zone of metadata['name'].split(',').map(zone => zone.trim()).filter(zone => zone.length)) {
+            if (zone in directivesByZone) {
+                zoneDirectives = [...zoneDirectives, ...directivesByZone[zone]];
+            }
+        }
     }
+
     if (metadata['default'] && 'default' in directivesByZone) {
-        zoneDirectives = directivesByZone['default'];
+        zoneDirectives = [...zoneDirectives, ...directivesByZone['default']];
     }
 
     if (zoneDirectives.length) {
@@ -535,6 +543,27 @@ function buildZonesLayout(node: XmlParserNode, data: BuildZoneLayoutData): React
     return reactTree;
 }
 
+function capitalizeFirstLetter(string: string): string {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function getAppropriateXmlLayout(layoutType: LayoutType, layoutMobileMode: LayoutMobileMode): string {
+    if (LayoutType.Desktop === layoutType) {
+        return 'DefaultLayoutDesktop.xml';
+    }
+    if (LayoutType.TabletVertical === layoutType) {
+        return 'DefaultLayoutTabletVertical.xml';
+    }
+    if (LayoutType.MobileVertical === layoutType) {
+        return 'DefaultLayoutMobileVertical' + capitalizeFirstLetter(layoutMobileMode)  + '.xml';
+    }
+    if (LayoutType.MobileHorizontal === layoutType) {
+        return 'DefaultLayoutMobileHorizontal' + capitalizeFirstLetter(layoutMobileMode) + '.xml';
+    }
+
+    throw 'Unable to load appropriate XML layout file for this configuration';
+}
+
 export function createLayout(layoutProps: LayoutProps): ReactElement {
     const xmlToReact = new XMLToReact({
         HorizontalLayout: (attrs) => ({
@@ -551,12 +580,10 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 orientation: RelativeLayoutOrientation.VERTICAL,
             }
         }),
-        ZoneLayout: (attrs) => {
-            return {
-                type: ZoneLayout,
-                metadata: attrs,
-            }
-        },
+        ZoneLayout: (attrs) => ({
+            type: ZoneLayout,
+            metadata: attrs,
+        }),
         ControlsAndErrors: (attrs) => ({
             type: ControlsAndErrors,
             metadata: {
@@ -567,14 +594,19 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         }),
         Editor: (attrs) => ({
             type: LayoutEditor,
-            metadata: attrs,
+            metadata: {
+                id: 'editor',
+                title: layoutProps.getMessage('TASK_EDITOR'),
+                icon: 'edit',
+                ...attrs,
+            },
         }),
         Instructions: (attrs) => ({
             type: TaskInstructions,
             metadata: {
                 id: 'instructions',
                 title: layoutProps.getMessage('TASK_DESCRIPTION'),
-                icon: 'align-left',
+                icon: 'document',
                 ...attrs,
             },
         }),
@@ -594,9 +626,10 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
     });
 
     const directivesByZone = {};
+    const availableZones = ['top-right', 'top-left', 'center-top', 'center', 'center-bottom', 'center-left', 'center-right', 'bottom-left', 'bottom-right'];
     if (layoutProps.orderedDirectives) {
         for (let directive of layoutProps.orderedDirectives) {
-            const zone = directive.byName['zone'] ?? 'default';
+            const zone = directive.byName['zone'] && availableZones.indexOf(directive.byName['zone']) !== -1 ? directive.byName['zone'] : 'default';
             if (!(zone in directivesByZone)) {
                 directivesByZone[zone] = [];
             }
@@ -604,7 +637,8 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         }
     }
 
-    let layoutXml = require('./DefaultLayoutDesktop.xml').default;
+    const layout = getAppropriateXmlLayout(layoutProps.layoutType, layoutProps.layoutMobileMode);
+    let layoutXml = require('./' + layout).default;
     if (layoutProps.fullScreenActive) {
         layoutXml = '<Editor/>';
     }
@@ -624,6 +658,10 @@ function layoutVisualizationSelectedReducer(state: AppStore, {payload: {visualiz
     makeVisualizationAsPreferred(state.layout.preferredVisualizations, visualization);
 }
 
+function layoutMobileModeChangedReducer(state: AppStore, {payload: {mobileMode}}) {
+    state.layout.mobileMode = mobileMode;
+}
+
 export function makeVisualizationAsPreferred(visualizations: string[], visualization: string): string[] {
     if (-1 !== visualizations.indexOf(visualization)) {
         visualizations.splice(visualizations.indexOf(visualization), 1);
@@ -633,17 +671,49 @@ export function makeVisualizationAsPreferred(visualizations: string[], visualiza
     return visualizations;
 }
 
+export function computeLayoutType(width: number, height: number) {
+    if (width < 768 && width <= height) {
+        return LayoutType.MobileVertical;
+    } else if ((width < 855 || height < 450) && width > height) {
+        return LayoutType.MobileHorizontal;
+    } else if (width <= height) {
+        return LayoutType.TabletVertical;
+    } else {
+        return LayoutType.Desktop; // and tablet horizontal
+    }
+}
+
+export enum LayoutType {
+    Desktop = 'desktop', // and tablet horizontal
+    TabletVertical = 'tablet-vertical',
+    MobileHorizontal = 'mobile-horizontal',
+    MobileVertical = 'mobile-vertical',
+}
+
+export enum LayoutMobileMode {
+    Instructions = 'instructions',
+    Editor = 'editor',
+    Player = 'player',
+}
+
 export interface LayoutState {
     preferredVisualizations: string[], // least preferred at the beginning, most preferred at the end
+    type: LayoutType,
+    mobileMode: LayoutMobileMode,
 }
 
 export default function (bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
         state.layout = {
             preferredVisualizations: [],
+            type: LayoutType.Desktop,
+            mobileMode: LayoutMobileMode.Instructions,
         };
     });
 
     bundle.defineAction(ActionTypes.LayoutVisualizationSelected);
     bundle.addReducer(ActionTypes.LayoutVisualizationSelected, layoutVisualizationSelectedReducer);
+
+    bundle.defineAction(ActionTypes.LayoutMobileModeChanged);
+    bundle.addReducer(ActionTypes.LayoutMobileModeChanged, layoutMobileModeChangedReducer);
 };

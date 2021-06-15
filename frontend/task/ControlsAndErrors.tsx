@@ -3,12 +3,18 @@ import {StepperControls} from "../stepper/views/StepperControls";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {connect} from "react-redux";
 import {Icon} from "@blueprintjs/core";
-import {StepperStatus} from "../stepper";
 import {AppStore} from "../store";
+import {LayoutMobileMode, LayoutType} from "./layout/layout";
+import {ActionTypes} from "./layout/actionTypes";
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faFileAlt, faPencilAlt, faPlay} from "@fortawesome/free-solid-svg-icons";
 
 interface ControlsAndErrorsStateToProps {
     error: string,
     diagnostics: any,
+    layoutType: LayoutType,
+    layoutMobileMode: LayoutMobileMode,
+    getMessage: Function,
 }
 
 interface ControlsAndErrorsProps extends ControlsAndErrorsStateToProps {
@@ -19,21 +25,64 @@ function mapStateToProps(state: AppStore): ControlsAndErrorsStateToProps {
     const diagnostics = state.compile.diagnosticsHtml;
     const currentStepperState = state.stepper.currentStepperState;
     const error = currentStepperState && currentStepperState.error;
+    const layoutType = state.layout.type;
+    const layoutMobileMode = state.layout.mobileMode;
+    const getMessage = state.getMessage;
 
     return {
         error,
         diagnostics,
+        layoutType,
+        layoutMobileMode,
+        getMessage,
     };
 }
 
 class _ControlsAndErrors extends React.PureComponent<ControlsAndErrorsProps> {
     render() {
-        const {error, diagnostics} = this.props;
+        const {error, diagnostics, getMessage, layoutType, layoutMobileMode} = this.props;
         const hasError = !!(error || diagnostics);
+        const hasModes = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
         return (
             <div className="controls-and-errors">
-                <StepperControls enabled={true} newControls={true}/>
+                <div className="mode-selector">
+                    {hasModes &&
+                        <React.Fragment>
+                            <div
+                                className={`mode ${LayoutMobileMode.Instructions === layoutMobileMode ? 'is-active' : ''}`}
+                                onClick={() => this.selectMode(LayoutMobileMode.Instructions)}
+                            >
+                                <FontAwesomeIcon icon={faFileAlt}/>
+                                {LayoutMobileMode.Instructions === layoutMobileMode &&
+                                    <span className="label">{getMessage('TASK_DESCRIPTION')}</span>
+                                }
+                            </div>
+                            <div
+                                className={`mode ${LayoutMobileMode.Editor === layoutMobileMode ? 'is-active' : ''}`}
+                                onClick={() => this.selectMode(LayoutMobileMode.Editor)}
+                            >
+                                <FontAwesomeIcon icon={faPencilAlt}/>
+                                {LayoutMobileMode.Editor === layoutMobileMode &&
+                                    <span className="label">{getMessage('TASK_EDITOR')}</span>
+                                }
+                            </div>
+                            {LayoutMobileMode.Player !== layoutMobileMode &&
+                                <div
+                                    className={`mode`}
+                                    onClick={() => this.selectMode(LayoutMobileMode.Player)}
+                                >
+                                    <FontAwesomeIcon icon={faPlay}/>
+                                </div>
+                            }
+                        </React.Fragment>
+                    }
+
+                    {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && <div className="stepper-controls-container">
+                        <StepperControls enabled={true} newControls={true}/>
+                    </div>}
+                </div>
+
                 {hasError && <div className="error-message" onClick={this._onClearDiagnostics}>
                   <button type="button" className="close-button" onClick={this._onClearDiagnostics}>
                     <Icon icon="cross"/>
@@ -52,6 +101,10 @@ class _ControlsAndErrors extends React.PureComponent<ControlsAndErrorsProps> {
 
     _onClearDiagnostics = () => {
         this.props.dispatch({type: StepperActionTypes.CompileClearDiagnostics});
+    };
+
+    selectMode = (mobileMode: LayoutMobileMode) => {
+        this.props.dispatch({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
     };
 }
 

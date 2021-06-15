@@ -12,7 +12,7 @@ export class ZoneLayout extends React.PureComponent<ZoneLayoutProps> {
     render() {
         const {metadata} = this.props;
         const hasDesiredSize = !!metadata.desiredSize;
-        const style: React.CSSProperties = hasDesiredSize ? {flexBasis: metadata.desiredSize + 'px'} : {flex: '1 0'};
+        const style: React.CSSProperties = hasDesiredSize ? {flexBasis: metadata.desiredSize} : {flex: '1 0'};
         if (false !== metadata.overflow) {
             style.overflow = 'auto';
         }

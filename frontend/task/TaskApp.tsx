@@ -11,6 +11,7 @@ import {SubtitlesBand} from "../subtitles/SubtitlesBand";
 import {PlayerControlsTask} from "./PlayerControlsTask";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {LayoutLoader} from "./layout/LayoutLoader";
+import {LayoutType} from "./layout/layout";
 
 interface TaskAppStateToProps {
     fullScreenActive: boolean,
@@ -22,6 +23,7 @@ interface TaskAppStateToProps {
     options: CodecastOptions,
     taskSuccess: boolean,
     taskSuccessMessage: string,
+    layoutType: LayoutType,
 }
 
 function mapStateToProps(state: AppStore): TaskAppStateToProps {
@@ -35,10 +37,12 @@ function mapStateToProps(state: AppStore): TaskAppStateToProps {
     const isPlayerReady = player.isReady;
     const playerProgress = player.progress;
     const options = state.options;
+    const layoutType = state.layout.type;
 
     return {
         fullScreenActive, recordingEnabled, playerProgress, isPlayerReady,
         playerEnabled, getMessage, taskSuccess, taskSuccessMessage, options,
+        layoutType,
     };
 }
 
@@ -60,11 +64,11 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
     render() {
         const {
             fullScreenActive, recordingEnabled, playerProgress, isPlayerReady,
-            playerEnabled, getMessage, taskSuccess, taskSuccessMessage,
+            playerEnabled, getMessage, taskSuccess, taskSuccessMessage, layoutType,
         } = this.props;
 
         return (
-            <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''}`}>
+            <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType}`}>
                 <div className="task-section">
                     <div className="task-header">
                         <span className="task-header__quick">QUICK</span>
