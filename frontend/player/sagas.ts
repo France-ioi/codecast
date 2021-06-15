@@ -247,7 +247,6 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
             if (inputNeeded) {
                 waitingPromises.push({promise: taskPromise, handled: false});
             }
-
         } else {
             const originalState = replayContext.state;
             const draft = createDraft(originalState);

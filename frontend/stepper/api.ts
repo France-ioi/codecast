@@ -215,7 +215,7 @@ async function executeEffects(stepperContext: StepperContext, iterator) {
     }
 }
 
-async function executeSingleStep(stepperContext: StepperContext, makeInteract: boolean = true) {
+async function executeSingleStep(stepperContext: StepperContext, makeInteract: () => boolean = null) {
     if (isStuck(stepperContext.state)) {
         throw new StepperError('stuck', 'execution cannot proceed');
     }
@@ -263,17 +263,11 @@ async function executeSingleStep(stepperContext: StepperContext, makeInteract: b
 
         /* Update the current position in source code. */
         const position = getNodeStartRow(stepperContext.state);
-        if (makeInteract) {
+        if (!makeInteract || makeInteract()) {
+            await stepperContext.interact({
+                position
+            });
             stepperContext.position = position;
-            stepperContext.lineCounter += 1;
-
-            if (stepperContext.lineCounter === 20) {
-                await stepperContext.interact({
-                    position
-                });
-
-                stepperContext.lineCounter = 0;
-            }
         }
     }
 }
@@ -282,6 +276,7 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined, u
     let stop = false;
     let first = true;
     let delayCondition = 0;
+    let nextDelayC = false;
     while (true) {
         if (isStuck(stepperContext.state)) {
             return;
@@ -302,32 +297,37 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined, u
             return;
         }
 
-        let makeDelay = false;
-        if (useSpeed && !first && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255) {
-            if (stepperContext.state.platform === 'unix') {
-                if (C.outOfCurrentStmt(stepperContext.state.programState) && 0 === delayCondition) {
-                    delayCondition++;
-                }
-                if (C.intoNextStmt(stepperContext.state.programState) && 1 === delayCondition) {
-                    makeDelay = true;
-                    delayCondition = 0;
-                }
-            } else {
-                makeDelay = true;
-            }
-
-            if (makeDelay) {
-                if (stepperContext.state.platform === 'unix') {
-                    const position = getNodeStartRow(stepperContext.state);
-                    await stepperContext.interact({
-                        position,
-                    });
-                }
+        if (!first && useSpeed && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255) {
+            if (stepperContext.state.platform !== 'unix' || nextDelayC) {
                 await delay(255 - stepperContext.speed);
+                nextDelayC = false;
             }
         }
 
-        await executeSingleStep(stepperContext, false);
+        await executeSingleStep(stepperContext, () => {
+            if (stepperContext.state.platform === 'unix') {
+                if (0 === delayCondition && C.outOfCurrentStmt(stepperContext.state.programState)) {
+                    delayCondition++;
+                }
+                if (1 === delayCondition && C.intoNextStmt(stepperContext.state.programState)) {
+                    delayCondition++;
+                }
+
+                if (delayCondition === 2) {
+                    nextDelayC = true;
+                    delayCondition = 0;
+
+                    return true;
+                } else if (isStuck(stepperContext.state)) {
+                    return true;
+                }
+
+                return false;
+            } else {
+                return true;
+            }
+        });
+
         first = false;
     }
 }

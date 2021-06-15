@@ -292,6 +292,14 @@ class _Editor extends React.PureComponent<EditorProps> {
 
             /* Do not auto-scroll when shielded. */
             this.editor.setAutoScrollEditorIntoView(!this.props.shield);
+
+            const session = this.editor.getSession();
+            if (prevProps.mode !== this.props.mode) {
+                session.setMode(`ace/mode/${this.props.mode || 'text'}`);
+            }
+            if (prevProps.theme !== this.props.theme) {
+                this.editor.setTheme(`ace/theme/${this.props.theme || 'github'}`);
+            }
         }
     };
 

@@ -223,66 +223,29 @@ export default function(bundle: Bundle) {
         });
 
         stepperApi.onEffect('gets', function* getsEffect(stepperContext: StepperContext) {
-            // let {state} = stepperContext;
-            // let {input, inputPos} = state;
-            // let nextNL = input.indexOf('\n', inputPos);
-            // while (-1 === nextNL) {
-            //     if (!state.terminal || !stepperContext.interact) {
-            //         /* non-interactive, end of input */
-            //         return null;
-            //     }
+            // @ts-ignore
+            const context: PrinterLib = quickAlgoLibraries.getContext('printer');
 
-                /* During replay no action is needed, the stepper will suspended until
-                   input events supply the necessary input. */
-                // yield ['interact', {saga: waitForInputSaga}];
+            let hasResult = false;
+            let result;
 
-                // @ts-ignore
-                const context: PrinterLib = quickAlgoLibraries.getContext('printer');
+            const promise = context.read((elm) => {
+                result = elm;
+                hasResult = true;
+            });
 
-                console.log('before interact');
-
-                let result;
-
-                yield ['interact', {saga: function*() {
+            while (!hasResult) {
+                yield ['interact', {
+                    saga: function* () {
                         yield call(() => {
-                            return new Promise((resolve) => {
-                                // @ts-ignore
-                                context.read((elm) => {
-                                    console.log('is read', elm);
-                                    result = elm;
-                                    resolve(elm);
-                                });
-                            })
+                            return promise;
                         });
-                    }}];
+                    },
+                }];
+            }
 
-                return result;
-
-                // console.log('go here', state.input);
-                // /* Parse the next line from updated stepper state. */
-                // state = stepperContext.state;
-                // input = state.input;
-                // inputPos = state.inputPos;
-                // nextNL = input.indexOf('\n', inputPos);
-                // console.log('find next nl', nextNL);
-            // }
-            //
-            // const line = input.substring(inputPos, nextNL);
-            // state.inputPos = nextNL + 1;
-            //
-            // return line;
+            return result;
         });
-
-        function* waitForInputSaga() {
-            /* Set the isWaitingOnInput flag on the state. */
-            yield put({type: ActionTypes.TerminalInputNeeded});
-
-            /* Transfer focus to the terminal. */
-            yield put({type: ActionTypes.TerminalFocus});
-
-            /* Wait for the user to enter a line. */
-            yield take(ActionTypes.TerminalInputEnter);
-        }
 
         stepperApi.onEffect('ungets', function* ungetsHandler(stepperContext: StepperContext, count) {
             stepperContext.state.inputPos -= count;
