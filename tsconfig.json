@@ -9,7 +9,6 @@
     "strict": true, // enable all strict rules, unless they are explicitely disabled (below). there should not be any of such exceptions.
     "noImplicitAny": false, // temporirly disabled, should fix code and remove this line
     "noImplicitThis": false, // temporirly disabled, should fix code and remove this line
-    "strictFunctionTypes": false, // temporirly disabled, should fix code and remove this line
     "strictNullChecks": false, // temporirly disabled, should fix code and remove this line
     "strictPropertyInitialization": false, // temporirly disabled, should fix code and remove this line
 
