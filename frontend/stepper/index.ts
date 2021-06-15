@@ -790,6 +790,7 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
     if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
         const taskContext = quickAlgoLibraries.getContext();
         taskContext.reset();
+        yield delay(0);
 
         window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
 
