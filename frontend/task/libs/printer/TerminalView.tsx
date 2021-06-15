@@ -1,12 +1,12 @@
 import React from "react";
 import {Card} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
-import {writeString} from "./terminal";
-import {ActionTypes} from "./actionTypes";
-import {PureTerminal} from "./PureTerminal";
-import {getCurrentStepperState} from "../selectors";
+import {writeString} from "../../../stepper/io/terminal";
+import {ActionTypes} from "../../../stepper/io/actionTypes";
+import {PureTerminal} from "../../../stepper/io/PureTerminal";
+import {getCurrentStepperState} from "../../../stepper/selectors";
 import {connect} from "react-redux";
-import {AppStore} from "../../store";
+import {AppStore} from "../../../store";
 
 interface TerminalViewStateToProps {
     isWaitingOnInput?: boolean,

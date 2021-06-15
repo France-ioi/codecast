@@ -278,7 +278,10 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
                 disabled = !this.props.canCompile;
                 break;
             case 'go_to_end':
-                disabled = this.props.isFinished;
+                disabled = !this.props.canStep || this.props.isFinished;
+                break;
+            case 'step_by_step':
+                disabled = !this.props.canStep;
                 break;
         }
 

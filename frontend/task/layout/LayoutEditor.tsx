@@ -53,6 +53,7 @@ export class _LayoutEditor extends React.PureComponent<LayoutStackViewProps> {
                 theme="textmate"
                 requiredWidth="100%"
                 requiredHeight="100%"
+                hasAutocompletion
             />
         );
     }

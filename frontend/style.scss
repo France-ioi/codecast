@@ -221,6 +221,13 @@ body#app, #app h1, #app h2, #app h3 {
 .terminal-placeholder {
   color: #AAA;
 }
+.terminal-view-header {
+  display: flex;
+  align-items: center;
+  .bp3-icon {
+    margin-left: 5px;
+  }
+}
 
 #vumeter {
   position: fixed;

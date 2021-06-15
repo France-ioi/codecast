@@ -30,7 +30,7 @@ import {setAutoFreeze} from "immer";
 import {ReplayApi} from "./player/replay";
 import {RecordApi} from "./recorder/record";
 import {StepperApi} from "./stepper/api";
-import {QuickAlgoContext} from "./task";
+import {EnhancedStore} from "@reduxjs/toolkit";
 
 /**
  * TODO: This should be removed if possible.
@@ -55,14 +55,13 @@ export interface App {
 
 declare global {
     interface Window extends WindowLocalStorage {
-        store: any,
+        store: EnhancedStore<AppStore>,
         Codecast: Codecast,
         currentPythonRunner: any,
         currentPythonContext: any,
         languageStrings: any,
         __REDUX_DEVTOOLS_EXTENSION__: any,
         __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: any,
-        quickAlgoContext: (display: boolean, infos: any) => QuickAlgoContext,
         quickAlgoLibraries: any,
         quickAlgoLibrariesList: any,
         stringsLanguage: any,

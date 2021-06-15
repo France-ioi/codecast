@@ -5,12 +5,13 @@ import PythonInterpreter from "./python_interpreter";
 import {ActionTypes} from './actionTypes';
 import {ActionTypes as CompileActionTypes} from '../actionTypes';
 import {ActionTypes as IoActionTypes} from '../io/actionTypes';
-import {ActionTypes as TaskActionTypes} from '../../task/actionTypes';
 import {AppStore, AppStoreReplay} from "../../store";
 import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
+import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
+import {taskSuccess} from "../../task/task_slice";
 
 const pythonInterpreterChannel = channel();
 
@@ -108,10 +109,12 @@ export default function(bundle: Bundle) {
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore, replay: boolean = false) {
             const {platform} = state.options;
             const source = state.buffers['source'].model.document.toString();
+            const currentTest = state.task.currentTest;
 
             if (platform === 'python') {
-                const context = state.task.context;
-                context.reset();
+                const context = quickAlgoLibraries.getContext();
+                context.reset(currentTest);
+
                 context.onError = (diagnostics) => {
                     if (replay) {
                         return;
@@ -136,10 +139,7 @@ export default function(bundle: Bundle) {
                         type: CompileActionTypes.StepperInterrupting,
                     });
 
-                    pythonInterpreterChannel.put({
-                        type: TaskActionTypes.TaskSuccess,
-                        payload: {message},
-                    });
+                    pythonInterpreterChannel.put(taskSuccess(message));
                 };
                 context.onInput = () => {
                     return new Promise((resolve, reject) => {

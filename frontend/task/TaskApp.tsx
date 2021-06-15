@@ -4,7 +4,6 @@ import {AppStore, CodecastOptions} from "../store";
 import {Container} from 'react-bootstrap';
 import {getPlayerState} from "../player/selectors";
 import {Dialog, Icon, Intent, ProgressBar} from "@blueprintjs/core";
-import {ActionTypes} from "./actionTypes";
 import {MenuTask} from "./MenuTask";
 import {RecorderControlsTask} from "./RecorderControlsTask";
 import {SubtitlesBand} from "../subtitles/SubtitlesBand";
@@ -12,6 +11,8 @@ import {PlayerControlsTask} from "./PlayerControlsTask";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {LayoutLoader} from "./layout/LayoutLoader";
 import {LayoutType} from "./layout/layout";
+import {taskSuccessClear} from "./task_slice";
+import {taskLoad} from "./index";
 
 interface TaskAppStateToProps {
     fullScreenActive: boolean,
@@ -115,7 +116,7 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
     };
 
     componentDidMount() {
-        this.props.dispatch({type: ActionTypes.TaskLoad});
+        this.props.dispatch(taskLoad());
 
         if (this.props.options.baseDataUrl) {
             let audioUrl = `${this.props.options.baseDataUrl}.mp3`;
@@ -131,7 +132,7 @@ class _TaskApp extends React.PureComponent<TaskAppProps, TaskAppState> {
     }
 
     closeTaskSuccess = () => {
-        this.props.dispatch({type: ActionTypes.TaskSuccessClear});
+        this.props.dispatch(taskSuccessClear());
     };
 }
 

@@ -61,6 +61,7 @@ import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {produce} from "immer";
+import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 
 export interface StepperTask {
 
@@ -319,6 +320,7 @@ export function clearStepper(stepper: Stepper) {
     stepper.status = StepperStatus.Clear;
     stepper.undo = [];
     stepper.redo = [];
+    stepper.interrupting = false;
     stepper.initialStepperState = null;
     stepper.currentStepperState = null;
 }
@@ -463,7 +465,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         }
     }
 
-    state.task.state = state.task.context && state.task.context.getCurrentState ? {...state.task.context.getCurrentState()} : {};
+    state.task.state = quickAlgoLibraries.getContext() && quickAlgoLibraries.getContext().getCurrentState ? {...quickAlgoLibraries.getContext().getCurrentState()} : {};
     state.stepper.currentStepperState = stepperContext.state;
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;
@@ -763,7 +765,7 @@ function* stepperStepSaga(app: App, action) {
  */
 function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContext) {
     if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
-        const taskContext = yield select((state: AppStore) => state.task.context);
+        const taskContext = quickAlgoLibraries.getContext();
         taskContext.reset();
 
         window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
@@ -1111,8 +1113,12 @@ function postLink(app: App) {
         yield takeEvery(ActionTypes.StepperStep, stepperStepSaga, args);
         yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga);
         yield takeEvery(ActionTypes.StepperExit, stepperExitSaga);
-        yield takeEvery(BufferActionTypes.BufferEdit, function* () {
-            yield put({type: ActionTypes.StepperExit, payload: {}});
+        yield takeEvery(BufferActionTypes.BufferEdit, function* (action) {
+            // @ts-ignore
+            const {buffer} = action;
+            if (buffer === 'source') {
+                yield put({type: ActionTypes.StepperExit, payload: {}});
+            }
         });
 
         /* Highlight the range of the current source fragment. */

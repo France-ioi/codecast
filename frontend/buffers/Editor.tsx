@@ -4,21 +4,22 @@ import * as ace from 'brace';
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {addAutocompletion} from "./editorAutocompletion";
-import {getAutocompletionParameters, QuickAlgoContext} from '../task';
+import {getAutocompletionParameters} from '../task';
 import {LayoutType} from "../task/layout/layout";
+import {quickAlgoLibraries, QuickAlgoLibrary} from "../task/libs/quickalgo_librairies";
 
 const Range = ace.acequire('ace/range').Range;
 
 interface EditorStateToProps {
     getMessage: Function,
-    context: QuickAlgoContext,
+    context: QuickAlgoLibrary,
     layoutType: LayoutType,
 }
 
 function mapStateToProps(state: AppStore): EditorStateToProps {
     return {
         getMessage: state.getMessage,
-        context: state.task.context,
+        context: quickAlgoLibraries.getContext(),
         layoutType: state.layout.type,
     };
 }
@@ -30,7 +31,7 @@ interface EditorProps extends EditorStateToProps {
     mode: string,
     width: any,
     height: any,
-    disableAutocompletion?: boolean,
+    hasAutocompletion?: boolean,
     onSelect: Function,
     onEdit: Function,
     onScroll: Function,
@@ -199,7 +200,7 @@ class _Editor extends React.PureComponent<EditorProps> {
 
     componentDidMount() {
         const editor = this.editor = ace.edit(this.editorNode);
-        if (!this.props.disableAutocompletion && this.props.context) {
+        if (this.props.hasAutocompletion && this.props.context) {
             const {includeBlocks, strings, constants} = getAutocompletionParameters(this.props.context);
             addAutocompletion(this.props.getMessage, includeBlocks, constants, strings);
         }
@@ -214,8 +215,8 @@ class _Editor extends React.PureComponent<EditorProps> {
         // editor.setOptions({minLines: 25, maxLines: 50});
         editor.setOptions({
             readOnly: !!this.props.readOnly,
-            enableBasicAutocompletion: !this.props.disableAutocompletion,
-            enableLiveAutocompletion: !this.props.disableAutocompletion,
+            enableBasicAutocompletion: this.props.hasAutocompletion,
+            enableLiveAutocompletion: this.props.hasAutocompletion,
             enableSnippets: false,
         });
 
@@ -255,7 +256,7 @@ class _Editor extends React.PureComponent<EditorProps> {
             }
         });
 
-        if (!this.props.disableAutocompletion) {
+        if (this.props.hasAutocompletion) {
             // @ts-ignore
             let completer = editor.completer;
             // we resize the completer window, because some functions are too big so we need more place:

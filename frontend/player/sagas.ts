@@ -19,6 +19,7 @@ import {StepperContext} from "../stepper/api";
 import {App} from "../index";
 import {createDraft, finishDraft} from "immer";
 import {ReplayApi} from "./replay";
+import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -105,7 +106,7 @@ function* playerPrepare(app: App, action) {
         payload: platform
     });
 
-    const context = state.task.context;
+    const context = quickAlgoLibraries.getContext();
     context.display = false;
 
     const replayState = {
@@ -113,8 +114,8 @@ function* playerPrepare(app: App, action) {
             platform
         },
         task: {
-            context,
-            state: state.task.context && state.task.context.getCurrentState ? {...state.task.context.getCurrentState()} : {},
+            state: context && context.getCurrentState ? {...context.getCurrentState()} : {},
+            success: false,
         },
     };
 

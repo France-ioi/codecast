@@ -15,6 +15,7 @@ import {ZoneLayoutVisualizationGroup} from "./ZoneLayoutVisualizationGroup";
 import {LayoutStackView} from "./LayoutStackView";
 import {LayoutEditor} from "./LayoutEditor";
 import {LayoutDirective} from "./LayoutDirective";
+import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_librairies";
 
 interface Dimensions {
     width: number,
@@ -45,6 +46,7 @@ interface BuildZoneLayoutData {
     width: number,
     height: number,
     preferredVisualizations: string[],
+    quickAlgoLibraries: QuickAlgoLibraries,
 }
 
 export interface LayoutProps {
@@ -612,7 +614,12 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         }),
         ContextVisualization: (attrs) => ({
             type: ContextVisualization,
-            metadata: attrs,
+            metadata: {
+                id: 'io',
+                title: layoutProps.getMessage('TASK_IO'),
+                icon: 'console',
+                ...attrs,
+            },
         }),
         Variables: (attrs) => ({
             type: LayoutStackView,
@@ -651,6 +658,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         height: layoutProps.height,
         getMessage: layoutProps.getMessage,
         preferredVisualizations: layoutProps.preferredVisualizations,
+        quickAlgoLibraries,
     });
 }
 

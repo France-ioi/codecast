@@ -8,7 +8,7 @@ export function buildCommonOptions(start, query) {
         showViews: true,
         showIO: true,
         platform: 'python',
-        canChangePlatform: /sandbox|recorder/.test(start),
+        canChangePlatform: /sandbox|recorder|task/.test(start),
         controls: {},
     };
 

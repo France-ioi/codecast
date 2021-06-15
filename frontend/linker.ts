@@ -1,9 +1,10 @@
-import {applyMiddleware, compose, createStore} from 'redux';
 import {default as createSagaMiddleware} from 'redux-saga';
 import {all, call} from 'redux-saga/effects';
 import produce from "immer";
 import {App} from "./index";
 import {AppStore} from "./store";
+import {configureStore} from "@reduxjs/toolkit";
+import taskSlice from "./task/task_slice";
 
 export interface Linker {
     scope: App,
@@ -145,14 +146,23 @@ export function link(rootBuilder): Linker {
         return result;
     }
 
-    // Create the store.
-    const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+    const immerRootReducer = produce(rootReducer);
 
-    const store = createStore(
-        produce(rootReducer),
-        {},
-        composeEnhancers(applyMiddleware(sagaMiddleware, userTimingMiddleware))
-    );
+    const rootReducerWithSlices = (state, action) => {
+        let newState = immerRootReducer(state, action);
+
+        return customCombineReducers({
+            task: taskSlice,
+        })(newState, action);
+    };
+
+    // Create the store.
+
+    const store = configureStore({
+        reducer: rootReducerWithSlices,
+        preloadedState: {},
+        middleware: [sagaMiddleware, userTimingMiddleware],
+    })
 
     window.store = store;
 
@@ -395,4 +405,43 @@ function reverseCompose(firstReducer, secondReducer) {
         firstReducer(state, action);
         secondReducer(state, action);
     }
+}
+
+// We use our own function instead of Redux one to be able
+// to combine a root reducer with key-prefixed slice reducers
+// without getting Redux warnings
+function customCombineReducers(reducers) {
+    let reducerKeys = Object.keys(reducers);
+    let finalReducers = {};
+
+    for (let i = 0; i < reducerKeys.length; i++) {
+        let key = reducerKeys[i];
+        if (typeof reducers[key] === 'function') {
+            finalReducers[key] = reducers[key];
+        }
+    }
+
+    let finalReducerKeys = Object.keys(finalReducers);
+    
+    return function combination(state, action) {
+        if (state === void 0) {
+            state = {};
+        }
+
+        let hasChanged = false;
+        let nextState = {...state};
+
+        for (let _i = 0; _i < finalReducerKeys.length; _i++) {
+            let _key = finalReducerKeys[_i];
+            let reducer = finalReducers[_key];
+            let previousStateForKey = state[_key];
+            let nextStateForKey = reducer(previousStateForKey, action);
+
+            nextState[_key] = nextStateForKey;
+            hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
+        }
+
+        hasChanged = hasChanged || finalReducerKeys.length !== Object.keys(state).length;
+        return hasChanged ? nextState : state;
+    };
 }

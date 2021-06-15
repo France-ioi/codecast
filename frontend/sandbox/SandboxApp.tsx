@@ -5,7 +5,7 @@ import {StepperView} from "../stepper/views/StepperView";
 import {Menu} from "../common/Menu";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
-import {ActionTypes} from "../task/actionTypes";
+import {taskLoad} from "../task";
 
 interface SandboxAppStateToProps {
     containerWidth: number,
@@ -54,7 +54,7 @@ class _SandboxApp extends React.PureComponent<SandboxAppProps> {
     };
 
     componentDidMount() {
-        this.props.dispatch({type: ActionTypes.TaskLoad});
+        this.props.dispatch(taskLoad());
     }
 }
 

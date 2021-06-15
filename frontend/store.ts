@@ -1,4 +1,4 @@
-import {Store} from "redux";
+import {Action, Store} from "redux";
 import {initialStateMemoryUsage} from "./recorder/memory_usage";
 import {initialStateEditor} from "./editor";
 import {initialStateStatistics} from "./statistics";
@@ -19,7 +19,7 @@ import {initialStateIoPane} from "./stepper/io";
 import {initialStateSubtitles} from "./subtitles";
 import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
-import {TaskState} from "./task";
+import {TaskState} from "./task/task_slice";
 import {LayoutState} from "./task/layout/layout";
 
 export type CodecastPlatform = 'python' | 'unix' | 'arduino';
@@ -72,6 +72,10 @@ export interface AppStoreReplay {
     stopped: boolean
 }
 
+export interface AppAction extends Action {
+    payload?: any;
+}
+
 export interface AppStore extends Store, AppStoreReplay {
     lastError: undefined | Error,
     memoryUsage: typeof initialStateMemoryUsage,
@@ -101,5 +105,5 @@ export interface AppStore extends Store, AppStoreReplay {
     viewportTooSmall: boolean,
 
     // TODO: Function should not be inside the store.
-    getMessage: Function
+    getMessage: Function,
 }
