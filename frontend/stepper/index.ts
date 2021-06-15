@@ -123,7 +123,6 @@ const initialStateStepperState = {
         functionCallStackMap: null
     } as StepperDirectives,
     inputBuffer: '',
-    isWaitingOnInput: false,
     error: '',
     serial: {
         speed: false
@@ -635,7 +634,7 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
     let state: AppStore = yield select();
 
     /* Has the stepper been interrupted? */
-    if (isStepperInterrupting(state)) {
+    if (isStepperInterrupting(state) || StepperStatus.Clear === state.stepper.status) {
         yield call(reject, new StepperError('interrupt', 'interrupted'));
 
         return;

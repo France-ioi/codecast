@@ -109,7 +109,7 @@ class _PlayerControlsTask extends React.PureComponent<PlayerControlsTaskProps> {
                 <div className="player-slider-container">
                     {!Number.isNaN(duration) &&
                         <Slider
-                          value={audioTime}
+                          value={Math.min(audioTime, duration)}
                           onChange={this.onSeek}
                           min={0}
                           max={duration}

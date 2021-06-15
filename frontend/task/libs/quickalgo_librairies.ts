@@ -1,4 +1,6 @@
 import {ReactElement} from "react";
+import {App} from "../../index";
+import {AppStore} from "../../store";
 
 //TODO: Handle multiples libraries at once.
 // For now, we only use 1 library
@@ -13,8 +15,8 @@ export class QuickAlgoLibraries {
         return this.libraries.length ? this.libraries[0] : null;
     }
 
-    reset(taskInfos = null) {
-        this.applyOnLibraries('reset', [taskInfos]);
+    reset(taskInfos = null, appState: AppStore = null) {
+        this.applyOnLibraries('reset', [taskInfos, appState]);
     }
 
     resetDisplay(taskInfos = null) {
@@ -37,11 +39,11 @@ export class QuickAlgoLibraries {
         return null;
     }
 
-    getSagas() {
+    getSagas(app: App) {
         const sagas = [];
         for (let library of this.libraries) {
-            if (library.getSaga()) {
-                sagas.push(library.getSaga());
+            if (library.getSaga(app)) {
+                sagas.push(library.getSaga(app));
             }
         }
 
@@ -158,7 +160,7 @@ export class QuickAlgoLibrary {
     };
 
     // Placeholders, should be actually defined by the library
-    reset(taskInfos = null) {
+    reset(taskInfos = null, appState: AppStore = null) {
         // Reset the context
         if (this.display) {
             this.resetDisplay();
@@ -193,7 +195,7 @@ export class QuickAlgoLibrary {
     reloadState(state: any): void {
     }
 
-    getSaga() {
+    getSaga(app: App) {
         return null;
     }
 

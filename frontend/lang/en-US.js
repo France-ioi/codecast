@@ -42,6 +42,7 @@ module.exports = {
     IOPANE_MODE_SPLIT: "Split input/output",
     IOPANE_MODE_INTERACTIVE: "Interactive terminal",
     IOPANE_INITIAL_INPUT: "Initial input :",
+    IOPANE_INITIAL_OUTPUT: "Expected output :",
     IOPANE_SELECT_TERMINAL_TITLE: "Input/Output/Terminal",
     IOPANE_FORCED_TERMINAL_TITLE: "Terminal",
     IOPANE_TERMINAL_PROGRAM_STOPPED: "The terminal will be visible while the program is running.",

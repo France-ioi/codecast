@@ -33,7 +33,7 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.TerminalInputNeeded, terminalInputNeededReducer);
 
     function terminalInputNeededReducer(state: AppStoreReplay): void {
-        state.stepper.currentStepperState.isWaitingOnInput = true;
+        // state.stepper.currentStepperState.isWaitingOnInput = true;
     }
 
     bundle.defineAction(ActionTypes.TerminalInputKey);
@@ -87,7 +87,7 @@ export default function(bundle: Bundle) {
         state.stepper.currentStepperState.input = newInput;
         state.stepper.currentStepperState.inputPos = newInputPos;
         state.stepper.currentStepperState.terminal = newTerminal;
-        state.stepper.currentStepperState.isWaitingOnInput = false;
+        // state.stepper.currentStepperState.isWaitingOnInput = false;
     }
 
     bundle.defer(function({recordApi, replayApi}: App) {
@@ -114,12 +114,12 @@ export default function(bundle: Bundle) {
             terminalInputBackspaceReducer(replayContext.state);
         });
 
-        recordApi.on(ActionTypes.TerminalInputEnter, function* (addEvent) {
-            yield call(addEvent, 'terminal.enter');
-        });
-        replayApi.on('terminal.enter', function(replayContext: ReplayContext) {
-            terminalInputEnterReducer(replayContext.state);
-        });
+        // recordApi.on(ActionTypes.TerminalInputEnter, function* (addEvent) {
+        //     yield call(addEvent, 'terminal.enter');
+        // });
+        // replayApi.on('terminal.enter', function(replayContext: ReplayContext) {
+        //     terminalInputEnterReducer(replayContext.state);
+        // });
     });
 };
 

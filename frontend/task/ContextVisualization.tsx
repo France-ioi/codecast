@@ -6,7 +6,7 @@ export function ContextVisualization() {
 
     useEffect(() => {
         quickAlgoLibraries.resetDisplay();
-    });
+    }, []);
 
     return (
         <div className="task-visualisation">

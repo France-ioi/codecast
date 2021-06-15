@@ -11,6 +11,7 @@ import {MenuIconsTask} from "./MenuIconsTask";
 import {select} from "redux-saga/effects";
 import {IoMode} from "../stepper/io";
 import {recordingEnabledChange} from "./task_slice";
+import {StepperStatus} from "../stepper";
 
 interface MenuTaskStateToProps {
     getMessage: Function,
@@ -28,7 +29,8 @@ function mapStateToProps(state: AppStore): MenuTaskStateToProps {
     const getMessage = state.getMessage;
     const recordingEnabled = state.task.recordingEnabled;
     const playerEnabled = !!state.options.baseDataUrl;
-    const {mode: ioMode, modeSelect: ioModeSelect} = state.ioPane;
+    const {mode: ioMode, modeSelect} = state.ioPane;
+    const ioModeSelect = modeSelect && (!state.stepper || state.stepper.status === StepperStatus.Clear);
 
     let offlineDownloadUrl = null;
     if (!isLocalMode() && baseDataUrl) {

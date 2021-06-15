@@ -7,26 +7,34 @@ import {call, put, select, takeEvery, all, fork} from "redux-saga/effects";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PlayerInstant} from "../player";
-import {ReplayContext} from "../player/sagas";
 import {PrinterLib} from "./libs/printer/printer_lib";
-import {AppAction} from "../store";
+import {AppAction, AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
-import {
-    recordingEnabledChange, TaskState,
+import taskSlice, {
+    recordingEnabledChange, taskInitialState, taskRecordableActions,
+    TaskState,
     taskSuccess,
     taskSuccessClear,
-    taskSuccessClearReducer,
-    taskSuccessReducer, updateCurrentTest
+    updateCurrentTest
 } from "./task_slice";
+import {addAutoRecordingBehaviour} from "../recorder/record";
+import {ReplayContext} from "../player/sagas";
+import {DocumentModel, initialStateBuffers} from "../buffers";
 
 export enum ActionTypes {
     TaskLoad = 'task/load',
     TaskReset = 'task/reset',
+    TaskInputEntered = 'task/inputEntered',
 }
 
 export interface TaskResetAction extends AppAction {
     type: ActionTypes.TaskReset;
     payload: TaskState;
+}
+
+export interface TaskInputEnteredAction extends AppAction {
+    type: ActionTypes.TaskInputEntered;
+    payload: string;
 }
 
 export const taskLoad = () => ({
@@ -40,39 +48,12 @@ export const taskReset = (
     payload: taskData,
 });
 
-export interface QuickAlgoContext {
-    display: boolean,
-    infos: any,
-    nbCodes: number,
-    nbNodes: number,
-    setLocalLanguageStrings?: Function,
-    strings?: any,
-    importLanguageStrings?: Function,
-    getConceptList?: Function,
-    changeDelay?: Function,
-    waitDelay?: Function,
-    callCallback?: Function,
-    setCurNode?: Function,
-    debug_alert?: Function,
-    reset?: Function,
-    resetDisplay?: Function,
-    updateScale?: Function,
-    unload?: Function,
-    provideBlocklyColours?: Function,
-    localLanguageStrings?: any,
-    customBlocks?: any,
-    customConstants?: any,
-    conceptList?: any,
-    curNode?: any,
-    stringsLanguage?: any,
-    runner?: any,
-    propagate?: Function,
-    onSuccess?: Function,
-    onError?: Function,
-    onInput?: Function,
-    getCurrentState?: () => any,
-    reloadState?: (state: any) => void,
-}
+export const taskInputEntered = (
+    input: string
+): TaskInputEnteredAction => ({
+    type: ActionTypes.TaskInputEntered,
+    payload: input,
+});
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -94,9 +75,10 @@ if (!String.prototype.format) {
     }
 }
 
+const subTask = StringRotation;
+const curLevel = 'easy';
+
 function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
-    const curLevel = 'easy';
-    const subTask = StringRotation;
     const levelGridInfos = extractLevelSpecific(subTask.gridInfos, curLevel);
     const display = true;
 
@@ -108,10 +90,14 @@ function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
         quickAlgoLibraries.addLibrary(defaultLib);
     }
 
-    const testData = subTask.data[curLevel][0];
+    const testData = getTaskTest();
+    console.log('create context', testData);
     yield put(updateCurrentTest(testData));
-    console.log('ici reset', testData);
     quickAlgoLibraries.reset(testData);
+}
+
+function getTaskTest() {
+    return subTask.data[curLevel][0];
 }
 
 export function getAutocompletionParameters (context) {
@@ -126,10 +112,10 @@ export function getAutocompletionParameters (context) {
 }
 
 export default function (bundle: Bundle) {
-    bundle.addSaga(function* () {
+    bundle.addSaga(function* (app: App) {
         yield takeEvery(ActionTypes.TaskLoad, function* () {
             yield call(createContext, quickAlgoLibraries);
-            const sagas = quickAlgoLibraries.getSagas();
+            const sagas = quickAlgoLibraries.getSagas(app);
             yield fork(function* () {
                 yield all(sagas);
             });
@@ -152,36 +138,22 @@ export default function (bundle: Bundle) {
         });
     });
 
-    bundle.defer(function({replayApi, recordApi}: App) {
-        replayApi.onReset(function* (instant: PlayerInstant) {
-            const taskData = instant.state.task;
-            if (taskData) {
-                yield put(taskReset(taskData));
-                yield put(updateCurrentTest(taskData.currentTest));
-                if (taskData.success) {
-                    yield put(taskSuccess(taskData.successMessage));
-                } else {
-                    yield put(taskSuccessClear());
-                }
-            }
+    bundle.defer(function(app: App) {
+        addAutoRecordingBehaviour(app, {
+            sliceName: taskSlice.name,
+            actionNames: taskRecordableActions,
+            actions: taskSlice.actions,
+            reducers: taskSlice.caseReducers,
+            onResetDisabled: true,
         });
 
-        recordApi.on(taskSuccess.type, function* (addEvent, action) {
-            const {payload} = action;
+        const context = quickAlgoLibraries.getContext();
 
-            yield call(addEvent, 'task.success', payload);
-        });
-        replayApi.on('task.success', function (replayContext: ReplayContext, event) {
-            const message = event[2];
-
-            taskSuccessReducer(replayContext.state.task, taskSuccess(message));
-        });
-
-        recordApi.on(taskSuccessClear.type, function* (addEvent) {
-            yield call(addEvent, 'task.success.clear');
-        });
-        replayApi.on('task.success.clear', function (replayContext: ReplayContext) {
-            taskSuccessClearReducer(replayContext.state.task);
+        app.replayApi.on('start', function(replayContext: ReplayContext) {
+            replayContext.state.task = {
+                currentTest: getTaskTest(),
+                state: context && context.getCurrentState ? {...context.getCurrentState()} : {},
+            };
         });
     });
 }

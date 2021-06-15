@@ -71,6 +71,40 @@ export default function(context) {
         return '\nmod.' + name + ' = new Sk.builtin.func(function () {\n' + handler + '\n});\n';
     };
 
+    this._createBuiltin = function (name, generatorName, blockName, nbArgs, type) {
+        return function () {
+            window.currentPythonContext.runner.checkArgs(name, generatorName, blockName, arguments);
+
+            var susp = new Sk.misceval.Suspension();
+            var result = Sk.builtin.none.none$;
+
+            var args = Array.prototype.slice.call(arguments);
+
+            susp.resume = function() { return result; };
+            susp.data = {
+                type: 'Sk.promise',
+                promise: new Promise(function(resolve) {
+                    args.push(resolve);
+
+                    // Count actions
+                    if (type == 'actions') {
+                        window.currentPythonContext.runner._nbActions += 1;
+                    }
+
+                    try {
+                        const result = window.currentPythonContext[generatorName][blockName].apply(window.currentPythonContext, args);
+                        if (result instanceof Promise) result.catch((e) => { window.currentPythonContext.runner._onStepError(e) })
+                    } catch (e) {
+                        window.currentPythonContext.runner._onStepError(e)}
+                }).then(function (value) {
+                    result = value;
+                    return value;
+                })};
+
+            return susp;
+        }
+    };
+
     this._skulptifyConst = (name, value) => {
         let handler = '';
         if (typeof value === "number") {
@@ -142,6 +176,12 @@ export default function(context) {
 
                     this._argumentsByBlock[generatorName][blockName] = nbsArgs;
                     modContents += this._skulptifyHandler(code, generatorName, blockName, nbsArgs, type);
+
+                    // We do want to override Python's naturel input and output to replace them with our own modules
+                    if (generatorName === 'printer' && ('input' === code || 'print' === code)) {
+                        const newCode = 'print' === code ? 'customPrint' : code;
+                        Sk.builtins[newCode] = this._createBuiltin(code, generatorName, blockName, nbsArgs, type);
+                    }
                 }
 
                 if (this.context.customConstants && this.context.customConstants[generatorName]) {
@@ -420,6 +460,9 @@ export default function(context) {
                 this._onStepError(e);
             }
         } else {
+            if (message) {
+                Sk.builtins['customPrint'](message.trim());
+            }
             this._printedDuringStep += message;
         }
     };

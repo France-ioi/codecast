@@ -28,7 +28,7 @@ export enum IoMode {
 }
 
 export const initialStateIoPane = {
-    mode: IoMode.Split,
+    mode: IoMode.Terminal,
     modeSelect: false
 };
 

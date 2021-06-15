@@ -2,74 +2,52 @@ import React from "react";
 import {Card} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
 import {writeString} from "../../../stepper/io/terminal";
-import {ActionTypes} from "../../../stepper/io/actionTypes";
-import {PureTerminal} from "../../../stepper/io/PureTerminal";
-import {getCurrentStepperState} from "../../../stepper/selectors";
-import {connect} from "react-redux";
+import {PureTerminal} from "./PureTerminal";
+import {useDispatch} from "react-redux";
 import {AppStore} from "../../../store";
+import {useAppSelector} from "../../../hooks";
+import {terminalInit, terminalInputBackSpace, terminalInputEnter, terminalInputKey} from "./printer_terminal_slice";
+import {getPlayerState} from "../../../player/selectors";
 
-interface TerminalViewStateToProps {
-    isWaitingOnInput?: boolean,
-    terminal?: any,
-    input?: string,
-    getMessage: Function,
-}
+export function TerminalView() {
+    const getMessage = useAppSelector((state: AppStore) => state.getMessage);
+    let input = useAppSelector((state: AppStore) => state.printerTerminal.inputBuffer);
+    let terminal = useAppSelector((state: AppStore) => state.printerTerminal.terminal);
+    let inputNeeded = useAppSelector((state: AppStore) => state.task.inputNeeded);
 
-function mapStateToProps(state: AppStore): TerminalViewStateToProps {
-    const stepper = getCurrentStepperState(state);
-    if (stepper) {
-        return {
-            getMessage: state.getMessage,
-            terminal: stepper.terminal,
-            input: stepper.inputBuffer,
-            isWaitingOnInput: stepper.isWaitingOnInput
+    const player = useAppSelector((state: AppStore) => getPlayerState(state));
+    const preventInput = player && player.isPlaying;
+
+    const dispatch = useDispatch();
+
+    const onTermInit = (terminalElement) => {
+        dispatch(terminalInit(terminalElement));
+    }
+
+    const onTermChar = (key) => {
+        if (!preventInput) {
+            dispatch(terminalInputKey(key));
         }
     }
 
-    return {
-        getMessage: state.getMessage,
-    };
-}
-
-interface TerminalViewDispatchToProps {
-    dispatch: Function
-}
-
-interface TerminalViewProps extends TerminalViewStateToProps, TerminalViewDispatchToProps {
-    preventInput: boolean
-}
-
-class _TerminalView extends React.PureComponent<TerminalViewProps> {
-    onTermInit = (terminalElement) => {
-        this.props.dispatch({type: ActionTypes.TerminalInit, terminalElement});
-    }
-
-    onTermChar = (key) => {
-        if (!this.props.preventInput) {
-            this.props.dispatch({type: ActionTypes.TerminalInputKey, key});
+    const onTermBS = () => {
+        if (!preventInput) {
+            dispatch(terminalInputBackSpace());
         }
     }
 
-    onTermBS = () => {
-        if (!this.props.preventInput) {
-            this.props.dispatch({type: ActionTypes.TerminalInputBackspace});
+    const onTermEnter = () => {
+        if (!preventInput) {
+            dispatch(terminalInputEnter());
         }
     }
 
-    onTermEnter = () => {
-        if (!this.props.preventInput) {
-            this.props.dispatch({type: ActionTypes.TerminalInputEnter});
-        }
-    }
-
-    renderHeader = () => {
-        const {isWaitingOnInput, getMessage} = this.props;
-
+    const renderHeader = () => {
         return (
             <div className="row">
                 <div className="col-sm-12 terminal-view-header">
                     {getMessage('IOPANE_TERMINAL')}
-                    {isWaitingOnInput &&
+                    {inputNeeded &&
                         <Icon icon='console'/>
                     }
                 </div>
@@ -77,33 +55,28 @@ class _TerminalView extends React.PureComponent<TerminalViewProps> {
         );
     }
 
-    render = () => {
-        const {terminal, input} = this.props;
-        const terminalBuffer = terminal && writeString(terminal, input);
+    const terminalBuffer = terminal && writeString(terminal, input);
 
-        return (
-            <Card>
-                <Card.Header>{this.renderHeader()}</Card.Header>
-                <Card.Body>
-                    <div className="row">
-                        <div className="col-sm-12">
-                            {terminalBuffer ?
-                                <PureTerminal
-                                    terminalBuffer={terminalBuffer}
-                                    onInit={this.onTermInit}
-                                    onKeyPress={this.onTermChar}
-                                    onBackspace={this.onTermBS}
-                                    onEnter={this.onTermEnter}
-                                />
-                            :
-                                <p>{"no buffer"}</p>
-                            }
-                        </div>
+    return (
+        <Card>
+            <Card.Header>{renderHeader()}</Card.Header>
+            <Card.Body>
+                <div className="row">
+                    <div className="col-sm-12">
+                        {terminalBuffer ?
+                            <PureTerminal
+                                terminalBuffer={terminalBuffer}
+                                onInit={onTermInit}
+                                onKeyPress={onTermChar}
+                                onBackspace={onTermBS}
+                                onEnter={onTermEnter}
+                            />
+                        :
+                            <p>{"no buffer"}</p>
+                        }
                     </div>
-                </Card.Body>
-            </Card>
-        );
-    }
+                </div>
+            </Card.Body>
+        </Card>
+    );
 }
-
-export const TerminalView = connect(mapStateToProps)(_TerminalView);

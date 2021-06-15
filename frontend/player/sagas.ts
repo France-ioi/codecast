@@ -3,15 +3,13 @@
 // where source and input are buffer models (of shape {document, selection, firstVisibleRow}).
 
 import {buffers, eventChannel} from 'redux-saga';
-import {call, put, select, take, takeLatest} from 'redux-saga/effects';
-
+import {call, fork, put, race, select, take, takeLatest} from 'redux-saga/effects';
 import {getJson} from '../common/utils';
 import {findInstantIndex} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {getPlayerState} from "./selectors";
-import {StepperStepMode} from "../stepper";
 import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
@@ -20,6 +18,8 @@ import {App} from "../index";
 import {createDraft, finishDraft} from "immer";
 import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
+import {taskInputNeeded} from "../task/task_slice";
+import {taskInputEntered} from "../task";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -113,10 +113,6 @@ function* playerPrepare(app: App, action) {
         options: {
             platform
         },
-        task: {
-            state: context && context.getCurrentState ? {...context.getCurrentState()} : {},
-            success: false,
-        },
     };
 
     if (data.options) {
@@ -181,6 +177,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
        to an action that is dispatched to the store (which must have an
        appropriate reducer) plus an optional saga to be called during playback. */
     let pos, progress, lastProgress = 0, range;
+    let waitingPromises = [];
     const events = replayContext.events;
     const duration = events[events.length - 1][0];
     for (pos = 0; pos < events.length; pos += 1) {
@@ -222,6 +219,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         const instant: PlayerInstant = {t, pos, event} as PlayerInstant;
         replayContext.instant = instant;
 
+
         console.log('-------- REPLAY ---- EVENT ----', key, event);
 
         if (key === 'stepper.step' || key === 'stepper.progress' || key === 'stepper.idle' || key === 'stepper.restart') {
@@ -234,7 +232,22 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
              * refactor of the player.
              */
 
-            yield call(replayApi.applyEvent, key, replayContext, event);
+            const task = yield fork(function*() {
+                return yield call(replayApi.applyEvent, key, replayContext, event);
+            })
+            const taskPromise = new Promise((resolve, reject) => {
+                task.toPromise().then(resolve, reject);
+            });
+
+            let {inputNeeded} = yield race({
+                inputNeeded: take(taskInputNeeded.type),
+                result: taskPromise,
+            })
+
+            if (inputNeeded) {
+                waitingPromises.push({promise: taskPromise, handled: false});
+            }
+
         } else {
             const originalState = replayContext.state;
             const draft = createDraft(originalState);
@@ -243,6 +256,16 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
             replayContext.state = draft;
 
             yield call(replayApi.applyEvent, key, replayContext, event);
+
+            const nonHandledWaitingPromises = waitingPromises.filter(promiseElement => !promiseElement.handled);
+            if (key === 'task/taskInputNeeded' && !event[2]) {
+                if (nonHandledWaitingPromises.length) {
+                    const nonHandledWaitingPromise = nonHandledWaitingPromises[0];
+                    nonHandledWaitingPromise.handled = true;
+                    yield put(taskInputEntered(replayContext.state.printerTerminal.lastInput));
+                    yield nonHandledWaitingPromise;
+                }
+            }
 
             // @ts-ignore
             replayContext.state = finishDraft(draft);
@@ -444,21 +467,6 @@ function* resetToAudioTime(app: App, audioTime: number, quick?: boolean) {
 function* restartStepper() {
     /* Re-enable the stepper to allow the user to interact with it. */
     yield put({type: StepperActionTypes.StepperEnabled});
-
-    /* If the stepper was running and blocking on input, do a "step-into" to
-       restore the blocked-on-I/O state. */
-    const state: AppStore = yield select();
-    const instant = state.player.current;
-
-    //TODO: Is this used ?
-    // @ts-ignore
-    if (instant.state.status === 'running') {
-        // @ts-ignore
-        const {isWaitingOnInput} = instant.state.current;
-        if (isWaitingOnInput) {
-            yield put({type: StepperActionTypes.StepperStep, mode: StepperStepMode.Into});
-        }
-    }
 }
 
 function* jumpToAudioTime(app: App, audioTime: number) {

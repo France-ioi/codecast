@@ -1,21 +1,25 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
 export interface TaskState {
-    recordingEnabled: boolean,
+    recordingEnabled?: boolean,
     state?: any,
     success?: boolean,
     successMessage?: string,
     currentTest?: object,
+    inputNeeded?: boolean,
 }
+
+export const taskInitialState = {
+    recordingEnabled: false,
+    success: false,
+    successMessage: null,
+    currentTest: null,
+    inputNeeded: false,
+} as TaskState;
 
 export const taskSlice = createSlice({
     name: 'task',
-    initialState: {
-        recordingEnabled: false,
-        success: false,
-        successMessage: null,
-        currentTest: null,
-    } as TaskState,
+    initialState: taskInitialState,
     reducers: {
         recordingEnabledChange(state, action: PayloadAction<boolean>) {
             state.recordingEnabled = action.payload;
@@ -38,6 +42,9 @@ export const taskSlice = createSlice({
                 state.currentTest = action.payload;
             }
         },
+        taskInputNeeded(state: TaskState, action: PayloadAction<boolean>) {
+            state.inputNeeded = action.payload;
+        },
     },
 });
 
@@ -46,11 +53,13 @@ export const {
     taskSuccess,
     taskSuccessClear,
     updateCurrentTest,
+    taskInputNeeded,
 } = taskSlice.actions;
 
-export const {
-    taskSuccess: taskSuccessReducer,
-    taskSuccessClear: taskSuccessClearReducer,
-} = taskSlice.caseReducers;
+export const taskRecordableActions = [
+    'taskSuccess',
+    'taskSuccessClear',
+    'taskInputNeeded',
+];
 
-export default taskSlice.reducer;
+export default taskSlice;

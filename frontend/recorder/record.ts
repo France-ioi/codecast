@@ -16,6 +16,9 @@ import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {RecorderStatus} from "./store";
 import {Bundle} from "../linker";
+import {ReplayContext} from "../player/sagas";
+import {App} from "../index";
+import {PlayerInstant, playerReset} from "../player";
 
 /* Sagas can be registered to run when recording starts, to populate an
    'init' object which is stored in the 'start' event of the recording. */
@@ -24,6 +27,15 @@ const startSagas = [];
 /* For each redux action a single saga handler(addEvent, action) can be
    registered to add an event to the recorded stream. */
 const actionHandlers = new Map();
+
+export interface AutoRecordingParams {
+    sliceName: string,
+    actionNames: string[],
+    actions: any,
+    reducers: any,
+    initialState?: any,
+    onResetDisabled?: boolean,
+}
 
 /* Recorder API */
 const recordApi = {
@@ -46,6 +58,37 @@ const recordApi = {
     }
 };
 
+export function addAutoRecordingBehaviour({recordApi, replayApi}: App, {sliceName, actions, actionNames, reducers, initialState, onResetDisabled}: AutoRecordingParams) {
+    for (let actionName of actionNames) {
+        const action = actions[actionName];
+        recordApi.on(action.type, function* (addEvent, {payload}) {
+            yield call(addEvent, action.type, payload);
+        });
+
+        if (initialState) {
+            replayApi.on('start', function(replayContext: ReplayContext) {
+                replayContext.state[sliceName] = initialState;
+            });
+        }
+
+        replayApi.on(action.type, function (replayContext: ReplayContext, event) {
+            const payload = event[2];
+            const reducer = reducers[actionName];
+
+            reducer(replayContext.state[sliceName], action(payload));
+        });
+    }
+
+    if (!onResetDisabled) {
+        replayApi.onReset(function* (instant: PlayerInstant) {
+            const sliceState = instant.state[sliceName];
+            if (sliceState) {
+                yield put(playerReset({sliceName, state: sliceState}));
+            }
+        });
+    }
+}
+
 export type RecordApi = typeof recordApi;
 
 export default function(bundle: Bundle) {
@@ -66,9 +109,9 @@ export default function(bundle: Bundle) {
     });
 
     bundle.addSaga(function* recordEvents() {
-        const pattern = Array.from(actionHandlers.keys());
         // Wait for the recorder to be ready, grab the context.
         yield takeLatest(ActionTypes.RecorderReady, function* (action) {
+            const pattern = Array.from(actionHandlers.keys());
             // Wait for recording to actually start.
             yield take(ActionTypes.RecorderStarted);
             // Start buffering actions.
