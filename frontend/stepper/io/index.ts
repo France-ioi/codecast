@@ -1,18 +1,10 @@
-import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
-
+import {call, put, select} from 'redux-saga/effects';
 import * as C from 'persistent-c';
-
-import {documentFromString, Selection} from '../../buffers/document';
-import {DocumentModel} from '../../buffers';
-import {default as TerminalBundle, TermBuffer, writeString} from './terminal';
 import {printfBuiltin} from './printf';
 import {scanfBuiltin} from './scanf';
 import {ActionTypes} from "./actionTypes";
-import {ActionTypes as StepperActionTypes} from "../actionTypes";
-import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
-import {getCurrentStepperState} from "../selectors";
 import {getBufferModel} from "../../buffers/selectors";
 import {AppStore, AppStoreReplay} from "../../store";
 import {PlayerInstant} from "../../player";
@@ -23,6 +15,7 @@ import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
 import {PrinterLib} from "../../task/libs/printer/printer_lib";
+import {TermBuffer} from "./terminal";
 
 export enum IoMode {
     Terminal = 'terminal',
@@ -35,8 +28,6 @@ export const initialStateIoPane = {
 };
 
 export default function(bundle: Bundle) {
-    bundle.include(TerminalBundle);
-
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
         state.ioPane = initialStateIoPane;
 
@@ -66,17 +57,6 @@ export default function(bundle: Bundle) {
         state.ioPane.mode = mode;
     }
 
-    /* Split input/output view */
-
-    function getOutputBufferModel(state: AppStoreReplay): DocumentModel {
-        const stepper = getCurrentStepperState(state);
-        const {output} = stepper;
-        const doc = documentFromString(output);
-        const endCursor = doc.endCursor();
-
-        return new DocumentModel(doc, new Selection(endCursor, endCursor), endCursor.row);
-    }
-
     bundle.defer(function({recordApi, replayApi, stepperApi}: App) {
         recordApi.onStart(function* (init) {
             const state: AppStore = yield select();
@@ -104,31 +84,6 @@ export default function(bundle: Bundle) {
 
             ioPaneModeChangedReducer(replayContext.state, {payload: {mode}});
         });
-
-        replayApi.on(['stepper.progress', 'stepper.idle', 'stepper.restart', 'stepper.undo', 'stepper.redo'], function replaySyncOutput(replayContext: ReplayContext) {
-            if (replayContext.state.ioPane.mode === IoMode.Split) {
-                /* Consider: pushing updates from the stepper state to the output buffer
-                   in the global state adds complexity.  Three options:
-                   (1) dispatch a recorded 'buffer' action when the output changes, so
-                       that a buffer event updates the model during replay;
-                   (2) get the stepper to update the buffer in the global state somehow;
-                   (3) make the output editor fetch its model from the stepper state.
-                   It is not clear which option is best.
-                */
-                syncOutputBufferReducer(replayContext.state);
-                replayContext.addSaga(syncOutputBufferSaga);
-            }
-        });
-
-        function syncOutputBufferReducer(state: AppStoreReplay): void {
-            state.buffers['output'].model = getOutputBufferModel(state);
-        }
-
-        function* syncOutputBufferSaga(instant) {
-            const model = instant.state.buffers.model;
-
-            yield put({type: BufferActionTypes.BufferReset, buffer: 'output', model});
-        }
 
         /* Set up the terminal or input. */
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
@@ -250,73 +205,5 @@ export default function(bundle: Bundle) {
         stepperApi.onEffect('ungets', function* ungetsHandler(stepperContext: StepperContext, count) {
             stepperContext.state.inputPos -= count;
         });
-
-        /* Monitor actions that may need to update the output buffer.
-           Currently this is done in an awkward way because stepper effects cannot
-           modify the global state. So the effect modifies the 'output' property
-           of the stepper state, and the saga below detects changes and pushes them
-           to the global state and to the editor.
-           This mechanism could by simplified by having the 'write' effect
-           directly alter the global state & push the change to the editor. */
-        stepperApi.addSaga(function* ioStepperSaga() {
-            const state: AppStore = yield select();
-
-            const {mode} = state.ioPane;
-
-            if (mode === IoMode.Split) {
-                yield call(reflectToOutput);
-            }
-        });
-
-        function* reflectToOutput() {
-            /* Incrementally add text produced by the stepper to the output buffer. */
-            yield takeLatest([
-                StepperActionTypes.StepperProgress,
-                StepperActionTypes.StepperIdle
-            ], function* () {
-                let state: AppStore = yield select();
-
-                const stepperState = getCurrentStepperState(state);
-                const outputModel = getBufferModel(state, 'output');
-                const oldSize = outputModel.document.size();
-                const newSize = stepperState.output.length;
-                if (oldSize !== newSize) {
-                    const endCursor = outputModel.document.endCursor();
-                    const delta = {
-                        action: 'insert',
-                        start: endCursor,
-                        end: endCursor,
-                        lines: stepperState.output.substr(oldSize).split('\n')
-                    };
-
-                    /* Update the model to maintain length, new end cursor. */
-                    yield put({type: BufferActionTypes.BufferEdit, buffer: 'output', delta});
-
-                    state = yield select();
-                    const newEndCursor = getBufferModel(state, 'output').document.endCursor();
-
-                    /* Send the delta to the editor to add the new output. */
-                    yield put({type: BufferActionTypes.BufferModelEdit, buffer: 'output', delta});
-
-                    /* Move the cursor to the end of the buffer. */
-                    yield put({
-                        type: BufferActionTypes.BufferModelSelect,
-                        buffer: 'output',
-                        selection: {start: newEndCursor, end: newEndCursor}
-                    });
-                }
-            });
-            /* Reset the output document. */
-            yield takeEvery([
-                StepperActionTypes.StepperRestart,
-                StepperActionTypes.StepperUndo,
-                StepperActionTypes.StepperRedo
-            ], function* () {
-                const state: AppStore = yield select();
-                const model = getOutputBufferModel(state);
-
-                yield put({type: BufferActionTypes.BufferReset, buffer: 'output', model});
-            });
-        }
     });
 }
