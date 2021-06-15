@@ -144,7 +144,7 @@ function getNodeStartRow(stepperState: StepperState) {
 
 export function makeContext(stepper: Stepper, interact: Function): StepperContext {
     /**
-     * We create a new state object here instead of mutatating the state. This is intended.
+     * We create a new state object here instead of mutating the state. This is intended.
      */
 
     const state = stepper.currentStepperState;
@@ -167,7 +167,7 @@ export function makeContext(stepper: Stepper, interact: Function): StepperContex
             state: {
                 ...state,
                 programState: C.clearMemoryLog(state.programState),
-                lastProgramState: Object.freeze(state.programState),
+                lastProgramState: {...state.programState},
                 controls: resetControls(state.controls)
             },
             interact,

@@ -646,10 +646,10 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
 
     /* Run the provided saga if any, or wait until next animation frame. */
     const saga = arg.saga || stepperWaitSaga;
-    const {completed, interrupted} = yield (race({
+    const {completed, interrupted} = yield race({
         completed: call(saga, stepperContext),
         interrupted: take(ActionTypes.StepperInterrupt)
-    }));
+    });
 
     /* Update stepperContext.state from the global state to avoid discarding
        the effects of user interaction. */
