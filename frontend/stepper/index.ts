@@ -48,7 +48,7 @@ import PythonBundle, {getNewOutput, getNewTerminal} from './python';
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
 import {Directive, parseDirectives} from "./python/directives";
-import {ActionTypes as CompileActionTypes, ActionTypes} from "./actionTypes";
+import {ActionTypes as StepperActionTypes, ActionTypes as CompileActionTypes, ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
@@ -751,6 +751,9 @@ function* stepperStepSaga(app: App, action) {
                     // @ts-ignore
                     if (taskContext.success) {
                         yield put(taskSuccess(message));
+                        yield put({
+                            type: StepperActionTypes.StepperExit,
+                        });
                     } else {
                         const response = {diagnostics: message};
                         yield put({

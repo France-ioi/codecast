@@ -132,10 +132,6 @@ export default function (bundle: Bundle) {
                 yield put({type: RecorderActionTypes.RecorderPrepare});
             }
         });
-
-        yield takeEvery(taskSuccess.type, function* () {
-            yield put({type: StepperActionTypes.StepperExit});
-        });
     });
 
     bundle.defer(function(app: App) {

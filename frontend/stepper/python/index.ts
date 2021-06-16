@@ -3,7 +3,7 @@ import {call, put, take} from 'redux-saga/effects';
 import {writeString} from "../io/terminal";
 import PythonInterpreter from "./python_interpreter";
 import {ActionTypes} from './actionTypes';
-import {ActionTypes as CompileActionTypes} from '../actionTypes';
+import {ActionTypes as StepperActionTypes, ActionTypes as CompileActionTypes} from '../actionTypes';
 import {AppStore, AppStoreReplay} from "../../store";
 import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
@@ -65,16 +65,8 @@ export default function(bundle: Bundle) {
                         response
                     });
                 };
-                context.onSuccess = (message) => {
-                    if (replay) {
-                        return;
-                    }
-
-                    pythonInterpreterChannel.put({
-                        type: CompileActionTypes.StepperInterrupting,
-                    });
-
-                    pythonInterpreterChannel.put(taskSuccess(message));
+                context.onSuccess = () => {
+                    console.error('Success should be handled at an upper level');
                 };
                 context.onInput = () => {
                     console.error('Input should go to the printer lib');
