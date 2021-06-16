@@ -43,6 +43,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     const {controls, showStepper, platform} = state.options;
     const compileStatus = state.compile.status;
     const layoutType = state.layout.type;
+    const inputNeeded = state.task.inputNeeded;
 
     let showCompile = false, showControls = false, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
@@ -102,7 +103,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
         } else if (status === 'running') {
             showEdit = true;
             showControls = true;
-            canInterrupt = enabled && !isStepperInterrupting(state);
+            canInterrupt = enabled && !isStepperInterrupting(state) && !inputNeeded;
         }
     }
 
