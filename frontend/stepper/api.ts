@@ -8,12 +8,13 @@
 */
 
 import * as C from 'persistent-c';
-import {all, call} from 'redux-saga/effects';
+import {all, call, select, take} from 'redux-saga/effects';
 import {getNewOutput, getNewTerminal} from "./python";
 import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay} from "../store";
 import {initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
+import {ActionTypes as TaskActionTypes} from "../task";
 
 export interface StepperContext {
     state: StepperState,
@@ -233,13 +234,17 @@ async function executeSingleStep(stepperContext: StepperContext, makeInteract: (
         });
 
         while (!finished) {
-            await delay(0);
-            if (!finished) {
-                console.log('DO INTERACT WAITING FINISH');
-                await stepperContext.interact({
-                    position: 0,
-                });
-            }
+            console.log('DO INTERACT WAITING FINISH');
+            await stepperContext.interact({
+                saga: function* () {
+                    const inputNeeded = yield select((state: AppStore) => state.task.inputNeeded);
+                    console.log('here saga', inputNeeded);
+                    if (inputNeeded) {
+                        yield take(TaskActionTypes.TaskInputEntered);
+                        console.log('input entered');
+                    }
+                },
+            });
         }
 
         console.log('FINAL INTERACT');
