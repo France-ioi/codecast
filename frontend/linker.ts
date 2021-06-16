@@ -164,6 +164,7 @@ export function link(rootBuilder): Linker {
         reducer: rootReducerWithSlices,
         preloadedState: {},
         middleware: [sagaMiddleware, userTimingMiddleware],
+        devTools: true,
     })
 
     window.store = store;

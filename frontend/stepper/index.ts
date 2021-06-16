@@ -788,6 +788,7 @@ function* stepperStepSaga(app: App, action) {
  */
 function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContext) {
     if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
+        console.log('Run python from beginning is necessary');
         const taskContext = quickAlgoLibraries.getContext();
         taskContext.reset();
         yield delay(0);

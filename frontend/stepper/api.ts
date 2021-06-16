@@ -226,37 +226,56 @@ async function executeSingleStep(stepperContext: StepperContext, makeInteract: (
         window.currentPythonRunner._terminal = stepperContext.state.terminal;
         window.currentPythonRunner._interact = stepperContext.interact;
 
-        await window.currentPythonRunner.runStep();
+        let finished = false;
+        const promise = window.currentPythonRunner.runStep();
+        promise.then(() => {
+            finished = true;
+        });
+
+        while (!finished) {
+            await delay(0);
+            if (!finished) {
+                console.log('DO INTERACT WAITING FINISH');
+                await stepperContext.interact({
+                    position: 0,
+                });
+            }
+        }
+
+        console.log('FINAL INTERACT');
+        await stepperContext.interact({
+            position: 0,
+        });
 
         /**
          * In player mode, empty _futureInputValue after it has been used.
          */
-        if (window.currentPythonRunner._futureInputValue && window.currentPythonRunner._futureInputValue.value) {
-            window.currentPythonRunner._futureInputValue = null;
-        }
+        // if (window.currentPythonRunner._futureInputValue && window.currentPythonRunner._futureInputValue.value) {
+        //     window.currentPythonRunner._futureInputValue = null;
+        // }
 
-        const newOutput = getNewOutput(stepperContext.state, window.currentPythonRunner._printedDuringStep);
-        const newInput = window.currentPythonRunner._input;
-        const newInputPos = window.currentPythonRunner._inputPos;
-
-        // Warning : The interact event retrieves the state from the global state again.
-        // It means : we need to pass the changes so it can update it.
-        await stepperContext.interact({
-            position: 0,
-            output: newOutput,
-            //terminal: newTerminal,
-            inputPos: newInputPos,
-            input: newInput
-        });
-
-        const newTerminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
-        window.currentPythonRunner._terminal = newTerminal;
-
-        // Put the output and terminal again so it works with the replay too.
-        stepperContext.state.output = newOutput;
-        stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
-
-        stepperContext.state.terminal = newTerminal;
+        // const newOutput = getNewOutput(stepperContext.state, window.currentPythonRunner._printedDuringStep);
+        // const newInput = window.currentPythonRunner._input;
+        // const newInputPos = window.currentPythonRunner._inputPos;
+        //
+        // // Warning : The interact event retrieves the state from the global state again.
+        // // It means : we need to pass the changes so it can update it.
+        // await stepperContext.interact({
+        //     position: 0,
+        //     output: newOutput,
+        //     //terminal: newTerminal,
+        //     inputPos: newInputPos,
+        //     input: newInput
+        // });
+        //
+        // const newTerminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
+        // window.currentPythonRunner._terminal = newTerminal;
+        //
+        // // Put the output and terminal again so it works with the replay too.
+        // stepperContext.state.output = newOutput;
+        // stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
+        //
+        // stepperContext.state.terminal = newTerminal;
     } else {
         const effects = C.step(stepperContext.state.programState);
         await executeEffects(stepperContext, effects[Symbol.iterator]());

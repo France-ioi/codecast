@@ -232,21 +232,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
              * refactor of the player.
              */
 
-            const task = yield fork(function*() {
-                return yield call(replayApi.applyEvent, key, replayContext, event);
-            })
-            const taskPromise = new Promise((resolve, reject) => {
-                task.toPromise().then(resolve, reject);
-            });
-
-            let {inputNeeded} = yield race({
-                inputNeeded: take(taskInputNeeded.type),
-                result: taskPromise,
-            })
-
-            if (inputNeeded) {
-                waitingPromises.push({promise: taskPromise, handled: false});
-            }
+            yield call(replayApi.applyEvent, key, replayContext, event);
         } else {
             const originalState = replayContext.state;
             const draft = createDraft(originalState);
@@ -258,12 +244,13 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
 
             const nonHandledWaitingPromises = waitingPromises.filter(promiseElement => !promiseElement.handled);
             if (key === 'task/taskInputNeeded' && !event[2]) {
-                if (nonHandledWaitingPromises.length) {
-                    const nonHandledWaitingPromise = nonHandledWaitingPromises[0];
-                    nonHandledWaitingPromise.handled = true;
+                // if (nonHandledWaitingPromises.length) {
+                //     const nonHandledWaitingPromise = nonHandledWaitingPromises[0];
+                //     nonHandledWaitingPromise.handled = true;
+                console.log('TASK INPUT LAST INPUT', replayContext.state.printerTerminal.lastInput);
                     yield put(taskInputEntered(replayContext.state.printerTerminal.lastInput));
-                    yield nonHandledWaitingPromise;
-                }
+                    // yield nonHandledWaitingPromise;
+                // }
             }
 
             // @ts-ignore
