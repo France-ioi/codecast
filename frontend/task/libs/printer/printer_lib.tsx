@@ -383,17 +383,24 @@ export class PrinterLib extends QuickAlgoLibrary {
     popFirstInput() {
         const firstInputIndex = this.printer.ioEvents.findIndex(event => PrinterLineEventType.input === event.type && PrinterLineEventSource.initial === event.source);
         if (-1 !== firstInputIndex) {
-            this.printer.ioEvents.splice(firstInputIndex, 1);
+            this.printer.ioEvents = [
+                ...this.printer.ioEvents.slice(0, firstInputIndex),
+                ...this.printer.ioEvents.slice(firstInputIndex + 1),
+            ];
         }
     }
 
     replaceFirstInput(newValue: string) {
         const firstInputIndex = this.printer.ioEvents.findIndex(event => PrinterLineEventType.input === event.type && PrinterLineEventSource.initial === event.source);
         if (-1 !== firstInputIndex) {
-            this.printer.ioEvents.splice(firstInputIndex, 1, {
-                ...this.printer.ioEvents[firstInputIndex],
-                content: newValue,
-            });
+            this.printer.ioEvents = [
+                ...this.printer.ioEvents.slice(0, firstInputIndex),
+                {
+                    ...this.printer.ioEvents[firstInputIndex],
+                    content: newValue,
+                },
+                ...this.printer.ioEvents.slice(firstInputIndex + 1),
+            ];
         }
     }
 
