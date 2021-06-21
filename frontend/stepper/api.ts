@@ -249,7 +249,6 @@ async function executeSingleStep(stepperContext: StepperContext) {
         });
 
         let i = 0;
-        let finalInteract = true;
         while (!finished) {
             await delay(0);
             if (!finished) {
@@ -264,24 +263,18 @@ async function executeSingleStep(stepperContext: StepperContext) {
                         }
                     },
                 });
-
-                stepperContext.makeDelay = true;
-                finalInteract = false;
-
                 console.log('AFTER INTERACT');
             }
             i++;
             if (i > 100) break;
         }
 
-        console.log('FINAL INTERACT', finalInteract);
-        if (finalInteract) {
-            stepperContext.makeDelay = true;
-            await stepperContext.interactAfter({
-                position: 0,
-            });
-            console.log('AFTER FINAL INTERACT');
-        }
+        console.log('FINAL INTERACT');
+        stepperContext.makeDelay = true;
+        await stepperContext.interactAfter({
+            position: 0,
+        });
+        console.log('AFTER FINAL INTERACT');
     } else {
         const effects = C.step(stepperContext.state.programState);
         await executeEffects(stepperContext, effects[Symbol.iterator]());
