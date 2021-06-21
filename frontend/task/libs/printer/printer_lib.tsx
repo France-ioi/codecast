@@ -298,6 +298,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     async print() {
+        console.log('PRINT', arguments);
         await this.commonPrint(Array.prototype.slice.call(arguments, 0, -1), "\n");
         this.waitDelay(arguments[arguments.length-1]);
     }
@@ -499,6 +500,8 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     *getInputSaga(context) {
+        console.log('HERE ASK INPUT');
+
         yield put(taskInputNeeded(true));
         if (context.display) {
             yield put(terminalFocus());
@@ -508,7 +511,9 @@ export class PrinterLib extends QuickAlgoLibrary {
             interrupt: take(StepperActionTypes.StepperInterrupt),
             exit: take(StepperActionTypes.StepperExit),
             input: take(TaskActionTypes.TaskInputEntered),
-        })
+        });
+
+        console.log('RECEIVED INPUT', input);
 
         if (input) {
             const {payload: inputValue} = input;
@@ -517,6 +522,8 @@ export class PrinterLib extends QuickAlgoLibrary {
                 ...context.printer.ioEvents,
                 {type: PrinterLineEventType.input, content: inputValue + "\n", source: PrinterLineEventSource.runtime},
             ];
+
+            console.log('ADD NEW INPUT');
 
             if (context.display) {
                 yield call(context.syncInputOutputBuffers, context);
@@ -578,6 +585,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                         context.popFirstInput();
                     } else {
                         result = inputValue.substring(0, index);
+                        console.log('READ', 'before', inputValue, 'after', inputValue.substring(index + 1));
                         context.replaceFirstInput(inputValue.substring(index + 1));
                     }
                 } else {
@@ -596,7 +604,6 @@ export class PrinterLib extends QuickAlgoLibrary {
                 break;
             }
             case PrinterLibAction.reset: {
-                console.trace('printer lib reset');
                 const currentTest = yield select((state: AppStore) => state.task.currentTest);
                 yield put({
                     type: ActionTypes.BufferReset,
@@ -653,6 +660,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                     ...context.printer.ioEvents,
                     {type: PrinterLineEventType.output, content: text + payload.end, source: PrinterLineEventSource.runtime},
                 ];
+                console.log('PRINT', text);
 
                 if (context.display) {
                     yield put({

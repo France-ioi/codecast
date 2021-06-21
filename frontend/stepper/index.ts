@@ -192,6 +192,7 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.StepperStarted, stepperStartedReducer);
 
     bundle.defineAction(ActionTypes.StepperInteract);
+    bundle.defineAction(ActionTypes.StepperInteractBefore);
 
     // Sent when the stepper has been evaluating for a while without completing a step.
     bundle.defineAction(ActionTypes.StepperProgress);
@@ -283,6 +284,7 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
             if (window.currentPythonRunner._isFinished) {
                 stepperState.isFinished = true;
             } else {
+                console.log('INCREASE STEP NUM');
                 stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
                 stepperState.directives = {
                     ordered: parseDirectives(stepperState.analysis),
@@ -457,15 +459,9 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     // Set new currentStepperState state and go back to idle.
     enrichStepperState(stepperContext.state, 'Stepper.Progress');
 
-    // Python print calls are asynchronous so we need to update the terminal and output by the one in the store.
-    if (stepperContext.state.platform === 'python') {
-        stepperContext.state.terminal = window.currentPythonRunner._terminal;
-        if (state.stepper.currentStepperState) {
-            stepperContext.state.output = state.stepper.currentStepperState.output;
-        }
-    }
 
     state.task.state = quickAlgoLibraries.getContext() && quickAlgoLibraries.getContext().getCurrentState ? {...quickAlgoLibraries.getContext().getCurrentState()} : {};
+    console.log('PROGRESS', Object.freeze(state.task.state), state.task.state.events[0].content);
     state.stepper.currentStepperState = stepperContext.state;
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;
@@ -488,6 +484,7 @@ function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}):
 
 function stepperExitReducer(state: AppStoreReplay): void {
     clearStepper(state.stepper);
+    state.task.inputNeeded = false;
 }
 
 function stepperInterruptReducer(state: AppStore): void {
@@ -603,7 +600,7 @@ function* compileSucceededSaga() {
 function* recorderStoppingSaga() {
     /* Disable the stepper when recording stops. */
     yield put({type: ActionTypes.StepperInterrupt});
-    yield put({type: ActionTypes.StepperDisabled});
+    yield put({type: ActionTypes.StepperExit});
 }
 
 function* stepperEnabledSaga(args) {
@@ -631,18 +628,37 @@ export function* stepperDisabledSaga() {
     yield put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
 }
 
-function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
+function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
     let state: AppStore = yield select();
+
+    console.log('inside stepper interact before');
 
     /* Has the stepper been interrupted? */
     if (isStepperInterrupting(state) || StepperStatus.Clear === state.stepper.status) {
+        console.log('stepper is still interrupting');
         yield call(reject, new StepperError('interrupt', 'interrupted'));
 
         return;
     }
 
-    /* Emit a progress action so that an up-to-date state gets displayed. */
-    yield put({type: ActionTypes.StepperProgress, payload: {stepperContext}});
+    yield call(resolve, true);
+}
+
+function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
+    let state: AppStore = yield select();
+
+    /* Has the stepper been interrupted? */
+    if (isStepperInterrupting(state) || StepperStatus.Clear === state.stepper.status) {
+        console.log('stepper is still interrupting');
+        yield call(reject, new StepperError('interrupt', 'interrupted'));
+
+        return;
+    }
+
+    if (arg.progress !== false) {
+        /* Emit a progress action so that an up-to-date state gets displayed. */
+        yield put({type: ActionTypes.StepperProgress, payload: {stepperContext}});
+    }
 
     /* Run the provided saga if any, or wait until next animation frame. */
     const saga = arg.saga || stepperWaitSaga;
@@ -651,20 +667,17 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
         interrupted: take(ActionTypes.StepperInterrupt)
     });
 
+    if (arg.saga) {
+        yield put({type: ActionTypes.StepperResume, payload: {stepperContext}});
+    }
+
+    stepperContext.pendingResume = true;
+
     /* Update stepperContext.state from the global state to avoid discarding
        the effects of user interaction. */
     state = yield select();
     stepperContext.state = getCurrentStepperState(state);
     stepperContext.speed = getStepper(state).speed;
-    if (stepperContext.state.platform === 'python' && arg) {
-        // TODO: Immer: This here breaks when the state is frozen.
-        // So this should probably be removed, if input, output and terminal are working without this.
-        // Also try it with a record and replay to be sure.
-        stepperContext.state.output = arg.output;
-        stepperContext.state.terminal = arg.terminal;
-        stepperContext.state.inputPos = arg.inputPos;
-        stepperContext.state.input = arg.input;
-    }
 
     /* Check whether to interrupt or resume the stepper. */
     if (interrupted) {
@@ -693,9 +706,9 @@ function* stepperInterruptSaga() {
     }
 
     const stepperContext = makeContext(getStepper(state), () => {
-        return new Promise((resolve) => {
-            resolve(true);
-        });
+        return Promise.resolve(true);
+    }, () => {
+        return Promise.resolve(true);
     });
 
     if (stepperContext.state.platform === 'python') {
@@ -712,7 +725,7 @@ function* stepperStepSaga(app: App, action) {
     if (stepper.status === StepperStatus.Starting) {
         yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
-        const stepperContext = makeContext(stepper, interact);
+        const stepperContext = makeContext(stepper, interactBefore, interactAfter);
         if (stepperContext.state.platform === 'python') {
             yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
         }
@@ -771,7 +784,17 @@ function* stepperStepSaga(app: App, action) {
             yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
         }
 
-        function interact(arg) {
+        function interactBefore(arg) {
+            return new Promise((resolve, reject) => {
+                app.dispatch({
+                    type: ActionTypes.StepperInteractBefore,
+                    payload: {stepperContext, arg},
+                    meta: {resolve, reject}
+                });
+            });
+        }
+
+        function interactAfter(arg) {
             return new Promise((resolve, reject) => {
                 app.dispatch({
                     type: ActionTypes.StepperInteract,
@@ -904,7 +927,9 @@ function postLink(app: App) {
                 stepperStartedReducer(draft, {mode});
             });
 
-            replayContext.stepperContext = makeContext(replayContext.state.stepper, function interact(_) {
+            replayContext.stepperContext = makeContext(replayContext.state.stepper, function interactBefore() {
+                return Promise.resolve(true);
+            }, function interactAfter(_) {
                 return new Promise((cont) => {
                     stepperSuspend(replayContext.stepperContext, cont);
 
@@ -949,7 +974,11 @@ function postLink(app: App) {
         });
     });
 
-    recordApi.on(ActionTypes.StepperProgress, function* (addEvent, {payload: {stepperContext}}) {
+    recordApi.on(ActionTypes.StepperInteractBefore, function* (addEvent, {payload: {stepperContext}}) {
+        yield call(addEvent, 'stepper.progress', stepperContext.lineCounter);
+    });
+
+    recordApi.on(ActionTypes.StepperResume, function* (addEvent, {payload: {stepperContext}}) {
         yield call(addEvent, 'stepper.progress', stepperContext.lineCounter);
     });
 
@@ -957,7 +986,9 @@ function postLink(app: App) {
         return new Promise((resolve) => {
             replayContext.stepperDone = resolve;
             replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
-            stepperResume(replayContext.stepperContext, function interact() {
+            stepperResume(replayContext.stepperContext, function interactBefore() {
+                return Promise.resolve(true);
+            }, function interactAfter() {
                 return new Promise((cont) => {
                     stepperSuspend(replayContext.stepperContext, cont);
 
@@ -985,7 +1016,8 @@ function postLink(app: App) {
            completion. */
         const {stepperContext} = replayContext;
 
-        stepperContext.interact = null;
+        stepperContext.interactBefore = null;
+        stepperContext.interactAfter = null;
         stepperContext.resume = null;
     });
 
@@ -999,7 +1031,9 @@ function postLink(app: App) {
             replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
 
             /* Set the interact callback to resume the stepper until completion. */
-            stepperResume(replayContext.stepperContext, function interact(_) {
+            stepperResume(replayContext.stepperContext, function interactBefore() {
+                return Promise.resolve(true);
+            }, function interactAfter(_) {
                 return new Promise((cont) => {
                     cont(true);
                 });
@@ -1021,15 +1055,18 @@ function postLink(app: App) {
     }
 
     function stepperSuspend(stepperContext: StepperContext, cont) {
-        stepperContext.interact = null;
+        stepperContext.interactBefore = null;
+        console.log('reset interact before');
+        stepperContext.interactAfter = null;
         stepperContext.resume = cont;
     }
 
-    function stepperResume(stepperContext: StepperContext, interact, notSuspended) {
+    function stepperResume(stepperContext: StepperContext, interactBefore, interactAfter, notSuspended) {
         const {resume} = stepperContext;
         if (resume) {
             stepperContext.resume = null;
-            stepperContext.interact = interact;
+            stepperContext.interactBefore = interactBefore;
+            stepperContext.interactAfter = interactAfter;
             resume();
         } else {
             notSuspended();
@@ -1138,6 +1175,8 @@ function postLink(app: App) {
     stepperApi.addSaga(function* mainStepperSaga(args) {
         // @ts-ignore
         yield takeEvery(ActionTypes.StepperInteract, stepperInteractSaga, args);
+        // @ts-ignore
+        yield takeEvery(ActionTypes.StepperInteractBefore, stepperInteractBeforeSaga, args);
         yield takeEvery(ActionTypes.StepperStep, stepperStepSaga, args);
         yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga);
         yield takeEvery(ActionTypes.StepperExit, stepperExitSaga);
@@ -1145,7 +1184,7 @@ function postLink(app: App) {
             // @ts-ignore
             const {buffer} = action;
             if (buffer === 'source') {
-                yield put({type: ActionTypes.StepperExit, payload: {}});
+                yield put({type: ActionTypes.StepperExit});
             }
         });
 

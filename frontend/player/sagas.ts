@@ -18,7 +18,6 @@ import {App} from "../index";
 import {createDraft, finishDraft} from "immer";
 import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
-import {taskInputNeeded} from "../task/task_slice";
 import {taskInputEntered} from "../task";
 
 export default function(bundle: Bundle) {
@@ -232,6 +231,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
              * refactor of the player.
              */
 
+
             yield call(replayApi.applyEvent, key, replayContext, event);
         } else {
             const originalState = replayContext.state;
@@ -253,6 +253,9 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
                 // }
             }
 
+            replayContext.state.task.state = quickAlgoLibraries.getContext() && quickAlgoLibraries.getContext().getCurrentState ? {...quickAlgoLibraries.getContext().getCurrentState()} : {};
+            console.log('GET STATE', Object.freeze(replayContext.state.task.state));
+
             // @ts-ignore
             replayContext.state = finishDraft(draft);
         }
@@ -268,6 +271,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         instant.state = replayContext.state;
 
         Object.freeze(instant);
+        console.log('new instant', instant.range);
 
         replayContext.instants.push(instant);
         progress = Math.round(pos * 50 / events.length + t * 50 / duration) / 100;

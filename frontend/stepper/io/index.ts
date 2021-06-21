@@ -184,19 +184,32 @@ export default function(bundle: Bundle) {
             let hasResult = false;
             let result;
 
+            console.log('start read');
+
             const promise = context.read((elm) => {
                 result = elm;
                 hasResult = true;
             });
 
+            let i = 0;
             while (!hasResult) {
+                console.log('-- not read, interact');
                 yield ['interact', {
                     saga: function* () {
                         yield call(() => {
                             return promise;
                         });
                     },
+                    // progress: false,
                 }];
+                console.log('-- end interaction');
+
+                i++;
+                // Add a security to avoid possible infinite loop
+                if (i > 100) {
+                    console.error('Interacting buffer exhausted, this is most likely abnormal (input required but not given in recording)');
+                    break;
+                }
             }
 
             return result;

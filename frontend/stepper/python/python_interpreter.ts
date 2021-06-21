@@ -30,7 +30,6 @@ export default function(context) {
     this._isFinished = false;
     this._printedDuringStep = '';
     this._inputPos = 0;
-    this._interact = null;
     this._futureInputValue = null;
     this._synchronizingAnalysis = false;
     this.onInput = context.onInput;
