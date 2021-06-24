@@ -11,6 +11,7 @@ import {TrimEditorReturn} from "./TrimEditorReturn";
 import {SubtitlesEditorReturn} from "../subtitles/SubtitlesEditorReturn";
 import {EditorControl} from "./index";
 import {Screen} from "../common/screens";
+import {taskLoad} from "../task";
 
 enum EditorAppActivity {
     None,
@@ -99,6 +100,10 @@ class _EditorApp extends React.PureComponent<EditorAppProps> {
 
         this.setState({collapsed: !collapsed});
     };
+
+    componentDidMount() {
+        this.props.dispatch(taskLoad());
+    }
 }
 
 export const EditorApp = connect(mapStateToProps)(_EditorApp);

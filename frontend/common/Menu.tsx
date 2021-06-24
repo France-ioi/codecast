@@ -2,7 +2,6 @@ import React from 'react';
 import {Button, ButtonGroup, Dialog} from '@blueprintjs/core';
 import {isLocalMode} from "../utils/app";
 import {FullscreenButton} from "./FullscreenButton";
-import {SubtitlesMenu} from "../subtitles/SubtitlesMenu";
 import {LanguageSelection} from "../lang/LanguageSelection";
 import {ExamplePicker} from "./ExamplePicker";
 import {ActionTypes} from "./actionTypes";
@@ -48,7 +47,6 @@ class _Menu extends React.PureComponent<MenuProps> {
         return (
             <div id='menu'>
                 <ButtonGroup>
-                    <SubtitlesMenu />
                     <Button onClick={this.openMenu} icon='menu'/>
                     <FullscreenButton />
                 </ButtonGroup>

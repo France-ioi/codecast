@@ -1,41 +1,36 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Button} from '@blueprintjs/core';
 import {FullscreenButton} from "../common/FullscreenButton";
-import {SubtitlesMenu} from "../subtitles/SubtitlesMenu";
-import {connect} from "react-redux";
+import {SubtitlesPopup} from "../subtitles/SubtitlesPopup";
+import {useAppSelector} from "../hooks";
 
-function mapStateToProps() {
-    return {};
-}
-
-interface MenuIconsTaskDispatchToProps {
-    dispatch: Function
-}
-
-interface MenuIconsTaskProps extends MenuIconsTaskDispatchToProps {
+interface MenuIconsTaskProps {
     toggleMenu: () => void,
 }
 
-class _MenuIconsTask extends React.PureComponent<MenuIconsTaskProps> {
-    state = {isOpen: false};
+export function MenuIconsTask(props: MenuIconsTaskProps) {
+    const getMessage = useAppSelector(state => state.getMessage);
+    const [subtitlesOpen, setSubtitlesOpen] = useState(false);
 
-    render() {
-        return (
-            <div id='menu'>
-                <div className="menu-task-elements">
-                    <div className="menu-task-element is-blue">
-                        <FullscreenButton />
-                    </div>
-                    <div className="menu-task-element">
-                        <SubtitlesMenu />
-                    </div>
-                    <div className="menu-task-element">
-                        <Button onClick={this.props.toggleMenu} icon='menu'/>
-                    </div>
+    return (
+        <div id='menu'>
+            <div className="menu-task-elements">
+                <div className="menu-task-element is-blue">
+                    <FullscreenButton />
+                </div>
+                <div className="menu-task-element">
+                    <Button
+                        onClick={() => setSubtitlesOpen(!subtitlesOpen)}
+                        className='btn-cc'
+                        title={getMessage('CLOSED_CAPTIONS_TOOLTIP').s}
+                        text='CC'
+                    />
+                    <SubtitlesPopup open={subtitlesOpen} onClose={() => setSubtitlesOpen(false)}/>
+                </div>
+                <div className="menu-task-element">
+                    <Button onClick={props.toggleMenu} icon='menu'/>
                 </div>
             </div>
-        );
-    }
+        </div>
+    );
 }
-
-export const MenuIconsTask = connect(mapStateToProps)(_MenuIconsTask);

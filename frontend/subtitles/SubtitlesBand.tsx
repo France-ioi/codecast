@@ -12,7 +12,8 @@ interface SubtitlesBandStateToProps {
     offsetY?: number,
     top?: number,
     textHidden?: boolean,
-    isMoving?: boolean
+    isMoving?: boolean,
+    windowHeight?: number,
 }
 
 function mapStateToProps(state: AppStore): SubtitlesBandStateToProps {
@@ -23,7 +24,7 @@ function mapStateToProps(state: AppStore): SubtitlesBandStateToProps {
 
     const item = items && items[currentIndex];
     const subtitleData = item && item.data;
-    if (subtitleData && typeof subtitleData.text === 'undefined' || !loaded || (!editing && !bandEnabled)) {
+    if ((subtitleData && !subtitleData.text) || !loaded || (!editing && !bandEnabled)) {
         return {hidden: true};
     }
 
@@ -43,14 +44,15 @@ function mapStateToProps(state: AppStore): SubtitlesBandStateToProps {
     const windowHeight = state.windowHeight;
 
     return {
-        top: windowHeight - 60,
+        top: windowHeight - 170,
         active: itemVisible,
         item,
         isMoving,
         offsetY,
         geometry,
         textHidden,
-        hidden: false
+        windowHeight,
+        hidden: false,
     };
 }
 
@@ -94,7 +96,7 @@ class _SubtitlesBand extends React.PureComponent<SubtitlesBandProps> {
         return (
             <div
                 className={classnames(['subtitles-band', `subtitles-band-${active ? '' : 'in'}active`, isMoving && 'subtitles-band-moving', 'no-select', `mainView-${geometry.size}`])}
-                style={{top: `${top}px`, transform: translation, width: `${geometry.width}px`}}
+                style={{top: `${top}px`, transform: translation, width: `100%`}}
                 ref={this._refBand}
             >
                 <div className='subtitles-band-frame'>

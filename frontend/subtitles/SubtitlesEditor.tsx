@@ -69,7 +69,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                             </MenuItem>
                         </Menu>
                     </div>
-                    <div className='fill' style={{paddingLeft: '10px'}}>
+                    <div className='fill' style={{padding: '10px'}}>
                         {selected ?
                             <div>
                                 <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange} />
