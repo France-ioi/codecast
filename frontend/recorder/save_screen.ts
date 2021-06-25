@@ -38,6 +38,7 @@ export const initialStateSave = {
     wavAudioUrl: '',
     eventsUrl: '',
     playerUrl: '',
+    editorUrl: '',
     error: ''
 };
 
@@ -51,6 +52,7 @@ export default function(bundle: Bundle) {
         state.save.step = SaveStep.EncodingPending;
         state.save.progress = 0;
         state.save.playerUrl = '';
+        state.save.editorUrl = '';
     });
 
     bundle.defineAction(ActionTypes.SaveScreenEncodingProgress);
@@ -97,9 +99,10 @@ export default function(bundle: Bundle) {
     });
 
     bundle.defineAction(ActionTypes.SaveScreenUploadSucceeded);
-    bundle.addReducer(ActionTypes.SaveScreenUploadSucceeded, (state: AppStore, {payload: {playerUrl}}) => {
+    bundle.addReducer(ActionTypes.SaveScreenUploadSucceeded, (state: AppStore, {payload: {playerUrl, editorUrl}}) => {
         state.save.step = SaveStep.Done;
         state.save.playerUrl = playerUrl;
+        state.save.editorUrl = editorUrl;
     });
 
     bundle.defineAction(ActionTypes.SaveScreenUploadFailed);
@@ -202,7 +205,7 @@ function* uploadSaga(app: App, action) {
         yield put({type: ActionTypes.SaveScreenAudioUploaded, payload: {url: response.audio.public_url}});
 
         // Signal completion.
-        yield put({type: ActionTypes.SaveScreenUploadSucceeded, payload: {playerUrl: response.player_url}});
+        yield put({type: ActionTypes.SaveScreenUploadSucceeded, payload: {playerUrl: response.player_url, editorUrl: response.editor_url}});
     } catch (error) {
         yield put({type: ActionTypes.SaveScreenUploadFailed, payload: {error}});
     }

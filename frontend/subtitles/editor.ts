@@ -284,6 +284,12 @@ function* subtitlesEditorSaga(state) {
     yield takeLatest(ActionTypes.SubtitlesTextReverted, subtitlesTextRevertedSaga, state);
     yield takeLatest(ActionTypes.SubtitlesTextLoaded, subtitlesTextLoadedSaga, state);
     yield takeLatest(ActionTypes.SubtitlesOptionSave, subtitlesSaveOptionSaga, state);
+    yield takeLatest(ActionTypes.SubtitlesOptionAdd, function*() {
+        yield put({type: ActionTypes.SubtitlesReload});
+    });
+    yield takeLatest(ActionTypes.SubtitlesOptionRemove, function*() {
+        yield put({type: ActionTypes.SubtitlesReload});
+    });
 }
 
 function* subtitlesSelectedSaga(state, action) {

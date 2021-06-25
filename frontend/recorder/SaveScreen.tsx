@@ -12,6 +12,7 @@ interface SaveScreenStateToProps {
     wavAudioUrl: string,
     eventsUrl: string,
     playerUrl: string,
+    editorUrl: string,
     step: string,
     error: any,
     progress: any
@@ -20,9 +21,9 @@ interface SaveScreenStateToProps {
 function mapStateToProps(state: AppStore): SaveScreenStateToProps {
     const getMessage = state.getMessage;
     const grants = (state.user) ? state.user.grants : [];
-    const {step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, error} = state.save;
+    const {step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, editorUrl, error} = state.save;
 
-    return {getMessage, grants, step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, error};
+    return {getMessage, grants, step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, editorUrl, error};
 }
 
 interface SaveScreenDispatchToProps {
@@ -36,7 +37,7 @@ interface SaveScreenProps extends SaveScreenStateToProps, SaveScreenDispatchToPr
 export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
     render() {
         const {getMessage, grants} = this.props;
-        const {audioUrl, wavAudioUrl, eventsUrl, playerUrl, step, error, progress} = this.props;
+        const {audioUrl, wavAudioUrl, eventsUrl, playerUrl, editorUrl, step, error, progress} = this.props;
         const {targetUrl} = this.state;
         const grantOptions = grants.map(({url, description}) => ({value: url, label: description}));
         let message = null, canUpload = false, busy = false;
@@ -160,6 +161,12 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
                 {playerUrl &&
                     <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')} className="mt-4">
                         <input id='playerUrlInput' type='text' className='bp3-input bp3-fill' value={playerUrl} readOnly onFocus={this.handleFocus}/>
+                    </FormGroup>
+                }
+
+                {editorUrl &&
+                    <FormGroup labelFor='editorUrlInput' label={getMessage('EDITOR_LINK')} className="mt-4">
+                      <input id='editorUrlInput' type='text' className='bp3-input bp3-fill' value={editorUrl} readOnly onFocus={this.handleFocus}/>
                     </FormGroup>
                 }
             </form>

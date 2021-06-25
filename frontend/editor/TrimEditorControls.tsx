@@ -4,25 +4,19 @@ import {ExpandedWaveform} from "./waveform/ExpandedWaveform";
 import {FullWaveform} from "./waveform/FullWaveform";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes"
-import {connect} from "react-redux";
-import {AppStore} from "../store";
+import {useDispatch} from "react-redux";
+import {useAppSelector} from "../hooks";
 
-interface TrimEditorControlsStateToProps {
-    position: number,
-    viewStart: number,
-    viewEnd: number,
-    duration: number,
-    waveform: any,
-    events: any,
-    intervals: any,
-    selectedMarker: number,
-    selectedInterval: any
+interface TrimEditorControlsProps {
+    width: number
 }
 
-function mapStateToProps(state: AppStore, props): TrimEditorControlsStateToProps {
+export function TrimEditorControls(props: TrimEditorControlsProps) {
     const {width} = props;
-    const editor = state.editor;
-    const player = state.player;
+
+    const editor = useAppSelector(state => state.editor);
+    const player = useAppSelector(state => state.player);
+    const getMessage = useAppSelector(state => state.getMessage);
     const position = Math.round(player.audioTime);
     const duration = player.duration;
     const waveform = editor.waveform;
@@ -42,96 +36,74 @@ function mapStateToProps(state: AppStore, props): TrimEditorControlsStateToProps
     const diffToEnd = selectedInterval.end - position;
     const selectedMarker = diffToStart <= diffToEnd ? selectedInterval.start : selectedInterval.end;
 
-    return {
-        position, viewStart, viewEnd, duration, waveform, events, intervals,
-        selectedMarker, selectedInterval
-    };
-}
+    const dispatch = useDispatch();
 
-interface TrimEditorControlsDispatchToProps {
-    dispatch: Function
-}
-
-interface TrimEditorControlsProps extends TrimEditorControlsStateToProps, TrimEditorControlsDispatchToProps {
-    width: number
-}
-
-class _TrimEditorControls extends React.PureComponent<TrimEditorControlsProps> {
-    render() {
-        const {position, viewStart, viewEnd, duration, waveform, events, width, intervals, selectedMarker, selectedInterval} = this.props;
-        return (
-            <div>
-                <div className='hbox'>
-                    <Button onClick={this.addMarker} text="Split" icon='split-columns'/>
-                    <Button onClick={this.removeMarker} text="Merge" icon='merge-columns'/>
-                    <div className='hbox trim-selection-controls'>
-                        <Checkbox checked={selectedInterval.value.skip} onChange={this.intervalSkipChanged}>
-                            {"Skip"}
-                        </Checkbox>
-                        <Checkbox checked={selectedInterval.value.mute} onChange={this.intervalMuteChanged}>
-                            {"Mute"}
-                        </Checkbox>
-                    </div>
-                </div>
-                <ExpandedWaveform
-                    height={100}
-                    width={width}
-                    position={position}
-                    duration={duration}
-                    selectedMarker={selectedMarker}
-                    waveform={waveform}
-                    events={events}
-                    intervals={intervals}
-                    onPan={this.seekTo}
-                />
-                <FullWaveform
-                    height={60}
-                    width={width}
-                    position={position}
-                    duration={duration}
-                    selectedMarker={selectedMarker}
-                    viewStart={viewStart}
-                    viewEnd={viewEnd}
-                    waveform={waveform}
-                    events={events}
-                    intervals={intervals}
-                    onPan={this.seekTo}
-                />
-            </div>
-        );
-    }
-
-    seekTo = (position) => {
-        this.props.dispatch({type: PlayerActionTypes.PlayerSeek, payload: {audioTime: position}});
+    const seekTo = (position) => {
+        dispatch({type: PlayerActionTypes.PlayerSeek, payload: {audioTime: position}});
     };
-    addMarker = () => {
-        const {position} = this.props;
-        this.props.dispatch({type: ActionTypes.EditorTrimMarkerAdded, payload: {position}});
+    const addMarker = () => {
+        dispatch({type: ActionTypes.EditorTrimMarkerAdded, payload: {position}});
     };
-    removeMarker = () => {
-        const position = this.props.selectedMarker;
-        this.props.dispatch({type: ActionTypes.EditorTrimMarkerRemoved, payload: {position}});
+    const removeMarker = () => {
+        dispatch({type: ActionTypes.EditorTrimMarkerRemoved, payload: {position: selectedMarker}});
     };
-    intervalSkipChanged = (event) => {
-        const {position, selectedInterval} = this.props;
+    const intervalSkipChanged = (event) => {
         const skip = event.target.checked;
         let {value} = selectedInterval;
 
-        this.props.dispatch({
+        dispatch({
             type: ActionTypes.EditorTrimIntervalChanged,
             payload: {position, value: {...value, skip}}
         });
     };
-    intervalMuteChanged = (event) => {
-        const {position, selectedInterval} = this.props;
+    const intervalMuteChanged = (event) => {
         let {value} = selectedInterval;
         const mute = event.target.checked;
 
-        this.props.dispatch({
+        dispatch({
             type: ActionTypes.EditorTrimIntervalChanged,
             payload: {position, value: {...value, mute}}
         });
     };
-}
 
-export const TrimEditorControls = connect(mapStateToProps)(_TrimEditorControls);
+    return (
+        <div>
+            <div className='hbox'>
+                <Button onClick={addMarker} text={getMessage('EDITOR_SPLIT')} icon='split-columns'/>
+                <Button onClick={removeMarker} text={getMessage('EDITOR_MERGE')} icon='merge-columns'/>
+                <div className='hbox trim-selection-controls'>
+                    <Checkbox checked={selectedInterval.value.skip} onChange={intervalSkipChanged}>
+                        {getMessage('EDITOR_SKIP')}
+                    </Checkbox>
+                    <Checkbox checked={selectedInterval.value.mute} onChange={intervalMuteChanged}>
+                        {getMessage('EDITOR_MUTE')}
+                    </Checkbox>
+                </div>
+            </div>
+            <ExpandedWaveform
+                height={100}
+                width={width}
+                position={position}
+                duration={duration}
+                selectedMarker={selectedMarker}
+                waveform={waveform}
+                events={events}
+                intervals={intervals}
+                onPan={seekTo}
+            />
+            <FullWaveform
+                height={60}
+                width={width}
+                position={position}
+                duration={duration}
+                selectedMarker={selectedMarker}
+                viewStart={viewStart}
+                viewEnd={viewEnd}
+                waveform={waveform}
+                events={events}
+                intervals={intervals}
+                onPan={seekTo}
+            />
+        </div>
+    );
+}

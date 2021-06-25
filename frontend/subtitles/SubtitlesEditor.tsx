@@ -16,16 +16,18 @@ interface SubtitlesEditorStateToProps {
     langOptions: any[],
     canSave: boolean,
     unsaved: boolean,
-    notify: any
+    notify: any,
+    getMessage: Function,
 }
 
 function mapStateToProps(state: AppStore): SubtitlesEditorStateToProps {
+    const getMessage = state.getMessage;
     const {unsaved, notify, selectedKey, availableOptions, langOptions} = state.subtitles;
     const canSave = state.editor.canSave;
     const selected = selectedKey && availableOptions[selectedKey];
     const subtitlesText = (selected && selected.text) || '';
 
-    return {canSave, unsaved, notify, availableOptions, langOptions, selected, subtitlesText};
+    return {canSave, unsaved, notify, availableOptions, langOptions, selected, subtitlesText, getMessage};
 }
 
 interface SubtitlesEditorDispatchToProps {
@@ -33,7 +35,7 @@ interface SubtitlesEditorDispatchToProps {
 }
 
 interface SubtitlesEditorProps extends SubtitlesEditorStateToProps, SubtitlesEditorDispatchToProps {
-
+    light?: boolean,
 }
 
 class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
@@ -41,7 +43,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
     _fileAccepts = ['.srt'];
 
     render() {
-        const {availableOptions, selected, subtitlesText, langOptions, canSave, unsaved, notify} = this.props;
+        const {availableOptions, selected, subtitlesText, langOptions, canSave, unsaved, notify, light, getMessage} = this.props;
         const availKeys = Object.keys(availableOptions).filter(key => !availableOptions[key].removed).sort();
 
         return (
@@ -57,7 +59,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                                     onSelect={this._selectOption}
                                 />
                             )}
-                            <MenuItem icon='add' text='Add language…' popoverProps={{position: Position.TOP_RIGHT}}>
+                            <MenuItem icon='add' text={getMessage('EDITOR_ADD_LANGUAGE')} popoverProps={{position: Position.TOP_RIGHT}}>
                                 {langOptions.map(option =>
                                     <SubtitlesEditorNewOption
                                         key={option.value}
@@ -69,7 +71,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                             </MenuItem>
                         </Menu>
                     </div>
-                    <div className='fill' style={{padding: '10px'}}>
+                    {!light && <div className='fill' style={{padding: '10px'}}>
                         {selected ?
                             <div>
                                 <textarea rows={7} style={{width: '100%'}} value={subtitlesText} onChange={this._onChange} />
@@ -97,9 +99,9 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                                 description={"Load existing subtitles or add a new language, and click the Edit button."}
                             />
                         }
-                    </div>
+                    </div>}
                 </div>
-                <div className='hbox mb' style={{textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
+                {!light && <div className='hbox mb' style={{textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
                     <div className='fill center'>
                         <Button
                             onClick={this._beginEdit}
@@ -116,13 +118,13 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                             intent={unsaved ? Intent.PRIMARY : Intent.NONE}
                         />
                     </div>
-                </div>
-                {!canSave &&
+                </div>}
+                {!light && !canSave &&
                     <Callout intent={Intent.WARNING} title={"Insufficient access rights"}>
                         {"The current user is not allowed to modify this Codecast."}
                     </Callout>
                 }
-                <div>
+                {!light && <div>
                     {notify.key === 'pending' &&
                         <Callout icon={<Spinner size={Spinner.SIZE_SMALL}/>}>{"Saving, please wait."}</Callout>
                     }
@@ -132,7 +134,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                     {notify.key === 'failure' &&
                         <Callout icon='warning-sign' intent={Intent.DANGER}>{"Failed to save: "}{notify.message}</Callout>
                     }
-                </div>
+                </div>}
             </div>
         );
     }

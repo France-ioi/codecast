@@ -11,6 +11,9 @@ interface MenuIconsTaskProps {
 export function MenuIconsTask(props: MenuIconsTaskProps) {
     const getMessage = useAppSelector(state => state.getMessage);
     const [subtitlesOpen, setSubtitlesOpen] = useState(false);
+    const subtitles = useAppSelector(state => state.subtitles);
+    const playerData = useAppSelector(state => state.player.data);
+    const showSubtitles = !subtitles.editing && playerData && playerData.subtitles && !!playerData.subtitles.length;
 
     return (
         <div id='menu'>
@@ -18,15 +21,17 @@ export function MenuIconsTask(props: MenuIconsTaskProps) {
                 <div className="menu-task-element is-blue">
                     <FullscreenButton />
                 </div>
-                <div className="menu-task-element">
-                    <Button
+                {showSubtitles &&
+                    <div className="menu-task-element">
+                      <Button
                         onClick={() => setSubtitlesOpen(!subtitlesOpen)}
                         className='btn-cc'
                         title={getMessage('CLOSED_CAPTIONS_TOOLTIP').s}
                         text='CC'
-                    />
-                    <SubtitlesPopup open={subtitlesOpen} onClose={() => setSubtitlesOpen(false)}/>
-                </div>
+                      />
+                      <SubtitlesPopup open={subtitlesOpen} onClose={() => setSubtitlesOpen(false)}/>
+                    </div>
+                }
                 <div className="menu-task-element">
                     <Button onClick={props.toggleMenu} icon='menu'/>
                 </div>

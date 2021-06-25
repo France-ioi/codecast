@@ -219,6 +219,8 @@ Codecast.start = function(options) {
             break;
 
         case 'task':
+            autoLogin();
+
             appDisplay = <TaskApp />;
 
             break;

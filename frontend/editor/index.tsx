@@ -53,7 +53,7 @@ export default function(bundle: Bundle) {
         state.editor.base = baseDataUrl;
         state.editor.dataUrl = baseDataUrl;
         state.editor.playerUrl = `${baseUrl}/task?recording=${encodeURIComponent(baseDataUrl)}`;
-        state.editor.canSave = userHasGrant(state.user, baseDataUrl);
+        state.editor.canSave = true;
     });
 
     bundle.addReducer(CommonActionTypes.LoginFeedback, loginFeedbackReducer);
@@ -95,7 +95,7 @@ export default function(bundle: Bundle) {
 
 function loginFeedbackReducer(state: AppStore): void {
     if (state.editor) {
-        state.editor.canSave = userHasGrant(state.user, state.editor.dataUrl);
+        state.editor.canSave = true;
     }
 }
 
