@@ -131,6 +131,11 @@ module.exports = {
     EDITOR_SAVE_ERROR: "L'enregistrement a échoué : ",
     EDITOR_SAVED: "Enregistrement réussi.",
     EDITOR_ADD_LANGUAGE: "Ajouter des sous-titres",
+    EDITOR_SUBTITLES_LOAD: 'Charger',
+    EDITOR_SUBTITLES_DOWNLOAD: 'Télécharger',
+    EDITOR_SUBTITLES_REVERT: 'Annuler',
+    EDITOR_SUBTITLES_REMOVE: 'Supprimer',
+    EDITOR_SUBTITLES_SAVE: 'Enregistrer',
 
     KEYWORD: 'mot-clé',
     CONSTANT: "constante",

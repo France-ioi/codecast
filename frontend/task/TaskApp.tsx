@@ -78,11 +78,11 @@ export function TaskApp() {
                 <div className="task-body">
                     <LayoutLoader width={null} height={null}/>
                     {displayEditor &&
-                        <div key="subtitles" className="subtitles-pane" style={{width: '300px'}}>
-                          <SubtitlesEditor
-                            light={true}
-                          />
-                          <SubtitlesEditorPane/>
+                        <div key="subtitles" className="subtitles-pane-container">
+                            <SubtitlesEditor
+                              light={true}
+                            />
+                            <SubtitlesEditorPane/>
                         </div>
                     }
                 </div>

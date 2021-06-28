@@ -101,6 +101,36 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                         }
                     </div>}
                 </div>
+                {light && <div className="subtitles-save-button">
+                  <Button
+                    onClick={this._save}
+                    icon={IconNames.CLOUD_UPLOAD}
+                    text={getMessage('EDITOR_SUBTITLES_SAVE')}
+                    disabled={!canSave}
+                    intent={unsaved ? Intent.PRIMARY : Intent.NONE}
+                  />
+                </div>}
+                {light && !!this.props.selected.key && <div className="subtitles-buttons-container">
+                    <div className='buttons-bar'>
+                        <Files
+                            onChange={this._fileChanged}
+                            accepts={this._fileAccepts}
+                            style={{display: 'inline-block'}}
+                        >
+                            <Button icon={IconNames.UPLOAD}>{getMessage('EDITOR_SUBTITLES_LOAD')}</Button>
+                        </Files>
+                        <Button onClick={this._saveSelected} icon={IconNames.DOWNLOAD} text={getMessage('EDITOR_SUBTITLES_DOWNLOAD')}/>
+                    </div>
+                    <div className='buttons-bar'>
+                        <Button
+                            onClick={this._reloadSelected}
+                            icon={IconNames.CLOUD_DOWNLOAD}
+                            disabled={!selected.url} text={getMessage('EDITOR_SUBTITLES_REVERT')}
+                        />
+                        <Button onClick={this._removeSelected} icon={IconNames.CROSS} text={getMessage('EDITOR_SUBTITLES_REMOVE')}/>
+                    </div>
+                </div>
+                }
                 {!light && <div className='hbox mb' style={{textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
                     <div className='fill center'>
                         <Button

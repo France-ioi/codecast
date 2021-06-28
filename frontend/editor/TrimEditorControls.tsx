@@ -6,6 +6,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes"
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
+import {IconNames} from "@blueprintjs/icons";
 
 interface TrimEditorControlsProps {
     width: number
@@ -66,19 +67,30 @@ export function TrimEditorControls(props: TrimEditorControlsProps) {
         });
     };
 
+    const save = () => {
+        const {targetUrl} = this.state;
+        const grant = this.props.grants.find(grant => grant.url === targetUrl);
+        if (grant) {
+            dispatch({type: ActionTypes.EditorTrimSave, payload: {target: grant}});
+        }
+    };
+
     return (
         <div>
-            <div className='hbox'>
-                <Button onClick={addMarker} text={getMessage('EDITOR_SPLIT')} icon='split-columns'/>
-                <Button onClick={removeMarker} text={getMessage('EDITOR_MERGE')} icon='merge-columns'/>
-                <div className='hbox trim-selection-controls'>
-                    <Checkbox checked={selectedInterval.value.skip} onChange={intervalSkipChanged}>
-                        {getMessage('EDITOR_SKIP')}
-                    </Checkbox>
-                    <Checkbox checked={selectedInterval.value.mute} onChange={intervalMuteChanged}>
-                        {getMessage('EDITOR_MUTE')}
-                    </Checkbox>
+            <div className='hbox trim-editor-controls'>
+                <div className="trim-editor-controls-buttons">
+                    <Button onClick={addMarker} text={getMessage('EDITOR_SPLIT')} icon='split-columns'/>
+                    <Button onClick={removeMarker} text={getMessage('EDITOR_MERGE')} icon='merge-columns'/>
+                    <div className='trim-selection-controls'>
+                        <Checkbox checked={selectedInterval.value.skip} onChange={intervalSkipChanged}>
+                            {getMessage('EDITOR_SKIP')}
+                        </Checkbox>
+                        <Checkbox checked={selectedInterval.value.mute} onChange={intervalMuteChanged}>
+                            {getMessage('EDITOR_MUTE')}
+                        </Checkbox>
+                    </div>
                 </div>
+                <Button onClick={save} icon={IconNames.CLOUD_UPLOAD} text={getMessage('EDITOR_SUBTITLES_SAVE')} />
             </div>
             <ExpandedWaveform
                 height={100}

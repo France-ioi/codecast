@@ -3,7 +3,7 @@
 
 $font-family-sans-serif: 'Open Sans', sans-serif;
 $font-family-monospace: 'Inconsolata';
-$font-family-console: 'Lucida Console', Monaco, sans-serif;
+$font-family-console: 'Lucida Console', Monaco, monospace;
 
 $font-size-base: 1rem;
 $font-size-lg: $font-size-base * 1.12 !default;
@@ -681,10 +681,16 @@ strong.highlight {
 }
 
 .buttons-bar {
-  display: table-row;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  > * {
+    margin: 3px;
+  }
 }
-.buttons-bar > * {
-  display: table-cell;
+
+.subtitles-buttons-container {
+  margin: 10px 0;
 }
 
 /* New layout classes, use. */

@@ -1,11 +1,40 @@
-.trim-selection-controls > * {
-  margin: 7px 0 0 12px;
-}
-
 #editor-app {
   font-size: 16px;
 }
 
-.subtitles-pane {
+.subtitles-pane-container {
   font-size: 14px;
+  overflow-y: auto;
+  padding-right: 50px;
+  border-left: solid 1px #ddd;
+  width: 300px;
+}
+
+.subtitle-item-editor {
+  display: flex;
+  align-items: center;
+}
+
+.subtitles-timestamp-start, .subtitles-timestamp-end {
+  flex: 1 0;
+}
+
+.trim-editor-controls {
+  display: flex;
+  align-items: center;
+}
+
+.trim-editor-controls-buttons {
+  flex: 1 0;
+  display: flex;
+  align-items: center;
+}
+
+.trim-selection-controls {
+  flex: 1 0;
+  margin-left: 6px;
+  .bp3-control {
+    display: inline-block;
+    margin: 0 6px;
+  }
 }

@@ -129,6 +129,11 @@ module.exports = {
     EDITOR_SAVE_ERROR: "Failed to save: ",
     EDITOR_SAVED: "Saved.",
     EDITOR_ADD_LANGUAGE: "Add subtitles",
+    EDITOR_SUBTITLES_LOAD: 'Load',
+    EDITOR_SUBTITLES_DOWNLOAD: 'Download',
+    EDITOR_SUBTITLES_REVERT: 'Revert',
+    EDITOR_SUBTITLES_REMOVE: 'Remove',
+    EDITOR_SUBTITLES_SAVE: 'Save',
 
     USER_SELECT_LOGIN_METHOD: "Select a login option:",
     TASK_DESCRIPTION: 'Instructions',

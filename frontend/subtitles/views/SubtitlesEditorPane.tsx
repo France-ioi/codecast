@@ -75,7 +75,7 @@ class _SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPaneProps>
                 prevStart = subtitle.data.start;
             });
         } else {
-            message = <p>{getMessage('CLOSED_CAPTIONS_NOT_LOADED')}</p>;
+            return null;
         }
         return (
             <div className='subtitles-pane'>

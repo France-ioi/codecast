@@ -14,12 +14,14 @@ export class SubtitlePaneItemViewer extends React.PureComponent<SubtitlePaneItem
 
         return (
             <div className='subtitles-item-viewer' onClick={this._onClick}>
-                <div className='subtitles-timestamp row'>
-                    <div className='col-sm-6'>
-                        <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
-                    </div>
-                    <div className='col-sm-6'>
-                        <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>
+                <div className='subtitles-timestamp'>
+                    <div className="row">
+                        <div className='col-sm-6'>
+                            <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
+                        </div>
+                        <div className='col-sm-6'>
+                            <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>
+                        </div>
                     </div>
                 </div>
                 <span className='subtitles-text'>
