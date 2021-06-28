@@ -136,6 +136,7 @@ module.exports = {
     EDITOR_SUBTITLES_REVERT: 'Annuler',
     EDITOR_SUBTITLES_REMOVE: 'Supprimer',
     EDITOR_SUBTITLES_SAVE: 'Enregistrer',
+    EDITOR_SUBTITLES_REMOVE_CONFIRM: 'Confirmez-vous la suppression des sous-titres {language} ?',
 
     KEYWORD: 'mot-clé',
     CONSTANT: "constante",

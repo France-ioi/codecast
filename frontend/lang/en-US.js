@@ -134,6 +134,7 @@ module.exports = {
     EDITOR_SUBTITLES_REVERT: 'Revert',
     EDITOR_SUBTITLES_REMOVE: 'Remove',
     EDITOR_SUBTITLES_SAVE: 'Save',
+    EDITOR_SUBTITLES_REMOVE_CONFIRM: 'Do you confirm the removal of language {language}?',
 
     USER_SELECT_LOGIN_METHOD: "Select a login option:",
     TASK_DESCRIPTION: 'Instructions',

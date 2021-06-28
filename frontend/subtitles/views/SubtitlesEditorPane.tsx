@@ -13,18 +13,20 @@ interface SubtitlesEditorPaneStateToProps {
     subtitles: NodeCue[],
     currentIndex: number,
     audioTime: number,
-    getMessage: Function
+    getMessage: Function,
+    selectedKey: number,
 }
 
 function mapStateToProps(state: AppStore): SubtitlesEditorPaneStateToProps {
     const getMessage = state.getMessage;
-    const {items, currentIndex, audioTime} = state.subtitles;
+    const {items, currentIndex, audioTime, selectedKey} = state.subtitles;
 
     return {
         getMessage,
         subtitles: items,
         currentIndex,
-        audioTime
+        audioTime,
+        selectedKey,
     };
 }
 
@@ -40,12 +42,12 @@ class _SubtitlesEditorPane extends React.PureComponent<SubtitlesEditorPaneProps>
     _selectedComponent: SubtitlePaneItemEditor = null;
 
     render() {
-        const {subtitles, currentIndex, audioTime, getMessage} = this.props;
+        const {subtitles, currentIndex, audioTime, selectedKey} = this.props;
         const items = [];
         let message = null;
         const shiftAmount = 200;
 
-        if (subtitles && subtitles.length > 0) {
+        if (subtitles && subtitles.length > 0 && selectedKey) {
             let prevStart = 0;
             const canRemove = subtitles.length > 1;
             subtitles.forEach((subtitle, index) => {

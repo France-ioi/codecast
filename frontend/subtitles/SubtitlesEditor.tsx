@@ -110,7 +110,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                     intent={unsaved ? Intent.PRIMARY : Intent.NONE}
                   />
                 </div>}
-                {light && !!this.props.selected.key && <div className="subtitles-buttons-container">
+                {light && !!this.props.selected && !!this.props.selected.key && <div className="subtitles-buttons-container">
                     <div className='buttons-bar'>
                         <Files
                             onChange={this._fileChanged}
@@ -194,7 +194,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
     };
     _removeSelected = () => {
         const {selected: {key}} = this.props;
-        if (confirm(`Confirm remove of language ${key}?`)) {
+        if (confirm(this.props.getMessage('EDITOR_SUBTITLES_REMOVE_CONFIRM').format({language: key}))) {
             this.props.dispatch({type: ActionTypes.SubtitlesOptionRemove, payload: {key}});
         }
     };
