@@ -39,6 +39,7 @@ module.exports = {
     PLAYBACK_LINK: "Lien pour la lecture :",
     EDITOR_LINK: "Lien pour l'édition :",
     PLAYER_PREPARING: "Chargement de l'enregistrement en cours",
+    PLAYER_LOADING_AUDIO: "Chargement de l'audio en cours",
     IOPANE_MODE: "Mécanisme d'entrée/sortie :",
     IOPANE_MODE_SPLIT: "Entrée/sortie séparés",
     IOPANE_MODE_INTERACTIVE: "Terminal interactif",

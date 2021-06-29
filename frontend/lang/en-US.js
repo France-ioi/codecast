@@ -38,6 +38,7 @@ module.exports = {
     UPLOADING_URL_AUDIO_WAV: "URL audio (wav)",
     PLAYBACK_LINK: "Playback link:",
     EDITOR_LINK: "Editing link:",
+    PLAYER_LOADING_AUDIO: "Loading audio",
     PLAYER_PREPARING: "Preparing playback",
     IOPANE_MODE: "Input/output mechanism:",
     IOPANE_MODE_SPLIT: "Split input/output",

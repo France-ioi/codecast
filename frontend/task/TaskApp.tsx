@@ -28,11 +28,22 @@ export function TaskApp() {
     const taskSuccessMessage = useAppSelector(state => state.task.successMessage);
     const player = useAppSelector(state => state.player);
     const isPlayerReady = player.isReady;
-    const playerProgress = player.progress;
     const options = useAppSelector(state => state.options);
     const layoutType = useAppSelector(state => state.layout.type);
-    const displayEditor = useAppSelector(state => state.editor && state.editor.playerReady);
+    const editor = useAppSelector(state => state.editor);
+    const displayEditor = editor && editor.playerReady;
     const user = useAppSelector(state => state.user);
+    const audioLoaded = editor.audioLoaded;
+
+    let progress = null;
+    let progressMessage = null;
+    if (options.baseDataUrl && CodecastOptionsMode.Edit === options.mode && !audioLoaded) {
+        progress = editor.audioLoadProgress;
+        progressMessage = getMessage('PLAYER_LOADING_AUDIO');
+    } else if (playerEnabled && !isPlayerReady) {
+        progress = player.progress;
+        progressMessage = getMessage('PLAYER_PREPARING');
+    }
 
     const dispatch = useDispatch();
 
@@ -120,9 +131,9 @@ export function TaskApp() {
             </div>
             <MenuTask/>
 
-            <Dialog isOpen={playerEnabled && !isPlayerReady} title={getMessage('PLAYER_PREPARING')} isCloseButtonShown={false}>
+            <Dialog isOpen={!!progressMessage} title={progressMessage} isCloseButtonShown={false}>
                 <div style={{margin: '20px 20px 0 20px'}}>
-                    <ProgressBar value={playerProgress} intent={Intent.SUCCESS}/>
+                    <ProgressBar value={progress} intent={Intent.SUCCESS}/>
                 </div>
             </Dialog>
 
