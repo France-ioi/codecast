@@ -147,6 +147,7 @@ function subtitlesTextChangedReducer(state: AppStore, {payload: {text, unsaved}}
 
 function subtitlesItemChangedReducer(state: AppStore, {payload: {index, text}}): void {
     state.subtitles.items[index].data.text = text;
+    subtitlesSaveReducer(state);
 }
 
 function subtitlesItemInsertedReducer(state: AppStore, {payload: {index, offset, where}}): void {
@@ -196,6 +197,7 @@ function subtitlesItemInsertedReducer(state: AppStore, {payload: {index, offset,
         jumpTo = start;
     }
 
+    subtitlesSaveReducer(state);
     return updateCurrentItem(state.subtitles, jumpTo);
 }
 
@@ -222,6 +224,8 @@ function subtitlesItemRemovedReducer(state: AppStore, {payload: {index, merge}})
         type: 'cue'
     });
 
+    subtitlesSaveReducer(state);
+
     const audioTime = state.player.audioTime;
 
     updateCurrentItem(state.subtitles, audioTime);
@@ -241,6 +245,8 @@ function subtitlesItemShiftedReducer(state: AppStore, {payload: {index, amount}}
        and disturbing further user action on the same item. */
     state.subtitles.items[index - 1].data.end = shift(state.subtitles.items[index - 1].data.end);
     state.subtitles.items[index].data.start = shift(state.subtitles.items[index].data.start);
+
+    subtitlesSaveReducer(state);
 }
 
 function subtitlesSaveReducer(state: AppStore): void {
@@ -295,8 +301,11 @@ function* subtitlesEditorSaga(state) {
 function* subtitlesSelectedSaga(state, action) {
     /* Trigger loading of subtitles when first selected. */
     const {key, url, text} = action.payload.option;
+    console.log('change selection');
     if (url && !text) {
         yield put({type: ActionTypes.SubtitlesTextReverted, payload: {key, url}});
+    } else {
+        yield put({type: ActionTypes.SubtitlesReload});
     }
 }
 

@@ -71,6 +71,7 @@ module.exports = {
     MENU_SETTINGS: "Réglages",
     MENU_RECORDER: "Enregistrement",
     MENU_EDIT_RECORDING: "Paramètres de l'enregistrement",
+    MENU_EDIT_RECORDING_TITLE: "Enregistrement",
     EXAMPLES_LABEL: "Exemples: ",
     EXAMPLES_BUTTON_TITLE: "Afficher la liste",
     EXAMPLES_MESSAGE: "Charger un exemple interrompt toute activité en cours",

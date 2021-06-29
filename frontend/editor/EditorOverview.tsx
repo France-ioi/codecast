@@ -68,8 +68,8 @@ export function EditorOverview(props: EditorOverviewProps) {
             </div>
             <div className='hbox mb' style={{textAlign: 'center', backgroundColor: '#efefef', padding: '10px'}}>
                 <div className='fill center'>
-                    <Button onClick={_saveAudio} icon={IconNames.DOWNLOAD} text={getMessage('EDITOR_DOWNLOAD_AUDIO')} />
-                    <Button onClick={_save} icon={IconNames.CLOUD_UPLOAD} text={getMessage('EDITOR_SAVE')} disabled={!canSave}/>
+                    <Button onClick={_saveAudio} icon={IconNames.DOWNLOAD} text={getMessage('EDITOR_DOWNLOAD_AUDIO')} className="mr-2"/>
+                    <Button onClick={_save} icon={IconNames.CLOUD_UPLOAD} text={getMessage('EDITOR_SAVE')} disabled={!canSave} intent={Intent.PRIMARY}/>
                 </div>
             </div>
             {!canSave &&

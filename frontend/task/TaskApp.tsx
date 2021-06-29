@@ -13,12 +13,11 @@ import {taskLoad} from "./index";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {useAppSelector} from "../hooks";
 import {CodecastOptionsMode} from "../store";
-import {EditorOverview} from "../editor/EditorOverview";
-import {TrimEditorControls} from "../editor/TrimEditorControls";
 import {EditorInterface} from "../editor/EditorInterface";
 import {SubtitlesEditorPane} from "../subtitles/views/SubtitlesEditorPane";
 import {ActionTypes} from "../subtitles/actionTypes";
 import {SubtitlesEditor} from "../subtitles/SubtitlesEditor";
+import {LoginScreen} from "../common/LoginScreen";
 
 export function TaskApp() {
     const getMessage = useAppSelector(state => state.getMessage);
@@ -33,6 +32,7 @@ export function TaskApp() {
     const options = useAppSelector(state => state.options);
     const layoutType = useAppSelector(state => state.layout.type);
     const displayEditor = useAppSelector(state => state.editor && state.editor.playerReady);
+    const user = useAppSelector(state => state.user);
 
     const dispatch = useDispatch();
 
@@ -66,6 +66,18 @@ export function TaskApp() {
     const closeTaskSuccess = () => {
         dispatch(taskSuccessClear());
     };
+
+    if (!user && options.baseDataUrl && CodecastOptionsMode.Edit === options.mode) {
+        return (
+            <div id='editor-app'>
+                <div className="cc-login">
+                    <h1 style={{margin: '20px 0'}}>{"Codecast Editor"}</h1>
+
+                    <LoginScreen/>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType}`}>
