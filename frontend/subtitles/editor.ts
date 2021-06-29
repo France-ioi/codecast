@@ -363,6 +363,7 @@ function* subtitlesTextRevertedSaga(state, action) {
 
     /* Text is loaded from server, so clear the unsaved flag. */
     yield put({type: ActionTypes.SubtitlesTextChanged, payload: {text, unsaved: false}});
+    yield put({type: ActionTypes.SubtitlesReload});
 }
 
 function* subtitlesTextLoadedSaga(state, action) {
