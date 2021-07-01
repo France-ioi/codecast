@@ -7,6 +7,7 @@ export enum Screen {
     Statistics = 'statistics',
     Record = 'record',
     Save = 'save',
+    EditorSave = 'editor_save',
 }
 
 export default function(bundle: Bundle) {

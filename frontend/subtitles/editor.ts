@@ -64,17 +64,6 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.SubtitlesItemShifted);
     bundle.addReducer(ActionTypes.SubtitlesItemShifted, subtitlesItemShiftedReducer);
 
-    /* subtitlesEditorSave is dispatched when the user clicks the 'Save' button
-       on the setup screen. */
-    bundle.defineAction(ActionTypes.SubtitlesEditorSave);
-    bundle.addReducer(ActionTypes.SubtitlesEditorSave, subtitlesEditorSaveReducer);
-
-    bundle.defineAction(ActionTypes.SubtitlesEditorSaveFailed);
-    bundle.addReducer(ActionTypes.SubtitlesEditorSaveFailed, subtitlesEditorSaveFailedReducer);
-
-    bundle.defineAction(ActionTypes.SubtitlesEditorSaveSucceeded);
-    bundle.addReducer(ActionTypes.SubtitlesEditorSaveSucceeded, subtitlesEditorSaveSucceededReducer);
-
     /* subtitlesSave is dispatched when returning from the editor to the screen. */
     bundle.defineAction(ActionTypes.SubtitlesSave);
     bundle.addReducer(ActionTypes.SubtitlesSave, subtitlesSaveReducer);
@@ -82,20 +71,11 @@ export default function(bundle: Bundle) {
     bundle.addSaga(subtitlesEditorSaga);
 }
 
-function clearNotify(subtitles: typeof initialStateSubtitles) {
-    subtitles.notify = {
-        key: '',
-        message: ''
-    };
-}
-
 function setUnsaved(subtitles: typeof initialStateSubtitles) {
     subtitles.unsaved = true;
 }
 
 function subtitlesSelectedReducer(state: AppStore, {payload: {option}}): void {
-    clearNotify(state.subtitles);
-
     state.subtitles.selectedKey = option.key;
 }
 
@@ -120,7 +100,6 @@ function subtitlesAddOptionReducer(state: AppStore, {payload: {key, select}}): v
     }
 
     setUnsaved(state.subtitles);
-    clearNotify(state.subtitles);
 }
 
 function subtitlesRemoveOptionReducer(state: AppStore, {payload: {key}}): void {
@@ -128,8 +107,6 @@ function subtitlesRemoveOptionReducer(state: AppStore, {payload: {key}}): void {
     if (state.subtitles.selectedKey === key) {
         state.subtitles.selectedKey = null;
     }
-
-    clearNotify(state.subtitles);
 }
 
 
@@ -142,7 +119,6 @@ function subtitlesTextChangedReducer(state: AppStore, {payload: {text, unsaved}}
     }
 
     setUnsaved(state.subtitles);
-    clearNotify(state.subtitles);
 }
 
 function subtitlesItemChangedReducer(state: AppStore, {payload: {index, text}}): void {
@@ -255,28 +231,12 @@ function subtitlesSaveReducer(state: AppStore): void {
         format: 'SRT'
     });
 
-    clearNotify(state.subtitles);
-
     state.subtitles.availableOptions[key].text = text;
+    state.subtitles.availableOptions[key].unsaved = true;
+    setUnsaved(state.subtitles);
 }
 
-function subtitlesEditorSaveReducer(state: AppStore): void {
-    state.subtitles.notify.key = 'pending';
-}
-
-function subtitlesEditorSaveFailedReducer(state: AppStore, {payload: {error}}): void {
-    state.subtitles.notify.key = 'failure';
-    state.subtitles.notify.message = error.toString();
-}
-
-function subtitlesEditorSaveSucceededReducer(state: AppStore): void {
-    state.subtitles.unsaved = false;
-    state.subtitles.notify.key = 'success';
-
-    clearAllUnsaved(state.subtitles.availableOptions);
-}
-
-function clearAllUnsaved(options: SubtitlesOptions) {
+export function clearAllUnsaved(options: SubtitlesOptions) {
     for (let key of Object.keys(options)) {
         options[key].unsaved = false;
     }
@@ -285,7 +245,6 @@ function clearAllUnsaved(options: SubtitlesOptions) {
 function* subtitlesEditorSaga(state) {
     yield takeLatest(ActionTypes.SubtitlesSelected, subtitlesSelectedSaga, state);
     yield takeLatest(ActionTypes.SubtitlesEditorEnter, subtitlesEditorEnterSaga, state);
-    yield takeLatest(ActionTypes.SubtitlesEditorSave, subtitlesEditorSaveSaga);
     yield takeLatest(ActionTypes.SubtitlesEditorReturn, subtitlesEditorReturnSaga, state);
     yield takeLatest(ActionTypes.SubtitlesTextReverted, subtitlesTextRevertedSaga, state);
     yield takeLatest(ActionTypes.SubtitlesTextLoaded, subtitlesTextLoadedSaga, state);
@@ -326,36 +285,6 @@ function* subtitlesEditorReturnSaga(state, _action) {
     yield put({type: ActionTypes.SubtitlesEditingChanged, payload: {editing: false}});
     yield put({type: EditorActionTypes.EditorControlsChanged, payload: {controls: 'none'}});
     yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Setup}});
-}
-
-function* subtitlesEditorSaveSaga() {
-    const state: AppStore = yield select();
-
-    const {baseUrl} = state.options;
-    const editor = state.editor;
-    const base = editor.base;
-    const subtitles = Object.values(state.subtitles.availableOptions).filter((subtitlesOption: SubtitlesOption) => {
-        return !subtitlesOption.removed;
-    });
-
-    const changes = {subtitles};
-
-    let result;
-    try {
-        // TODO: also pass new base when copying
-        result = yield call(postJson, `${baseUrl}/save`, {base, changes});
-    } catch (ex) {
-        result = {error: ex.toString()};
-    }
-
-    if (result.error) {
-        yield put({type: ActionTypes.SubtitlesEditorSaveFailed, payload: {error: result.error}});
-        return;
-    }
-
-    const timestamp = new Date();
-
-    yield put({type: ActionTypes.SubtitlesEditorSaveSucceeded, payload: {timestamp}});
 }
 
 function* subtitlesTextRevertedSaga(state, action) {

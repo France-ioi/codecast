@@ -9,6 +9,8 @@ import {recordingEnabledChange} from "./task_slice";
 import {StepperStatus} from "../stepper";
 import {SettingsDialog} from "../common/SettingsDialog";
 import {EditRecordingDialog} from "../editor/EditRecordingDialog";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {Screen} from "../common/screens";
 
 interface MenuTaskStateToProps {
     getMessage: Function,
@@ -20,6 +22,7 @@ interface MenuTaskStateToProps {
     ioMode: IoMode,
     ioModeSelect: boolean,
     editorEnabled: boolean,
+    screen: Screen,
 }
 
 function mapStateToProps(state: AppStore): MenuTaskStateToProps {
@@ -30,6 +33,7 @@ function mapStateToProps(state: AppStore): MenuTaskStateToProps {
     const {mode: ioMode, modeSelect} = state.ioPane;
     const ioModeSelect = modeSelect && (!state.stepper || state.stepper.status === StepperStatus.Clear);
     const displayEditor = state.editor && state.editor.playerReady;
+    const screen = state.screen;
 
     let offlineDownloadUrl = null;
     if (!isLocalMode() && baseDataUrl) {
@@ -38,6 +42,7 @@ function mapStateToProps(state: AppStore): MenuTaskStateToProps {
 
     return {
         getMessage, platform, canChangePlatform, offlineDownloadUrl, recordingEnabled, playerEnabled, ioMode, ioModeSelect,
+        screen,
         editorEnabled: displayEditor,
     };
 }
@@ -49,7 +54,6 @@ interface MenuTaskDispatchToProps {
 interface MenuTaskState {
     settingsOpen: boolean,
     menuOpen: boolean,
-    editRecordingOpen: boolean,
 }
 
 interface MenuTaskProps extends MenuTaskStateToProps, MenuTaskDispatchToProps {
@@ -60,7 +64,6 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
     state = {
         settingsOpen: false,
         menuOpen: false,
-        editRecordingOpen: false,
     };
 
     private wrapperRef: React.RefObject<HTMLDivElement>;
@@ -82,8 +85,8 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
     }
 
     render() {
-        const {getMessage, playerEnabled, editorEnabled} = this.props;
-        const {settingsOpen, editRecordingOpen} = this.state;
+        const {getMessage, playerEnabled, editorEnabled, screen} = this.props;
+        const {settingsOpen} = this.state;
 
         return (
             <div ref={this.wrapperRef} className={`menu-container ${this.state.menuOpen ? 'is-open' : ''}`}>
@@ -111,7 +114,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
                     onClose={this.closeSettings}
                 />
                 <EditRecordingDialog
-                    open={editRecordingOpen}
+                    open={screen === Screen.EditorSave}
                     onClose={this.closeEditRecording}
                 />
             </div>
@@ -151,9 +154,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
     };
 
     toggleEditRecording = () => {
-        this.setState(prevState => ({
-            editRecordingOpen: !prevState.editRecordingOpen,
-        }));
+        this.props.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.EditorSave}});
     };
 
     closeSettings = () => {
@@ -169,9 +170,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
     };
 
     closeEditRecording = () => {
-        this.setState({
-            editRecordingOpen: false,
-        });
+        this.props.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
     };
 }
 

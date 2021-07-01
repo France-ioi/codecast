@@ -7,8 +7,13 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
 import {EditorSaveState, initialStateEditor} from "./index";
 import {Bundle} from "../linker";
+import {SubtitlesOption} from "../subtitles";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {ensureLoggedSaga} from "../recorder/save_screen";
+import {Screen} from "../common/screens";
+import {clearAllUnsaved} from "../subtitles/editor";
 
-export default function(bundle: Bundle) {
+export default function (bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
         state.editor = initialStateEditor;
     });
@@ -26,6 +31,9 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.EditorSave);
     bundle.addReducer(ActionTypes.EditorSave, editorSaveReducer);
 
+    bundle.defineAction(ActionTypes.EditorSaveClear);
+    bundle.addReducer(ActionTypes.EditorSaveClear, editorSaveClearReducer);
+
     bundle.defineAction(ActionTypes.EditorSaveFailed);
     bundle.addReducer(ActionTypes.EditorSaveFailed, editorSaveFailedReducer);
 
@@ -35,6 +43,12 @@ export default function(bundle: Bundle) {
     bundle.addSaga(function* editorOverviewSaga() {
         yield takeLatest(ActionTypes.EditorSaveAudio, editorSaveAudioSaga);
         yield takeLatest(ActionTypes.EditorSave, editorSaveSaga);
+        // @ts-ignore
+        yield takeLatest(CommonActionTypes.AppSwitchToScreen, function* ({payload: {screen}}) {
+            if (Screen.EditorSave === screen) {
+                yield call(ensureLoggedSaga);
+            }
+        });
     });
 }
 
@@ -50,14 +64,32 @@ function editorSaveReducer(state: AppStore): void {
     state.editor.save.state = EditorSaveState.Pending;
 }
 
+function editorSaveClearReducer(state: AppStore): void {
+    state.editor.save.state = EditorSaveState.Idle;
+    state.editor.save.step = null;
+    state.editor.save.error = null;
+    state.editor.save.progress = null;
+}
+
 function editorSaveFailedReducer(state: AppStore, {payload: {error}}) {
     state.editor.save.state = EditorSaveState.Failure;
     state.editor.save.error = error;
+    state.editor.save.step = null;
 }
 
-function editorSaveSucceededReducer(state: AppStore): void {
+function editorSaveSucceededReducer(state: AppStore, {payload: {playerUrl, editorUrl}}): void {
     state.editor.save.state = EditorSaveState.Success;
+    state.editor.save.step = null;
+    if (playerUrl) {
+        state.editor.playerUrl = playerUrl;
+    }
+    if (editorUrl) {
+        state.editor.editorUrl = editorUrl;
+    }
     state.editor.unsaved = false;
+    state.editor.trim.unsaved = false;
+    state.subtitles.unsaved = false;
+    clearAllUnsaved(state.subtitles.availableOptions);
 }
 
 function* editorSaveAudioSaga() {
@@ -82,6 +114,12 @@ function* editorSaveSaga() {
     const {name} = editor.data;
 
     const changes = {name};
+    if (state.subtitles.unsaved) {
+        changes['subtitles'] = Object.values(state.subtitles.availableOptions).filter((subtitlesOption: SubtitlesOption) => {
+            return !subtitlesOption.removed;
+        });
+    }
+
     let result;
     try {
         result = yield call(postJson, `${baseUrl}/save`, {base, changes});
@@ -95,5 +133,7 @@ function* editorSaveSaga() {
         return;
     }
 
-    yield put({type: ActionTypes.EditorSaveSucceeded});
+    const timestamp = new Date();
+
+    yield put({type: ActionTypes.EditorSaveSucceeded, payload: {timestamp}});
 }

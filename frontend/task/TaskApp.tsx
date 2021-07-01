@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
 import {Dialog, Icon, Intent, ProgressBar} from "@blueprintjs/core";
@@ -34,6 +34,7 @@ export function TaskApp() {
     const displayEditor = editor && editor.playerReady;
     const user = useAppSelector(state => state.user);
     const audioLoaded = editor.audioLoaded;
+    const [initialUserCheck, setInitialUserCheck] = useState(false);
 
     let progress = null;
     let progressMessage = null;
@@ -78,16 +79,22 @@ export function TaskApp() {
         dispatch(taskSuccessClear());
     };
 
-    if (!user && options.baseDataUrl && CodecastOptionsMode.Edit === options.mode) {
-        return (
-            <div id='editor-app'>
-                <div className="cc-login">
-                    <h1 style={{margin: '20px 0'}}>{"Codecast Editor"}</h1>
+    if (options.baseDataUrl && CodecastOptionsMode.Edit === options.mode) {
+        if (user) {
+            if (!initialUserCheck) {
+                setInitialUserCheck(true);
+            }
+        } else if (!initialUserCheck) {
+            return (
+                <div id='editor-app'>
+                    <div className="cc-login">
+                        <h1 style={{margin: '20px 0'}}>{"Codecast Editor"}</h1>
 
-                    <LoginScreen/>
+                        <LoginScreen/>
+                    </div>
                 </div>
-            </div>
-        );
+            );
+        }
     }
 
     return (
@@ -131,7 +138,7 @@ export function TaskApp() {
             </div>
             <MenuTask/>
 
-            <Dialog isOpen={!!progressMessage} title={progressMessage} isCloseButtonShown={false}>
+            <Dialog isOpen={!!progressMessage} title={progressMessage ? progressMessage : 'Info'} isCloseButtonShown={false}>
                 <div style={{margin: '20px 20px 0 20px'}}>
                     <ProgressBar value={progress} intent={Intent.SUCCESS}/>
                 </div>

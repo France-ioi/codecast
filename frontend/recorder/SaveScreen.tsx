@@ -117,7 +117,7 @@ export class _SaveScreen extends React.PureComponent<SaveScreenProps> {
                         onFocus={this.handleFocus}
                     />
                 </FormGroup>}
-                <FormGroup label="Target">
+                <FormGroup label={getMessage('UPLOADING_TARGET')}>
                     <HTMLSelect options={grantOptions} value={targetUrl} onChange={this.handleTargetChange}/>
                 </FormGroup>
                 <div className="encoding-status">

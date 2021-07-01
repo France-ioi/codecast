@@ -118,7 +118,7 @@ export default function(bundle: Bundle) {
     });
 }
 
-function* ensureLoggedSaga() {
+export function* ensureLoggedSaga() {
     const state: AppStore = yield select();
     const {baseUrl} = state.options;
 

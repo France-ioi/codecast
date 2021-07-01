@@ -6,6 +6,7 @@ import {FullWaveform} from "./waveform/FullWaveform";
 import {ActionTypes} from "./actionTypes";
 import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
+import {EditorSaveState} from "./index";
 
 interface EditorOverviewProps {
     withoutWaveform?: boolean,
@@ -79,19 +80,19 @@ export function EditorOverview(props: EditorOverviewProps) {
             }
             {save &&
                 <div className='vbox'>
-                    {save.state === 'pending' &&
+                    {save.state === EditorSaveState.Pending &&
                         <div className='fill'>
                             <Spinner size={Spinner.SIZE_SMALL} />
                             {getMessage('EDITOR_SAVING')}
                         </div>
                     }
-                    {save.state === 'failure' &&
+                    {save.state === EditorSaveState.Failure &&
                         <div className='fill'>
                             <Icon icon='cross' intent={Intent.DANGER} />
                             {getMessage('EDITOR_SAVE_ERROR')}{save.error}
                         </div>
                     }
-                    {save.state === 'success' &&
+                    {save.state === EditorSaveState.Success &&
                         <div className='fill'>
                             <Icon icon='tick' intent={Intent.SUCCESS} />
                             {getMessage('EDITOR_SAVED')}

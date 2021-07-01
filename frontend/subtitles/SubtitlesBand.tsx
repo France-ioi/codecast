@@ -24,7 +24,7 @@ function mapStateToProps(state: AppStore): SubtitlesBandStateToProps {
 
     const item = items && items[currentIndex];
     const subtitleData = item && item.data;
-    if ((subtitleData && !subtitleData.text) || !loaded || (!editing && !bandEnabled)) {
+    if (!subtitleData || !subtitleData.text || !loaded || (!editing && !bandEnabled)) {
         return {hidden: true};
     }
 

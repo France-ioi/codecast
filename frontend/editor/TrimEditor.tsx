@@ -1,5 +1,5 @@
 import React from "react";
-import {AnchorButton, Button, FormGroup, HTMLSelect, Icon, Intent, ProgressBar, Spinner} from "@blueprintjs/core";
+import {AnchorButton, Button, FormGroup, HTMLSelect} from "@blueprintjs/core";
 import {IconNames} from "@blueprintjs/icons";
 import {ActionTypes} from "./actionTypes";
 import {connect} from "react-redux";
@@ -11,11 +11,10 @@ interface TrimEditorStateToProps {
 }
 
 function mapStateToProps(state: AppStore): TrimEditorStateToProps {
-    const {saving} = state.editor.trim;
     const user = state.user;
     const grants = user ? user.grants : [];
 
-    return {saving, grants};
+    return {saving: {}, grants};
 }
 
 interface TrimEditorDispatchToProps {
@@ -45,17 +44,6 @@ class _TrimEditor extends React.PureComponent<TrimEditorProps> {
 
         if (saving) {
             const stepRows = [];
-            for (let step of savingSteps) {
-                const status = saving[step.key];
-                stepRows.push(<StepRow key={step.key} title={step.label} status={status}/>);
-                if (status === 'pending') {
-                    stepRows.push(
-                        <div key={`${step.key}_progress`} style={{margin: '10px 0 20px 0'}}>
-                            <ProgressBar value={saving.progress}/>
-                        </div>
-                    );
-                }
-            }
             savingView = (
                 <div style={{marginTop: '10px'}}>
                     <h2>{"Saving"}</h2>
@@ -99,33 +87,3 @@ class _TrimEditor extends React.PureComponent<TrimEditorProps> {
 }
 
 export const TrimEditor = connect(mapStateToProps)(_TrimEditor);
-
-const savingSteps = [
-    {key: 'prepareUpload', label: "Preparing upload"},
-    {key: 'uploadEvents', label: "Uploading events"},
-    {key: 'assembleAudio', label: "Assembling audio stream"},
-    {key: 'encodeAudio', label: "Encoding audio stream"},
-    {key: 'uploadAudio', label: "Uploading audio"},
-    {key: 'updateSubtitles', label: "Updating Subtitles"},
-    {key: 'uploadSubtitles', label: "Uploading Subtitles"},
-];
-
-function StepRow({title, status}) {
-    return (
-        <ul style={{height: '28px', listStyle: 'none'}}>
-            <li>
-                <div style={{display: 'inline-block', width: '40px', textAlign: 'center'}}>
-                    {status === 'done' && <Icon icon='tick' intent={Intent.SUCCESS}/>}
-                    {status === 'error' && <Icon icon='cross' intent={Intent.DANGER}/>}
-                    {status === 'pending' && <Spinner size={Spinner.SIZE_SMALL}/>}
-                </div>
-                <div style={status === 'pending' ? {
-                    display: 'inline-block',
-                    fontWeight: 'bold'
-                } : {display: 'inline-block'}}>
-                    {title}
-                </div>
-            </li>
-        </ul>
-    );
-}

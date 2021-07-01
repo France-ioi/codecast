@@ -9,16 +9,15 @@ export enum ActionTypes {
     EditorPropertyChanged = 'Editor.Property.Changed',
     EditorSaveAudio = 'Editor.Save.Audio',
     EditorSave = 'Editor.Save',
+    EditorSaveClear = 'Editor.Save.Clear',
     EditorSaveFailed = 'Editor.Save.Failed',
     EditorSaveSucceeded = 'Editor.Save.Succeeded',
+    EditorSavingStep = 'Editor.Saving.Step',
 
     EditorTrimEnter = 'Editor.Trim.Enter',
     EditorTrimReturn = 'Editor.Trim.Return',
     EditorTrimSave = 'Editor.Trim.Save',
-    EditorTrimIntervalsChanged = 'Editor.Trim.Intervals.Changed',
     EditorTrimMarkerAdded = 'Editor.Trim.MarkerAdded',
     EditorTrimMarkerRemoved = 'Editor.Trim.MarkerRemoved',
     EditorTrimIntervalChanged = 'Editor.Trim.Interval.Changed',
-    EditorTrimSavingStep = 'Editor.Trim.Saving.Step',
-    EditorTrimSavingDone = 'Editor.Trim.Saving.Done',
 }

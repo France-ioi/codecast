@@ -89,7 +89,13 @@ function subtitlesLoadFailedReducer(state: AppStore, {payload: {error}}): void {
 }
 
 function subtitlesLoadForTrimSucceededReducer(state: AppStore, {payload: {key, items}}): void {
-    state.subtitles.trim.loaded.push({key, items})
+    const index = state.subtitles.trim.loaded.findIndex(element => element.key === key);
+    console.log('load succeeded', state.subtitles.trim.loaded, index);
+    if (index !== -1) {
+        state.subtitles.trim.loaded[index] = {key, items};
+    } else {
+        state.subtitles.trim.loaded.push({key, items})
+    }
 }
 
 function subtitlesTrimDoneReducer(state: AppStore, {payload: {subtitles: data}}): void {
@@ -201,7 +207,7 @@ function* subtitlesReloadSaga(_action) {
     }
 }
 
-function* subtitlesLoadForTrimSaga(_action) {
+export function* subtitlesLoadForTrimSaga() {
     const state: AppStore = yield select();
     const {availableOptions} = state.subtitles;
     const availKeys = Object.keys(availableOptions).sort();
@@ -211,10 +217,13 @@ function* subtitlesLoadForTrimSaga(_action) {
         let text = (availableOptions[key].text || '').trim();
 
         try {
+            console.log('here text', {text});
             if (!text) {
                 text = yield call(getSubtitles, url);
+                console.log('get subtitles');
             }
             const items = parseSync(text);
+            console.log('rsult items', {items});
             yield put({type: ActionTypes.SubtitlesLoadForTrimSucceeded, payload: {key, items}});
         } catch (ex) {
         }

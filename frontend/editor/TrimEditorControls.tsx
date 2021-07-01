@@ -7,6 +7,8 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes"
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
 import {IconNames} from "@blueprintjs/icons";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {Screen} from "../common/screens";
 
 interface TrimEditorControlsProps {
     width: number
@@ -68,11 +70,7 @@ export function TrimEditorControls(props: TrimEditorControlsProps) {
     };
 
     const save = () => {
-        const {targetUrl} = this.state;
-        const grant = this.props.grants.find(grant => grant.url === targetUrl);
-        if (grant) {
-            dispatch({type: ActionTypes.EditorTrimSave, payload: {target: grant}});
-        }
+        dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.EditorSave}});
     };
 
     return (

@@ -37,10 +37,6 @@ export const initialStateSubtitles = {
     filterText: '',
     filterRegexp: null,
     /* editor-specific */
-    notify: {
-        key: '',
-        message: ''
-    },
     trim: {
         loaded: [],
     },

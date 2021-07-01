@@ -8,6 +8,9 @@ import {ActionTypes} from "./actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {SubtitlesOptions} from "./index";
+import {put} from "redux-saga/effects";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {Screen} from "../common/screens";
 
 interface SubtitlesEditorStateToProps {
     availableOptions: SubtitlesOptions,
@@ -16,18 +19,17 @@ interface SubtitlesEditorStateToProps {
     langOptions: any[],
     canSave: boolean,
     unsaved: boolean,
-    notify: any,
     getMessage: Function,
 }
 
 function mapStateToProps(state: AppStore): SubtitlesEditorStateToProps {
     const getMessage = state.getMessage;
-    const {unsaved, notify, selectedKey, availableOptions, langOptions} = state.subtitles;
+    const {unsaved, selectedKey, availableOptions, langOptions} = state.subtitles;
     const canSave = state.editor.canSave;
     const selected = selectedKey && availableOptions[selectedKey];
     const subtitlesText = (selected && selected.text) || '';
 
-    return {canSave, unsaved, notify, availableOptions, langOptions, selected, subtitlesText, getMessage};
+    return {canSave, unsaved, availableOptions, langOptions, selected, subtitlesText, getMessage};
 }
 
 interface SubtitlesEditorDispatchToProps {
@@ -43,7 +45,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
     _fileAccepts = ['.srt'];
 
     render() {
-        const {availableOptions, selected, subtitlesText, langOptions, canSave, unsaved, notify, light, getMessage} = this.props;
+        const {availableOptions, selected, subtitlesText, langOptions, canSave, unsaved, light, getMessage} = this.props;
         const availKeys = Object.keys(availableOptions).filter(key => !availableOptions[key].removed).sort();
 
         return (
@@ -107,7 +109,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                     icon={IconNames.CLOUD_UPLOAD}
                     text={getMessage('EDITOR_SUBTITLES_SAVE')}
                     disabled={!canSave}
-                    intent={unsaved ? Intent.PRIMARY : Intent.NONE}
+                    intent={Intent.PRIMARY}
                   />
                 </div>}
                 {light && !!this.props.selected && !!this.props.selected.key && <div className="subtitles-buttons-container">
@@ -154,17 +156,6 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                         {"The current user is not allowed to modify this Codecast."}
                     </Callout>
                 }
-                {!light && <div>
-                    {notify.key === 'pending' &&
-                        <Callout icon={<Spinner size={Spinner.SIZE_SMALL}/>}>{"Saving, please wait."}</Callout>
-                    }
-                    {notify.key === 'success' &&
-                        <Callout icon='saved' intent={Intent.SUCCESS}>{"Saved."}</Callout>
-                    }
-                    {notify.key === 'failure' &&
-                        <Callout icon='warning-sign' intent={Intent.DANGER}>{"Failed to save: "}{notify.message}</Callout>
-                    }
-                </div>}
             </div>
         );
     }
@@ -207,7 +198,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
         this.props.dispatch({type: ActionTypes.SubtitlesEditorEnter});
     };
     _save = () => {
-        this.props.dispatch({type: ActionTypes.SubtitlesEditorSave});
+        this.props.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.EditorSave}});
     };
     _fileChanged = ([file]) => {
         const key = this.props.selected.key;
