@@ -16,13 +16,11 @@ import {isLocalMode} from "./utils/app";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "./common/actionTypes";
 import {ActionTypes as PlayerActionTypes} from "./player/actionTypes";
-import {ActionTypes as EditorActionTypes} from "./editor/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "./recorder/actionTypes";
 import {ActionTypes as StatisticsActionTypes} from "./statistics/actionTypes";
 import {SandboxApp} from "./sandbox/SandboxApp";
 import {TaskApp} from "./task/TaskApp";
 import {StatisticsApp} from "./statistics/StatisticsApp";
-import {EditorApp} from "./editor/EditorApp";
 import {PlayerApp} from "./player/PlayerApp";
 import {RecorderApp} from "./recorder/RecorderApp";
 import {AppErrorBoundary} from "./common/AppErrorBoundary";
@@ -184,19 +182,6 @@ Codecast.start = function(options) {
             });
 
             appDisplay = <PlayerApp />;
-
-            break;
-        case 'editor':
-            autoLogin();
-
-            store.dispatch({
-                type: EditorActionTypes.EditorPrepare,
-                payload: {
-                    baseDataUrl: options.baseDataUrl
-                }
-            });
-
-            appDisplay = <EditorApp />;
 
             break;
         case 'statistics':
