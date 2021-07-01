@@ -28,7 +28,7 @@ function mapStateToProps(state: AppStore): PlayerControlsTaskStateToProps {
     const audioTime = player.audioTime;
     const duration = player.duration;
     const volume = player.volume;
-    const isMuted = player.isMuted;
+    const isMuted = player.audio.muted;
 
     return {getMessage, isReady, isPlaying, isAtEnd, audioTime, duration, volume, isMuted};
 }

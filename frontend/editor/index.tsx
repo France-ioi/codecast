@@ -54,7 +54,8 @@ export const initialStateEditor = {
     waveform: new Float32Array(),
     playerReady: false,
     data: null as any,
-    trim: initialStateTrimSaving
+    trim: initialStateTrimSaving,
+    isMuted: false,
 };
 
 export default function(bundle: Bundle) {

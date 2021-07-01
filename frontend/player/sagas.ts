@@ -404,7 +404,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
     while (instantIndex <= nextInstantIndex) {
         let instant = instants[instantIndex];
         if (instant.hasOwnProperty('mute')) {
-            yield put({type: ActionTypes.PlayerMutedChanged, payload: {isMuted: instant.mute}});
+            yield put({type: ActionTypes.PlayerEditorMutedChanged, payload: {isMuted: instant.mute}});
         }
         if (instant.hasOwnProperty('jump')) {
             // @ts-ignore
