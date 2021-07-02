@@ -292,6 +292,8 @@ function* replaySaga(app: App, {type, payload}) {
     let audioTime = player.audioTime;
     let instant = player.current;
 
+    console.log('ici replay saga', type);
+
     if (type === ActionTypes.PlayerStart && !player.isReady) {
         /* Prevent starting playback until ready.  Should perhaps wait until
            preparation is done, for autoplay. */
@@ -332,6 +334,8 @@ function* replaySaga(app: App, {type, payload}) {
     }
 
     if (type === ActionTypes.PlayerSeek) {
+        let start = window.performance.now();
+
         if (!isPlaying) {
             /* The stepper is disabled before a seek-while-paused, as it could be
                waiting on I/O. */
@@ -349,9 +353,11 @@ function* replaySaga(app: App, {type, payload}) {
         }
 
         audio.currentTime = audioTime / 1000;
+        console.log(`SEEK execution time: ${window.performance.now() - start} ms`);
         if (!isPlaying) {
             return;
         }
+
         /* fall-through for seek-during-playback, which is handled by the
            periodic update loop */
     }

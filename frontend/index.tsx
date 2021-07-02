@@ -4,6 +4,7 @@ import url from 'url';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
+import log from 'loglevel';
 import 'rc-slider/assets/index.css?global';
 import {AppStore, AppStoreReplay} from './store';
 import {Bundle, link} from './linker';
@@ -35,6 +36,7 @@ import {EnhancedStore} from "@reduxjs/toolkit";
  * Search for "TODO: Immer:" to find the reason.
  */
 setAutoFreeze(false);
+log.setLevel('trace');
 
 interface Codecast {
     store: AppStore,
@@ -96,7 +98,7 @@ const {store, scope, finalize, start} = link(function(bundle: Bundle) {
     if (process.env['NODE_ENV'] === 'development') {
         bundle.addEarlyReducer(function(state: AppStoreReplay, action): void {
             if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
-                console.log('action', action);
+                log.debug('action', action);
             }
         });
     }

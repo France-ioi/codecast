@@ -429,7 +429,7 @@ function stepperTaskCancelledReducer(state: AppStore): void {
 }
 
 function stepperResetReducer(state: AppStore, {payload: {stepperState}}): void {
-    state.stepper = stepperState;
+    state.stepper = Object.freeze(stepperState);
 }
 
 function stepperStepReducer(state: AppStore): void {

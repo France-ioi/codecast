@@ -234,7 +234,6 @@ async function executeSingleStep(stepperContext: StepperContext) {
         throw new StepperError('stuck', 'execution cannot proceed');
     }
 
-    console.log('execute single step');
     if (stepperContext.pendingResume) {
         // Check if existing is allowed (if the recording was not paused during delay), and send resume signal to recording
         await stepperContext.interactBefore();
@@ -282,14 +281,11 @@ async function executeSingleStep(stepperContext: StepperContext) {
         /* Update the current position in source code. */
         const position = getNodeStartRow(stepperContext.state);
 
-        console.log('value', stepperContext.unixNextStepCondition);
         if (0 === stepperContext.unixNextStepCondition % 3 && C.outOfCurrentStmt(stepperContext.state.programState)) {
             stepperContext.unixNextStepCondition++;
-            console.log('step up', 1);
         }
         if (1 === stepperContext.unixNextStepCondition % 3 && C.intoNextStmt(stepperContext.state.programState)) {
             stepperContext.unixNextStepCondition++;
-            console.log('step up 2');
         }
 
         if (stepperContext.unixNextStepCondition % 3 === 2 || isStuck(stepperContext.state)) {
