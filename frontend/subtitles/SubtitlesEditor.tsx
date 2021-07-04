@@ -103,15 +103,6 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                         }
                     </div>}
                 </div>
-                {light && <div className="subtitles-save-button">
-                  <Button
-                    onClick={this._save}
-                    icon={IconNames.CLOUD_UPLOAD}
-                    text={getMessage('EDITOR_SUBTITLES_SAVE')}
-                    disabled={!canSave}
-                    intent={Intent.PRIMARY}
-                  />
-                </div>}
                 {light && !!this.props.selected && !!this.props.selected.key && <div className="subtitles-buttons-container">
                     <div className='buttons-bar'>
                         <Files
