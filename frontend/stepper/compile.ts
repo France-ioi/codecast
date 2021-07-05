@@ -100,21 +100,23 @@ export default function(bundle: Bundle) {
                 source
             });
 
+            if (!source.trim()) {
+                yield put({
+                    type: ActionTypes.CompileFailed,
+                    response: {
+                        diagnostics: getMessage('EMPTY_PROGRAM')
+                    }
+                });
+
+                return;
+            }
+
             let response;
             if (platform === 'python') {
-                if (!source.trim()) {
-                    yield put({
-                        type: ActionTypes.CompileFailed,
-                        response: {
-                            diagnostics: getMessage('EMPTY_PROGRAM')
-                        }
-                    });
-                } else {
-                    yield put({
-                        type: ActionTypes.CompileSucceeded,
-                        platform
-                    });
-                }
+                yield put({
+                    type: ActionTypes.CompileSucceeded,
+                    platform
+                });
             } else {
                 state = yield select();
                 try {
