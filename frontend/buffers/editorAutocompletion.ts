@@ -206,7 +206,7 @@ export const getFunctionsInfo = function (functionName, strings, ignoreDoc = fal
     };
 };
 
-export const addAutocompletion = function (getMessage, includeBlocks, customConstants, strings) {
+export const addAutocompletion = function (language, getMessage, includeBlocks, customConstants, strings) {
     let langTools = ace.acequire("ace/ext/language_tools");
 
     // This array will contain all functions for which we must add autocompletion
@@ -247,7 +247,7 @@ export const addAutocompletion = function (getMessage, includeBlocks, customCons
             }
         }
 
-        if (includeBlocks.pythonAdditionalFunctions) {
+        if ('python' === language && includeBlocks.pythonAdditionalFunctions) {
             for (let i = 0; i < includeBlocks.pythonAdditionalFunctions.length; i++) {
                 let func = includeBlocks.pythonAdditionalFunctions[i];
                 completions.push({
@@ -260,70 +260,72 @@ export const addAutocompletion = function (getMessage, includeBlocks, customCons
         }
     }
 
-    // Adding allowed consts (for, while...)
-    let allowedConsts = pythonForbiddenLists(includeBlocks).allowed;
-    hideHiddenWords(allowedConsts);
+    if ('python' === language) {
+        // Adding allowed consts (for, while...)
+        let allowedConsts = pythonForbiddenLists(includeBlocks).allowed;
+        hideHiddenWords(allowedConsts);
 
-    // This blocks are blocks which are not special but must be added
-    let toAdd = ["True", "False"];
-    for (let toAddId = 0; toAddId < toAdd.length; toAddId++) {
-        allowedConsts.push(toAdd[toAddId]);
-    }
+        // This blocks are blocks which are not special but must be added
+        let toAdd = ["True", "False"];
+        for (let toAddId = 0; toAddId < toAdd.length; toAddId++) {
+            allowedConsts.push(toAdd[toAddId]);
+        }
 
-    let keywordi18n = getMessage('KEYWORD').s;
+        let keywordi18n = getMessage('KEYWORD').s;
 
-    // if we want to modify the result of certain keys
-    let specialSnippets = {
-        // list_brackets and dict_brackets are not working
-        list_brackets:
-            {
-                name: "[]",
-                value: "[]",
+        // if we want to modify the result of certain keys
+        let specialSnippets = {
+            // list_brackets and dict_brackets are not working
+            list_brackets:
+                {
+                    name: "[]",
+                    value: "[]",
+                    meta: keywordi18n
+                },
+            dict_brackets: {
+                name: "{}",
+                value: "{}",
                 meta: keywordi18n
             },
-        dict_brackets: {
-            name: "{}",
-            value: "{}",
-            meta: keywordi18n
-        },
-        var_assign: {
-            caption: "x =",
-            snippet: "x = $1",
-            type: "snippet",
-            meta: getMessage('VARIABLE').s,
-        },
-        if: {
-            caption: "if",
-            snippet: "if ${1:condition}:\n\t${2:pass}",
-            type: "snippet",
-            meta: keywordi18n
-        },
-        while: {
-            caption: "while",
-            snippet: "while ${1:condition}:\n\t${2:pass}",
-            type: "snippet",
-            meta: keywordi18n
-        },
-        elif: {
-            caption: "elif",
-            snippet: "elif ${1:condition}:\n\t${2:pass}",
-            type: "snippet",
-            meta: keywordi18n
-        }
-    };
-
-    for (let constId = 0; constId < allowedConsts.length; constId++) {
-
-        if (specialSnippets.hasOwnProperty(allowedConsts[constId])) {
-            // special constant, need to create snippet
-            completions.push(specialSnippets[allowedConsts[constId]]);
-        } else {
-            // basic constant (just printed)
-            completions.push({
-                name: allowedConsts[constId],
-                value: allowedConsts[constId],
+            var_assign: {
+                caption: "x =",
+                snippet: "x = $1",
+                type: "snippet",
+                meta: getMessage('VARIABLE').s,
+            },
+            if: {
+                caption: "if",
+                snippet: "if ${1:condition}:\n\t${2:pass}",
+                type: "snippet",
                 meta: keywordi18n
-            })
+            },
+            while: {
+                caption: "while",
+                snippet: "while ${1:condition}:\n\t${2:pass}",
+                type: "snippet",
+                meta: keywordi18n
+            },
+            elif: {
+                caption: "elif",
+                snippet: "elif ${1:condition}:\n\t${2:pass}",
+                type: "snippet",
+                meta: keywordi18n
+            }
+        };
+
+        for (let constId = 0; constId < allowedConsts.length; constId++) {
+
+            if (specialSnippets.hasOwnProperty(allowedConsts[constId])) {
+                // special constant, need to create snippet
+                completions.push(specialSnippets[allowedConsts[constId]]);
+            } else {
+                // basic constant (just printed)
+                completions.push({
+                    name: allowedConsts[constId],
+                    value: allowedConsts[constId],
+                    meta: keywordi18n
+                })
+            }
         }
     }
 
