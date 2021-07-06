@@ -7,7 +7,7 @@
 
 */
 
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 import {all, call, select, take} from 'redux-saga/effects';
 import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay} from "../store";

@@ -1,6 +1,6 @@
 import {parse as P, text as PT} from 'bennu';
 import {stream} from 'nu-stream';
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 import {StepperContext} from "../api";
 
 /* Generator that iterates over the elements of the string argument. */

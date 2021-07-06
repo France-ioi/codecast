@@ -1,5 +1,5 @@
 import {call, put, select} from 'redux-saga/effects';
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 import {printfBuiltin} from './printf';
 import {scanfBuiltin} from './scanf';
 import {ActionTypes} from "./actionTypes";

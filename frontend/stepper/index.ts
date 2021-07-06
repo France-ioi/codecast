@@ -25,7 +25,7 @@ The stepper's state has the following shape:
 */
 
 import {apply, call, cancel, delay, fork, put, race, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 
 import {
     buildState,

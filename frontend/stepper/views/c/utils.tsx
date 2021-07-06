@@ -5,7 +5,7 @@ extracted from the stepper by the analysis module.
 
 import React from 'react';
 import classnames from 'classnames';
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 
 import {LocalizedError} from '../../../lang';
 

@@ -5,7 +5,7 @@ import {ActionTypes} from "../actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../../store";
 import {getStepper, isStepperInterrupting} from "../selectors";
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 import {StepperControlsType, StepperStepMode} from "../index";
 import {formatTime} from "../../common/utils";
 import {CompileStatus} from "../compile";
