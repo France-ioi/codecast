@@ -43,6 +43,9 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.14.x
+        registry-url: "https://npm.pkg.github.com"
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.PACKAGE_PAT }}
     - name: Cache node modules
       uses: actions/cache@v2
       with:
@@ -51,5 +54,7 @@ jobs:
         restore-keys: v1-npm-deps-
     - name: Install dependencies
       run: yarn install --frozen-lockfile
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.PACKAGE_PAT }}
     - name: Run linter
       run: yarn lint
