@@ -289,7 +289,7 @@ function compileSucceededReducer(state: AppStoreReplay, action): void {
     }
 }
 
-function compileFailedReducer(state: AppStoreReplay, action): void {
+export function compileFailedReducer(state: AppStoreReplay, action): void {
     const {diagnostics} = action.response;
 
     state.compile.status = CompileStatus.Error;
