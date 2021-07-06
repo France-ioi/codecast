@@ -1,6 +1,6 @@
 import React from "react";
 import {NodeCue} from "subtitle";
-import {Button} from "@blueprintjs/core";
+import {Button, Icon} from "@blueprintjs/core";
 import {IconNames} from "@blueprintjs/icons";
 import {formatTimeLong} from "../../common/utils";
 
@@ -27,7 +27,7 @@ export class SubtitlePaneItemEditor extends React.PureComponent<SubtitlePaneItem
         return (
             <div className='subtitles-item-editor'>
                 <div className='subtitles-timestamp'>
-                    <div className="row">
+                    <div className="row" style={{flex: '1 0'}}>
                         <div className='col-sm-6'>
                             <div className="subtitle-item-editor">
                                 <span className='is-narrow'>
@@ -48,7 +48,7 @@ export class SubtitlePaneItemEditor extends React.PureComponent<SubtitlePaneItem
                             <div className="subtitle-item-editor">
                                 <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>
                                 <span className='is-narrow'>
-                                <Button small disabled={!this.props.onRemove} onClick={this._onRemove} icon={IconNames.MINUS} />
+                                <Button small disabled={!this.props.onRemove} onClick={this._onRemove} icon={IconNames.TRASH} />
                             </span>
                             </div>
                         </div>

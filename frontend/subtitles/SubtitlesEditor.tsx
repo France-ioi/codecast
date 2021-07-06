@@ -117,7 +117,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                     <div className='buttons-bar'>
                         <Button
                             onClick={this._reloadSelected}
-                            icon={IconNames.CLOUD_DOWNLOAD}
+                            icon={IconNames.UNDO}
                             disabled={!selected.url} text={getMessage('EDITOR_SUBTITLES_REVERT')}
                         />
                         <Button onClick={this._removeSelected} icon={IconNames.CROSS} text={getMessage('EDITOR_SUBTITLES_REMOVE')}/>

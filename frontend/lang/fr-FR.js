@@ -124,7 +124,7 @@ module.exports = {
 
     USER_SELECT_LOGIN_METHOD: "Choisissez une méthode de connexion :",
 
-    EDITOR_SPLIT: 'Couper',
+    EDITOR_SPLIT: 'Diviser',
     EDITOR_MERGE: 'Fusionner',
     EDITOR_SKIP: 'Passer',
     EDITOR_MUTE: 'Muet',
