@@ -23,6 +23,8 @@ jobs:
         restore-keys: v1-npm-deps-
     - name: Install dependencies
       run: yarn install --frozen-lockfile
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Copy default config file
       run: cp config.json.template config.json
     - name: Build app
