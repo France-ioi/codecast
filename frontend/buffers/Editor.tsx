@@ -200,7 +200,7 @@ class _Editor extends React.PureComponent<EditorProps> {
         const editor = this.editor = ace.edit(this.editorNode);
         if (this.props.hasAutocompletion && this.props.context) {
             const {includeBlocks, strings, constants} = getAutocompletionParameters(this.props.context);
-            addAutocompletion(this.props.getMessage, includeBlocks, constants, strings);
+            addAutocompletion(this.props.mode, this.props.getMessage, includeBlocks, constants, strings);
         }
         const session = this.editor.getSession();
         editor.$blockScrolling = Infinity;
@@ -299,6 +299,11 @@ class _Editor extends React.PureComponent<EditorProps> {
             }
             if (prevProps.theme !== this.props.theme) {
                 this.editor.setTheme(`ace/theme/${this.props.theme || 'github'}`);
+            }
+
+            if (this.props.hasAutocompletion && this.props.context && prevProps.mode !== this.props.mode) {
+                const {includeBlocks, strings, constants} = getAutocompletionParameters(this.props.context);
+                addAutocompletion(this.props.mode, this.props.getMessage, includeBlocks, constants, strings);
             }
         }
     };

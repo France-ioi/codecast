@@ -63,7 +63,7 @@
     "node-range": "^0.1.0",
     "nu-stream": "^3.3.1",
     "packrattle": "^4.1.0",
-    "persistent-c": "^11.3.0",
+    "@france-ioi/persistent-c": "11.2.8",
     "pretty-error": "^3.0.3",
     "process": "^0.11.10",
     "pug": "^3.0.2",

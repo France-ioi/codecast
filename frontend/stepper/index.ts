@@ -25,7 +25,7 @@ The stepper's state has the following shape:
 */
 
 import {apply, call, cancel, delay, fork, put, race, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 
 import {
     buildState,
@@ -36,7 +36,7 @@ import {
     StepperContext,
     StepperError
 } from './api';
-import CompileBundle, {CompileStatus} from './compile';
+import CompileBundle, {compileFailedReducer, CompileStatus} from './compile';
 import EffectsBundle from './c/effects';
 
 import DelayBundle from './delay';
@@ -743,7 +743,9 @@ function* stepperStepSaga(app: App, action) {
                 yield put({type: ActionTypes.StepperInterrupted});
             }
             if (ex.condition === 'error') {
-                stepperContext.state.error = ex.message;
+                const response = {diagnostics: ex.message};
+                yield put({type: ActionTypes.CompileFailed, response});
+                // stepperContext.state.error = ex.message;
             }
         }
 
@@ -961,11 +963,13 @@ function postLink(app: App) {
                 if (error.condition === 'interrupt') {
                     replayContext.stepperContext.interrupted = true;
                 }
-                if (error.condition === 'error') {
-                    replayContext.stepperContext.state.error = error.message;
-                }
 
                 replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
+                    if (error.condition === 'error') {
+                        compileFailedReducer(draft, {
+                            diagnostics: error.message,
+                        });
+                    }
                     stepperIdleReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
                 });
 

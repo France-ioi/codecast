@@ -1115,6 +1115,14 @@
   dependencies:
     prop-types "^15.7.2"
 
+"@france-ioi/persistent-c@11.2.8":
+  version "11.2.8"
+  resolved "https://npm.pkg.github.com/download/@france-ioi/persistent-c/11.2.8/6fad52576487be0c84c1c7ebe51c40fb1ba4168860f2094eee1c1c2025831584#78cd4a3051ab0e8556e602b32ca78e11372c698e"
+  integrity sha512-nPFgT0U4ep3s57RxJ1M48OcJMnsK2KU1bW20kYU2O+C/yjVWXErhWwZwmOJxFVRzZXk7qab2VDlaCNvxWDZZ/A==
+  dependencies:
+    immutable "^3.7.6"
+    text-encoding-utf-8 "^1.0.1"
+
 "@nicolo-ribaudo/chokidar-2@2.1.8-no-fsevents":
   version "2.1.8-no-fsevents"
   resolved "https://registry.yarnpkg.com/@nicolo-ribaudo/chokidar-2/-/chokidar-2-2.1.8-no-fsevents.tgz#da7c3996b8e6e19ebd14d82eaced2313e7769f9b"
@@ -5867,14 +5875,6 @@ performance-now@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
   integrity sha1-Ywn04OX6kT7BxpMHrjZLSzd8nns=
-
-persistent-c@^11.3.0:
-  version "11.3.0"
-  resolved "https://registry.yarnpkg.com/persistent-c/-/persistent-c-11.3.0.tgz#b2052b5684203084635ac5fe1660300b40ed5d74"
-  integrity sha512-fd1cgPYUx8l651giRJDZPFcE7tUap1v9NLQ3hxewmVgFxKfZmStx4rwVubaga9O+a4FNDvlLUZYgid13wH9Ikg==
-  dependencies:
-    immutable "^3.7.6"
-    text-encoding-utf-8 "^1.0.1"
 
 pick-by-alias@^1.2.0:
   version "1.2.0"

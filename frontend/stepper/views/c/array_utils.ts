@@ -1,4 +1,4 @@
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 import {FibonacciHeap, INode} from '@tyriar/fibonacci-heap';
 import range from 'node-range';
 

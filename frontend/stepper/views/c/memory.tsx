@@ -29,7 +29,7 @@ import Slider from 'rc-slider';
 import {Button, ButtonGroup} from '@blueprintjs/core';
 import classnames from 'classnames';
 import range from 'node-range';
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 import adt from 'adt';
 
 import {evalExpr, getList, getNumber, renderArrow, renderValue} from './utils';
