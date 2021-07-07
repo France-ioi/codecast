@@ -1,4 +1,4 @@
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 import {StepperContext} from "../api";
 
 // not supported:

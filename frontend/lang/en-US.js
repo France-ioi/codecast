@@ -104,9 +104,9 @@ module.exports = {
     CLOSED_CAPTIONS_DOWNLOAD_SELECTED: "download selected subtitles",
     CLOSED_CAPTIONS_SHOW_PANE: "show pane",
     CLOSED_CAPTIONS_SHOW_BAND: "show strip",
-    PLATFORM_SETTING: "Platform: ",
-    PLATFORM_UNIX: "Unix",
-    PLATFORM_ARDUINO: "Arduino",
+    PLATFORM_SETTING: "Language: ",
+    PLATFORM_UNIX: "C (Unix)",
+    PLATFORM_ARDUINO: "C (Arduino)",
     PLATFORM_PYTHON: "Python",
     EMPTY_PROGRAM: "The program is empty.",
 

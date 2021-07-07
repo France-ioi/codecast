@@ -7,22 +7,26 @@
 
 */
 
-import * as C from 'persistent-c';
-import {all, call} from 'redux-saga/effects';
-import {getNewOutput, getNewTerminal} from "./python";
+import * as C from '@france-ioi/persistent-c';
+import {all, call, select, take} from 'redux-saga/effects';
 import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay} from "../store";
 import {initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
+import {ActionTypes as TaskActionTypes} from "../task";
 
 export interface StepperContext {
     state: StepperState,
     interrupted?: boolean,
-    interact: Function | null,
+    interactBefore: Function | null,
+    interactAfter: Function | null,
     resume: Function | null,
     position: any,
     lineCounter: number,
     speed?: number,
+    pendingResume?: boolean,
+    unixNextStepCondition: 0,
+    makeDelay?: boolean,
 }
 
 const stepperApi = {
@@ -72,11 +76,13 @@ export async function buildState(state: AppStoreReplay, replay: boolean = false)
     /* Run until in user code */
     const stepperContext: StepperContext = {
         state: stepperState,
-        interact,
+        interactBefore,
+        interactAfter,
         resume: null,
         position: 0,
         lineCounter: 0,
         speed: state.stepper.speed,
+        unixNextStepCondition: 0,
     } as StepperContext;
 
     if (stepperContext.state.platform === 'python') {
@@ -93,7 +99,11 @@ export async function buildState(state: AppStoreReplay, replay: boolean = false)
         return stepperContext.state;
     }
 
-    function interact({saga}) {
+    function interactBefore() {
+        return Promise.resolve(true);
+    }
+
+    function interactAfter({saga}) {
         return new Promise((resolve, reject) => {
             if (saga) {
                 return reject(new StepperError('error', 'cannot interact in buildState'));
@@ -142,9 +152,9 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, interact: Function): StepperContext {
+export function makeContext(stepper: Stepper, interactBefore: Function, interactAfter: Function): StepperContext {
     /**
-     * We create a new state object here instead of mutatating the state. This is intended.
+     * We create a new state object here instead of mutating the state. This is intended.
      */
 
     const state = stepper.currentStepperState;
@@ -156,25 +166,29 @@ export function makeContext(stepper: Stepper, interact: Function): StepperContex
                 lastAnalysis: Object.freeze(clearLoadedReferences(state.analysis)),
                 controls: resetControls(state.controls)
             },
-            interact,
+            interactBefore,
+            interactAfter,
             resume: null,
             position: getNodeStartRow(state),
             lineCounter: 0,
             speed: stepper.speed,
+            unixNextStepCondition: 0,
         };
     } else {
         return {
             state: {
                 ...state,
                 programState: C.clearMemoryLog(state.programState),
-                lastProgramState: Object.freeze(state.programState),
-                controls: resetControls(state.controls)
+                lastProgramState: {...state.programState},
+                controls: resetControls(state.controls),
             },
-            interact,
+            interactBefore,
+            interactAfter,
             resume: null,
             position: getNodeStartRow(state),
             lineCounter: 0,
             speed: stepper.speed,
+            unixNextStepCondition: 0,
         }
     }
 }
@@ -194,7 +208,9 @@ async function executeEffects(stepperContext: StepperContext, iterator) {
         }
         const name = value[0];
         if (name === 'interact') {
-            lastResult = await stepperContext.interact(value[1] || {});
+            lastResult = await stepperContext.interactAfter(value[1] || {});
+        } else if (name === 'promise') {
+            lastResult = await value[1];
         } else if (name === 'builtin') {
             const builtin = value[1];
             if (!builtinHandlers.has(builtin)) {
@@ -218,65 +234,77 @@ async function executeSingleStep(stepperContext: StepperContext) {
         throw new StepperError('stuck', 'execution cannot proceed');
     }
 
+    console.log('execute single step');
+    if (stepperContext.pendingResume) {
+        // Check if existing is allowed (if the recording was not paused during delay), and send resume signal to recording
+        await stepperContext.interactBefore();
+        stepperContext.pendingResume = false;
+    }
+
     if (stepperContext.state.platform === 'python') {
-        window.currentPythonRunner._input = stepperContext.state.input;
-        window.currentPythonRunner._inputPos = stepperContext.state.inputPos;
-        window.currentPythonRunner._terminal = stepperContext.state.terminal;
-        window.currentPythonRunner._interact = stepperContext.interact;
-
-        await window.currentPythonRunner.runStep();
-
-        /**
-         * In player mode, empty _futureInputValue after it has been used.
-         */
-        if (window.currentPythonRunner._futureInputValue && window.currentPythonRunner._futureInputValue.value) {
-            window.currentPythonRunner._futureInputValue = null;
-        }
-
-        const newOutput = getNewOutput(stepperContext.state, window.currentPythonRunner._printedDuringStep);
-        const newInput = window.currentPythonRunner._input;
-        const newInputPos = window.currentPythonRunner._inputPos;
-
-        // Warning : The interact event retrieves the state from the global state again.
-        // It means : we need to pass the changes so it can update it.
-        await stepperContext.interact({
-            position: 0,
-            output: newOutput,
-            //terminal: newTerminal,
-            inputPos: newInputPos,
-            input: newInput
+        let finished = false;
+        const promise = window.currentPythonRunner.runStep();
+        promise.then(() => {
+            finished = true;
         });
 
-        const newTerminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
-        window.currentPythonRunner._terminal = newTerminal;
+        let i = 0;
+        while (!finished) {
+            await delay(0);
+            if (!finished) {
+                console.log('DO INTERACT WAITING FINISH');
+                await stepperContext.interactAfter({
+                    saga: function* () {
+                        const inputNeeded = yield select((state: AppStore) => state.task.inputNeeded);
+                        console.log('here saga', inputNeeded);
+                        if (inputNeeded) {
+                            yield take(TaskActionTypes.TaskInputEntered);
+                            console.log('input entered');
+                        }
+                    },
+                });
+                console.log('AFTER INTERACT');
+            }
+            i++;
+            if (i > 100) break;
+        }
 
-        // Put the output and terminal again so it works with the replay too.
-        stepperContext.state.output = newOutput;
-        stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
-
-        stepperContext.state.terminal = newTerminal;
+        console.log('FINAL INTERACT');
+        stepperContext.makeDelay = true;
+        await stepperContext.interactAfter({
+            position: 0,
+        });
+        console.log('AFTER FINAL INTERACT');
     } else {
         const effects = C.step(stepperContext.state.programState);
         await executeEffects(stepperContext, effects[Symbol.iterator]());
 
         /* Update the current position in source code. */
         const position = getNodeStartRow(stepperContext.state);
-        if (position !== undefined && position !== stepperContext.position) {
+
+        console.log('value', stepperContext.unixNextStepCondition);
+        if (0 === stepperContext.unixNextStepCondition % 3 && C.outOfCurrentStmt(stepperContext.state.programState)) {
+            stepperContext.unixNextStepCondition++;
+            console.log('step up', 1);
+        }
+        if (1 === stepperContext.unixNextStepCondition % 3 && C.intoNextStmt(stepperContext.state.programState)) {
+            stepperContext.unixNextStepCondition++;
+            console.log('step up 2');
+        }
+
+        if (stepperContext.unixNextStepCondition % 3 === 2 || isStuck(stepperContext.state)) {
+            console.log('do interact');
+            stepperContext.makeDelay = true;
+            stepperContext.unixNextStepCondition = 0;
+            await stepperContext.interactAfter({
+                position
+            });
             stepperContext.position = position;
-            stepperContext.lineCounter += 1;
-
-            if (stepperContext.lineCounter === 20) {
-                await stepperContext.interact({
-                    position
-                });
-
-                stepperContext.lineCounter = 0;
-            }
         }
     }
 }
 
-async function stepUntil(stepperContext: StepperContext, stopCond = undefined, speed?: number) {
+async function stepUntil(stepperContext: StepperContext, stopCond = undefined, useSpeed: boolean = false) {
     let stop = false;
     let first = true;
     while (true) {
@@ -299,10 +327,14 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined, s
             return;
         }
 
-        if (!first && null !== speed && undefined !== speed) {
-            await delay(225 - stepperContext.speed);
+        if (!first && useSpeed && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255 && stepperContext.makeDelay) {
+            console.log('exec start delay');
+            stepperContext.makeDelay = false;
+            await delay(255 - stepperContext.speed);
         }
+
         await executeSingleStep(stepperContext);
+
         first = false;
     }
 }
@@ -387,10 +419,10 @@ async function stepOver(stepperContext: StepperContext) {
     }
 }
 
-export async function performStep(stepperContext: StepperContext, mode, speed?: number) {
+export async function performStep(stepperContext: StepperContext, mode, useSpeed: boolean = false) {
     switch (mode) {
         case 'run':
-            await stepUntil(stepperContext, undefined, speed);
+            await stepUntil(stepperContext, undefined, useSpeed);
             break;
         case 'into':
             await stepInto(stepperContext);

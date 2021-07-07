@@ -5,14 +5,18 @@ import {AppStore} from "../../store";
 //TODO: Handle multiples libraries at once.
 // For now, we only use 1 library
 export class QuickAlgoLibraries {
-    libraries: QuickAlgoLibrary[] = [];
+    libraries: {[name: string]: QuickAlgoLibrary} = {};
 
-    addLibrary(library: QuickAlgoLibrary) {
-        this.libraries.push(library);
+    addLibrary(library: QuickAlgoLibrary, name: string) {
+        this.libraries[name] = library;
     }
 
-    getContext(): QuickAlgoLibrary {
-        return this.libraries.length ? this.libraries[0] : null;
+    getContext(name: string = null): QuickAlgoLibrary {
+        if (name in this.libraries) {
+            return this.libraries[name];
+        }
+
+        return Object.keys(this.libraries).length ? this.libraries[Object.keys(this.libraries)[0]] : null;
     }
 
     reset(taskInfos = null, appState: AppStore = null) {
@@ -24,13 +28,13 @@ export class QuickAlgoLibraries {
     }
 
     applyOnLibraries(method, args) {
-        for (let library of this.libraries) {
+        for (let library of Object.values(this.libraries)) {
             library[method].apply(library, args);
         }
     }
 
     getVisualization() {
-        for (let library of this.libraries) {
+        for (let library of Object.values(this.libraries)) {
             if (library.getComponent()) {
                 return library.getComponent();
             }
@@ -41,7 +45,7 @@ export class QuickAlgoLibraries {
 
     getSagas(app: App) {
         const sagas = [];
-        for (let library of this.libraries) {
+        for (let library of Object.values(this.libraries)) {
             if (library.getSaga(app)) {
                 sagas.push(library.getSaga(app));
             }
@@ -74,7 +78,7 @@ export class QuickAlgoLibrary {
         this.display = display;
         this.infos = infos;
         this.nbCodes = 1; // How many different codes the user can edit
-        this.nbNodes = 1; // How many nodes will be executing programs
+        this.nbNodes = 1; // How many nodes will be executing programs, for QuickPi distributed
 
         // Properties we expect the context to have
         this.strings = {};
@@ -141,6 +145,8 @@ export class QuickAlgoLibrary {
         // but we handle the speed delay in an upper level
         if (this.runner) {
             this.runner.returnCallback(callback, value);
+        } else {
+            callback(value);
         }
     };
 

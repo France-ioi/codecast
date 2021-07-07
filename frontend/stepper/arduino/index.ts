@@ -14,7 +14,7 @@ In the stepper state:
 
 import range from 'node-range';
 import {call, put, select} from 'redux-saga/effects';
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 import update from 'immutability-helper';
 import './ace';
 import './style.scss';

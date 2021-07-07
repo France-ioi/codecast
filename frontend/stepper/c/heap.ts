@@ -1,4 +1,4 @@
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 import {AppStore} from "../../store";
 import {StepperContext} from "../api";
 import {StepperState} from "../index";

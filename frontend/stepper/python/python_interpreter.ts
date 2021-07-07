@@ -30,7 +30,6 @@ export default function(context) {
     this._isFinished = false;
     this._printedDuringStep = '';
     this._inputPos = 0;
-    this._interact = null;
     this._futureInputValue = null;
     this._synchronizingAnalysis = false;
     this.onInput = context.onInput;
@@ -454,11 +453,6 @@ export default function(context) {
     this.print = (message) => {
         if (message.trim() === 'Program execution complete') {
             this._isFinished = true;
-            try {
-                this.context.infos.checkEndCondition(this.context, true);
-            } catch (e) {
-                this._onStepError(e);
-            }
         } else {
             if (message) {
                 Sk.builtins['customPrint'](message.trim());

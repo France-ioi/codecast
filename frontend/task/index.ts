@@ -84,10 +84,10 @@ function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
 
     try {
         const printerLib = new PrinterLib(display, levelGridInfos);
-        quickAlgoLibraries.addLibrary(printerLib);
+        quickAlgoLibraries.addLibrary(printerLib, 'printer');
     } catch (e) {
         const defaultLib = new QuickAlgoLibrary(display, levelGridInfos);
-        quickAlgoLibraries.addLibrary(defaultLib);
+        quickAlgoLibraries.addLibrary(defaultLib, 'default');
     }
 
     const testData = getTaskTest();
@@ -131,10 +131,6 @@ export default function (bundle: Bundle) {
             if (!recorderState.status) {
                 yield put({type: RecorderActionTypes.RecorderPrepare});
             }
-        });
-
-        yield takeEvery(taskSuccess.type, function* () {
-            yield put({type: StepperActionTypes.StepperExit});
         });
     });
 

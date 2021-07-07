@@ -5,7 +5,7 @@ import {ActionTypes} from "../actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../../store";
 import {getStepper, isStepperInterrupting} from "../selectors";
-import * as C from 'persistent-c';
+import * as C from '@france-ioi/persistent-c';
 import {StepperControlsType, StepperStepMode} from "../index";
 import {formatTime} from "../../common/utils";
 import {CompileStatus} from "../compile";
@@ -43,6 +43,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     const {controls, showStepper, platform} = state.options;
     const compileStatus = state.compile.status;
     const layoutType = state.layout.type;
+    const inputNeeded = state.task.inputNeeded;
 
     let showCompile = false, showControls = false, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
@@ -102,7 +103,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
         } else if (status === 'running') {
             showEdit = true;
             showControls = true;
-            canInterrupt = enabled && !isStepperInterrupting(state);
+            canInterrupt = enabled && !isStepperInterrupting(state) && !inputNeeded;
         }
     }
 
@@ -322,7 +323,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
             return;
         }
         await this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
-        await this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run, speed: this.props.speed}});
+        await this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run, useSpeed: true}});
     };
     onStepExpr = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Expr}});
     onStepInto = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into}});
@@ -381,15 +382,16 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
     };
     onChangeSpeed = (speed) => this.props.dispatch({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
 
-    compileIfNecessary = async () => {
-        if (this.props.showCompile) {
-            await this.props.dispatch({type: ActionTypes.Compile, payload: {}});
-            if (this.props.compileStatus === CompileStatus.Error) {
-                return false;
+    compileIfNecessary = () => {
+        return new Promise<boolean>((resolve) => {
+            if (this.props.showCompile) {
+                this.props.dispatch({type: ActionTypes.CompileWait, payload: {callback: (result) => {
+                    resolve(result);
+                }}});
+            } else {
+                resolve(true);
             }
-        }
-
-        return true;
+        });
     };
 }
 
