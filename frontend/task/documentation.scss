@@ -1,13 +1,15 @@
 .documentation {
   border-left: solid 1px #e7e7e7;
   height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
 
   .documentation-header, .documentation-category-title {
     display: flex;
-    height: 70px;
+    min-height: 70px;
     align-items: center;
+    border-bottom: solid 1px #e7e7e7;
     h2 {
       flex: 1 0;
       font-size: 22px !important;
@@ -18,9 +20,12 @@
   .documentation-tabs {
     display: flex;
     background: #efefef;
-    height: 50px;
+    min-height: 50px;
     align-items: center;
     justify-content: center;
+    @include mobile {
+      display: none;
+    }
     .documentation-tab {
       flex: 1 0;
       color: #7c7c7c;
@@ -46,9 +51,37 @@
           background: #fff;
           border-radius: 5px;
           height: 100%;
-          margin-top: 8px;
+          margin-top: 5px;
         }
       }
+    }
+  }
+
+  .documentation-tab-left {
+    &:first-child {
+      margin-top: .75rem;
+    }
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    height: 50px;
+    position: relative;
+    color: #7c7c7c;
+    &.is-active {
+      background-color: $primary;
+      color: white;
+      font-weight: bold;
+      .bp3-icon {
+        color: white;
+      }
+    }
+    .bp3-icon {
+      color: $primary;
+      margin-right: 5px;
+    }
+    .documentation-tab-title {
+      display: flex;
+      align-items: center;
     }
   }
 
@@ -90,10 +123,16 @@
 
   .documentation-category-title {
     border-bottom: solid 1px #e7e7e7;
+    @include mobile {
+      display: none;
+    }
   }
 
   .documentation-content {
     padding: 1rem 2rem;
+    @include mobile {
+      padding: 1rem;
+    }
     flex: 1 0;
 
     .documentation-viewer-content {
@@ -134,5 +173,87 @@
   }
   .documentation-close:after {
     transform: rotate(-45deg);
+  }
+
+  .documentation-body {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    .documentation-menu {
+      flex-basis: 33%;
+      max-width: 400px;
+      border-right: solid 1px #e7e7e7;
+      @include mobile {
+        display: none;
+      }
+    }
+    .documentation-aside {
+      padding: 0 0 0 1rem;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      @include mobile {
+        padding: 0;
+      }
+    }
+  }
+
+  &.is-big {
+    .documentation-tabs {
+      display: none;
+    }
+  }
+
+  &.is-small {
+    .documentation-menu {
+      display: none;
+    }
+  }
+
+  .documentation-language-selector {
+    display: flex;
+    align-items: center;
+    margin-right: 1rem;
+    @include mobile {
+      display: none;
+    }
+  }
+
+  .documentation-category-dropdown, .documentation-language-dropdown {
+    align-items: center;
+    min-height: 50px;
+    border-bottom: solid 1px #e7e7e7;
+    display: none;
+    @include mobile {
+      display: flex;
+    }
+  }
+
+  .documentation-select {
+    &.bp3-label {
+      margin-bottom: 0 !important;
+      .bp3-select {
+        margin-top: 0 !important;
+        &:after {
+          display: none !important;
+        }
+      }
+      select {
+        box-shadow: none;
+        color: white;
+        border-radius: 50px;
+        padding: 0 2rem 0 1rem;
+        font-weight: bold !important;
+        outline: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        background: $primary;
+        background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
+        background-repeat: no-repeat;
+        background-position-x: calc(100% - 3px);
+        background-position-y: 4px;
+      }
+    }
   }
 }

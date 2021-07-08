@@ -668,8 +668,8 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
 
     const layout = getAppropriateXmlLayout(layoutProps.layoutType, layoutProps.layoutMobileMode);
     let layoutXml = require('./' + layout).default;
-    const documentationOpen = Screen.Documentation === layoutProps.screen;
-    if (documentationOpen && (layoutProps.layoutType === LayoutType.MobileHorizontal || layoutProps.layoutType === LayoutType.MobileVertical)) {
+    const documentationOpen = Screen.DocumentationSmall === layoutProps.screen || Screen.DocumentationBig === layoutProps.screen;
+    if (documentationOpen && (layoutProps.layoutType === LayoutType.MobileHorizontal || layoutProps.layoutType === LayoutType.MobileVertical || Screen.DocumentationBig === layoutProps.screen)) {
         layoutXml = '<Documentation/>';
     }
 
