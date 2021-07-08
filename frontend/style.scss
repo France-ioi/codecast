@@ -3,7 +3,7 @@
 
 $font-family-sans-serif: 'Open Sans', sans-serif;
 $font-family-monospace: 'Inconsolata';
-$font-family-console: 'Lucida Console', Monaco, sans-serif;
+$font-family-console: 'Lucida Console', Monaco, monospace;
 
 $font-size-base: 1rem;
 $font-size-lg: $font-size-base * 1.12 !default;
@@ -681,10 +681,16 @@ strong.highlight {
 }
 
 .buttons-bar {
-  display: table-row;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  > * {
+    margin: 3px;
+  }
 }
-.buttons-bar > * {
-  display: table-cell;
+
+.subtitles-buttons-container {
+  margin: 10px 0;
 }
 
 /* New layout classes, use. */
@@ -713,7 +719,6 @@ strong.highlight {
 
 /* Subtitles CC button */
 .btn-cc span {
-  background-color: #5c7080;
   color: #fff;
   font-family: monospace;
   border-radius: 3px;
@@ -721,6 +726,13 @@ strong.highlight {
   width: 20px;
   line-height: 16px;
 }
+.btn-cc.has-background span {
+  background-color: #5c7080;
+}
 button.btn-cc {
   width: 30px;
+}
+
+.edit-recording-dialog {
+  width: 600px;
 }

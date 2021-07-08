@@ -21,10 +21,22 @@ export enum EditorSaveState {
     Failure = 'failure'
 }
 
+export enum EditorSavingStep {
+    PrepareUpload = 'prepare_upload',
+    UploadEvents = 'upload_events',
+    AssembleAudio = 'assemble_audio',
+    EncodeAudio = 'encode_audio',
+    UploadAudio = 'upload_audio',
+    UpdateSubtitles = 'update_subtitles',
+    UploadSubtitles = 'upload_subtitles',
+}
+
 export const initialStateEditor = {
     save: {
         state: EditorSaveState.Idle,
-        error: ''
+        error: '',
+        step: null,
+        progress: null,
     },
     unsaved: false,
     controls: 'none' as EditorControl,
@@ -33,6 +45,7 @@ export const initialStateEditor = {
     base: '',
     dataUrl: '',
     playerUrl: '',
+    editorUrl: '',
     canSave: false,
     audioLoaded: false,
     duration: 0,
@@ -41,7 +54,8 @@ export const initialStateEditor = {
     waveform: new Float32Array(),
     playerReady: false,
     data: null as any,
-    trim: initialStateTrimSaving
+    trim: initialStateTrimSaving,
+    isMuted: false,
 };
 
 export default function(bundle: Bundle) {
@@ -53,7 +67,8 @@ export default function(bundle: Bundle) {
         state.editor.base = baseDataUrl;
         state.editor.dataUrl = baseDataUrl;
         state.editor.playerUrl = `${baseUrl}/task?recording=${encodeURIComponent(baseDataUrl)}`;
-        state.editor.canSave = userHasGrant(state.user, baseDataUrl);
+        state.editor.editorUrl = `${baseUrl}/task?recording=${encodeURIComponent(baseDataUrl)}&mode=edit`;
+        state.editor.canSave = true;
     });
 
     bundle.addReducer(CommonActionTypes.LoginFeedback, loginFeedbackReducer);
@@ -95,7 +110,7 @@ export default function(bundle: Bundle) {
 
 function loginFeedbackReducer(state: AppStore): void {
     if (state.editor) {
-        state.editor.canSave = userHasGrant(state.user, state.editor.dataUrl);
+        state.editor.canSave = true;
     }
 }
 

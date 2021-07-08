@@ -20,9 +20,6 @@ export enum ActionTypes {
     SubtitlesItemInserted = 'Subtitles.Item.Inserted',
     SubtitlesItemRemoved = 'Subtitles.Item.Removed',
     SubtitlesItemShifted = 'Subtitles.Item.Shifted',
-    SubtitlesEditorSave = 'Subtitles.Editor.Save',
-    SubtitlesEditorSaveFailed = 'Subtitles.Editor.Save.Failed',
-    SubtitlesEditorSaveSucceeded = 'Subtitles.Editor.Save.Succeeded',
     SubtitlesSave = 'Subtitles.Save',
 
     SubtitlesCleared = 'Subtitles.Cleared',

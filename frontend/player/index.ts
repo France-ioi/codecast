@@ -98,9 +98,15 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.PlayerMutedChanged);
     bundle.addReducer(ActionTypes.PlayerMutedChanged, (state: AppStore, {payload: {isMuted}}) => {
         const audio = state.player.audio;
-        audio.muted = isMuted;
+        state.player.isMuted = isMuted;
+        audio.muted = state.player.isMuted || state.editor.isMuted;
+    });
 
-        state.player.isMuted = audio.muted;
+    bundle.defineAction(ActionTypes.PlayerEditorMutedChanged);
+    bundle.addReducer(ActionTypes.PlayerEditorMutedChanged, (state: AppStore, {payload: {isMuted}}) => {
+        const audio = state.player.audio;
+        state.editor.isMuted = isMuted;
+        audio.muted = state.player.isMuted || state.editor.isMuted;
     });
 
     bundle.defineAction(ActionTypes.PlayerSeek);

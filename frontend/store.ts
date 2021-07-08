@@ -25,6 +25,11 @@ import {PrinterTerminalState} from "./task/libs/printer/printer_terminal_slice";
 
 export type CodecastPlatform = 'python' | 'unix' | 'arduino';
 
+export enum CodecastOptionsMode {
+    Edit = 'edit',
+    Play = 'play',
+}
+
 export interface CodecastOptions {
     language: keyof typeof Languages,
     controls: {},
@@ -33,6 +38,7 @@ export interface CodecastOptions {
     callbackUrl: string,
     examplesUrl: string,
     baseDataUrl: string,
+    mode: CodecastOptionsMode,
     canChangePlatform: boolean,
     authProviders: string[],
     referer: any,

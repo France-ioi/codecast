@@ -85,6 +85,13 @@ export function buildOptions(config, req, start, callback) {
     if (/recorder|editor|statistics|task/.test(start)) {
         if (req.query.recording) {
             options.baseDataUrl = req.query.recording;
+            const {s3Bucket: bucket, uploadPath: folder, id: codecast} = parseCodecastUrl(options.baseDataUrl);
+            options.codecastData = {bucket, folder, codecast};
+            if (req.query.mode === 'edit') {
+                options.mode = 'edit';
+            } else {
+                options.mode = 'play';
+            }
         }
 
         return config.optionsHook(req, options, callback);

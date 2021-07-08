@@ -60,9 +60,9 @@ function playerReadyReducer(state: AppStore, {payload: {baseDataUrl, data}}): vo
 function playerSeekedReducer(state: AppStore, action): void {
     const {seekTo} = action;
 
-    updateCurrentItem(state.subtitles, seekTo);
+    updateCurrentItem(state.subtitles, Math.round(seekTo));
 }
 
 function playerTickReducer(state: AppStore, {payload: {audioTime}}): void {
-    return updateCurrentItem(state.subtitles, audioTime);
+    return updateCurrentItem(state.subtitles, Math.round(audioTime));
 }

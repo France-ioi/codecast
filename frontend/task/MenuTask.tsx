@@ -1,17 +1,16 @@
 import React from 'react';
-import {Dialog, Icon} from '@blueprintjs/core';
+import {Icon} from '@blueprintjs/core';
 import {isLocalMode} from "../utils/app";
-import {LanguageSelection} from "../lang/LanguageSelection";
-import {ExamplePicker} from "../common/ExamplePicker";
-import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {MenuIconsTask} from "./MenuIconsTask";
-import {select} from "redux-saga/effects";
 import {IoMode} from "../stepper/io";
 import {recordingEnabledChange} from "./task_slice";
 import {StepperStatus} from "../stepper";
+import {SettingsDialog} from "../common/SettingsDialog";
+import {EditRecordingDialog} from "../editor/EditRecordingDialog";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {Screen} from "../common/screens";
 
 interface MenuTaskStateToProps {
     getMessage: Function,
@@ -22,6 +21,8 @@ interface MenuTaskStateToProps {
     playerEnabled: boolean,
     ioMode: IoMode,
     ioModeSelect: boolean,
+    editorEnabled: boolean,
+    screen: Screen,
 }
 
 function mapStateToProps(state: AppStore): MenuTaskStateToProps {
@@ -31,6 +32,8 @@ function mapStateToProps(state: AppStore): MenuTaskStateToProps {
     const playerEnabled = !!state.options.baseDataUrl;
     const {mode: ioMode, modeSelect} = state.ioPane;
     const ioModeSelect = modeSelect && (!state.stepper || state.stepper.status === StepperStatus.Clear);
+    const displayEditor = state.editor && state.editor.playerReady;
+    const screen = state.screen;
 
     let offlineDownloadUrl = null;
     if (!isLocalMode() && baseDataUrl) {
@@ -39,6 +42,8 @@ function mapStateToProps(state: AppStore): MenuTaskStateToProps {
 
     return {
         getMessage, platform, canChangePlatform, offlineDownloadUrl, recordingEnabled, playerEnabled, ioMode, ioModeSelect,
+        screen,
+        editorEnabled: displayEditor,
     };
 }
 
@@ -61,11 +66,6 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
         menuOpen: false,
     };
 
-    modeOptions = [
-        {value: IoMode.Split, label: 'IOPANE_MODE_SPLIT'},
-        {value: IoMode.Terminal, label: 'IOPANE_MODE_INTERACTIVE'}
-    ];
-
     private wrapperRef: React.RefObject<HTMLDivElement>;
 
     constructor(props) {
@@ -85,7 +85,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
     }
 
     render() {
-        const {getMessage, platform, canChangePlatform, offlineDownloadUrl, playerEnabled, ioMode, ioModeSelect} = this.props;
+        const {getMessage, playerEnabled, editorEnabled, screen} = this.props;
         const {settingsOpen} = this.state;
 
         return (
@@ -104,52 +104,19 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
                         <Icon icon="record" color="#ff001f"/>
                         <span>{getMessage('MENU_RECORDER')}</span>
                     </div>}
-                    <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={settingsOpen} onClose={this.closeSettings}>
-                        <div className='bp3-dialog-body'>
-                            <div style={{marginBottom: '10px'}}>
-                                <LanguageSelection closeMenu={this.closeSettings}/>
-                            </div>
-                            {canChangePlatform &&
-                                <div>
-                                  <label className='bp3-label'>
-                                      {getMessage('PLATFORM_SETTING')}
-                                    <div className='bp3-select'>
-                                      <select onChange={this.setPlatform} value={platform}>
-                                        <option value='python'>{getMessage('PLATFORM_PYTHON')}</option>
-                                        <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
-                                        <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
-                                      </select>
-                                    </div>
-                                  </label>
-                                </div>
-                            }
-                            {ioModeSelect &&
-                                <div>
-                                  <label className='bp3-label'>
-                                      {getMessage('IOPANE_MODE')}
-                                    <div className='bp3-select'>
-                                      <select value={ioMode} onChange={this.onIOModeChanged}>
-                                          {this.modeOptions.map(p =>
-                                              <option
-                                                  key={p.value}
-                                                  value={p.value}
-                                              >
-                                                  {getMessage(p.label)}
-                                              </option>)}
-                                      </select>
-                                    </div>
-                                  </label>
-                                </div>
-                            }
-                            {offlineDownloadUrl &&
-                                <a href={offlineDownloadUrl} target="_blank" rel="noreferrer">
-                                    {getMessage('DOWNLOAD_OFFLINE')}
-                                </a>
-                            }
-                            <ExamplePicker />
-                        </div>
-                    </Dialog>
+                    {editorEnabled && <div className="menu-item" onClick={this.toggleEditRecording}>
+                      <Icon icon="edit"/>
+                      <span>{getMessage('MENU_EDIT_RECORDING')}</span>
+                    </div>}
                 </div>
+                <SettingsDialog
+                    open={settingsOpen}
+                    onClose={this.closeSettings}
+                />
+                <EditRecordingDialog
+                    open={screen === Screen.EditorSave}
+                    onClose={this.closeEditRecording}
+                />
             </div>
         );
     }
@@ -184,7 +151,11 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
     toggleRecording = () => {
         this.props.dispatch(recordingEnabledChange(!this.props.recordingEnabled));
         this.closeMenu();
-    }
+    };
+
+    toggleEditRecording = () => {
+        this.props.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.EditorSave}});
+    };
 
     closeSettings = () => {
         this.setState({
@@ -198,17 +169,8 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
         });
     };
 
-    setPlatform = (event) => {
-        const platform = event.target.value;
-        this.props.dispatch({
-            type: CommonActionTypes.PlatformChanged,
-            payload: platform
-        });
-    };
-
-    onIOModeChanged = (event) => {
-        const mode = event.target.value;
-        this.props.dispatch({type: IOActionTypes.IoPaneModeChanged, payload: {mode}});
+    closeEditRecording = () => {
+        this.props.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
     };
 }
 

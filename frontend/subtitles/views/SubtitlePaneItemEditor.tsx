@@ -1,6 +1,6 @@
 import React from "react";
 import {NodeCue} from "subtitle";
-import {Button} from "@blueprintjs/core";
+import {Button, Icon} from "@blueprintjs/core";
 import {IconNames} from "@blueprintjs/icons";
 import {formatTimeLong} from "../../common/utils";
 
@@ -26,32 +26,38 @@ export class SubtitlePaneItemEditor extends React.PureComponent<SubtitlePaneItem
 
         return (
             <div className='subtitles-item-editor'>
-                <div className='subtitles-timestamp row'>
-                    <div className='col-sm-6'>
-                        <span className='pull-left'>
-                          <Button small disabled={start <= minStart} onClick={this._onShiftMinus} icon={IconNames.CHEVRON_LEFT}/>
-                        </span>
-                        <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
-                        <span className='pull-right'>
-                            <Button
-                                small
-                                disabled={start === 0 || start >= maxStart}
-                                onClick={this._onShiftPlus}
-                                icon={IconNames.CHEVRON_RIGHT}
-                            />
-                        </span>
-                    </div>
-                    <div className='col-sm-6'>
-                        <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>
-                        <span className='pull-right'>
-                            <Button small disabled={!this.props.onRemove} onClick={this._onRemove} icon={IconNames.MINUS} />
-                        </span>
+                <div className='subtitles-timestamp'>
+                    <div className="row" style={{flex: '1 0'}}>
+                        <div className='col-sm-6'>
+                            <div className="subtitle-item-editor">
+                                <span className='is-narrow'>
+                                  <Button small disabled={start <= minStart} onClick={this._onShiftMinus} icon={IconNames.CHEVRON_LEFT}/>
+                                </span>
+                                <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
+                                <span className='is-narrow'>
+                                    <Button
+                                        small
+                                        disabled={start === 0 || start >= maxStart}
+                                        onClick={this._onShiftPlus}
+                                        icon={IconNames.CHEVRON_RIGHT}
+                                    />
+                                </span>
+                            </div>
+                        </div>
+                        <div className='col-sm-6'>
+                            <div className="subtitle-item-editor">
+                                <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>
+                                <span className='is-narrow'>
+                                <Button small disabled={!this.props.onRemove} onClick={this._onRemove} icon={IconNames.TRASH} />
+                            </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <textarea ref={this.refTextarea} className='subtitles-text' value={text} onChange={this._onChange} rows={6}/>
-                <div className='subtitles-split row'>
+                <div className='subtitles-split'>
                     <p>{formatTimeLong(audioTime)}</p>
-                    <span className='pull-right'>
+                    <span className='is-narrow'>
                         <Button small disabled={offset === 0 || audioTime < start} onClick={this._onInsertBelow} icon={IconNames.PLUS}/>
                     </span>
                 </div>

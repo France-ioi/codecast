@@ -78,7 +78,7 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
     render() {
         const {
             getMessage, canRecord, canPlay, canPause, canStop,
-            isPlayback, playPause, position, duration, screen, user,
+            isPlayback, playPause, position, duration, screen,
         } = this.props;
 
         return (

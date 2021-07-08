@@ -183,6 +183,7 @@ function addBackendRoutes(app, config, store) {
        grants. */
     app.post('/upload', function (req, res) {
         config.getUserConfig(req, function (err, userConfig) {
+            console.log('user config', userConfig);
             selectTarget(userConfig, req.body, function (err, target) {
                 if (err) {
                     return res.json({error: err.toString()});
@@ -198,7 +199,8 @@ function addBackendRoutes(app, config, store) {
                         if (err) return res.json({error: err.toString()});
                         const baseUrl = `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}`;
                         const player_url = `${config.playerUrl}?recording=${encodeURIComponent(baseUrl)}`;
-                        res.json({player_url, events, audio});
+                        const editor_url = `${config.playerUrl}?recording=${encodeURIComponent(baseUrl)}&mode=edit`;
+                        res.json({player_url, editor_url, events, audio});
                     });
                 });
             });
@@ -301,6 +303,7 @@ function addBackendRoutes(app, config, store) {
        The `base` URL must identify an S3 Target in the user's grants. */
     app.post('/save', function (req, res) {
         config.getUserConfig(req, function (err, userConfig) {
+            console.log('user config', userConfig);
             const {s3Bucket, uploadPath, id} = parseCodecastUrl(req.body.base);
             selectTarget(userConfig, {s3Bucket, uploadPath}, function (err, target) {
                 if (err) {
@@ -352,6 +355,8 @@ function addBackendRoutes(app, config, store) {
     app.use('/statistics/api', statisticsApi);
 
     function selectTarget({grants}, {s3Bucket, uploadPath}, callback) {
+        console.log({grants});
+        console.log({s3Bucket, uploadPath});
         for (let grant of grants) {
             if (grant.s3Bucket === s3Bucket && grant.uploadPath === uploadPath) {
                 return callback(null, grant);

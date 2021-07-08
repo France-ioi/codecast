@@ -17,6 +17,7 @@ export enum ActionTypes {
 
     PlayerVolumeChanged = 'Player.Volume.Changed',
     PlayerMutedChanged = 'Player.Muted.Changed',
+    PlayerEditorMutedChanged = 'Player.Editor.Muted.Changed',
 
     PlayerReset = 'Player.Reset',
 }
