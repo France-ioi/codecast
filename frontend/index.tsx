@@ -30,6 +30,7 @@ import {ReplayApi} from "./player/replay";
 import {RecordApi} from "./recorder/record";
 import {StepperApi} from "./stepper/api";
 import {EnhancedStore} from "@reduxjs/toolkit";
+import {ConceptViewer} from "./task/documentation";
 
 /**
  * TODO: This should be removed if possible.
@@ -37,6 +38,7 @@ import {EnhancedStore} from "@reduxjs/toolkit";
  */
 setAutoFreeze(false);
 log.setLevel('trace');
+log.getLogger('performance').setLevel('info');
 
 interface Codecast {
     store: AppStore,
@@ -66,6 +68,10 @@ declare global {
         quickAlgoLibrariesList: any,
         stringsLanguage: any,
         getContext: Function,
+        getConceptViewerBaseConcepts: Function,
+        getConceptsFromBlocks: Function,
+        conceptViewer: ConceptViewer,
+        conceptsFill: Function,
     }
 }
 

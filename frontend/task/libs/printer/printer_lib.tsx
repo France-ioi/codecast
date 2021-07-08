@@ -199,7 +199,6 @@ export class PrinterLib extends QuickAlgoLibrary {
             {id: 'printer_read', name: 'Lire une ligne', url: conceptBaseUrl + '#printer_read', isBase: true}
         ];
 
-
         this.cells = [];
         this.texts = [];
         this.scale = 1;

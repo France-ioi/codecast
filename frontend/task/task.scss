@@ -2,6 +2,7 @@ $primary: #4a90e2;
 
 @import "./layout/layout.scss";
 @import "./controls.scss";
+@import "./documentation.scss";
 
 @mixin mobile {
   @media screen and (max-width: 767px) {
