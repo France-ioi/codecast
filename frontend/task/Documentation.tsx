@@ -170,7 +170,7 @@ export function Documentation() {
                             {'task-instructions' === selectedConcept.id ?
                                 <div className="documentation-task-instructions">
                                     <p>
-                                        Programmez le robot ci-contre pour qu'il atteigne l'étoile, en sautant
+                                        Programmez le robot ci-contre pour qu&#39;il atteigne l&#39;étoile, en sautant
                                         de plateforme en plateforme. Mettez le robot directement sous une plateforme
                                         avant de le faire sauter pour le faire monter sur cette plateforme.
                                     </p>
@@ -178,7 +178,7 @@ export function Documentation() {
                                         Votre programme sera testé sur 2 plateaux différents, et doit fonctionner sur les deux.
                                     </p>
                                     <p>
-                                        Chaque plateforme commence toujours à droite de celle en dessous d'elle.
+                                        Chaque plateforme commence toujours à droite de celle en dessous d&#39;elle.
                                     </p>
                                 </div>
                                 :
