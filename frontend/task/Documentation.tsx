@@ -1,14 +1,16 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Icon} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import {documentationLoad} from "./documentation";
+import {documentationLoad, sendCodeExampleToOpener} from "./documentation";
 import {useAppSelector} from "../hooks";
 import {documentationConceptSelected, DocumentationLanguage, documentationLanguageChanged} from "./documentation_slice";
 import {Screen} from "../common/screens";
 import {select} from "redux-saga/effects";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
+import {ActionTypes} from "../buffers/actionTypes";
+import {documentModelFromString} from "../buffers";
 
 interface DocumentationProps {
     standalone: boolean,
@@ -25,6 +27,8 @@ export function Documentation(props: DocumentationProps) {
     const getMessage = useAppSelector(state => state.getMessage);
     const firstConcepts = concepts.slice(0, 3);
 
+    const [iframeRef, setIframeRef] = useState(null);
+
     let conceptUrl = null;
     if (selectedConcept && selectedConcept.url) {
         const urlSplit = selectedConcept.url.split('#');
@@ -39,6 +43,21 @@ export function Documentation(props: DocumentationProps) {
     useEffect(() => {
         dispatch(documentationLoad(props.standalone));
     }, []);
+
+    const iframeLoaded = () => {
+        const docWindow = iframeRef.contentWindow;
+        const channel = window.Channel.build({window: docWindow, origin: '*', scope: 'test'});
+
+        channel.bind('useCodeExample', (instance, {code, language}) => {
+            if (code) {
+                if (props.standalone) {
+                    sendCodeExampleToOpener(code, language);
+                } else {
+                    useCodeExample(code, language);
+                }
+            }
+        });
+    };
 
     const openDocumentationInNewWindow = () => {
         const searchParams = new URLSearchParams(document.location.search);
@@ -56,6 +75,27 @@ export function Documentation(props: DocumentationProps) {
                 screen,
             };
         });
+
+        channel.bind('useCodeExample', (instance, {code, language}) => {
+            useCodeExample(code, language);
+        });
+    };
+
+    const useCodeExample = (code, language) => {
+        if (!code) {
+            return;
+        }
+
+        dispatch({
+            type: ActionTypes.BufferReset,
+            buffer: 'source',
+            model: documentModelFromString(code),
+        });
+        dispatch({
+            type: CommonActionTypes.PlatformChanged,
+            payload: language,
+        });
+        closeDocumentation();
     };
 
     const openDocumentationBig = () => {
@@ -215,6 +255,8 @@ export function Documentation(props: DocumentationProps) {
                                     className="documentation-viewer-content"
                                     name="viewerContent"
                                     src={conceptUrl}
+                                    onLoad={iframeLoaded}
+                                    ref={setIframeRef}
                                 />
                             }
                         </div>

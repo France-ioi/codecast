@@ -186,7 +186,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         this.setLocalLanguageStrings(localLanguageStrings);
 
         const conceptBaseUrl = (window.location.protocol == 'https:' ? 'https:' : 'http:') + '//'
-            + 'static4.castor-informatique.fr/help/printer.html';
+            + 'static4.castor-informatique.fr/help/printer_codecast.html';
 
         this.conceptList = [
             {

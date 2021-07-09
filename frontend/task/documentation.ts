@@ -13,6 +13,8 @@ import {AppAction} from "../store";
 import {ActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 
+let openerChannel;
+
 export enum DocumentationActionTypes {
     DocumentationLoad = 'documentation/load',
 }
@@ -37,8 +39,11 @@ export const documentationLoad = (standalone: boolean): DocumentationLoadAction 
 
 function getConceptsFromChannel() {
     return new Promise((resolve, reject) => {
-        const channel = window.Channel.build({window: window.opener, origin: '*', scope: 'test'});
-        channel.call({
+        if (!openerChannel) {
+            openerChannel = window.Channel.build({window: window.opener, origin: '*', scope: 'test'});
+        }
+
+        openerChannel.call({
             method: 'getConceptViewerConfigs',
             timeout: 100,
             success: function (configs) {
@@ -49,6 +54,24 @@ function getConceptsFromChannel() {
             }
         });
     })
+}
+
+export function sendCodeExampleToOpener(code, language) {
+    if (!openerChannel) {
+        openerChannel = window.Channel.build({window: window.opener, origin: '*', scope: 'test'});
+    }
+
+    openerChannel.call({
+        method: 'useCodeExample',
+        params: {
+            code,
+            language,
+        },
+        success: function () {
+        },
+        error: function () {
+        }
+    });
 }
 
 function* documentationLoadSaga(standalone: boolean) {
