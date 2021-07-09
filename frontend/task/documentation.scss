@@ -5,6 +5,10 @@
   display: flex;
   flex-direction: column;
 
+  &.is-standalone {
+    height: 100vh;
+  }
+
   .documentation-header, .documentation-category-title {
     display: flex;
     min-height: 70px;
@@ -145,15 +149,15 @@
 
   .documentation-close-container {
     position: relative;
-    width: 50px;
+    width: 40px;
     height: 40px;
   }
 
   .documentation-close {
     position: absolute;
-    top: 4px;
-    width: 32px;
-    height: 32px;
+    top: 8px;
+    width: 24px;
+    height: 24px;
     opacity: 0.3;
     cursor: pointer;
   }
@@ -162,9 +166,9 @@
   }
   .documentation-close:before, .documentation-close:after {
     position: absolute;
-    left: 15px;
+    left: 10px;
     content: ' ';
-    height: 33px;
+    height: 25px;
     width: 2px;
     background-color: #333;
   }
@@ -255,5 +259,10 @@
         background-position-y: 4px;
       }
     }
+  }
+
+  .documentation-new-window {
+    color: $primary;
+    margin-right: .75em;
   }
 }

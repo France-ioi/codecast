@@ -6,7 +6,7 @@ import {AppStore} from "../../../store";
 import {channel} from "redux-saga";
 import {ActionTypes} from "../../../buffers/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
-import {ActionTypes as TaskActionTypes, taskInputEntered, taskReset, TaskResetAction} from "../../index";
+import {TaskActionTypes as TaskActionTypes, taskInputEntered, taskReset, TaskResetAction} from "../../index";
 import {documentModelFromString} from "../../../buffers";
 import taskSlice, {taskInputNeeded, taskSuccess, taskSuccessClear, updateCurrentTest} from "../../task_slice";
 import printerTerminalSlice, {

@@ -18,37 +18,42 @@ import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation";
 
-export enum ActionTypes {
+export enum TaskActionTypes {
     TaskLoad = 'task/load',
+    TaskLoaded = 'task/loaded',
     TaskReset = 'task/reset',
     TaskInputEntered = 'task/inputEntered',
 }
 
 export interface TaskResetAction extends AppAction {
-    type: ActionTypes.TaskReset;
+    type: TaskActionTypes.TaskReset;
     payload: TaskState;
 }
 
 export interface TaskInputEnteredAction extends AppAction {
-    type: ActionTypes.TaskInputEntered;
+    type: TaskActionTypes.TaskInputEntered;
     payload: string;
 }
 
 export const taskLoad = () => ({
-    type: ActionTypes.TaskLoad,
+    type: TaskActionTypes.TaskLoad,
+});
+
+export const taskLoaded = () => ({
+    type: TaskActionTypes.TaskLoaded,
 });
 
 export const taskReset = (
     taskData: TaskState,
 ): TaskResetAction => ({
-    type: ActionTypes.TaskReset,
+    type: TaskActionTypes.TaskReset,
     payload: taskData,
 });
 
 export const taskInputEntered = (
     input: string
 ): TaskInputEnteredAction => ({
-    type: ActionTypes.TaskInputEntered,
+    type: TaskActionTypes.TaskInputEntered,
     payload: input,
 });
 
@@ -112,9 +117,10 @@ export default function (bundle: Bundle) {
     bundle.include(DocumentationBundle);
 
     bundle.addSaga(function* (app: App) {
-        yield takeEvery(ActionTypes.TaskLoad, function* () {
+        yield takeEvery(TaskActionTypes.TaskLoad, function* () {
             yield put(currentLevelChange(1));
             yield call(createContext, quickAlgoLibraries);
+            yield put(taskLoaded());
             const sagas = quickAlgoLibraries.getSagas(app);
             yield fork(function* () {
                 yield all(sagas);

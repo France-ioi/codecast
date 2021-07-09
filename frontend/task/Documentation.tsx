@@ -7,8 +7,14 @@ import {useAppSelector} from "../hooks";
 import {documentationConceptSelected, DocumentationLanguage, documentationLanguageChanged} from "./documentation_slice";
 import {Screen} from "../common/screens";
 import {select} from "redux-saga/effects";
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 
-export function Documentation() {
+interface DocumentationProps {
+    standalone: boolean,
+}
+
+export function Documentation(props: DocumentationProps) {
     const dispatch = useDispatch();
 
     const concepts = useAppSelector(state => state.documentation.concepts);
@@ -31,8 +37,26 @@ export function Documentation() {
     }
 
     useEffect(() => {
-        dispatch(documentationLoad());
+        dispatch(documentationLoad(props.standalone));
     }, []);
+
+    const openDocumentationInNewWindow = () => {
+        const searchParams = new URLSearchParams(document.location.search);
+        searchParams.set('documentation', '1');
+        const documentationUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?' + searchParams.toString();
+
+        const fullscreenWindow = window.open(documentationUrl);
+        const channel = window.Channel.build({window: fullscreenWindow, origin: '*', scope: 'test'});
+
+        channel.bind('getConceptViewerConfigs', () => {
+            return {
+                concepts,
+                selectedConceptId,
+                language: documentationLanguage,
+                screen,
+            };
+        });
+    };
 
     const openDocumentationBig = () => {
         dispatch({
@@ -64,7 +88,7 @@ export function Documentation() {
     };
 
     return (
-        <div className={`documentation ${Screen.DocumentationBig === screen ? 'is-big' : 'is-small'}`}>
+        <div className={`documentation ${Screen.DocumentationBig === screen ? 'is-big' : 'is-small'} ${props.standalone ? 'is-standalone' : ''}`}>
             <div className="documentation-header">
                 <div className="documentation-header-icon">
                     <Icon icon="zoom-in"/>
@@ -81,10 +105,15 @@ export function Documentation() {
                         </div>
                     </label>
                 </div>
-                <div className="documentation-close-container">
+                {!props.standalone && <div className="documentation-new-window">
+                    <a onClick={openDocumentationInNewWindow}>
+                        <FontAwesomeIcon icon={faExternalLinkAlt}/>
+                    </a>
+                </div>}
+                {(!props.standalone || Screen.DocumentationBig === screen) && <div className="documentation-close-container">
                     <div className="documentation-close" onClick={closeDocumentation}>
                     </div>
-                </div>
+                </div>}
             </div>
             <div className="documentation-language-dropdown">
                 <div className="documentation-tabs-menu">
