@@ -14,6 +14,7 @@ import {Screen} from "../common/screens";
 import {User} from "../common/login";
 import {LoginScreen} from "../common/LoginScreen";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {Vumeter} from "../recorder/Vumeter";
 
 interface RecorderControlsTaskStateToProps {
     getMessage: Function,
@@ -79,6 +80,7 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
         const {
             getMessage, canRecord, canPlay, canPause, canStop,
             isPlayback, playPause, position, duration, screen,
+            recorderStatus,
         } = this.props;
 
         return (
@@ -117,6 +119,11 @@ class _RecorderControlsTask extends React.PureComponent<RecorderControlsTaskProp
                 <div className="memory-usage">
                     <MemoryUsage />
                 </div>
+                {recorderStatus === RecorderStatus.Recording &&
+                    <div className="sound-meter">
+                      <Vumeter width={82} height={20} />
+                    </div>
+                }
                 <div className="controls-time">
                     <Icon icon='time'/>
                     <span style={{marginLeft: '4px'}}>

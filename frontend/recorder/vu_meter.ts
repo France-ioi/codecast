@@ -13,10 +13,15 @@ export default function(bundle: Bundle) {
 function* vumeterSaga() {
     let vumeterTask;
     let canvasContext;
+    let canvasWidth;
+    let canvasHeight;
+    let bandHeight = 12;
 
     // @ts-ignore
-    yield takeEvery(ActionTypes.VumeterMounted, function* ({payload: {element}}) {
+    yield takeEvery(ActionTypes.VumeterMounted, function* ({payload: {element, width, height}}) {
         canvasContext = element && element.getContext("2d");
+        canvasWidth = width;
+        canvasHeight = height;
     });
     yield takeEvery(ActionTypes.RecorderStopped, vumeterCleanupSaga);
     // @ts-ignore
@@ -29,7 +34,7 @@ function* vumeterSaga() {
     function* vumeterMonitorSaga(analyser) {
         const vumeterData = new Uint8Array(analyser.frequencyBinCount);
         // Set up the ScriptProcessor to divert all buffers to the worker.
-        periodically(function* () {
+        yield call(periodically,function* () {
             // Get analyser data and update vumeter.
             analyser.getByteFrequencyData(vumeterData);
             let sum = 0, i;
@@ -37,10 +42,15 @@ function* vumeterSaga() {
                 sum += vumeterData[i];
             }
             const average = sum / vumeterData.length;
-            canvasContext.fillStyle = '#dddddd';
-            canvasContext.fillRect(0, 0, 10, 100);
-            canvasContext.fillStyle = '#00ff00';
-            canvasContext.fillRect(0, 100 - average, 10, 100);
+            canvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
+            if (average < 1) {
+                canvasContext.fillStyle = '#e34e4e';
+                canvasContext.font = '16px "Open Sans", sans-serif';
+                canvasContext.fillText('Aucun son', 0, canvasHeight - 4);
+            } else {
+                canvasContext.fillStyle = '#5FE34E';
+                canvasContext.fillRect(0, (canvasHeight - bandHeight) / 2, average * canvasWidth / 100,  bandHeight);
+            }
         });
     }
 

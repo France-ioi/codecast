@@ -1,27 +1,20 @@
-import React from "react";
+import React, {useEffect, useRef} from "react";
 import {ActionTypes} from "./actionTypes";
-import {connect} from "react-redux";
+import {useDispatch} from "react-redux";
 
-interface VumeterDispatchToProps {
-    dispatch: Function
+interface VumeterProps {
+    width: number,
+    height: number,
 }
 
-interface VumeterProps extends VumeterDispatchToProps {
+export function Vumeter(props: VumeterProps) {
+    const canvasRef = useRef();
 
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        dispatch({type: ActionTypes.VumeterMounted, payload: {element: canvasRef.current, width: props.width, height: props.height}});
+    }, []);
+
+    return <canvas ref={canvasRef} className='vumeter' width={props.width} height={props.height}/>;
 }
-
-class _Vumeter extends React.PureComponent<VumeterProps> {
-    _canvas = HTMLCanvasElement = null;
-
-    render () {
-        return <canvas ref={this._refCanvas} id='vumeter' width="10" height="100"></canvas>;
-    }
-    componentDidMount () {
-        this.props.dispatch({type: ActionTypes.VumeterMounted, payload: {element: this._canvas}});
-    }
-    _refCanvas = (el) => {
-        this._canvas = el;
-    };
-}
-
-export const Vumeter = connect()(_Vumeter);
