@@ -46,7 +46,12 @@ export function Documentation(props: DocumentationProps) {
 
     const iframeLoaded = () => {
         const docWindow = iframeRef.contentWindow;
-        const channel = window.Channel.build({window: docWindow, origin: '*', scope: 'test'});
+        const channel = window.Channel.build({window: docWindow, origin: '*', scope: 'snippet'});
+
+        channel.notify({
+            method: 'setupConceptDisplaySnippets',
+            timeout: 50,
+        });
 
         channel.bind('useCodeExample', (instance, {code, language}) => {
             if (code) {
