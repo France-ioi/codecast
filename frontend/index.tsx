@@ -185,12 +185,11 @@ Codecast.start = function(options) {
 
             break;
         case 'player':
-            let audioUrl = options.audioUrl || `${options.baseDataUrl}.mp3`;
             store.dispatch({
                 type: PlayerActionTypes.PlayerPrepare,
                 payload: {
                     baseDataUrl: options.baseDataUrl,
-                    audioUrl: audioUrl,
+                    audioUrl: options.audioUrl,
                     eventsUrl: `${options.baseDataUrl}.json`,
                     data: options.data
                 }

@@ -1,6 +1,5 @@
 import React from 'react';
 import {Icon} from '@blueprintjs/core';
-import {isLocalMode} from "../utils/app";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {MenuIconsTask} from "./MenuIconsTask";
@@ -16,7 +15,6 @@ interface MenuTaskStateToProps {
     getMessage: Function,
     canChangePlatform: boolean,
     platform: string,
-    offlineDownloadUrl: string,
     recordingEnabled: boolean,
     playerEnabled: boolean,
     ioMode: IoMode,
@@ -26,22 +24,17 @@ interface MenuTaskStateToProps {
 }
 
 function mapStateToProps(state: AppStore): MenuTaskStateToProps {
-    const {baseUrl, baseDataUrl, platform, canChangePlatform} = state.options;
+    const {platform, canChangePlatform} = state.options;
     const getMessage = state.getMessage;
     const recordingEnabled = state.task.recordingEnabled;
-    const playerEnabled = !!state.options.baseDataUrl;
+    const playerEnabled = !!(state.options.audioUrl);
     const {mode: ioMode, modeSelect} = state.ioPane;
     const ioModeSelect = modeSelect && (!state.stepper || state.stepper.status === StepperStatus.Clear);
     const displayEditor = state.editor && state.editor.playerReady;
     const screen = state.screen;
 
-    let offlineDownloadUrl = null;
-    if (!isLocalMode() && baseDataUrl) {
-        offlineDownloadUrl = baseUrl + '/offline?recording=' + encodeURIComponent(baseDataUrl);
-    }
-
     return {
-        getMessage, platform, canChangePlatform, offlineDownloadUrl, recordingEnabled, playerEnabled, ioMode, ioModeSelect,
+        getMessage, platform, canChangePlatform, recordingEnabled, playerEnabled, ioMode, ioModeSelect,
         screen,
         editorEnabled: displayEditor,
     };

@@ -20,6 +20,7 @@
     "start": "NODE_ENV=production nodemon --mode production --watch backend --exec npx --no-install babel-node -- backend/server.js",
     "build": "webpack --mode=production --progress --color",
     "build-offline": "BUILD=offline webpack --mode=production --progress --color",
+    "pack-offline": "rm -rf build && yarn run build-offline && zip -r offline.zip build assets bebras-modules/ext/jquery/1.7/jquery.min.js bebras-modules/ext/jschannel/jschannel.js bebras-modules/pemFioi/conceptViewer-1.0-mobileFirst.js",
     "lint": "./node_modules/.bin/eslint frontend/ --ext .tsx,.ts"
   },
   "dependencies": {

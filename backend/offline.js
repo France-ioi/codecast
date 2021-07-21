@@ -65,7 +65,7 @@ export default function (app, config, store) {
 
             const {query} = token;
             const {ownPath, sharedPath} = query;
-            const options = buildCommonOptions('player', query);
+            const options = buildCommonOptions('task', query);
             options.audioUrl = urlJoin(pathReverse(sharedPath), ownPath, "audio.mp3");
 
             request(`${query.recording}.json`, function (err, response, body) {
@@ -82,9 +82,11 @@ export default function (app, config, store) {
                     return res.status(400).send(ex.toString());
                 }
 
-                res.render('offline', {
+                res.render('task', {
                     options,
-                    baseUrl: `${urlJoin(pathReverse(ownPath), sharedPath)}`
+                    rebaseUrl: (url) => {
+                        return `${url}`;
+                    },
                 });
             });
         });
