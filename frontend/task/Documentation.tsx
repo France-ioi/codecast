@@ -261,6 +261,7 @@ export function Documentation(props: DocumentationProps) {
                                     name="viewerContent"
                                     src={conceptUrl}
                                     onLoad={iframeLoaded}
+                                    key={conceptUrl}
                                     ref={setIframeRef}
                                 />
                             }
