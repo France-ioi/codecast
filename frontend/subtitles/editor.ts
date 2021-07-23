@@ -260,7 +260,6 @@ function* subtitlesEditorSaga(state) {
 function* subtitlesSelectedSaga(state, action) {
     /* Trigger loading of subtitles when first selected. */
     const {key, url, text} = action.payload.option;
-    console.log('change selection');
     if (url && !text) {
         yield put({type: ActionTypes.SubtitlesTextReverted, payload: {key, url}});
     } else {

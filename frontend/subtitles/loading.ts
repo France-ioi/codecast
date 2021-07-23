@@ -137,6 +137,19 @@ function* subtitlesLoadFromTextSaga(action) {
 }
 
 function* subtitlesLoadFromUrlSaga(action) {
+    const options = yield select(state => state.options);
+    if (options.data && options.data.subtitlesData && action.payload.key in options.data.subtitlesData) {
+        yield put({
+            type: ActionTypes.SubtitlesLoadSucceeded,
+            payload: {
+                key: action.payload.key,
+                text: action.payload.text,
+                items: options.data.subtitlesData[action.payload.key],
+            }
+        });
+        return;
+    }
+
     yield put({
         type: ActionTypes.SubtitlesLoadStarted,
         payload: {
