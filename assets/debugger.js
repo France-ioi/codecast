@@ -2,7 +2,7 @@
  * Debugger support for skulpt module
  */
 
-var Sk = Sk || {}; //jshint ignore:line
+var Sk = window.Sk || {}; //jshint ignore:line
 
 /**
  * Changes :

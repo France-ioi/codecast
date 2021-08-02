@@ -32,6 +32,9 @@ import {StepperApi} from "./stepper/api";
 import {EnhancedStore} from "@reduxjs/toolkit";
 import {ConceptViewer} from "./task/documentation";
 import {Documentation} from "./task/Documentation";
+import '@france-ioi/skulpt/dist/skulpt.min';
+import '@france-ioi/skulpt/dist/skulpt-stdlib';
+import '../assets/debugger';
 
 /**
  * TODO: This should be removed if possible.
