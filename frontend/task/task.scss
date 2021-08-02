@@ -297,6 +297,15 @@ body {
       border-right: solid 1px black;
     }
 
+    .sound-meter {
+      display: flex;
+      align-items: center;
+      padding-left: 10px;
+      padding-right: 10px;
+      white-space: nowrap;
+      border-right: solid 1px black;
+    }
+
     .player-slider-container {
       display: flex;
       align-items: center;

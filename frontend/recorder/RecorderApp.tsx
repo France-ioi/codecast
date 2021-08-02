@@ -48,7 +48,7 @@ class _RecorderApp extends React.PureComponent<RecorderAppProps> {
                 <div id='page-level-controls'>
                     <div>
                         <MemoryUsage />
-                        <Vumeter />
+                        <Vumeter width={10} height={100}/>
                     </div>
                 </div>
 
