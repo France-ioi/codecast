@@ -370,6 +370,21 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             )
         }
 
+        if (this.props.cur instanceof Sk.builtin.bytes) {
+            const byteToString = (byte: number) => {
+                return String.fromCharCode(byte).match(/^[a-zA-Z0-9]$/) ? String.fromCharCode(byte) : "\\x" + byte.toString(16);
+            };
+
+            return (
+                <React.Fragment>
+                    <span className={classes}>b'{Array.from<number>(this.props.cur.v).map(byteToString).join('')}'</span>
+                    {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
+                        <span className="value-previous">b'{Array.from<number>(this.props.old.v).map(byteToString).join('')}'</span>
+                        : null}
+                </React.Fragment>
+            )
+        }
+
         return (
             <React.Fragment>
                 <span className={classes}>{this.props.cur.v}</span>
