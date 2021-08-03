@@ -385,6 +385,26 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             )
         }
 
+        if (this.props.cur instanceof Sk.builtin.complex) {
+            const complexToString = (complex: {imag: number, real: number}) => {
+                const parts = [
+                    ...(complex.real !== 0 ? [complex.real] : []),
+                    ...(complex.imag !== 0 ? [complex.imag + 'j'] : []),
+                ];
+
+                return parts.length ? parts.join('+') : '0';
+            };
+
+            return (
+                <React.Fragment>
+                    <span className={classes}>{complexToString(this.props.cur)}</span>
+                    {(this.props.old && (this.props.cur.real !== this.props.old.real || this.props.cur.imag !== this.props.old.imag)) ?
+                        <span className="value-previous">{complexToString(this.props.old)}</span>
+                        : null}
+                </React.Fragment>
+            )
+        }
+
         return (
             <React.Fragment>
                 <span className={classes}>{this.props.cur.v}</span>
