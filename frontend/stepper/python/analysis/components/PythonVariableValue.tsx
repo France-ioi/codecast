@@ -457,9 +457,9 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
 
             return (
                 <React.Fragment>
-                    <span className={classes}>b'{Array.from<number>(this.props.cur.v).map(byteToString).join('')}'</span>
+                    <span className={classes}>b&#39;{Array.from<number>(this.props.cur.v).map(byteToString).join('')}&#39;</span>
                     {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
-                        <span className="value-previous">b'{Array.from<number>(this.props.old.v).map(byteToString).join('')}'</span>
+                        <span className="value-previous">b&#39;{Array.from<number>(this.props.old.v).map(byteToString).join('')}&#39;</span>
                         : null}
                 </React.Fragment>
             )
