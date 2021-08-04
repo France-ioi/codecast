@@ -146,10 +146,13 @@ export const analyseSkulptScope = function(suspension: any, lastAnalysis: Skulpt
     const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspVariables)), args);
 
     for (let variableName of variableNames) {
-        const value = suspVariables[variableName];
+        let value = suspVariables[variableName];
 
         if (typeof value === 'function') {
-            continue;
+            if (!value.prototype || !value.prototype.tp$name) {
+                continue;
+            }
+            value = `<class '${value.prototype.tp$name}'>`;
         }
 
         let lastValue = null;

@@ -485,11 +485,22 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             )
         }
 
+        if (this.props.cur.v) {
+            return (
+                <React.Fragment>
+                    <span className={classes}>{this.props.cur.v}</span>
+                    {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
+                        <span className="value-previous">{this.props.old.v}</span>
+                        : null}
+                </React.Fragment>
+            );
+        }
+
         return (
             <React.Fragment>
-                <span className={classes}>{this.props.cur.v}</span>
-                {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
-                    <span className="value-previous">{this.props.old.v}</span>
+                <span className={classes}>{this.props.cur}</span>
+                {(this.props.old && (this.props.cur !== this.props.old)) ?
+                    <span className="value-previous">{this.props.old}</span>
                     : null}
             </React.Fragment>
         );
