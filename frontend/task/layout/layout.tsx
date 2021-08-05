@@ -19,6 +19,9 @@ import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_librairi
 import {Screen} from "../../common/screens";
 import {Documentation} from "../Documentation";
 
+export const ZOOM_LEVEL_LOW = 0.8;
+export const ZOOM_LEVEL_HIGH = 1.5;
+
 interface Dimensions {
     width: number,
     height: number,
@@ -698,6 +701,10 @@ function layoutMobileModeChangedReducer(state: AppStore, {payload: {mobileMode}}
     state.layout.mobileMode = mobileMode;
 }
 
+function layoutZoomLevelChangedReducer(state: AppStore, {payload: {zoomLevel}}) {
+    state.layout.zoomLevel = zoomLevel;
+}
+
 export function makeVisualizationAsPreferred(visualizations: string[], visualization: string): string[] {
     if (-1 !== visualizations.indexOf(visualization)) {
         visualizations.splice(visualizations.indexOf(visualization), 1);
@@ -736,6 +743,7 @@ export interface LayoutState {
     preferredVisualizations: string[], // least preferred at the beginning, most preferred at the end
     type: LayoutType,
     mobileMode: LayoutMobileMode,
+    zoomLevel: number, // 1 is normal
 }
 
 export default function (bundle: Bundle) {
@@ -744,6 +752,7 @@ export default function (bundle: Bundle) {
             preferredVisualizations: [],
             type: LayoutType.Desktop,
             mobileMode: LayoutMobileMode.Instructions,
+            zoomLevel: 1,
         };
     });
 
@@ -752,4 +761,7 @@ export default function (bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.LayoutMobileModeChanged);
     bundle.addReducer(ActionTypes.LayoutMobileModeChanged, layoutMobileModeChangedReducer);
+
+    bundle.defineAction(ActionTypes.LayoutZoomLevelChanged);
+    bundle.addReducer(ActionTypes.LayoutZoomLevelChanged, layoutZoomLevelChangedReducer);
 };
