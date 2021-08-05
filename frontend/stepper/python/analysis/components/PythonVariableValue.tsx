@@ -386,7 +386,7 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             )
         }
 
-        if (this.props.cur.hasOwnProperty('$__iterType')) {
+        if (this.props.cur && this.props.cur.hasOwnProperty('$__iterType')) {
             let old = this.props.old;
             if (old && old.hasOwnProperty('$__iterType')) {
                 old = old.myobj;
@@ -485,7 +485,7 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             )
         }
 
-        if (this.props.cur.v) {
+        if (this.props.cur && this.props.cur.v) {
             return (
                 <React.Fragment>
                     <span className={classes}>{this.props.cur.v}</span>

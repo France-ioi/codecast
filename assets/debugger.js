@@ -337,7 +337,7 @@ Sk.Debugger.prototype.resume = function (resolve, reject) {
         var promise = this.suspension_handler(this.get_active_suspension());
         var self = this;
         promise.then(function (value) {
-            if (value.data && value.data.promise) {
+            if (value && value.data && value.data.promise) {
                 // If waiting for input, wait that it has resolved too before continuing.
                 value.data.promise.then((inputValue) => {
                     // Skulpt is taking the value into the result parameter, so let's put it in !
@@ -345,7 +345,7 @@ Sk.Debugger.prototype.resume = function (resolve, reject) {
 
                     self.success(value, resolve, reject);
                 });
-            } else if (value.hasOwnProperty('_uuid')) {
+            } else if (value && value.hasOwnProperty('_uuid')) {
                 /**
                  * In the case the value is a class, its reference may have changed since the
                  * creation of the Promise, which is done before the call to a method.

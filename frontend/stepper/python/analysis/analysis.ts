@@ -165,7 +165,7 @@ export const analyseSkulptScope = function(suspension: any, lastAnalysis: Skulpt
             }
         }
 
-        variables[variableName] ={
+        variables[Sk.unfixReserved(variableName)] ={
             cur: value,
             old: lastValue
         };
@@ -271,8 +271,8 @@ const getDirectiveVariables = (variables) => {
  */
 const sortArgumentsFirst = (variableNames: string[], args) => {
     return variableNames.sort((a, b) => {
-        const aIsArg = (args.indexOf(a) !== -1);
-        const bIsArg = (args.indexOf(b) !== -1);
+        const aIsArg = (args && args.indexOf(a) !== -1);
+        const bIsArg = (args && args.indexOf(b) !== -1);
 
         if (aIsArg && !bIsArg) {
             return -1;

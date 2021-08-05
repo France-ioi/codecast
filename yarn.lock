@@ -1123,10 +1123,10 @@
     immutable "^3.7.6"
     text-encoding-utf-8 "^1.0.1"
 
-"@france-ioi/skulpt@1.3.2":
-  version "1.3.2"
-  resolved "https://npm.pkg.github.com/download/@france-ioi/skulpt/1.3.2/1233b4b04a6a5352b0fc6be3299887276e629c0e19e34e8df673bc1550cd75e3#2a5732be75d6e47011db9290c3098165b0f9bfa3"
-  integrity sha512-Cd45eFiOVZ7IbRtlJ0s0vJA5uB0udtafMfkikgBEdsgl3s8sV2e6hOHvmnpxm7SmyYFWJlx6786u+q6RmVRGww==
+"@france-ioi/skulpt@1.3.3":
+  version "1.3.3"
+  resolved "https://npm.pkg.github.com/download/@france-ioi/skulpt/1.3.3/2b70c16b39246063679c810de60a017b3575184066b78c7dd61a5730f2bca768#45cd6cb773a7656f25fc4c816f3877a125ff8914"
+  integrity sha512-O5UDpxXh+MCBnFNAb/B1lLf1DrQcBVk3p5IER532YpUluNLfkKlKuaI+WIs/cy/PRsygUD24ghBQFB4WuLT6Gw==
   dependencies:
     jsbi "^3.1.4"
     uuid "^8.2.0"

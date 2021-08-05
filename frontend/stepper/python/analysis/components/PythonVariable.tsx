@@ -32,7 +32,7 @@ export const PythonVariable = (props: PythonVariableProps): JSX.Element => {
     return (
         <span className={classes}>
             <span>
-                <span className="variable-name">{window.Sk.unfixReserved(props.name)}</span>
+                <span className="variable-name">{props.name}</span>
             </span>
             {' = '}
             <span className="vardecl-value">
