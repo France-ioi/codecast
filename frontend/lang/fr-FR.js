@@ -9,6 +9,7 @@ module.exports = {
     MESSAGES: 'Messages',
     ERROR: 'Erreur',
     CLOSE: 'Fermer',
+    NONE: 'Aucun',
     FULLSCREEN: "plein écran",
     EXIT_FULLSCREEN: "sortie de plein-écran",
     SAVE_RECORDING: "Sauvegarder l'enregistrement",
@@ -159,4 +160,6 @@ module.exports = {
     TASK_DOCUMENTATION_INSTRUCTIONS: 'Détails de la mission',
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualisation {number}",
+
+    LAYOUT_TYPE_REQUIRED_LABEL: "Imposer un agencement :",
 };

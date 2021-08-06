@@ -62,6 +62,7 @@ export interface LayoutProps {
     width: number,
     height: number,
     preferredVisualizations: string[],
+    layoutRequiredType: LayoutType,
     layoutType: LayoutType,
     layoutMobileMode: LayoutMobileMode,
     screen: Screen,
@@ -669,7 +670,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         }
     }
 
-    const layout = getAppropriateXmlLayout(layoutProps.layoutType, layoutProps.layoutMobileMode);
+    const layout = layoutProps.layoutRequiredType ? layoutProps.layoutRequiredType + '.xml' : getAppropriateXmlLayout(layoutProps.layoutType, layoutProps.layoutMobileMode);
     let layoutXml = require('./' + layout).default;
     const documentationOpen = Screen.DocumentationSmall === layoutProps.screen || Screen.DocumentationBig === layoutProps.screen;
     if (documentationOpen && (layoutProps.layoutType === LayoutType.MobileHorizontal || layoutProps.layoutType === LayoutType.MobileVertical || Screen.DocumentationBig === layoutProps.screen)) {
@@ -703,6 +704,10 @@ function layoutMobileModeChangedReducer(state: AppStore, {payload: {mobileMode}}
 
 function layoutZoomLevelChangedReducer(state: AppStore, {payload: {zoomLevel}}) {
     state.layout.zoomLevel = zoomLevel;
+}
+
+function layoutRequiredTypeChangedReducer(state: AppStore, {payload: {requiredType}}) {
+    state.layout.requiredType = requiredType;
 }
 
 export function makeVisualizationAsPreferred(visualizations: string[], visualization: string): string[] {
@@ -742,6 +747,7 @@ export enum LayoutMobileMode {
 export interface LayoutState {
     preferredVisualizations: string[], // least preferred at the beginning, most preferred at the end
     type: LayoutType,
+    requiredType?: LayoutType,
     mobileMode: LayoutMobileMode,
     zoomLevel: number, // 1 is normal
 }
@@ -764,4 +770,7 @@ export default function (bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.LayoutZoomLevelChanged);
     bundle.addReducer(ActionTypes.LayoutZoomLevelChanged, layoutZoomLevelChangedReducer);
+
+    bundle.defineAction(ActionTypes.LayoutRequiredTypeChanged);
+    bundle.addReducer(ActionTypes.LayoutRequiredTypeChanged, layoutRequiredTypeChangedReducer);
 };
