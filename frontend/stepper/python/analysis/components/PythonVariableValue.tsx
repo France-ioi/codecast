@@ -485,7 +485,7 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             )
         }
 
-        if (this.props.cur && this.props.cur.v) {
+        if (this.props.cur && undefined !== this.props.cur.v && null !== this.props.cur.v) {
             return (
                 <React.Fragment>
                     <span className={classes}>{this.props.cur.v}</span>
