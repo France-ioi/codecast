@@ -317,8 +317,19 @@ function* subtitlesTextLoadedSaga(state, action) {
 
 function* subtitlesSaveOptionSaga(app: App, action) {
     const state: AppStore = yield select();
-    const {text} = state.subtitles.availableOptions[action.payload.key];
-    const blob = new Blob([text], {type: "text/plain;charset=utf-8"});
+
+    let blobContent;
+    if (state.options.data && state.options.data.subtitlesData && action.payload.key in state.options.data.subtitlesData) {
+        // For offline mode
+        blobContent = stringifySync(state.options.data.subtitlesData[action.payload.key], {
+            format: 'SRT'
+        });
+    } else {
+        const {text} = state.subtitles.availableOptions[action.payload.key];
+        blobContent = text;
+    }
+
+    const blob = new Blob([blobContent], {type: "text/plain;charset=utf-8"});
 
     yield call(FileSaver.saveAs, blob, `${action.payload.key}.srt`);
 }

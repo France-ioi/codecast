@@ -46,6 +46,12 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
             payload: {value: !bandEnabled}
         });
     };
+    const downloadSubtitles = () => {
+        dispatch({
+            type: ActionTypes.SubtitlesOptionSave,
+            payload: {key: loadedKey}
+        });
+    }
 
     return (
         <Dialog icon='menu' title={getMessage('CLOSED_CAPTIONS_TITLE')} isOpen={props.open} onClose={props.onClose}>
@@ -80,7 +86,7 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
                 </div>
                 {isLoaded &&
                     <div style={{textAlign: 'center'}} className="mt-4">
-                        <a href={availableOptions[loadedKey].url} className='bp3-button bp3-small bp3-icon-download'
+                        <a onClick={downloadSubtitles} className='bp3-button bp3-small bp3-icon-download'
                            target='_blank' rel="noreferrer" download>
                             {getMessage('CLOSED_CAPTIONS_DOWNLOAD_SELECTED')}
                         </a>
