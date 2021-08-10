@@ -261,6 +261,7 @@ async function executeSingleStep(stepperContext: StepperContext) {
                             console.log('input entered');
                         }
                     },
+                    progress: false,
                 });
                 console.log('AFTER INTERACT');
             }
