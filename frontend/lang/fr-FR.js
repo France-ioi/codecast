@@ -157,6 +157,7 @@ module.exports = {
     TASK_EDITOR: 'Éditeur',
     TASK_DOCUMENTATION: 'Informations',
     TASK_DOCUMENTATION_INSTRUCTIONS: 'Détails de la mission',
+    TASK_DOCUMENTATION_CODE_EXAMPLES: 'Exemples de code',
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualisation {number}",
 };
