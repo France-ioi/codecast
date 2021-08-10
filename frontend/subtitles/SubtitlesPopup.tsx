@@ -14,6 +14,7 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
     const {loadedKey, loading, lastError, availableOptions, langOptions, paneEnabled, bandEnabled} = useAppSelector(state => state.subtitles);
     const getMessage = useAppSelector(state => state.getMessage);
     const isLoaded = !loading && loadedKey !== 'none';
+    const hasLocalSubtitles = useAppSelector(state => !!(state.options && state.options.data && state.options.data.subtitlesData));
     const busy = !!loading;
 
     const availKeys = Object.keys(availableOptions).sort();
@@ -46,6 +47,12 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
             payload: {value: !bandEnabled}
         });
     };
+    const downloadSubtitles = () => {
+        dispatch({
+            type: ActionTypes.SubtitlesOptionSave,
+            payload: {key: loadedKey},
+        });
+    }
 
     return (
         <Dialog icon='menu' title={getMessage('CLOSED_CAPTIONS_TITLE')} isOpen={props.open} onClose={props.onClose}>
@@ -80,7 +87,7 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
                 </div>
                 {isLoaded &&
                     <div style={{textAlign: 'center'}} className="mt-4">
-                        <a href={availableOptions[loadedKey].url} className='bp3-button bp3-small bp3-icon-download'
+                        <a {...(hasLocalSubtitles ? {onClick: downloadSubtitles} : {href: availableOptions[loadedKey].url})} className='bp3-button bp3-small bp3-icon-download'
                            target='_blank' rel="noreferrer" download>
                             {getMessage('CLOSED_CAPTIONS_DOWNLOAD_SELECTED')}
                         </a>
