@@ -17,6 +17,7 @@ export default function (app, config, store) {
         const manifestUrl = editURL(config.baseUrl, function (obj) {
             obj.pathname = urlJoin(obj.pathname, 'offline/manifest');
             obj.query.recording = baseUrl;
+            obj.query.date = Date.now(); // This avoids going through archive builder cache as its hash key is generated based on manifest url
         });
 
         const builderUrl = editURL(config.builderUrl, function (obj) {
