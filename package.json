@@ -20,7 +20,7 @@
     "start": "NODE_ENV=production nodemon --mode production --watch backend --exec npx --no-install babel-node -- backend/server.js",
     "build": "webpack --mode=production --progress --color",
     "build-offline": "BUILD=offline webpack --mode=production --progress --color",
-    "pack-offline": "rm -rf build && yarn run build-offline && zip -r offline.zip build assets bebras-modules/ext/jquery/1.7/jquery.min.js bebras-modules/ext/jschannel/jschannel.js bebras-modules/pemFioi/conceptViewer-1.0-mobileFirst.js",
+    "pack-offline": "rm -rf build && yarn run build-offline && zip -r offline.zip build assets",
     "lint": "./node_modules/.bin/eslint frontend/ --ext .tsx,.ts"
   },
   "dependencies": {
@@ -30,6 +30,7 @@
     "@fortawesome/fontawesome-svg-core": "^1.2.35",
     "@fortawesome/free-solid-svg-icons": "^5.15.3",
     "@fortawesome/react-fontawesome": "^0.1.14",
+    "@france-ioi/persistent-c": "11.2.8",
     "@reduxjs/toolkit": "^1.5.1",
     "@tyriar/fibonacci-heap": "^2.0.9",
     "adt": "^0.7.2",
@@ -64,7 +65,6 @@
     "node-range": "^0.1.0",
     "nu-stream": "^3.3.1",
     "packrattle": "^4.1.0",
-    "@france-ioi/persistent-c": "11.2.8",
     "pretty-error": "^3.0.3",
     "process": "^0.11.10",
     "pug": "^3.0.2",
@@ -118,6 +118,7 @@
     "@typescript-eslint/eslint-plugin": "^4.19.0",
     "@typescript-eslint/parser": "^4.19.0",
     "babel-loader": "8.2.2",
+    "copy-webpack-plugin": "^9.0.1",
     "css-loader": "^5.1.1",
     "eslint": "^7.22.0",
     "eslint-plugin-react": "^7.23.1",

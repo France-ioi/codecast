@@ -4,7 +4,7 @@ import * as ace from 'brace';
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {addAutocompletion} from "./editorAutocompletion";
-import {getAutocompletionParameters} from '../task';
+import {AutocompletionParameters, getAutocompletionParameters} from '../task';
 import {LayoutType} from "../task/layout/layout";
 import {quickAlgoLibraries, QuickAlgoLibrary} from "../task/libs/quickalgo_librairies";
 
@@ -14,13 +14,18 @@ interface EditorStateToProps {
     getMessage: Function,
     context: QuickAlgoLibrary,
     layoutType: LayoutType,
+    autocompletionParameters: AutocompletionParameters,
 }
 
 function mapStateToProps(state: AppStore): EditorStateToProps {
+    const context = quickAlgoLibraries.getContext();
+    const autocompletionParameters = context ? getAutocompletionParameters(context, state.task.currentLevel) : null;
+
     return {
         getMessage: state.getMessage,
-        context: quickAlgoLibraries.getContext(),
+        context,
         layoutType: state.layout.type,
+        autocompletionParameters,
     };
 }
 
@@ -198,8 +203,8 @@ class _Editor extends React.PureComponent<EditorProps> {
 
     componentDidMount() {
         const editor = this.editor = ace.edit(this.editorNode);
-        if (this.props.hasAutocompletion && this.props.context) {
-            const {includeBlocks, strings, constants} = getAutocompletionParameters(this.props.context);
+        if (this.props.hasAutocompletion && this.props.autocompletionParameters) {
+            const {includeBlocks, strings, constants} = this.props.autocompletionParameters;
             addAutocompletion(this.props.mode, this.props.getMessage, includeBlocks, constants, strings);
         }
         const session = this.editor.getSession();
@@ -301,8 +306,8 @@ class _Editor extends React.PureComponent<EditorProps> {
                 this.editor.setTheme(`ace/theme/${this.props.theme || 'github'}`);
             }
 
-            if (this.props.hasAutocompletion && this.props.context && prevProps.mode !== this.props.mode) {
-                const {includeBlocks, strings, constants} = getAutocompletionParameters(this.props.context);
+            if (this.props.hasAutocompletion && this.props.autocompletionParameters && prevProps.mode !== this.props.mode) {
+                const {includeBlocks, strings, constants} = this.props.autocompletionParameters;
                 addAutocompletion(this.props.mode, this.props.getMessage, includeBlocks, constants, strings);
             }
         }

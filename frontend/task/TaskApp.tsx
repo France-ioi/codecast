@@ -49,7 +49,10 @@ export function TaskApp() {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(taskLoad());
+        // Wait that the html is loaded before we create the context because some of them use jQuery to select elements
+        setTimeout(() => {
+            dispatch(taskLoad());
+        });
 
         if (options.audioUrl) {
             if (CodecastOptionsMode.Edit === options.mode) {

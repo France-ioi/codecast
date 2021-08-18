@@ -67,6 +67,7 @@ declare global {
         __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: any,
         quickAlgoLibraries: any,
         quickAlgoLibrariesList: any,
+        quickAlgoContext: Function,
         stringsLanguage: any,
         getContext: Function,
         getConceptViewerBaseConcepts: Function,
@@ -74,6 +75,8 @@ declare global {
         conceptViewer: ConceptViewer,
         conceptsFill: Function,
         Channel: any,
+        DelayFactory: any,
+        RaphaelFactory: any,
     }
 }
 

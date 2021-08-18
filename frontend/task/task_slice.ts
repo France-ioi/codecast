@@ -1,8 +1,11 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import StringRotationFixture from './fixtures/14_strings_05_rotation';
+import LoopFixture from './fixtures/a19_boucles';
 
 export const taskLevels = ['basic', 'easy', 'medium', 'hard'];
 
 export interface TaskState {
+    currentTask?: any,
     currentLevel?: number,
     recordingEnabled?: boolean,
     state?: any,
@@ -13,6 +16,7 @@ export interface TaskState {
 }
 
 export const taskInitialState = {
+    currentTask: LoopFixture,
     currentLevel: null,
     recordingEnabled: false,
     success: false,
