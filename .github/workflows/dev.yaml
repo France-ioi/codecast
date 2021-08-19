@@ -24,6 +24,8 @@ jobs:
         path: node_modules
         key: v1-npm-deps-${{ hashFiles('yarn.lock') }}
         restore-keys: v1-npm-deps-
+    - name: Fetch git submodules
+      run: git submodule update --init
     - name: Install dependencies
       run: yarn install --frozen-lockfile
       env:
