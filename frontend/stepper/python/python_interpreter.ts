@@ -3,6 +3,8 @@
         Python code runner.
 */
 
+import log from "loglevel";
+
 if (!window.hasOwnProperty('currentPythonContext')) {
     window.currentPythonContext = null;
 }
@@ -341,6 +343,7 @@ export default function(context) {
     };
 
     this.returnCallback = (callback, value) => {
+        log.getLogger('python_interpreter').debug('RETURN CALLBACK', value);
         var primitive = this._createPrimitive(value);
         if (primitive !== Sk.builtin.none.none$) {
             this._resetCallstackOnNextStep = true;
@@ -351,6 +354,7 @@ export default function(context) {
     };
 
     this.waitDelay = (callback, value, delay) => {
+        log.getLogger('python_interpreter').debug('WAIT DELAY', value, delay);
         this._paused = true;
         if (delay > 0) {
             let _noDelay = this.noDelay.bind(this, callback, value);
@@ -361,6 +365,7 @@ export default function(context) {
     };
 
     this.waitEvent = (callback, target, eventName, func) => {
+        log.getLogger('python_interpreter').debug('WAIT EVENT');
         this._paused = true;
         var listenerFunc = null;
         var that = this;
@@ -373,6 +378,7 @@ export default function(context) {
 
     this.waitCallback = (callback) => {
         // Returns a callback to be called once we can continue the execution
+        log.getLogger('python_interpreter').debug('WAIT CALLBACK');
         this._paused = true;
         var that = this;
         return (value) => {
@@ -381,6 +387,7 @@ export default function(context) {
     };
 
     this.noDelay = (callback, value) => {
+        log.getLogger('python_interpreter').debug('NO DELAY');
         var primitive = this._createPrimitive(value);
         if (primitive !== Sk.builtin.none.none$) {
             // Apparently when we create a new primitive, the debugger adds a call to
@@ -389,10 +396,7 @@ export default function(context) {
             this.reportValue(value);
         }
 
-        this._paused = false;
         callback(primitive);
-
-        this._setTimeout(this._continue.bind(this), 10);
     };
 
     this._createPrimitive = (data) => {
@@ -454,7 +458,7 @@ export default function(context) {
         if (message.trim() === 'Program execution complete') {
             this._isFinished = true;
         } else {
-            if (message) {
+            if (message && 'customPrint' in Sk.builtins) {
                 Sk.builtins['customPrint'](message.trim());
             }
             this._printedDuringStep += message;

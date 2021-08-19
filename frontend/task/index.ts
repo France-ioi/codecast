@@ -85,7 +85,6 @@ function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
     if (levelGridInfos.context) {
         const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
         const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
-        console.log({libraryIndex, contextFactory})
         try {
             const contextLib = contextFactory(display, levelGridInfos);
             quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context);
@@ -106,7 +105,6 @@ function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
     }
 
     const testData = getTaskTest(currentTask, currentLevel);
-    console.log('create context', testData);
     yield put(updateCurrentTest(testData));
     quickAlgoLibraries.reset(testData);
 }

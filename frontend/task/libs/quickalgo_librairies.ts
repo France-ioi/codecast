@@ -116,6 +116,8 @@ export class QuickAlgoLibrary {
             }
         }
         this.strings = window.languageStrings;
+
+        return this.strings;
     };
 
     // Import more language strings

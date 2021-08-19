@@ -306,7 +306,9 @@ class _Editor extends React.PureComponent<EditorProps> {
                 this.editor.setTheme(`ace/theme/${this.props.theme || 'github'}`);
             }
 
-            if (this.props.hasAutocompletion && this.props.autocompletionParameters && prevProps.mode !== this.props.mode) {
+            if (this.props.hasAutocompletion && this.props.autocompletionParameters
+                && (prevProps.mode !== this.props.mode || JSON.stringify(prevProps.autocompletionParameters) !== JSON.stringify(this.props.autocompletionParameters))
+            ) {
                 const {includeBlocks, strings, constants} = this.props.autocompletionParameters;
                 addAutocompletion(this.props.mode, this.props.getMessage, includeBlocks, constants, strings);
             }

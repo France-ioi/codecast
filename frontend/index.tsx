@@ -40,6 +40,7 @@ import {Documentation} from "./task/Documentation";
 setAutoFreeze(false);
 log.setLevel('trace');
 log.getLogger('performance').setLevel('info');
+log.getLogger('python_interpreter').setLevel('info');
 
 interface Codecast {
     store: AppStore,
