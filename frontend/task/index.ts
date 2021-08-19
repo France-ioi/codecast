@@ -17,6 +17,8 @@ import taskSlice, {
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation";
+import {ActionTypes} from "./layout/actionTypes";
+import {ZOOM_LEVEL_HIGH} from "./layout/layout";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -127,7 +129,10 @@ export default function (bundle: Bundle) {
             });
         });
 
-        yield takeEvery(recordingEnabledChange.type, function* (payload) {
+        // @ts-ignore
+        yield takeEvery(recordingEnabledChange.type, function* ({payload}) {
+            yield put({type: ActionTypes.LayoutZoomLevelChanged, payload: {zoomLevel: payload ? ZOOM_LEVEL_HIGH : 1}});
+
             if (!payload) {
                 return;
             }

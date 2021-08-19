@@ -9,6 +9,7 @@ module.exports = {
     MESSAGES: 'Messages',
     ERROR: 'Error',
     CLOSE: 'Close',
+    NONE: 'None',
     FULLSCREEN: "fullscreen",
     EXIT_FULLSCREEN: "exit fullscreen",
     SAVE_RECORDING: "Save recording",
@@ -153,4 +154,6 @@ module.exports = {
     TASK_EDITOR: 'Editor',
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualization {number}",
+
+    LAYOUT_TYPE_REQUIRED_LABEL: "Force a layout:",
 };

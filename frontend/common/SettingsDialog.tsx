@@ -9,6 +9,7 @@ import {StepperStatus} from "../stepper";
 import {ActionTypes as CommonActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
 import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
+import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {IoMode} from "../stepper/io";
 
 interface SettingsDialogProps {
@@ -22,6 +23,8 @@ export function SettingsDialog(props: SettingsDialogProps) {
     const {mode: ioMode, modeSelect} = useAppSelector(state => state.ioPane);
     const stepper = useAppSelector(state => state.stepper);
     const ioModeSelect = modeSelect && (!stepper || stepper.status === StepperStatus.Clear);
+    const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
+    const layoutRequiredType = useAppSelector(state => state.layout.requiredType);
 
     let offlineDownloadUrl = null;
     if (!isLocalMode() && baseDataUrl) {
@@ -43,9 +46,25 @@ export function SettingsDialog(props: SettingsDialogProps) {
         dispatch({type: IOActionTypes.IoPaneModeChanged, payload: {mode}});
     };
 
+    const onLayoutRequiredTypeChanged = (event) => {
+        const requiredLayout = event.target.value;
+        dispatch({type: LayoutActionTypes.LayoutRequiredTypeChanged, payload: {requiredType: requiredLayout}});
+    };
+
     const modeOptions = [
         {value: IoMode.Split, label: 'IOPANE_MODE_SPLIT'},
         {value: IoMode.Terminal, label: 'IOPANE_MODE_INTERACTIVE'}
+    ];
+
+    const layoutChoices = [
+        'DefaultLayoutDesktop',
+        'DefaultLayoutTabletVertical',
+        'DefaultLayoutMobileHorizontalEditor',
+        'DefaultLayoutMobileHorizontalInstructions',
+        'DefaultLayoutMobileHorizontalPlayer',
+        'DefaultLayoutMobileVerticalEditor',
+        'DefaultLayoutMobileVerticalInstructions',
+        'DefaultLayoutMobileVerticalPlayer',
     ];
 
     return (
@@ -80,6 +99,25 @@ export function SettingsDialog(props: SettingsDialogProps) {
                                       value={p.value}
                                   >
                                       {getMessage(p.label)}
+                                  </option>)}
+                          </select>
+                        </div>
+                      </label>
+                    </div>
+                }
+                {recordingEnabled &&
+                    <div>
+                      <label className='bp3-label'>
+                          {getMessage('LAYOUT_TYPE_REQUIRED_LABEL')}
+                        <div className='bp3-select'>
+                          <select value={layoutRequiredType} onChange={onLayoutRequiredTypeChanged}>
+                              <option key="null" value={null}>{getMessage('NONE')}</option>
+                              {layoutChoices.map(p =>
+                                  <option
+                                      key={p}
+                                      value={p}
+                                  >
+                                      {p}
                                   </option>)}
                           </select>
                         </div>
