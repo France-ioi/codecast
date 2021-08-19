@@ -461,7 +461,6 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
 
 
     state.task.state = quickAlgoLibraries.getContext() && quickAlgoLibraries.getContext().getCurrentState ? {...quickAlgoLibraries.getContext().getCurrentState()} : {};
-    console.log('PROGRESS', Object.freeze(state.task.state), state.task.state.events[0].content);
     state.stepper.currentStepperState = stepperContext.state;
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;

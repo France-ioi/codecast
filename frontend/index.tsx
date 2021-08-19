@@ -43,6 +43,7 @@ import '../assets/debugger';
 setAutoFreeze(false);
 log.setLevel('trace');
 log.getLogger('performance').setLevel('info');
+log.getLogger('python_interpreter').setLevel('info');
 
 interface Codecast {
     store: AppStore,
@@ -70,6 +71,8 @@ declare global {
         __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: any,
         quickAlgoLibraries: any,
         quickAlgoLibrariesList: any,
+        quickAlgoContext: Function,
+        quickAlgoResponsive: boolean,
         stringsLanguage: any,
         getContext: Function,
         getConceptViewerBaseConcepts: Function,
@@ -77,6 +80,8 @@ declare global {
         conceptViewer: ConceptViewer,
         conceptsFill: Function,
         Channel: any,
+        DelayFactory: any,
+        RaphaelFactory: any,
     }
 }
 
@@ -188,12 +193,11 @@ Codecast.start = function(options) {
 
             break;
         case 'player':
-            let audioUrl = options.audioUrl || `${options.baseDataUrl}.mp3`;
             store.dispatch({
                 type: PlayerActionTypes.PlayerPrepare,
                 payload: {
                     baseDataUrl: options.baseDataUrl,
-                    audioUrl: audioUrl,
+                    audioUrl: options.audioUrl,
                     eventsUrl: `${options.baseDataUrl}.json`,
                     data: options.data
                 }

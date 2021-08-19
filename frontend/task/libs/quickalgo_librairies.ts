@@ -1,4 +1,3 @@
-import {ReactElement} from "react";
 import {App} from "../../index";
 import {AppStore} from "../../store";
 
@@ -73,6 +72,8 @@ export class QuickAlgoLibrary {
     messagePrefixFailure: string;
     messagePrefixSuccess: string;
     linkBack: boolean;
+    delayFactory: any;
+    raphaelFactory: any;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -90,6 +91,10 @@ export class QuickAlgoLibrary {
         this.messagePrefixFailure = '';
         this.messagePrefixSuccess = '';
         this.linkBack = false;
+
+        // These classes are provided by the bebras-modules
+        this.delayFactory = new window.DelayFactory();
+        this.raphaelFactory = new window.RaphaelFactory();
 
         // this.blocklyHelper = {
         //     updateSize: function () {
@@ -111,6 +116,8 @@ export class QuickAlgoLibrary {
             }
         }
         this.strings = window.languageStrings;
+
+        return this.strings;
     };
 
     // Import more language strings
@@ -216,4 +223,10 @@ export class QuickAlgoLibrary {
     onInput(): void {
 
     }
+}
+
+window.quickAlgoResponsive = true;
+
+window.quickAlgoContext = function (display: boolean, infos: any) {
+    return new QuickAlgoLibrary(display, infos);
 }

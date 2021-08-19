@@ -1,5 +1,4 @@
 import {extractLevelSpecific} from "./utils";
-import StringRotation from './fixtures/14_strings_05_rotation';
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {call, put, select, takeEvery, all, fork} from "redux-saga/effects";
@@ -79,33 +78,50 @@ if (!String.prototype.format) {
     }
 }
 
-const subTask = StringRotation;
-const currentLevel = 1;
-
 function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
+    const currentTask = yield select(state => state.task.currentTask);
     const currentLevel = yield select(state => state.task.currentLevel);
-    const levelGridInfos = extractLevelSpecific(subTask.gridInfos, taskLevels[currentLevel]);
+    const levelGridInfos = extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]);
     const display = true;
 
-    try {
-        const printerLib = new PrinterLib(display, levelGridInfos);
-        quickAlgoLibraries.addLibrary(printerLib, 'printer');
-    } catch (e) {
-        const defaultLib = new QuickAlgoLibrary(display, levelGridInfos);
-        quickAlgoLibraries.addLibrary(defaultLib, 'default');
+    if (levelGridInfos.context) {
+        const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
+        const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
+        try {
+            const contextLib = contextFactory(display, levelGridInfos);
+            quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context);
+        } catch (e) {
+            console.error("Cannot create context", e);
+            const defaultLib = new QuickAlgoLibrary(display, levelGridInfos);
+            quickAlgoLibraries.addLibrary(defaultLib, 'default');
+        }
+    } else {
+        try {
+            const printerLib = new PrinterLib(display, levelGridInfos);
+            quickAlgoLibraries.addLibrary(printerLib, 'printer');
+        } catch (e) {
+            console.error("Cannot create context", e);
+            const defaultLib = new QuickAlgoLibrary(display, levelGridInfos);
+            quickAlgoLibraries.addLibrary(defaultLib, 'default');
+        }
     }
 
-    const testData = getTaskTest(currentLevel);
-    console.log('create context', testData);
+    const testData = getTaskTest(currentTask, currentLevel);
     yield put(updateCurrentTest(testData));
     quickAlgoLibraries.reset(testData);
 }
 
-function getTaskTest(currentLevel: number) {
-    return subTask.data[taskLevels[currentLevel]][0];
+function getTaskTest(currentTask: any, currentLevel: number) {
+    return currentTask.data[taskLevels[currentLevel]][0];
 }
 
-export function getAutocompletionParameters (context) {
+export interface AutocompletionParameters {
+    includeBlocks: any,
+    strings: any,
+    constants: any,
+}
+
+export function getAutocompletionParameters (context, currentLevel: number): AutocompletionParameters {
     const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, taskLevels[currentLevel]);
 
     return {
@@ -158,8 +174,8 @@ export default function (bundle: Bundle) {
 
         app.replayApi.on('start', function(replayContext: ReplayContext) {
             replayContext.state.task = {
-                currentLevel,
-                currentTest: getTaskTest(currentLevel),
+                ...replayContext.state.task,
+                currentTest: getTaskTest(replayContext.state.task.currentTask, replayContext.state.task.currentLevel),
                 state: context && context.getCurrentState ? {...context.getCurrentState()} : {},
             };
         });

@@ -109,6 +109,10 @@ function* playerPrepare(app: App, action) {
     context.display = false;
 
     const replayState = {
+        task: {
+            currentTask: state.task.currentTask,
+            currentLevel: state.task.currentLevel,
+        },
         options: {
             platform
         },

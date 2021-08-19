@@ -25,7 +25,7 @@ export function TaskApp() {
     const getMessage = useAppSelector(state => state.getMessage);
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
-    const playerEnabled = !!useAppSelector(state => state.options.baseDataUrl);
+    const playerEnabled = !!useAppSelector(state => state.options.audioUrl);
     const taskSuccess = useAppSelector(state => state.task.success);
     const taskSuccessMessage = useAppSelector(state => state.task.successMessage);
     const player = useAppSelector(state => state.player);
@@ -51,11 +51,12 @@ export function TaskApp() {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(taskLoad());
+        // Wait that the html is loaded before we create the context because some of them use jQuery to select elements
+        setTimeout(() => {
+            dispatch(taskLoad());
+        });
 
-        if (options.baseDataUrl) {
-            let audioUrl = `${options.baseDataUrl}.mp3`;
-
+        if (options.audioUrl) {
             if (CodecastOptionsMode.Edit === options.mode) {
                 dispatch({
                     type: EditorActionTypes.EditorPrepare,
@@ -71,8 +72,9 @@ export function TaskApp() {
                     type: PlayerActionTypes.PlayerPrepare,
                     payload: {
                         baseDataUrl: options.baseDataUrl,
-                        audioUrl: audioUrl,
+                        audioUrl: options.audioUrl,
                         eventsUrl: `${options.baseDataUrl}.json`,
+                        data: options.data
                     }
                 });
             }

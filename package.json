@@ -20,6 +20,7 @@
     "start": "NODE_ENV=production nodemon --mode production --watch backend --exec npx --no-install babel-node -- backend/server.js",
     "build": "webpack --mode=production --progress --color",
     "build-offline": "BUILD=offline webpack --mode=production --progress --color",
+    "pack-offline": "rm -rf build && yarn run build-offline && zip -r offline.zip build assets",
     "lint": "./node_modules/.bin/eslint frontend/ --ext .tsx,.ts"
   },
   "dependencies": {
@@ -118,6 +119,7 @@
     "@typescript-eslint/eslint-plugin": "^4.19.0",
     "@typescript-eslint/parser": "^4.19.0",
     "babel-loader": "8.2.2",
+    "copy-webpack-plugin": "^9.0.1",
     "css-loader": "^5.1.1",
     "eslint": "^7.22.0",
     "eslint-plugin-react": "^7.23.1",

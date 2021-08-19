@@ -125,7 +125,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
                     </div>
                 }
                 {offlineDownloadUrl &&
-                    <a href={offlineDownloadUrl} target="_blank" rel="noreferrer">
+                    <a href={offlineDownloadUrl} target="_blank" rel="noreferrer" className="offline-download-link">
                         {getMessage('DOWNLOAD_OFFLINE')}
                     </a>
                 }
