@@ -223,6 +223,8 @@ export class QuickAlgoLibrary {
     }
 }
 
+window.quickAlgoResponsive = true;
+
 window.quickAlgoContext = function (display: boolean, infos: any) {
     return new QuickAlgoLibrary(display, infos);
 }

@@ -68,6 +68,7 @@ declare global {
         quickAlgoLibraries: any,
         quickAlgoLibrariesList: any,
         quickAlgoContext: Function,
+        quickAlgoResponsive: boolean,
         stringsLanguage: any,
         getContext: Function,
         getConceptViewerBaseConcepts: Function,
