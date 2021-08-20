@@ -29,6 +29,7 @@ import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {isStepperInterrupting} from "./selectors";
+import {checkCompilingCode} from "../task/utils";
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -100,14 +101,15 @@ export default function(bundle: Bundle) {
                 source
             });
 
-            if (!source.trim()) {
+            try {
+                checkCompilingCode(source.trim(), getMessage);
+            } catch (e) {
                 yield put({
                     type: ActionTypes.CompileFailed,
                     response: {
-                        diagnostics: getMessage('EMPTY_PROGRAM')
-                    }
+                        diagnostics: e,
+                    },
                 });
-
                 return;
             }
 
