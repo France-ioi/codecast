@@ -75,6 +75,10 @@ export function checkCompilingCode(code, getMessage) {
     if (context) {
         const availableModules = getAvailableModules(context);
         for (let availableModule of availableModules) {
+            if ('printer' === availableModule) {
+                // Printer lib is optional
+                continue;
+            }
             let match = (new RegExp('from\\s+' + availableModule + '\\s+import\\s+\\*')).exec(code);
             if (null === match) {
                 throw getMessage('PROGRAM_MISSING_LIB').format({line: `<code>from ${availableModule} import *</code>`});

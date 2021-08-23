@@ -9,6 +9,7 @@ export interface TaskState {
     currentTask?: any,
     currentLevel?: number,
     recordingEnabled?: boolean,
+    resetDone?: boolean,
     state?: any,
     success?: boolean,
     successMessage?: string,
@@ -20,6 +21,7 @@ export const taskInitialState = {
     currentTask: SokobanFixture,
     currentLevel: 1,
     recordingEnabled: false,
+    resetDone: true,
     success: false,
     successMessage: null,
     currentTest: null,
@@ -44,6 +46,9 @@ export const taskSlice = createSlice({
             state.success = false;
             state.successMessage = null;
         },
+        taskResetDone(state: TaskState, action: PayloadAction<boolean>) {
+            state.resetDone = action.payload;
+        },
         updateCurrentTest(state: TaskState, action: PayloadAction<object>) {
             if (state.currentTest) {
                 state.currentTest = {
@@ -61,12 +66,12 @@ export const taskSlice = createSlice({
 });
 
 export const {
-    currentLevelChange,
     recordingEnabledChange,
     taskSuccess,
     taskSuccessClear,
     updateCurrentTest,
     taskInputNeeded,
+    taskResetDone,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

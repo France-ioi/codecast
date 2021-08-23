@@ -1,14 +1,14 @@
 import React from "react";
 import {InputOutputVisualization} from "./InputOutputVisualization";
 import {QuickAlgoLibrary} from "../quickalgo_librairies";
-import {call, fork, put, race, select, take, takeEvery} from "redux-saga/effects";
+import {call, cancel, cancelled, fork, put, race, select, take, takeEvery} from "redux-saga/effects";
 import {AppStore} from "../../../store";
 import {channel} from "redux-saga";
 import {ActionTypes} from "../../../buffers/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
-import {TaskActionTypes as TaskActionTypes, taskInputEntered, taskReset, TaskResetAction} from "../../index";
+import {TaskActionTypes as TaskActionTypes, taskInputEntered, TaskResetAction, taskUnload} from "../../index";
 import {documentModelFromString} from "../../../buffers";
-import taskSlice, {taskInputNeeded, taskSuccess, taskSuccessClear, updateCurrentTest} from "../../task_slice";
+import taskSlice, {taskInputNeeded, updateCurrentTest} from "../../task_slice";
 import printerTerminalSlice, {
     printerTerminalInitialState,
     printerTerminalRecordableActions,
@@ -18,7 +18,6 @@ import printerTerminalSlice, {
     terminalPrintLine, terminalReset
 } from "./printer_terminal_slice";
 import {App} from "../../../index";
-import {PlayerInstant} from "../../../player";
 import {addAutoRecordingBehaviour} from "../../../recorder/record";
 import {IoMode} from "../../../stepper/io";
 import {ReplayContext} from "../../../player/sagas";
@@ -168,6 +167,8 @@ const localLanguageStrings = {
         }
     }
 };
+
+let recordApiInit = false;
 
 export class PrinterLib extends QuickAlgoLibrary {
     success: boolean = false;
@@ -695,19 +696,6 @@ export class PrinterLib extends QuickAlgoLibrary {
             }
         });
 
-        // For replay purposes
-        app.replayApi.on('buffer.edit', function(replayContext: ReplayContext, event) {
-            const buffer = event[0];
-            if (inputBufferLibTest === buffer) {
-                const inputValue = replayContext.state.buffers[buffer].model.document.toString();
-                taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({input: inputValue}));
-            }
-            if (outputBufferLibTest === buffer) {
-                const outputValue = replayContext.state.buffers[buffer].model.document.toString();
-                taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({output: outputValue}));
-            }
-        });
-
         yield takeEvery(terminalInputEnter.type, function* (action) {
             const inputValue = yield select((state: AppStore) => state.printerTerminal.lastInput);
 
@@ -717,50 +705,53 @@ export class PrinterLib extends QuickAlgoLibrary {
         });
 
         yield takeEvery(TaskActionTypes.TaskReset, function* (action: TaskResetAction) {
-            const taskData = action.payload;
-            if (!taskData.state) {
-                return;
-            }
-
-            context.reloadState(taskData.state);
+            // const taskData = action.payload;
+            // if (!taskData.state) {
+            //     return;
+            // }
+            //
+            // context.reloadState(taskData.state);
 
             if (context.display) {
                 yield call(context.syncInputOutputBuffers, context);
             }
         });
 
-        addAutoRecordingBehaviour(app, {
-            sliceName: printerTerminalSlice.name,
-            actionNames: printerTerminalRecordableActions,
-            actions: printerTerminalSlice.actions,
-            reducers: printerTerminalSlice.caseReducers,
-            initialState: printerTerminalInitialState,
-        });
+        if (!recordApiInit) {
+            recordApiInit = true;
 
-        app.replayApi.onReset(function* (instant: PlayerInstant) {
-            const taskData = instant.state.task;
-            if (taskData) {
-                yield put(taskReset(taskData));
-                yield put(updateCurrentTest(taskData.currentTest));
-                if (taskData.success) {
-                    yield put(taskSuccess(taskData.successMessage));
-                } else {
-                    yield put(taskSuccessClear());
+            // For replay purposes
+            app.replayApi.on('buffer.edit', function(replayContext: ReplayContext, event) {
+                const buffer = event[0];
+                if (inputBufferLibTest === buffer) {
+                    const inputValue = replayContext.state.buffers[buffer].model.document.toString();
+                    taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({input: inputValue}));
                 }
-                yield put(taskInputNeeded(taskData.inputNeeded));
-            }
-        });
+                if (outputBufferLibTest === buffer) {
+                    const outputValue = replayContext.state.buffers[buffer].model.document.toString();
+                    taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({output: outputValue}));
+                }
+            });
 
-        app.replayApi.on('start', function(replayContext: ReplayContext, event) {
-            const {buffers} = event[2];
-            if (buffers[inputBufferLibTest]) {
-                const inputValue = buffers[inputBufferLibTest].document;
-                taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({input: inputValue}));
-            }
-            if (buffers[outputBufferLibTest]) {
-                const outputValue = buffers[outputBufferLibTest].document;
-                taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({output: outputValue}));
-            }
-        });
+            addAutoRecordingBehaviour(app, {
+                sliceName: printerTerminalSlice.name,
+                actionNames: printerTerminalRecordableActions,
+                actions: printerTerminalSlice.actions,
+                reducers: printerTerminalSlice.caseReducers,
+                initialState: printerTerminalInitialState,
+            });
+
+            app.replayApi.on('start', function(replayContext: ReplayContext, event) {
+                const {buffers} = event[2];
+                if (buffers[inputBufferLibTest]) {
+                    const inputValue = buffers[inputBufferLibTest].document;
+                    taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({input: inputValue}));
+                }
+                if (buffers[outputBufferLibTest]) {
+                    const outputValue = buffers[outputBufferLibTest].document;
+                    taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({output: outputValue}));
+                }
+            });
+        }
     }
 }

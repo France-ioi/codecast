@@ -1,25 +1,30 @@
 import {extractLevelSpecific} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, all, fork} from "redux-saga/effects";
+import {call, put, select, takeEvery, all, fork, cancel} from "redux-saga/effects";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
 import {AppAction} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
-    currentLevelChange,
-    recordingEnabledChange, taskLevels, taskRecordableActions,
-    TaskState,
+    recordingEnabledChange, taskInputNeeded, taskLevels, taskRecordableActions, taskResetDone,
+    TaskState, taskSuccess, taskSuccessClear,
     updateCurrentTest
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation";
+import {original} from "immer";
+import {PlayerInstant} from "../player";
+import {ActionTypes} from "../stepper/actionTypes";
+import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
+import {StepperStatus} from "../stepper";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
     TaskLoaded = 'task/loaded',
+    TaskUnload = 'task/unload',
     TaskReset = 'task/reset',
     TaskInputEntered = 'task/inputEntered',
 }
@@ -40,6 +45,10 @@ export const taskLoad = () => ({
 
 export const taskLoaded = () => ({
     type: TaskActionTypes.TaskLoaded,
+});
+
+export const taskUnload = () => ({
+    type: TaskActionTypes.TaskUnload,
 });
 
 export const taskReset = (
@@ -77,36 +86,46 @@ if (!String.prototype.format) {
 }
 
 function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
+    const context = quickAlgoLibraries.getContext();
+    if (context) {
+        context.unload();
+    }
+
     const currentTask = yield select(state => state.task.currentTask);
     const currentLevel = yield select(state => state.task.currentLevel);
     const levelGridInfos = extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]);
     const display = true;
 
+    let contextLib;
     if (levelGridInfos.context) {
         const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
-        const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
-        try {
-            const contextLib = contextFactory(display, levelGridInfos);
-            quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context);
-        } catch (e) {
-            console.error("Cannot create context", e);
-            const defaultLib = new QuickAlgoLibrary(display, levelGridInfos);
-            quickAlgoLibraries.addLibrary(defaultLib, 'default');
+        if (-1 !== libraryIndex) {
+            const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
+            try {
+                contextLib = contextFactory(display, levelGridInfos);
+                quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context);
+            } catch (e) {
+                console.error("Cannot create context", e);
+                contextLib = new QuickAlgoLibrary(display, levelGridInfos);
+                quickAlgoLibraries.addLibrary(contextLib, 'default');
+            }
         }
-    } else {
+    }
+    if (!contextLib) {
         try {
-            const printerLib = new PrinterLib(display, levelGridInfos);
-            quickAlgoLibraries.addLibrary(printerLib, 'printer');
+            const contextLib = new PrinterLib(display, levelGridInfos);
+            quickAlgoLibraries.addLibrary(contextLib, 'printer');
         } catch (e) {
             console.error("Cannot create context", e);
-            const defaultLib = new QuickAlgoLibrary(display, levelGridInfos);
-            quickAlgoLibraries.addLibrary(defaultLib, 'default');
+            const contextLib = new QuickAlgoLibrary(display, levelGridInfos);
+            quickAlgoLibraries.addLibrary(contextLib, 'default');
         }
     }
 
     const testData = getTaskTest(currentTask, currentLevel);
     yield put(updateCurrentTest(testData));
-    quickAlgoLibraries.reset(testData);
+    const state = yield select();
+    quickAlgoLibraries.reset(testData, state);
 }
 
 function getTaskTest(currentTask: any, currentLevel: number) {
@@ -120,6 +139,10 @@ export interface AutocompletionParameters {
 }
 
 export function getAutocompletionParameters (context, currentLevel: number): AutocompletionParameters {
+    if (!context.strings || 0 === Object.keys(context.strings).length) {
+        return null;
+    }
+
     const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, taskLevels[currentLevel]);
 
     return {
@@ -133,12 +156,19 @@ export default function (bundle: Bundle) {
     bundle.include(DocumentationBundle);
 
     bundle.addSaga(function* (app: App) {
+        let oldSagasTask;
+
         yield takeEvery(TaskActionTypes.TaskLoad, function* () {
-            yield put(currentLevelChange(1));
+            if (oldSagasTask) {
+                // Unload task first
+                yield cancel(oldSagasTask);
+                yield put(taskUnload());
+            }
+
             yield call(createContext, quickAlgoLibraries);
             yield put(taskLoaded());
             const sagas = quickAlgoLibraries.getSagas(app);
-            yield fork(function* () {
+            oldSagasTask = yield fork(function* () {
                 yield all(sagas);
             });
         });
@@ -152,6 +182,57 @@ export default function (bundle: Bundle) {
             const recorderState = getRecorderState(state);
             if (!recorderState.status) {
                 yield put({type: RecorderActionTypes.RecorderPrepare});
+            }
+        });
+
+        yield takeEvery(TaskActionTypes.TaskReset, function* (action: TaskResetAction) {
+            const taskData = action.payload;
+            const context = quickAlgoLibraries.getContext();
+            console.log('RELOAD STATE');
+            if (taskData.state && context) {
+                context.reloadState(taskData.state);
+            }
+        });
+
+        app.replayApi.onReset(function* (instant: PlayerInstant) {
+            const taskData = instant.state.task;
+            if (taskData) {
+                yield put(taskReset(taskData));
+                yield put(updateCurrentTest(taskData.currentTest));
+                if (taskData.success) {
+                    yield put(taskSuccess(taskData.successMessage));
+                } else {
+                    yield put(taskSuccessClear());
+                }
+                yield put(taskInputNeeded(taskData.inputNeeded));
+            }
+        });
+
+        yield takeEvery(BufferActionTypes.BufferEdit, function* (action) {
+            // @ts-ignore
+            const {buffer} = action;
+            if (buffer === 'source') {
+                const needsReset = yield select(state => StepperStatus.Clear !== state.stepper.status || !state.task.resetDone);
+                console.log('needs reset', needsReset);
+                if (needsReset) {
+                    yield put({type: ActionTypes.StepperExit});
+                }
+            }
+        });
+
+        // @ts-ignore
+        yield takeEvery(ActionTypes.StepperExit, function* ({payload}) {
+            if (!(payload && false === payload.reset)) {
+                console.log('make reset');
+                const context = quickAlgoLibraries.getContext();
+                if (context) {
+                    const state = yield select();
+                    const context = quickAlgoLibraries.getContext();
+                    context.reset(state.task.currentTest, state);
+                    yield put(taskResetDone(true));
+                }
+            } else {
+                yield put(taskResetDone(false));
             }
         });
     });
@@ -168,9 +249,11 @@ export default function (bundle: Bundle) {
         const context = quickAlgoLibraries.getContext();
 
         app.replayApi.on('start', function(replayContext: ReplayContext) {
+            const currentState = original(replayContext.state.task);
+
             replayContext.state.task = {
-                ...replayContext.state.task,
-                currentTest: getTaskTest(replayContext.state.task.currentTask, replayContext.state.task.currentLevel),
+                ...currentState,
+                currentTest: getTaskTest(currentState.currentTask, currentState.currentLevel),
                 state: context && context.getCurrentState ? {...context.getCurrentState()} : {},
             };
         });

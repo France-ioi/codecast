@@ -147,6 +147,11 @@ module.exports = {
     EDITOR_SUBTITLES_REMOVE_CONFIRM: 'Do you confirm the removal of language {language}?',
 
     USER_SELECT_LOGIN_METHOD: "Select a login option:",
+
+    KEYWORD: 'keyword',
+    CONSTANT: "constant",
+    VARIABLE: "variable",
+
     TASK_DESCRIPTION: 'Instructions',
     TASK_VARIABLES: 'Variables',
     TASK_DOCUMENTATION: 'Informations',
