@@ -9,7 +9,7 @@ import {getBufferModel} from "../../buffers/selectors";
 import {AppStore, AppStoreReplay} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
-import {StepperContext} from "../api";
+import {createQuickAlgoLibraryExecutor, StepperContext} from "../api";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
@@ -125,31 +125,9 @@ export default function(bundle: Bundle) {
         stepperApi.addBuiltin('scanf', scanfBuiltin);
 
         stepperApi.onEffect('write', function* writeEffect(stepperContext: StepperContext, text) {
-            console.log('effect write', text);
-
-            // @ts-ignore
-            const context: PrinterLib = quickAlgoLibraries.getContext('printer');
-
-            console.log('do write');
-            yield ['promise', new Promise((resolve) => {
-                console.log('call print_end');
-                // @ts-ignore
-                context.print_end(text, "", resolve); // In C, printf doesn't add \n by default in the end
-            })];
-
-            // const {state} = stepperContext;
-            // if (state.terminal) {
-            //     state.terminal = writeString(state.terminal, text);
-            // } else {
-            //     state.output = state.output + text;
-            // }
-            /* TODO: update the output buffer model
-               If running interactively, we must alter the actual global state.
-               If pre-computing states for replay, we must alter the (computed) global
-               state in the replayContext.
-               Currently this is done by reflectToOutput (interactively) and
-               syncOutputBuffer/syncOutputBufferSaga (non-interactively).
-             */
+            const executor = createQuickAlgoLibraryExecutor(stepperContext);
+            const executorPromise = executor('printer', 'print_end', [text], () => {});
+            yield ['promise', executorPromise];
         });
 
         stepperApi.addBuiltin('gets', function* getsBuiltin(stepperContext: StepperContext, ref) {
@@ -178,39 +156,18 @@ export default function(bundle: Bundle) {
         });
 
         stepperApi.onEffect('gets', function* getsEffect(stepperContext: StepperContext) {
-            // @ts-ignore
-            const context: PrinterLib = quickAlgoLibraries.getContext('printer');
+            const executor = createQuickAlgoLibraryExecutor(stepperContext);
 
-            let hasResult = false;
             let result;
-
-            console.log('start read');
-
-            const promise = context.read((elm) => {
-                result = elm;
-                hasResult = true;
+            const executorPromise = executor('printer', 'read', [], (res) => {
+                console.log('callback', res);
+                result = res;
             });
 
-            let i = 0;
-            while (!hasResult) {
-                console.log('-- not read, interact');
-                yield ['interact', {
-                    saga: function* () {
-                        yield call(() => {
-                            return promise;
-                        });
-                    },
-                    // progress: false,
-                }];
-                console.log('-- end interaction');
-
-                i++;
-                // Add a security to avoid possible infinite loop
-                if (i > 100) {
-                    console.error('Interacting buffer exhausted, this is most likely abnormal (input required but not given in recording)');
-                    break;
-                }
-            }
+            yield ['promise', executorPromise];
+            console.log('the result', executorPromise, result, result.split('').map(function (char) {
+                return char.charCodeAt(0);
+            }).join('/'));
 
             return result;
         });

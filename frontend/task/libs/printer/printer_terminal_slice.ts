@@ -3,9 +3,9 @@ import {TermBuffer, writeString} from "../../../stepper/io/terminal";
 
 export interface PrinterTerminalState {
     terminal: TermBuffer,
-    terminalElement: any,
-    inputBuffer: string,
-    lastInput: string,
+    terminalElement?: any,
+    inputBuffer?: string,
+    lastInput?: string,
 }
 
 export const printerTerminalInitialState = {
@@ -43,8 +43,15 @@ export const printerTerminalSlice = createSlice({
         terminalPrintLine(state, action: PayloadAction<string>) {
             state.terminal = writeString(state.terminal, action.payload);
         },
-        terminalReset(state, action: PayloadAction<TermBuffer>) {
-            state.terminal = action.payload;
+        terminalReset(state, action: PayloadAction<PrinterTerminalState>) {
+            state.terminal = action.payload.terminal;
+            if ('inputBuffer' in action.payload) {
+                state.inputBuffer = action.payload.inputBuffer;
+            }
+            if ('lastInput' in action.payload) {
+                state.lastInput = action.payload.lastInput;
+            }
+            console.log('change terminal state', action.payload);
         },
     },
 });

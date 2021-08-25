@@ -55,7 +55,6 @@ export default function(context) {
 
         handler += "\n\tsusp.resume = function() { return result; };";
         handler += "\n\tsusp.data = {type: 'Sk.promise', promise: new Promise(function(resolve) {";
-        handler += "\n\targs.push(resolve);";
 
         // Count actions
         if(type == 'actions') {
@@ -63,7 +62,7 @@ export default function(context) {
         }
 
         handler += "\n\ttry {";
-        handler += '\n\t\tconst result = currentPythonContext["' + generatorName + '"]["' + blockName + '"].apply(currentPythonContext, args);';
+        handler += '\n\t\tconst result = currentPythonContext.runner.executeQuickAlgoLibraryCall("' + generatorName + '", "' + blockName + '", args, resolve);';
         handler += '\n\t\tif (result instanceof Promise) result.catch((e) => { currentPythonContext.runner._onStepError(e) })';
         handler += "\n\t} catch (e) {";
         handler += "\n\t\tcurrentPythonContext.runner._onStepError(e)}";
@@ -85,15 +84,13 @@ export default function(context) {
             susp.data = {
                 type: 'Sk.promise',
                 promise: new Promise(function(resolve) {
-                    args.push(resolve);
-
                     // Count actions
                     if (type == 'actions') {
                         window.currentPythonContext.runner._nbActions += 1;
                     }
 
                     try {
-                        const result = window.currentPythonContext[generatorName][blockName].apply(window.currentPythonContext, args);
+                        const result = window.currentPythonContext.runner.executeQuickAlgoLibraryCall(generatorName, blockName, args, resolve);
                         if (result instanceof Promise) result.catch((e) => { window.currentPythonContext.runner._onStepError(e) })
                     } catch (e) {
                         window.currentPythonContext.runner._onStepError(e)}
@@ -537,7 +534,8 @@ export default function(context) {
         this._isRunning = true;
     };
 
-    this.runStep = () => {
+    this.runStep = (executeQuickAlgoLibraryCall) => {
+        this.executeQuickAlgoLibraryCall = executeQuickAlgoLibraryCall;
         return new Promise((resolve, reject) => {
             this.stepMode = true;
             this._printedDuringStep = '';
@@ -741,7 +739,7 @@ export default function(context) {
         const analysisCode = analysis.code;
         const currentPythonStepNum = window.currentPythonRunner._steps;
         const currentPythonCode = window.currentPythonRunner._code;
-        console.log('check sync analysis', analysisStepNum, currentPythonStepNum);
+        console.log('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentPythonStepNum);
         if (analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode) {
             return false;
         }

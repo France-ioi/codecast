@@ -67,7 +67,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
         const status = stepper.status;
         speed = stepper.speed;
         controlsType = stepper.controls;
-        canRestart = enabled && 'clear' !== status && stepper.currentStepperState !== stepper.initialStepperState;
+        canRestart = enabled && 'clear' !== status;
 
         if (status === 'clear') {
             showCompile = true;

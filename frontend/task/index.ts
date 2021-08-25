@@ -191,6 +191,7 @@ export default function (bundle: Bundle) {
             console.log('RELOAD STATE');
             if (taskData.state && context) {
                 context.reloadState(taskData.state);
+                context.resetDisplay();
             }
         });
 
@@ -215,6 +216,7 @@ export default function (bundle: Bundle) {
                 const needsReset = yield select(state => StepperStatus.Clear !== state.stepper.status || !state.task.resetDone);
                 console.log('needs reset', needsReset);
                 if (needsReset) {
+                    console.log('HANDLE RESET');
                     yield put({type: ActionTypes.StepperExit});
                 }
             }
