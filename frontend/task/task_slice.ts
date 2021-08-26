@@ -18,7 +18,7 @@ export interface TaskState {
 }
 
 export const taskInitialState = {
-    currentTask: SokobanFixture,
+    currentTask: StringRotationFixture,
     currentLevel: 1,
     recordingEnabled: false,
     resetDone: true,
