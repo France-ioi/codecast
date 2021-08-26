@@ -4,6 +4,9 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {put, takeEvery} from "redux-saga/effects";
+import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
+import {taskLoad} from "../task";
 
 export const Languages = {
     'en-US': require('./en-US.js'),
@@ -23,11 +26,21 @@ export default function(bundle: Bundle) {
             language = options.language;
         }
 
+        window.stringsLanguage = language.split('-')[0];
+
         return setLanguageReducer(state, {payload: {language}});
     });
 
     bundle.defineAction(ActionTypes.LanguageSet);
     bundle.addReducer(ActionTypes.LanguageSet, setLanguageReducer);
+
+    bundle.addSaga(function* () {
+        // Quit stepper and reload task (and current context) after each language selection
+        yield takeEvery(ActionTypes.LanguageSet, function* () {
+            yield put({type: StepperActionTypes.StepperExit});
+            yield put(taskLoad());
+        });
+    });
 }
 
 const Message = {
@@ -85,6 +98,7 @@ function setLanguageReducer(state: AppStore, {payload: {language}}) {
 
     state.options.language = language;
     state.getMessage = getMessage;
+    window.stringsLanguage = language.split('-')[0];
 }
 
 export class LocalizedError extends Error {

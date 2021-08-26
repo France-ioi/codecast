@@ -100,10 +100,12 @@ function* playerPrepare(app: App, action) {
         platform = data.options.platform;
     }
 
-    yield put({
-        type: CommonActionTypes.PlatformChanged,
-        payload: platform
-    });
+    if (platform !== state.options.platform) {
+        yield put({
+            type: CommonActionTypes.PlatformChanged,
+            payload: platform
+        });
+    }
 
     const context = quickAlgoLibraries.getContext();
     context.display = false;
@@ -222,6 +224,8 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         const instant: PlayerInstant = {t, pos, event} as PlayerInstant;
         replayContext.instant = instant;
 
+        let needsRestartExecutor = false;
+
 
         console.log('-------- REPLAY ---- EVENT ----', key, event);
 
@@ -235,8 +239,15 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
              * refactor of the player.
              */
 
+            console.log('start apply event');
+            const sagas = yield call(replayApi.applyEvent, key, replayContext, event);
+            console.log('end apply event', sagas);
 
-            yield call(replayApi.applyEvent, key, replayContext, event);
+            for (let saga of sagas) {
+                yield fork(saga);
+            }
+
+            console.log('end fork sagas');
         } else {
             const originalState = replayContext.state;
             const draft = createDraft(originalState);
@@ -246,15 +257,10 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
 
             yield call(replayApi.applyEvent, key, replayContext, event);
 
-            const nonHandledWaitingPromises = waitingPromises.filter(promiseElement => !promiseElement.handled);
             if (key === 'task/taskInputNeeded' && !event[2]) {
-                // if (nonHandledWaitingPromises.length) {
-                //     const nonHandledWaitingPromise = nonHandledWaitingPromises[0];
-                //     nonHandledWaitingPromise.handled = true;
                 console.log('TASK INPUT LAST INPUT', replayContext.state.printerTerminal.lastInput);
-                    yield put(taskInputEntered(replayContext.state.printerTerminal.lastInput));
-                    // yield nonHandledWaitingPromise;
-                // }
+                yield put(taskInputEntered(replayContext.state.printerTerminal.lastInput));
+                needsRestartExecutor = true;
             }
 
             replayContext.state.task.state = quickAlgoLibraries.getContext() && quickAlgoLibraries.getContext().getCurrentState ? {...quickAlgoLibraries.getContext().getCurrentState()} : {};
@@ -263,6 +269,14 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
             // @ts-ignore
             replayContext.state = finishDraft(draft);
         }
+
+        // if (needsRestartExecutor) {
+        //     console.log('HERE RESTART EXECUTOR');
+        //     const sagas = yield call(replayApi.applyEvent, 'stepper.progress', replayContext, ['stepper.progress']);
+        //     for (let saga of sagas) {
+        //         yield fork(saga);
+        //     }
+        // }
 
         /* Preserve the last explicitly set range. */
         // TODO: Is this used ?

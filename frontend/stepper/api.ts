@@ -14,6 +14,13 @@ import {AppStore, AppStoreReplay} from "../store";
 import {initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
 import {TaskActionTypes as TaskActionTypes} from "../task";
+import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
+
+export interface QuickalgoLibraryCall {
+    module: string,
+    action: string,
+    arguments: any[],
+}
 
 export interface StepperContext {
     state: StepperState,
@@ -164,7 +171,8 @@ export function makeContext(stepper: Stepper, interactBefore: Function, interact
             state: {
                 ...state,
                 lastAnalysis: Object.freeze(clearLoadedReferences(state.analysis)),
-                controls: resetControls(state.controls)
+                controls: resetControls(state.controls),
+                lastQuickalgoLibraryCalls: [],
             },
             interactBefore,
             interactAfter,
@@ -181,6 +189,7 @@ export function makeContext(stepper: Stepper, interactBefore: Function, interact
                 programState: C.clearMemoryLog(state.programState),
                 lastProgramState: {...state.programState},
                 controls: resetControls(state.controls),
+                lastQuickalgoLibraryCalls: [],
             },
             interactBefore,
             interactAfter,
@@ -210,7 +219,9 @@ async function executeEffects(stepperContext: StepperContext, iterator) {
         if (name === 'interact') {
             lastResult = await stepperContext.interactAfter(value[1] || {});
         } else if (name === 'promise') {
+            console.log('await promise');
             lastResult = await value[1];
+            console.log('promise result', lastResult);
         } else if (name === 'builtin') {
             const builtin = value[1];
             if (!builtinHandlers.has(builtin)) {
@@ -241,33 +252,34 @@ async function executeSingleStep(stepperContext: StepperContext) {
     }
 
     if (stepperContext.state.platform === 'python') {
-        let finished = false;
-        const promise = window.currentPythonRunner.runStep();
-        promise.then(() => {
-            finished = true;
-        });
+        // let finished = false;
+        // const promise = window.currentPythonRunner.runStep(createQuickAlgoLibraryExecutor(stepperContext));
+        // promise.then(() => {
+        //     finished = true;
+        // });
+        //
+        // let i = 0;
+        // while (!finished) {
+        //     await delay(0);
+        //     if (!finished) {
+        //         console.log('DO INTERACT WAITING FINISH');
+        //         await stepperContext.interactAfter({
+        //             saga: function* () {
+        //                 const inputNeeded = yield select((state: AppStore) => state.task.inputNeeded);
+        //                 console.log('here saga', inputNeeded);
+        //                 if (inputNeeded) {
+        //                     yield take(TaskActionTypes.TaskInputEntered);
+        //                     console.log('input entered');
+        //                 }
+        //             },
+        //         });
+        //         console.log('AFTER INTERACT');
+        //     }
+        //     i++;
+        //     if (i > 100) break;
+        // }
 
-        let i = 0;
-        while (!finished) {
-            await delay(0);
-            if (!finished) {
-                console.log('DO INTERACT WAITING FINISH');
-                await stepperContext.interactAfter({
-                    saga: function* () {
-                        const inputNeeded = yield select((state: AppStore) => state.task.inputNeeded);
-                        console.log('here saga', inputNeeded);
-                        if (inputNeeded) {
-                            yield take(TaskActionTypes.TaskInputEntered);
-                            console.log('input entered');
-                        }
-                    },
-                    progress: false,
-                });
-                console.log('AFTER INTERACT');
-            }
-            i++;
-            if (i > 100) break;
-        }
+        await window.currentPythonRunner.runStep(createQuickAlgoLibraryExecutor(stepperContext));
 
         console.log('FINAL INTERACT');
         stepperContext.makeDelay = true;
@@ -450,6 +462,46 @@ function inUserCode(stepperState: StepperState) {
         return true;
     } else {
         return !!stepperState.programState.control.node[1].begin;
+    }
+}
+
+export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
+    return async (module: string, action: string, args: any[], callback: Function) => {
+        const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, arguments: args};
+        console.log('stepper context', stepperContext);
+
+        stepperContext.state.lastQuickalgoLibraryCalls.push(quickAlgoLibraryCall);
+        console.log('LOG ACTION', module, action, args);
+
+        const context = quickAlgoLibraries.getContext();
+        console.log('context', context, context[module]);
+
+        let result = context[module][action].apply(context, [...args, callback]);
+        console.log('MODULE RESULT', result);
+        if (!(Symbol.iterator in Object(result))) {
+            context.waitDelay(callback, result);
+
+            return result;
+        }
+
+        let lastResult;
+        while (true) {
+            /* Pull the next effect from the builtin's iterator. */
+            const {done, value} = result.next();
+            console.log('ITERATOR RESULT', done, value);
+            if (done) {
+                context.waitDelay(callback, value);
+
+                return value;
+            }
+
+            const name = value[0];
+            if (name === 'interact') {
+                console.log('ASK FOR INTERACT');
+                lastResult = await stepperContext.interactAfter({...(value[1] || {}), progress: false});
+                console.log('last result', lastResult);
+            }
+        }
     }
 }
 

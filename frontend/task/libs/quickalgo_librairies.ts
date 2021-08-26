@@ -104,7 +104,7 @@ export class QuickAlgoLibrary {
 
     // Set the localLanguageStrings for this context
     setLocalLanguageStrings(localLanguageStrings) {
-        window.stringsLanguage = window.stringsLanguage || "fr";
+        window.stringsLanguage = window.stringsLanguage && window.stringsLanguage in localLanguageStrings ? window.stringsLanguage : "fr";
         window.languageStrings = window.languageStrings || {};
 
         if (typeof window.languageStrings != "object") {

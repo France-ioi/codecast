@@ -7,7 +7,7 @@ export function buildCommonOptions(start, query) {
         showStack: true,
         showViews: true,
         showIO: true,
-        platform: 'unix',
+        platform: 'python',
         canChangePlatform: /sandbox|recorder|task/.test(start),
         controls: {},
     };

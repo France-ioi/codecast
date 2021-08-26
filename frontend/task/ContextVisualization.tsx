@@ -27,8 +27,7 @@ export function ContextVisualization() {
                     <img key={key} src={module.default} style={{display: 'none'}}/>
                 )
             }
-            <div id="grid"/>
-            {Visualization && <Visualization/>}
+            {Visualization ? <Visualization/> : <div id="grid"/>}
         </div>
     );
 }
