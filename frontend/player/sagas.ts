@@ -263,8 +263,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
                 needsRestartExecutor = true;
             }
 
-            replayContext.state.task.state = quickAlgoLibraries.getContext() && quickAlgoLibraries.getContext().getCurrentState ? {...quickAlgoLibraries.getContext().getCurrentState()} : {};
-            console.log('GET STATE', Object.freeze(replayContext.state.task.state));
+            // console.log('GET STATE', Object.freeze(replayContext.state.task.state));
 
             // @ts-ignore
             replayContext.state = finishDraft(draft);
@@ -289,7 +288,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         instant.state = replayContext.state;
 
         Object.freeze(instant);
-        console.log('new instant', instant.range);
+        console.log('new instant', instant.state);
 
         replayContext.instants.push(instant);
         progress = Math.round(pos * 50 / events.length + t * 50 / duration) / 100;

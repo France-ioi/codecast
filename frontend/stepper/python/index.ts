@@ -44,10 +44,7 @@ export default function(bundle: Bundle) {
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore, replay: boolean = false) {
             const {platform} = state.options;
             const source = state.buffers['source'].model.document.toString();
-            const currentTest = state.task.currentTest;
-
             const context = quickAlgoLibraries.getContext();
-            context.reset(currentTest, state);
 
             if (platform === 'python') {
                 context.onError = (diagnostics) => {

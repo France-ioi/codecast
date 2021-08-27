@@ -9,12 +9,9 @@ import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
 import {
     TaskActionTypes as TaskActionTypes,
     taskInputEntered,
-    taskReset,
-    TaskResetAction,
-    taskUnload
 } from "../../index";
 import {documentModelFromString} from "../../../buffers";
-import taskSlice, {taskInputNeeded, taskSuccess, taskSuccessClear, updateCurrentTest} from "../../task_slice";
+import taskSlice, {taskInputNeeded, updateCurrentTest} from "../../task_slice";
 import printerTerminalSlice, {
     printerTerminalInitialState,
     printerTerminalRecordableActions,

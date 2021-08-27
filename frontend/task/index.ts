@@ -5,7 +5,7 @@ import {call, put, select, takeEvery, all, fork, cancel} from "redux-saga/effect
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
-import {AppAction} from "../store";
+import {AppAction, AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
     recordingEnabledChange, taskInputNeeded, taskLevels, taskRecordableActions, taskResetDone,
@@ -19,19 +19,13 @@ import {original} from "immer";
 import {PlayerInstant} from "../player";
 import {ActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
-import {StepperStatus} from "../stepper";
+import {StepperState, StepperStatus} from "../stepper";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
     TaskLoaded = 'task/loaded',
     TaskUnload = 'task/unload',
-    TaskReset = 'task/reset',
     TaskInputEntered = 'task/inputEntered',
-}
-
-export interface TaskResetAction extends AppAction {
-    type: TaskActionTypes.TaskReset;
-    payload: TaskState;
 }
 
 export interface TaskInputEnteredAction extends AppAction {
@@ -49,13 +43,6 @@ export const taskLoaded = () => ({
 
 export const taskUnload = () => ({
     type: TaskActionTypes.TaskUnload,
-});
-
-export const taskReset = (
-    taskData: TaskState,
-): TaskResetAction => ({
-    type: TaskActionTypes.TaskReset,
-    payload: taskData,
 });
 
 export const taskInputEntered = (
@@ -185,20 +172,18 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield takeEvery(TaskActionTypes.TaskReset, function* (action: TaskResetAction) {
-            const taskData = action.payload;
-            const context = quickAlgoLibraries.getContext();
-            console.log('RELOAD STATE');
-            if (taskData.state && context) {
-                context.reloadState(taskData.state);
-                context.resetDisplay();
-            }
-        });
-
         app.replayApi.onReset(function* (instant: PlayerInstant) {
             const taskData = instant.state.task;
+
+            const context = quickAlgoLibraries.getContext();
+            const stepperState = instant.state.stepper;
+            console.log('RELOAD STATE', stepperState);
+            if (stepperState && stepperState.currentStepperState && stepperState.currentStepperState.contextState && context) {
+                context.reloadState(stepperState.currentStepperState.contextState);
+                context.resetDisplay();
+            }
+
             if (taskData) {
-                yield put(taskReset(taskData));
                 yield put(updateCurrentTest(taskData.currentTest));
                 if (taskData.success) {
                     yield put(taskSuccess(taskData.successMessage));
@@ -248,7 +233,7 @@ export default function (bundle: Bundle) {
             onResetDisabled: true,
         });
 
-        const context = quickAlgoLibraries.getContext();
+        // const context = quickAlgoLibraries.getContext();
 
         app.replayApi.on('start', function(replayContext: ReplayContext) {
             const currentState = original(replayContext.state.task);
@@ -256,8 +241,17 @@ export default function (bundle: Bundle) {
             replayContext.state.task = {
                 ...currentState,
                 currentTest: getTaskTest(currentState.currentTask, currentState.currentLevel),
-                state: context && context.getCurrentState ? {...context.getCurrentState()} : {},
+                // state: context && context.getCurrentState ? {...context.getCurrentState()} : {},
             };
+        });
+
+        app.stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
+            const currentTest = state.task.currentTest;
+
+            const context = quickAlgoLibraries.getContext();
+            context.reset(currentTest, state);
+
+            stepperState.contextState = context.getCurrentState();
         });
     });
 }

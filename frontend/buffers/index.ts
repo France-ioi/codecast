@@ -39,7 +39,7 @@ import 'brace/worker/javascript';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "./selectors";
-import {immerable} from "immer";
+import {current, immerable} from "immer";
 import {AppStore, AppStoreReplay} from "../store";
 import {ReplayContext} from "../player/sagas";
 import {PlayerInstant} from "../player";
@@ -103,7 +103,7 @@ export class DocumentModel {
     }
 }
 
-class BufferState {
+export class BufferState {
     [immerable] = true;
 
     constructor(public model = new DocumentModel()) {
@@ -119,12 +119,6 @@ export const documentModelFromString = function (text: string): DocumentModel {
     return new DocumentModel(doc);
 }
 
-export const initialStateBuffers: {[key: string]: BufferState} = {
-    source: new BufferState(),
-    input: new BufferState(),
-    output: new BufferState()
-};
-
 function initBufferIfNeeded(state: AppStore, buffer: string) {
     if (!(buffer in state.buffers)) {
         state.buffers[buffer] = new BufferState();
@@ -133,7 +127,7 @@ function initBufferIfNeeded(state: AppStore, buffer: string) {
 
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {options: {source, input}}}) => {
-        state.buffers = initialStateBuffers;
+        state.buffers = {};
 
         if (source) {
             bufferLoadReducer(state, {buffer: 'source', text: source || ''});
@@ -350,14 +344,17 @@ function addRecordHooks({recordApi}: App) {
 function addReplayHooks({replayApi}: App) {
     replayApi.on('start', function(replayContext: ReplayContext, event) {
         const {buffers} = event[2];
-        replayContext.state.buffers = initialStateBuffers;
+        replayContext.state.buffers = {};
+        console.log('here buffers', buffers);
 
         for (let bufferName of Object.keys(buffers)) {
             if (!(bufferName in replayContext.state.buffers)) {
                 replayContext.state.buffers[bufferName] = new BufferState();
             }
+            console.log('fill buffer', bufferName, buffers && buffers[bufferName]);
             replayContext.state.buffers[bufferName].model = buffers && buffers[bufferName] ? loadBufferModel(buffers[bufferName]) : new DocumentModel();
         }
+        console.log('new state', current(replayContext.state));
     });
     replayApi.on('buffer.select', function(replayContext: ReplayContext, event) {
         // XXX use reducer imported from common/buffers
