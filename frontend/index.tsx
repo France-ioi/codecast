@@ -37,7 +37,7 @@ import {Documentation} from "./task/Documentation";
  * TODO: This should be removed if possible.
  * Search for "TODO: Immer:" to find the reason.
  */
-setAutoFreeze(false);
+setAutoFreeze('development' === process.env['NODE_ENV']);
 log.setLevel('trace');
 log.getLogger('performance').setLevel('info');
 log.getLogger('python_interpreter').setLevel('info');

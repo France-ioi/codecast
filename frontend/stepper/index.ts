@@ -903,13 +903,13 @@ function postLink(app: App) {
     });
     replayApi.on('stepper.restart', async function(replayContext: ReplayContext) {
         const stepperState = await buildState(replayContext.state, true);
-        console.log('STEPPER RESTART state before', current(replayContext.state), stepperState);
+        // console.log('STEPPER RESTART state before', current(replayContext.state), stepperState);
 
         replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
             stepperRestartReducer(draft, {payload: {stepperState}});
         });
 
-        console.log('STEPPER RESTART after state before', current(replayContext.state), stepperState);
+        // console.log('STEPPER RESTART after state before', current(replayContext.state), stepperState);
     });
 
     recordApi.on(ActionTypes.StepperStarted, function* (addEvent, action) {
