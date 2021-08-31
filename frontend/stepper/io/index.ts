@@ -16,6 +16,7 @@ import {App} from "../../index";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
 import {PrinterLib} from "../../task/libs/printer/printer_lib";
 import {TermBuffer} from "./terminal";
+import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 
 export enum IoMode {
     Terminal = 'terminal',
@@ -63,11 +64,15 @@ export default function(bundle: Bundle) {
 
             init.ioPaneMode = state.ioPane.mode;
         });
-        replayApi.on('start', function(replayContext: ReplayContext, event) {
+        replayApi.on('start', function* (replayContext: ReplayContext, event) {
             const {ioPaneMode} = event[2];
 
-            replayContext.state.ioPane = initialStateIoPane;
-            ioPaneModeChangedReducer(replayContext.state, {payload: {mode: ioPaneMode}});
+            const newState = {
+                ...initialStateIoPane,
+                mode: ioPaneMode,
+            };
+
+            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'ioPane', state: newState}});
         });
 
         replayApi.onReset(function* (instant: PlayerInstant) {

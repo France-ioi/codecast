@@ -1,15 +1,12 @@
 import React from "react";
 import {InputOutputVisualization} from "./InputOutputVisualization";
-import {quickAlgoLibraries, QuickAlgoLibrary} from "../quickalgo_librairies";
+import {QuickAlgoLibrary} from "../quickalgo_librairies";
 import {call, fork, put, race, select, take, takeEvery} from "redux-saga/effects";
 import {AppStore} from "../../../store";
 import {channel} from "redux-saga";
 import {ActionTypes} from "../../../buffers/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
-import {
-    TaskActionTypes as TaskActionTypes,
-    taskInputEntered,
-} from "../../index";
+import {TaskActionTypes as TaskActionTypes, taskInputEntered,} from "../../index";
 import {documentModelFromString} from "../../../buffers";
 import taskSlice, {taskInputNeeded, updateCurrentTest} from "../../task_slice";
 import printerTerminalSlice, {
@@ -18,7 +15,8 @@ import printerTerminalSlice, {
     terminalFocus,
     terminalInit,
     terminalInputEnter,
-    terminalPrintLine, terminalReset
+    terminalPrintLine,
+    terminalReset
 } from "./printer_terminal_slice";
 import {App} from "../../../index";
 import {addAutoRecordingBehaviour} from "../../../recorder/record";
@@ -26,6 +24,7 @@ import {IoMode} from "../../../stepper/io";
 import {ReplayContext} from "../../../player/sagas";
 import {TermBuffer, writeString} from "../../../stepper/io/terminal";
 import {PlayerInstant} from "../../../player";
+import {current} from "immer";
 
 function escapeHtml(unsafe) {
     return unsafe
@@ -585,6 +584,8 @@ export class PrinterLib extends QuickAlgoLibrary {
         if (input) {
             const {payload: inputValue} = input;
 
+            console.log('previous', context.printer.ioEvents, current(context.printer.ioEvents));
+
             context.printer.ioEvents = [
                 ...context.printer.ioEvents,
                 {type: PrinterLineEventType.input, content: inputValue + "\n", source: PrinterLineEventSource.runtime},
@@ -745,15 +746,17 @@ export class PrinterLib extends QuickAlgoLibrary {
             recordApiInit = true;
 
             // For replay purposes
-            app.replayApi.on('buffer.edit', function(replayContext: ReplayContext, event) {
+            app.replayApi.on('buffer.edit', function* (replayContext: ReplayContext, event) {
                 const buffer = event[0];
+                let currentTest: {input?: string, output?: string} = {};
                 if (inputBufferLibTest === buffer) {
-                    const inputValue = replayContext.state.buffers[buffer].model.document.toString();
-                    taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({input: inputValue}));
+                    currentTest.input = replayContext.state.buffers[buffer].model.document.toString();
+                } else if (outputBufferLibTest === buffer) {
+                    currentTest.output = replayContext.state.buffers[buffer].model.document.toString();
                 }
-                if (outputBufferLibTest === buffer) {
-                    const outputValue = replayContext.state.buffers[buffer].model.document.toString();
-                    taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({output: outputValue}));
+
+                if (Object.keys(currentTest).length) {
+                    yield put(updateCurrentTest(currentTest));
                 }
             });
 
@@ -766,15 +769,17 @@ export class PrinterLib extends QuickAlgoLibrary {
                 onResetDisabled: true,
             });
 
-            app.replayApi.on('start', function(replayContext: ReplayContext, event) {
+            app.replayApi.on('start', function* (replayContext: ReplayContext, event) {
                 const {buffers} = event[2];
+                let currentTest: {input?: string, output?: string} = {};
                 if (buffers[inputBufferLibTest]) {
-                    const inputValue = buffers[inputBufferLibTest].document;
-                    taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({input: inputValue}));
+                    currentTest.input = buffers[inputBufferLibTest].document;
                 }
                 if (buffers[outputBufferLibTest]) {
-                    const outputValue = buffers[outputBufferLibTest].document;
-                    taskSlice.caseReducers.updateCurrentTest(replayContext.state.task, updateCurrentTest({output: outputValue}));
+                    currentTest.output = buffers[outputBufferLibTest].document;
+                }
+                if (Object.keys(currentTest).length) {
+                    yield put(updateCurrentTest(currentTest));
                 }
             });
 

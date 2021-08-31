@@ -25,9 +25,10 @@ import {AppStore, AppStoreReplay} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {StepperContext} from "../api";
-import {StepperState} from "../index";
+import {initialStateStepper, StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
+import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 
 export enum PinMode {
   Input = 0,
@@ -107,13 +108,16 @@ export default function(bundle: Bundle) {
                 init.arduino = state.arduino;
             }
         });
-        replayApi.on('start', function(replayContext: ReplayContext, event) {
-            replayContext.state.arduino = initialStateArduino;
-
+        replayApi.on('start', function*(replayContext: ReplayContext, event) {
+            let arduinoState;
             const {arduino} = event[2];
             if (arduino) {
-                replayContext.state.arduino = arduino;
+                arduinoState = arduino;
+            } else {
+                arduinoState = initialStateArduino;
             }
+
+            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'arduino', state: arduinoState}});
         });
         replayApi.onReset(function* (instant: PlayerInstant) {
             const arduinoState = instant.state.arduino;

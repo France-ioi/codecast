@@ -26,7 +26,6 @@ export enum ActionTypes {
     Compile = 'Compile',
     CompileWait = 'Compile.Wait',
     CompileClear = 'Compile.Clear',
-    CompileReset = 'Compile.Reset',
     CompileStarted = 'Compile.Started',
     CompileSucceeded = 'Compile.Succeeded',
     CompileFailed = 'Compile.Failed',

@@ -9,16 +9,20 @@ import {findInstantIndex} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
+import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getPlayerState} from "./selectors";
 import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
 import {StepperContext} from "../stepper/api";
-import {App} from "../index";
+import {App, Codecast} from "../index";
 import {createDraft, finishDraft} from "immer";
 import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
-import {taskInputEntered} from "../task";
+import {expandRange} from "../buffers/document";
+import {ActionTypes as AppActionTypes} from "../actionTypes";
+import {getTaskTest} from "../task";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -47,6 +51,8 @@ function* playerSaga(action) {
     ];
 
     yield takeLatest(anyReplayAction, replaySaga, action);
+
+    yield takeLatest(ActionTypes.PlayerApplyReplayEvent, playerReplayEvent, action);
 }
 
 function* playerPrepare(app: App, action) {
@@ -114,6 +120,7 @@ function* playerPrepare(app: App, action) {
         task: {
             currentTask: state.task.currentTask,
             currentLevel: state.task.currentLevel,
+            currentTest: getTaskTest(state.task.currentTask, state.task.currentLevel),
         },
         options: {
             platform
@@ -185,6 +192,10 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
     let waitingPromises = [];
     const events = replayContext.events;
     const duration = events[events.length - 1][0];
+    const replayStore = Codecast.replayStore;
+
+    yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}}});
+
     for (pos = 0; pos < events.length; pos += 1) {
         const event = events[pos];
 
@@ -226,48 +237,47 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
 
         let needsRestartExecutor = false;
 
-
         console.log('-------- REPLAY ---- EVENT ----', key, event);
 
-        if (key === 'stepper.step' || key === 'stepper.progress' || key === 'stepper.idle' || key === 'stepper.restart') {
-            /**
-             * Those event are trickier than the other ones because they copy a piece of state (state.stepper.currentStepperStep)
-             * and then reuse it in future events. We cannot copy a piece of immer draft and use it later.
-             * The choice made is to update the state in a more granular way in those events, so that the copied piece
-             * is a piece of the real state and not one of a immer draft.
-             * I would have been better to not copy the stepper at all but it seems like this would imply a huge
-             * refactor of the player.
-             */
-
-            console.log('start apply event');
-            const sagas = yield call(replayApi.applyEvent, key, replayContext, event);
-            console.log('end apply event', sagas);
-
-            for (let saga of sagas) {
-                yield fork(saga);
-            }
-
-            console.log('end fork sagas');
-        } else {
-            const originalState = replayContext.state;
-            const draft = createDraft(originalState);
-
-            // @ts-ignore
-            replayContext.state = draft;
-
-            yield call(replayApi.applyEvent, key, replayContext, event);
-
-            if (key === 'task/taskInputNeeded' && !event[2]) {
-                console.log('TASK INPUT LAST INPUT', replayContext.state.printerTerminal.lastInput);
-                yield put(taskInputEntered(replayContext.state.printerTerminal.lastInput));
-                needsRestartExecutor = true;
-            }
-
-            // console.log('GET STATE', Object.freeze(replayContext.state.task.state));
-
-            // @ts-ignore
-            replayContext.state = finishDraft(draft);
-        }
+        // if (key === 'stepper.step' || key === 'stepper.progress' || key === 'stepper.idle' || key === 'stepper.restart') {
+        //     /**
+        //      * Those event are trickier than the other ones because they copy a piece of state (state.stepper.currentStepperStep)
+        //      * and then reuse it in future events. We cannot copy a piece of immer draft and use it later.
+        //      * The choice made is to update the state in a more granular way in those events, so that the copied piece
+        //      * is a piece of the real state and not one of a immer draft.
+        //      * I would have been better to not copy the stepper at all but it seems like this would imply a huge
+        //      * refactor of the player.
+        //      */
+        //
+        //     console.log('start apply event');
+        //     const sagas = yield call(replayApi.applyEvent, key, replayContext, event);
+        //     console.log('end apply event', sagas);
+        //
+        //     for (let saga of sagas) {
+        //         yield fork(saga);
+        //     }
+        //
+        //     console.log('end fork sagas');
+        // } else {
+        //     const originalState = replayContext.state;
+        //     const draft = createDraft(originalState);
+        //
+        //     // @ts-ignore
+        //     replayContext.state = draft;
+        //
+        //     yield call(replayApi.applyEvent, key, replayContext, event);
+        //
+        //     if (key === 'task/taskInputNeeded' && !event[2]) {
+        //         console.log('TASK INPUT LAST INPUT', replayContext.state.printerTerminal.lastInput);
+        //         yield put(taskInputEntered(replayContext.state.printerTerminal.lastInput));
+        //         needsRestartExecutor = true;
+        //     }
+        //
+        //     // console.log('GET STATE', Object.freeze(replayContext.state.task.state));
+        //
+        //     // @ts-ignore
+        //     replayContext.state = finishDraft(draft);
+        // }
 
         // if (needsRestartExecutor) {
         //     console.log('HERE RESTART EXECUTOR');
@@ -277,6 +287,20 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         //     }
         // }
 
+
+        // if (key === 'buffer.select') {
+        //     console.log('make test', key, event);
+        //     let buffer = event[2];
+        //     let selection = expandRange(event[3]);
+        //     yield call(replayStore.dispatch, {type: BufferActionTypes.BufferSelect, buffer, selection});
+        //     console.log('end test');
+        // } else {
+            yield call(replayStore.dispatch, {type: PlayerActionTypes.PlayerApplyReplayEvent, payload: {replayApi, key, replayContext, event}});
+            // yield call(replayApi.applyEvent, key, replayContext, event);
+        // }
+
+
+
         /* Preserve the last explicitly set range. */
         // TODO: Is this used ?
         if ('range' in instant) {
@@ -285,7 +309,8 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
             instant.range = range;
         }
 
-        instant.state = replayContext.state;
+        // instant.state = replayContext.state;
+        instant.state = replayStore.getState();
 
         Object.freeze(instant);
         console.log('new instant', instant.state);
@@ -298,6 +323,16 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
             yield call(replayContext.reportProgress, progress);
         }
     }
+}
+
+/**
+ * This redux saga has been dispatched in the replay store and occurs in this store
+ */
+function* playerReplayEvent(app: App, {type, payload}) {
+    console.log('REPLAY EVENT', type, payload);
+    const {replayApi, key, replayContext, event} = payload;
+
+    yield call(replayApi.applyEvent, key, replayContext, event);
 }
 
 function* replaySaga(app: App, {type, payload}) {

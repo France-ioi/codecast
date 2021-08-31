@@ -116,6 +116,12 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.PlayerReset, (state: AppStore, {payload: {sliceName, state: newState}}) => {
         state[sliceName] = newState;
     });
+
+    bundle.defineAction(ActionTypes.PlayerResetFull);
+    bundle.addReducer(ActionTypes.PlayerResetFull, (state: AppStore, {payload: {newState}}) => {
+        console.log('DO FULL RESET WITH', newState);
+        return newState;
+    });
 };
 
 export interface PlayerInstant {

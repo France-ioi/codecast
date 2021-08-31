@@ -13,6 +13,7 @@
 
 import {actionChannel, call, put, select, take, takeLatest} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {AppStore} from "../store";
 import {RecorderStatus} from "./store";
 import {Bundle} from "../linker";
@@ -66,8 +67,8 @@ export function addAutoRecordingBehaviour({recordApi, replayApi}: App, {sliceNam
         });
 
         if (initialState) {
-            replayApi.on('start', function(replayContext: ReplayContext) {
-                replayContext.state[sliceName] = initialState;
+            replayApi.on('start', function* () {
+                yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName, state: initialState}});
             });
         }
 

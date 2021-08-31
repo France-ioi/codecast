@@ -173,8 +173,10 @@ export default function(bundle: Bundle) {
 
 function bufferLoadReducer(state: AppStore, action): void {
     const {buffer, text} = action;
+    console.log('load buffer', buffer, text)
     initBufferIfNeeded(state, buffer);
     state.buffers[buffer].model = new DocumentModel(documentFromString(text));
+    console.log('new model', state.buffers[buffer].model);
 }
 
 function bufferResetReducer(state: AppStore, action): void {
@@ -342,26 +344,31 @@ function addRecordHooks({recordApi}: App) {
 }
 
 function addReplayHooks({replayApi}: App) {
-    replayApi.on('start', function(replayContext: ReplayContext, event) {
+    replayApi.on('start', function* (replayContext: ReplayContext, event) {
         const {buffers} = event[2];
-        replayContext.state.buffers = {};
-        console.log('here buffers', buffers);
+        // replayContext.state.buffers = {};
+        // console.log('here buffers', buffers);
 
         for (let bufferName of Object.keys(buffers)) {
-            if (!(bufferName in replayContext.state.buffers)) {
-                replayContext.state.buffers[bufferName] = new BufferState();
-            }
-            console.log('fill buffer', bufferName, buffers && buffers[bufferName]);
-            replayContext.state.buffers[bufferName].model = buffers && buffers[bufferName] ? loadBufferModel(buffers[bufferName]) : new DocumentModel();
+            const text = buffers[bufferName].document;
+            console.log('buffer init', bufferName, text);
+            yield put({type: ActionTypes.BufferLoad, buffer: bufferName, text});
+            //
+            // if (!(bufferName in replayContext.state.buffers)) {
+            //     replayContext.state.buffers[bufferName] = new BufferState();
+            // }
+            // console.log('fill buffer', bufferName, buffers && buffers[bufferName]);
+            // replayContext.state.buffers[bufferName].model = buffers && buffers[bufferName] ? loadBufferModel(buffers[bufferName]) : new DocumentModel();
         }
-        console.log('new state', current(replayContext.state));
+
     });
-    replayApi.on('buffer.select', function(replayContext: ReplayContext, event) {
+    replayApi.on('buffer.select', function* (replayContext: ReplayContext, event) {
         // XXX use reducer imported from common/buffers
         const buffer = event[2];
         const selection = expandRange(event[3]);
 
-        bufferSelectReducer(replayContext.state, {buffer, selection});
+        yield put({type: ActionTypes.BufferSelect, buffer, selection});
+
         replayContext.addSaga(function* () {
             yield put({type: ActionTypes.BufferModelSelect, buffer, selection});
         });
@@ -407,6 +414,7 @@ function addReplayHooks({replayApi}: App) {
     });
     replayApi.onReset(function* ({state, range}: PlayerInstant, quick) {
         /* Reset all buffers. */
+        console.log('BUFFER RESET', state, range);
         for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer].model;
 

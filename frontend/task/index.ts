@@ -9,7 +9,7 @@ import {AppAction, AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
     recordingEnabledChange, taskInputNeeded, taskLevels, taskRecordableActions, taskResetDone,
-    TaskState, taskSuccess, taskSuccessClear,
+    taskSuccess, taskSuccessClear,
     updateCurrentTest
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
@@ -72,7 +72,7 @@ if (!String.prototype.format) {
     }
 }
 
-function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
+function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
     const context = quickAlgoLibraries.getContext();
     if (context) {
         context.unload();
@@ -115,7 +115,7 @@ function* createContext (quickAlgoLibraries: QuickAlgoLibraries) {
     quickAlgoLibraries.reset(testData, state);
 }
 
-function getTaskTest(currentTask: any, currentLevel: number) {
+export function getTaskTest(currentTask: any, currentLevel: number) {
     return currentTask.data[taskLevels[currentLevel]][0];
 }
 
@@ -231,18 +231,6 @@ export default function (bundle: Bundle) {
             actions: taskSlice.actions,
             reducers: taskSlice.caseReducers,
             onResetDisabled: true,
-        });
-
-        // const context = quickAlgoLibraries.getContext();
-
-        app.replayApi.on('start', function(replayContext: ReplayContext) {
-            const currentState = original(replayContext.state.task);
-
-            replayContext.state.task = {
-                ...currentState,
-                currentTest: getTaskTest(currentState.currentTask, currentState.currentLevel),
-                // state: context && context.getCurrentState ? {...context.getCurrentState()} : {},
-            };
         });
 
         app.stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {

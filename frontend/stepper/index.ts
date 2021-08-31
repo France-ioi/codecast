@@ -37,7 +37,7 @@ import {
     StepperContext,
     StepperError, QuickalgoLibraryCall
 } from './api';
-import CompileBundle, {compileFailedReducer, CompileStatus} from './compile';
+import CompileBundle, {compileFailedReducer, CompileStatus, initialStateCompile} from './compile';
 import EffectsBundle from './c/effects';
 
 import DelayBundle from './delay';
@@ -64,6 +64,7 @@ import {App} from "../index";
 import {current, produce} from "immer";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {taskSuccess} from "../task/task_slice";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -877,9 +878,9 @@ function postLink(app: App) {
     recordApi.onStart(function* () {
         /* TODO: store stepper options in init */
     });
-    replayApi.on('start', function(replayContext: ReplayContext) {
+    replayApi.on('start', function*() {
         /* TODO: restore stepper options from event[2] */
-        initReducer(replayContext.state);
+        yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'stepper', state: initialStateStepper}});
     });
     replayApi.onReset(function* (instant: PlayerInstant) {
         const stepperState = instant.state.stepper;

@@ -30,6 +30,7 @@ import {Bundle} from "../linker";
 import {App} from "../index";
 import {isStepperInterrupting} from "./selectors";
 import {checkCompilingCode} from "../task/utils";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -59,14 +60,6 @@ export default function(bundle: Bundle) {
     // Clear the 'compile' state.
     bundle.defineAction(ActionTypes.CompileClear);
     bundle.addReducer(ActionTypes.CompileClear, initReducer);
-
-    // Reset the 'compile' state.
-    bundle.defineAction(ActionTypes.CompileReset);
-    bundle.addReducer(ActionTypes.CompileReset, compileResetReducer);
-
-    function compileResetReducer(state: AppStoreReplay, action): void {
-        state.compile = action.state;
-    }
 
     // Started translation of {source}.
     bundle.defineAction(ActionTypes.CompileStarted);
@@ -164,8 +157,8 @@ export default function(bundle: Bundle) {
     });
 
     bundle.defer(function({recordApi, replayApi}: App) {
-        replayApi.on('start', function(replayContext: ReplayContext) {
-            compileResetReducer(replayContext.state, {state: initialStateCompile});
+        replayApi.on('start', function* () {
+            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: initialStateCompile}});
         });
 
         recordApi.on(ActionTypes.CompileStarted, function* (addEvent, action) {
@@ -212,7 +205,7 @@ export default function(bundle: Bundle) {
         replayApi.onReset(function* (instant: PlayerInstant) {
             const compileModel = instant.state.compile;
 
-            yield put({type: ActionTypes.CompileReset, state: compileModel});
+            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: compileModel}});
         });
     });
 };

@@ -44,8 +44,10 @@ log.getLogger('python_interpreter').setLevel('info');
 
 interface Codecast {
     store: AppStore,
+    replayStore: AppStore,
     scope: any,
     task?: any,
+    replayTask?: any,
     start?: Function,
     restart: Function
 }
@@ -54,12 +56,14 @@ export interface App {
     recordApi: RecordApi,
     replayApi: ReplayApi,
     stepperApi: StepperApi,
-    dispatch: Function
+    dispatch: Function,
+    replay: boolean,
 }
 
 declare global {
     interface Window extends WindowLocalStorage {
         store: EnhancedStore<AppStore>,
+        replayStore: EnhancedStore<AppStore>,
         Codecast: Codecast,
         currentPythonRunner: any,
         currentPythonContext: any,
@@ -96,7 +100,7 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
     // 'Player.Tick': true
 };
 
-const {store, scope, finalize, start} = link(function(bundle: Bundle) {
+const {store, replayStore, scope, replayScope, finalize, start, startReplay} = link(function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.AppInit);
     bundle.addReducer(ActionTypes.AppInit, () => {
         // return {};
@@ -119,7 +123,7 @@ const {store, scope, finalize, start} = link(function(bundle: Bundle) {
 finalize(scope);
 
 /* In-browser API */
-const Codecast: Codecast = window.Codecast = {store, scope, restart};
+export const Codecast: Codecast = window.Codecast = {store, replayStore, scope, restart};
 
 /*
   options :: {
@@ -145,9 +149,14 @@ function restart() {
         Codecast.task.cancel();
         Codecast.task = null;
     }
+    if (Codecast.replayTask) {
+        Codecast.replayTask.cancel();
+        Codecast.replayTask = null;
+    }
 
     /* XXX Make a separate object for selectors in the linker? */
     Codecast.task = start(scope);
+    Codecast.replayTask = startReplay(replayScope);
 }
 
 function clearUrl() {
