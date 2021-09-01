@@ -40,11 +40,13 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "./selectors";
 import {current, immerable} from "immer";
-import {AppStore, AppStoreReplay} from "../store";
+import {AppStore} from "../store";
 import {ReplayContext} from "../player/sagas";
 import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
 import {App} from "../index";
+import {getCurrentStepperState} from "../stepper/selectors";
+import {getNodeRange} from "../stepper";
 
 // import 'brace/theme/ambiance';
 // import 'brace/theme/chaos';
@@ -185,20 +187,20 @@ function bufferResetReducer(state: AppStore, action): void {
     state.buffers[buffer].model = model;
 }
 
-function bufferEditReducer(state: AppStoreReplay, action): void {
+function bufferEditReducer(state: AppStore, action): void {
     const {buffer, delta} = action;
     const oldDoc = state.buffers[buffer].model.document;
 
     state.buffers[buffer].model.document = oldDoc.applyDelta(delta);
 }
 
-function bufferSelectReducer(state: AppStoreReplay, action): void {
+function bufferSelectReducer(state: AppStore, action): void {
     const {buffer, selection} = action;
 
     state.buffers[buffer].model.selection = selection;
 }
 
-function bufferScrollReducer(state: AppStoreReplay, action): void {
+function bufferScrollReducer(state: AppStore, action): void {
     const {buffer, firstVisibleRow} = action;
 
     state.buffers[buffer].model.firstVisibleRow = firstVisibleRow;
@@ -394,7 +396,7 @@ function addReplayHooks({replayApi}: App) {
         }
 
         if (delta) {
-            bufferEditReducer(replayContext.state, {buffer, delta});
+            yield put({type: ActionTypes.BufferEdit, buffer, delta});
             yield call(replayApi.applyEvent,'buffer.edit', replayContext, [buffer]);
 
             replayContext.addSaga(function* () {
@@ -402,26 +404,27 @@ function addReplayHooks({replayApi}: App) {
             });
         }
     });
-    replayApi.on('buffer.scroll', function(replayContext: ReplayContext, event) {
+    replayApi.on('buffer.scroll', function* (replayContext: ReplayContext, event) {
         // XXX use reducer imported from common/buffers
         const buffer = event[2];
         const firstVisibleRow = event[3];
 
-        bufferScrollReducer(replayContext.state, {buffer, firstVisibleRow});
+        yield put({type: ActionTypes.BufferScroll, buffer, firstVisibleRow});
+
         replayContext.addSaga(function* () {
             yield put({type: ActionTypes.BufferModelScroll, buffer, firstVisibleRow});
         });
     });
-    replayApi.onReset(function* ({state, range}: PlayerInstant, quick) {
+    replayApi.onReset(function* ({state}: PlayerInstant, quick) {
         /* Reset all buffers. */
-        console.log('BUFFER RESET', state, range);
+        console.log('BUFFER RESET', state);
         for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer].model;
 
             yield put({type: ActionTypes.BufferReset, buffer, model, quiet: quick});
         }
-        if (range) {
-            yield put({type: ActionTypes.BufferHighlight, buffer: 'source', range});
-        }
+
+        const range = getNodeRange(getCurrentStepperState(state));
+        yield put({type: ActionTypes.BufferHighlight, buffer: 'source', range});
     });
 }

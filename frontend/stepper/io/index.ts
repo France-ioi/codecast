@@ -6,15 +6,13 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {getBufferModel} from "../../buffers/selectors";
-import {AppStore, AppStoreReplay} from "../../store";
+import {AppStore} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../api";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
-import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
-import {PrinterLib} from "../../task/libs/printer/printer_lib";
 import {TermBuffer} from "./terminal";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 
@@ -54,7 +52,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.IoPaneModeChanged);
     bundle.addReducer(ActionTypes.IoPaneModeChanged, ioPaneModeChangedReducer);
 
-    function ioPaneModeChangedReducer(state: AppStoreReplay, {payload: {mode}}): void {
+    function ioPaneModeChangedReducer(state: AppStore, {payload: {mode}}): void {
         state.ioPane.mode = mode;
     }
 
@@ -84,10 +82,10 @@ export default function(bundle: Bundle) {
         recordApi.on(ActionTypes.IoPaneModeChanged, function* (addEvent, {payload: {mode}}) {
             yield call(addEvent, 'ioPane.mode', mode);
         });
-        replayApi.on('ioPane.mode', function(replayContext: ReplayContext, event) {
+        replayApi.on('ioPane.mode', function* (replayContext: ReplayContext, event) {
             const mode = event[2];
 
-            ioPaneModeChangedReducer(replayContext.state, {payload: {mode}});
+            yield put({type: ActionTypes.IoPaneModeChanged, payload: {mode}});
         });
 
         /* Set up the terminal or input. */

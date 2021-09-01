@@ -324,7 +324,7 @@ export function clearStepper(stepper: Stepper) {
     stepper.currentStepperState = null;
 }
 
-function getNodeRange(stepperState: StepperState) {
+export function getNodeRange(stepperState?: StepperState) {
     if (!stepperState) {
         return null;
     }
@@ -868,10 +868,6 @@ function* stepperSaga(args) {
 
 /* Post-link, register record and replay hooks. */
 
-function updateRange(replayContext: ReplayContext) {
-    replayContext.instant.range = getNodeRange(getCurrentStepperState(replayContext.state));
-}
-
 function postLink(app: App) {
     const {recordApi, replayApi, stepperApi} = app;
 
@@ -886,17 +882,13 @@ function postLink(app: App) {
         const stepperState = instant.state.stepper;
 
         yield put({type: ActionTypes.StepperReset, payload: {stepperState}});
-        yield put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: instant.range});
     });
 
     recordApi.on(ActionTypes.StepperExit, function* (addEvent) {
         yield call(addEvent, 'stepper.exit');
     });
-    replayApi.on('stepper.exit', function(replayContext: ReplayContext) {
-        stepperExitReducer(replayContext.state);
-
-        /* Clear the highlighted range when the stepper terminates. */
-        replayContext.instant.range = null;
+    replayApi.on('stepper.exit', function* () {
+        yield put({type: ActionTypes.StepperExit});
     });
 
     recordApi.on(ActionTypes.StepperRestart, function* (addEvent) {
@@ -1089,7 +1081,6 @@ function postLink(app: App) {
     function stepperEventReplayed(replayContext: ReplayContext) {
         const done = replayContext.stepperDone;
         replayContext.stepperDone = null;
-        updateRange(replayContext);
         done();
     }
 
@@ -1115,35 +1106,29 @@ function postLink(app: App) {
     recordApi.on(ActionTypes.StepperUndo, function* (addEvent) {
         yield call(addEvent, 'stepper.undo');
     });
-    replayApi.on('stepper.undo', function(replayContext: ReplayContext) {
-        stepperUndoReducer(replayContext.state);
-
-        updateRange(replayContext);
+    replayApi.on('stepper.undo', function* () {
+        yield put({type: ActionTypes.StepperUndo});
     });
 
     recordApi.on(ActionTypes.StepperRedo, function* (addEvent) {
         yield call(addEvent, 'stepper.redo');
     });
-    replayApi.on('stepper.redo', function(replayContext: ReplayContext) {
-        stepperRedoReducer(replayContext.state);
-
-        updateRange(replayContext);
+    replayApi.on('stepper.redo', function* () {
+        yield put({type: ActionTypes.StepperRedo});
     });
 
     recordApi.on(ActionTypes.StepperStackUp, function* (addEvent) {
         yield call(addEvent, 'stepper.stack.up');
     });
-    replayApi.on('stepper.stack.up', function(replayContext: ReplayContext) {
-        stepperStackUpReducer(replayContext.state);
-        updateRange(replayContext);
+    replayApi.on('stepper.stack.up', function* () {
+        yield put({type: ActionTypes.StepperStackUp});
     });
 
     recordApi.on(ActionTypes.StepperStackDown, function* (addEvent) {
         yield call(addEvent, 'stepper.stack.down');
     });
-    replayApi.on('stepper.stack.down', function(replayContext: ReplayContext) {
-        stepperStackDownReducer(replayContext.state);
-        updateRange(replayContext);
+    replayApi.on('stepper.stack.down', function* () {
+        yield put({type: ActionTypes.StepperStackDown});
     });
 
     recordApi.on(ActionTypes.StepperViewControlsChanged, function* (addEvent, action) {
@@ -1151,11 +1136,11 @@ function postLink(app: App) {
 
         yield call(addEvent, 'stepper.view.update', key, update);
     });
-    replayApi.on('stepper.view.update', function(replayContext: ReplayContext, event) {
+    replayApi.on('stepper.view.update', function* (replayContext: ReplayContext, event) {
         const key = event[2];
         const update = event[3];
 
-        stepperViewControlsChangedReducer(replayContext.state, {key, update});
+        yield put({type: ActionTypes.StepperViewControlsChanged, key, update});
     });
 
     recordApi.on(ActionTypes.StepperSpeedChanged, function* (addEvent, action) {
@@ -1163,10 +1148,10 @@ function postLink(app: App) {
 
         yield call(addEvent, 'stepper.speed.changed', speed);
     });
-    replayApi.on('stepper.speed.changed', function(replayContext: ReplayContext, event) {
+    replayApi.on('stepper.speed.changed', function* (replayContext: ReplayContext, event) {
         const speed = event[2];
 
-        stepperSpeedChangedReducer(replayContext.state, {payload: {speed}});
+        yield put({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
     });
 
     recordApi.on(ActionTypes.StepperControlsChanged, function* (addEvent, action) {
@@ -1174,10 +1159,10 @@ function postLink(app: App) {
 
         yield call(addEvent, 'stepper.controls.changed', controls);
     });
-    replayApi.on('stepper.controls.changed', function(replayContext: ReplayContext, event) {
+    replayApi.on('stepper.controls.changed', function* (replayContext: ReplayContext, event) {
         const controls = event[2];
 
-        stepperControlsChangedReducer(replayContext.state, {payload: {controls}});
+        yield put({type: ActionTypes.StepperControlsChanged, payload: {controls}});
     });
 
     stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {

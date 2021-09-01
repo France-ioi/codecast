@@ -3,14 +3,13 @@ import {call, put, take} from 'redux-saga/effects';
 import {writeString} from "../io/terminal";
 import PythonInterpreter from "./python_interpreter";
 import {ActionTypes} from './actionTypes';
-import {ActionTypes as StepperActionTypes, ActionTypes as CompileActionTypes} from '../actionTypes';
-import {AppStore, AppStoreReplay} from "../../store";
+import {ActionTypes as CompileActionTypes} from '../actionTypes';
+import {AppStore} from "../../store";
 import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
-import {taskSuccess} from "../../task/task_slice";
 
 const pythonInterpreterChannel = channel();
 
@@ -25,7 +24,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.StackViewPathToggle);
     bundle.addReducer(ActionTypes.StackViewPathToggle, stackViewPathToggleReducer);
 
-    function stackViewPathToggleReducer(state: AppStoreReplay, action): void {
+    function stackViewPathToggleReducer(state: AppStore, action): void {
         const {scopeIndex, path, isOpened} = action.payload;
 
         state.stepper.currentStepperState.analysis.functionCallStack[scopeIndex].openedPaths[path] = isOpened;
@@ -35,10 +34,10 @@ export default function(bundle: Bundle) {
         recordApi.on(ActionTypes.StackViewPathToggle, function* (addEvent, action) {
             yield call(addEvent, 'stackview.path.toggle', action);
         });
-        replayApi.on('stackview.path.toggle', function(replayContext: ReplayContext, event) {
+        replayApi.on('stackview.path.toggle', function* (replayContext: ReplayContext, event) {
             const action = event[2];
 
-            stackViewPathToggleReducer(replayContext.state, action);
+            yield put({type: ActionTypes.StackViewPathToggle, payload: action});
         });
 
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore, replay: boolean = false) {

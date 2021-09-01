@@ -189,7 +189,6 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
        to an action that is dispatched to the store (which must have an
        appropriate reducer) plus an optional saga to be called during playback. */
     let pos, progress, lastProgress = 0, range;
-    let waitingPromises = [];
     const events = replayContext.events;
     const duration = events[events.length - 1][0];
     const replayStore = Codecast.replayStore;
@@ -298,16 +297,6 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
             yield call(replayStore.dispatch, {type: PlayerActionTypes.PlayerApplyReplayEvent, payload: {replayApi, key, replayContext, event}});
             // yield call(replayApi.applyEvent, key, replayContext, event);
         // }
-
-
-
-        /* Preserve the last explicitly set range. */
-        // TODO: Is this used ?
-        if ('range' in instant) {
-            range = instant.range;
-        } else {
-            instant.range = range;
-        }
 
         // instant.state = replayContext.state;
         instant.state = replayStore.getState();

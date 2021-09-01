@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
 import log from 'loglevel';
 import 'rc-slider/assets/index.css?global';
-import {AppStore, AppStoreReplay} from './store';
+import {AppStore} from './store';
 import {Bundle, link} from './linker';
 import commonBundle from './common/index';
 import playerBundle from './player/index';
@@ -113,7 +113,7 @@ const {store, replayStore, scope, replayScope, finalize, start, startReplay} = l
     bundle.include(statisticsBundle);
 
     if (process.env['NODE_ENV'] === 'development') {
-        bundle.addEarlyReducer(function(state: AppStoreReplay, action): void {
+        bundle.addEarlyReducer(function(state: AppStore, action): void {
             if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
                 log.debug('action', action);
             }

@@ -21,11 +21,11 @@ import './style.scss';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {NPorts} from "./config";
-import {AppStore, AppStoreReplay} from "../../store";
+import {AppStore} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {StepperContext} from "../api";
-import {initialStateStepper, StepperState} from "../index";
+import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
@@ -74,7 +74,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.ArduinoPortConfigured);
     bundle.addReducer(ActionTypes.ArduinoPortConfigured, arduinoPortConfiguredReducer);
 
-    function arduinoPortConfiguredReducer(state: AppStoreReplay, action): void {
+    function arduinoPortConfiguredReducer(state: AppStore, action): void {
         const {index, changes} = action;
 
         // Change has the shape of an immutable update parameter. We keep it to be compatible with old records.
@@ -84,7 +84,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.ArduinoPortChanged);
     bundle.addReducer(ActionTypes.ArduinoPortChanged, arduinoPortChangedReducer);
 
-    function arduinoPortChangedReducer(state: AppStoreReplay, action): void {
+    function arduinoPortChangedReducer(state: AppStore, action): void {
         const {index, changes} = action;
 
         // Change has the shape of an immutable update parameter. We keep it to be compatible with old records.
@@ -94,7 +94,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.ArduinoPortSelected);
     bundle.addReducer(ActionTypes.ArduinoPortSelected, arduinoPortSelectedReducer);
 
-    function arduinoPortSelectedReducer(state: AppStoreReplay, action): void {
+    function arduinoPortSelectedReducer(state: AppStore, action): void {
         const {index} = action;
 
         state.stepper.currentStepperState.selectedPort = index;
@@ -131,11 +131,11 @@ export default function(bundle: Bundle) {
 
             yield call(addEvent, 'arduino.port.configured', index, changes);
         });
-        replayApi.on('arduino.port.configured', function(replayContext: ReplayContext, event) {
+        replayApi.on('arduino.port.configured', function* (replayContext: ReplayContext, event) {
             const index = event[2];
             const changes = event[3];
 
-            arduinoPortConfiguredReducer(replayContext.state, {index, changes});
+            yield put({type: ActionTypes.ArduinoPortConfigured, index, changes});
         });
 
         recordApi.on(ActionTypes.ArduinoPortChanged, function* (addEvent, action) {
@@ -143,11 +143,11 @@ export default function(bundle: Bundle) {
 
             yield call(addEvent, 'arduino.port.changed', index, changes);
         });
-        replayApi.on('arduino.port.changed', function(replayContext: ReplayContext, event) {
+        replayApi.on('arduino.port.changed', function* (replayContext: ReplayContext, event) {
             const index = event[2];
             const changes = event[3];
 
-            arduinoPortChangedReducer(replayContext.state, {index, changes});
+            yield put({type: ActionTypes.ArduinoPortChanged, index, changes});
         });
 
         recordApi.on(ActionTypes.ArduinoPortSelected, function* (addEvent, action) {
@@ -155,10 +155,10 @@ export default function(bundle: Bundle) {
 
             yield call(addEvent, 'arduino.port.selected', index);
         });
-        replayApi.on('arduino.port.selected', function(replayContext: ReplayContext, event) {
+        replayApi.on('arduino.port.selected', function* (replayContext: ReplayContext, event) {
             const index = event[2];
 
-            arduinoPortSelectedReducer(replayContext.state, {index});
+            yield put({type: ActionTypes.ArduinoPortSelected, index});
         });
 
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {

@@ -72,11 +72,10 @@ export function addAutoRecordingBehaviour({recordApi, replayApi}: App, {sliceNam
             });
         }
 
-        replayApi.on(action.type, function (replayContext: ReplayContext, event) {
+        replayApi.on(action.type, function* (replayContext: ReplayContext, event) {
             const payload = event[2];
-            const reducer = reducers[actionName];
 
-            reducer(replayContext.state[sliceName], action(payload));
+            yield put({type: action.type, payload});
         });
     }
 
