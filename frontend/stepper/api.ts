@@ -28,6 +28,7 @@ export interface StepperContext {
     interrupted?: boolean,
     interactBefore: Function | null,
     interactAfter: Function | null,
+    waitForProgress?: Function,
     resume: Function | null,
     position: any,
     lineCounter: number,
@@ -160,7 +161,7 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, interactBefore: Function, interactAfter: Function): StepperContext {
+export function makeContext(stepper: Stepper, interactBefore: Function, interactAfter: Function, waitForProgress?: Function): StepperContext {
     /**
      * We create a new state object here instead of mutating the state. This is intended.
      */
@@ -177,6 +178,7 @@ export function makeContext(stepper: Stepper, interactBefore: Function, interact
             },
             interactBefore,
             interactAfter,
+            waitForProgress,
             resume: null,
             position: getNodeStartRow(state),
             lineCounter: 0,
@@ -194,6 +196,7 @@ export function makeContext(stepper: Stepper, interactBefore: Function, interact
             },
             interactBefore,
             interactAfter,
+            waitForProgress,
             resume: null,
             position: getNodeStartRow(state),
             lineCounter: 0,
@@ -246,11 +249,11 @@ async function executeSingleStep(stepperContext: StepperContext) {
         throw new StepperError('stuck', 'execution cannot proceed');
     }
 
-    if (stepperContext.pendingResume) {
-        // Check if existing is allowed (if the recording was not paused during delay), and send resume signal to recording
-        await stepperContext.interactBefore();
-        stepperContext.pendingResume = false;
-    }
+    // if (stepperContext.pendingResume) {
+    //     Check if existing is allowed (if the recording was not paused during delay), and send resume signal to recording
+        // await stepperContext.interactBefore();
+        // stepperContext.pendingResume = false;
+    // }
 
     if (stepperContext.state.platform === 'python') {
         const result = await window.currentPythonRunner.runStep(createQuickAlgoLibraryExecutor(stepperContext));
@@ -444,17 +447,21 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
         let libraryCallResult;
         const context = quickAlgoLibraries.getContext();
 
-        const draft = createDraft(stepperContext.state)
+        // const draft = createDraft(stepperContext.state)
 
         console.log('stepper context before', stepperContext.state.contextState);
         const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, arguments: args};
-        draft.lastQuickalgoLibraryCalls.push(quickAlgoLibraryCall);
+        stepperContext.state = {
+            ...stepperContext.state,
+            lastQuickalgoLibraryCalls: [...stepperContext.state.lastQuickalgoLibraryCalls, quickAlgoLibraryCall],
+        };
+        // stepperContext.state.lastQuickalgoLibraryCalls.push(quickAlgoLibraryCall);
         console.log('LOG ACTION', module, action, args);
 
         console.log('context', context, context[module]);
 
         // console.log('RELOAD CONTEXT STATE', draft.contextState, original(draft.contextState));
-        context.reloadState(draft.contextState);
+        context.reloadState(stepperContext.state.contextState);
 
         const makeLibraryCall = async () => {
             let result = context[module][action].apply(context, [...args, callback]);
@@ -488,9 +495,12 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
 
         const newState = context.getCurrentState();
         console.log('NEW LIBRARY STATE', newState);
-        draft.contextState = newState;
+        stepperContext.state = {
+            ...stepperContext.state,
+            contextState: newState,
+        };
 
-        stepperContext.state = finishDraft(draft);
+        // stepperContext.state = finishDraft(draft);
 
         console.log('stepper context after', stepperContext.state.contextState);
 

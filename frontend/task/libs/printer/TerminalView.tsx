@@ -6,7 +6,12 @@ import {PureTerminal} from "./PureTerminal";
 import {useDispatch} from "react-redux";
 import {AppStore} from "../../../store";
 import {useAppSelector} from "../../../hooks";
-import {terminalInit, terminalInputBackSpace, terminalInputEnter, terminalInputKey} from "./printer_terminal_slice";
+import {
+    terminalInitElement,
+    terminalInputBackSpace,
+    terminalInputEnter,
+    terminalInputKey
+} from "./printer_terminal_slice";
 import {getPlayerState} from "../../../player/selectors";
 
 export function TerminalView() {
@@ -21,7 +26,7 @@ export function TerminalView() {
     const dispatch = useDispatch();
 
     const onTermInit = (terminalElement) => {
-        dispatch(terminalInit(terminalElement));
+        dispatch(terminalInitElement(terminalElement));
     }
 
     const onTermChar = (key) => {

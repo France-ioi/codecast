@@ -72,7 +72,7 @@ if (!String.prototype.format) {
     }
 }
 
-function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
+function* createContext(quickAlgoLibraries: QuickAlgoLibraries, display = true) {
     const context = quickAlgoLibraries.getContext();
     if (context) {
         context.unload();
@@ -81,7 +81,6 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
     const currentTask = yield select(state => state.task.currentTask);
     const currentLevel = yield select(state => state.task.currentLevel);
     const levelGridInfos = extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]);
-    const display = true;
 
     let contextLib;
     if (levelGridInfos.context) {
@@ -144,15 +143,21 @@ export default function (bundle: Bundle) {
 
     bundle.addSaga(function* (app: App) {
         let oldSagasTask;
+        console.log('INIT TASK SAGAS');
 
         yield takeEvery(TaskActionTypes.TaskLoad, function* () {
+            console.log('TASK LOAD', oldSagasTask);
             if (oldSagasTask) {
                 // Unload task first
                 yield cancel(oldSagasTask);
                 yield put(taskUnload());
             }
 
-            yield call(createContext, quickAlgoLibraries);
+            const context = quickAlgoLibraries.getContext();
+            if (!app.replay && !context) {
+                yield call(createContext, quickAlgoLibraries);
+            }
+
             yield put(taskLoaded());
             const sagas = quickAlgoLibraries.getSagas(app);
             oldSagasTask = yield fork(function* () {
@@ -169,28 +174,6 @@ export default function (bundle: Bundle) {
             const recorderState = getRecorderState(state);
             if (!recorderState.status) {
                 yield put({type: RecorderActionTypes.RecorderPrepare});
-            }
-        });
-
-        app.replayApi.onReset(function* (instant: PlayerInstant) {
-            const taskData = instant.state.task;
-
-            const context = quickAlgoLibraries.getContext();
-            const stepperState = instant.state.stepper;
-            console.log('RELOAD STATE', stepperState);
-            if (stepperState && stepperState.currentStepperState && stepperState.currentStepperState.contextState && context) {
-                context.reloadState(stepperState.currentStepperState.contextState);
-                context.resetDisplay();
-            }
-
-            if (taskData) {
-                yield put(updateCurrentTest(taskData.currentTest));
-                if (taskData.success) {
-                    yield put(taskSuccess(taskData.successMessage));
-                } else {
-                    yield put(taskSuccessClear());
-                }
-                yield put(taskInputNeeded(taskData.inputNeeded));
             }
         });
 
@@ -225,6 +208,28 @@ export default function (bundle: Bundle) {
     });
 
     bundle.defer(function(app: App) {
+        app.replayApi.onReset(function* (instant: PlayerInstant) {
+            const taskData = instant.state.task;
+
+            const context = quickAlgoLibraries.getContext();
+            const stepperState = instant.state.stepper;
+            console.log('RELOAD STATE', stepperState);
+            if (stepperState && stepperState.currentStepperState && stepperState.currentStepperState.contextState && context) {
+                context.reloadState(stepperState.currentStepperState.contextState);
+                context.resetDisplay();
+            }
+
+            if (taskData) {
+                yield put(updateCurrentTest(taskData.currentTest));
+                if (taskData.success) {
+                    yield put(taskSuccess(taskData.successMessage));
+                } else {
+                    yield put(taskSuccessClear());
+                }
+                yield put(taskInputNeeded(taskData.inputNeeded));
+            }
+        });
+
         addAutoRecordingBehaviour(app, {
             sliceName: taskSlice.name,
             actionNames: taskRecordableActions,

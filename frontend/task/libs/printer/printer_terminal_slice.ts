@@ -25,6 +25,9 @@ export const printerTerminalSlice = createSlice({
                 state.terminalElement = action.payload;
             }
         },
+        terminalInitElement(state, action: PayloadAction<any>) {
+            state.terminalElement = action.payload;
+        },
         terminalInputKey(state, action: PayloadAction<string>) {
             state.inputBuffer = state.inputBuffer + action.payload;
         },
@@ -58,6 +61,7 @@ export const printerTerminalSlice = createSlice({
 
 export const {
     terminalInit,
+    terminalInitElement,
     terminalInputKey,
     terminalInputBackSpace,
     terminalFocus,

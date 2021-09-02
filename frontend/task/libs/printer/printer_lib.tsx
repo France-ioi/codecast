@@ -8,7 +8,7 @@ import {ActionTypes} from "../../../buffers/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
 import {TaskActionTypes as TaskActionTypes, taskInputEntered,} from "../../index";
 import {documentModelFromString} from "../../../buffers";
-import taskSlice, {taskInputNeeded, updateCurrentTest} from "../../task_slice";
+import {taskInputNeeded, updateCurrentTest} from "../../task_slice";
 import printerTerminalSlice, {
     printerTerminalInitialState,
     printerTerminalRecordableActions,
@@ -24,7 +24,6 @@ import {IoMode} from "../../../stepper/io";
 import {ReplayContext} from "../../../player/sagas";
 import {TermBuffer, writeString} from "../../../stepper/io/terminal";
 import {PlayerInstant} from "../../../player";
-import {current} from "immer";
 
 function escapeHtml(unsafe) {
     return unsafe
@@ -584,7 +583,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         if (input) {
             const {payload: inputValue} = input;
 
-            console.log('previous', context.printer.ioEvents, current(context.printer.ioEvents));
+            // console.log('previous', context.printer.ioEvents, current(context.printer.ioEvents));
 
             context.printer.ioEvents = [
                 ...context.printer.ioEvents,
@@ -620,7 +619,7 @@ export class PrinterLib extends QuickAlgoLibrary {
 
         let termBuffer = new TermBuffer({lines: 10, width: 60});
         termBuffer = writeString(termBuffer, context.getTerminalText());
-        console.log('WRITE TEXT', context.getTerminalText());
+        console.log('WRITE TEXT sync io', context.getTerminalText());
         yield put(terminalReset({terminal: termBuffer}));
         console.log('TEXT WRITTEN');
     }
@@ -718,6 +717,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     *getSaga(app: App) {
+        console.log('START PRINTER LIB SAGA');
         const context = this;
         yield fork(this.executionChannelSaga, this);
 
@@ -736,20 +736,21 @@ export class PrinterLib extends QuickAlgoLibrary {
 
         yield takeEvery(terminalInputEnter.type, function* (action) {
             const inputValue = yield select((state: AppStore) => state.printerTerminal.lastInput);
+            console.log('RECEIVE TERMINAL INPUT ENTER');
 
             // yield put(terminalInputEnter()); // empty buffer
             yield put(taskInputNeeded(false));
             yield put(taskInputEntered(inputValue));
         });
 
-        if (!recordApiInit) {
+        if (!recordApiInit && !app.replay) {
             recordApiInit = true;
 
             // For replay purposes
             app.replayApi.on('buffer.edit', function* (replayContext: ReplayContext, event) {
+                const buffer = event[0];
                 const bufferValue = yield select(state => state.buffers[buffer]);
 
-                const buffer = event[0];
                 let currentTest: {input?: string, output?: string} = {};
                 if (inputBufferLibTest === buffer) {
                     currentTest.input = bufferValue.model.document.toString();
@@ -792,7 +793,7 @@ export class PrinterLib extends QuickAlgoLibrary {
 
                     let termBuffer = new TermBuffer({lines: 10, width: 60});
                     termBuffer = writeString(termBuffer, context.getTerminalText());
-                    console.log('WRITE TEXT', context.getTerminalText());
+                    console.log('WRITE TEXT onReset', context.printer.ioEvents, context.getTerminalText());
                     yield put(terminalReset({...instant.state.printerTerminal, terminal: termBuffer}));
                     console.log('TEXT WRITTEN');
 

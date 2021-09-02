@@ -175,10 +175,8 @@ export default function(bundle: Bundle) {
 
 function bufferLoadReducer(state: AppStore, action): void {
     const {buffer, text} = action;
-    console.log('load buffer', buffer, text)
     initBufferIfNeeded(state, buffer);
     state.buffers[buffer].model = new DocumentModel(documentFromString(text));
-    console.log('new model', state.buffers[buffer].model);
 }
 
 function bufferResetReducer(state: AppStore, action): void {
@@ -346,6 +344,7 @@ function addRecordHooks({recordApi}: App) {
 }
 
 function addReplayHooks({replayApi}: App) {
+    console.log('ADD REPLAY HOOKS');
     replayApi.on('start', function* (replayContext: ReplayContext, event) {
         const {buffers} = event[2];
         // replayContext.state.buffers = {};
@@ -353,7 +352,6 @@ function addReplayHooks({replayApi}: App) {
 
         for (let bufferName of Object.keys(buffers)) {
             const text = buffers[bufferName].document;
-            console.log('buffer init', bufferName, text);
             yield put({type: ActionTypes.BufferLoad, buffer: bufferName, text});
             //
             // if (!(bufferName in replayContext.state.buffers)) {

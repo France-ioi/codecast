@@ -22,7 +22,7 @@ import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {expandRange} from "../buffers/document";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {getTaskTest} from "../task";
+import {getTaskTest, taskLoad} from "../task";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -194,6 +194,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
     const replayStore = Codecast.replayStore;
 
     yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}}});
+    yield call(replayStore.dispatch, taskLoad());
 
     for (pos = 0; pos < events.length; pos += 1) {
         const event = events[pos];
