@@ -11,12 +11,16 @@ import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
 
-const pythonInterpreterChannel = channel();
+const pythonInterpreterChannels = {
+    main: channel(),
+    replay: channel(),
+}
 
 export default function(bundle: Bundle) {
-    bundle.addSaga(function* watchPythonInterpreterChannel() {
+    bundle.addSaga(function* watchPythonInterpreterChannel(app: App) {
+        let channel = pythonInterpreterChannels[app.replay ? 'replay' : 'main'];
         while (true) {
-            const action = yield take(pythonInterpreterChannel);
+            const action = yield take(channel);
             yield put(action);
         }
     });
@@ -45,18 +49,22 @@ export default function(bundle: Bundle) {
             const source = state.buffers['source'].model.document.toString();
             const context = quickAlgoLibraries.getContext();
 
+            console.log('init stepper', replay);
             if (platform === 'python') {
+                let channel = pythonInterpreterChannels[replay ? 'replay' : 'main'];
+
                 context.onError = (diagnostics) => {
+                    console.log('bim context on error', diagnostics);
                     if (replay) {
                         return;
                     }
 
-                    pythonInterpreterChannel.put({
+                    channel.put({
                         type: CompileActionTypes.StepperInterrupting,
                     });
 
                     const response = {diagnostics};
-                    pythonInterpreterChannel.put({
+                    channel.put({
                         type: CompileActionTypes.CompileFailed,
                         response
                     });
