@@ -1115,10 +1115,10 @@
   dependencies:
     prop-types "^15.7.2"
 
-"@france-ioi/persistent-c@11.2.8":
-  version "11.2.8"
-  resolved "https://npm.pkg.github.com/download/@france-ioi/persistent-c/11.2.8/6fad52576487be0c84c1c7ebe51c40fb1ba4168860f2094eee1c1c2025831584#78cd4a3051ab0e8556e602b32ca78e11372c698e"
-  integrity sha512-nPFgT0U4ep3s57RxJ1M48OcJMnsK2KU1bW20kYU2O+C/yjVWXErhWwZwmOJxFVRzZXk7qab2VDlaCNvxWDZZ/A==
+"@france-ioi/persistent-c@11.2.10":
+  version "11.2.10"
+  resolved "https://npm.pkg.github.com/download/@france-ioi/persistent-c/11.2.10/d8e454372d348b2a848b288ea5dcffde5706cb978ebc87a6dfb9529f6d68570a#91156514b098110344da3835b902d012c815bcd8"
+  integrity sha512-qbFZgYQD9B7YRd40xB1OaUZdBfRu917jF/3Gw8PdvHls/JoW5DGALDPuFCxuMzMyUIQLe0VD5gW32P3eKsgqhA==
   dependencies:
     immutable "^3.7.6"
     text-encoding-utf-8 "^1.0.1"

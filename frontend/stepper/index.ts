@@ -29,6 +29,7 @@ import {
     apply,
     call,
     cancel,
+    cancelled,
     delay,
     fork,
     put,
@@ -36,7 +37,7 @@ import {
     select,
     take,
     takeEvery,
-    takeLatest
+    takeLatest,
 } from 'redux-saga/effects';
 import * as C from '@france-ioi/persistent-c';
 
@@ -687,7 +688,7 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
     /* Update stepperContext.state from the global state to avoid discarding
        the effects of user interaction. */
     state = yield select();
-    stepperContext.state = getCurrentStepperState(state);
+    stepperContext.state = {...getCurrentStepperState(state)};
     stepperContext.speed = getStepper(state).speed;
     console.log('current stepper state3', stepperContext.state.contextState);
 
@@ -731,94 +732,109 @@ function* stepperInterruptSaga() {
 }
 
 function* stepperStepSaga(app: App, action) {
-    const state = yield select();
-    const {waitForProgress} = action.payload;
+    let stepperContext;
+    try {
+        const state = yield select();
+        const {waitForProgress} = action.payload;
 
-    const stepper = getStepper(state);
-    if (stepper.status === StepperStatus.Starting) {
-        yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
+        const stepper = getStepper(state);
+        if (stepper.status === StepperStatus.Starting) {
+            yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
-        const stepperContext = makeContext(stepper, interactBefore, interactAfter, waitForProgress);
-        console.log('bim create context', stepperContext);
-        if (stepperContext.state.platform === 'python') {
-            yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
-        }
-
-        try {
-            yield call(performStep, stepperContext, action.payload.mode, action.payload.useSpeed);
-        } catch (ex) {
-            console.log('stepperStepSaga has catched', ex);
-            if (!(ex instanceof StepperError)) {
-                ex = new StepperError('error', stringifyError(ex));
+            stepperContext = makeContext(stepper, interactBefore, interactAfter, waitForProgress);
+            console.log('bim create context', stepperContext);
+            if (stepperContext.state.platform === 'python') {
+                yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
             }
-            if (ex.condition === 'interrupt') {
-                stepperContext.interrupted = true;
 
-                yield put({type: ActionTypes.StepperInterrupted});
+            try {
+                yield call(performStep, stepperContext, action.payload.mode, action.payload.useSpeed);
+            } catch (ex) {
+                console.log('stepperStepSaga has catched', ex);
+                if (!(ex instanceof StepperError)) {
+                    ex = new StepperError('error', stringifyError(ex));
+                }
+                if (ex.condition === 'interrupt') {
+                    stepperContext.interrupted = true;
+
+                    yield put({type: ActionTypes.StepperInterrupted});
+                }
+                if (ex.condition === 'error') {
+                    const response = {diagnostics: ex.message};
+                    yield put({type: ActionTypes.CompileFailed, response});
+                    // stepperContext.state.error = ex.message;
+                }
             }
-            if (ex.condition === 'error') {
-                const response = {diagnostics: ex.message};
-                yield put({type: ActionTypes.CompileFailed, response});
-                // stepperContext.state.error = ex.message;
+
+            if (stepperContext.state.platform === 'python') {
+                // Save scope.
+                stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
+            } else if (stepperContext.state.platform === 'unix') {
+                stepperContext.state.isFinished = !stepperContext.state.programState.control;
             }
-        }
 
-        if (stepperContext.state.platform === 'python') {
-            // Save scope.
-            stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
-        } else if (stepperContext.state.platform === 'unix') {
-            stepperContext.state.isFinished = !stepperContext.state.programState.control;
-        }
-
-        if (stepperContext.state.isFinished) {
-            console.log('check end condition');
-            const taskContext = quickAlgoLibraries.getContext();
-            if (taskContext && taskContext.infos.checkEndCondition) {
-                try {
-                    taskContext.infos.checkEndCondition(taskContext, true);
-                } catch (message) {
-                    // @ts-ignore
-                    if (taskContext.success) {
-                        yield put(taskSuccess(message));
-                        yield put({
-                            type: StepperActionTypes.StepperExit,
-                            payload: {reset: false},
-                        });
-                    } else {
-                        const response = {diagnostics: message};
-                        yield put({
-                            type: CompileActionTypes.CompileFailed,
-                            response
-                        });
+            if (stepperContext.state.isFinished) {
+                console.log('check end condition');
+                const taskContext = quickAlgoLibraries.getContext();
+                if (taskContext && taskContext.infos.checkEndCondition) {
+                    try {
+                        taskContext.infos.checkEndCondition(taskContext, true);
+                    } catch (message) {
+                        // @ts-ignore
+                        if (taskContext.success) {
+                            yield put(taskSuccess(message));
+                            yield put({
+                                type: StepperActionTypes.StepperExit,
+                                payload: {reset: false},
+                            });
+                        } else {
+                            const response = {diagnostics: message};
+                            yield put({
+                                type: CompileActionTypes.CompileFailed,
+                                response
+                            });
+                        }
                     }
                 }
             }
-        }
 
-        const newState = yield select();
-        const newStepper = getStepper(newState);
-        if (StepperStatus.Clear !== newStepper.status) {
-            yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
-        }
+            const newState = yield select();
+            const newStepper = getStepper(newState);
+            if (StepperStatus.Clear !== newStepper.status) {
+                yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
+            }
 
-        function interactBefore(arg) {
-            return new Promise((resolve, reject) => {
-                app.dispatch({
-                    type: ActionTypes.StepperInteractBefore,
-                    payload: {stepperContext, arg},
-                    meta: {resolve, reject}
+            function interactBefore(arg) {
+                return new Promise((resolve, reject) => {
+                    app.dispatch({
+                        type: ActionTypes.StepperInteractBefore,
+                        payload: {stepperContext, arg},
+                        meta: {resolve, reject}
+                    });
                 });
-            });
-        }
+            }
 
-        function interactAfter(arg) {
-            return new Promise((resolve, reject) => {
-                app.dispatch({
-                    type: ActionTypes.StepperInteract,
-                    payload: {stepperContext, arg},
-                    meta: {resolve, reject}
+            function interactAfter(arg) {
+                return new Promise((resolve, reject) => {
+                    app.dispatch({
+                        type: ActionTypes.StepperInteract,
+                        payload: {stepperContext, arg},
+                        meta: {resolve, reject}
+                    });
                 });
-            });
+            }
+        }
+    }  finally {
+        console.log('end stepper saga');
+        if (yield cancelled()) {
+            // If the stepper execution was cancelled, we make a final
+            // call to waitForProgress to start over the execution
+            // of the replay thread
+            console.log('has been cancelled', stepperContext.waitForProgress);
+            if (stepperContext.waitForProgress) {
+                console.log('call resume');
+                stepperContext.waitForProgress(stepperContext);
+            }
         }
     }
 }
@@ -939,8 +955,10 @@ function postLink(app: App) {
         let waitForProgress;
 
         const promise = new Promise((resolve, reject) => {
+            console.log('PROMISE RETURNED');
             let sagas = [];
             waitForProgress = (stepperContext) => {
+                console.log('INSIDE WAIT FOR PROGRESS');
                 replayContext.stepperContext = stepperContext;
                 // if (_.saga) {
                 //     console.log('INTERACT AFTER - received saga', _.saga);
@@ -948,6 +966,7 @@ function postLink(app: App) {
                 // }
 
                 return new Promise((cont) => {
+                    console.log('INSIDE PROMISE');
                     stepperSuspend(stepperContext, cont);
                     stepperEventReplayed(replayContext);
                 });
@@ -956,9 +975,12 @@ function postLink(app: App) {
             replayContext.stepperDone = resolve;
         });
 
+        console.log('before put step');
         yield put({type: ActionTypes.StepperStep, payload: {mode, waitForProgress}});
 
-        return promise;
+        console.log('before yield promise', promise);
+        yield promise;
+        console.log('after yield promise', promise);
 
         // let sagas = [];
         // const stepperStepContent = () => {
@@ -1049,6 +1071,7 @@ function postLink(app: App) {
         const promise = new Promise((resolve, reject) => {
             let sagas = [];
             waitForProgress = (stepperContext) => {
+                console.log('stepper progress resume ?');
                 // if (_.saga) {
                 //     console.log('INTERACT AFTER - received saga', _.saga);
                 //     sagas.push(_.saga);
@@ -1065,10 +1088,14 @@ function postLink(app: App) {
 
         const {resume} = replayContext.stepperContext;
         if (resume) {
-            resume();
+            try {
+                resume();
+            } catch (e) {
+                console.error('exception', e);
+            }
         }
 
-        return promise;
+        yield promise;
         //
         // yield call(stepperProgressContent);
         //

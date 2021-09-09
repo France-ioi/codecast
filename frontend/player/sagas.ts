@@ -3,7 +3,7 @@
 // where source and input are buffer models (of shape {document, selection, firstVisibleRow}).
 
 import {buffers, eventChannel} from 'redux-saga';
-import {call, fork, put, race, select, take, takeLatest} from 'redux-saga/effects';
+import {call, delay, fork, put, race, select, take, takeLatest} from 'redux-saga/effects';
 import {getJson} from '../common/utils';
 import {findInstantIndex} from './utils';
 import {ActionTypes} from "./actionTypes";
@@ -23,6 +23,7 @@ import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {expandRange} from "../buffers/document";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getTaskTest, taskLoad} from "../task";
+import {taskInputNeeded} from "../task/task_slice";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -295,7 +296,11 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         //     yield call(replayStore.dispatch, {type: BufferActionTypes.BufferSelect, buffer, selection});
         //     console.log('end test');
         // } else {
-            yield call(replayStore.dispatch, {type: PlayerActionTypes.PlayerApplyReplayEvent, payload: {replayApi, key, replayContext, event}});
+        console.log('START REPLAY EVENT (computeInstants)');
+        yield new Promise(resolve => {
+            replayStore.dispatch({type: PlayerActionTypes.PlayerApplyReplayEvent, payload: {replayApi, key, replayContext, event, resolve}});
+        });
+        console.log('END REPLAY EVENT (computeInstants)');
             // yield call(replayApi.applyEvent, key, replayContext, event);
         // }
 
@@ -319,10 +324,18 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
  * This redux saga has been dispatched in the replay store and occurs in this store
  */
 function* playerReplayEvent(app: App, {type, payload}) {
-    console.log('REPLAY EVENT', type, payload);
-    const {replayApi, key, replayContext, event} = payload;
+    console.log('START REPLAY EVENT (playerReplayEvent)', type, payload);
+    const {replayApi, key, replayContext, event, resolve} = payload;
 
-    yield call(replayApi.applyEvent, key, replayContext, event);
+    // Play event, except if we need an input: in this case, end the event execution and continue
+    // playing events until we get the input
+    yield race({
+        event: call(replayApi.applyEvent, key, replayContext, event),
+        inputNeeded: take('task/taskInputNeeded'),
+    });
+
+    console.log('END REPLAY EVENT (playerReplayEvent)');
+    resolve();
 }
 
 function* replaySaga(app: App, {type, payload}) {
