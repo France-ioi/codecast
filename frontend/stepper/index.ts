@@ -444,6 +444,7 @@ function stepperStepReducer(state: AppStore): void {
     /* No check for 'idle' status, the player must be able to step while
        the status is 'running'. */
     state.stepper.status = StepperStatus.Starting;
+    state.stepper.interrupting = false;
 }
 
 function stepperStartedReducer(state: AppStoreReplay, action): void {
