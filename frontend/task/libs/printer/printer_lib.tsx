@@ -70,7 +70,10 @@ interface ExecutionChannelMessage {
     reject?: Function,
 }
 
-const executionChannel = channel<ExecutionChannelMessage>();
+const executionChannels = {
+    main: channel<ExecutionChannelMessage>(),
+    replay: channel<ExecutionChannelMessage>(),
+};
 
 const localLanguageStrings = {
     fr: {
@@ -269,7 +272,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
 
         if (this.display) {
-            executionChannel.put({
+            executionChannels.main.put({
                 action: PrinterLibAction.reset,
             });
         }
@@ -287,17 +290,11 @@ export class PrinterLib extends QuickAlgoLibrary {
     };
 
     resetDisplay() {
-        console.log('RESET DISPLAY, doing nothing');
-        // if (this.display) {
-        //     executionChannel.put({
-        //         action: PrinterLibAction.syncBuffers,
-        //     });
-        // }
     };
 
     commonPrint(args, end) {
         return new Promise<null>((resolve, reject) => {
-            executionChannel.put({
+            executionChannels.main.put({
                 action: PrinterLibAction.printLine,
                 payload: {args, end},
                 resolve,
@@ -624,9 +621,9 @@ export class PrinterLib extends QuickAlgoLibrary {
         console.log('TEXT WRITTEN');
     }
 
-    *executionChannelSaga(context) {
+    *executionChannelSaga(context, replay) {
         while (true) {
-            const parameters = yield take(executionChannel);
+            const parameters = yield take(executionChannels[replay ? 'replay' : 'main']);
             yield fork(context.handleRequest, context, parameters);
         }
     }
@@ -700,6 +697,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                 console.log('PRINT', text);
 
                 if (context.display) {
+                    console.log('has display');
                     yield put({
                         type: ActionTypes.BufferReset,
                         buffer: outputBufferLib,
@@ -719,7 +717,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     *getSaga(app: App) {
         console.log('START PRINTER LIB SAGA');
         const context = this;
-        yield fork(this.executionChannelSaga, this);
+        yield fork(this.executionChannelSaga, this, app.replay);
 
         yield takeEvery(ActionTypes.BufferEdit, function* (action) {
             // @ts-ignore

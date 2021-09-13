@@ -114,7 +114,7 @@ const {store, replayStore, scope, replayScope, finalize, start, startReplay} = l
     if (process.env['NODE_ENV'] === 'development') {
         bundle.addEarlyReducer(function(state: AppStore, action): void {
             if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
-                log.debug('action', action);
+                log.debug(state.replay ? 'action on replay' : 'action', action);
             }
         });
     }

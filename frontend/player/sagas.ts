@@ -194,7 +194,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
     const duration = events[events.length - 1][0];
     const replayStore = Codecast.replayStore;
 
-    yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}}});
+    yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}, replay: true}});
     yield call(replayStore.dispatch, taskLoad());
 
     for (pos = 0; pos < events.length; pos += 1) {
