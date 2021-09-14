@@ -1,4 +1,5 @@
 import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
+import {current, isDraft} from "immer";
 
 export function extractLevelSpecific(item, level) {
     if ((typeof item != "object")) {
@@ -85,4 +86,12 @@ export function checkCompilingCode(code, getMessage) {
             }
         }
     }
+}
+
+export function getCurrentImmerState(object) {
+    return Object.fromEntries(
+        Object.entries(object).map(
+            ([k, v]) => [k, isDraft(v) ? current(v) : v],
+        )
+    )
 }

@@ -9,17 +9,19 @@ import {AppAction, AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
     recordingEnabledChange, taskInputNeeded, taskLevels, taskRecordableActions, taskResetDone,
-    taskSuccess, taskSuccessClear,
+    taskSuccess, taskSuccessClear, taskUpdateState,
     updateCurrentTest
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation";
-import {original} from "immer";
+import {createDraft, current, isDraft, original} from "immer";
 import {PlayerInstant} from "../player";
 import {ActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {StepperState, StepperStatus} from "../stepper";
+import {createQuickAlgoLibraryExecutor, makeContext} from "../stepper/api";
+import {getStepper} from "../stepper/selectors";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -74,6 +76,7 @@ if (!String.prototype.format) {
 
 function* createContext(quickAlgoLibraries: QuickAlgoLibraries, display = true) {
     const context = quickAlgoLibraries.getContext();
+    console.log('Create a context', context);
     if (context) {
         context.unload();
     }
@@ -159,6 +162,12 @@ export default function (bundle: Bundle) {
             }
 
             yield put(taskLoaded());
+
+            if (app.replay && context) {
+                const contextState = context.getCurrentState();
+                yield put(taskUpdateState(isDraft(contextState) ? current(contextState) : contextState));
+            }
+
             const sagas = quickAlgoLibraries.getSagas(app);
             oldSagasTask = yield fork(function* () {
                 yield all(sagas);
@@ -208,15 +217,39 @@ export default function (bundle: Bundle) {
     });
 
     bundle.defer(function(app: App) {
-        app.replayApi.onReset(function* (instant: PlayerInstant) {
+        // Quick mode means continuous play. In this case we can just call every library method
+        // without reloading state or display in between
+        app.replayApi.onReset(function* (instant: PlayerInstant, quick) {
             const taskData = instant.state.task;
 
             const context = quickAlgoLibraries.getContext();
             const stepperState = instant.state.stepper;
             console.log('RELOAD STATE', stepperState);
-            if (stepperState && stepperState.currentStepperState && stepperState.currentStepperState.contextState && context) {
-                context.reloadState(stepperState.currentStepperState.contextState);
-                context.resetDisplay();
+
+            if (!quick) {
+                if (taskData && taskData.state) {
+                    const draft = createDraft(taskData.state);
+                    context.reloadState(draft);
+                }
+                console.log('DO RESET DISPLAY');
+                context.resetDisplay(); // TODO: remove this?
+            }
+
+            if (stepperState && stepperState.currentStepperState && stepperState.currentStepperState.quickalgoLibraryCalls && quick && context) {
+                const stepperContext = makeContext(stepperState, () => {
+                    return Promise.resolve(true);
+                }, () => {
+                    return Promise.resolve(true);
+                });
+                const executor = createQuickAlgoLibraryExecutor(stepperContext, false);
+                for (let quickalgoCall of stepperState.currentStepperState.quickalgoLibraryCalls) {
+                    const {module, action, args} = quickalgoCall;
+                    console.log('start call execution', quickalgoCall, !quick);
+
+                    yield call(executor, module, action, args, () => {
+                        console.log('execution over');
+                    });
+                }
             }
 
             if (taskData) {

@@ -18,7 +18,7 @@ export interface TaskState {
 }
 
 export const taskInitialState = {
-    currentTask: StringRotationFixture,
+    currentTask: SokobanFixture,
     currentLevel: 1,
     recordingEnabled: false,
     resetDone: true,
@@ -62,6 +62,9 @@ export const taskSlice = createSlice({
         taskInputNeeded(state: TaskState, action: PayloadAction<boolean>) {
             state.inputNeeded = action.payload;
         },
+        taskUpdateState(state: TaskState, action: PayloadAction<any>) {
+            state.state = action.payload;
+        },
     },
 });
 
@@ -72,6 +75,7 @@ export const {
     updateCurrentTest,
     taskInputNeeded,
     taskResetDone,
+    taskUpdateState,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

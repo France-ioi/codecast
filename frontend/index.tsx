@@ -69,6 +69,7 @@ declare global {
         languageStrings: any,
         __REDUX_DEVTOOLS_EXTENSION__: any,
         __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: any,
+        quickAlgoLoadedLibraries: any,
         quickAlgoLibraries: any,
         quickAlgoLibrariesList: any,
         quickAlgoContext: Function,

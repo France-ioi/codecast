@@ -55,6 +55,7 @@ export class QuickAlgoLibraries {
 }
 
 export const quickAlgoLibraries = new QuickAlgoLibraries();
+window.quickAlgoLoadedLibraries = quickAlgoLibraries;
 
 export class QuickAlgoLibrary {
     display: boolean;

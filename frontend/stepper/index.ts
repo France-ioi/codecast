@@ -75,7 +75,7 @@ import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
-import {current, produce} from "immer";
+import {current, isDraft, produce} from "immer";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {taskSuccess} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -148,7 +148,7 @@ const initialStateStepperState = {
     },
     isFinished: false, // Only used for python
     contextState: {} as any,
-    lastQuickalgoLibraryCalls: [] as QuickalgoLibraryCall[],
+    quickalgoLibraryCalls: [] as QuickalgoLibraryCall[],
 };
 
 export type StepperState = typeof initialStateStepperState;
@@ -280,11 +280,17 @@ export default function(bundle: Bundle) {
  *
  * @param stepperState The stepper state.
  * @param {string} context The context (Stepper.Progress, Stepper.Restart, Stepper.Idle).
+ * @param stepperContext
  */
-function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restart' | 'Stepper.Progress' | 'Stepper.Idle'): void {
+function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restart' | 'Stepper.Progress' | 'Stepper.Idle', stepperContext: StepperContext = null): void {
     const {programState, controls} = stepperState;
     if (!programState) {
         return;
+    }
+
+    if (stepperContext && stepperContext.quickalgoLibraryCalls) {
+        stepperState.quickalgoLibraryCalls = [...stepperContext.quickalgoLibraryCalls];
+        stepperContext.quickalgoLibraryCalls = [];
     }
 
     /* TODO: extend stepper API to add enrichers that run here */
@@ -458,7 +464,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     /**
      * TODO: stepperState comes from an action so it's not an immer draft.
      */
-    console.log('previous state', stepperContext.state.contextState, 'and progress', progress);
+    // console.log('previous state', stepperContext.state.contextState, 'and progress', progress);
     stepperContext.state = {...stepperContext.state};
 
     if (false !== progress) {
@@ -468,10 +474,15 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         }
 
         // Set new currentStepperState state and go back to idle.
-        enrichStepperState(stepperContext.state, 'Stepper.Progress');
+        enrichStepperState(stepperContext.state, 'Stepper.Progress', stepperContext);
     }
 
-    // state.task.state = quickAlgoLibraries.getContext() && quickAlgoLibraries.getContext().getCurrentState ? Object.freeze({...quickAlgoLibraries.getContext().getCurrentState()}) : {};
+    const context = quickAlgoLibraries.getContext();
+    if (context && context.getCurrentState) {
+        const contextState = context.getCurrentState();
+        state.task.state = isDraft(contextState) ? current(contextState) : contextState;
+    }
+
     state.stepper.currentStepperState = stepperContext.state;
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;
@@ -481,7 +492,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
 function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}): void {
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
-    enrichStepperState(stepperContext.state, 'Stepper.Idle');
+    enrichStepperState(stepperContext.state, 'Stepper.Idle', stepperContext);
     /**
      * TODO: stepperState comes from an action so it's not an immer draft.
      */
@@ -653,7 +664,7 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext, arg}, m
 function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
     let state: AppStore = yield select();
 
-    console.log('current stepper state', stepperContext.state.contextState);
+    // console.log('current stepper state', stepperContext.state.contextState);
     /* Has the stepper been interrupted? */
     if (isStepperInterrupting(state) || StepperStatus.Clear === state.stepper.status) {
         console.log('stepper is still interrupting');
@@ -678,7 +689,7 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
         completed: call(saga, stepperContext),
         interrupted: take(ActionTypes.StepperInterrupt)
     });
-    console.log('current stepper state2', stepperContext.state.contextState);
+    // console.log('current stepper state2', stepperContext.state.contextState);
 
     // if (arg.saga) {
     //     yield put({type: ActionTypes.StepperResume, payload: {stepperContext}});
@@ -691,7 +702,7 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
     state = yield select();
     stepperContext.state = {...getCurrentStepperState(state)};
     stepperContext.speed = getStepper(state).speed;
-    console.log('current stepper state3', stepperContext.state.contextState);
+    // console.log('current stepper state3', stepperContext.state.contextState);
 
     /* Check whether to interrupt or resume the stepper. */
     if (interrupted) {

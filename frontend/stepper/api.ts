@@ -16,11 +16,12 @@ import {Bundle} from "../linker";
 import {TaskActionTypes as TaskActionTypes} from "../task";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {createDraft, current, finishDraft, original, produce} from "immer";
+import {getCurrentImmerState} from "../task/utils";
 
 export interface QuickalgoLibraryCall {
     module: string,
     action: string,
-    arguments: any[],
+    args: any[],
 }
 
 export interface StepperContext {
@@ -36,6 +37,7 @@ export interface StepperContext {
     pendingResume?: boolean,
     unixNextStepCondition: 0,
     makeDelay?: boolean,
+    quickalgoLibraryCalls?: QuickalgoLibraryCall[],
 }
 
 const stepperApi = {
@@ -174,7 +176,7 @@ export function makeContext(stepper: Stepper, interactBefore: Function, interact
                 ...state,
                 lastAnalysis: Object.freeze(clearLoadedReferences(state.analysis)),
                 controls: resetControls(state.controls),
-                lastQuickalgoLibraryCalls: [],
+                quickalgoLibraryCalls: [],
             },
             interactBefore,
             interactAfter,
@@ -184,6 +186,7 @@ export function makeContext(stepper: Stepper, interactBefore: Function, interact
             lineCounter: 0,
             speed: stepper.speed,
             unixNextStepCondition: 0,
+            quickalgoLibraryCalls: [],
         };
     } else {
         return {
@@ -192,7 +195,7 @@ export function makeContext(stepper: Stepper, interactBefore: Function, interact
                 programState: C.clearMemoryLog(state.programState),
                 lastProgramState: {...state.programState},
                 controls: resetControls(state.controls),
-                lastQuickalgoLibraryCalls: [],
+                quickalgoLibraryCalls: [],
             },
             interactBefore,
             interactAfter,
@@ -202,6 +205,7 @@ export function makeContext(stepper: Stepper, interactBefore: Function, interact
             lineCounter: 0,
             speed: stepper.speed,
             unixNextStepCondition: 0,
+            quickalgoLibraryCalls: [],
         }
     }
 }
@@ -442,26 +446,30 @@ function inUserCode(stepperState: StepperState) {
     }
 }
 
-export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
+export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, reloadState = true) {
     return async (module: string, action: string, args: any[], callback: Function) => {
         let libraryCallResult;
         const context = quickAlgoLibraries.getContext();
 
-        // const draft = createDraft(stepperContext.state)
-
         console.log('stepper context before', stepperContext.state.contextState);
-        const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, arguments: args};
-        stepperContext.state = {
-            ...stepperContext.state,
-            lastQuickalgoLibraryCalls: [...stepperContext.state.lastQuickalgoLibraryCalls, quickAlgoLibraryCall],
-        };
-        // stepperContext.state.lastQuickalgoLibraryCalls.push(quickAlgoLibraryCall);
+        console.log('quickalgo', stepperContext.quickalgoLibraryCalls);
+        const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, args};
+        stepperContext.quickalgoLibraryCalls = [
+            ...stepperContext.quickalgoLibraryCalls,
+            quickAlgoLibraryCall,
+        ];
         console.log('LOG ACTION', module, action, args);
 
         console.log('context', context, context[module]);
 
+        const draft = createDraft(stepperContext.state.contextState);
+
         // console.log('RELOAD CONTEXT STATE', draft.contextState, original(draft.contextState));
-        context.reloadState(stepperContext.state.contextState);
+        if (reloadState) {
+            context.reloadState(draft);
+        }
+
+        // context.resetDisplay(); // TODO: remove this
 
         const makeLibraryCall = async () => {
             let result = context[module][action].apply(context, [...args, callback]);
@@ -493,14 +501,13 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
         libraryCallResult = await makeLibraryCall();
         console.log('after make async library call');
 
-        const newState = context.getCurrentState();
+        const newStateValue = context.getCurrentState();
+        const newState = getCurrentImmerState(newStateValue);
         console.log('NEW LIBRARY STATE', newState);
         stepperContext.state = {
             ...stepperContext.state,
             contextState: newState,
         };
-
-        // stepperContext.state = finishDraft(draft);
 
         console.log('stepper context after', stepperContext.state.contextState);
 
