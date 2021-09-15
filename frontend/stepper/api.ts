@@ -467,9 +467,8 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         // console.log('RELOAD CONTEXT STATE', draft.contextState, original(draft.contextState));
         if (reloadState) {
             context.reloadState(draft);
+            context.resetDisplay();
         }
-
-        // context.resetDisplay(); // TODO: remove this
 
         const makeLibraryCall = async () => {
             let result = context[module][action].apply(context, [...args, callback]);

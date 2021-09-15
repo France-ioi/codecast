@@ -632,6 +632,7 @@ function* stepperEnabledSaga(args) {
 export function* stepperDisabledSaga() {
     /* Cancel the stepper task if still running. */
     const oldTask = currentStepperTask;
+    console.log('try to disable stepper', oldTask);
     if (oldTask) {
         // @ts-ignore
         yield cancel(oldTask);
@@ -795,10 +796,10 @@ function* stepperStepSaga(app: App, action) {
                         // @ts-ignore
                         if (taskContext.success) {
                             yield put(taskSuccess(message));
-                            yield put({
-                                type: StepperActionTypes.StepperExit,
-                                payload: {reset: false},
-                            });
+                            // yield put({
+                            //     type: StepperActionTypes.StepperExit,
+                            //     payload: {reset: false},
+                            // });
                         } else {
                             const response = {diagnostics: message};
                             yield put({
@@ -862,8 +863,12 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
         console.log('Run python from beginning is necessary');
         const taskContext = quickAlgoLibraries.getContext();
         const state = yield select();
+        taskContext.display = false;
         taskContext.reset(state.task.currentTest, state);
+        stepperContext.state.contextState = taskContext.getCurrentState();
         yield delay(0);
+
+        console.log('current task state', taskContext.getCurrentState());
 
         window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
 
@@ -880,6 +885,9 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
             }
         }
         window.currentPythonRunner._synchronizingAnalysis = false;
+
+        taskContext.display = true;
+        console.log('End run python from beginning');
 
         // stepperContext.state.input = window.currentPythonRunner._input;
         // stepperContext.state.terminal = window.currentPythonRunner._terminal;

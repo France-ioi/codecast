@@ -19,9 +19,9 @@ import {createDraft, current, isDraft, original} from "immer";
 import {PlayerInstant} from "../player";
 import {ActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
-import {StepperState, StepperStatus} from "../stepper";
+import {stepperDisabledSaga, StepperState, StepperStatus} from "../stepper";
 import {createQuickAlgoLibraryExecutor, makeContext} from "../stepper/api";
-import {getStepper} from "../stepper/selectors";
+import {getStepper, isStepperInterrupting} from "../stepper/selectors";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -197,6 +197,15 @@ export default function (bundle: Bundle) {
                     yield put({type: ActionTypes.StepperExit});
                 }
             }
+        });
+
+        yield takeEvery(taskSuccess.type, function* () {
+            console.log('listen task success');
+            // let state: AppStore = yield select();
+            // if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
+            //     yield put({type: ActionTypes.StepperInterrupt, payload: {}});
+            // }
+            yield call(stepperDisabledSaga);
         });
 
         // @ts-ignore
