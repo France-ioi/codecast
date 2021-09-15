@@ -75,7 +75,7 @@ if (!String.prototype.format) {
 }
 
 function* createContext(quickAlgoLibraries: QuickAlgoLibraries, display = true) {
-    const context = quickAlgoLibraries.getContext();
+    let context = quickAlgoLibraries.getContext();
     console.log('Create a context', context);
     if (context) {
         context.unload();
@@ -115,6 +115,8 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries, display = true) 
     yield put(updateCurrentTest(testData));
     const state = yield select();
     quickAlgoLibraries.reset(testData, state);
+    context = quickAlgoLibraries.getContext();
+    context.reloadState(createDraft(context.getCurrentState()));
 }
 
 export function getTaskTest(currentTask: any, currentLevel: number) {
@@ -217,6 +219,7 @@ export default function (bundle: Bundle) {
                     const state = yield select();
                     const context = quickAlgoLibraries.getContext();
                     context.reset(state.task.currentTest, state);
+                    context.reloadState(createDraft(context.getCurrentState()));
                     yield put(taskResetDone(true));
                 }
             } else {
@@ -237,6 +240,7 @@ export default function (bundle: Bundle) {
 
             if (!quick) {
                 if (taskData && taskData.state) {
+                    console.log('do reload state', taskData.state);
                     const draft = createDraft(taskData.state);
                     context.reloadState(draft);
                 }
@@ -287,6 +291,7 @@ export default function (bundle: Bundle) {
             context.reset(currentTest, state);
 
             stepperState.contextState = context.getCurrentState();
+            context.reloadState(createDraft(stepperState.contextState));
         });
     });
 }

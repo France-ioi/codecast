@@ -75,10 +75,11 @@ import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
-import {current, isDraft, produce} from "immer";
+import {createDraft, current, isDraft, produce} from "immer";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {taskSuccess} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {getCurrentImmerState} from "../task/utils";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -480,7 +481,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     const context = quickAlgoLibraries.getContext();
     if (context && context.getCurrentState) {
         const contextState = context.getCurrentState();
-        state.task.state = isDraft(contextState) ? current(contextState) : contextState;
+        state.task.state = getCurrentImmerState(contextState);
     }
 
     state.stepper.currentStepperState = stepperContext.state;
@@ -755,7 +756,7 @@ function* stepperStepSaga(app: App, action) {
             yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
             stepperContext = makeContext(stepper, interactBefore, interactAfter, waitForProgress);
-            console.log('bim create context', stepperContext);
+            console.log('bim create stepper context', stepperContext);
             if (stepperContext.state.platform === 'python') {
                 yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
             }
@@ -866,6 +867,7 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
         taskContext.display = false;
         taskContext.reset(state.task.currentTest, state);
         stepperContext.state.contextState = taskContext.getCurrentState();
+        taskContext.reloadState(createDraft(stepperContext.state.contextState));
         yield delay(0);
 
         console.log('current task state', taskContext.getCurrentState());
@@ -878,7 +880,7 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
 
         window.currentPythonRunner._synchronizingAnalysis = true;
         while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
-            yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, [createQuickAlgoLibraryExecutor(stepperContext)]);
+            yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, [createQuickAlgoLibraryExecutor(stepperContext, false)]);
 
             if (window.currentPythonRunner._isFinished) {
                 break;
@@ -887,6 +889,7 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
         window.currentPythonRunner._synchronizingAnalysis = false;
 
         taskContext.display = true;
+        taskContext.resetDisplay();
         console.log('End run python from beginning');
 
         // stepperContext.state.input = window.currentPythonRunner._input;

@@ -260,7 +260,7 @@ async function executeSingleStep(stepperContext: StepperContext) {
     // }
 
     if (stepperContext.state.platform === 'python') {
-        const result = await window.currentPythonRunner.runStep(createQuickAlgoLibraryExecutor(stepperContext));
+        const result = await window.currentPythonRunner.runStep(createQuickAlgoLibraryExecutor(stepperContext, false));
 
         console.log('FINAL INTERACT', result);
         stepperContext.makeDelay = true;
