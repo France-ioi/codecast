@@ -33,10 +33,9 @@ import {EnhancedStore} from "@reduxjs/toolkit";
 import {ConceptViewer} from "./task/documentation";
 import {Documentation} from "./task/Documentation";
 
-// The value below is the default value: for performance reasons, Immer doesn't auto-freeze data in production
-// but it does auto-freeze in developement which is a good to notice some weird bugs that can happen
+// We auto-freeze in developement which is a good to notice some weird bugs that can happen
 // if we try to modify data that has been outputted by Immer (such data should be immutable)
-// setAutoFreeze('development' === process.env['NODE_ENV']);
+setAutoFreeze('development' === process.env['NODE_ENV']);
 log.setLevel('trace');
 log.getLogger('performance').setLevel('info');
 log.getLogger('python_interpreter').setLevel('info');
