@@ -33,9 +33,7 @@ import {EnhancedStore} from "@reduxjs/toolkit";
 import {ConceptViewer} from "./task/documentation";
 import {Documentation} from "./task/Documentation";
 
-// We auto-freeze in developement which is a good to notice some weird bugs that can happen
-// if we try to modify data that has been outputted by Immer (such data should be immutable)
-setAutoFreeze('development' === process.env['NODE_ENV']);
+setAutoFreeze(true);
 log.setLevel('trace');
 log.getLogger('performance').setLevel('info');
 log.getLogger('python_interpreter').setLevel('info');
