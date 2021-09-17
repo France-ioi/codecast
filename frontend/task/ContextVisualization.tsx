@@ -6,11 +6,12 @@ import {useResizeDetector} from "react-resize-detector";
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const taskLoaded = useAppSelector(state => state.task.loaded);
     const {width, height, ref} = useResizeDetector();
 
     useEffect(() => {
         quickAlgoLibraries.resetDisplay();
-    }, []);
+    }, [taskLoaded]);
 
     useEffect(() => {
         const context = quickAlgoLibraries.getContext();

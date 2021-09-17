@@ -8,7 +8,7 @@ import {PrinterLib} from "./libs/printer/printer_lib";
 import {AppAction, AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
-    recordingEnabledChange, taskInputNeeded, taskLevels, taskRecordableActions, taskResetDone,
+    recordingEnabledChange, taskInputNeeded, taskLevels, taskLoaded, taskRecordableActions, taskResetDone,
     taskSuccess, taskSuccessClear, taskUpdateState,
     updateCurrentTest
 } from "./task_slice";
@@ -24,33 +24,15 @@ import {createQuickAlgoLibraryExecutor, makeContext} from "../stepper/api";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
-    TaskLoaded = 'task/loaded',
     TaskUnload = 'task/unload',
-    TaskInputEntered = 'task/inputEntered',
-}
-
-export interface TaskInputEnteredAction extends AppAction {
-    type: TaskActionTypes.TaskInputEntered;
-    payload: string;
 }
 
 export const taskLoad = () => ({
     type: TaskActionTypes.TaskLoad,
 });
 
-export const taskLoaded = () => ({
-    type: TaskActionTypes.TaskLoaded,
-});
-
 export const taskUnload = () => ({
     type: TaskActionTypes.TaskUnload,
-});
-
-export const taskInputEntered = (
-    input: string
-): TaskInputEnteredAction => ({
-    type: TaskActionTypes.TaskInputEntered,
-    payload: input,
 });
 
 // @ts-ignore
@@ -142,13 +124,16 @@ export function getAutocompletionParameters (context, currentLevel: number): Aut
     };
 }
 
-let oldSagasTask;
+let oldSagasTasks = {
+    main: null,
+    replay: null,
+};
 
 function* taskLoadSaga (app: App) {
-    console.log('TASK LOAD', oldSagasTask);
-    if (oldSagasTask) {
+    console.log('TASK LOAD', oldSagasTasks);
+    if (oldSagasTasks[app.replay ? 'replay' : 'main']) {
         // Unload task first
-        yield cancel(oldSagasTask);
+        yield cancel(oldSagasTasks[app.replay ? 'replay' : 'main']);
         yield put(taskUnload());
     }
 
@@ -165,10 +150,14 @@ function* taskLoadSaga (app: App) {
     }
 
     const sagas = quickAlgoLibraries.getSagas(app);
-    oldSagasTask = yield fork(function* () {
+    oldSagasTasks[app.replay ? 'replay' : 'main'] = yield fork(function* () {
         yield all(sagas);
     });
 
+    yield call(handleLibrariesEventListenerSaga, app);
+}
+
+function* handleLibrariesEventListenerSaga(app: App) {
     const stepperContext = {
         interactAfter: (arg) => {
             return new Promise((resolve, reject) => {
@@ -187,12 +176,19 @@ function* taskLoadSaga (app: App) {
     const listeners = quickAlgoLibraries.getEventListeners();
     console.log('task listeners', listeners);
     for (let [eventName, {module, method}] of Object.entries(listeners)) {
-        console.log({eventName, method})
-        app.replayApi.on(eventName, function* (replayContext: ReplayContext, event) {
-            const payload = event[2];
-            console.log('trigger method ', method, 'for event name ', eventName);
-            yield put({type: eventName, payload});
-        });
+        console.log({eventName, method});
+
+        if (!app.replay) {
+            app.recordApi.on(eventName, function* (addEvent, {payload}) {
+                yield call(addEvent, eventName, payload);
+            });
+
+            app.replayApi.on(eventName, function* (replayContext: ReplayContext, event) {
+                const payload = event[2];
+                console.log('trigger method ', method, 'for event name ', eventName);
+                yield put({type: eventName, payload});
+            });
+        }
 
         // @ts-ignore
         yield takeEvery(eventName, function* ({payload}) {
@@ -278,7 +274,20 @@ export default function (bundle: Bundle) {
 
             const context = quickAlgoLibraries.getContext();
             const stepperState = instant.state.stepper;
-            console.log('RELOAD STATE', stepperState);
+
+            console.log('TASK REPLAY API RESET', instant.event);
+            if (instant.event[1] === 'compile.success') {
+                // When the stepper is initialized, we have to set the current test value into the context
+                // just like in the stepperApi.onInit listener
+                const currentTest = taskData.currentTest;
+                console.log('stepper init, current test', currentTest);
+
+                const context = quickAlgoLibraries.getContext();
+                context.reset(currentTest, instant.state);
+
+                const contextState = context.getCurrentState();
+                context.reloadState(createDraft(contextState));
+            }
 
             if (!quick) {
                 if (taskData && taskData.state) {
@@ -287,7 +296,7 @@ export default function (bundle: Bundle) {
                     context.reloadState(draft);
                 }
                 console.log('DO RESET DISPLAY');
-                context.resetDisplay(); // TODO: remove this?
+                context.resetDisplay();
             }
 
             if (stepperState && stepperState.currentStepperState && stepperState.currentStepperState.quickalgoLibraryCalls && quick && context) {
@@ -318,6 +327,7 @@ export default function (bundle: Bundle) {
 
             if (taskData) {
                 yield put(updateCurrentTest(taskData.currentTest));
+                yield put(taskUpdateState(taskData.state));
                 if (taskData.success) {
                     yield put(taskSuccess(taskData.successMessage));
                 } else {
@@ -337,6 +347,8 @@ export default function (bundle: Bundle) {
 
         app.stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
             const currentTest = state.task.currentTest;
+
+            console.log('stepper init, current test', currentTest);
 
             const context = quickAlgoLibraries.getContext();
             context.reset(currentTest, state);

@@ -1,5 +1,5 @@
 import {App} from "../../index";
-import {AppStore} from "../../store";
+import {AppStore, AppStoreReplay} from "../../store";
 
 //TODO: Handle multiples libraries at once.
 // For now, we only use 1 library
@@ -189,7 +189,7 @@ export class QuickAlgoLibrary {
     };
 
     // Placeholders, should be actually defined by the library
-    reset(taskInfos = null, appState: AppStore = null) {
+    reset(taskInfos = null, appState: AppStoreReplay = null) {
         // Reset the context
         if (this.display) {
             this.resetDisplay();

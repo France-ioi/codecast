@@ -6,9 +6,9 @@ import {AppStore} from "../../../store";
 import {channel} from "redux-saga";
 import {ActionTypes} from "../../../buffers/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
-import {TaskActionTypes as TaskActionTypes, taskInputEntered,} from "../../index";
+import {TaskActionTypes as TaskActionTypes} from "../../index";
 import {documentModelFromString} from "../../../buffers";
-import {taskInputNeeded, updateCurrentTest} from "../../task_slice";
+import {taskInputEntered, taskInputNeeded, updateCurrentTest} from "../../task_slice";
 import {App} from "../../../index";
 import {IoMode} from "../../../stepper/io";
 import {ReplayContext} from "../../../player/sagas";
@@ -310,6 +310,12 @@ export class PrinterLib extends QuickAlgoLibrary {
     };
 
     resetDisplay() {
+        if (this.display) {
+            console.log('make reset display');
+            executionChannels.main.put({
+                action: PrinterLibAction.syncBuffers,
+            });
+        }
     };
 
     getEventListeners(): {[eventName: string]: string} {
@@ -332,22 +338,10 @@ export class PrinterLib extends QuickAlgoLibrary {
 
     *inputEnter() {
         const context = this;
-        console.log('INPUT ENTER SAGA');
         const inputValue = context.printer.inputBuffer;
-        console.log('RECEIVE TERMINAL INPUT ENTER');
+        console.log('RECEIVE TERMINAL INPUT ENTER', inputValue);
         context.printer.inputBuffer = '';
-        yield ['put', taskInputNeeded(false)];
         yield ['put', taskInputEntered(inputValue)];
-
-        // yield ['interact', {saga: function* () {
-        //     console.log('INPUT ENTER SAGA');
-        //     const inputValue = context.printer.inputBuffer;
-        //     console.log('RECEIVE TERMINAL INPUT ENTER');
-        //     context.printer.inputBuffer = null;
-        //
-        //     yield put(taskInputNeeded(false));
-        //     yield put(taskInputEntered(inputValue));
-        // }}];
     };
 
     *commonPrint(args, end) {
@@ -428,6 +422,7 @@ export class PrinterLib extends QuickAlgoLibrary {
 
             let inputValue = context.getFirstInput();
             let index = inputValue.indexOf("\n");
+            console.log('read split input', inputValue, index);
             if (index === -1) {
                 if (!inputValue) {
                     throw context.strings.messages.inputEmpty;
@@ -440,6 +435,15 @@ export class PrinterLib extends QuickAlgoLibrary {
                 context.replaceFirstInput(inputValue.substring(index + 1));
             }
 
+            if (context.display) {
+                console.log('now result, update', context.getInputText());
+                yield ['put', {
+                    type: ActionTypes.BufferReset,
+                    buffer: inputBufferLib,
+                    model: documentModelFromString(context.getInputText()),
+                }];
+            }
+
             return readResult;
         } else {
             let hasResult = false;
@@ -447,10 +451,11 @@ export class PrinterLib extends QuickAlgoLibrary {
             while (!hasResult) {
                 console.log('ICI MAKE INTERACT', iterations);
                 yield ['interact', 0 === iterations ? {saga : function* () {
-                    console.log('MAKE READ - START INTERACT SAGA');
+                    console.log('MAKE READ - START INTERACT SAGA', context.display);
                     readResult = yield call(context.getInputSaga, context);
                     hasResult = true;
                     if (context.display) {
+                        console.log('now result, update', context.getInputText());
                         yield put({
                             type: ActionTypes.BufferReset,
                             buffer: inputBufferLib,
@@ -462,6 +467,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                 iterations++;
                 if (iterations > 300) {
                     // Add a security break in case we've passed N events and not received input
+                    console.error("We breaked out of printer lib input saga. This is an anormal behaviour.")
                     break;
                 }
             }
@@ -535,6 +541,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     popFirstInput() {
+        console.log('pop first input', this.printer.ioEvents);
         const firstInputIndex = this.printer.ioEvents.findIndex(event => PrinterLineEventType.input === event.type && PrinterLineEventSource.initial === event.source);
         if (-1 !== firstInputIndex) {
             this.printer.ioEvents = [
@@ -542,6 +549,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                 ...this.printer.ioEvents.slice(firstInputIndex + 1),
             ];
         }
+        console.log('pop first input result', this.printer.ioEvents);
     }
 
     replaceFirstInput(newValue: string) {
@@ -657,7 +665,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         const {input} = yield race({
             interrupt: take(StepperActionTypes.StepperInterrupt),
             exit: take(StepperActionTypes.StepperExit),
-            input: take(TaskActionTypes.TaskInputEntered),
+            input: take(taskInputEntered.type),
         });
 
         console.log('RECEIVED INPUT', input);
@@ -707,14 +715,20 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     *executionChannelSaga(context, replay) {
-        while (true) {
-            const parameters = yield take(executionChannels[replay ? 'replay' : 'main']);
-            yield fork(context.handleRequest, context, parameters);
+        try {
+            console.log('create execution channel saga', replay);
+            while (true) {
+                const parameters = yield take(executionChannels[replay ? 'replay' : 'main']);
+                yield fork(context.handleRequest, context, parameters);
+            }
+        } finally {
+            console.log('close execution channel saga');
         }
     }
 
     *handleRequest(context, parameters) {
         const {action, payload, resolve} = parameters;
+        console.log('PRINTER HANDLE REQUEST', parameters);
 
         switch (action) {
             case PrinterLibAction.reset: {
@@ -732,7 +746,6 @@ export class PrinterLib extends QuickAlgoLibrary {
                 });
 
                 yield call(context.syncInputOutputBuffers, context);
-                // yield put(terminalInit(null));
                 break;
             }
             case PrinterLibAction.syncBuffers: {
@@ -767,22 +780,24 @@ export class PrinterLib extends QuickAlgoLibrary {
             recordApiInit = true;
 
             // For replay purposes
-            app.replayApi.on('buffer.edit', function* (replayContext: ReplayContext, event) {
-                const buffer = event[0];
-                const bufferValue = yield select(state => state.buffers[buffer]);
+            // Normally useless because it's in the takeEvery above
+            // app.replayApi.on('buffer.edit', function* (replayContext: ReplayContext, event) {
+            //     const buffer = event[0];
+            //     const bufferValue = yield select(state => state.buffers[buffer]);
+            //
+            //     let currentTest: {input?: string, output?: string} = {};
+            //     if (inputBufferLibTest === buffer) {
+            //         currentTest.input = bufferValue.model.document.toString();
+            //     } else if (outputBufferLibTest === buffer) {
+            //         currentTest.output = bufferValue.model.document.toString();
+            //     }
+            //
+            //     if (Object.keys(currentTest).length) {
+            //         yield put(updateCurrentTest(currentTest));
+            //     }
+            // });
 
-                let currentTest: {input?: string, output?: string} = {};
-                if (inputBufferLibTest === buffer) {
-                    currentTest.input = bufferValue.model.document.toString();
-                } else if (outputBufferLibTest === buffer) {
-                    currentTest.output = bufferValue.model.document.toString();
-                }
-
-                if (Object.keys(currentTest).length) {
-                    yield put(updateCurrentTest(currentTest));
-                }
-            });
-
+            // Is it still useful? Check this
             app.replayApi.on('start', function* (replayContext: ReplayContext, event) {
                 const {buffers} = event[2];
                 let currentTest: {input?: string, output?: string} = {};
@@ -796,19 +811,6 @@ export class PrinterLib extends QuickAlgoLibrary {
                     yield put(updateCurrentTest(currentTest));
                 }
             });
-
-            // app.replayApi.onReset(function* (instant: PlayerInstant) {
-            //     const terminalData = instant.state.printerTerminal;
-            //     if (terminalData) {
-            //         console.log('do terminal reset', terminalData);
-            //
-            //         let termBuffer = new TermBuffer({lines: 10, width: 60});
-            //         termBuffer = writeString(termBuffer, context.getTerminalText());
-            //         console.log('WRITE TEXT onReset', context.printer.ioEvents, context.getTerminalText());
-            //         yield put(terminalReset({...instant.state.printerTerminal, terminal: termBuffer}));
-            //         console.log('TEXT WRITTEN');
-            //     }
-            // });
         }
     }
 }

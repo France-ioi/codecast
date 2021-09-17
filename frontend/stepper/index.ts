@@ -51,7 +51,7 @@ import {
     StepperContext,
     StepperError, QuickalgoLibraryCall
 } from './api';
-import CompileBundle, {compileFailedReducer, CompileStatus, initialStateCompile} from './compile';
+import CompileBundle, {CompileStatus} from './compile';
 import EffectsBundle from './c/effects';
 
 import DelayBundle from './delay';
@@ -59,7 +59,7 @@ import HeapBundle from './c/heap';
 import IoBundle from './io/index';
 import ViewsBundle from './views/index';
 import ArduinoBundle, {ArduinoPort} from './arduino';
-import PythonBundle, {getNewOutput, getNewTerminal} from './python';
+import PythonBundle from './python';
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
 import {Directive, parseDirectives} from "./python/directives";
@@ -979,14 +979,9 @@ function postLink(app: App) {
 
         const promise = new Promise((resolve, reject) => {
             console.log('PROMISE RETURNED');
-            let sagas = [];
             waitForProgress = (stepperContext) => {
                 console.log('INSIDE WAIT FOR PROGRESS');
                 replayContext.stepperContext = stepperContext;
-                // if (_.saga) {
-                //     console.log('INTERACT AFTER - received saga', _.saga);
-                //     sagas.push(_.saga);
-                // }
 
                 return new Promise((cont) => {
                     console.log('INSIDE PROMISE');
@@ -1004,84 +999,6 @@ function postLink(app: App) {
         console.log('before yield promise', promise);
         yield promise;
         console.log('after yield promise', promise);
-
-        // let sagas = [];
-        // const stepperStepContent = () => {
-        //     return new Promise((resolve, reject) => {
-        //         const mode = event[2];
-        //
-        //         replayContext.stepperDone = resolve;
-        //         replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-        //             stepperStartedReducer(draft, {mode});
-        //         });
-        //
-        //         console.log('replaycontext', replayContext.state.stepper);
-        //
-        //         replayContext.stepperContext = makeContext(replayContext.state.stepper, function interactBefore() {
-        //             return Promise.resolve(true);
-        //         }, function interactAfter(_) {
-        //             if (_.saga) {
-        //                 console.log('INTERACT AFTER - received saga', _.saga);
-        //                 sagas.push(_.saga);
-        //             }
-        //
-        //             return new Promise((cont) => {
-        //                 stepperSuspend(replayContext.stepperContext, cont);
-        //
-        //                 replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-        //                     stepperProgressReducer(draft, {
-        //                         payload: {
-        //                             stepperContext: replayContext.stepperContext,
-        //                             progress: true
-        //                         }
-        //                     });
-        //                 });
-        //
-        //                 stepperEventReplayed(replayContext);
-        //             });
-        //         });
-        //
-        //         performStep(replayContext.stepperContext, mode).then(function () {
-        //             replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-        //                 let currentStepperState = draft.stepper.currentStepperState;
-        //
-        //                 if (currentStepperState.platform === 'python' && window.currentPythonRunner._printedDuringStep) {
-        //                     draft.stepper.currentStepperState.output = getNewOutput(currentStepperState, window.currentPythonRunner._printedDuringStep);
-        //                     draft.stepper.currentStepperState.terminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
-        //                 }
-        //
-        //                 stepperIdleReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
-        //             });
-        //
-        //             stepperEventReplayed(replayContext);
-        //         }, function (error) {
-        //             if (!(error instanceof StepperError)) {
-        //                 return reject(error);
-        //             }
-        //             if (error.condition === 'interrupt') {
-        //                 replayContext.stepperContext.interrupted = true;
-        //             }
-        //
-        //             replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-        //                 if (error.condition === 'error') {
-        //                     compileFailedReducer(draft, {
-        //                         diagnostics: error.message,
-        //                     });
-        //                 }
-        //                 stepperIdleReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
-        //             });
-        //
-        //             stepperEventReplayed(replayContext);
-        //         });
-        //     });
-        // };
-        //
-        // yield call(stepperStepContent);
-        //
-        // console.log('STEPPER.STEP - FORK SAGAS', sagas);
-        // console.log('end fork');
-        //
-        // return sagas;
     });
 
     recordApi.on(ActionTypes.StepperProgress, function* (addEvent, {payload: {stepperContext}}) {
@@ -1092,13 +1009,8 @@ function postLink(app: App) {
         let waitForProgress;
 
         const promise = new Promise((resolve, reject) => {
-            let sagas = [];
             waitForProgress = (stepperContext) => {
                 console.log('stepper progress resume ?');
-                // if (_.saga) {
-                //     console.log('INTERACT AFTER - received saga', _.saga);
-                //     sagas.push(_.saga);
-                // }
 
                 return new Promise((cont) => {
                     stepperSuspend(stepperContext, cont);
@@ -1119,13 +1031,6 @@ function postLink(app: App) {
         }
 
         yield promise;
-        //
-        // yield call(stepperProgressContent);
-        //
-        // console.log('STEPPER.PROGRESS - FORK SAGAS', sagas);
-        // console.log('end fork');
-        //
-        // return sagas;
     });
 
     recordApi.on(ActionTypes.StepperInterrupt, function* (addEvent) {

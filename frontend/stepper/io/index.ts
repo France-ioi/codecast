@@ -5,15 +5,12 @@ import {scanfBuiltin} from './scanf';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
-import {getBufferModel} from "../../buffers/selectors";
 import {AppStore} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../api";
-import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
-import {TermBuffer} from "./terminal";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 
 export enum IoMode {
@@ -86,26 +83,6 @@ export default function(bundle: Bundle) {
             const mode = event[2];
 
             yield put({type: ActionTypes.IoPaneModeChanged, payload: {mode}});
-        });
-
-        /* Set up the terminal or input. */
-        stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
-            const {mode} = state.ioPane;
-
-            stepperState.inputPos = 0;
-            if (mode === IoMode.Terminal) {
-                stepperState.input = "";
-                stepperState.terminal = new TermBuffer({lines: 10, width: 80});
-                stepperState.inputBuffer = "";
-            } else {
-                const inputModel = getBufferModel(state, 'input');
-                let input = inputModel.document.toString().trimRight();
-                if (input.length !== 0) {
-                    input = input + "\n";
-                }
-                stepperState.input = input;
-                stepperState.output = "";
-            }
         });
 
         stepperApi.addBuiltin('printf', printfBuiltin);
