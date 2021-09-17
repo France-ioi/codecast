@@ -17,13 +17,10 @@ import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
 import {StepperContext} from "../stepper/api";
 import {App, Codecast} from "../index";
-import {createDraft, finishDraft} from "immer";
 import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
-import {expandRange} from "../buffers/document";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getTaskTest, taskLoad} from "../task";
-import {taskInputNeeded} from "../task/task_slice";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -239,72 +236,11 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         let needsRestartExecutor = false;
 
         console.log('-------- REPLAY ---- EVENT ----', key, event);
-
-        // if (key === 'stepper.step' || key === 'stepper.progress' || key === 'stepper.idle' || key === 'stepper.restart') {
-        //     /**
-        //      * Those event are trickier than the other ones because they copy a piece of state (state.stepper.currentStepperStep)
-        //      * and then reuse it in future events. We cannot copy a piece of immer draft and use it later.
-        //      * The choice made is to update the state in a more granular way in those events, so that the copied piece
-        //      * is a piece of the real state and not one of a immer draft.
-        //      * I would have been better to not copy the stepper at all but it seems like this would imply a huge
-        //      * refactor of the player.
-        //      */
-        //
-        //     console.log('start apply event');
-        //     const sagas = yield call(replayApi.applyEvent, key, replayContext, event);
-        //     console.log('end apply event', sagas);
-        //
-        //     for (let saga of sagas) {
-        //         yield fork(saga);
-        //     }
-        //
-        //     console.log('end fork sagas');
-        // } else {
-        //     const originalState = replayContext.state;
-        //     const draft = createDraft(originalState);
-        //
-        //     // @ts-ignore
-        //     replayContext.state = draft;
-        //
-        //     yield call(replayApi.applyEvent, key, replayContext, event);
-        //
-        //     if (key === 'task/taskInputNeeded' && !event[2]) {
-        //         console.log('TASK INPUT LAST INPUT', replayContext.state.printerTerminal.lastInput);
-        //         yield put(taskInputEntered(replayContext.state.printerTerminal.lastInput));
-        //         needsRestartExecutor = true;
-        //     }
-        //
-        //     // console.log('GET STATE', Object.freeze(replayContext.state.task.state));
-        //
-        //     // @ts-ignore
-        //     replayContext.state = finishDraft(draft);
-        // }
-
-        // if (needsRestartExecutor) {
-        //     console.log('HERE RESTART EXECUTOR');
-        //     const sagas = yield call(replayApi.applyEvent, 'stepper.progress', replayContext, ['stepper.progress']);
-        //     for (let saga of sagas) {
-        //         yield fork(saga);
-        //     }
-        // }
-
-
-        // if (key === 'buffer.select') {
-        //     console.log('make test', key, event);
-        //     let buffer = event[2];
-        //     let selection = expandRange(event[3]);
-        //     yield call(replayStore.dispatch, {type: BufferActionTypes.BufferSelect, buffer, selection});
-        //     console.log('end test');
-        // } else {
-        console.log('START REPLAY EVENT (computeInstants)');
         yield new Promise(resolve => {
             replayStore.dispatch({type: PlayerActionTypes.PlayerApplyReplayEvent, payload: {replayApi, key, replayContext, event, resolve}});
         });
         console.log('END REPLAY EVENT (computeInstants)');
-            // yield call(replayApi.applyEvent, key, replayContext, event);
-        // }
 
-        // instant.state = replayContext.state;
         instant.state = replayStore.getState();
 
         Object.freeze(instant);

@@ -25,17 +25,18 @@ export interface QuickalgoLibraryCall {
 }
 
 export interface StepperContext {
-    state: StepperState,
+    state?: StepperState,
     interrupted?: boolean,
-    interactBefore: Function | null,
+    interactBefore?: Function | null,
     interactAfter: Function | null,
     waitForProgress?: Function,
-    resume: Function | null,
-    position: any,
-    lineCounter: number,
+    dispatch?: Function,
+    resume?: Function | null,
+    position?: any,
+    lineCounter?: number,
     speed?: number,
     pendingResume?: boolean,
-    unixNextStepCondition: 0,
+    unixNextStepCondition?: 0,
     makeDelay?: boolean,
     quickalgoLibraryCalls?: QuickalgoLibraryCall[],
 }
@@ -163,7 +164,7 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, interactBefore: Function, interactAfter: Function, waitForProgress?: Function): StepperContext {
+export function makeContext(stepper: Stepper, interactBefore: Function, interactAfter: Function, waitForProgress?: Function, dispatch?: Function): StepperContext {
     /**
      * We create a new state object here instead of mutating the state. This is intended.
      */
@@ -181,6 +182,7 @@ export function makeContext(stepper: Stepper, interactBefore: Function, interact
             interactBefore,
             interactAfter,
             waitForProgress,
+            dispatch,
             resume: null,
             position: getNodeStartRow(state),
             lineCounter: 0,
@@ -200,6 +202,7 @@ export function makeContext(stepper: Stepper, interactBefore: Function, interact
             interactBefore,
             interactAfter,
             waitForProgress,
+            dispatch,
             resume: null,
             position: getNodeStartRow(state),
             lineCounter: 0,
@@ -451,21 +454,23 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         let libraryCallResult;
         const context = quickAlgoLibraries.getContext();
 
-        console.log('stepper context before', stepperContext.state.contextState);
-        console.log('quickalgo', stepperContext.quickalgoLibraryCalls);
-        const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, args};
-        stepperContext.quickalgoLibraryCalls = [
-            ...stepperContext.quickalgoLibraryCalls,
-            quickAlgoLibraryCall,
-        ];
-        console.log('LOG ACTION', module, action, args);
+        if (stepperContext.state) {
+            console.log('stepper context before', stepperContext.state.contextState);
+        }
 
-        console.log('context', context, context[module]);
+        if (stepperContext.quickalgoLibraryCalls) {
+            console.log('quickalgo', stepperContext.quickalgoLibraryCalls);
+            const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, args};
+            stepperContext.quickalgoLibraryCalls = [
+                ...stepperContext.quickalgoLibraryCalls,
+                quickAlgoLibraryCall,
+            ];
+            console.log('LOG ACTION', module, action, args);
+        }
 
-        const draft = createDraft(stepperContext.state.contextState);
-
-        // console.log('RELOAD CONTEXT STATE', draft.contextState, original(draft.contextState));
         if (reloadState) {
+            // console.log('RELOAD CONTEXT STATE', draft.contextState, original(draft.contextState));
+            const draft = createDraft(stepperContext.state.contextState);
             context.reloadState(draft);
             context.resetDisplay();
         }
@@ -492,23 +497,28 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
                     console.log('ASK FOR INTERACT');
                     lastResult = await stepperContext.interactAfter({...(value[1] || {}), progress: false});
                     console.log('last result', lastResult);
+                } else if (name == 'put') {
+                    console.log('ask put dispatch', value[1]);
+                    await stepperContext.dispatch(value[1]);
                 }
             }
         }
 
-        console.log('before make async library call');
+        console.log('before make async library call', {module, action});
         libraryCallResult = await makeLibraryCall();
         console.log('after make async library call');
 
         const newStateValue = context.getCurrentState();
         const newState = getCurrentImmerState(newStateValue);
         console.log('NEW LIBRARY STATE', newState);
-        stepperContext.state = {
-            ...stepperContext.state,
-            contextState: newState,
-        };
 
-        console.log('stepper context after', stepperContext.state.contextState);
+        if (stepperContext.state) {
+            stepperContext.state = {
+                ...stepperContext.state,
+                contextState: newState,
+            };
+            console.log('stepper context after', stepperContext.state.contextState);
+        }
 
         context.waitDelay(callback, libraryCallResult);
 

@@ -6,7 +6,6 @@ import {AppStore} from "./store";
 import {configureStore} from "@reduxjs/toolkit";
 import taskSlice from "./task/task_slice";
 import documentationSlice from "./task/documentation_slice";
-import printerTerminalSlice from "./task/libs/printer/printer_terminal_slice";
 import log from "loglevel";
 
 export interface Linker {
@@ -167,7 +166,6 @@ export function link(rootBuilder): Linker {
         const newNewState = customCombineReducers({
             [taskSlice.name]: taskSlice.reducer,
             [documentationSlice.name]: documentationSlice.reducer,
-            [printerTerminalSlice.name]: printerTerminalSlice.reducer,
         })(newState, action);
 
         let end2 = window.performance.now();

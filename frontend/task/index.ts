@@ -1,4 +1,4 @@
-import {extractLevelSpecific} from "./utils";
+import {extractLevelSpecific, getCurrentImmerState} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {call, put, select, takeEvery, all, fork, cancel} from "redux-saga/effects";
@@ -21,7 +21,6 @@ import {ActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {stepperDisabledSaga, StepperState, StepperStatus} from "../stepper";
 import {createQuickAlgoLibraryExecutor, makeContext} from "../stepper/api";
-import {getStepper, isStepperInterrupting} from "../stepper/selectors";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -143,38 +142,81 @@ export function getAutocompletionParameters (context, currentLevel: number): Aut
     };
 }
 
+let oldSagasTask;
+
+function* taskLoadSaga (app: App) {
+    console.log('TASK LOAD', oldSagasTask);
+    if (oldSagasTask) {
+        // Unload task first
+        yield cancel(oldSagasTask);
+        yield put(taskUnload());
+    }
+
+    const context = quickAlgoLibraries.getContext();
+    if (!app.replay && !context) {
+        yield call(createContext, quickAlgoLibraries);
+    }
+
+    yield put(taskLoaded());
+
+    if (app.replay && context) {
+        const contextState = context.getCurrentState();
+        yield put(taskUpdateState(getCurrentImmerState(contextState)));
+    }
+
+    const sagas = quickAlgoLibraries.getSagas(app);
+    oldSagasTask = yield fork(function* () {
+        yield all(sagas);
+    });
+
+    const stepperContext = {
+        interactAfter: (arg) => {
+            return new Promise((resolve, reject) => {
+                app.dispatch({
+                    type: ActionTypes.StepperInteract,
+                    payload: {stepperContext, arg},
+                    meta: {resolve, reject}
+                });
+            });
+        },
+        dispatch: app.dispatch,
+    };
+
+    const executor = createQuickAlgoLibraryExecutor(stepperContext, false);
+
+    const listeners = quickAlgoLibraries.getEventListeners();
+    console.log('task listeners', listeners);
+    for (let [eventName, {module, method}] of Object.entries(listeners)) {
+        console.log({eventName, method})
+        app.replayApi.on(eventName, function* (replayContext: ReplayContext, event) {
+            const payload = event[2];
+            console.log('trigger method ', method, 'for event name ', eventName);
+            yield put({type: eventName, payload});
+        });
+
+        // @ts-ignore
+        yield takeEvery(eventName, function* ({payload}) {
+            console.log('make payload', payload);
+            const args = payload ? payload : [];
+            yield executor(module, method, args, () => {
+                console.log('exec done');
+            });
+
+            const context = quickAlgoLibraries.getContext();
+            const contextState = context.getCurrentState();
+            console.log('get new state', contextState);
+            yield put(taskUpdateState(getCurrentImmerState(contextState)));
+        });
+    }
+}
+
 export default function (bundle: Bundle) {
     bundle.include(DocumentationBundle);
 
     bundle.addSaga(function* (app: App) {
-        let oldSagasTask;
         console.log('INIT TASK SAGAS');
 
-        yield takeEvery(TaskActionTypes.TaskLoad, function* () {
-            console.log('TASK LOAD', oldSagasTask);
-            if (oldSagasTask) {
-                // Unload task first
-                yield cancel(oldSagasTask);
-                yield put(taskUnload());
-            }
-
-            const context = quickAlgoLibraries.getContext();
-            if (!app.replay && !context) {
-                yield call(createContext, quickAlgoLibraries);
-            }
-
-            yield put(taskLoaded());
-
-            if (app.replay && context) {
-                const contextState = context.getCurrentState();
-                yield put(taskUpdateState(isDraft(contextState) ? current(contextState) : contextState));
-            }
-
-            const sagas = quickAlgoLibraries.getSagas(app);
-            oldSagasTask = yield fork(function* () {
-                yield all(sagas);
-            });
-        });
+        yield takeEvery(TaskActionTypes.TaskLoad, taskLoadSaga, app);
 
         yield takeEvery(recordingEnabledChange.type, function* (payload) {
             if (!payload) {
@@ -228,7 +270,7 @@ export default function (bundle: Bundle) {
         });
     });
 
-    bundle.defer(function(app: App) {
+    bundle.defer(function (app: App) {
         // Quick mode means continuous play. In this case we can just call every library method
         // without reloading state or display in between
         app.replayApi.onReset(function* (instant: PlayerInstant, quick) {
@@ -251,9 +293,18 @@ export default function (bundle: Bundle) {
             if (stepperState && stepperState.currentStepperState && stepperState.currentStepperState.quickalgoLibraryCalls && quick && context) {
                 const stepperContext = makeContext(stepperState, () => {
                     return Promise.resolve(true);
-                }, () => {
-                    return Promise.resolve(true);
-                });
+                }, (arg) => {
+                    return new Promise((resolve, reject) => {
+                        app.dispatch({
+                            type: ActionTypes.StepperInteract,
+                            payload: {stepperContext, arg},
+                            meta: {resolve, reject}
+                        });
+                    });
+                }, null, app.dispatch);
+
+                console.log('stepper context', {stepperContext})
+
                 const executor = createQuickAlgoLibraryExecutor(stepperContext, false);
                 for (let quickalgoCall of stepperState.currentStepperState.quickalgoLibraryCalls) {
                     const {module, action, args} = quickalgoCall;

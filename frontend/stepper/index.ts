@@ -647,7 +647,7 @@ export function* stepperDisabledSaga() {
     yield put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
 }
 
-function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
+function* stepperInteractBeforeSaga(app: App, {meta: {resolve, reject}}) {
     let state: AppStore = yield select();
 
     console.log('inside stepper interact before');
@@ -724,7 +724,7 @@ function* stepperWaitSaga() {
     yield delay(0);
 }
 
-function* stepperInterruptSaga() {
+function* stepperInterruptSaga(app: App) {
     const state = yield select();
 
     const curStepperState = getCurrentStepperState(state);
@@ -736,7 +736,7 @@ function* stepperInterruptSaga() {
         return Promise.resolve(true);
     }, () => {
         return Promise.resolve(true);
-    });
+    }, null, app.dispatch);
 
     if (stepperContext.state.platform === 'python') {
         yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
@@ -755,7 +755,7 @@ function* stepperStepSaga(app: App, action) {
         if (stepper.status === StepperStatus.Starting) {
             yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
-            stepperContext = makeContext(stepper, interactBefore, interactAfter, waitForProgress);
+            stepperContext = makeContext(stepper, interactBefore, interactAfter, waitForProgress, app.dispatch);
             console.log('bim create stepper context', stepperContext);
             if (stepperContext.state.platform === 'python') {
                 yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
@@ -1296,7 +1296,7 @@ function postLink(app: App) {
         // @ts-ignore
         yield takeEvery(ActionTypes.StepperInteractBefore, stepperInteractBeforeSaga, args);
         yield takeEvery(ActionTypes.StepperStep, stepperStepSaga, args);
-        yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga);
+        yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga, args);
         // @ts-ignore
         yield takeEvery(ActionTypes.StepperExit, stepperExitSaga);
 

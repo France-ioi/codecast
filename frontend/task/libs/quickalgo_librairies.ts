@@ -45,12 +45,27 @@ export class QuickAlgoLibraries {
     getSagas(app: App) {
         const sagas = [];
         for (let library of Object.values(this.libraries)) {
-            if (library.getSaga(app)) {
-                sagas.push(library.getSaga(app));
+            const librarySagas = library.getSaga(app);
+            if (librarySagas) {
+                sagas.push(librarySagas);
             }
         }
 
         return sagas;
+    }
+
+    getEventListeners() {
+        let listeners = {} as {[key: string]: {module: string, method: string}};
+        for (let [module, library] of Object.entries(this.libraries)) {
+            const libraryListeners = library.getEventListeners();
+            if (libraryListeners && Object.keys(libraryListeners).length) {
+                for (let [eventName, method] of Object.entries(libraryListeners)) {
+                    listeners[eventName] = {module, method};
+                }
+            }
+        }
+
+        return listeners;
     }
 }
 
@@ -212,6 +227,10 @@ export class QuickAlgoLibrary {
     getSaga(app: App) {
         return null;
     }
+
+    getEventListeners(): {[eventName: string]: string} {
+        return null;
+    };
 
     onError(diagnostics: any): void {
 

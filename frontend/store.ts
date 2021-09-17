@@ -20,7 +20,6 @@ import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
 import {TaskState} from "./task/task_slice";
 import {LayoutState} from "./task/layout/layout";
-import {PrinterTerminalState} from "./task/libs/printer/printer_terminal_slice";
 import {DocumentationState} from "./task/documentation_slice";
 import {BufferState} from "./buffers";
 
@@ -76,7 +75,6 @@ export interface AppStoreReplay {
     stepper: Stepper,
     compile: typeof initialStateCompile,
     task: TaskState,
-    printerTerminal: PrinterTerminalState,
 
     options: CodecastOptions,
 
@@ -115,7 +113,6 @@ export interface AppStore extends Store, AppStoreReplay {
     containerWidth: number,
     viewportTooSmall: boolean,
 
-    printerTerminal: PrinterTerminalState,
     documentation: DocumentationState,
 
     // TODO: Function should not be inside the store.
