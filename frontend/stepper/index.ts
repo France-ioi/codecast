@@ -24,7 +24,21 @@ The stepper's state has the following shape:
 
 */
 
-import {apply, call, cancel, delay, fork, put, race, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
+import {
+    all,
+    apply,
+    call,
+    cancel,
+    cancelled,
+    delay,
+    fork,
+    put,
+    race,
+    select,
+    take,
+    takeEvery,
+    takeLatest,
+} from 'redux-saga/effects';
 import * as C from '@france-ioi/persistent-c';
 
 import {
@@ -37,7 +51,7 @@ import {
     StepperContext,
     StepperError, QuickalgoLibraryCall
 } from './api';
-import CompileBundle, {compileFailedReducer, CompileStatus} from './compile';
+import CompileBundle, {CompileStatus} from './compile';
 import EffectsBundle from './c/effects';
 
 import DelayBundle from './delay';
@@ -45,7 +59,7 @@ import HeapBundle from './c/heap';
 import IoBundle from './io/index';
 import ViewsBundle from './views/index';
 import ArduinoBundle, {ArduinoPort} from './arduino';
-import PythonBundle, {getNewOutput, getNewTerminal} from './python';
+import PythonBundle from './python';
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
 import {Directive, parseDirectives} from "./python/directives";
@@ -61,13 +75,11 @@ import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
-import {produce} from "immer";
+import {createDraft, current, isDraft, produce} from "immer";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {taskSuccess} from "../task/task_slice";
-
-export interface StepperTask {
-
-}
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {getCurrentImmerState} from "../task/utils";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -98,6 +110,8 @@ export const initialStepperStateControls = {
     vPan: 0,
     cellPan: 0
 };
+
+let currentStepperTask;
 
 /**
  * TODO: This type is used in directives but it may actually be a different type that is used there.
@@ -135,7 +149,7 @@ const initialStateStepperState = {
     },
     isFinished: false, // Only used for python
     contextState: {} as any,
-    lastQuickalgoLibraryCalls: [] as QuickalgoLibraryCall[],
+    quickalgoLibraryCalls: [] as QuickalgoLibraryCall[],
 };
 
 export type StepperState = typeof initialStateStepperState;
@@ -168,10 +182,6 @@ function initReducer(state: AppStoreReplay): void {
 
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, initReducer);
-
-    /* Sent when the stepper task is started */
-    bundle.defineAction(ActionTypes.StepperTaskStarted);
-    bundle.addReducer(ActionTypes.StepperTaskStarted, stepperTaskStartedReducer);
 
     /* Sent when the stepper task is cancelled */
     bundle.defineAction(ActionTypes.StepperTaskCancelled);
@@ -271,11 +281,17 @@ export default function(bundle: Bundle) {
  *
  * @param stepperState The stepper state.
  * @param {string} context The context (Stepper.Progress, Stepper.Restart, Stepper.Idle).
+ * @param stepperContext
  */
-function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restart' | 'Stepper.Progress' | 'Stepper.Idle'): void {
+function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restart' | 'Stepper.Progress' | 'Stepper.Idle', stepperContext: StepperContext = null): void {
     const {programState, controls} = stepperState;
     if (!programState) {
         return;
+    }
+
+    if (stepperContext && stepperContext.quickalgoLibraryCalls) {
+        stepperState.quickalgoLibraryCalls = [...stepperContext.quickalgoLibraryCalls];
+        stepperContext.quickalgoLibraryCalls = [];
     }
 
     /* TODO: extend stepper API to add enrichers that run here */
@@ -329,7 +345,7 @@ export function clearStepper(stepper: Stepper) {
     stepper.currentStepperState = null;
 }
 
-function getNodeRange(stepperState: StepperState) {
+export function getNodeRange(stepperState?: StepperState) {
     if (!stepperState) {
         return null;
     }
@@ -423,12 +439,8 @@ function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}})
     state.task.resetDone = false;
 }
 
-function stepperTaskStartedReducer(state: AppStore, {payload: {task}}): void {
-    state.stepperTask = task;
-}
-
-function stepperTaskCancelledReducer(state: AppStore): void {
-    state.stepperTask = null;
+function stepperTaskCancelledReducer(): void {
+    currentStepperTask = null;
 }
 
 function stepperResetReducer(state: AppStore, {payload: {stepperState}}): void {
@@ -439,6 +451,7 @@ function stepperStepReducer(state: AppStore): void {
     /* No check for 'idle' status, the player must be able to step while
        the status is 'running'. */
     state.stepper.status = StepperStatus.Starting;
+    state.stepper.interrupting = false;
 }
 
 function stepperStartedReducer(state: AppStoreReplay, action): void {
@@ -452,7 +465,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     /**
      * TODO: stepperState comes from an action so it's not an immer draft.
      */
-    console.log('previous state', stepperContext.state.lastQuickalgoLibraryCalls, 'and progress', progress);
+    // console.log('previous state', stepperContext.state.contextState, 'and progress', progress);
     stepperContext.state = {...stepperContext.state};
 
     if (false !== progress) {
@@ -462,10 +475,15 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         }
 
         // Set new currentStepperState state and go back to idle.
-        enrichStepperState(stepperContext.state, 'Stepper.Progress');
+        enrichStepperState(stepperContext.state, 'Stepper.Progress', stepperContext);
     }
 
-    state.task.state = quickAlgoLibraries.getContext() && quickAlgoLibraries.getContext().getCurrentState ? Object.freeze({...quickAlgoLibraries.getContext().getCurrentState()}) : {};
+    const context = quickAlgoLibraries.getContext();
+    if (context && context.getCurrentState) {
+        const contextState = context.getCurrentState();
+        state.task.state = getCurrentImmerState(contextState);
+    }
+
     state.stepper.currentStepperState = stepperContext.state;
     if (state.compile.status === CompileStatus.Error) {
         state.stepper.currentStepperState.isFinished = false;
@@ -475,7 +493,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
 function stepperIdleReducer(state: AppStoreReplay, {payload: {stepperContext}}): void {
     // Set new currentStepperState state and go back to idle.
     /* XXX Call enrichStepperState prior to calling the reducer. */
-    enrichStepperState(stepperContext.state, 'Stepper.Idle');
+    enrichStepperState(stepperContext.state, 'Stepper.Idle', stepperContext);
     /**
      * TODO: stepperState comes from an action so it's not an immer draft.
      */
@@ -609,16 +627,13 @@ function* recorderStoppingSaga() {
 
 function* stepperEnabledSaga(args) {
     /* Start the new stepper task. */
-    const newTask = yield fork(rootStepperSaga, args);
-
-    yield put({type: ActionTypes.StepperTaskStarted, payload: {task: newTask}});
+    currentStepperTask = yield fork(rootStepperSaga, args);
 }
 
 export function* stepperDisabledSaga() {
-    const state: AppStore = yield select();
-
     /* Cancel the stepper task if still running. */
-    const oldTask = state.stepperTask;
+    const oldTask = currentStepperTask;
+    console.log('try to disable stepper', oldTask);
     if (oldTask) {
         // @ts-ignore
         yield cancel(oldTask);
@@ -632,7 +647,7 @@ export function* stepperDisabledSaga() {
     yield put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
 }
 
-function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
+function* stepperInteractBeforeSaga(app: App, {meta: {resolve, reject}}) {
     let state: AppStore = yield select();
 
     console.log('inside stepper interact before');
@@ -651,7 +666,7 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext, arg}, m
 function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {resolve, reject}}) {
     let state: AppStore = yield select();
 
-    console.log('current stepper state', stepperContext.state.lastQuickalgoLibraryCalls);
+    // console.log('current stepper state', stepperContext.state.contextState);
     /* Has the stepper been interrupted? */
     if (isStepperInterrupting(state) || StepperStatus.Clear === state.stepper.status) {
         console.log('stepper is still interrupting');
@@ -661,7 +676,14 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
     }
 
     /* Emit a progress action so that an up-to-date state gets displayed. */
+
     yield put({type: ActionTypes.StepperProgress, payload: {stepperContext, progress: arg.progress}});
+
+    if (stepperContext.waitForProgress) {
+        console.log('wait for progress');
+        yield call(stepperContext.waitForProgress, stepperContext);
+        console.log('end wait for progress, continuing');
+    }
 
     /* Run the provided saga if any, or wait until next animation frame. */
     const saga = arg.saga || stepperWaitSaga;
@@ -669,20 +691,20 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
         completed: call(saga, stepperContext),
         interrupted: take(ActionTypes.StepperInterrupt)
     });
-    console.log('current stepper state2', stepperContext.state.lastQuickalgoLibraryCalls);
+    // console.log('current stepper state2', stepperContext.state.contextState);
 
-    if (arg.saga) {
-        yield put({type: ActionTypes.StepperResume, payload: {stepperContext}});
-    }
+    // if (arg.saga) {
+    //     yield put({type: ActionTypes.StepperResume, payload: {stepperContext}});
+    // }
 
-    stepperContext.pendingResume = true;
+    // stepperContext.pendingResume = true;
 
     /* Update stepperContext.state from the global state to avoid discarding
        the effects of user interaction. */
     state = yield select();
-    stepperContext.state = getCurrentStepperState(state);
+    stepperContext.state = {...getCurrentStepperState(state)};
     stepperContext.speed = getStepper(state).speed;
-    console.log('current stepper state3', stepperContext.state.lastQuickalgoLibraryCalls);
+    // console.log('current stepper state3', stepperContext.state.contextState);
 
     /* Check whether to interrupt or resume the stepper. */
     if (interrupted) {
@@ -702,7 +724,7 @@ function* stepperWaitSaga() {
     yield delay(0);
 }
 
-function* stepperInterruptSaga() {
+function* stepperInterruptSaga(app: App) {
     const state = yield select();
 
     const curStepperState = getCurrentStepperState(state);
@@ -714,7 +736,7 @@ function* stepperInterruptSaga() {
         return Promise.resolve(true);
     }, () => {
         return Promise.resolve(true);
-    });
+    }, null, app.dispatch);
 
     if (stepperContext.state.platform === 'python') {
         yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
@@ -724,93 +746,109 @@ function* stepperInterruptSaga() {
 }
 
 function* stepperStepSaga(app: App, action) {
-    const state = yield select();
+    let stepperContext;
+    try {
+        const state = yield select();
+        const {waitForProgress} = action.payload;
 
-    const stepper = getStepper(state);
-    if (stepper.status === StepperStatus.Starting) {
-        yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
+        const stepper = getStepper(state);
+        if (stepper.status === StepperStatus.Starting) {
+            yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
-        const stepperContext = makeContext(stepper, interactBefore, interactAfter);
-        console.log('bim create context', stepperContext);
-        if (stepperContext.state.platform === 'python') {
-            yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
-        }
-
-        try {
-            yield call(performStep, stepperContext, action.payload.mode, action.payload.useSpeed);
-        } catch (ex) {
-            console.log('stepperStepSaga has catched', ex);
-            if (!(ex instanceof StepperError)) {
-                ex = new StepperError('error', stringifyError(ex));
+            stepperContext = makeContext(stepper, interactBefore, interactAfter, waitForProgress, app.dispatch);
+            console.log('bim create stepper context', stepperContext);
+            if (stepperContext.state.platform === 'python') {
+                yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
             }
-            if (ex.condition === 'interrupt') {
-                stepperContext.interrupted = true;
 
-                yield put({type: ActionTypes.StepperInterrupted});
+            try {
+                yield call(performStep, stepperContext, action.payload.mode, action.payload.useSpeed);
+            } catch (ex) {
+                console.log('stepperStepSaga has catched', ex);
+                if (!(ex instanceof StepperError)) {
+                    ex = new StepperError('error', stringifyError(ex));
+                }
+                if (ex.condition === 'interrupt') {
+                    stepperContext.interrupted = true;
+
+                    yield put({type: ActionTypes.StepperInterrupted});
+                }
+                if (ex.condition === 'error') {
+                    const response = {diagnostics: ex.message};
+                    yield put({type: ActionTypes.CompileFailed, response});
+                    // stepperContext.state.error = ex.message;
+                }
             }
-            if (ex.condition === 'error') {
-                const response = {diagnostics: ex.message};
-                yield put({type: ActionTypes.CompileFailed, response});
-                // stepperContext.state.error = ex.message;
+
+            if (stepperContext.state.platform === 'python') {
+                // Save scope.
+                stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
+            } else if (stepperContext.state.platform === 'unix') {
+                stepperContext.state.isFinished = !stepperContext.state.programState.control;
             }
-        }
 
-        if (stepperContext.state.platform === 'python') {
-            // Save scope.
-            stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
-        } else if (stepperContext.state.platform === 'unix') {
-            stepperContext.state.isFinished = !stepperContext.state.programState.control;
-        }
-
-        if (stepperContext.state.isFinished) {
-            console.log('check end condition');
-            const taskContext = quickAlgoLibraries.getContext();
-            if (taskContext && taskContext.infos.checkEndCondition) {
-                try {
-                    taskContext.infos.checkEndCondition(taskContext, true);
-                } catch (message) {
-                    // @ts-ignore
-                    if (taskContext.success) {
-                        yield put(taskSuccess(message));
-                        yield put({
-                            type: StepperActionTypes.StepperExit,
-                            payload: {reset: false},
-                        });
-                    } else {
-                        const response = {diagnostics: message};
-                        yield put({
-                            type: CompileActionTypes.CompileFailed,
-                            response
-                        });
+            if (stepperContext.state.isFinished) {
+                console.log('check end condition');
+                const taskContext = quickAlgoLibraries.getContext();
+                if (taskContext && taskContext.infos.checkEndCondition) {
+                    try {
+                        taskContext.infos.checkEndCondition(taskContext, true);
+                    } catch (message) {
+                        // @ts-ignore
+                        if (taskContext.success) {
+                            yield put(taskSuccess(message));
+                            // yield put({
+                            //     type: StepperActionTypes.StepperExit,
+                            //     payload: {reset: false},
+                            // });
+                        } else {
+                            const response = {diagnostics: message};
+                            yield put({
+                                type: CompileActionTypes.CompileFailed,
+                                response
+                            });
+                        }
                     }
                 }
             }
-        }
 
-        const newState = yield select();
-        const newStepper = getStepper(newState);
-        if (StepperStatus.Clear !== newStepper.status) {
-            yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
-        }
+            const newState = yield select();
+            const newStepper = getStepper(newState);
+            if (StepperStatus.Clear !== newStepper.status) {
+                yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
+            }
 
-        function interactBefore(arg) {
-            return new Promise((resolve, reject) => {
-                app.dispatch({
-                    type: ActionTypes.StepperInteractBefore,
-                    payload: {stepperContext, arg},
-                    meta: {resolve, reject}
+            function interactBefore(arg) {
+                return new Promise((resolve, reject) => {
+                    app.dispatch({
+                        type: ActionTypes.StepperInteractBefore,
+                        payload: {stepperContext, arg},
+                        meta: {resolve, reject}
+                    });
                 });
-            });
-        }
+            }
 
-        function interactAfter(arg) {
-            return new Promise((resolve, reject) => {
-                app.dispatch({
-                    type: ActionTypes.StepperInteract,
-                    payload: {stepperContext, arg},
-                    meta: {resolve, reject}
+            function interactAfter(arg) {
+                return new Promise((resolve, reject) => {
+                    app.dispatch({
+                        type: ActionTypes.StepperInteract,
+                        payload: {stepperContext, arg},
+                        meta: {resolve, reject}
+                    });
                 });
-            });
+            }
+        }
+    }  finally {
+        console.log('end stepper saga');
+        if (yield cancelled()) {
+            // If the stepper execution was cancelled, we make a final
+            // call to waitForProgress to start over the execution
+            // of the replay thread
+            console.log('has been cancelled', stepperContext.waitForProgress);
+            if (stepperContext.waitForProgress) {
+                console.log('call resume');
+                stepperContext.waitForProgress(stepperContext);
+            }
         }
     }
 }
@@ -826,18 +864,23 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
         console.log('Run python from beginning is necessary');
         const taskContext = quickAlgoLibraries.getContext();
         const state = yield select();
+        taskContext.display = false;
         taskContext.reset(state.task.currentTest, state);
+        stepperContext.state.contextState = taskContext.getCurrentState();
+        taskContext.reloadState(createDraft(stepperContext.state.contextState));
         yield delay(0);
+
+        console.log('current task state', taskContext.getCurrentState());
 
         window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
 
-        window.currentPythonRunner._input = stepperContext.state.input;
-        window.currentPythonRunner._inputPos = 0;
-        window.currentPythonRunner._terminal = stepperContext.state.terminal;
+        // window.currentPythonRunner._input = stepperContext.state.input;
+        // window.currentPythonRunner._inputPos = 0;
+        // window.currentPythonRunner._terminal = stepperContext.state.terminal;
 
         window.currentPythonRunner._synchronizingAnalysis = true;
         while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
-            yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, [createQuickAlgoLibraryExecutor(stepperContext)]);
+            yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, [createQuickAlgoLibraryExecutor(stepperContext, false)]);
 
             if (window.currentPythonRunner._isFinished) {
                 break;
@@ -845,9 +888,13 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
         }
         window.currentPythonRunner._synchronizingAnalysis = false;
 
-        stepperContext.state.input = window.currentPythonRunner._input;
-        stepperContext.state.terminal = window.currentPythonRunner._terminal;
-        stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
+        taskContext.display = true;
+        taskContext.resetDisplay();
+        console.log('End run python from beginning');
+
+        // stepperContext.state.input = window.currentPythonRunner._input;
+        // stepperContext.state.terminal = window.currentPythonRunner._terminal;
+        // stepperContext.state.inputPos = window.currentPythonRunner._inputPos;
     }
 }
 
@@ -881,46 +928,42 @@ function* stepperSaga(args) {
 
 /* Post-link, register record and replay hooks. */
 
-function updateRange(replayContext: ReplayContext) {
-    replayContext.instant.range = getNodeRange(getCurrentStepperState(replayContext.state));
-}
-
 function postLink(app: App) {
     const {recordApi, replayApi, stepperApi} = app;
 
     recordApi.onStart(function* () {
         /* TODO: store stepper options in init */
     });
-    replayApi.on('start', function(replayContext: ReplayContext) {
+    replayApi.on('start', function*() {
         /* TODO: restore stepper options from event[2] */
-        initReducer(replayContext.state);
+        yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'stepper', state: initialStateStepper}});
     });
     replayApi.onReset(function* (instant: PlayerInstant) {
         const stepperState = instant.state.stepper;
 
         yield put({type: ActionTypes.StepperReset, payload: {stepperState}});
-        yield put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: instant.range});
     });
 
     recordApi.on(ActionTypes.StepperExit, function* (addEvent) {
         yield call(addEvent, 'stepper.exit');
     });
-    replayApi.on('stepper.exit', function(replayContext: ReplayContext) {
-        stepperExitReducer(replayContext.state);
-
-        /* Clear the highlighted range when the stepper terminates. */
-        replayContext.instant.range = null;
+    replayApi.on('stepper.exit', function* () {
+        yield put({type: ActionTypes.StepperExit});
     });
 
     recordApi.on(ActionTypes.StepperRestart, function* (addEvent) {
         yield call(addEvent, 'stepper.restart');
     });
     replayApi.on('stepper.restart', async function(replayContext: ReplayContext) {
-        const stepperState = await buildState(replayContext.state, true);
-
-        replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-            stepperRestartReducer(draft, {payload: {stepperState}});
-        });
+        // new : Stepper.Restart action is called with Compile.Succeeded event
+        // const stepperState = await buildState(replayContext.state, true);
+        // // console.log('STEPPER RESTART state before', current(replayContext.state), stepperState);
+        //
+        // replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
+        //     stepperRestartReducer(draft, {payload: {stepperState}});
+        // });
+        //
+        // // console.log('STEPPER RESTART after state before', current(replayContext.state), stepperState);
     });
 
     recordApi.on(ActionTypes.StepperStarted, function* (addEvent, action) {
@@ -929,130 +972,65 @@ function postLink(app: App) {
         yield call(addEvent, 'stepper.step', mode);
     });
     replayApi.on('stepper.step', function* (replayContext: ReplayContext, event) {
-        let sagas = [];
-        const stepperStepContent = () => {
-            return new Promise((resolve, reject) => {
-                const mode = event[2];
+        const mode = event[2];
+        console.log('stepper.step event', replayContext);
 
-                replayContext.stepperDone = resolve;
-                replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-                    stepperStartedReducer(draft, {mode});
-                });
+        let waitForProgress;
 
-                replayContext.stepperContext = makeContext(replayContext.state.stepper, function interactBefore() {
-                    return Promise.resolve(true);
-                }, function interactAfter(_) {
-                    if (_.saga) {
-                        console.log('INTERACT AFTER - received saga', _.saga);
-                        sagas.push(_.saga);
-                    }
+        const promise = new Promise((resolve, reject) => {
+            console.log('PROMISE RETURNED');
+            waitForProgress = (stepperContext) => {
+                console.log('INSIDE WAIT FOR PROGRESS');
+                replayContext.stepperContext = stepperContext;
 
-                    return new Promise((cont) => {
-                        stepperSuspend(replayContext.stepperContext, cont);
-
-                        replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-                            stepperProgressReducer(draft, {
-                                payload: {
-                                    stepperContext: replayContext.stepperContext,
-                                    progress: true
-                                }
-                            });
-                        });
-
-                        stepperEventReplayed(replayContext);
-                    });
-                });
-
-                performStep(replayContext.stepperContext, mode).then(function () {
-                    replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-                        let currentStepperState = draft.stepper.currentStepperState;
-
-                        if (currentStepperState.platform === 'python' && window.currentPythonRunner._printedDuringStep) {
-                            draft.stepper.currentStepperState.output = getNewOutput(currentStepperState, window.currentPythonRunner._printedDuringStep);
-                            draft.stepper.currentStepperState.terminal = getNewTerminal(window.currentPythonRunner._terminal, window.currentPythonRunner._printedDuringStep);
-                        }
-
-                        stepperIdleReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
-                    });
-
-                    stepperEventReplayed(replayContext);
-                }, function (error) {
-                    if (!(error instanceof StepperError)) {
-                        return reject(error);
-                    }
-                    if (error.condition === 'interrupt') {
-                        replayContext.stepperContext.interrupted = true;
-                    }
-
-                    replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-                        if (error.condition === 'error') {
-                            compileFailedReducer(draft, {
-                                diagnostics: error.message,
-                            });
-                        }
-                        stepperIdleReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
-                    });
-
+                return new Promise((cont) => {
+                    console.log('INSIDE PROMISE');
+                    stepperSuspend(stepperContext, cont);
                     stepperEventReplayed(replayContext);
                 });
-            });
-        };
+            }
 
-        yield call(stepperStepContent);
+            replayContext.stepperDone = resolve;
+        });
 
-        console.log('STEPPER.STEP - FORK SAGAS', sagas);
-        console.log('end fork');
+        console.log('before put step');
+        yield put({type: ActionTypes.StepperStep, payload: {mode, waitForProgress}});
 
-        return sagas;
+        console.log('before yield promise', promise);
+        yield promise;
+        console.log('after yield promise', promise);
     });
 
-    recordApi.on(ActionTypes.StepperInteractBefore, function* (addEvent, {payload: {stepperContext}}) {
-        yield call(addEvent, 'stepper.progress', stepperContext.lineCounter);
-    });
-
-    recordApi.on(ActionTypes.StepperResume, function* (addEvent, {payload: {stepperContext}}) {
+    recordApi.on(ActionTypes.StepperProgress, function* (addEvent, {payload: {stepperContext}}) {
         yield call(addEvent, 'stepper.progress', stepperContext.lineCounter);
     });
 
     replayApi.on('stepper.progress', function* (replayContext: ReplayContext) {
-        let sagas = [];
-        const stepperProgressContent = () => {
-            return new Promise((resolve) => {
-                replayContext.stepperDone = resolve;
-                replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
-                stepperResume(replayContext.stepperContext, function interactBefore() {
-                    return Promise.resolve(true);
-                }, function interactAfter(elements) {
-                    if (elements.saga) {
-                        console.log('INTERACT AFTER - received saga', elements.saga);
-                        sagas.push(elements.saga);
-                    }
+        let waitForProgress;
 
-                    return new Promise((cont) => {
-                        stepperSuspend(replayContext.stepperContext, cont);
+        const promise = new Promise((resolve, reject) => {
+            waitForProgress = (stepperContext) => {
+                console.log('stepper progress resume ?');
 
-                        replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-                            stepperProgressReducer(draft, {payload: {stepperContext: replayContext.stepperContext, progress: true}});
-                        });
-
-                        stepperEventReplayed(replayContext);
-                    });
-                }, function() {
-                    replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-                        stepperProgressReducer(draft, {payload: {stepperContext: replayContext.stepperContext, progress: true}});
-                    });
-
+                return new Promise((cont) => {
+                    stepperSuspend(stepperContext, cont);
                     stepperEventReplayed(replayContext);
                 });
-            })
-        };
+            }
 
-        yield call(stepperProgressContent);
+            replayContext.stepperDone = resolve;
+        });
 
-        console.log('STEPPER.PROGRESS - FORK SAGAS', sagas);
-        console.log('end fork');
+        const {resume} = replayContext.stepperContext;
+        if (resume) {
+            try {
+                resume();
+            } catch (e) {
+                console.error('exception', e);
+            }
+        }
 
-        return sagas;
+        yield promise;
     });
 
     recordApi.on(ActionTypes.StepperInterrupt, function* (addEvent) {
@@ -1075,36 +1053,40 @@ function postLink(app: App) {
     replayApi.on('stepper.idle', function(replayContext: ReplayContext) {
         return new Promise((resolve) => {
             replayContext.stepperDone = resolve;
-            replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
+            // replayContext.stepperContext.state = getCurrentStepperState(replayContext.state);
 
             /* Set the interact callback to resume the stepper until completion. */
-            stepperResume(replayContext.stepperContext, function interactBefore() {
-                return Promise.resolve(true);
-            }, function interactAfter(_) {
-                return new Promise((cont) => {
-                    cont(true);
-                });
-            }, function() {
-                replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-                    stepperIdleReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
-                });
+            // stepperResume(replayContext.stepperContext, function interactBefore() {
+            //     return Promise.resolve(true);
+            // }, function interactAfter(_) {
+            //     return new Promise((cont) => {
+            //         cont(true);
+            //     });
+            // }, function() {
+            //     replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
+            //         stepperIdleReducer(draft, {payload: {stepperContext: replayContext.stepperContext}});
+            //     });
+            //
+            //     stepperEventReplayed(replayContext);
+            // });
 
-                stepperEventReplayed(replayContext);
-            });
+            const {resume} = replayContext.stepperContext;
+            if (resume) {
+                resume();
+            }
         });
     });
 
     function stepperEventReplayed(replayContext: ReplayContext) {
         const done = replayContext.stepperDone;
         replayContext.stepperDone = null;
-        updateRange(replayContext);
         done();
     }
 
     function stepperSuspend(stepperContext: StepperContext, cont) {
-        stepperContext.interactBefore = null;
+        // stepperContext.interactBefore = null;
         console.log('reset interact before');
-        stepperContext.interactAfter = null;
+        // stepperContext.interactAfter = null;
         stepperContext.resume = cont;
     }
 
@@ -1123,35 +1105,29 @@ function postLink(app: App) {
     recordApi.on(ActionTypes.StepperUndo, function* (addEvent) {
         yield call(addEvent, 'stepper.undo');
     });
-    replayApi.on('stepper.undo', function(replayContext: ReplayContext) {
-        stepperUndoReducer(replayContext.state);
-
-        updateRange(replayContext);
+    replayApi.on('stepper.undo', function* () {
+        yield put({type: ActionTypes.StepperUndo});
     });
 
     recordApi.on(ActionTypes.StepperRedo, function* (addEvent) {
         yield call(addEvent, 'stepper.redo');
     });
-    replayApi.on('stepper.redo', function(replayContext: ReplayContext) {
-        stepperRedoReducer(replayContext.state);
-
-        updateRange(replayContext);
+    replayApi.on('stepper.redo', function* () {
+        yield put({type: ActionTypes.StepperRedo});
     });
 
     recordApi.on(ActionTypes.StepperStackUp, function* (addEvent) {
         yield call(addEvent, 'stepper.stack.up');
     });
-    replayApi.on('stepper.stack.up', function(replayContext: ReplayContext) {
-        stepperStackUpReducer(replayContext.state);
-        updateRange(replayContext);
+    replayApi.on('stepper.stack.up', function* () {
+        yield put({type: ActionTypes.StepperStackUp});
     });
 
     recordApi.on(ActionTypes.StepperStackDown, function* (addEvent) {
         yield call(addEvent, 'stepper.stack.down');
     });
-    replayApi.on('stepper.stack.down', function(replayContext: ReplayContext) {
-        stepperStackDownReducer(replayContext.state);
-        updateRange(replayContext);
+    replayApi.on('stepper.stack.down', function* () {
+        yield put({type: ActionTypes.StepperStackDown});
     });
 
     recordApi.on(ActionTypes.StepperViewControlsChanged, function* (addEvent, action) {
@@ -1159,11 +1135,11 @@ function postLink(app: App) {
 
         yield call(addEvent, 'stepper.view.update', key, update);
     });
-    replayApi.on('stepper.view.update', function(replayContext: ReplayContext, event) {
+    replayApi.on('stepper.view.update', function* (replayContext: ReplayContext, event) {
         const key = event[2];
         const update = event[3];
 
-        stepperViewControlsChangedReducer(replayContext.state, {key, update});
+        yield put({type: ActionTypes.StepperViewControlsChanged, key, update});
     });
 
     recordApi.on(ActionTypes.StepperSpeedChanged, function* (addEvent, action) {
@@ -1171,10 +1147,10 @@ function postLink(app: App) {
 
         yield call(addEvent, 'stepper.speed.changed', speed);
     });
-    replayApi.on('stepper.speed.changed', function(replayContext: ReplayContext, event) {
+    replayApi.on('stepper.speed.changed', function* (replayContext: ReplayContext, event) {
         const speed = event[2];
 
-        stepperSpeedChangedReducer(replayContext.state, {payload: {speed}});
+        yield put({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
     });
 
     recordApi.on(ActionTypes.StepperControlsChanged, function* (addEvent, action) {
@@ -1182,10 +1158,10 @@ function postLink(app: App) {
 
         yield call(addEvent, 'stepper.controls.changed', controls);
     });
-    replayApi.on('stepper.controls.changed', function(replayContext: ReplayContext, event) {
+    replayApi.on('stepper.controls.changed', function* (replayContext: ReplayContext, event) {
         const controls = event[2];
 
-        stepperControlsChangedReducer(replayContext.state, {payload: {controls}});
+        yield put({type: ActionTypes.StepperControlsChanged, payload: {controls}});
     });
 
     stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
@@ -1225,7 +1201,7 @@ function postLink(app: App) {
         // @ts-ignore
         yield takeEvery(ActionTypes.StepperInteractBefore, stepperInteractBeforeSaga, args);
         yield takeEvery(ActionTypes.StepperStep, stepperStepSaga, args);
-        yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga);
+        yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga, args);
         // @ts-ignore
         yield takeEvery(ActionTypes.StepperExit, stepperExitSaga);
 

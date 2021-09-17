@@ -1,5 +1,4 @@
 export enum ActionTypes {
-    StepperTaskStarted = 'Stepper.Task.Started',
     StepperTaskCancelled = 'Stepper.Task.Cancelled',
     StepperRestart = 'Stepper.Restart',
     StepperReset = 'Stepper.Reset',
@@ -27,7 +26,6 @@ export enum ActionTypes {
     Compile = 'Compile',
     CompileWait = 'Compile.Wait',
     CompileClear = 'Compile.Clear',
-    CompileReset = 'Compile.Reset',
     CompileStarted = 'Compile.Started',
     CompileSucceeded = 'Compile.Succeeded',
     CompileFailed = 'Compile.Failed',

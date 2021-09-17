@@ -10,6 +10,7 @@ export interface TaskState {
     currentLevel?: number,
     recordingEnabled?: boolean,
     resetDone?: boolean,
+    loaded?: boolean,
     state?: any,
     success?: boolean,
     successMessage?: string,
@@ -22,6 +23,7 @@ export const taskInitialState = {
     currentLevel: 1,
     recordingEnabled: false,
     resetDone: true,
+    loaded: false,
     success: false,
     successMessage: null,
     currentTest: null,
@@ -62,6 +64,15 @@ export const taskSlice = createSlice({
         taskInputNeeded(state: TaskState, action: PayloadAction<boolean>) {
             state.inputNeeded = action.payload;
         },
+        taskInputEntered(state: TaskState, action: PayloadAction<string>) {
+            state.inputNeeded = false;
+        },
+        taskLoaded(state: TaskState) {
+            state.loaded = true;
+        },
+        taskUpdateState(state: TaskState, action: PayloadAction<any>) {
+            state.state = action.payload;
+        },
     },
 });
 
@@ -71,7 +82,10 @@ export const {
     taskSuccessClear,
     updateCurrentTest,
     taskInputNeeded,
+    taskInputEntered,
     taskResetDone,
+    taskUpdateState,
+    taskLoaded,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

@@ -30,6 +30,7 @@ import {Bundle} from "../linker";
 import {App} from "../index";
 import {isStepperInterrupting} from "./selectors";
 import {checkCompilingCode} from "../task/utils";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -47,7 +48,7 @@ export const initialStateCompile = {
 };
 
 export default function(bundle: Bundle) {
-    function initReducer(state: AppStoreReplay): void {
+    function initReducer(state: AppStore): void {
         state.compile = initialStateCompile;
     }
 
@@ -59,14 +60,6 @@ export default function(bundle: Bundle) {
     // Clear the 'compile' state.
     bundle.defineAction(ActionTypes.CompileClear);
     bundle.addReducer(ActionTypes.CompileClear, initReducer);
-
-    // Reset the 'compile' state.
-    bundle.defineAction(ActionTypes.CompileReset);
-    bundle.addReducer(ActionTypes.CompileReset, compileResetReducer);
-
-    function compileResetReducer(state: AppStoreReplay, action): void {
-        state.compile = action.state;
-    }
 
     // Started translation of {source}.
     bundle.defineAction(ActionTypes.CompileStarted);
@@ -164,8 +157,8 @@ export default function(bundle: Bundle) {
     });
 
     bundle.defer(function({recordApi, replayApi}: App) {
-        replayApi.on('start', function(replayContext: ReplayContext) {
-            compileResetReducer(replayContext.state, {state: initialStateCompile});
+        replayApi.on('start', function* () {
+            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: initialStateCompile}});
         });
 
         recordApi.on(ActionTypes.CompileStarted, function* (addEvent, action) {
@@ -173,46 +166,46 @@ export default function(bundle: Bundle) {
 
             yield call(addEvent, 'compile.start', source); // XXX should also have platform
         });
-        replayApi.on(['stepper.compile', 'compile.start'], function(replayContext: ReplayContext, event) {
-            const action = {source: event[2]};
+        replayApi.on(['stepper.compile', 'compile.start'], function* (replayContext: ReplayContext, event) {
+            const source = event[2];
 
-            compileStartedReducer(replayContext.state, action);
+            yield put({type: ActionTypes.CompileStarted, source});
         });
 
         recordApi.on(ActionTypes.CompileSucceeded, function* (addEvent, action) {
             yield call(addEvent, 'compile.success', action);
         });
-        replayApi.on('compile.success', function(replayContext: ReplayContext, event) {
+        replayApi.on('compile.success', function* (replayContext: ReplayContext, event) {
             const action = event[2];
 
-            compileSucceededReducer(replayContext.state, action);
+            yield put({type: ActionTypes.CompileSucceeded, ...action});
         });
 
         recordApi.on(ActionTypes.CompileFailed, function* (addEvent, action) {
             const {response} = action;
             yield call(addEvent, 'compile.failure', response);
         });
-        replayApi.on('compile.failure', function(replayContext: ReplayContext, event) {
+        replayApi.on('compile.failure', function* (replayContext: ReplayContext, event) {
             const action = {response: event[2]};
 
-            compileFailedReducer(replayContext.state, action);
+            yield put({type: ActionTypes.CompileFailed, ...action});
         });
 
         recordApi.on(ActionTypes.CompileClearDiagnostics, function* (addEvent) {
             yield call(addEvent, 'compile.clearDiagnostics');
         });
-        replayApi.on('compile.clearDiagnostics', function(replayContext: ReplayContext) {
-            compileClearDiagnosticsReducer(replayContext.state);
+        replayApi.on('compile.clearDiagnostics', function* () {
+            yield put({type: ActionTypes.CompileClearDiagnostics});
         });
 
-        replayApi.on('stepper.exit', function(replayContext: ReplayContext) {
-            initReducer(replayContext.state);
+        replayApi.on('stepper.exit', function* () {
+            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: initialStateCompile}});
         });
 
         replayApi.onReset(function* (instant: PlayerInstant) {
             const compileModel = instant.state.compile;
 
-            yield put({type: ActionTypes.CompileReset, state: compileModel});
+            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: compileModel}});
         });
     });
 };
@@ -268,14 +261,14 @@ const addNodeRanges = function(source, syntaxTree) {
     return traverse(syntaxTree);
 };
 
-function compileStartedReducer(state: AppStoreReplay, action): void {
+function compileStartedReducer(state: AppStore, action): void {
     const {source} = action;
 
     state.compile.status = CompileStatus.Running;
     state.compile.source = source;
 }
 
-function compileSucceededReducer(state: AppStoreReplay, action): void {
+function compileSucceededReducer(state: AppStore, action): void {
     if (action.platform === 'python') {
         state.compile.status = CompileStatus.Done;
         state.compile.diagnostics = '';
@@ -301,7 +294,7 @@ export function compileFailedReducer(state: AppStoreReplay, action): void {
     clearStepper(state.stepper);
 }
 
-function compileClearDiagnosticsReducer(state: AppStoreReplay): void {
+function compileClearDiagnosticsReducer(state: AppStore): void {
     state.compile.diagnostics = '';
     state.compile.diagnosticsHtml = '';
 }

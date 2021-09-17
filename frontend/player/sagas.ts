@@ -3,22 +3,24 @@
 // where source and input are buffer models (of shape {document, selection, firstVisibleRow}).
 
 import {buffers, eventChannel} from 'redux-saga';
-import {call, fork, put, race, select, take, takeLatest} from 'redux-saga/effects';
+import {call, delay, fork, put, race, select, take, takeLatest} from 'redux-saga/effects';
 import {getJson} from '../common/utils';
 import {findInstantIndex} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
+import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getPlayerState} from "./selectors";
 import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
 import {StepperContext} from "../stepper/api";
-import {App} from "../index";
-import {createDraft, finishDraft} from "immer";
+import {App, Codecast} from "../index";
 import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
-import {taskInputEntered} from "../task";
+import {ActionTypes as AppActionTypes} from "../actionTypes";
+import {getTaskTest, taskLoad} from "../task";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -47,6 +49,8 @@ function* playerSaga(action) {
     ];
 
     yield takeLatest(anyReplayAction, replaySaga, action);
+
+    yield takeLatest(ActionTypes.PlayerApplyReplayEvent, playerReplayEvent, action);
 }
 
 function* playerPrepare(app: App, action) {
@@ -114,6 +118,7 @@ function* playerPrepare(app: App, action) {
         task: {
             currentTask: state.task.currentTask,
             currentLevel: state.task.currentLevel,
+            currentTest: getTaskTest(state.task.currentTask, state.task.currentLevel),
         },
         options: {
             platform
@@ -182,9 +187,13 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
        to an action that is dispatched to the store (which must have an
        appropriate reducer) plus an optional saga to be called during playback. */
     let pos, progress, lastProgress = 0, range;
-    let waitingPromises = [];
     const events = replayContext.events;
     const duration = events[events.length - 1][0];
+    const replayStore = Codecast.replayStore;
+
+    yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}, replay: true}});
+    yield call(replayStore.dispatch, taskLoad());
+
     for (pos = 0; pos < events.length; pos += 1) {
         const event = events[pos];
 
@@ -226,70 +235,16 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
 
         let needsRestartExecutor = false;
 
-
         console.log('-------- REPLAY ---- EVENT ----', key, event);
+        yield new Promise(resolve => {
+            replayStore.dispatch({type: PlayerActionTypes.PlayerApplyReplayEvent, payload: {replayApi, key, replayContext, event, resolve}});
+        });
+        console.log('END REPLAY EVENT (computeInstants)');
 
-        if (key === 'stepper.step' || key === 'stepper.progress' || key === 'stepper.idle' || key === 'stepper.restart') {
-            /**
-             * Those event are trickier than the other ones because they copy a piece of state (state.stepper.currentStepperStep)
-             * and then reuse it in future events. We cannot copy a piece of immer draft and use it later.
-             * The choice made is to update the state in a more granular way in those events, so that the copied piece
-             * is a piece of the real state and not one of a immer draft.
-             * I would have been better to not copy the stepper at all but it seems like this would imply a huge
-             * refactor of the player.
-             */
-
-            console.log('start apply event');
-            const sagas = yield call(replayApi.applyEvent, key, replayContext, event);
-            console.log('end apply event', sagas);
-
-            for (let saga of sagas) {
-                yield fork(saga);
-            }
-
-            console.log('end fork sagas');
-        } else {
-            const originalState = replayContext.state;
-            const draft = createDraft(originalState);
-
-            // @ts-ignore
-            replayContext.state = draft;
-
-            yield call(replayApi.applyEvent, key, replayContext, event);
-
-            if (key === 'task/taskInputNeeded' && !event[2]) {
-                console.log('TASK INPUT LAST INPUT', replayContext.state.printerTerminal.lastInput);
-                yield put(taskInputEntered(replayContext.state.printerTerminal.lastInput));
-                needsRestartExecutor = true;
-            }
-
-            replayContext.state.task.state = quickAlgoLibraries.getContext() && quickAlgoLibraries.getContext().getCurrentState ? {...quickAlgoLibraries.getContext().getCurrentState()} : {};
-            console.log('GET STATE', Object.freeze(replayContext.state.task.state));
-
-            // @ts-ignore
-            replayContext.state = finishDraft(draft);
-        }
-
-        // if (needsRestartExecutor) {
-        //     console.log('HERE RESTART EXECUTOR');
-        //     const sagas = yield call(replayApi.applyEvent, 'stepper.progress', replayContext, ['stepper.progress']);
-        //     for (let saga of sagas) {
-        //         yield fork(saga);
-        //     }
-        // }
-
-        /* Preserve the last explicitly set range. */
-        // TODO: Is this used ?
-        if ('range' in instant) {
-            range = instant.range;
-        } else {
-            instant.range = range;
-        }
-
-        instant.state = replayContext.state;
+        instant.state = replayStore.getState();
 
         Object.freeze(instant);
-        console.log('new instant', instant.range);
+        console.log('new instant', instant.state);
 
         replayContext.instants.push(instant);
         progress = Math.round(pos * 50 / events.length + t * 50 / duration) / 100;
@@ -299,6 +254,24 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
             yield call(replayContext.reportProgress, progress);
         }
     }
+}
+
+/**
+ * This redux saga has been dispatched in the replay store and occurs in this store
+ */
+function* playerReplayEvent(app: App, {type, payload}) {
+    console.log('START REPLAY EVENT (playerReplayEvent)', type, payload);
+    const {replayApi, key, replayContext, event, resolve} = payload;
+
+    // Play event, except if we need an input: in this case, end the event execution and continue
+    // playing events until we get the input
+    yield race({
+        event: call(replayApi.applyEvent, key, replayContext, event),
+        inputNeeded: take('task/taskInputNeeded'),
+    });
+
+    console.log('END REPLAY EVENT (playerReplayEvent)');
+    resolve();
 }
 
 function* replaySaga(app: App, {type, payload}) {

@@ -26,7 +26,11 @@ export const playerReset = (
 export default function(bundle: Bundle) {
     bundle.include(playerSagas);
 
-    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {replay}}) => {
+        if (replay) {
+            state.replay = true;
+        }
+
         state.player = initialStatePlayer;
 
         playerClear(state);
@@ -115,6 +119,12 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.PlayerReset);
     bundle.addReducer(ActionTypes.PlayerReset, (state: AppStore, {payload: {sliceName, state: newState}}) => {
         state[sliceName] = newState;
+    });
+
+    bundle.defineAction(ActionTypes.PlayerResetFull);
+    bundle.addReducer(ActionTypes.PlayerResetFull, (state: AppStore, {payload: {newState}}) => {
+        console.log('DO FULL RESET WITH', newState);
+        return newState;
     });
 };
 

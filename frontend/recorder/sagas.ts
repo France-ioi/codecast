@@ -71,9 +71,9 @@ export default function(bundle, deps) {
     });
 
     bundle.defer(function({replayApi}: App) {
-        replayApi.on('end', function(replayContext: ReplayContext) {
+        replayApi.on('end', function (replayContext: ReplayContext) {
             replayContext.instant.isEnd = true;
-            replayContext.state.stopped = true;
+            // replayContext.state.stopped = true; // Useful??
         });
     });
 

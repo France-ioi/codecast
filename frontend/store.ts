@@ -6,14 +6,13 @@ import {initialStateFullscreen} from "./common/fullscreen";
 import {Error} from "./common/error";
 import {mainViewGeometries} from "./common/resize";
 import {Languages} from './lang';
-import {Stepper, StepperTask} from "./stepper";
+import {Stepper} from "./stepper";
 import {initialStateCompile} from "./stepper/compile";
 import {initialStateExamples} from "./common/examples";
 import {initialStateUser} from "./common/login";
 import {Screen} from "./common/screens";
 import {initialStatePlayer} from "./player";
 import {initialStateRecorder} from "./recorder/store";
-import {initialStateBuffers} from "./buffers";
 import {initialStateArduino} from "./stepper/arduino";
 import {initialStateIoPane} from "./stepper/io";
 import {initialStateSubtitles} from "./subtitles";
@@ -21,8 +20,8 @@ import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
 import {TaskState} from "./task/task_slice";
 import {LayoutState} from "./task/layout/layout";
-import {PrinterTerminalState} from "./task/libs/printer/printer_terminal_slice";
 import {DocumentationState} from "./task/documentation_slice";
+import {BufferState} from "./buffers";
 
 export type CodecastPlatform = 'python' | 'unix' | 'arduino';
 
@@ -72,11 +71,10 @@ export interface Panes {
 export interface AppStoreReplay {
     ioPane: typeof initialStateIoPane,
     arduino: typeof initialStateArduino,
-    buffers: typeof initialStateBuffers,
+    buffers: {[key: string]: BufferState},
     stepper: Stepper,
     compile: typeof initialStateCompile,
     task: TaskState,
-    printerTerminal: PrinterTerminalState,
 
     options: CodecastOptions,
 
@@ -93,7 +91,6 @@ export interface AppStore extends Store, AppStoreReplay {
     editor: typeof initialStateEditor,
     statistics: typeof initialStateStatistics,
     fullscreen: typeof initialStateFullscreen,
-    stepperTask: StepperTask,
     examples: typeof initialStateExamples,
     user: typeof initialStateUser,
     screen: Screen,
@@ -106,6 +103,7 @@ export interface AppStore extends Store, AppStoreReplay {
     vumeterElement: any,
     task: TaskState,
     layout: LayoutState,
+    replay: boolean,
 
     // TODO: Put the following in a "window" attribute instead of at the root of the store
     mainViewGeometry: typeof mainViewGeometries[0],
@@ -115,7 +113,6 @@ export interface AppStore extends Store, AppStoreReplay {
     containerWidth: number,
     viewportTooSmall: boolean,
 
-    printerTerminal: PrinterTerminalState,
     documentation: DocumentationState,
 
     // TODO: Function should not be inside the store.

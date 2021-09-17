@@ -53,8 +53,14 @@ export function PureTerminal(props: PureTerminalProps) {
     const ci = cursor.line, cj = cursor.column;
 
     return (
-        <div ref={refTerminal} className="terminal" tabIndex={1} onKeyDown={onKeyDown}
-             onKeyUp={onKeyUp} onKeyPress={onKeyPress}>
+        <div
+            ref={refTerminal}
+            className="terminal"
+            tabIndex={1}
+            onKeyDown={onKeyDown}
+             onKeyUp={onKeyUp}
+            onKeyPress={onKeyPress}
+        >
             {terminalBuffer.lines.map(function(line, i) {
                 return (
                     <div key={i} className="terminal-line" style={{width: '100%'}}>

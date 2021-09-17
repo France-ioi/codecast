@@ -1,5 +1,5 @@
 import {App} from "../../index";
-import {AppStore} from "../../store";
+import {AppStore, AppStoreReplay} from "../../store";
 
 //TODO: Handle multiples libraries at once.
 // For now, we only use 1 library
@@ -45,16 +45,32 @@ export class QuickAlgoLibraries {
     getSagas(app: App) {
         const sagas = [];
         for (let library of Object.values(this.libraries)) {
-            if (library.getSaga(app)) {
-                sagas.push(library.getSaga(app));
+            const librarySagas = library.getSaga(app);
+            if (librarySagas) {
+                sagas.push(librarySagas);
             }
         }
 
         return sagas;
     }
+
+    getEventListeners() {
+        let listeners = {} as {[key: string]: {module: string, method: string}};
+        for (let [module, library] of Object.entries(this.libraries)) {
+            const libraryListeners = library.getEventListeners();
+            if (libraryListeners && Object.keys(libraryListeners).length) {
+                for (let [eventName, method] of Object.entries(libraryListeners)) {
+                    listeners[eventName] = {module, method};
+                }
+            }
+        }
+
+        return listeners;
+    }
 }
 
 export const quickAlgoLibraries = new QuickAlgoLibraries();
+window.quickAlgoLoadedLibraries = quickAlgoLibraries;
 
 export class QuickAlgoLibrary {
     display: boolean;
@@ -173,7 +189,7 @@ export class QuickAlgoLibrary {
     };
 
     // Placeholders, should be actually defined by the library
-    reset(taskInfos = null, appState: AppStore = null) {
+    reset(taskInfos = null, appState: AppStoreReplay = null) {
         // Reset the context
         if (this.display) {
             this.resetDisplay();
@@ -211,6 +227,10 @@ export class QuickAlgoLibrary {
     getSaga(app: App) {
         return null;
     }
+
+    getEventListeners(): {[eventName: string]: string} {
+        return null;
+    };
 
     onError(diagnostics: any): void {
 

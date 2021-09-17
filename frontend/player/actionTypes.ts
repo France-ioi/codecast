@@ -20,4 +20,6 @@ export enum ActionTypes {
     PlayerEditorMutedChanged = 'Player.Editor.Muted.Changed',
 
     PlayerReset = 'Player.Reset',
+    PlayerResetFull = 'Player.ResetFull',
+    PlayerApplyReplayEvent = 'Player.ApplyReplayEvent',
 }

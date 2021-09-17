@@ -5,17 +5,13 @@ import {scanfBuiltin} from './scanf';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
-import {getBufferModel} from "../../buffers/selectors";
-import {AppStore, AppStoreReplay} from "../../store";
+import {AppStore} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../api";
-import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
-import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
-import {PrinterLib} from "../../task/libs/printer/printer_lib";
-import {TermBuffer} from "./terminal";
+import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 
 export enum IoMode {
     Terminal = 'terminal',
@@ -53,7 +49,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.IoPaneModeChanged);
     bundle.addReducer(ActionTypes.IoPaneModeChanged, ioPaneModeChangedReducer);
 
-    function ioPaneModeChangedReducer(state: AppStoreReplay, {payload: {mode}}): void {
+    function ioPaneModeChangedReducer(state: AppStore, {payload: {mode}}): void {
         state.ioPane.mode = mode;
     }
 
@@ -63,11 +59,15 @@ export default function(bundle: Bundle) {
 
             init.ioPaneMode = state.ioPane.mode;
         });
-        replayApi.on('start', function(replayContext: ReplayContext, event) {
+        replayApi.on('start', function* (replayContext: ReplayContext, event) {
             const {ioPaneMode} = event[2];
 
-            replayContext.state.ioPane = initialStateIoPane;
-            ioPaneModeChangedReducer(replayContext.state, {payload: {mode: ioPaneMode}});
+            const newState = {
+                ...initialStateIoPane,
+                mode: ioPaneMode,
+            };
+
+            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'ioPane', state: newState}});
         });
 
         replayApi.onReset(function* (instant: PlayerInstant) {
@@ -79,30 +79,10 @@ export default function(bundle: Bundle) {
         recordApi.on(ActionTypes.IoPaneModeChanged, function* (addEvent, {payload: {mode}}) {
             yield call(addEvent, 'ioPane.mode', mode);
         });
-        replayApi.on('ioPane.mode', function(replayContext: ReplayContext, event) {
+        replayApi.on('ioPane.mode', function* (replayContext: ReplayContext, event) {
             const mode = event[2];
 
-            ioPaneModeChangedReducer(replayContext.state, {payload: {mode}});
-        });
-
-        /* Set up the terminal or input. */
-        stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
-            const {mode} = state.ioPane;
-
-            stepperState.inputPos = 0;
-            if (mode === IoMode.Terminal) {
-                stepperState.input = "";
-                stepperState.terminal = new TermBuffer({lines: 10, width: 80});
-                stepperState.inputBuffer = "";
-            } else {
-                const inputModel = getBufferModel(state, 'input');
-                let input = inputModel.document.toString().trimRight();
-                if (input.length !== 0) {
-                    input = input + "\n";
-                }
-                stepperState.input = input;
-                stepperState.output = "";
-            }
+            yield put({type: ActionTypes.IoPaneModeChanged, payload: {mode}});
         });
 
         stepperApi.addBuiltin('printf', printfBuiltin);

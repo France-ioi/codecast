@@ -31,22 +31,23 @@ const replayApi = {
         }
     },
     applyEvent: function* (key: string, replayContext: ReplayContext, event) {
-        let allSagas = [];
+        // let allSagas = [];
         if (eventHandlers.has(key)) {
             const funcs = eventHandlers.get(key);
             for (let func of funcs) {
                 console.log('bim start call');
-                let sagas = yield call(func, replayContext, event);
-                if (Array.isArray(sagas) && sagas.length) {
-                    allSagas = [...allSagas, ...sagas];
-                }
+                yield call(func, replayContext, event);
                 console.log('bim end call');
+                // console.log('returned sagas', sagas);
+                // if (Array.isArray(sagas) && sagas.length) {
+                //     allSagas = [...allSagas, ...sagas];
+                // }
             }
         } else {
             console.log(`event ${key} ignored (no replay handler)`);
         }
-
-        return allSagas;
+        //
+        // return [];
     },
     onReset: function(saga: (instant: PlayerInstant, quick?: boolean) => void): void {
         resetSagas.push(saga);
