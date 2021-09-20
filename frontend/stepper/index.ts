@@ -47,9 +47,8 @@ import {
     makeContext,
     performStep,
     rootStepperSaga,
-    createQuickAlgoLibraryExecutor,
     StepperContext,
-    StepperError, QuickalgoLibraryCall
+    StepperError,
 } from './api';
 import CompileBundle, {CompileStatus} from './compile';
 import EffectsBundle from './c/effects';
@@ -869,7 +868,7 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
 
         window.currentPythonRunner._synchronizingAnalysis = true;
         while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
-            yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, [createQuickAlgoLibraryExecutor(stepperContext, false)]);
+            yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, [stepperContext.quickAlgoCallsExecutor]);
 
             if (window.currentPythonRunner._isFinished) {
                 break;
@@ -938,21 +937,6 @@ function postLink(app: App) {
     });
     replayApi.on('stepper.exit', function* () {
         yield put({type: ActionTypes.StepperExit});
-    });
-
-    recordApi.on(ActionTypes.StepperRestart, function* (addEvent) {
-        yield call(addEvent, 'stepper.restart');
-    });
-    replayApi.on('stepper.restart', async function(replayContext: ReplayContext) {
-        // new : Stepper.Restart action is called with Compile.Succeeded event
-        // const stepperState = await buildState(replayContext.state, true);
-        // // console.log('STEPPER RESTART state before', current(replayContext.state), stepperState);
-        //
-        // replayContext.state = produce(replayContext.state, (draft: AppStoreReplay) => {
-        //     stepperRestartReducer(draft, {payload: {stepperState}});
-        // });
-        //
-        // // console.log('STEPPER RESTART after state before', current(replayContext.state), stepperState);
     });
 
     recordApi.on(ActionTypes.StepperStarted, function* (addEvent, action) {

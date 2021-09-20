@@ -3,6 +3,11 @@ import StringRotationFixture from './fixtures/14_strings_05_rotation';
 import LoopFixture from './fixtures/a19_boucles';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
 
+const availableTasks = {
+    robot: SokobanFixture,
+    printer: StringRotationFixture,
+};
+
 export const taskLevels = ['basic', 'easy', 'medium', 'hard'];
 
 export interface TaskState {
@@ -34,6 +39,14 @@ export const taskSlice = createSlice({
     name: 'task',
     initialState: taskInitialState,
     reducers: {
+        currentTaskChange(state, action: PayloadAction<string>) {
+            if (action.payload in availableTasks) {
+                state.currentTask = availableTasks[action.payload];
+            } else {
+                state.currentTask = availableTasks.robot;
+                console.error('Unrecognized task: ', action.payload);
+            }
+        },
         currentLevelChange(state, action: PayloadAction<number>) {
             state.currentLevel = action.payload;
         },
@@ -86,6 +99,7 @@ export const {
     taskResetDone,
     taskUpdateState,
     taskLoaded,
+    currentTaskChange,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

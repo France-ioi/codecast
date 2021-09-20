@@ -32,6 +32,7 @@ export interface StepperContext {
     waitForProgress?: Function,
     dispatch?: Function,
     quickAlgoCallsLogger?: Function,
+    quickAlgoCallsExecutor?: Function,
     resume?: Function | null,
     position?: any,
     lineCounter?: number,
@@ -89,20 +90,18 @@ export async function buildState(state: AppStoreReplay, replay: boolean = false)
         callback(curStepperState, state, replay);
     }
 
-    // TODO: Make something so that the initCallbacks doesn't obscure the creation of stepperState.
-    const stepperState = curStepperState as StepperState;
+    console.log('do build state');
+
+    const stepper: Stepper = {
+        ...state.stepper,
+        currentStepperState: curStepperState,
+    };
 
     /* Run until in user code */
-    const stepperContext: StepperContext = {
-        state: stepperState,
+    const stepperContext = makeContext(stepper, {
         interactBefore,
         interactAfter,
-        resume: null,
-        position: 0,
-        lineCounter: 0,
-        speed: state.stepper.speed,
-        unixNextStepCondition: 0,
-    } as StepperContext;
+    });
 
     if (stepperContext.state.platform === 'python') {
         return stepperContext.state;
@@ -198,12 +197,14 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
         },
     };
 
+    stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
+
     if (state.platform === 'python') {
         return {
             ...stepperContext,
             state: {
                 ...stepperContext.state,
-                lastAnalysis: Object.freeze(clearLoadedReferences(state.analysis)),
+                ...(state.analysis ? {lastAnalysis: Object.freeze(clearLoadedReferences(state.analysis))} : {}),
                 controls: resetControls(state.controls),
             },
         };
@@ -264,7 +265,7 @@ async function executeSingleStep(stepperContext: StepperContext) {
     }
 
     if (stepperContext.state.platform === 'python') {
-        const result = await window.currentPythonRunner.runStep(createQuickAlgoLibraryExecutor(stepperContext, false));
+        const result = await window.currentPythonRunner.runStep(stepperContext.quickAlgoCallsExecutor);
 
         console.log('FINAL INTERACT', result);
         stepperContext.makeDelay = true;
@@ -450,7 +451,7 @@ function inUserCode(stepperState: StepperState) {
     }
 }
 
-export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, reloadState = true) {
+export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, reloadState = false) {
     return async (module: string, action: string, args: any[], callback: Function) => {
         let libraryCallResult;
         const context = quickAlgoLibraries.getContext();

@@ -3,19 +3,18 @@
 // where source and input are buffer models (of shape {document, selection, firstVisibleRow}).
 
 import {buffers, eventChannel} from 'redux-saga';
-import {call, delay, fork, put, race, select, take, takeLatest} from 'redux-saga/effects';
+import {call, put, race, select, take, takeLatest, spawn} from 'redux-saga/effects';
 import {getJson} from '../common/utils';
 import {findInstantIndex} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
-import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getPlayerState} from "./selectors";
 import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
-import {createQuickAlgoLibraryExecutor, makeContext, QuickalgoLibraryCall, StepperContext} from "../stepper/api";
+import {makeContext, QuickalgoLibraryCall, StepperContext} from "../stepper/api";
 import {App, Codecast} from "../index";
 import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
@@ -450,12 +449,13 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                     dispatch: app.dispatch
                 });
 
-                const executor = createQuickAlgoLibraryExecutor(stepperContext, false);
+                const executor = stepperContext.quickAlgoCallsExecutor;
                 for (let quickalgoCall of instant.quickalgoLibraryCalls) {
                     const {module, action, args} = quickalgoCall;
                     console.log('start call execution', quickalgoCall);
 
-                    yield call(executor, module, action, args, () => {
+                    // @ts-ignore
+                    yield spawn(executor, module, action, args, () => {
                         console.log('execution over');
                     });
                 }

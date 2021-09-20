@@ -8,7 +8,7 @@ import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {AppStore} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
-import {createQuickAlgoLibraryExecutor, StepperContext} from "../api";
+import {StepperContext} from "../api";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
@@ -105,7 +105,7 @@ export default function(bundle: Bundle) {
         stepperApi.addBuiltin('scanf', scanfBuiltin);
 
         stepperApi.onEffect('write', function* writeEffect(stepperContext: StepperContext, text) {
-            const executor = createQuickAlgoLibraryExecutor(stepperContext);
+            const executor = stepperContext.quickAlgoCallsExecutor;
             const executorPromise = executor('printer', 'print_end', [text], () => {});
             yield ['promise', executorPromise];
         });
@@ -136,7 +136,7 @@ export default function(bundle: Bundle) {
         });
 
         stepperApi.onEffect('gets', function* getsEffect(stepperContext: StepperContext) {
-            const executor = createQuickAlgoLibraryExecutor(stepperContext);
+            const executor = stepperContext.quickAlgoCallsExecutor;
 
             let result;
             const executorPromise = executor('printer', 'read', [], (res) => {

@@ -8,6 +8,7 @@ import {PrinterLib} from "./libs/printer/printer_lib";
 import {AppAction, AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
+    currentTaskChange,
     recordingEnabledChange, taskInputNeeded, taskLevels, taskLoaded, taskRecordableActions, taskResetDone,
     taskSuccess, taskSuccessClear, taskUpdateState,
     updateCurrentTest
@@ -15,12 +16,12 @@ import taskSlice, {
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation";
-import {createDraft, current, isDraft, original} from "immer";
+import {createDraft} from "immer";
 import {PlayerInstant} from "../player";
 import {ActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {stepperDisabledSaga, StepperState, StepperStatus} from "../stepper";
-import {createQuickAlgoLibraryExecutor, makeContext} from "../stepper/api";
+import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -129,8 +130,14 @@ let oldSagasTasks = {
     replay: null,
 };
 
-function* taskLoadSaga (app: App) {
-    console.log('TASK LOAD', oldSagasTasks);
+function* taskLoadSaga(app: App) {
+    const urlParameters = new URLSearchParams(window.location.search);
+    const selectedTask = urlParameters.has('task') ? urlParameters.get('task') : null;
+
+    if (selectedTask) {
+        yield put(currentTaskChange(selectedTask));
+    }
+
     if (oldSagasTasks[app.replay ? 'replay' : 'main']) {
         // Unload task first
         yield cancel(oldSagasTasks[app.replay ? 'replay' : 'main']);
@@ -158,7 +165,7 @@ function* taskLoadSaga (app: App) {
 }
 
 function* handleLibrariesEventListenerSaga(app: App) {
-    const stepperContext = {
+    const stepperContext: StepperContext = {
         interactAfter: (arg) => {
             return new Promise((resolve, reject) => {
                 app.dispatch({
@@ -171,7 +178,7 @@ function* handleLibrariesEventListenerSaga(app: App) {
         dispatch: app.dispatch,
     };
 
-    const executor = createQuickAlgoLibraryExecutor(stepperContext, false);
+    stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
 
     const listeners = quickAlgoLibraries.getEventListeners();
     console.log('task listeners', listeners);
@@ -194,7 +201,7 @@ function* handleLibrariesEventListenerSaga(app: App) {
         yield takeEvery(eventName, function* ({payload}) {
             console.log('make payload', payload);
             const args = payload ? payload : [];
-            yield executor(module, method, args, () => {
+            yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
                 console.log('exec done');
             });
 
