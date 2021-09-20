@@ -27,18 +27,25 @@ export interface QuickalgoLibraryCall {
 export interface StepperContext {
     state?: StepperState,
     interrupted?: boolean,
-    interactBefore?: Function | null,
-    interactAfter: Function | null,
+    interactBefore?: Function,
+    interactAfter: Function,
     waitForProgress?: Function,
     dispatch?: Function,
+    quickAlgoCallsLogger?: Function,
     resume?: Function | null,
     position?: any,
     lineCounter?: number,
     speed?: number,
-    pendingResume?: boolean,
     unixNextStepCondition?: 0,
     makeDelay?: boolean,
-    quickalgoLibraryCalls?: QuickalgoLibraryCall[],
+}
+
+export interface StepperContextParameters {
+    interactBefore?: Function,
+    interactAfter?: Function,
+    waitForProgress?: Function,
+    dispatch?: Function,
+    quickAlgoCallsLogger?: Function,
 }
 
 const stepperApi = {
@@ -164,51 +171,51 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, interactBefore: Function, interactAfter: Function, waitForProgress?: Function, dispatch?: Function): StepperContext {
+export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, dispatch, quickAlgoCallsLogger}: StepperContextParameters): StepperContext {
     /**
      * We create a new state object here instead of mutating the state. This is intended.
      */
 
     const state = stepper.currentStepperState;
 
+    const stepperContext: StepperContext = {
+        interactBefore: interactBefore ? interactBefore : () => {
+            return Promise.resolve(true);
+        },
+        interactAfter: interactAfter ? interactAfter : () => {
+            return Promise.resolve(true);
+        },
+        waitForProgress,
+        dispatch,
+        quickAlgoCallsLogger,
+        resume: null,
+        position: getNodeStartRow(state),
+        lineCounter: 0,
+        speed: stepper.speed,
+        unixNextStepCondition: 0,
+        state: {
+            ...state,
+        },
+    };
+
     if (state.platform === 'python') {
         return {
+            ...stepperContext,
             state: {
-                ...state,
+                ...stepperContext.state,
                 lastAnalysis: Object.freeze(clearLoadedReferences(state.analysis)),
                 controls: resetControls(state.controls),
-                quickalgoLibraryCalls: [],
             },
-            interactBefore,
-            interactAfter,
-            waitForProgress,
-            dispatch,
-            resume: null,
-            position: getNodeStartRow(state),
-            lineCounter: 0,
-            speed: stepper.speed,
-            unixNextStepCondition: 0,
-            quickalgoLibraryCalls: [],
         };
     } else {
         return {
+            ...stepperContext,
             state: {
-                ...state,
+                ...stepperContext.state,
                 programState: C.clearMemoryLog(state.programState),
                 lastProgramState: {...state.programState},
                 controls: resetControls(state.controls),
-                quickalgoLibraryCalls: [],
             },
-            interactBefore,
-            interactAfter,
-            waitForProgress,
-            dispatch,
-            resume: null,
-            position: getNodeStartRow(state),
-            lineCounter: 0,
-            speed: stepper.speed,
-            unixNextStepCondition: 0,
-            quickalgoLibraryCalls: [],
         }
     }
 }
@@ -255,12 +262,6 @@ async function executeSingleStep(stepperContext: StepperContext) {
     if (isStuck(stepperContext.state)) {
         throw new StepperError('stuck', 'execution cannot proceed');
     }
-
-    // if (stepperContext.pendingResume) {
-    //     Check if existing is allowed (if the recording was not paused during delay), and send resume signal to recording
-        // await stepperContext.interactBefore();
-        // stepperContext.pendingResume = false;
-    // }
 
     if (stepperContext.state.platform === 'python') {
         const result = await window.currentPythonRunner.runStep(createQuickAlgoLibraryExecutor(stepperContext, false));
@@ -458,13 +459,9 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
             console.log('stepper context before', stepperContext.state.contextState);
         }
 
-        if (stepperContext.quickalgoLibraryCalls) {
-            console.log('quickalgo', stepperContext.quickalgoLibraryCalls);
+        if (stepperContext.quickAlgoCallsLogger) {
             const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, args};
-            stepperContext.quickalgoLibraryCalls = [
-                ...stepperContext.quickalgoLibraryCalls,
-                quickAlgoLibraryCall,
-            ];
+            stepperContext.quickAlgoCallsLogger(quickAlgoLibraryCall);
             console.log('LOG ACTION', module, action, args);
         }
 

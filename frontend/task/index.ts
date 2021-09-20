@@ -198,6 +198,8 @@ function* handleLibrariesEventListenerSaga(app: App) {
                 console.log('exec done');
             });
 
+            console.log('continue');
+
             const context = quickAlgoLibraries.getContext();
             const contextState = context.getCurrentState();
             console.log('get new state', contextState);
@@ -273,7 +275,6 @@ export default function (bundle: Bundle) {
             const taskData = instant.state.task;
 
             const context = quickAlgoLibraries.getContext();
-            const stepperState = instant.state.stepper;
 
             console.log('TASK REPLAY API RESET', instant.event);
             if (instant.event[1] === 'compile.success') {
@@ -297,32 +298,6 @@ export default function (bundle: Bundle) {
                 }
                 console.log('DO RESET DISPLAY');
                 context.resetDisplay();
-            }
-
-            if (stepperState && stepperState.currentStepperState && stepperState.currentStepperState.quickalgoLibraryCalls && quick && context) {
-                const stepperContext = makeContext(stepperState, () => {
-                    return Promise.resolve(true);
-                }, (arg) => {
-                    return new Promise((resolve, reject) => {
-                        app.dispatch({
-                            type: ActionTypes.StepperInteract,
-                            payload: {stepperContext, arg},
-                            meta: {resolve, reject}
-                        });
-                    });
-                }, null, app.dispatch);
-
-                console.log('stepper context', {stepperContext})
-
-                const executor = createQuickAlgoLibraryExecutor(stepperContext, false);
-                for (let quickalgoCall of stepperState.currentStepperState.quickalgoLibraryCalls) {
-                    const {module, action, args} = quickalgoCall;
-                    console.log('start call execution', quickalgoCall, !quick);
-
-                    yield call(executor, module, action, args, () => {
-                        console.log('execution over');
-                    });
-                }
             }
 
             if (taskData) {

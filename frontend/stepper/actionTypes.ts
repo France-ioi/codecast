@@ -7,7 +7,6 @@ export enum ActionTypes {
     StepperInteractBefore = 'Stepper.Interact.Before',
     StepperInteract = 'Stepper.Interact',
     StepperProgress = 'Stepper.Progress',
-    StepperResume = 'Stepper.Resume',
     StepperIdle = 'Stepper.Idle',
     StepperExit = 'Stepper.Exit',
     StepperInterrupting = 'Stepper.Interrupting',

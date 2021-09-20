@@ -15,7 +15,7 @@ import {getPlayerState} from "./selectors";
 import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
-import {StepperContext} from "../stepper/api";
+import {createQuickAlgoLibraryExecutor, makeContext, QuickalgoLibraryCall, StepperContext} from "../stepper/api";
 import {App, Codecast} from "../index";
 import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
@@ -33,6 +33,7 @@ export interface ReplayContext {
     instant: PlayerInstant,
     applyEvent: any,
     addSaga: Function,
+    addQuickAlgoLibraryCall: Function,
     reportProgress: any,
     stepperDone: any,
     stepperContext: StepperContext
@@ -138,6 +139,7 @@ function* playerPrepare(app: App, action) {
         stepperDone: null,
         applyEvent: replayApi.applyEvent,
         addSaga,
+        addQuickAlgoLibraryCall,
         reportProgress,
     };
 
@@ -172,6 +174,15 @@ function* playerPrepare(app: App, action) {
         }
 
         sagas.push(saga);
+    }
+
+    function addQuickAlgoLibraryCall(quickalgoLibraryCall: QuickalgoLibraryCall) {
+        let {quickalgoLibraryCalls} = replayContext.instant;
+        if (!quickalgoLibraryCalls) {
+            quickalgoLibraryCalls = replayContext.instant.quickalgoLibraryCalls = [];
+        }
+
+        quickalgoLibraryCalls.push(quickalgoLibraryCall);
     }
 
     function* reportProgress(progress) {
@@ -394,10 +405,13 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
         return;
     }
 
+    console.log('replay, new instants', instantIndex, nextInstantIndex);
+
     /* Update the DOM by replaying incremental events between (immediately
        after) `instant` and up to (including) `nextInstant`. */
     instantIndex += 1;
     while (instantIndex <= nextInstantIndex) {
+        console.log('upgrade instant');
         let instant = instants[instantIndex];
         if (instant.hasOwnProperty('mute')) {
             yield put({type: ActionTypes.PlayerEditorMutedChanged, payload: {isMuted: instant.mute}});
@@ -415,6 +429,36 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                state being accurate.  Instead, it should use `instant.state`. */
             for (let saga of instant.sagas) {
                 yield call(saga, instant);
+            }
+        }
+
+        if (instant.quickalgoLibraryCalls && instant.quickalgoLibraryCalls.length) {
+            console.log('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.action).join(','));
+            const context = quickAlgoLibraries.getContext();
+            const stepperState = instant.state.stepper;
+            if (context) {
+                const stepperContext = makeContext(stepperState, {
+                    interactAfter: (arg) => {
+                        return new Promise((resolve, reject) => {
+                            app.dispatch({
+                                type: StepperActionTypes.StepperInteract,
+                                payload: {stepperContext, arg},
+                                meta: {resolve, reject}
+                            });
+                        });
+                    },
+                    dispatch: app.dispatch
+                });
+
+                const executor = createQuickAlgoLibraryExecutor(stepperContext, false);
+                for (let quickalgoCall of instant.quickalgoLibraryCalls) {
+                    const {module, action, args} = quickalgoCall;
+                    console.log('start call execution', quickalgoCall);
+
+                    yield call(executor, module, action, args, () => {
+                        console.log('execution over');
+                    });
+                }
             }
         }
         if (instant.isEnd) {

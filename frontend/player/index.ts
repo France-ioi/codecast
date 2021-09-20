@@ -5,6 +5,7 @@ import {ActionTypes} from "./actionTypes";
 import {AppAction, AppStore, AppStoreReplay} from "../store";
 import {Bundle} from "../linker";
 import {CodecastRecord} from "../recorder/save_screen";
+import {QuickalgoLibraryCall} from "../stepper/api";
 
 export interface PlayerResetPayload {
     sliceName: string,
@@ -136,6 +137,7 @@ export interface PlayerInstant {
     range?: any, // TODO: What is this ?
     state: AppStoreReplay,
     sagas: any[],
+    quickalgoLibraryCalls: QuickalgoLibraryCall[],
     jump?: boolean,
     mute?: boolean
 }
