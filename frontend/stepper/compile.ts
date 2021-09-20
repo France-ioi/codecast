@@ -49,7 +49,7 @@ export const initialStateCompile = {
 
 export default function(bundle: Bundle) {
     function initReducer(state: AppStore): void {
-        state.compile = initialStateCompile;
+        state.compile = {...initialStateCompile};
     }
 
     bundle.addReducer(AppActionTypes.AppInit, initReducer);

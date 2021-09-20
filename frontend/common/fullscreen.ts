@@ -13,7 +13,7 @@ export const initialStateFullscreen = {
 
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.fullscreen = initialStateFullscreen;
+        state.fullscreen = {...initialStateFullscreen};
     });
 
     bundle.defineAction(ActionTypes.FullscreenEnter);

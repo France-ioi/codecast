@@ -26,7 +26,7 @@ export const initialStateWindow = {
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
         state.mainViewGeometry = initialStateWindow.mainViewGeometry;
-        state.panes = initialStateWindow.panes;
+        state.panes = {...initialStateWindow.panes};
         state.windowWidth = initialStateWindow.windowWidth;
         state.windowHeight = initialStateWindow.windowHeight;
     });

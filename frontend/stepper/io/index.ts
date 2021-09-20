@@ -25,7 +25,7 @@ export const initialStateIoPane = {
 
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.ioPane = initialStateIoPane;
+        state.ioPane = {...initialStateIoPane};
 
         updateIoPaneState(state);
     });

@@ -31,7 +31,7 @@ export default function(bundle: Bundle) {
             state.replay = true;
         }
 
-        state.player = initialStatePlayer;
+        state.player = {...initialStatePlayer};
 
         playerClear(state);
     });

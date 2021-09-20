@@ -63,7 +63,7 @@ export const initialStateArduino = {
 
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.arduino = initialStateArduino;
+        state.arduino = {...initialStateArduino};
     });
 
     bundle.defineAction(ActionTypes.ArduinoReset);
@@ -114,7 +114,7 @@ export default function(bundle: Bundle) {
             if (arduino) {
                 arduinoState = arduino;
             } else {
-                arduinoState = initialStateArduino;
+                arduinoState = {...initialStateArduino};
             }
 
             yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'arduino', state: arduinoState}});

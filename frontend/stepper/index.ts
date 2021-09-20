@@ -177,7 +177,7 @@ export const initialStateStepper = {
 export type Stepper = typeof initialStateStepper;
 
 function initReducer(state: AppStoreReplay): void {
-    state.stepper = initialStateStepper;
+    state.stepper = {...initialStateStepper};
 }
 
 export default function(bundle: Bundle) {

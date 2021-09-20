@@ -44,7 +44,7 @@ export const initialStateSave = {
 
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.save = initialStateSave;
+        state.save = {...initialStateSave};
     });
 
     bundle.defineAction(ActionTypes.SaveScreenEncodingStart);
