@@ -540,6 +540,11 @@ function stepperConfigureReducer(state: AppStore, action): void {
 }
 
 function stepperSpeedChangedReducer(state: AppStoreReplay, {payload: {speed}}): void {
+    const context = quickAlgoLibraries.getContext();
+    if (context && context.changeDelay) {
+        context.changeDelay(255 - speed);
+    }
+
     return state.stepper.speed = speed;
 }
 

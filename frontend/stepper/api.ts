@@ -323,7 +323,6 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined, u
         }
 
         if (!first && useSpeed && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255 && stepperContext.makeDelay) {
-            console.log('exec start delay');
             stepperContext.makeDelay = false;
             await delay(255 - stepperContext.speed);
         }
