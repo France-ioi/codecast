@@ -108,6 +108,11 @@ export default function(bundle: Bundle) {
         state.recorder.junkTime = (state.recorder.suspendedAt - audioTime);
     });
 
+    bundle.defineAction(ActionTypes.RecorderPopEvent);
+    bundle.addReducer(ActionTypes.RecorderPopEvent, (state: AppStore) => {
+        state.recorder.events.pop();
+    });
+
     bundle.addSaga(function* recordEvents() {
         // Wait for the recorder to be ready, grab the context.
         yield takeLatest(ActionTypes.RecorderReady, function* (action) {

@@ -221,7 +221,7 @@ export default function(bundle, deps) {
     function* recorderPause() {
         try {
             let state: AppStore = yield select();
-            const recorder = getRecorderState(state);
+            let recorder = getRecorderState(state);
             if (recorder.status !== RecorderStatus.Recording) {
                 return;
             }
@@ -238,11 +238,12 @@ export default function(bundle, deps) {
 
             // Get a URL for events.
             const endTime = Math.floor(duration * 1000);
-            recorder.events.push([endTime, 'end']);
+            yield put({type: ActionTypes.RecorderAddEvent, event: [endTime, 'end']});
 
             const version = RECORDING_FORMAT_VERSION;
             state = yield select();
             const options = state.options;
+            recorder = getRecorderState(state);
             const data = {
                 version,
                 options,
@@ -292,7 +293,8 @@ export default function(bundle, deps) {
             /* Clear the player's state. */
             yield put({type: PlayerActionTypes.PlayerClear});
 
-            recorder.events.pop(); // Remove the 'end' event put at the end when paused.
+            /* Remove the 'end' event put at the end when paused. */
+            yield put({type: ActionTypes.RecorderPopEvent});
 
             /* Signal that the recorder is resuming. */
             yield put({type: ActionTypes.RecorderResuming});
