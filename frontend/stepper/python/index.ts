@@ -55,10 +55,6 @@ export default function(bundle: Bundle) {
 
                 context.onError = (diagnostics) => {
                     console.log('bim context on error', diagnostics);
-                    if (replay) {
-                        return;
-                    }
-
                     channel.put({
                         type: CompileActionTypes.StepperInterrupting,
                     });

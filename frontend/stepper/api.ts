@@ -17,6 +17,7 @@ import {TaskActionTypes as TaskActionTypes} from "../task";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {createDraft, current, finishDraft, original, produce} from "immer";
 import {getCurrentImmerState} from "../task/utils";
+import {ActionTypes as CompileActionTypes} from "./actionTypes";
 
 export interface QuickalgoLibraryCall {
     module: string,
@@ -502,7 +503,20 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         }
 
         console.log('before make async library call', {module, action});
-        libraryCallResult = await makeLibraryCall();
+        try {
+            libraryCallResult = await makeLibraryCall();
+        } catch (e) {
+            console.log('bim context on error', e);
+            await stepperContext.dispatch({
+                type: CompileActionTypes.StepperInterrupting,
+            });
+
+            const response = {diagnostics: e};
+            await stepperContext.dispatch({
+                type: CompileActionTypes.CompileFailed,
+                response
+            });
+        }
         console.log('after make async library call');
 
         const newStateValue = context.getCurrentState();

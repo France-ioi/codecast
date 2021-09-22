@@ -596,13 +596,13 @@ function stepperViewControlsChangedReducer(state: AppStoreReplay, action): void 
 
 /* saga */
 
-function* compileSucceededSaga() {
+function* compileSucceededSaga(app: App) {
     try {
         yield put({type: ActionTypes.StepperDisabled});
         /* Build the stepper state. This automatically runs into user source code. */
         let state: AppStore = yield select();
 
-        let stepperState = yield call(buildState, state);
+        let stepperState = yield call(buildState, state, app.replay);
 
         // buildState may have triggered an error.
         state = yield select();
@@ -913,7 +913,7 @@ function* updateSourceHighlightSaga() {
 }
 
 function* stepperSaga(args) {
-    yield takeLatest(ActionTypes.CompileSucceeded, compileSucceededSaga);
+    yield takeLatest(ActionTypes.CompileSucceeded, compileSucceededSaga, args);
     yield takeLatest(RecorderActionTypes.RecorderStopping, recorderStoppingSaga);
     yield takeLatest(ActionTypes.StepperEnabled, stepperEnabledSaga, args);
     yield takeLatest(ActionTypes.StepperDisabled, stepperDisabledSaga);

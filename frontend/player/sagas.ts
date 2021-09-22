@@ -434,7 +434,8 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
         if (instant.quickalgoLibraryCalls && instant.quickalgoLibraryCalls.length) {
             console.log('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.action).join(','));
             const context = quickAlgoLibraries.getContext();
-            const stepperState = instant.state.stepper;
+            // We start from the end state of the last instant, and apply the calls that happened during this instant
+            const stepperState = instants[instantIndex-1].state.stepper;
             if (context) {
                 const stepperContext = makeContext(stepperState, {
                     interactAfter: (arg) => {
