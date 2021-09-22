@@ -922,12 +922,19 @@ function* stepperSaga(args) {
 function postLink(app: App) {
     const {recordApi, replayApi, stepperApi} = app;
 
-    recordApi.onStart(function* () {
-        /* TODO: store stepper options in init */
+    recordApi.onStart(function* (init) {
+        const state: AppStore = yield select();
+        const stepperState = state.stepper;
+        if (stepperState) {
+            init.speed = stepperState.speed;
+        }
     });
-    replayApi.on('start', function*() {
-        /* TODO: restore stepper options from event[2] */
-        yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'stepper', state: initialStateStepper}});
+    replayApi.on('start', function*(replayContext: ReplayContext, event) {
+        const options = event[2];
+        yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'stepper', state: {...initialStateStepper}}});
+        if (options.speed) {
+            yield put({type: ActionTypes.StepperSpeedChanged, payload: {speed: options.speed}});
+        }
     });
     replayApi.onReset(function* (instant: PlayerInstant) {
         const stepperState = instant.state.stepper;
