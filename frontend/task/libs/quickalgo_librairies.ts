@@ -1,5 +1,6 @@
 import {App} from "../../index";
 import {AppStore, AppStoreReplay} from "../../store";
+import {createDraft} from "immer";
 
 //TODO: Handle multiples libraries at once.
 // For now, we only use 1 library
@@ -193,6 +194,13 @@ export class QuickAlgoLibrary {
         // Reset the context
         if (this.display) {
             this.resetDisplay();
+        }
+    };
+
+    resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null) {
+        this.reset(taskInfos, appState);
+        if (this.reloadState) {
+            this.reloadState(createDraft(this.getCurrentState()));
         }
     };
 

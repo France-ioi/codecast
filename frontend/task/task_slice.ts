@@ -77,7 +77,7 @@ export const taskSlice = createSlice({
         taskInputNeeded(state: TaskState, action: PayloadAction<boolean>) {
             state.inputNeeded = action.payload;
         },
-        taskInputEntered(state: TaskState, action: PayloadAction<string>) {
+        taskInputEntered(state: TaskState) {
             state.inputNeeded = false;
         },
         taskLoaded(state: TaskState) {

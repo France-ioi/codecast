@@ -20,12 +20,14 @@ import {createDraft} from "immer";
 import {PlayerInstant} from "../player";
 import {ActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
-import {stepperDisabledSaga, StepperState, StepperStatus} from "../stepper";
+import {stepperDisabledSaga, stepperExitReducer, StepperState, StepperStatus} from "../stepper";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
+import {ActionTypes as AppActionTypes} from "../actionTypes";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
     TaskUnload = 'task/unload',
+    TaskReset = 'task/reset',
 }
 
 export const taskLoad = () => ({
@@ -34,6 +36,10 @@ export const taskLoad = () => ({
 
 export const taskUnload = () => ({
     type: TaskActionTypes.TaskUnload,
+});
+
+export const taskReset = () => ({
+    type: TaskActionTypes.TaskReset,
 });
 
 // @ts-ignore
@@ -96,9 +102,8 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries, display = true) 
     const testData = getTaskTest(currentTask, currentLevel);
     yield put(updateCurrentTest(testData));
     const state = yield select();
-    quickAlgoLibraries.reset(testData, state);
     context = quickAlgoLibraries.getContext();
-    context.reloadState(createDraft(context.getCurrentState()));
+    context.resetAndReloadState(testData, state);
 }
 
 export function getTaskTest(currentTask: any, currentLevel: number) {
@@ -218,6 +223,9 @@ function* handleLibrariesEventListenerSaga(app: App) {
 export default function (bundle: Bundle) {
     bundle.include(DocumentationBundle);
 
+    bundle.defineAction(taskSuccess.type);
+    bundle.addReducer(taskSuccess.type, stepperExitReducer);
+
     bundle.addSaga(function* (app: App) {
         console.log('INIT TASK SAGAS');
 
@@ -259,18 +267,34 @@ export default function (bundle: Bundle) {
 
         // @ts-ignore
         yield takeEvery(ActionTypes.StepperExit, function* ({payload}) {
-            if (!(payload && false === payload.reset)) {
+            // if (!(payload && false === payload.reset)) {
                 console.log('make reset');
                 const context = quickAlgoLibraries.getContext();
                 if (context) {
                     const state = yield select();
                     const context = quickAlgoLibraries.getContext();
-                    context.reset(state.task.currentTest, state);
-                    context.reloadState(createDraft(context.getCurrentState()));
+                    context.resetAndReloadState(state.task.currentTest, state);
+                    console.log('put task reset done to true');
                     yield put(taskResetDone(true));
                 }
-            } else {
-                yield put(taskResetDone(false));
+            // } else {
+            //     yield put(taskResetDone(false));
+            // }
+
+            // yield put(taskResetDone(false));
+        });
+
+        yield takeEvery(TaskActionTypes.TaskReset, function* () {
+            const isResetDone = yield select(state => state.task.resetDone);
+            if (!isResetDone) {
+                console.log('make reset');
+                const context = quickAlgoLibraries.getContext();
+                if (context) {
+                    const state = yield select();
+                    const context = quickAlgoLibraries.getContext();
+                    context.resetAndReloadState(state.task.currentTest, state);
+                    yield put(taskResetDone(true));
+                }
             }
         });
     });
@@ -291,10 +315,7 @@ export default function (bundle: Bundle) {
                 console.log('stepper init, current test', currentTest);
 
                 const context = quickAlgoLibraries.getContext();
-                context.reset(currentTest, instant.state);
-
-                const contextState = context.getCurrentState();
-                context.reloadState(createDraft(contextState));
+                context.resetAndReloadState(currentTest, instant.state);
             }
 
             if (!quick) {
@@ -310,6 +331,7 @@ export default function (bundle: Bundle) {
             if (taskData) {
                 yield put(updateCurrentTest(taskData.currentTest));
                 yield put(taskUpdateState(taskData.state));
+                yield put(taskResetDone(taskData.resetDone));
                 if (taskData.success) {
                     yield put(taskSuccess(taskData.successMessage));
                 } else {
@@ -333,10 +355,8 @@ export default function (bundle: Bundle) {
             console.log('stepper init, current test', currentTest);
 
             const context = quickAlgoLibraries.getContext();
-            context.reset(currentTest, state);
-
-            stepperState.contextState = context.getCurrentState();
-            context.reloadState(createDraft(stepperState.contextState));
+            context.resetAndReloadState(currentTest, state);
+            stepperState.contextState = getCurrentImmerState(context.getCurrentState());
         });
     });
 }
