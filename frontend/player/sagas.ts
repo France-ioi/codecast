@@ -293,8 +293,6 @@ function* replaySaga(app: App, {type, payload}) {
     let audioTime = player.audioTime;
     let instant = player.current;
 
-    console.log('ici replay saga', type);
-
     if (type === ActionTypes.PlayerStart && !player.isReady) {
         /* Prevent starting playback until ready.  Should perhaps wait until
            preparation is done, for autoplay. */

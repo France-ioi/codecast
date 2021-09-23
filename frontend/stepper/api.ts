@@ -492,7 +492,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
 
                 const name = value[0];
                 if (name === 'interact') {
-                    console.log('ASK FOR INTERACT');
+                    console.log('ASK FOR INTERACT', stepperContext.interactAfter);
                     lastResult = await stepperContext.interactAfter({...(value[1] || {}), progress: false});
                     console.log('last result', lastResult);
                 } else if (name == 'put') {
@@ -506,7 +506,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         try {
             libraryCallResult = await makeLibraryCall();
         } catch (e) {
-            console.log('bim context on error', e);
+            console.log('context error 2', e);
             await stepperContext.dispatch({
                 type: CompileActionTypes.StepperInterrupting,
             });

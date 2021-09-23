@@ -33,7 +33,6 @@ export default function(context) {
     this._printedDuringStep = '';
     this._inputPos = 0;
     this._futureInputValue = null;
-    this._synchronizingAnalysis = false;
     this.onInput = context.onInput;
     this.onError = context.onError;
     this.onSuccess = context.onSuccess;

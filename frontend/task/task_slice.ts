@@ -2,6 +2,7 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import StringRotationFixture from './fixtures/14_strings_05_rotation';
 import LoopFixture from './fixtures/a19_boucles';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
+import {ActionTypes} from "../stepper/actionTypes";
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -21,6 +22,12 @@ export interface TaskState {
     successMessage?: string,
     currentTest?: object,
     inputNeeded?: boolean,
+    inputs?: any[],
+}
+
+export interface TaskInputEnteredPayload {
+    input: string,
+    clearInput?: boolean,
 }
 
 export const taskInitialState = {
@@ -33,6 +40,7 @@ export const taskInitialState = {
     successMessage: null,
     currentTest: null,
     inputNeeded: false,
+    inputs: [],
 } as TaskState;
 
 export const taskSlice = createSlice({
@@ -78,14 +86,28 @@ export const taskSlice = createSlice({
             state.inputNeeded = action.payload;
         },
         // We don't store the input into the store but it's useful in the action for its listeners
-        taskInputEntered(state: TaskState, action: PayloadAction<string>) {
+        taskInputEntered(state: TaskState, action: PayloadAction<TaskInputEnteredPayload>) {
             state.inputNeeded = false;
+            if (action.payload.clearInput) {
+                console.log('pop input', state.inputs.join(','));
+                state.inputs.shift();
+                console.log('pop input2', state.inputs.join(','));
+            }
         },
         taskLoaded(state: TaskState) {
             state.loaded = true;
         },
         taskUpdateState(state: TaskState, action: PayloadAction<any>) {
             state.state = action.payload;
+        },
+        taskClearInputs(state: TaskState) {
+            state.inputs = [];
+        },
+        taskAddInput(state: TaskState, action: PayloadAction<any>) {
+            state.inputs.push(action.payload);
+        },
+        taskSetInputs(state: TaskState, action: PayloadAction<any[]>) {
+            state.inputs = action.payload;
         },
     },
 });
@@ -101,6 +123,8 @@ export const {
     taskUpdateState,
     taskLoaded,
     currentTaskChange,
+    taskAddInput,
+    taskSetInputs,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

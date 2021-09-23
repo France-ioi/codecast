@@ -54,7 +54,7 @@ export default function(bundle: Bundle) {
                 let channel = pythonInterpreterChannels[replay ? 'replay' : 'main'];
 
                 context.onError = (diagnostics) => {
-                    console.log('bim context on error', diagnostics);
+                    console.log('context error', diagnostics);
                     channel.put({
                         type: CompileActionTypes.StepperInterrupting,
                     });

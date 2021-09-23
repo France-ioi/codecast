@@ -22,6 +22,7 @@ export enum ActionTypes {
     StepperDisabled = 'Stepper.Disabled',
     StepperSpeedChanged = 'Stepper.Speed.Changed',
     StepperControlsChanged = 'Stepper.Controls.Changed',
+    StepperSynchronizingAnalysisChanged = 'Stepper.Synchronizing.Analysis.Changed',
     Compile = 'Compile',
     CompileWait = 'Compile.Wait',
     CompileClear = 'Compile.Clear',

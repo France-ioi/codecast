@@ -9,8 +9,16 @@ import {AppAction, AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
     currentTaskChange,
-    recordingEnabledChange, taskInputNeeded, taskLevels, taskLoaded, taskRecordableActions, taskResetDone,
-    taskSuccess, taskSuccessClear, taskUpdateState,
+    recordingEnabledChange, taskAddInput,
+    taskInputEntered,
+    taskInputNeeded,
+    taskLevels,
+    taskLoaded,
+    taskRecordableActions,
+    taskResetDone, taskSetInputs,
+    taskSuccess,
+    taskSuccessClear,
+    taskUpdateState,
     updateCurrentTest
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
@@ -257,31 +265,19 @@ export default function (bundle: Bundle) {
         });
 
         yield takeEvery(taskSuccess.type, function* () {
-            console.log('listen task success');
-            // let state: AppStore = yield select();
-            // if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
-            //     yield put({type: ActionTypes.StepperInterrupt, payload: {}});
-            // }
             yield call(stepperDisabledSaga);
         });
 
-        // @ts-ignore
-        yield takeEvery(ActionTypes.StepperExit, function* ({payload}) {
-            // if (!(payload && false === payload.reset)) {
-                console.log('make reset');
+        yield takeEvery(ActionTypes.StepperExit, function* () {
+            console.log('make reset');
+            const context = quickAlgoLibraries.getContext();
+            if (context) {
+                const state = yield select();
                 const context = quickAlgoLibraries.getContext();
-                if (context) {
-                    const state = yield select();
-                    const context = quickAlgoLibraries.getContext();
-                    context.resetAndReloadState(state.task.currentTest, state);
-                    console.log('put task reset done to true');
-                    yield put(taskResetDone(true));
-                }
-            // } else {
-            //     yield put(taskResetDone(false));
-            // }
-
-            // yield put(taskResetDone(false));
+                context.resetAndReloadState(state.task.currentTest, state);
+                console.log('put task reset done to true');
+                yield put(taskResetDone(true));
+            }
         });
 
         yield takeEvery(TaskActionTypes.TaskReset, function* () {
@@ -297,6 +293,31 @@ export default function (bundle: Bundle) {
                 }
             }
         });
+
+        // Store inputs to be replayed in the next method
+        // @ts-ignore
+        yield takeEvery(taskInputEntered.type, function* ({payload}) {
+            console.log('add new input into store', payload);
+            const state = yield select();
+            if (!state.stepper.synchronizingAnalysis) {
+                yield put(taskAddInput(payload.input));
+            }
+        });
+
+        // Replay inputs when needed from stepperPythonRunFromBeginningIfNecessary
+        // @ts-ignore
+        yield takeEvery(taskInputNeeded.type, function* ({payload}) {
+            console.log('task input needed', payload);
+            if (payload) {
+                const state = yield select();
+                console.log('sync', state.stepper.synchronizingAnalysis, 'inputs', state.task.inputs);
+                if (state.stepper.synchronizingAnalysis && state.task.inputs.length) {
+                    const nextInput = state.task.inputs[0];
+                    console.log('next input', nextInput);
+                    yield put(taskInputEntered({input: nextInput, clearInput: true}));
+                }
+            }
+        });
     });
 
     bundle.defer(function (app: App) {
@@ -307,7 +328,7 @@ export default function (bundle: Bundle) {
 
             const context = quickAlgoLibraries.getContext();
 
-            console.log('TASK REPLAY API RESET', instant.event);
+            console.log('TASK REPLAY API RESET', instant.event, taskData);
             if (instant.event[1] === 'compile.success') {
                 // When the stepper is initialized, we have to set the current test value into the context
                 // just like in the stepperApi.onInit listener
@@ -332,6 +353,7 @@ export default function (bundle: Bundle) {
                 yield put(updateCurrentTest(taskData.currentTest));
                 yield put(taskUpdateState(taskData.state));
                 yield put(taskResetDone(taskData.resetDone));
+                yield put(taskSetInputs(taskData.inputs));
                 if (taskData.success) {
                     yield put(taskSuccess(taskData.successMessage));
                 } else {
