@@ -215,15 +215,13 @@ function* handleLibrariesEventListenerSaga(app: App) {
             console.log('make payload', payload);
             const args = payload ? payload : [];
             yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
-                console.log('exec done');
+                console.log('exec done, update task state');
+                const context = quickAlgoLibraries.getContext();
+                const contextState = context.getCurrentState();
+                console.log('get new state', contextState);
+                app.dispatch(taskUpdateState(getCurrentImmerState(contextState)));
+                console.log('dispatched');
             });
-
-            console.log('continue');
-
-            const context = quickAlgoLibraries.getContext();
-            const contextState = context.getCurrentState();
-            console.log('get new state', contextState);
-            yield put(taskUpdateState(getCurrentImmerState(contextState)));
         });
     }
 }
