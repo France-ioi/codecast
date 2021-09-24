@@ -48,7 +48,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
 
     const onLayoutRequiredTypeChanged = (event) => {
         const requiredLayout = event.target.value;
-        dispatch({type: LayoutActionTypes.LayoutRequiredTypeChanged, payload: {requiredType: requiredLayout}});
+        dispatch({type: LayoutActionTypes.LayoutRequiredTypeChanged, payload: {requiredType: requiredLayout ? requiredLayout : null}});
     };
 
     const modeOptions = [
@@ -110,8 +110,8 @@ export function SettingsDialog(props: SettingsDialogProps) {
                       <label className='bp3-label'>
                           {getMessage('LAYOUT_TYPE_REQUIRED_LABEL')}
                         <div className='bp3-select'>
-                          <select value={layoutRequiredType} onChange={onLayoutRequiredTypeChanged}>
-                              <option key="null" value={null}>{getMessage('NONE')}</option>
+                          <select value={layoutRequiredType || ''} onChange={onLayoutRequiredTypeChanged}>
+                              <option key="null" value={''}>{getMessage('NONE')}</option>
                               {layoutChoices.map(p =>
                                   <option
                                       key={p}
