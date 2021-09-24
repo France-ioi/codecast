@@ -39,7 +39,7 @@ export const initialStateSave = {
     eventsUrl: '',
     playerUrl: '',
     editorUrl: '',
-    error: ''
+    error: '' as any,
 };
 
 export default function(bundle: Bundle) {
