@@ -265,6 +265,13 @@ async function executeSingleStep(stepperContext: StepperContext) {
         throw new StepperError('stuck', 'execution cannot proceed');
     }
 
+    await stepperContext.interactBefore();
+    if (stepperContext.waitForProgress) {
+        console.log('wait for progress');
+        await stepperContext.waitForProgress(stepperContext);
+        console.log('end wait for progress, continuing');
+    }
+
     if (stepperContext.state.platform === 'python') {
         const result = await window.currentPythonRunner.runStep(stepperContext.quickAlgoCallsExecutor);
 

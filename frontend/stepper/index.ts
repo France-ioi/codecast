@@ -678,22 +678,17 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
 
     if (!state.stepper.synchronizingAnalysis) {
         // console.log('current stepper state', stepperContext.state.contextState);
+
+        /* Emit a progress action so that an up-to-date state gets displayed. */
+
+        yield put({type: ActionTypes.StepperProgress, payload: {stepperContext, progress: arg.progress}});
+
         /* Has the stepper been interrupted? */
         if (isStepperInterrupting(state) || StepperStatus.Clear === state.stepper.status) {
             console.log('stepper is still interrupting');
             yield call(reject, new StepperError('interrupt', 'interrupted'));
 
             return;
-        }
-
-        /* Emit a progress action so that an up-to-date state gets displayed. */
-
-        yield put({type: ActionTypes.StepperProgress, payload: {stepperContext, progress: arg.progress}});
-
-        if (stepperContext.waitForProgress) {
-            console.log('wait for progress');
-            yield call(stepperContext.waitForProgress, stepperContext);
-            console.log('end wait for progress, continuing');
         }
     }
 
@@ -876,7 +871,6 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
         taskContext.display = false;
         taskContext.resetAndReloadState(state.task.currentTest, state);
         stepperContext.state.contextState = getCurrentImmerState(taskContext.getCurrentState());
-        yield delay(0);
 
         console.log('current task state', taskContext.getCurrentState());
 
@@ -996,8 +990,14 @@ function postLink(app: App) {
         console.log('after yield promise', promise);
     });
 
-    recordApi.on(ActionTypes.StepperProgress, function* (addEvent, {payload: {stepperContext}}) {
-        yield call(addEvent, 'stepper.progress', stepperContext.lineCounter);
+    recordApi.on(ActionTypes.StepperInteractBefore, function* (addEvent) {
+        const state = yield select();
+        if (isStepperInterrupting(state) || StepperStatus.Clear === state.stepper.status) {
+            console.log('stepper is still interrupting, not logging progress');
+            return;
+        }
+
+        yield call(addEvent, 'stepper.progress');
     });
 
     replayApi.on('stepper.progress', function* (replayContext: ReplayContext) {
@@ -1031,34 +1031,18 @@ function postLink(app: App) {
     recordApi.on(ActionTypes.StepperInterrupt, function* (addEvent) {
         yield call(addEvent, 'stepper.interrupt');
     });
-    replayApi.on('stepper.interrupt', function(replayContext: ReplayContext) {
-        /* Prevent the subsequent stepper.idle event from running the stepper until
-           completion. */
-        const {stepperContext} = replayContext;
+    replayApi.on('stepper.interrupt', function* (replayContext: ReplayContext) {
+        const stepperContext = replayContext.stepperContext;
 
-        stepperContext.interactBefore = null;
-        stepperContext.interactAfter = null;
-        stepperContext.resume = null;
-    });
-
-    recordApi.on(ActionTypes.StepperIdle, function* (addEvent, {payload: {stepperContext}}) {
-        yield call(addEvent, 'stepper.idle', stepperContext.lineCounter);
-    });
-
-    replayApi.on('stepper.idle', function(replayContext: ReplayContext) {
-        return new Promise((resolve) => {
-            replayContext.stepperDone = resolve;
-            const {resume} = replayContext.stepperContext;
-            if (resume) {
-                resume();
-            }
-        });
+        yield put({type: ActionTypes.StepperInterrupt, payload: {stepperContext}});
     });
 
     function stepperEventReplayed(replayContext: ReplayContext) {
         const done = replayContext.stepperDone;
         replayContext.stepperDone = null;
-        done();
+        if (done) {
+            done();
+        }
     }
 
     function stepperSuspend(stepperContext: StepperContext, cont) {

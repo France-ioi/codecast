@@ -3,7 +3,7 @@
 // where source and input are buffer models (of shape {document, selection, firstVisibleRow}).
 
 import {buffers, eventChannel} from 'redux-saga';
-import {call, put, race, select, take, takeLatest, spawn} from 'redux-saga/effects';
+import {call, put, race, select, take, takeLatest, spawn, delay} from 'redux-saga/effects';
 import {getJson} from '../common/utils';
 import {findInstantIndex} from './utils';
 import {ActionTypes} from "./actionTypes";
@@ -280,6 +280,7 @@ function* playerReplayEvent(app: App, {type, payload}) {
         inputNeeded: take('task/taskInputNeeded'),
     });
 
+    yield delay(0);
     console.log('END REPLAY EVENT (playerReplayEvent)');
     resolve();
 }
