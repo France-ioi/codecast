@@ -1104,6 +1104,13 @@ function postLink(app: App) {
         const speed = event[2];
 
         yield put({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
+
+        replayContext.addSaga(function* () {
+            const context = quickAlgoLibraries.getContext(null, false);
+            if (context && context.changeDelay) {
+                context.changeDelay(255 - speed);
+            }
+        });
     });
 
     recordApi.on(ActionTypes.StepperControlsChanged, function* (addEvent, action) {

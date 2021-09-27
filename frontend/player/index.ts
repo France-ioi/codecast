@@ -28,10 +28,7 @@ export default function(bundle: Bundle) {
     bundle.include(playerSagas);
 
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {replay}}) => {
-        if (replay) {
-            state.replay = true;
-        }
-
+        state.replay = !!replay;
         state.player = {...initialStatePlayer};
 
         playerClear(state);
