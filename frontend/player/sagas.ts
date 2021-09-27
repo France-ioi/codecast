@@ -62,7 +62,7 @@ function* playerPrepare(app: App, action) {
       audioUrl, eventsUrl need to be able to be passed independently by the
         recorder, where they are "blob:" URLs.
     */
-    const {baseDataUrl, audioUrl} = action.payload;
+    const {baseDataUrl, audioUrl, resetTo} = action.payload;
 
     // Check that the player is idle.
     const state: AppStore = yield select();
@@ -111,9 +111,6 @@ function* playerPrepare(app: App, action) {
         });
     }
 
-    const context = quickAlgoLibraries.getContext();
-    context.display = false;
-
     const replayState = {
         task: {
             currentTask: state.task.currentTask,
@@ -145,14 +142,16 @@ function* playerPrepare(app: App, action) {
     try {
         yield call(computeInstants, replayApi, replayContext);
 
-        context.display = true;
-
         /* The duration of the recording is the timestamp of the last event. */
         const instants = replayContext.instants;
         const duration = instants[instants.length - 1].t;
         yield put({type: ActionTypes.PlayerReady, payload: {baseDataUrl, duration, data, instants}});
 
-        yield call(resetToAudioTime, app, 0);
+        if ('end' === resetTo) {
+            yield call(resetToAudioTime, app, duration);
+        } else {
+            yield call(resetToAudioTime, app, 0);
+        }
     } catch (ex) {
         console.log(ex);
 
@@ -325,8 +324,10 @@ function* replaySaga(app: App, {type, payload}) {
         audio.pause();
 
         const audioTime = Math.round(audio.currentTime * 1000);
+        if (!payload || false !== payload.reset) {
+            yield call(resetToAudioTime, app, audioTime);
+        }
 
-        yield call(resetToAudioTime, app, audioTime);
         yield call(restartStepper);
         yield put({type: ActionTypes.PlayerPaused});
 
@@ -432,7 +433,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
 
         if (instant.quickalgoLibraryCalls && instant.quickalgoLibraryCalls.length) {
             console.log('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.action).join(','));
-            const context = quickAlgoLibraries.getContext();
+            const context = quickAlgoLibraries.getContext(null, false);
             // We start from the end state of the last instant, and apply the calls that happened during this instant
             const stepperState = instants[instantIndex-1].state.stepper;
             if (context) {
@@ -446,7 +447,8 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                             });
                         });
                     },
-                    dispatch: app.dispatch
+                    dispatch: app.dispatch,
+                    replay: app.replay,
                 });
 
                 const executor = stepperContext.quickAlgoCallsExecutor;
@@ -496,6 +498,7 @@ function* resetToAudioTime(app: App, audioTime: number, quick?: boolean) {
 
 function* restartStepper() {
     /* Re-enable the stepper to allow the user to interact with it. */
+    console.log('restart stepper');
     yield put({type: StepperActionTypes.StepperEnabled});
 }
 

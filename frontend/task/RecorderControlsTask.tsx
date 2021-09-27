@@ -108,7 +108,7 @@ export function RecorderControlsTask(props: RecorderControlsTaskProps) {
                     <Button
                         onClick={onStopRecording}
                         disabled={!canStop}
-                        icon='floppy-disk'
+                        icon='stop'
                         title={getMessage('SAVE_RECORDING')}
                     />
                 </ButtonGroup>

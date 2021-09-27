@@ -155,12 +155,14 @@ function* taskLoadSaga(app: App) {
     }
 
     const state = yield select();
-    const context = quickAlgoLibraries.getContext(null, state.replay);
+    let context = quickAlgoLibraries.getContext(null, state.replay);
     if (!context) {
         yield call(createContext, quickAlgoLibraries);
     }
+    context = quickAlgoLibraries.getContext(null, state.replay);
 
     yield put(taskLoaded());
+    console.log('task loaded', app.replay, context);
 
     if (app.replay && context) {
         const contextState = context.getCurrentState();

@@ -256,7 +256,7 @@ export default function(bundle, deps) {
             const eventsUrl = URL.createObjectURL(eventsBlob);
 
             // Prepare the player to use the audio and event streams, wait till ready.
-            yield put({type: PlayerActionTypes.PlayerPrepare, payload: {audioUrl, eventsUrl}});
+            yield put({type: PlayerActionTypes.PlayerPrepare, payload: {audioUrl, eventsUrl, resetTo: 'end'}});
 
             yield take(PlayerActionTypes.PlayerReady);
 
@@ -287,7 +287,7 @@ export default function(bundle, deps) {
 
             /* Pause the player (even if already paused) to make sure the state
                accurately represents the instant in the recording. */
-            yield put({type: PlayerActionTypes.PlayerPause});
+            yield put({type: PlayerActionTypes.PlayerPause, payload: {reset: false}});
             yield take(PlayerActionTypes.PlayerPaused);
 
             /* Clear the player's state. */
