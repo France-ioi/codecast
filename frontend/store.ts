@@ -78,7 +78,8 @@ export interface AppStoreReplay {
 
     options: CodecastOptions,
 
-    stopped: boolean
+    stopped: boolean,
+    replay: boolean,
 }
 
 export interface AppAction extends Action {

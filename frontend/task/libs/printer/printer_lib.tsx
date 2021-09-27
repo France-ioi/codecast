@@ -585,7 +585,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     getComponent() {
-        return InputOutputVisualization;
+        return this.display ? InputOutputVisualization : null;
     }
 
     provideBlocklyColours() {

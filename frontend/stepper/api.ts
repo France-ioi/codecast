@@ -40,6 +40,7 @@ export interface StepperContext {
     speed?: number,
     unixNextStepCondition?: 0,
     makeDelay?: boolean,
+    quickAlgoContext?: any,
 }
 
 export interface StepperContextParameters {
@@ -48,6 +49,7 @@ export interface StepperContextParameters {
     waitForProgress?: Function,
     dispatch?: Function,
     quickAlgoCallsLogger?: Function,
+    replay?: boolean,
 }
 
 const stepperApi = {
@@ -102,6 +104,7 @@ export async function buildState(state: AppStoreReplay, replay: boolean = false)
     const stepperContext = makeContext(stepper, {
         interactBefore,
         interactAfter,
+        replay,
     });
 
     if (stepperContext.state.platform === 'python') {
@@ -171,7 +174,7 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, dispatch, quickAlgoCallsLogger}: StepperContextParameters): StepperContext {
+export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, dispatch, quickAlgoCallsLogger, replay}: StepperContextParameters): StepperContext {
     /**
      * We create a new state object here instead of mutating the state. This is intended.
      */
@@ -196,6 +199,7 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
         state: {
             ...state,
         },
+        quickAlgoContext: quickAlgoLibraries.getContext(null, replay),
     };
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
@@ -461,7 +465,7 @@ function inUserCode(stepperState: StepperState) {
 export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, reloadState = false) {
     return async (module: string, action: string, args: any[], callback: Function) => {
         let libraryCallResult;
-        const context = quickAlgoLibraries.getContext();
+        const context = stepperContext.quickAlgoContext;
 
         if (stepperContext.state) {
             console.log('stepper context before', stepperContext.state.contextState);

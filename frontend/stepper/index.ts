@@ -29,7 +29,6 @@ import {
     apply,
     call,
     cancel,
-    cancelled,
     delay,
     fork,
     put,
@@ -47,7 +46,7 @@ import {
     makeContext,
     performStep,
     rootStepperSaga,
-    StepperContext,
+    StepperContext, StepperContextParameters,
     StepperError,
 } from './api';
 import CompileBundle, {CompileStatus} from './compile';
@@ -62,7 +61,7 @@ import PythonBundle from './python';
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
 import {Directive, parseDirectives} from "./python/directives";
-import {ActionTypes as StepperActionTypes, ActionTypes as CompileActionTypes, ActionTypes} from "./actionTypes";
+import {ActionTypes as CompileActionTypes, ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
@@ -74,7 +73,6 @@ import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
-import {createDraft} from "immer";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {taskResetDone, taskSuccess} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -476,7 +474,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         enrichStepperState(stepperContext.state, 'Stepper.Progress', stepperContext);
     }
 
-    const context = quickAlgoLibraries.getContext();
+    const context = quickAlgoLibraries.getContext(null, state.replay);
     if (context && context.getCurrentState) {
         const contextState = context.getCurrentState();
         state.task.state = getCurrentImmerState(contextState);
@@ -545,7 +543,7 @@ function stepperConfigureReducer(state: AppStore, action): void {
 }
 
 function stepperSpeedChangedReducer(state: AppStoreReplay, {payload: {speed}}): void {
-    const context = quickAlgoLibraries.getContext();
+    const context = quickAlgoLibraries.getContext(null, state.replay);
     if (context && context.changeDelay) {
         context.changeDelay(255 - speed);
     }
@@ -738,7 +736,7 @@ function* stepperInterruptSaga(app: App) {
         return;
     }
 
-    const stepperContext = createStepperContext(getStepper(state), {dispatch: app.dispatch});
+    const stepperContext = createStepperContext(getStepper(state), {dispatch: app.dispatch, replay: app.replay});
 
     if (stepperContext.state.platform === 'python') {
         yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
@@ -747,7 +745,7 @@ function* stepperInterruptSaga(app: App) {
     yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
 }
 
-function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quickAlgoCallsLogger}: {dispatch?: Function, waitForProgress?: Function, quickAlgoCallsLogger?: Function}) {
+function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quickAlgoCallsLogger, replay}: StepperContextParameters) {
     let stepperContext = makeContext(stepper, {
         interactBefore: (arg) => {
             return new Promise((resolve, reject) => {
@@ -770,6 +768,7 @@ function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quic
         waitForProgress,
         quickAlgoCallsLogger,
         dispatch,
+        replay,
     });
 
     return stepperContext;
@@ -785,7 +784,12 @@ function* stepperStepSaga(app: App, action) {
         if (stepper.status === StepperStatus.Starting) {
             yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
-            stepperContext = createStepperContext(stepper, {dispatch: app.dispatch, waitForProgress, quickAlgoCallsLogger});
+            stepperContext = createStepperContext(stepper, {
+                dispatch: app.dispatch,
+                waitForProgress,
+                quickAlgoCallsLogger,
+                replay: state.replay,
+            });
 
             if (stepperContext.state.platform === 'python') {
                 yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
@@ -819,7 +823,7 @@ function* stepperStepSaga(app: App, action) {
 
             if (stepperContext.state.isFinished) {
                 console.log('check end condition');
-                const taskContext = quickAlgoLibraries.getContext();
+                const taskContext = quickAlgoLibraries.getContext(null, state.replay);
                 if (taskContext && taskContext.infos.checkEndCondition) {
                     try {
                         taskContext.infos.checkEndCondition(taskContext, true);
@@ -864,10 +868,10 @@ function* stepperStepSaga(app: App, action) {
 function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContext) {
     if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
         console.log('Run python from beginning is necessary');
-        const taskContext = quickAlgoLibraries.getContext();
+        const state = yield select();
+        const taskContext = quickAlgoLibraries.getContext(null, state.replay);
         yield put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: true});
 
-        const state = yield select();
         taskContext.display = false;
         taskContext.resetAndReloadState(state.task.currentTest, state);
         stepperContext.state.contextState = getCurrentImmerState(taskContext.getCurrentState());
@@ -950,10 +954,9 @@ function postLink(app: App) {
         yield put({type: ActionTypes.StepperExit});
         replayContext.addSaga(function* () {
             console.log('make reset saga');
-            const context = quickAlgoLibraries.getContext();
+            const context = quickAlgoLibraries.getContext(null, false);
             if (context) {
                 const state = yield select();
-                const context = quickAlgoLibraries.getContext();
                 context.resetAndReloadState(state.task.currentTest, state);
             }
         })
