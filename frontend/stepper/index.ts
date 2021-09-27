@@ -77,6 +77,7 @@ import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {taskResetDone, taskSuccess} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
+import PythonInterpreter from "./python/python_interpreter";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -878,11 +879,12 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
 
         console.log('current task state', taskContext.getCurrentState());
 
-        window.currentPythonRunner.initCodes([stepperContext.state.analysis.code]);
-        while (window.currentPythonRunner._steps < stepperContext.state.analysis.stepNum) {
-            yield apply(window.currentPythonRunner, window.currentPythonRunner.runStep, [stepperContext.quickAlgoCallsExecutor]);
+        const pythonInterpreter = new PythonInterpreter(taskContext);
+        pythonInterpreter.initCodes([stepperContext.state.analysis.code]);
+        while (pythonInterpreter._steps < stepperContext.state.analysis.stepNum) {
+            yield apply(pythonInterpreter, pythonInterpreter.runStep, [stepperContext.quickAlgoCallsExecutor]);
 
-            if (window.currentPythonRunner._isFinished) {
+            if (pythonInterpreter._isFinished) {
                 break;
             }
         }
