@@ -1,8 +1,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import StringRotationFixture from './fixtures/14_strings_05_rotation';
-import LoopFixture from './fixtures/a19_boucles';
-import SokobanFixture from './fixtures/11_variable_08_sokoban';
-import {ActionTypes} from "../stepper/actionTypes";
+import StringRotationFixture from './fixtures/14_strings_05_rotation/index';
+import SokobanFixture from './fixtures/11_variable_08_sokoban/index';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -31,7 +29,7 @@ export interface TaskInputEnteredPayload {
 }
 
 export const taskInitialState = {
-    currentTask: SokobanFixture,
+    currentTask: null,
     currentLevel: 1,
     recordingEnabled: false,
     resetDone: true,
@@ -47,13 +45,15 @@ export const taskSlice = createSlice({
     name: 'task',
     initialState: taskInitialState,
     reducers: {
-        currentTaskChange(state, action: PayloadAction<string>) {
+        currentTaskChangePredefined(state, action: PayloadAction<string>) {
             if (action.payload in availableTasks) {
                 state.currentTask = availableTasks[action.payload];
             } else {
                 state.currentTask = availableTasks.robot;
-                console.error('Unrecognized task: ', action.payload);
             }
+        },
+        currentTaskChange(state, action: PayloadAction<any>) {
+            state.currentTask = action.payload;
         },
         currentLevelChange(state, action: PayloadAction<number>) {
             state.currentLevel = action.payload;
@@ -122,6 +122,7 @@ export const {
     taskResetDone,
     taskUpdateState,
     taskLoaded,
+    currentTaskChangePredefined,
     currentTaskChange,
     taskAddInput,
     taskSetInputs,

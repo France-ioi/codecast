@@ -4,6 +4,7 @@ const webpack = require('webpack');
 const SRC = path.resolve(__dirname, "frontend");
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 const CopyPlugin = require("copy-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 // To analyse webpack speed and build size
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -28,7 +29,10 @@ module.exports = (env, argv) => {
     console.log('isDevelopment ?', isDev);
 
     const jsonConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'));
-    const publicPath = path.join(process.env.BUILD === 'offline' ? '.' : jsonConfig.mountPath, 'build/');
+    let publicPath = path.join(process.env.BUILD === 'offline' ? '.' : jsonConfig.mountPath, 'build/');
+    if ('lib' === process.env.BUILD) {
+        publicPath = './';
+    }
 
     return {
         mode: argv.mode,
@@ -87,7 +91,7 @@ module.exports = (env, argv) => {
                     test: /\.css$/,
                     use: [
                         {
-                            loader: 'style-loader'
+                            loader: isDev ? "style-loader" : MiniCssExtractPlugin.loader,
                         }, {
                             loader: 'css-loader',
                             options: {
@@ -101,7 +105,7 @@ module.exports = (env, argv) => {
                     test: /\.scss$/,
                     use: [
                         {
-                            loader: 'style-loader'
+                            loader: isDev ? "style-loader" : MiniCssExtractPlugin.loader,
                         }, {
                             loader: 'css-loader',
                             options: {
@@ -172,6 +176,7 @@ module.exports = (env, argv) => {
                     'bebras-modules/pemFioi/conceptViewer-1.0-mobileFirst.js',
                 ],
             }),
+            new MiniCssExtractPlugin(),
             // new BundleAnalyzerPlugin(),
         ],
         // Note : splitChunks breaks the audio recording.
