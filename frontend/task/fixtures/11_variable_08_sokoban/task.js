@@ -247,15 +247,8 @@ setTimeout(() => {
     "showViews": true,
     "showIO": true,
     "platform": "python",
-    "canChangePlatform": true,
-    "controls": {"": "+"},
-    // "baseUrl": "https://codecast-dev.france-ioi.org/next",
-    // "callbackUrl": "/next/task",
-    "baseUrl": "",
-    "callbackUrl": "",
-    "referer": null,
+    "baseUrl": "https://codecast-dev.france-ioi.org/next",
     "authProviders": ["guest"],
-    "user": false,
     "task": subTask,
   })
 }, 0);

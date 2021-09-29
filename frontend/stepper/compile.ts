@@ -95,7 +95,7 @@ export default function(bundle: Bundle) {
             });
 
             try {
-                checkCompilingCode(source.trim(), getMessage, state.replay);
+                checkCompilingCode(source.trim(), getMessage, platform, state.replay);
             } catch (e) {
                 yield put({
                     type: ActionTypes.CompileFailed,
