@@ -5,7 +5,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from '../editor/actionTypes';
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
-import {EditorSaveState, initialStateEditor} from "./index";
+import {EditorSaveState, getInitialStateEditor} from "./index";
 import {Bundle} from "../linker";
 import {SubtitlesOption} from "../subtitles";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
@@ -15,7 +15,7 @@ import {clearAllUnsaved} from "../subtitles/editor";
 
 export default function (bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.editor = {...initialStateEditor};
+        state.editor = {...getInitialStateEditor()};
     });
 
     bundle.addReducer(EditorActionTypes.EditorPrepare, (state: AppStore) => {

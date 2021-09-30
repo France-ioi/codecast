@@ -12,6 +12,7 @@ import {Bundle} from "../linker";
 import {App} from "../index";
 import {Screen} from "../common/screens";
 import intervalTree from "./interval_tree";
+import {SaveStep} from "../recorder/save_screen";
 
 export type EditorControl = 'none' | 'trim' | 'subtitles';
 
@@ -32,32 +33,61 @@ export enum EditorSavingStep {
     UploadSubtitles = 'upload_subtitles',
 }
 
-export const initialStateEditor = {
+export interface EditorState {
     save: {
-        state: EditorSaveState.Idle,
-        error: '',
-        step: null,
-        progress: null,
+        state: EditorSaveState,
+        error: string,
+        step: SaveStep,
+        progress: number,
     },
-    unsaved: false,
-    controls: 'none' as EditorControl,
-    audioLoadProgress: 0,
-    setupTabId: 'setup-tab-infos',
-    base: '',
-    dataUrl: '',
-    playerUrl: '',
-    editorUrl: '',
-    canSave: false,
-    audioLoaded: false,
-    duration: 0,
-    audioBlob: null as any,
-    audioBuffer: null as any,
-    waveform: new Float32Array(),
-    playerReady: false,
-    data: null as any,
-    trim: initialStateTrimSaving,
-    isMuted: false,
-};
+    unsaved: boolean,
+    controls: EditorControl,
+    audioLoadProgress: number,
+    setupTabId: string,
+    base: string,
+    dataUrl: string,
+    playerUrl: string,
+    editorUrl: string,
+    canSave: boolean,
+    audioLoaded: boolean,
+    duration: number,
+    audioBlob: any,
+    audioBuffer: any,
+    waveform: Float32Array,
+    playerReady: boolean,
+    data: any,
+    trim: typeof initialStateTrimSaving,
+    isMuted: boolean,
+}
+
+export function getInitialStateEditor() {
+    return {
+        save: {
+            state: EditorSaveState.Idle,
+            error: '',
+            step: null,
+            progress: null,
+        },
+        unsaved: false,
+        controls: 'none' as EditorControl,
+        audioLoadProgress: 0,
+        setupTabId: 'setup-tab-infos',
+        base: '',
+        dataUrl: '',
+        playerUrl: '',
+        editorUrl: '',
+        canSave: false,
+        audioLoaded: false,
+        duration: 0,
+        audioBlob: null as any,
+        audioBuffer: null as any,
+        waveform: new Float32Array(),
+        playerReady: false,
+        data: null as any,
+        trim: {...initialStateTrimSaving},
+        isMuted: false,
+    };
+}
 
 export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.EditorPrepare);
@@ -66,7 +96,7 @@ export default function(bundle: Bundle) {
         const intervals = intervalTree({skip: false, mute: false});
 
         state.editor = {
-            ...initialStateEditor,
+            ...getInitialStateEditor(),
             trim: {
                 ...state.editor.trim,
                 intervals,

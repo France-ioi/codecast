@@ -11,58 +11,86 @@ import {Bundle} from "../linker";
 import {NodeCue} from "subtitle";
 
 export type SubtitlesOption = {
-    key: string,
-    text: string,
-    unsaved: boolean,
+    key?: string,
+    text?: string,
+    unsaved?: boolean,
     countryCode: string,
     label: string,
     value: string,
-    removed: boolean,
-    url: string
+    removed?: boolean,
+    url?: string
 }
 
 export type SubtitlesOptions = {
     [key: string]: SubtitlesOption
 }
 
-export const initialStateSubtitles = {
-    langOptions: [
-        {value: 'fr-FR', label: "Français", countryCode: 'fr'},
-        {value: 'en-US', label: "English", countryCode: 'us'},
-    ],
-    editing: false,
-    paneEnabled: false,
-    bandEnabled: false,
+export interface SubtitlesState {
+    langOptions: SubtitlesOption[],
+    editing: boolean,
+    paneEnabled: boolean,
+    bandEnabled: boolean,
     /* player-specific */
-    filterText: '',
-    filterRegexp: null,
+    filterText: string,
+    filterRegexp: any,
     /* editor-specific */
     trim: {
-        loaded: [],
+        loaded: any[],
     },
-    text: '',
-    items: [] as NodeCue[],
-    currentIndex: 0,
-    audioTime: 0,
-    loaded: false,
-    itemVisible: false,
-    isMoving: false,
-    startY: 0,
-    offsetY: 0,
-    unsaved: false,
-    availableOptions: {} as SubtitlesOptions,
-    selectedKey: 0,
-    filteredItems: [],
-    loadedKey: 'none',
-    lastError: '',
-    loading: false
-};
+    text: string,
+    items: NodeCue[],
+    currentIndex: number,
+    audioTime: number,
+    loaded: boolean,
+    itemVisible: boolean,
+    isMoving: boolean,
+    startY: number,
+    offsetY: number,
+    unsaved: boolean,
+    availableOptions: SubtitlesOptions,
+    selectedKey: number,
+    filteredItems: any[],
+    loadedKey: string,
+    lastError: string,
+    loading: boolean,
+}
 
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
         const {paneEnabled, bandEnabled} = getPersistentOptions();
 
-        state.subtitles = {...initialStateSubtitles};
+        state.subtitles = {
+            langOptions: [
+                {value: 'fr-FR', label: "Français", countryCode: 'fr'},
+                {value: 'en-US', label: "English", countryCode: 'us'},
+            ],
+            editing: false,
+            paneEnabled: false,
+            bandEnabled: false,
+            /* player-specific */
+            filterText: '',
+            filterRegexp: null,
+            /* editor-specific */
+            trim: {
+                loaded: [],
+            },
+            text: '',
+            items: [] as NodeCue[],
+            currentIndex: 0,
+            audioTime: 0,
+            loaded: false,
+            itemVisible: false,
+            isMoving: false,
+            startY: 0,
+            offsetY: 0,
+            unsaved: false,
+            availableOptions: {} as SubtitlesOptions,
+            selectedKey: 0,
+            filteredItems: [],
+            loadedKey: 'none',
+            lastError: '',
+            loading: false
+        };
         state.subtitles.paneEnabled = paneEnabled;
         state.subtitles.bandEnabled = bandEnabled;
     });
