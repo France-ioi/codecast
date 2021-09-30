@@ -26,10 +26,6 @@ export const initialStateTrimSaving = {
 }
 
 export default function(bundle: Bundle) {
-    bundle.addReducer(ActionTypes.EditorPrepare, (state: AppStore) => {
-        state.editor.trim.intervals = intervalTree({skip: false, mute: false});
-    });
-
     bundle.defineAction(ActionTypes.EditorTrimEnter);
     bundle.defineAction(ActionTypes.EditorTrimReturn);
 

@@ -11,6 +11,7 @@ import {AppStore} from "../store";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {Screen} from "../common/screens";
+import intervalTree from "./interval_tree";
 
 export type EditorControl = 'none' | 'trim' | 'subtitles';
 
@@ -62,8 +63,15 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.EditorPrepare);
     bundle.addReducer(ActionTypes.EditorPrepare, (state: AppStore, {payload: {baseDataUrl}}) => {
         const {baseUrl} = state.options;
+        const intervals = intervalTree({skip: false, mute: false});
 
-        state.editor = {...initialStateEditor};
+        state.editor = {
+            ...initialStateEditor,
+            trim: {
+                ...state.editor.trim,
+                intervals,
+            }
+        };
         state.editor.base = baseDataUrl;
         state.editor.dataUrl = baseDataUrl;
         state.editor.playerUrl = `${baseUrl}/task?recording=${encodeURIComponent(baseDataUrl)}`;
