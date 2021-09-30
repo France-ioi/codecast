@@ -29,7 +29,7 @@ module.exports = (env, argv) => {
     console.log('isDevelopment ?', isDev);
 
     const jsonConfig = JSON.parse(fs.readFileSync('config.json', 'utf8'));
-    let publicPath = path.join(process.env.BUILD === 'offline' ? '.' : jsonConfig.mountPath, 'build/');
+    let publicPath = path.join(jsonConfig.mountPath, 'build/');
     if ('lib' === process.env.BUILD) {
         publicPath = './';
     }
@@ -130,7 +130,7 @@ module.exports = (env, argv) => {
                         {
                             loader: 'file-loader',
                             options: {
-                                publicPath,
+                                publicPath: './',
                                 name: 'fonts/[name].[ext]'
                             }
                         }
@@ -139,8 +139,15 @@ module.exports = (env, argv) => {
                 {
                     test: /\.(ico|gif|png|jpg|jpeg|svg)$/,
                     use: [
-                        {loader: 'file-loader?context=public&name=images/[name].[ext]'}
-                    ]
+                        {
+                            loader: 'file-loader',
+                            options: {
+                                context: 'public',
+                                publicPath: './build/',
+                                name: 'images/[name].[ext]'
+                            }
+                        }
+                    ],
                 },
                 {
                     test: /\.xml$/,

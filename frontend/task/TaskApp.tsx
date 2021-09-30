@@ -49,31 +49,31 @@ export function TaskApp() {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        if (options.audioUrl) {
-            if (CodecastOptionsMode.Edit === options.mode) {
-                dispatch({
-                    type: EditorActionTypes.EditorPrepare,
-                    payload: {
-                        baseDataUrl: options.baseDataUrl,
-                    },
-                });
-                dispatch({type: ActionTypes.SubtitlesEditorEnter});
-            } else {
-                dispatch({
-                    type: PlayerActionTypes.PlayerPrepare,
-                    payload: {
-                        baseDataUrl: options.baseDataUrl,
-                        audioUrl: options.audioUrl,
-                        eventsUrl: `${options.baseDataUrl}.json`,
-                        data: options.data
-                    }
-                });
-            }
-        }
-
         // Wait that the html is loaded before we create the context because some of them use jQuery to select elements
         setTimeout(() => {
             dispatch(taskLoad());
+
+            if (options.audioUrl) {
+                if (CodecastOptionsMode.Edit === options.mode) {
+                    dispatch({
+                        type: EditorActionTypes.EditorPrepare,
+                        payload: {
+                            baseDataUrl: options.baseDataUrl,
+                        },
+                    });
+                    dispatch({type: ActionTypes.SubtitlesEditorEnter});
+                } else {
+                    dispatch({
+                        type: PlayerActionTypes.PlayerPrepare,
+                        payload: {
+                            baseDataUrl: options.baseDataUrl,
+                            audioUrl: options.audioUrl,
+                            eventsUrl: `${options.baseDataUrl}.json`,
+                            data: options.data
+                        }
+                    });
+                }
+            }
         });
     }, []);
 
