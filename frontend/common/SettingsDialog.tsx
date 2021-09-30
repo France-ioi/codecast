@@ -117,7 +117,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
                                       key={p}
                                       value={p}
                                   >
-                                      {p}
+                                      {getMessage('LAYOUT_' + p)}
                                   </option>)}
                           </select>
                         </div>

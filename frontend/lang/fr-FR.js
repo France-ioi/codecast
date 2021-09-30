@@ -162,4 +162,12 @@ module.exports = {
     TASK_VISUALIZATION: "Visualisation {number}",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Imposer un agencement :",
+    LAYOUT_DefaultLayoutDesktop: 'Ordinateur',
+    LAYOUT_DefaultLayoutTabletVertical: 'Tablette vertical',
+    LAYOUT_DefaultLayoutMobileHorizontalEditor: 'Mobile horizontal (édition)',
+    LAYOUT_DefaultLayoutMobileHorizontalInstructions: 'Mobile horizontal (instructions)',
+    LAYOUT_DefaultLayoutMobileHorizontalPlayer: 'Mobile horizontal (exécution)',
+    LAYOUT_DefaultLayoutMobileVerticalEditor: 'Mobile vertical (édition)',
+    LAYOUT_DefaultLayoutMobileVerticalInstructions: 'Mobile vertical (instructions)',
+    LAYOUT_DefaultLayoutMobileVerticalPlayer: 'Mobile vertical (exécution)',
 };

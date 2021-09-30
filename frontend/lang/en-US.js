@@ -156,4 +156,12 @@ module.exports = {
     TASK_VISUALIZATION: "Visualization {number}",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Force a layout:",
+    LAYOUT_DefaultLayoutDesktop: 'Desktop',
+    LAYOUT_DefaultLayoutTabletVertical: 'Tablet vertical',
+    LAYOUT_DefaultLayoutMobileHorizontalEditor: 'Mobile horizontal (edition)',
+    LAYOUT_DefaultLayoutMobileHorizontalInstructions: 'Mobile horizontal (instructions)',
+    LAYOUT_DefaultLayoutMobileHorizontalPlayer: 'Mobile horizontal (execution)',
+    LAYOUT_DefaultLayoutMobileVerticalEditor: 'Mobile vertical (edition)',
+    LAYOUT_DefaultLayoutMobileVerticalInstructions: 'Mobile vertical (instructions)',
+    LAYOUT_DefaultLayoutMobileVerticalPlayer: 'Mobile vertical (execution)',
 };
