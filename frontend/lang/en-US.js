@@ -9,6 +9,7 @@ module.exports = {
     MESSAGES: 'Messages',
     ERROR: 'Error',
     CLOSE: 'Close',
+    NONE: 'None',
     FULLSCREEN: "fullscreen",
     EXIT_FULLSCREEN: "exit fullscreen",
     SAVE_RECORDING: "Save recording",
@@ -154,4 +155,14 @@ module.exports = {
     TASK_EDITOR: 'Editor',
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualization {number}",
+
+    LAYOUT_TYPE_REQUIRED_LABEL: "Preview a specific layout:",
+    LAYOUT_DefaultLayoutDesktop: 'Desktop',
+    LAYOUT_DefaultLayoutTabletVertical: 'Tablet vertical',
+    LAYOUT_DefaultLayoutMobileHorizontalEditor: 'Mobile horizontal (edition)',
+    LAYOUT_DefaultLayoutMobileHorizontalInstructions: 'Mobile horizontal (instructions)',
+    LAYOUT_DefaultLayoutMobileHorizontalPlayer: 'Mobile horizontal (execution)',
+    LAYOUT_DefaultLayoutMobileVerticalEditor: 'Mobile vertical (edition)',
+    LAYOUT_DefaultLayoutMobileVerticalInstructions: 'Mobile vertical (instructions)',
+    LAYOUT_DefaultLayoutMobileVerticalPlayer: 'Mobile vertical (execution)',
 };
