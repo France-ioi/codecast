@@ -130,7 +130,7 @@ module.exports = (env, argv) => {
                         {
                             loader: 'file-loader',
                             options: {
-                                publicPath: './',
+                                publicPath: 'lib' === process.env.BUILD ? './' : './build/',
                                 name: 'fonts/[name].[ext]'
                             }
                         }
