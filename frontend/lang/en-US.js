@@ -155,7 +155,7 @@ module.exports = {
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualization {number}",
 
-    LAYOUT_TYPE_REQUIRED_LABEL: "Force a layout:",
+    LAYOUT_TYPE_REQUIRED_LABEL: "Preview a specific layout:",
     LAYOUT_DefaultLayoutDesktop: 'Desktop',
     LAYOUT_DefaultLayoutTabletVertical: 'Tablet vertical',
     LAYOUT_DefaultLayoutMobileHorizontalEditor: 'Mobile horizontal (edition)',
