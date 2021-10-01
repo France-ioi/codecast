@@ -161,7 +161,7 @@ module.exports = {
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualisation {number}",
 
-    LAYOUT_TYPE_REQUIRED_LABEL: "Imposer un agencement :",
+    LAYOUT_TYPE_REQUIRED_LABEL: "Se placer dans un agencement :",
     LAYOUT_DefaultLayoutDesktop: 'Ordinateur',
     LAYOUT_DefaultLayoutTabletVertical: 'Tablette vertical',
     LAYOUT_DefaultLayoutMobileHorizontalEditor: 'Mobile horizontal (édition)',
