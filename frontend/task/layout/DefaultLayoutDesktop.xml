@@ -1,6 +1,6 @@
 <HorizontalLayout>
     <VerticalLayout desiredSize="40%">
-        <ZoneLayout name="top-left">
+        <ZoneLayout name="top-left" desiredSize="33%">
             <Instructions/>
             <Variables/>
         </ZoneLayout>

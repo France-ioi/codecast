@@ -19,7 +19,7 @@ import {App, Codecast} from "../index";
 import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {getTaskTest, taskLoad} from "../task";
+import {taskLoad} from "../task";
 import {PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
 import {RECORDING_FORMAT_VERSION} from "../version";
 import {getNodeRange} from "../stepper";
@@ -119,7 +119,7 @@ function* playerPrepare(app: App, action) {
         task: {
             currentTask: state.task.currentTask,
             currentLevel: state.task.currentLevel,
-            currentTest: getTaskTest(state.task.currentTask, state.task.currentLevel),
+            currentTestId: state.task.currentTestId,
         },
         options: {
             platform

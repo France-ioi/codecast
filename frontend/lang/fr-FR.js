@@ -160,4 +160,6 @@ module.exports = {
     TASK_DOCUMENTATION_INSTRUCTIONS: 'Détails de la mission',
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualisation {number}",
+
+    TESTS_TAB_TITLE: 'Test {index}',
 };

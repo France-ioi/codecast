@@ -18,7 +18,8 @@ export interface TaskState {
     state?: any,
     success?: boolean,
     successMessage?: string,
-    currentTest?: object,
+    taskTests: any[],
+    currentTestId?: number,
     inputNeeded?: boolean,
     inputs?: any[],
 }
@@ -31,12 +32,13 @@ export interface TaskInputEnteredPayload {
 export const taskInitialState = {
     currentTask: null,
     currentLevel: 1,
+    taskTests: [],
+    currentTestId: null,
     recordingEnabled: false,
     resetDone: true,
     loaded: false,
     success: false,
     successMessage: null,
-    currentTest: null,
     inputNeeded: false,
     inputs: [],
 } as TaskState;
@@ -72,14 +74,22 @@ export const taskSlice = createSlice({
         taskResetDone(state: TaskState, action: PayloadAction<boolean>) {
             state.resetDone = action.payload;
         },
+        updateTaskTests(state: TaskState, action: PayloadAction<any[]>) {
+            state.taskTests = action.payload;
+        },
+        updateCurrentTestId(state: TaskState, action: PayloadAction<number>) {
+            state.currentTestId = action.payload;
+        },
         updateCurrentTest(state: TaskState, action: PayloadAction<object>) {
-            if (state.currentTest) {
-                state.currentTest = {
-                    ...state.currentTest,
+            if (state.currentTestId in state.taskTests) {
+                let currentTest = state.taskTests[state.currentTestId];
+
+                state.taskTests[state.currentTestId] = {
+                    ...currentTest,
                     ...action.payload,
                 };
             } else {
-                state.currentTest = action.payload;
+                state.taskTests[state.currentTestId] = action.payload;
             }
         },
         taskInputNeeded(state: TaskState, action: PayloadAction<boolean>) {
@@ -117,6 +127,8 @@ export const {
     taskSuccess,
     taskSuccessClear,
     updateCurrentTest,
+    updateTaskTests,
+    updateCurrentTestId,
     taskInputNeeded,
     taskInputEntered,
     taskResetDone,
@@ -132,6 +144,7 @@ export const taskRecordableActions = [
     'taskSuccess',
     'taskSuccessClear',
     'taskInputNeeded',
+    'updateCurrentTestId',
 ];
 
 export default taskSlice;

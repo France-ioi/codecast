@@ -19,7 +19,8 @@ import taskSlice, {
     taskSuccess,
     taskSuccessClear,
     taskUpdateState,
-    updateCurrentTest
+    updateCurrentTestId,
+    updateTaskTests,
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
@@ -65,7 +66,7 @@ if (!String.prototype.format) {
 }
 
 function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
-    let state = yield select();
+    let state: AppStore = yield select();
     let context = quickAlgoLibraries.getContext(null, state.replay);
     console.log('Create a context', context, state.replay);
     if (context) {
@@ -110,15 +111,12 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
         }
     }
 
-    const testData = getTaskTest(currentTask, currentLevel);
-    yield put(updateCurrentTest(testData));
+    yield put(updateTaskTests(currentTask.data[taskLevels[currentLevel]]));
+    yield put(updateCurrentTestId(0));
     state = yield select();
+    const testData = state.task.taskTests[state.task.currentTestId];
     context = quickAlgoLibraries.getContext(null, state.replay);
     context.resetAndReloadState(testData, state);
-}
-
-export function getTaskTest(currentTask: any, currentLevel: number) {
-    return currentTask ? currentTask.data[taskLevels[currentLevel]][0] : {};
 }
 
 export interface AutocompletionParameters {
@@ -326,7 +324,7 @@ export default function (bundle: Bundle) {
             if (instant.event[1] === 'compile.success') {
                 // When the stepper is initialized, we have to set the current test value into the context
                 // just like in the stepperApi.onInit listener
-                const currentTest = taskData.currentTest;
+                const currentTest = taskData.taskTests[taskData.currentTestId];
                 console.log('stepper init, current test', currentTest);
 
                 const context = quickAlgoLibraries.getContext(null, false);
@@ -344,7 +342,8 @@ export default function (bundle: Bundle) {
             }
 
             if (taskData) {
-                yield put(updateCurrentTest(taskData.currentTest));
+                yield put(updateCurrentTestId(taskData.currentTestId));
+                yield put(updateTaskTests(taskData.taskTests));
                 yield put(taskUpdateState(taskData.state));
                 yield put(taskResetDone(taskData.resetDone));
                 yield put(taskSetInputs(taskData.inputs));
@@ -366,7 +365,7 @@ export default function (bundle: Bundle) {
         });
 
         app.stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
-            const currentTest = state.task.currentTest;
+            const currentTest = state.task.taskTests[state.task.currentTestId];
 
             console.log('stepper init, current test', currentTest);
 

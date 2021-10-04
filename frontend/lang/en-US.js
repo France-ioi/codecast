@@ -159,4 +159,6 @@ module.exports = {
     TASK_EDITOR: 'Editor',
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualization {number}",
+
+    TESTS_TAB_TITLE: 'Test {index}',
 };
