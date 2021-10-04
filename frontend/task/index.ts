@@ -310,6 +310,13 @@ export default function (bundle: Bundle) {
                 }
             }
         });
+
+        yield takeEvery(updateCurrentTestId.type, function* () {
+            const state = yield select();
+            const context = quickAlgoLibraries.getContext(null, state.replay);
+            const currentTest = state.task.taskTests[state.task.currentTestId];
+            context.resetAndReloadState(currentTest, state);
+        });
     });
 
     bundle.defer(function (app: App) {

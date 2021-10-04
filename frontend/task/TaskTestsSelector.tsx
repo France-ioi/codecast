@@ -13,7 +13,6 @@ export function TaskTestsSelector() {
     const getMessage = useAppSelector(state => state.getMessage);
 
     const selectTest = (index) => {
-        console.log('select test', index);
         dispatch(updateCurrentTestId(index));
     }
 
