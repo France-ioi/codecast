@@ -13,13 +13,12 @@ Shape of the 'compile' state:
 
 */
 
-import {call, put, select, takeLatest, takeEvery, take, race, delay} from 'redux-saga/effects';
+import {call, put, select, takeLatest, takeEvery, take, race} from 'redux-saga/effects';
 
 import {asyncRequestJson} from '../utils/api';
 
-import {toHtml} from "../utils/sanitize";
 import {TextEncoder} from "text-encoding-utf-8";
-import {clearStepper, stepperDisabledSaga, StepperStatus} from "./index";
+import {clearStepper} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "../buffers/selectors";
@@ -28,7 +27,6 @@ import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
-import {isStepperInterrupting} from "./selectors";
 import {checkCompilingCode} from "../task/utils";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 
@@ -41,8 +39,6 @@ export enum CompileStatus {
 
 export const initialStateCompile = {
     status: CompileStatus.Clear,
-    diagnostics: '',
-    diagnosticsHtml: '' as string | {__html: string},
     source: '',
     syntaxTree: null as any
 };
@@ -72,11 +68,6 @@ export default function(bundle: Bundle) {
     // Failed to compile {source} with {error}.
     bundle.defineAction(ActionTypes.CompileFailed);
     bundle.addReducer(ActionTypes.CompileFailed, compileFailedReducer);
-
-    // Clear the diagnostics (compilation errors and warnings) returned
-    // by the last compile operation.
-    bundle.defineAction(ActionTypes.CompileClearDiagnostics);
-    bundle.addReducer(ActionTypes.CompileClearDiagnostics, compileClearDiagnosticsReducer);
 
     bundle.defineAction(ActionTypes.CompileWait);
 
@@ -137,14 +128,6 @@ export default function(bundle: Bundle) {
             }
         });
 
-        yield takeEvery(ActionTypes.CompileFailed, function* () {
-            let state: AppStore = yield select();
-            if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
-                yield put({type: ActionTypes.StepperInterrupt, payload: {}});
-            }
-            yield call(stepperDisabledSaga, true);
-        });
-
         // @ts-ignore
         yield takeEvery(ActionTypes.CompileWait, function* ({payload: {callback}}) {
             yield put({type: ActionTypes.Compile, payload: {}});
@@ -179,23 +162,6 @@ export default function(bundle: Bundle) {
             const action = event[2];
 
             yield put({type: ActionTypes.CompileSucceeded, ...action});
-        });
-
-        recordApi.on(ActionTypes.CompileFailed, function* (addEvent, action) {
-            const {response} = action;
-            yield call(addEvent, 'compile.failure', response);
-        });
-        replayApi.on('compile.failure', function* (replayContext: ReplayContext, event) {
-            const action = {response: event[2]};
-
-            yield put({type: ActionTypes.CompileFailed, ...action});
-        });
-
-        recordApi.on(ActionTypes.CompileClearDiagnostics, function* (addEvent) {
-            yield call(addEvent, 'compile.clearDiagnostics');
-        });
-        replayApi.on('compile.clearDiagnostics', function* () {
-            yield put({type: ActionTypes.CompileClearDiagnostics});
         });
 
         replayApi.on('stepper.exit', function* () {
@@ -271,30 +237,18 @@ function compileStartedReducer(state: AppStore, action): void {
 function compileSucceededReducer(state: AppStore, action): void {
     if (action.platform === 'python') {
         state.compile.status = CompileStatus.Done;
-        state.compile.diagnostics = '';
-        state.compile.diagnosticsHtml = '';
+        state.stepper.error = null;
     } else {
         const {ast, diagnostics} = action.response;
         const source = state.compile.source;
 
         state.compile.status = CompileStatus.Done;
         state.compile.syntaxTree = addNodeRanges(source, ast);
-        state.compile.diagnostics = diagnostics;
-        state.compile.diagnosticsHtml = diagnostics && toHtml(diagnostics);
+        state.stepper.error = diagnostics;
     }
 }
 
-export function compileFailedReducer(state: AppStoreReplay, action): void {
-    const {diagnostics} = action.response;
-
+export function compileFailedReducer(state: AppStoreReplay): void {
     state.compile.status = CompileStatus.Error;
-    state.compile.diagnostics = diagnostics;
-    state.compile.diagnosticsHtml = toHtml(diagnostics);
-
     clearStepper(state.stepper);
-}
-
-function compileClearDiagnosticsReducer(state: AppStore): void {
-    state.compile.diagnostics = '';
-    state.compile.diagnosticsHtml = '';
 }

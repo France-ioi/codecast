@@ -25,7 +25,6 @@ The stepper's state has the following shape:
 */
 
 import {
-    all,
     apply,
     call,
     cancel,
@@ -61,7 +60,11 @@ import PythonBundle from './python';
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
 import {Directive, parseDirectives} from "./python/directives";
-import {ActionTypes as CompileActionTypes, ActionTypes} from "./actionTypes";
+import {
+    ActionTypes as StepperActionTypes,
+    ActionTypes, stepperDisplayError, stepperExecutionError,
+    stepperExecutionSuccess
+} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
@@ -74,12 +77,10 @@ import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
-import {taskResetDone, taskSuccess, taskUpdateState} from "../task/task_slice";
+import {taskResetDone, taskUpdateState} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonInterpreter from "./python/python_interpreter";
-import {taskSubmissionExecutor} from "../task/task_submission";
-import {taskExecutionSuccess} from "../task";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -171,6 +172,7 @@ export const initialStateStepper = {
     options: {} as any, // TODO: Is this used ? If yes, put the type.
     controls: StepperControlsType.Normal,
     synchronizingAnalysis: false,
+    error: null as string | {__html: string},
 };
 
 export type Stepper = typeof initialStateStepper;
@@ -255,6 +257,18 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.StepperSynchronizingAnalysisChanged);
     bundle.addReducer(ActionTypes.StepperSynchronizingAnalysisChanged, stepperSynchronizingAnalysisChangedReducer);
+
+    bundle.defineAction(ActionTypes.StepperExecutionSuccess);
+    bundle.addReducer(ActionTypes.StepperExecutionSuccess, stepperExitReducer);
+
+    bundle.defineAction(ActionTypes.StepperExecutionError);
+    bundle.addReducer(ActionTypes.StepperExecutionError, stepperExecutionErrorReducer);
+
+    bundle.defineAction(ActionTypes.StepperDisplayError);
+    bundle.addReducer(ActionTypes.StepperDisplayError, stepperDisplayErrorReducer);
+
+    bundle.defineAction(ActionTypes.StepperClearError);
+    bundle.addReducer(ActionTypes.StepperClearError, stepperClearErrorReducer);
 
     /* END view stuff to move out of here */
 
@@ -602,6 +616,18 @@ function stepperSynchronizingAnalysisChangedReducer(state: AppStoreReplay, {payl
     state.stepper.synchronizingAnalysis = payload;
 }
 
+export function stepperExecutionErrorReducer(state: AppStoreReplay): void {
+    clearStepper(state.stepper);
+}
+
+export function stepperDisplayErrorReducer(state: AppStoreReplay, {payload}): void {
+    state.stepper.error = payload.error;
+}
+
+function stepperClearErrorReducer(state: AppStore): void {
+    state.stepper.error = null;
+}
+
 /* saga */
 
 function* compileSucceededSaga(app: App) {
@@ -830,9 +856,7 @@ function* stepperStepSaga(app: App, action) {
                     yield put({type: ActionTypes.StepperInterrupted});
                 }
                 if (ex.condition === 'error') {
-                    const response = {diagnostics: ex.message};
-                    yield put({type: ActionTypes.CompileFailed, response});
-                    // stepperContext.state.error = ex.message;
+                    yield put(stepperExecutionError(ex.message));
                 }
             }
 
@@ -852,18 +876,9 @@ function* stepperStepSaga(app: App, action) {
                     } catch (message) {
                         // @ts-ignore
                         if (taskContext.success) {
-                            yield put(taskExecutionSuccess(message));
+                            yield put(stepperExecutionSuccess(message));
                         } else {
-                            const response = {diagnostics: message};
-                            yield put({
-                                type: CompileActionTypes.CompileFailed,
-                                response
-                            });
-                            yield taskSubmissionExecutor.afterExecution({
-                                testId: state.task.currentTestId,
-                                result: false,
-                                message,
-                            });
+                            yield put(stepperExecutionError(message));
                         }
                     }
                 }
@@ -1153,6 +1168,13 @@ function postLink(app: App) {
         yield put({type: ActionTypes.StepperControlsChanged, payload: {controls}});
     });
 
+    recordApi.on(ActionTypes.StepperClearError, function* (addEvent) {
+        yield call(addEvent, 'stepper.clear_error');
+    });
+    replayApi.on(['compile.clearDiagnostics', 'stepper.clear_error'], function* () {
+        yield put({type: ActionTypes.StepperClearError});
+    });
+
     stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
         const {platform} = state.options;
 
@@ -1193,6 +1215,24 @@ function postLink(app: App) {
         yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga, args);
         // @ts-ignore
         yield takeEvery(ActionTypes.StepperExit, stepperExitSaga);
+
+        yield takeEvery([
+            StepperActionTypes.StepperExecutionSuccess,
+            StepperActionTypes.StepperExecutionError,
+            StepperActionTypes.CompileFailed,
+        ], function*() {
+            let state: AppStore = yield select();
+            if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
+                yield put({type: ActionTypes.StepperInterrupt, payload: {}});
+            }
+            yield call(stepperDisabledSaga, true);
+        });
+
+        // @ts-ignore
+        yield takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function*({payload}) {
+            console.log('receive an error, display it');
+            yield put(stepperDisplayError(payload.error));
+        });
 
         /* Highlight the range of the current source fragment. */
         yield takeLatest([

@@ -31,7 +31,7 @@ import {createDraft} from "immer";
 import {PlayerInstant} from "../player";
 import {ActionTypes as StepperActionTypes, ActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
-import {stepperDisabledSaga, stepperExitReducer, StepperState, StepperStatus, StepperStepMode} from "../stepper";
+import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
@@ -41,26 +41,19 @@ export enum TaskActionTypes {
     TaskLoad = 'task/load',
     TaskUnload = 'task/unload',
     TaskRunExecution = 'task/runExecution',
-    TaskExecutionSuccess = 'task/executionSuccess',
 }
 
-export const taskLoad = (testId?: number, tests?: any[]) => ({
+export const taskLoad = ({testId, tests, reloadContext}: {testId?: number, tests?: any[], reloadContext?: boolean} = {}) => ({
     type: TaskActionTypes.TaskLoad,
     payload: {
         testId,
         tests,
+        reloadContext,
     },
 });
 
 export const taskUnload = () => ({
     type: TaskActionTypes.TaskUnload,
-});
-
-export const taskExecutionSuccess = (message) => ({
-    type: TaskActionTypes.TaskExecutionSuccess,
-    payload: {
-        message,
-    },
 });
 
 // @ts-ignore
@@ -189,7 +182,7 @@ function* taskLoadSaga(app: App, action) {
     }
 
     let context = quickAlgoLibraries.getContext(null, state.replay);
-    if (!context) {
+    if (!context || (action.payload && action.payload.reloadContext)) {
         yield call(createContext, quickAlgoLibraries);
     }
     context = quickAlgoLibraries.getContext(null, state.replay);
@@ -269,7 +262,7 @@ function* taskRunExecution(app: App, {type, payload}) {
 
     yield put({type: AppActionTypes.AppInit, payload: {options: {...options}, replay: true}});
     yield put({type: BufferActionTypes.BufferLoad, buffer: 'source', text: source});
-    yield put(taskLoad(testId, tests[testId]));
+    yield put(taskLoad({testId, tests: tests[testId]}));
     yield take(taskLoaded.type);
 
     const result = yield new Promise((callback) => {
@@ -302,9 +295,6 @@ function* taskRunExecution(app: App, {type, payload}) {
 export default function (bundle: Bundle) {
     bundle.include(DocumentationBundle);
 
-    bundle.defineAction(TaskActionTypes.TaskExecutionSuccess);
-    bundle.addReducer(TaskActionTypes.TaskExecutionSuccess, stepperExitReducer);
-
     bundle.addSaga(function* (app: App) {
         console.log('INIT TASK SAGAS');
 
@@ -336,9 +326,7 @@ export default function (bundle: Bundle) {
         });
 
         // @ts-ignore
-        yield takeEvery(TaskActionTypes.TaskExecutionSuccess, function* ({payload}) {
-            yield call(stepperDisabledSaga, true);
-
+        yield takeEvery(StepperActionTypes.StepperExecutionSuccess, function* ({payload}) {
             const currentTestId = yield select(state => state.task.currentTestId);
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
@@ -348,12 +336,12 @@ export default function (bundle: Bundle) {
         });
 
         // @ts-ignore
-        yield takeEvery(ActionTypes.CompileFailed, function* ({response}) {
+        yield takeEvery([ActionTypes.StepperExecutionError, ActionTypes.CompileFailed], function* ({payload}) {
             const currentTestId = yield select(state => state.task.currentTestId);
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
                 result: false,
-                message: response.diagnostics,
+                message: payload.error,
             });
         });
 

@@ -526,10 +526,11 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
                 type: CompileActionTypes.StepperInterrupting,
             });
 
-            const response = {diagnostics: e};
             await stepperContext.dispatch({
-                type: CompileActionTypes.CompileFailed,
-                response
+                type: CompileActionTypes.StepperExecutionError,
+                payload: {
+                    error: e,
+                },
             });
         }
         console.log('after make async library call');

@@ -1,6 +1,5 @@
 import {
     taskCreateSubmission,
-    TaskSubmission,
     TaskSubmissionResultPayload,
     taskSubmissionSetTestResult, taskSubmissionStartTest, taskSuccess
 } from "./task_slice";
@@ -10,6 +9,7 @@ import {Codecast} from "../index";
 import {getBufferModel} from "../buffers/selectors";
 import {TaskActionTypes} from "./index";
 import log from "loglevel";
+import {ActionTypes} from "../stepper/actionTypes";
 
 class TaskSubmissionExecutor {
     private afterExecutionCallback: Function = null;
@@ -40,18 +40,17 @@ class TaskSubmissionExecutor {
             if (result.testId === testIndex) {
                 continue;
             }
-            // if (undefined === this.currentSubmission.results[testIndex].result) {
-                yield put(taskSubmissionStartTest(testIndex));
-                log.getLogger('tests').debug('[Tests] Start new execution for test', testIndex);
-                const payload: TaskSubmissionResultPayload = yield this.makeBackgroundExecution(testIndex);
-                log.getLogger('tests').debug('[Tests] End execution, result=', payload);
-                yield put(taskSubmissionSetTestResult(payload));
-                lastMessage = payload.message;
-                if (false === payload.result) {
-                    // Stop at first test that doesn't work
-                    break;
-                }
-            // }
+
+            yield put(taskSubmissionStartTest(testIndex));
+            log.getLogger('tests').debug('[Tests] Start new execution for test', testIndex);
+            const payload: TaskSubmissionResultPayload = yield this.makeBackgroundExecution(testIndex);
+            log.getLogger('tests').debug('[Tests] End execution, result=', payload);
+            yield put(taskSubmissionSetTestResult(payload));
+            lastMessage = payload.message;
+            if (false === payload.result) {
+                // Stop at first test that doesn't work
+                break;
+            }
         }
 
         currentSubmission = yield select((state: AppStore) => state.task.currentSubmission);
@@ -60,6 +59,8 @@ class TaskSubmissionExecutor {
         console.log(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
         if (currentSubmission.results.reduce((agg, next) => agg && next.result, true)) {
             yield put(taskSuccess(lastMessage));
+        } else {
+            yield put({type: ActionTypes.StepperDisplayError, payload: {error: currentSubmission.results.map(element => element.result).join(',')}});
         }
     }
 

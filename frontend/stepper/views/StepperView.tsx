@@ -3,7 +3,7 @@ import {Button, Icon} from "@blueprintjs/core";
 import {PythonStackView} from "../python/analysis/components/PythonStackView";
 import classnames from 'classnames';
 import {StepperViewPanes} from "./StepperViewPanes";
-import {ActionTypes} from "../actionTypes";
+import {ActionTypes, stepperClearError} from "../actionTypes";
 import {BufferEditor} from "../../buffers/BufferEditor";
 import {ArduinoPanel} from "../arduino/ArduinoPanel";
 import {IOPane} from "../io/IOPane";
@@ -35,7 +35,7 @@ function mapStateToProps(state: AppStore, props): StepperViewStateToProps {
     const getMessage = state.getMessage;
     const geometry = state.mainViewGeometry;
     const panes = state.panes;
-    const diagnostics = state.compile.diagnosticsHtml;
+    const diagnostics = state.stepper.error;
     const currentStepperState = state.stepper.currentStepperState;
     const error = currentStepperState && currentStepperState.error;
     const readOnly = currentStepperState || props.preventInput;
@@ -236,7 +236,7 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
     }
 
     _onClearDiagnostics = () => {
-        this.props.dispatch({type: ActionTypes.CompileClearDiagnostics});
+        this.props.dispatch(stepperClearError());
     };
 
     _onStepperExit = () => {

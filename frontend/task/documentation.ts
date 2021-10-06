@@ -85,7 +85,7 @@ function* documentationLoadSaga(standalone: boolean) {
             yield put(documentationLanguageChanged(language));
             yield call(loadDocumentationConcepts, concepts, selectedConceptId);
         } catch (e) {
-            yield put({type: ActionTypes.CompileFailed, response: {diagnostics: e.message}});
+            yield put({type: CommonActionTypes.Error, payload: {error: e.message}});
         }
         return;
     }

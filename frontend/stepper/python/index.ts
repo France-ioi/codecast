@@ -3,7 +3,7 @@ import {call, put, take} from 'redux-saga/effects';
 import {writeString} from "../io/terminal";
 import PythonInterpreter from "./python_interpreter";
 import {ActionTypes} from './actionTypes';
-import {ActionTypes as CompileActionTypes} from '../actionTypes';
+import {ActionTypes as CompileActionTypes, stepperExecutionError} from '../actionTypes';
 import {AppStore} from "../../store";
 import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
@@ -58,12 +58,7 @@ export default function(bundle: Bundle) {
                     channel.put({
                         type: CompileActionTypes.StepperInterrupting,
                     });
-
-                    const response = {diagnostics};
-                    channel.put({
-                        type: CompileActionTypes.CompileFailed,
-                        response
-                    });
+                    channel.put(stepperExecutionError(diagnostics));
                 };
                 context.onSuccess = () => {
                     console.error('Success should be handled at an upper level');

@@ -42,7 +42,7 @@ class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
                     title={getMessage('AN_ERROR_OCCURRED')}
                 >
                     <div className='bp3-dialog-body'>
-                        <p>{"Source: "}{source}</p>
+                        {source && <p>{"Source: "}{source}</p>}
                         <p style={{fontWeight: 'bold'}}>{(error || '').toString()}</p>
                         {source === 'react' &&
                             <pre>{"Component stack:"}{info.componentStack}</pre>
