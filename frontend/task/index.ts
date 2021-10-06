@@ -1,7 +1,7 @@
 import {extractLevelSpecific, getCurrentImmerState} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, all, fork, cancel} from "redux-saga/effects";
+import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest} from "redux-saga/effects";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
@@ -15,7 +15,9 @@ import taskSlice, {
     taskLevels,
     taskLoaded,
     taskRecordableActions,
-    taskResetDone, taskSetInputs,
+    taskResetDone,
+    taskSetInputs,
+    TaskSubmissionResultPayload,
     taskSuccess,
     taskSuccessClear,
     taskUpdateState,
@@ -27,22 +29,38 @@ import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation";
 import {createDraft} from "immer";
 import {PlayerInstant} from "../player";
-import {ActionTypes} from "../stepper/actionTypes";
+import {ActionTypes as StepperActionTypes, ActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
-import {stepperDisabledSaga, stepperExitReducer, StepperState, StepperStatus} from "../stepper";
+import {stepperDisabledSaga, stepperExitReducer, StepperState, StepperStatus, StepperStepMode} from "../stepper";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
+import {taskSubmissionExecutor} from "./task_submission";
+import {ActionTypes as AppActionTypes} from "../actionTypes";
+import {CompileStatus} from "../stepper/compile";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
     TaskUnload = 'task/unload',
+    TaskRunExecution = 'task/runExecution',
+    TaskExecutionSuccess = 'task/executionSuccess',
 }
 
-export const taskLoad = () => ({
+export const taskLoad = (testId?: number, tests?: any[]) => ({
     type: TaskActionTypes.TaskLoad,
+    payload: {
+        testId,
+        tests,
+    },
 });
 
 export const taskUnload = () => ({
     type: TaskActionTypes.TaskUnload,
+});
+
+export const taskExecutionSuccess = (message) => ({
+    type: TaskActionTypes.TaskExecutionSuccess,
+    payload: {
+        message,
+    },
 });
 
 // @ts-ignore
@@ -111,9 +129,6 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
         }
     }
 
-    yield put(updateTaskTests(currentTask.data[taskLevels[currentLevel]]));
-    yield put(updateCurrentTestId(0));
-    state = yield select();
     const testData = state.task.taskTests[state.task.currentTestId];
     context = quickAlgoLibraries.getContext(null, state.replay);
     context.resetAndReloadState(testData, state);
@@ -144,17 +159,28 @@ let oldSagasTasks = {
     replay: null,
 };
 
-function* taskLoadSaga(app: App) {
+function* taskLoadSaga(app: App, action) {
     const urlParameters = new URLSearchParams(window.location.search);
     const selectedTask = urlParameters.has('task') ? urlParameters.get('task') : null;
 
-    const state = yield select();
+    let state: AppStore = yield select();
 
     if (state.options.task) {
         yield put(currentTaskChange(state.options.task));
     } else {
         yield put(currentTaskChangePredefined(selectedTask));
     }
+
+    const currentTask = yield select(state => state.task.currentTask);
+    const currentLevel = yield select(state => state.task.currentLevel);
+
+    const testId = action.payload && action.payload.testId ? action.payload.testId : 0;
+    yield put(updateCurrentTestId(testId));
+
+    const tests = action.payload && action.payload.test ? action.payload.tests : currentTask.data[taskLevels[currentLevel]];
+    yield put(updateTaskTests(tests));
+
+    console.log({testId, tests});
 
     if (oldSagasTasks[app.replay ? 'replay' : 'main']) {
         // Unload task first
@@ -168,9 +194,6 @@ function* taskLoadSaga(app: App) {
     }
     context = quickAlgoLibraries.getContext(null, state.replay);
 
-    yield put(taskLoaded());
-    console.log('task loaded', app.replay, context);
-
     if (app.replay && context) {
         const contextState = context.getInnerState();
         yield put(taskUpdateState(getCurrentImmerState(contextState)));
@@ -182,6 +205,9 @@ function* taskLoadSaga(app: App) {
     });
 
     yield call(handleLibrariesEventListenerSaga, app);
+
+    console.log('task loaded', app.replay, context);
+    yield put(taskLoaded());
 }
 
 function* handleLibrariesEventListenerSaga(app: App) {
@@ -235,11 +261,49 @@ function* handleLibrariesEventListenerSaga(app: App) {
     }
 }
 
+function* taskRunExecution(app: App, {type, payload}) {
+    console.log('START RUN EXECUTION', type, payload);
+    const {testId, options, source, resolve} = payload;
+
+    const tests = yield select((state: AppStore) => state.task.taskTests);
+
+    yield put({type: AppActionTypes.AppInit, payload: {options: {...options}, replay: true}});
+    yield put({type: BufferActionTypes.BufferLoad, buffer: 'source', text: source});
+    yield put(taskLoad(testId, tests[testId]));
+    yield take(taskLoaded.type);
+
+    const result = yield new Promise((callback) => {
+        app.dispatch({
+            type: StepperActionTypes.CompileWait,
+            payload: {
+                callback,
+            },
+        });
+    });
+
+    console.log('compile result', result);
+    if (CompileStatus.Done !== result) {
+        const taskSubmissionResult: TaskSubmissionResultPayload = {
+            testId,
+            result: false,
+        };
+        resolve(taskSubmissionResult);
+        return;
+    }
+
+    taskSubmissionExecutor.setAfterExecutionCallback((result) => {
+        console.log('END RUN EXECUTION', result);
+        resolve(result);
+    });
+
+    yield put({type: StepperActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});
+}
+
 export default function (bundle: Bundle) {
     bundle.include(DocumentationBundle);
 
-    bundle.defineAction(taskSuccess.type);
-    bundle.addReducer(taskSuccess.type, stepperExitReducer);
+    bundle.defineAction(TaskActionTypes.TaskExecutionSuccess);
+    bundle.addReducer(TaskActionTypes.TaskExecutionSuccess, stepperExitReducer);
 
     bundle.addSaga(function* (app: App) {
         console.log('INIT TASK SAGAS');
@@ -271,12 +335,29 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield takeEvery(taskSuccess.type, function* () {
+        // @ts-ignore
+        yield takeEvery(TaskActionTypes.TaskExecutionSuccess, function* ({payload}) {
             yield call(stepperDisabledSaga, true);
+
+            const currentTestId = yield select(state => state.task.currentTestId);
+            yield taskSubmissionExecutor.afterExecution({
+                testId: currentTestId,
+                result: true,
+                message: payload.message,
+            });
+        });
+
+        // @ts-ignore
+        yield takeEvery(ActionTypes.CompileFailed, function* ({response}) {
+            const currentTestId = yield select(state => state.task.currentTestId);
+            yield taskSubmissionExecutor.afterExecution({
+                testId: currentTestId,
+                result: false,
+                message: response.diagnostics,
+            });
         });
 
         yield takeEvery(ActionTypes.StepperExit, function* () {
-            console.log('make reset');
             const state = yield select();
             const context = quickAlgoLibraries.getContext(null, state.replay);
             if (context) {
@@ -314,9 +395,13 @@ export default function (bundle: Bundle) {
         yield takeEvery(updateCurrentTestId.type, function* () {
             const state = yield select();
             const context = quickAlgoLibraries.getContext(null, state.replay);
-            const currentTest = state.task.taskTests[state.task.currentTestId];
-            context.resetAndReloadState(currentTest, state);
+            if (context) {
+                const currentTest = state.task.taskTests[state.task.currentTestId];
+                context.resetAndReloadState(currentTest, state);
+            }
         });
+
+        yield takeLatest(TaskActionTypes.TaskRunExecution, taskRunExecution, app);
     });
 
     bundle.defer(function (app: App) {

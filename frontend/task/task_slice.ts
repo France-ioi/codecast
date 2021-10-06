@@ -9,6 +9,17 @@ const availableTasks = {
 
 export const taskLevels = ['basic', 'easy', 'medium', 'hard'];
 
+export interface TaskSubmission {
+    executing: boolean,
+    results: TaskSubmissionResult[], // One per test
+}
+
+export interface TaskSubmissionResult {
+    executing: boolean,
+    result?: boolean,
+    message?: string,
+}
+
 export interface TaskState {
     currentTask?: any,
     currentLevel?: number,
@@ -20,6 +31,7 @@ export interface TaskState {
     successMessage?: string,
     taskTests: any[],
     currentTestId?: number,
+    currentSubmission?: TaskSubmission,
     inputNeeded?: boolean,
     inputs?: any[],
 }
@@ -29,11 +41,18 @@ export interface TaskInputEnteredPayload {
     clearInput?: boolean,
 }
 
+export interface TaskSubmissionResultPayload {
+    testId: number,
+    result: boolean,
+    message?: string,
+}
+
 export const taskInitialState = {
     currentTask: null,
     currentLevel: 1,
     taskTests: [],
     currentTestId: null,
+    currentSubmission: null,
     recordingEnabled: false,
     resetDone: true,
     loaded: false,
@@ -119,6 +138,22 @@ export const taskSlice = createSlice({
         taskSetInputs(state: TaskState, action: PayloadAction<any[]>) {
             state.inputs = action.payload;
         },
+        taskCreateSubmission(state: TaskState) {
+            state.currentSubmission = {
+                executing: true,
+                results: state.taskTests.map(() => ({executing: false})),
+            };
+        },
+        taskSubmissionStartTest(state: TaskState, action: PayloadAction<number>) {
+            state.currentSubmission.results[action.payload].executing = true;
+        },
+        taskSubmissionSetTestResult(state: TaskState, action: PayloadAction<TaskSubmissionResultPayload>) {
+            state.currentSubmission.results[action.payload.testId] = {
+                executing: false,
+                result: action.payload.result,
+                message: action.payload.message,
+            };
+        },
     },
 });
 
@@ -138,6 +173,9 @@ export const {
     currentTaskChange,
     taskAddInput,
     taskSetInputs,
+    taskCreateSubmission,
+    taskSubmissionStartTest,
+    taskSubmissionSetTestResult,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

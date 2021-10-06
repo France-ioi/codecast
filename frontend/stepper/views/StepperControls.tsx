@@ -381,7 +381,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
         return new Promise<boolean>((resolve) => {
             if (this.props.showCompile) {
                 this.props.dispatch({type: ActionTypes.CompileWait, payload: {callback: (result) => {
-                    resolve(result);
+                    resolve(CompileStatus.Done === result);
                 }}});
             } else {
                 resolve(true);

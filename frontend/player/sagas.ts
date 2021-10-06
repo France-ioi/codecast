@@ -281,8 +281,6 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         const instant: PlayerInstant = {t, pos, event} as PlayerInstant;
         replayContext.instant = instant;
 
-        let needsRestartExecutor = false;
-
         console.log('-------- REPLAY ---- EVENT ----', key, event);
         yield new Promise(resolve => {
             replayStore.dispatch({type: PlayerActionTypes.PlayerApplyReplayEvent, payload: {replayApi, key, replayContext, event, resolve}});

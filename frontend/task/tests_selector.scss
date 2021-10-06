@@ -99,6 +99,20 @@
     &:not(.is-active) {
       box-shadow: 0 1px 0 0px #ccc inset;
     }
+
+    .test-icon {
+      display: inline-block;
+      margin-right: 5px;
+      .bp3-spinner {
+        display: inline-block;
+      }
+    }
+    &.status-success .test-icon {
+      color: green;
+    }
+    &.status-failure .test-icon {
+      color: red;
+    }
   }
 }
 

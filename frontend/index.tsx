@@ -38,6 +38,7 @@ log.setLevel('trace');
 log.getLogger('performance').setLevel('info');
 log.getLogger('python_interpreter').setLevel('info');
 log.getLogger('printer_lib').setLevel('info');
+log.getLogger('tests').setLevel('debug');
 
 interface Codecast {
     store: AppStore,
@@ -113,7 +114,7 @@ const {store, replayStore, scope, replayScope, finalize, start, startReplay} = l
     if (process.env['NODE_ENV'] === 'development') {
         bundle.addEarlyReducer(function(state: AppStore, action): void {
             if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
-                log.debug(state.replay ? 'action on replay' : 'action', action);
+                log.debug(state.replay || (action.payload && action.payload.replay) ? 'action on replay' : 'action', action);
             }
         });
     }

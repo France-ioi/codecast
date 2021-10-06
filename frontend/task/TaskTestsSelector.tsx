@@ -2,11 +2,15 @@ import React from "react";
 import {useAppSelector} from "../hooks";
 import {taskLevels, updateCurrentTestId} from "./task_slice";
 import {useDispatch} from "react-redux";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCheckCircle, faTimesCircle} from "@fortawesome/free-solid-svg-icons";
+import {Spinner} from "@blueprintjs/core";
 
 export function TaskTestsSelector() {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
+    const currentSubmission = useAppSelector(state => state.task.currentSubmission);
     const levelData = currentTask.data[taskLevels[currentLevel]];
 
     const dispatch = useDispatch();
@@ -25,18 +29,47 @@ export function TaskTestsSelector() {
         return element ? element : null;
     };
 
+    let testStatuses = null;
+    if (currentSubmission) {
+        testStatuses = levelData.map((test, index) => {
+            // return 'executing';
+            if (index in currentSubmission.results) {
+                const testResult = currentSubmission.results[index];
+                if (testResult.executing) {
+                    return 'executing';
+                }
+                if (true === testResult.result) {
+                    return 'success';
+                }
+                if (false === testResult.result) {
+                    return 'failure';
+                }
+            }
+
+            return 'unknown';
+        })
+    }
+
     return (
         <div className="tests-selector">
             {levelData.map((testData, index) =>
-                <div key={index} className={`tests-selector-tab ${currentTestId === index ? 'is-active' : ''}`} onClick={() => selectTest(index)}>
+                <div
+                    key={index}
+                    className={`tests-selector-tab${currentTestId === index ? ' is-active' : ''}${testStatuses && testStatuses[index] ? ' status-' + testStatuses[index] : ''}`}
+                    onClick={() => selectTest(index)}>
                     {getTestThumbNail(index) && <div className="test-thumbnail">
                         <img
                             src={getTestThumbNail(index)}
                         />
                     </div>}
                     <span className="test-title">
-                        {false && <span className="testResultIcon">&nbsp;</span>}
-                        {getMessage('TESTS_TAB_TITLE').format({index: index + 1})}
+                        {testStatuses && <span className="test-icon">
+                            {testStatuses[index] === 'executing' && <Spinner size={Spinner.SIZE_SMALL}/>}
+                            {testStatuses && testStatuses[index] === 'success' && <FontAwesomeIcon icon={faCheckCircle}/>}
+                            {testStatuses && testStatuses[index] === 'failure' && <FontAwesomeIcon icon={faTimesCircle}/>}
+                        </span>}
+
+                        <span>{getMessage('TESTS_TAB_TITLE').format({index: index + 1})}</span>
                     </span>
                 </div>
             )}

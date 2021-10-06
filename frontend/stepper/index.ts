@@ -78,6 +78,8 @@ import {taskResetDone, taskSuccess, taskUpdateState} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonInterpreter from "./python/python_interpreter";
+import {taskSubmissionExecutor} from "../task/task_submission";
+import {taskExecutionSuccess} from "../task";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -791,7 +793,7 @@ function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quic
 function* stepperStepSaga(app: App, action) {
     let stepperContext: StepperContext;
     try {
-        const state = yield select();
+        const state: AppStore = yield select();
         const {waitForProgress, quickAlgoCallsLogger} = action.payload;
 
         const stepper = getStepper(state);
@@ -850,12 +852,17 @@ function* stepperStepSaga(app: App, action) {
                     } catch (message) {
                         // @ts-ignore
                         if (taskContext.success) {
-                            yield put(taskSuccess(message));
+                            yield put(taskExecutionSuccess(message));
                         } else {
                             const response = {diagnostics: message};
                             yield put({
                                 type: CompileActionTypes.CompileFailed,
                                 response
+                            });
+                            yield taskSubmissionExecutor.afterExecution({
+                                testId: state.task.currentTestId,
+                                result: false,
+                                message,
                             });
                         }
                     }

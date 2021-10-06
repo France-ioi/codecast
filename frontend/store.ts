@@ -60,7 +60,8 @@ export interface CodecastOptions {
         folder: string,
         bucket: string
     },
-    origin: string
+    origin: string,
+    task?: string,
 }
 
 export interface Panes {

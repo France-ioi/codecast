@@ -149,10 +149,10 @@ export default function(bundle: Bundle) {
         yield takeEvery(ActionTypes.CompileWait, function* ({payload: {callback}}) {
             yield put({type: ActionTypes.Compile, payload: {}});
             const outcome = yield race({
-                succeeded: take(ActionTypes.StepperRestart),
-                failed: take(ActionTypes.CompileFailed),
+                [CompileStatus.Done]: take(ActionTypes.StepperRestart),
+                [CompileStatus.Error]: take(ActionTypes.CompileFailed),
             });
-            callback('succeeded' in outcome);
+            callback(Object.keys(outcome)[0]);
         });
     });
 
