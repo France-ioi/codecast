@@ -16,8 +16,6 @@ import taskSlice, {
     taskLoaded,
     taskRecordableActions,
     taskResetDone,
-    taskSetInputs,
-    TaskSubmissionResultPayload,
     taskSuccess,
     taskSuccessClear,
     taskUpdateState,
@@ -35,7 +33,7 @@ import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {CompileStatus} from "../stepper/compile";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -265,31 +263,12 @@ function* taskRunExecution(app: App, {type, payload}) {
     yield put(taskLoad({testId, tests: tests[testId]}));
     yield take(taskLoaded.type);
 
-    const result = yield new Promise((callback) => {
-        app.dispatch({
-            type: StepperActionTypes.CompileWait,
-            payload: {
-                callback,
-            },
-        });
-    });
-
-    console.log('compile result', result);
-    if (CompileStatus.Done !== result) {
-        const taskSubmissionResult: TaskSubmissionResultPayload = {
-            testId,
-            result: false,
-        };
-        resolve(taskSubmissionResult);
-        return;
-    }
-
     taskSubmissionExecutor.setAfterExecutionCallback((result) => {
         console.log('END RUN EXECUTION', result);
         resolve(result);
     });
 
-    yield put({type: StepperActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});
+    yield put({type: StepperActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run}});
 }
 
 export default function (bundle: Bundle) {
@@ -350,6 +329,7 @@ export default function (bundle: Bundle) {
             const context = quickAlgoLibraries.getContext(null, state.replay);
             if (context) {
                 context.resetAndReloadState(state.task.currentTest, state);
+                yield put(taskUpdateState(getCurrentImmerState(context.getInnerState())));
                 console.log('put task reset done to true');
                 yield put(taskResetDone(true));
             }
@@ -383,9 +363,12 @@ export default function (bundle: Bundle) {
         yield takeEvery(updateCurrentTestId.type, function* () {
             const state = yield select();
             const context = quickAlgoLibraries.getContext(null, state.replay);
+            console.log('update current test', context);
             if (context) {
                 const currentTest = state.task.taskTests[state.task.currentTestId];
+                console.log('reload current test', currentTest);
                 context.resetAndReloadState(currentTest, state);
+                yield put(taskUpdateState(getCurrentImmerState(context.getInnerState())));
             }
         });
 
@@ -393,6 +376,18 @@ export default function (bundle: Bundle) {
     });
 
     bundle.defer(function (app: App) {
+        app.recordApi.onStart(function* (init) {
+            const state: AppStore = yield select();
+            init.testId = state.task.currentTestId;
+        });
+
+        app.replayApi.on('start', function*(replayContext: ReplayContext, event) {
+            const {testId} = event[2];
+            if (null !== testId && undefined !== testId) {
+                yield put(updateCurrentTestId(testId));
+            }
+        });
+
         // Quick mode means continuous play. In this case we can just call every library method
         // without reloading state or display in between
         app.replayApi.onReset(function* (instant: PlayerInstant, quick) {
@@ -422,17 +417,28 @@ export default function (bundle: Bundle) {
             }
 
             if (taskData) {
-                yield put(updateCurrentTestId(taskData.currentTestId));
-                yield put(updateTaskTests(taskData.taskTests));
-                yield put(taskUpdateState(taskData.state));
-                yield put(taskResetDone(taskData.resetDone));
-                yield put(taskSetInputs(taskData.inputs));
+                yield put({
+                    type: PlayerActionTypes.PlayerReset,
+                    payload: {
+                        sliceName: 'task',
+                        partial: true,
+                        state: {
+                            currentTestId: taskData.currentTestId,
+                            taskTests: taskData.taskTests,
+                            state: taskData.state,
+                            resetDone: taskData.resetDone,
+                            inputs: taskData.inputs,
+                            inputNeeded: taskData.inputNeeded,
+                            currentSubmission: taskData.currentSubmission,
+                        },
+                    },
+                });
+
                 if (taskData.success) {
                     yield put(taskSuccess(taskData.successMessage));
                 } else {
                     yield put(taskSuccessClear());
                 }
-                yield put(taskInputNeeded(taskData.inputNeeded));
             }
         });
 

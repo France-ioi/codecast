@@ -2,6 +2,7 @@ export enum ActionTypes {
     StepperTaskCancelled = 'Stepper.Task.Cancelled',
     StepperRestart = 'Stepper.Restart',
     StepperReset = 'Stepper.Reset',
+    StepperCompileAndStep = 'Stepper.CompileAndStep',
     StepperStep = 'Stepper.Step',
     StepperStarted = 'Stepper.Started',
     StepperInteractBefore = 'Stepper.Interact.Before',

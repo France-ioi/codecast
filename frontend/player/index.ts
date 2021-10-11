@@ -115,8 +115,12 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.PlayerSeeked);
 
     bundle.defineAction(ActionTypes.PlayerReset);
-    bundle.addReducer(ActionTypes.PlayerReset, (state: AppStore, {payload: {sliceName, state: newState}}) => {
-        state[sliceName] = newState;
+    bundle.addReducer(ActionTypes.PlayerReset, (state: AppStore, {payload: {sliceName, state: newState, partial}}) => {
+        if (partial) {
+            state[sliceName] = {...state[sliceName], ...newState};
+        } else {
+            state[sliceName] = newState;
+        }
     });
 
     bundle.defineAction(ActionTypes.PlayerResetFull);

@@ -24,7 +24,16 @@ export function ControlsAndErrors() {
 
     const hasError = !!stepperError;
     const hasModes = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
-    const stepperErrorHtml = toHtml(stepperError);
+
+    let error = null;
+    if (hasError) {
+        if (React.isValidElement(stepperError)) {
+            error = stepperError;
+        } else {
+            const stepperErrorHtml = toHtml(stepperError);
+            error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
+        }
+    }
 
     const dispatch = useDispatch();
 
@@ -82,7 +91,7 @@ export function ControlsAndErrors() {
               <div className="message-wrapper">
                 <Icon icon="notifications" className="bell-icon"/>
                 <div className="message">
-                    {stepperError && <div dangerouslySetInnerHTML={stepperErrorHtml}/>}
+                    {error}
                 </div>
               </div>
             </div>}

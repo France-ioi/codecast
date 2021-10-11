@@ -10,6 +10,9 @@ import {getBufferModel} from "../buffers/selectors";
 import {TaskActionTypes} from "./index";
 import log from "loglevel";
 import {ActionTypes} from "../stepper/actionTypes";
+import {TaskTestsSelector} from "./TaskTestsSelector";
+import React from "react";
+import {TaskTestsSubmissionResultOverview} from "./TaskTestsSubmissionResultOverview";
 
 class TaskSubmissionExecutor {
     private afterExecutionCallback: Function = null;
@@ -33,6 +36,7 @@ class TaskSubmissionExecutor {
             return;
         }
 
+        const displayedResults = [result];
 
         const tests = yield select(state => state.task.taskTests);
         let lastMessage = null;
@@ -47,6 +51,7 @@ class TaskSubmissionExecutor {
             log.getLogger('tests').debug('[Tests] End execution, result=', payload);
             yield put(taskSubmissionSetTestResult(payload));
             lastMessage = payload.message;
+            displayedResults.push(payload);
             if (false === payload.result) {
                 // Stop at first test that doesn't work
                 break;
@@ -60,7 +65,9 @@ class TaskSubmissionExecutor {
         if (currentSubmission.results.reduce((agg, next) => agg && next.result, true)) {
             yield put(taskSuccess(lastMessage));
         } else {
-            yield put({type: ActionTypes.StepperDisplayError, payload: {error: currentSubmission.results.map(element => element.result).join(',')}});
+            const error = <TaskTestsSubmissionResultOverview results={displayedResults}/>;
+
+            yield put({type: ActionTypes.StepperDisplayError, payload: {error: error}});
         }
     }
 

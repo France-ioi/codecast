@@ -90,8 +90,8 @@ export default function(bundle: Bundle) {
             } catch (e) {
                 yield put({
                     type: ActionTypes.CompileFailed,
-                    response: {
-                        diagnostics: e,
+                    payload: {
+                        error: e,
                     },
                 });
                 return;
@@ -123,7 +123,7 @@ export default function(bundle: Bundle) {
                         platform
                     });
                 } else {
-                    yield put({type: ActionTypes.CompileFailed, response});
+                    yield put({type: ActionTypes.CompileFailed, payload: response});
                 }
             }
         });

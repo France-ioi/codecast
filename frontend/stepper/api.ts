@@ -53,6 +53,7 @@ export interface StepperContextParameters {
     dispatch?: Function,
     quickAlgoCallsLogger?: Function,
     replay?: boolean,
+    speed?: number,
 }
 
 const stepperApi = {
@@ -177,7 +178,7 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, dispatch, quickAlgoCallsLogger, replay}: StepperContextParameters): StepperContext {
+export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, dispatch, quickAlgoCallsLogger, replay, speed}: StepperContextParameters): StepperContext {
     /**
      * We create a new state object here instead of mutating the state. This is intended.
      */
@@ -197,7 +198,7 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
         resume: null,
         position: getNodeStartRow(state),
         lineCounter: 0,
-        speed: stepper.speed,
+        speed: undefined !== speed ? speed : stepper.speed,
         unixNextStepCondition: 0,
         state: {
             ...state,
@@ -315,7 +316,7 @@ async function executeSingleStep(stepperContext: StepperContext) {
     }
 }
 
-async function stepUntil(stepperContext: StepperContext, stopCond = undefined, useSpeed: boolean = false) {
+async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
     let stop = false;
     let first = true;
     while (true) {
@@ -338,7 +339,7 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined, u
             return;
         }
 
-        if (!first && useSpeed && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255 && stepperContext.makeDelay) {
+        if (!first && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255 && stepperContext.makeDelay) {
             stepperContext.makeDelay = false;
             await delay(255 - stepperContext.speed);
         }
@@ -429,10 +430,10 @@ async function stepOver(stepperContext: StepperContext) {
     }
 }
 
-export async function performStep(stepperContext: StepperContext, mode, useSpeed: boolean = false) {
+export async function performStep(stepperContext: StepperContext, mode) {
     switch (mode) {
         case 'run':
-            await stepUntil(stepperContext, undefined, useSpeed);
+            await stepUntil(stepperContext);
             break;
         case 'into':
             await stepInto(stepperContext);

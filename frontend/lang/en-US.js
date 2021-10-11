@@ -161,4 +161,7 @@ module.exports = {
     TASK_VISUALIZATION: "Visualization {number}",
 
     TESTS_TAB_TITLE: 'Test {index}',
+    TESTS_RESULT_OVERVIEW_SUCCESS: 'Test {index}: success',
+    TESTS_RESULT_OVERVIEW_FAILURE: 'Test {index}: error',
+    TESTS_RESULT_OVERVIEW_LINK: 'see',
 };
