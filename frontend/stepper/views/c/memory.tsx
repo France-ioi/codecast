@@ -346,17 +346,17 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
         let maxAddress = currentAddress;
         for (let marker of allMarkers(programState, localMap, cursorExprs)) {
             const {address} = marker;
-            if ((address < currentAddress) && (address > nextAddress)) {
+            if ((address < currentAddress) && (-1 === nextAddress || address > nextAddress)) {
                 nextAddress = address;
             }
             if (address > maxAddress) {
                 maxAddress = address;
             }
         }
-        if (fallThrough && nextAddress === undefined) {
+        if (fallThrough && nextAddress === -1) {
             nextAddress = maxAddress;
         }
-        if (nextAddress !== undefined) {
+        if (nextAddress !== -1) {
             nextAddress = clipCenterAddress(this.props, nextAddress);
             this.props.onChange(this.props.directive, {centerAddress: nextAddress});
         }
@@ -372,17 +372,17 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
         let minAddress = currentAddress;
         for (let marker of allMarkers(programState, localMap, cursorExprs)) {
             const {address} = marker;
-            if ((currentAddress) < address && (address < nextAddress)) {
+            if ((currentAddress) < address && (-1 === nextAddress || address < nextAddress)) {
                 nextAddress = address;
             }
             if (address < minAddress) {
                 minAddress = address;
             }
         }
-        if (fallThrough && nextAddress === undefined) {
+        if (fallThrough && nextAddress === -1) {
             nextAddress = minAddress;
         }
-        if (nextAddress !== undefined) {
+        if (nextAddress !== -1) {
             nextAddress = clipCenterAddress(this.props, nextAddress);
             this.props.onChange(this.props.directive, {centerAddress: nextAddress});
         }
