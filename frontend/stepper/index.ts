@@ -119,7 +119,6 @@ export type StepperControls = typeof initialStepperStateControls;
 // TODO: Separate the needs per platform (StepperStatePython, StepperStateC, etc)
 const initialStateStepperState = {
     platform: 'unix' as CodecastPlatform,
-    inputPos: 0, // Only used for python
     input: '',
     output: '', // Only used for python
     terminal: null as TermBuffer, // Only used for python
@@ -409,7 +408,6 @@ function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}})
     } else {
         if (platform === 'python') {
             stepperState = state.stepper.initialStepperState;
-            stepperState.inputPos = 0;
 
             const source = state.buffers['source'].model.document.toString();
 

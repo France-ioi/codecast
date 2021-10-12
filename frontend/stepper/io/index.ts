@@ -153,7 +153,9 @@ export default function(bundle: Bundle) {
         });
 
         stepperApi.onEffect('ungets', function* ungetsHandler(stepperContext: StepperContext, count) {
-            stepperContext.state.inputPos -= count;
+            const executor = stepperContext.quickAlgoCallsExecutor;
+            const executorPromise = executor('printer', 'ungets', [count], () => {});
+            yield ['promise', executorPromise];
         });
     });
 }

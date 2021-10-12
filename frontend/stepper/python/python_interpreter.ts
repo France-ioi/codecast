@@ -31,7 +31,6 @@ export default function(context) {
     this._definedFunctions = [];
     this._isFinished = false;
     this._printedDuringStep = '';
-    this._inputPos = 0;
     this._futureInputValue = null;
     this.onInput = context.onInput;
     this.onError = context.onError;
