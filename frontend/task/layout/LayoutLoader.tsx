@@ -24,7 +24,7 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     const fullScreenActive = state.fullscreen.active;
     const currentStepperState = state.stepper.currentStepperState;
     const orderedDirectives = currentStepperState ? currentStepperState.directives.ordered : [];
-    const advisedVisualization = !state.stepper || state.stepper.status === StepperStatus.Clear ? 'instructions' : 'variables';
+    const advisedVisualization = (!state.stepper || state.stepper.status === StepperStatus.Clear) && state.task.resetDone ? 'instructions' : 'variables';
     const preferredVisualizations = state.layout.preferredVisualizations;
     const layoutType = state.layout.type;
     const layoutMobileMode = state.layout.mobileMode;

@@ -23,8 +23,8 @@ export function TerminalView() {
     const preventInput = player && player.isPlaying;
 
     let terminalBuffer = new TermBuffer({lines: 10, width: 60});
-    if (taskState && taskState.events) {
-        terminalBuffer = writeString(terminalBuffer, getTerminalText(taskState.events));
+    if (taskState && taskState.ioEvents) {
+        terminalBuffer = writeString(terminalBuffer, getTerminalText(taskState.ioEvents));
     }
     terminalBuffer = writeString(terminalBuffer, input);
 
