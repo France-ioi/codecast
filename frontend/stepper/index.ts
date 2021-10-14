@@ -634,12 +634,14 @@ function* stepperEnabledSaga(args) {
     currentStepperTask = yield fork(rootStepperSaga, args);
 }
 
-export function* stepperDisabledSaga() {
+export function* stepperDisabledSaga(action, leaveContext = false) {
     /* Cancel the stepper task if still running. */
     const oldTask = currentStepperTask;
-    console.log('try to disable stepper', oldTask);
+    console.log('try to disable stepper', oldTask, leaveContext);
 
-    yield put(taskResetDone(false));
+    if (leaveContext) {
+        yield put(taskResetDone(false));
+    }
 
     if (oldTask) {
         // @ts-ignore

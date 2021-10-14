@@ -265,7 +265,7 @@ export default function (bundle: Bundle) {
         });
 
         yield takeEvery(taskSuccess.type, function* () {
-            yield call(stepperDisabledSaga);
+            yield call(stepperDisabledSaga, true);
         });
 
         yield takeEvery(ActionTypes.StepperExit, function* () {
