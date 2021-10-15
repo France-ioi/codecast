@@ -79,11 +79,14 @@ body {
     flex-direction: column;
   }
 
-  .task-mission {
+  .stack-view, .task-mission {
     padding: 20px;
     @include mobile {
       padding: 15px;
     }
+  }
+
+  .task-mission {
     color: #7c7c7c;
 
     h1 {

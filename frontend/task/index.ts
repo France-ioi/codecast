@@ -76,20 +76,24 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
 
     const currentTask = yield select(state => state.task.currentTask);
     const currentLevel = yield select(state => state.task.currentLevel);
-    const levelGridInfos = extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]);
 
     let contextLib;
-    if (levelGridInfos.context) {
-        const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
-        if (-1 !== libraryIndex) {
-            const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
-            try {
-                contextLib = contextFactory(display, levelGridInfos);
-                quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context, state.replay);
-            } catch (e) {
-                console.error("Cannot create context", e);
-                contextLib = new QuickAlgoLibrary(display, levelGridInfos);
-                quickAlgoLibraries.addLibrary(contextLib, 'default', state.replay);
+    let levelGridInfos = {};
+    if (currentTask) {
+        const levelGridInfos = extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]);
+
+        if (levelGridInfos.context) {
+            const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
+            if (-1 !== libraryIndex) {
+                const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
+                try {
+                    contextLib = contextFactory(display, levelGridInfos);
+                    quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context, state.replay);
+                } catch (e) {
+                    console.error("Cannot create context", e);
+                    contextLib = new QuickAlgoLibrary(display, levelGridInfos);
+                    quickAlgoLibraries.addLibrary(contextLib, 'default', state.replay);
+                }
             }
         }
     }
@@ -112,7 +116,7 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
 }
 
 export function getTaskTest(currentTask: any, currentLevel: number) {
-    return currentTask.data[taskLevels[currentLevel]][0];
+    return currentTask ? currentTask.data[taskLevels[currentLevel]][0] : {};
 }
 
 export interface AutocompletionParameters {

@@ -2,7 +2,6 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import StringRotationFixture from './fixtures/14_strings_05_rotation';
 import LoopFixture from './fixtures/a19_boucles';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
-import {ActionTypes} from "../stepper/actionTypes";
 
 const availableTasks = {
     robot: SokobanFixture,

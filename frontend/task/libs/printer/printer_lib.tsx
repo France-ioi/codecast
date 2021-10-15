@@ -753,17 +753,20 @@ export class PrinterLib extends QuickAlgoLibrary {
         switch (action) {
             case PrinterLibAction.reset: {
                 const currentTest = yield select((state: AppStore) => state.task.currentTest);
-                yield put({
-                    type: ActionTypes.BufferReset,
-                    buffer: inputBufferLibTest,
-                    model: documentModelFromString(currentTest.input),
-                });
-
-                yield put({
-                    type: ActionTypes.BufferReset,
-                    buffer: outputBufferLibTest,
-                    model: documentModelFromString(currentTest.output),
-                });
+                if (currentTest && currentTest.input) {
+                    yield put({
+                        type: ActionTypes.BufferReset,
+                        buffer: inputBufferLibTest,
+                        model: documentModelFromString(currentTest.input),
+                    });
+                }
+                if (currentTest && currentTest.output) {
+                    yield put({
+                        type: ActionTypes.BufferReset,
+                        buffer: outputBufferLibTest,
+                        model: documentModelFromString(currentTest.output),
+                    });
+                }
 
                 yield call(context.syncInputOutputBuffers, context);
                 break;
