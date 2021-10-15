@@ -20,6 +20,9 @@ import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getTaskTest, taskLoad} from "../task";
+import {PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
+import {RECORDING_FORMAT_VERSION} from "../version";
+import {getNodeRange} from "../stepper";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -28,6 +31,7 @@ export default function(bundle: Bundle) {
 export interface ReplayContext {
     state: AppStoreReplay,
     events: any[],
+    recordingVersion?: string,
     instants: PlayerInstant[],
     instant: PlayerInstant,
     applyEvent: any,
@@ -126,9 +130,12 @@ function* playerPrepare(app: App, action) {
         replayState.options = data.options;
     }
 
+    console.log('recording data', data);
+
     const replayContext: ReplayContext = {
         state: replayState as AppStore,
         events: data.events,
+        recordingVersion: data.version,
         instants: [],
         instant: null,
         stepperContext: null,
@@ -191,20 +198,12 @@ function* playerPrepare(app: App, action) {
     }
 }
 
-function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
-    /* CONSIDER: create a redux store, use the replayApi to convert each event
-       to an action that is dispatched to the store (which must have an
-       appropriate reducer) plus an optional saga to be called during playback. */
-    let pos, progress, lastProgress = 0, range;
-    const events = replayContext.events;
-    const duration = events[events.length - 1][0];
-    const replayStore = Codecast.replayStore;
+function ensureBackwardsCompatibility(events: any[], version?: string) {
+    let transformedEvents = [];
+    let versionComponents = (version ? version : RECORDING_FORMAT_VERSION).split('.').map(Number);
 
-    yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}, replay: true}});
-    yield call(replayStore.dispatch, taskLoad());
-
-    for (pos = 0; pos < events.length; pos += 1) {
-        const event = events[pos];
+    for (let event of events) {
+        let [t, key, ...params] = event;
 
         /**
          * For version < 6, the translate.success action, now renamed to compile.success used to contain :
@@ -222,22 +221,62 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
          *   }
          * }
          */
-        if (event[1] === 'translate.success') {
-            event[2] = {
+        if (key === 'translate.success') {
+            params[0] = {
                 response: {
-                    ...event[2],
+                    ...params[0],
                     platform: 'unix'
                 }
             };
         }
 
-        const t = event[0];
-
         /**
          * Get the action name.
          * Note : translate.* actions have been replaced by compile.* actions from version 6.
          */
-        const key = event[1].replace('translate.', 'compile.');
+        key = key.replace('translate.', 'compile.');
+
+        if (key === 'terminal.key') {
+            key = PrinterLibActionTypes.PrinterLibTerminalInputKey;
+        }
+        if (key === 'terminal.backspace') {
+            key = PrinterLibActionTypes.PrinterLibTerminalInputBackSpace;
+        }
+        if (key === 'terminal.enter') {
+            key = PrinterLibActionTypes.PrinterLibTerminalInputEnter;
+        }
+
+        if ((key === 'stepper.step' || key === 'stepper.progress') && versionComponents[0] < 7) {
+            params.push('immediate'); // Special mode to ensure backwards compatibility, we didn't have timeouts between each step in previous versions
+        }
+
+        transformedEvents.push([t, key, ...params]);
+
+        if (key === 'stepper.step' && params[0] === 'run' && versionComponents[0] < 7) {
+            transformedEvents.push([t, 'stepper.progress']);
+        }
+    }
+
+    return transformedEvents;
+}
+
+function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
+    /* CONSIDER: create a redux store, use the replayApi to convert each event
+       to an action that is dispatched to the store (which must have an
+       appropriate reducer) plus an optional saga to be called during playback. */
+    let pos, progress, lastProgress = 0, range = null;
+    const recordingEvents = replayContext.events;
+    const events = ensureBackwardsCompatibility(recordingEvents, replayContext.recordingVersion);
+    const duration = events[events.length - 1][0];
+    const replayStore = Codecast.replayStore;
+
+    yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}, replay: true}});
+    yield call(replayStore.dispatch, taskLoad());
+
+    for (pos = 0; pos < events.length; pos += 1) {
+        const event = events[pos];
+        const t = event[0];
+        const key = event[1];
 
         const instant: PlayerInstant = {t, pos, event} as PlayerInstant;
         replayContext.instant = instant;

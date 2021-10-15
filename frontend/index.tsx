@@ -37,6 +37,7 @@ setAutoFreeze(true);
 log.setLevel('trace');
 log.getLogger('performance').setLevel('info');
 log.getLogger('python_interpreter').setLevel('info');
+log.getLogger('printer_lib').setLevel('info');
 
 interface Codecast {
     store: AppStore,

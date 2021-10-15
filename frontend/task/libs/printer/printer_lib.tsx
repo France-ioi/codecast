@@ -12,6 +12,7 @@ import {App} from "../../../index";
 import {IoMode} from "../../../stepper/io";
 import {ReplayContext} from "../../../player/sagas";
 import {createDraft} from "immer";
+import log from 'loglevel';
 
 function escapeHtml(unsafe) {
     return unsafe
@@ -289,6 +290,8 @@ export class PrinterLib extends QuickAlgoLibrary {
         this.success = false;
 
         this.innerState.ioEvents = [];
+        this.innerState.inputBuffer = '';
+        this.innerState.inputPosition = null;
 
         if (taskInfos) {
             this.taskInfos = taskInfos;
@@ -312,13 +315,13 @@ export class PrinterLib extends QuickAlgoLibrary {
     };
 
     reloadState(data): void {
-        console.log('RELOADED EVENTS', data);
+        log.getLogger('printer_lib').debug('RELOADED EVENTS', data);
         this.innerState = data;
     };
 
     resetDisplay() {
         if (this.display) {
-            console.log('make reset display');
+            log.getLogger('printer_lib').debug('make reset display');
             executionChannels.main.put({
                 action: PrinterLibAction.syncBuffers,
             });
@@ -334,20 +337,21 @@ export class PrinterLib extends QuickAlgoLibrary {
     };
 
     inputKey(character) {
-        console.log('received action inputKey', character);
+        log.getLogger('printer_lib').debug('received action inputKey', character);
         this.innerState.inputBuffer = this.innerState.inputBuffer + character;
     };
 
     inputBackSpace() {
-        console.log('received action inputBackSpace');
+        log.getLogger('printer_lib').debug('received action inputBackSpace');
         this.innerState.inputBuffer = this.innerState.inputBuffer.slice(0, -1);
     };
 
     *inputEnter() {
         const context = this;
         const inputValue = context.innerState.inputBuffer;
-        console.log('RECEIVE TERMINAL INPUT ENTER', inputValue);
+        log.getLogger('printer_lib').debug('RECEIVE TERMINAL INPUT ENTER', inputValue);
         context.innerState.inputBuffer = '';
+        context.innerState.ioEvents.push({type: PrinterLineEventType.input, content: inputValue + "\n"});
         yield ['put', taskInputEntered({input: inputValue})];
     };
 
@@ -389,10 +393,10 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
 
         context.innerState.ioEvents.push({type: PrinterLineEventType.output, content: text + end});
-        console.log('PRINT', text);
+        log.getLogger('printer_lib').debug('PRINT', text);
 
         if (context.display) {
-            console.log('has display');
+            log.getLogger('printer_lib').debug('has display');
             yield ['put', {
                 type: ActionTypes.BufferReset,
                 buffer: outputBufferLib,
@@ -402,7 +406,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     *print() {
-        console.log('PRINT', arguments);
+        log.getLogger('printer_lib').debug('PRINT', arguments);
         return yield* this.commonPrint(Array.prototype.slice.call(arguments, 0, -1), "\n");
     }
 
@@ -414,21 +418,46 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
     }
 
-    *commonRead(action: PrinterLibAction = PrinterLibAction.readLine) {
-        const context = this;
-        console.log('MAKE READ - BEFORE INTERACT', action, context.ioMode, context.innerState.inputPosition);
+    getCurrentInputBuffer() {
+        log.getLogger('printer_lib').debug('[printer_lib] check current input buffer', this.innerState.ioEvents.length, this.innerState.inputPosition);
+        if (null !== this.innerState.inputPosition) {
+            const {event, pos} = this.innerState.inputPosition;
+            log.getLogger('printer_lib').debug('[printer_lib] check input position', event, pos);
 
-        if (null !== context.innerState.inputPosition) {
-            const {event, pos} = context.innerState.inputPosition;
-            if (event in context.innerState.ioEvents) {
-                const remaining = context.innerState.ioEvents[event].content.substring(pos)
-                if (remaining.length) {
-                    console.log('remaining text', remaining.trim());
-                    context.innerState.inputPosition.pos = context.innerState.ioEvents[event].content.length;
-                    console.log('new position', context.innerState.inputPosition.pos);
-                    return remaining.trim();
+            let remaining = '';
+            let lastEventId = null;
+            for (let eventId = event; eventId < this.innerState.ioEvents.length; eventId++) {
+                const ioEvent = this.innerState.ioEvents[eventId];
+                log.getLogger('printer_lib').debug('[printer_lib] check input', eventId, ioEvent, pos);
+                if (PrinterLineEventType.input === ioEvent.type) {
+                    remaining += this.innerState.ioEvents[eventId].content.substring(this.innerState.inputPosition.pos).trim();
+                    log.getLogger('printer_lib').debug('[printer_lib] new remaining', remaining);
+                    this.innerState.inputPosition.pos = 0;
+                    lastEventId = eventId;
                 }
             }
+
+            if (null !== lastEventId) {
+                this.innerState.inputPosition.event = lastEventId;
+                this.innerState.inputPosition.pos = this.innerState.ioEvents[lastEventId].content.length;
+                log.getLogger('printer_lib').debug('[printer_lib] reset position', this.innerState.inputPosition);
+            }
+
+            if (remaining.length) {
+                return remaining;
+            }
+        }
+
+        return null;
+    }
+
+    *commonRead(action: PrinterLibAction = PrinterLibAction.readLine) {
+        const context = this;
+        log.getLogger('printer_lib').debug('MAKE READ - BEFORE INTERACT', action, context.ioMode, context.innerState.inputPosition);
+
+        const inputBuffer = this.getCurrentInputBuffer();
+        if (null !== inputBuffer) {
+            return inputBuffer;
         }
 
         let readResult = '';
@@ -439,7 +468,7 @@ export class PrinterLib extends QuickAlgoLibrary {
 
             let inputValue = context.getInputText();
             let index = inputValue.indexOf("\n");
-            console.log('read split input', inputValue, index);
+            log.getLogger('printer_lib').debug('read split input', inputValue, index);
             if (index === -1) {
                 if (!inputValue) {
                     throw context.strings.messages.inputEmpty;
@@ -448,12 +477,12 @@ export class PrinterLib extends QuickAlgoLibrary {
                 context.innerState.initial = '';
             } else {
                 readResult = inputValue.substring(0, index);
-                console.log('READ', 'before', inputValue, 'after', inputValue.substring(index + 1));
+                log.getLogger('printer_lib').debug('READ', 'before', inputValue, 'after', inputValue.substring(index + 1));
                 context.innerState.initial = inputValue.substring(index + 1);
             }
 
             if (context.display) {
-                console.log('now result, update', context.getInputText());
+                log.getLogger('printer_lib').debug('now result, update', context.getInputText());
                 yield ['put', {
                     type: ActionTypes.BufferReset,
                     buffer: inputBufferLib,
@@ -466,13 +495,13 @@ export class PrinterLib extends QuickAlgoLibrary {
             let hasResult = false;
             let iterations = 0;
             while (!hasResult) {
-                console.log('MAKE INTERACT', iterations);
+                log.getLogger('printer_lib').debug('MAKE INTERACT', iterations);
                 yield ['interact', 0 === iterations ? {saga : function* () {
-                    console.log('MAKE READ - START INTERACT SAGA', context.display);
+                    log.getLogger('printer_lib').debug('MAKE READ - START INTERACT SAGA', context.display);
                     readResult = yield call(context.getInputSaga, context);
                     hasResult = true;
                     if (context.display) {
-                        console.log('now result, update', context.getInputText());
+                        log.getLogger('printer_lib').debug('now result, update', context.getInputText());
                         yield put({
                             type: ActionTypes.BufferReset,
                             buffer: inputBufferLib,
@@ -489,7 +518,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                 }
             }
 
-            console.log('MAKE READ - AFTER INTERACT', readResult);
+            log.getLogger('printer_lib').debug('MAKE READ - AFTER INTERACT', readResult);
 
             return readResult;
         }
@@ -520,6 +549,8 @@ export class PrinterLib extends QuickAlgoLibrary {
     *ungets(count) {
         let inputPosition = this.innerState.inputPosition;
         const startEvent = null !== inputPosition ? inputPosition.event : this.innerState.ioEvents.length - 1;
+
+        log.getLogger('printer_lib').debug('[ungets] ', {inputPosition, startEvent, ioEvents: this.innerState.ioEvents});
 
         for (let eventId = startEvent; eventId >= 0; eventId--) {
             const event = this.innerState.ioEvents[eventId];
@@ -659,7 +690,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     *getInputSaga(context) {
-        console.log('HERE ASK INPUT');
+        log.getLogger('printer_lib').debug('HERE ASK INPUT');
 
         yield put(taskInputNeeded(true));
 
@@ -669,12 +700,11 @@ export class PrinterLib extends QuickAlgoLibrary {
             input: take(taskInputEntered.type),
         });
 
-        console.log('RECEIVED INPUT', input);
+        log.getLogger('printer_lib').debug('RECEIVED INPUT', input);
 
         if (input) {
             const inputValue = input.payload.input;
 
-            context.innerState.ioEvents.push({type: PrinterLineEventType.input, content: inputValue + "\n"});
             context.innerState.inputPosition = createDraft({
                 event: context.innerState.ioEvents.length - 1,
                 pos: context.innerState.ioEvents[context.innerState.ioEvents.length - 1].content.length,
@@ -706,19 +736,19 @@ export class PrinterLib extends QuickAlgoLibrary {
 
     *executionChannelSaga(context, replay) {
         try {
-            console.log('create execution channel saga', replay);
+            log.getLogger('printer_lib').debug('create execution channel saga', replay);
             while (true) {
                 const parameters = yield take(executionChannels[replay ? 'replay' : 'main']);
                 yield fork(context.handleRequest, context, parameters);
             }
         } finally {
-            console.log('close execution channel saga');
+            log.getLogger('printer_lib').debug('close execution channel saga');
         }
     }
 
     *handleRequest(context, parameters) {
         const {action} = parameters;
-        console.log('PRINTER HANDLE REQUEST', parameters);
+        log.getLogger('printer_lib').debug('PRINTER HANDLE REQUEST', parameters);
 
         switch (action) {
             case PrinterLibAction.reset: {
@@ -739,7 +769,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                 break;
             }
             case PrinterLibAction.syncBuffers: {
-                console.log('SYNC BUFFERS');
+                log.getLogger('printer_lib').debug('SYNC BUFFERS');
                 yield call(context.syncInputOutputBuffers, context);
                 break;
             }
@@ -749,7 +779,7 @@ export class PrinterLib extends QuickAlgoLibrary {
     }
 
     *getSaga(app: App) {
-        console.log('START PRINTER LIB SAGA');
+        log.getLogger('printer_lib').debug('START PRINTER LIB SAGA');
         yield fork(this.executionChannelSaga, this, app.replay);
 
         yield takeEvery(ActionTypes.BufferEdit, function* (action) {

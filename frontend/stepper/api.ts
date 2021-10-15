@@ -31,6 +31,7 @@ export interface StepperContext {
     interactBefore?: Function,
     interactAfter: Function,
     waitForProgress?: Function,
+    onStepperDone?: Function,
     dispatch?: Function,
     quickAlgoCallsLogger?: Function,
     quickAlgoCallsExecutor?: Function,
@@ -41,12 +42,14 @@ export interface StepperContext {
     unixNextStepCondition?: 0,
     makeDelay?: boolean,
     quickAlgoContext?: any,
+    replay?: boolean,
 }
 
 export interface StepperContextParameters {
     interactBefore?: Function,
     interactAfter?: Function,
     waitForProgress?: Function,
+    onStepperDone?: Function,
     dispatch?: Function,
     quickAlgoCallsLogger?: Function,
     replay?: boolean,
@@ -200,6 +203,7 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
             ...state,
         },
         quickAlgoContext: quickAlgoLibraries.getContext(null, replay),
+        replay,
     };
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
