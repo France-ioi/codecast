@@ -476,8 +476,8 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     }
 
     const context = quickAlgoLibraries.getContext(null, state.replay);
-    if (context && context.getCurrentState) {
-        const contextState = context.getCurrentState();
+    if (context && context.getInnerState) {
+        const contextState = context.getInnerState();
         state.task.state = getCurrentImmerState(contextState);
     }
 
@@ -875,9 +875,9 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
 
         taskContext.display = false;
         taskContext.resetAndReloadState(state.task.currentTest, state);
-        stepperContext.state.contextState = getCurrentImmerState(taskContext.getCurrentState());
+        stepperContext.state.contextState = getCurrentImmerState(taskContext.getInnerState());
 
-        console.log('current task state', taskContext.getCurrentState());
+        console.log('current task state', taskContext.getInnerState());
 
         const pythonInterpreter = new PythonInterpreter(taskContext);
         pythonInterpreter.initCodes([stepperContext.state.analysis.code]);
@@ -891,7 +891,7 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
         yield put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: false});
 
         taskContext.display = true;
-        taskContext.resetDisplay();
+        taskContext.redrawDisplay();
         console.log('End run python from beginning');
     }
 }

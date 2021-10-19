@@ -171,7 +171,7 @@ function* taskLoadSaga(app: App) {
     console.log('task loaded', app.replay, context);
 
     if (app.replay && context) {
-        const contextState = context.getCurrentState();
+        const contextState = context.getInnerState();
         yield put(taskUpdateState(getCurrentImmerState(contextState)));
     }
 
@@ -225,7 +225,7 @@ function* handleLibrariesEventListenerSaga(app: App) {
             yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
                 console.log('exec done, update task state');
                 const context = quickAlgoLibraries.getContext(null, state.replay);
-                const contextState = context.getCurrentState();
+                const contextState = context.getInnerState();
                 console.log('get new state', contextState);
                 app.dispatch(taskUpdateState(getCurrentImmerState(contextState)));
                 console.log('dispatched');
@@ -334,10 +334,10 @@ export default function (bundle: Bundle) {
                 if (taskData && taskData.state) {
                     console.log('do reload state', taskData.state);
                     const draft = createDraft(taskData.state);
-                    context.reloadState(draft);
+                    context.reloadInnerState(draft);
                 }
                 console.log('DO RESET DISPLAY');
-                context.resetDisplay();
+                context.redrawDisplay();
             }
 
             if (taskData) {
@@ -369,7 +369,7 @@ export default function (bundle: Bundle) {
 
             const context = quickAlgoLibraries.getContext(null, state.replay);
             context.resetAndReloadState(currentTest, state);
-            stepperState.contextState = getCurrentImmerState(context.getCurrentState());
+            stepperState.contextState = getCurrentImmerState(context.getInnerState());
         });
     });
 }

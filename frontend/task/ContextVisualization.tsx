@@ -10,7 +10,7 @@ export function ContextVisualization() {
     const {width, height, ref} = useResizeDetector();
 
     useEffect(() => {
-        quickAlgoLibraries.resetDisplay();
+        quickAlgoLibraries.redrawDisplay();
     }, [taskLoaded]);
 
     useEffect(() => {
