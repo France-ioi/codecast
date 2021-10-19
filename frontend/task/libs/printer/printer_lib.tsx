@@ -289,7 +289,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
     };
 
-    getCurrentState() {
+    getInnerState() {
         return {
             events: this.printer.ioEvents,
             initial: this.printer.initial,
@@ -297,14 +297,14 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
     };
 
-    reloadState(data): void {
+    reloadInnerState(data): void {
         console.log('RELOADED EVENTS', data);
         this.printer.ioEvents = data.events ?? [];
         this.printer.initial = data.initial;
         this.printer.inputBuffer = data.inputBuffer;
     };
 
-    resetDisplay() {
+    redrawDisplay() {
         if (this.display) {
             console.log('make reset display');
             executionChannels.main.put({

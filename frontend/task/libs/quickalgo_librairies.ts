@@ -26,8 +26,8 @@ export class QuickAlgoLibraries {
         this.applyOnLibraries('reset', [taskInfos, appState]);
     }
 
-    resetDisplay(taskInfos = null) {
-        this.applyOnLibraries('resetDisplay', [taskInfos]);
+    redrawDisplay(taskInfos = null) {
+        this.applyOnLibraries('redrawDisplay', [taskInfos]);
     }
 
     applyOnLibraries(method, args) {
@@ -202,18 +202,18 @@ export class QuickAlgoLibrary {
     reset(taskInfos = null, appState: AppStoreReplay = null) {
         // Reset the context
         if (this.display) {
-            this.resetDisplay();
+            this.redrawDisplay();
         }
     };
 
     resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null) {
         this.reset(taskInfos, appState);
-        if (this.reloadState) {
-            this.reloadState(createDraft(this.getCurrentState()));
+        if (this.reloadInnerState) {
+            this.reloadInnerState(createDraft(this.getInnerState()));
         }
     };
 
-    resetDisplay() {
+    redrawDisplay() {
         // Reset the context display
     };
 
@@ -234,11 +234,11 @@ export class QuickAlgoLibrary {
         return null;
     };
 
-    getCurrentState() {
+    getInnerState() {
         return {};
     };
 
-    reloadState(state: any): void {
+    reloadInnerState(state: any): void {
     }
 
     getSaga(app: App) {

@@ -480,8 +480,8 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         if (reloadState) {
             // console.log('RELOAD CONTEXT STATE', draft.contextState, original(draft.contextState));
             const draft = createDraft(stepperContext.state.contextState);
-            context.reloadState(draft);
-            context.resetDisplay();
+            context.reloadInnerState(draft);
+            context.redrawDisplay();
         }
 
         const makeLibraryCall = async () => {
@@ -530,7 +530,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         }
         console.log('after make async library call');
 
-        const newStateValue = context.getCurrentState();
+        const newStateValue = context.getInnerState();
         const newState = getCurrentImmerState(newStateValue);
         console.log('NEW LIBRARY STATE', newState);
 
