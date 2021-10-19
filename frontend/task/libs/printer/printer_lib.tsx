@@ -256,7 +256,7 @@ export class PrinterLib extends QuickAlgoLibrary {
             ioEvents: [] as PrinterLineEvent[],
             initial: '',
             inputBuffer: '',
-            inputPosition: null, // if null, we keep asking new input to user.
+            inputPosition: createDraft({event: 0, pos: 0}),
         };
 
         this.customBlocks = {
@@ -291,7 +291,7 @@ export class PrinterLib extends QuickAlgoLibrary {
 
         this.innerState.ioEvents = [];
         this.innerState.inputBuffer = '';
-        this.innerState.inputPosition = null;
+        this.innerState.inputPosition = createDraft({event: 0, pos: 0});
 
         if (taskInfos) {
             this.taskInfos = taskInfos;

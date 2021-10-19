@@ -100,17 +100,25 @@ function saveByteMemoryOps(byteOps, memoryLog, address) {
 }
 
 function getByteRangeOps(byteOps, start, end) {
-    let load = -1, store = -1;
+    let load, store;
     for (let address = start; address <= end; address += 1) {
         const ops = byteOps[address];
 
         if (ops) {
-            load = Math.max(load, ops.load);
-            store = Math.max(store, ops.store);
+            load = maxDefinedRank(load, ops.load);
+            store = maxDefinedRank(store, ops.store);
         }
     }
 
     return {load, store};
+}
+
+function maxDefinedRank(r1, r2) {
+    if (r1 === undefined)
+        return r2;
+    if (r2 === undefined)
+        return r1;
+    return Math.max(r1, r2);
 }
 
 function viewValue(context, byteOps, ref) {
