@@ -7,13 +7,22 @@ export function buildCommonOptions(start, query) {
         showStack: true,
         showViews: true,
         showIO: true,
+        showDocumentation: true,
+        showFullScreen: true,
+        showMenu: true,
+        canRecord: false,
         platform: 'python',
         canChangePlatform: /sandbox|recorder|task/.test(start),
+        canChangeLanguage: true,
         controls: {},
     };
 
     if ('language' in query) {
         options.language = query.language;
+    }
+
+    if ('noLanguageChange' in query) {
+        options.canChangeLanguage = false;
     }
 
     (query.stepperControls || '').split(',').forEach(function (controlStr) {
@@ -37,6 +46,18 @@ export function buildCommonOptions(start, query) {
     }
     if ('noIO' in query) {
         options.showIO = false;
+    }
+    if ('noMenu' in query) {
+        options.showMenu = false;
+    }
+    if ('noDoc' in query) {
+        options.showDocumentation = false;
+    }
+    if ('noFullScreen' in query) {
+        options.showFullScreen = false;
+    }
+    if ('record' in query) {
+        options.canRecord = true;
     }
     if ('mode' in query) {
         /* Deprecated */
