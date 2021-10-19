@@ -310,16 +310,16 @@ export class PrinterLib extends QuickAlgoLibrary {
         }
     };
 
-    getCurrentState() {
+    getInnerState() {
         return this.innerState;
     };
 
-    reloadState(data): void {
+    reloadInnerState(data): void {
         log.getLogger('printer_lib').debug('RELOADED EVENTS', data);
         this.innerState = data;
     };
 
-    resetDisplay() {
+    redrawDisplay() {
         if (this.display) {
             log.getLogger('printer_lib').debug('make reset display');
             executionChannels.main.put({
