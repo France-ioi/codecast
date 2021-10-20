@@ -10,21 +10,15 @@ import log from "loglevel";
 
 export interface Linker {
     scope: App,
-    replayScope: App,
     actionTypes: {
         [key: string]: string
     },
     store: AppStore,
-    replayStore: AppStore,
     finalize: Function
     start: Function
-    startReplay: Function
 }
 
-export function link(rootBuilder): Linker {
-    // The global namespace map (name → value)
-    const globalScope = {replay: false} as App;
-
+export function link(rootBuilder, globalScope: App): Linker {
     // Type map (value|selector|action|view) used to stage injections.
     const typeMap = new Map();
 
@@ -56,7 +50,6 @@ export function link(rootBuilder): Linker {
             throw new Error(`linker conflict on ${name}`);
         }
         typeMap.set(name, type);
-        globalScope[name] = value;
         globalScope[name] = value;
     }
 
@@ -103,7 +96,7 @@ export function link(rootBuilder): Linker {
     rootBuilder(rootBundle, rootBundle.locals);
 
     // Seal the bundles to ensure all linking is done statically.
-    rootBundle._seal();
+    // rootBundle._seal();
 
     /* Views can depend on selector definitions, so inject them in a second phase. */
     injectAll(['action', 'value']);
@@ -115,6 +108,7 @@ export function link(rootBuilder): Linker {
         if (actionMap.has(action.type)) {
             state = actionMap.get(action.type)(state, action);
         }
+        console.log('make action', globalScope.replay, actionMap.has(action.type))
 
         return state;
     };
@@ -183,63 +177,28 @@ export function link(rootBuilder): Linker {
         devTools: true,
     })
 
-    window.store = store;
-
-    // Create the replay store
-
-    const replaySagaMiddleWare = createSagaMiddleware({
-        onError: (error) => {
-            console.error(error);
-            setImmediate(() => {
-                throw error;
-            });
-        }
-    });
-
-    const replayStore = configureStore({
-        reducer: rootReducerWithSlices,
-        preloadedState: {},
-        middleware: [replaySagaMiddleWare, userTimingMiddleware],
-        devTools: true,
-    })
-
-    window.replayStore = replayStore;
-
     function finalize(...args) {
         /* Call the deferred callbacks. */
+        console.log({actionMap})
         rootBundle._runDefers(...args);
     }
 
 
     function start(...args) {
         const rootSaga = rootBundle._saga();
+        console.log('run saga middleware', rootSaga);
 
         return sagaMiddleware.run(rootSaga, args);
     }
 
-    function startReplay(...args) {
-        const rootSaga = rootBundle._saga();
-
-        return replaySagaMiddleWare.run(rootSaga, args);
-    }
-
     globalScope.dispatch = store.dispatch;
-
-    const replayGlobalScope = {
-        ...globalScope,
-        replay: true,
-        dispatch: replayStore.dispatch,
-    }
 
     return {
         scope: globalScope as App,
-        replayScope: replayGlobalScope as App,
         actionTypes: typeForActionName,
         store: store as AppStore,
-        replayStore: replayStore as AppStore,
         finalize,
         start,
-        startReplay,
     };
 }
 

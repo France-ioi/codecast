@@ -3,14 +3,13 @@ import {
     TaskSubmissionResultPayload,
     taskSubmissionSetTestResult, taskSubmissionStartTest, taskSuccess
 } from "./task_slice";
-import {put, select} from "redux-saga/effects";
+import {delay, put, select} from "redux-saga/effects";
 import {AppStore} from "../store";
 import {Codecast} from "../index";
 import {getBufferModel} from "../buffers/selectors";
 import {TaskActionTypes} from "./index";
 import log from "loglevel";
 import {ActionTypes} from "../stepper/actionTypes";
-import {TaskTestsSelector} from "./TaskTestsSelector";
 import React from "react";
 import {TaskTestsSubmissionResultOverview} from "./TaskTestsSubmissionResultOverview";
 
@@ -65,19 +64,24 @@ class TaskSubmissionExecutor {
         if (currentSubmission.results.reduce((agg, next) => agg && next.result, true)) {
             yield put(taskSuccess(lastMessage));
         } else {
-            const error = <TaskTestsSubmissionResultOverview results={displayedResults}/>;
+            const error = {
+                element: 'task-tests-submission-results-overview',
+                props: {
+                    results: displayedResults,
+                }
+            };
 
-            yield put({type: ActionTypes.StepperDisplayError, payload: {error: error}});
+            yield put({type: ActionTypes.StepperDisplayError, payload: {error}});
         }
     }
 
     *makeBackgroundExecution(testId) {
-        const replayStore = Codecast.replayStore;
+        const backgroundStore = Codecast.environments['background'].store;
         const state: AppStore = yield select();
         const source = getBufferModel(state, 'source').document.toString();
 
         return yield new Promise(resolve => {
-            replayStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, testId, source, resolve}});
+            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, testId, source, resolve}});
         });
     }
 

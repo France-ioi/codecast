@@ -170,7 +170,7 @@ export const initialStateStepper = {
     options: {} as any, // TODO: Is this used ? If yes, put the type.
     controls: StepperControlsType.Normal,
     synchronizingAnalysis: false,
-    error: null as string | {__html: string},
+    error: null as any,
 };
 
 export type Stepper = typeof initialStateStepper;

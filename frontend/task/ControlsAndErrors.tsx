@@ -9,6 +9,7 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faFileAlt, faPencilAlt, faPlay} from "@fortawesome/free-solid-svg-icons";
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
+import {TaskTestsSubmissionResultOverview} from "./TaskTestsSubmissionResultOverview";
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -27,9 +28,13 @@ export function ControlsAndErrors() {
 
     let error = null;
     if (hasError) {
-        if (React.isValidElement(stepperError)) {
-            error = stepperError;
-        } else {
+        if (stepperError.element) {
+            switch (stepperError.element) {
+                case 'task-tests-submission-results-overview':
+                    error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
+                    break;
+            }
+        }  else {
             const stepperErrorHtml = toHtml(stepperError);
             error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
         }

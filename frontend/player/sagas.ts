@@ -268,7 +268,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
     const recordingEvents = replayContext.events;
     const events = ensureBackwardsCompatibility(recordingEvents, replayContext.recordingVersion);
     const duration = events[events.length - 1][0];
-    const replayStore = Codecast.replayStore;
+    const replayStore = Codecast.environments['replay'].store;
 
     yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}, replay: true}});
     yield call(replayStore.dispatch, taskLoad());

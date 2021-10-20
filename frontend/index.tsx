@@ -40,14 +40,15 @@ log.getLogger('python_interpreter').setLevel('info');
 log.getLogger('printer_lib').setLevel('info');
 log.getLogger('tests').setLevel('debug');
 
-interface Codecast {
+interface CodecastEnvironment {
     store: AppStore,
-    replayStore: AppStore,
-    scope: any,
-    task?: any,
-    replayTask?: any,
+    restart: Function,
+}
+
+interface Codecast {
+    environments: {[key: string]: CodecastEnvironment},
     start?: Function,
-    restart: Function
+    restartSagas?: Function,
 }
 
 export interface App {
@@ -99,33 +100,66 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
     // 'Player.Tick': true
 };
 
-const {store, replayStore, scope, replayScope, finalize, start, startReplay} = link(function(bundle: Bundle) {
-    bundle.defineAction(ActionTypes.AppInit);
-    bundle.addReducer(ActionTypes.AppInit, () => {
-        // return {};
-    });
+window.Codecast = {
+    environments: {},
+}
 
-    bundle.include(commonBundle);
-    bundle.include(playerBundle);
-    bundle.include(recorderBundle);
-    bundle.include(editorBundle);
-    bundle.include(statisticsBundle);
+for (let environment of ['main', 'replay', 'background']) {
+    const initScope = {replay: 'main' !== environment} as App;
 
-    if (process.env['NODE_ENV'] === 'development') {
-        bundle.addEarlyReducer(function(state: AppStore, action): void {
-            if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
-                log.debug(state.replay || (action.payload && action.payload.replay) ? 'action on replay' : 'action', action);
-            }
+    const {store, scope, finalize, start} = link(function(bundle: Bundle) {
+        bundle.defineAction(ActionTypes.AppInit);
+        bundle.addReducer(ActionTypes.AppInit, () => {
+            // return {};
         });
+
+        bundle.include(commonBundle);
+        bundle.include(playerBundle);
+        bundle.include(recorderBundle);
+        bundle.include(editorBundle);
+        bundle.include(statisticsBundle);
+
+        if (process.env['NODE_ENV'] === 'development') {
+            bundle.addEarlyReducer(function(state: AppStore, action): void {
+                if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
+                    log.debug(`action on ${environment}`, action);
+                }
+            });
+        }
+    }, initScope);
+    finalize(scope);
+
+    let task = null;
+    const restart = () => {
+        if (null !== task) {
+            task.cancel();
+            task = null;
+        }
+        task = start(scope);
     }
-});
-finalize(scope);
 
-/* In-browser API */
-export const Codecast: Codecast = window.Codecast = {store, replayStore, scope, restart};
+    window.Codecast.environments[environment] = {store, restart};
+}
 
-/*
-  options :: {
+export const Codecast: Codecast = window.Codecast;
+Codecast.restartSagas = () => {
+    for (let [, {restart}] of Object.entries(Codecast.environments)) {
+        restart();
+    }
+}
+
+function clearUrl() {
+    const currentUrl = url.parse(document.location.href, true);
+    delete currentUrl.search;
+    delete currentUrl.query['source'];
+
+    window.history.replaceState(null, document.title, url.format(currentUrl));
+}
+
+
+/**
+ * Options :
+  {
     start: 'sandbox'|'player'|'recorder'|'editor',
     baseUrl: url,
     examplesUrl: url,
@@ -141,33 +175,11 @@ export const Codecast: Codecast = window.Codecast = {store, replayStore, scope, 
     input: string,
     token: string
   }
-*/
-
-function restart() {
-    if (Codecast.task) {
-        Codecast.task.cancel();
-        Codecast.task = null;
-    }
-    if (Codecast.replayTask) {
-        Codecast.replayTask.cancel();
-        Codecast.replayTask = null;
-    }
-
-    /* XXX Make a separate object for selectors in the linker? */
-    Codecast.task = start(scope);
-    Codecast.replayTask = startReplay(replayScope);
-}
-
-function clearUrl() {
-    const currentUrl = url.parse(document.location.href, true);
-    delete currentUrl.search;
-    delete currentUrl.query['source'];
-
-    window.history.replaceState(null, document.title, url.format(currentUrl));
-}
-
+**/
 Codecast.start = function(options) {
-    store.dispatch({type: ActionTypes.AppInit, payload: {options}});
+    const mainStore = Codecast.environments['main'].store;
+    
+    mainStore.dispatch({type: ActionTypes.AppInit, payload: {options}});
 
     // remove source from url wihtout reloading
     if (options.source) {
@@ -176,10 +188,10 @@ Codecast.start = function(options) {
     // XXX store.dispatch({type: scope.stepperConfigure, options: stepperOptions});
 
     /* Run the sagas (must be done before calling autoLogin) */
-    restart();
+    Codecast.restartSagas();
 
     if (!isLocalMode() && /editor|player|sandbox/.test(options.start)) {
-        store.dispatch({type: StatisticsActionTypes.StatisticsInitLogData});
+        mainStore.dispatch({type: StatisticsActionTypes.StatisticsInitLogData});
     }
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -192,13 +204,13 @@ Codecast.start = function(options) {
         case 'recorder':
             autoLogin();
 
-            store.dispatch({type: RecorderActionTypes.RecorderPrepare});
+            mainStore.dispatch({type: RecorderActionTypes.RecorderPrepare});
 
             appDisplay = <RecorderApp />;
 
             break;
         case 'player':
-            store.dispatch({
+            mainStore.dispatch({
                 type: PlayerActionTypes.PlayerPrepare,
                 payload: {
                     baseDataUrl: options.baseDataUrl,
@@ -214,7 +226,7 @@ Codecast.start = function(options) {
         case 'statistics':
             autoLogin();
 
-            store.dispatch({
+            mainStore.dispatch({
                 type: StatisticsActionTypes.StatisticsPrepare
             });
 
@@ -222,7 +234,7 @@ Codecast.start = function(options) {
 
             break;
         case 'sandbox':
-            store.dispatch({
+            mainStore.dispatch({
                 type: StatisticsActionTypes.StatisticsLogLoadingData
             });
 
@@ -250,7 +262,7 @@ Codecast.start = function(options) {
 
     const container = document.getElementById('react-container');
     ReactDOM.render(
-        <Provider store={store}>
+        <Provider store={mainStore}>
             <AppErrorBoundary>
                 {appDisplay}
             </AppErrorBoundary>
@@ -266,5 +278,6 @@ function autoLogin() {
         return;
     }
 
-    store.dispatch({type: CommonActionTypes.LoginFeedback, payload: {user}});
+    const mainStore = Codecast.environments['main'].store;
+    mainStore.dispatch({type: CommonActionTypes.LoginFeedback, payload: {user}});
 }
