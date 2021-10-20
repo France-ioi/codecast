@@ -40,11 +40,9 @@ import {
 import * as C from '@france-ioi/persistent-c';
 
 import {
-    buildState,
     default as ApiBundle,
     makeContext,
     performStep,
-    rootStepperSaga,
     StepperContext, StepperContextParameters,
     StepperError,
 } from './api';
@@ -631,7 +629,7 @@ function* compileSucceededSaga(app: App) {
         /* Build the stepper state. This automatically runs into user source code. */
         let state: AppStore = yield select();
 
-        let stepperState = yield call(buildState, state, app.replay);
+        let stepperState = yield call(app.stepperApi.buildState, state, app.replay);
         console.log('[stepper init] current state', state.task.state, 'context state', stepperState.contextState);
         yield put(taskUpdateState(stepperState.contextState));
         const newState = yield select();
@@ -657,9 +655,9 @@ function* recorderStoppingSaga() {
     yield put({type: ActionTypes.StepperExit});
 }
 
-function* stepperEnabledSaga(args) {
+function* stepperEnabledSaga(app: App) {
     /* Start the new stepper task. */
-    currentStepperTask = yield fork(rootStepperSaga, args);
+    currentStepperTask = yield fork(app.stepperApi.rootStepperSaga, app);
 }
 
 export function* stepperDisabledSaga(action, leaveContext = false) {
@@ -842,6 +840,7 @@ function* stepperStepSaga(app: App, action) {
                 quickAlgoCallsLogger,
                 replay: state.replay,
                 speed: action.payload.useSpeed && !action.payload.immediate ? stepper.speed : null,
+                executeEffects: app.stepperApi.executeEffects,
             });
             console.log('execution stepper context', stepperContext);
 

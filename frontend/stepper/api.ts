@@ -43,6 +43,7 @@ export interface StepperContext {
     makeDelay?: boolean,
     quickAlgoContext?: any,
     replay?: boolean,
+    executeEffects?: Function,
 }
 
 export interface StepperContextParameters {
@@ -54,113 +55,158 @@ export interface StepperContextParameters {
     quickAlgoCallsLogger?: Function,
     replay?: boolean,
     speed?: number,
+    executeEffects?: Function,
 }
-
-const stepperApi = {
-    onInit,
-    addSaga,
-    onEffect,
-    addBuiltin,
-};
 
 const delay = delay => new Promise((resolve) => setTimeout(resolve, delay));
 
-export type StepperApi = typeof stepperApi;
+export interface StepperApi {
+    onInit?: Function,
+    addSaga?: Function,
+    onEffect?: Function,
+    addBuiltin?: Function,
+    buildState?: any,
+    rootStepperSaga?: any,
+    executeEffects?: Function,
+}
 
 export default function(bundle: Bundle) {
-    bundle.defineValue('stepperApi', stepperApi);
-}
-
-const initCallbacks = [];
-const stepperSagas = [];
-const effectHandlers = new Map();
-const builtinHandlers = new Map();
-
-/* Register a setup callback for the stepper's initial state. */
-function onInit(callback: (stepperState: StepperState, state: AppStore) => void): void {
-    initCallbacks.push(callback);
-}
-
-/* Build a stepper state from the given init data. */
-export async function buildState(state: AppStoreReplay, replay: boolean = false): Promise<StepperState> {
-    const {platform} = state.options;
-
-    /*
-     * Call all the init callbacks. Pass the global state so the player can
-     * build stepper states without having to install the pre-computed state
-     * into the store.
-     */
-    const curStepperState: StepperState = {
-        platform
-    } as StepperState;
-    for (let callback of initCallbacks) {
-        callback(curStepperState, state, replay);
-    }
-
-    console.log('do build state');
-
-    const stepper: Stepper = {
-        ...state.stepper,
-        currentStepperState: curStepperState,
+    const stepperApi = {
+        onInit,
+        addSaga,
+        onEffect,
+        addBuiltin,
+        buildState,
+        rootStepperSaga,
     };
 
-    /* Run until in user code */
-    const stepperContext = makeContext(stepper, {
-        interactBefore,
-        interactAfter,
-        replay,
-    });
+    const initCallbacks = [];
+    const stepperSagas = [];
+    const effectHandlers = new Map();
+    const builtinHandlers = new Map();
 
-    if (stepperContext.state.platform === 'python') {
-        return stepperContext.state;
-    } else {
-        while (!inUserCode(stepperContext.state)) {
-            /* Mutate the stepper context to advance execution by a single step. */
-            const effects = C.step(stepperContext.state.programState);
-            if (effects) {
-                await executeEffects(stepperContext, effects[Symbol.iterator]());
-            }
+    /* Register a setup callback for the stepper's initial state. */
+    function onInit(callback: (stepperState: StepperState, state: AppStore) => void): void {
+        initCallbacks.push(callback);
+    }
+
+    /* Register a saga to run inside the stepper task. */
+    function addSaga(saga): void {
+        stepperSagas.push(saga);
+    }
+
+    /* The root stepper saga does a parallel call of registered stepper sagas. */
+    function* rootStepperSaga(...args) {
+        yield all(stepperSagas.map(saga => call(saga, ...args)));
+    }
+
+    /* An effect is a generator that may alter the stepperContext/state/programState, and
+       yield further effects. */
+    function onEffect(name: string, handler: (stepperContext: StepperContext, ...args) => void): void {
+        /* TODO: guard against duplicate effects? allow multiple handlers for a single effect? */
+        effectHandlers.set(name, handler);
+    }
+
+    /* Register a builtin. A builtin is a generator that yields effects. */
+    function addBuiltin(name: string, handler: (stepperContext: StepperContext, ...args) => void): void {
+        /* TODO: guard against duplicate builtins */
+        builtinHandlers.set(name, handler);
+    }
+
+
+    /* Build a stepper state from the given init data. */
+    async function buildState(state: AppStoreReplay, replay: boolean = false): Promise<StepperState> {
+        const {platform} = state.options;
+
+        /*
+         * Call all the init callbacks. Pass the global state so the player can
+         * build stepper states without having to install the pre-computed state
+         * into the store.
+         */
+        const curStepperState: StepperState = {
+            platform
+        } as StepperState;
+        for (let callback of initCallbacks) {
+            callback(curStepperState, state, replay);
         }
 
-        return stepperContext.state;
-    }
+        console.log('do build state');
 
-    function interactBefore() {
-        return Promise.resolve(true);
-    }
+        const stepper: Stepper = {
+            ...state.stepper,
+            currentStepperState: curStepperState,
+        };
 
-    function interactAfter({saga}) {
-        return new Promise((resolve, reject) => {
-            if (saga) {
-                return reject(new StepperError('error', 'cannot interact in buildState'));
+        /* Run until in user code */
+        const stepperContext = makeContext(stepper, {
+            interactBefore,
+            interactAfter,
+            replay,
+        });
+
+        if (stepperContext.state.platform === 'python') {
+            return stepperContext.state;
+        } else {
+            while (!inUserCode(stepperContext.state)) {
+                /* Mutate the stepper context to advance execution by a single step. */
+                const effects = C.step(stepperContext.state.programState);
+                if (effects) {
+                    await executeEffects(stepperContext, effects[Symbol.iterator]());
+                }
             }
 
-            resolve(true);
-        });
+            return stepperContext.state;
+        }
+
+        function interactBefore() {
+            return Promise.resolve(true);
+        }
+
+        function interactAfter({saga}) {
+            return new Promise((resolve, reject) => {
+                if (saga) {
+                    return reject(new StepperError('error', 'cannot interact in buildState'));
+                }
+
+                resolve(true);
+            });
+        }
     }
-}
 
-/* Register a saga to run inside the stepper task. */
-function addSaga(saga): void {
-    stepperSagas.push(saga);
-}
+    async function executeEffects(stepperContext: StepperContext, iterator) {
+        let lastResult;
+        while (true) {
+            /* Pull the next effect from the builtin's iterator. */
+            const {done, value} = iterator.next(lastResult);
+            if (done) {
+                return value;
+            }
+            const name = value[0];
+            if (name === 'interact') {
+                lastResult = await stepperContext.interactAfter(value[1] || {});
+            } else if (name === 'promise') {
+                console.log('await promise');
+                lastResult = await value[1];
+                console.log('promise result', lastResult);
+            } else if (name === 'builtin') {
+                const builtin = value[1];
+                if (!builtinHandlers.has(builtin)) {
+                    throw new StepperError('error', `unknown builtin ${builtin}`);
+                }
 
-/* The root stepper saga does a parallel call of registered stepper sagas. */
-export function* rootStepperSaga(...args) {
-    yield all(stepperSagas.map(saga => call(saga, ...args)));
-}
+                lastResult = await executeEffects(stepperContext, builtinHandlers.get(builtin)(stepperContext, ...value.slice(2)));
+            } else {
+                /* Call the effect handler, feed the result back into the iterator. */
+                if (!effectHandlers.has(name)) {
+                    throw new StepperError('error', `unhandled effect ${name}`);
+                }
 
-/* An effect is a generator that may alter the stepperContext/state/programState, and
-   yield further effects. */
-function onEffect(name: string, handler: (stepperContext: StepperContext, ...args) => void): void {
-    /* TODO: guard against duplicate effects? allow multiple handlers for a single effect? */
-    effectHandlers.set(name, handler);
-}
+                lastResult = await executeEffects(stepperContext, effectHandlers.get(name)(stepperContext, ...value.slice(1)));
+            }
+        }
+    }
 
-/* Register a builtin. A builtin is a generator that yields effects. */
-function addBuiltin(name: string, handler: (stepperContext: StepperContext, ...args) => void): void {
-    /* TODO: guard against duplicate builtins */
-    builtinHandlers.set(name, handler);
+    bundle.defineValue('stepperApi', stepperApi);
 }
 
 function getNodeStartRow(stepperState: StepperState) {
@@ -236,39 +282,6 @@ function resetControls(controls) {
     return initialStepperStateControls;
 }
 
-async function executeEffects(stepperContext: StepperContext, iterator) {
-    let lastResult;
-    while (true) {
-        /* Pull the next effect from the builtin's iterator. */
-        const {done, value} = iterator.next(lastResult);
-        if (done) {
-            return value;
-        }
-        const name = value[0];
-        if (name === 'interact') {
-            lastResult = await stepperContext.interactAfter(value[1] || {});
-        } else if (name === 'promise') {
-            console.log('await promise');
-            lastResult = await value[1];
-            console.log('promise result', lastResult);
-        } else if (name === 'builtin') {
-            const builtin = value[1];
-            if (!builtinHandlers.has(builtin)) {
-                throw new StepperError('error', `unknown builtin ${builtin}`);
-            }
-
-            lastResult = await executeEffects(stepperContext, builtinHandlers.get(builtin)(stepperContext, ...value.slice(2)));
-        } else {
-            /* Call the effect handler, feed the result back into the iterator. */
-            if (!effectHandlers.has(name)) {
-                throw new StepperError('error', `unhandled effect ${name}`);
-            }
-
-            lastResult = await executeEffects(stepperContext, effectHandlers.get(name)(stepperContext, ...value.slice(1)));
-        }
-    }
-}
-
 async function executeSingleStep(stepperContext: StepperContext) {
     if (isStuck(stepperContext.state)) {
         throw new StepperError('stuck', 'execution cannot proceed');
@@ -292,7 +305,7 @@ async function executeSingleStep(stepperContext: StepperContext) {
         console.log('AFTER FINAL INTERACT');
     } else {
         const effects = C.step(stepperContext.state.programState);
-        await executeEffects(stepperContext, effects[Symbol.iterator]());
+        await stepperContext.executeEffects(stepperContext, effects[Symbol.iterator]());
 
         /* Update the current position in source code. */
         const position = getNodeStartRow(stepperContext.state);
