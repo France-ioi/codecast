@@ -27,8 +27,8 @@ export const playerReset = (
 export default function(bundle: Bundle) {
     bundle.include(playerSagas);
 
-    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {replay}}) => {
-        state.replay = !!replay;
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {environment}}) => {
+        state.environment = environment ? environment : 'main';
         state.player = {...initialStatePlayer};
 
         playerClear(state);

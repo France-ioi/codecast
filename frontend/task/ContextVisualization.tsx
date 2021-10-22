@@ -17,7 +17,7 @@ export function ContextVisualization() {
     }, [taskLoaded]);
 
     useEffect(() => {
-        const context = quickAlgoLibraries.getContext(null, false);
+        const context = quickAlgoLibraries.getContext(null, 'main');
         if (context) {
             context.updateScale();
         }

@@ -83,9 +83,9 @@ export interface AppStoreReplay {
     task: TaskState,
 
     options: CodecastOptions,
+    environment: string,
 
     stopped: boolean,
-    replay: boolean,
 }
 
 export interface AppAction extends Action {
@@ -110,7 +110,6 @@ export interface AppStore extends Store, AppStoreReplay {
     vumeterElement: any,
     task: TaskState,
     layout: LayoutState,
-    replay: boolean,
 
     // TODO: Put the following in a "window" attribute instead of at the root of the store
     mainViewGeometry: typeof mainViewGeometries[0],

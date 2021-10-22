@@ -70,7 +70,7 @@ export default function(bundle: Bundle) {
     }, buffers.sliding(3));
 
     bundle.addSaga(function* monitorFullscreen(app: App) {
-        if (app.replay) {
+        if ('main' !== app.environment) {
             return;
         }
 

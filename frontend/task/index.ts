@@ -76,13 +76,13 @@ if (!String.prototype.format) {
 
 function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
     let state: AppStore = yield select();
-    let context = quickAlgoLibraries.getContext(null, state.replay);
-    console.log('Create a context', context, state.replay);
+    let context = quickAlgoLibraries.getContext(null, state.environment);
+    console.log('Create a context', context, state.environment);
     if (context) {
         context.unload();
     }
 
-    const display = !state.replay;
+    const display = 'main' === state.environment;
 
     const currentTask = yield select(state => state.task.currentTask);
     const currentLevel = yield select(state => state.task.currentLevel);
@@ -101,27 +101,27 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
             const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
             try {
                 contextLib = contextFactory(display, levelGridInfos);
-                quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context, state.replay);
+                quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context, state.environment);
             } catch (e) {
                 console.error("Cannot create context", e);
                 contextLib = new QuickAlgoLibrary(display, levelGridInfos);
-                quickAlgoLibraries.addLibrary(contextLib, 'default', state.replay);}
+                quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);}
             }
         }
     }
     if (!contextLib) {
         try {
             const contextLib = new PrinterLib(display, levelGridInfos);
-            quickAlgoLibraries.addLibrary(contextLib, 'printer', state.replay);
+            quickAlgoLibraries.addLibrary(contextLib, 'printer', state.environment);
         } catch (e) {
             console.error("Cannot create context", e);
             const contextLib = new QuickAlgoLibrary(display, levelGridInfos);
-            quickAlgoLibraries.addLibrary(contextLib, 'default', state.replay);
+            quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);
         }
     }
 
     const testData = state.task.taskTests[state.task.currentTestId].data;
-    context = quickAlgoLibraries.getContext(null, state.replay);
+    context = quickAlgoLibraries.getContext(null, state.environment);
     context.resetAndReloadState(testData, state);
 }
 
@@ -145,10 +145,7 @@ export function getAutocompletionParameters (context, currentLevel: number): Aut
     };
 }
 
-let oldSagasTasks = {
-    main: null,
-    replay: null,
-};
+let oldSagasTasks = {};
 
 function* taskLoadSaga(app: App, action) {
     const urlParameters = new URLSearchParams(window.location.search);
@@ -175,25 +172,25 @@ function* taskLoadSaga(app: App, action) {
 
     console.log({testId, tests});
 
-    if (oldSagasTasks[app.replay ? 'replay' : 'main']) {
+    if (oldSagasTasks[app.environment]) {
         // Unload task first
-        yield cancel(oldSagasTasks[app.replay ? 'replay' : 'main']);
+        yield cancel(oldSagasTasks[app.environment]);
         yield put(taskUnload());
     }
 
-    let context = quickAlgoLibraries.getContext(null, state.replay);
+    let context = quickAlgoLibraries.getContext(null, state.environment);
     if (!context || (action.payload && action.payload.reloadContext)) {
         yield call(createContext, quickAlgoLibraries);
     }
 
     const sagas = quickAlgoLibraries.getSagas(app);
-    oldSagasTasks[app.replay ? 'replay' : 'main'] = yield fork(function* () {
+    oldSagasTasks[app.environment] = yield fork(function* () {
         yield all(sagas);
     });
 
     yield call(handleLibrariesEventListenerSaga, app);
 
-    console.log('task loaded', app.replay);
+    console.log('task loaded', app.environment);
     yield put(taskLoaded());
 }
 
@@ -209,7 +206,7 @@ function* handleLibrariesEventListenerSaga(app: App) {
             });
         },
         dispatch: app.dispatch,
-        quickAlgoContext: quickAlgoLibraries.getContext(null, app.replay),
+        quickAlgoContext: quickAlgoLibraries.getContext(null, app.environment),
     };
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
@@ -219,7 +216,7 @@ function* handleLibrariesEventListenerSaga(app: App) {
     for (let [eventName, {module, method}] of Object.entries(listeners)) {
         console.log({eventName, method});
 
-        if (!app.replay) {
+        if ('main' === app.environment) {
             app.recordApi.on(eventName, function* (addEvent, {payload}) {
                 yield call(addEvent, eventName, payload);
             });
@@ -238,7 +235,7 @@ function* handleLibrariesEventListenerSaga(app: App) {
             const state = yield select();
             yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
                 console.log('exec done, update task state');
-                const context = quickAlgoLibraries.getContext(null, state.replay);
+                const context = quickAlgoLibraries.getContext(null, state.environment);
                 const contextState = context.getInnerState();
                 console.log('get new state', contextState);
             });
@@ -250,7 +247,7 @@ function* taskRunExecution(app: App, {type, payload}) {
     console.log('START RUN EXECUTION', type, payload);
     const {testId, tests, options, source, resolve} = payload;
 
-    yield put({type: AppActionTypes.AppInit, payload: {options: {...options}, replay: true}});
+    yield put({type: AppActionTypes.AppInit, payload: {options: {...options}, environment: 'background'}});
     yield put({type: BufferActionTypes.BufferLoad, buffer: 'source', text: source});
     yield put(taskLoad({testId, tests}));
     yield take(taskLoaded.type);
@@ -318,7 +315,7 @@ export default function (bundle: Bundle) {
 
         yield takeEvery(ActionTypes.StepperExit, function* () {
             const state = yield select();
-            const context = quickAlgoLibraries.getContext(null, state.replay);
+            const context = quickAlgoLibraries.getContext(null, state.environment);
             if (context) {
                 context.resetAndReloadState(state.task.currentTest, state);
                 console.log('put task reset done to true');
@@ -353,7 +350,7 @@ export default function (bundle: Bundle) {
 
         yield takeEvery(updateCurrentTestId.type, function* () {
             const state: AppStore = yield select();
-            const context = quickAlgoLibraries.getContext(null, state.replay);
+            const context = quickAlgoLibraries.getContext(null, state.environment);
             console.log('update current test', context);
 
             // Save context state for the test we have just left
@@ -416,7 +413,7 @@ export default function (bundle: Bundle) {
         app.replayApi.onReset(function* (instant: PlayerInstant, quick) {
             const taskData = instant.state.task;
 
-            const context = quickAlgoLibraries.getContext(null, false);
+            const context = quickAlgoLibraries.getContext(null, 'main');
 
             console.log('TASK REPLAY API RESET', instant.event, taskData);
             if (instant.event[1] === 'compile.success') {
@@ -425,7 +422,7 @@ export default function (bundle: Bundle) {
                 const currentTest = taskData.taskTests[taskData.currentTestId].data;
                 console.log('stepper init, current test', currentTest);
 
-                const context = quickAlgoLibraries.getContext(null, false);
+                const context = quickAlgoLibraries.getContext(null, 'main');
                 context.resetAndReloadState(currentTest, instant.state);
             }
 
@@ -478,7 +475,7 @@ export default function (bundle: Bundle) {
 
             console.log('stepper init, current test', currentTest);
 
-            const context = quickAlgoLibraries.getContext(null, state.replay);
+            const context = quickAlgoLibraries.getContext(null, state.environment);
             context.resetAndReloadState(currentTest, state);
             stepperState.contextState = getCurrentImmerState(context.getInnerState());
         });

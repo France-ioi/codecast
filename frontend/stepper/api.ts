@@ -41,7 +41,7 @@ export interface StepperContext {
     unixNextStepCondition?: 0,
     makeDelay?: boolean,
     quickAlgoContext?: any,
-    replay?: boolean,
+    environment?: string,
     executeEffects?: Function,
 }
 
@@ -52,7 +52,7 @@ export interface StepperContextParameters {
     onStepperDone?: Function,
     dispatch?: Function,
     quickAlgoCallsLogger?: Function,
-    replay?: boolean,
+    environment?: string,
     speed?: number,
     executeEffects?: Function,
 }
@@ -114,7 +114,7 @@ export default function(bundle: Bundle) {
 
 
     /* Build a stepper state from the given init data. */
-    async function buildState(state: AppStoreReplay, replay: boolean = false): Promise<StepperState> {
+    async function buildState(state: AppStoreReplay, environment: string): Promise<StepperState> {
         const {platform} = state.options;
 
         /*
@@ -126,7 +126,7 @@ export default function(bundle: Bundle) {
             platform
         } as StepperState;
         for (let callback of initCallbacks) {
-            callback(curStepperState, state, replay);
+            callback(curStepperState, state, environment);
         }
 
         console.log('do build state');
@@ -140,7 +140,7 @@ export default function(bundle: Bundle) {
         const stepperContext = makeContext(stepper, {
             interactBefore,
             interactAfter,
-            replay,
+            environment,
         });
 
         if (stepperContext.state.platform === 'python') {
@@ -223,7 +223,7 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, dispatch, quickAlgoCallsLogger, replay, speed}: StepperContextParameters): StepperContext {
+export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, dispatch, quickAlgoCallsLogger, environment, speed}: StepperContextParameters): StepperContext {
     /**
      * We create a new state object here instead of mutating the state. This is intended.
      */
@@ -248,8 +248,8 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
         state: {
             ...state,
         },
-        quickAlgoContext: quickAlgoLibraries.getContext(null, replay),
-        replay,
+        quickAlgoContext: quickAlgoLibraries.getContext(null, environment),
+        environment,
     };
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);

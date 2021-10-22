@@ -18,7 +18,7 @@ interface EditorStateToProps {
 }
 
 function mapStateToProps(state: AppStore): EditorStateToProps {
-    const context = quickAlgoLibraries.getContext(null, false);
+    const context = quickAlgoLibraries.getContext(null, 'main');
     const autocompletionParameters = context ? getAutocompletionParameters(context, state.task.currentLevel) : null;
 
     return {

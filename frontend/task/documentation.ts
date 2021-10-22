@@ -90,7 +90,7 @@ function* documentationLoadSaga(standalone: boolean) {
         return;
     }
 
-    let context = quickAlgoLibraries.getContext(null, false);
+    let context = quickAlgoLibraries.getContext(null, 'main');
     if (context.display && context.infos.conceptViewer) {
         const conceptViewer = context.infos.conceptViewer;
         let allConcepts = context.getConceptList();

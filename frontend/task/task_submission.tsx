@@ -24,7 +24,7 @@ class TaskSubmissionExecutor {
         }
 
         let currentSubmission = yield select((state: AppStore) => state.task.currentSubmission);
-        const replay = yield select((state: AppStore) => state.replay);
+        const environment = yield select((state: AppStore) => state.environment);
         if (!currentSubmission) {
             yield put(taskCreateSubmission());
         }
@@ -45,14 +45,14 @@ class TaskSubmissionExecutor {
             }
 
             yield put(taskSubmissionStartTest(testIndex));
-            if (!replay) {
+            if ('main' === environment) {
                 yield delay(0);
             }
             log.getLogger('tests').debug('[Tests] Start new execution for test', testIndex);
             const payload: TaskSubmissionResultPayload = yield this.makeBackgroundExecution(testIndex);
             log.getLogger('tests').debug('[Tests] End execution, result=', payload);
             yield put(taskSubmissionSetTestResult(payload));
-            if (!replay) {
+            if ('main' === environment) {
                 yield delay(0);
             }
             lastMessage = payload.message;

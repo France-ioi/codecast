@@ -271,7 +271,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
     const duration = events[events.length - 1][0];
     const replayStore = Codecast.environments['replay'].store;
 
-    yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}, replay: true}});
+    yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}, environment: 'replay'}});
     yield call(replayStore.dispatch, taskLoad());
 
     for (pos = 0; pos < events.length; pos += 1) {
@@ -290,7 +290,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
 
         // Get Redux state and context state and store them
         const instantState = createDraft(replayStore.getState());
-        const context = quickAlgoLibraries.getContext(null, true);
+        const context = quickAlgoLibraries.getContext(null, 'replay');
         instantState.task.state = getCurrentImmerState(context.getInnerState());
         instant.state = finishDraft(instantState);
 
@@ -475,7 +475,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
 
         if (instant.quickalgoLibraryCalls && instant.quickalgoLibraryCalls.length) {
             console.log('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.action).join(','));
-            const context = quickAlgoLibraries.getContext(null, false);
+            const context = quickAlgoLibraries.getContext(null, 'main');
             // We start from the end state of the last instant, and apply the calls that happened during this instant
             const stepperState = instants[instantIndex-1].state.stepper;
             if (context) {
@@ -490,7 +490,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                         });
                     },
                     dispatch: app.dispatch,
-                    replay: app.replay,
+                    environment: app.environment,
                 });
 
                 const executor = stepperContext.quickAlgoCallsExecutor;

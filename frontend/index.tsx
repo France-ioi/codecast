@@ -56,7 +56,7 @@ export interface App {
     replayApi: ReplayApi,
     stepperApi: StepperApi,
     dispatch: Function,
-    replay: boolean,
+    environment: string,
 }
 
 declare global {
@@ -106,7 +106,7 @@ window.Codecast = {
 }
 
 for (let environment of ['main', 'replay', 'background']) {
-    const initScope = {replay: 'main' !== environment} as App;
+    const initScope = {environment} as App;
 
     const {store, scope, finalize, start} = link(function(bundle: Bundle) {
         bundle.defineAction(ActionTypes.AppInit);

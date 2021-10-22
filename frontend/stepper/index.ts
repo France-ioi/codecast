@@ -487,7 +487,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         enrichStepperState(stepperContext.state, 'Stepper.Progress', stepperContext);
     }
 
-    const context = quickAlgoLibraries.getContext(null, state.replay);
+    const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context && context.getInnerState) {
         const contextState = context.getInnerState();
         state.task.state = getCurrentImmerState(contextState);
@@ -629,7 +629,7 @@ function* compileSucceededSaga(app: App) {
         /* Build the stepper state. This automatically runs into user source code. */
         let state: AppStore = yield select();
 
-        let stepperState = yield call(app.stepperApi.buildState, state, app.replay);
+        let stepperState = yield call(app.stepperApi.buildState, state, app.environment);
         console.log('[stepper init] current state', state.task.state, 'context state', stepperState.contextState);
         const newState = yield select();
         console.log('[stepper init] new state', newState.task.state);
@@ -716,7 +716,7 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
     }
 
     /* Run the provided saga if any, or wait until next animation frame. */
-    const saga = arg.saga || (stepperContext.replay ? null : stepperWaitSaga);
+    const saga = arg.saga || ('main' === stepperContext.environment ? stepperWaitSaga : null);
     let completed = true;
     let interrupted = false;
     if (saga) {
@@ -741,7 +741,7 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
     stepperContext.state = {...getCurrentStepperState(state)};
 
     // Update speed if we use speed
-    const context = quickAlgoLibraries.getContext(null, state.replay);
+    const context = quickAlgoLibraries.getContext(null, state.environment);
     if (null !== stepperContext.speed) {
         stepperContext.speed = getStepper(state).speed;
         if (context && context.changeDelay) {
@@ -782,7 +782,7 @@ function* stepperInterruptSaga(app: App) {
         return;
     }
 
-    const stepperContext = createStepperContext(getStepper(state), {dispatch: app.dispatch, replay: app.replay});
+    const stepperContext = createStepperContext(getStepper(state), {dispatch: app.dispatch, environment: app.environment});
 
     if (stepperContext.state.platform === 'python') {
         yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
@@ -791,7 +791,7 @@ function* stepperInterruptSaga(app: App) {
     yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
 }
 
-function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quickAlgoCallsLogger, replay, speed}: StepperContextParameters) {
+function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quickAlgoCallsLogger, environment, speed}: StepperContextParameters) {
     let stepperContext = makeContext(stepper, {
         interactBefore: (arg) => {
             return new Promise((resolve, reject) => {
@@ -814,7 +814,7 @@ function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quic
         waitForProgress,
         quickAlgoCallsLogger,
         dispatch,
-        replay,
+        environment,
         speed,
     });
 
@@ -836,7 +836,7 @@ function* stepperStepSaga(app: App, action) {
                 dispatch: app.dispatch,
                 waitForProgress,
                 quickAlgoCallsLogger,
-                replay: state.replay,
+                environment: state.environment,
                 speed: action.payload.useSpeed && !action.payload.immediate ? stepper.speed : null,
                 executeEffects: app.stepperApi.executeEffects,
             });
@@ -846,7 +846,7 @@ function* stepperStepSaga(app: App, action) {
                 action.payload.setStepperContext(stepperContext);
             }
 
-            console.log('[stepper.step] Creating new stepper context', stepperContext, stepperContext.resume, state.replay, stepperContext.replay);
+            console.log('[stepper.step] Creating new stepper context', stepperContext, stepperContext.resume, state.environment, stepperContext.environment);
 
             if (stepperContext.state.platform === 'python') {
                 yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
@@ -878,7 +878,7 @@ function* stepperStepSaga(app: App, action) {
 
             if (stepperContext.state.isFinished) {
                 console.log('check end condition');
-                const taskContext = quickAlgoLibraries.getContext(null, state.replay);
+                const taskContext = quickAlgoLibraries.getContext(null, state.environment);
                 if (taskContext && taskContext.infos.checkEndCondition) {
                     try {
                         taskContext.infos.checkEndCondition(taskContext, true);
@@ -919,7 +919,7 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
     if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
         console.log('Run python from beginning is necessary');
         const state = yield select();
-        const taskContext = quickAlgoLibraries.getContext(null, state.replay);
+        const taskContext = quickAlgoLibraries.getContext(null, state.environment);
         yield put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: true});
 
         taskContext.display = false;
@@ -1030,7 +1030,7 @@ function postLink(app: App) {
         yield put({type: ActionTypes.StepperExit});
         replayContext.addSaga(function* () {
             console.log('make reset saga');
-            const context = quickAlgoLibraries.getContext(null, false);
+            const context = quickAlgoLibraries.getContext(null, 'main');
             if (context) {
                 const state = yield select();
                 context.resetAndReloadState(state.task.currentTest, state);
@@ -1184,7 +1184,7 @@ function postLink(app: App) {
         yield put({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
 
         replayContext.addSaga(function* () {
-            const context = quickAlgoLibraries.getContext(null, false);
+            const context = quickAlgoLibraries.getContext(null, 'main');
             if (context && context.changeDelay) {
                 context.changeDelay(255 - speed);
             }

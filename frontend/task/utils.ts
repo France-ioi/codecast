@@ -67,13 +67,13 @@ export function getAvailableModules(context) {
     }
 }
 
-export function checkCompilingCode(code, getMessage, platform: string, replay: boolean) {
+export function checkCompilingCode(code, getMessage, platform: string, environment: string) {
     if (!code) {
         throw getMessage('EMPTY_PROGRAM');
     }
 
     if ('python' === platform) {
-        const context = quickAlgoLibraries.getContext(null, replay);
+        const context = quickAlgoLibraries.getContext(null, environment);
         if (context) {
             const availableModules = getAvailableModules(context);
             for (let availableModule of availableModules) {

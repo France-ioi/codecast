@@ -11,16 +11,12 @@ import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
 
-const pythonInterpreterChannels = {
-    main: channel(),
-    replay: channel(),
-}
-
 export default function(bundle: Bundle) {
-    bundle.addSaga(function* watchPythonInterpreterChannel(app: App) {
-        let channel = pythonInterpreterChannels[app.replay ? 'replay' : 'main'];
+    const pythonInterpreterChannel = channel();
+
+    bundle.addSaga(function* watchPythonInterpreterChannel() {
         while (true) {
-            const action = yield take(channel);
+            const action = yield take(pythonInterpreterChannel);
             yield put(action);
         }
     });
@@ -44,14 +40,14 @@ export default function(bundle: Bundle) {
             yield put({type: ActionTypes.StackViewPathToggle, payload: action});
         });
 
-        stepperApi.onInit(function(stepperState: StepperState, state: AppStore, replay: boolean = false) {
+        stepperApi.onInit(function(stepperState: StepperState, state: AppStore, environment: string) {
             const {platform} = state.options;
             const source = state.buffers['source'].model.document.toString();
-            const context = quickAlgoLibraries.getContext(null, replay);
+            const context = quickAlgoLibraries.getContext(null, environment);
 
-            console.log('init stepper', replay);
+            console.log('init stepper', environment);
             if (platform === 'python') {
-                let channel = pythonInterpreterChannels[replay ? 'replay' : 'main'];
+                let channel = pythonInterpreterChannel;
 
                 context.onError = (diagnostics) => {
                     console.log('context error', diagnostics);
