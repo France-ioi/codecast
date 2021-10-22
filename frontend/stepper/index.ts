@@ -1074,6 +1074,15 @@ function postLink(app: App) {
         console.log('[stepper.step] before yield promise', promise);
         yield promise;
         console.log('[stepper.step] after yield promise', promise);
+
+        replayContext.addSaga(function* () {
+            const speed = yield select((state: AppStore) => state.stepper.speed);
+            console.log('[stepper.step] set speed', speed);
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            if (context && context.changeDelay) {
+                context.changeDelay(255 - speed);
+            }
+        });
     });
 
     recordApi.on(ActionTypes.StepperInteractBefore, function* (addEvent) {
