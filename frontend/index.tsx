@@ -83,6 +83,7 @@ declare global {
         Channel: any,
         DelayFactory: any,
         RaphaelFactory: any,
+        jQuery: any,
     }
 }
 

@@ -20,11 +20,20 @@ export function TaskTestsSelector() {
         dispatch(updateCurrentTestId(index));
     }
 
-    const existingImages = currentTask.gridInfos.images.map(module => module.default);
+    const existingImages = currentTask.gridInfos && currentTask.gridInfos.images ? currentTask.gridInfos.images.map(module => module.default) : [];
 
     const getTestThumbNail = (testIndex) => {
-        const file = `test_${taskLevels[currentLevel]}_${testIndex + 1}.`;
-        const element = existingImages.find(image => image.indexOf(file) !== -1);
+        const file = `test_${taskLevels[currentLevel]}_${testIndex + 1}`;
+        const element = existingImages.find(image => image.indexOf(file + '.') !== -1);
+        if (element) {
+            return element;
+        }
+
+        // Lib usage behaviour: put images in html
+        const levelTestImg = window.jQuery(`img#${file}`);
+        if (levelTestImg.length) {
+            return levelTestImg.attr('src');
+        }
 
         return element ? element : null;
     };

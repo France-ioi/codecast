@@ -77,7 +77,7 @@ class TaskSubmissionExecutor {
                 }
             };
 
-            yield stepperDisplayError(error);
+            yield put(stepperDisplayError(error));
         }
     }
 
