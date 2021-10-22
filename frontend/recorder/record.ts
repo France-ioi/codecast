@@ -129,6 +129,10 @@ export default function(bundle: Bundle) {
             let done = false;
             while (!done) {
                 const recordAction = yield take(channel);
+                if (recordAction.payload && false === recordAction.payload.record) {
+                    console.log('skip record');
+                    continue;
+                }
                 const state: AppStore = yield select();
                 const recorder = state.recorder;
                 const status = recorder.status;

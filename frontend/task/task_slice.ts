@@ -29,8 +29,9 @@ export interface TaskState {
     state?: any,
     success?: boolean,
     successMessage?: string,
-    taskTests: any[],
+    taskTests: TaskTest[],
     currentTestId?: number,
+    previousTestId?: number,
     currentSubmission?: TaskSubmission,
     inputNeeded?: boolean,
     inputs?: any[],
@@ -47,11 +48,22 @@ export interface TaskSubmissionResultPayload {
     message?: string,
 }
 
+export interface UpdateTestContextStatePayload {
+    testId: number,
+    contextState: any,
+}
+
+export interface TaskTest {
+    data: any,
+    contextState: any,
+}
+
 export const taskInitialState = {
     currentTask: null,
     currentLevel: 1,
     taskTests: [],
     currentTestId: null,
+    previousTestId: null,
     currentSubmission: null,
     recordingEnabled: false,
     resetDone: true,
@@ -94,22 +106,29 @@ export const taskSlice = createSlice({
             state.resetDone = action.payload;
         },
         updateTaskTests(state: TaskState, action: PayloadAction<any[]>) {
-            state.taskTests = action.payload;
+            state.taskTests = action.payload.map(testData => ({
+                data: testData,
+                contextState: null,
+            } as TaskTest));
         },
         updateCurrentTestId(state: TaskState, action: PayloadAction<number>) {
+            state.previousTestId = state.currentTestId;
             state.currentTestId = action.payload;
         },
         updateCurrentTest(state: TaskState, action: PayloadAction<object>) {
             if (state.currentTestId in state.taskTests) {
-                let currentTest = state.taskTests[state.currentTestId];
+                let currentTest = state.taskTests[state.currentTestId].data;
 
-                state.taskTests[state.currentTestId] = {
+                state.taskTests[state.currentTestId].data = {
                     ...currentTest,
                     ...action.payload,
                 };
             } else {
-                state.taskTests[state.currentTestId] = action.payload;
+                state.taskTests[state.currentTestId].data = action.payload;
             }
+        },
+        updateTestContextState(state: TaskState, action: PayloadAction<UpdateTestContextStatePayload>) {
+            state.taskTests[action.payload.testId].contextState = action.payload.contextState;
         },
         taskInputNeeded(state: TaskState, action: PayloadAction<boolean>) {
             state.inputNeeded = action.payload;
@@ -118,25 +137,17 @@ export const taskSlice = createSlice({
         taskInputEntered(state: TaskState, action: PayloadAction<TaskInputEnteredPayload>) {
             state.inputNeeded = false;
             if (action.payload.clearInput) {
-                console.log('pop input', state.inputs.join(','));
                 state.inputs.shift();
-                console.log('pop input2', state.inputs.join(','));
             }
         },
         taskLoaded(state: TaskState) {
             state.loaded = true;
-        },
-        taskUpdateState(state: TaskState, action: PayloadAction<any>) {
-            state.state = action.payload;
         },
         taskClearInputs(state: TaskState) {
             state.inputs = [];
         },
         taskAddInput(state: TaskState, action: PayloadAction<any>) {
             state.inputs.push(action.payload);
-        },
-        taskSetInputs(state: TaskState, action: PayloadAction<any[]>) {
-            state.inputs = action.payload;
         },
         taskCreateSubmission(state: TaskState) {
             state.currentSubmission = {
@@ -167,15 +178,14 @@ export const {
     taskInputNeeded,
     taskInputEntered,
     taskResetDone,
-    taskUpdateState,
     taskLoaded,
     currentTaskChangePredefined,
     currentTaskChange,
     taskAddInput,
-    taskSetInputs,
     taskCreateSubmission,
     taskSubmissionStartTest,
     taskSubmissionSetTestResult,
+    updateTestContextState,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

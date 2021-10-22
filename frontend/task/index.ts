@@ -18,9 +18,8 @@ import taskSlice, {
     taskResetDone,
     taskSuccess,
     taskSuccessClear,
-    taskUpdateState,
     updateCurrentTestId,
-    updateTaskTests,
+    updateTaskTests, updateTestContextState,
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
@@ -34,6 +33,7 @@ import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {isStepperInterrupting} from "../stepper/selectors";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -120,7 +120,7 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
         }
     }
 
-    const testData = state.task.taskTests[state.task.currentTestId];
+    const testData = state.task.taskTests[state.task.currentTestId].data;
     context = quickAlgoLibraries.getContext(null, state.replay);
     context.resetAndReloadState(testData, state);
 }
@@ -165,11 +165,13 @@ function* taskLoadSaga(app: App, action) {
     const currentTask = yield select(state => state.task.currentTask);
     const currentLevel = yield select(state => state.task.currentLevel);
 
-    const testId = action.payload && action.payload.testId ? action.payload.testId : 0;
-    yield put(updateCurrentTestId(testId));
-
-    const tests = action.payload && action.payload.test ? action.payload.tests : currentTask.data[taskLevels[currentLevel]];
+    const tests = action.payload && action.payload.tests ? action.payload.tests : currentTask.data[taskLevels[currentLevel]];
+    console.log('[task.load] update task tests', tests);
     yield put(updateTaskTests(tests));
+
+    const testId = action.payload && action.payload.testId ? action.payload.testId : 0;
+    console.log('[task.load] update current test id', testId);
+    yield put(updateCurrentTestId(testId));
 
     console.log({testId, tests});
 
@@ -183,12 +185,6 @@ function* taskLoadSaga(app: App, action) {
     if (!context || (action.payload && action.payload.reloadContext)) {
         yield call(createContext, quickAlgoLibraries);
     }
-    context = quickAlgoLibraries.getContext(null, state.replay);
-
-    if (app.replay && context) {
-        const contextState = context.getInnerState();
-        yield put(taskUpdateState(getCurrentImmerState(contextState)));
-    }
 
     const sagas = quickAlgoLibraries.getSagas(app);
     oldSagasTasks[app.replay ? 'replay' : 'main'] = yield fork(function* () {
@@ -197,7 +193,7 @@ function* taskLoadSaga(app: App, action) {
 
     yield call(handleLibrariesEventListenerSaga, app);
 
-    console.log('task loaded', app.replay, context);
+    console.log('task loaded', app.replay);
     yield put(taskLoaded());
 }
 
@@ -245,8 +241,6 @@ function* handleLibrariesEventListenerSaga(app: App) {
                 const context = quickAlgoLibraries.getContext(null, state.replay);
                 const contextState = context.getInnerState();
                 console.log('get new state', contextState);
-                app.dispatch(taskUpdateState(getCurrentImmerState(contextState)));
-                console.log('dispatched');
             });
         });
     }
@@ -254,13 +248,11 @@ function* handleLibrariesEventListenerSaga(app: App) {
 
 function* taskRunExecution(app: App, {type, payload}) {
     console.log('START RUN EXECUTION', type, payload);
-    const {testId, options, source, resolve} = payload;
-
-    const tests = yield select((state: AppStore) => state.task.taskTests);
+    const {testId, tests, options, source, resolve} = payload;
 
     yield put({type: AppActionTypes.AppInit, payload: {options: {...options}, replay: true}});
     yield put({type: BufferActionTypes.BufferLoad, buffer: 'source', text: source});
-    yield put(taskLoad({testId, tests: tests[testId]}));
+    yield put(taskLoad({testId, tests}));
     yield take(taskLoaded.type);
 
     taskSubmissionExecutor.setAfterExecutionCallback((result) => {
@@ -329,7 +321,6 @@ export default function (bundle: Bundle) {
             const context = quickAlgoLibraries.getContext(null, state.replay);
             if (context) {
                 context.resetAndReloadState(state.task.currentTest, state);
-                yield put(taskUpdateState(getCurrentImmerState(context.getInnerState())));
                 console.log('put task reset done to true');
                 yield put(taskResetDone(true));
             }
@@ -361,14 +352,39 @@ export default function (bundle: Bundle) {
         });
 
         yield takeEvery(updateCurrentTestId.type, function* () {
-            const state = yield select();
+            const state: AppStore = yield select();
             const context = quickAlgoLibraries.getContext(null, state.replay);
             console.log('update current test', context);
+
+            // Save context state for the test we have just left
             if (context) {
-                const currentTest = state.task.taskTests[state.task.currentTestId];
-                console.log('reload current test', currentTest);
-                context.resetAndReloadState(currentTest, state);
-                yield put(taskUpdateState(getCurrentImmerState(context.getInnerState())));
+                if (null !== state.task.previousTestId) {
+                    const currentState = getCurrentImmerState(context.getInnerState());
+                    yield put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState}));
+                }
+            }
+
+            // Stop current execution if there is one
+            if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
+                yield put({type: ActionTypes.StepperInterrupt, payload: {record: false}});
+            }
+            if (state.stepper && state.stepper.status !== StepperStatus.Clear) {
+                yield put({type: ActionTypes.StepperExit, payload: {record: false}});
+            }
+
+            // Reload context state for the new test
+            if (context) {
+                console.log('task update test', state.task.taskTests, state.task.currentTestId);
+                const contextState = state.task.taskTests[state.task.currentTestId].contextState;
+                if (null !== contextState) {
+                    console.log('reload context state', contextState);
+                    context.reloadInnerState(createDraft(contextState));
+                    context.redrawDisplay();
+                } else {
+                    const currentTest = state.task.taskTests[state.task.currentTestId].data;
+                    console.log('reload current test', currentTest);
+                    context.resetAndReloadState(currentTest, state);
+                }
             }
         });
 
@@ -388,6 +404,13 @@ export default function (bundle: Bundle) {
             }
         });
 
+        // app.replayApi.on('task/updateCurrentTestId', function*(replayContext: ReplayContext, event) {
+        //     const {testId} = event[2];
+        //     if (null !== testId && undefined !== testId) {
+        //         yield put(updateCurrentTestId(testId));
+        //     }
+        // });
+
         // Quick mode means continuous play. In this case we can just call every library method
         // without reloading state or display in between
         app.replayApi.onReset(function* (instant: PlayerInstant, quick) {
@@ -399,14 +422,14 @@ export default function (bundle: Bundle) {
             if (instant.event[1] === 'compile.success') {
                 // When the stepper is initialized, we have to set the current test value into the context
                 // just like in the stepperApi.onInit listener
-                const currentTest = taskData.taskTests[taskData.currentTestId];
+                const currentTest = taskData.taskTests[taskData.currentTestId].data;
                 console.log('stepper init, current test', currentTest);
 
                 const context = quickAlgoLibraries.getContext(null, false);
                 context.resetAndReloadState(currentTest, instant.state);
             }
 
-            if (!quick) {
+            if (!quick || instant.event[1] === 'task/updateCurrentTestId') {
                 if (taskData && taskData.state) {
                     console.log('do reload state', taskData.state);
                     const draft = createDraft(taskData.state);
@@ -451,7 +474,7 @@ export default function (bundle: Bundle) {
         });
 
         app.stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
-            const currentTest = state.task.taskTests[state.task.currentTestId];
+            const currentTest = state.task.taskTests[state.task.currentTestId].data;
 
             console.log('stepper init, current test', currentTest);
 

@@ -13,9 +13,8 @@ import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay} from "../store";
 import {initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
-import {TaskActionTypes as TaskActionTypes} from "../task";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
-import {createDraft, current, finishDraft, original, produce} from "immer";
+import {createDraft} from "immer";
 import {getCurrentImmerState} from "../task/utils";
 import {ActionTypes as CompileActionTypes} from "./actionTypes";
 

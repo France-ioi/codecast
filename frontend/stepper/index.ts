@@ -75,7 +75,7 @@ import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
-import {taskResetDone, taskUpdateState, TaskSubmissionResultPayload} from "../task/task_slice";
+import {taskResetDone} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonInterpreter from "./python/python_interpreter";
@@ -631,10 +631,8 @@ function* compileSucceededSaga(app: App) {
 
         let stepperState = yield call(app.stepperApi.buildState, state, app.replay);
         console.log('[stepper init] current state', state.task.state, 'context state', stepperState.contextState);
-        yield put(taskUpdateState(stepperState.contextState));
         const newState = yield select();
         console.log('[stepper init] new state', newState.task.state);
-
 
         // buildState may have triggered an error.
         state = yield select();
@@ -974,17 +972,20 @@ function* stepperSaga(args) {
     yield takeLatest(ActionTypes.StepperEnabled, stepperEnabledSaga, args);
     yield takeLatest(ActionTypes.StepperDisabled, stepperDisabledSaga);
     yield takeLatest(ActionTypes.StepperCompileAndStep, function*(app: App, {payload}) {
-        const result = yield new Promise((callback) => {
-            app.dispatch({
-                type: StepperActionTypes.CompileWait,
-                payload: {
-                    callback,
-                },
+        const stepperState = yield select((state: AppStore) => state.stepper.status);
+        if (StepperStatus.Clear === stepperState) {
+            const result = yield new Promise((callback) => {
+                app.dispatch({
+                    type: StepperActionTypes.CompileWait,
+                    payload: {
+                        callback,
+                    },
+                });
             });
-        });
 
-        if (CompileStatus.Done !== result) {
-            return;
+            if (CompileStatus.Done !== result) {
+                return;
+            }
         }
 
         yield put({type: StepperActionTypes.StepperStep, payload});

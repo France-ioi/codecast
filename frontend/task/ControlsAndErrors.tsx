@@ -28,13 +28,13 @@ export function ControlsAndErrors() {
 
     let error = null;
     if (hasError) {
-        if (stepperError.element) {
-            switch (stepperError.element) {
-                case 'task-tests-submission-results-overview':
-                    error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
-                    break;
-            }
-        }  else {
+        console.log({stepperError})
+        if ('task-tests-submission-results-overview' === stepperError.type) {
+            error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
+        } else if ('compilation' === stepperError.type) {
+            const stepperErrorHtml = toHtml(stepperError.content);
+            error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;
+        } else {
             const stepperErrorHtml = toHtml(stepperError);
             error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
         }

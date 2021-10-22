@@ -9,9 +9,8 @@ import {Codecast} from "../index";
 import {getBufferModel} from "../buffers/selectors";
 import {TaskActionTypes} from "./index";
 import log from "loglevel";
-import {ActionTypes} from "../stepper/actionTypes";
+import {stepperDisplayError} from "../stepper/actionTypes";
 import React from "react";
-import {TaskTestsSubmissionResultOverview} from "./TaskTestsSubmissionResultOverview";
 
 class TaskSubmissionExecutor {
     private afterExecutionCallback: Function = null;
@@ -72,13 +71,13 @@ class TaskSubmissionExecutor {
             yield put(taskSuccess(lastMessage));
         } else {
             const error = {
-                element: 'task-tests-submission-results-overview',
+                type: 'task-tests-submission-results-overview',
                 props: {
                     results: displayedResults,
                 }
             };
 
-            yield put({type: ActionTypes.StepperDisplayError, payload: {error}});
+            yield stepperDisplayError(error);
         }
     }
 
@@ -86,9 +85,10 @@ class TaskSubmissionExecutor {
         const backgroundStore = Codecast.environments['background'].store;
         const state: AppStore = yield select();
         const source = getBufferModel(state, 'source').document.toString();
+        const tests = state.task.taskTests.map(test => test.data);
 
         return yield new Promise(resolve => {
-            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, testId, source, resolve}});
+            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, testId, tests, source, resolve}});
         });
     }
 

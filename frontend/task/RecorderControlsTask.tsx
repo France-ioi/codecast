@@ -66,7 +66,6 @@ export function RecorderControlsTask(props: RecorderControlsTaskProps) {
         }
     };
     const onCancel = () => {
-        console.log('bdsdsd cancel');
         dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Record}});
         dispatch({type: RecorderActionTypes.RecorderPrepare});
     };

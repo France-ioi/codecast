@@ -123,7 +123,7 @@ export default function(bundle: Bundle) {
                         platform
                     });
                 } else {
-                    yield put({type: ActionTypes.CompileFailed, payload: response});
+                    yield put({type: ActionTypes.CompileFailed, payload: {error: {type: 'compilation', content: response.diagnostics}}});
                 }
             }
         });

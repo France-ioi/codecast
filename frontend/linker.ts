@@ -108,7 +108,6 @@ export function link(rootBuilder, globalScope: App): Linker {
         if (actionMap.has(action.type)) {
             state = actionMap.get(action.type)(state, action);
         }
-        console.log('make action', globalScope.replay, actionMap.has(action.type))
 
         return state;
     };

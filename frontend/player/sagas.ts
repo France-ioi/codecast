@@ -22,7 +22,8 @@ import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {taskLoad} from "../task";
 import {PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
 import {RECORDING_FORMAT_VERSION} from "../version";
-import {getNodeRange} from "../stepper";
+import {getCurrentImmerState} from "../task/utils";
+import {createDraft, finishDraft} from "immer";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -287,7 +288,11 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         });
         console.log('END REPLAY EVENT (computeInstants)');
 
-        instant.state = replayStore.getState();
+        // Get Redux state and context state and store them
+        const instantState = createDraft(replayStore.getState());
+        const context = quickAlgoLibraries.getContext(null, true);
+        instantState.task.state = getCurrentImmerState(context.getInnerState());
+        instant.state = finishDraft(instantState);
 
         Object.freeze(instant);
         console.log('new instant', instant.state);
