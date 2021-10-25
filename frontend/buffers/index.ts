@@ -227,11 +227,11 @@ function* buffersSaga() {
     yield takeEvery(ActionTypes.BufferReset, function* (action) {
         const state: AppStore = yield select();
         // @ts-ignore
-        const {buffer, model, quiet} = action;
+        const {buffer, model, quiet, goToEnd} = action;
         if (!quiet) {
             const editor = getBufferEditor(state, buffer);
             if (editor) {
-                resetEditor(editor, model);
+                resetEditor(editor, model, !!goToEnd);
             }
         }
     });
@@ -287,11 +287,15 @@ function* buffersSaga() {
     });
 }
 
-function resetEditor(editor, model: DocumentModel) {
+function resetEditor(editor, model: DocumentModel, goToEnd?: boolean) {
     try {
         const text = model.document.toString();
 
         editor.reset(text, model.selection, model.firstVisibleRow);
+
+        if (goToEnd) {
+            editor.goToEnd();
+        }
     } catch (error) {
         console.log('failed to update editor view with model', error);
     }
@@ -347,18 +351,9 @@ function addReplayHooks({replayApi}: App) {
     console.log('ADD REPLAY HOOKS');
     replayApi.on('start', function* (replayContext: ReplayContext, event) {
         const {buffers} = event[2];
-        // replayContext.state.buffers = {};
-        // console.log('here buffers', buffers);
-
         for (let bufferName of Object.keys(buffers)) {
             const text = buffers[bufferName].document;
             yield put({type: ActionTypes.BufferLoad, buffer: bufferName, text});
-            //
-            // if (!(bufferName in replayContext.state.buffers)) {
-            //     replayContext.state.buffers[bufferName] = new BufferState();
-            // }
-            // console.log('fill buffer', bufferName, buffers && buffers[bufferName]);
-            // replayContext.state.buffers[bufferName].model = buffers && buffers[bufferName] ? loadBufferModel(buffers[bufferName]) : new DocumentModel();
         }
 
     });

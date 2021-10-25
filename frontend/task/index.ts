@@ -1,4 +1,4 @@
-import {extractLevelSpecific, getCurrentImmerState} from "./utils";
+import {extractLevelSpecific, getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest} from "redux-saga/effects";
@@ -34,6 +34,8 @@ import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {isStepperInterrupting} from "../stepper/selectors";
+import {getBufferModel} from "../buffers/selectors";
+import {documentModelFromString} from "../buffers";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -189,6 +191,14 @@ function* taskLoadSaga(app: App, action) {
     });
 
     yield call(handleLibrariesEventListenerSaga, app);
+
+    const sourceModel = getBufferModel(state, 'source');
+    const source = sourceModel ? sourceModel.document.toString() : null;
+    if (!source || !source.length) {
+        const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment);
+        console.log('Load default source code', defaultSourceCode);
+        yield put({type: BufferActionTypes.BufferReset, buffer: 'source', model: documentModelFromString(defaultSourceCode), goToEnd: true});
+    }
 
     console.log('task loaded', app.environment);
     yield put(taskLoaded());

@@ -90,6 +90,22 @@ export function checkCompilingCode(code, getMessage, platform: string, environme
     }
 }
 
+export function getDefaultSourceCode(platform: string, environment: string) {
+    if ('python' === platform) {
+        const context = quickAlgoLibraries.getContext(null, environment);
+        if (context) {
+            const availableModules = getAvailableModules(context);
+            let content = '';
+            for (let i = 0; i < availableModules.length; i++) {
+                content += 'from ' + availableModules[i] + ' import *\n';
+            }
+            return content;
+        }
+    }
+
+    return '';
+}
+
 export function getCurrentImmerState(object) {
     return Object.fromEntries(
         Object.entries(object).map(
