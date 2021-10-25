@@ -9,7 +9,7 @@ import {AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
     currentTaskChange, currentTaskChangePredefined,
-    recordingEnabledChange, taskAddInput,
+    recordingEnabledChange, taskAddInput, taskClearSubmission, taskCreateSubmission,
     taskInputEntered,
     taskInputNeeded,
     taskLevels,
@@ -28,7 +28,7 @@ import {createDraft} from "immer";
 import {PlayerInstant} from "../player";
 import {ActionTypes as StepperActionTypes, ActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
-import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
+import {stepperDisabledSaga, StepperState, StepperStatus, StepperStepMode} from "../stepper";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
@@ -300,6 +300,11 @@ export default function (bundle: Bundle) {
                     console.log('HANDLE RESET');
                     yield put({type: ActionTypes.StepperExit});
                 }
+
+                const currentSubmission = yield select((state: AppStore) => state.task.currentSubmission);
+                if (null !== currentSubmission) {
+                    yield put(taskClearSubmission());
+                }
             }
         });
 
@@ -396,6 +401,11 @@ export default function (bundle: Bundle) {
         });
 
         yield takeLatest(TaskActionTypes.TaskRunExecution, taskRunExecution, app);
+
+        yield takeEvery(StepperActionTypes.StepperRestart, function*() {
+            console.log('stepper restart, create new submission');
+            yield put(taskClearSubmission());
+        });
     });
 
     bundle.defer(function (app: App) {

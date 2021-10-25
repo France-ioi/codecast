@@ -155,6 +155,9 @@ export const taskSlice = createSlice({
                 results: state.taskTests.map(() => ({executing: false})),
             };
         },
+        taskClearSubmission(state: TaskState) {
+            state.currentSubmission = null;
+        },
         taskSubmissionStartTest(state: TaskState, action: PayloadAction<number>) {
             state.currentSubmission.results[action.payload].executing = true;
         },
@@ -183,6 +186,7 @@ export const {
     currentTaskChange,
     taskAddInput,
     taskCreateSubmission,
+    taskClearSubmission,
     taskSubmissionStartTest,
     taskSubmissionSetTestResult,
     updateTestContextState,

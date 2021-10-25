@@ -44,6 +44,12 @@ class TaskSubmissionExecutor {
                 continue;
             }
 
+            const currentSubmission = yield select((state: AppStore) => state.task.currentSubmission);
+            if (!currentSubmission) {
+                // Submission has been cancelled during progress
+                return;
+            }
+
             yield put(taskSubmissionStartTest(testIndex));
             if ('main' === environment) {
                 yield delay(0);
@@ -64,6 +70,10 @@ class TaskSubmissionExecutor {
         }
 
         currentSubmission = yield select((state: AppStore) => state.task.currentSubmission);
+        if (!currentSubmission) {
+            // Submission has been cancelled during progress
+            return;
+        }
 
         log.getLogger('tests').debug('Submission execution over', currentSubmission.results);
         console.log(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
