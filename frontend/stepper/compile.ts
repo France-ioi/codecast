@@ -129,8 +129,8 @@ export default function(bundle: Bundle) {
         });
 
         // @ts-ignore
-        yield takeEvery(ActionTypes.CompileWait, function* ({payload: {callback}}) {
-            yield put({type: ActionTypes.Compile, payload: {}});
+        yield takeEvery(ActionTypes.CompileWait, function* ({payload: {callback, keepSubmission}}) {
+            yield put({type: ActionTypes.Compile, payload: {keepSubmission}});
             const outcome = yield race({
                 [CompileStatus.Done]: take(ActionTypes.StepperRestart),
                 [CompileStatus.Error]: take(ActionTypes.CompileFailed),

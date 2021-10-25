@@ -16,7 +16,7 @@ export function TaskTestsSubmissionResultOverview(props: TaskTestsSubmissionResu
 
     const seeFailedTest = (testId) => {
         dispatch(updateCurrentTestId(testId));
-        dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run}});
+        dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, keepSubmission: true}});
     }
 
     return (

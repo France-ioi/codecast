@@ -979,6 +979,7 @@ function* stepperSaga(args) {
                     type: StepperActionTypes.CompileWait,
                     payload: {
                         callback,
+                        ...payload,
                     },
                 });
             });

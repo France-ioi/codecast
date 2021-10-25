@@ -402,9 +402,12 @@ export default function (bundle: Bundle) {
 
         yield takeLatest(TaskActionTypes.TaskRunExecution, taskRunExecution, app);
 
-        yield takeEvery(StepperActionTypes.StepperRestart, function*() {
+        // @ts-ignore
+        yield takeEvery(StepperActionTypes.Compile, function*({payload}) {
             console.log('stepper restart, create new submission');
-            yield put(taskClearSubmission());
+            if (!payload.keepSubmission) {
+                yield put(taskClearSubmission());
+            }
         });
     });
 
