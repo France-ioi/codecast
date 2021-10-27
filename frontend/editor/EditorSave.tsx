@@ -18,10 +18,10 @@ import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
 import {LoginScreen} from "../common/LoginScreen";
 import {EditorSaveState} from "./index";
+import {getMessage} from "../lang";
 
 export function EditorSave() {
     const editor = useAppSelector(state => state.editor);
-    const getMessage = useAppSelector(state => state.getMessage);
     const user = useAppSelector(state => state.user);
 
     const {version, name, events} = editor.data;

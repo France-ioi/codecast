@@ -10,9 +10,9 @@ import {Menu} from "../common/Menu";
 import {getPlayerState} from "../player/selectors";
 import {getRecorderState} from "./selectors";
 import {RecorderStatus} from "./store";
+import {getMessage} from "../lang";
 
 interface RecorderControlsStateToProps {
-    getMessage: Function,
     canRecord: boolean,
     canPlay: boolean,
     canPause: boolean,
@@ -26,7 +26,6 @@ interface RecorderControlsStateToProps {
 }
 
 function mapStateToProps (state: AppStore): RecorderControlsStateToProps {
-    const getMessage = state.getMessage;
     const recorder = getRecorderState(state);
     const recorderStatus = recorder.status;
     const isPlayback = recorderStatus === RecorderStatus.Paused;
@@ -51,7 +50,6 @@ function mapStateToProps (state: AppStore): RecorderControlsStateToProps {
     }
 
     return {
-        getMessage,
         recorderStatus, isPlayback, playPause,
         canRecord, canPlay, canPause, canStop, canStep,
         position, duration
@@ -69,7 +67,7 @@ interface RecorderControlsProps extends RecorderControlsStateToProps, RecorderCo
 class _RecorderControls extends React.PureComponent<RecorderControlsProps> {
     render() {
         const {
-            getMessage, canRecord, canPlay, canPause, canStop, canStep,
+            canRecord, canPlay, canPause, canStop, canStep,
             isPlayback, playPause, position, duration
         } = this.props;
         return (

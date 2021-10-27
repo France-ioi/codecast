@@ -2,7 +2,7 @@ import React from "react";
 import {DirectiveFrame} from "./DirectiveFrame";
 import {C_directiveViewDict, pythonDirectiveViewDict} from "./index";
 
-export function DirectivePanel({scale, directive, controls, context, functionCallStack, platform, getMessage, onChange}) {
+export function DirectivePanel({scale, directive, controls, context, functionCallStack, platform, onChange}) {
     const {kind} = directive;
     const hide = controls.hide;
     if (hide) {
@@ -32,7 +32,6 @@ export function DirectivePanel({scale, directive, controls, context, functionCal
     return (
         <directiveDescription.View
             DirectiveFrame={DirectiveFrame}
-            getMessage={getMessage}
             onChange={onChange}
             {...props}
         />

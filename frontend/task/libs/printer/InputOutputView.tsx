@@ -2,11 +2,9 @@ import React from "react";
 import {Card} from 'react-bootstrap'
 import {Icon} from "@blueprintjs/core";
 import {BufferEditor} from "../../../buffers/BufferEditor";
-import {useAppSelector} from "../../../hooks";
+import {getMessage} from "../../../lang";
 
 export function InputOutputView() {
-    const getMessage = useAppSelector(state => state.getMessage);
-
     return (
         <div>
             <Card>

@@ -18,6 +18,7 @@ import {LayoutDirective} from "./LayoutDirective";
 import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_librairies";
 import {Screen} from "../../common/screens";
 import {Documentation} from "../Documentation";
+import {getMessage} from "../../lang";
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -47,7 +48,6 @@ interface Converters {
 
 interface BuildZoneLayoutData {
     directivesByZone: {[zone: string]: Directive[]},
-    getMessage: Function,
     width: number,
     height: number,
     preferredVisualizations: string[],
@@ -58,7 +58,6 @@ interface BuildZoneLayoutData {
 export interface LayoutProps {
     orderedDirectives: readonly Directive[],
     fullScreenActive: boolean,
-    getMessage: Function,
     width: number,
     height: number,
     preferredVisualizations: string[],
@@ -401,7 +400,7 @@ function assignMetadataToVisualizationGroups(mergedVisualizationGroups: LayoutVi
         const defaultMetadata = {
             ...visualizationGroup.metadata,
             id: "visualization-" + visualizationGroupsCount,
-            title: data.getMessage('TASK_VISUALIZATION').format({number: visualizationGroupsCount}),
+            title: getMessage('TASK_VISUALIZATION').format({number: visualizationGroupsCount}),
             icon: null,
         };
 
@@ -617,7 +616,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
             type: LayoutEditor,
             metadata: {
                 id: 'editor',
-                title: layoutProps.getMessage('TASK_EDITOR'),
+                title: getMessage('TASK_EDITOR'),
                 icon: 'edit',
                 ...attrs,
             },
@@ -627,7 +626,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 type: TaskInstructions,
                 metadata: {
                     id: 'instructions',
-                    title: layoutProps.getMessage('TASK_DESCRIPTION'),
+                    title: getMessage('TASK_DESCRIPTION'),
                     icon: 'document',
                     ...attrs,
                 },
@@ -638,7 +637,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 type: ContextVisualization,
                 metadata: {
                     id: 'io',
-                    title: layoutProps.getMessage('TASK_IO'),
+                    title: getMessage('TASK_IO'),
                     icon: 'console',
                     ...attrs,
                 },
@@ -649,7 +648,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 type: LayoutStackView,
                 metadata: {
                     id: 'variables',
-                    title: layoutProps.getMessage('TASK_VARIABLES'),
+                    title: getMessage('TASK_VARIABLES'),
                     icon: 'code',
                     ...attrs,
                 },
@@ -659,7 +658,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
             type: Documentation,
             metadata: {
                 id: 'doc',
-                title: layoutProps.getMessage('TASK_DOCUMENTATION'),
+                title: getMessage('TASK_DOCUMENTATION'),
                 icon: 'help',
                 ...attrs,
             },
@@ -697,7 +696,6 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         directivesByZone,
         width: layoutProps.width,
         height: layoutProps.height,
-        getMessage: layoutProps.getMessage,
         preferredVisualizations: layoutProps.preferredVisualizations,
         documentationOpen,
         quickAlgoLibraries,

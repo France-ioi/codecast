@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {Card} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
 import {TermBuffer, writeString} from "../../../stepper/io/terminal";
@@ -13,9 +13,9 @@ import {
     printerLibTerminalInputEnter,
     printerLibTerminalInputKey
 } from "./printer_lib";
+import {getMessage} from "../../../lang";
 
 export function TerminalView() {
-    const getMessage = useAppSelector((state: AppStore) => state.getMessage);
     const taskState = useAppSelector((state: AppStore) => state.task.state);
     const input = taskState ? taskState.inputBuffer : '';
     const inputNeeded = useAppSelector((state: AppStore) => state.task.inputNeeded);

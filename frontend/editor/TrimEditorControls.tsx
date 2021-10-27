@@ -9,6 +9,7 @@ import {useAppSelector} from "../hooks";
 import {IconNames} from "@blueprintjs/icons";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
+import {getMessage} from "../lang";
 
 interface TrimEditorControlsProps {
     width: number
@@ -19,7 +20,6 @@ export function TrimEditorControls(props: TrimEditorControlsProps) {
 
     const editor = useAppSelector(state => state.editor);
     const player = useAppSelector(state => state.player);
-    const getMessage = useAppSelector(state => state.getMessage);
     const position = Math.round(player.audioTime);
     const duration = player.duration;
     const waveform = editor.waveform;

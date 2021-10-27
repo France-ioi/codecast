@@ -13,16 +13,13 @@ interface SubtitlesEditorPaneStateToProps {
     subtitles: NodeCue[],
     currentIndex: number,
     audioTime: number,
-    getMessage: Function,
     selectedKey: number,
 }
 
 function mapStateToProps(state: AppStore): SubtitlesEditorPaneStateToProps {
-    const getMessage = state.getMessage;
     const {items, currentIndex, audioTime, selectedKey} = state.subtitles;
 
     return {
-        getMessage,
         subtitles: items,
         currentIndex,
         audioTime,

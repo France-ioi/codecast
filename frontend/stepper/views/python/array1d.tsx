@@ -24,7 +24,6 @@ interface Array1DView {
     fullView: any,
     cellHeight: any,
     cellWidth: any,
-    getMessage: any,
     error?: string,
     cursorMap?: any,
     ref?: any
@@ -132,7 +131,6 @@ interface Array1DProps {
     directive: any,
     context: any,
     scale: any,
-    getMessage: any,
     onChange: Function
 }
 
@@ -140,7 +138,7 @@ export class Array1D extends React.PureComponent<Array1DProps> {
     _cellWidth = DEFAULT_CELL_WIDTH;
 
     render() {
-        const {controls, directive, context, scale, getMessage} = this.props;
+        const {controls, directive, context, scale} = this.props;
 
         /**
          * Eg. directive :
@@ -184,7 +182,6 @@ export class Array1D extends React.PureComponent<Array1DProps> {
             fullView,
             cellHeight,
             cellWidth,
-            getMessage
         };
         Object.assign(view, extractView(context, byPos[0], view));
         if (view.error) {

@@ -9,16 +9,13 @@ import {AppStore} from "../../store";
 
 interface DirectivesPaneStateToProps {
     stepperState: any,
-    getMessage: Function
 }
 
 function mapStateToProps(state: AppStore): DirectivesPaneStateToProps {
-    const getMessage = state.getMessage;
     const stepperState = getCurrentStepperState(state);
 
     return {
         stepperState,
-        getMessage
     };
 }
 
@@ -46,7 +43,7 @@ class _DirectivesPane extends React.PureComponent<DirectivesPaneProps> {
     };
 
     render() {
-        const {stepperState, scale, getMessage} = this.props;
+        const {stepperState, scale} = this.props;
         if (!stepperState || !stepperState.analysis) {
             return false;
         }
@@ -82,7 +79,6 @@ class _DirectivesPane extends React.PureComponent<DirectivesPaneProps> {
                     context={context}
                     functionCallStack={functionCallStack}
                     platform={platform}
-                    getMessage={getMessage}
                     onChange={this.onControlsChange}
                 />
             );

@@ -8,9 +8,9 @@ import {ActionTypes} from "./actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {SubtitlesOptions} from "./index";
-import {put} from "redux-saga/effects";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
+import {getMessage} from "../lang";
 
 interface SubtitlesEditorStateToProps {
     availableOptions: SubtitlesOptions,
@@ -19,17 +19,15 @@ interface SubtitlesEditorStateToProps {
     langOptions: any[],
     canSave: boolean,
     unsaved: boolean,
-    getMessage: Function,
 }
 
 function mapStateToProps(state: AppStore): SubtitlesEditorStateToProps {
-    const getMessage = state.getMessage;
     const {unsaved, selectedKey, availableOptions, langOptions} = state.subtitles;
     const canSave = state.editor.canSave;
     const selected = selectedKey && availableOptions[selectedKey];
     const subtitlesText = (selected && selected.text) || '';
 
-    return {canSave, unsaved, availableOptions, langOptions, selected, subtitlesText, getMessage};
+    return {canSave, unsaved, availableOptions, langOptions, selected, subtitlesText};
 }
 
 interface SubtitlesEditorDispatchToProps {
@@ -45,7 +43,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
     _fileAccepts = ['.srt'];
 
     render() {
-        const {availableOptions, selected, subtitlesText, langOptions, canSave, unsaved, light, getMessage} = this.props;
+        const {availableOptions, selected, subtitlesText, langOptions, canSave, unsaved, light} = this.props;
         const availKeys = Object.keys(availableOptions).filter(key => !availableOptions[key].removed).sort();
 
         return (
@@ -176,7 +174,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
     };
     _removeSelected = () => {
         const {selected: {key}} = this.props;
-        if (confirm(this.props.getMessage('EDITOR_SUBTITLES_REMOVE_CONFIRM').format({language: key}))) {
+        if (confirm(getMessage('EDITOR_SUBTITLES_REMOVE_CONFIRM').format({language: key}))) {
             this.props.dispatch({type: ActionTypes.SubtitlesOptionRemove, payload: {key}});
         }
     };

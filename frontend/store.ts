@@ -120,7 +120,4 @@ export interface AppStore extends Store, AppStoreReplay {
     viewportTooSmall: boolean,
 
     documentation: DocumentationState,
-
-    // TODO: Function should not be inside the store.
-    getMessage: Function,
 }

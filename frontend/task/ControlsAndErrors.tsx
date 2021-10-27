@@ -10,11 +10,11 @@ import {faFileAlt, faPencilAlt, faPlay} from "@fortawesome/free-solid-svg-icons"
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
 import {TaskTestsSubmissionResultOverview} from "./TaskTestsSubmissionResultOverview";
+import {getMessage} from "../lang";
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
     const layoutType = useAppSelector(state => state.layout.type);
-    const getMessage = useAppSelector(state => state.getMessage);
     const {showStepper} = useAppSelector(state => state.options);
     const currentTask = useAppSelector(state => state.task.currentTask);
 

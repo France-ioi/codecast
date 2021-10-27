@@ -36,6 +36,7 @@ import {evalExpr, getList, getNumber, renderArrow, renderValue} from './utils';
 import {finalizeCursors, getCursorMap} from './array_utils';
 import {enumerateHeapBlocks} from '../../c/heap';
 import {DirectiveFrame} from "../DirectiveFrame";
+import {getMessage} from "../../../lang";
 
 interface MemoryCell {
     previous?: any,
@@ -263,7 +264,6 @@ function* allMarkers(programState, localMap, cursorExprs) {
 
 interface MemoryViewProps {
     scale: any,
-    getMessage: any,
     cursorRows: any,
     widthFactor: any,
     layout: any,
@@ -292,7 +292,7 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
 
     render() {
         const {
-            scale, getMessage, cursorRows, widthFactor,
+            scale, cursorRows, widthFactor,
             layout, centerAddress, maxAddress,
             bytes, cursorMap, variables, extraRows, viewTransform
         } = this.props;

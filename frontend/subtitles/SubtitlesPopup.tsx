@@ -4,6 +4,7 @@ import {setPersistentOption} from "./options";
 import {ActionTypes} from './actionTypes';
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
+import {getMessage} from "../lang";
 
 interface SubtitlesPopupProps {
     open: boolean,
@@ -12,7 +13,6 @@ interface SubtitlesPopupProps {
 
 export function SubtitlesPopup(props: SubtitlesPopupProps) {
     const {loadedKey, loading, lastError, availableOptions, langOptions, paneEnabled, bandEnabled} = useAppSelector(state => state.subtitles);
-    const getMessage = useAppSelector(state => state.getMessage);
     const isLoaded = !loading && loadedKey !== 'none';
     const hasLocalSubtitles = useAppSelector(state => !!(state.options && state.options.data && state.options.data.subtitlesData));
     const busy = !!loading;

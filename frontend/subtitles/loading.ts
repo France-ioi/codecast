@@ -10,6 +10,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {getMessage} from "../lang";
 
 export default function(bundle: Bundle) {
     /* Clear (unload) the currently loaded subtitles, if any. */
@@ -76,7 +77,7 @@ function subtitlesLoadSucceededReducer(state: AppStore, {payload: {key, text, it
 }
 
 function subtitlesLoadFailedReducer(state: AppStore, {payload: {error}}): void {
-    let errorText = state.getMessage('SUBTITLES_FAILED_TO_LOAD').s;
+    let errorText = getMessage('SUBTITLES_FAILED_TO_LOAD').s;
     if (error.res) {
         errorText = `${errorText} (${error.res.statusCode})`;
     }

@@ -20,9 +20,9 @@ import {ActionTypes} from "../subtitles/actionTypes";
 import {SubtitlesEditor} from "../subtitles/SubtitlesEditor";
 import {LoginScreen} from "../common/LoginScreen";
 import {ZOOM_LEVEL_LOW} from "./layout/layout";
+import {getMessage} from "../lang";
 
 export function TaskApp() {
-    const getMessage = useAppSelector(state => state.getMessage);
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
     const playerEnabled = !!useAppSelector(state => state.options.audioUrl);

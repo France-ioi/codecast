@@ -3,9 +3,9 @@ import {Button} from "@blueprintjs/core";
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {connect} from "react-redux";
+import {getMessage} from "../lang";
 
 interface FullscreenButtonStateToProps {
-    getMessage: Function,
     enabled: boolean,
     active: boolean
 }
@@ -16,7 +16,6 @@ function mapStateToProps(state: AppStore): FullscreenButtonStateToProps {
     return {
         enabled: fullscreen.enabled,
         active: fullscreen.active,
-        getMessage: state.getMessage
     }
 }
 
@@ -30,7 +29,7 @@ interface FullscreenButtonProps extends FullscreenButtonStateToProps, Fullscreen
 
 class _FullscreenButton extends React.PureComponent<FullscreenButtonProps> {
     render() {
-        const {enabled, active, getMessage} = this.props;
+        const {enabled, active} = this.props;
         const tooltip = getMessage(active ? 'EXIT_FULLSCREEN' : 'FULLSCREEN');
 
         return (

@@ -6,18 +6,17 @@ import {BufferEditor} from "../../buffers/BufferEditor";
 import {connect} from "react-redux";
 import {AppStore} from "../../store";
 import {IoMode} from "./index";
+import {getMessage} from "../../lang";
 
 interface IOPaneOptionsStateToProps {
-    getMessage: any,
     mode: string,
     modeSelect: boolean
 }
 
 function mapStateToProps(state: AppStore): IOPaneOptionsStateToProps {
-    const getMessage = state.getMessage;
     const {mode, modeSelect} = state.ioPane;
 
-    return {getMessage, mode, modeSelect};
+    return {mode, modeSelect};
 }
 
 interface IOPaneOptionsDispatchToProps {
@@ -40,7 +39,7 @@ class _IOPaneOptions extends React.PureComponent<IOPaneOptionsProps> {
     }
 
     render() {
-        const {getMessage, mode, modeSelect} = this.props;
+        const {mode, modeSelect} = this.props;
         const headerTitle = getMessage(modeSelect ? 'IOPANE_SELECT_TERMINAL_TITLE' : 'IOPANE_FORCED_TERMINAL_TITLE');
 
         return (

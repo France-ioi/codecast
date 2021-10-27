@@ -2,9 +2,9 @@ import * as C from '@france-ioi/persistent-c';
 
 import {evalExpr, readScalarBasic, stringifyExpr} from './utils';
 import {getCursorMap} from './array_utils';
+import {getMessage} from "../../../lang";
 
 export const extractView = function(context, stackFrame, refExpr, options) {
-    const {getMessage} = options;
     const {programState} = context;
     const localMap = stackFrame.get('localMap');
     let ref;

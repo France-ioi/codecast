@@ -8,10 +8,10 @@ import {ActionTypes} from "./actionTypes";
 import {SubtitlesPopup} from "../subtitles/SubtitlesPopup";
 import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
+import {getMessage} from "../lang";
 
 export function Menu() {
     const {baseUrl, baseDataUrl, platform, canChangePlatform} = useAppSelector(state => state.options);
-    const getMessage =  useAppSelector(state => state.getMessage);
     let offlineDownloadUrl = null;
     if (!isLocalMode() && baseDataUrl) {
         offlineDownloadUrl = baseUrl + '/offline?recording=' + encodeURIComponent(baseDataUrl);

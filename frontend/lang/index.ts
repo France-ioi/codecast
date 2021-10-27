@@ -63,6 +63,9 @@ Object.defineProperty(Message, 's', {
     }
 });
 
+let localGetMessage;
+let localGetFormat;
+
 function setLanguageReducer(state: AppStore, {payload: {language}}) {
     if (!Languages[language]) {
         language = 'en-US';
@@ -75,7 +78,8 @@ function setLanguageReducer(state: AppStore, {payload: {language}}) {
             value: language
         }
     });
-    const getMessage = memoize(function(message, defaultText) {
+
+    localGetMessage = memoize(function(message, defaultText) {
         const value = Languages[language][message] || defaultText || `L:${message}`;
 
         return Object.create(localizedMessage, {
@@ -87,19 +91,24 @@ function setLanguageReducer(state: AppStore, {payload: {language}}) {
         });
     });
 
-    getMessage.format = function(value) {
+    localGetFormat = function(value) {
         if (value instanceof Error && value.name === 'LocalizedError') {
             // @ts-ignore
             return getMessage(value.message).format(value.args);
         }
 
-        return getMessage(value.toString());
+        return localGetMessage(value.toString());
     }
 
     state.options.language = language;
-    state.getMessage = getMessage;
     window.stringsLanguage = language.split('-')[0];
 }
+
+export const getMessage = (message, defaultText = null) => {
+    return localGetMessage(message, defaultText);
+}
+
+getMessage.format = localGetFormat;
 
 export class LocalizedError extends Error {
     constructor(message, public args) {

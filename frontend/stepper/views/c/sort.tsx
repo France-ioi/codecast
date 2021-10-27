@@ -26,7 +26,6 @@ interface SortViewParams {
     maxVisibleCells: any,
     cursorExprs: any,
     cursorRows: any,
-    getMessage: any,
     error?: string,
     thresholds?: any,
     nbCells?: any,
@@ -136,14 +135,13 @@ interface SortViewProps {
     functionCallStack: any,
     context: any,
     scale: any,
-    getMessage: any,
     onChange: Function
 }
 
 export class SortView extends React.PureComponent<SortViewProps> {
 
     render() {
-        const {controls, directive, functionCallStack, context, scale, getMessage} = this.props;
+        const {controls, directive, functionCallStack, context, scale} = this.props;
         const {programState} = context;
         const topStackFrame = functionCallStack[0];
 
@@ -160,7 +158,7 @@ export class SortView extends React.PureComponent<SortViewProps> {
         const cursorRows = getNumber(byName.cursorRows, 1);
         const maxVisibleCells = getNumber(byName.n, 40);
         const svgHeight = marginTop + barHeight + barMarginBottom + textLineHeight + minArrowHeight + textLineHeight * cursorRows + marginBottom;
-        const view: SortViewParams = {dimExpr: dim, fullView, cursorExprs, maxVisibleCells, cursorRows, getMessage};
+        const view: SortViewParams = {dimExpr: dim, fullView, cursorExprs, maxVisibleCells, cursorRows};
         Object.assign(view, extractView(context, topStackFrame, expr, view));
         if (view.error) {
             return <DirectiveFrame {...this.props}>{view.error}</DirectiveFrame>;

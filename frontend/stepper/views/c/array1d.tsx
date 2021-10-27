@@ -21,7 +21,6 @@ interface Array1DView {
     fullView: any,
     cellHeight: any,
     cellWidth: any,
-    getMessage: any,
     error?: string,
     cursorMap?: any,
     ref?: any,
@@ -118,7 +117,6 @@ interface Array1DProps {
     functionCallStack: any,
     context: any,
     scale: any,
-    getMessage: any,
     onChange: Function
 }
 
@@ -126,7 +124,7 @@ export class Array1D extends React.PureComponent<Array1DProps> {
     _cellWidth = 28;
 
     render() {
-        const {controls, directive, functionCallStack, context, scale, getMessage} = this.props;
+        const {controls, directive, functionCallStack, context, scale} = this.props;
         const topStackFrame = functionCallStack[0];
         const fullView = controls.fullView;
         const cellPan = this.getPosition();
@@ -141,7 +139,7 @@ export class Array1D extends React.PureComponent<Array1DProps> {
         // The first element of `functionCallStack` is the topmost stackFrame containing the  directive.
         const view: Array1DView = {
             dimExpr: dim, cursorExprs, cursorRows, maxVisibleCells,
-            fullView, cellHeight, cellWidth, getMessage
+            fullView, cellHeight, cellWidth,
         };
         Object.assign(view, extractView(context, topStackFrame, expr, view));
         if (view.error) {
