@@ -48,10 +48,10 @@ body {
   }
 
   .task-header {
+    display: none; // We don't need it for now
     font-size: 18px;
     font-weight: bold;
     height: 50px;
-    display: flex;
     padding-left: 20px;
     align-items: center;
     .task-header__quick {
