@@ -1,5 +1,7 @@
 import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
 import {current, isDraft} from "immer";
+import {checkPythonCode} from "./python_utils";
+import {getMessage} from "../lang";
 
 export function extractLevelSpecific(item, level) {
     if ((typeof item != "object")) {
@@ -67,7 +69,7 @@ export function getAvailableModules(context) {
     }
 }
 
-export function checkCompilingCode(code, getMessage, platform: string, environment: string) {
+export function checkCompilingCode(code, platform: string, environment: string) {
     if (!code) {
         throw getMessage('EMPTY_PROGRAM');
     }
@@ -75,17 +77,7 @@ export function checkCompilingCode(code, getMessage, platform: string, environme
     if ('python' === platform) {
         const context = quickAlgoLibraries.getContext(null, environment);
         if (context) {
-            const availableModules = getAvailableModules(context);
-            for (let availableModule of availableModules) {
-                if ('printer' === availableModule) {
-                    // Printer lib is optional
-                    continue;
-                }
-                let match = (new RegExp('from\\s+' + availableModule + '\\s+import\\s+\\*')).exec(code);
-                if (null === match) {
-                    throw getMessage('PROGRAM_MISSING_LIB').format({line: `<code>from ${availableModule} import *</code>`});
-                }
-            }
+            checkPythonCode(code, context);
         }
     }
 }
