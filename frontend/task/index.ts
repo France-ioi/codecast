@@ -92,12 +92,9 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
     const currentLevel = yield select(state => state.task.currentLevel);
 
     let contextLib;
-    let levelGridInfos = {};
-    if (currentTask) {
-        const levelGridInfos = extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]);
-
-        if (levelGridInfos.context) {
-            if (!window.quickAlgoLibrariesList) {
+    let levelGridInfos = currentTask ? extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]) : {};
+    if (levelGridInfos.context) {
+        if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
         }
         const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
@@ -109,7 +106,7 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
             } catch (e) {
                 console.error("Cannot create context", e);
                 contextLib = new QuickAlgoLibrary(display, levelGridInfos);
-                quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);}
+                quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);
             }
         }
     }
