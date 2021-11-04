@@ -60,6 +60,8 @@ export interface App {
 }
 
 declare global {
+    const Sk: any;
+
     interface Window extends WindowLocalStorage {
         store: EnhancedStore<AppStore>,
         replayStore: EnhancedStore<AppStore>,
