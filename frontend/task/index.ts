@@ -23,7 +23,7 @@ import taskSlice, {
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
-import DocumentationBundle from "./documentation";
+import DocumentationBundle from "./doc";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
 import {ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {createDraft} from "immer";

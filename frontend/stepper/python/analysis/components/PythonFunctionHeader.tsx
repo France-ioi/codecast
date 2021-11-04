@@ -19,7 +19,7 @@ export const PythonFunctionHeader = (props: PythonFunctionHeaderProps): JSX.Elem
             path: null
         };
 
-        if (argument.cur.hasOwnProperty('_uuid')) {
+        if (argument.cur && argument.cur.hasOwnProperty('_uuid')) {
             argument.path = '#' + name;
         }
 

@@ -348,7 +348,7 @@ export function getNodeRange(stepperState?: StepperState) {
 
     if (stepperState.platform === 'python') {
         const {functionCallStack} = stepperState.analysis;
-        const stackFrame = functionCallStack[functionCallStack.length - 1];
+        const stackFrame = functionCallStack[0];
         if (!stackFrame) {
             return null;
         }
