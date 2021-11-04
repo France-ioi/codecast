@@ -1,5 +1,6 @@
 export default {
     gridInfos: {
+        context: 'printer',
         hideSaveOrLoad: true,
         conceptViewer: true,
         actionDelay: 200,

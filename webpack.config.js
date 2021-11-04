@@ -3,6 +3,7 @@ const path = require('path');
 const webpack = require('webpack');
 const SRC = path.resolve(__dirname, "frontend");
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const CopyPlugin = require("copy-webpack-plugin");
 
 // To analyse webpack speed and build size
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -158,6 +159,18 @@ module.exports = (env, argv) => {
                 typescript: {
                     memoryLimit: 4096,
                 }
+            }),
+            new CopyPlugin({
+                patterns: [
+                    'bebras-modules/pemFioi/blocklyRobot_lib-1.0.0.js',
+                    'bebras-modules/ext/jquery/1.7/jquery.min.js',
+                    'bebras-modules/ext/raphael/2.2.1/raphael.min.js',
+                    'bebras-modules/ext/jschannel/jschannel.js',
+                    'bebras-modules/pemFioi/blocklyRobot_lib-1.0.0.js',
+                    'bebras-modules/pemFioi/delayFactory-1.0.js',
+                    'bebras-modules/pemFioi/raphaelFactory-1.0.js',
+                    'bebras-modules/pemFioi/conceptViewer-1.0-mobileFirst.js',
+                ],
             }),
             // new BundleAnalyzerPlugin(),
         ],

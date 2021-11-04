@@ -39,12 +39,14 @@ import 'brace/worker/javascript';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "./selectors";
-import {immerable} from "immer";
-import {AppStore, AppStoreReplay} from "../store";
+import {current, immerable} from "immer";
+import {AppStore} from "../store";
 import {ReplayContext} from "../player/sagas";
 import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
 import {App} from "../index";
+import {getCurrentStepperState} from "../stepper/selectors";
+import {getNodeRange} from "../stepper";
 
 // import 'brace/theme/ambiance';
 // import 'brace/theme/chaos';
@@ -103,7 +105,7 @@ export class DocumentModel {
     }
 }
 
-class BufferState {
+export class BufferState {
     [immerable] = true;
 
     constructor(public model = new DocumentModel()) {
@@ -119,12 +121,6 @@ export const documentModelFromString = function (text: string): DocumentModel {
     return new DocumentModel(doc);
 }
 
-export const initialStateBuffers: {[key: string]: BufferState} = {
-    source: new BufferState(),
-    input: new BufferState(),
-    output: new BufferState()
-};
-
 function initBufferIfNeeded(state: AppStore, buffer: string) {
     if (!(buffer in state.buffers)) {
         state.buffers[buffer] = new BufferState();
@@ -133,7 +129,7 @@ function initBufferIfNeeded(state: AppStore, buffer: string) {
 
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {options: {source, input}}}) => {
-        state.buffers = initialStateBuffers;
+        state.buffers = {};
 
         if (source) {
             bufferLoadReducer(state, {buffer: 'source', text: source || ''});
@@ -189,20 +185,20 @@ function bufferResetReducer(state: AppStore, action): void {
     state.buffers[buffer].model = model;
 }
 
-function bufferEditReducer(state: AppStoreReplay, action): void {
+function bufferEditReducer(state: AppStore, action): void {
     const {buffer, delta} = action;
     const oldDoc = state.buffers[buffer].model.document;
 
     state.buffers[buffer].model.document = oldDoc.applyDelta(delta);
 }
 
-function bufferSelectReducer(state: AppStoreReplay, action): void {
+function bufferSelectReducer(state: AppStore, action): void {
     const {buffer, selection} = action;
 
     state.buffers[buffer].model.selection = selection;
 }
 
-function bufferScrollReducer(state: AppStoreReplay, action): void {
+function bufferScrollReducer(state: AppStore, action): void {
     const {buffer, firstVisibleRow} = action;
 
     state.buffers[buffer].model.firstVisibleRow = firstVisibleRow;
@@ -348,23 +344,31 @@ function addRecordHooks({recordApi}: App) {
 }
 
 function addReplayHooks({replayApi}: App) {
-    replayApi.on('start', function(replayContext: ReplayContext, event) {
+    console.log('ADD REPLAY HOOKS');
+    replayApi.on('start', function* (replayContext: ReplayContext, event) {
         const {buffers} = event[2];
-        replayContext.state.buffers = initialStateBuffers;
+        // replayContext.state.buffers = {};
+        // console.log('here buffers', buffers);
 
         for (let bufferName of Object.keys(buffers)) {
-            if (!(bufferName in replayContext.state.buffers)) {
-                replayContext.state.buffers[bufferName] = new BufferState();
-            }
-            replayContext.state.buffers[bufferName].model = buffers && buffers[bufferName] ? loadBufferModel(buffers[bufferName]) : new DocumentModel();
+            const text = buffers[bufferName].document;
+            yield put({type: ActionTypes.BufferLoad, buffer: bufferName, text});
+            //
+            // if (!(bufferName in replayContext.state.buffers)) {
+            //     replayContext.state.buffers[bufferName] = new BufferState();
+            // }
+            // console.log('fill buffer', bufferName, buffers && buffers[bufferName]);
+            // replayContext.state.buffers[bufferName].model = buffers && buffers[bufferName] ? loadBufferModel(buffers[bufferName]) : new DocumentModel();
         }
+
     });
-    replayApi.on('buffer.select', function(replayContext: ReplayContext, event) {
+    replayApi.on('buffer.select', function* (replayContext: ReplayContext, event) {
         // XXX use reducer imported from common/buffers
         const buffer = event[2];
         const selection = expandRange(event[3]);
 
-        bufferSelectReducer(replayContext.state, {buffer, selection});
+        yield put({type: ActionTypes.BufferSelect, buffer, selection});
+
         replayContext.addSaga(function* () {
             yield put({type: ActionTypes.BufferModelSelect, buffer, selection});
         });
@@ -390,7 +394,7 @@ function addReplayHooks({replayApi}: App) {
         }
 
         if (delta) {
-            bufferEditReducer(replayContext.state, {buffer, delta});
+            yield put({type: ActionTypes.BufferEdit, buffer, delta});
             yield call(replayApi.applyEvent,'buffer.edit', replayContext, [buffer]);
 
             replayContext.addSaga(function* () {
@@ -398,25 +402,27 @@ function addReplayHooks({replayApi}: App) {
             });
         }
     });
-    replayApi.on('buffer.scroll', function(replayContext: ReplayContext, event) {
+    replayApi.on('buffer.scroll', function* (replayContext: ReplayContext, event) {
         // XXX use reducer imported from common/buffers
         const buffer = event[2];
         const firstVisibleRow = event[3];
 
-        bufferScrollReducer(replayContext.state, {buffer, firstVisibleRow});
+        yield put({type: ActionTypes.BufferScroll, buffer, firstVisibleRow});
+
         replayContext.addSaga(function* () {
             yield put({type: ActionTypes.BufferModelScroll, buffer, firstVisibleRow});
         });
     });
-    replayApi.onReset(function* ({state, range}: PlayerInstant, quick) {
+    replayApi.onReset(function* ({state}: PlayerInstant, quick) {
         /* Reset all buffers. */
+        console.log('BUFFER RESET', state);
         for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer].model;
 
             yield put({type: ActionTypes.BufferReset, buffer, model, quiet: quick});
         }
-        if (range) {
-            yield put({type: ActionTypes.BufferHighlight, buffer: 'source', range});
-        }
+
+        const range = getNodeRange(getCurrentStepperState(state));
+        yield put({type: ActionTypes.BufferHighlight, buffer: 'source', range});
     });
 }

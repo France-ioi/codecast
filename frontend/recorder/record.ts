@@ -13,6 +13,7 @@
 
 import {actionChannel, call, put, select, take, takeLatest} from 'redux-saga/effects';
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {AppStore} from "../store";
 import {RecorderStatus} from "./store";
 import {Bundle} from "../linker";
@@ -66,16 +67,15 @@ export function addAutoRecordingBehaviour({recordApi, replayApi}: App, {sliceNam
         });
 
         if (initialState) {
-            replayApi.on('start', function(replayContext: ReplayContext) {
-                replayContext.state[sliceName] = initialState;
+            replayApi.on('start', function* () {
+                yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName, state: initialState}});
             });
         }
 
-        replayApi.on(action.type, function (replayContext: ReplayContext, event) {
+        replayApi.on(action.type, function* (replayContext: ReplayContext, event) {
             const payload = event[2];
-            const reducer = reducers[actionName];
 
-            reducer(replayContext.state[sliceName], action(payload));
+            yield put({type: action.type, payload});
         });
     }
 
@@ -106,6 +106,11 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.RecorderTruncate, (state: AppStore, {payload: {position, audioTime}}) => {
         state.recorder.events = state.recorder.events.slice(0, position);
         state.recorder.junkTime = (state.recorder.suspendedAt - audioTime);
+    });
+
+    bundle.defineAction(ActionTypes.RecorderPopEvent);
+    bundle.addReducer(ActionTypes.RecorderPopEvent, (state: AppStore) => {
+        state.recorder.events.pop();
     });
 
     bundle.addSaga(function* recordEvents() {

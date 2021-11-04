@@ -35,6 +35,7 @@ export enum ActionTypes {
     RecorderResumed = 'Recorder.Resumed',
 
     RecorderAddEvent = 'Recorder.Add.Event',
+    RecorderPopEvent = 'Recorder.Pop.Event',
     RecorderTruncate = 'Recorder.Truncate',
 
     AudioContextSuspended = 'Audio.Context.Suspended'

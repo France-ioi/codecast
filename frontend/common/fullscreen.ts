@@ -4,6 +4,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {App} from "../index";
 
 export const initialStateFullscreen = {
     active: false,
@@ -12,7 +13,7 @@ export const initialStateFullscreen = {
 
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.fullscreen = initialStateFullscreen;
+        state.fullscreen = {...initialStateFullscreen};
     });
 
     bundle.defineAction(ActionTypes.FullscreenEnter);
@@ -68,7 +69,11 @@ export default function(bundle: Bundle) {
         }
     }, buffers.sliding(3));
 
-    bundle.addSaga(function* monitorFullscreen() {
+    bundle.addSaga(function* monitorFullscreen(app: App) {
+        if (app.replay) {
+            return;
+        }
+
         const elem = window.document;
         // @ts-ignore
         const isFullscreenEnabled = !!(elem.fullscreenEnabled || elem.msFullscreenEnabled || elem.mozFullScreenEnabled || elem.webkitFullscreenEnabled);

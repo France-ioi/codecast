@@ -1,40 +1,43 @@
-import {ReactElement} from "react";
 import {App} from "../../index";
-import {AppStore} from "../../store";
+import {AppStore, AppStoreReplay} from "../../store";
+import {createDraft} from "immer";
 
 //TODO: Handle multiples libraries at once.
 // For now, we only use 1 library
 export class QuickAlgoLibraries {
-    libraries: {[name: string]: QuickAlgoLibrary} = {};
+    libraries: {[name: string]: {[mode: string]: QuickAlgoLibrary}} = {};
 
-    addLibrary(library: QuickAlgoLibrary, name: string) {
-        this.libraries[name] = library;
+    addLibrary(library: QuickAlgoLibrary, name: string, replay: boolean) {
+        if (!(name in this.libraries)) {
+            this.libraries[name] = {};
+        }
+        this.libraries[name][replay ? 'replay' : 'main'] = library;
     }
 
-    getContext(name: string = null): QuickAlgoLibrary {
+    getContext(name: string = null, replay: boolean): QuickAlgoLibrary {
         if (name in this.libraries) {
-            return this.libraries[name];
+            return this.libraries[name][replay ? 'replay' : 'main'];
         }
 
-        return Object.keys(this.libraries).length ? this.libraries[Object.keys(this.libraries)[0]] : null;
+        return Object.keys(this.libraries).length ? this.libraries[Object.keys(this.libraries)[0]][replay ? 'replay' : 'main'] : null;
     }
 
     reset(taskInfos = null, appState: AppStore = null) {
         this.applyOnLibraries('reset', [taskInfos, appState]);
     }
 
-    resetDisplay(taskInfos = null) {
-        this.applyOnLibraries('resetDisplay', [taskInfos]);
+    redrawDisplay(taskInfos = null) {
+        this.applyOnLibraries('redrawDisplay', [taskInfos]);
     }
 
     applyOnLibraries(method, args) {
-        for (let library of Object.values(this.libraries)) {
+        for (let library of this.getAllLibraries()) {
             library[method].apply(library, args);
         }
     }
 
     getVisualization() {
-        for (let library of Object.values(this.libraries)) {
+        for (let library of this.getAllLibraries()) {
             if (library.getComponent()) {
                 return library.getComponent();
             }
@@ -45,17 +48,39 @@ export class QuickAlgoLibraries {
 
     getSagas(app: App) {
         const sagas = [];
-        for (let library of Object.values(this.libraries)) {
-            if (library.getSaga(app)) {
-                sagas.push(library.getSaga(app));
+        for (let library of this.getAllLibraries()) {
+            const librarySagas = library.getSaga(app);
+            if (librarySagas) {
+                sagas.push(librarySagas);
             }
         }
 
         return sagas;
     }
+
+    getEventListeners() {
+        let listeners = {} as {[key: string]: {module: string, method: string}};
+        for (let [module, libraries] of Object.entries(this.libraries)) {
+            for (let library of Object.values(libraries)) {
+                const libraryListeners = library.getEventListeners();
+                if (libraryListeners && Object.keys(libraryListeners).length) {
+                    for (let [eventName, method] of Object.entries(libraryListeners)) {
+                        listeners[eventName] = {module, method};
+                    }
+                }
+            }
+        }
+
+        return listeners;
+    }
+
+    getAllLibraries() {
+        return Object.values(this.libraries).reduce((prev, libs) => [...prev, ...Object.values(libs)], []);
+    }
 }
 
 export const quickAlgoLibraries = new QuickAlgoLibraries();
+window.quickAlgoLoadedLibraries = quickAlgoLibraries;
 
 export class QuickAlgoLibrary {
     display: boolean;
@@ -73,6 +98,8 @@ export class QuickAlgoLibrary {
     messagePrefixFailure: string;
     messagePrefixSuccess: string;
     linkBack: boolean;
+    delayFactory: any;
+    raphaelFactory: any;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -91,6 +118,10 @@ export class QuickAlgoLibrary {
         this.messagePrefixSuccess = '';
         this.linkBack = false;
 
+        // These classes are provided by the bebras-modules
+        this.delayFactory = new window.DelayFactory();
+        this.raphaelFactory = new window.RaphaelFactory();
+
         // this.blocklyHelper = {
         //     updateSize: function () {
         //     },
@@ -99,7 +130,7 @@ export class QuickAlgoLibrary {
 
     // Set the localLanguageStrings for this context
     setLocalLanguageStrings(localLanguageStrings) {
-        window.stringsLanguage = window.stringsLanguage || "fr";
+        window.stringsLanguage = window.stringsLanguage && window.stringsLanguage in localLanguageStrings ? window.stringsLanguage : "fr";
         window.languageStrings = window.languageStrings || {};
 
         if (typeof window.languageStrings != "object") {
@@ -111,6 +142,8 @@ export class QuickAlgoLibrary {
             }
         }
         this.strings = window.languageStrings;
+
+        return this.strings;
     };
 
     // Import more language strings
@@ -166,14 +199,21 @@ export class QuickAlgoLibrary {
     };
 
     // Placeholders, should be actually defined by the library
-    reset(taskInfos = null, appState: AppStore = null) {
+    reset(taskInfos = null, appState: AppStoreReplay = null) {
         // Reset the context
         if (this.display) {
-            this.resetDisplay();
+            this.redrawDisplay();
         }
     };
 
-    resetDisplay() {
+    resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null) {
+        this.reset(taskInfos, appState);
+        if (this.reloadInnerState) {
+            this.reloadInnerState(createDraft(this.getInnerState()));
+        }
+    };
+
+    redrawDisplay() {
         // Reset the context display
     };
 
@@ -194,16 +234,20 @@ export class QuickAlgoLibrary {
         return null;
     };
 
-    getCurrentState() {
+    getInnerState() {
         return {};
     };
 
-    reloadState(state: any): void {
+    reloadInnerState(state: any): void {
     }
 
     getSaga(app: App) {
         return null;
     }
+
+    getEventListeners(): {[eventName: string]: string} {
+        return null;
+    };
 
     onError(diagnostics: any): void {
 
@@ -216,4 +260,10 @@ export class QuickAlgoLibrary {
     onInput(): void {
 
     }
+}
+
+window.quickAlgoResponsive = true;
+
+window.quickAlgoContext = function (display: boolean, infos: any) {
+    return new QuickAlgoLibrary(display, infos);
 }

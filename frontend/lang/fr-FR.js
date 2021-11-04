@@ -122,6 +122,7 @@ module.exports = {
     PLATFORM_ARDUINO: "C (Arduino)",
     PLATFORM_PYTHON: "Python",
     EMPTY_PROGRAM: "Le programme est vide.",
+    PROGRAM_MISSING_LIB: "Vous devez mettre la ligne {line} dans votre programme.",
 
     USER_SELECT_LOGIN_METHOD: "Choisissez une méthode de connexion :",
 

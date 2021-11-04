@@ -3,6 +3,8 @@
         Python code runner.
 */
 
+import log from "loglevel";
+
 if (!window.hasOwnProperty('currentPythonContext')) {
     window.currentPythonContext = null;
 }
@@ -31,7 +33,6 @@ export default function(context) {
     this._printedDuringStep = '';
     this._inputPos = 0;
     this._futureInputValue = null;
-    this._synchronizingAnalysis = false;
     this.onInput = context.onInput;
     this.onError = context.onError;
     this.onSuccess = context.onSuccess;
@@ -53,7 +54,6 @@ export default function(context) {
 
         handler += "\n\tsusp.resume = function() { return result; };";
         handler += "\n\tsusp.data = {type: 'Sk.promise', promise: new Promise(function(resolve) {";
-        handler += "\n\targs.push(resolve);";
 
         // Count actions
         if(type == 'actions') {
@@ -61,7 +61,7 @@ export default function(context) {
         }
 
         handler += "\n\ttry {";
-        handler += '\n\t\tconst result = currentPythonContext["' + generatorName + '"]["' + blockName + '"].apply(currentPythonContext, args);';
+        handler += '\n\t\tconst result = currentPythonContext.runner.executeQuickAlgoLibraryCall("' + generatorName + '", "' + blockName + '", args, resolve);';
         handler += '\n\t\tif (result instanceof Promise) result.catch((e) => { currentPythonContext.runner._onStepError(e) })';
         handler += "\n\t} catch (e) {";
         handler += "\n\t\tcurrentPythonContext.runner._onStepError(e)}";
@@ -83,15 +83,13 @@ export default function(context) {
             susp.data = {
                 type: 'Sk.promise',
                 promise: new Promise(function(resolve) {
-                    args.push(resolve);
-
                     // Count actions
                     if (type == 'actions') {
                         window.currentPythonContext.runner._nbActions += 1;
                     }
 
                     try {
-                        const result = window.currentPythonContext[generatorName][blockName].apply(window.currentPythonContext, args);
+                        const result = window.currentPythonContext.runner.executeQuickAlgoLibraryCall(generatorName, blockName, args, resolve);
                         if (result instanceof Promise) result.catch((e) => { window.currentPythonContext.runner._onStepError(e) })
                     } catch (e) {
                         window.currentPythonContext.runner._onStepError(e)}
@@ -341,6 +339,7 @@ export default function(context) {
     };
 
     this.returnCallback = (callback, value) => {
+        log.getLogger('python_interpreter').debug('RETURN CALLBACK', value);
         var primitive = this._createPrimitive(value);
         if (primitive !== Sk.builtin.none.none$) {
             this._resetCallstackOnNextStep = true;
@@ -351,6 +350,7 @@ export default function(context) {
     };
 
     this.waitDelay = (callback, value, delay) => {
+        log.getLogger('python_interpreter').debug('WAIT DELAY', value, delay);
         this._paused = true;
         if (delay > 0) {
             let _noDelay = this.noDelay.bind(this, callback, value);
@@ -361,6 +361,7 @@ export default function(context) {
     };
 
     this.waitEvent = (callback, target, eventName, func) => {
+        log.getLogger('python_interpreter').debug('WAIT EVENT');
         this._paused = true;
         var listenerFunc = null;
         var that = this;
@@ -373,6 +374,7 @@ export default function(context) {
 
     this.waitCallback = (callback) => {
         // Returns a callback to be called once we can continue the execution
+        log.getLogger('python_interpreter').debug('WAIT CALLBACK');
         this._paused = true;
         var that = this;
         return (value) => {
@@ -381,6 +383,7 @@ export default function(context) {
     };
 
     this.noDelay = (callback, value) => {
+        log.getLogger('python_interpreter').debug('NO DELAY');
         var primitive = this._createPrimitive(value);
         if (primitive !== Sk.builtin.none.none$) {
             // Apparently when we create a new primitive, the debugger adds a call to
@@ -389,10 +392,7 @@ export default function(context) {
             this.reportValue(value);
         }
 
-        this._paused = false;
         callback(primitive);
-
-        this._setTimeout(this._continue.bind(this), 10);
     };
 
     this._createPrimitive = (data) => {
@@ -454,7 +454,7 @@ export default function(context) {
         if (message.trim() === 'Program execution complete') {
             this._isFinished = true;
         } else {
-            if (message) {
+            if (message && 'customPrint' in Sk.builtins) {
                 Sk.builtins['customPrint'](message.trim());
             }
             this._printedDuringStep += message;
@@ -533,7 +533,8 @@ export default function(context) {
         this._isRunning = true;
     };
 
-    this.runStep = () => {
+    this.runStep = (executeQuickAlgoLibraryCall) => {
+        this.executeQuickAlgoLibraryCall = executeQuickAlgoLibraryCall;
         return new Promise((resolve, reject) => {
             this.stepMode = true;
             this._printedDuringStep = '';
@@ -737,7 +738,7 @@ export default function(context) {
         const analysisCode = analysis.code;
         const currentPythonStepNum = window.currentPythonRunner._steps;
         const currentPythonCode = window.currentPythonRunner._code;
-        console.log('check sync analysis', analysisStepNum, currentPythonStepNum);
+        console.log('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentPythonStepNum);
         if (analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode) {
             return false;
         }

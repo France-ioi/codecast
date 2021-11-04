@@ -1,3 +1,6 @@
+import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
+import {current, isDraft} from "immer";
+
 export function extractLevelSpecific(item, level) {
     if ((typeof item != "object")) {
         return item;
@@ -48,4 +51,47 @@ export function extractLevelSpecific(item, level) {
         return newItem;
     }
     console.error("Invalid type for shared property");
+}
+
+export function getAvailableModules(context) {
+    if (context.infos.includeBlocks && context.infos.includeBlocks.generatedBlocks) {
+        let availableModules = [];
+        for (let generatorName in context.infos.includeBlocks.generatedBlocks) {
+            if (context.infos.includeBlocks.generatedBlocks[generatorName].length) {
+                availableModules.push(generatorName);
+            }
+        }
+        return availableModules;
+    } else {
+        return [];
+    }
+}
+
+export function checkCompilingCode(code, getMessage, replay: boolean) {
+    if (!code) {
+        throw getMessage('EMPTY_PROGRAM');
+    }
+
+    const context = quickAlgoLibraries.getContext(null, replay);
+    if (context) {
+        const availableModules = getAvailableModules(context);
+        for (let availableModule of availableModules) {
+            if ('printer' === availableModule) {
+                // Printer lib is optional
+                continue;
+            }
+            let match = (new RegExp('from\\s+' + availableModule + '\\s+import\\s+\\*')).exec(code);
+            if (null === match) {
+                throw getMessage('PROGRAM_MISSING_LIB').format({line: `<code>from ${availableModule} import *</code>`});
+            }
+        }
+    }
+}
+
+export function getCurrentImmerState(object) {
+    return Object.fromEntries(
+        Object.entries(object).map(
+            ([k, v]) => [k, isDraft(v) ? current(v) : v],
+        )
+    )
 }

@@ -63,7 +63,7 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.EditorPrepare, (state: AppStore, {payload: {baseDataUrl}}) => {
         const {baseUrl} = state.options;
 
-        state.editor = initialStateEditor;
+        state.editor = {...initialStateEditor};
         state.editor.base = baseDataUrl;
         state.editor.dataUrl = baseDataUrl;
         state.editor.playerUrl = `${baseUrl}/task?recording=${encodeURIComponent(baseDataUrl)}`;

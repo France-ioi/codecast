@@ -121,6 +121,7 @@ module.exports = {
     PLATFORM_ARDUINO: "C (Arduino)",
     PLATFORM_PYTHON: "Python",
     EMPTY_PROGRAM: "The program is empty.",
+    PROGRAM_MISSING_LIB: "You must include the line {line} in your program.",
 
     EDITOR_SPLIT: 'Split',
     EDITOR_MERGE: 'Merge',
@@ -147,6 +148,11 @@ module.exports = {
     EDITOR_SUBTITLES_REMOVE_CONFIRM: 'Do you confirm the removal of language {language}?',
 
     USER_SELECT_LOGIN_METHOD: "Select a login option:",
+
+    KEYWORD: 'keyword',
+    CONSTANT: "constant",
+    VARIABLE: "variable",
+
     TASK_DESCRIPTION: 'Instructions',
     TASK_VARIABLES: 'Variables',
     TASK_DOCUMENTATION: 'Informations',

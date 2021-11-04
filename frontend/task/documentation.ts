@@ -90,7 +90,7 @@ function* documentationLoadSaga(standalone: boolean) {
         return;
     }
 
-    let context = quickAlgoLibraries.getContext();
+    let context = quickAlgoLibraries.getContext(null, false);
     if (context.display && context.infos.conceptViewer) {
         const language = yield select(state => state.documentation.language);
         let concepts = [], allConcepts = [];
