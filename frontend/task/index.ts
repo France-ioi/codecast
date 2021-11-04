@@ -16,7 +16,7 @@ import taskSlice, {
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
-import DocumentationBundle from "./documentation";
+import DocumentationBundle from "./doc";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',

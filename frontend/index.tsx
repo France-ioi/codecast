@@ -30,7 +30,7 @@ import {ReplayApi} from "./player/replay";
 import {RecordApi} from "./recorder/record";
 import {StepperApi} from "./stepper/api";
 import {EnhancedStore} from "@reduxjs/toolkit";
-import {ConceptViewer} from "./task/documentation";
+import {ConceptViewer} from "./task/doc";
 import {Documentation} from "./task/Documentation";
 import '@france-ioi/skulpt/dist/skulpt.min';
 import '@france-ioi/skulpt/dist/skulpt-stdlib';

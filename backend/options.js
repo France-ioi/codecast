@@ -1,13 +1,13 @@
 import url from 'url';
 
-export function buildCommonOptions(start, query) {
+export function buildCommonOptions(config, start, query) {
     const options = {
         start,
         showStepper: true,
         showStack: true,
         showViews: true,
         showIO: true,
-        platform: 'unix',
+        platform: config.hasOwnProperty('defaultPlatform') ? config.defaultPlatform : 'unix',
         canChangePlatform: /sandbox|recorder|task/.test(start),
         controls: {},
     };
@@ -64,7 +64,7 @@ export function buildCommonOptions(start, query) {
 }
 
 export function buildOptions(config, req, start, callback) {
-    const options = buildCommonOptions(start, req.query);
+    const options = buildCommonOptions(config, start, req.query);
     options.baseUrl = config.baseUrl;
     options.callbackUrl = req.originalUrl;
     options.referer = req.headers.referer || null;

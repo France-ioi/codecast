@@ -352,6 +352,8 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
              *   - $d : Sk.builtin.dict
              */
 
+            console.log('object => ', this.props);
+
             let old = this.props.old;
             if (old && old instanceof Sk.builtin.object) {
                 old = old.$d;
@@ -489,7 +491,7 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             return (
                 <React.Fragment>
                     <span className={classes}>{this.props.cur.v}</span>
-                    {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
+                    {(this.props.old && (this.props.cur.v !== this.props.old.v)) && !Array.isArray(this.props.old.v) ?
                         <span className="value-previous">{this.props.old.v}</span>
                         : null}
                 </React.Fragment>
