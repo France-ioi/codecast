@@ -11,6 +11,7 @@ export interface DocumentationConcept {
 
 export enum DocumentationLanguage {
     Python = 'python',
+    C = 'c',
     Blockly = 'blockly',
     Scratch = 'scratch',
 }

@@ -7,6 +7,7 @@ import {RecorderControlsTask} from "./RecorderControlsTask";
 import {SubtitlesBand} from "../subtitles/SubtitlesBand";
 import {PlayerControlsTask} from "./PlayerControlsTask";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {LayoutLoader} from "./layout/LayoutLoader";
 import {taskSuccessClear} from "./task_slice";
 import {taskLoad} from "./index";
@@ -18,6 +19,7 @@ import {SubtitlesEditorPane} from "../subtitles/views/SubtitlesEditorPane";
 import {ActionTypes} from "../subtitles/actionTypes";
 import {SubtitlesEditor} from "../subtitles/SubtitlesEditor";
 import {LoginScreen} from "../common/LoginScreen";
+import {ZOOM_LEVEL_LOW} from "./layout/layout";
 
 export function TaskApp() {
     const getMessage = useAppSelector(state => state.getMessage);
@@ -63,7 +65,9 @@ export function TaskApp() {
                     });
                     dispatch({type: ActionTypes.SubtitlesEditorEnter});
                 } else {
-                    dispatch({
+                    dispatch({type: LayoutActionTypes.LayoutZoomLevelChanged, payload: {zoomLevel: ZOOM_LEVEL_LOW}});
+
+                dispatch({
                         type: PlayerActionTypes.PlayerPrepare,
                         payload: {
                             baseDataUrl: options.baseDataUrl,

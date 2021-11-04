@@ -24,11 +24,13 @@ import taskSlice, {
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation";
+import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
+import {ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {createDraft} from "immer";
 import {PlayerInstant} from "../player";
-import {ActionTypes as StepperActionTypes, ActionTypes} from "../stepper/actionTypes";
+import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
-import {stepperDisabledSaga, StepperState, StepperStatus, StepperStepMode} from "../stepper";
+import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
@@ -209,7 +211,7 @@ function* handleLibrariesEventListenerSaga(app: App) {
         interactAfter: (arg) => {
             return new Promise((resolve, reject) => {
                 app.dispatch({
-                    type: ActionTypes.StepperInteract,
+                    type: StepperActionTypes.StepperInteract,
                     payload: {stepperContext, arg},
                     meta: {resolve, reject}
                 });
@@ -278,7 +280,10 @@ export default function (bundle: Bundle) {
 
         yield takeEvery(TaskActionTypes.TaskLoad, taskLoadSaga, app);
 
-        yield takeEvery(recordingEnabledChange.type, function* (payload) {
+        // @ts-ignore
+        yield takeEvery(recordingEnabledChange.type, function* ({payload}) {
+            yield put({type: LayoutActionTypes.LayoutZoomLevelChanged, payload: {zoomLevel: payload ? ZOOM_LEVEL_HIGH : 1}});
+
             if (!payload) {
                 return;
             }
@@ -298,7 +303,7 @@ export default function (bundle: Bundle) {
                 console.log('needs reset', needsReset);
                 if (needsReset) {
                     console.log('HANDLE RESET');
-                    yield put({type: ActionTypes.StepperExit});
+                    yield put({type: StepperActionTypes.StepperExit});
                 }
 
                 const currentSubmission = yield select((state: AppStore) => state.task.currentSubmission);
@@ -319,7 +324,7 @@ export default function (bundle: Bundle) {
         });
 
         // @ts-ignore
-        yield takeEvery([ActionTypes.StepperExecutionError, ActionTypes.CompileFailed], function* ({payload}) {
+        yield takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function* ({payload}) {
             const currentTestId = yield select(state => state.task.currentTestId);
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
@@ -328,7 +333,7 @@ export default function (bundle: Bundle) {
             });
         });
 
-        yield takeEvery(ActionTypes.StepperExit, function* () {
+        yield takeEvery(StepperActionTypes.StepperExit, function* () {
             const state = yield select();
             const context = quickAlgoLibraries.getContext(null, state.environment);
             if (context) {
@@ -378,10 +383,10 @@ export default function (bundle: Bundle) {
 
             // Stop current execution if there is one
             if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
-                yield put({type: ActionTypes.StepperInterrupt, payload: {record: false}});
+                yield put({type: StepperActionTypes.StepperInterrupt, payload: {record: false}});
             }
             if (state.stepper && state.stepper.status !== StepperStatus.Clear) {
-                yield put({type: ActionTypes.StepperExit, payload: {record: false}});
+                yield put({type: StepperActionTypes.StepperExit, payload: {record: false}});
             }
 
             // Reload context state for the new test

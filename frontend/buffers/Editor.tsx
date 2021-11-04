@@ -14,6 +14,7 @@ interface EditorStateToProps {
     getMessage: Function,
     context: QuickAlgoLibrary,
     layoutType: LayoutType,
+    zoomLevel?: number,
     autocompletionParameters: AutocompletionParameters,
 }
 
@@ -25,6 +26,7 @@ function mapStateToProps(state: AppStore): EditorStateToProps {
         getMessage: state.getMessage,
         context,
         layoutType: state.layout.type,
+        zoomLevel: state.layout.zoomLevel,
         autocompletionParameters,
     };
 }
@@ -40,7 +42,7 @@ interface EditorProps extends EditorStateToProps {
     onSelect: Function,
     onEdit: Function,
     onScroll: Function,
-    onInit: Function
+    onInit: Function,
 }
 
 class _Editor extends React.PureComponent<EditorProps> {
@@ -221,9 +223,7 @@ class _Editor extends React.PureComponent<EditorProps> {
         // editor.setBehavioursEnabled(false);
         editor.setTheme(`ace/theme/${this.props.theme || 'github'}`);
         session.setMode(`ace/mode/${this.props.mode || 'text'}`);
-        if (LayoutType.MobileHorizontal === this.props.layoutType || LayoutType.MobileVertical === this.props.layoutType) {
-            editor.setFontSize('16px');
-        }
+        editor.setFontSize(Math.round(16 * this.props.zoomLevel) + 'px');
         // editor.setOptions({minLines: 25, maxLines: 50});
         editor.setOptions({
             readOnly: !!this.props.readOnly,
@@ -303,6 +303,10 @@ class _Editor extends React.PureComponent<EditorProps> {
         if (this.editor) {
             if (prevProps.readOnly !== this.props.readOnly) {
                 this.editor.setReadOnly(this.props.readOnly);
+            }
+
+            if (prevProps.zoomLevel !== this.props.zoomLevel) {
+                this.editor.setFontSize(Math.round(16 * this.props.zoomLevel) + 'px');
             }
 
             /* Do not auto-scroll when shielded. */

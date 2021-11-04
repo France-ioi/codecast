@@ -315,7 +315,7 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
                 </div>
                 <div className='clearfix' style={{padding: '2px'}}>
                     <div style={{width: '100%', height: `${layout.bottom * scale}px`}}>
-                        <svg width='100%' height={layout.bottom} version='1.1' xmlns='http://www.w3.org/2000/svg'
+                        <svg width='100%' height={layout.bottom * scale} version='1.1' xmlns='http://www.w3.org/2000/svg'
                              onMouseDown={this.onMouseDown} onMouseMove={this.onMouseMove} onMouseUp={this.onMouseUp}>
                             <g className='memory-view' ref={this.refViewer} transform={viewTransform}>
                                 <g style={{pointerEvents: "none"}}>
