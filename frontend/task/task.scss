@@ -24,6 +24,7 @@ $primary: #4a90e2;
 
 html {
   margin: 0 !important;
+  font-size: 18px;
 }
 
 body {
@@ -89,6 +90,7 @@ body {
     h1 {
       color: #30242B;
       margin-bottom: 1rem;
+      font-size: 1.5em !important;
     }
   }
 
@@ -393,9 +395,9 @@ body {
   }
 }
 
-pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
-  font-size: $font-size-lg;
-  line-height: $line-height-lg;
+pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
+  font-size: 1.12em;
+  line-height: 1.5;
 }
 
 .ace_editor {

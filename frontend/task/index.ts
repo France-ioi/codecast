@@ -24,9 +24,11 @@ import taskSlice, {
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation";
+import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
+import {ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {createDraft} from "immer";
 import {PlayerInstant} from "../player";
-import {ActionTypes} from "../stepper/actionTypes";
+import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {stepperDisabledSaga, stepperExitReducer, StepperState, StepperStatus} from "../stepper";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
@@ -188,7 +190,7 @@ function* handleLibrariesEventListenerSaga(app: App) {
         interactAfter: (arg) => {
             return new Promise((resolve, reject) => {
                 app.dispatch({
-                    type: ActionTypes.StepperInteract,
+                    type: StepperActionTypes.StepperInteract,
                     payload: {stepperContext, arg},
                     meta: {resolve, reject}
                 });
@@ -245,7 +247,10 @@ export default function (bundle: Bundle) {
 
         yield takeEvery(TaskActionTypes.TaskLoad, taskLoadSaga, app);
 
-        yield takeEvery(recordingEnabledChange.type, function* (payload) {
+        // @ts-ignore
+        yield takeEvery(recordingEnabledChange.type, function* ({payload}) {
+            yield put({type: LayoutActionTypes.LayoutZoomLevelChanged, payload: {zoomLevel: payload ? ZOOM_LEVEL_HIGH : 1}});
+
             if (!payload) {
                 return;
             }
@@ -265,7 +270,7 @@ export default function (bundle: Bundle) {
                 console.log('needs reset', needsReset);
                 if (needsReset) {
                     console.log('HANDLE RESET');
-                    yield put({type: ActionTypes.StepperExit});
+                    yield put({type: StepperActionTypes.StepperExit});
                 }
             }
         });
@@ -274,7 +279,7 @@ export default function (bundle: Bundle) {
             yield call(stepperDisabledSaga);
         });
 
-        yield takeEvery(ActionTypes.StepperExit, function* () {
+        yield takeEvery(StepperActionTypes.StepperExit, function* () {
             console.log('make reset');
             const state = yield select();
             const context = quickAlgoLibraries.getContext(null, state.replay);

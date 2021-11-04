@@ -208,7 +208,7 @@ export class Array2D extends React.PureComponent<Array2DProps> {
             <DirectiveFrame {...this.props}>
                 <div className='clearfix' style={{padding: '2px'}}>
                     <div style={{width: '100%', height: divHeight}}>
-                        <SvgPan width='100%' height={svgHeight} scale={scale} x={hPan * cellWidth} y={vPan * cellHeight}
+                        <SvgPan width='100%' height={svgHeight * scale} scale={scale} x={hPan * cellWidth} y={vPan * cellHeight}
                                 getPosition={this.getPosition} onPan={this.onPan} className="array2d">
                             <clipPath id="cell">
                                 <rect x="0" y="0" width={cellWidth} height={cellHeight}/>

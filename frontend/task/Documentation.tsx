@@ -42,7 +42,7 @@ export function Documentation(props: DocumentationProps) {
 
     useEffect(() => {
         dispatch(documentationLoad(props.standalone));
-    }, []);
+    }, [documentationLanguage]);
 
     const iframeLoaded = () => {
         const docWindow = iframeRef.contentWindow;
@@ -98,7 +98,7 @@ export function Documentation(props: DocumentationProps) {
         });
         dispatch({
             type: CommonActionTypes.PlatformChanged,
-            payload: language,
+            payload: 'c' === language ? 'unix' : language,
         });
         closeDocumentation();
     };
@@ -144,6 +144,7 @@ export function Documentation(props: DocumentationProps) {
                         <div className='bp3-select'>
                             <select onChange={setDocumentationLanguage} value={documentationLanguage}>
                                 <option value={DocumentationLanguage.Python}>Python</option>
+                                <option value={DocumentationLanguage.C}>C</option>
                                 <option value={DocumentationLanguage.Blockly}>Blockly</option>
                                 <option value={DocumentationLanguage.Scratch}>Scratch</option>
                             </select>
@@ -169,6 +170,7 @@ export function Documentation(props: DocumentationProps) {
                         <div className='bp3-select'>
                             <select onChange={setDocumentationLanguage} value={documentationLanguage}>
                                 <option value={DocumentationLanguage.Python}>Python</option>
+                                <option value={DocumentationLanguage.C}>C</option>
                                 <option value={DocumentationLanguage.Blockly}>Blockly</option>
                                 <option value={DocumentationLanguage.Scratch}>Scratch</option>
                             </select>

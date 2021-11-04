@@ -150,7 +150,7 @@ export class Array1D extends React.PureComponent<Array1DProps> {
         return (
             <DirectiveFrame {...this.props} hasFullView>
                 <div className='clearfix' style={{padding: '2px'}}>
-                    <SvgPan className='svg-array1d' width='100%' height={cellHeight} scale={scale} x={cellPan * cellWidth - 10} y={0}
+                    <SvgPan className='svg-array1d' width='100%' height={cellHeight * scale} scale={scale} x={cellPan * cellWidth - 10} y={0}
                             getPosition={this.getPosition} onPan={this.onPan}>
                         <clipPath id="cell">
                             <rect x="0" y="0" width={cellWidth} height={3 * textLineHeight}/>
