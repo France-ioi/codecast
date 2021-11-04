@@ -10,7 +10,6 @@ import {
 } from "./documentation_slice";
 import {taskLevels} from "./task_slice";
 import {AppAction} from "../store";
-import {ActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {getMessage} from "../lang";
 
@@ -111,8 +110,6 @@ function* documentationLoadSaga(standalone: boolean) {
         } else {
             concepts.push('base');
         }
-
-        const getMessage = yield select(state => state.getMessage);
 
         // Add code examples to documentation
         const conceptBaseUrl = (window.location.protocol == 'https:' ? 'https:' : 'http:') + '//'
