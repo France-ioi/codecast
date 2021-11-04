@@ -37,13 +37,19 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
 
     isOpened = () => {
         let opened = false;
-        if (this.props.cur.hasOwnProperty('_uuid')) {
-            if (this.props.openedPaths.hasOwnProperty(this.props.path)) {
-                opened = this.props.openedPaths[this.props.path];
-            } else if (this.props.hasOwnProperty('defaultopened')) {
+        if (
+            this.props.cur instanceof Sk.builtin.list
+            || this.props.cur instanceof Sk.builtin.tuple
+            || this.props.cur instanceof Sk.builtin.range_
+            || this.props.cur instanceof Sk.builtin.set
+            || this.props.cur instanceof Sk.builtin.frozenset
+        ) {
+            opened = true;
+        } else if (this.props.openedPaths.hasOwnProperty(this.props.path)) {
+            opened = this.props.openedPaths[this.props.path];
+        } else if (this.props.cur.hasOwnProperty('_uuid')) {
+            if (this.props.hasOwnProperty('defaultopened')) {
                 opened = this.props.defaultopened;
-            } else if (this.props.cur instanceof Sk.builtin.list || this.props.cur instanceof Sk.builtin.tuple) {
-                opened = true;
             }
         }
 
@@ -70,58 +76,33 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
         }
 
         if (this.props.cur instanceof Sk.builtin.dict) {
-            /**
-             * A dict's representation is as follow :
-             *
-             * test : Sk.builtin.dict
-             *   - buckets
-             *     - 14: (hash index example) /!\ This one only in case of an Object /!\
-             *       - $hash : Sk.builtin.int_
-             *         - v: 14 (hash index example)
-             *       - items : [
-             *         - 0 :
-             *           - lhs : Sk.builtin.str
-             *             - v : "__dict__"
-             *             - $savedHash : (= $hash)
-             *           - rhs : dict (= $d)
-             *     - 16: (hash index example 2)
-             *       - $hash : Sk.builtin.int_
-             *         - v: 16 (hash index example 2)
-             *       - items : [
-             *         - 0 :
-             *           - lhs : Sk.builtin.int_
-             *             - v : "a" (variable name)
-             *             - $savedHash : (= $hash)
-             *           - rhs : Sk.builtin.int_
-             *             - v: 41 (variable value)
-             *       ]
-             */
-
             const elements = [];
             let isEmpty = true;
-            for (let hashKey in this.props.cur.buckets) {
-                const element = this.props.cur.buckets[hashKey].items[0];
+            const entries = Object.entries(this.props.cur.entries);
+            for (let i in entries) {
+                const key = entries[i][0];
+                const item = entries[i][1];
 
                 // Ignore the element with name __dict__ that appears in objects dictionnaries.
-                if (element.lhs.v === '__dict__') {
+                if (key === '__dict__') {
                     continue;
                 }
 
                 let old = undefined;
                 if (this.props.old && this.props.old instanceof Sk.builtin.dict) {
-                    const oldBucket = this.props.old.buckets[hashKey];
-                    if (oldBucket) {
-                        old = oldBucket.items[0].rhs;
+                    const oldEntry = Object.entries(this.props.old.entries)[i];
+                    if (oldEntry) {
+                        old = oldEntry[1][1];
                     }
                 }
 
-                const path = this.props.path + ':' + element.lhs.v;
-                const loaded = this.props.loadedReferences.hasOwnProperty(this.props.cur._uuid + '_' + element.lhs.v);
+                const path = this.props.path + ':' + key;
+                const loaded = this.props.loadedReferences.hasOwnProperty(this.props.cur._uuid + '_' + key);
 
                 elements.push({
-                    name: element.lhs.v,
+                    name: key,
                     value: {
-                        cur: element.rhs,
+                        cur: item[1],
                         old: old
                     },
                     path: path,
@@ -188,7 +169,99 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             )
         }
 
-        if (this.props.cur instanceof Sk.builtin.list || this.props.cur instanceof Sk.builtin.tuple) {
+        if (this.props.cur instanceof Sk.builtin.set || this.props.cur instanceof Sk.builtin.frozenset) {
+            const elements = [];
+            let isEmpty = true;
+            const entries = Object.entries(this.props.cur.v.entries);
+            for (let i in entries) {
+                const key = entries[i][0];
+
+                // Ignore the element with name __dict__ that appears in objects dictionnaries.
+                if (key === '__dict__') {
+                    continue;
+                }
+
+                let old = undefined;
+                if (this.props.old && this.props.old.v instanceof Sk.builtin.dict) {
+                    const oldEntry = this.props.old.v.entries[i];
+                    if (oldEntry) {
+                        old = oldEntry[1][0];
+                    }
+                }
+
+                const path = this.props.path + ':' + key;
+                const loaded = this.props.loadedReferences.hasOwnProperty(this.props.cur.v._uuid + '_' + key);
+
+                elements.push({
+                    name: key,
+                    value: {
+                        cur: entries[i][1][0],
+                        old: old
+                    },
+                    path: path,
+                    loaded: loaded
+                });
+                isEmpty = false;
+            }
+
+            const wasVisited = this.props.visited[this.props.cur.v._uuid];
+            const visited = {
+                ...this.props.visited,
+
+            }
+            visited[this.props.cur.v._uuid] = true;
+
+            let renderedElements;
+            if (wasVisited) {
+                renderedElements = '...';
+            } else if (isEmpty) {
+                renderedElements = <span className="value-empty">&lt;&gt;</span>;
+            } else {
+                renderedElements = elements.map((element, index) => {
+                    let loadedReferences = {};
+                    if (element.loaded) {
+                        loadedReferences = this.props.loadedReferences;
+                    }
+
+                    return (
+                        <span key={element.name}>
+                            <PythonVariableValue
+                                cur={element.value.cur}
+                                old={element.value.old}
+                                visited={visited}
+                                path={element.path}
+                                loadedReferences={loadedReferences}
+                                openedPaths={this.props.openedPaths}
+                                scopeIndex={this.props.scopeIndex}
+                            />
+                            {(index + 1) < elements.length ? ', ' : null}
+                        </span>
+                    );
+                });
+            }
+
+            return (
+                <React.Fragment>
+                    {this.isOpened() ? (
+                        <React.Fragment>
+                            <span className="list-toggle list-toggle-open" onClick={this.toggleOpened}>
+                                <span className="toggle-icon">▾</span>
+                            </span>
+                            &#x7B;{renderedElements}&#x7D;
+                        </React.Fragment>
+                    ) : (
+                        <span className="list-toggle" onClick={this.toggleOpened}>
+                            <span className="toggle-icon">▸</span>
+                            <span className="value-list-closed">
+                                &lt;{this.props.cur instanceof Sk.builtin.frozenset ? 'frozenset' : 'set'}&gt;
+                            </span>
+                        </span>
+                    )}
+                </React.Fragment>
+            )
+        }
+
+        if (this.props.cur instanceof Sk.builtin.list || this.props.cur instanceof Sk.builtin.tuple || this.props.cur instanceof Sk.builtin.range_) {
             const nbElements = this.props.cur.v.length;
 
             const elements = [];
@@ -243,6 +316,13 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
                 });
             }
 
+            let variableType = 'list';
+            if (this.props.cur instanceof Sk.builtin.tuple) {
+                variableType = 'tuple';
+            } else if (this.props.cur instanceof Sk.builtin.range_) {
+                variableType = 'range';
+            }
+
             return (
                 <React.Fragment>
                     {this.isOpened() ? (
@@ -256,7 +336,7 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
                         <span className="list-toggle" onClick={this.toggleOpened}>
                             <span className="toggle-icon">▸</span>
                             <span className="value-list-closed">
-                                &lt;list&gt;
+                                &lt;{variableType}&gt;
                             </span>
                         </span>
                     )}
@@ -271,6 +351,8 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
              * test : Sk.builtin.object
              *   - $d : Sk.builtin.dict
              */
+
+            console.log('object => ', this.props);
 
             let old = this.props.old;
             if (old && old instanceof Sk.builtin.object) {
@@ -306,7 +388,7 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             )
         }
 
-        if (this.props.cur.hasOwnProperty('$__iterType')) {
+        if (this.props.cur && this.props.cur.hasOwnProperty('$__iterType')) {
             let old = this.props.old;
             if (old && old.hasOwnProperty('$__iterType')) {
                 old = old.myobj;
@@ -370,11 +452,57 @@ class _PythonVariableValue extends React.PureComponent<PythonVariableValueProps>
             )
         }
 
+        if (this.props.cur instanceof Sk.builtin.bytes) {
+            const byteToString = (byte: number) => {
+                return String.fromCharCode(byte).match(/^[a-zA-Z0-9]$/) ? String.fromCharCode(byte) : "\\x" + byte.toString(16);
+            };
+
+            return (
+                <React.Fragment>
+                    <span className={classes}>b&#39;{Array.from<number>(this.props.cur.v).map(byteToString).join('')}&#39;</span>
+                    {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
+                        <span className="value-previous">b&#39;{Array.from<number>(this.props.old.v).map(byteToString).join('')}&#39;</span>
+                        : null}
+                </React.Fragment>
+            )
+        }
+
+        if (this.props.cur instanceof Sk.builtin.complex) {
+            const complexToString = (complex: {imag: number, real: number}) => {
+                const parts = [
+                    ...(complex.real !== 0 ? [complex.real] : []),
+                    ...(complex.imag !== 0 ? [complex.imag + 'j'] : []),
+                ];
+
+                return parts.length ? parts.join('+') : '0';
+            };
+
+            return (
+                <React.Fragment>
+                    <span className={classes}>{complexToString(this.props.cur)}</span>
+                    {(this.props.old && (this.props.cur.real !== this.props.old.real || this.props.cur.imag !== this.props.old.imag)) ?
+                        <span className="value-previous">{complexToString(this.props.old)}</span>
+                        : null}
+                </React.Fragment>
+            )
+        }
+
+        if (this.props.cur && undefined !== this.props.cur.v && null !== this.props.cur.v) {
+            return (
+                <React.Fragment>
+                    <span className={classes}>{this.props.cur.v}</span>
+                    {(this.props.old && (this.props.cur.v !== this.props.old.v)) && !Array.isArray(this.props.old.v) ?
+                        <span className="value-previous">{this.props.old.v}</span>
+                        : null}
+                </React.Fragment>
+            );
+        }
+
         return (
             <React.Fragment>
-                <span className={classes}>{this.props.cur.v}</span>
-                {(this.props.old && (this.props.cur.v !== this.props.old.v)) ?
-                    <span className="value-previous">{this.props.old.v}</span>
+                <span className={classes}>{this.props.cur}</span>
+                {(this.props.old && (this.props.cur !== this.props.old)) ?
+                    <span className="value-previous">{this.props.old}</span>
                     : null}
             </React.Fragment>
         );

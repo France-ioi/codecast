@@ -84,7 +84,13 @@ to '/examples' also install a cors plugin in your browser to get rid of cors iss
 
 ## Install project and run
 
-To install and run the project, or after an update, run:
+In order to be able to download the @france-ioi packages, you need to create a github access token (https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) and put in your **home directory** a **~/.npmrc** file with the following content :
+
+    registry=https://registry.npmjs.org/
+    @france-ioi:registry=https://npm.pkg.github.com/
+    //npm.pkg.github.com/:_authToken=ghp_...YOUR_ACCESS_TOKEN
+
+You can then install and run the project, or update it:
 
     git submodule update --init
     yarn install

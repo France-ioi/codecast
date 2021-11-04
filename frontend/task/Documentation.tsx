@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {Icon} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import {documentationLoad, sendCodeExampleToOpener} from "./documentation";
+import {documentationLoad, sendCodeExampleToOpener} from "./doc";
 import {useAppSelector} from "../hooks";
 import {documentationConceptSelected, DocumentationLanguage, documentationLanguageChanged} from "./documentation_slice";
 import {Screen} from "../common/screens";
