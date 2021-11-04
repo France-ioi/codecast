@@ -27,16 +27,16 @@ export function ContextVisualization() {
     let testsSelectorEnabled = false;
     if (currentTask) {
         const levelData = currentTask.data[taskLevels[currentLevel]];
-        testsSelectorEnabled = 0 < levelData.length;
+        testsSelectorEnabled = 1 < levelData.length;
     }
 
     return (
         <div className="context-visualization">
             <div className="task-visualisation" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
                 {currentTask && currentTask.gridInfos && currentTask.gridInfos.images &&
-                currentTask.gridInfos.images.map((module, key) =>
-                    <img key={key} src={module.default} style={{display: 'none'}}/>
-                )
+                    currentTask.gridInfos.images.map((module, key) =>
+                        <img key={key} src={module.default} style={{display: 'none'}}/>
+                    )
                 }
                 {Visualization ? <Visualization/> : <div id="grid"/>}
             </div>
