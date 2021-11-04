@@ -80,22 +80,18 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
     const currentLevel = yield select(state => state.task.currentLevel);
 
     let contextLib;
-    let levelGridInfos = {};
-    if (currentTask) {
-        const levelGridInfos = extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]);
-
-        if (levelGridInfos.context) {
-            const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
-            if (-1 !== libraryIndex) {
-                const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
-                try {
-                    contextLib = contextFactory(display, levelGridInfos);
-                    quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context, state.replay);
-                } catch (e) {
-                    console.error("Cannot create context", e);
-                    contextLib = new QuickAlgoLibrary(display, levelGridInfos);
-                    quickAlgoLibraries.addLibrary(contextLib, 'default', state.replay);
-                }
+    let levelGridInfos = currentTask ? extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]) : {};
+    if (levelGridInfos.context) {
+        const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
+        if (-1 !== libraryIndex) {
+            const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
+            try {
+                contextLib = contextFactory(display, levelGridInfos);
+                quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context, state.replay);
+            } catch (e) {
+                console.error("Cannot create context", e);
+                contextLib = new QuickAlgoLibrary(display, levelGridInfos);
+                quickAlgoLibraries.addLibrary(contextLib, 'default', state.replay);
             }
         }
     }
