@@ -14,19 +14,42 @@ import {AppStore, AppStoreReplay} from "../store";
 import {initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
 import {TaskActionTypes as TaskActionTypes} from "../task";
+import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
+import {createDraft, current, finishDraft, original, produce} from "immer";
+import {getCurrentImmerState} from "../task/utils";
+import {ActionTypes as CompileActionTypes} from "./actionTypes";
+
+export interface QuickalgoLibraryCall {
+    module: string,
+    action: string,
+    args: any[],
+}
 
 export interface StepperContext {
-    state: StepperState,
+    state?: StepperState,
     interrupted?: boolean,
-    interactBefore: Function | null,
-    interactAfter: Function | null,
-    resume: Function | null,
-    position: any,
-    lineCounter: number,
+    interactBefore?: Function,
+    interactAfter: Function,
+    waitForProgress?: Function,
+    dispatch?: Function,
+    quickAlgoCallsLogger?: Function,
+    quickAlgoCallsExecutor?: Function,
+    resume?: Function | null,
+    position?: any,
+    lineCounter?: number,
     speed?: number,
-    pendingResume?: boolean,
-    unixNextStepCondition: 0,
+    unixNextStepCondition?: 0,
     makeDelay?: boolean,
+    quickAlgoContext?: any,
+}
+
+export interface StepperContextParameters {
+    interactBefore?: Function,
+    interactAfter?: Function,
+    waitForProgress?: Function,
+    dispatch?: Function,
+    quickAlgoCallsLogger?: Function,
+    replay?: boolean,
 }
 
 const stepperApi = {
@@ -70,20 +93,19 @@ export async function buildState(state: AppStoreReplay, replay: boolean = false)
         callback(curStepperState, state, replay);
     }
 
-    // TODO: Make something so that the initCallbacks doesn't obscure the creation of stepperState.
-    const stepperState = curStepperState as StepperState;
+    console.log('do build state');
+
+    const stepper: Stepper = {
+        ...state.stepper,
+        currentStepperState: curStepperState,
+    };
 
     /* Run until in user code */
-    const stepperContext: StepperContext = {
-        state: stepperState,
+    const stepperContext = makeContext(stepper, {
         interactBefore,
         interactAfter,
-        resume: null,
-        position: 0,
-        lineCounter: 0,
-        speed: state.stepper.speed,
-        unixNextStepCondition: 0,
-    } as StepperContext;
+        replay,
+    });
 
     if (stepperContext.state.platform === 'python') {
         return stepperContext.state;
@@ -152,43 +174,54 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, interactBefore: Function, interactAfter: Function): StepperContext {
+export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, dispatch, quickAlgoCallsLogger, replay}: StepperContextParameters): StepperContext {
     /**
      * We create a new state object here instead of mutating the state. This is intended.
      */
 
     const state = stepper.currentStepperState;
 
+    const stepperContext: StepperContext = {
+        interactBefore: interactBefore ? interactBefore : () => {
+            return Promise.resolve(true);
+        },
+        interactAfter: interactAfter ? interactAfter : () => {
+            return Promise.resolve(true);
+        },
+        waitForProgress,
+        dispatch,
+        quickAlgoCallsLogger,
+        resume: null,
+        position: getNodeStartRow(state),
+        lineCounter: 0,
+        speed: stepper.speed,
+        unixNextStepCondition: 0,
+        state: {
+            ...state,
+        },
+        quickAlgoContext: quickAlgoLibraries.getContext(null, replay),
+    };
+
+    stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
+
     if (state.platform === 'python') {
         return {
+            ...stepperContext,
             state: {
-                ...state,
-                lastAnalysis: Object.freeze(clearLoadedReferences(state.analysis)),
-                controls: resetControls(state.controls)
+                ...stepperContext.state,
+                ...(state.analysis ? {lastAnalysis: Object.freeze(clearLoadedReferences(state.analysis))} : {}),
+                controls: resetControls(state.controls),
             },
-            interactBefore,
-            interactAfter,
-            resume: null,
-            position: getNodeStartRow(state),
-            lineCounter: 0,
-            speed: stepper.speed,
-            unixNextStepCondition: 0,
         };
     } else {
         return {
+            ...stepperContext,
             state: {
-                ...state,
+                ...stepperContext.state,
                 programState: C.clearMemoryLog(state.programState),
                 lastProgramState: {...state.programState},
                 controls: resetControls(state.controls),
             },
-            interactBefore,
-            interactAfter,
-            resume: null,
-            position: getNodeStartRow(state),
-            lineCounter: 0,
-            speed: stepper.speed,
-            unixNextStepCondition: 0,
         }
     }
 }
@@ -210,7 +243,9 @@ async function executeEffects(stepperContext: StepperContext, iterator) {
         if (name === 'interact') {
             lastResult = await stepperContext.interactAfter(value[1] || {});
         } else if (name === 'promise') {
+            console.log('await promise');
             lastResult = await value[1];
+            console.log('promise result', lastResult);
         } else if (name === 'builtin') {
             const builtin = value[1];
             if (!builtinHandlers.has(builtin)) {
@@ -234,42 +269,17 @@ async function executeSingleStep(stepperContext: StepperContext) {
         throw new StepperError('stuck', 'execution cannot proceed');
     }
 
-    if (stepperContext.pendingResume) {
-        // Check if existing is allowed (if the recording was not paused during delay), and send resume signal to recording
-        await stepperContext.interactBefore();
-        stepperContext.pendingResume = false;
+    await stepperContext.interactBefore();
+    if (stepperContext.waitForProgress) {
+        console.log('wait for progress');
+        await stepperContext.waitForProgress(stepperContext);
+        console.log('end wait for progress, continuing');
     }
 
     if (stepperContext.state.platform === 'python') {
-        let finished = false;
-        const promise = window.currentPythonRunner.runStep();
-        promise.then(() => {
-            finished = true;
-        });
+        const result = await window.currentPythonRunner.runStep(stepperContext.quickAlgoCallsExecutor);
 
-        let i = 0;
-        while (!finished) {
-            await delay(0);
-            if (!finished) {
-                console.log('DO INTERACT WAITING FINISH');
-                await stepperContext.interactAfter({
-                    saga: function* () {
-                        const inputNeeded = yield select((state: AppStore) => state.task.inputNeeded);
-                        console.log('here saga', inputNeeded);
-                        if (inputNeeded) {
-                            yield take(TaskActionTypes.TaskInputEntered);
-                            console.log('input entered');
-                        }
-                    },
-                    progress: false,
-                });
-                console.log('AFTER INTERACT');
-            }
-            i++;
-            if (i > 100) break;
-        }
-
-        console.log('FINAL INTERACT');
+        console.log('FINAL INTERACT', result);
         stepperContext.makeDelay = true;
         await stepperContext.interactAfter({
             position: 0,
@@ -325,7 +335,6 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined, u
         }
 
         if (!first && useSpeed && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255 && stepperContext.makeDelay) {
-            console.log('exec start delay');
             stepperContext.makeDelay = false;
             await delay(255 - stepperContext.speed);
         }
@@ -450,6 +459,92 @@ function inUserCode(stepperState: StepperState) {
         return true;
     } else {
         return !!stepperState.programState.control.node[1].begin;
+    }
+}
+
+export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, reloadState = false) {
+    return async (module: string, action: string, args: any[], callback: Function) => {
+        let libraryCallResult;
+        const context = stepperContext.quickAlgoContext;
+
+        if (stepperContext.state) {
+            console.log('stepper context before', stepperContext.state.contextState);
+        }
+
+        if (stepperContext.quickAlgoCallsLogger) {
+            const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, args};
+            stepperContext.quickAlgoCallsLogger(quickAlgoLibraryCall);
+            console.log('LOG ACTION', module, action, args);
+        }
+
+        if (reloadState) {
+            // console.log('RELOAD CONTEXT STATE', draft.contextState, original(draft.contextState));
+            const draft = createDraft(stepperContext.state.contextState);
+            context.reloadInnerState(draft);
+            context.redrawDisplay();
+        }
+
+        const makeLibraryCall = async () => {
+            let result = context[module][action].apply(context, [...args, callback]);
+
+            console.log('MODULE RESULT', result);
+            if (!(Symbol.iterator in Object(result))) {
+                return result;
+            }
+
+            let lastResult;
+            while (true) {
+                /* Pull the next effect from the builtin's iterator. */
+                const {done, value} = result.next();
+                console.log('ITERATOR RESULT', done, value);
+                if (done) {
+                    return value;
+                }
+
+                const name = value[0];
+                if (name === 'interact') {
+                    console.log('ASK FOR INTERACT', stepperContext.interactAfter);
+                    lastResult = await stepperContext.interactAfter({...(value[1] || {}), progress: false});
+                    console.log('last result', lastResult);
+                } else if (name == 'put') {
+                    console.log('ask put dispatch', value[1]);
+                    await stepperContext.dispatch(value[1]);
+                }
+            }
+        }
+
+        console.log('before make async library call', {module, action});
+        try {
+            libraryCallResult = await makeLibraryCall();
+        } catch (e) {
+            console.log('context error 2', e);
+            await stepperContext.dispatch({
+                type: CompileActionTypes.StepperInterrupting,
+            });
+
+            const response = {diagnostics: e};
+            await stepperContext.dispatch({
+                type: CompileActionTypes.CompileFailed,
+                response
+            });
+        }
+        console.log('after make async library call');
+
+        const newStateValue = context.getInnerState();
+        const newState = getCurrentImmerState(newStateValue);
+        console.log('NEW LIBRARY STATE', newState);
+
+        if (stepperContext.state) {
+            stepperContext.state = {
+                ...stepperContext.state,
+                contextState: newState,
+            };
+            console.log('stepper context after', stepperContext.state.contextState);
+        }
+
+        context.waitDelay(callback, libraryCallResult);
+
+        return libraryCallResult;
     }
 }
 

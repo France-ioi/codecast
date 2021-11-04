@@ -108,9 +108,7 @@ To build the project for production use, run:
 
 1 : Build the offline ZIP :
 ```
-    rm -rf build
-    yarn run build-offline
-    zip -r offline.zip build assets
+    yarn pack-offline
 ```
 
 2 : Install and configure [archive-builder](https://github.com/France-ioi/archive-builder)

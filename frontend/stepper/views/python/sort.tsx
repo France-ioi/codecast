@@ -217,7 +217,7 @@ export class SortView extends React.PureComponent<SortViewProps> {
         return (
             <DirectiveFrame {...this.props} hasFullView>
                 <div className='clearfix' style={{padding: '2px'}}>
-                    <SvgPan className='svg-sortview' width='100%' height={svgHeight} scale={scale} x={cellPan * (BAR_WIDTH + BAR_SPACING) - 10}
+                    <SvgPan className='svg-sortview' width='100%' height={svgHeight * scale} scale={scale} x={cellPan * (BAR_WIDTH + BAR_SPACING) - 10}
                             y={0} getPosition={this.getPosition} onPan={this.onPan}>
                         <clipPath id="barClipping">
                             <rect x="0" y="0" width={BAR_WIDTH} height={BAR_HEIGHT}/>

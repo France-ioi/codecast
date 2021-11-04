@@ -95,7 +95,7 @@ export default function(bundle: Bundle) {
     }
 
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {options: {isStatisticsReady}}}) => {
-        state.statistics = initialStateStatistics;
+        state.statistics = {...initialStateStatistics};
         state.statistics.isReady = isStatisticsReady;
     });
 

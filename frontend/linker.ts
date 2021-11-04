@@ -6,22 +6,24 @@ import {AppStore} from "./store";
 import {configureStore} from "@reduxjs/toolkit";
 import taskSlice from "./task/task_slice";
 import documentationSlice from "./task/documentation_slice";
-import printerTerminalSlice from "./task/libs/printer/printer_terminal_slice";
 import log from "loglevel";
 
 export interface Linker {
     scope: App,
+    replayScope: App,
     actionTypes: {
         [key: string]: string
     },
     store: AppStore,
+    replayStore: AppStore,
     finalize: Function
     start: Function
+    startReplay: Function
 }
 
 export function link(rootBuilder): Linker {
     // The global namespace map (name → value)
-    const globalScope = {} as App;
+    const globalScope = {replay: false} as App;
 
     // Type map (value|selector|action|view) used to stage injections.
     const typeMap = new Map();
@@ -54,6 +56,7 @@ export function link(rootBuilder): Linker {
             throw new Error(`linker conflict on ${name}`);
         }
         typeMap.set(name, type);
+        globalScope[name] = value;
         globalScope[name] = value;
     }
 
@@ -163,7 +166,6 @@ export function link(rootBuilder): Linker {
         const newNewState = customCombineReducers({
             [taskSlice.name]: taskSlice.reducer,
             [documentationSlice.name]: documentationSlice.reducer,
-            [printerTerminalSlice.name]: printerTerminalSlice.reducer,
         })(newState, action);
 
         let end2 = window.performance.now();
@@ -183,33 +185,61 @@ export function link(rootBuilder): Linker {
 
     window.store = store;
 
+    // Create the replay store
+
+    const replaySagaMiddleWare = createSagaMiddleware({
+        onError: (error) => {
+            console.error(error);
+            setImmediate(() => {
+                throw error;
+            });
+        }
+    });
+
+    const replayStore = configureStore({
+        reducer: rootReducerWithSlices,
+        preloadedState: {},
+        middleware: [replaySagaMiddleWare, userTimingMiddleware],
+        devTools: true,
+    })
+
+    window.replayStore = replayStore;
+
     function finalize(...args) {
         /* Call the deferred callbacks. */
         rootBundle._runDefers(...args);
     }
 
-    /* Collect the sagas.  The root task is returned, suggested use is:
-
-        start().done.catch(function(error) {
-          // notify user that the application has crashed and offer
-          // to restart it by calling start() again.
-        });
-
-     */
-    const rootSaga = rootBundle._saga();
 
     function start(...args) {
+        const rootSaga = rootBundle._saga();
+
         return sagaMiddleware.run(rootSaga, args);
+    }
+
+    function startReplay(...args) {
+        const rootSaga = rootBundle._saga();
+
+        return replaySagaMiddleWare.run(rootSaga, args);
     }
 
     globalScope.dispatch = store.dispatch;
 
+    const replayGlobalScope = {
+        ...globalScope,
+        replay: true,
+        dispatch: replayStore.dispatch,
+    }
+
     return {
         scope: globalScope as App,
+        replayScope: replayGlobalScope as App,
         actionTypes: typeForActionName,
         store: store as AppStore,
+        replayStore: replayStore as AppStore,
         finalize,
-        start
+        start,
+        startReplay,
     };
 }
 

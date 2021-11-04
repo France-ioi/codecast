@@ -9,6 +9,7 @@ module.exports = {
     MESSAGES: 'Messages',
     ERROR: 'Error',
     CLOSE: 'Close',
+    NONE: 'None',
     FULLSCREEN: "fullscreen",
     EXIT_FULLSCREEN: "exit fullscreen",
     SAVE_RECORDING: "Save recording",
@@ -120,6 +121,7 @@ module.exports = {
     PLATFORM_ARDUINO: "C (Arduino)",
     PLATFORM_PYTHON: "Python",
     EMPTY_PROGRAM: "The program is empty.",
+    PROGRAM_MISSING_LIB: "You must include the line {line} in your program.",
 
     EDITOR_SPLIT: 'Split',
     EDITOR_MERGE: 'Merge',
@@ -146,11 +148,27 @@ module.exports = {
     EDITOR_SUBTITLES_REMOVE_CONFIRM: 'Do you confirm the removal of language {language}?',
 
     USER_SELECT_LOGIN_METHOD: "Select a login option:",
+
+    KEYWORD: 'keyword',
+    CONSTANT: "constant",
+    VARIABLE: "variable",
+
     TASK_DESCRIPTION: 'Instructions',
     TASK_VARIABLES: 'Variables',
     TASK_DOCUMENTATION: 'Informations',
     TASK_DOCUMENTATION_INSTRUCTIONS: 'Mission details',
+    TASK_DOCUMENTATION_CODE_EXAMPLES: 'Code examples',
     TASK_EDITOR: 'Editor',
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualization {number}",
+
+    LAYOUT_TYPE_REQUIRED_LABEL: "Preview a specific layout:",
+    LAYOUT_DefaultLayoutDesktop: 'Desktop',
+    LAYOUT_DefaultLayoutTabletVertical: 'Tablet vertical',
+    LAYOUT_DefaultLayoutMobileHorizontalEditor: 'Mobile horizontal (edition)',
+    LAYOUT_DefaultLayoutMobileHorizontalInstructions: 'Mobile horizontal (instructions)',
+    LAYOUT_DefaultLayoutMobileHorizontalPlayer: 'Mobile horizontal (execution)',
+    LAYOUT_DefaultLayoutMobileVerticalEditor: 'Mobile vertical (edition)',
+    LAYOUT_DefaultLayoutMobileVerticalInstructions: 'Mobile vertical (instructions)',
+    LAYOUT_DefaultLayoutMobileVerticalPlayer: 'Mobile vertical (execution)',
 };

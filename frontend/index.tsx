@@ -6,7 +6,7 @@ import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
 import log from 'loglevel';
 import 'rc-slider/assets/index.css?global';
-import {AppStore, AppStoreReplay} from './store';
+import {AppStore} from './store';
 import {Bundle, link} from './linker';
 import commonBundle from './common/index';
 import playerBundle from './player/index';
@@ -36,18 +36,17 @@ import '@france-ioi/skulpt/dist/skulpt.min';
 import '@france-ioi/skulpt/dist/skulpt-stdlib';
 import '../assets/debugger';
 
-/**
- * TODO: This should be removed if possible.
- * Search for "TODO: Immer:" to find the reason.
- */
-setAutoFreeze(false);
+setAutoFreeze(true);
 log.setLevel('trace');
 log.getLogger('performance').setLevel('info');
+log.getLogger('python_interpreter').setLevel('info');
 
 interface Codecast {
     store: AppStore,
+    replayStore: AppStore,
     scope: any,
     task?: any,
+    replayTask?: any,
     start?: Function,
     restart: Function
 }
@@ -56,20 +55,25 @@ export interface App {
     recordApi: RecordApi,
     replayApi: ReplayApi,
     stepperApi: StepperApi,
-    dispatch: Function
+    dispatch: Function,
+    replay: boolean,
 }
 
 declare global {
     interface Window extends WindowLocalStorage {
         store: EnhancedStore<AppStore>,
+        replayStore: EnhancedStore<AppStore>,
         Codecast: Codecast,
         currentPythonRunner: any,
         currentPythonContext: any,
         languageStrings: any,
         __REDUX_DEVTOOLS_EXTENSION__: any,
         __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: any,
+        quickAlgoLoadedLibraries: any,
         quickAlgoLibraries: any,
         quickAlgoLibrariesList: any,
+        quickAlgoContext: Function,
+        quickAlgoResponsive: boolean,
         stringsLanguage: any,
         getContext: Function,
         getConceptViewerBaseConcepts: Function,
@@ -77,6 +81,8 @@ declare global {
         conceptViewer: ConceptViewer,
         conceptsFill: Function,
         Channel: any,
+        DelayFactory: any,
+        RaphaelFactory: any,
     }
 }
 
@@ -94,7 +100,7 @@ const DEBUG_IGNORE_ACTIONS_MAP = {
     // 'Player.Tick': true
 };
 
-const {store, scope, finalize, start} = link(function(bundle: Bundle) {
+const {store, replayStore, scope, replayScope, finalize, start, startReplay} = link(function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.AppInit);
     bundle.addReducer(ActionTypes.AppInit, () => {
         // return {};
@@ -107,9 +113,9 @@ const {store, scope, finalize, start} = link(function(bundle: Bundle) {
     bundle.include(statisticsBundle);
 
     if (process.env['NODE_ENV'] === 'development') {
-        bundle.addEarlyReducer(function(state: AppStoreReplay, action): void {
+        bundle.addEarlyReducer(function(state: AppStore, action): void {
             if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
-                log.debug('action', action);
+                log.debug(state.replay ? 'action on replay' : 'action', action);
             }
         });
     }
@@ -117,7 +123,7 @@ const {store, scope, finalize, start} = link(function(bundle: Bundle) {
 finalize(scope);
 
 /* In-browser API */
-const Codecast: Codecast = window.Codecast = {store, scope, restart};
+export const Codecast: Codecast = window.Codecast = {store, replayStore, scope, restart};
 
 /*
   options :: {
@@ -143,9 +149,14 @@ function restart() {
         Codecast.task.cancel();
         Codecast.task = null;
     }
+    if (Codecast.replayTask) {
+        Codecast.replayTask.cancel();
+        Codecast.replayTask = null;
+    }
 
     /* XXX Make a separate object for selectors in the linker? */
     Codecast.task = start(scope);
+    Codecast.replayTask = startReplay(replayScope);
 }
 
 function clearUrl() {
@@ -188,12 +199,11 @@ Codecast.start = function(options) {
 
             break;
         case 'player':
-            let audioUrl = options.audioUrl || `${options.baseDataUrl}.mp3`;
             store.dispatch({
                 type: PlayerActionTypes.PlayerPrepare,
                 payload: {
                     baseDataUrl: options.baseDataUrl,
-                    audioUrl: audioUrl,
+                    audioUrl: options.audioUrl,
                     eventsUrl: `${options.baseDataUrl}.json`,
                     data: options.data
                 }

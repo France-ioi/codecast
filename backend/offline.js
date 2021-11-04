@@ -4,6 +4,7 @@ import urlJoin from 'url-join';
 import express from 'express';
 import editURL from 'edit-url';
 import {buildCommonOptions} from './options';
+import {parseSync} from "subtitle";
 
 const request = require('request');
 
@@ -16,6 +17,7 @@ export default function (app, config, store) {
         const manifestUrl = editURL(config.baseUrl, function (obj) {
             obj.pathname = urlJoin(obj.pathname, 'offline/manifest');
             obj.query.recording = baseUrl;
+            obj.query.date = Date.now(); // This avoids going through archive builder cache as its hash key is generated based on manifest url
         });
 
         const builderUrl = editURL(config.builderUrl, function (obj) {
@@ -65,10 +67,10 @@ export default function (app, config, store) {
 
             const {query} = token;
             const {ownPath, sharedPath} = query;
-            const options = buildCommonOptions(config,'player', query);
+            const options = buildCommonOptions(config,'task', query);
             options.audioUrl = urlJoin(pathReverse(sharedPath), ownPath, "audio.mp3");
 
-            request(`${query.recording}.json`, function (err, response, body) {
+            request(`${query.recording}.json`, async function (err, response, body) {
                 if (err) {
                     return res.status(400).send(err.toString());
                 }
@@ -78,13 +80,21 @@ export default function (app, config, store) {
 
                 try {
                     options.data = JSON.parse(body);
+                    if (options.data.subtitles && options.data.subtitles.length) {
+                        options.data.subtitlesData = {};
+                        for (let language of options.data.subtitles) {
+                            options.data.subtitlesData[language] = await fetchSubtitles(query.recording, language);
+                        }
+                    }
                 } catch (ex) {
                     return res.status(400).send(ex.toString());
                 }
 
-                res.render('offline', {
+                res.render('task', {
                     options,
-                    baseUrl: `${urlJoin(pathReverse(ownPath), sharedPath)}`
+                    rebaseUrl: (url) => {
+                        return `${url}`;
+                    },
                 });
             });
         });
@@ -102,4 +112,24 @@ function pathReverse(a) {
     }
 
     return a.split(/\/+/).map(_ => '..').join('/');
+}
+
+function fetchSubtitles(baseDataUrl, language) {
+    return new Promise((resolve, reject) => {
+        const url = `${baseDataUrl}_${language}.srt`;
+
+        request(url, async function (err, response, body) {
+            if (err) {
+                reject(err.toString());
+                return;
+            }
+            if (response.statusCode !== 200) {
+                reject(body);
+                return;
+            }
+
+            const items = parseSync(body);
+            resolve(items);
+        });
+    });
 }

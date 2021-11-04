@@ -13,7 +13,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.MemoryUsageChanged);
 
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.memoryUsage = initialStateMemoryUsage;
+        state.memoryUsage = {...initialStateMemoryUsage};
     });
 
     bundle.addReducer(ActionTypes.MemoryUsageChanged, (state: AppStore, {payload}) => {

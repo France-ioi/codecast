@@ -5,6 +5,7 @@ import {ActionTypes} from "./actionTypes";
 import {AppAction, AppStore, AppStoreReplay} from "../store";
 import {Bundle} from "../linker";
 import {CodecastRecord} from "../recorder/save_screen";
+import {QuickalgoLibraryCall} from "../stepper/api";
 
 export interface PlayerResetPayload {
     sliceName: string,
@@ -26,8 +27,9 @@ export const playerReset = (
 export default function(bundle: Bundle) {
     bundle.include(playerSagas);
 
-    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.player = initialStatePlayer;
+    bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {replay}}) => {
+        state.replay = !!replay;
+        state.player = {...initialStatePlayer};
 
         playerClear(state);
     });
@@ -116,6 +118,12 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.PlayerReset, (state: AppStore, {payload: {sliceName, state: newState}}) => {
         state[sliceName] = newState;
     });
+
+    bundle.defineAction(ActionTypes.PlayerResetFull);
+    bundle.addReducer(ActionTypes.PlayerResetFull, (state: AppStore, {payload: {newState}}) => {
+        console.log('DO FULL RESET WITH', newState);
+        return newState;
+    });
 };
 
 export interface PlayerInstant {
@@ -126,6 +134,7 @@ export interface PlayerInstant {
     range?: any, // TODO: What is this ?
     state: AppStoreReplay,
     sagas: any[],
+    quickalgoLibraryCalls: QuickalgoLibraryCall[],
     jump?: boolean,
     mute?: boolean
 }

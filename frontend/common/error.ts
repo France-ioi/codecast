@@ -19,6 +19,9 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.Error);
     bundle.addReducer(ActionTypes.Error, (state: AppStore, {payload}) => {
         console.log("GENERIC ERROR", payload);
+        if (payload.error) {
+            console.error(payload.error);
+        }
 
         state.lastError = payload;
     });

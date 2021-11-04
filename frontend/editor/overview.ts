@@ -15,7 +15,7 @@ import {clearAllUnsaved} from "../subtitles/editor";
 
 export default function (bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.editor = initialStateEditor;
+        state.editor = {...initialStateEditor};
     });
 
     bundle.addReducer(EditorActionTypes.EditorPrepare, (state: AppStore) => {

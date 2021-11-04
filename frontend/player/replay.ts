@@ -44,6 +44,7 @@ const replayApi = {
         resetSagas.push(saga);
     },
     reset: function* (instant: PlayerInstant, quick?: boolean) {
+        console.log('RESET INSTANT', instant.state);
         for (let saga of resetSagas) {
             yield call(saga, instant, quick);
         }

@@ -5,17 +5,13 @@ import {scanfBuiltin} from './scanf';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
-import {getBufferModel} from "../../buffers/selectors";
-import {AppStore, AppStoreReplay} from "../../store";
+import {AppStore} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {StepperContext} from "../api";
-import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
-import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
-import {PrinterLib} from "../../task/libs/printer/printer_lib";
-import {TermBuffer} from "./terminal";
+import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 
 export enum IoMode {
     Terminal = 'terminal',
@@ -29,7 +25,7 @@ export const initialStateIoPane = {
 
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
-        state.ioPane = initialStateIoPane;
+        state.ioPane = {...initialStateIoPane};
 
         updateIoPaneState(state);
     });
@@ -53,7 +49,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.IoPaneModeChanged);
     bundle.addReducer(ActionTypes.IoPaneModeChanged, ioPaneModeChangedReducer);
 
-    function ioPaneModeChangedReducer(state: AppStoreReplay, {payload: {mode}}): void {
+    function ioPaneModeChangedReducer(state: AppStore, {payload: {mode}}): void {
         state.ioPane.mode = mode;
     }
 
@@ -63,11 +59,15 @@ export default function(bundle: Bundle) {
 
             init.ioPaneMode = state.ioPane.mode;
         });
-        replayApi.on('start', function(replayContext: ReplayContext, event) {
+        replayApi.on('start', function* (replayContext: ReplayContext, event) {
             const {ioPaneMode} = event[2];
 
-            replayContext.state.ioPane = initialStateIoPane;
-            ioPaneModeChangedReducer(replayContext.state, {payload: {mode: ioPaneMode}});
+            const newState = {
+                ...initialStateIoPane,
+                mode: ioPaneMode,
+            };
+
+            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'ioPane', state: newState}});
         });
 
         replayApi.onReset(function* (instant: PlayerInstant) {
@@ -79,30 +79,10 @@ export default function(bundle: Bundle) {
         recordApi.on(ActionTypes.IoPaneModeChanged, function* (addEvent, {payload: {mode}}) {
             yield call(addEvent, 'ioPane.mode', mode);
         });
-        replayApi.on('ioPane.mode', function(replayContext: ReplayContext, event) {
+        replayApi.on('ioPane.mode', function* (replayContext: ReplayContext, event) {
             const mode = event[2];
 
-            ioPaneModeChangedReducer(replayContext.state, {payload: {mode}});
-        });
-
-        /* Set up the terminal or input. */
-        stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
-            const {mode} = state.ioPane;
-
-            stepperState.inputPos = 0;
-            if (mode === IoMode.Terminal) {
-                stepperState.input = "";
-                stepperState.terminal = new TermBuffer({lines: 10, width: 80});
-                stepperState.inputBuffer = "";
-            } else {
-                const inputModel = getBufferModel(state, 'input');
-                let input = inputModel.document.toString().trimRight();
-                if (input.length !== 0) {
-                    input = input + "\n";
-                }
-                stepperState.input = input;
-                stepperState.output = "";
-            }
+            yield put({type: ActionTypes.IoPaneModeChanged, payload: {mode}});
         });
 
         stepperApi.addBuiltin('printf', printfBuiltin);
@@ -125,31 +105,9 @@ export default function(bundle: Bundle) {
         stepperApi.addBuiltin('scanf', scanfBuiltin);
 
         stepperApi.onEffect('write', function* writeEffect(stepperContext: StepperContext, text) {
-            console.log('effect write', text);
-
-            // @ts-ignore
-            const context: PrinterLib = quickAlgoLibraries.getContext('printer');
-
-            console.log('do write');
-            yield ['promise', new Promise((resolve) => {
-                console.log('call print_end');
-                // @ts-ignore
-                context.print_end(text, "", resolve); // In C, printf doesn't add \n by default in the end
-            })];
-
-            // const {state} = stepperContext;
-            // if (state.terminal) {
-            //     state.terminal = writeString(state.terminal, text);
-            // } else {
-            //     state.output = state.output + text;
-            // }
-            /* TODO: update the output buffer model
-               If running interactively, we must alter the actual global state.
-               If pre-computing states for replay, we must alter the (computed) global
-               state in the replayContext.
-               Currently this is done by reflectToOutput (interactively) and
-               syncOutputBuffer/syncOutputBufferSaga (non-interactively).
-             */
+            const executor = stepperContext.quickAlgoCallsExecutor;
+            const executorPromise = executor('printer', 'print_end', [text], () => {});
+            yield ['promise', executorPromise];
         });
 
         stepperApi.addBuiltin('gets', function* getsBuiltin(stepperContext: StepperContext, ref) {
@@ -178,39 +136,18 @@ export default function(bundle: Bundle) {
         });
 
         stepperApi.onEffect('gets', function* getsEffect(stepperContext: StepperContext) {
-            // @ts-ignore
-            const context: PrinterLib = quickAlgoLibraries.getContext('printer');
+            const executor = stepperContext.quickAlgoCallsExecutor;
 
-            let hasResult = false;
             let result;
-
-            console.log('start read');
-
-            const promise = context.read((elm) => {
-                result = elm;
-                hasResult = true;
+            const executorPromise = executor('printer', 'read', [], (res) => {
+                console.log('callback', res);
+                result = res;
             });
 
-            let i = 0;
-            while (!hasResult) {
-                console.log('-- not read, interact');
-                yield ['interact', {
-                    saga: function* () {
-                        yield call(() => {
-                            return promise;
-                        });
-                    },
-                    // progress: false,
-                }];
-                console.log('-- end interaction');
-
-                i++;
-                // Add a security to avoid possible infinite loop
-                if (i > 100) {
-                    console.error('Interacting buffer exhausted, this is most likely abnormal (input required but not given in recording)');
-                    break;
-                }
-            }
+            yield ['promise', executorPromise];
+            console.log('the result', executorPromise, result, result.split('').map(function (char) {
+                return char.charCodeAt(0);
+            }).join('/'));
 
             return result;
         });

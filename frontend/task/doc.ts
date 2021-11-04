@@ -5,7 +5,7 @@ import {extractLevelSpecific} from "./utils";
 import {
     DocumentationConcept,
     documentationConceptSelected,
-    documentationConceptsLoaded,
+    documentationConceptsLoaded, DocumentationLanguage,
     documentationLanguageChanged
 } from "./documentation_slice";
 import {taskLevels} from "./task_slice";
@@ -90,22 +90,38 @@ function* documentationLoadSaga(standalone: boolean) {
         return;
     }
 
-    let context = quickAlgoLibraries.getContext();
+    let context = quickAlgoLibraries.getContext(null, false);
     if (context.display && context.infos.conceptViewer) {
+        const language = yield select(state => state.documentation.language);
+        let concepts = [], allConcepts = [];
+        if (DocumentationLanguage.C !== language) {
+            allConcepts = context.getConceptList();
+            allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts());
+
+            const currentLevel = yield select(state => state.task.currentLevel);
+            const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, taskLevels[currentLevel]);
+
+            concepts = window.getConceptsFromBlocks(curIncludeBlocks, allConcepts, context);
+        }
+
         const conceptViewer = context.infos.conceptViewer;
-        let allConcepts = context.getConceptList();
-        allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts());
-
-        const currentLevel = yield select(state => state.task.currentLevel);
-        const getMessage = yield select(state => state.getMessage);
-        const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, taskLevels[currentLevel]);
-
-        let concepts = window.getConceptsFromBlocks(curIncludeBlocks, allConcepts, context);
         if (conceptViewer.length) {
             concepts = concepts.concat(conceptViewer);
         } else {
             concepts.push('base');
         }
+
+        const getMessage = yield select(state => state.getMessage);
+
+        // Add code examples to documentation
+        const conceptBaseUrl = (window.location.protocol == 'https:' ? 'https:' : 'http:') + '//'
+            + 'static4.castor-informatique.fr/help/examples_codecast.html';
+        allConcepts = allConcepts.concat([{
+            id: 'exemples',
+            name: getMessage('TASK_DOCUMENTATION_CODE_EXAMPLES').s,
+            url: conceptBaseUrl + '#examples',
+            isBase: true
+        }])
 
         const taskConcept = {
             id: 'task-instructions',

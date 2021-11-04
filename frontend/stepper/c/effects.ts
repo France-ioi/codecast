@@ -19,49 +19,68 @@ import * as C from '@france-ioi/persistent-c';
 import {StepperContext} from "../api";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
+import produce from "immer";
 
 export default function(bundle: Bundle) {
     bundle.defer(function({stepperApi}: App) {
         stepperApi.onEffect('control', function* controlHandler(stepperContext: StepperContext, control) {
-            C.effects.doControl(stepperContext.state.programState, control);
+            stepperContext.state.programState = produce(stepperContext.state.programState, (draft) => {
+                C.effects.doControl(draft, control);
+            })
         });
 
         stepperApi.onEffect('result', function* resultHandler(stepperContext: StepperContext, result) {
-            C.effects.doResult(stepperContext.state.programState, result);
+            stepperContext.state.programState = produce(stepperContext.state.programState, (draft) => {
+                C.effects.doResult(draft, result);
+            });
         });
 
         stepperApi.onEffect('load', function* loadHandler(stepperContext: StepperContext, ref) {
-            C.effects.doLoad(stepperContext.state.programState, ref);
+            stepperContext.state.programState = produce(stepperContext.state.programState, (draft) => {
+                C.effects.doLoad(draft, ref);
+            });
         });
 
         stepperApi.onEffect('store', function* storeHandler(stepperContext: StepperContext, ref, value) {
-            C.effects.doStore(stepperContext.state.programState, ref, value);
+            stepperContext.state.programState = produce(stepperContext.state.programState, (draft) => {
+                C.effects.doStore(draft, ref, value);
+            });
         });
 
         stepperApi.onEffect('enter', function* enterHandler(stepperContext: StepperContext, blockNode) {
-            C.effects.doEnter(stepperContext.state.programState, blockNode);
-            stepperContext.state.programState.scope.directives = blockNode[1].directives || [];
+            stepperContext.state.programState = produce(stepperContext.state.programState, (draft) => {
+                C.effects.doEnter(draft, blockNode);
+                draft.scope.directives = blockNode[1].directives || [];
+            });
         });
 
         stepperApi.onEffect('leave', function* leaveHandler(stepperContext: StepperContext, blockNode) {
-            C.effects.doLeave(stepperContext.state.programState, blockNode);
+            stepperContext.state.programState = produce(stepperContext.state.programState, (draft) => {
+                C.effects.doLeave(draft, blockNode);
+            });
         });
 
         stepperApi.onEffect('call', function* callHandler(stepperContext: StepperContext, cont, values) {
-            C.effects.doCall(stepperContext.state.programState, cont, values);
+            stepperContext.state.programState = produce(stepperContext.state.programState, (draft) => {
+                C.effects.doCall(draft, cont, values);
 
-            /* XXX disable this code and leave directives in block */
-            const bodyNode = values[0].decl;
-            stepperContext.state.programState.scope.directives = bodyNode[1].directives || [];
-            /* --- */
+                /* XXX disable this code and leave directives in block */
+                const bodyNode = values[0].decl;
+                draft.scope.directives = bodyNode[1].directives || [];
+                /* --- */
+            });
         });
 
         stepperApi.onEffect('return', function* returnHandler(stepperContext: StepperContext, result) {
-            C.effects.doReturn(stepperContext.state.programState, result);
+            stepperContext.state.programState = produce(stepperContext.state.programState, (draft) => {
+                C.effects.doReturn(draft, result);
+            });
         });
 
         stepperApi.onEffect('vardecl', function* vardeclHandler(stepperContext: StepperContext, name, type, init) {
-            C.effects.doVardecl(stepperContext.state.programState, name, type, init);
+            stepperContext.state.programState = produce(stepperContext.state.programState, (draft) => {
+                C.effects.doVardecl(draft, name, type, init);
+            });
         });
     });
 };

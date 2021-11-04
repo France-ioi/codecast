@@ -7,7 +7,7 @@ export function buildCommonOptions(config, start, query) {
         showStack: true,
         showViews: true,
         showIO: true,
-        platform: config.hasOwnProperty('defaultPlatform') ? config.defaultPlatform : 'unix',
+        platform: config.hasOwnProperty('defaultPlatform') ? config.defaultPlatform : 'python',
         canChangePlatform: /sandbox|recorder|task/.test(start),
         controls: {},
     };
@@ -76,6 +76,9 @@ export function buildOptions(config, req, start, callback) {
     }
     if (/editor|player/.test(start)) {
         options.baseDataUrl = req.query.recording;
+        if (options.baseDataUrl) {
+            options.audioUrl = `${options.baseDataUrl}.mp3`;
+        }
         const {s3Bucket: bucket, uploadPath: folder, id: codecast} = parseCodecastUrl(options.baseDataUrl);
         options.codecastData = {bucket, folder, codecast};
     }
@@ -85,6 +88,7 @@ export function buildOptions(config, req, start, callback) {
     if (/recorder|editor|statistics|task/.test(start)) {
         if (req.query.recording) {
             options.baseDataUrl = req.query.recording;
+            options.audioUrl = `${options.baseDataUrl}.mp3`;
             const {s3Bucket: bucket, uploadPath: folder, id: codecast} = parseCodecastUrl(options.baseDataUrl);
             options.codecastData = {bucket, folder, codecast};
             if (req.query.mode === 'edit') {

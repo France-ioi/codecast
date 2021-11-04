@@ -24,6 +24,7 @@ $primary: #4a90e2;
 
 html {
   margin: 0 !important;
+  font-size: 18px;
 }
 
 body {
@@ -89,6 +90,7 @@ body {
     h1 {
       color: #30242B;
       margin-bottom: 1rem;
+      font-size: 1.5em !important;
     }
   }
 
@@ -143,12 +145,25 @@ body {
         padding-right: 30px;
       }
     }
+
+    code {
+      font-size: 1em !important;
+      color: #e00000;
+      margin: 0 4px;
+    }
   }
 
   .task-visualisation {
     padding: 20px;
+    width: 100%;
+    height: 100%;
     @include mobile {
       padding: 0;
+    }
+    #grid {
+      width: 100%;
+      height: 100%;
+      text-align: center;
     }
   }
 
@@ -380,9 +395,9 @@ body {
   }
 }
 
-pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
-  font-size: $font-size-lg;
-  line-height: $line-height-lg;
+pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
+  font-size: 1.12em;
+  line-height: 1.5;
 }
 
 .ace_editor {
@@ -466,4 +481,9 @@ pre, #app .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
       border-radius: 0;
     }
   }
+}
+
+.offline-download-link {
+  margin-top: 20px;
+  font-size: 16px;
 }

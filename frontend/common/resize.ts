@@ -5,6 +5,7 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
 import {computeLayoutType} from "../task/layout/layout";
+import {App} from "../index";
 
 export const mainViewGeometries = [
     {size: 'lg', width: 1140, svgScale: 1.0},
@@ -25,7 +26,7 @@ export const initialStateWindow = {
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
         state.mainViewGeometry = initialStateWindow.mainViewGeometry;
-        state.panes = initialStateWindow.panes;
+        state.panes = {...initialStateWindow.panes};
         state.windowWidth = initialStateWindow.windowWidth;
         state.windowHeight = initialStateWindow.windowHeight;
     });
@@ -60,7 +61,11 @@ export default function(bundle: Bundle) {
     }, buffers.sliding(1));
 
     // Lift resize events into windowResized actions.
-    bundle.addSaga(function* monitorResize() {
+    bundle.addSaga(function* monitorResize(app: App) {
+        if (app.replay) {
+            return;
+        }
+
         while (true) {
             let {width, height} = yield take(resizeMonitorChannel);
 

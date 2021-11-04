@@ -13,7 +13,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.PlatformChanged);
     bundle.addReducer(ActionTypes.PlatformChanged, (state, {payload: platform}) => {
         state.options.platform = platform;
-        state.compile = initialStateCompile;
+        state.compile = {...initialStateCompile};
     });
 
     bundle.addSaga(function* () {

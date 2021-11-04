@@ -1,44 +1,62 @@
-import React from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {Card} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
-import {writeString} from "../../../stepper/io/terminal";
+import {TermBuffer, writeString} from "../../../stepper/io/terminal";
 import {PureTerminal} from "./PureTerminal";
 import {useDispatch} from "react-redux";
 import {AppStore} from "../../../store";
 import {useAppSelector} from "../../../hooks";
-import {terminalInit, terminalInputBackSpace, terminalInputEnter, terminalInputKey} from "./printer_terminal_slice";
 import {getPlayerState} from "../../../player/selectors";
+import {
+    getTerminalText,
+    printerLibTerminalInputBackSpace,
+    printerLibTerminalInputEnter,
+    printerLibTerminalInputKey
+} from "./printer_lib";
 
 export function TerminalView() {
     const getMessage = useAppSelector((state: AppStore) => state.getMessage);
-    let input = useAppSelector((state: AppStore) => state.printerTerminal.inputBuffer);
-    let terminal = useAppSelector((state: AppStore) => state.printerTerminal.terminal);
-    let inputNeeded = useAppSelector((state: AppStore) => state.task.inputNeeded);
-
+    const taskState = useAppSelector((state: AppStore) => state.task.state);
+    const input = taskState ? taskState.inputBuffer : '';
+    const inputNeeded = useAppSelector((state: AppStore) => state.task.inputNeeded);
     const player = useAppSelector((state: AppStore) => getPlayerState(state));
     const preventInput = player && player.isPlaying;
 
+    let terminalBuffer = new TermBuffer({lines: 10, width: 60});
+    if (taskState && taskState.events) {
+        terminalBuffer = writeString(terminalBuffer, getTerminalText(taskState.events));
+    }
+    terminalBuffer = writeString(terminalBuffer, input);
+
+    const [focus, setFocus] = useState(null);
+
     const dispatch = useDispatch();
 
+    useEffect(() => {
+        if (inputNeeded && focus) {
+            focus();
+        }
+    }, [inputNeeded])
+
     const onTermInit = (terminalElement) => {
-        dispatch(terminalInit(terminalElement));
+        setFocus(() => terminalElement.focus);
     }
 
     const onTermChar = (key) => {
         if (!preventInput) {
-            dispatch(terminalInputKey(key));
+            dispatch(printerLibTerminalInputKey(key));
         }
     }
 
     const onTermBS = () => {
         if (!preventInput) {
-            dispatch(terminalInputBackSpace());
+            dispatch(printerLibTerminalInputBackSpace());
         }
     }
 
     const onTermEnter = () => {
         if (!preventInput) {
-            dispatch(terminalInputEnter());
+            dispatch(printerLibTerminalInputEnter());
         }
     }
 
@@ -54,8 +72,6 @@ export function TerminalView() {
             </div>
         );
     }
-
-    const terminalBuffer = terminal && writeString(terminal, input);
 
     return (
         <Card>

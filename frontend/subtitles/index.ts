@@ -62,7 +62,7 @@ export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
         const {paneEnabled, bandEnabled} = getPersistentOptions();
 
-        state.subtitles = initialStateSubtitles;
+        state.subtitles = {...initialStateSubtitles};
         state.subtitles.paneEnabled = paneEnabled;
         state.subtitles.bandEnabled = bandEnabled;
     });
