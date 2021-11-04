@@ -8,6 +8,7 @@ export function ContextVisualization() {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const taskLoaded = useAppSelector(state => state.task.loaded);
     const {width, height, ref} = useResizeDetector();
+    const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
 
     useEffect(() => {
         quickAlgoLibraries.redrawDisplay();
@@ -21,7 +22,7 @@ export function ContextVisualization() {
     }, [width, height]);
 
     return (
-        <div className="task-visualisation" ref={ref}>
+        <div className="task-visualisation" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
             {currentTask && currentTask.gridInfos && currentTask.gridInfos.images &&
                 currentTask.gridInfos.images.map((module, key) =>
                     <img key={key} src={module.default} style={{display: 'none'}}/>

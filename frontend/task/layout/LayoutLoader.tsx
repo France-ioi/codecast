@@ -15,6 +15,7 @@ interface LayoutLoaderStateToProps {
     getMessage: Function,
     preferredVisualizations: string[],
     layoutType: LayoutType,
+    layoutRequiredType: LayoutType,
     layoutMobileMode: LayoutMobileMode,
     screen: Screen,
     options: CodecastOptions,
@@ -29,6 +30,7 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     const advisedVisualization = (!state.stepper || state.stepper.status === StepperStatus.Clear) && state.task.resetDone ? 'instructions' : 'variables';
     const preferredVisualizations = state.layout.preferredVisualizations;
     const layoutType = state.layout.type;
+    const layoutRequiredType = state.layout.requiredType;
     const screen = state.screen;
     const options = state.options;
     const currentTask = state.task.currentTask;
@@ -38,7 +40,8 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     }
 
     return {
-        getMessage, orderedDirectives, fullScreenActive, advisedVisualization, preferredVisualizations, layoutType, layoutMobileMode, screen, options, currentTask,
+        getMessage, orderedDirectives, fullScreenActive, advisedVisualization, preferredVisualizations,
+        layoutType, layoutMobileMode, screen, options, currentTask, layoutRequiredType,
     };
 }
 

@@ -9,16 +9,19 @@ import {directiveDimensionsDict} from "../../stepper/views";
 
 interface LayoutDirectiveStateToProps {
     stepperState: any,
-    getMessage: Function
+    getMessage: Function,
+    zoomLevel: number,
 }
 
 function mapStateToProps(state: AppStore): LayoutDirectiveStateToProps {
     const getMessage = state.getMessage;
     const stepperState = getCurrentStepperState(state);
+    const zoomLevel = state.layout.zoomLevel;
 
     return {
         stepperState,
-        getMessage
+        getMessage,
+        zoomLevel,
     };
 }
 
@@ -30,7 +33,7 @@ interface LayoutDirectiveProps extends LayoutDirectiveStateToProps {
 
 export class _LayoutDirective extends React.PureComponent<LayoutDirectiveProps> {
     render() {
-        const {stepperState, getMessage} = this.props;
+        const {stepperState, getMessage, zoomLevel} = this.props;
         if (!stepperState || !stepperState.analysis) {
             return false;
         }
@@ -50,7 +53,7 @@ export class _LayoutDirective extends React.PureComponent<LayoutDirectiveProps> 
                 key={key}
                 directive={this.props.directive}
                 controls={dirControls}
-                scale={1}
+                scale={zoomLevel}
                 context={context}
                 functionCallStack={functionCallStack}
                 platform={platform}
