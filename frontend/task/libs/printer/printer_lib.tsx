@@ -554,7 +554,7 @@ export class PrinterLib extends QuickAlgoLibrary {
 
         for (let eventId = startEvent; eventId >= 0; eventId--) {
             const event = this.innerState.ioEvents[eventId];
-            if (PrinterLineEventType.input === event.type) {
+            if (event && PrinterLineEventType.input === event.type) {
                 if (null === inputPosition) {
                     inputPosition = createDraft({event: eventId, pos: event.content.length});
                 }
