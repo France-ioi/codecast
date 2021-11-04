@@ -146,10 +146,13 @@ export const analyseSkulptScope = function(suspension: any, lastAnalysis: Skulpt
     const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspVariables)), args);
 
     for (let variableName of variableNames) {
-        const value = suspVariables[variableName];
+        let value = suspVariables[variableName];
 
         if (typeof value === 'function') {
-            continue;
+            if (!value.prototype || !value.prototype.tp$name) {
+                continue;
+            }
+            value = `<class '${value.prototype.tp$name}'>`;
         }
 
         let lastValue = null;
@@ -162,7 +165,7 @@ export const analyseSkulptScope = function(suspension: any, lastAnalysis: Skulpt
             }
         }
 
-        variables[variableName] ={
+        variables[Sk.unfixReserved(variableName)] ={
             cur: value,
             old: lastValue
         };
@@ -268,8 +271,8 @@ const getDirectiveVariables = (variables) => {
  */
 const sortArgumentsFirst = (variableNames: string[], args) => {
     return variableNames.sort((a, b) => {
-        const aIsArg = (args.indexOf(a) !== -1);
-        const bIsArg = (args.indexOf(b) !== -1);
+        const aIsArg = (args && args.indexOf(a) !== -1);
+        const bIsArg = (args && args.indexOf(b) !== -1);
 
         if (aIsArg && !bIsArg) {
             return -1;
