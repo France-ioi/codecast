@@ -107,16 +107,16 @@ body#app, #app h1, #app h2, #app h3 {
   /* XXX background-color: #eee; */
 }
 #app h1 {
-  font-size: 24px;
+  font-size: 1.5rem;
 }
 #app h2 {
-  font-size: 18px;
+  font-size: 1.2rem;
   /* font-weight: bold; */
   /* XXX padding: 5px 6px; */
   /* XXX border-top: 1px solid; */
 }
 #app h3 {
-  font-size: 14px;
+  font-size: 1rem;
   /* XXX margin: 10px 0 0; */
 }
 
@@ -204,7 +204,6 @@ body#app, #app h1, #app h2, #app h3 {
 
 .terminal {
   margin: 4px;
-  line-height: 16px;
   background-color: #222;
   outline: none;
 }
