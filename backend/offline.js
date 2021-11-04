@@ -67,7 +67,7 @@ export default function (app, config, store) {
 
             const {query} = token;
             const {ownPath, sharedPath} = query;
-            const options = buildCommonOptions('task', query);
+            const options = buildCommonOptions(config,'task', query);
             options.audioUrl = urlJoin(pathReverse(sharedPath), ownPath, "audio.mp3");
 
             request(`${query.recording}.json`, async function (err, response, body) {
