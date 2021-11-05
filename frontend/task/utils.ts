@@ -71,7 +71,7 @@ export function getAvailableModules(context) {
 
 export function checkCompilingCode(code, platform: string, environment: string) {
     if (!code) {
-        throw getMessage('EMPTY_PROGRAM');
+        throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
 
     if ('python' === platform) {

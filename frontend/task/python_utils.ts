@@ -113,9 +113,6 @@ export const pythonForbiddenLists = function (includeBlocks) {
     const forbidden = ['for', 'while', 'if', 'else', 'elif', 'not', 'and', 'or', 'list', 'set', 'list_brackets', 'dict_brackets', '__getitem__', '__setitem__', 'var_assign', 'def', 'lambda', 'break', 'continue', 'setattr', 'map', 'split'];
     const allowed = [];
 
-    //TODO: use include blocks
-    // return {forbidden: allowed, allowed: forbidden};
-
     if (!includeBlocks) {
         return {forbidden: forbidden, allowed: allowed};
     }
@@ -372,26 +369,111 @@ export const pythonFindLimited = function (code, limitedUses, blockToCode) {
     return false;
 }
 
+export const getContextFunctions = function(context) {
+    const definedFunctions = [];
+    const argumentsByBlock = {};
+    const handlers = [];
+    const constants = [];
+
+    if (context.infos && context.infos.includeBlocks && context.infos.includeBlocks.generatedBlocks) {
+        // Flatten customBlocks information for easy access
+        const blocksInfos = {};
+        for (let generatorName in context.customBlocks) {
+            for (let typeName in context.customBlocks[generatorName]) {
+                let blockList = context.customBlocks[generatorName][typeName];
+                for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
+                    let blockInfo = blockList[iBlock];
+                    blocksInfos[blockInfo.name] = {
+                        nbArgs: 0, // handled below
+                        type: typeName
+                    };
+                    blocksInfos[blockInfo.name].nbsArgs = [];
+                    if (blockInfo.anyArgs) {
+                        // Allows to specify the function can accept any number of arguments
+                        blocksInfos[blockInfo.name].nbsArgs.push(Infinity);
+                    }
+                    let variants = blockInfo.variants ? blockInfo.variants : (blockInfo.params ? [blockInfo.params] : []);
+                    if (variants.length) {
+                        for (let i = 0; i < variants.length; i++) {
+                            blocksInfos[blockInfo.name].nbsArgs.push(variants[i].length);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generate functions used in the task
+        for (let generatorName in context.infos.includeBlocks.generatedBlocks) {
+            let blockList = context.infos.includeBlocks.generatedBlocks[generatorName];
+            if (!blockList.length) {
+                continue;
+            }
+
+            if (!argumentsByBlock[generatorName]) {
+                argumentsByBlock[generatorName] = {};
+            }
+            for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
+                let blockName = blockList[iBlock];
+                let code = context.strings.code[blockName];
+                if (typeof (code) == "undefined") {
+                    code = blockName;
+                }
+                let nbsArgs = blocksInfos[blockName] ? (blocksInfos[blockName].nbsArgs ? blocksInfos[blockName].nbsArgs : []) : [];
+                let type = blocksInfos[blockName] ? blocksInfos[blockName].type : 'actions';
+
+                if (type == 'actions') {
+                    // this._hasActions = true;
+                }
+
+                argumentsByBlock[generatorName][blockName] = nbsArgs;
+                handlers.push({code, generatorName, blockName, nbsArgs, type});
+
+                if (-1 === definedFunctions.indexOf(code)) {
+                    definedFunctions.push(code);
+                }
+            }
+
+            if (context.customConstants && context.customConstants[generatorName]) {
+                let constList = context.customConstants[generatorName];
+                for (let iConst = 0; iConst < constList.length; iConst++) {
+                    let name = constList[iConst].name;
+                    if (context.strings.constant && context.strings.constant[name]) {
+                        name = context.strings.constant[name];
+                    }
+                    constants.push({name, generatorName, value: constList[iConst].value});
+                }
+            }
+        }
+    }
+
+    return {
+        definedFunctions,
+        argumentsByBlock,
+        handlers,
+        constants,
+    };
+}
+
 export const checkPythonCode = function (code, context) {
     const includeBlocks = context.infos.includeBlocks;
     const forbidden = pythonForbidden(code, includeBlocks);
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
 
     if (forbidden) {
-        throw ("Le mot-clé " + forbidden + " est interdit ici !");
+        throw getMessage('CODE_CONSTRAINTS_FORBIDDEN_KEYWORD').format({keyword: forbidden});
     }
     if (maxInstructions && pythonCount(code) > maxInstructions) {
-        throw ("Vous utilisez trop d'éléments Python !");
+        throw getMessage('CODE_CONSTRAINTS_MAX_INSTRUCTIONS_PYTHON');
     }
 
-    const limited = context.infos.limitedUses ? pythonFindLimited(code, context.infos.limitedUses, this._mainContext.strings.code) : false;
+    const limited = context.infos.limitedUses ? pythonFindLimited(code, context.infos.limitedUses, context.strings.code) : false;
     if (limited && limited.type == 'uses') {
-        throw ('Vous utilisez trop souvent un mot-clé à utilisation limitée : "' + limited.name + '".');
+        throw getMessage('CODE_CONSTRAINTS_LIMITED_USES').format({keyword: limited.name});
     } else if (limited && limited.type == 'assign') {
-        throw ('Vous n\'avez pas le droit de réassigner un mot-clé à utilisation limitée : "' + limited.name + '".');
+        throw getMessage('CODE_CONSTRAINTS_LIMITED_ASSIGN').format({keyword: limited.name});
     }
     if (pythonCount(code) <= 0) {
-        throw ("Vous ne pouvez pas valider un programme vide !");
+        throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
 
     const availableModules = getAvailableModules(context);
@@ -408,15 +490,15 @@ export const checkPythonCode = function (code, context) {
 
     // Check for functions used as values
     let re = /def\W+([^(]+)\(/g;
-    const foundFuncs = this._mainContext && this._mainContext.runner ? this._mainContext.runner.getDefinedFunctions() : [];
+    const {definedFunctions} = getContextFunctions(context);
     let match;
     while (match = re.exec(code)) {
-        foundFuncs.push(match[1]);
+        definedFunctions.push(match[1]);
     }
-    for (let j = 0; j < foundFuncs.length; j++) {
-        re = new RegExp('\\W' + foundFuncs[j] + '([^A-Za-z0-9_( ]| +[^ (]|$)');
+    for (let j = 0; j < definedFunctions.length; j++) {
+        re = new RegExp('\\W' + definedFunctions[j] + '([^A-Za-z0-9_( ]| +[^ (]|$)');
         if (re.exec(code)) {
-            throw ("Vous utilisez la fonction '" + foundFuncs[j] + "' sans les parenthèses. Ajoutez les parenthèses pour appeler la fonction.");
+            throw getMessage('CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS').format({funcName: definedFunctions[j]});
         }
     }
 }

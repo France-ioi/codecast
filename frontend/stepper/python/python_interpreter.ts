@@ -4,6 +4,7 @@
 */
 
 import log from "loglevel";
+import {getContextFunctions} from "../../task/python_utils";
 
 if (!window.hasOwnProperty('currentPythonContext')) {
     window.currentPythonContext = null;
@@ -39,8 +40,6 @@ export default function(context) {
     var that = this;
 
     this._skulptifyHandler = function (name, generatorName, blockName, nbArgs, type) {
-        if(-1 === this._definedFunctions.indexOf(name)) { this._definedFunctions.push(name); }
-
         var handler = '';
         handler += "\tcurrentPythonContext.runner.checkArgs('" + name + "', '" + generatorName + "', '" + blockName + "', arguments);";
 
@@ -66,6 +65,7 @@ export default function(context) {
         handler += "\n\t\tcurrentPythonContext.runner._onStepError(e)}";
         handler += '\n\t}).then(function (value) {\nresult = value;\nreturn value;\n })};';
         handler += '\n\treturn susp;';
+
         return '\nmod.' + name + ' = new Sk.builtin.func(function () {\n' + handler + '\n});\n';
     };
 
@@ -118,83 +118,30 @@ export default function(context) {
 
     this._injectFunctions = () => {
         // Generate Python custom libraries from all generated blocks
-        this._definedFunctions = [];
+        const {argumentsByBlock, handlers, constants} = getContextFunctions(this.context);
+        this._argumentsByBlock = argumentsByBlock;
 
-        if (this.context.infos && this.context.infos.includeBlocks && this.context.infos.includeBlocks.generatedBlocks) {
-            // Flatten customBlocks information for easy access
-            var blocksInfos = {};
-            for (let generatorName in this.context.customBlocks) {
-                for (let typeName in this.context.customBlocks[generatorName]) {
-                    let blockList = this.context.customBlocks[generatorName][typeName];
-                    for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
-                        var blockInfo = blockList[iBlock];
-                        blocksInfos[blockInfo.name] = {
-                            nbArgs: 0, // handled below
-                            type: typeName
-                        };
-                        blocksInfos[blockInfo.name].nbsArgs = [];
-                        if (blockInfo.anyArgs) {
-                            // Allows to specify the function can accept any number of arguments
-                            blocksInfos[blockInfo.name].nbsArgs.push(Infinity);
-                        }
-                        let variants = blockInfo.variants ? blockInfo.variants : (blockInfo.params ? [blockInfo.params] : []);
-                        if (variants.length) {
-                            for (let i = 0; i < variants.length; i++) {
-                                blocksInfos[blockInfo.name].nbsArgs.push(variants[i].length);
-                            }
-                        }
-                    }
+        for (let generatorName in context.infos.includeBlocks.generatedBlocks) {
+            let modContents = "var $builtinmodule = function(name) {\n\nvar mod = {};\nmod.__package__ = Sk.builtin.none.none$;\n";
+
+            for (let handler of handlers.filter(handler => generatorName === handler.generatorName)) {
+                const {code, generatorName, blockName, nbsArgs, type} = handler;
+                modContents += this._skulptifyHandler(code, generatorName, blockName, nbsArgs, type);
+                // We do want to override Python's naturel input and output to replace them with our own modules
+                if (generatorName === 'printer' && ('input' === code || 'print' === code)) {
+                    const newCode = 'print' === code ? 'customPrint' : code;
+                    Sk.builtins[newCode] = this._createBuiltin(code, generatorName, blockName, nbsArgs, type);
                 }
             }
 
-            // Generate functions used in the task
-            for (let generatorName in this.context.infos.includeBlocks.generatedBlocks) {
-                let blockList = this.context.infos.includeBlocks.generatedBlocks[generatorName];
-                if (!blockList.length) {
-                    continue;
-                }
-                let modContents = "var $builtinmodule = function(name) {\n\nvar mod = {};\nmod.__package__ = Sk.builtin.none.none$;\n";
-                if (!this._argumentsByBlock[generatorName]) {
-                    this._argumentsByBlock[generatorName] = {};
-                }
-                for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
-                    let blockName = blockList[iBlock];
-                    let code = this.context.strings.code[blockName];
-                    if (typeof (code) == "undefined") {
-                        code = blockName;
-                    }
-                    let nbsArgs = blocksInfos[blockName] ? (blocksInfos[blockName].nbsArgs ? blocksInfos[blockName].nbsArgs : []) : [];
-                    let type = blocksInfos[blockName] ? blocksInfos[blockName].type : 'actions';
-
-                    if (type == 'actions') {
-                        // this._hasActions = true;
-                    }
-
-                    this._argumentsByBlock[generatorName][blockName] = nbsArgs;
-                    modContents += this._skulptifyHandler(code, generatorName, blockName, nbsArgs, type);
-
-                    // We do want to override Python's naturel input and output to replace them with our own modules
-                    if (generatorName === 'printer' && ('input' === code || 'print' === code)) {
-                        const newCode = 'print' === code ? 'customPrint' : code;
-                        Sk.builtins[newCode] = this._createBuiltin(code, generatorName, blockName, nbsArgs, type);
-                    }
-                }
-
-                if (this.context.customConstants && this.context.customConstants[generatorName]) {
-                    let constList = this.context.customConstants[generatorName];
-                    for (let iConst = 0; iConst < constList.length; iConst++) {
-                        let name = constList[iConst].name;
-                        if (this.context.strings.constant && this.context.strings.constant[name]) {
-                            name = this.context.strings.constant[name];
-                        }
-                        modContents += this._skulptifyConst(name, constList[iConst].value)
-                    }
-                }
-
-                modContents += "\nreturn mod;\n};";
-                Sk.builtinFiles["files"]["src/lib/" + generatorName + ".js"] = modContents;
-                this.availableModules.push(generatorName);
+            for (let constant of constants.filter(constant => generatorName === constant.generatorName)) {
+                const {name, value} = constant;
+                modContents += this._skulptifyConst(name, value);
             }
+
+            modContents += "\nreturn mod;\n};";
+            Sk.builtinFiles["files"]["src/lib/" + generatorName + ".js"] = modContents;
+            this.availableModules.push(generatorName);
         }
     };
 
@@ -312,11 +259,6 @@ export default function(context) {
 
             return retVal;
         }
-    };
-
-    this.getDefinedFunctions = () => {
-        this._injectFunctions();
-        return this._definedFunctions.slice();
     };
 
     this._setTimeout = (func, time) => {
