@@ -1,0 +1,114 @@
+.level-tabs {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+}
+.level-tabs a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-transform: uppercase;
+  color: #4a90e2;
+  text-decoration: none;
+}
+.level-tabs .star-rating {
+  margin-left: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.level-tabs .level-tab {
+  text-align: center;
+  white-space: nowrap;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .level-tab-link {
+    flex: 1 0;
+  }
+
+  .prev-link, .next-link {
+    display: none;
+  }
+}
+.level-tabs .level-tab:not(.current) a {
+  color: #9b9b9b;
+}
+
+@media screen and (max-width: 481px), screen and (max-width: 601px) and (orientation: portrait) {
+  .level-tabs {
+    background-color: #fff;
+    border-radius: 5px 5px 0 0;
+    margin: 0 10px;
+    padding: 4px 0;
+    position: relative;
+  }
+  .level-tabs .level-tab {
+    display: none;
+  }
+  .level-tabs .level-tab.current {
+    flex: 1 0 0;
+    display: flex;
+  }
+
+  .level-tabs .prev-link, .level-tabs .next-link {
+    display: block !important;
+    flex: 0 1;
+    color: #9b9b9b;
+    font-weight: 900;
+    font-size: 18px;
+    margin: 0 10px;
+  }
+}
+@media /* all but portrait mobiles */
+screen and (min-width: 481px) and (orientation: landscape),
+screen and (min-width: 601px) and (orientation: portrait) {
+  .level-tabs a {
+    padding: 10px 0;
+  }
+  .level-tabs .level-tab {
+    padding: 0 20px;
+  }
+  .level-tabs .level-tab.current {
+    background-color: #fff;
+    border-radius: 5px 5px 0 0;
+    position: relative;
+  }
+  .level-tabs .level-tab.current::before,
+  .level-tabs .level-tab.current::after {
+    content: " ";
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: transparent;
+  }
+  .level-tabs .level-tab.current::before {
+    border-radius: 50% 0;
+    box-shadow: 10px 0px 0 #fff;
+    bottom: 0;
+    left: -20px;
+  }
+  .level-tabs .level-tab.current::after {
+    border-radius: 0 50%;
+    box-shadow: -10px 0px 0 #fff;
+    bottom: 0;
+    right: -20px;
+  }
+}
+@media /* Tablets and desktop */
+screen and (min-width: 768px) and (max-width: 1024.9999999999px) and (orientation: portrait),
+screen and (min-width: 855px) and (orientation: landscape),
+screen and (min-width: 1025px) {
+  .level-tabs .level-tab {
+    padding: 0 40px;
+  }
+}
+@media /* Tablets landscape and desktop */
+screen and (min-width: 855px) and (orientation: landscape) {
+  .level-tabs {
+    margin-top: 7px;
+  }
+}

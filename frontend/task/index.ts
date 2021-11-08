@@ -1,7 +1,7 @@
 import {extractLevelSpecific, getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest} from "redux-saga/effects";
+import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, delay} from "redux-saga/effects";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
@@ -9,13 +9,13 @@ import {AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
     currentTaskChange, currentTaskChangePredefined,
-    recordingEnabledChange, taskAddInput, taskClearSubmission, taskCreateSubmission,
+    recordingEnabledChange, taskAddInput, taskClearSubmission, taskCreateSubmission, taskCurrentLevelChange,
     taskInputEntered,
     taskInputNeeded,
-    taskLevels,
+    TaskLevel, TaskLevelName, taskLevelsList,
     taskLoaded,
     taskRecordableActions,
-    taskResetDone,
+    taskResetDone, taskSetLevels,
     taskSuccess,
     taskSuccessClear,
     updateCurrentTestId,
@@ -78,12 +78,14 @@ if (!String.prototype.format) {
     }
 }
 
-function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
+function* createContext() {
     let state: AppStore = yield select();
     let context = quickAlgoLibraries.getContext(null, state.environment);
     console.log('Create a context', context, state.environment);
     if (context) {
+        console.log('Unload initial context first');
         context.unload();
+        yield delay(0);
     }
 
     const display = 'main' === state.environment;
@@ -92,7 +94,7 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
     const currentLevel = yield select(state => state.task.currentLevel);
 
     let contextLib;
-    let levelGridInfos = currentTask ? extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]) : {};
+    let levelGridInfos = currentTask ? extractLevelSpecific(currentTask.gridInfos, currentLevel) : {};
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
@@ -132,12 +134,12 @@ export interface AutocompletionParameters {
     constants: any,
 }
 
-export function getAutocompletionParameters (context, currentLevel: number): AutocompletionParameters {
+export function getAutocompletionParameters (context, currentLevel: TaskLevelName): AutocompletionParameters {
     if (!context.strings || 0 === Object.keys(context.strings).length) {
         return null;
     }
 
-    const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, taskLevels[currentLevel]);
+    const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
 
     return {
         includeBlocks: curIncludeBlocks,
@@ -160,16 +162,43 @@ function* taskLoadSaga(app: App, action) {
         yield put(currentTaskChangePredefined(selectedTask));
     }
 
-    const currentTask = yield select(state => state.task.currentTask);
-    const currentLevel = yield select(state => state.task.currentLevel);
+    const currentTask = yield select((state: AppStore) => state.task.currentTask);
+    let currentLevel = yield select((state: AppStore) => state.task.currentLevel);
 
-    const tests = action.payload && action.payload.tests ? action.payload.tests : currentTask.data[taskLevels[currentLevel]];
+    if (null === currentLevel || !(currentLevel in currentTask.data)) {
+        // Select default level
+        for (let level of taskLevelsList) {
+            if (level in currentTask.data) {
+                yield put(taskCurrentLevelChange({level, record: false}));
+                break;
+            }
+        }
+
+        currentLevel = yield select((state: AppStore) => state.task.currentLevel);
+    }
+
+    const tests = action.payload && action.payload.tests ? action.payload.tests : currentTask.data[currentLevel];
     console.log('[task.load] update task tests', tests);
     yield put(updateTaskTests(tests));
 
     const testId = action.payload && action.payload.testId ? action.payload.testId : 0;
     console.log('[task.load] update current test id', testId);
-    yield put(updateCurrentTestId(testId));
+    yield put(updateCurrentTestId({testId, record: false}));
+
+    const taskLevels = yield select((state: AppStore) => state.task.levels);
+    if (0 === Object.keys(taskLevels).length) {
+        const levels = {};
+        for (let level of Object.keys(currentTask.data)) {
+            levels[level] = {
+                level,
+                answer: null,
+                bestAnswer: null,
+                score: 0,
+            } as TaskLevel;
+        }
+
+        yield put(taskSetLevels(levels));
+    }
 
     console.log({testId, tests});
 
@@ -181,7 +210,7 @@ function* taskLoadSaga(app: App, action) {
 
     let context = quickAlgoLibraries.getContext(null, state.environment);
     if (!context || (action.payload && action.payload.reloadContext)) {
-        yield call(createContext, quickAlgoLibraries);
+        yield call(createContext);
     }
 
     const sagas = quickAlgoLibraries.getSagas(app);
@@ -365,17 +394,35 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield takeEvery(updateCurrentTestId.type, function* () {
+        yield takeEvery(taskCurrentLevelChange.type, function* () {
+            const state: AppStore = yield select();
+            console.log('level change');
+
+            const currentSubmission = yield select((state: AppStore) => state.task.currentSubmission);
+            if (null !== currentSubmission) {
+                yield put(taskClearSubmission());
+            }
+
+            const currentTask = state.task.currentTask;
+            const newLevel = state.task.currentLevel;
+
+            const tests = currentTask.data[newLevel];
+            console.log('[task.currentLevelChange] update task tests', tests);
+            yield put(updateTaskTests(tests));
+
+            yield put(updateCurrentTestId({testId: 0, record: false, recreateContext: true}));
+        });
+
+        // @ts-ignore
+        yield takeEvery(updateCurrentTestId.type, function* ({payload}) {
             const state: AppStore = yield select();
             const context = quickAlgoLibraries.getContext(null, state.environment);
             console.log('update current test', context);
 
             // Save context state for the test we have just left
-            if (context) {
-                if (null !== state.task.previousTestId) {
-                    const currentState = getCurrentImmerState(context.getInnerState());
-                    yield put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState}));
-                }
+            if (context && !payload.recreateContext && null !== state.task.previousTestId) {
+                const currentState = getCurrentImmerState(context.getInnerState());
+                yield put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState}));
             }
 
             // Stop current execution if there is one
@@ -387,7 +434,9 @@ export default function (bundle: Bundle) {
             }
 
             // Reload context state for the new test
-            if (context) {
+            if (payload.recreateContext) {
+                yield call(createContext);
+            } else if (context) {
                 console.log('task update test', state.task.taskTests, state.task.currentTestId);
                 const contextState = state.task.taskTests[state.task.currentTestId].contextState;
                 if (null !== contextState) {
@@ -422,7 +471,7 @@ export default function (bundle: Bundle) {
         app.replayApi.on('start', function*(replayContext: ReplayContext, event) {
             const {testId} = event[2];
             if (null !== testId && undefined !== testId) {
-                yield put(updateCurrentTestId(testId));
+                yield put(updateCurrentTestId({testId}));
             }
         });
 

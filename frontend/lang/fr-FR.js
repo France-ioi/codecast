@@ -161,6 +161,7 @@ module.exports = {
     TASK_DOCUMENTATION_CODE_EXAMPLES: 'Exemples de code',
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualisation {number}",
+    TASK_LEVEL: 'Version',
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Se placer dans un agencement :",
     LAYOUT_DefaultLayoutDesktop: 'Ordinateur',

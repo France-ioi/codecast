@@ -8,7 +8,6 @@ import {
     documentationConceptsLoaded, DocumentationLanguage,
     documentationLanguageChanged
 } from "./documentation_slice";
-import {taskLevels} from "./task_slice";
 import {AppAction} from "../store";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {getMessage} from "../lang";
@@ -99,7 +98,7 @@ function* documentationLoadSaga(standalone: boolean) {
             allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts());
 
             const currentLevel = yield select(state => state.task.currentLevel);
-            const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, taskLevels[currentLevel]);
+            const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
 
             concepts = window.getConceptsFromBlocks(curIncludeBlocks, allConcepts, context);
         }

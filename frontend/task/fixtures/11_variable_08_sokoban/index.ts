@@ -7,6 +7,12 @@ const images = [
     require('./test_easy_1.png'),
     require('./test_easy_2.png'),
     require('./test_easy_3.png'),
+    require('./test_medium_1.png'),
+    require('./test_medium_2.png'),
+    require('./test_medium_3.png'),
+    require('./test_hard_1.png'),
+    require('./test_hard_2.png'),
+    require('./test_hard_3.png'),
 ];
 
 export default {

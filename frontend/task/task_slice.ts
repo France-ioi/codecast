@@ -7,7 +7,14 @@ const availableTasks = {
     printer: StringRotationFixture,
 };
 
-export const taskLevels = ['basic', 'easy', 'medium', 'hard'];
+export enum TaskLevelName {
+    Basic = 'basic',
+    Easy = 'easy',
+    Medium = 'medium',
+    Hard = 'hard',
+}
+
+export const taskLevelsList = [TaskLevelName.Basic, TaskLevelName.Easy, TaskLevelName.Medium, TaskLevelName.Hard];
 
 export interface TaskSubmission {
     executing: boolean,
@@ -20,9 +27,17 @@ export interface TaskSubmissionResult {
     message?: string,
 }
 
+export interface TaskLevel {
+    level: TaskLevelName,
+    answer: any,
+    bestAnswer: any,
+    score: number,
+}
+
 export interface TaskState {
     currentTask?: any,
-    currentLevel?: number,
+    currentLevel?: TaskLevelName,
+    levels: {[key: string]: TaskLevel},
     recordingEnabled?: boolean,
     resetDone?: boolean,
     loaded?: boolean,
@@ -60,8 +75,9 @@ export interface TaskTest {
 
 export const taskInitialState = {
     currentTask: null,
-    currentLevel: 1,
+    currentLevel: null,
     taskTests: [],
+    levels: {},
     currentTestId: null,
     previousTestId: null,
     currentSubmission: null,
@@ -88,8 +104,8 @@ export const taskSlice = createSlice({
         currentTaskChange(state, action: PayloadAction<any>) {
             state.currentTask = action.payload;
         },
-        currentLevelChange(state, action: PayloadAction<number>) {
-            state.currentLevel = action.payload;
+        taskCurrentLevelChange(state, action: PayloadAction<{level: TaskLevelName, record?: boolean}>) {
+            state.currentLevel = action.payload.level;
         },
         recordingEnabledChange(state, action: PayloadAction<boolean>) {
             state.recordingEnabled = action.payload;
@@ -111,9 +127,9 @@ export const taskSlice = createSlice({
                 contextState: null,
             } as TaskTest));
         },
-        updateCurrentTestId(state: TaskState, action: PayloadAction<number>) {
+        updateCurrentTestId(state: TaskState, action: PayloadAction<{testId: number, record?: boolean, recreateContext?: boolean}>) {
             state.previousTestId = state.currentTestId;
-            state.currentTestId = action.payload;
+            state.currentTestId = action.payload.testId;
         },
         updateCurrentTest(state: TaskState, action: PayloadAction<object>) {
             if (state.currentTestId in state.taskTests) {
@@ -168,6 +184,10 @@ export const taskSlice = createSlice({
                 message: action.payload.message,
             };
         },
+        taskSetLevels(state: TaskState, action: PayloadAction<{[key: string]: TaskLevel}>) {
+            console.log('task set levels', action.payload);
+            state.levels = action.payload;
+        },
     },
 });
 
@@ -190,6 +210,8 @@ export const {
     taskSubmissionStartTest,
     taskSubmissionSetTestResult,
     updateTestContextState,
+    taskSetLevels,
+    taskCurrentLevelChange,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [
@@ -197,6 +219,7 @@ export const taskRecordableActions = [
     'taskSuccessClear',
     'taskInputNeeded',
     'updateCurrentTestId',
+    'taskCurrentLevelChange',
 ];
 
 export default taskSlice;
