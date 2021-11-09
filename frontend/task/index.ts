@@ -45,10 +45,11 @@ export enum TaskActionTypes {
     TaskRunExecution = 'task/runExecution',
 }
 
-export const taskLoad = ({testId, tests, reloadContext}: {testId?: number, tests?: any[], reloadContext?: boolean} = {}) => ({
+export const taskLoad = ({testId, level, tests, reloadContext}: {testId?: number, level?: TaskLevelName, tests?: any[], reloadContext?: boolean} = {}) => ({
     type: TaskActionTypes.TaskLoad,
     payload: {
         testId,
+        level,
         tests,
         reloadContext,
     },
@@ -85,7 +86,6 @@ function* createContext() {
     if (context) {
         console.log('Unload initial context first');
         context.unload();
-        yield delay(0);
     }
 
     const display = 'main' === state.environment;
@@ -124,6 +124,7 @@ function* createContext() {
     }
 
     const testData = state.task.taskTests[state.task.currentTestId].data;
+    console.log('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     context.resetAndReloadState(testData, state);
 }
@@ -165,7 +166,9 @@ function* taskLoadSaga(app: App, action) {
     const currentTask = yield select((state: AppStore) => state.task.currentTask);
     let currentLevel = yield select((state: AppStore) => state.task.currentLevel);
 
-    if (null === currentLevel || !(currentLevel in currentTask.data)) {
+    if (action.payload.level && action.payload.level in currentTask.data) {
+        yield put(taskCurrentLevelChange({level: action.payload.level, record: false}));
+    } else if (null === currentLevel || !(currentLevel in currentTask.data)) {
         // Select default level
         for (let level of taskLevelsList) {
             if (level in currentTask.data) {
@@ -173,9 +176,8 @@ function* taskLoadSaga(app: App, action) {
                 break;
             }
         }
-
-        currentLevel = yield select((state: AppStore) => state.task.currentLevel);
     }
+    currentLevel = yield select((state: AppStore) => state.task.currentLevel);
 
     const tests = action.payload && action.payload.tests ? action.payload.tests : currentTask.data[currentLevel];
     console.log('[task.load] update task tests', tests);
@@ -283,11 +285,11 @@ function* handleLibrariesEventListenerSaga(app: App) {
 
 function* taskRunExecution(app: App, {type, payload}) {
     console.log('START RUN EXECUTION', type, payload);
-    const {testId, tests, options, source, resolve} = payload;
+    const {level, testId, tests, options, source, resolve} = payload;
 
     yield put({type: AppActionTypes.AppInit, payload: {options: {...options}, environment: 'background'}});
     yield put({type: BufferActionTypes.BufferLoad, buffer: 'source', text: source});
-    yield put(taskLoad({testId, tests}));
+    yield put(taskLoad({testId, level, tests}));
     yield take(taskLoaded.type);
 
     taskSubmissionExecutor.setAfterExecutionCallback((result) => {
@@ -296,6 +298,15 @@ function* taskRunExecution(app: App, {type, payload}) {
     });
 
     yield put({type: StepperActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run}});
+}
+
+function* contextResetAndReloadStateSaga() {
+    const state = yield select();
+    const taskData = state.task;
+    const currentTest = taskData.taskTests[taskData.currentTestId].data;
+
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    context.resetAndReloadState(currentTest, state);
 }
 
 export default function (bundle: Bundle) {
@@ -475,41 +486,10 @@ export default function (bundle: Bundle) {
             }
         });
 
-        // app.replayApi.on('task/updateCurrentTestId', function*(replayContext: ReplayContext, event) {
-        //     const {testId} = event[2];
-        //     if (null !== testId && undefined !== testId) {
-        //         yield put(updateCurrentTestId(testId));
-        //     }
-        // });
-
         // Quick mode means continuous play. In this case we can just call every library method
         // without reloading state or display in between
         app.replayApi.onReset(function* (instant: PlayerInstant, quick) {
             const taskData = instant.state.task;
-
-            const context = quickAlgoLibraries.getContext(null, 'main');
-
-            console.log('TASK REPLAY API RESET', instant.event, taskData);
-            if (instant.event[1] === 'compile.success') {
-                // When the stepper is initialized, we have to set the current test value into the context
-                // just like in the stepperApi.onInit listener
-                const currentTest = taskData.taskTests[taskData.currentTestId].data;
-                console.log('stepper init, current test', currentTest);
-
-                const context = quickAlgoLibraries.getContext(null, 'main');
-                context.resetAndReloadState(currentTest, instant.state);
-            }
-
-            if (!quick || instant.event[1] === 'task/updateCurrentTestId') {
-                if (taskData && taskData.state) {
-                    console.log('do reload state', taskData.state);
-                    const draft = createDraft(taskData.state);
-                    context.reloadInnerState(draft);
-                }
-                console.log('DO RESET DISPLAY');
-                context.redrawDisplay();
-            }
-
             if (taskData) {
                 yield put({
                     type: PlayerActionTypes.PlayerReset,
@@ -517,6 +497,7 @@ export default function (bundle: Bundle) {
                         sliceName: 'task',
                         partial: true,
                         state: {
+                            currentLevel: taskData.currentLevel,
                             currentTestId: taskData.currentTestId,
                             taskTests: taskData.taskTests,
                             state: taskData.state,
@@ -533,6 +514,22 @@ export default function (bundle: Bundle) {
                 } else {
                     yield put(taskSuccessClear());
                 }
+            }
+
+            console.log('TASK REPLAY API RESET', instant.event, taskData);
+            if (!quick || -1 !== ['compile.success', 'task/taskCurrentLevelChange'].indexOf(instant.event[1])) {
+                yield call(contextResetAndReloadStateSaga);
+            }
+
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            if (!quick || -1 !== ['task/updateCurrentTestId', 'task/taskCurrentLevelChange'].indexOf(instant.event[1])) {
+                if (taskData && taskData.state) {
+                    console.log('do reload state', taskData.state);
+                    const draft = createDraft(taskData.state);
+                    context.reloadInnerState(draft);
+                }
+                console.log('DO RESET DISPLAY');
+                context.redrawDisplay();
             }
         });
 

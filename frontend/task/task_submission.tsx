@@ -115,9 +115,10 @@ class TaskSubmissionExecutor {
         const state: AppStore = yield select();
         const source = getBufferModel(state, 'source').document.toString();
         const tests = state.task.taskTests.map(test => test.data);
+        const level = state.task.currentLevel;
 
         return yield new Promise(resolve => {
-            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, testId, tests, source, resolve}});
+            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, source, resolve}});
         });
     }
 
