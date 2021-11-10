@@ -22,6 +22,7 @@ import {ZOOM_LEVEL_LOW} from "./layout/layout";
 import {getMessage} from "../lang";
 import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
+import {TaskLevelName} from "./task_slice";
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -53,7 +54,11 @@ export function TaskApp() {
     useEffect(() => {
         // Wait that the html is loaded before we create the context because some of them use jQuery to select elements
         setTimeout(() => {
-            dispatch(taskLoad());
+            const taskLoadParameters: {level?: TaskLevelName} = {};
+            if (options.level) {
+                taskLoadParameters.level = options.level;
+            }
+            dispatch(taskLoad(taskLoadParameters));
 
             if (options.audioUrl) {
                 if (CodecastOptionsMode.Edit === options.mode) {

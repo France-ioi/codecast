@@ -80,6 +80,9 @@ export function buildCommonOptions(config, start, query) {
     if ('input' in query) {
         options.input = query.input || '';
     }
+    if ('level' in query) {
+        options.level = query.level || null;
+    }
 
     return options;
 }

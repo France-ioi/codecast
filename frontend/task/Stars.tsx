@@ -1,7 +1,7 @@
 import React from 'react';
 import range from 'node-range';
 
-export default ({starsCount, rating}) => {
+export function Stars({starsCount, rating}) {
     const filledStars = starsCount * rating;
 
     const starPath = [[25,60],[5,37],[35,30],[50,5],[65,30],[95,37],[75,60],[78,90],[50,77],[22,90]];

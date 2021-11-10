@@ -1,7 +1,7 @@
 import React from "react";
 import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
-import Stars from "./Stars";
+import {Stars} from "./Stars";
 import {getMessage} from "../lang";
 import {levelScoringData} from "./task_submission";
 import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
