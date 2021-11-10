@@ -6,13 +6,19 @@ $primary: #4a90e2;
   }
 }
 
+@mixin not-mobile {
+  @media screen and (min-width: 768px) {
+    @content
+  }
+}
+
 @include mobile {
   .hidden-mobile {
     display: none;
   }
 }
 
-@media screen and (min-width: 768px) {
+@include not-mobile {
   .visible-mobile {
     display: none;
   }
@@ -182,6 +188,7 @@ body {
     width: 100%;
     height: 100%;
     position: relative;
+    min-height: 150px;
     #grid {
       position: absolute;
       width: 100%;

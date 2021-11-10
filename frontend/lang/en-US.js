@@ -151,6 +151,7 @@ module.exports = {
     KEYWORD: 'keyword',
     CONSTANT: "constant",
     VARIABLE: "variable",
+    OK: "Ok",
 
     TASK_DESCRIPTION: 'Instructions',
     TASK_VARIABLES: 'Variables',
@@ -161,6 +162,10 @@ module.exports = {
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualization {number}",
     TASK_LEVEL: 'Version',
+    TASK_LEVEL_VERSION: "{count} stars",
+    TASK_LEVEL_SUCCESS_NEXT_BUTTON: "Go to next version",
+    TASK_LEVEL_SUCCESS_NEXT_LABEL: "We suggest you try the version {version}.",
+    TASK_LEVEL_SUCCESS_FINISHED: "You have fully resolved this question.",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Preview a specific layout:",
     LAYOUT_DefaultLayoutDesktop: 'Desktop',

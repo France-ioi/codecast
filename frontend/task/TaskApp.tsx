@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
-import {Dialog, Icon, Intent, ProgressBar} from "@blueprintjs/core";
+import {Dialog, Intent, ProgressBar} from "@blueprintjs/core";
 import {MenuTask} from "./MenuTask";
 import {RecorderControlsTask} from "./RecorderControlsTask";
 import {SubtitlesBand} from "../subtitles/SubtitlesBand";
@@ -9,7 +9,6 @@ import {PlayerControlsTask} from "./PlayerControlsTask";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {LayoutLoader} from "./layout/LayoutLoader";
-import {taskSuccessClear} from "./task_slice";
 import {taskLoad} from "./index";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {useAppSelector} from "../hooks";
@@ -22,13 +21,12 @@ import {LoginScreen} from "../common/LoginScreen";
 import {ZOOM_LEVEL_LOW} from "./layout/layout";
 import {getMessage} from "../lang";
 import {TaskLevelTabs} from "./TaskLevelTabs";
+import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
     const playerEnabled = !!useAppSelector(state => state.options.audioUrl);
-    const taskSuccess = useAppSelector(state => state.task.success);
-    const taskSuccessMessage = useAppSelector(state => state.task.successMessage);
     const player = useAppSelector(state => state.player);
     const isPlayerReady = player.isReady;
     const options = useAppSelector(state => state.options);
@@ -82,10 +80,6 @@ export function TaskApp() {
             }
         });
     }, []);
-
-    const closeTaskSuccess = () => {
-        dispatch(taskSuccessClear());
-    };
 
     if (options.baseDataUrl && CodecastOptionsMode.Edit === options.mode) {
         if (user) {
@@ -154,16 +148,7 @@ export function TaskApp() {
                 </div>
             </Dialog>
 
-            <Dialog isOpen={taskSuccess} className="simple-dialog" onClose={closeTaskSuccess}>
-                <p className="simple-dialog-success">{taskSuccessMessage}</p>
-
-                <div className="simple-dialog-buttons">
-                    <button className="simple-dialog-button" onClick={closeTaskSuccess}>
-                        <Icon icon="small-tick" iconSize={24}/>
-                        <span>Ok</span>
-                    </button>
-                </div>
-            </Dialog>
+            <TaskSuccessDialog/>
         </Container>
     );
 }

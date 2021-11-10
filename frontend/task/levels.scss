@@ -2,14 +2,16 @@
   display: flex;
   align-items: center;
   margin-right: 10px;
+  margin-top: 7px;
 }
-.level-tabs a {
+.level-tabs .level-tab-link {
   display: flex;
   justify-content: center;
   align-items: center;
   text-transform: uppercase;
   color: #4a90e2;
   text-decoration: none;
+  padding: 10px 40px;
 }
 .level-tabs .star-rating {
   margin-left: 5px;
@@ -38,7 +40,7 @@
   color: #9b9b9b;
 }
 
-@media screen and (max-width: 481px), screen and (max-width: 601px) and (orientation: portrait) {
+@include mobile {
   .level-tabs {
     background-color: #fff;
     border-radius: 5px 5px 0 0;
@@ -63,15 +65,8 @@
     margin: 0 10px;
   }
 }
-@media /* all but portrait mobiles */
-screen and (min-width: 481px) and (orientation: landscape),
-screen and (min-width: 601px) and (orientation: portrait) {
-  .level-tabs a {
-    padding: 10px 0;
-  }
-  .level-tabs .level-tab {
-    padding: 0 20px;
-  }
+
+@include not-mobile {
   .level-tabs .level-tab.current {
     background-color: #fff;
     border-radius: 5px 5px 0 0;
@@ -96,19 +91,5 @@ screen and (min-width: 601px) and (orientation: portrait) {
     box-shadow: -10px 0px 0 #fff;
     bottom: 0;
     right: -20px;
-  }
-}
-@media /* Tablets and desktop */
-screen and (min-width: 768px) and (max-width: 1024.9999999999px) and (orientation: portrait),
-screen and (min-width: 855px) and (orientation: landscape),
-screen and (min-width: 1025px) {
-  .level-tabs .level-tab {
-    padding: 0 40px;
-  }
-}
-@media /* Tablets landscape and desktop */
-screen and (min-width: 855px) and (orientation: landscape) {
-  .level-tabs {
-    margin-top: 7px;
   }
 }

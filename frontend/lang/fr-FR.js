@@ -152,6 +152,7 @@ module.exports = {
     KEYWORD: 'mot-clé',
     CONSTANT: "constante",
     VARIABLE: "variable",
+    OK: "Ok",
 
     TASK_DESCRIPTION: 'Énoncé',
     TASK_VARIABLES: 'Variables',
@@ -162,6 +163,10 @@ module.exports = {
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualisation {number}",
     TASK_LEVEL: 'Version',
+    TASK_LEVEL_VERSION: "{count} étoiles",
+    TASK_LEVEL_SUCCESS_NEXT_BUTTON: "Passer à la suite",
+    TASK_LEVEL_SUCCESS_NEXT_LABEL: "Nous vous proposons d'essayer la version {version}.",
+    TASK_LEVEL_SUCCESS_FINISHED: "Vous avez entièrement résolu cette question.",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Se placer dans un agencement :",
     LAYOUT_DefaultLayoutDesktop: 'Ordinateur',

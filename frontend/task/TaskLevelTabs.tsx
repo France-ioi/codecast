@@ -2,11 +2,11 @@ import React from "react";
 import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
 import Stars from "./Stars";
-import {taskCurrentLevelChange} from "./task_slice";
 import {getMessage} from "../lang";
 import {levelScoringData} from "./task_submission";
 import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {taskChangeLevel} from "./index";
 
 export function TaskLevelTabs() {
     const currentLevel = useAppSelector(state => state.task.currentLevel);
@@ -15,7 +15,7 @@ export function TaskLevelTabs() {
     const dispatch = useDispatch();
 
     const changeVersion = (level) => {
-        dispatch(taskCurrentLevelChange({level}));
+        dispatch(taskChangeLevel({level}));
     };
 
     return (

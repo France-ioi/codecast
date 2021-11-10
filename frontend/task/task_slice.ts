@@ -32,6 +32,7 @@ export interface TaskLevel {
     answer: any,
     bestAnswer: any,
     score: number,
+    locked?: boolean,
 }
 
 export interface TaskState {
@@ -114,7 +115,7 @@ export const taskSlice = createSlice({
             state.success = true;
             state.successMessage = action.payload;
         },
-        taskSuccessClear(state: TaskState) {
+        taskSuccessClear(state: TaskState, action?: PayloadAction<{record?: boolean}>) {
             state.success = false;
             state.successMessage = null;
         },
@@ -188,6 +189,31 @@ export const taskSlice = createSlice({
             console.log('task set levels', action.payload);
             state.levels = action.payload;
         },
+        taskSaveScore(state: TaskState, action: PayloadAction<{level: TaskLevelName, answer: any, score: number}>) {
+            const taskLevel = state.levels[action.payload.level];
+            const currentScore = taskLevel.score;
+            let newState = state;
+            if (action.payload.score > currentScore) {
+                state.levels[action.payload.level].bestAnswer = action.payload.answer;
+                state.levels[action.payload.level].score = action.payload.score;
+
+                if (action.payload.score >= 1) {
+                    const levelNumber = taskLevelsList.indexOf(action.payload.level)
+                    if (levelNumber + 1 <= taskLevelsList.length - 1) {
+                        const nextLevel = taskLevelsList[levelNumber + 1];
+                        if (nextLevel in state.levels && state.levels[nextLevel].locked) {
+                            state.levels[nextLevel].locked = false;
+                        }
+                    }
+                }
+            }
+
+            return newState;
+        },
+        taskSaveAnswer(state: TaskState, action: PayloadAction<{level: TaskLevelName, answer: any}>) {
+            const taskLevel = state.levels[action.payload.level];
+            taskLevel.answer = action.payload.answer;
+        },
     },
 });
 
@@ -212,6 +238,8 @@ export const {
     updateTestContextState,
     taskSetLevels,
     taskCurrentLevelChange,
+    taskSaveScore,
+    taskSaveAnswer,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [
@@ -219,7 +247,6 @@ export const taskRecordableActions = [
     'taskSuccessClear',
     'taskInputNeeded',
     'updateCurrentTestId',
-    'taskCurrentLevelChange',
 ];
 
 export default taskSlice;

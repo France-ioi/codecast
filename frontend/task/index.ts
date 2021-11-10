@@ -1,21 +1,21 @@
 import {extractLevelSpecific, getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, delay} from "redux-saga/effects";
+import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest} from "redux-saga/effects";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
 import {AppStore} from "../store";
-import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
+import {quickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
     currentTaskChange, currentTaskChangePredefined,
-    recordingEnabledChange, taskAddInput, taskClearSubmission, taskCreateSubmission, taskCurrentLevelChange,
+    recordingEnabledChange, taskAddInput, taskClearSubmission, taskCurrentLevelChange,
     taskInputEntered,
     taskInputNeeded,
     TaskLevel, TaskLevelName, taskLevelsList,
     taskLoaded,
     taskRecordableActions,
-    taskResetDone, taskSetLevels,
+    taskResetDone, taskSaveAnswer, taskSetLevels,
     taskSuccess,
     taskSuccessClear,
     updateCurrentTestId,
@@ -42,6 +42,7 @@ import {documentModelFromString} from "../buffers";
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
     TaskUnload = 'task/unload',
+    TaskChangeLevel = 'task/changeLevel',
     TaskRunExecution = 'task/runExecution',
 }
 
@@ -52,6 +53,13 @@ export const taskLoad = ({testId, level, tests, reloadContext}: {testId?: number
         level,
         tests,
         reloadContext,
+    },
+});
+
+export const taskChangeLevel = ({level}: {level: TaskLevelName}) => ({
+    type: TaskActionTypes.TaskChangeLevel,
+    payload: {
+        level,
     },
 });
 
@@ -178,6 +186,7 @@ function* taskLoadSaga(app: App, action) {
         }
     }
     currentLevel = yield select((state: AppStore) => state.task.currentLevel);
+    console.log('new current level', currentLevel);
 
     const tests = action.payload && action.payload.tests ? action.payload.tests : currentTask.data[currentLevel];
     console.log('[task.load] update task tests', tests);
@@ -289,7 +298,7 @@ function* taskRunExecution(app: App, {type, payload}) {
 
     yield put({type: AppActionTypes.AppInit, payload: {options: {...options}, environment: 'background'}});
     yield put({type: BufferActionTypes.BufferLoad, buffer: 'source', text: source});
-    yield put(taskLoad({testId, level, tests}));
+    yield put(taskLoad({testId, level, tests, reloadContext: true}));
     yield take(taskLoaded.type);
 
     taskSubmissionExecutor.setAfterExecutionCallback((result) => {
@@ -405,18 +414,33 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield takeEvery(taskCurrentLevelChange.type, function* () {
+        // @ts-ignore
+        yield takeEvery(TaskActionTypes.TaskChangeLevel, function* ({payload}) {
             const state: AppStore = yield select();
-            console.log('level change');
+            const currentLevel = state.task.currentLevel;
+            const newLevel = payload.level;
+            console.log('level change', currentLevel, newLevel);
 
             const currentSubmission = yield select((state: AppStore) => state.task.currentSubmission);
             if (null !== currentSubmission) {
                 yield put(taskClearSubmission());
             }
+            yield put(taskSuccessClear({record: false}));
+
+            // Save old answer
+            const source = getBufferModel(state, 'source').document.toString();
+            yield put(taskSaveAnswer({level: currentLevel, answer: source}));
+
+            yield put(taskCurrentLevelChange({level: newLevel}));
+
+            // Reload answer
+            let newLevelAnswer = yield select((state: AppStore) => state.task.levels[newLevel].answer);
+            if (!newLevelAnswer || !newLevelAnswer.length) {
+                newLevelAnswer = getDefaultSourceCode(state.options.platform, state.environment);
+            }
+            yield put({type: BufferActionTypes.BufferReset, buffer: 'source', model: documentModelFromString(newLevelAnswer), goToEnd: true});
 
             const currentTask = state.task.currentTask;
-            const newLevel = state.task.currentLevel;
-
             const tests = currentTask.data[newLevel];
             console.log('[task.currentLevelChange] update task tests', tests);
             yield put(updateTaskTests(tests));
@@ -497,6 +521,7 @@ export default function (bundle: Bundle) {
                         sliceName: 'task',
                         partial: true,
                         state: {
+                            levels: taskData.levels,
                             currentLevel: taskData.currentLevel,
                             currentTestId: taskData.currentTestId,
                             taskTests: taskData.taskTests,
@@ -512,17 +537,17 @@ export default function (bundle: Bundle) {
                 if (taskData.success) {
                     yield put(taskSuccess(taskData.successMessage));
                 } else {
-                    yield put(taskSuccessClear());
+                    yield put(taskSuccessClear({}));
                 }
             }
 
             console.log('TASK REPLAY API RESET', instant.event, taskData);
-            if (!quick || -1 !== ['compile.success', 'task/taskCurrentLevelChange'].indexOf(instant.event[1])) {
+            if (!quick || -1 !== ['compile.success', 'task/changeLevel'].indexOf(instant.event[1])) {
                 yield call(contextResetAndReloadStateSaga);
             }
 
             const context = quickAlgoLibraries.getContext(null, 'main');
-            if (!quick || -1 !== ['task/updateCurrentTestId', 'task/taskCurrentLevelChange'].indexOf(instant.event[1])) {
+            if (!quick || -1 !== ['task/updateCurrentTestId', 'task/changeLevel'].indexOf(instant.event[1])) {
                 if (taskData && taskData.state) {
                     console.log('do reload state', taskData.state);
                     const draft = createDraft(taskData.state);
@@ -539,6 +564,13 @@ export default function (bundle: Bundle) {
             actions: taskSlice.actions,
             reducers: taskSlice.caseReducers,
             onResetDisabled: true,
+        });
+
+        app.recordApi.on(TaskActionTypes.TaskChangeLevel, function* (addEvent, {payload}) {
+            yield call(addEvent, TaskActionTypes.TaskChangeLevel, payload);
+        });
+        app.replayApi.on(TaskActionTypes.TaskChangeLevel, function* (replayContext: ReplayContext, event) {
+            yield put({type: TaskActionTypes.TaskChangeLevel, payload: event[2]});
         });
 
         app.stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
