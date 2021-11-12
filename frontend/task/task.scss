@@ -103,6 +103,21 @@ body {
       margin-bottom: 1rem;
       font-size: 1.5em !important;
     }
+
+    .basic, .easy, .medium, .hard {
+      display: none;
+    }
+
+    &.level-basic .basic,
+    &.level-easy .easy,
+    &.level-medium .medium,
+    &.level-hard .hard {
+      display: inline-block;
+    }
+
+    ul {
+      margin-bottom: 1rem !important;
+    }
   }
 
   hr {

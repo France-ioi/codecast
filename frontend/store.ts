@@ -63,6 +63,7 @@ export interface CodecastOptions {
     },
     origin: string,
     task?: string,
+    taskInstructions?: string,
 }
 
 export interface Panes {
