@@ -7,7 +7,7 @@ import {uploadBlobChannel} from '../utils/blobs';
 import {spawnWorker} from '../utils/worker_utils';
 // @ts-ignore
 import AudioWorker from '../audio_worker/index.worker';
-import intervalTree, {IntervalTree} from './interval_tree';
+import {IntervalTree} from './interval_tree';
 import {findInstantIndex} from '../player/utils';
 import {postJson} from '../common/utils';
 import {findSubtitleIndex} from '../subtitles/utils';
@@ -26,10 +26,6 @@ export const initialStateTrimSaving = {
 }
 
 export default function(bundle: Bundle) {
-    bundle.addReducer(ActionTypes.EditorPrepare, (state: AppStore) => {
-        state.editor.trim.intervals = intervalTree({skip: false, mute: false});
-    });
-
     bundle.defineAction(ActionTypes.EditorTrimEnter);
     bundle.defineAction(ActionTypes.EditorTrimReturn);
 

@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+   <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>11_variable_04_sokoban</title>
+      <script>
+      window.stringsLanguage = 'fr';
+      window.taskStrings = {
+      };
+      </script>
+      <script class="remove" type="text/javascript" src="../../../../../tasks/v01/_common/modules/pemFioi/importModules-1.5.js" id="import-modules"></script>
+      <script class="remove" type="text/javascript">
+        var modulesPath = '../../../../../tasks/v01/_common/modules/'
+        importModules([
+          'jquery-1.7.1', 'JSON-js', 'raphael-2.2.1', 'jschannel', 'raphaelFactory-1.0', 'delayFactory-1.0', 'simulationFactory-1.0',
+          'platform-pr', 'installationAPI.01', 'miniPlatform',
+          'conceptViewer-1.0', 'blockly-robot-1.0', 'codecast-7.0']);
+        // set Blockly as default language when none is specified through ?language=
+        // importLanguageModules('blockly');
+      </script>
+      <script class="remove" type="text/javascript">
+       var json = {
+          "id": "http://castor-informatique.fr/questions/algorea_training_2/11_variable_08_sokoban",
+          "language": "fr",
+          "version": "fr.01",
+          "authors": "Mathias Hiron, Marielle Léonard",
+          "translators": [],
+          "license": "",
+          "taskPathPrefix": "",
+          "modulesPathPrefix": "",
+          "browserSupport": [],
+          "fullFeedback": true,
+          "minWidth": "auto"
+      };
+      </script>
+   </head>
+   <body id="app">
+       <img src="wall.png" style="display:none" />
+       <img src="marker.png" style="display:none" />
+       <img src="box.png" style="display:none" />
+       <img src="green_robot.png" style="display:none" />
+       <img src="icon.png" style="display:none" />
+       <img src="test_easy_1.png" id="test_easy_1" style="display: none;" />
+       <img src="test_easy_2.png" id="test_easy_2" style="display: none;" />
+       <img src="test_easy_3.png" id="test_easy_3" style="display: none;" />
+       <img src="test_medium_1.png" id="test_medium_1" style="display: none;" />
+       <img src="test_medium_2.png" id="test_medium_2" style="display: none;" />
+       <img src="test_medium_3.png" id="test_medium_3" style="display: none;" />
+       <img src="test_hard_1.png" id="test_hard_1" style="display: none;" />
+       <img src="test_hard_2.png" id="test_hard_2" style="display: none;" />
+       <img src="test_hard_3.png" id="test_hard_3" style="display: none;" />
+
+     <div id="react-container">
+     </div>
+
+     <script type="text/javascript" src="task.js"></script>
+   </body>
+</html>
+ 

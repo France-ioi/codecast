@@ -73,21 +73,21 @@ function getBrowser() {
     return null;
 }
 
-export const initialStateStatistics = {
-    isReady: false,
-    logData: undefined as LogData,
-    dateRange: [null, null],
+export interface StatisticsState {
+    isReady: boolean,
+    logData: LogData,
+    dateRange: Date[],
     folder: {
-        label: 'Select a Folder',
-        value: null
+        label: string,
+        value: string,
     },
-    prefix: '',
+    prefix: string,
     search: {
-        status: 'success',
-        data: [],
-        error: null
+        status: string,
+        data: any,
+        error: string,
     }
-};
+}
 
 export default function(bundle: Bundle) {
     if (isLocalMode()) {
@@ -95,7 +95,21 @@ export default function(bundle: Bundle) {
     }
 
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore, {payload: {options: {isStatisticsReady}}}) => {
-        state.statistics = {...initialStateStatistics};
+        state.statistics = {
+            isReady: false,
+            logData: undefined as LogData,
+            dateRange: [null, null],
+            folder: {
+                label: 'Select a Folder',
+                value: null
+            },
+            prefix: '',
+            search: {
+                status: 'success',
+                data: [],
+                error: null
+            }
+        };
         state.statistics.isReady = isStatisticsReady;
     });
 
