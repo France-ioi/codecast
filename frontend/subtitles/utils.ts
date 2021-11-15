@@ -1,7 +1,7 @@
 import request from 'superagent';
-import {initialStateSubtitles} from "./index";
+import {SubtitlesState} from "./index";
 
-export function updateCurrentItem(subtitles: typeof initialStateSubtitles, audioTime?: number): void {
+export function updateCurrentItem(subtitles: SubtitlesState, audioTime?: number): void {
     if (subtitles.items) {
         if (audioTime === undefined) {
             audioTime = subtitles.audioTime;

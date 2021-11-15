@@ -1,7 +1,6 @@
 import {Action, Store} from "redux";
 import {initialStateMemoryUsage} from "./recorder/memory_usage";
-import {initialStateEditor} from "./editor";
-import {initialStateStatistics} from "./statistics";
+import {StatisticsState} from "./statistics";
 import {initialStateFullscreen} from "./common/fullscreen";
 import {Error} from "./common/error";
 import {mainViewGeometries} from "./common/resize";
@@ -15,13 +14,14 @@ import {initialStatePlayer} from "./player";
 import {initialStateRecorder} from "./recorder/store";
 import {initialStateArduino} from "./stepper/arduino";
 import {initialStateIoPane} from "./stepper/io";
-import {initialStateSubtitles} from "./subtitles";
+import {SubtitlesState} from "./subtitles";
 import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
 import {TaskState} from "./task/task_slice";
 import {LayoutState} from "./task/layout/layout";
 import {DocumentationState} from "./task/documentation_slice";
 import {BufferState} from "./buffers";
+import {EditorState} from "./editor";
 
 export type CodecastPlatform = 'python' | 'unix' | 'arduino';
 
@@ -94,15 +94,15 @@ export interface AppAction extends Action {
 export interface AppStore extends Store, AppStoreReplay {
     lastError: undefined | Error,
     memoryUsage: typeof initialStateMemoryUsage,
-    editor: typeof initialStateEditor,
-    statistics: typeof initialStateStatistics,
+    editor: EditorState,
+    statistics: StatisticsState,
     fullscreen: typeof initialStateFullscreen,
     examples: typeof initialStateExamples,
     user: typeof initialStateUser,
     screen: Screen,
     player: typeof initialStatePlayer,
     recorder: typeof initialStateRecorder,
-    subtitles: typeof initialStateSubtitles,
+    subtitles: SubtitlesState,
     save: typeof initialStateSave,
     terminal: typeof initialStateTerminal,
     terminalElement: any,

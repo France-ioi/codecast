@@ -19,8 +19,8 @@
     "dev": "nodemon --mode development --watch backend --exec npx --no-install babel-node -- backend/server.js",
     "start": "NODE_ENV=production nodemon --mode production --watch backend --exec npx --no-install babel-node -- backend/server.js",
     "build": "webpack --mode=production --progress --color",
-    "build-offline": "BUILD=offline webpack --mode=production --progress --color",
-    "pack-offline": "rm -rf build && yarn run build-offline && zip -r offline.zip build assets",
+    "build-lib": "BUILD=lib webpack --mode=production --progress --color",
+    "pack-offline": "rm -rf build && yarn run build-lib && zip -r offline.zip build assets",
     "lint": "./node_modules/.bin/eslint frontend/ --ext .tsx,.ts"
   },
   "dependencies": {
@@ -62,6 +62,7 @@
     "lodash": "^4.17.21",
     "lodash.memoize": "^4.1.2",
     "loglevel": "^1.7.1",
+    "mini-css-extract-plugin": "^2.3.0",
     "mysql": "^2.18.1",
     "node-range": "^0.1.0",
     "nu-stream": "^3.3.1",

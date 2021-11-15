@@ -5,13 +5,12 @@
 import {call, put, select, take, takeLatest} from 'redux-saga/effects';
 import {stringifySync} from 'subtitle';
 import FileSaver from 'file-saver';
-import {postJson} from '../common/utils';
 import {getSubtitles, updateCurrentItem} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {AppStore} from "../store";
-import {initialStateSubtitles, SubtitlesOption, SubtitlesOptions} from "./index";
+import {SubtitlesOptions, SubtitlesState} from "./index";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {Screen} from "../common/screens";
@@ -71,7 +70,7 @@ export default function(bundle: Bundle) {
     bundle.addSaga(subtitlesEditorSaga);
 }
 
-function setUnsaved(subtitles: typeof initialStateSubtitles) {
+function setUnsaved(subtitles: SubtitlesState) {
     subtitles.unsaved = true;
 }
 

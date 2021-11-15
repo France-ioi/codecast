@@ -8,7 +8,7 @@ import {PrinterLib} from "./libs/printer/printer_lib";
 import {AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
-    currentTaskChange,
+    currentTaskChange, currentTaskChangePredefined,
     recordingEnabledChange, taskAddInput,
     taskInputEntered,
     taskInputNeeded,
@@ -82,6 +82,9 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
     let contextLib;
     let levelGridInfos = currentTask ? extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]) : {};
     if (levelGridInfos.context) {
+        if (!window.quickAlgoLibrariesList) {
+            window.quickAlgoLibrariesList = [];
+        }
         const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
         if (-1 !== libraryIndex) {
             const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
@@ -146,8 +149,12 @@ function* taskLoadSaga(app: App) {
     const urlParameters = new URLSearchParams(window.location.search);
     const selectedTask = urlParameters.has('task') ? urlParameters.get('task') : null;
 
-    if (selectedTask) {
-        yield put(currentTaskChange(selectedTask));
+    const state = yield select();
+
+    if (state.options.task) {
+        yield put(currentTaskChange(state.options.task));
+    } else {
+        yield put(currentTaskChangePredefined(selectedTask));
     }
 
     if (oldSagasTasks[app.replay ? 'replay' : 'main']) {
@@ -156,7 +163,6 @@ function* taskLoadSaga(app: App) {
         yield put(taskUnload());
     }
 
-    const state = yield select();
     let context = quickAlgoLibraries.getContext(null, state.replay);
     if (!context) {
         yield call(createContext, quickAlgoLibraries);
