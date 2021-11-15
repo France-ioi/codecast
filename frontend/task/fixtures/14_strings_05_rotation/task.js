@@ -1,4 +1,4 @@
-var subTask = {
+window.taskData = {
   gridInfos: {
     context: 'printer',
     hideSaveOrLoad: true,
@@ -70,18 +70,4 @@ var subTask = {
       }
     ],
   },
-}
-
-setTimeout(() => {
-  Codecast.start({
-    "start": "task",
-    "showStepper": true,
-    "showStack": true,
-    "showViews": true,
-    "showIO": true,
-    "platform": "python",
-    "baseUrl": "https://codecast-dev.france-ioi.org/next",
-    "authProviders": ["guest"],
-    "task": subTask,
-  })
-}, 0);
+};

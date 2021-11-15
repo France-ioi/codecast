@@ -19,7 +19,7 @@ import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_librairi
 import {Screen} from "../../common/screens";
 import {Documentation} from "../Documentation";
 
-export const ZOOM_LEVEL_LOW = 0.8;
+export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
 
 interface Dimensions {

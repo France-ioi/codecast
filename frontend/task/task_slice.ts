@@ -1,6 +1,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import StringRotationFixture from './fixtures/14_strings_05_rotation';
-import SokobanFixture from './fixtures/11_variable_08_sokoban';
+import StringRotationFixture from './fixtures/14_strings_05_rotation/index';
+import SokobanFixture from './fixtures/11_variable_08_sokoban/index';
 
 const availableTasks = {
     robot: SokobanFixture,
