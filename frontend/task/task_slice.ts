@@ -1,6 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import StringRotationFixture from './fixtures/14_strings_05_rotation/index';
 import SokobanFixture from './fixtures/11_variable_08_sokoban/index';
+import {AppStore} from "../store";
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -90,6 +91,14 @@ export const taskInitialState = {
     inputNeeded: false,
     inputs: [],
 } as TaskState;
+
+export const selectCurrentTest = (state: AppStore) => {
+    if (null == state.task.currentTestId || !(state.task.currentTestId in state.task.taskTests)) {
+        return {};
+    }
+
+    return state.task.taskTests[state.task.currentTestId].data;
+}
 
 export const taskSlice = createSlice({
     name: 'task',

@@ -7,7 +7,7 @@ import {channel} from "redux-saga";
 import {ActionTypes} from "../../../buffers/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../../../stepper/actionTypes";
 import {documentModelFromString} from "../../../buffers";
-import {taskInputEntered, taskInputNeeded, updateCurrentTest} from "../../task_slice";
+import {selectCurrentTest, taskInputEntered, taskInputNeeded, updateCurrentTest} from "../../task_slice";
 import {App} from "../../../index";
 import {IoMode} from "../../../stepper/io";
 import {ReplayContext} from "../../../player/sagas";
@@ -751,7 +751,7 @@ export class PrinterLib extends QuickAlgoLibrary {
 
         switch (action) {
             case PrinterLibAction.reset: {
-                const currentTest = yield select((state: AppStore) => state.task.taskTests[state.task.currentTestId].data);
+                const currentTest = yield select(selectCurrentTest);
                 if (currentTest && currentTest.input) {
                     yield put({
                         type: ActionTypes.BufferReset,

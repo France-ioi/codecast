@@ -47,6 +47,10 @@ class TaskSubmissionExecutor {
         const environment = state.environment;
         const level = state.task.currentLevel;
         const source = getBufferModel(state, 'source').document.toString();
+        const tests = yield select(state => state.task.taskTests);
+        if (!tests || 0 === Object.values(tests).length) {
+            return;
+        }
 
         if (!currentSubmission) {
             yield put(taskCreateSubmission());
@@ -60,7 +64,6 @@ class TaskSubmissionExecutor {
 
         const displayedResults = [result];
 
-        const tests = yield select(state => state.task.taskTests);
         let lastMessage = null;
         for (let testIndex = 0; testIndex < tests.length; testIndex++) {
             if (result.testId === testIndex) {

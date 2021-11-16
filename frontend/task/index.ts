@@ -9,7 +9,7 @@ import {AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
     currentTaskChange, currentTaskChangePredefined,
-    recordingEnabledChange, taskAddInput, taskClearSubmission, taskCurrentLevelChange,
+    recordingEnabledChange, selectCurrentTest, taskAddInput, taskClearSubmission, taskCurrentLevelChange,
     taskInputEntered,
     taskInputNeeded,
     TaskLevel, TaskLevelName, taskLevelsList,
@@ -102,7 +102,16 @@ function* createContext() {
     const currentLevel = yield select(state => state.task.currentLevel);
 
     let contextLib;
-    let levelGridInfos = currentTask ? extractLevelSpecific(currentTask.gridInfos, currentLevel) : {};
+    let levelGridInfos = currentTask ? extractLevelSpecific(currentTask.gridInfos, currentLevel) : {
+        includeBlocks: {
+            generatedBlocks: {
+                printer: ["print", "read", "manipulate"]
+            },
+            standardBlocks: {
+                includeAll: true,
+            },
+        },
+    };
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
@@ -131,7 +140,7 @@ function* createContext() {
         }
     }
 
-    const testData = state.task.taskTests[state.task.currentTestId].data;
+    const testData = selectCurrentTest(state);
     console.log('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     context.resetAndReloadState(testData, state);
@@ -167,55 +176,57 @@ function* taskLoadSaga(app: App, action) {
 
     if (state.options.task) {
         yield put(currentTaskChange(state.options.task));
-    } else {
+    } {
         yield put(currentTaskChangePredefined(selectedTask));
     }
 
     const currentTask = yield select((state: AppStore) => state.task.currentTask);
-    let currentLevel = yield select((state: AppStore) => state.task.currentLevel);
+    if (currentTask) {
+        let currentLevel = yield select((state: AppStore) => state.task.currentLevel);
 
-    if (action.payload.level && action.payload.level in currentTask.data) {
-        yield put(taskCurrentLevelChange({level: action.payload.level, record: false}));
-    } else if (null === currentLevel || !(currentLevel in currentTask.data)) {
-        // Select default level
-        for (let level of taskLevelsList) {
-            if (level in currentTask.data) {
-                yield put(taskCurrentLevelChange({level, record: false}));
-                break;
+        if (action.payload.level && action.payload.level in currentTask.data) {
+            yield put(taskCurrentLevelChange({level: action.payload.level, record: false}));
+        } else if (null === currentLevel || !(currentLevel in currentTask.data)) {
+            // Select default level
+            for (let level of taskLevelsList) {
+                if (level in currentTask.data) {
+                    yield put(taskCurrentLevelChange({level, record: false}));
+                    break;
+                }
             }
         }
-    }
-    currentLevel = yield select((state: AppStore) => state.task.currentLevel);
-    console.log('new current level', currentLevel);
+        currentLevel = yield select((state: AppStore) => state.task.currentLevel);
+        console.log('new current level', currentLevel);
 
-    const tests = action.payload && action.payload.tests ? action.payload.tests : currentTask.data[currentLevel];
-    console.log('[task.load] update task tests', tests);
-    yield put(updateTaskTests(tests));
+        const tests = action.payload && action.payload.tests ? action.payload.tests : currentTask.data[currentLevel];
+        console.log('[task.load] update task tests', tests);
+        yield put(updateTaskTests(tests));
 
-    const testId = action.payload && action.payload.testId ? action.payload.testId : 0;
-    console.log('[task.load] update current test id', testId);
-    yield put(updateCurrentTestId({testId, record: false}));
+        const testId = action.payload && action.payload.testId ? action.payload.testId : 0;
+        console.log('[task.load] update current test id', testId);
+        yield put(updateCurrentTestId({testId, record: false}));
 
-    const taskLevels = yield select((state: AppStore) => state.task.levels);
-    if (0 === Object.keys(taskLevels).length) {
-        const levels = {};
-        for (let level of Object.keys(currentTask.data)) {
-            if (state.options.level && state.options.level !== level) {
-                continue;
+        const taskLevels = yield select((state: AppStore) => state.task.levels);
+        if (0 === Object.keys(taskLevels).length) {
+            const levels = {};
+            for (let level of Object.keys(currentTask.data)) {
+                if (state.options.level && state.options.level !== level) {
+                    continue;
+                }
+
+                levels[level] = {
+                    level,
+                    answer: null,
+                    bestAnswer: null,
+                    score: 0,
+                } as TaskLevel;
             }
 
-            levels[level] = {
-                level,
-                answer: null,
-                bestAnswer: null,
-                score: 0,
-            } as TaskLevel;
+            yield put(taskSetLevels(levels));
         }
 
-        yield put(taskSetLevels(levels));
+        console.log({testId, tests});
     }
-
-    console.log({testId, tests});
 
     if (oldSagasTasks[app.environment]) {
         // Unload task first
@@ -230,14 +241,13 @@ function* taskLoadSaga(app: App, action) {
 
     const sagas = quickAlgoLibraries.getSagas(app);
     oldSagasTasks[app.environment] = yield fork(function* () {
+        sagas.push(handleLibrariesEventListenerSaga);
         yield all(sagas);
     });
 
-    yield call(handleLibrariesEventListenerSaga, app);
-
     const sourceModel = getBufferModel(state, 'source');
     const source = sourceModel ? sourceModel.document.toString() : null;
-    if (!source || !source.length) {
+    if ((!source || !source.length) && currentTask) {
         const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment);
         console.log('Load default source code', defaultSourceCode);
         yield put({type: BufferActionTypes.BufferReset, buffer: 'source', model: documentModelFromString(defaultSourceCode), goToEnd: true});
@@ -376,7 +386,7 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
             context.reloadInnerState(createDraft(contextState));
             context.redrawDisplay();
         } else {
-            const currentTest = state.task.taskTests[state.task.currentTestId].data;
+            const currentTest = selectCurrentTest(state);
             console.log('reload current test', currentTest);
             context.resetAndReloadState(currentTest, state);
         }
@@ -385,8 +395,7 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
 
 function* contextResetAndReloadStateSaga() {
     const state = yield select();
-    const taskData = state.task;
-    const currentTest = taskData.taskTests[taskData.currentTestId].data;
+    const currentTest = selectCurrentTest(state);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     context.resetAndReloadState(currentTest, state);
@@ -587,7 +596,7 @@ export default function (bundle: Bundle) {
         });
 
         app.stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
-            const currentTest = state.task.taskTests[state.task.currentTestId].data;
+            const currentTest = selectCurrentTest(state);
 
             console.log('stepper init, current test', currentTest);
 

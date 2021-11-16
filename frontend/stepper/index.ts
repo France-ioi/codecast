@@ -791,7 +791,7 @@ function* stepperInterruptSaga(app: App) {
     yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
 }
 
-function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quickAlgoCallsLogger, environment, speed}: StepperContextParameters) {
+function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quickAlgoCallsLogger, environment, speed, executeEffects}: StepperContextParameters) {
     let stepperContext = makeContext(stepper, {
         interactBefore: (arg) => {
             return new Promise((resolve, reject) => {
@@ -816,6 +816,7 @@ function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quic
         dispatch,
         environment,
         speed,
+        executeEffects,
     });
 
     return stepperContext;
