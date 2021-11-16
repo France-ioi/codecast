@@ -40,9 +40,9 @@ module.exports = function (app, config, callback) {
         req.session.user_id = 0;
         req.session.identity = {id: 0, login: 'guest'};
         getUserConfig(0, function (err, userConfig) {
-            if (err) return res.render('after_login', {error: err.toString()});
+            if (err) return res.render('after_login', {error: err.toString(), rebaseUrl: config.rebaseUrl});
             req.session.grants = userConfig.grants;
-            res.render('after_login', {user: getFrontendUser(req.session)});
+            res.render('after_login', {user: getFrontendUser(req.session), rebaseUrl: config.rebaseUrl});
         });
     }
 
@@ -61,7 +61,7 @@ module.exports = function (app, config, callback) {
                     url: authConfig.identityProviderUri
                 }), function (err, response, body) {
                     if (err) {
-                        return res.render('after_login', {error: err.toString()});
+                        return res.render('after_login', {error: err.toString(), rebaseUrl: config.rebaseUrl});
                     }
                     if (response.statusCode != 200) {
                         return res.status(response.statusCode).send(body);
@@ -71,7 +71,7 @@ module.exports = function (app, config, callback) {
                     try {
                         identity = JSON.parse(body);
                     } catch (ex) {
-                        if (err) return res.render('after_login', {error: 'malformed user profile'});
+                        if (err) return res.render('after_login', {error: 'malformed user profile', rebaseUrl: config.rebaseUrl});
                     }
 
                     req.session.identity = identity;
@@ -82,17 +82,17 @@ module.exports = function (app, config, callback) {
 
                     getUserConfig(identity.id, function (err, userConfig) {
                         if (err) {
-                            return res.render('after_login', {error: err.toString()});
+                            return res.render('after_login', {error: err.toString(), rebaseUrl: config.rebaseUrl});
                         }
 
                         req.session.grants = userConfig.grants;
 
-                        res.render('after_login', {user: getFrontendUser(req.session)});
+                        res.render('after_login', {user: getFrontendUser(req.session), rebaseUrl: config.rebaseUrl});
                     })
                 });
             })
             .catch(function (err) {
-                return res.render('after_login', {error: err.toString()});
+                return res.render('after_login', {error: err.toString(), rebaseUrl: config.rebaseUrl});
             });
     });
 
