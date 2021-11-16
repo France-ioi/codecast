@@ -348,7 +348,9 @@ function* trimEditorUpdateSubtitles(intervals) {
 function* trimEditorPrepareUpload(target) {
     yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.PrepareUpload}});
 
-    const targets = yield call(asyncRequestJson, 'upload', target);
+    const state: AppStore = yield select();
+    const {baseUrl} = state.options;
+    const targets = yield call(asyncRequestJson, `${baseUrl}/upload`, target);
     yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.PrepareUpload}});
 
     return {targets, playerUrl: targets.player_url, editorUrl: targets.editor_url}; // XXX clean up /upload endpoint interface

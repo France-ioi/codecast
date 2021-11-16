@@ -185,7 +185,8 @@ function* uploadSaga(app: App, action) {
 
         const state: AppStore = yield select();
         const save = state.save;
-        const response = yield call(asyncRequestJson, 'upload', action.payload.target);
+        const {baseUrl} = state.options;
+        const response = yield call(asyncRequestJson, `${baseUrl}/upload`, action.payload.target);
         if (response.error) {
             throw new Error(`cannot upload: ${response.error}`);
         }
