@@ -39,6 +39,11 @@ body {
   overflow: hidden;
 }
 
+// Hide Quickalgo instructions
+#task {
+  display: none;
+}
+
 .task {
   background: #f1f2f7;
   height: 100vh;

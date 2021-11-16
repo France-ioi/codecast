@@ -380,7 +380,8 @@ function* trimEditorUpload(step, target, data) {
 
 function* trimEditorAssembleAudio(audioBuffer, intervals) {
     yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.AssembleAudio}});
-    const worker = yield call(spawnWorker, AudioWorker);
+    const state: AppStore = yield select();
+    const worker = yield call(spawnWorker, AudioWorker, state.options.audioWorkerUrl);
     const {sampleRate, numberOfChannels, duration} = audioBuffer;
 
     /* Extract the list of chunks to retain. */

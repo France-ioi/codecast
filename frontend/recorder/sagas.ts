@@ -118,7 +118,7 @@ export default function(bundle, deps) {
             yield put({type: ActionTypes.RecorderPreparing, payload: {progress: 'audio_ok'}});
 
             // Set up a worker to hold and encode the buffers.
-            const worker = yield call(spawnWorker, AudioWorker);
+            const worker = yield call(spawnWorker, AudioWorker, state.options.audioWorkerUrl);
             yield put({type: ActionTypes.RecorderPreparing, payload: {progress: 'worker_ok', worker}});
 
             // Initialize the worker.

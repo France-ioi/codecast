@@ -21,6 +21,7 @@ export function buildCommonOptions(config, start) {
 export function buildOptions(config, req, start, callback) {
     const options = buildCommonOptions(config, start);
     options.baseUrl = config.baseUrl;
+    options.audioWorkerUrl = config.audioWorkerUrl;
     options.callbackUrl = req.originalUrl;
     options.referer = req.headers.referer || null;
     if (/sandbox/.test(start)) {

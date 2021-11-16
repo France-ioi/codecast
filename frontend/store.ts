@@ -40,6 +40,7 @@ export interface CodecastOptions {
     examplesUrl: string,
     audioUrl: string,
     baseDataUrl: string,
+    audioWorkerUrl: string,
     data: any,
     mode: CodecastOptionsMode,
     canChangePlatform: boolean,

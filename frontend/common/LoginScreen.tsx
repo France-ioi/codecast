@@ -31,7 +31,7 @@ class _LoginScreen extends React.PureComponent<LoginScreenProps> {
             <div>
                 <h3 style={{margin: '0 0 10px 0'}}>{getMessage('USER_SELECT_LOGIN_METHOD')}</h3>
 
-                <ButtonGroup large={true} vertical={true}>
+                <ButtonGroup large={true}>
                     {authProviders && authProviders.map((provider) =>
                         <a
                             href={`${baseUrl}/auth/${provider}`}

@@ -2,9 +2,9 @@ import {EventEmitter2} from 'eventemitter2';
 import {call, take} from 'redux-saga/effects';
 import {buffers, eventChannel} from 'redux-saga';
 
-export function spawnWorker(Worker) {
+export function spawnWorker(audioWorker, audioWorkerUrl) {
     return new Promise(function(resolve, reject) {
-        const worker = new Worker();
+        const worker = audioWorkerUrl ? new Worker(audioWorkerUrl) : new audioWorker();
         worker.onerror = function(event) {
             worker.onerror = null;
             worker.onmessage = null;

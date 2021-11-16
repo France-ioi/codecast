@@ -35,6 +35,7 @@ import {Documentation} from "./task/Documentation";
 import '@france-ioi/skulpt/dist/skulpt.min.js';
 import '@france-ioi/skulpt/dist/skulpt-stdlib.js';
 import '@france-ioi/skulpt/dist/debugger.js';
+import {Portal} from "@blueprintjs/core";
 
 setAutoFreeze(true);
 log.setLevel('trace');
@@ -183,6 +184,9 @@ function clearUrl() {
   }
 **/
 Codecast.start = function(options) {
+    // Fix bug when bundle is loaded in head before body is initialized, dialogs would not appear
+    Portal.defaultProps.container = document.body;
+
     const mainStore = Codecast.environments['main'].store;
 
     const urlParameters = new URLSearchParams(window.location.search);
