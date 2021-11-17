@@ -196,3 +196,38 @@ CREATE TABLE IF NOT EXISTS `statistics_logs` (
     `resolution` TEXT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB;
+
+
+
+--
+-- Table structure for table `recordings`
+--
+
+CREATE TABLE `recordings` (
+    `id` int NOT NULL,
+    `user_id` int DEFAULT NULL,
+    `codecast_url` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+    `date_time` datetime NOT NULL,
+    `task_url` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `recordings`
+--
+ALTER TABLE `recordings`
+    ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `recordings`
+--
+ALTER TABLE `recordings`
+    MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1;
+COMMIT;
