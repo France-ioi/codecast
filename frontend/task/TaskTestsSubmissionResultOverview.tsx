@@ -29,7 +29,7 @@ export function TaskTestsSubmissionResultOverview(props: TaskTestsSubmissionResu
                     {true === testResult.result && <span className="test-success">{getMessage('TESTS_RESULT_OVERVIEW_SUCCESS').format({index: testResult.testId + 1})}</span>}
                     {false === testResult.result && <React.Fragment>
                         <span className="test-error">{getMessage('TESTS_RESULT_OVERVIEW_FAILURE').format({index: testResult.testId + 1})}</span>
-                        <span className="test-link" onClick={() => seeFailedTest(testResult.testId)}>{getMessage('TESTS_RESULT_OVERVIEW_LINK')}</span>
+                        <span className="test-link" onClick={() => seeFailedTest(testResult.testId)}>{getMessage('TESTS_RESULT_OVERVIEW_VIEW')}</span>
                     </React.Fragment>}
                 </div>
             )}

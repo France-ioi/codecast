@@ -176,5 +176,5 @@ module.exports = {
     TESTS_TAB_TITLE: 'Test {index}',
     TESTS_RESULT_OVERVIEW_SUCCESS: 'Test {index} : validé',
     TESTS_RESULT_OVERVIEW_FAILURE: 'Test {index} : erreur',
-    TESTS_RESULT_OVERVIEW_LINK: 'voir',
+    TESTS_RESULT_OVERVIEW_VIEW: 'voir',
 };
