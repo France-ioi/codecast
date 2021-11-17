@@ -15,30 +15,6 @@ export function readFileAsText(file) {
     });
 }
 
-export function getJson(path: string) {
-    return new Promise(function(resolve, reject) {
-        const req = request.get(path);
-        req.set('Accept', 'application/json');
-        req.end(function(err, res) {
-            if (err) {
-                reject({err, res});
-            } else {
-                resolve(res.body || JSON.parse(res.text));
-            }
-        });
-    });
-}
-
-export function postJson(url: string, data) {
-    return new Promise(function(resolve, reject) {
-        request.post(url)
-            .send(data)
-            .set('Accept', 'application/json')
-            .catch(reject)
-            .then(res => resolve(res.body));
-    });
-}
-
 export function getAudio(path: string) {
     return eventChannel(emitter => {
         request.get(path)

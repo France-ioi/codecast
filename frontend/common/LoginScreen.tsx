@@ -16,8 +16,8 @@ export function LoginScreen() {
         const providerWindow = window.open(providerUrl);
         const channel = window.Channel.build({window: providerWindow, origin: '*', scope: 'login'});
 
-        channel.bind('sendLoginFeedback', (instance, {user, error}) => {
-            dispatch({type: CommonActionTypes.LoginFeedback, payload: {user, error}});
+        channel.bind('sendLoginFeedback', (instance, {user, token, error}) => {
+            dispatch({type: CommonActionTypes.LoginFeedback, payload: {user, token, error}});
         });
     };
 

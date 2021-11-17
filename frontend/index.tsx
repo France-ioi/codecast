@@ -285,12 +285,14 @@ Codecast.start = function(options) {
 
 function autoLogin() {
     let user = null;
+    let token = null;
     try {
         user = JSON.parse(window.localStorage.getItem('user') || 'null');
+        token = window.localStorage.getItem('token');
     } catch (ex) {
         return;
     }
 
     const mainStore = Codecast.environments['main'].store;
-    mainStore.dispatch({type: CommonActionTypes.LoginFeedback, payload: {user}});
+    mainStore.dispatch({type: CommonActionTypes.LoginFeedback, payload: {user, token}});
 }

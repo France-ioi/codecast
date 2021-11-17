@@ -122,12 +122,16 @@ export function* ensureLoggedSaga() {
     const state: AppStore = yield select();
     const {baseUrl} = state.options;
 
-    const response = yield call(asyncGetJson, baseUrl + '/me', []);
-    if (response.user) {
-        yield put({type: CommonActionTypes.LoginFeedback, payload: {user: response.user}});
-    } else {
-        yield put({type: CommonActionTypes.LoginFeedback, payload: {user: false}});
+    const token = window.localStorage.getItem('token');
+    if (token) {
+        const response = yield call(asyncGetJson, baseUrl + '/me');
+        if (response.user) {
+            yield put({type: CommonActionTypes.LoginFeedback, payload: {user: response.user, token}});
+            return;
+        }
     }
+
+    yield put({type: CommonActionTypes.LoginFeedback, payload: {user: false}});
 }
 
 function* encodingSaga() {

@@ -9,7 +9,6 @@ import {spawnWorker} from '../utils/worker_utils';
 import AudioWorker from '../audio_worker/index.worker';
 import {IntervalTree} from './interval_tree';
 import {findInstantIndex} from '../player/utils';
-import {postJson} from '../common/utils';
 import {findSubtitleIndex} from '../subtitles/utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
@@ -448,7 +447,7 @@ function* trimSubtitleUpload(playerUrl, subtitles) {
     const changes = {name, subtitles};
 
     try {
-        yield call(postJson, `${baseUrl}/save`, {base, changes});
+        yield call(asyncRequestJson, `${baseUrl}/save`, {base, changes});
 
         yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.UploadSubtitles, progress: 100}});
         yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.UploadSubtitles}});

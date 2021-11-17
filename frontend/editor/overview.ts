@@ -1,6 +1,5 @@
 import {call, put, select, takeLatest} from 'redux-saga/effects';
 import FileSaver from 'file-saver';
-import {postJson} from '../common/utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from '../editor/actionTypes';
 import {ActionTypes as AppActionTypes} from '../actionTypes';
@@ -12,6 +11,7 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ensureLoggedSaga} from "../recorder/save_screen";
 import {Screen} from "../common/screens";
 import {clearAllUnsaved} from "../subtitles/editor";
+import {asyncRequestJson} from "../utils/api";
 
 export default function (bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
@@ -122,7 +122,7 @@ function* editorSaveSaga() {
 
     let result;
     try {
-        result = yield call(postJson, `${baseUrl}/save`, {base, changes});
+        result = yield call(asyncRequestJson, `${baseUrl}/save`, {base, changes});
     } catch (ex) {
         result = {error: ex.toString()};
     }

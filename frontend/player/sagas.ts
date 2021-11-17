@@ -4,7 +4,6 @@
 
 import {buffers, eventChannel} from 'redux-saga';
 import {call, put, race, select, take, takeLatest, spawn, delay} from 'redux-saga/effects';
-import {getJson} from '../common/utils';
 import {findInstantIndex} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
@@ -24,6 +23,7 @@ import {PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
 import {RECORDING_FORMAT_VERSION} from "../version";
 import {getCurrentImmerState} from "../task/utils";
 import {createDraft, finishDraft} from "immer";
+import {asyncGetJson} from "../utils/api";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -89,7 +89,7 @@ function* playerPrepare(app: App, action) {
     if (action.payload.data) {
         data = action.payload.data;
     } else {
-        data = yield call(getJson, action.payload.eventsUrl);
+        data = yield call(asyncGetJson, action.payload.eventsUrl);
     }
     data = Object.freeze(data);
 

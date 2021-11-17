@@ -19,10 +19,14 @@ export const initialStateUser = false as User | false;
 
 export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.LoginFeedback);
-    bundle.addReducer(ActionTypes.LoginFeedback, (state: AppStore, {payload: {user, error}}): void => {
+    bundle.addReducer(ActionTypes.LoginFeedback, (state: AppStore, {payload: {user, token, error}}): void => {
         if (!error) {
             window.localStorage.setItem('user', JSON.stringify(user));
-
+            if (token) {
+                window.localStorage.setItem('token', token);
+            } else {
+                window.localStorage.removeItem('token');
+            }
             state.user = user;
         }
     });
@@ -30,6 +34,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.LogoutFeedback);
     bundle.addReducer(ActionTypes.LogoutFeedback, (state: AppStore): void => {
         window.localStorage.setItem('user', '');
+        window.localStorage.setItem('token', null);
 
         state.user = initialStateUser;
     });
