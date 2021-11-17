@@ -5,13 +5,15 @@ head(lang='fr')
 body
   script(type='text/javascript', src=rebaseUrl('build/jschannel.js'))
   script.
-    const channel = window.Channel.build({window: window.opener, origin: '*', scope: 'login'});
-    channel.notify({
+    var channel = window.Channel.build({window: window.opener, origin: '*', scope: 'login'});
+    channel.call({
         method: 'sendLoginFeedback',
         params: {
             user: !{user ? JSON.stringify(user) : "null"},
             token: !{token ? JSON.stringify(token) : "null"},
-            error: !{error ? JSON.stringify(error) : "null"},
+            error: !{error ? JSON.stringify(error) : "null"}
+        },
+        success: function () {
+            window.close();
         }
     });
-    window.close();
