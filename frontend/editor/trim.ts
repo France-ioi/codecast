@@ -349,7 +349,11 @@ function* trimEditorPrepareUpload(target) {
 
     const state: AppStore = yield select();
     const {baseUrl} = state.options;
-    const targets = yield call(asyncRequestJson, `${baseUrl}/upload`, target);
+    const uploadParameters = {
+        ...target,
+        basePlayerUrl: window.location.href.split('?')[0],
+    };
+    const targets = yield call(asyncRequestJson, `${baseUrl}/upload`, uploadParameters);
     yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.PrepareUpload}});
 
     return {targets, playerUrl: targets.player_url, editorUrl: targets.editor_url}; // XXX clean up /upload endpoint interface

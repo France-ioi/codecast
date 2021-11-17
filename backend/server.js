@@ -12,7 +12,7 @@ import oauth from './oauth';
 import startWorker from './worker';
 import {buildOptions, parseCodecastUrl} from './options';
 import addOfflineRoutes from './offline';
-import {logCompileData, logLoadingData, statisticsSearch} from './statistics';
+import {logCompileData, logLoadingData, logUploadData, statisticsSearch} from './statistics';
 
 function buildApp(config, store, callback) {
 
@@ -182,6 +182,8 @@ function addBackendRoutes(app, config, store) {
        pair identifying the S3 target, which must correspond to one of the user's
        grants. */
     app.post('/upload', function (req, res) {
+        const basePlayerUrl = req.body.basePlayerUrl ? req.body.basePlayerUrl : config.playerUrl;
+
         config.getUserConfig(req, function (err, userConfig) {
             console.log('user config', userConfig);
             selectTarget(userConfig, req.body, function (err, target) {
@@ -198,8 +200,13 @@ function addBackendRoutes(app, config, store) {
                     upload.getMp3UploadForm(s3client, s3Bucket, uploadPath, function (err, audio) {
                         if (err) return res.json({error: err.toString()});
                         const baseUrl = `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}`;
-                        const player_url = `${config.playerUrl}?recording=${encodeURIComponent(baseUrl)}`;
-                        const editor_url = `${config.playerUrl}?recording=${encodeURIComponent(baseUrl)}&mode=edit`;
+                        const player_url = `${basePlayerUrl}?recording=${encodeURIComponent(baseUrl)}`;
+                        const editor_url = `${basePlayerUrl}?recording=${encodeURIComponent(baseUrl)}&mode=edit`;
+                        logUploadData(config, {
+                            userId: userConfig.user_id,
+                            playerUrl: player_url,
+                            basePlayerUrl,
+                        });
                         res.json({player_url, editor_url, events, audio});
                     });
                 });
