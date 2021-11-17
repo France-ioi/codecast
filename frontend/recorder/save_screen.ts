@@ -131,7 +131,7 @@ export function* ensureLoggedSaga() {
         }
     }
 
-    yield put({type: CommonActionTypes.LoginFeedback, payload: {user: false}});
+    yield put({type: CommonActionTypes.LoginFeedback, payload: {user: null}});
 }
 
 function* encodingSaga() {
