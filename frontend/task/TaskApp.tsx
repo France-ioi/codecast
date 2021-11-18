@@ -23,6 +23,7 @@ import {getMessage} from "../lang";
 import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
 import {TaskLevelName} from "./task_slice";
+import {SubtitlesPane} from "../subtitles/SubtitlesPane";
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -34,6 +35,7 @@ export function TaskApp() {
     const layoutType = useAppSelector(state => state.layout.type);
     const editor = useAppSelector(state => state.editor);
     const displayEditor = editor && editor.playerReady;
+    const displaySubtitlesPane = useAppSelector(state => state.subtitles && state.subtitles.paneEnabled);
     const user = useAppSelector(state => state.user);
     const audioLoaded = editor.audioLoaded;
     const [initialUserCheck, setInitialUserCheck] = useState(false);
@@ -122,6 +124,11 @@ export function TaskApp() {
                               light={true}
                             />
                             <SubtitlesEditorPane/>
+                        </div>
+                    }
+                    {!displayEditor && displaySubtitlesPane &&
+                        <div key="subtitles-view" className="subtitles-pane-container">
+                          <SubtitlesPane/>
                         </div>
                     }
                 </div>
