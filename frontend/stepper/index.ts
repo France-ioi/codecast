@@ -1094,7 +1094,8 @@ function postLink(app: App) {
             return;
         }
 
-        yield call(addEvent, 'stepper.progress');
+        const range = getNodeRange(getCurrentStepperState(state));
+        yield call(addEvent, 'stepper.progress', range ? range.start : null);
     });
 
     replayApi.on('stepper.progress', function* (replayContext: ReplayContext, event) {
