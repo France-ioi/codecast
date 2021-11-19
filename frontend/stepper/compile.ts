@@ -90,7 +90,7 @@ export default function(bundle: Bundle) {
                 yield put({
                     type: ActionTypes.CompileFailed,
                     payload: {
-                        error: e,
+                        error: String(e),
                     },
                 });
                 return;
