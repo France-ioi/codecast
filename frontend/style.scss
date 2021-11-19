@@ -33,8 +33,9 @@ $grid-gutter-width: 6px;
 @import "controls";
 
 html {
-    margin-left: calc(100vw - 100%);
-    margin-right: 0;
+  margin-left: calc(100vw - 100%);
+  margin-right: 0;
+  font-size: 18px !important;
 }
 
 /* Darker icons on blueprint buttons. */
