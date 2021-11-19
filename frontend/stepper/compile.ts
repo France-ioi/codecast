@@ -163,6 +163,20 @@ export default function(bundle: Bundle) {
             yield put({type: ActionTypes.CompileSucceeded, ...action});
         });
 
+        recordApi.on(ActionTypes.CompileFailed, function* (addEvent, {payload}) {
+            yield call(addEvent, 'compile.failure', payload.error);
+        });
+        replayApi.on('compile.failure', function* (replayContext: ReplayContext, event) {
+            let error = event[2];
+
+            // Ensure retro-compatibility with Codecast V6
+            if (error.diagnostics) {
+                error = {type: 'compilation', content: error.diagnostics}
+            }
+
+            yield put({type: ActionTypes.CompileFailed, payload: {error}});
+        });
+
         replayApi.on('stepper.exit', function* () {
             yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: initialStateCompile}});
         });
