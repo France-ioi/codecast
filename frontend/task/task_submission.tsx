@@ -64,7 +64,7 @@ class TaskSubmissionExecutor {
 
         const displayedResults = [result];
 
-        let lastMessage = null;
+        let lastMessage = result.message;
         for (let testIndex = 0; testIndex < tests.length; testIndex++) {
             if (result.testId === testIndex) {
                 continue;
