@@ -110,22 +110,22 @@ body {
     }
 
     .basic, .easy, .medium, .hard {
-      display: none;
+      display: none !important;
     }
 
     &.level-basic .basic,
     &.level-easy .easy,
     &.level-medium .medium,
     &.level-hard .hard {
-      display: inline-block;
+      display: inline-block !important;
     }
 
     [data-lang] {
-      display: none;
+      display: none !important;
     }
 
     [data-lang~="python"] {
-      display: inline-block;
+      display: inline-block !important;
     }
 
     ul {
