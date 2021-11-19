@@ -241,7 +241,7 @@ function* taskLoadSaga(app: App, action) {
 
     const sagas = quickAlgoLibraries.getSagas(app);
     oldSagasTasks[app.environment] = yield fork(function* () {
-        sagas.push(handleLibrariesEventListenerSaga);
+        sagas.push(handleLibrariesEventListenerSaga(app));
         yield all(sagas);
     });
 

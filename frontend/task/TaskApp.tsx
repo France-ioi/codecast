@@ -35,7 +35,7 @@ export function TaskApp() {
     const layoutType = useAppSelector(state => state.layout.type);
     const editor = useAppSelector(state => state.editor);
     const displayEditor = editor && editor.playerReady;
-    const displaySubtitlesPane = useAppSelector(state => !!(state.subtitles && state.subtitles.paneEnabled && state.player.data && state.player.data.subtitles && !!state.player.data.subtitles.length));
+    const displaySubtitlesPane = useAppSelector(state => !!(state.subtitles && state.subtitles.paneEnabled && state.subtitles.items && !!state.subtitles.items.length));
     const user = useAppSelector(state => state.user);
     const audioLoaded = editor.audioLoaded;
     const [initialUserCheck, setInitialUserCheck] = useState(false);
