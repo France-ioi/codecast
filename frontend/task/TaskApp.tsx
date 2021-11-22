@@ -74,7 +74,7 @@ export function TaskApp() {
                 } else {
                     dispatch({type: LayoutActionTypes.LayoutZoomLevelChanged, payload: {zoomLevel: ZOOM_LEVEL_LOW}});
 
-                dispatch({
+                    dispatch({
                         type: PlayerActionTypes.PlayerPrepare,
                         payload: {
                             baseDataUrl: options.baseDataUrl,

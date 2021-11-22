@@ -89,6 +89,7 @@ export interface AppStoreReplay {
     environment: string,
 
     stopped: boolean,
+    layout: LayoutState,
 }
 
 export interface AppAction extends Action {
@@ -112,7 +113,6 @@ export interface AppStore extends Store, AppStoreReplay {
     terminalElement: any,
     vumeterElement: any,
     task: TaskState,
-    layout: LayoutState,
 
     // TODO: Put the following in a "window" attribute instead of at the root of the store
     mainViewGeometry: typeof mainViewGeometries[0],

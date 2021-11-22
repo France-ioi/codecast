@@ -176,7 +176,7 @@ function* taskLoadSaga(app: App, action) {
 
     if (state.options.task) {
         yield put(currentTaskChange(state.options.task));
-    } {
+    } else if (!state.options.audioUrl) {
         yield put(currentTaskChangePredefined(selectedTask));
     }
 

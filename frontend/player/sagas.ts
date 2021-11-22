@@ -123,7 +123,8 @@ function* playerPrepare(app: App, action) {
             currentTestId: state.task.currentTestId,
         },
         options: {
-            platform
+            platform,
+            audioUrl,
         },
     };
 

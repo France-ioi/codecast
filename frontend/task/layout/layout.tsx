@@ -9,6 +9,7 @@ import {ControlsAndErrors} from "../ControlsAndErrors";
 import {Bundle} from "../../linker";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
+import {ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
 import {Directive} from "../../stepper/python/directives";
 import {MultiVisualization} from "./MultiVisualization";
 import {ZoneLayoutVisualizationGroup} from "./ZoneLayoutVisualizationGroup";
@@ -19,6 +20,9 @@ import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_librairi
 import {Screen} from "../../common/screens";
 import {Documentation} from "../Documentation";
 import {getMessage} from "../../lang";
+import {put, select, takeEvery} from "redux-saga/effects";
+import {App} from "../../index";
+import {PlayerInstant} from "../../player";
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -760,6 +764,22 @@ export interface LayoutState {
     zoomLevel: number, // 1 is normal
 }
 
+function* layoutSaga() {
+    yield takeEvery(StepperActionTypes.StepperRestart, function* () {
+        const environment = yield select((state: AppStore) => state.environment);
+        if ('replay' === environment) {
+            yield put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Player}});
+        }
+    });
+
+    yield takeEvery(StepperActionTypes.StepperExit, function* () {
+        const environment = yield select((state: AppStore) => state.environment);
+        if ('replay' === environment) {
+            yield put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Editor}});
+        }
+    });
+}
+
 export default function (bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
         state.layout = {
@@ -781,4 +801,13 @@ export default function (bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.LayoutRequiredTypeChanged);
     bundle.addReducer(ActionTypes.LayoutRequiredTypeChanged, layoutRequiredTypeChangedReducer);
-};
+
+    bundle.addSaga(layoutSaga);
+
+    bundle.defer(function ({replayApi}: App) {
+        replayApi.onReset(function* (instant: PlayerInstant) {
+            const mobileMode = instant.state.layout.mobileMode;
+            yield put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
+        });
+    });
+}
