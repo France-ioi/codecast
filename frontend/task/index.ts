@@ -46,13 +46,20 @@ export enum TaskActionTypes {
     TaskRunExecution = 'task/runExecution',
 }
 
-export const taskLoad = ({testId, level, tests, reloadContext}: {testId?: number, level?: TaskLevelName, tests?: any[], reloadContext?: boolean} = {}) => ({
+export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
+    testId?: number,
+    level?: TaskLevelName,
+    tests?: any[],
+    reloadContext?: boolean,
+    selectedTask?: string,
+} = {}) => ({
     type: TaskActionTypes.TaskLoad,
     payload: {
         testId,
         level,
         tests,
         reloadContext,
+        selectedTask,
     },
 });
 
@@ -143,6 +150,7 @@ function* createContext() {
     const testData = selectCurrentTest(state);
     console.log('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
+    console.log('Created context', context);
     context.resetAndReloadState(testData, state);
 }
 
@@ -176,8 +184,10 @@ function* taskLoadSaga(app: App, action) {
 
     if (state.options.task) {
         yield put(currentTaskChange(state.options.task));
-    } else if (!state.options.audioUrl) {
+    } else if (selectedTask) {
         yield put(currentTaskChangePredefined(selectedTask));
+    } else if (action.payload.selectedTask) {
+        yield put(currentTaskChangePredefined(action.payload.selectedTask));
     }
 
     const currentTask = yield select((state: AppStore) => state.task.currentTask);
@@ -380,6 +390,10 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
         yield call(createContext);
     } else if (context) {
         console.log('task update test', state.task.taskTests, state.task.currentTestId);
+        if (!(state.task.currentTestId in state.task.taskTests)) {
+            console.error("Test " + state.task.currentTestId + " does not exist on task ", state.task);
+            throw "Couldn't update test during replay, check if the replay is using the appropriate task";
+        }
         const contextState = state.task.taskTests[state.task.currentTestId].contextState;
         if (null !== contextState) {
             console.log('reload context state', contextState);

@@ -154,13 +154,16 @@ function* encodingSaga() {
     let events = [...recorder.events];
     events.push([endTime, 'end']);
 
+    const urlParameters = new URLSearchParams(window.location.search);
+
     const subtitles = [];
     const options = state.options;
     const data = {
         version,
+        selectedTask: urlParameters.has('task') ? urlParameters.get('task') : null,
         options,
         events,
-        subtitles
+        subtitles,
     } as CodecastRecord;
     const eventsBlob = new Blob([JSON.stringify(data)], {type: "application/json;charset=UTF-8"});
     const eventsUrl = URL.createObjectURL(eventsBlob);

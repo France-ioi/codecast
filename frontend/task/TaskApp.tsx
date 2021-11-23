@@ -60,7 +60,6 @@ export function TaskApp() {
             if (options.level) {
                 taskLoadParameters.level = options.level;
             }
-            dispatch(taskLoad(taskLoadParameters));
 
             if (options.audioUrl) {
                 if (CodecastOptionsMode.Edit === options.mode) {
@@ -84,6 +83,9 @@ export function TaskApp() {
                         }
                     });
                 }
+            } else {
+                // If we have a recording, taskLoad is triggered afterwards, in playerPrepare, when we have the events data and know the task
+                dispatch(taskLoad(taskLoadParameters));
             }
         });
     }, []);

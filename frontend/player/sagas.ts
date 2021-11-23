@@ -24,6 +24,7 @@ import {RECORDING_FORMAT_VERSION} from "../version";
 import {getCurrentImmerState} from "../task/utils";
 import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
+import {taskLoaded} from "../task/task_slice";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -70,7 +71,7 @@ function* playerPrepare(app: App, action) {
     const {baseDataUrl, audioUrl, resetTo} = action.payload;
 
     // Check that the player is idle.
-    const state: AppStore = yield select();
+    let state: AppStore = yield select();
     const player = getPlayerState(state);
     if (player.isPlaying) {
         return;
@@ -116,6 +117,10 @@ function* playerPrepare(app: App, action) {
         });
     }
 
+    yield put(taskLoad({selectedTask: data.selectedTask}));
+    yield take(taskLoaded.type);
+    state = yield select();
+
     const replayState = {
         task: {
             currentTask: state.task.currentTask,
@@ -124,15 +129,16 @@ function* playerPrepare(app: App, action) {
         },
         options: {
             platform,
-            audioUrl,
+            audioUrl: null,
+            task: null,
         },
     };
 
     if (data.options) {
         replayState.options = data.options;
     }
-
-    console.log('recording data', data);
+    replayState.options.audioUrl = audioUrl;
+    replayState.options.task = state.task.currentTask;
 
     const replayContext: ReplayContext = {
         state: replayState as AppStore,
