@@ -18,6 +18,7 @@ import taskSlice, {
     taskResetDone, taskSaveAnswer, taskSetLevels,
     taskSuccess,
     taskSuccessClear,
+    taskUpdateState,
     updateCurrentTestId,
     updateTaskTests, updateTestContextState,
 } from "./task_slice";
@@ -309,8 +310,9 @@ function* handleLibrariesEventListenerSaga(app: App) {
             yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
                 console.log('exec done, update task state');
                 const context = quickAlgoLibraries.getContext(null, state.environment);
-                const contextState = context.getInnerState();
+                const contextState = getCurrentImmerState(context.getInnerState());
                 console.log('get new state', contextState);
+                app.dispatch(taskUpdateState(contextState));
             });
         });
     }

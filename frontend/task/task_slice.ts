@@ -169,6 +169,9 @@ export const taskSlice = createSlice({
         taskLoaded(state: TaskState) {
             state.loaded = true;
         },
+        taskUpdateState(state: TaskState, action: PayloadAction<any>) {
+            state.state = action.payload;
+        },
         taskClearInputs(state: TaskState) {
             state.inputs = [];
         },
@@ -237,6 +240,7 @@ export const {
     taskInputEntered,
     taskResetDone,
     taskLoaded,
+    taskUpdateState,
     currentTaskChangePredefined,
     currentTaskChange,
     taskAddInput,
