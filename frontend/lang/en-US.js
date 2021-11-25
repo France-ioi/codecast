@@ -20,6 +20,7 @@ module.exports = {
     START_PLAYBACK: "play",
     PAUSE_PLAYBACK: "pause",
     RESUME_PLAYBACK: "Resume Codecast",
+    RESUME_PLAYBACK_WARNING: "By resuming, you will lose all your changes.",
     RESUME_PLAYBACK_CONFIRM: "Resume",
     SOUND_ON: "Unmute sound",
     SOUND_OFF: "Mute sound",
