@@ -111,6 +111,7 @@ body {
   &:not(.full-screen).task-player-replay {
     .task-section {
       border: solid 10px #4a4a4a;
+      border-bottom: 0;
       border-radius: 10px;
     }
     .task-section-container {
