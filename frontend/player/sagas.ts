@@ -405,7 +405,7 @@ function* replaySaga(app: App, {type, payload}) {
             yield call(restartStepper);
         }
 
-        yield put({type: ActionTypes.PlayerSeeked});
+        yield put({type: ActionTypes.PlayerSeeked, seekTo: audioTime});
 
         audio.currentTime = audioTime / 1000;
         if (!isPlaying) {
