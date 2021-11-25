@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   margin-right: 10px;
-  margin-top: 7px;
+  //margin-top: 7px;
 }
 .level-tabs .level-tab-link {
   display: flex;
@@ -72,7 +72,7 @@
     border-radius: 5px 5px 0 0;
     position: relative;
   }
-  .level-tabs .level-tab.current::before,
+  .level-tabs .level-tab:not(:first-child).current::before,
   .level-tabs .level-tab.current::after {
     content: " ";
     position: absolute;
@@ -80,7 +80,7 @@
     height: 20px;
     background: transparent;
   }
-  .level-tabs .level-tab.current::before {
+  .level-tabs .level-tab:not(:first-child).current::before {
     border-radius: 50% 0;
     box-shadow: 10px 0px 0 #fff;
     bottom: 0;

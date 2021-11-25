@@ -138,6 +138,15 @@
   }
 }
 
+.task.task-player-replay .controls-stepper {
+  .bp3-button, .bp3-slider {
+    opacity: 0.3;
+    &:hover:not([disabled]) {
+      opacity: 1;
+    }
+  }
+}
+
 // Responsive
 .layout-mobile-horizontal.task, .layout-mobile-vertical.task {
   .stepper-controls-container {

@@ -9,6 +9,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {getPlayerState} from "./selectors";
 import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "./index";
@@ -25,6 +26,7 @@ import {getCurrentImmerState} from "../task/utils";
 import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
 import {taskLoaded} from "../task/task_slice";
+import {LayoutPlayerMode} from "../task/layout/layout";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -161,6 +163,7 @@ function* playerPrepare(app: App, action) {
         const instants = replayContext.instants;
         const duration = instants[instants.length - 1].t;
         yield put({type: ActionTypes.PlayerReady, payload: {baseDataUrl, duration, data, instants}});
+        yield put({type: LayoutActionTypes.LayoutPlayerModeChanged, payload: {playerMode: LayoutPlayerMode.Replay}});
 
         if ('end' === resetTo) {
             yield call(resetToAudioTime, app, duration);
@@ -401,6 +404,8 @@ function* replaySaga(app: App, {type, payload}) {
                waiting on I/O. */
             yield call(restartStepper);
         }
+
+        yield put({type: ActionTypes.PlayerSeeked});
 
         audio.currentTime = audioTime / 1000;
         if (!isPlaying) {

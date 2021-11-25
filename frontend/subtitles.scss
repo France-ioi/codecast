@@ -96,8 +96,9 @@
 }
 .subtitles-band {
   position: fixed;
-  width: 1164px;
   z-index: 6;
+  left: 0;
+  right: 0;
   cursor: grab;
   cursor: -webkit-grab;
   cursor: -moz-grab;
@@ -106,7 +107,6 @@
   opacity: 0.8;
   background-color: #222;
   color: #ff4;
-  border-radius: 7px;
 }
 .subtitles-band-frame {
   //background: #eee;

@@ -33,6 +33,7 @@ export function TaskApp() {
     const isPlayerReady = player.isReady;
     const options = useAppSelector(state => state.options);
     const layoutType = useAppSelector(state => state.layout.type);
+    const layoutPlayerMode = useAppSelector(state => state.layout.playerMode);
     const editor = useAppSelector(state => state.editor);
     const displayEditor = editor && editor.playerReady;
     const displaySubtitlesPane = useAppSelector(state => !!(state.subtitles && state.subtitles.paneEnabled && state.subtitles.items && !!state.subtitles.items.length));
@@ -109,52 +110,58 @@ export function TaskApp() {
     }
 
     return (
-        <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType}`}>
-            <div className="task-section">
-                <div className="task-header">
-                    <span className="task-header__quick">QUICK</span>
-                    <span className="task-header__algo">ALGO</span>
-                </div>
-
-                {taskLevels && 1 < Object.keys(taskLevels).length && <TaskLevelTabs/>}
-
-                <div className="task-body">
-                    <LayoutLoader width={null} height={null}/>
-                    {displayEditor &&
-                        <div key="subtitles" className="subtitles-pane-container">
-                            <SubtitlesEditor
-                              light={true}
-                            />
-                            <SubtitlesEditorPane/>
+        <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode}`}>
+            <div className="layout-general">
+                <div className={`task-section`}>
+                    <div className="task-section-container">
+                        <div className="task-header">
+                            <span className="task-header__quick">QUICK</span>
+                            <span className="task-header__algo">ALGO</span>
                         </div>
-                    }
-                    {!displayEditor && displaySubtitlesPane &&
-                        <div key="subtitles-view" className="subtitles-pane-container">
-                          <SubtitlesPane/>
+
+                        {taskLevels && 1 < Object.keys(taskLevels).length && <TaskLevelTabs/>}
+
+                        <div className="task-body">
+                            <LayoutLoader width={null} height={null}/>
+                            {displayEditor &&
+                                <div key="subtitles" className="subtitles-pane-container">
+                                    <SubtitlesEditor
+                                        light={true}
+                                    />
+                                    <SubtitlesEditorPane/>
+                                </div>
+                            }
+                            {!displayEditor && displaySubtitlesPane &&
+                                <div key="subtitles-view" className="subtitles-pane-container">
+                                    <SubtitlesPane/>
+                                </div>
+                            }
                         </div>
-                    }
+
+                        <MenuTask/>
+                    </div>
+
                 </div>
 
                 {recordingEnabled &&
-                    <div className="task-footer">
+                    <div className="layout-footer">
                       <RecorderControlsTask/>
                     </div>
                 }
 
                 {playerEnabled && isPlayerReady &&
-                    <div className="task-footer">
+                    <div className="layout-footer">
                       <PlayerControlsTask/>
                       <SubtitlesBand/>
                     </div>
                 }
 
                 {displayEditor &&
-                    <div className="task-footer">
+                    <div className="layout-footer">
                       <EditorInterface/>
                     </div>
                 }
             </div>
-            <MenuTask/>
 
             <Dialog isOpen={!!progressMessage} title={progressMessage ? progressMessage : 'Info'} isCloseButtonShown={false}>
                 <div style={{margin: '20px 20px 0 20px'}}>

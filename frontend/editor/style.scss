@@ -8,6 +8,7 @@
   padding-right: 50px;
   border-left: solid 1px #ddd;
   width: 300px;
+  overscroll-behavior: contain;
 }
 
 .subtitle-item-editor {
