@@ -16,8 +16,8 @@
     "url": "https://github.com/France-ioi/codecast/issues"
   },
   "scripts": {
-    "dev": "nodemon --mode development --watch backend --exec npx --no-install babel-node -- backend/server.js",
-    "start": "NODE_ENV=production nodemon --mode production --watch backend --exec npx --no-install babel-node -- backend/server.js",
+    "dev": "nodemon --mode development --watch backend --exec yarn babel-node -- backend/server.js",
+    "start": "NODE_ENV=production nodemon --mode production --watch backend --exec yarn babel-node -- backend/server.js",
     "build": "webpack --mode=production --progress --color",
     "build-lib": "BUILD=lib webpack --mode=production --progress --color",
     "pack-offline": "rm -rf build && yarn run build-lib && zip -r offline.zip build assets",
