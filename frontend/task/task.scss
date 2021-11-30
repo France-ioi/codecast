@@ -6,13 +6,19 @@ $primary: #4a90e2;
   }
 }
 
+@mixin not-mobile {
+  @media screen and (min-width: 768px) {
+    @content
+  }
+}
+
 @include mobile {
   .hidden-mobile {
     display: none;
   }
 }
 
-@media screen and (min-width: 768px) {
+@include not-mobile {
   .visible-mobile {
     display: none;
   }
@@ -22,6 +28,7 @@ $primary: #4a90e2;
 @import "./controls.scss";
 @import "./documentation.scss";
 @import "./task_tests.scss";
+@import "./levels.scss";
 
 html {
   margin: 0 !important;
@@ -96,6 +103,21 @@ body {
       margin-bottom: 1rem;
       font-size: 1.5em !important;
     }
+
+    .basic, .easy, .medium, .hard {
+      display: none;
+    }
+
+    &.level-basic .basic,
+    &.level-easy .easy,
+    &.level-medium .medium,
+    &.level-hard .hard {
+      display: inline-block;
+    }
+
+    ul {
+      margin-bottom: 1rem !important;
+    }
   }
 
   hr {
@@ -168,14 +190,22 @@ body {
     flex-direction: column;
   }
 
-  .task-visualisation {
+  .task-visualization-container {
     padding: 20px;
     width: 100%;
     flex: 1 1 auto;
     @include mobile {
       padding: 0;
     }
+  }
+
+  .task-visualization {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    min-height: 150px;
     #grid {
+      position: absolute;
       width: 100%;
       height: 100%;
       text-align: center;

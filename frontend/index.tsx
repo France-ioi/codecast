@@ -184,8 +184,11 @@ function clearUrl() {
 **/
 Codecast.start = function(options) {
     const mainStore = Codecast.environments['main'].store;
-    
-    mainStore.dispatch({type: ActionTypes.AppInit, payload: {options}});
+
+    const urlParameters = new URLSearchParams(window.location.search);
+    const queryParameters = Object.fromEntries(urlParameters);
+
+    mainStore.dispatch({type: ActionTypes.AppInit, payload: {options, query: queryParameters}});
 
     // remove source from url wihtout reloading
     if (options.source) {

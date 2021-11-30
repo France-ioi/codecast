@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
-import {Dialog, Icon, Intent, ProgressBar} from "@blueprintjs/core";
+import {Dialog, Intent, ProgressBar} from "@blueprintjs/core";
 import {MenuTask} from "./MenuTask";
 import {RecorderControlsTask} from "./RecorderControlsTask";
 import {SubtitlesBand} from "../subtitles/SubtitlesBand";
@@ -9,7 +9,6 @@ import {PlayerControlsTask} from "./PlayerControlsTask";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {LayoutLoader} from "./layout/LayoutLoader";
-import {taskSuccessClear} from "./task_slice";
 import {taskLoad} from "./index";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {useAppSelector} from "../hooks";
@@ -21,13 +20,14 @@ import {SubtitlesEditor} from "../subtitles/SubtitlesEditor";
 import {LoginScreen} from "../common/LoginScreen";
 import {ZOOM_LEVEL_LOW} from "./layout/layout";
 import {getMessage} from "../lang";
+import {TaskLevelTabs} from "./TaskLevelTabs";
+import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
+import {TaskLevelName} from "./task_slice";
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
     const playerEnabled = !!useAppSelector(state => state.options.audioUrl);
-    const taskSuccess = useAppSelector(state => state.task.success);
-    const taskSuccessMessage = useAppSelector(state => state.task.successMessage);
     const player = useAppSelector(state => state.player);
     const isPlayerReady = player.isReady;
     const options = useAppSelector(state => state.options);
@@ -37,6 +37,7 @@ export function TaskApp() {
     const user = useAppSelector(state => state.user);
     const audioLoaded = editor.audioLoaded;
     const [initialUserCheck, setInitialUserCheck] = useState(false);
+    const taskLevels = useAppSelector(state => state.task.levels);
 
     let progress = null;
     let progressMessage = null;
@@ -53,7 +54,11 @@ export function TaskApp() {
     useEffect(() => {
         // Wait that the html is loaded before we create the context because some of them use jQuery to select elements
         setTimeout(() => {
-            dispatch(taskLoad());
+            const taskLoadParameters: {level?: TaskLevelName} = {};
+            if (options.level) {
+                taskLoadParameters.level = options.level;
+            }
+            dispatch(taskLoad(taskLoadParameters));
 
             if (options.audioUrl) {
                 if (CodecastOptionsMode.Edit === options.mode) {
@@ -81,10 +86,6 @@ export function TaskApp() {
         });
     }, []);
 
-    const closeTaskSuccess = () => {
-        dispatch(taskSuccessClear());
-    };
-
     if (options.baseDataUrl && CodecastOptionsMode.Edit === options.mode) {
         if (user) {
             if (!initialUserCheck) {
@@ -110,6 +111,8 @@ export function TaskApp() {
                     <span className="task-header__quick">QUICK</span>
                     <span className="task-header__algo">ALGO</span>
                 </div>
+
+                {taskLevels && 1 < Object.keys(taskLevels).length && <TaskLevelTabs/>}
 
                 <div className="task-body">
                     <LayoutLoader width={null} height={null}/>
@@ -150,16 +153,7 @@ export function TaskApp() {
                 </div>
             </Dialog>
 
-            <Dialog isOpen={taskSuccess} className="simple-dialog" onClose={closeTaskSuccess}>
-                <p className="simple-dialog-success">{taskSuccessMessage}</p>
-
-                <div className="simple-dialog-buttons">
-                    <button className="simple-dialog-button" onClick={closeTaskSuccess}>
-                        <Icon icon="small-tick" iconSize={24}/>
-                        <span>Ok</span>
-                    </button>
-                </div>
-            </Dialog>
+            <TaskSuccessDialog/>
         </Container>
     );
 }

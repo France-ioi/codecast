@@ -1,5 +1,5 @@
 import {
-    taskCreateSubmission,
+    taskCreateSubmission, taskSaveScore,
     TaskSubmissionResultPayload,
     taskSubmissionSetTestResult, taskSubmissionStartTest, taskSuccess
 } from "./task_slice";
@@ -12,6 +12,25 @@ import log from "loglevel";
 import {stepperDisplayError} from "../stepper/actionTypes";
 import React from "react";
 
+export const levelScoringData = {
+    basic: {
+        stars: 1,
+        scoreCoefficient: 0.25,
+    },
+    easy: {
+        stars: 2,
+        scoreCoefficient: 0.5,
+    },
+    medium: {
+        stars: 3,
+        scoreCoefficient: 0.75,
+    },
+    hard: {
+        stars: 4,
+        scoreCoefficient: 1,
+    },
+}
+
 class TaskSubmissionExecutor {
     private afterExecutionCallback: Function = null;
 
@@ -23,8 +42,16 @@ class TaskSubmissionExecutor {
             return;
         }
 
-        let currentSubmission = yield select((state: AppStore) => state.task.currentSubmission);
-        const environment = yield select((state: AppStore) => state.environment);
+        const state: AppStore = yield select();
+        let currentSubmission = state.task.currentSubmission;
+        const environment = state.environment;
+        const level = state.task.currentLevel;
+        const source = getBufferModel(state, 'source').document.toString();
+        const tests = yield select(state => state.task.taskTests);
+        if (!tests || 0 === Object.values(tests).length) {
+            return;
+        }
+
         if (!currentSubmission) {
             yield put(taskCreateSubmission());
         }
@@ -37,7 +64,6 @@ class TaskSubmissionExecutor {
 
         const displayedResults = [result];
 
-        const tests = yield select(state => state.task.taskTests);
         let lastMessage = null;
         for (let testIndex = 0; testIndex < tests.length; testIndex++) {
             if (result.testId === testIndex) {
@@ -55,7 +81,7 @@ class TaskSubmissionExecutor {
                 yield delay(0);
             }
             log.getLogger('tests').debug('[Tests] Start new execution for test', testIndex);
-            const payload: TaskSubmissionResultPayload = yield this.makeBackgroundExecution(testIndex);
+            const payload: TaskSubmissionResultPayload = yield this.makeBackgroundExecution(level, testIndex, source);
             log.getLogger('tests').debug('[Tests] End execution, result=', payload);
             yield put(taskSubmissionSetTestResult(payload));
             if ('main' === environment) {
@@ -75,6 +101,14 @@ class TaskSubmissionExecutor {
             return;
         }
 
+        let worstRate = 1;
+        for (let result of currentSubmission.results) {
+            worstRate = Math.min(worstRate, result.result ? 1 : 0);
+        }
+
+        const finalScore = worstRate;
+        yield put(taskSaveScore({level, answer: source, score: finalScore}));
+
         log.getLogger('tests').debug('Submission execution over', currentSubmission.results);
         console.log(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
         if (currentSubmission.results.reduce((agg, next) => agg && next.result, true)) {
@@ -91,14 +125,13 @@ class TaskSubmissionExecutor {
         }
     }
 
-    *makeBackgroundExecution(testId) {
+    *makeBackgroundExecution(level, testId, source) {
         const backgroundStore = Codecast.environments['background'].store;
         const state: AppStore = yield select();
-        const source = getBufferModel(state, 'source').document.toString();
         const tests = state.task.taskTests.map(test => test.data);
 
         return yield new Promise(resolve => {
-            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, testId, tests, source, resolve}});
+            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, source, resolve}});
         });
     }
 

@@ -1,13 +1,21 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import StringRotationFixture from './fixtures/14_strings_05_rotation/index';
 import SokobanFixture from './fixtures/11_variable_08_sokoban/index';
+import {AppStore} from "../store";
 
 const availableTasks = {
     robot: SokobanFixture,
     printer: StringRotationFixture,
 };
 
-export const taskLevels = ['basic', 'easy', 'medium', 'hard'];
+export enum TaskLevelName {
+    Basic = 'basic',
+    Easy = 'easy',
+    Medium = 'medium',
+    Hard = 'hard',
+}
+
+export const taskLevelsList = [TaskLevelName.Basic, TaskLevelName.Easy, TaskLevelName.Medium, TaskLevelName.Hard];
 
 export interface TaskSubmission {
     executing: boolean,
@@ -20,9 +28,18 @@ export interface TaskSubmissionResult {
     message?: string,
 }
 
+export interface TaskLevel {
+    level: TaskLevelName,
+    answer: any,
+    bestAnswer: any,
+    score: number,
+    locked?: boolean,
+}
+
 export interface TaskState {
     currentTask?: any,
-    currentLevel?: number,
+    currentLevel?: TaskLevelName,
+    levels: {[key: string]: TaskLevel},
     recordingEnabled?: boolean,
     resetDone?: boolean,
     loaded?: boolean,
@@ -60,8 +77,9 @@ export interface TaskTest {
 
 export const taskInitialState = {
     currentTask: null,
-    currentLevel: 1,
+    currentLevel: null,
     taskTests: [],
+    levels: {},
     currentTestId: null,
     previousTestId: null,
     currentSubmission: null,
@@ -73,6 +91,14 @@ export const taskInitialState = {
     inputNeeded: false,
     inputs: [],
 } as TaskState;
+
+export const selectCurrentTest = (state: AppStore) => {
+    if (null == state.task.currentTestId || !(state.task.currentTestId in state.task.taskTests)) {
+        return {};
+    }
+
+    return state.task.taskTests[state.task.currentTestId].data;
+}
 
 export const taskSlice = createSlice({
     name: 'task',
@@ -88,8 +114,8 @@ export const taskSlice = createSlice({
         currentTaskChange(state, action: PayloadAction<any>) {
             state.currentTask = action.payload;
         },
-        currentLevelChange(state, action: PayloadAction<number>) {
-            state.currentLevel = action.payload;
+        taskCurrentLevelChange(state, action: PayloadAction<{level: TaskLevelName, record?: boolean}>) {
+            state.currentLevel = action.payload.level;
         },
         recordingEnabledChange(state, action: PayloadAction<boolean>) {
             state.recordingEnabled = action.payload;
@@ -98,7 +124,7 @@ export const taskSlice = createSlice({
             state.success = true;
             state.successMessage = action.payload;
         },
-        taskSuccessClear(state: TaskState) {
+        taskSuccessClear(state: TaskState, action?: PayloadAction<{record?: boolean}>) {
             state.success = false;
             state.successMessage = null;
         },
@@ -111,9 +137,9 @@ export const taskSlice = createSlice({
                 contextState: null,
             } as TaskTest));
         },
-        updateCurrentTestId(state: TaskState, action: PayloadAction<number>) {
+        updateCurrentTestId(state: TaskState, action: PayloadAction<{testId: number, record?: boolean, recreateContext?: boolean}>) {
             state.previousTestId = state.currentTestId;
-            state.currentTestId = action.payload;
+            state.currentTestId = action.payload.testId;
         },
         updateCurrentTest(state: TaskState, action: PayloadAction<object>) {
             if (state.currentTestId in state.taskTests) {
@@ -168,6 +194,35 @@ export const taskSlice = createSlice({
                 message: action.payload.message,
             };
         },
+        taskSetLevels(state: TaskState, action: PayloadAction<{[key: string]: TaskLevel}>) {
+            console.log('task set levels', action.payload);
+            state.levels = action.payload;
+        },
+        taskSaveScore(state: TaskState, action: PayloadAction<{level: TaskLevelName, answer: any, score: number}>) {
+            const taskLevel = state.levels[action.payload.level];
+            const currentScore = taskLevel.score;
+            let newState = state;
+            if (action.payload.score > currentScore) {
+                state.levels[action.payload.level].bestAnswer = action.payload.answer;
+                state.levels[action.payload.level].score = action.payload.score;
+
+                if (action.payload.score >= 1) {
+                    const levelNumber = taskLevelsList.indexOf(action.payload.level)
+                    if (levelNumber + 1 <= taskLevelsList.length - 1) {
+                        const nextLevel = taskLevelsList[levelNumber + 1];
+                        if (nextLevel in state.levels && state.levels[nextLevel].locked) {
+                            state.levels[nextLevel].locked = false;
+                        }
+                    }
+                }
+            }
+
+            return newState;
+        },
+        taskSaveAnswer(state: TaskState, action: PayloadAction<{level: TaskLevelName, answer: any}>) {
+            const taskLevel = state.levels[action.payload.level];
+            taskLevel.answer = action.payload.answer;
+        },
     },
 });
 
@@ -190,6 +245,10 @@ export const {
     taskSubmissionStartTest,
     taskSubmissionSetTestResult,
     updateTestContextState,
+    taskSetLevels,
+    taskCurrentLevelChange,
+    taskSaveScore,
+    taskSaveAnswer,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

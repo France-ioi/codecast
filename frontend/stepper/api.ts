@@ -77,6 +77,7 @@ export default function(bundle: Bundle) {
         addBuiltin,
         buildState,
         rootStepperSaga,
+        executeEffects,
     };
 
     const initCallbacks = [];
@@ -141,6 +142,7 @@ export default function(bundle: Bundle) {
             interactBefore,
             interactAfter,
             environment,
+            executeEffects,
         });
 
         if (stepperContext.state.platform === 'python') {
@@ -223,7 +225,7 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, dispatch, quickAlgoCallsLogger, environment, speed}: StepperContextParameters): StepperContext {
+export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, dispatch, quickAlgoCallsLogger, environment, speed, executeEffects}: StepperContextParameters): StepperContext {
     /**
      * We create a new state object here instead of mutating the state. This is intended.
      */
@@ -250,6 +252,7 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
         },
         quickAlgoContext: quickAlgoLibraries.getContext(null, environment),
         environment,
+        executeEffects,
     };
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);

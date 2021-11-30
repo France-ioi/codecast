@@ -3,7 +3,6 @@ import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
 import {useAppSelector} from "../hooks";
 import {useResizeDetector} from "react-resize-detector";
 import {TaskTestsSelector} from "./TaskTestsSelector";
-import {taskLevels} from "./task_slice";
 
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();
@@ -25,20 +24,22 @@ export function ContextVisualization() {
     }, [width, height]);
 
     let testsSelectorEnabled = false;
-    if (currentTask) {
-        const levelData = currentTask.data[taskLevels[currentLevel]];
+    if (currentTask && currentLevel) {
+        const levelData = currentTask.data[currentLevel];
         testsSelectorEnabled = 1 < levelData.length;
     }
 
     return (
         <div className="context-visualization">
-            <div className="task-visualisation" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
-                {currentTask && currentTask.gridInfos && currentTask.gridInfos.images &&
-                    currentTask.gridInfos.images.map((module, key) =>
-                        <img key={key} src={module.default} style={{display: 'none'}}/>
-                    )
-                }
-                {Visualization ? <Visualization/> : <div id="grid"/>}
+            <div className="task-visualization-container">
+                <div className="task-visualization" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
+                    {currentTask && currentTask.gridInfos && currentTask.gridInfos.images &&
+                        currentTask.gridInfos.images.map((module, key) =>
+                            <img key={key} src={module.default} style={{display: 'none'}}/>
+                        )
+                    }
+                    {Visualization ? <Visualization/> : <div id="grid"/>}
+                </div>
             </div>
 
             {testsSelectorEnabled && <TaskTestsSelector/>}

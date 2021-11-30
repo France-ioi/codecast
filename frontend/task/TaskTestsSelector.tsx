@@ -1,6 +1,6 @@
 import React from "react";
 import {useAppSelector} from "../hooks";
-import {taskLevels, updateCurrentTestId} from "./task_slice";
+import {updateCurrentTestId} from "./task_slice";
 import {useDispatch} from "react-redux";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle, faTimesCircle} from "@fortawesome/free-solid-svg-icons";
@@ -12,18 +12,18 @@ export function TaskTestsSelector() {
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
     const currentSubmission = useAppSelector(state => state.task.currentSubmission);
-    const levelData = currentTask.data[taskLevels[currentLevel]];
+    const levelData = currentTask.data[currentLevel];
 
     const dispatch = useDispatch();
 
     const selectTest = (index) => {
-        dispatch(updateCurrentTestId(index));
+        dispatch(updateCurrentTestId({testId: index}));
     }
 
     const existingImages = currentTask.gridInfos && currentTask.gridInfos.images ? currentTask.gridInfos.images.map(module => module.default) : [];
 
     const getTestThumbNail = (testIndex) => {
-        const file = `test_${taskLevels[currentLevel]}_${testIndex + 1}`;
+        const file = `test_${currentLevel}_${testIndex + 1}`;
         const element = existingImages.find(image => image.indexOf(file + '.') !== -1);
         if (element) {
             return element;

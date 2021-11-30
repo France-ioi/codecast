@@ -17,7 +17,7 @@ import {initialStateIoPane} from "./stepper/io";
 import {SubtitlesState} from "./subtitles";
 import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
-import {TaskState} from "./task/task_slice";
+import {TaskLevelName, TaskState} from "./task/task_slice";
 import {LayoutState} from "./task/layout/layout";
 import {DocumentationState} from "./task/documentation_slice";
 import {BufferState} from "./buffers";
@@ -32,6 +32,7 @@ export enum CodecastOptionsMode {
 
 export interface CodecastOptions {
     language: keyof typeof Languages,
+    level: TaskLevelName,
     controls: {},
     platform: CodecastPlatform,
     baseUrl: string,
@@ -62,6 +63,7 @@ export interface CodecastOptions {
     },
     origin: string,
     task?: string,
+    taskInstructions?: string,
 }
 
 export interface Panes {
