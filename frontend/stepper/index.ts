@@ -25,7 +25,6 @@ The stepper's state has the following shape:
 */
 
 import {
-    all,
     apply,
     call,
     cancel,
@@ -41,11 +40,9 @@ import {
 import * as C from '@france-ioi/persistent-c';
 
 import {
-    buildState,
     default as ApiBundle,
     makeContext,
     performStep,
-    rootStepperSaga,
     StepperContext, StepperContextParameters,
     StepperError,
 } from './api';
@@ -61,7 +58,11 @@ import PythonBundle from './python';
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
 import {Directive, parseDirectives} from "./python/directives";
-import {ActionTypes as CompileActionTypes, ActionTypes} from "./actionTypes";
+import {
+    ActionTypes as StepperActionTypes,
+    ActionTypes, stepperDisplayError, stepperExecutionError,
+    stepperExecutionSuccess
+} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
@@ -74,7 +75,7 @@ import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
-import {taskResetDone, taskSuccess, taskUpdateState} from "../task/task_slice";
+import {taskResetDone} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonInterpreter from "./python/python_interpreter";
@@ -169,6 +170,7 @@ export const initialStateStepper = {
     options: {} as any, // TODO: Is this used ? If yes, put the type.
     controls: StepperControlsType.Normal,
     synchronizingAnalysis: false,
+    error: null as any,
 };
 
 export type Stepper = typeof initialStateStepper;
@@ -253,6 +255,18 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.StepperSynchronizingAnalysisChanged);
     bundle.addReducer(ActionTypes.StepperSynchronizingAnalysisChanged, stepperSynchronizingAnalysisChangedReducer);
+
+    bundle.defineAction(ActionTypes.StepperExecutionSuccess);
+    bundle.addReducer(ActionTypes.StepperExecutionSuccess, stepperExitReducer);
+
+    bundle.defineAction(ActionTypes.StepperExecutionError);
+    bundle.addReducer(ActionTypes.StepperExecutionError, stepperExecutionErrorReducer);
+
+    bundle.defineAction(ActionTypes.StepperDisplayError);
+    bundle.addReducer(ActionTypes.StepperDisplayError, stepperDisplayErrorReducer);
+
+    bundle.defineAction(ActionTypes.StepperClearError);
+    bundle.addReducer(ActionTypes.StepperClearError, stepperClearErrorReducer);
 
     /* END view stuff to move out of here */
 
@@ -473,7 +487,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
         enrichStepperState(stepperContext.state, 'Stepper.Progress', stepperContext);
     }
 
-    const context = quickAlgoLibraries.getContext(null, state.replay);
+    const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context && context.getInnerState) {
         const contextState = context.getInnerState();
         state.task.state = getCurrentImmerState(contextState);
@@ -542,11 +556,6 @@ function stepperConfigureReducer(state: AppStore, action): void {
 }
 
 function stepperSpeedChangedReducer(state: AppStoreReplay, {payload: {speed}}): void {
-    const context = quickAlgoLibraries.getContext(null, state.replay);
-    if (context && context.changeDelay) {
-        context.changeDelay(255 - speed);
-    }
-
     return state.stepper.speed = speed;
 }
 
@@ -600,6 +609,18 @@ function stepperSynchronizingAnalysisChangedReducer(state: AppStoreReplay, {payl
     state.stepper.synchronizingAnalysis = payload;
 }
 
+export function stepperExecutionErrorReducer(state: AppStoreReplay): void {
+    clearStepper(state.stepper);
+}
+
+export function stepperDisplayErrorReducer(state: AppStoreReplay, {payload}): void {
+    state.stepper.error = payload.error;
+}
+
+function stepperClearErrorReducer(state: AppStore): void {
+    state.stepper.error = null;
+}
+
 /* saga */
 
 function* compileSucceededSaga(app: App) {
@@ -608,12 +629,10 @@ function* compileSucceededSaga(app: App) {
         /* Build the stepper state. This automatically runs into user source code. */
         let state: AppStore = yield select();
 
-        let stepperState = yield call(buildState, state, app.replay);
+        let stepperState = yield call(app.stepperApi.buildState, state, app.environment);
         console.log('[stepper init] current state', state.task.state, 'context state', stepperState.contextState);
-        yield put(taskUpdateState(stepperState.contextState));
         const newState = yield select();
         console.log('[stepper init] new state', newState.task.state);
-
 
         // buildState may have triggered an error.
         state = yield select();
@@ -634,9 +653,9 @@ function* recorderStoppingSaga() {
     yield put({type: ActionTypes.StepperExit});
 }
 
-function* stepperEnabledSaga(args) {
+function* stepperEnabledSaga(app: App) {
     /* Start the new stepper task. */
-    currentStepperTask = yield fork(rootStepperSaga, args);
+    currentStepperTask = yield fork(app.stepperApi.rootStepperSaga, app);
 }
 
 export function* stepperDisabledSaga(action, leaveContext = false) {
@@ -697,7 +716,7 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
     }
 
     /* Run the provided saga if any, or wait until next animation frame. */
-    const saga = arg.saga || (stepperContext.replay ? null : stepperWaitSaga);
+    const saga = arg.saga || ('main' === stepperContext.environment ? stepperWaitSaga : null);
     let completed = true;
     let interrupted = false;
     if (saga) {
@@ -720,7 +739,20 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
        the effects of user interaction. */
     state = yield select();
     stepperContext.state = {...getCurrentStepperState(state)};
-    stepperContext.speed = getStepper(state).speed;
+
+    // Update speed if we use speed
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+    if (null !== stepperContext.speed) {
+        stepperContext.speed = getStepper(state).speed;
+        if (context && context.changeDelay) {
+            context.changeDelay(255 - stepperContext.speed);
+        }
+    } else {
+        if (context && context.changeDelay) {
+            context.changeDelay(0);
+        }
+    }
+
     // console.log('current stepper state3', stepperContext.state.contextState);
 
     /* Check whether to interrupt or resume the stepper. */
@@ -750,7 +782,7 @@ function* stepperInterruptSaga(app: App) {
         return;
     }
 
-    const stepperContext = createStepperContext(getStepper(state), {dispatch: app.dispatch, replay: app.replay});
+    const stepperContext = createStepperContext(getStepper(state), {dispatch: app.dispatch, environment: app.environment});
 
     if (stepperContext.state.platform === 'python') {
         yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
@@ -759,7 +791,7 @@ function* stepperInterruptSaga(app: App) {
     yield put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
 }
 
-function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quickAlgoCallsLogger, replay}: StepperContextParameters) {
+function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quickAlgoCallsLogger, environment, speed}: StepperContextParameters) {
     let stepperContext = makeContext(stepper, {
         interactBefore: (arg) => {
             return new Promise((resolve, reject) => {
@@ -782,7 +814,8 @@ function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quic
         waitForProgress,
         quickAlgoCallsLogger,
         dispatch,
-        replay,
+        environment,
+        speed,
     });
 
     return stepperContext;
@@ -791,32 +824,36 @@ function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quic
 function* stepperStepSaga(app: App, action) {
     let stepperContext: StepperContext;
     try {
-        const state = yield select();
+        const state: AppStore = yield select();
         const {waitForProgress, quickAlgoCallsLogger} = action.payload;
 
         const stepper = getStepper(state);
         if (stepper.status === StepperStatus.Starting) {
             yield put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
+            console.log('execution speed', action.payload.useSpeed ? stepper.speed : null)
             stepperContext = createStepperContext(stepper, {
                 dispatch: app.dispatch,
                 waitForProgress,
                 quickAlgoCallsLogger,
-                replay: state.replay,
+                environment: state.environment,
+                speed: action.payload.useSpeed && !action.payload.immediate ? stepper.speed : null,
+                executeEffects: app.stepperApi.executeEffects,
             });
+            console.log('execution stepper context', stepperContext);
 
             if (action.payload.setStepperContext) {
                 action.payload.setStepperContext(stepperContext);
             }
 
-            console.log('[stepper.step] Creating new stepper context', stepperContext, stepperContext.resume, state.replay, stepperContext.replay);
+            console.log('[stepper.step] Creating new stepper context', stepperContext, stepperContext.resume, state.environment, stepperContext.environment);
 
             if (stepperContext.state.platform === 'python') {
                 yield call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
             }
 
             try {
-                yield call(performStep, stepperContext, action.payload.mode, action.payload.useSpeed && !action.payload.immediate);
+                yield call(performStep, stepperContext, action.payload.mode);
             } catch (ex) {
                 console.log('stepperStepSaga has catched', ex);
                 if (!(ex instanceof StepperError)) {
@@ -828,9 +865,7 @@ function* stepperStepSaga(app: App, action) {
                     yield put({type: ActionTypes.StepperInterrupted});
                 }
                 if (ex.condition === 'error') {
-                    const response = {diagnostics: ex.message};
-                    yield put({type: ActionTypes.CompileFailed, response});
-                    // stepperContext.state.error = ex.message;
+                    yield put(stepperExecutionError(ex.message));
                 }
             }
 
@@ -843,20 +878,16 @@ function* stepperStepSaga(app: App, action) {
 
             if (stepperContext.state.isFinished) {
                 console.log('check end condition');
-                const taskContext = quickAlgoLibraries.getContext(null, state.replay);
+                const taskContext = quickAlgoLibraries.getContext(null, state.environment);
                 if (taskContext && taskContext.infos.checkEndCondition) {
                     try {
                         taskContext.infos.checkEndCondition(taskContext, true);
                     } catch (message) {
                         // @ts-ignore
                         if (taskContext.success) {
-                            yield put(taskSuccess(message));
+                            yield put(stepperExecutionSuccess(message));
                         } else {
-                            const response = {diagnostics: message};
-                            yield put({
-                                type: CompileActionTypes.CompileFailed,
-                                response
-                            });
+                            yield put(stepperExecutionError(message));
                         }
                     }
                 }
@@ -888,7 +919,7 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
     if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
         console.log('Run python from beginning is necessary');
         const state = yield select();
-        const taskContext = quickAlgoLibraries.getContext(null, state.replay);
+        const taskContext = quickAlgoLibraries.getContext(null, state.environment);
         yield put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: true});
 
         taskContext.display = false;
@@ -940,6 +971,32 @@ function* stepperSaga(args) {
     yield takeLatest(RecorderActionTypes.RecorderStopping, recorderStoppingSaga);
     yield takeLatest(ActionTypes.StepperEnabled, stepperEnabledSaga, args);
     yield takeLatest(ActionTypes.StepperDisabled, stepperDisabledSaga);
+    yield takeLatest(ActionTypes.StepperCompileAndStep, function*(app: App, {payload}) {
+        const stepperState = yield select((state: AppStore) => state.stepper.status);
+        if (StepperStatus.Clear === stepperState) {
+            const result = yield new Promise((callback) => {
+                app.dispatch({
+                    type: StepperActionTypes.CompileWait,
+                    payload: {
+                        callback,
+                        ...payload,
+                    },
+                });
+            });
+
+            if (CompileStatus.Done !== result) {
+                return;
+            }
+        }
+
+        yield put({type: StepperActionTypes.StepperStep, payload});
+    }, args);
+
+    // @ts-ignore
+    yield takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function*({payload}) {
+        console.log('receive an error, display it');
+        yield put(stepperDisplayError(payload.error));
+    });
 }
 
 /* Post-link, register record and replay hooks. */
@@ -974,7 +1031,7 @@ function postLink(app: App) {
         yield put({type: ActionTypes.StepperExit});
         replayContext.addSaga(function* () {
             console.log('make reset saga');
-            const context = quickAlgoLibraries.getContext(null, false);
+            const context = quickAlgoLibraries.getContext(null, 'main');
             if (context) {
                 const state = yield select();
                 context.resetAndReloadState(state.task.currentTest, state);
@@ -1018,6 +1075,15 @@ function postLink(app: App) {
         console.log('[stepper.step] before yield promise', promise);
         yield promise;
         console.log('[stepper.step] after yield promise', promise);
+
+        replayContext.addSaga(function* () {
+            const speed = yield select((state: AppStore) => state.stepper.speed);
+            console.log('[stepper.step] set speed', speed);
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            if (context && context.changeDelay) {
+                context.changeDelay(255 - speed);
+            }
+        });
     });
 
     recordApi.on(ActionTypes.StepperInteractBefore, function* (addEvent) {
@@ -1128,7 +1194,7 @@ function postLink(app: App) {
         yield put({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
 
         replayContext.addSaga(function* () {
-            const context = quickAlgoLibraries.getContext(null, false);
+            const context = quickAlgoLibraries.getContext(null, 'main');
             if (context && context.changeDelay) {
                 context.changeDelay(255 - speed);
             }
@@ -1144,6 +1210,13 @@ function postLink(app: App) {
         const controls = event[2];
 
         yield put({type: ActionTypes.StepperControlsChanged, payload: {controls}});
+    });
+
+    recordApi.on(ActionTypes.StepperClearError, function* (addEvent) {
+        yield call(addEvent, 'stepper.clear_error');
+    });
+    replayApi.on(['compile.clearDiagnostics', 'stepper.clear_error'], function* () {
+        yield put({type: ActionTypes.StepperClearError});
     });
 
     stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
@@ -1186,6 +1259,18 @@ function postLink(app: App) {
         yield takeEvery(ActionTypes.StepperInterrupt, stepperInterruptSaga, args);
         // @ts-ignore
         yield takeEvery(ActionTypes.StepperExit, stepperExitSaga);
+
+        yield takeEvery([
+            StepperActionTypes.StepperExecutionSuccess,
+            StepperActionTypes.StepperExecutionError,
+            StepperActionTypes.CompileFailed,
+        ], function*() {
+            let state: AppStore = yield select();
+            if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
+                yield put({type: ActionTypes.StepperInterrupt, payload: {}});
+            }
+            yield call(stepperDisabledSaga, true);
+        });
 
         /* Highlight the range of the current source fragment. */
         yield takeLatest([

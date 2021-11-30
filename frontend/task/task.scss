@@ -21,6 +21,7 @@ $primary: #4a90e2;
 @import "./layout/layout.scss";
 @import "./controls.scss";
 @import "./documentation.scss";
+@import "./task_tests.scss";
 
 html {
   margin: 0 !important;
@@ -142,12 +143,14 @@ body {
       .message {
         flex: 1 1 auto;
         color: #30242B;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 600;
         margin: 0;
         padding-right: 30px;
-        white-space: pre;
-        font-family: $font-family-monospace;
+        .compilation {
+          white-space: pre;
+          font-family: $font-family-monospace;
+        }
       }
     }
 
@@ -158,10 +161,17 @@ body {
     }
   }
 
+  .context-visualization {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
   .task-visualisation {
     padding: 20px;
     width: 100%;
-    height: 100%;
+    flex: 1 1 auto;
     @include mobile {
       padding: 0;
     }

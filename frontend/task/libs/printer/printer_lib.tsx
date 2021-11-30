@@ -80,7 +80,6 @@ interface ExecutionChannelMessage {
 
 const executionChannels = {
     main: channel<ExecutionChannelMessage>(),
-    replay: channel<ExecutionChannelMessage>(),
 };
 
 const localLanguageStrings = {
@@ -734,11 +733,11 @@ export class PrinterLib extends QuickAlgoLibrary {
         });
     }
 
-    *executionChannelSaga(context, replay) {
+    *executionChannelSaga(context) {
         try {
-            log.getLogger('printer_lib').debug('create execution channel saga', replay);
+            log.getLogger('printer_lib').debug('create execution channel saga');
             while (true) {
-                const parameters = yield take(executionChannels[replay ? 'replay' : 'main']);
+                const parameters = yield take(executionChannels.main);
                 yield fork(context.handleRequest, context, parameters);
             }
         } finally {
@@ -752,7 +751,7 @@ export class PrinterLib extends QuickAlgoLibrary {
 
         switch (action) {
             case PrinterLibAction.reset: {
-                const currentTest = yield select((state: AppStore) => state.task.currentTest);
+                const currentTest = yield select((state: AppStore) => state.task.taskTests[state.task.currentTestId].data);
                 if (currentTest && currentTest.input) {
                     yield put({
                         type: ActionTypes.BufferReset,
@@ -783,7 +782,9 @@ export class PrinterLib extends QuickAlgoLibrary {
 
     *getSaga(app: App) {
         log.getLogger('printer_lib').debug('START PRINTER LIB SAGA');
-        yield fork(this.executionChannelSaga, this, app.replay);
+        if ('main' === app.environment) {
+            yield fork(this.executionChannelSaga, this);
+        }
 
         yield takeEvery(ActionTypes.BufferEdit, function* (action) {
             // @ts-ignore
@@ -798,7 +799,7 @@ export class PrinterLib extends QuickAlgoLibrary {
             }
         });
 
-        if (!recordApiInit && !app.replay) {
+        if (!recordApiInit && 'main' === app.environment) {
             recordApiInit = true;
 
             app.replayApi.on('start', function* (replayContext: ReplayContext, event) {

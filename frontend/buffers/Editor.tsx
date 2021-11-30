@@ -19,7 +19,7 @@ interface EditorStateToProps {
 }
 
 function mapStateToProps(state: AppStore): EditorStateToProps {
-    const context = quickAlgoLibraries.getContext(null, false);
+    const context = quickAlgoLibraries.getContext(null, 'main');
     const autocompletionParameters = context ? getAutocompletionParameters(context, state.task.currentLevel) : null;
 
     return {
@@ -158,6 +158,14 @@ class _Editor extends React.PureComponent<EditorProps> {
         });
     };
 
+    goToEnd = () => {
+        if (!this.editor) {
+            return;
+        }
+
+        this.editor.gotoLine(Infinity, Infinity, false);
+    }
+
     resize = () => {
         if (!this.editor) {
             return;
@@ -235,6 +243,7 @@ class _Editor extends React.PureComponent<EditorProps> {
                 getSelectionRange: this.getSelectionRange,
                 highlight: this.highlight,
                 resize: this.resize,
+                goToEnd: this.goToEnd,
             };
             onInit(api);
         }

@@ -314,20 +314,14 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
     };
 
     onStepRun = async () => {
-        if (!await this.compileIfNecessary()) {
-            return;
-        }
-        await this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
-        await this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run, useSpeed: true}});
+        this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
+        this.props.dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, useSpeed: true}});
     };
-    onStepExpr = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Expr}});
-    onStepInto = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into}});
-    onStepOut = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Out}});
+    onStepExpr = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Expr, useSpeed: true}});
+    onStepInto = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into, useSpeed: true}});
+    onStepOut = () => this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Out, useSpeed: true}});
     onStepOver = async () => {
-        if (!await this.compileIfNecessary()) {
-            return;
-        }
-        this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Over}});
+        this.props.dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Over, useSpeed: true}});
     }
     onToggleSpeed = () => {
         this.setState((prevState) => {
@@ -356,7 +350,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
             await this.props.dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.StepByStep}});
         }
         if (this.props.canStep) {
-            this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into}});
+            this.props.dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into, useSpeed: true}});
         } else {
             await this.props.dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
         }
@@ -381,7 +375,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
         return new Promise<boolean>((resolve) => {
             if (this.props.showCompile) {
                 this.props.dispatch({type: ActionTypes.CompileWait, payload: {callback: (result) => {
-                    resolve(result);
+                    resolve(CompileStatus.Done === result);
                 }}});
             } else {
                 resolve(true);

@@ -2,6 +2,7 @@ export enum ActionTypes {
     StepperTaskCancelled = 'Stepper.Task.Cancelled',
     StepperRestart = 'Stepper.Restart',
     StepperReset = 'Stepper.Reset',
+    StepperCompileAndStep = 'Stepper.CompileAndStep',
     StepperStep = 'Stepper.Step',
     StepperStarted = 'Stepper.Started',
     StepperInteractBefore = 'Stepper.Interact.Before',
@@ -23,11 +24,39 @@ export enum ActionTypes {
     StepperSpeedChanged = 'Stepper.Speed.Changed',
     StepperControlsChanged = 'Stepper.Controls.Changed',
     StepperSynchronizingAnalysisChanged = 'Stepper.Synchronizing.Analysis.Changed',
+    StepperExecutionSuccess = 'Stepper.Execution.Success',
+    StepperExecutionError = 'Stepper.Execution.Error',
+    StepperDisplayError = 'Stepper.Execution.DisplayError',
+    StepperClearError = 'Stepper.Execution.ClearError',
     Compile = 'Compile',
     CompileWait = 'Compile.Wait',
     CompileClear = 'Compile.Clear',
     CompileStarted = 'Compile.Started',
     CompileSucceeded = 'Compile.Succeeded',
     CompileFailed = 'Compile.Failed',
-    CompileClearDiagnostics = 'Compile.Clear.Diagnostics'
 }
+
+export const stepperExecutionSuccess = (message) => ({
+    type: ActionTypes.StepperExecutionSuccess,
+    payload: {
+        message,
+    },
+});
+
+export const stepperExecutionError = (error) => ({
+    type: ActionTypes.StepperExecutionError,
+    payload: {
+        error,
+    },
+});
+
+export const stepperDisplayError = (error) => ({
+    type: ActionTypes.StepperDisplayError,
+    payload: {
+        error,
+    },
+});
+
+export const stepperClearError = () => ({
+    type: ActionTypes.StepperClearError,
+});

@@ -4,6 +4,9 @@ const images = [
     require('./green_robot.png'),
     require('./marker.png'),
     require('./wall.png'),
+    require('./test_easy_1.png'),
+    require('./test_easy_2.png'),
+    require('./test_easy_3.png'),
 ];
 
 export default {

@@ -1,0 +1,118 @@
+.tests-selector {
+  display: flex;
+  line-height: 24px;
+  text-align: center;
+  background-color: #f1f2f7;
+
+  .test-title {
+    min-height: 40px;
+  }
+
+  .test-thumbnail {
+    width: 80%;
+    padding-top: 10px;
+
+    img {
+      max-width: 100%;
+      height: auto;
+      max-height: 70px;
+    }
+  }
+
+  .tests-selector-tab {
+    flex: 1 0;
+    cursor: pointer;
+    padding: 2px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #7c7c7c;
+    font-weight: bold;
+
+    &.is-active {
+      box-shadow: 0 1px 0 0px #ccc;
+      border-radius: 0 0 5px 5px;
+      background-color: #fff;
+      z-index: 1;
+
+      &:before, &:after {
+        top: -3px;
+        box-shadow: 0px 1px 0 #ccc inset;
+        z-index: 1;
+        border-top: 3px solid #fff;
+      }
+      &:before {
+        left: -10px;
+        border-radius: 0 70%;
+        border-right: 6px solid #fff;
+      }
+      &:after {
+        right: -10px;
+        border-radius: 70% 0;
+        border-left: 6px solid #fff;
+      }
+      &:before, &:not(:last-child):after {
+        content: " ";
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: transparent;
+        box-sizing: content-box;
+      }
+    }
+
+    &:not(.is-active) {
+      box-shadow: 0 1px 0 0px #ccc inset;
+    }
+
+    .test-icon {
+      display: inline-block;
+      margin-right: 5px;
+      .bp3-spinner {
+        display: inline-block;
+      }
+    }
+    &.status-success .test-icon {
+      color: green;
+    }
+    &.status-failure .test-icon {
+      color: red;
+    }
+  }
+}
+
+@media /* Tablets and desktop */
+screen and (min-width: 768px) and (max-width: 1024.9px) and (orientation: portrait),
+screen and (min-width: 855px) and (min-height: 450px) and (orientation: landscape),
+screen and (min-width: 1025px) and (min-height: 450px) {
+  .tests-selector  .tests-selector-tab {
+    line-height: 36px;
+  }
+}
+
+.test-results-overview {
+  display: flex;
+  font-weight: bold;
+
+  .test-result {
+    padding: 2px 10px;
+    margin: 0px 6px;
+    border-radius: 10px;
+    background-color: white;
+  }
+  .test-success {
+    color: green;
+  }
+  .test-error {
+    color: #FF001F;
+  }
+  .test-link {
+    color: #4A90E2;
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 8px;
+  }
+}

@@ -62,7 +62,7 @@ export default function(bundle: Bundle) {
 
     // Lift resize events into windowResized actions.
     bundle.addSaga(function* monitorResize(app: App) {
-        if (app.replay) {
+        if ('main' !== app.environment) {
             return;
         }
 

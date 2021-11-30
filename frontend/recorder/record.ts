@@ -21,14 +21,6 @@ import {ReplayContext} from "../player/sagas";
 import {App} from "../index";
 import {PlayerInstant, playerReset} from "../player";
 
-/* Sagas can be registered to run when recording starts, to populate an
-   'init' object which is stored in the 'start' event of the recording. */
-const startSagas = [];
-
-/* For each redux action a single saga handler(addEvent, action) can be
-   registered to add an event to the recorded stream. */
-const actionHandlers = new Map();
-
 export interface AutoRecordingParams {
     sliceName: string,
     actionNames: string[],
@@ -37,27 +29,6 @@ export interface AutoRecordingParams {
     initialState?: any,
     onResetDisabled?: boolean,
 }
-
-/* Recorder API */
-const recordApi = {
-    onStart: function(saga) {
-        startSagas.push(saga);
-    },
-    start: function* () {
-        const init = {};
-        for (let saga of startSagas) {
-            yield call(saga, init);
-        }
-        const event = [0, 'start', init];
-        yield put({type: ActionTypes.RecorderAddEvent, event});
-    },
-    on: function(actionType: string, handler) {
-        if (actionHandlers.has(actionType)) {
-            throw new Error(`multiple record handlers for ${actionType}`);
-        }
-        actionHandlers.set(actionType, handler);
-    }
-};
 
 export function addAutoRecordingBehaviour({recordApi, replayApi}: App, {sliceName, actions, actionNames, reducers, initialState, onResetDisabled}: AutoRecordingParams) {
     for (let actionName of actionNames) {
@@ -89,9 +60,43 @@ export function addAutoRecordingBehaviour({recordApi, replayApi}: App, {sliceNam
     }
 }
 
-export type RecordApi = typeof recordApi;
+export interface RecordApi {
+    onStart: Function,
+    start: any,
+    on: (actionType: string, handler) => void,
+}
 
 export default function(bundle: Bundle) {
+    /* Sagas can be registered to run when recording starts, to populate an
+   'init' object which is stored in the 'start' event of the recording. */
+    const startSagas = [];
+
+    /* For each redux action a single saga handler(addEvent, action) can be
+       registered to add an event to the recorded stream. */
+    const actionHandlers = new Map();
+
+
+    /* Recorder API */
+    const recordApi = {
+        onStart: function(saga) {
+            startSagas.push(saga);
+        },
+        start: function* () {
+            const init = {};
+            for (let saga of startSagas) {
+                yield call(saga, init);
+            }
+            const event = [0, 'start', init];
+            yield put({type: ActionTypes.RecorderAddEvent, event});
+        },
+        on: function(actionType: string, handler) {
+            if (actionHandlers.has(actionType)) {
+                throw new Error(`multiple record handlers for ${actionType}`);
+            }
+            actionHandlers.set(actionType, handler);
+        }
+    };
+
     bundle.defineValue('recordApi', recordApi);
 
     bundle.defineAction(ActionTypes.RecorderAddEvent);
@@ -124,6 +129,10 @@ export default function(bundle: Bundle) {
             let done = false;
             while (!done) {
                 const recordAction = yield take(channel);
+                if (recordAction.payload && false === recordAction.payload.record) {
+                    console.log('skip record');
+                    continue;
+                }
                 const state: AppStore = yield select();
                 const recorder = state.recorder;
                 const status = recorder.status;

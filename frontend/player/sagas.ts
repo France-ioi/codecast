@@ -19,10 +19,11 @@ import {App, Codecast} from "../index";
 import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {getTaskTest, taskLoad} from "../task";
+import {taskLoad} from "../task";
 import {PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
 import {RECORDING_FORMAT_VERSION} from "../version";
-import {getNodeRange} from "../stepper";
+import {getCurrentImmerState} from "../task/utils";
+import {createDraft, finishDraft} from "immer";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -119,7 +120,7 @@ function* playerPrepare(app: App, action) {
         task: {
             currentTask: state.task.currentTask,
             currentLevel: state.task.currentLevel,
-            currentTest: getTaskTest(state.task.currentTask, state.task.currentLevel),
+            currentTestId: state.task.currentTestId,
         },
         options: {
             platform
@@ -268,9 +269,9 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
     const recordingEvents = replayContext.events;
     const events = ensureBackwardsCompatibility(recordingEvents, replayContext.recordingVersion);
     const duration = events[events.length - 1][0];
-    const replayStore = Codecast.replayStore;
+    const replayStore = Codecast.environments['replay'].store;
 
-    yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}, replay: true}});
+    yield call(replayStore.dispatch, {type: AppActionTypes.AppInit, payload: {options: {...replayContext.state.options}, environment: 'replay'}});
     yield call(replayStore.dispatch, taskLoad());
 
     for (pos = 0; pos < events.length; pos += 1) {
@@ -281,15 +282,17 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         const instant: PlayerInstant = {t, pos, event} as PlayerInstant;
         replayContext.instant = instant;
 
-        let needsRestartExecutor = false;
-
         console.log('-------- REPLAY ---- EVENT ----', key, event);
         yield new Promise(resolve => {
             replayStore.dispatch({type: PlayerActionTypes.PlayerApplyReplayEvent, payload: {replayApi, key, replayContext, event, resolve}});
         });
         console.log('END REPLAY EVENT (computeInstants)');
 
-        instant.state = replayStore.getState();
+        // Get Redux state and context state and store them
+        const instantState = createDraft(replayStore.getState());
+        const context = quickAlgoLibraries.getContext(null, 'replay');
+        instantState.task.state = getCurrentImmerState(context.getInnerState());
+        instant.state = finishDraft(instantState);
 
         Object.freeze(instant);
         console.log('new instant', instant.state);
@@ -472,7 +475,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
 
         if (instant.quickalgoLibraryCalls && instant.quickalgoLibraryCalls.length) {
             console.log('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.action).join(','));
-            const context = quickAlgoLibraries.getContext(null, false);
+            const context = quickAlgoLibraries.getContext(null, 'main');
             // We start from the end state of the last instant, and apply the calls that happened during this instant
             const stepperState = instants[instantIndex-1].state.stepper;
             if (context) {
@@ -487,7 +490,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                         });
                     },
                     dispatch: app.dispatch,
-                    replay: app.replay,
+                    environment: app.environment,
                 });
 
                 const executor = stepperContext.quickAlgoCallsExecutor;

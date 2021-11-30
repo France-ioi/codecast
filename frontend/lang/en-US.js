@@ -171,4 +171,9 @@ module.exports = {
     LAYOUT_DefaultLayoutMobileVerticalEditor: 'Mobile vertical (edition)',
     LAYOUT_DefaultLayoutMobileVerticalInstructions: 'Mobile vertical (instructions)',
     LAYOUT_DefaultLayoutMobileVerticalPlayer: 'Mobile vertical (execution)',
+
+    TESTS_TAB_TITLE: 'Test {index}',
+    TESTS_RESULT_OVERVIEW_SUCCESS: 'Test {index}: success',
+    TESTS_RESULT_OVERVIEW_FAILURE: 'Test {index}: error',
+    TESTS_RESULT_OVERVIEW_VIEW: 'see',
 };

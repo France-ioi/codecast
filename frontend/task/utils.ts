@@ -67,13 +67,13 @@ export function getAvailableModules(context) {
     }
 }
 
-export function checkCompilingCode(code, getMessage, platform: string, replay: boolean) {
+export function checkCompilingCode(code, getMessage, platform: string, environment: string) {
     if (!code) {
         throw getMessage('EMPTY_PROGRAM');
     }
 
     if ('python' === platform) {
-        const context = quickAlgoLibraries.getContext(null, replay);
+        const context = quickAlgoLibraries.getContext(null, environment);
         if (context) {
             const availableModules = getAvailableModules(context);
             for (let availableModule of availableModules) {
@@ -88,6 +88,22 @@ export function checkCompilingCode(code, getMessage, platform: string, replay: b
             }
         }
     }
+}
+
+export function getDefaultSourceCode(platform: string, environment: string) {
+    if ('python' === platform) {
+        const context = quickAlgoLibraries.getContext(null, environment);
+        if (context) {
+            const availableModules = getAvailableModules(context);
+            let content = '';
+            for (let i = 0; i < availableModules.length; i++) {
+                content += 'from ' + availableModules[i] + ' import *\n';
+            }
+            return content;
+        }
+    }
+
+    return '';
 }
 
 export function getCurrentImmerState(object) {

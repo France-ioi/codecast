@@ -85,12 +85,12 @@ function* documentationLoadSaga(standalone: boolean) {
             yield put(documentationLanguageChanged(language));
             yield call(loadDocumentationConcepts, concepts, selectedConceptId);
         } catch (e) {
-            yield put({type: ActionTypes.CompileFailed, response: {diagnostics: e.message}});
+            yield put({type: CommonActionTypes.Error, payload: {error: e.message}});
         }
         return;
     }
 
-    let context = quickAlgoLibraries.getContext(null, false);
+    let context = quickAlgoLibraries.getContext(null, 'main');
     if (context.display && context.infos.conceptViewer) {
         const language = yield select(state => state.documentation.language);
         let concepts = [], allConcepts = [];

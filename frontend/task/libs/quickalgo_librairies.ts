@@ -7,19 +7,19 @@ import {createDraft} from "immer";
 export class QuickAlgoLibraries {
     libraries: {[name: string]: {[mode: string]: QuickAlgoLibrary}} = {};
 
-    addLibrary(library: QuickAlgoLibrary, name: string, replay: boolean) {
+    addLibrary(library: QuickAlgoLibrary, name: string, environment: string) {
         if (!(name in this.libraries)) {
             this.libraries[name] = {};
         }
-        this.libraries[name][replay ? 'replay' : 'main'] = library;
+        this.libraries[name][environment] = library;
     }
 
-    getContext(name: string = null, replay: boolean): QuickAlgoLibrary {
+    getContext(name: string = null, environment: string): QuickAlgoLibrary {
         if (name in this.libraries) {
-            return this.libraries[name][replay ? 'replay' : 'main'];
+            return this.libraries[name][environment];
         }
 
-        return Object.keys(this.libraries).length ? this.libraries[Object.keys(this.libraries)[0]][replay ? 'replay' : 'main'] : null;
+        return Object.keys(this.libraries).length ? this.libraries[Object.keys(this.libraries)[0]][environment] : null;
     }
 
     reset(taskInfos = null, appState: AppStore = null) {
