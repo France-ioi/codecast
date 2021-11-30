@@ -4,7 +4,7 @@ import {TaskInstructions} from "../TaskInstructions";
 import {ContextVisualization} from "../ContextVisualization";
 import {DOMParser} from 'xmldom';
 import React, {createElement, ReactElement, ReactNode} from 'react';
-import {AppStore} from "../../store";
+import {AppStore, CodecastOptions} from "../../store";
 import {ControlsAndErrors} from "../ControlsAndErrors";
 import {Bundle} from "../../linker";
 import {ActionTypes} from "./actionTypes";
@@ -19,7 +19,7 @@ import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_librairi
 import {Screen} from "../../common/screens";
 import {Documentation} from "../Documentation";
 
-export const ZOOM_LEVEL_LOW = 0.8;
+export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
 
 interface Dimensions {
@@ -66,6 +66,8 @@ export interface LayoutProps {
     layoutType: LayoutType,
     layoutMobileMode: LayoutMobileMode,
     screen: Screen,
+    options: CodecastOptions,
+    currentTask: any,
 }
 
 export interface LayoutElementMetadata {
@@ -620,33 +622,39 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 ...attrs,
             },
         }),
-        Instructions: (attrs) => ({
-            type: TaskInstructions,
-            metadata: {
-                id: 'instructions',
-                title: layoutProps.getMessage('TASK_DESCRIPTION'),
-                icon: 'document',
-                ...attrs,
-            },
-        }),
-        ContextVisualization: (attrs) => ({
-            type: ContextVisualization,
-            metadata: {
-                id: 'io',
-                title: layoutProps.getMessage('TASK_IO'),
-                icon: 'console',
-                ...attrs,
-            },
-        }),
-        Variables: (attrs) => ({
-            type: LayoutStackView,
-            metadata: {
-                id: 'variables',
-                title: layoutProps.getMessage('TASK_VARIABLES'),
-                icon: 'code',
-                ...attrs,
-            },
-        }),
+        ...(layoutProps.currentTask ? {
+            Instructions: (attrs) => ({
+                type: TaskInstructions,
+                metadata: {
+                    id: 'instructions',
+                    title: layoutProps.getMessage('TASK_DESCRIPTION'),
+                    icon: 'document',
+                    ...attrs,
+                },
+            })
+        } : {}),
+        ...(layoutProps.options.showIO ? {
+            ContextVisualization: (attrs) => ({
+                type: ContextVisualization,
+                metadata: {
+                    id: 'io',
+                    title: layoutProps.getMessage('TASK_IO'),
+                    icon: 'console',
+                    ...attrs,
+                },
+            })
+        } : {}),
+        ...(layoutProps.options.showStack ? {
+            Variables: (attrs) => ({
+                type: LayoutStackView,
+                metadata: {
+                    id: 'variables',
+                    title: layoutProps.getMessage('TASK_VARIABLES'),
+                    icon: 'code',
+                    ...attrs,
+                },
+            }),
+        } : {}),
         Documentation: (attrs) => ({
             type: Documentation,
             metadata: {
@@ -661,12 +669,14 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
     const directivesByZone = {};
     const availableZones = ['top-right', 'top-left', 'center-top', 'center', 'center-bottom', 'center-left', 'center-right', 'bottom-left', 'bottom-right'];
     if (layoutProps.orderedDirectives) {
-        for (let directive of layoutProps.orderedDirectives) {
-            const zone = directive.byName['zone'] && availableZones.indexOf(directive.byName['zone']) !== -1 ? directive.byName['zone'] : 'default';
-            if (!(zone in directivesByZone)) {
-                directivesByZone[zone] = [];
+        if (layoutProps.options.showViews) {
+            for (let directive of layoutProps.orderedDirectives) {
+                const zone = directive.byName['zone'] && availableZones.indexOf(directive.byName['zone']) !== -1 ? directive.byName['zone'] : 'default';
+                if (!(zone in directivesByZone)) {
+                    directivesByZone[zone] = [];
+                }
+                directivesByZone[zone].push(directive);
             }
-            directivesByZone[zone].push(directive);
         }
     }
 

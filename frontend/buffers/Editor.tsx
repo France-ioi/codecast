@@ -122,6 +122,7 @@ class _Editor extends React.PureComponent<EditorProps> {
         this.wrapModelToEditor(() => {
             this.editor.getSession().setValue(value);
             this.editor.resize(true);
+            this.selection = null;
             this.setSelection(selection);
             this.firstVisibleRow = firstVisibleRow;
             this.editor.scrollToLine(firstVisibleRow);

@@ -22,7 +22,7 @@ export default function(bundle: Bundle) {
         if (window.localStorage.getItem('language') && window.localStorage.getItem('language') in Languages) {
             language = window.localStorage.getItem('language');
         }
-        if (language in options && options.language in Languages) {
+        if (options.language && options.language in Languages) {
             language = options.language;
         }
 

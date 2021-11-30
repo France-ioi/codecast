@@ -13,18 +13,16 @@ import {Screen} from "../common/screens";
 
 interface MenuTaskStateToProps {
     getMessage: Function,
-    canChangePlatform: boolean,
-    platform: string,
     recordingEnabled: boolean,
     playerEnabled: boolean,
     ioMode: IoMode,
     ioModeSelect: boolean,
     editorEnabled: boolean,
     screen: Screen,
+    canRecord: boolean,
 }
 
 function mapStateToProps(state: AppStore): MenuTaskStateToProps {
-    const {platform, canChangePlatform} = state.options;
     const getMessage = state.getMessage;
     const recordingEnabled = state.task.recordingEnabled;
     const playerEnabled = !!(state.options.audioUrl);
@@ -32,11 +30,13 @@ function mapStateToProps(state: AppStore): MenuTaskStateToProps {
     const ioModeSelect = modeSelect && (!state.stepper || state.stepper.status === StepperStatus.Clear);
     const displayEditor = state.editor && state.editor.playerReady;
     const screen = state.screen;
+    const canRecord = state.options.canRecord;
 
     return {
-        getMessage, platform, canChangePlatform, recordingEnabled, playerEnabled, ioMode, ioModeSelect,
+        getMessage, recordingEnabled, playerEnabled, ioMode, ioModeSelect,
         screen,
         editorEnabled: displayEditor,
+        canRecord,
     };
 }
 
@@ -78,7 +78,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
     }
 
     render() {
-        const {getMessage, playerEnabled, editorEnabled, screen} = this.props;
+        const {getMessage, playerEnabled, editorEnabled, screen, canRecord} = this.props;
         const {settingsOpen} = this.state;
 
         return (
@@ -94,7 +94,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
                         <Icon icon="cog"/>
                         <span>{getMessage('MENU_SETTINGS')}</span>
                     </div>
-                    {!playerEnabled && <div className="menu-item" onClick={this.toggleRecording}>
+                    {!playerEnabled && canRecord && <div className="menu-item" onClick={this.toggleRecording}>
                         <Icon icon="record" color="#ff001f"/>
                         <span>{getMessage('MENU_RECORDER')}</span>
                     </div>}

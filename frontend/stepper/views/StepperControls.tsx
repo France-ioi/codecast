@@ -157,7 +157,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
                               {this._button('restart', this.onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faStop}/>, null, 'is-small')}
                               {!canInterrupt && this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
                               {canInterrupt && this._button('interrupt', this.onInterrupt, getMessage('CONTROL_INTERRUPT'), <FontAwesomeIcon icon={faPause}/>, null, 'is-big')}
-                              {this._button('step_by_step', this.onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
+                              {this._button('into', this.onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
                         </React.Fragment>
                     }
                     {controlsType === StepperControlsType.Normal && LayoutType.MobileVertical === layoutType &&
@@ -192,7 +192,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
                     }
                     {(LayoutType.MobileVertical !== layoutType || (!this.state.speedDisplayed && controlsType === StepperControlsType.Normal)) &&
                         <React.Fragment>
-                            {this._button('go_to_end', this.onGoToEnd, getMessage('CONTROL_GO_TO_END'), <FontAwesomeIcon icon={faFastForward}/>, null, 'is-small')
+                            {this._button('gotoend', this.onGoToEnd, getMessage('CONTROL_GO_TO_END'), <FontAwesomeIcon icon={faFastForward}/>, null, 'is-small')
                             }
                         </React.Fragment>
                     }
@@ -276,11 +276,8 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
             case 'compile':
                 disabled = !this.props.canCompile;
                 break;
-            case 'go_to_end':
+            case 'gotoend':
                 disabled = !this.props.canStep || this.props.isFinished;
-                break;
-            case 'step_by_step':
-                disabled = !this.props.canStep;
                 break;
         }
 

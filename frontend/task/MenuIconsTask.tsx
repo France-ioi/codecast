@@ -3,8 +3,6 @@ import {Button} from '@blueprintjs/core';
 import {FullscreenButton} from "../common/FullscreenButton";
 import {SubtitlesPopup} from "../subtitles/SubtitlesPopup";
 import {useAppSelector} from "../hooks";
-import {faQuestion} from "@fortawesome/free-solid-svg-icons";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
 interface MenuIconsTaskProps {
     toggleMenu: () => void,
@@ -17,13 +15,16 @@ export function MenuIconsTask(props: MenuIconsTaskProps) {
     const subtitles = useAppSelector(state => state.subtitles);
     const playerData = useAppSelector(state => state.player.data);
     const showSubtitles = !subtitles.editing && playerData && playerData.subtitles && !!playerData.subtitles.length;
+    const showDocumentation = useAppSelector(state => state.options.showDocumentation);
+    const showFullScreen = useAppSelector(state => state.options.showFullScreen);
+    const showMenu = useAppSelector(state => state.options.showMenu);
 
     return (
         <div id='menu'>
             <div className="menu-task-elements">
-                <div className="menu-task-element is-blue">
+                {showFullScreen && <div className="menu-task-element is-blue">
                     <FullscreenButton />
-                </div>
+                </div>}
                 {showSubtitles &&
                     <div className="menu-task-element">
                       <Button
@@ -35,12 +36,12 @@ export function MenuIconsTask(props: MenuIconsTaskProps) {
                       <SubtitlesPopup open={subtitlesOpen} onClose={() => setSubtitlesOpen(false)}/>
                     </div>
                 }
-                <div className="menu-task-element is-blue">
+                {showDocumentation && <div className="menu-task-element is-blue">
                     <Button onClick={props.toggleDocumentation} icon='help'/>
-                </div>
-                <div className="menu-task-element">
+                </div>}
+                {showMenu && <div className="menu-task-element">
                     <Button onClick={props.toggleMenu} icon='menu'/>
-                </div>
+                </div>}
             </div>
         </div>
     );

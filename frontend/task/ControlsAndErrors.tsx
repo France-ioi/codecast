@@ -15,6 +15,8 @@ interface ControlsAndErrorsStateToProps {
     layoutType: LayoutType,
     layoutMobileMode: LayoutMobileMode,
     getMessage: Function,
+    showStepper: boolean,
+    currentTask: any,
 }
 
 interface ControlsAndErrorsProps extends ControlsAndErrorsStateToProps {
@@ -26,8 +28,13 @@ function mapStateToProps(state: AppStore): ControlsAndErrorsStateToProps {
     const currentStepperState = state.stepper.currentStepperState;
     const error = currentStepperState && currentStepperState.error;
     const layoutType = state.layout.type;
-    const layoutMobileMode = state.layout.mobileMode;
     const getMessage = state.getMessage;
+    const {showStepper} = state.options;
+    const currentTask = state.task.currentTask;
+    let layoutMobileMode = state.layout.mobileMode;
+    if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
+        layoutMobileMode = LayoutMobileMode.Editor;
+    }
 
     return {
         error,
@@ -35,21 +42,23 @@ function mapStateToProps(state: AppStore): ControlsAndErrorsStateToProps {
         layoutType,
         layoutMobileMode,
         getMessage,
+        showStepper,
+        currentTask,
     };
 }
 
 class _ControlsAndErrors extends React.PureComponent<ControlsAndErrorsProps> {
     render() {
-        const {error, diagnostics, getMessage, layoutType, layoutMobileMode} = this.props;
+        const {error, diagnostics, getMessage, layoutType, layoutMobileMode, showStepper, currentTask} = this.props;
         const hasError = !!(error || diagnostics);
         const hasModes = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
         return (
             <div className="controls-and-errors">
-                <div className="mode-selector">
+                {(showStepper || hasModes) && <div className="mode-selector">
                     {hasModes &&
                         <React.Fragment>
-                            <div
+                            {currentTask && <div
                                 className={`mode ${LayoutMobileMode.Instructions === layoutMobileMode ? 'is-active' : ''}`}
                                 onClick={() => this.selectMode(LayoutMobileMode.Instructions)}
                             >
@@ -57,7 +66,7 @@ class _ControlsAndErrors extends React.PureComponent<ControlsAndErrorsProps> {
                                 {LayoutMobileMode.Instructions === layoutMobileMode &&
                                     <span className="label">{getMessage('TASK_DESCRIPTION')}</span>
                                 }
-                            </div>
+                            </div>}
                             <div
                                 className={`mode ${LayoutMobileMode.Editor === layoutMobileMode ? 'is-active' : ''}`}
                                 onClick={() => this.selectMode(LayoutMobileMode.Editor)}
@@ -78,10 +87,10 @@ class _ControlsAndErrors extends React.PureComponent<ControlsAndErrorsProps> {
                         </React.Fragment>
                     }
 
-                    {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && <div className="stepper-controls-container">
+                    {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
                         <StepperControls enabled={true} newControls={true}/>
                     </div>}
-                </div>
+                </div>}
 
                 {hasError && <div className="error-message" onClick={this._onClearDiagnostics}>
                   <button type="button" className="close-button" onClick={this._onClearDiagnostics}>

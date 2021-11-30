@@ -100,17 +100,25 @@ function saveByteMemoryOps(byteOps, memoryLog, address) {
 }
 
 function getByteRangeOps(byteOps, start, end) {
-    let load = -1, store = -1;
+    let load, store;
     for (let address = start; address <= end; address += 1) {
         const ops = byteOps[address];
 
         if (ops) {
-            load = Math.max(load, ops.load);
-            store = Math.max(store, ops.store);
+            load = maxDefinedRank(load, ops.load);
+            store = maxDefinedRank(store, ops.store);
         }
     }
 
     return {load, store};
+}
+
+function maxDefinedRank(r1, r2) {
+    if (r1 === undefined)
+        return r2;
+    if (r2 === undefined)
+        return r1;
+    return Math.max(r1, r2);
 }
 
 function viewValue(context, byteOps, ref) {
@@ -346,17 +354,17 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
         let maxAddress = currentAddress;
         for (let marker of allMarkers(programState, localMap, cursorExprs)) {
             const {address} = marker;
-            if ((address < currentAddress) && (address > nextAddress)) {
+            if ((address < currentAddress) && (-1 === nextAddress || address > nextAddress)) {
                 nextAddress = address;
             }
             if (address > maxAddress) {
                 maxAddress = address;
             }
         }
-        if (fallThrough && nextAddress === undefined) {
+        if (fallThrough && nextAddress === -1) {
             nextAddress = maxAddress;
         }
-        if (nextAddress !== undefined) {
+        if (nextAddress !== -1) {
             nextAddress = clipCenterAddress(this.props, nextAddress);
             this.props.onChange(this.props.directive, {centerAddress: nextAddress});
         }
@@ -372,17 +380,17 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
         let minAddress = currentAddress;
         for (let marker of allMarkers(programState, localMap, cursorExprs)) {
             const {address} = marker;
-            if ((currentAddress) < address && (address < nextAddress)) {
+            if ((currentAddress) < address && (-1 === nextAddress || address < nextAddress)) {
                 nextAddress = address;
             }
             if (address < minAddress) {
                 minAddress = address;
             }
         }
-        if (fallThrough && nextAddress === undefined) {
+        if (fallThrough && nextAddress === -1) {
             nextAddress = minAddress;
         }
-        if (nextAddress !== undefined) {
+        if (nextAddress !== -1) {
             nextAddress = clipCenterAddress(this.props, nextAddress);
             this.props.onChange(this.props.directive, {centerAddress: nextAddress});
         }

@@ -1,6 +1,6 @@
 import React from "react";
 import {connect} from "react-redux";
-import {AppStore} from "../../store";
+import {AppStore, CodecastOptions} from "../../store";
 import {createLayout, LayoutMobileMode, LayoutType} from "./layout";
 import {StepperStatus} from "../../stepper";
 import {ActionTypes} from "./actionTypes";
@@ -18,6 +18,8 @@ interface LayoutLoaderStateToProps {
     layoutRequiredType: LayoutType,
     layoutMobileMode: LayoutMobileMode,
     screen: Screen,
+    options: CodecastOptions,
+    currentTask: any,
 }
 
 function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
@@ -25,16 +27,21 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     const fullScreenActive = state.fullscreen.active;
     const currentStepperState = state.stepper.currentStepperState;
     const orderedDirectives = currentStepperState ? currentStepperState.directives.ordered : [];
-    const advisedVisualization = !state.stepper || state.stepper.status === StepperStatus.Clear ? 'instructions' : 'variables';
+    const advisedVisualization = (!state.stepper || state.stepper.status === StepperStatus.Clear) && state.task.resetDone ? 'instructions' : 'variables';
     const preferredVisualizations = state.layout.preferredVisualizations;
     const layoutType = state.layout.type;
     const layoutRequiredType = state.layout.requiredType;
-    const layoutMobileMode = state.layout.mobileMode;
     const screen = state.screen;
+    const options = state.options;
+    const currentTask = state.task.currentTask;
+    let layoutMobileMode = state.layout.mobileMode;
+    if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
+        layoutMobileMode = LayoutMobileMode.Editor;
+    }
 
     return {
         getMessage, orderedDirectives, fullScreenActive, advisedVisualization, preferredVisualizations,
-        layoutType, layoutMobileMode, screen, layoutRequiredType,
+        layoutType, layoutMobileMode, screen, options, currentTask, layoutRequiredType,
     };
 }
 

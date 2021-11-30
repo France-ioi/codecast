@@ -42,12 +42,17 @@ export interface CodecastOptions {
     data: any,
     mode: CodecastOptionsMode,
     canChangePlatform: boolean,
+    canChangeLanguage: boolean,
     authProviders: string[],
     referer: any,
     showIO: boolean,
     showStack: boolean,
     showStepper: boolean,
     showViews: boolean,
+    showDocumentation: boolean,
+    showFullScreen: boolean,
+    showMenu: boolean,
+    canRecord: boolean,
     user: typeof initialStateUser // TODO: Why is this in options AND in store.user and not only in store.user ?
     start: string,
     codecastData: {

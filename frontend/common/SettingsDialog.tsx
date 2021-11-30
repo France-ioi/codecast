@@ -18,7 +18,7 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog(props: SettingsDialogProps) {
-    const {baseUrl, baseDataUrl, platform, canChangePlatform} = useAppSelector(state => state.options);
+    const {baseUrl, baseDataUrl, platform, canChangePlatform, canChangeLanguage} = useAppSelector(state => state.options);
     const getMessage = useAppSelector(state => state.getMessage);
     const {mode: ioMode, modeSelect} = useAppSelector(state => state.ioPane);
     const stepper = useAppSelector(state => state.stepper);
@@ -70,9 +70,9 @@ export function SettingsDialog(props: SettingsDialogProps) {
     return (
         <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={props.open} onClose={props.onClose}>
             <div className='bp3-dialog-body'>
-                <div style={{marginBottom: '10px'}}>
+                {canChangeLanguage && <div style={{marginBottom: '10px'}}>
                     <LanguageSelection closeMenu={props.onClose}/>
-                </div>
+                </div>}
                 {canChangePlatform &&
                     <div>
                       <label className='bp3-label'>

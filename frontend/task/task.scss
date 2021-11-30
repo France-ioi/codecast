@@ -49,10 +49,10 @@ body {
   }
 
   .task-header {
+    display: none; // We don't need it for now
     font-size: 18px;
     font-weight: bold;
     height: 50px;
-    display: flex;
     padding-left: 20px;
     align-items: center;
     .task-header__quick {
@@ -80,11 +80,14 @@ body {
     flex-direction: column;
   }
 
-  .task-mission {
+  .stack-view, .task-mission {
     padding: 20px;
     @include mobile {
       padding: 15px;
     }
+  }
+
+  .task-mission {
     color: #7c7c7c;
 
     h1 {
@@ -143,6 +146,8 @@ body {
         font-weight: 600;
         margin: 0;
         padding-right: 30px;
+        white-space: pre;
+        font-family: $font-family-monospace;
       }
     }
 

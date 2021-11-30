@@ -142,7 +142,7 @@ export default function(bundle: Bundle) {
             if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
                 yield put({type: ActionTypes.StepperInterrupt, payload: {}});
             }
-            yield call(stepperDisabledSaga);
+            yield call(stepperDisabledSaga, true);
         });
 
         // @ts-ignore

@@ -78,9 +78,9 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
 
     const currentTask = yield select(state => state.task.currentTask);
     const currentLevel = yield select(state => state.task.currentLevel);
-    const levelGridInfos = extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]);
 
     let contextLib;
+    let levelGridInfos = currentTask ? extractLevelSpecific(currentTask.gridInfos, taskLevels[currentLevel]) : {};
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
@@ -117,7 +117,7 @@ function* createContext(quickAlgoLibraries: QuickAlgoLibraries) {
 }
 
 export function getTaskTest(currentTask: any, currentLevel: number) {
-    return currentTask.data[taskLevels[currentLevel]][0];
+    return currentTask ? currentTask.data[taskLevels[currentLevel]][0] : {};
 }
 
 export interface AutocompletionParameters {
@@ -276,7 +276,7 @@ export default function (bundle: Bundle) {
         });
 
         yield takeEvery(taskSuccess.type, function* () {
-            yield call(stepperDisabledSaga);
+            yield call(stepperDisabledSaga, true);
         });
 
         yield takeEvery(StepperActionTypes.StepperExit, function* () {
