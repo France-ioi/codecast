@@ -27,7 +27,6 @@ interface SortViewParams {
     cursors: any,
     maxVisibleCells: any,
     cursorRows: any,
-    getMessage: any,
     error?: string,
     thresholds?: any,
     nbCells?: any,
@@ -149,13 +148,12 @@ interface SortViewProps {
     directive: any,
     context: any,
     scale: any,
-    getMessage: any,
     onChange: Function
 }
 
 export class SortView extends React.PureComponent<SortViewProps> {
     render() {
-        const {controls, directive, context, scale, getMessage} = this.props;
+        const {controls, directive, context, scale} = this.props;
 
         /**
          * Eg. directive :
@@ -197,7 +195,6 @@ export class SortView extends React.PureComponent<SortViewProps> {
             cursors,
             maxVisibleCells,
             cursorRows,
-            getMessage
         };
         Object.assign(view, extractView(context, byPos[0], view));
         if (view.error) {

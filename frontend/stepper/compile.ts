@@ -75,7 +75,6 @@ export default function(bundle: Bundle) {
         yield takeLatest(ActionTypes.Compile, function* () {
             let state: AppStore = yield select();
 
-            const getMessage = state.getMessage;
             const sourceModel = getBufferModel(state, 'source');
             const source = sourceModel.document.toString();
             const {platform} = state.options;
@@ -86,7 +85,7 @@ export default function(bundle: Bundle) {
             });
 
             try {
-                checkCompilingCode(source.trim(), getMessage, platform, state.environment);
+                checkCompilingCode(source.trim(), platform, state.environment);
             } catch (e) {
                 yield put({
                     type: ActionTypes.CompileFailed,

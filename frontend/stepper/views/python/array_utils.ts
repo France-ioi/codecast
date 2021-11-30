@@ -1,6 +1,7 @@
 import range from 'node-range';
 
 import {getLoadedReferencesFromVariable, getVariable} from './utils';
+import {getMessage} from "../../../lang";
 
 /**
  extractView(context, name, options) looks up `name` in `stackFrame` and
@@ -61,7 +62,7 @@ export const extractView = function(context, name, options) {
 
     // Normalize options.
     const {dim} = options;
-    let {cursors, cursorRows, maxVisibleCells, pointsByKind, getMessage} = options;
+    let {cursors, cursorRows, maxVisibleCells, pointsByKind} = options;
     if (cursors === undefined) {
         cursors = [];
     }

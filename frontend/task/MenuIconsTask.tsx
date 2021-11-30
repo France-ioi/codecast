@@ -3,6 +3,7 @@ import {Button} from '@blueprintjs/core';
 import {FullscreenButton} from "../common/FullscreenButton";
 import {SubtitlesPopup} from "../subtitles/SubtitlesPopup";
 import {useAppSelector} from "../hooks";
+import {getMessage} from "../lang";
 
 interface MenuIconsTaskProps {
     toggleMenu: () => void,
@@ -10,7 +11,6 @@ interface MenuIconsTaskProps {
 }
 
 export function MenuIconsTask(props: MenuIconsTaskProps) {
-    const getMessage = useAppSelector(state => state.getMessage);
     const [subtitlesOpen, setSubtitlesOpen] = useState(false);
     const subtitles = useAppSelector(state => state.subtitles);
     const playerData = useAppSelector(state => state.player.data);

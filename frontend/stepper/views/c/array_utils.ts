@@ -3,6 +3,7 @@ import {FibonacciHeap, INode} from '@tyriar/fibonacci-heap';
 import range from 'node-range';
 
 import {evalExpr, readScalarBasic, stringifyExpr} from './utils';
+import {getMessage} from "../../../lang";
 
 interface HeapNode {
     key: any,
@@ -73,7 +74,7 @@ export const extractView = function(context, stackFrame, refExpr, options) {
     const localMap = stackFrame.get('localMap');
     // Normalize options.
     const {fullView, dimExpr} = options;
-    let {cursorExprs, cursorRows, maxVisibleCells, pointsByKind, getMessage} = options;
+    let {cursorExprs, cursorRows, maxVisibleCells, pointsByKind} = options;
     if (cursorExprs === undefined) {
         cursorExprs = [];
     }

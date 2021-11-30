@@ -4,13 +4,13 @@ import {ActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
 import {SaveStep} from "./save_screen";
 import {useAppSelector} from "../hooks";
+import {getMessage} from "../lang";
 
 interface SaveScreenProps {
     onCancel?: () => void,
 }
 
 export function SaveScreen(props: SaveScreenProps) {
-    const getMessage = useAppSelector(state => state.getMessage);
     const grants = useAppSelector(state => state.user ? state.user.grants : []);
     const {step, progress, audioUrl, wavAudioUrl, eventsUrl, playerUrl, editorUrl, error} = useAppSelector(state => state.save);
 

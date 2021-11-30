@@ -12,7 +12,6 @@ interface LayoutLoaderStateToProps {
     advisedVisualization: string,
     orderedDirectives: readonly Directive[],
     fullScreenActive: boolean,
-    getMessage: Function,
     preferredVisualizations: string[],
     layoutType: LayoutType,
     layoutRequiredType: LayoutType,
@@ -23,7 +22,6 @@ interface LayoutLoaderStateToProps {
 }
 
 function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
-    const getMessage = state.getMessage;
     const fullScreenActive = state.fullscreen.active;
     const currentStepperState = state.stepper.currentStepperState;
     const orderedDirectives = currentStepperState ? currentStepperState.directives.ordered : [];
@@ -40,7 +38,7 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     }
 
     return {
-        getMessage, orderedDirectives, fullScreenActive, advisedVisualization, preferredVisualizations,
+        orderedDirectives, fullScreenActive, advisedVisualization, preferredVisualizations,
         layoutType, layoutMobileMode, screen, options, currentTask, layoutRequiredType,
     };
 }

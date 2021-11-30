@@ -1,9 +1,9 @@
 import {Dialog} from "@blueprintjs/core";
 import React, {useEffect} from "react";
-import {useAppSelector} from "../hooks";
 import {EditorSave} from "./EditorSave";
 import {useDispatch} from "react-redux";
 import {ActionTypes} from './actionTypes';
+import {getMessage} from "../lang";
 
 interface EditRecordingDialogProps {
     open: boolean,
@@ -11,7 +11,6 @@ interface EditRecordingDialogProps {
 }
 
 export function EditRecordingDialog(props: EditRecordingDialogProps) {
-    const getMessage = useAppSelector(state => state.getMessage);
     const dispatch = useDispatch();
 
     useEffect(() => {

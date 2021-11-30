@@ -30,7 +30,6 @@ interface Array2DParams {
     rowCount?: any,
     colCount?: any,
     height: any,
-    getMessage: any,
     rowInfoMap?: any,
     colInfoMap?: any,
     error?: string
@@ -174,20 +173,19 @@ interface Array2DProps {
     directive: any,
     functionCallStack: any,
     context: any,
-    getMessage: any,
     controls: StepperControls,
     onChange: Function
 }
 
 export class Array2D extends React.PureComponent<Array2DProps> {
     render() {
-        const {scale, directive, functionCallStack, context, getMessage} = this.props;
+        const {scale, directive, functionCallStack, context} = this.props;
         const {byName, byPos} = directive;
         const expr = byPos[0];
         const rowCursors = getList(byName.rowCursors, []);
         const colCursors = getList(byName.colCursors, []);
         const height = getNumber(byName.height, 'auto');
-        const view: Array2DParams = {rowCursors, colCursors, height, getMessage};
+        const view: Array2DParams = {rowCursors, colCursors, height};
         const {hPan, vPan} = this.getPosition();
 
         const extractedView = extractView(context, functionCallStack[0], expr, view);

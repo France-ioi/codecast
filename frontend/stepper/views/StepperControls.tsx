@@ -12,9 +12,9 @@ import {CompileStatus} from "../compile";
 import {LayoutType} from "../../task/layout/layout";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faTachometerAlt, faPlay, faPause, faFastForward, faStop, faShoePrints, faWalking, faRunning} from '@fortawesome/free-solid-svg-icons';
+import {getMessage} from "../../lang";
 
 interface StepperControlsStateToProps {
-    getMessage: Function,
     showStepper: boolean,
     showControls: boolean,
     showEdit: boolean,
@@ -39,7 +39,6 @@ interface StepperControlsStateToProps {
 
 function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     const {enabled} = props;
-    const getMessage = state.getMessage;
     const {controls, showStepper, platform} = state.options;
     const compileStatus = state.compile.status;
     const layoutType = state.layout.type;
@@ -106,7 +105,6 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     }
 
     return {
-        getMessage,
         showStepper, showControls, controls,
         showEdit, canExit,
         showExpr,
@@ -146,7 +144,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
             return null;
         }
 
-        const {getMessage, showControls, showEdit, showCompile, compileOrExecuteMessage, speed, controlsType, canInterrupt} = this.props;
+        const {showControls, showEdit, showCompile, compileOrExecuteMessage, speed, controlsType, canInterrupt} = this.props;
         const speedDisplayed = LayoutType.MobileVertical !== layoutType || this.state.speedDisplayed;
 
         return newControls ?

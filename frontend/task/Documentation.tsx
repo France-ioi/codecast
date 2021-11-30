@@ -11,6 +11,7 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 import {ActionTypes} from "../buffers/actionTypes";
 import {documentModelFromString} from "../buffers";
+import {getMessage} from "../lang";
 
 interface DocumentationProps {
     standalone: boolean,
@@ -24,7 +25,6 @@ export function Documentation(props: DocumentationProps) {
     const selectedConcept = selectedConceptId ? concepts.find(concept => selectedConceptId === concept.id) : null;
     const documentationLanguage = useAppSelector(state => state.documentation.language);
     const screen = useAppSelector(state => state.screen);
-    const getMessage = useAppSelector(state => state.getMessage);
     const firstConcepts = concepts.slice(0, 3);
 
     const [iframeRef, setIframeRef] = useState(null);

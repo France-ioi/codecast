@@ -10,9 +10,9 @@ import {SettingsDialog} from "../common/SettingsDialog";
 import {EditRecordingDialog} from "../editor/EditRecordingDialog";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
+import {getMessage, Languages} from "../lang";
 
 interface MenuTaskStateToProps {
-    getMessage: Function,
     recordingEnabled: boolean,
     playerEnabled: boolean,
     ioMode: IoMode,
@@ -20,10 +20,10 @@ interface MenuTaskStateToProps {
     editorEnabled: boolean,
     screen: Screen,
     canRecord: boolean,
+    language: keyof typeof Languages,
 }
 
 function mapStateToProps(state: AppStore): MenuTaskStateToProps {
-    const getMessage = state.getMessage;
     const recordingEnabled = state.task.recordingEnabled;
     const playerEnabled = !!(state.options.audioUrl);
     const {mode: ioMode, modeSelect} = state.ioPane;
@@ -31,12 +31,15 @@ function mapStateToProps(state: AppStore): MenuTaskStateToProps {
     const displayEditor = state.editor && state.editor.playerReady;
     const screen = state.screen;
     const canRecord = state.options.canRecord;
+    const language = state.options.language;
 
     return {
-        getMessage, recordingEnabled, playerEnabled, ioMode, ioModeSelect,
+        recordingEnabled, playerEnabled, ioMode, ioModeSelect,
         screen,
         editorEnabled: displayEditor,
         canRecord,
+        // Force re-render of menu when language is changed
+        language,
     };
 }
 
@@ -78,7 +81,7 @@ class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
     }
 
     render() {
-        const {getMessage, playerEnabled, editorEnabled, screen, canRecord} = this.props;
+        const {playerEnabled, editorEnabled, screen, canRecord} = this.props;
         const {settingsOpen} = this.state;
 
         return (

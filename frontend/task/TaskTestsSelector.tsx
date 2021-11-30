@@ -5,6 +5,7 @@ import {useDispatch} from "react-redux";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle, faTimesCircle} from "@fortawesome/free-solid-svg-icons";
 import {Spinner} from "@blueprintjs/core";
+import {getMessage} from "../lang";
 
 export function TaskTestsSelector() {
     const currentTask = useAppSelector(state => state.task.currentTask);
@@ -14,7 +15,6 @@ export function TaskTestsSelector() {
     const levelData = currentTask.data[taskLevels[currentLevel]];
 
     const dispatch = useDispatch();
-    const getMessage = useAppSelector(state => state.getMessage);
 
     const selectTest = (index) => {
         dispatch(updateCurrentTestId(index));

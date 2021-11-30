@@ -120,7 +120,6 @@ module.exports = {
     PLATFORM_UNIX: "C (Unix)",
     PLATFORM_ARDUINO: "C (Arduino)",
     PLATFORM_PYTHON: "Python",
-    EMPTY_PROGRAM: "The program is empty.",
     PROGRAM_MISSING_LIB: "You must include the line {line} in your program.",
 
     EDITOR_SPLIT: 'Split',
@@ -176,4 +175,11 @@ module.exports = {
     TESTS_RESULT_OVERVIEW_SUCCESS: 'Test {index}: success',
     TESTS_RESULT_OVERVIEW_FAILURE: 'Test {index}: error',
     TESTS_RESULT_OVERVIEW_VIEW: 'see',
+
+    CODE_CONSTRAINTS_FORBIDDEN_KEYWORD: "The keyword {keyword} is forbidden here.",
+    CODE_CONSTRAINTS_MAX_INSTRUCTIONS_PYTHON: "You use too many Python instructions.",
+    CODE_CONSTRAINTS_LIMITED_USES: "You use too much a keyword with limited uses: {keyword}.",
+    CODE_CONSTRAINTS_LIMITED_ASSIGN: "You are not allowed to reassign a keyword with limited uses: {keyword}.",
+    CODE_CONSTRAINTS_EMPTY_PROGRAM: "You cannot submit an empty program.",
+    CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS: "You use the function \"{funcName}\" without the parentheses. Add the parentheses to call the function.",
 };

@@ -1,19 +1,17 @@
 import React from "react";
-import {Languages} from "./index";
+import {getMessage, Languages} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 
 interface LanguageSelectionStoreToProps {
     language: string,
-    getMessage: Function
 }
 
 function mapStateToProps(state: AppStore): LanguageSelectionStoreToProps {
     const language = state.options.language;
-    const getMessage = state.getMessage;
 
-    return {language, getMessage};
+    return {language};
 }
 
 interface LanguageSelectionDispatchToProps {
@@ -28,7 +26,7 @@ const languageKeys = Object.keys(Languages);
 
 class _LanguageSelection extends React.PureComponent<LanguageSelectionProps> {
     render() {
-        const {language, getMessage} = this.props;
+        const {language} = this.props;
         return (
             <label className='bp3-label'>
                 {getMessage('LANGUAGE:')}

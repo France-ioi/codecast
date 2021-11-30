@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React from "react";
 import {Button, ButtonGroup, Dialog, Icon, Slider} from "@blueprintjs/core";
 import {formatTime} from "../common/utils";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
@@ -15,13 +15,13 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Vumeter} from "../recorder/Vumeter";
 import {useAppSelector} from "../hooks";
 import {SaveStep} from "../recorder/save_screen";
+import {getMessage} from "../lang";
 
 interface RecorderControlsTaskProps {
     enabled?: boolean
 }
 
 export function RecorderControlsTask(props: RecorderControlsTaskProps) {
-    const getMessage = useAppSelector(state => state.getMessage);
     const screen = useAppSelector(state => state.screen);
     const user = useAppSelector(state => state.user);
     const recorder = useAppSelector(state => getRecorderState(state));

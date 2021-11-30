@@ -10,6 +10,7 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
 import {NodeCue} from "subtitle";
+import {getMessage} from "../lang";
 
 interface SubtitlesPaneStateToProps {
     subtitles: any[],
@@ -19,16 +20,13 @@ interface SubtitlesPaneStateToProps {
     filterText: string,
     filterRegexp: string,
     windowHeight: number,
-    getMessage: Function
 }
 
 function mapStateToProps(state: AppStore): SubtitlesPaneStateToProps {
-    const getMessage = state.getMessage;
     const windowHeight = state.windowHeight;
     const {filteredItems, currentIndex, audioTime, filterText, filterRegexp} = state.subtitles;
 
     return {
-        getMessage,
         subtitles: filteredItems,
         currentIndex,
         audioTime,
@@ -50,7 +48,7 @@ class _SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
     _selectedComponent: any = null;
 
     render() {
-        const {subtitles, currentIndex, editing, audioTime, filterText, filterRegexp, getMessage, windowHeight} = this.props;
+        const {subtitles, currentIndex, editing, audioTime, filterText, filterRegexp, windowHeight} = this.props;
 
         return (
             <div className='subtitles-pane vbox' style={{height: `${windowHeight - 89}px`}}>

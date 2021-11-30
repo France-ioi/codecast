@@ -6,9 +6,9 @@ import {ActionTypes} from "../../actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../../../store";
 import {getCurrentStepperState} from "../../selectors";
+import {getMessage} from "../../../lang";
 
 interface StackViewStateToProps {
-    getMessage: Function,
     context?: any,
     analysis?: any,
     firstVisible?: number,
@@ -17,10 +17,9 @@ interface StackViewStateToProps {
 }
 
 function mapStateToProps(state: AppStore): StackViewStateToProps {
-    const getMessage = state.getMessage;
     const stepperState = getCurrentStepperState(state);
     if (!stepperState) {
-        return {getMessage};
+        return {};
     }
 
     const {programState, lastProgramState, analysis, controls} = stepperState;
@@ -29,7 +28,6 @@ function mapStateToProps(state: AppStore): StackViewStateToProps {
     const firstVisible = Math.max(0, focusDepth - 5);
 
     return {
-        getMessage,
         context: {programState, lastProgramState},
         analysis,
         firstVisible,
@@ -70,7 +68,7 @@ class _StackView extends React.PureComponent<StackViewProps> {
     };
 
     render() {
-        const {context, height, getMessage} = this.props;
+        const {context, height} = this.props;
         if (!context) {
             return (
                 <div className="stack-view" style={{maxHeight: height}}>

@@ -1,0 +1,504 @@
+/*
+pythonCount: returns number of Blockly blocks corresponding to some Python code.
+
+Patterns are stored in pythonCountPatterns, tried in the order of the list;
+block: false means a pattern doesn't count towards the block number if matched.
+
+Codecast note: this module comes from https://github.com/France-ioi/bebras-modules/blob/master/pemFioi/pythonCount-1.0.js
+*/
+
+import {getAvailableModules} from "./utils";
+import {getMessage} from "../lang";
+
+const pythonCountPatterns = [
+    // Comments
+    {pattern: /^#[^\n\r]+/, block: false},
+
+    // Special syntax
+    {pattern: /^from\s+\w+\s+import\s+[^\n\r]/, block: false}, // from robot import *
+    {pattern: /^import\s+[^\n\r]+/, block: false}, // import x, y, z
+    {pattern: /^for\s+\w+\s+in\s+range/, block: false}, // for i in range(5): is only one block; it's a bit tricky
+    {pattern: /^def\s[^:]+:/, block: true}, // for i in range(5): is only one block; it's a bit tricky
+
+    {pattern: /^\d+\.\d*/, block: true},
+    {pattern: /^\w+/, block: true},
+
+    // Strings
+    {pattern: /^'''(?:[^\\']|\\.|'[^']|'[^'])*'''/, block: true},
+    {pattern: /^'(?:[^\\']|\\.)*'/, block: true},
+    {pattern: /^"""(?:[^\\"]|\\.|"[^"]|""[^"])*"""/, block: true},
+    {pattern: /^"(?:[^\\"]|\\.)*"/, block: true},
+
+    // Operators
+    {pattern: /^[+*\/%=!<>&|^~]+/, block: true},
+
+    // Separators
+    {pattern: /^[\s\(\),:]+/, block: false}
+];
+
+function pythonCount(text) {
+    let remainingText = text;
+    let nbBlocks = 0;
+    while (remainingText != '') {
+        let found = false;
+        for (let i = 0; i < pythonCountPatterns.length; i++) {
+            let patternInfo = pythonCountPatterns[i];
+            let match = patternInfo.pattern.exec(remainingText);
+            if (match) {
+                if (patternInfo.block) {
+                    nbBlocks += 1;
+                }
+                remainingText = remainingText.substring(match[0].length);
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            remainingText = remainingText.substring(1);
+        }
+    }
+    return nbBlocks;
+}
+
+const pythonForbiddenBlocks = {
+    'dicts': {
+        'dicts_create_with': ['dict_brackets'],
+        'dict_get_literal': ['dict_brackets'],
+        'dict_set_literal': ['dict_brackets'],
+        'dict_keys': ['dict_brackets']
+    },
+    'logic': {
+        'controls_if': ['if', 'else', 'elif'],
+        'controls_if_else': ['if', 'else', 'elif'],
+        'logic_negate': ['not'],
+        'logic_operation': ['and', 'or']
+    },
+    'loops': {
+        'controls_repeat': ['for'],
+        'controls_repeat_ext': ['for'],
+        'controls_for': ['for'],
+        'controls_forEach': ['for'],
+        'controls_whileUntil': ['while'],
+        'controls_untilWhile': ['while'],
+        'controls_infiniteloop': ['while']
+    },
+    'lists': {
+        'lists_create_with_empty': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_create_with': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_repeat': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_length': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_isEmpty': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_indexOf': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_getIndex': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_setIndex': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_getSublist': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_sort': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_split': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_append': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__']
+    },
+    'maths': {
+        'math_number': ['math_number']
+    },
+    'functions': {
+        'procedures_defnoreturn': ['def', 'lambda'],
+        'procedures_defreturn': ['def', 'lambda']
+    },
+    'variables': {
+        'variables_set': ['var_assign']
+    }
+};
+
+export const pythonForbiddenLists = function (includeBlocks) {
+    // Check for forbidden keywords in code
+    const forbidden = ['for', 'while', 'if', 'else', 'elif', 'not', 'and', 'or', 'list', 'set', 'list_brackets', 'dict_brackets', '__getitem__', '__setitem__', 'var_assign', 'def', 'lambda', 'break', 'continue', 'setattr', 'map', 'split'];
+    const allowed = [];
+
+    if (!includeBlocks) {
+        return {forbidden: forbidden, allowed: allowed};
+    }
+
+    const forced = includeBlocks.pythonForceForbidden ? includeBlocks.pythonForceForbidden : [];
+    for (let k = 0; k < forced.length; k++) {
+        if (-1 === forbidden.indexOf(forced[k])) {
+            forbidden.push(forced[k]);
+        }
+    }
+
+    const removeForbidden = function (kwList) {
+        for (let k = 0; k < kwList.length; k++) {
+            if (-1 !== forced.indexOf(kwList[k])) {
+                continue;
+            }
+            let idx = forbidden.indexOf(kwList[k]);
+            if (idx >= 0) {
+                forbidden.splice(idx, 1);
+                allowed.push(kwList[k]);
+            }
+        }
+    };
+
+    const pfa = includeBlocks.pythonForceAllowed ? includeBlocks.pythonForceAllowed : [];
+    removeForbidden(pfa);
+    for (let k = 0; k < pfa.length; k++) {
+        if (-1 === allowed.indexOf(pfa[k])) {
+            allowed.push(pfa[k]);
+        }
+    }
+
+    if (includeBlocks && includeBlocks.standardBlocks) {
+        if (includeBlocks.standardBlocks.includeAll || includeBlocks.standardBlocks.includeAllPython) {
+            // Everything is allowed
+            removeForbidden(forbidden.slice());
+            return {forbidden: forbidden, allowed: allowed};
+        }
+
+        if (includeBlocks.standardBlocks.wholeCategories) {
+            for (let c = 0; c < includeBlocks.standardBlocks.wholeCategories.length; c++) {
+                let categoryName = includeBlocks.standardBlocks.wholeCategories[c];
+                if (pythonForbiddenBlocks[categoryName]) {
+                    for (let blockName of Object.keys(pythonForbiddenBlocks[categoryName])) {
+                        removeForbidden(pythonForbiddenBlocks[categoryName][blockName]);
+                    }
+                }
+            }
+        }
+        if (includeBlocks.standardBlocks.singleBlocks) {
+            for (let b = 0; b < includeBlocks.standardBlocks.singleBlocks.length; b++) {
+                let blockName = includeBlocks.standardBlocks.singleBlocks[b];
+                for (let categoryName in pythonForbiddenBlocks) {
+                    if (pythonForbiddenBlocks[categoryName][blockName]) {
+                        removeForbidden(pythonForbiddenBlocks[categoryName][blockName]);
+                    }
+                }
+            }
+        }
+    }
+
+    if (includeBlocks && includeBlocks.variables && includeBlocks.variables.length) {
+        removeForbidden(['var_assign']);
+    }
+
+    if (includeBlocks && includeBlocks.procedures && (includeBlocks.procedures.ret || includeBlocks.procedures.noret)) {
+        removeForbidden(['def']);
+    }
+
+    return {forbidden: forbidden, allowed: allowed};
+}
+
+function removeFromPatterns(code, patterns) {
+    // Remove matching patterns from code
+    for (let i = 0; i < patterns.length; i++) {
+        while (patterns[i].exec(code)) {
+            code = code.replace(patterns[i], '');
+        }
+    }
+    return code;
+}
+
+export const pythonForbidden = function (code, includeBlocks) {
+    let forbidden = pythonForbiddenLists(includeBlocks).forbidden;
+
+    if (includeBlocks && includeBlocks.procedures && includeBlocks.procedures.disableArgs) {
+        forbidden.push('def_args');
+    }
+
+    // Remove comments and strings before scanning
+    let removePatterns = [
+        /#[^\n\r]+/
+    ];
+
+    code = removeFromPatterns(code, removePatterns);
+
+    let stringPatterns = [
+        /'''(?:[^\\']|\\.|'[^']|'[^'])*'''/,
+        /'(?:[^\\']|\\.)*'/,
+        /"""(?:[^\\"]|\\.|"[^"]|""[^"])*"""/,
+        /"(?:[^\\"]|\\.)*"/
+    ];
+
+    let code2 = removeFromPatterns(code, stringPatterns);
+    if (-1 !== forbidden.indexOf('strings') && code != code2) {
+        return 'chaînes de caractères';
+    }
+
+    code = code2;
+
+    // exec and eval are forbidden anyway
+    if (/(^|\W)exec\((\W|$)/.exec(code)) {
+        return 'exec';
+    }
+    if (/(^|\W)eval\((\W|$)/.exec(code)) {
+        return 'eval';
+    }
+
+    if (forbidden.length <= 0) {
+        return false;
+    }
+
+    // Scan for each forbidden keyword
+    for (let i = 0; i < forbidden.length; i++) {
+        if (forbidden[i] == 'list_brackets') {
+            // Special pattern for lists
+            const re = /[\[\]]/;
+            if (re.exec(code)) {
+                // Forbidden keyword found
+                return 'crochets [ ]'; // TODO :: i18n ?
+            }
+        } else if (forbidden[i] == 'dict_brackets') {
+            // Special pattern for lists
+            const re = /[\{\}]/;
+            if (re.exec(code)) {
+                // Forbidden keyword found
+                return 'accolades { }'; // TODO :: i18n ?
+            }
+        } else if (forbidden[i] == 'var_assign') {
+            // Special pattern for lists
+            const re = /[^=!<>]=[^=!<>]/;
+            if (re.exec(code)) {
+                // Forbidden keyword found
+                return '= (assignation de variable)'; // TODO :: i18n ?
+            }
+        } else if (forbidden[i] == 'def_args') {
+            const re = /def\s*\w+\([^\s]+\)/;
+            if (re.exec(code)) {
+                // Forbidden keyword found
+                return 'fonction avec arguments'; // TODO :: i18n ?
+            }
+        } else if (forbidden[i] != 'strings') {
+            const re = new RegExp('(^|\\W)' + forbidden[i] + '(\\W|$)');
+            if (re.exec(code)) {
+                // Forbidden keyword found
+                return forbidden[i];
+            }
+        }
+    }
+
+    // No forbidden keyword found
+    return false;
+}
+
+export const pythonFindLimited = function (code, limitedUses, blockToCode) {
+    if (!code || !limitedUses) {
+        return false;
+    }
+
+    let limitedPointers = {};
+    let usesCount = {};
+    for (let i = 0; i < limitedUses.length; i++) {
+        let curLimit = limitedUses[i];
+        let pythonKeys = [];
+        for (let b = 0; b < curLimit.blocks.length; b++) {
+            let blockName = curLimit.blocks[b];
+            if (blockToCode[blockName]) {
+                if (pythonKeys.indexOf(blockToCode[blockName]) >= 0) {
+                    continue;
+                }
+                pythonKeys.push(blockToCode[blockName]);
+            }
+            for (let categoryName in pythonForbiddenBlocks) {
+                let targetKeys = pythonForbiddenBlocks[categoryName][blockName];
+                if (!targetKeys) {
+                    continue;
+                }
+                for (let j = 0; j < targetKeys.length; j++) {
+                    let pyKey = pythonForbiddenBlocks[categoryName][blockName][j];
+                    if (pythonKeys.indexOf(pyKey) >= 0) {
+                        continue;
+                    }
+                    pythonKeys.push(pyKey);
+                }
+            }
+        }
+
+        for (let j = 0; j < pythonKeys.length; j++) {
+            let pyKey = pythonKeys[j];
+            if (!limitedPointers[pyKey]) {
+                limitedPointers[pyKey] = [];
+            }
+            limitedPointers[pyKey].push(i);
+        }
+    }
+
+    for (let pyKey in limitedPointers) {
+        // Keys to ignore
+        if (pyKey == 'else') {
+            continue;
+        }
+        // Special keys
+        let re;
+        if (pyKey == 'list_brackets') {
+            re = /[\[\]]/g;
+        } else if (pyKey == 'dict_brackets') {
+            re = /[\{\}]/g;
+        } else if (pyKey == 'math_number') {
+            re = /\W\d+(\.\d*)?/g;
+        } else {
+            // Check for assign statements
+            re = new RegExp('=\\W*' + pyKey + '([^(]|$)');
+            if (re.exec(code)) {
+                return {type: 'assign', name: pyKey};
+            }
+
+            re = new RegExp('(^|\\W)' + pyKey + '(\\W|$)', 'g');
+        }
+
+        let count = (code.match(re) || []).length;
+        for (let i = 0; i < limitedPointers[pyKey].length; i++) {
+            let pointer = limitedPointers[pyKey][i];
+            if (!usesCount[pointer]) {
+                usesCount[pointer] = 0;
+            }
+            usesCount[pointer] += count;
+            if (usesCount[pointer] > limitedUses[pointer].nbUses) {
+                // TODO :: i18n ?
+                let name;
+                if (pyKey == 'list_brackets') {
+                    name = 'crochets [ ]';
+                } else if (pyKey == 'dict_brackets') {
+                    name = 'accolades { }';
+                } else if (pyKey == 'math_number') {
+                    name = 'nombres';
+                } else {
+                    name = pyKey;
+                }
+                return {type: 'uses', name: name};
+            }
+        }
+    }
+
+    return false;
+}
+
+export const getContextFunctions = function(context) {
+    const definedFunctions = [];
+    const argumentsByBlock = {};
+    const handlers = [];
+    const constants = [];
+
+    if (context.infos && context.infos.includeBlocks && context.infos.includeBlocks.generatedBlocks) {
+        // Flatten customBlocks information for easy access
+        const blocksInfos = {};
+        for (let generatorName in context.customBlocks) {
+            for (let typeName in context.customBlocks[generatorName]) {
+                let blockList = context.customBlocks[generatorName][typeName];
+                for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
+                    let blockInfo = blockList[iBlock];
+                    blocksInfos[blockInfo.name] = {
+                        nbArgs: 0, // handled below
+                        type: typeName
+                    };
+                    blocksInfos[blockInfo.name].nbsArgs = [];
+                    if (blockInfo.anyArgs) {
+                        // Allows to specify the function can accept any number of arguments
+                        blocksInfos[blockInfo.name].nbsArgs.push(Infinity);
+                    }
+                    let variants = blockInfo.variants ? blockInfo.variants : (blockInfo.params ? [blockInfo.params] : []);
+                    if (variants.length) {
+                        for (let i = 0; i < variants.length; i++) {
+                            blocksInfos[blockInfo.name].nbsArgs.push(variants[i].length);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Generate functions used in the task
+        for (let generatorName in context.infos.includeBlocks.generatedBlocks) {
+            let blockList = context.infos.includeBlocks.generatedBlocks[generatorName];
+            if (!blockList.length) {
+                continue;
+            }
+
+            if (!argumentsByBlock[generatorName]) {
+                argumentsByBlock[generatorName] = {};
+            }
+            for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
+                let blockName = blockList[iBlock];
+                let code = context.strings.code[blockName];
+                if (typeof (code) == "undefined") {
+                    code = blockName;
+                }
+                let nbsArgs = blocksInfos[blockName] ? (blocksInfos[blockName].nbsArgs ? blocksInfos[blockName].nbsArgs : []) : [];
+                let type = blocksInfos[blockName] ? blocksInfos[blockName].type : 'actions';
+
+                if (type == 'actions') {
+                    // this._hasActions = true;
+                }
+
+                argumentsByBlock[generatorName][blockName] = nbsArgs;
+                handlers.push({code, generatorName, blockName, nbsArgs, type});
+
+                if (-1 === definedFunctions.indexOf(code)) {
+                    definedFunctions.push(code);
+                }
+            }
+
+            if (context.customConstants && context.customConstants[generatorName]) {
+                let constList = context.customConstants[generatorName];
+                for (let iConst = 0; iConst < constList.length; iConst++) {
+                    let name = constList[iConst].name;
+                    if (context.strings.constant && context.strings.constant[name]) {
+                        name = context.strings.constant[name];
+                    }
+                    constants.push({name, generatorName, value: constList[iConst].value});
+                }
+            }
+        }
+    }
+
+    return {
+        definedFunctions,
+        argumentsByBlock,
+        handlers,
+        constants,
+    };
+}
+
+export const checkPythonCode = function (code, context) {
+    const includeBlocks = context.infos.includeBlocks;
+    const forbidden = pythonForbidden(code, includeBlocks);
+    const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
+
+    if (forbidden) {
+        throw getMessage('CODE_CONSTRAINTS_FORBIDDEN_KEYWORD').format({keyword: forbidden});
+    }
+    if (maxInstructions && pythonCount(code) > maxInstructions) {
+        throw getMessage('CODE_CONSTRAINTS_MAX_INSTRUCTIONS_PYTHON');
+    }
+
+    const limited = context.infos.limitedUses ? pythonFindLimited(code, context.infos.limitedUses, context.strings.code) : false;
+    if (limited && limited.type == 'uses') {
+        throw getMessage('CODE_CONSTRAINTS_LIMITED_USES').format({keyword: limited.name});
+    } else if (limited && limited.type == 'assign') {
+        throw getMessage('CODE_CONSTRAINTS_LIMITED_ASSIGN').format({keyword: limited.name});
+    }
+    if (pythonCount(code) <= 0) {
+        throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
+    }
+
+    const availableModules = getAvailableModules(context);
+    for (let availableModule of availableModules) {
+        if ('printer' === availableModule) {
+            // Printer lib is optional
+            continue;
+        }
+        let match = (new RegExp('from\\s+' + availableModule + '\\s+import\\s+\\*')).exec(code);
+        if (null === match) {
+            throw getMessage('PROGRAM_MISSING_LIB').format({line: `<code>from ${availableModule} import *</code>`});
+        }
+    }
+
+    // Check for functions used as values
+    let re = /def\W+([^(]+)\(/g;
+    const {definedFunctions} = getContextFunctions(context);
+    let match;
+    while (match = re.exec(code)) {
+        definedFunctions.push(match[1]);
+    }
+    for (let j = 0; j < definedFunctions.length; j++) {
+        re = new RegExp('\\W' + definedFunctions[j] + '([^A-Za-z0-9_( ]| +[^ (]|$)');
+        if (re.exec(code)) {
+            throw getMessage('CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS').format({funcName: definedFunctions[j]});
+        }
+    }
+}

@@ -3,16 +3,15 @@ import {Dialog} from "@blueprintjs/core";
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {connect} from "react-redux";
+import {getMessage} from "../lang";
 
 interface AppErrorBoundaryStateToProps {
     lastError: any,
-    getMessage: Function,
 }
 
 function mapStateToProps(state: AppStore): AppErrorBoundaryStateToProps {
     return {
         lastError: state.lastError,
-        getMessage: state.getMessage,
     };
 }
 
@@ -26,7 +25,7 @@ interface AppErrorBoundaryProps extends AppErrorBoundaryStateToProps, AppErrorBo
 
 class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
     render() {
-        const {lastError, children, getMessage} = this.props;
+        const {lastError, children} = this.props;
         if (!lastError) {
             return children;
         }

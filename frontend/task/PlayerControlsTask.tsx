@@ -6,6 +6,7 @@ import {connect} from "react-redux";
 import {StepperControls} from "../stepper/views/StepperControls";
 import {Menu} from "../common/Menu";
 import {AppStore} from "../store";
+import {getMessage} from "../lang";
 
 interface PlayerControlsTaskStateToProps {
     isReady: boolean,
@@ -15,11 +16,9 @@ interface PlayerControlsTaskStateToProps {
     duration: number,
     volume: any,
     isMuted: boolean,
-    getMessage: Function
 }
 
 function mapStateToProps(state: AppStore): PlayerControlsTaskStateToProps {
-    const getMessage = state.getMessage;
     const player = state.player;
     const isReady = player.isReady;
     const isPlaying = player.isPlaying;
@@ -30,7 +29,7 @@ function mapStateToProps(state: AppStore): PlayerControlsTaskStateToProps {
     const volume = player.volume;
     const isMuted = player.audio.muted;
 
-    return {getMessage, isReady, isPlaying, isAtEnd, audioTime, duration, volume, isMuted};
+    return {isReady, isPlaying, isAtEnd, audioTime, duration, volume, isMuted};
 }
 
 interface PlayerControlsTaskDispatchToProps {
@@ -43,7 +42,7 @@ interface PlayerControlsTaskProps extends PlayerControlsTaskStateToProps, Player
 
 class _PlayerControlsTask extends React.PureComponent<PlayerControlsTaskProps> {
     render() {
-        const {isReady, isPlaying, isAtEnd, audioTime, duration, volume, isMuted, getMessage} = this.props;
+        const {isReady, isPlaying, isAtEnd, audioTime, duration, volume, isMuted} = this.props;
         const showStartPlayback = !isPlaying;
         const canStartPlayback = isReady && !isPlaying;
         const showPausePlayback = isPlaying;

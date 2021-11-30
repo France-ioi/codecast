@@ -1,8 +1,8 @@
 import {getLoadedReferencesFromVariable, getVariable} from './utils';
 import {getCursorMap} from './array_utils';
+import {getMessage} from "../../../lang";
 
 export const extractView = function(context, name: string, options) {
-    const {getMessage} = options;
     const {analysis} = context;
 
     const ref = getVariable(analysis, name);

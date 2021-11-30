@@ -12,6 +12,7 @@ import {DirectivesPane} from "./DirectivesPane";
 import {connect} from "react-redux";
 import {AppStore} from "../../store";
 import {getPlayerState} from "../../player/selectors";
+import {getMessage} from "../../lang";
 
 interface StepperViewStateToProps {
     diagnostics: any,
@@ -19,7 +20,6 @@ interface StepperViewStateToProps {
     sourceMode: string,
     sourceRowHeight: number,
     error: string,
-    getMessage: Function,
     geometry: any,
     panes: any,
     showStack: boolean,
@@ -32,7 +32,6 @@ interface StepperViewStateToProps {
 }
 
 function mapStateToProps(state: AppStore, props): StepperViewStateToProps {
-    const getMessage = state.getMessage;
     const geometry = state.mainViewGeometry;
     const panes = state.panes;
     const diagnostics = state.stepper.error;
@@ -72,7 +71,7 @@ function mapStateToProps(state: AppStore, props): StepperViewStateToProps {
     const windowHeight = state.windowHeight;
 
     return {
-        diagnostics, readOnly, error, getMessage, geometry, panes, preventInput, sourceRowHeight,
+        diagnostics, readOnly, error, geometry, panes, preventInput, sourceRowHeight,
         sourceMode, showStack, arduinoEnabled, showViews, showIO, windowHeight,
         currentStepperState,
     };
@@ -93,7 +92,7 @@ class _StepperView extends React.PureComponent<StepperViewProps> {
     render() {
         const {
             diagnostics, readOnly, sourceMode, sourceRowHeight,
-            preventInput, error, getMessage, geometry, panes,
+            preventInput, error, geometry, panes,
             windowHeight, currentStepperState,
             showStack, arduinoEnabled, showViews, showIO
         } = this.props;

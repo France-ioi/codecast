@@ -2,18 +2,17 @@ import React from "react";
 import {ButtonGroup} from "@blueprintjs/core";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
+import {getMessage} from "../lang";
 
 interface LoginScreenStateToProps {
     baseUrl: string,
     authProviders: string[],
-    getMessage: Function,
 }
 
 function mapStateToProps(state: AppStore): LoginScreenStateToProps {
     const {baseUrl, authProviders} = state.options;
-    const getMessage = state.getMessage;
 
-    return {baseUrl, authProviders, getMessage};
+    return {baseUrl, authProviders};
 }
 
 interface LoginScreenDispatchToProps {
@@ -26,7 +25,7 @@ interface LoginScreenProps extends LoginScreenStateToProps, LoginScreenDispatchT
 
 class _LoginScreen extends React.PureComponent<LoginScreenProps> {
     render() {
-        const {baseUrl, authProviders, getMessage} = this.props;
+        const {baseUrl, authProviders} = this.props;
 
         return (
             <div>

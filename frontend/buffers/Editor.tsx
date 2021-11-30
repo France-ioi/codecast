@@ -7,11 +7,11 @@ import {addAutocompletion} from "./editorAutocompletion";
 import {AutocompletionParameters, getAutocompletionParameters} from '../task';
 import {LayoutType} from "../task/layout/layout";
 import {quickAlgoLibraries, QuickAlgoLibrary} from "../task/libs/quickalgo_librairies";
+import {getMessage} from "../lang";
 
 const Range = ace.acequire('ace/range').Range;
 
 interface EditorStateToProps {
-    getMessage: Function,
     context: QuickAlgoLibrary,
     layoutType: LayoutType,
     zoomLevel?: number,
@@ -23,7 +23,6 @@ function mapStateToProps(state: AppStore): EditorStateToProps {
     const autocompletionParameters = context ? getAutocompletionParameters(context, state.task.currentLevel) : null;
 
     return {
-        getMessage: state.getMessage,
         context,
         layoutType: state.layout.type,
         zoomLevel: state.layout.zoomLevel,
@@ -216,7 +215,7 @@ class _Editor extends React.PureComponent<EditorProps> {
         const editor = this.editor = ace.edit(this.editorNode);
         if (this.props.hasAutocompletion && this.props.autocompletionParameters) {
             const {includeBlocks, strings, constants} = this.props.autocompletionParameters;
-            addAutocompletion(this.props.mode, this.props.getMessage, includeBlocks, constants, strings);
+            addAutocompletion(this.props.mode, includeBlocks, constants, strings);
         }
         const session = this.editor.getSession();
         editor.$blockScrolling = Infinity;
@@ -324,7 +323,7 @@ class _Editor extends React.PureComponent<EditorProps> {
                 && (prevProps.mode !== this.props.mode || JSON.stringify(prevProps.autocompletionParameters) !== JSON.stringify(this.props.autocompletionParameters))
             ) {
                 const {includeBlocks, strings, constants} = this.props.autocompletionParameters;
-                addAutocompletion(this.props.mode, this.props.getMessage, includeBlocks, constants, strings);
+                addAutocompletion(this.props.mode, includeBlocks, constants, strings);
             }
         }
     };
@@ -336,7 +335,7 @@ class _Editor extends React.PureComponent<EditorProps> {
     };
 
     render() {
-        const {width, height, shield, getMessage} = this.props;
+        const {width, height, shield} = this.props;
 
         return (
             <div className="editor" style={{width: width, height: height}}>

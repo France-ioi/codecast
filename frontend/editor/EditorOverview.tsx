@@ -7,6 +7,7 @@ import {ActionTypes} from "./actionTypes";
 import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
 import {EditorSaveState} from "./index";
+import {getMessage} from "../lang";
 
 interface EditorOverviewProps {
     withoutWaveform?: boolean,
@@ -14,7 +15,6 @@ interface EditorOverviewProps {
 
 export function EditorOverview(props: EditorOverviewProps) {
     const editor = useAppSelector(state => state.editor);
-    const getMessage = useAppSelector(state => state.getMessage);
 
     const {version, name, events} = editor.data;
     const playerUrl = editor.playerUrl;

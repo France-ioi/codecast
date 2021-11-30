@@ -1,120 +1,6 @@
 import * as ace from 'brace';
-
-const pythonForbiddenBlocks = {
-    'dicts': {
-        'dicts_create_with': ['dict_brackets'],
-        'dict_get_literal': ['dict_brackets'],
-        'dict_set_literal': ['dict_brackets'],
-        'dict_keys': ['dict_brackets']
-    },
-    'logic': {
-        'controls_if': ['if', 'else', 'elif'],
-        'controls_if_else': ['if', 'else', 'elif'],
-        'logic_negate': ['not'],
-        'logic_operation': ['and', 'or']
-    },
-    'loops': {
-        'controls_repeat': ['for'],
-        'controls_repeat_ext': ['for'],
-        'controls_for': ['for'],
-        'controls_forEach': ['for'],
-        'controls_whileUntil': ['while'],
-        'controls_untilWhile': ['while'],
-        'controls_infiniteloop': ['while']
-    },
-    'lists': {
-        'lists_create_with_empty': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_create_with': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_repeat': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_length': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_isEmpty': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_indexOf': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_getIndex': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_setIndex': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_getSublist': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_sort': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_split': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_append': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__']
-    },
-    'maths': {
-        'math_number': ['math_number']
-    },
-    'functions': {
-        'procedures_defnoreturn': ['def', 'lambda'],
-        'procedures_defreturn': ['def', 'lambda']
-    },
-    'variables': {
-        'variables_set': ['var_assign']
-    }
-};
-
-export const pythonForbiddenLists = function (includeBlocks) {
-    // Check for forbidden keywords in code
-    const forbidden = ['for', 'while', 'if', 'else', 'elif', 'not', 'and', 'or', 'list', 'set', 'list_brackets', 'dict_brackets', '__getitem__', '__setitem__', 'var_assign', 'def', 'lambda', 'break', 'continue', 'setattr', 'map', 'split'];
-    const allowed = [];
-
-    //TODO: use include blocks
-    return {forbidden: allowed, allowed: forbidden};
-
-    if (!includeBlocks) {
-        return {forbidden: forbidden, allowed: allowed};
-    }
-
-    const forced = includeBlocks.pythonForceForbidden ? includeBlocks.pythonForceForbidden : [];
-    for (let k = 0; k < forced.length; k++) {
-        if (-1 === forbidden.indexOf(forced[k])) {
-            forbidden.push(forced[k]);
-        }
-    }
-
-    const removeForbidden = function (kwList) {
-        for (let k = 0; k < kwList.length; k++) {
-            if (-1 !== forced.indexOf(kwList[k])) {
-                continue;
-            }
-            let idx = forbidden.indexOf(kwList[k]);
-            if (idx >= 0) {
-                forbidden.splice(idx, 1);
-                allowed.push(kwList[k]);
-            }
-        }
-    };
-
-    if (includeBlocks && includeBlocks.standardBlocks) {
-        if (includeBlocks.standardBlocks.includeAll || includeBlocks.standardBlocks.includeAllPython) {
-            // Everything is allowed
-            removeForbidden(forbidden.slice());
-            return {forbidden: forbidden, allowed: allowed};
-        }
-
-        if (includeBlocks.standardBlocks.wholeCategories) {
-            for (let c = 0; c < includeBlocks.standardBlocks.wholeCategories.length; c++) {
-                let categoryName = includeBlocks.standardBlocks.wholeCategories[c];
-                if (pythonForbiddenBlocks[categoryName]) {
-                    for (let blockName of Object.keys(pythonForbiddenBlocks[categoryName])) {
-                        removeForbidden(pythonForbiddenBlocks[categoryName][blockName]);
-                    }
-                }
-            }
-        }
-        if (includeBlocks.standardBlocks.singleBlocks) {
-            for (let b = 0; b < includeBlocks.standardBlocks.singleBlocks.length; b++) {
-                let blockName = includeBlocks.standardBlocks.singleBlocks[b];
-                for (let categoryName in pythonForbiddenBlocks) {
-                    if (pythonForbiddenBlocks[categoryName][blockName]) {
-                        removeForbidden(pythonForbiddenBlocks[categoryName][blockName]);
-                    }
-                }
-            }
-        }
-    }
-
-    if (includeBlocks && includeBlocks.variables && includeBlocks.variables.length) {
-        removeForbidden(['var_assign']);
-    }
-
-    return {forbidden: forbidden, allowed: allowed};
-}
+import {pythonForbiddenLists} from "../task/python_utils";
+import {getMessage} from "../lang";
 
 function hideHiddenWords(list) {
     const hiddenWords = ['__getitem__', '__setitem__'];
@@ -206,7 +92,7 @@ export const getFunctionsInfo = function (functionName, strings, ignoreDoc = fal
     };
 };
 
-export const addAutocompletion = function (language, getMessage, includeBlocks, customConstants, strings) {
+export const addAutocompletion = function (language, includeBlocks, customConstants, strings) {
     let langTools = ace.acequire("ace/ext/language_tools");
 
     // This array will contain all functions for which we must add autocompletion
@@ -314,7 +200,6 @@ export const addAutocompletion = function (language, getMessage, includeBlocks, 
         };
 
         for (let constId = 0; constId < allowedConsts.length; constId++) {
-
             if (specialSnippets.hasOwnProperty(allowedConsts[constId])) {
                 // special constant, need to create snippet
                 completions.push(specialSnippets[allowedConsts[constId]]);

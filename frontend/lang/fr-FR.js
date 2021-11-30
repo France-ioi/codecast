@@ -121,7 +121,6 @@ module.exports = {
     PLATFORM_UNIX: "C (Unix)",
     PLATFORM_ARDUINO: "C (Arduino)",
     PLATFORM_PYTHON: "Python",
-    EMPTY_PROGRAM: "Le programme est vide.",
     PROGRAM_MISSING_LIB: "Vous devez mettre la ligne {line} dans votre programme.",
 
     USER_SELECT_LOGIN_METHOD: "Choisissez une méthode de connexion :",
@@ -177,4 +176,11 @@ module.exports = {
     TESTS_RESULT_OVERVIEW_SUCCESS: 'Test {index} : validé',
     TESTS_RESULT_OVERVIEW_FAILURE: 'Test {index} : erreur',
     TESTS_RESULT_OVERVIEW_VIEW: 'voir',
+
+    CODE_CONSTRAINTS_FORBIDDEN_KEYWORD: "Le mot-clé {keyword} est interdit ici.",
+    CODE_CONSTRAINTS_MAX_INSTRUCTIONS_PYTHON: "Vous utilisez trop d'éléments Python.",
+    CODE_CONSTRAINTS_LIMITED_USES: "Vous utilisez trop souvent un mot-clé à utilisation limitée : {keyword}.",
+    CODE_CONSTRAINTS_LIMITED_ASSIGN: "Vous n'avez pas le droit de réassigner un mot-clé à utilisation limitée : {keyword}.",
+    CODE_CONSTRAINTS_EMPTY_PROGRAM: "Vous ne pouvez pas valider un programme vide.",
+    CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS: "Vous utilisez la fonction \"{funcName}\" sans les parenthèses. Ajoutez les parenthèses pour appeler la fonction.",
 };

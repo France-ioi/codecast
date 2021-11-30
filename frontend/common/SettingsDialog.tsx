@@ -11,6 +11,7 @@ import {useDispatch} from "react-redux";
 import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {IoMode} from "../stepper/io";
+import {getMessage} from "../lang";
 
 interface SettingsDialogProps {
     open: boolean,
@@ -19,7 +20,6 @@ interface SettingsDialogProps {
 
 export function SettingsDialog(props: SettingsDialogProps) {
     const {baseUrl, baseDataUrl, platform, canChangePlatform, canChangeLanguage} = useAppSelector(state => state.options);
-    const getMessage = useAppSelector(state => state.getMessage);
     const {mode: ioMode, modeSelect} = useAppSelector(state => state.ioPane);
     const stepper = useAppSelector(state => state.stepper);
     const ioModeSelect = modeSelect && (!stepper || stepper.status === StepperStatus.Clear);

@@ -29,7 +29,6 @@ interface Array2DParams {
     rowCount: any,
     colCount: any,
     height: any,
-    getMessage: any,
     rowInfoMap?: any,
     colInfoMap?: any,
     error?: string
@@ -206,14 +205,13 @@ interface Array2DProps {
     scale: any,
     directive: any,
     context: any,
-    getMessage: any,
     controls: StepperControls,
     onChange: Function
 }
 
 export class Array2D extends React.PureComponent<Array2DProps> {
     render() {
-        const {scale, directive, context, getMessage} = this.props;
+        const {scale, directive, context} = this.props;
 
         /**
          * Eg. directive :
@@ -240,7 +238,7 @@ export class Array2D extends React.PureComponent<Array2DProps> {
         const height = (byName.height) ? byName.height : 'auto';
         const rowCount = (byName.rows) ? parseInt(byName.rows) : 0;
         const colCount = (byName.cols) ? parseInt(byName.cols) : 0;
-        const view: Array2DParams = {rowCursors, colCursors, rowCount, colCount, height, getMessage};
+        const view: Array2DParams = {rowCursors, colCursors, rowCount, colCount, height};
         const {hPan, vPan} = this.getPosition();
 
         const extractedView = extractView(context, byPos[0], view);

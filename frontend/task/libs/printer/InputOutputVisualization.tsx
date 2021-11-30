@@ -6,11 +6,11 @@ import {IoMode} from "../../../stepper/io";
 import {BufferEditor} from "../../../buffers/BufferEditor";
 import {useAppSelector} from "../../../hooks";
 import {inputBufferLibTest, outputBufferLibTest} from "./printer_lib";
+import {getMessage} from "../../../lang";
 
 export function InputOutputVisualization() {
     const ioMode = useAppSelector(state => state.ioPane.mode);
     const hasStepper = useAppSelector(state => !!getCurrentStepperState(state) || !state.task.resetDone);
-    const getMessage = useAppSelector(state => state.getMessage);
 
     if (hasStepper) {
         if (IoMode.Terminal === ioMode) {
