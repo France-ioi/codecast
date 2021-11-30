@@ -1,4 +1,4 @@
-import {call, put, select, takeLatest} from 'redux-saga/effects';
+import {call, put, select, takeLatest} from 'typed-redux-saga';
 import FileSaver from 'file-saver';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as EditorActionTypes} from '../editor/actionTypes';
@@ -41,12 +41,12 @@ export default function (bundle: Bundle) {
     bundle.addReducer(ActionTypes.EditorSaveSucceeded, editorSaveSucceededReducer);
 
     bundle.addSaga(function* editorOverviewSaga() {
-        yield takeLatest(ActionTypes.EditorSaveAudio, editorSaveAudioSaga);
-        yield takeLatest(ActionTypes.EditorSave, editorSaveSaga);
+        yield* takeLatest(ActionTypes.EditorSaveAudio, editorSaveAudioSaga);
+        yield* takeLatest(ActionTypes.EditorSave, editorSaveSaga);
         // @ts-ignore
-        yield takeLatest(CommonActionTypes.AppSwitchToScreen, function* ({payload: {screen}}) {
+        yield* takeLatest(CommonActionTypes.AppSwitchToScreen, function* ({payload: {screen}}) {
             if (Screen.EditorSave === screen) {
-                yield call(ensureLoggedSaga);
+                yield* call(ensureLoggedSaga);
             }
         });
     });
@@ -93,7 +93,7 @@ function editorSaveSucceededReducer(state: AppStore, {payload: {playerUrl, edito
 }
 
 function* editorSaveAudioSaga() {
-    const state: AppStore = yield select();
+    const state: AppStore = yield* select();
 
     const editor = state.editor;
     const id = editor.base.replace(/^.*\//, '');
@@ -102,11 +102,11 @@ function* editorSaveAudioSaga() {
     const saveAsName = `${name || id}.mp3`;
     const blob = state.editor.audioBlob;
 
-    yield call(FileSaver.saveAs, blob, saveAsName);
+    yield* call(FileSaver.saveAs, blob, saveAsName);
 }
 
 function* editorSaveSaga() {
-    const state: AppStore = yield select();
+    const state: AppStore = yield* select();
 
     const {baseUrl} = state.options;
     const editor = state.editor;
@@ -122,18 +122,18 @@ function* editorSaveSaga() {
 
     let result;
     try {
-        result = yield call(asyncRequestJson, `${baseUrl}/save`, {base, changes});
+        result = yield* call(asyncRequestJson, `${baseUrl}/save`, {base, changes});
     } catch (ex) {
         result = {error: ex.toString()};
     }
 
     if (result.error) {
-        yield put({type: ActionTypes.EditorSaveFailed, payload: {error: result.error}});
+        yield* put({type: ActionTypes.EditorSaveFailed, payload: {error: result.error}});
 
         return;
     }
 
     const timestamp = new Date();
 
-    yield put({type: ActionTypes.EditorSaveSucceeded, payload: {timestamp}});
+    yield* put({type: ActionTypes.EditorSaveSucceeded, payload: {timestamp}});
 }

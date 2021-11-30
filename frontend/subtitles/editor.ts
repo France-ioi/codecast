@@ -2,7 +2,7 @@
  *  Subtitles Editor
  */
 
-import {call, put, select, take, takeLatest} from 'redux-saga/effects';
+import {call, put, select, take, takeLatest} from 'typed-redux-saga';
 import {stringifySync} from 'subtitle';
 import FileSaver from 'file-saver';
 import {getSubtitles, updateCurrentItem} from './utils';
@@ -242,17 +242,17 @@ export function clearAllUnsaved(options: SubtitlesOptions) {
 }
 
 function* subtitlesEditorSaga(state) {
-    yield takeLatest(ActionTypes.SubtitlesSelected, subtitlesSelectedSaga, state);
-    yield takeLatest(ActionTypes.SubtitlesEditorEnter, subtitlesEditorEnterSaga, state);
-    yield takeLatest(ActionTypes.SubtitlesEditorReturn, subtitlesEditorReturnSaga, state);
-    yield takeLatest(ActionTypes.SubtitlesTextReverted, subtitlesTextRevertedSaga, state);
-    yield takeLatest(ActionTypes.SubtitlesTextLoaded, subtitlesTextLoadedSaga, state);
-    yield takeLatest(ActionTypes.SubtitlesOptionSave, subtitlesSaveOptionSaga, state);
-    yield takeLatest(ActionTypes.SubtitlesOptionAdd, function*() {
-        yield put({type: ActionTypes.SubtitlesReload});
+    yield* takeLatest(ActionTypes.SubtitlesSelected, subtitlesSelectedSaga, state);
+    yield* takeLatest(ActionTypes.SubtitlesEditorEnter, subtitlesEditorEnterSaga, state);
+    yield* takeLatest(ActionTypes.SubtitlesEditorReturn, subtitlesEditorReturnSaga, state);
+    yield* takeLatest(ActionTypes.SubtitlesTextReverted, subtitlesTextRevertedSaga, state);
+    yield* takeLatest(ActionTypes.SubtitlesTextLoaded, subtitlesTextLoadedSaga, state);
+    yield* takeLatest(ActionTypes.SubtitlesOptionSave, subtitlesSaveOptionSaga, state);
+    yield* takeLatest(ActionTypes.SubtitlesOptionAdd, function*() {
+        yield* put({type: ActionTypes.SubtitlesReload});
     });
-    yield takeLatest(ActionTypes.SubtitlesOptionRemove, function*() {
-        yield put({type: ActionTypes.SubtitlesReload});
+    yield* takeLatest(ActionTypes.SubtitlesOptionRemove, function*() {
+        yield* put({type: ActionTypes.SubtitlesReload});
     });
 }
 
@@ -260,54 +260,54 @@ function* subtitlesSelectedSaga(state, action) {
     /* Trigger loading of subtitles when first selected. */
     const {key, url, text} = action.payload.option;
     if (url && !text) {
-        yield put({type: ActionTypes.SubtitlesTextReverted, payload: {key, url}});
+        yield* put({type: ActionTypes.SubtitlesTextReverted, payload: {key, url}});
     } else {
-        yield put({type: ActionTypes.SubtitlesReload});
+        yield* put({type: ActionTypes.SubtitlesReload});
     }
 }
 
 function* subtitlesEditorEnterSaga(state, _action) {
-    yield put({type: ActionTypes.SubtitlesEditingChanged, payload: {editing: true}});
-    yield put({
+    yield* put({type: ActionTypes.SubtitlesEditingChanged, payload: {editing: true}});
+    yield* put({
         type: EditorActionTypes.EditorControlsChanged,
         payload: {
             controls: 'subtitles'
         }
     });
-    yield put({type: ActionTypes.SubtitlesReload});
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Edit}});
+    yield* put({type: ActionTypes.SubtitlesReload});
+    yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Edit}});
 }
 
 function* subtitlesEditorReturnSaga(state, _action) {
-    yield put({type: ActionTypes.SubtitlesSave});
-    yield put({type: ActionTypes.SubtitlesEditingChanged, payload: {editing: false}});
-    yield put({type: EditorActionTypes.EditorControlsChanged, payload: {controls: 'none'}});
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Setup}});
+    yield* put({type: ActionTypes.SubtitlesSave});
+    yield* put({type: ActionTypes.SubtitlesEditingChanged, payload: {editing: false}});
+    yield* put({type: EditorActionTypes.EditorControlsChanged, payload: {controls: 'none'}});
+    yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Setup}});
 }
 
 function* subtitlesTextRevertedSaga(state, action) {
-    const text = yield call(getSubtitles, action.payload.url);
+    const text = yield* call(getSubtitles, action.payload.url);
 
     /* Text is loaded from server, so clear the unsaved flag. */
-    yield put({type: ActionTypes.SubtitlesTextChanged, payload: {text, unsaved: false}});
-    yield put({type: ActionTypes.SubtitlesReload});
+    yield* put({type: ActionTypes.SubtitlesTextChanged, payload: {text, unsaved: false}});
+    yield* put({type: ActionTypes.SubtitlesReload});
 }
 
 function* subtitlesTextLoadedSaga(state, action) {
-    yield put({type: ActionTypes.SubtitlesLoadFromFile, payload: {
+    yield* put({type: ActionTypes.SubtitlesLoadFromFile, payload: {
         key: action.payload.key,
         file: action.payload.file
     }});
 
     while (true) {
-        const loadAction = yield take([ActionTypes.SubtitlesLoadSucceeded, ActionTypes.SubtitlesLoadFailed]);
+        const loadAction: any = yield* take([ActionTypes.SubtitlesLoadSucceeded, ActionTypes.SubtitlesLoadFailed]);
         if (loadAction.payload.key !== action.payload.key) {
             continue;
         }
         if (loadAction.type === ActionTypes.SubtitlesLoadSucceeded) {
             const {text} = loadAction.payload;
 
-            yield put({type: ActionTypes.SubtitlesTextChanged, payload: {text, unsaved: true}});
+            yield* put({type: ActionTypes.SubtitlesTextChanged, payload: {text, unsaved: true}});
         }
 
         break;
@@ -315,7 +315,7 @@ function* subtitlesTextLoadedSaga(state, action) {
 }
 
 function* subtitlesSaveOptionSaga(app: App, action) {
-    const state: AppStore = yield select();
+    const state: AppStore = yield* select();
 
     let blobContent;
     if (state.options.data && state.options.data.subtitlesData && action.payload.key in state.options.data.subtitlesData) {
@@ -330,5 +330,5 @@ function* subtitlesSaveOptionSaga(app: App, action) {
 
     const blob = new Blob([blobContent], {type: "text/plain;charset=utf-8"});
 
-    yield call(FileSaver.saveAs, blob, `${action.payload.key}.srt`);
+    yield* call(FileSaver.saveAs, blob, `${action.payload.key}.srt`);
 }

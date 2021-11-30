@@ -1,6 +1,6 @@
 import React from "react";
 import {Card} from 'react-bootstrap';
-import {select} from "redux-saga/effects";
+import {select} from "typed-redux-saga";
 import {ActionTypes} from "./actionTypes";
 import {BufferEditor} from "../../buffers/BufferEditor";
 import {connect} from "react-redux";

@@ -1,4 +1,4 @@
-import {call, put, select, takeLatest} from 'redux-saga/effects';
+import {call, put, select, takeLatest} from 'typed-redux-saga';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {asyncGetJson, asyncRequestJson} from '../utils/api';
 import {getBlob, uploadBlob} from '../utils/blobs';
@@ -112,38 +112,38 @@ export default function(bundle: Bundle) {
     });
 
     bundle.addSaga(function* saveSaga(arg) {
-        yield takeLatest(RecorderActionTypes.RecorderStopped, encodingSaga);
-        yield takeLatest(RecorderActionTypes.SaveScreenEncodingDone, ensureLoggedSaga);
-        yield takeLatest(ActionTypes.SaveScreenUpload, uploadSaga, arg);
+        yield* takeLatest(RecorderActionTypes.RecorderStopped, encodingSaga);
+        yield* takeLatest(RecorderActionTypes.SaveScreenEncodingDone, ensureLoggedSaga);
+        yield* takeLatest(ActionTypes.SaveScreenUpload, uploadSaga, arg);
     });
 }
 
 export function* ensureLoggedSaga() {
-    const state: AppStore = yield select();
+    const state: AppStore = yield* select();
     const {baseUrl} = state.options;
 
     const token = window.localStorage.getItem('token');
     if (token) {
-        const response = yield call(asyncGetJson, baseUrl + '/me');
+        const response: any = yield* call(asyncGetJson, baseUrl + '/me');
         if (response.user) {
-            yield put({type: CommonActionTypes.LoginFeedback, payload: {user: response.user, token}});
+            yield* put({type: CommonActionTypes.LoginFeedback, payload: {user: response.user, token}});
             return;
         }
     }
 
-    yield put({type: CommonActionTypes.LoginFeedback, payload: {user: null}});
+    yield* put({type: CommonActionTypes.LoginFeedback, payload: {user: null}});
 }
 
 function* encodingSaga() {
-    yield put({type: ActionTypes.SaveScreenEncodingStart, payload: {}});
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Save}});
+    yield* put({type: ActionTypes.SaveScreenEncodingStart, payload: {}});
+    yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Save}});
 
-    const state: AppStore = yield select();
+    const state: AppStore = yield* select();
     const recorder = getRecorderState(state);
 
     /* Encode the audio track, reporting progress. */
     const {worker} = recorder.context;
-    const {mp3, wav, duration} = yield call(worker.call, 'export', {mp3: true, wav: true}, encodingProgressSaga);
+    const {mp3, wav, duration}: any = yield* call(worker.call, 'export', {mp3: true, wav: true}, encodingProgressSaga);
     const mp3Url = URL.createObjectURL(mp3);
     const wavUrl = URL.createObjectURL(wav);
 
@@ -169,7 +169,7 @@ function* encodingSaga() {
     const eventsUrl = URL.createObjectURL(eventsBlob);
 
     /* Signal that the recorder has stopped. */
-    yield put({
+    yield* put({
         type: ActionTypes.SaveScreenEncodingDone,
         payload: {
             audioUrl: mp3Url,
@@ -180,45 +180,53 @@ function* encodingSaga() {
 
     function* encodingProgressSaga({step, progress}) {
         /* step: copy|wav|mp3 */
-        yield put({type: ActionTypes.SaveScreenEncodingProgress, payload: {step, progress}});
+        yield* put({type: ActionTypes.SaveScreenEncodingProgress, payload: {step, progress}});
     }
+}
+
+export interface UploadResponse {
+    player_url: string,
+    editor_url: string,
+    events: any,
+    audio: any,
+    error?: string,
 }
 
 function* uploadSaga(app: App, action) {
     try {
         // Step 1: prepare the upload by getting the S3 form parameters
         // from the server.
-        yield put({type: ActionTypes.SaveScreenPreparing});
+        yield* put({type: ActionTypes.SaveScreenPreparing});
 
-        const state: AppStore = yield select();
+        const state: AppStore = yield* select();
         const save = state.save;
         const {baseUrl} = state.options;
         const uploadParameters = {
             ...action.payload.target,
             basePlayerUrl: window.location.href.split('?')[0],
         };
-        const response = yield call(asyncRequestJson, `${baseUrl}/upload`, uploadParameters);
+        const response: UploadResponse = yield* call(asyncRequestJson, `${baseUrl}/upload`, uploadParameters);
         if (response.error) {
             throw new Error(`cannot upload: ${response.error}`);
         }
 
         // Upload the events file.
-        yield put({type: ActionTypes.SaveScreenEventsUploading});
+        yield* put({type: ActionTypes.SaveScreenEventsUploading});
 
-        const eventsBlob = yield call(getBlob, save.eventsUrl);
-        yield call(uploadBlob, response.events, eventsBlob);
-        yield put({type: ActionTypes.SaveScreenEventsUploaded, payload: {url: response.events.public_url}});
+        const eventsBlob = yield* call(getBlob, save.eventsUrl);
+        yield* call(uploadBlob, response.events, eventsBlob);
+        yield* put({type: ActionTypes.SaveScreenEventsUploaded, payload: {url: response.events.public_url}});
 
         // Upload the audio file.
-        yield put({type: ActionTypes.SaveScreenAudioUploading});
-        const audioBlob: Blob = yield call(getBlob, save.audioUrl);
+        yield* put({type: ActionTypes.SaveScreenAudioUploading});
+        const audioBlob: Blob = yield* call(getBlob, save.audioUrl);
 
-        yield call(uploadBlob, response.audio, audioBlob);
-        yield put({type: ActionTypes.SaveScreenAudioUploaded, payload: {url: response.audio.public_url}});
+        yield* call(uploadBlob, response.audio, audioBlob);
+        yield* put({type: ActionTypes.SaveScreenAudioUploaded, payload: {url: response.audio.public_url}});
 
         // Signal completion.
-        yield put({type: ActionTypes.SaveScreenUploadSucceeded, payload: {playerUrl: response.player_url, editorUrl: response.editor_url}});
+        yield* put({type: ActionTypes.SaveScreenUploadSucceeded, payload: {playerUrl: response.player_url, editorUrl: response.editor_url}});
     } catch (error) {
-        yield put({type: ActionTypes.SaveScreenUploadFailed, payload: {error}});
+        yield* put({type: ActionTypes.SaveScreenUploadFailed, payload: {error}});
     }
 }

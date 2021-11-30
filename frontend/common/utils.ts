@@ -3,10 +3,10 @@ import audioDecode from 'audio-decode';
 import {eventChannel} from 'redux-saga'
 
 export function readFileAsText(file) {
-    return new Promise(function(resolve, reject) {
+    return new Promise<string>(function(resolve, reject) {
         const reader = new FileReader();
         reader.onload = function(event) {
-            resolve(event.target.result);
+            resolve((event.target.result) as string);
         };
         reader.onerror = function(event) {
             reject(event.target.error);
@@ -16,7 +16,7 @@ export function readFileAsText(file) {
 }
 
 export function getAudio(path: string) {
-    return eventChannel(emitter => {
+    return eventChannel<{type: string, value?: number, error?: string, audioBuffer?: AudioBuffer, blob?: Blob}>(emitter => {
         request.get(path)
             .accept('audio')
             .responseType('blob')

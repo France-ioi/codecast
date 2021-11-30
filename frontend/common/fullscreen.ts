@@ -1,5 +1,5 @@
 import {buffers, eventChannel} from 'redux-saga';
-import {put, take} from 'redux-saga/effects';
+import {put, take} from 'typed-redux-saga';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
@@ -77,18 +77,18 @@ export default function(bundle: Bundle) {
         const elem = window.document;
         // @ts-ignore
         const isFullscreenEnabled = !!(elem.fullscreenEnabled || elem.msFullscreenEnabled || elem.mozFullScreenEnabled || elem.webkitFullscreenEnabled);
-        yield put({type: ActionTypes.FullscreenEnabled, enabled: isFullscreenEnabled});
+        yield* put({type: ActionTypes.FullscreenEnabled, enabled: isFullscreenEnabled});
         while (true) {
-            let event = yield take(fullscreenMonitorChannel);
+            let event = yield* take(fullscreenMonitorChannel);
             switch (event) {
                 case 'on':
-                    yield put({type: ActionTypes.FullscreenEnterSucceeded});
+                    yield* put({type: ActionTypes.FullscreenEnterSucceeded});
                     break;
                 case 'error':
-                    yield put({type: ActionTypes.FullscreenEnterFailed});
+                    yield* put({type: ActionTypes.FullscreenEnterFailed});
                     break;
                 case 'off':
-                    yield put({type: ActionTypes.FullscreenLeaveSucceeded});
+                    yield* put({type: ActionTypes.FullscreenLeaveSucceeded});
                     break;
             }
         }
@@ -96,7 +96,7 @@ export default function(bundle: Bundle) {
 
     bundle.addSaga(function* watchEnterFullscreen() {
         while (true) {
-            yield take(ActionTypes.FullscreenEnter);
+            yield* take(ActionTypes.FullscreenEnter);
 
             const elem = window.document.documentElement;
             if (elem.requestFullscreen) {
@@ -119,7 +119,7 @@ export default function(bundle: Bundle) {
 
     bundle.addSaga(function* watchLeaveFullscreen() {
         while (true) {
-            yield take(ActionTypes.FullscreenLeave);
+            yield* take(ActionTypes.FullscreenLeave);
 
             const elem = window.document;
             if (elem.exitFullscreen) {

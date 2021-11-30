@@ -4,7 +4,7 @@ import {ExamplePicker} from "./ExamplePicker";
 import React from "react";
 import {useAppSelector} from "../hooks";
 import {isLocalMode} from "../utils/app";
-import {select} from "redux-saga/effects";
+import {select} from "typed-redux-saga";
 import {StepperStatus} from "../stepper";
 import {ActionTypes as CommonActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";

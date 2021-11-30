@@ -1,4 +1,4 @@
-import {call} from 'redux-saga/effects';
+import {call} from 'typed-redux-saga';
 import {PlayerInstant} from "./index";
 import {ReplayContext} from "./sagas";
 import {Bundle} from "../linker";
@@ -42,7 +42,7 @@ export default function(bundle: Bundle) {
             if (eventHandlers.has(key)) {
                 const funcs = eventHandlers.get(key);
                 for (let func of funcs) {
-                    yield call(func, replayContext, event);
+                    yield* call(func, replayContext, event);
                 }
             } else {
                 console.log(`event ${key} ignored (no replay handler)`);
@@ -54,7 +54,7 @@ export default function(bundle: Bundle) {
         reset: function* (instant: PlayerInstant, quick?: boolean) {
             console.log('RESET INSTANT', instant.state);
             for (let saga of resetSagas) {
-                yield call(saga, instant, quick);
+                yield* call(saga, instant, quick);
             }
         }
     };

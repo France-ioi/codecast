@@ -1,4 +1,4 @@
-import {put, takeEvery} from 'redux-saga/effects';
+import {put, takeEvery} from 'typed-redux-saga';
 import {buffers} from 'redux-saga';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
@@ -21,14 +21,14 @@ export default function(bundle: Bundle) {
     });
 
     bundle.addSaga(function* () {
-        yield takeEvery(ActionTypes.RecorderPreparing, function* (action) {
+        yield* takeEvery(ActionTypes.RecorderPreparing, function* (action) {
             // @ts-ignore
             if (action.payload.progress === 'worker_ok') {
                 // @ts-ignore
                 const channel = action.payload.worker.listen('memoryUsage', buffers.sliding(1));
                 // @ts-ignore
-                yield takeEvery(channel, function* (action) {
-                    yield put({
+                yield* takeEvery(channel, function* (action) {
+                    yield* put({
                         type: ActionTypes.MemoryUsageChanged,
                         payload: {
                             // @ts-ignore

@@ -13,7 +13,7 @@ In the stepper state:
 */
 
 import range from 'node-range';
-import {call, put, select} from 'redux-saga/effects';
+import {call, put, select} from 'typed-redux-saga';
 import * as C from '@france-ioi/persistent-c';
 import update from 'immutability-helper';
 import './ace';
@@ -102,7 +102,7 @@ export default function(bundle: Bundle) {
 
     bundle.defer(function({recordApi, replayApi, stepperApi}: App) {
         recordApi.onStart(function* (init) {
-            const state: AppStore = yield select();
+            const state: AppStore = yield* select();
             const {platform} = state.options;
             if (platform === 'arduino') {
                 init.arduino = state.arduino;
@@ -117,48 +117,48 @@ export default function(bundle: Bundle) {
                 arduinoState = {...initialStateArduino};
             }
 
-            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'arduino', state: arduinoState}});
+            yield* put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'arduino', state: arduinoState}});
         });
         replayApi.onReset(function* (instant: PlayerInstant) {
             const arduinoState = instant.state.arduino;
             if (arduinoState) {
-                yield put({type: ActionTypes.ArduinoReset, state: arduinoState});
+                yield* put({type: ActionTypes.ArduinoReset, state: arduinoState});
             }
         });
 
         recordApi.on(ActionTypes.ArduinoPortConfigured, function* (addEvent, action) {
             const {index, changes} = action;
 
-            yield call(addEvent, 'arduino.port.configured', index, changes);
+            yield* call(addEvent, 'arduino.port.configured', index, changes);
         });
         replayApi.on('arduino.port.configured', function* (replayContext: ReplayContext, event) {
             const index = event[2];
             const changes = event[3];
 
-            yield put({type: ActionTypes.ArduinoPortConfigured, index, changes});
+            yield* put({type: ActionTypes.ArduinoPortConfigured, index, changes});
         });
 
         recordApi.on(ActionTypes.ArduinoPortChanged, function* (addEvent, action) {
             const {index, changes} = action;
 
-            yield call(addEvent, 'arduino.port.changed', index, changes);
+            yield* call(addEvent, 'arduino.port.changed', index, changes);
         });
         replayApi.on('arduino.port.changed', function* (replayContext: ReplayContext, event) {
             const index = event[2];
             const changes = event[3];
 
-            yield put({type: ActionTypes.ArduinoPortChanged, index, changes});
+            yield* put({type: ActionTypes.ArduinoPortChanged, index, changes});
         });
 
         recordApi.on(ActionTypes.ArduinoPortSelected, function* (addEvent, action) {
             const {index} = action;
 
-            yield call(addEvent, 'arduino.port.selected', index);
+            yield* call(addEvent, 'arduino.port.selected', index);
         });
         replayApi.on('arduino.port.selected', function* (replayContext: ReplayContext, event) {
             const index = event[2];
 
-            yield put({type: ActionTypes.ArduinoPortSelected, index});
+            yield* put({type: ActionTypes.ArduinoPortSelected, index});
         });
 
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {

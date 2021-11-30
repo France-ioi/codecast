@@ -1,5 +1,5 @@
 import {channel} from 'redux-saga';
-import {call, put, take} from 'redux-saga/effects';
+import {call, put, take} from 'typed-redux-saga';
 import {writeString} from "../io/terminal";
 import PythonInterpreter from "./python_interpreter";
 import {ActionTypes} from './actionTypes';
@@ -10,14 +10,15 @@ import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
+import {Action} from "redux";
 
 export default function(bundle: Bundle) {
-    const pythonInterpreterChannel = channel();
+    const pythonInterpreterChannel = channel<Action>();
 
     bundle.addSaga(function* watchPythonInterpreterChannel() {
         while (true) {
-            const action = yield take(pythonInterpreterChannel);
-            yield put(action);
+            const action = yield* take<Action>(pythonInterpreterChannel);
+            yield* put(action);
         }
     });
 
@@ -32,12 +33,12 @@ export default function(bundle: Bundle) {
 
     bundle.defer(function({recordApi, replayApi, stepperApi}: App) {
         recordApi.on(ActionTypes.StackViewPathToggle, function* (addEvent, action) {
-            yield call(addEvent, 'stackview.path.toggle', action);
+            yield* call(addEvent, 'stackview.path.toggle', action);
         });
         replayApi.on('stackview.path.toggle', function* (replayContext: ReplayContext, event) {
             const action = event[2];
 
-            yield put({type: ActionTypes.StackViewPathToggle, payload: action});
+            yield* put({type: ActionTypes.StackViewPathToggle, payload: action});
         });
 
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore, environment: string) {

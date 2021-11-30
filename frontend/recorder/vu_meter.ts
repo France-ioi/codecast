@@ -1,4 +1,4 @@
-import {call, cancel, delay, fork, takeEvery} from 'redux-saga/effects';
+import {call, cancel, delay, fork, takeEvery} from 'typed-redux-saga';
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
@@ -18,23 +18,23 @@ function* vumeterSaga() {
     let bandHeight = 12;
 
     // @ts-ignore
-    yield takeEvery(ActionTypes.VumeterMounted, function* ({payload: {element, width, height}}) {
+    yield* takeEvery(ActionTypes.VumeterMounted, function* ({payload: {element, width, height}}) {
         canvasContext = element && element.getContext("2d");
         canvasWidth = width;
         canvasHeight = height;
     });
-    yield takeEvery(ActionTypes.RecorderStopped, vumeterCleanupSaga);
+    yield* takeEvery(ActionTypes.RecorderStopped, vumeterCleanupSaga);
     // @ts-ignore
-    yield takeEvery(ActionTypes.RecorderPreparing, function* ({payload: {analyser}}) {
+    yield* takeEvery(ActionTypes.RecorderPreparing, function* ({payload: {analyser}}) {
         if (!analyser) return;
-        yield call(vumeterCleanupSaga);
-        vumeterTask = yield fork(vumeterMonitorSaga, analyser);
+        yield* call(vumeterCleanupSaga);
+        vumeterTask = yield* fork(vumeterMonitorSaga, analyser);
     });
 
     function* vumeterMonitorSaga(analyser) {
         const vumeterData = new Uint8Array(analyser.frequencyBinCount);
         // Set up the ScriptProcessor to divert all buffers to the worker.
-        yield call(periodically,function* () {
+        yield* call(periodically,function* () {
             // Get analyser data and update vumeter.
             analyser.getByteFrequencyData(vumeterData);
             let sum = 0, i;
@@ -56,7 +56,7 @@ function* vumeterSaga() {
 
     function* vumeterCleanupSaga() {
         if (vumeterTask) {
-            yield cancel(vumeterTask);
+            yield* cancel(vumeterTask);
             vumeterTask = null;
         }
     }
@@ -64,9 +64,9 @@ function* vumeterSaga() {
     function* periodically(saga) {
         while (true) {
             if (canvasContext) {
-                yield call(saga);
+                yield* call(saga);
             }
-            yield delay(100);
+            yield* delay(100);
         }
     }
 }

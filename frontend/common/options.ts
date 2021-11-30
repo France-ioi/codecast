@@ -3,7 +3,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
 import {Bundle} from "../linker";
-import {put, takeEvery} from "redux-saga/effects";
+import {put, takeEvery} from "typed-redux-saga";
 import {AppStore} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
 
@@ -92,8 +92,8 @@ export default function(bundle: Bundle) {
     });
 
     bundle.addSaga(function* () {
-        yield takeEvery(ActionTypes.PlatformChanged, function* () {
-            yield put({type: StepperActionTypes.StepperExit});
+        yield* takeEvery(ActionTypes.PlatformChanged, function* () {
+            yield* put({type: StepperActionTypes.StepperExit});
         });
     });
 }

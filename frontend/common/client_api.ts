@@ -1,9 +1,9 @@
 import {buffers, eventChannel} from 'redux-saga';
-import {put, take} from 'redux-saga/effects'
+import {put, take} from 'typed-redux-saga'
 import {Bundle} from "../linker";
 
 export default function(bundle: Bundle) {
-    const messageChannel = eventChannel(function(listener) {
+    const messageChannel = eventChannel<{source: string, message: any}>(function(listener) {
         const onMessage = function(event) {
             const {source, data} = event;
             let message;
@@ -27,11 +27,10 @@ export default function(bundle: Bundle) {
 
     bundle.addSaga(function* () {
         while (true) {
-            let {source, message} = yield take(messageChannel);
+            let {source, message} = yield* take(messageChannel);
             if (typeof message.dispatch === 'object') {
                 /* Dispatch an action. */
-                yield put(message.dispatch);
-
+                yield* put(message.dispatch);
             }
         }
     });

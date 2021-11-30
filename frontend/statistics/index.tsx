@@ -1,5 +1,5 @@
 import React from 'react';
-import {call, put, select, take, takeEvery, takeLatest} from 'redux-saga/effects';
+import {call, put, select, take, takeEvery, takeLatest} from 'typed-redux-saga';
 import {asyncRequestJson} from '../utils/api';
 import {isLocalMode} from "../utils/app";
 import {ActionTypes} from "./actionTypes";
@@ -150,11 +150,11 @@ export default function(bundle: Bundle) {
     });
 
     bundle.addSaga(function* editorSaga(app: App) {
-        yield takeEvery(ActionTypes.StatisticsLogLoadingData, statisticsLogLoadingDataSaga);
-        yield takeEvery(ActionTypes.StatisticsInitLogData, statisticsInitLogDataSaga);
-        yield takeEvery(PlayerActionTypes.PlayerReady, statisticsPlayerReadySaga, app);
-        yield takeEvery(ActionTypes.StatisticsPrepare, statisticsPrepareSaga);
-        yield takeLatest(ActionTypes.StatisticsSearchSubmit, statisticsSearchSaga);
+        yield* takeEvery(ActionTypes.StatisticsLogLoadingData, statisticsLogLoadingDataSaga);
+        yield* takeEvery(ActionTypes.StatisticsInitLogData, statisticsInitLogDataSaga);
+        yield* takeEvery(PlayerActionTypes.PlayerReady, statisticsPlayerReadySaga, app);
+        yield* takeEvery(ActionTypes.StatisticsPrepare, statisticsPrepareSaga);
+        yield* takeLatest(ActionTypes.StatisticsSearchSubmit, statisticsSearchSaga);
     });
 }
 
@@ -177,15 +177,15 @@ function statisticsSearchStatusChangedReducer(state: AppStore): void {
 
 function* statisticsPrepareSaga() {
     /* Require the user to be logged in. */
-    while (!(yield select((state: AppStore) => state.user))) {
-        yield take(CommonActionTypes.LoginFeedback);
+    while (!(yield* select((state: AppStore) => state.user))) {
+        yield* take(CommonActionTypes.LoginFeedback);
     }
 
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Statistics}});
+    yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Statistics}});
 }
 
 function* statisticsInitLogDataSaga() {
-    const state: AppStore = yield select();
+    const state: AppStore = yield* select();
     const options = state.options;
     const {
         start: compileType,
@@ -213,18 +213,18 @@ function* statisticsInitLogDataSaga() {
         logData.bucket = bucket;
     }
 
-    yield put({type: ActionTypes.StatisticsLogDataChanged, payload: {logData}});
+    yield* put({type: ActionTypes.StatisticsLogDataChanged, payload: {logData}});
 }
 
 function* statisticsPlayerReadySaga(app: App, action) {
     try {
-        const state: AppStore = yield select();
+        const state: AppStore = yield* select();
         const logData = state.statistics.logData;
         if (logData) {
             logData.name = (action.payload.data.hasOwnProperty('name')) ? action.payload.data.name : 'default';
 
-            yield put({type: ActionTypes.StatisticsLogDataChanged, payload: {logData}});
-            yield put({type: ActionTypes.StatisticsLogLoadingData});
+            yield* put({type: ActionTypes.StatisticsLogDataChanged, payload: {logData}});
+            yield* put({type: ActionTypes.StatisticsLogLoadingData});
         }
     } catch (error) {
         console.error('Error Codecast Load Log', error);
@@ -233,22 +233,22 @@ function* statisticsPlayerReadySaga(app: App, action) {
 
 function* statisticsLogLoadingDataSaga() {
     try {
-        const state: AppStore = yield select();
+        const state: AppStore = yield* select();
         const {baseUrl} = state.options;
         const logData = state.statistics.logData;
 
-        yield call(asyncRequestJson, `${baseUrl}/statistics/api/logLoadingData`, {logData});
+        yield* call(asyncRequestJson, `${baseUrl}/statistics/api/logLoadingData`, {logData});
     } catch (error) {
         console.error('Error Codecast Load Log', error);
     }
 }
 
 function* statisticsSearchSaga() {
-    yield put({type: ActionTypes.StatisticsSearchStatusChanged, payload: {status: 'loading'}});
+    yield* put({type: ActionTypes.StatisticsSearchStatusChanged, payload: {status: 'loading'}});
 
     let response;
     try {
-        const state: AppStore = yield select();
+        const state: AppStore = yield* select();
         const {baseUrl} = state.options;
 
         const statistics = state.statistics;
@@ -256,7 +256,7 @@ function* statisticsSearchSaga() {
         const folder = statistics.folder.value;
         const prefix = statistics.prefix;
 
-        response = yield call(asyncRequestJson, `${baseUrl}/statistics/api/search`, {
+        response = yield* call(asyncRequestJson, `${baseUrl}/statistics/api/search`, {
             dateRange,
             folder,
             prefix
@@ -265,9 +265,9 @@ function* statisticsSearchSaga() {
         response = {error: ex.toString()};
     }
     if (response.data) {
-        yield put({type: ActionTypes.StatisticsSearchStatusChanged, payload: {status: 'success', data: response.data}});
+        yield* put({type: ActionTypes.StatisticsSearchStatusChanged, payload: {status: 'success', data: response.data}});
     } else {
-        yield put({
+        yield* put({
             type: ActionTypes.StatisticsSearchStatusChanged,
             payload: {status: 'failed', error: response.error}
         });

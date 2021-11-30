@@ -27,7 +27,7 @@ export const showAlert = (props: ShowAlertProps) => {
 }
 
 export const askConfirmation = (props: ShowConfirmProps) => {
-    return new Promise((resolve) => {
+    return new Promise<boolean>((resolve) => {
         renderOnDoc((handleClose) => {
             return <AlertWrapper {...{
                 ...props,

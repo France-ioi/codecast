@@ -12,6 +12,7 @@ parserOptions:
 plugins:
   - react
   - '@typescript-eslint'
+  - '@jambit/typed-redux-saga'
 settings:
   react:
     createClass: createReactClass # Regex for Component Factory to use, default to "createReactClass"
@@ -33,3 +34,14 @@ settings:
 rules:
   react/prop-types: off
   react/no-unescaped-entities: ["error", {"forbid": [">", "}"]}]
+overrides:
+  -
+    files:
+      - "./**/*.ts"
+      - "./**/*.tsx"
+    excludedFiles:
+      - "./**/*.spec.ts"
+    rules:
+      "@jambit/typed-redux-saga/use-typed-effects":
+        - error
+      "@jambit/typed-redux-saga/delegate-effects": error

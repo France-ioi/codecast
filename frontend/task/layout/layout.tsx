@@ -21,7 +21,7 @@ import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_librairi
 import {Screen} from "../../common/screens";
 import {Documentation} from "../Documentation";
 import {getMessage} from "../../lang";
-import {call, put, select, takeEvery} from "redux-saga/effects";
+import {call, put, select, takeEvery} from "typed-redux-saga";
 import {App} from "../../index";
 import {PlayerInstant} from "../../player";
 import {getBufferModel} from "../../buffers/selectors";
@@ -778,22 +778,22 @@ export interface LayoutState {
 }
 
 function* layoutSaga({replayApi}: App) {
-    yield takeEvery(StepperActionTypes.StepperRestart, function* () {
-        const environment = yield select((state: AppStore) => state.environment);
+    yield* takeEvery(StepperActionTypes.StepperRestart, function* () {
+        const environment = yield* select((state: AppStore) => state.environment);
         if ('replay' === environment) {
-            yield put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Player}});
+            yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Player}});
         }
     });
 
-    yield takeEvery(StepperActionTypes.StepperExit, function* () {
-        const environment = yield select((state: AppStore) => state.environment);
+    yield* takeEvery(StepperActionTypes.StepperExit, function* () {
+        const environment = yield* select((state: AppStore) => state.environment);
         if ('replay' === environment) {
-            yield put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Editor}});
+            yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Editor}});
         }
     });
 
-    yield takeEvery(ActionTypes.LayoutPlayerModeBackToReplay, function* () {
-        const state: AppStore = yield select();
+    yield* takeEvery(ActionTypes.LayoutPlayerModeBackToReplay, function* () {
+        const state: AppStore = yield* select();
         const currentSource = getBufferModel(state, 'source').document.toString();
 
         const instant = state.player.current;
@@ -803,7 +803,7 @@ function* layoutSaga({replayApi}: App) {
 
         let confirmed = true;
         if (currentSource !== instantSource) {
-            confirmed = yield call(askConfirmation,{
+            confirmed = yield* call(askConfirmation,{
                 text: getMessage('RESUME_PLAYBACK_WARNING'),
                 confirmText: getMessage('RESUME_PLAYBACK_CONFIRM'),
                 cancelText: getMessage('CANCEL'),
@@ -811,8 +811,8 @@ function* layoutSaga({replayApi}: App) {
         }
 
         if (confirmed) {
-            yield put({type: LayoutActionTypes.LayoutPlayerModeChanged, payload: {playerMode: LayoutPlayerMode.Replay}});
-            yield call(replayApi.reset, instant);
+            yield* put({type: LayoutActionTypes.LayoutPlayerModeChanged, payload: {playerMode: LayoutPlayerMode.Replay}});
+            yield* call(replayApi.reset, instant);
         }
     });
 }
@@ -848,7 +848,7 @@ export default function (bundle: Bundle) {
     bundle.defer(function ({replayApi}: App) {
         replayApi.onReset(function* (instant: PlayerInstant) {
             const mobileMode = instant.state.layout.mobileMode;
-            yield put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
+            yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
         });
     });
 }

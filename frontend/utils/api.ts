@@ -1,7 +1,7 @@
 import request from 'superagent';
 
 export const asyncRequestJson = function(path, body) {
-    return new Promise(function(resolve, reject) {
+    return new Promise<any>(function(resolve, reject) {
         const req = request.post(path);
 
         const token = window.localStorage.getItem('token');
