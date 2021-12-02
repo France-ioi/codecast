@@ -8,14 +8,19 @@ import {PrinterLib} from "./libs/printer/printer_lib";
 import {AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import taskSlice, {
-    currentTaskChange, currentTaskChangePredefined,
-    recordingEnabledChange, selectCurrentTest, taskAddInput, taskClearSubmission, taskCurrentLevelChange,
+    currentTaskChange,
+    currentTaskChangePredefined,
+    recordingEnabledChange,
+    selectCurrentTest,
+    taskAddInput,
+    taskClearSubmission,
+    taskCurrentLevelChange,
     taskInputEntered,
     taskInputNeeded,
-    TaskLevel, TaskLevelName, taskLevelsList,
     taskLoaded,
     taskRecordableActions,
-    taskResetDone, taskSaveAnswer, taskSetLevels,
+    taskResetDone,
+    TaskSubmissionResultPayload,
     taskSuccess,
     taskSuccessClear,
     taskUpdateState,
@@ -25,25 +30,36 @@ import taskSlice, {
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./doc";
+import PlatformBundle, {setPlatformBundleParameters, taskApi} from "./platform/platform";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
 import {ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {createDraft} from "immer";
 import {PlayerInstant} from "../player";
-import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
+import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {platformAnswerGraded, platformAnswerLoaded} from "./platform/actionTypes";
 import {isStepperInterrupting} from "../stepper/selectors";
 import {getBufferModel} from "../buffers/selectors";
 import {documentModelFromString} from "../buffers";
+import {
+    platformSaveAnswer,
+    platformSetTaskLevels, platformTokenUpdated,
+    TaskLevel,
+    TaskLevelName,
+    taskLevelsList
+} from "./platform/platform_slice";
+import log from "loglevel";
+import {getTaskTokenForLevel} from "./platform/task_token";
+import {createAction} from "@reduxjs/toolkit";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
     TaskUnload = 'task/unload',
-    TaskChangeLevel = 'task/changeLevel',
     TaskRunExecution = 'task/runExecution',
 }
 
@@ -64,16 +80,15 @@ export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
     },
 });
 
-export const taskChangeLevel = ({level}: {level: TaskLevelName}) => ({
-    type: TaskActionTypes.TaskChangeLevel,
-    payload: {
-        level,
-    },
-});
-
 export const taskUnload = () => ({
     type: TaskActionTypes.TaskUnload,
 });
+
+export const taskChangeLevel = createAction('task/changeLevel', (level: TaskLevelName) => ({
+    payload: {
+        level,
+    },
+}));
 
 // @ts-ignore
 if (!String.prototype.format) {
@@ -217,7 +232,7 @@ function* taskLoadSaga(app: App, action) {
         console.log('[task.load] update current test id', testId);
         yield* put(updateCurrentTestId({testId, record: false}));
 
-        const taskLevels = yield* select((state: AppStore) => state.task.levels);
+        const taskLevels = yield* select((state: AppStore) => state.platform.levels);
         if (0 === Object.keys(taskLevels).length) {
             const levels = {};
             for (let level of Object.keys(currentTask.data)) {
@@ -233,7 +248,7 @@ function* taskLoadSaga(app: App, action) {
                 } as TaskLevel;
             }
 
-            yield* put(taskSetLevels(levels));
+            yield* put(platformSetTaskLevels(levels));
         }
 
         console.log({testId, tests});
@@ -327,7 +342,7 @@ function* taskRunExecution(app: App, {type, payload}) {
     yield* put(taskLoad({testId, level, tests, reloadContext: true}));
     yield* take(taskLoaded.type);
 
-    taskSubmissionExecutor.setAfterExecutionCallback((result) => {
+    taskSubmissionExecutor.setAfterExecutionCallback((result: TaskSubmissionResultPayload) => {
         console.log('END RUN EXECUTION', result);
         resolve(result);
     });
@@ -335,7 +350,7 @@ function* taskRunExecution(app: App, {type, payload}) {
     yield* put({type: StepperActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run}});
 }
 
-function* taskChangeLevelSaga({payload}) {
+function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     const state: AppStore = yield* select();
     const currentLevel = state.task.currentLevel;
     const newLevel = payload.level;
@@ -349,12 +364,24 @@ function* taskChangeLevelSaga({payload}) {
 
     // Save old answer
     const source = getBufferModel(state, 'source').document.toString();
-    yield* put(taskSaveAnswer({level: currentLevel, answer: source}));
+    yield* put(platformSaveAnswer({level: currentLevel, answer: source}));
 
+    // Grade old answer
+    yield new Promise(async (resolve, reject) => {
+        taskApi.getAnswer((answer) => {
+            taskApi.gradeAnswer(answer, null, resolve, reject, true);
+        });
+    })
+
+    // Change level
     yield* put(taskCurrentLevelChange({level: newLevel}));
 
+    const randomSeed = yield* select((state: AppStore) => state.platform.taskRandomSeed);
+    const taskToken = getTaskTokenForLevel(newLevel, randomSeed);
+    yield* put(platformTokenUpdated(taskToken));
+
     // Reload answer
-    let newLevelAnswer = yield* select((state: AppStore) => state.task.levels[newLevel].answer);
+    let newLevelAnswer = yield* select((state: AppStore) => state.platform.levels[newLevel].answer);
     if (!newLevelAnswer || !newLevelAnswer.length) {
         newLevelAnswer = getDefaultSourceCode(state.options.platform, state.environment);
     }
@@ -417,8 +444,31 @@ function* contextResetAndReloadStateSaga() {
     context.resetAndReloadState(currentTest, state);
 }
 
+function* getTaskAnswer () {
+    const state: AppStore = yield* select();
+
+    return getBufferModel(state, 'source').document.toString();
+}
+
+function* getTaskState () {
+    return {};
+}
+
+function* getTaskLevel () {
+    return yield* select((state: AppStore) => state.task.currentLevel);
+}
+
 export default function (bundle: Bundle) {
     bundle.include(DocumentationBundle);
+    bundle.include(PlatformBundle);
+
+    setPlatformBundleParameters({
+        getTaskAnswer,
+        getTaskState,
+        getTaskLevel,
+        taskChangeLevel,
+        taskGrader: taskSubmissionExecutor,
+    })
 
     bundle.addSaga(function* (app: App) {
         console.log('INIT TASK SAGAS');
@@ -513,8 +563,7 @@ export default function (bundle: Bundle) {
             }
         });
 
-        // @ts-ignore
-        yield* takeEvery(TaskActionTypes.TaskChangeLevel, taskChangeLevelSaga);
+        yield* takeEvery(taskChangeLevel.type, taskChangeLevelSaga);
 
         // @ts-ignore
         yield* takeEvery(updateCurrentTestId.type, taskUpdateCurrentTestIdSaga);
@@ -527,6 +576,20 @@ export default function (bundle: Bundle) {
             if (!payload.keepSubmission) {
                 yield* put(taskClearSubmission());
             }
+        });
+
+        yield* takeEvery(platformAnswerGraded.type, function*({payload: {score, message, error}}: ReturnType<typeof platformAnswerGraded>) {
+            log.getLogger('tests').debug('Submission execution over');
+            if (score >= 1) {
+                yield* put(taskSuccess(message));
+            } else if (error) {
+                yield* put(stepperDisplayError(error));
+            }
+        });
+
+        yield* takeEvery(platformAnswerLoaded.type, function*({payload: {answer}}: ReturnType<typeof platformAnswerLoaded>) {
+            console.log('Platform answer loaded', answer);
+            yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: documentModelFromString(answer), goToEnd: true});
         });
     });
 
@@ -546,6 +609,19 @@ export default function (bundle: Bundle) {
         // Quick mode means continuous play. In this case we can just call every library method
         // without reloading state or display in between
         app.replayApi.onReset(function* (instant: PlayerInstant, quick) {
+            if (instant.state.platform) {
+                yield* put({
+                    type: PlayerActionTypes.PlayerReset,
+                    payload: {
+                        sliceName: 'platform',
+                        partial: true,
+                        state: {
+                            levels: instant.state.platform.levels,
+                        },
+                    },
+                });
+            }
+
             const taskData = instant.state.task;
             if (taskData) {
                 yield* put({
@@ -554,7 +630,6 @@ export default function (bundle: Bundle) {
                         sliceName: 'task',
                         partial: true,
                         state: {
-                            levels: taskData.levels,
                             currentLevel: taskData.currentLevel,
                             currentTestId: taskData.currentTestId,
                             taskTests: taskData.taskTests,
@@ -599,11 +674,11 @@ export default function (bundle: Bundle) {
             onResetDisabled: true,
         });
 
-        app.recordApi.on(TaskActionTypes.TaskChangeLevel, function* (addEvent, {payload}) {
-            yield* call(addEvent, TaskActionTypes.TaskChangeLevel, payload);
+        app.recordApi.on(taskChangeLevel.type, function* (addEvent, {payload}) {
+            yield* call(addEvent, taskChangeLevel.type, payload);
         });
-        app.replayApi.on(TaskActionTypes.TaskChangeLevel, function* (replayContext: ReplayContext, event) {
-            yield* put({type: TaskActionTypes.TaskChangeLevel, payload: event[2]});
+        app.replayApi.on(taskChangeLevel.type, function* (replayContext: ReplayContext, event) {
+            yield* put(taskChangeLevel(event[2]));
             replayContext.addSaga(function* (instant: PlayerInstant) {
                 const sourceModel = getBufferModel(instant.state, 'source');
                 const source = sourceModel ? sourceModel.document.toString() : '';

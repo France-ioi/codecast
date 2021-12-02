@@ -7,6 +7,7 @@ import {configureStore} from "@reduxjs/toolkit";
 import taskSlice from "./task/task_slice";
 import documentationSlice from "./task/documentation_slice";
 import log from "loglevel";
+import platformSlice from "./task/platform/platform_slice";
 
 export interface Linker {
     scope: App,
@@ -158,6 +159,7 @@ export function link(rootBuilder, globalScope: App): Linker {
 
         const newNewState = customCombineReducers({
             [taskSlice.name]: taskSlice.reducer,
+            [platformSlice.name]: platformSlice.reducer,
             [documentationSlice.name]: documentationSlice.reducer,
         })(newState, action);
 

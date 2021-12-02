@@ -17,11 +17,12 @@ import {initialStateIoPane} from "./stepper/io";
 import {SubtitlesState} from "./subtitles";
 import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
-import {TaskLevelName, TaskState} from "./task/task_slice";
+import {TaskState} from "./task/task_slice";
 import {LayoutState} from "./task/layout/layout";
 import {DocumentationState} from "./task/documentation_slice";
 import {BufferState} from "./buffers";
 import {EditorState} from "./editor";
+import {PlatformState, TaskLevelName} from "./task/platform/platform_slice";
 
 export type CodecastPlatform = 'python' | 'unix' | 'arduino';
 
@@ -87,6 +88,7 @@ export interface AppStoreReplay {
     stepper: Stepper,
     compile: typeof initialStateCompile,
     task: TaskState,
+    platform: PlatformState,
 
     options: CodecastOptions,
     environment: string,
@@ -116,6 +118,7 @@ export interface AppStore extends Store, AppStoreReplay {
     terminalElement: any,
     vumeterElement: any,
     task: TaskState,
+    platform: PlatformState,
 
     // TODO: Put the following in a "window" attribute instead of at the root of the store
     mainViewGeometry: typeof mainViewGeometries[0],

@@ -1,15 +1,16 @@
 import {Dialog, Icon} from "@blueprintjs/core";
 import React from "react";
 import {useAppSelector} from "../../hooks";
-import {taskLevelsList, taskSuccessClear} from "../task_slice";
+import {taskSuccessClear} from "../task_slice";
 import {useDispatch} from "react-redux";
 import {getMessage} from "../../lang";
 import {taskChangeLevel} from "../index";
+import {taskLevelsList} from "../platform/platform_slice";
 
 export function TaskSuccessDialog() {
     const taskSuccess = useAppSelector(state => state.task.success);
     const taskSuccessMessage = useAppSelector(state => state.task.successMessage);
-    const levels = useAppSelector(state => state.task.levels);
+    const levels = useAppSelector(state => state.platform.levels);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const dispatch = useDispatch();
 
@@ -22,7 +23,7 @@ export function TaskSuccessDialog() {
     const hasNextLevel = currentLevelIndex + 1 < taskLevelsList.length && taskLevelsList[currentLevelIndex + 1] in levels;
 
     const increaseLevel = () => {
-        dispatch(taskChangeLevel({level: taskLevelsList[currentLevelIndex + 1]}));
+        dispatch(taskChangeLevel(taskLevelsList[currentLevelIndex + 1]));
     };
 
     const closeTaskSuccess = () => {

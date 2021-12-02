@@ -1,5 +1,5 @@
 import {
-    taskCreateSubmission, taskSaveScore,
+    taskCreateSubmission,
     TaskSubmissionResultPayload,
     taskSubmissionSetTestResult, taskSubmissionStartTest, taskSuccess
 } from "./task_slice";
@@ -11,6 +11,7 @@ import {TaskActionTypes} from "./index";
 import log from "loglevel";
 import {stepperDisplayError} from "../stepper/actionTypes";
 import React from "react";
+import {platformApi, PlatformTaskGradingParameters, PlatformTaskGradingResult} from "./platform/platform";
 
 export const levelScoringData = {
     basic: {
@@ -107,21 +108,21 @@ class TaskSubmissionExecutor {
         }
 
         const finalScore = worstRate;
-        yield* put(taskSaveScore({level, answer: source, score: finalScore}));
-
-        log.getLogger('tests').debug('Submission execution over', currentSubmission.results);
-        console.log(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
-        if (currentSubmission.results.reduce((agg, next) => agg && next.result, true)) {
-            yield* put(taskSuccess(lastMessage));
+        if (finalScore >= 1) {
+            platformApi.validate('done');
         } else {
-            const error = {
-                type: 'task-tests-submission-results-overview',
-                props: {
-                    results: displayedResults,
-                }
-            };
+            log.getLogger('tests').debug('Submission execution over', currentSubmission.results);
+            console.log(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
+            if (!currentSubmission.results.reduce((agg, next) => agg && next.result, true)) {
+                const error = {
+                    type: 'task-tests-submission-results-overview',
+                    props: {
+                        results: displayedResults,
+                    }
+                };
 
-            yield* put(stepperDisplayError(error));
+                yield* put(stepperDisplayError(error));
+            }
         }
     }
 
@@ -130,9 +131,53 @@ class TaskSubmissionExecutor {
         const state: AppStore = yield* select();
         const tests = state.task.taskTests.map(test => test.data);
 
-        return yield new Promise(resolve => {
+        return yield new Promise<TaskSubmissionResultPayload>(resolve => {
             backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, source, resolve}});
         });
+    }
+
+    *gradeAnswer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
+        const {level, answer, maxScore, minScore} = parameters;
+        let lastMessage = null;
+        const state: AppStore = yield* select();
+        const environment = state.environment;
+        const tests = yield* select(state => state.task.taskTests);
+        if (!tests || 0 === Object.values(tests).length) {
+            return {
+                score: 0,
+            };
+        }
+
+        let testResults = [];
+        for (let testIndex = 0; testIndex < tests.length; testIndex++) {
+            if ('main' === environment) {
+                yield* delay(0);
+            }
+            log.getLogger('tests').debug('[Tests] Start new execution for test', testIndex);
+            const payload: TaskSubmissionResultPayload = yield this.makeBackgroundExecution(level, testIndex, answer);
+            log.getLogger('tests').debug('[Tests] End execution, result=', payload);
+            if ('main' === environment) {
+                yield* delay(0);
+            }
+            lastMessage = payload.message;
+            testResults.push(payload);
+            if (false === payload.result) {
+                // Stop at first test that doesn't work
+                break;
+            }
+        }
+
+        let worstRate = 1;
+        for (let result of testResults) {
+            worstRate = Math.min(worstRate, result.result ? 1 : 0);
+        }
+
+        const finalScore = Math.round(worstRate * (maxScore - minScore) + minScore);
+
+        return {
+            score: finalScore,
+            message: lastMessage,
+        };
     }
 
     setAfterExecutionCallback(callback) {

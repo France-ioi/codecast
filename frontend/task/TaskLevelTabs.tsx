@@ -7,15 +7,16 @@ import {levelScoringData} from "./task_submission";
 import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {taskChangeLevel} from "./index";
+import {TaskLevelName} from "./platform/platform_slice";
 
 export function TaskLevelTabs() {
     const currentLevel = useAppSelector(state => state.task.currentLevel);
-    const levels = useAppSelector(state => state.task.levels);
+    const levels = useAppSelector(state => state.platform.levels);
 
     const dispatch = useDispatch();
 
-    const changeVersion = (level) => {
-        dispatch(taskChangeLevel({level}));
+    const changeVersion = (level: TaskLevelName) => {
+        dispatch(taskChangeLevel(level));
     };
 
     return (
@@ -29,7 +30,7 @@ export function TaskLevelTabs() {
                 >
                     {index > 0 && <a
                         className="prev-link"
-                        onClick={() => changeVersion(Object.keys(levels)[index - 1])}
+                        onClick={() => changeVersion(Object.keys(levels)[index - 1] as TaskLevelName)}
                     >
                         <FontAwesomeIcon icon={faChevronLeft}/>
                     </a>}
@@ -42,7 +43,7 @@ export function TaskLevelTabs() {
                     </a>
                     {index < Object.values(levels).length - 1 && <a
                         className="next-link"
-                        onClick={() => changeVersion(Object.keys(levels)[index + 1])}
+                        onClick={() => changeVersion(Object.keys(levels)[index + 1] as TaskLevelName)}
                     >
                         <FontAwesomeIcon icon={faChevronRight}/>
                     </a>}

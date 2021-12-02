@@ -43,6 +43,7 @@ log.getLogger('performance').setLevel('info');
 log.getLogger('python_interpreter').setLevel('info');
 log.getLogger('printer_lib').setLevel('info');
 log.getLogger('tests').setLevel('debug');
+log.getLogger('platform').setLevel('debug');
 
 interface CodecastEnvironment {
     store: AppStore,
@@ -90,6 +91,11 @@ declare global {
         DelayFactory: any,
         RaphaelFactory: any,
         jQuery: any,
+        task: any, // task object defined to receive data from platform
+        platform: any, // platform object defined to send data to platform
+        json: any, // object that contains the data of a task, defined in the index.html of such task
+        task_token: any, // instance that can generate a task token
+        options: any, // this is used to store default data about task
     }
 }
 
