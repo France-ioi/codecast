@@ -20,7 +20,7 @@ import {
     taskLoadEvent,
     taskUnloadEvent, platformAnswerGraded, platformTaskRefresh, platformAnswerLoaded,
 } from './actionTypes';
-import {App} from "../../index";
+import {App, Codecast} from "../../index";
 import {AppStore} from "../../store";
 import {Action, ActionCreator} from "redux";
 import {
@@ -40,12 +40,16 @@ let getTaskState: () => Generator;
 let getTaskLevel: () => Generator<unknown, TaskLevelName>;
 let taskChangeLevel: ActionCreator<Action>;
 let taskGrader: TaskGrader;
+let taskEventsEnvironment = 'main';
 
 export let taskApi: any;
 export let platformApi: ReturnType<typeof makePlatformAdapter>;
 export let serverApi = null;
+export let setTaskEventsEnvironment = (environment: string) => {
+    taskEventsEnvironment = environment;
+}
 
-function* getTaskAnswerAggregated () {
+export function* getTaskAnswerAggregated () {
     const currentAnswer = yield getTaskAnswer();
 
     const levels = yield* select((state: AppStore) => state.platform.levels);
@@ -72,9 +76,11 @@ function* linkTaskPlatformSaga (app: App) {
     const taskChannel = yield* call(makeTaskChannel);
     taskApi = ((yield* take(taskChannel)) as {task: any}).task;
 
-    // noinspection BadExpressionStatementJS
     yield* takeEvery(taskChannel, function* (action: Action) {
-        yield* put(action);
+        const environment = yield* select((state: AppStore) => state.environment);
+        console.log('listen to event', action, environment, taskEventsEnvironment)
+        const environmentStore = Codecast.environments[taskEventsEnvironment ?? 'main'].store;
+        yield* call(environmentStore.dispatch, action);
     });
 
     window.task = taskApi;
@@ -208,7 +214,8 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
     }
     yield* put(platformTaskRandomSeedUpdated(randomSeed));
 
-    let level: string = yield* select((state: AppStore) => state.task.currentLevel);
+    let level = yield* select((state: AppStore) => state.task.currentLevel);
+    console.log('task load event', level);
     if (!level) {
         const urlParameters = new URLSearchParams(window.location.search);
         const query = Object.fromEntries(urlParameters);
@@ -222,7 +229,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
                 window.location.href = generateTokenUrl(query);
                 return;
             } else {
-                level = query['version'];
+                level = query['version'] as TaskLevelName;
             }
         }
     }
@@ -243,7 +250,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
     }
 }
 
-function* taskGradeAnswerEventSaga ({payload: {answer, success, error, silent}}: ReturnType<typeof taskGradeAnswerEvent>) {
+export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, silent}}: ReturnType<typeof taskGradeAnswerEvent>) {
     try {
         const taskLevels = yield* select((state: AppStore) => state.platform.levels);
         console.log('task levels', taskLevels);
@@ -343,11 +350,7 @@ export function setPlatformBundleParameters(parameters: PlatformBundleParameters
 export default function (bundle: Bundle) {
     bundle.addSaga(linkTaskPlatformSaga);
 
-    bundle.addSaga(function* (app: App) {
-        if ('main' !== app.environment) {
-            return;
-        }
-
+    bundle.addSaga(function* () {
         yield* takeEvery(taskLoadEvent.type, taskLoadEventSaga);
         yield* takeEvery(taskGetMetadataEvent.type, taskGetMetaDataEventSaga);
         yield* takeEvery(taskUnloadEvent.type, taskUnloadEventSaga);

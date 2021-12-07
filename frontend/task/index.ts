@@ -7,6 +7,7 @@ import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
 import {AppStore} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
+import stringify from 'json-stable-stringify-without-jsonify';
 import taskSlice, {
     currentTaskChange,
     currentTaskChangePredefined,
@@ -30,7 +31,12 @@ import taskSlice, {
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./doc";
-import PlatformBundle, {setPlatformBundleParameters, taskApi} from "./platform/platform";
+import PlatformBundle, {
+    getTaskAnswerAggregated,
+    setPlatformBundleParameters,
+    taskApi,
+    taskGradeAnswerEventSaga
+} from "./platform/platform";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
 import {ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {createDraft} from "immer";
@@ -42,7 +48,12 @@ import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
-import {platformAnswerGraded, platformAnswerLoaded} from "./platform/actionTypes";
+import {
+    platformAnswerGraded,
+    platformAnswerLoaded,
+    taskGetAnswerEvent,
+    taskGradeAnswerEvent
+} from "./platform/actionTypes";
 import {isStepperInterrupting} from "../stepper/selectors";
 import {getBufferModel} from "../buffers/selectors";
 import {documentModelFromString} from "../buffers";
@@ -271,6 +282,7 @@ function* taskLoadSaga(app: App, action) {
         yield* all(sagas);
     });
 
+    state = yield* select();
     const sourceModel = getBufferModel(state, 'source');
     const source = sourceModel ? sourceModel.document.toString() : null;
     if ((!source || !source.length) && currentTask) {
@@ -367,11 +379,9 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     yield* put(platformSaveAnswer({level: currentLevel, answer: source}));
 
     // Grade old answer
-    yield new Promise(async (resolve, reject) => {
-        taskApi.getAnswer((answer) => {
-            taskApi.gradeAnswer(answer, null, resolve, reject, true);
-        });
-    })
+    const answer = stringify(yield* getTaskAnswerAggregated());
+    yield* call(taskGradeAnswerEventSaga, taskGradeAnswerEvent(answer, null, () => {}, () => {}, true));
+    console.log('grading finished');
 
     // Change level
     yield* put(taskCurrentLevelChange({level: newLevel}));
@@ -675,7 +685,7 @@ export default function (bundle: Bundle) {
         });
 
         app.recordApi.on(taskChangeLevel.type, function* (addEvent, {payload}) {
-            yield* call(addEvent, taskChangeLevel.type, payload);
+            yield* call(addEvent, taskChangeLevel.type, payload.level);
         });
         app.replayApi.on(taskChangeLevel.type, function* (replayContext: ReplayContext, event) {
             yield* put(taskChangeLevel(event[2]));

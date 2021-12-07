@@ -2,6 +2,7 @@ import {getAnswerTokenForLevel, getTaskTokenForLevel} from "./task_token";
 import {call, select} from "typed-redux-saga";
 import {PlatformTaskGradingParameters, serverApi} from "./platform";
 import {AppStore} from "../../store";
+import stringify from 'json-stable-stringify-without-jsonify';
 
 // This will be used when we'll start the task grading by a server
 export class ServerGrader {
@@ -9,7 +10,7 @@ export class ServerGrader {
         const randomSeed = yield* select((state: AppStore) => state.platform.taskRandomSeed);
 
         const newTaskToken = getTaskTokenForLevel(level, randomSeed);
-        const answerToken = getAnswerTokenForLevel(JSON.stringify(answer), level, randomSeed);
+        const answerToken = getAnswerTokenForLevel(stringify(answer), level, randomSeed);
 
         const {score, message, scoreToken}: any = yield* call(serverApi, 'tasks', 'gradeAnswer', {
             task: newTaskToken,

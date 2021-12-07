@@ -1,15 +1,16 @@
 import jwt from 'jsonwebtoken';
 import {levelScoringData} from "../task_submission";
+import {TaskLevelName} from "./platform_slice";
 
-export const getTaskTokenForLevel = (level, randomSeed) => {
+export const getTaskTokenForLevel = (level: TaskLevelName, randomSeed: string) => {
   return getTaskTokenObject(level, randomSeed).get();
 }
 
-export const getAnswerTokenForLevel = (answer, level, randomSeed) => {
+export const getAnswerTokenForLevel = (answer: any, level: TaskLevelName, randomSeed: string) => {
   return getTaskTokenObject(level, randomSeed).getAnswerToken(answer);
 }
 
-export const getTaskTokenObject = (level: string, randomSeed) => {
+export const getTaskTokenObject = (level: TaskLevelName, randomSeed: string) => {
   const query = {
     taskID: window.options ?window.options.defaults.taskID : null,
     version: level,

@@ -1,9 +1,10 @@
 import {
     taskCreateSubmission,
     TaskSubmissionResultPayload,
-    taskSubmissionSetTestResult, taskSubmissionStartTest, taskSuccess
+    taskSubmissionSetTestResult,
+    taskSubmissionStartTest,
 } from "./task_slice";
-import {delay, put, select} from "typed-redux-saga";
+import {call, delay, put, select} from "typed-redux-saga";
 import {AppStore} from "../store";
 import {Codecast} from "../index";
 import {getBufferModel} from "../buffers/selectors";
@@ -11,7 +12,11 @@ import {TaskActionTypes} from "./index";
 import log from "loglevel";
 import {stepperDisplayError} from "../stepper/actionTypes";
 import React from "react";
-import {platformApi, PlatformTaskGradingParameters, PlatformTaskGradingResult} from "./platform/platform";
+import {
+    platformApi,
+    PlatformTaskGradingParameters,
+    PlatformTaskGradingResult,
+} from "./platform/platform";
 
 export const levelScoringData = {
     basic: {
@@ -109,7 +114,7 @@ class TaskSubmissionExecutor {
 
         const finalScore = worstRate;
         if (finalScore >= 1) {
-            platformApi.validate('done');
+            yield* call([platformApi, platformApi.validate], 'done');
         } else {
             log.getLogger('tests').debug('Submission execution over', currentSubmission.results);
             console.log(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
@@ -141,6 +146,7 @@ class TaskSubmissionExecutor {
         let lastMessage = null;
         const state: AppStore = yield* select();
         const environment = state.environment;
+        console.log('start grading answer', environment);
         const tests = yield* select(state => state.task.taskTests);
         if (!tests || 0 === Object.values(tests).length) {
             return {
@@ -166,6 +172,8 @@ class TaskSubmissionExecutor {
                 break;
             }
         }
+
+        console.log('end grading answer');
 
         let worstRate = 1;
         for (let result of testResults) {
