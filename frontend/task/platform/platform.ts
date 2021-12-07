@@ -142,7 +142,11 @@ function* taskUnloadEventSaga ({payload: {success}}: ReturnType<typeof taskUnloa
 }
 
 function* taskGetMetaDataEventSaga ({payload: {success, error: _error}}: ReturnType<typeof taskGetMetadataEvent>) {
-    const metadata = window.json ? window.json : {fullFeedback: true};
+    const metadata = window.json ? window.json : {
+        fullFeedback: true,
+        minWidth: "auto",
+    };
+    metadata.autoHeight = true;
 
     yield* call(success, metadata);
 }
