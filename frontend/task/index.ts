@@ -181,26 +181,6 @@ function* createContext() {
     context.resetAndReloadState(testData, state);
 }
 
-export interface AutocompletionParameters {
-    includeBlocks: any,
-    strings: any,
-    constants: any,
-}
-
-export function getAutocompletionParameters (context, currentLevel: TaskLevelName): AutocompletionParameters {
-    if (!context.strings || 0 === Object.keys(context.strings).length) {
-        return null;
-    }
-
-    const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
-
-    return {
-        includeBlocks: curIncludeBlocks,
-        strings: context.strings,
-        constants: context.customConstants,
-    };
-}
-
 let oldSagasTasks = {};
 
 function* taskLoadSaga(app: App, action) {

@@ -2,12 +2,12 @@ import React from 'react';
 import classnames from 'classnames';
 import * as ace from 'brace';
 import {connect} from "react-redux";
-import {AppStore} from "../store";
+import {AppStore, CodecastPlatform} from "../store";
 import {addAutocompletion} from "./editorAutocompletion";
-import {AutocompletionParameters, getAutocompletionParameters} from '../task';
 import {LayoutType} from "../task/layout/layout";
 import {quickAlgoLibraries, QuickAlgoLibrary} from "../task/libs/quickalgo_librairies";
 import {getMessage} from "../lang";
+import {Block, getContextBlocksData} from "../task/blocks/blocks";
 
 const Range = ace.acequire('ace/range').Range;
 
@@ -15,18 +15,18 @@ interface EditorStateToProps {
     context: QuickAlgoLibrary,
     layoutType: LayoutType,
     zoomLevel?: number,
-    autocompletionParameters: AutocompletionParameters,
+    availableBlocks: Block[],
 }
 
-function mapStateToProps(state: AppStore): EditorStateToProps {
+function mapStateToProps(state: AppStore, props): EditorStateToProps {
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const autocompletionParameters = context ? getAutocompletionParameters(context, state.task.currentLevel) : null;
+    const availableBlocks = context && 'text' !== props.mode ? getContextBlocksData(context, props.mode as CodecastPlatform).availableBlocks : [];
 
     return {
         context,
         layoutType: state.layout.type,
         zoomLevel: state.layout.zoomLevel,
-        autocompletionParameters,
+        availableBlocks,
     };
 }
 
@@ -213,9 +213,9 @@ class _Editor extends React.PureComponent<EditorProps> {
 
     componentDidMount() {
         const editor = this.editor = ace.edit(this.editorNode);
-        if (this.props.hasAutocompletion && this.props.autocompletionParameters) {
-            const {includeBlocks, strings, constants} = this.props.autocompletionParameters;
-            addAutocompletion(this.props.mode, includeBlocks, constants, strings);
+        const context = quickAlgoLibraries.getContext(null, 'main');
+        if (this.props.hasAutocompletion && this.props.availableBlocks && context) {
+            addAutocompletion(this.props.availableBlocks, context.strings);
         }
         const session = this.editor.getSession();
         editor.$blockScrolling = Infinity;
@@ -319,11 +319,13 @@ class _Editor extends React.PureComponent<EditorProps> {
                 this.editor.setTheme(`ace/theme/${this.props.theme || 'github'}`);
             }
 
-            if (this.props.hasAutocompletion && this.props.autocompletionParameters
-                && (prevProps.mode !== this.props.mode || JSON.stringify(prevProps.autocompletionParameters) !== JSON.stringify(this.props.autocompletionParameters))
+            const context = quickAlgoLibraries.getContext(null, 'main');
+
+            if (this.props.hasAutocompletion && this.props.availableBlocks
+                && JSON.stringify(prevProps.availableBlocks) !== JSON.stringify(this.props.availableBlocks)
+                && context
             ) {
-                const {includeBlocks, strings, constants} = this.props.autocompletionParameters;
-                addAutocompletion(this.props.mode, includeBlocks, constants, strings);
+                addAutocompletion(this.props.availableBlocks, context.strings);
             }
         }
     };

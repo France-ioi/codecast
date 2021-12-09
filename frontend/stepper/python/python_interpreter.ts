@@ -4,7 +4,7 @@
 */
 
 import log from "loglevel";
-import {getContextFunctions} from "../../task/python_utils";
+import {getContextBlocksData} from "../../task/blocks/blocks";
 
 if (!window.hasOwnProperty('currentPythonContext')) {
     window.currentPythonContext = null;
@@ -118,7 +118,7 @@ export default function(context) {
 
     this._injectFunctions = () => {
         // Generate Python custom libraries from all generated blocks
-        const {argumentsByBlock, handlers, constants} = getContextFunctions(this.context);
+        const {argumentsByBlock, handlers, constants} = getContextBlocksData(this.context, 'python');
         this._argumentsByBlock = argumentsByBlock;
 
         for (let generatorName in context.infos.includeBlocks.generatedBlocks) {

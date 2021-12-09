@@ -1,17 +1,8 @@
 import * as ace from 'brace';
-import {pythonForbiddenLists} from "../task/python_utils";
 import {getMessage} from "../lang";
+import {Block, BlockType} from "../task/blocks/blocks";
 
-function hideHiddenWords(list) {
-    const hiddenWords = ['__getitem__', '__setitem__'];
-    for (let i = 0; i < hiddenWords.length; i++) {
-        const word = hiddenWords[i];
-        const wIdx = list.indexOf(word);
-        if (wIdx > -1) {
-            list.splice(wIdx, 1);
-        }
-    }
-}
+const hiddenWords = ['__getitem__', '__setitem__'];
 
 function getSnippet(proto) {
     let parenthesisOpenIndex = proto.indexOf("(");
@@ -92,125 +83,50 @@ export const getFunctionsInfo = function (functionName, strings, ignoreDoc = fal
     };
 };
 
-export const addAutocompletion = function (language, includeBlocks, customConstants, strings) {
+export const addAutocompletion = function (blocks: Block[], strings: any) {
     let langTools = ace.acequire("ace/ext/language_tools");
 
     // This array will contain all functions for which we must add autocompletion
     let completions = [];
 
-    // we add completion on functions
-    if (includeBlocks) {
-        if (includeBlocks.generatedBlocks) {
-            for (let categoryIndex of Object.keys(includeBlocks.generatedBlocks)) {
-                for (let funIndex of Object.keys(includeBlocks.generatedBlocks[categoryIndex])) {
-                    let fun = includeBlocks.generatedBlocks[categoryIndex][funIndex];
-                    let funInfos = getFunctionsInfo(fun, strings, false);
-                    let funProto = funInfos.proto;
-                    let funHelp = funInfos.help;
-                    let funSnippet = getSnippet(funProto);
-                    completions.push({
-                        caption: funProto,
-                        snippet: funSnippet,
-                        type: "snippet",
-                        docHTML: "<b>" + funProto + "</b><hr></hr>" + funHelp
-                    });
-                }
+    let keywordi18n = getMessage('KEYWORD').s;
 
-                if (customConstants && customConstants[categoryIndex]) {
-                    let constList = customConstants[categoryIndex];
-                    for (let iConst = 0; iConst < constList.length; iConst++) {
-                        let name = constList[iConst].name;
-                        if (strings.constant && strings.constant[name]) {
-                            name = strings.constant[name];
-                        }
-                        completions.push({
-                            name: name,
-                            value: name,
-                            meta: getMessage('CONSTANT').s,
-                        });
-                    }
-                }
-            }
-        }
-
-        if ('python' === language && includeBlocks.pythonAdditionalFunctions) {
-            for (let i = 0; i < includeBlocks.pythonAdditionalFunctions.length; i++) {
-                let func = includeBlocks.pythonAdditionalFunctions[i];
+    for (let block of blocks) {
+        switch (block.type) {
+            case BlockType.Function:
+                let fun = block.name;
+                let funInfos = getFunctionsInfo(fun, strings, false);
+                let funProto = funInfos.proto;
+                let funHelp = funInfos.help;
+                let funSnippet = getSnippet(funProto);
                 completions.push({
-                    caption: func + '()',
-                    snippet: getSnippet(func),
+                    caption: funProto,
+                    snippet: funSnippet,
                     type: "snippet",
-                    docHTML: "<b>" + func + "()</b><hr></hr>"
+                    docHTML: "<b>" + funProto + "</b><hr/>" + funHelp,
                 });
-            }
-        }
-    }
-
-    if ('python' === language) {
-        // Adding allowed consts (for, while...)
-        let allowedConsts = pythonForbiddenLists(includeBlocks).allowed;
-        hideHiddenWords(allowedConsts);
-
-        // This blocks are blocks which are not special but must be added
-        let toAdd = ["True", "False"];
-        for (let toAddId = 0; toAddId < toAdd.length; toAddId++) {
-            allowedConsts.push(toAdd[toAddId]);
-        }
-
-        let keywordi18n = getMessage('KEYWORD').s;
-
-        // if we want to modify the result of certain keys
-        let specialSnippets = {
-            // list_brackets and dict_brackets are not working
-            list_brackets:
-                {
-                    name: "[]",
-                    value: "[]",
-                    meta: keywordi18n
-                },
-            dict_brackets: {
-                name: "{}",
-                value: "{}",
-                meta: keywordi18n
-            },
-            var_assign: {
-                caption: "x =",
-                snippet: "x = $1",
-                type: "snippet",
-                meta: getMessage('VARIABLE').s,
-            },
-            if: {
-                caption: "if",
-                snippet: "if ${1:condition}:\n\t${2:pass}",
-                type: "snippet",
-                meta: keywordi18n
-            },
-            while: {
-                caption: "while",
-                snippet: "while ${1:condition}:\n\t${2:pass}",
-                type: "snippet",
-                meta: keywordi18n
-            },
-            elif: {
-                caption: "elif",
-                snippet: "elif ${1:condition}:\n\t${2:pass}",
-                type: "snippet",
-                meta: keywordi18n
-            }
-        };
-
-        for (let constId = 0; constId < allowedConsts.length; constId++) {
-            if (specialSnippets.hasOwnProperty(allowedConsts[constId])) {
-                // special constant, need to create snippet
-                completions.push(specialSnippets[allowedConsts[constId]]);
-            } else {
-                // basic constant (just printed)
+                break;
+            case BlockType.Constant:
+                let name = block.name;
+                if (strings.constant && strings.constant[name]) {
+                    name = strings.constant[name];
+                }
                 completions.push({
-                    name: allowedConsts[constId],
-                    value: allowedConsts[constId],
-                    meta: keywordi18n
-                })
-            }
+                    name: name,
+                    value: name,
+                    meta: getMessage('CONSTANT').s,
+                });
+                break;
+            case BlockType.Token:
+                if (-1 !== hiddenWords.indexOf(block.name)) {
+                    continue;
+                }
+                completions.push({
+                    caption: block.name,
+                    snippet: block.code,
+                    type: "snippet",
+                    meta: keywordi18n,
+                });
         }
     }
 
