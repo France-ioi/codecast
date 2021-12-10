@@ -2,12 +2,14 @@
   --primary-color: #4a90e2;
   --secondary-color: #4a4a4a;
   --font-family-sans-serif: 'Open Sans', sans-serif;
+  --default-border-radius: 5px;
 }
 
 [data-theme="coursera"] {
   --primary-color: #0056D2;
   --secondary-color: #1f1f1f;
   --font-family-sans-serif: 'Source Sans Pro', sans-serif;
+  --default-border-radius: 0;
 }
 
 @mixin mobile {
@@ -300,8 +302,8 @@ body {
 
     .menu-task-element {
       background: var(--secondary-color);
-      border-top-left-radius: 5px;
-      border-bottom-left-radius: 5px;
+      border-top-left-radius: var(--default-border-radius);
+      border-bottom-left-radius: var(--default-border-radius);
       margin-bottom: .7rem;
       padding: 0 6px 0 3px;
       &.is-blue {
