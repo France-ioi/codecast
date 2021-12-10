@@ -10,7 +10,13 @@ export function AvailableBlock(props: AvailableBlockProps) {
 
     return (
         <div className="task-available-block">
-            {block.code}
+            <div className="task-available-block-name">
+                {block.caption}
+            </div>
+
+            {block.description && <div className="task-available-block-description">
+                {block.description}
+            </div>}
         </div>
     );
 }

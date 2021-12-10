@@ -11,11 +11,15 @@ export enum BlockType {
 export interface Block {
     name: string,
     type: BlockType,
+    description?: string // displayed on the blocks list and in autocomplete
     code?: string,
-    category: string,
+    caption?: string, // how the block will be displayed on the interface
+    captionMeta?: string, // optional category that will appear in autocomplete
+    category?: string,
     generatorName?: string,
     value?: string, // for constant
     params?: any, // for function
+    showInBlocks?: boolean,
 }
 
 export const getContextBlocksDataSelector = function (state: AppStoreReplay, context: QuickAlgoLibrary): Block[] {
@@ -23,7 +27,7 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
     const contextStrings = state.task.contextStrings;
     const platform = state.options.platform;
 
-    let availableBlocks = [];
+    let availableBlocks: Block[] = [];
 
     if (contextIncludeBlocks && contextIncludeBlocks.generatedBlocks) {
         // Flatten customBlocks information for easy access
@@ -78,6 +82,7 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
                     type: BlockType.Function,
                     category: type,
                     params: nbsArgs,
+                    caption: code,
                     code,
                 });
             }
@@ -92,6 +97,7 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
                     availableBlocks.push({
                         generatorName,
                         name,
+                        caption: name,
                         type: BlockType.Constant,
                         value: constList[iConst].value,
                     });
@@ -104,6 +110,36 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
        const pythonSpecificBlocks = getPythonSpecificBlocks(contextIncludeBlocks);
        availableBlocks = [...availableBlocks, ...pythonSpecificBlocks];
     }
+
+    availableBlocks.forEach((block => {
+        if (block.name in contextStrings.description) {
+            block.description = contextStrings.description[block.name];
+        }
+
+        if (BlockType.Function === block.type) {
+            if (block.description) {
+                block.description = block.description.replace(/@/g, block.code);
+            }
+
+            let blockDesc = '', funcProto = '', blockHelp = '';
+            let blockName = block.name;
+            let funcCode = block.caption;
+            blockDesc = block.description;
+            if (!blockDesc) {
+                block.caption = funcCode + '()';
+            } else if (blockDesc.indexOf('</code>') < 0) {
+                let funcProtoEnd = blockDesc.indexOf(')') + 1;
+                if (funcProtoEnd > 0) {
+                    block.caption = blockDesc.substring(0, funcProtoEnd);
+                    block.description = blockDesc.substring(funcProtoEnd + 1);
+                    console.log('substring', blockDesc, funcProtoEnd, block.description);
+                } else {
+                    console.error("Description for block '" + blockName + "' needs to be of the format 'function() : description', auto-generated one used instead could be wrong.");
+                    block.caption = blockName + '()';
+                }
+            }
+        }
+    }))
 
     return availableBlocks;
 }

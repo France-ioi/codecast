@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React from "react";
 import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
 import {Block, getContextBlocksDataSelector} from "./blocks/blocks";
 import {useAppSelector} from "../hooks";
@@ -7,21 +7,14 @@ import {AvailableBlockCategory} from "./AvailableBlockCategory";
 
 export function AvailableBlocks() {
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const currentLevel = useAppSelector(state => state.task.currentLevel);
-    const blocks = useAppSelector(state => context ? getContextBlocksDataSelector(state, context) : []);
+    const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector(state, context) : []);
+    const blocks = allBlocks.filter(block => false !== block.showInBlocks);
 
-    console.log('bim', context && context.infos && context.infos.includeBlocks, currentLevel);
-    useEffect(() => {
-        console.log('test change');
-    }, [context && context.infos && context.infos.includeBlocks])
-
-    console.log('here display');
     if (!context) {
         return null;
     }
 
     const groupsCategory = !!(context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
-
     if (!blocks.length) {
         return null;
     }

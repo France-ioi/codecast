@@ -41,48 +41,6 @@ function getSnippet(proto) {
     }
 }
 
-export const getFunctionsInfo = function (functionName, strings, ignoreDoc = false) {
-    let blockDesc = '', funcProto = '', blockHelp = '';
-    const docGenerator = false;
-    // TODO: When we'll start working on blockly processing lib, we'll need to integrate its custom doc generator
-    // For now, we'll leave it commented
-
-    // const docGenerator = createDocGenerator(null, strings);
-    // if (!ignoreDoc && docGenerator) {
-    //     blockDesc = docGenerator.blockDescription(functionName);
-    //     funcProto = blockDesc.substring(blockDesc.indexOf('<code>') + 6, blockDesc.indexOf('</code>'));
-    //     blockHelp = blockDesc.substring(blockDesc.indexOf('</code>') + 7);
-    // } else {
-        let blockName = functionName;
-        let funcCode = (!ignoreDoc && strings.code[blockName]) || blockName;
-        blockDesc = (!ignoreDoc && strings.description[blockName]);
-        if (blockDesc) {
-            blockDesc = blockDesc.replace(/@/g, funcCode);
-        }
-        if (!blockDesc) {
-            funcProto = funcCode + '()';
-            blockDesc = '<code>' + funcProto + '</code>';
-        } else if (blockDesc.indexOf('</code>') < 0) {
-            let funcProtoEnd = blockDesc.indexOf(')') + 1;
-            if (funcProtoEnd > 0) {
-                funcProto = blockDesc.substring(0, funcProtoEnd);
-                blockHelp = blockDesc.substring(funcProtoEnd);
-                blockDesc = '<code>' + funcProto + '</code>' + blockHelp;
-            } else {
-                console.error("Description for block '" + blockName + "' needs to be of the format 'function() : description', auto-generated one used instead could be wrong.");
-                funcProto = blockName + '()';
-                blockDesc = '<code>' + funcProto + '</code> : ' + blockHelp;
-            }
-        }
-    // }
-    
-    return {
-        desc: blockDesc,
-        proto: funcProto,
-        help: blockHelp
-    };
-};
-
 export const addAutocompletion = function (blocks: Block[], strings: any) {
     let langTools = ace.acequire("ace/ext/language_tools");
 
@@ -94,16 +52,12 @@ export const addAutocompletion = function (blocks: Block[], strings: any) {
     for (let block of blocks) {
         switch (block.type) {
             case BlockType.Function:
-                let fun = block.name;
-                let funInfos = getFunctionsInfo(fun, strings, false);
-                let funProto = funInfos.proto;
-                let funHelp = funInfos.help;
-                let funSnippet = getSnippet(funProto);
+                let funSnippet = getSnippet(block.caption);
                 completions.push({
-                    caption: funProto,
+                    caption: block.caption,
                     snippet: funSnippet,
                     type: "snippet",
-                    docHTML: "<b>" + funProto + "</b><hr/>" + funHelp,
+                    docHTML: "<b>" + block.caption + "</b>" + (block.description ? "<hr/>" + block.description : ""),
                 });
                 break;
             case BlockType.Constant:
@@ -122,10 +76,10 @@ export const addAutocompletion = function (blocks: Block[], strings: any) {
                     continue;
                 }
                 completions.push({
-                    caption: block.name,
+                    caption: block.caption,
                     snippet: block.code,
                     type: "snippet",
-                    meta: keywordi18n,
+                    meta: block.captionMeta ? block.captionMeta : keywordi18n,
                 });
         }
     }

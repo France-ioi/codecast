@@ -426,9 +426,11 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
     const availableBlocks = [];
 
     let specialSnippets = {
-        var_assign: {
+        variables: {
             caption: "x =",
             snippet: "x = $1",
+            captionMeta: getMessage('VARIABLE').s,
+            showInBlocks: false,
         },
         if: {
             caption: "if",
@@ -449,6 +451,7 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
             let func = contextIncludeBlocks.pythonAdditionalFunctions[i];
             availableBlocks.push({
                 name: func,
+                caption: func,
                 type: BlockType.Function,
                 code: func + '()',
             });
@@ -480,19 +483,24 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
             let code = tokenParts.length > 1 ? tokenParts[1] : token;
 
             availableBlocks.push({
-                name: name in specialSnippets ? specialSnippets[name].caption : code,
+                name,
                 type: BlockType.Token,
+                caption: name in specialSnippets ? specialSnippets[name].caption : code,
+                captionMeta: name in specialSnippets && specialSnippets[name].captionMeta ? specialSnippets[name].captionMeta : null,
                 code: name in specialSnippets ? specialSnippets[name].snippet : code,
                 category: tokenCategories[token],
+                showInBlocks: name in specialSnippets && false === specialSnippets[name].showInBlocks ? false : undefined,
             });
         }
 
-        let toAdd = ["True", "False"];
+        let toAdd = ['True', 'False'];
         for (let name of toAdd) {
             availableBlocks.push({
                 name,
                 type: BlockType.Constant,
+                caption: name,
                 code: name,
+                showInBlocks: false,
             });
         }
     }
