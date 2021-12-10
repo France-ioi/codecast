@@ -2,12 +2,12 @@ import React from 'react';
 import classnames from 'classnames';
 import * as ace from 'brace';
 import {connect} from "react-redux";
-import {AppStore, CodecastPlatform} from "../store";
+import {AppStore} from "../store";
 import {addAutocompletion} from "./editorAutocompletion";
 import {LayoutType} from "../task/layout/layout";
 import {quickAlgoLibraries, QuickAlgoLibrary} from "../task/libs/quickalgo_librairies";
 import {getMessage} from "../lang";
-import {Block, getContextBlocksData} from "../task/blocks/blocks";
+import {Block, getContextBlocksDataSelector} from "../task/blocks/blocks";
 
 const Range = ace.acequire('ace/range').Range;
 
@@ -16,17 +16,19 @@ interface EditorStateToProps {
     layoutType: LayoutType,
     zoomLevel?: number,
     availableBlocks: Block[],
+    contextStrings: any,
 }
 
 function mapStateToProps(state: AppStore, props): EditorStateToProps {
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const availableBlocks = context && 'text' !== props.mode ? getContextBlocksData(context, props.mode as CodecastPlatform).availableBlocks : [];
+    const availableBlocks = context && 'text' !== props.mode ? getContextBlocksDataSelector(state, context) : [];
 
     return {
         context,
         layoutType: state.layout.type,
         zoomLevel: state.layout.zoomLevel,
         availableBlocks,
+        contextStrings: state.task.contextStrings,
     };
 }
 
@@ -213,9 +215,8 @@ class _Editor extends React.PureComponent<EditorProps> {
 
     componentDidMount() {
         const editor = this.editor = ace.edit(this.editorNode);
-        const context = quickAlgoLibraries.getContext(null, 'main');
-        if (this.props.hasAutocompletion && this.props.availableBlocks && context) {
-            addAutocompletion(this.props.availableBlocks, context.strings);
+        if (this.props.hasAutocompletion && this.props.availableBlocks && this.props.contextStrings) {
+            addAutocompletion(this.props.availableBlocks, this.props.contextStrings);
         }
         const session = this.editor.getSession();
         editor.$blockScrolling = Infinity;
@@ -319,13 +320,11 @@ class _Editor extends React.PureComponent<EditorProps> {
                 this.editor.setTheme(`ace/theme/${this.props.theme || 'github'}`);
             }
 
-            const context = quickAlgoLibraries.getContext(null, 'main');
-
-            if (this.props.hasAutocompletion && this.props.availableBlocks
-                && JSON.stringify(prevProps.availableBlocks) !== JSON.stringify(this.props.availableBlocks)
-                && context
+            if (this.props.hasAutocompletion && this.props.availableBlocks && this.props.contextStrings
+                && (JSON.stringify(prevProps.availableBlocks) !== JSON.stringify(this.props.availableBlocks)
+                    || JSON.stringify(prevProps.contextStrings) !== JSON.stringify(this.props.contextStrings))
             ) {
-                addAutocompletion(this.props.availableBlocks, context.strings);
+                addAutocompletion(this.props.availableBlocks, this.props.contextStrings);
             }
         }
     };

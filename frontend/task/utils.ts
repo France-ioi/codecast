@@ -2,7 +2,7 @@ import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
 import {current, isDraft} from "immer";
 import {checkPythonCode} from "./python_utils";
 import {getMessage} from "../lang";
-import {CodecastPlatform} from "../store";
+import {AppStore, CodecastPlatform} from "../store";
 
 export function extractLevelSpecific(item, level) {
     if ((typeof item != "object")) {
@@ -70,15 +70,15 @@ export function getAvailableModules(context) {
     }
 }
 
-export function checkCompilingCode(code, platform: CodecastPlatform, environment: string) {
+export function checkCompilingCode(code, platform: CodecastPlatform, state: AppStore) {
     if (!code) {
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
 
     if ('python' === platform) {
-        const context = quickAlgoLibraries.getContext(null, environment);
+        const context = quickAlgoLibraries.getContext(null, state.environment);
         if (context) {
-            checkPythonCode(code, context);
+            checkPythonCode(code, context, state);
         }
     }
 }

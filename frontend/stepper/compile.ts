@@ -85,7 +85,7 @@ export default function(bundle: Bundle) {
             });
 
             try {
-                checkCompilingCode(source.trim(), platform, state.environment);
+                checkCompilingCode(source.trim(), platform, state);
             } catch (e) {
                 yield* put({
                     type: ActionTypes.CompileFailed,

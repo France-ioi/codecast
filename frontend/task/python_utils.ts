@@ -9,7 +9,9 @@ Codecast note: this module comes from https://github.com/France-ioi/bebras-modul
 
 import {getAvailableModules} from "./utils";
 import {getMessage} from "../lang";
-import {Block, BlockType, getContextBlocksData} from "./blocks/blocks";
+import {Block, BlockType, getContextBlocksDataSelector} from "./blocks/blocks";
+import {AppStore} from "../store";
+import {QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 
 const pythonCountPatterns = [
     // Comments
@@ -370,7 +372,7 @@ export const pythonFindLimited = function (code, limitedUses, blockToCode) {
     return false;
 }
 
-export const checkPythonCode = function (code, context) {
+export const checkPythonCode = function (code: string, context: QuickAlgoLibrary, state: AppStore) {
     const includeBlocks = context.infos.includeBlocks;
     const forbidden = pythonForbidden(code, includeBlocks);
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
@@ -406,7 +408,8 @@ export const checkPythonCode = function (code, context) {
 
     // Check for functions used as values
     let re = /def\W+([^(]+)\(/g;
-    const {definedFunctions} = getContextBlocksData(context, 'python');
+    const availableBlocks = getContextBlocksDataSelector(state, context);
+    const definedFunctions = [...new Set(availableBlocks.filter(block => BlockType.Function === block.type).map(block => block.code))];
     let match;
     while (match = re.exec(code)) {
         definedFunctions.push(match[1]);
@@ -419,7 +422,7 @@ export const checkPythonCode = function (code, context) {
     }
 }
 
-export function getPythonSpecificBlocks(context): Block[] {
+export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
     const availableBlocks = [];
 
     let specialSnippets = {
@@ -441,9 +444,9 @@ export function getPythonSpecificBlocks(context): Block[] {
         },
     };
 
-    if (context.infos && context.infos.includeBlocks && context.infos.includeBlocks.pythonAdditionalFunctions) {
-        for (let i = 0; i < context.infos.includeBlocks.pythonAdditionalFunctions.length; i++) {
-            let func = context.infos.includeBlocks.pythonAdditionalFunctions[i];
+    if (contextIncludeBlocks && contextIncludeBlocks.pythonAdditionalFunctions) {
+        for (let i = 0; i < contextIncludeBlocks.pythonAdditionalFunctions.length; i++) {
+            let func = contextIncludeBlocks.pythonAdditionalFunctions[i];
             availableBlocks.push({
                 name: func,
                 type: BlockType.Function,
@@ -452,8 +455,8 @@ export function getPythonSpecificBlocks(context): Block[] {
         }
     }
 
-    if (context.infos && context.infos.includeBlocks) {
-        const allowedTokens = pythonForbiddenLists(context.infos.includeBlocks).allowed;
+    if (contextIncludeBlocks) {
+        const allowedTokens = pythonForbiddenLists(contextIncludeBlocks).allowed;
         const bracketsWords = { list_brackets: 'crochets [ ]+[]', dict_brackets: 'accolades { }+{}', var_assign: 'variables+x =' };
         for(let bracketsCode in bracketsWords) {
             const bracketsIdx = allowedTokens.indexOf(bracketsCode);

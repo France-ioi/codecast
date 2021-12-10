@@ -11,6 +11,7 @@ import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
 import {Action} from "redux";
+import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 
 export default function(bundle: Bundle) {
     const pythonInterpreterChannel = channel<Action>();
@@ -79,8 +80,10 @@ export default function(bundle: Bundle) {
                  */
                 const pythonSource = source + "\npass";
 
+                const blocksData = getContextBlocksDataSelector(state, context);
+
                 const pythonInterpreter = new PythonInterpreter(context);
-                pythonInterpreter.initCodes([pythonSource]);
+                pythonInterpreter.initCodes([pythonSource], blocksData);
             }
         });
     })

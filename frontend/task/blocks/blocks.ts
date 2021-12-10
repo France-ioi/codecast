@@ -1,5 +1,6 @@
-import {CodecastPlatform} from "../../store";
+import {AppStore, AppStoreReplay, CodecastPlatform} from "../../store";
 import {getPythonSpecificBlocks} from "../python_utils";
+import {QuickAlgoLibrary} from "../libs/quickalgo_librairies";
 
 export enum BlockType {
     Function = 'function',
@@ -17,14 +18,14 @@ export interface Block {
     params?: any, // for function
 }
 
-export const getContextBlocksData = function (context, platform: CodecastPlatform) {
-    const definedFunctions = [];
-    const argumentsByBlock = {};
-    const handlers = [];
-    const constants = [];
+export const getContextBlocksDataSelector = function (state: AppStoreReplay, context: QuickAlgoLibrary): Block[] {
+    const contextIncludeBlocks = state.task.contextIncludeBlocks;
+    const contextStrings = state.task.contextStrings;
+    const platform = state.options.platform;
+
     let availableBlocks = [];
 
-    if (context.infos && context.infos.includeBlocks && context.infos.includeBlocks.generatedBlocks) {
+    if (contextIncludeBlocks && contextIncludeBlocks.generatedBlocks) {
         // Flatten customBlocks information for easy access
         const blocksInfos = {};
         for (let generatorName in context.customBlocks) {
@@ -52,18 +53,15 @@ export const getContextBlocksData = function (context, platform: CodecastPlatfor
         }
 
         // Generate functions used in the task
-        for (let generatorName in context.infos.includeBlocks.generatedBlocks) {
-            let blockList = context.infos.includeBlocks.generatedBlocks[generatorName];
+        for (let generatorName in contextIncludeBlocks.generatedBlocks) {
+            let blockList = contextIncludeBlocks.generatedBlocks[generatorName];
             if (!blockList.length) {
                 continue;
             }
 
-            if (!argumentsByBlock[generatorName]) {
-                argumentsByBlock[generatorName] = {};
-            }
             for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
                 let blockName = blockList[iBlock];
-                let code = context.strings.code[blockName];
+                let code = contextStrings.code[blockName];
                 if (typeof (code) == "undefined") {
                     code = blockName;
                 }
@@ -74,30 +72,23 @@ export const getContextBlocksData = function (context, platform: CodecastPlatfor
                     // this._hasActions = true;
                 }
 
-                argumentsByBlock[generatorName][blockName] = nbsArgs;
-                handlers.push({code, generatorName, blockName, nbsArgs, type});
                 availableBlocks.push({
                     generatorName,
                     name: blockName,
                     type: BlockType.Function,
                     category: type,
                     params: nbsArgs,
-                    code: code + '()',
+                    code,
                 });
-
-                if (-1 === definedFunctions.indexOf(code)) {
-                    definedFunctions.push(code);
-                }
             }
 
             if (context.customConstants && context.customConstants[generatorName]) {
                 let constList = context.customConstants[generatorName];
                 for (let iConst = 0; iConst < constList.length; iConst++) {
                     let name = constList[iConst].name;
-                    if (context.strings.constant && context.strings.constant[name]) {
-                        name = context.strings.constant[name];
+                    if (contextStrings.constant && contextStrings.constant[name]) {
+                        name = contextStrings.constant[name];
                     }
-                    constants.push({name, generatorName, value: constList[iConst].value});
                     availableBlocks.push({
                         generatorName,
                         name,
@@ -110,15 +101,9 @@ export const getContextBlocksData = function (context, platform: CodecastPlatfor
     }
 
     if ('python' === platform) {
-       const pythonSpecificBlocks = getPythonSpecificBlocks(context);
+       const pythonSpecificBlocks = getPythonSpecificBlocks(contextIncludeBlocks);
        availableBlocks = [...availableBlocks, ...pythonSpecificBlocks];
     }
 
-    return {
-        definedFunctions,
-        argumentsByBlock,
-        handlers,
-        constants,
-        availableBlocks,
-    };
+    return availableBlocks;
 }

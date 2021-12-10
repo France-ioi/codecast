@@ -79,6 +79,7 @@ import {taskResetDone} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonInterpreter from "./python/python_interpreter";
+import {getContextBlocksDataSelector} from "../task/blocks/blocks";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -434,7 +435,10 @@ function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}})
              */
             const pythonSource = source + "\npass";
 
-            window.currentPythonRunner.initCodes([pythonSource]);
+            const context = quickAlgoLibraries.getContext(null, state.environment);
+            const blocksData = getContextBlocksDataSelector(state, context);
+
+            window.currentPythonRunner.initCodes([pythonSource], blocksData);
         } else {
             stepperState = state.stepper.initialStepperState;
         }
@@ -929,8 +933,10 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
 
         console.log('current task state', taskContext.getInnerState());
 
+        const blocksData = getContextBlocksDataSelector(state, taskContext);
+
         const pythonInterpreter = new PythonInterpreter(taskContext);
-        pythonInterpreter.initCodes([stepperContext.state.analysis.code]);
+        pythonInterpreter.initCodes([stepperContext.state.analysis.code], blocksData);
         while (pythonInterpreter._steps < stepperContext.state.analysis.stepNum) {
             yield* apply(pythonInterpreter, pythonInterpreter.runStep, [stepperContext.quickAlgoCallsExecutor]);
 
