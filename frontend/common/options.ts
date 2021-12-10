@@ -4,7 +4,7 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
 import {Bundle} from "../linker";
 import {put, takeEvery} from "typed-redux-saga";
-import {AppStore} from "../store";
+import {AppStore, CodecastOptionsMode} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
 
 function appInitReducer(state: AppStore, {payload: {options, query}}) {
@@ -14,70 +14,73 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
     }
 
     if ('language' in query) {
-        options.language = query.language;
+        state.options.language = query.language;
     }
 
     if ('noLanguageChange' in query) {
-        options.canChangeLanguage = false;
+        state.options.canChangeLanguage = false;
     }
 
     (query.stepperControls || '').split(',').forEach(function (controlStr) {
         // No prefix to highlight, '-' to disable.
         const m = /^([-_])?(.*)$/.exec(controlStr);
         if (m) {
-            options.controls[m[2]] = m[1] || '+';
+            state.options.controls[m[2]] = m[1] || '+';
         }
     });
     if ('noStepper' in query) {
-        options.showStepper = false;
-        options.showStack = false;
-        options.showViews = false;
-        options.showIO = false;
+        state.options.showStepper = false;
+        state.options.showStack = false;
+        state.options.showViews = false;
+        state.options.showIO = false;
     }
     if ('noStack' in query) {
-        options.showStack = false;
+        state.options.showStack = false;
     }
     if ('noViews' in query) {
-        options.showViews = false;
+        state.options.showViews = false;
     }
     if ('noIO' in query) {
-        options.showIO = false;
+        state.options.showIO = false;
     }
     if ('noMenu' in query) {
-        options.showMenu = false;
+        state.options.showMenu = false;
     }
     if ('noDoc' in query) {
-        options.showDocumentation = false;
+        state.options.showDocumentation = false;
     }
     if ('noFullScreen' in query) {
-        options.showFullScreen = false;
+        state.options.showFullScreen = false;
     }
     if ('record' in query) {
-        options.canRecord = true;
+        state.options.canRecord = true;
     }
     if ('platform' in query) {
-        options.platform = query.platform;
-        options.canChangePlatform = false;
+        state.options.platform = query.platform;
+        state.options.canChangePlatform = false;
     }
     if ('source' in query) {
-        options.source = query.source || '';
+        state.options.source = query.source || '';
     }
     if ('input' in query) {
-        options.input = query.input || '';
+        state.options.input = query.input || '';
     }
     if ('level' in query) {
-        options.level = query.level || null;
+        state.options.level = query.level || null;
+    }
+    if ('theme' in query) {
+        state.options.theme = query.theme || null;
     }
 
     if (query.recording) {
-        options.baseDataUrl = query.recording;
-        options.audioUrl = `${options.baseDataUrl}.mp3`;
+        state.options.baseDataUrl = query.recording;
+        state.options.audioUrl = `${options.baseDataUrl}.mp3`;
         const {s3Bucket: bucket, uploadPath: folder, id: codecast} = parseCodecastUrl(options.baseDataUrl);
-        options.codecastData = {bucket, folder, codecast};
+        state.options.codecastData = {bucket, folder, codecast};
         if (query.mode === 'edit') {
-            options.mode = 'edit';
+            state.options.mode = CodecastOptionsMode.Edit;
         } else {
-            options.mode = 'play';
+            state.options.mode = CodecastOptionsMode.Play;
         }
     }
 }

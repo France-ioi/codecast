@@ -1,4 +1,14 @@
-$primary: #4a90e2;
+:root {
+  --primary-color: #4a90e2;
+  --secondary-color: #4a4a4a;
+  --font-family-sans-serif: 'Open Sans', sans-serif;
+}
+
+[data-theme="coursera"] {
+  --primary-color: #0056D2;
+  --secondary-color: #1f1f1f;
+  --font-family-sans-serif: 'Source Sans Pro', sans-serif;
+}
 
 @mixin mobile {
   @media screen and (max-width: 767px) {
@@ -50,7 +60,7 @@ body {
   .layout-general {
     display: flex;
     flex-direction: column;
-    background: #4a4a4a;
+    background: var(--secondary-color);
   }
 
   .task-section {
@@ -86,7 +96,7 @@ body {
       color: #7c7c7c;
     }
     .task-header__algo {
-      color: $primary;
+      color: var(--primary-color);
     }
   }
 
@@ -110,7 +120,7 @@ body {
 
   &:not(.full-screen).task-player-replay {
     .task-section {
-      border: solid 10px #4a4a4a;
+      border: solid 10px var(--secondary-color);
       border-bottom: 0;
       border-radius: 10px;
     }
@@ -289,13 +299,13 @@ body {
     align-items: flex-start;
 
     .menu-task-element {
-      background: #4a4a4a;
+      background: var(--secondary-color);
       border-top-left-radius: 5px;
       border-bottom-left-radius: 5px;
       margin-bottom: .7rem;
       padding: 0 6px 0 3px;
       &.is-blue {
-        background: $primary;
+        background: var(--primary-color);
       }
       .bp3-button {
         background: transparent !important;
@@ -314,7 +324,7 @@ body {
   .task-menu {
     width: 200px;
     height: 100%;
-    background-color: #4a4a4a;
+    background-color: var(--secondary-color);
     color: #FFF;
 
     .menu-item {
@@ -346,7 +356,7 @@ body {
     display: flex;
     align-items: stretch;
     height: 50px;
-    background: #4a4a4a;
+    background: var(--secondary-color);
 
     .controls-recorder, .controls-subtitles {
       display: flex;
@@ -477,7 +487,7 @@ body {
         top: 0;
       }
       .bp3-slider-handle {
-        background: $primary;
+        background: var(--primary-color);
         border-radius: 50px;
         width: 30px;
         outline: none;
@@ -495,7 +505,7 @@ body {
         }
       }
       .bp3-slider-progress.bp3-intent-primary {
-        background-color: $primary;
+        background-color: var(--primary-color);
       }
     }
   }
@@ -504,7 +514,7 @@ body {
     justify-content: center;
     align-items: center;
     .bp3-button {
-      background-color: $primary;
+      background-color: var(--primary-color);
       background-image: none;
       color: #fff;
       outline: none;
@@ -523,7 +533,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
 
 .ace_editor {
   .ace_completion-highlight {
-    color: $primary !important;
+    color: var(--primary-color) !important;
   }
 }
 
@@ -563,7 +573,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
 
   .simple-dialog-button {
     padding: 5px 15px;
-    background-color: $primary;
+    background-color: var(--primary-color);
     color: #fff;
     border-radius: 100px;
     border: none;

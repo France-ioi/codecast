@@ -65,6 +65,9 @@ export interface CodecastOptions {
     origin: string,
     task?: string,
     taskInstructions?: string,
+    source?: string,
+    input?: string,
+    theme?: string,
 }
 
 export interface Panes {

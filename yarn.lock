@@ -1109,6 +1109,21 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@fontsource/inconsolata@^4.5.0":
+  version "4.5.0"
+  resolved "https://registry.yarnpkg.com/@fontsource/inconsolata/-/inconsolata-4.5.0.tgz#52a4e55fd497e1c82aead1e2baeb85f3f3e3bc3d"
+  integrity sha512-oJowMSSurNbuaQjaHXi5vwcx//+aWuYupY/+sq5inOkMeXw6tqVa4WLaXNsnxMo7sBYoDOLZ9Wb9AZCCPFbE4g==
+
+"@fontsource/open-sans@^4.5.2":
+  version "4.5.2"
+  resolved "https://registry.yarnpkg.com/@fontsource/open-sans/-/open-sans-4.5.2.tgz#6953650035d5b42be645013b1465544d0af49d7d"
+  integrity sha512-aDQrW8s0KslG2aKb9nM5R6fiQR9iPomqWXf6iZCC30qv/UFlSY14SppodA3rE//+w37EqsJjyUq3BSEYzLdisg==
+
+"@fontsource/source-sans-pro@^4.5.1":
+  version "4.5.1"
+  resolved "https://registry.yarnpkg.com/@fontsource/source-sans-pro/-/source-sans-pro-4.5.1.tgz#9c4f2b6061d38cd85e89fde21893e23b8a7f227c"
+  integrity sha512-JYEldSfnqxoDVUL6QgqT8Fiyjh0p7WlKcqKNevzDylpWabdejVRyFzPhTk2ZceKZd02KEOaL+K462U6u0/PQiA==
+
 "@formatjs/ecma402-abstract@1.6.2":
   version "1.6.2"
   resolved "https://registry.yarnpkg.com/@formatjs/ecma402-abstract/-/ecma402-abstract-1.6.2.tgz#9d064a2cf790769aa6721e074fb5d5c357084bb9"
@@ -8043,16 +8058,6 @@ typedarray-to-buffer@^3.1.2, typedarray-to-buffer@^3.1.5:
   integrity sha512-zdu8XMNEDepKKR+XYOXAVPtWui0ly0NtohUscw+UmaHiAWT8hrV1rr//H6V+0DvJ3OQ19S979M0laLfX8rm82Q==
   dependencies:
     is-typedarray "^1.0.0"
-
-typeface-inconsolata@^1.1.13:
-  version "1.1.13"
-  resolved "https://registry.yarnpkg.com/typeface-inconsolata/-/typeface-inconsolata-1.1.13.tgz#48ea5fd878bfeac32ef2b6168494f61ffce99a54"
-  integrity sha512-1hEywyikL41MM6/ysVObt73u0yAFPPjvfUDST4V1p2UJDUSYxmnsrVK3QLBdgm+5kUL2ErzykAF4zCiSF/5uGg==
-
-typeface-open-sans@^1.1.13:
-  version "1.1.13"
-  resolved "https://registry.yarnpkg.com/typeface-open-sans/-/typeface-open-sans-1.1.13.tgz#32a09ebd7df59601e01ad81216f98ce641eeafd1"
-  integrity sha512-lVGVHvYl7UJDFB9vN8r7NHw3sVm7Rjeow6b9AeABc/J+2mDaCkmcdVtw3QZnsJW39P+xm5zeggIj9gLHYGn9Iw==
 
 typescript-compare@^0.0.2:
   version "0.0.2"
