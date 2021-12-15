@@ -208,7 +208,7 @@ function loadBufferModel(dump) {
     return new DocumentModel(documentFromString(dump.document), expandRange(dump.selection), dump.firstVisibleRow || 0);
 }
 
-function getBufferEditor(state, buffer) {
+export function getBufferEditor(state, buffer) {
     return state.buffers[buffer].editor;
 }
 

@@ -1,5 +1,6 @@
 import React from "react";
-import {Block} from "./blocks/blocks";
+import {Block, DraggableBlockItem} from "./blocks/blocks";
+import {useDrag} from "react-dnd";
 
 export interface AvailableBlockProps {
     block: Block,
@@ -8,8 +9,19 @@ export interface AvailableBlockProps {
 export function AvailableBlock(props: AvailableBlockProps) {
     const {block} = props;
 
+    const [{isDragging}, drag, dragPreview] = useDrag(() => ({
+        type: 'block',
+        item: {
+            block,
+        },
+        collect: (monitor) => ({
+            isDragging: monitor.isDragging(),
+        }),
+    }))
+
+
     return (
-        <div className="task-available-block">
+        <div className="task-available-block" ref={drag}>
             <div className="task-available-block-name">
                 {block.caption}
             </div>
@@ -18,5 +30,5 @@ export function AvailableBlock(props: AvailableBlockProps) {
                 {block.description}
             </div>}
         </div>
-    );
+    )
 }

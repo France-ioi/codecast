@@ -6,6 +6,7 @@ import {AvailableBlocks} from "../AvailableBlocks";
 
 export function LayoutEditor() {
     const {platform} = useAppSelector(state => state.options);
+    const currentTask = useAppSelector(state => state.task.currentTask);
     let mode;
     switch (platform) {
         case 'arduino':
@@ -25,7 +26,7 @@ export function LayoutEditor() {
 
     return (
         <div className="layout-editor">
-            <AvailableBlocks/>
+            {currentTask && <AvailableBlocks/>}
             <BufferEditor
                 buffer="source"
                 readOnly={false}

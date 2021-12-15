@@ -1,38 +1,16 @@
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
 import * as ace from 'brace';
-import {connect} from "react-redux";
-import {AppStore} from "../store";
 import {addAutocompletion} from "./editorAutocompletion";
-import {LayoutType} from "../task/layout/layout";
-import {quickAlgoLibraries, QuickAlgoLibrary} from "../task/libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {getMessage} from "../lang";
-import {Block, getContextBlocksDataSelector} from "../task/blocks/blocks";
+import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
+import {useAppSelector} from "../hooks";
+import {useDrop} from "react-dnd";
 
 const Range = ace.acequire('ace/range').Range;
 
-interface EditorStateToProps {
-    context: QuickAlgoLibrary,
-    layoutType: LayoutType,
-    zoomLevel?: number,
-    availableBlocks: Block[],
-    contextStrings: any,
-}
-
-function mapStateToProps(state: AppStore, props): EditorStateToProps {
-    const context = quickAlgoLibraries.getContext(null, 'main');
-    const availableBlocks = context && 'text' !== props.mode ? getContextBlocksDataSelector(state, context) : [];
-
-    return {
-        context,
-        layoutType: state.layout.type,
-        zoomLevel: state.layout.zoomLevel,
-        availableBlocks,
-        contextStrings: state.task.contextStrings,
-    };
-}
-
-interface EditorProps extends EditorStateToProps {
+interface EditorProps {
     readOnly: boolean,
     shield: boolean,
     theme: string,
@@ -46,217 +24,247 @@ interface EditorProps extends EditorStateToProps {
     onInit: Function,
 }
 
-class _Editor extends React.PureComponent<EditorProps> {
-    editor: any = null;
-    editorNode: any = null;
-    selection: any = null;
-    marker: any = null;
-    mute: boolean = false;
-    scrollTop: number = 0;
-    firstVisibleRow: number = 0;
-    willUpdateSelection: boolean = false;
+function toRange(selection) {
+    return new Range(
+        selection.start.row, selection.start.column,
+        selection.end.row, selection.end.column
+    );
+}
 
-    refEditor = (node) => {
-        this.editorNode = node;
-    };
+function samePosition(p1, p2) {
+    return p1 && p2 && p1.row == p2.row && p1.column == p2.column;
+}
+
+function sameSelection(s1, s2) {
+    if (typeof s1 !== typeof s2 || !!s1 !== !!s2) {
+        return false;
+    }
+
+    // Test for same object (and also null).
+    if (s1 === s2) {
+        return true;
+    }
+
+    return samePosition(s1.start, s2.start) && samePosition(s1.end, s2.end);
+}
+
+export function Editor(props: EditorProps) {
+    const [editor, setEditor] = useState<any>(null);
+    const [selection, setSelection] = useState<any>(null);
+    const [marker, setMarker] = useState<any>(null);
+    const [mute, setMute] = useState(false);
+    const [scrollTop, setScrollTop] = useState(0);
+    const [firstVisibleRow, setFirstVisibleRow] = useState(0);
+    const [willUpdateSelection, setWillUpdateSelection] = useState(false);
+
+    const editorRef = useRef(editor);
+    editorRef.current = editor;
+
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    const availableBlocks = useAppSelector(state => context && 'text' !== props.mode ? getContextBlocksDataSelector(state, context) : []);
+    const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
+    const contextStrings = useAppSelector(state => state.task.contextStrings);
+
+    const refEditor = useRef();
 
     /*
       Performance fix: Ace fires many redundant selection events, so we wait
       until the next animation frame before querying the selection and firing
       the onSelect callback.
     */
-    onSelectionChanged = () => {
-        if (this.mute || this.willUpdateSelection) {
+    const onSelectionChanged = () => {
+        if (mute || willUpdateSelection) {
             return;
         }
         // const isUserChange = editor.curOp && editor.curOp.command.name;
-        this.willUpdateSelection = true;
+        setWillUpdateSelection(true);
         window.requestAnimationFrame(() => {
-            this.willUpdateSelection = false;
-            const selection_ = this.editor.selection.getRange();
-            if (sameSelection(this.selection, selection_))
+            setWillUpdateSelection(false);
+            const selection_ = editor.selection.getRange();
+            if (sameSelection(selection, selection_))
                 return;
-            this.selection = selection_;
-            this.props.onSelect(selection_);
+            setSelection(selection_);
+            props.onSelect(selection_);
         });
     };
 
-    onTextChanged = (edit) => {
-        if (this.mute) {
+    const onTextChanged = (edit) => {
+        if (mute) {
             return;
         }
         // The callback must not trigger a rendering of the Editor.
-        this.props.onEdit(edit)
+        props.onEdit(edit)
     };
 
-    onAfterRender = () => {
-        if (this.mute) {
+    const onAfterRender = () => {
+        if (mute) {
             return;
         }
-        const scrollTop_ = this.editor.getSession().getScrollTop();
-        if (this.scrollTop !== scrollTop_) {
-            this.scrollTop = scrollTop_;
-            const {onScroll} = this.props;
+        const scrollTop_ = editor.getSession().getScrollTop();
+        if (scrollTop !== scrollTop_) {
+            setScrollTop(scrollTop_);
+            const {onScroll} = props;
             if (typeof onScroll === 'function') {
-                const firstVisibleRow_ = this.editor.getFirstVisibleRow();
-                if (this.firstVisibleRow !== firstVisibleRow_) {
-                    this.firstVisibleRow = firstVisibleRow_;
+                const firstVisibleRow_ = editor.getFirstVisibleRow();
+                if (firstVisibleRow !== firstVisibleRow_) {
+                    setFirstVisibleRow(firstVisibleRow_);
                     onScroll(firstVisibleRow_);
                 }
             }
         }
     };
 
-    wrapModelToEditor = (cb) => {
-        if (!this.editor) {
+    const wrapModelToEditor = (cb) => {
+        if (!editor) {
             return;
         }
-        this.mute = true;
+        setMute(true);
         try {
             cb();
         } finally {
-            this.mute = false;
+            setMute(false);
         }
     };
 
-    reset = (value, selection, firstVisibleRow) => {
-        this.wrapModelToEditor(() => {
-            this.editor.getSession().setValue(value);
-            this.editor.resize(true);
-            this.selection = null;
-            this.setSelection(selection);
-            this.firstVisibleRow = firstVisibleRow;
-            this.editor.scrollToLine(firstVisibleRow);
-            this.scrollTop = this.editor.getSession().getScrollTop();
+    const reset = (value, selection, firstVisibleRow) => {
+        wrapModelToEditor(() => {
+            editor.getSession().setValue(value);
+            editor.resize(true);
+            setSelection(null);
+            doSetSelection(selection);
+            setFirstVisibleRow(firstVisibleRow);
+            editor.scrollToLine(firstVisibleRow);
+            setScrollTop(editor.getSession().getScrollTop());
             // Clear a previously set marker, if any.
-            if (this.marker) {
-                this.editor.session.removeMarker(this.marker);
-                this.marker = null;
+            if (marker) {
+                editor.session.removeMarker(marker);
+                setMarker(null);
             }
         });
     };
 
-    applyDeltas = (deltas) => {
-        this.wrapModelToEditor(() => {
-            this.editor.session.doc.applyDeltas(deltas);
+    const applyDeltas = (deltas) => {
+        wrapModelToEditor(() => {
+            editor.session.doc.applyDeltas(deltas);
         });
     };
 
-    focus = () => {
-        if (!this.editor) {
+    const focus = () => {
+        if (!editor) {
             return;
         }
 
-        this.editor.focus();
+        editor.focus();
     };
 
-    scrollToLine = (firstVisibleRow) => {
-        this.wrapModelToEditor(() => {
-            this.editor.resize(true);
-            this.firstVisibleRow = firstVisibleRow;
-            this.editor.scrollToLine(firstVisibleRow);
-            this.scrollTop = this.editor.getSession().getScrollTop();
+    const scrollToLine = (firstVisibleRow) => {
+        wrapModelToEditor(() => {
+            editor.resize(true);
+            setFirstVisibleRow(firstVisibleRow);
+            editor.scrollToLine(firstVisibleRow);
+            setScrollTop(editor.getSession().getScrollTop());
         });
     };
 
-    goToEnd = () => {
-        if (!this.editor) {
+    const goToEnd = () => {
+        if (!editor) {
             return;
         }
 
-        this.editor.gotoLine(Infinity, Infinity, false);
+        editor.gotoLine(Infinity, Infinity, false);
     }
 
-    resize = () => {
-        if (!this.editor) {
+    const resize = () => {
+        if (!editor) {
             return;
         }
 
-        this.editor.resize(true);
+        editor.resize(true);
     };
 
-    setSelection = (selection_) => {
-        this.wrapModelToEditor(() => {
-            if (sameSelection(this.selection, selection_)) {
+    const doSetSelection = (selection_) => {
+        wrapModelToEditor(() => {
+            if (sameSelection(selection, selection_)) {
                 return;
             }
-            this.selection = selection_;
-            if (this.selection && this.selection.start && this.selection.end) {
-                this.editor.selection.setRange(toRange(this.selection));
+            setSelection(selection_);
+            if (selection_ && selection_.start && selection_.end) {
+                editor.selection.setRange(toRange(selection_));
             } else {
-                this.editor.selection.setRange(new Range(0, 0, 0, 0));
+                editor.selection.setRange(new Range(0, 0, 0, 0));
             }
         });
     };
 
-    highlight = (range) => {
-        this.wrapModelToEditor(() => {
-            const session = this.editor.session;
-            if (this.marker) {
-                session.removeMarker(this.marker);
-                this.marker = null;
+    const highlight = (range) => {
+        wrapModelToEditor(() => {
+            const session = editor.session;
+            if (marker) {
+                session.removeMarker(marker);
+                setMarker(null);
             }
             if (range && range.start && range.end) {
                 // Add (and save) the marker.
-                this.marker = session.addMarker(toRange(range), 'code-highlight', 'text');
-                if (!this.props.shield) {
+                setMarker(session.addMarker(toRange(range), 'code-highlight', 'text'));
+                if (!props.shield) {
                     /* Also scroll so that the line is visible.  Skipped if the editor has
                        a shield (preventing user input) as this means playback is active,
                        and scrolling is handled by individual events. */
-                    this.editor.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
+                    editor.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
                 }
             }
         });
     };
 
-    getSelectionRange = () => {
-        return this.editor && this.editor.getSelectionRange();
+    const getSelectionRange = () => {
+        return editor && editor.getSelectionRange();
     };
 
-    componentDidMount() {
-        const editor = this.editor = ace.edit(this.editorNode);
-        if (this.props.hasAutocompletion && this.props.availableBlocks && this.props.contextStrings) {
-            addAutocompletion(this.props.availableBlocks, this.props.contextStrings);
+    const initEditor = () => {
+        console.log('init editor', editor);
+        if (props.hasAutocompletion && availableBlocks && contextStrings) {
+            addAutocompletion(availableBlocks, contextStrings);
         }
-        const session = this.editor.getSession();
+        const session = editor.getSession();
         editor.$blockScrolling = Infinity;
         // editor.setBehavioursEnabled(false);
-        editor.setTheme(`ace/theme/${this.props.theme || 'github'}`);
-        session.setMode(`ace/mode/${this.props.mode || 'text'}`);
-        editor.setFontSize(Math.round(16 * this.props.zoomLevel) + 'px');
+        editor.setTheme(`ace/theme/${props.theme || 'github'}`);
+        session.setMode(`ace/mode/${props.mode || 'text'}`);
+        editor.setFontSize(Math.round(16 * zoomLevel) + 'px');
         // editor.setOptions({minLines: 25, maxLines: 50});
         editor.setOptions({
-            readOnly: !!this.props.readOnly,
-            enableBasicAutocompletion: this.props.hasAutocompletion,
-            enableLiveAutocompletion: this.props.hasAutocompletion,
+            readOnly: !!props.readOnly,
+            enableBasicAutocompletion: props.hasAutocompletion,
+            enableLiveAutocompletion: props.hasAutocompletion,
             enableSnippets: false,
+            dragEnabled: true,
         });
 
-        const {onInit, onSelect, onEdit} = this.props;
+        const {onInit, onSelect, onEdit} = props;
         if (typeof onInit === 'function') {
             const api = {
-                reset: this.reset,
-                applyDeltas: this.applyDeltas,
-                setSelection: this.setSelection,
-                focus: this.focus,
-                scrollToLine: this.scrollToLine,
-                getSelectionRange: this.getSelectionRange,
-                highlight: this.highlight,
-                resize: this.resize,
-                goToEnd: this.goToEnd,
+                reset,
+                applyDeltas,
+                setSelection: doSetSelection,
+                focus,
+                scrollToLine,
+                getSelectionRange,
+                highlight,
+                resize,
+                goToEnd,
             };
             onInit(api);
         }
         if (typeof onSelect === 'function') {
-            session.selection.on("changeCursor", this.onSelectionChanged, true);
-            session.selection.on("changeSelection", this.onSelectionChanged, true);
+            session.selection.on("changeCursor", onSelectionChanged, true);
+            session.selection.on("changeSelection", onSelectionChanged, true);
         }
         if (typeof onEdit === 'function') {
-            session.on("change", this.onTextChanged);
+            session.on("change", onTextChanged);
         }
 
         // @ts-ignore
-        editor.renderer.on("afterRender", this.onAfterRender);
+        editor.renderer.on("afterRender", onAfterRender);
         editor.commands.addCommand({
             name: "escape",
             bindKey: {
@@ -269,7 +277,7 @@ class _Editor extends React.PureComponent<EditorProps> {
             }
         });
 
-        if (this.props.hasAutocompletion) {
+        if (props.hasAutocompletion) {
             // @ts-ignore
             let completer = editor.completer;
             // we resize the completer window, because some functions are too big so we need more place:
@@ -297,81 +305,86 @@ class _Editor extends React.PureComponent<EditorProps> {
         setTimeout(function() {
             editor.resize(true);
         }, 0);
-    };
-
-    componentDidUpdate(prevProps) {
-        if (this.editor) {
-            if (prevProps.readOnly !== this.props.readOnly) {
-                this.editor.setReadOnly(this.props.readOnly);
-            }
-
-            if (prevProps.zoomLevel !== this.props.zoomLevel) {
-                this.editor.setFontSize(Math.round(16 * this.props.zoomLevel) + 'px');
-            }
-
-            /* Do not auto-scroll when shielded. */
-            this.editor.setAutoScrollEditorIntoView(!this.props.shield);
-
-            const session = this.editor.getSession();
-            if (prevProps.mode !== this.props.mode) {
-                session.setMode(`ace/mode/${this.props.mode || 'text'}`);
-            }
-            if (prevProps.theme !== this.props.theme) {
-                this.editor.setTheme(`ace/theme/${this.props.theme || 'github'}`);
-            }
-
-            if (this.props.hasAutocompletion && this.props.availableBlocks && this.props.contextStrings
-                && (JSON.stringify(prevProps.availableBlocks) !== JSON.stringify(this.props.availableBlocks)
-                    || JSON.stringify(prevProps.contextStrings) !== JSON.stringify(this.props.contextStrings))
-            ) {
-                addAutocompletion(this.props.availableBlocks, this.props.contextStrings);
-            }
-        }
-    };
-
-    componentWillUnmount() {
-        if (typeof this.props.onInit === 'function') {
-            this.props.onInit(null);
-        }
-    };
-
-    render() {
-        const {width, height, shield} = this.props;
-
-        return (
-            <div className="editor" style={{width: width, height: height}}>
-                <div className="editor-frame" ref={this.refEditor}/>
-                <div
-                    className={classnames(['editor-shield', shield && 'editor-shield-up'])}
-                    title={getMessage('PROGRAM_CANNOT_BE_MODIFIED_WHILE_RUNNING')}
-                />
-            </div>
-        );
     }
-}
 
-export const Editor = connect(mapStateToProps)(_Editor);
+    useEffect(() => {
+        const editor = ace.edit(refEditor.current);
+        console.log('create editor', editor);
+        setEditor(editor);
 
-function toRange(selection) {
-    return new Range(
-        selection.start.row, selection.start.column,
-        selection.end.row, selection.end.column
+        return () => {
+            if (typeof props.onInit === 'function') {
+                props.onInit(null);
+            }
+        }
+    }, []);
+
+    useEffect(() => {
+        if (editor) {
+            initEditor();
+        }
+    }, [editor]);
+
+    useEffect(() => {
+        if (editor) {
+            editor.setReadOnly(props.readOnly);
+        }
+    }, [props.readOnly]);
+
+    useEffect(() => {
+        if (editor) {
+            editor.setFontSize(Math.round(16 * zoomLevel) + 'px');
+        }
+    }, [zoomLevel]);
+
+    useEffect(() => {
+        if (editor) {
+            editor.setAutoScrollEditorIntoView(!props.shield);
+        }
+    }, [props.shield]);
+
+    useEffect(() => {
+        if (editor) {
+            const session = editor.getSession();
+            session.setMode(`ace/mode/${props.mode || 'text'}`);
+        }
+    }, [props.mode]);
+
+    useEffect(() => {
+        if (editor) {
+            editor.setTheme(`ace/theme/${props.theme || 'github'}`);
+        }
+    }, [props.theme]);
+
+    useEffect(() => {
+        if (editor) {
+            addAutocompletion(availableBlocks, contextStrings);
+        }
+    }, [availableBlocks, contextStrings]);
+
+    const {width, height, shield} = props;
+
+    const [collectedProps, drop] = useDrop(() => ({
+        accept: ['block'],
+        drop(item: DraggableBlockItem, monitor) {
+            console.log('editor elm', editor, editorRef.current);
+            const offset = monitor.getClientOffset();
+            // noinspection JSVoidFunctionReturnValueUsed
+            const pos = editorRef.current.renderer.screenToTextCoordinates(offset.x, offset.y);
+            editorRef.current.session.insert(pos, item.block.caption);
+        },
+        hover(item, monitor) {
+            console.log('is hovering');
+        },
+    }));
+
+    return (
+        <div className="editor" style={{width: width, height: height}} ref={drop}>
+            <div className="editor-frame" ref={refEditor}/>
+            <div
+                className={classnames(['editor-shield', shield && 'editor-shield-up'])}
+                title={getMessage('PROGRAM_CANNOT_BE_MODIFIED_WHILE_RUNNING')}
+            />
+        </div>
     );
-}
-
-function samePosition(p1, p2) {
-    return p1 && p2 && p1.row == p2.row && p1.column == p2.column;
-}
-
-function sameSelection(s1, s2) {
-    if (typeof s1 !== typeof s2 || !!s1 !== !!s2) {
-        return false;
-    }
-
-    // Test for same object (and also null).
-    if (s1 === s2) {
-        return true;
-    }
-
-    return samePosition(s1.start, s2.start) && samePosition(s1.end, s2.end);
 }

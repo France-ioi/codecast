@@ -8,6 +8,10 @@ export enum BlockType {
     Token = 'token',
 }
 
+export interface DraggableBlockItem {
+    block: Block,
+}
+
 export interface Block {
     name: string,
     type: BlockType,
@@ -121,7 +125,7 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
                 block.description = block.description.replace(/@/g, block.code);
             }
 
-            let blockDesc = '', funcProto = '', blockHelp = '';
+            let blockDesc = '';
             let blockName = block.name;
             let funcCode = block.caption;
             blockDesc = block.description;
@@ -132,7 +136,6 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
                 if (funcProtoEnd > 0) {
                     block.caption = blockDesc.substring(0, funcProtoEnd);
                     block.description = blockDesc.substring(funcProtoEnd + 1);
-                    console.log('substring', blockDesc, funcProtoEnd, block.description);
                 } else {
                     console.error("Description for block '" + blockName + "' needs to be of the format 'function() : description', auto-generated one used instead could be wrong.");
                     block.caption = blockName + '()';
