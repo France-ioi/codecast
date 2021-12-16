@@ -178,9 +178,9 @@ function* createContext() {
     console.log('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     console.log('Created context', context);
-    yield put(taskSetContextStrings(context.strings));
+    yield* put(taskSetContextStrings(context.strings));
     if (context.infos && context.infos.includeBlocks) {
-        yield put(taskSetContextIncludeBlocks(context.infos.includeBlocks));
+        yield* put(taskSetContextIncludeBlocks(context.infos.includeBlocks));
     }
     context.resetAndReloadState(testData, state);
 }
