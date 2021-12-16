@@ -1,17 +1,29 @@
 import React from 'react';
-import {DragLayer, useDragLayer} from 'react-dnd';
+import {useDragLayer} from 'react-dnd';
 
-export const CustomDragLayer = (props) => {
-    const { itemType, isDragging, item, initialOffset, currentOffset } = useDragLayer((monitor) => ({
+export const CustomDragLayer = () => {
+    const { itemType, isDragging, item, currentOffset, clientOffset } = useDragLayer((monitor) => ({
         item: monitor.getItem(),
         itemType: monitor.getItemType(),
         initialOffset: monitor.getInitialSourceClientOffset(),
         currentOffset: monitor.getSourceClientOffset(),
         isDragging: monitor.isDragging(),
+        clientOffset: monitor.getClientOffset()
     }));
     if (!isDragging) {
         return null;
     }
+
+    let position = {
+        x: clientOffset && clientOffset.x ? clientOffset.x : 0,
+        y: clientOffset && clientOffset.y ? clientOffset.y : 0,
+    };
+
+    if ('block' === itemType) {
+        position.x -= 3;
+        position.y -= 22;
+    }
+
     return (<div
             role="presentation"
             style={{
@@ -23,11 +35,15 @@ export const CustomDragLayer = (props) => {
                 width: '100%',
                 height: '100%',
                 display: 'inline-block',
-                transform: `translate(${currentOffset && currentOffset.x ? currentOffset.x : 0}px, ${currentOffset && currentOffset.y ? currentOffset.y : 0}px)`,
+                transform: `translate(${position.x}px, ${position.y}px)`,
             }}
         >
             <div id="custom-drag-layer" className="custom-drag-layer">
-                <div>Draggable</div>
+                <div className="task-available-block">
+                    <div className="task-available-block-name">
+                        {item.block.caption}
+                    </div>
+                </div>
             </div>
         </div>
     );

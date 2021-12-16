@@ -1,9 +1,11 @@
-import React from "react";
-import {Block, DraggableBlockItem} from "./blocks/blocks";
+import React, {useEffect} from "react";
+import {Block} from "./blocks";
 import {useDrag} from "react-dnd";
+import {getEmptyImage} from "react-dnd-html5-backend";
 
 export interface AvailableBlockProps {
     block: Block,
+    onDragging: (dragging: boolean) => void,
 }
 
 export function AvailableBlock(props: AvailableBlockProps) {
@@ -19,6 +21,13 @@ export function AvailableBlock(props: AvailableBlockProps) {
         }),
     }))
 
+    useEffect(() => {
+        dragPreview(getEmptyImage(), {captureDraggingState: true});
+    }, []);
+
+    useEffect(() => {
+        props.onDragging(isDragging);
+    }, [isDragging]);
 
     return (
         <div className="task-available-block" ref={drag}>

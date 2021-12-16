@@ -1,8 +1,8 @@
 import React, {useState} from "react";
-import {Block} from "./blocks/blocks";
+import {Block} from "./blocks";
 import {Collapse} from "react-bootstrap";
 import {AvailableBlock} from "./AvailableBlock";
-import {getMessage} from "../lang";
+import {getMessage} from "../../lang";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCaretUp} from "@fortawesome/free-solid-svg-icons/faCaretUp";
 import {faCaretDown} from "@fortawesome/free-solid-svg-icons/faCaretDown";
@@ -10,6 +10,7 @@ import {faCaretDown} from "@fortawesome/free-solid-svg-icons/faCaretDown";
 export interface AvailableBlockCategoryProps {
     blocks: Block[],
     name: string,
+    onDragging: (dragging: boolean) => void,
 }
 
 export function AvailableBlockCategory(props: AvailableBlockCategoryProps) {
@@ -28,7 +29,7 @@ export function AvailableBlockCategory(props: AvailableBlockCategoryProps) {
             <Collapse in={open}>
                 <div>
                     {blocks.map((block, index) =>
-                        <AvailableBlock block={block} key={index}/>
+                        <AvailableBlock block={block} key={index} onDragging={props.onDragging}/>
                     )}
                 </div>
             </Collapse>

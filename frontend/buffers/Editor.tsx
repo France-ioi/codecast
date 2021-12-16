@@ -49,16 +49,14 @@ function sameSelection(s1, s2) {
 }
 
 export function Editor(props: EditorProps) {
-    const [editor, setEditor] = useState<any>(null);
     const [selection, setSelection] = useState<any>(null);
-    const [marker, setMarker] = useState<any>(null);
-    const [mute, setMute] = useState(false);
     const [scrollTop, setScrollTop] = useState(0);
     const [firstVisibleRow, setFirstVisibleRow] = useState(0);
     const [willUpdateSelection, setWillUpdateSelection] = useState(false);
 
-    const editorRef = useRef(editor);
-    editorRef.current = editor;
+    const editor = useRef(null);
+    const mute = useRef(false);
+    const marker = useRef();
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     const availableBlocks = useAppSelector(state => context && 'text' !== props.mode ? getContextBlocksDataSelector(state, context) : []);
@@ -73,14 +71,14 @@ export function Editor(props: EditorProps) {
       the onSelect callback.
     */
     const onSelectionChanged = () => {
-        if (mute || willUpdateSelection) {
+        if (mute.current || willUpdateSelection) {
             return;
         }
         // const isUserChange = editor.curOp && editor.curOp.command.name;
         setWillUpdateSelection(true);
         window.requestAnimationFrame(() => {
             setWillUpdateSelection(false);
-            const selection_ = editor.selection.getRange();
+            const selection_ = editor.current.selection.getRange();
             if (sameSelection(selection, selection_))
                 return;
             setSelection(selection_);
@@ -89,23 +87,24 @@ export function Editor(props: EditorProps) {
     };
 
     const onTextChanged = (edit) => {
-        if (mute) {
+        if (mute.current) {
             return;
         }
+        console.log('text changed');
         // The callback must not trigger a rendering of the Editor.
         props.onEdit(edit)
     };
 
     const onAfterRender = () => {
-        if (mute) {
+        if (mute.current) {
             return;
         }
-        const scrollTop_ = editor.getSession().getScrollTop();
+        const scrollTop_ = editor.current.getSession().getScrollTop();
         if (scrollTop !== scrollTop_) {
             setScrollTop(scrollTop_);
             const {onScroll} = props;
             if (typeof onScroll === 'function') {
-                const firstVisibleRow_ = editor.getFirstVisibleRow();
+                const firstVisibleRow_ = editor.current.getFirstVisibleRow();
                 if (firstVisibleRow !== firstVisibleRow_) {
                     setFirstVisibleRow(firstVisibleRow_);
                     onScroll(firstVisibleRow_);
@@ -115,71 +114,71 @@ export function Editor(props: EditorProps) {
     };
 
     const wrapModelToEditor = (cb) => {
-        if (!editor) {
+        if (!editor.current) {
             return;
         }
-        setMute(true);
+        mute.current = true;
         try {
             cb();
         } finally {
-            setMute(false);
+            mute.current = false;
         }
     };
 
     const reset = (value, selection, firstVisibleRow) => {
         wrapModelToEditor(() => {
-            editor.getSession().setValue(value);
-            editor.resize(true);
+            editor.current.getSession().setValue(value);
+            editor.current.resize(true);
             setSelection(null);
             doSetSelection(selection);
             setFirstVisibleRow(firstVisibleRow);
-            editor.scrollToLine(firstVisibleRow);
-            setScrollTop(editor.getSession().getScrollTop());
+            editor.current.scrollToLine(firstVisibleRow);
+            setScrollTop(editor.current.getSession().getScrollTop());
             // Clear a previously set marker, if any.
-            if (marker) {
-                editor.session.removeMarker(marker);
-                setMarker(null);
+            if (marker.current) {
+                editor.current.session.removeMarker(marker.current);
+                marker.current = null;
             }
         });
     };
 
     const applyDeltas = (deltas) => {
         wrapModelToEditor(() => {
-            editor.session.doc.applyDeltas(deltas);
+            editor.current.session.doc.applyDeltas(deltas);
         });
     };
 
     const focus = () => {
-        if (!editor) {
+        if (!editor.current) {
             return;
         }
 
-        editor.focus();
+        editor.current.focus();
     };
 
     const scrollToLine = (firstVisibleRow) => {
         wrapModelToEditor(() => {
-            editor.resize(true);
+            editor.current.resize(true);
             setFirstVisibleRow(firstVisibleRow);
-            editor.scrollToLine(firstVisibleRow);
-            setScrollTop(editor.getSession().getScrollTop());
+            editor.current.scrollToLine(firstVisibleRow);
+            setScrollTop(editor.current.getSession().getScrollTop());
         });
     };
 
     const goToEnd = () => {
-        if (!editor) {
+        if (!editor.current) {
             return;
         }
 
-        editor.gotoLine(Infinity, Infinity, false);
+        editor.current.gotoLine(Infinity, Infinity, false);
     }
 
     const resize = () => {
-        if (!editor) {
+        if (!editor.current) {
             return;
         }
 
-        editor.resize(true);
+        editor.current.resize(true);
     };
 
     const doSetSelection = (selection_) => {
@@ -189,50 +188,52 @@ export function Editor(props: EditorProps) {
             }
             setSelection(selection_);
             if (selection_ && selection_.start && selection_.end) {
-                editor.selection.setRange(toRange(selection_));
+                editor.current.selection.setRange(toRange(selection_));
             } else {
-                editor.selection.setRange(new Range(0, 0, 0, 0));
+                editor.current.selection.setRange(new Range(0, 0, 0, 0));
             }
         });
     };
 
     const highlight = (range) => {
+        console.log('make highlight');
         wrapModelToEditor(() => {
-            const session = editor.session;
-            if (marker) {
-                session.removeMarker(marker);
-                setMarker(null);
+            const session = editor.current.session;
+            console.log('remove marker', marker.current);
+            if (marker.current) {
+                session.removeMarker(marker.current);
+                marker.current = null;
             }
             if (range && range.start && range.end) {
                 // Add (and save) the marker.
-                setMarker(session.addMarker(toRange(range), 'code-highlight', 'text'));
+                console.log('add maker');
+                marker.current = session.addMarker(toRange(range), 'code-highlight', 'text');
                 if (!props.shield) {
                     /* Also scroll so that the line is visible.  Skipped if the editor has
                        a shield (preventing user input) as this means playback is active,
                        and scrolling is handled by individual events. */
-                    editor.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
+                    editor.current.scrollToLine(range.start.row, /*center*/true, /*animate*/true);
                 }
             }
         });
     };
 
     const getSelectionRange = () => {
-        return editor && editor.getSelectionRange();
+        return editor.current && editor.current.getSelectionRange();
     };
 
     const initEditor = () => {
-        console.log('init editor', editor);
         if (props.hasAutocompletion && availableBlocks && contextStrings) {
             addAutocompletion(availableBlocks, contextStrings);
         }
-        const session = editor.getSession();
-        editor.$blockScrolling = Infinity;
+        const session = editor.current.getSession();
+        editor.current.$blockScrolling = Infinity;
         // editor.setBehavioursEnabled(false);
-        editor.setTheme(`ace/theme/${props.theme || 'github'}`);
+        editor.current.setTheme(`ace/theme/${props.theme || 'github'}`);
         session.setMode(`ace/mode/${props.mode || 'text'}`);
-        editor.setFontSize(Math.round(16 * zoomLevel) + 'px');
+        editor.current.setFontSize(Math.round(16 * zoomLevel) + 'px');
         // editor.setOptions({minLines: 25, maxLines: 50});
-        editor.setOptions({
+        editor.current.setOptions({
             readOnly: !!props.readOnly,
             enableBasicAutocompletion: props.hasAutocompletion,
             enableLiveAutocompletion: props.hasAutocompletion,
@@ -264,8 +265,8 @@ export function Editor(props: EditorProps) {
         }
 
         // @ts-ignore
-        editor.renderer.on("afterRender", onAfterRender);
-        editor.commands.addCommand({
+        editor.current.renderer.on("afterRender", onAfterRender);
+        editor.current.commands.addCommand({
             name: "escape",
             bindKey: {
                 win: "Esc",
@@ -279,13 +280,13 @@ export function Editor(props: EditorProps) {
 
         if (props.hasAutocompletion) {
             // @ts-ignore
-            let completer = editor.completer;
+            let completer = editor.current.completer;
             // we resize the completer window, because some functions are too big so we need more place:
             if (!completer) {
                 // make sure completer is initialized
-                editor.execCommand("startAutocomplete");
+                editor.current.execCommand("startAutocomplete");
                 // @ts-ignore
-                completer = editor.completer;
+                completer = editor.current.completer;
                 completer.detach();
             }
             if (completer && completer.popup) {
@@ -303,14 +304,15 @@ export function Editor(props: EditorProps) {
 
         /* Force a resize, the editor will not work properly otherwise. */
         setTimeout(function() {
-            editor.resize(true);
+            editor.current.resize(true);
         }, 0);
     }
 
     useEffect(() => {
-        const editor = ace.edit(refEditor.current);
-        console.log('create editor', editor);
-        setEditor(editor);
+        const editorObject = ace.edit(refEditor.current);
+        console.log('create editor', editorObject);
+        editor.current = editorObject;
+        initEditor();
 
         return () => {
             if (typeof props.onInit === 'function') {
@@ -320,44 +322,38 @@ export function Editor(props: EditorProps) {
     }, []);
 
     useEffect(() => {
-        if (editor) {
-            initEditor();
-        }
-    }, [editor]);
-
-    useEffect(() => {
-        if (editor) {
-            editor.setReadOnly(props.readOnly);
+        if (editor.current) {
+            editor.current.setReadOnly(props.readOnly);
         }
     }, [props.readOnly]);
 
     useEffect(() => {
-        if (editor) {
-            editor.setFontSize(Math.round(16 * zoomLevel) + 'px');
+        if (editor.current) {
+            editor.current.setFontSize(Math.round(16 * zoomLevel) + 'px');
         }
     }, [zoomLevel]);
 
     useEffect(() => {
-        if (editor) {
-            editor.setAutoScrollEditorIntoView(!props.shield);
+        if (editor.current) {
+            editor.current.setAutoScrollEditorIntoView(!props.shield);
         }
     }, [props.shield]);
 
     useEffect(() => {
-        if (editor) {
-            const session = editor.getSession();
+        if (editor.current) {
+            const session = editor.current.getSession();
             session.setMode(`ace/mode/${props.mode || 'text'}`);
         }
     }, [props.mode]);
 
     useEffect(() => {
-        if (editor) {
-            editor.setTheme(`ace/theme/${props.theme || 'github'}`);
+        if (editor.current) {
+            editor.current.setTheme(`ace/theme/${props.theme || 'github'}`);
         }
     }, [props.theme]);
 
     useEffect(() => {
-        if (editor) {
+        if (editor.current) {
             addAutocompletion(availableBlocks, contextStrings);
         }
     }, [availableBlocks, contextStrings]);
@@ -367,14 +363,17 @@ export function Editor(props: EditorProps) {
     const [collectedProps, drop] = useDrop(() => ({
         accept: ['block'],
         drop(item: DraggableBlockItem, monitor) {
-            console.log('editor elm', editor, editorRef.current);
             const offset = monitor.getClientOffset();
             // noinspection JSVoidFunctionReturnValueUsed
-            const pos = editorRef.current.renderer.screenToTextCoordinates(offset.x, offset.y);
-            editorRef.current.session.insert(pos, item.block.caption);
+            const pos = editor.current.renderer.screenToTextCoordinates(offset.x, offset.y);
+            editor.current.session.insert(pos, item.block.caption);
         },
         hover(item, monitor) {
-            console.log('is hovering');
+            const offset = monitor.getClientOffset();
+            // noinspection JSVoidFunctionReturnValueUsed
+            const pos = editor.current.renderer.screenToTextCoordinates(offset.x, offset.y);
+            editor.current.moveCursorTo(pos.row, pos.column);
+            editor.current.selection.clearSelection();
         },
     }));
 

@@ -2,7 +2,7 @@ import React from "react";
 import {BufferEditor} from "../../buffers/BufferEditor";
 import {getPlayerState} from "../../player/selectors";
 import {useAppSelector} from "../../hooks";
-import {AvailableBlocks} from "../AvailableBlocks";
+import {AvailableBlocks} from "../blocks/AvailableBlocks";
 
 export function LayoutEditor() {
     const {platform} = useAppSelector(state => state.options);

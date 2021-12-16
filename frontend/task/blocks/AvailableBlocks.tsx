@@ -1,7 +1,7 @@
-import React from "react";
-import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
-import {Block, getContextBlocksDataSelector} from "./blocks/blocks";
-import {useAppSelector} from "../hooks";
+import React, {useState} from "react";
+import {quickAlgoLibraries} from "../libs/quickalgo_librairies";
+import {Block, getContextBlocksDataSelector} from "./blocks";
+import {useAppSelector} from "../../hooks";
 import {AvailableBlock} from "./AvailableBlock";
 import {AvailableBlockCategory} from "./AvailableBlockCategory";
 
@@ -9,6 +9,7 @@ export function AvailableBlocks() {
     const context = quickAlgoLibraries.getContext(null, 'main');
     const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector(state, context) : []);
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
+    const [isDragging, setDragging] = useState(false);
 
     if (!context) {
         return null;
@@ -18,7 +19,6 @@ export function AvailableBlocks() {
     if (!blocks.length) {
         return null;
     }
-    console.log('available blocks', blocks, context);
 
     const blocksByCategory: {[name: string]: Block[]} = {};
     for (let block of blocks) {
@@ -28,8 +28,13 @@ export function AvailableBlocks() {
         blocksByCategory[block.category].push(block);
     }
 
+    const onDragging = (dragging) => {
+        console.log('dragging', dragging);
+        setDragging(dragging);
+    };
+
     return (
-        <div className="task-available-blocks-container">
+        <div className={`task-available-blocks-container ${isDragging ? 'is-dragging' : ''}`}>
             <div className="task-available-blocks-header">
                 <h2 className="title">Blocs disponibles</h2>
                 <p className="subtitle">Cliquez pour insérer</p>
@@ -38,17 +43,16 @@ export function AvailableBlocks() {
             {groupsCategory ?
                 <div className="task-available-categories">
                     {Object.entries(blocksByCategory).map(([category, blocks]) =>
-                        <AvailableBlockCategory blocks={blocks} name={category}/>
+                        <AvailableBlockCategory blocks={blocks} name={category} key={category} onDragging={onDragging}/>
                     )}
                 </div>
             :
                 <div className="task-available-blocks">
                     {blocks.map(block =>
-                        <AvailableBlock key={block.name} block={block}/>
+                        <AvailableBlock key={block.name} block={block} onDragging={onDragging}/>
                     )}
                 </div>
             }
-
         </div>
     );
 }
