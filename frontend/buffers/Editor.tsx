@@ -173,6 +173,14 @@ export function Editor(props: EditorProps) {
         editor.current.gotoLine(Infinity, Infinity, false);
     }
 
+    const insert = (text) => {
+        if (!editor.current) {
+            return;
+        }
+
+        editor.current.session.insert(editor.current.getCursorPosition(), text);
+    }
+
     const resize = () => {
         if (!editor.current) {
             return;
@@ -253,6 +261,7 @@ export function Editor(props: EditorProps) {
                 highlight,
                 resize,
                 goToEnd,
+                insert,
             };
             onInit(api);
         }
@@ -360,7 +369,7 @@ export function Editor(props: EditorProps) {
 
     const {width, height, shield} = props;
 
-    const [collectedProps, drop] = useDrop(() => ({
+    const [, drop] = useDrop(() => ({
         accept: ['block'],
         drop(item: DraggableBlockItem, monitor) {
             const offset = monitor.getClientOffset();

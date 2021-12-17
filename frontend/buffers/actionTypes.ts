@@ -2,6 +2,7 @@ export enum ActionTypes {
     BufferInit = 'Buffer.Init',
     BufferLoad = 'Buffer.Load',
     BufferReset = 'Buffer.Reset',
+    BufferInsert = 'Buffer.Insert',
     BufferEdit = 'Buffer.Edit',
     BufferSelect = 'Buffer.Select',
     BufferScroll = 'Buffer.Scroll',

@@ -224,6 +224,15 @@ function* buffersSaga() {
             resetEditor(editor, model);
         }
     });
+    yield* takeEvery(ActionTypes.BufferInsert, function* (action) {
+        const state: AppStore = yield* select();
+        // @ts-ignore
+        const {buffer, text} = action.payload;
+        const editor = getBufferEditor(state, buffer);
+        if (editor) {
+            editor.insert(text);
+        }
+    });
     yield* takeEvery(ActionTypes.BufferReset, function* (action) {
         const state: AppStore = yield* select();
         // @ts-ignore
