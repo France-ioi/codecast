@@ -227,10 +227,10 @@ function* buffersSaga() {
     yield* takeEvery(ActionTypes.BufferInsert, function* (action) {
         const state: AppStore = yield* select();
         // @ts-ignore
-        const {buffer, text, forceNewLine} = action.payload;
+        const {buffer, text, withoutNewLine} = action.payload;
         const editor = getBufferEditor(state, buffer);
         if (editor) {
-            editor.insert(text, null, forceNewLine);
+            editor.insert(text, null, withoutNewLine);
         }
     });
     yield* takeEvery(ActionTypes.BufferReset, function* (action) {

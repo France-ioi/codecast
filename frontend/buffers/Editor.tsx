@@ -172,14 +172,15 @@ export function Editor(props: EditorProps) {
         editor.current.gotoLine(Infinity, Infinity, false);
     }
 
-    const insert = (text, pos = null, forceNewLine = false) => {
+    const insert = (text, pos = null, withoutNewLine = false) => {
         if (!editor.current) {
             return;
         }
 
         const cursorPosition = pos ? pos : editor.current.getCursorPosition();
         const textAfter = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, cursorPosition.column, Infinity, Infinity));
-        editor.current.session.insert(cursorPosition, text + (!textAfter.trim().length || forceNewLine ? "\n" : ""));
+        editor.current.session.insert(cursorPosition, text + (!textAfter.trim().length && !withoutNewLine ? "\n" : ""));
+        editor.current.focus();
     }
 
     const resize = () => {
