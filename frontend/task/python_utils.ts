@@ -12,6 +12,7 @@ import {getMessage} from "../lang";
 import {Block, BlockType, getContextBlocksDataSelector} from "./blocks/blocks";
 import {AppStore} from "../store";
 import {QuickAlgoLibrary} from "./libs/quickalgo_librairies";
+import {pythonDirectiveViewDict} from "../stepper/views";
 
 const pythonCountPatterns = [
     // Comments
@@ -423,7 +424,7 @@ export const checkPythonCode = function (code: string, context: QuickAlgoLibrary
 }
 
 export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
-    const availableBlocks = [];
+    const availableBlocks: Block[] = [];
 
     let specialSnippets = {
         variables: {
@@ -487,7 +488,8 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
                 type: BlockType.Token,
                 caption: name in specialSnippets ? specialSnippets[name].caption : code,
                 captionMeta: name in specialSnippets && specialSnippets[name].captionMeta ? specialSnippets[name].captionMeta : null,
-                code: name in specialSnippets ? specialSnippets[name].snippet : code,
+                snippet: name in specialSnippets ? specialSnippets[name].snippet : code,
+                code,
                 category: tokenCategories[token],
                 showInBlocks: name in specialSnippets && false === specialSnippets[name].showInBlocks ? false : undefined,
             });
@@ -503,6 +505,15 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
                 showInBlocks: false,
             });
         }
+    }
+
+    for (let [directive, directiveData] of Object.entries(pythonDirectiveViewDict)) {
+        availableBlocks.push({
+            name: directive,
+            type: BlockType.Directive,
+            caption: directive,
+            code: directiveData.snippet,
+        });
     }
 
     return availableBlocks;

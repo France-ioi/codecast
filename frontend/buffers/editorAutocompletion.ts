@@ -77,7 +77,7 @@ export const addAutocompletion = function (blocks: Block[], strings: any) {
                 }
                 completions.push({
                     caption: block.caption,
-                    snippet: block.code,
+                    snippet: block.snippet ? block.snippet : block.code,
                     type: "snippet",
                     meta: block.captionMeta ? block.captionMeta : keywordi18n,
                 });

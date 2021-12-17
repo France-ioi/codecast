@@ -941,4 +941,4 @@ function setCellClasses(bytes, cursorMap, heapMap) {
     }
 }
 
-export default {View: MemoryView, selector: MemoryViewSelector};
+export default {View: MemoryView, selector: MemoryViewSelector, snippet: "//! showMemory(start=65520)"};

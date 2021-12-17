@@ -5,6 +5,16 @@
   background: #4a4a4a;
   color: white;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+
+  .task-available-blocks, .task-available-categories {
+    flex: auto;
+  }
+
+  .task-available-directives {
+    margin-top: -1px;
+  }
 
   .task-available-blocks-header {
     padding: 10px 15px;

@@ -1,11 +1,13 @@
 import {AppStoreReplay} from "../../store";
 import {getPythonSpecificBlocks} from "../python_utils";
 import {QuickAlgoLibrary} from "../libs/quickalgo_librairies";
+import {getCSpecificBlocks} from "../../stepper/views/c/utils";
 
 export enum BlockType {
     Function = 'function',
     Constant = 'constant',
     Token = 'token',
+    Directive = 'directive',
 }
 
 export interface DraggableBlockItem {
@@ -16,7 +18,8 @@ export interface Block {
     name: string,
     type: BlockType,
     description?: string // displayed on the blocks list and in autocomplete
-    code?: string,
+    code?: string, // code that will inserted by Codecast
+    snippet?: string, // code that will be inserted by Ace editor
     caption?: string, // how the block will be displayed on the interface
     captionMeta?: string, // optional category that will appear in autocomplete
     category?: string,
@@ -87,7 +90,7 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
                     category: type,
                     params: nbsArgs,
                     caption: code,
-                    code,
+                    code: code + '()',
                 });
             }
 
@@ -113,6 +116,9 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
     if ('python' === platform) {
        const pythonSpecificBlocks = getPythonSpecificBlocks(contextIncludeBlocks);
        availableBlocks = [...availableBlocks, ...pythonSpecificBlocks];
+    } else if ('unix' === platform) {
+        const cSpecificBlocks = getCSpecificBlocks(contextIncludeBlocks);
+        availableBlocks = [...availableBlocks, ...cSpecificBlocks];
     }
 
     availableBlocks.forEach((block => {

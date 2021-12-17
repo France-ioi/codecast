@@ -37,16 +37,16 @@ export const directiveDimensionsDict = {
 }
 
 export const C_directiveViewDict = {
-    showVar: {View: C_ShowVar, selector: obj => obj},
-    showArray: {View: C_Array1D, selector: obj => obj},
-    showArray2D: {View: C_Array2D, selector: obj => obj},
-    showSort: {View: C_SortView, selector: obj => obj},
+    showVar: {View: C_ShowVar, selector: obj => obj, snippet: null},
+    showArray: {View: C_Array1D, selector: obj => obj, snippet: "//! A = showArray(A, cursors=[i])"},
+    showArray2D: {View: C_Array2D, selector: obj => obj, snippet: "//! A = showArray2D(A, rowCursors=[k], colCursors=[j])"},
+    showSort: {View: C_SortView, selector: obj => obj, snippet: "//! quicksort = showSort(array, cursors=[left, right, i, j], dim=size, thresholds=[pivot])"},
     showMemory: MemoryViewDirective,
 };
 export const pythonDirectiveViewDict = {
-    showArray: {View: pythonArray1D, selector: obj => obj},
-    showArray2D: {View: pythonArray2D, selector: obj => obj},
-    showSort: {View: pythonSortView, selector: obj => obj},
+    showArray: {View: pythonArray1D, selector: obj => obj, snippet: "_VIEW_arr = \"showArray(arr, cursors=[index], cursorRows=20)\""},
+    showArray2D: {View: pythonArray2D, selector: obj => obj, snippet: "_VIEW_arr = \"showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=2, cols=3)\""},
+    showSort: {View: pythonSortView, selector: obj => obj, snippet: "_VIEW_quicksort= \"showSort(quicksort, cursors=[left, right, i, j], dim=size, thresholds=[pivot])\""},
 };
 
 export default function(bundle: Bundle) {

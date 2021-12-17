@@ -375,7 +375,7 @@ export function Editor(props: EditorProps) {
             const offset = monitor.getClientOffset();
             // noinspection JSVoidFunctionReturnValueUsed
             const pos = editor.current.renderer.screenToTextCoordinates(offset.x, offset.y);
-            editor.current.session.insert(pos, item.block.caption);
+            editor.current.session.insert(pos, item.block.code);
         },
         hover(item, monitor) {
             const offset = monitor.getClientOffset();
