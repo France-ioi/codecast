@@ -1,5 +1,5 @@
 import React, {useEffect} from "react";
-import {Block} from "./blocks";
+import {Block, BlockType} from "./blocks";
 import {useDrag} from "react-dnd";
 import {getEmptyImage} from "react-dnd-html5-backend";
 import {useDispatch} from "react-redux";
@@ -34,7 +34,7 @@ export function AvailableBlock(props: AvailableBlockProps) {
     const dispatch = useDispatch();
 
     const insertBlock = () => {
-        dispatch({type: BufferActionTypes.BufferInsert, payload: {buffer: 'source', text: block.code}});
+        dispatch({type: BufferActionTypes.BufferInsert, payload: {buffer: 'source', text: block.code, forceNewLine: BlockType.Token === block.type}});
     }
 
     return (

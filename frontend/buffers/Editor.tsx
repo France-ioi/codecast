@@ -4,7 +4,7 @@ import * as ace from 'brace';
 import {addAutocompletion} from "./editorAutocompletion";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {getMessage} from "../lang";
-import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
+import {BlockType, DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";
 import {useDrop} from "react-dnd";
 
@@ -90,7 +90,6 @@ export function Editor(props: EditorProps) {
         if (mute.current) {
             return;
         }
-        console.log('text changed');
         // The callback must not trigger a rendering of the Editor.
         props.onEdit(edit)
     };
@@ -173,12 +172,14 @@ export function Editor(props: EditorProps) {
         editor.current.gotoLine(Infinity, Infinity, false);
     }
 
-    const insert = (text) => {
+    const insert = (text, pos = null, forceNewLine = false) => {
         if (!editor.current) {
             return;
         }
 
-        editor.current.session.insert(editor.current.getCursorPosition(), text);
+        const cursorPosition = pos ? pos : editor.current.getCursorPosition();
+        const textAfter = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, cursorPosition.column, Infinity, Infinity));
+        editor.current.session.insert(cursorPosition, text + (!textAfter.trim().length || forceNewLine ? "\n" : ""));
     }
 
     const resize = () => {
@@ -375,7 +376,7 @@ export function Editor(props: EditorProps) {
             const offset = monitor.getClientOffset();
             // noinspection JSVoidFunctionReturnValueUsed
             const pos = editor.current.renderer.screenToTextCoordinates(offset.x, offset.y);
-            editor.current.session.insert(pos, item.block.code);
+            insert(item.block.code, pos, BlockType.Token === item.block.type);
         },
         hover(item, monitor) {
             const offset = monitor.getClientOffset();
