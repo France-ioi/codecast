@@ -29,6 +29,44 @@ export interface Block {
     showInBlocks?: boolean,
 }
 
+
+function getSnippet(proto) {
+    let parenthesisOpenIndex = proto.indexOf("(");
+    if (proto.charAt(parenthesisOpenIndex + 1) == ')') {
+        return proto;
+    } else {
+        let ret = proto.substring(0, parenthesisOpenIndex + 1);
+        let commaIndex = parenthesisOpenIndex;
+        let snippetIndex = 1;
+        while (proto.indexOf(',', commaIndex + 1) != -1) {
+            let newCommaIndex = proto.indexOf(',', commaIndex + 1);
+            // we want to keep the space.
+            if (proto.charAt(commaIndex + 1) == ' ') {
+                commaIndex += 1;
+                ret += ' ';
+            }
+            ret += "${" + snippetIndex + ':';
+            ret += proto.substring(commaIndex + 1, newCommaIndex);
+            ret += "},";
+
+            commaIndex = newCommaIndex;
+            snippetIndex += 1;
+        }
+
+        // the last one is with the closing parenthesis.
+        let parenthesisCloseIndex = proto.indexOf(')');
+        if (proto.charAt(commaIndex + 1) == ' ') {
+            commaIndex += 1;
+            ret += ' ';
+        }
+        ret += "${" + snippetIndex + ':';
+        ret += proto.substring(commaIndex + 1, parenthesisCloseIndex);
+        ret += "})";
+
+        return ret;
+    }
+}
+
 export const getContextBlocksDataSelector = function (state: AppStoreReplay, context: QuickAlgoLibrary): Block[] {
     const contextIncludeBlocks = state.task.contextIncludeBlocks;
     const contextStrings = state.task.contextStrings;
@@ -147,6 +185,8 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
                     block.caption = blockName + '()';
                 }
             }
+
+            block.snippet = getSnippet(block.caption);
         }
     }))
 

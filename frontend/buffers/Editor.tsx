@@ -173,7 +173,7 @@ export function Editor(props: EditorProps) {
         editor.current.gotoLine(Infinity, Infinity, false);
     }
 
-    const insert = (text, pos = null, withoutNewLine = false) => {
+    const insert = (text, pos = null, withoutNewLine = false, snippet = false) => {
         if (!editor.current) {
             return;
         }
@@ -181,17 +181,19 @@ export function Editor(props: EditorProps) {
         const cursorPosition = pos ? pos : editor.current.getCursorPosition();
         const textAfter = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, cursorPosition.column, Infinity, Infinity));
         const indentationCurrentLine = editor.current.session.doc.getLine(cursorPosition.row).search(/\S|$/);
-        editor.current.session.insert(cursorPosition, text + (!textAfter.trim().length && !withoutNewLine ? "\n" + ' '.repeat(indentationCurrentLine) : ""));
+        if (snippet) {
+            editor.current.insertSnippet(text, cursorPosition);
+            if (text.indexOf("${") === -1) {
+                editor.current.session.insert({row: cursorPosition.row + 1, column: cursorPosition.column}, (!textAfter.trim().length && !withoutNewLine ? "\n" + ' '.repeat(indentationCurrentLine) : ""));
+            }
+        } else {
+            editor.current.session.insert(cursorPosition, text + (!textAfter.trim().length && !withoutNewLine ? "\n" + ' '.repeat(indentationCurrentLine) : ""));
+        }
         editor.current.focus();
     }
 
     const insertSnippet = (snippet, pos) => {
-        if (!editor.current) {
-            return;
-        }
-
-        editor.current.insertSnippet(snippet, pos);
-        editor.current.focus();
+        insert(snippet, pos, false, true);
     }
 
     const resize = () => {

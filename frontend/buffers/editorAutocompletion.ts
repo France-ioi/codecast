@@ -4,43 +4,6 @@ import {Block, BlockType} from "../task/blocks/blocks";
 
 const hiddenWords = ['__getitem__', '__setitem__'];
 
-function getSnippet(proto) {
-    let parenthesisOpenIndex = proto.indexOf("(");
-    if (proto.charAt(parenthesisOpenIndex + 1) == ')') {
-        return proto;
-    } else {
-        let ret = proto.substring(0, parenthesisOpenIndex + 1);
-        let commaIndex = parenthesisOpenIndex;
-        let snippetIndex = 1;
-        while (proto.indexOf(',', commaIndex + 1) != -1) {
-            let newCommaIndex = proto.indexOf(',', commaIndex + 1);
-            // we want to keep the space.
-            if (proto.charAt(commaIndex + 1) == ' ') {
-                commaIndex += 1;
-                ret += ' ';
-            }
-            ret += "${" + snippetIndex + ':';
-            ret += proto.substring(commaIndex + 1, newCommaIndex);
-            ret += "},";
-
-            commaIndex = newCommaIndex;
-            snippetIndex += 1;
-        }
-
-        // the last one is with the closing parenthesis.
-        let parenthesisCloseIndex = proto.indexOf(')');
-        if (proto.charAt(commaIndex + 1) == ' ') {
-            commaIndex += 1;
-            ret += ' ';
-        }
-        ret += "${" + snippetIndex + ':';
-        ret += proto.substring(commaIndex + 1, parenthesisCloseIndex);
-        ret += "})";
-
-        return ret;
-    }
-}
-
 export const addAutocompletion = function (blocks: Block[], strings: any) {
     let langTools = ace.acequire("ace/ext/language_tools");
 
@@ -52,10 +15,9 @@ export const addAutocompletion = function (blocks: Block[], strings: any) {
     for (let block of blocks) {
         switch (block.type) {
             case BlockType.Function:
-                let funSnippet = getSnippet(block.caption);
                 completions.push({
                     caption: block.caption,
-                    snippet: funSnippet,
+                    snippet: block.snippet,
                     type: "snippet",
                     docHTML: "<b>" + block.caption + "</b>" + (block.description ? "<hr/>" + block.description : ""),
                 });
