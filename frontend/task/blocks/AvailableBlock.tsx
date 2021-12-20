@@ -34,7 +34,7 @@ export function AvailableBlock(props: AvailableBlockProps) {
     const dispatch = useDispatch();
 
     const insertBlock = () => {
-        dispatch({type: BufferActionTypes.BufferInsert, payload: {buffer: 'source', text: block.code, withoutNewLine: BlockType.Token === block.type}});
+        dispatch({type: BufferActionTypes.BufferInsertBlock, payload: {buffer: 'source', block}});
     }
 
     return (

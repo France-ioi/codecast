@@ -47,6 +47,7 @@ import {Bundle} from "../linker";
 import {App} from "../index";
 import {getCurrentStepperState} from "../stepper/selectors";
 import {getNodeRange} from "../stepper";
+import {BlockType} from "../task/blocks/blocks";
 
 // import 'brace/theme/ambiance';
 // import 'brace/theme/chaos';
@@ -224,13 +225,18 @@ function* buffersSaga() {
             resetEditor(editor, model);
         }
     });
-    yield* takeEvery(ActionTypes.BufferInsert, function* (action) {
+    yield* takeEvery(ActionTypes.BufferInsertBlock, function* (action) {
         const state: AppStore = yield* select();
         // @ts-ignore
-        const {buffer, text, withoutNewLine} = action.payload;
+        const {buffer, block, pos} = action.payload;
+        const withoutNewLine = BlockType.Token === block.type;
         const editor = getBufferEditor(state, buffer);
         if (editor) {
-            editor.insert(text, null, withoutNewLine);
+            if (block.snippet) {
+                editor.insertSnippet(block.snippet, pos ? pos : null);
+            } else {
+                editor.insert(block.code, pos ? pos : null, withoutNewLine);
+            }
         }
     });
     yield* takeEvery(ActionTypes.BufferReset, function* (action) {

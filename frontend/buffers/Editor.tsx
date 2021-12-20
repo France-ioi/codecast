@@ -4,7 +4,7 @@ import * as ace from 'brace';
 import {addAutocompletion} from "./editorAutocompletion";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {getMessage} from "../lang";
-import {BlockType, DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
+import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";
 import {useDrop} from "react-dnd";
 
@@ -22,6 +22,7 @@ interface EditorProps {
     onEdit: Function,
     onScroll: Function,
     onInit: Function,
+    onDropBlock: Function,
 }
 
 function toRange(selection) {
@@ -179,7 +180,17 @@ export function Editor(props: EditorProps) {
 
         const cursorPosition = pos ? pos : editor.current.getCursorPosition();
         const textAfter = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, cursorPosition.column, Infinity, Infinity));
-        editor.current.session.insert(cursorPosition, text + (!textAfter.trim().length && !withoutNewLine ? "\n" : ""));
+        const indentationCurrentLine = editor.current.session.doc.getLine(cursorPosition.row).search(/\S|$/);
+        editor.current.session.insert(cursorPosition, text + (!textAfter.trim().length && !withoutNewLine ? "\n" + ' '.repeat(indentationCurrentLine) : ""));
+        editor.current.focus();
+    }
+
+    const insertSnippet = (snippet, pos) => {
+        if (!editor.current) {
+            return;
+        }
+
+        editor.current.insertSnippet(snippet, pos);
         editor.current.focus();
     }
 
@@ -264,6 +275,7 @@ export function Editor(props: EditorProps) {
                 resize,
                 goToEnd,
                 insert,
+                insertSnippet,
             };
             onInit(api);
         }
@@ -377,7 +389,7 @@ export function Editor(props: EditorProps) {
             const offset = monitor.getClientOffset();
             // noinspection JSVoidFunctionReturnValueUsed
             const pos = editor.current.renderer.screenToTextCoordinates(offset.x, offset.y);
-            insert(item.block.code, pos, BlockType.Token === item.block.type);
+            props.onDropBlock(item.block, pos);
         },
         hover(item, monitor) {
             const offset = monitor.getClientOffset();

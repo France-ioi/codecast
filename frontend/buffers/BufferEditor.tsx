@@ -4,6 +4,7 @@ import {ActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
 import {useResizeDetector} from "react-resize-detector";
 import {withResizeDetector} from "react-resize-detector/build/withPolyfill";
+import {Block, BlockType} from "../task/blocks/blocks";
 
 interface BufferEditorProps {
     readOnly?: boolean,
@@ -50,11 +51,16 @@ const _BufferEditor = (props: BufferEditorProps) => {
         dispatch({type: ActionTypes.BufferScroll, buffer, firstVisibleRow});
     };
 
+    const onDropBlock = (block: Block, pos) => {
+        dispatch({type: ActionTypes.BufferInsertBlock, payload: {buffer, block, pos}});
+    };
+
     return <Editor
         onInit={onInit}
         onEdit={onEdit}
         onSelect={onSelect}
         onScroll={onScroll}
+        onDropBlock={onDropBlock}
         readOnly={props.readOnly}
         shield={props.shield}
         theme={props.theme}
