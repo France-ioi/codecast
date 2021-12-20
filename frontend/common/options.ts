@@ -71,6 +71,9 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
     if ('theme' in query) {
         state.options.theme = query.theme || null;
     }
+    if ('directives' in query) {
+        options.showDirectives = true;
+    }
 
     if (query.recording) {
         state.options.baseDataUrl = query.recording;

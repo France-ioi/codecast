@@ -9,6 +9,7 @@ import {getMessage} from "../../lang";
 export function AvailableBlocks() {
     const context = quickAlgoLibraries.getContext(null, 'main');
     const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector(state, context) : []);
+    const showDirectives = useAppSelector(state => state.options.showDirectives);
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
     const [isDragging, setDragging] = useState(false);
 
@@ -63,11 +64,11 @@ export function AvailableBlocks() {
                 </div>
             }
 
-            <div className="task-available-directives">
+            {showDirectives && <div className="task-available-directives">
                 <div className="task-available-categories">
                     <AvailableBlockCategory blocks={directives} name={"Directives"} onDragging={onDragging}/>
                 </div>
-            </div>
+            </div>}
         </div>
     );
 }
