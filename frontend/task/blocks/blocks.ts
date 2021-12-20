@@ -128,7 +128,7 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
                     category: type,
                     params: nbsArgs,
                     caption: code,
-                    code: code + '()',
+                    code: code,
                 });
             }
 
