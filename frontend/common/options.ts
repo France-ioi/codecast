@@ -4,15 +4,10 @@ import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
 import {Bundle} from "../linker";
 import {put, takeEvery} from "typed-redux-saga";
-import {AppStore, CodecastOptionsMode} from "../store";
+import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
 
-function appInitReducer(state: AppStore, {payload: {options, query}}) {
-    state.options = options;
-    if (!query) {
-        return;
-    }
-
+function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
         state.options.language = query.language;
     }
@@ -86,6 +81,15 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
             state.options.mode = CodecastOptionsMode.Play;
         }
     }
+}
+
+function appInitReducer(state: AppStore, {payload: {options, query}}) {
+    state.options = options;
+    if (!query || options.disableQueryOptions) {
+        return;
+    }
+
+    loadOptionsFromQuery(options, query);
 }
 
 export default function(bundle: Bundle) {
