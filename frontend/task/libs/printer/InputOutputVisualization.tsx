@@ -12,16 +12,14 @@ export function InputOutputVisualization() {
     const ioMode = useAppSelector(state => state.ioPane.mode);
     const hasStepper = useAppSelector(state => !!getCurrentStepperState(state) || !state.task.resetDone);
 
-    if (hasStepper) {
-        if (IoMode.Terminal === ioMode) {
-            return <TerminalView/>;
-        }
-        if (IoMode.Split === ioMode) {
+    if (IoMode.Terminal === ioMode) {
+        return <TerminalView/>;
+    }
+    if (IoMode.Split === ioMode) {
+        if (hasStepper) {
             return <InputOutputView/>;
         }
-    }
 
-    if (IoMode.Split == ioMode) {
         return (
             <div>
                 <p>{getMessage('IOPANE_INITIAL_INPUT')}</p>

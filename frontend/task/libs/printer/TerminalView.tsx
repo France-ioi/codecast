@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Card} from 'react-bootstrap';
 import {Icon} from "@blueprintjs/core";
-import {TermBuffer, writeString} from "../../../stepper/io/terminal";
 import {PureTerminal} from "./PureTerminal";
 import {useDispatch} from "react-redux";
 import {AppStore} from "../../../store";
@@ -22,11 +21,11 @@ export function TerminalView() {
     const player = useAppSelector((state: AppStore) => getPlayerState(state));
     const preventInput = player && player.isPlaying;
 
-    let terminalBuffer = new TermBuffer({lines: 10, width: 60});
+    let terminalContent = '';
     if (taskState && taskState.ioEvents) {
-        terminalBuffer = writeString(terminalBuffer, getTerminalText(taskState.ioEvents));
+        terminalContent += getTerminalText(taskState.ioEvents);
     }
-    terminalBuffer = writeString(terminalBuffer, input);
+    terminalContent += input;
 
     const [focus, setFocus] = useState(null);
 
@@ -77,21 +76,13 @@ export function TerminalView() {
         <Card>
             <Card.Header>{renderHeader()}</Card.Header>
             <Card.Body>
-                <div className="row">
-                    <div className="col-sm-12">
-                        {terminalBuffer ?
-                            <PureTerminal
-                                terminalBuffer={terminalBuffer}
-                                onInit={onTermInit}
-                                onKeyPress={onTermChar}
-                                onBackspace={onTermBS}
-                                onEnter={onTermEnter}
-                            />
-                        :
-                            <p>{"no buffer"}</p>
-                        }
-                    </div>
-                </div>
+                <PureTerminal
+                    terminalContent={terminalContent}
+                    onInit={onTermInit}
+                    onKeyPress={onTermChar}
+                    onBackspace={onTermBS}
+                    onEnter={onTermEnter}
+                />
             </Card.Body>
         </Card>
     );

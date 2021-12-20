@@ -206,16 +206,17 @@ body#app, #app h1, #app h2, #app h3 {
 
 .terminal {
   margin: 4px;
-  background-color: #222;
+  background-color: black;
   outline: none;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  overflow-y: auto;
 }
 .terminal-cursor {
   background-color: #888;
 }
 .terminal-line, .terminal-placeholder {
-  background-color: black;
   min-height: 1em;
-  white-space: pre;
 }
 .terminal-line {
   color: #C80;
