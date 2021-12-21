@@ -14,7 +14,7 @@ jobs:
     - name: Setup node
       uses: actions/setup-node@v1
       with:
-        node-version: 14.14.x
+        node-version: 14.18.x
         registry-url: "https://npm.pkg.github.com"
       env:
         NODE_AUTH_TOKEN: ${{ secrets.PACKAGE_PAT }}
@@ -44,7 +44,7 @@ jobs:
     - name: Setup node
       uses: actions/setup-node@v1
       with:
-        node-version: 14.14.x
+        node-version: 14.18.x
         registry-url: "https://npm.pkg.github.com"
       env:
         NODE_AUTH_TOKEN: ${{ secrets.PACKAGE_PAT }}
