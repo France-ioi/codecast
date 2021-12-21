@@ -17,11 +17,11 @@ import {useAppSelector} from "../hooks";
 import {SaveStep} from "../recorder/save_screen";
 import {getMessage} from "../lang";
 
-interface RecorderControlsTaskProps {
+interface RecorderControlsProps {
     enabled?: boolean
 }
 
-export function RecorderControlsTask(props: RecorderControlsTaskProps) {
+export function RecorderControls(props: RecorderControlsProps) {
     const screen = useAppSelector(state => state.screen);
     const user = useAppSelector(state => state.user);
     const recorder = useAppSelector(state => getRecorderState(state));

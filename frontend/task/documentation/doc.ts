@@ -1,16 +1,16 @@
-import {Bundle} from "../linker";
+import {Bundle} from "../../linker";
 import {call, put, select, takeEvery} from "typed-redux-saga";
-import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
-import {extractLevelSpecific} from "./utils";
+import {quickAlgoLibraries} from "../libs/quickalgo_librairies";
+import {extractLevelSpecific} from "../utils";
 import {
     DocumentationConcept,
     documentationConceptSelected,
     documentationConceptsLoaded, DocumentationLanguage,
     documentationLanguageChanged
 } from "./documentation_slice";
-import {AppAction} from "../store";
-import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import {getMessage} from "../lang";
+import {AppAction} from "../../store";
+import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
+import {getMessage} from "../../lang";
 
 let openerChannel;
 

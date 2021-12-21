@@ -19,7 +19,7 @@ import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
 import {TaskState} from "./task/task_slice";
 import {LayoutState} from "./task/layout/layout";
-import {DocumentationState} from "./task/documentation_slice";
+import {DocumentationState} from "./task/documentation/documentation_slice";
 import {BufferState} from "./buffers";
 import {EditorState} from "./editor";
 import {PlatformState, TaskLevelName} from "./task/platform/platform_slice";
