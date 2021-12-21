@@ -55,7 +55,7 @@
 .task-available-block {
   padding: 10px 20px;
   border-bottom: solid 1px black;
-  color: $primary;
+  color: var(--primary-color);
   cursor: move; /* fallback if grab cursor is unsupported */
   cursor: grab;
   cursor: grabbing;
