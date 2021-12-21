@@ -18,22 +18,18 @@ import statisticsBundle from './statistics/index';
 import {isLocalMode} from "./utils/app";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "./common/actionTypes";
-import {ActionTypes as PlayerActionTypes} from "./player/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "./recorder/actionTypes";
 import {ActionTypes as StatisticsActionTypes} from "./statistics/actionTypes";
-import {SandboxApp} from "./sandbox/SandboxApp";
 import {TaskApp} from "./task/TaskApp";
 import {StatisticsApp} from "./statistics/StatisticsApp";
-import {PlayerApp} from "./player/PlayerApp";
-import {RecorderApp} from "./recorder/RecorderApp";
 import {AppErrorBoundary} from "./common/AppErrorBoundary";
 import {setAutoFreeze} from "immer";
 import {ReplayApi} from "./player/replay";
 import {RecordApi} from "./recorder/record";
 import {StepperApi} from "./stepper/api";
 import {EnhancedStore} from "@reduxjs/toolkit";
-import {ConceptViewer} from "./task/doc";
-import {Documentation} from "./task/Documentation";
+import {ConceptViewer} from "./task/documentation/doc";
+import {Documentation} from "./task/documentation/Documentation";
 import '@france-ioi/skulpt/dist/skulpt.min.js';
 import '@france-ioi/skulpt/dist/skulpt-stdlib.js';
 import '@france-ioi/skulpt/dist/debugger.js';
@@ -224,28 +220,6 @@ Codecast.start = function(options) {
 
     let appDisplay;
     switch (options.start) {
-        case 'recorder':
-            autoLogin();
-
-            mainStore.dispatch({type: RecorderActionTypes.RecorderPrepare});
-
-            appDisplay = <RecorderApp />;
-
-            break;
-        case 'player':
-            mainStore.dispatch({
-                type: PlayerActionTypes.PlayerPrepare,
-                payload: {
-                    baseDataUrl: options.baseDataUrl,
-                    audioUrl: options.audioUrl,
-                    eventsUrl: `${options.baseDataUrl}.json`,
-                    data: options.data
-                }
-            });
-
-            appDisplay = <PlayerApp />;
-
-            break;
         case 'statistics':
             autoLogin();
 
@@ -256,16 +230,12 @@ Codecast.start = function(options) {
             appDisplay = <StatisticsApp />;
 
             break;
-        case 'sandbox':
+
+        case 'task':
             mainStore.dispatch({
                 type: StatisticsActionTypes.StatisticsLogLoadingData
             });
 
-            appDisplay = <SandboxApp />;
-
-            break;
-
-        case 'task':
             autoLogin();
 
             appDisplay = <TaskApp />;

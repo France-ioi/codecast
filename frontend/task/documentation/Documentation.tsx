@@ -1,17 +1,17 @@
 import React, {useEffect, useState} from 'react';
 import {Icon} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
-import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {documentationLoad, sendCodeExampleToOpener} from "./doc";
-import {useAppSelector} from "../hooks";
+import {useAppSelector} from "../../hooks";
 import {documentationConceptSelected, DocumentationLanguage, documentationLanguageChanged} from "./documentation_slice";
-import {Screen} from "../common/screens";
+import {Screen} from "../../common/screens";
 import {select} from "typed-redux-saga";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
-import {ActionTypes} from "../buffers/actionTypes";
-import {documentModelFromString} from "../buffers";
-import {getMessage} from "../lang";
+import {ActionTypes} from "../../buffers/actionTypes";
+import {documentModelFromString} from "../../buffers";
+import {getMessage} from "../../lang";
 
 interface DocumentationProps {
     standalone: boolean,

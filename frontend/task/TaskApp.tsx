@@ -3,9 +3,9 @@ import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
 import {Dialog, Intent, ProgressBar} from "@blueprintjs/core";
 import {MenuTask} from "./MenuTask";
-import {RecorderControlsTask} from "./RecorderControlsTask";
+import {RecorderControls} from "./RecorderControls";
 import {SubtitlesBand} from "../subtitles/SubtitlesBand";
-import {PlayerControlsTask} from "./PlayerControlsTask";
+import {PlayerControls} from "./PlayerControls";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {LayoutLoader} from "./layout/LayoutLoader";
@@ -149,13 +149,13 @@ export function TaskApp() {
 
                 {recordingEnabled &&
                     <div className="layout-footer">
-                      <RecorderControlsTask/>
+                      <RecorderControls/>
                     </div>
                 }
 
                 {playerEnabled && isPlayerReady &&
                     <div className="layout-footer">
-                      <PlayerControlsTask/>
+                      <PlayerControls/>
                       <SubtitlesBand/>
                     </div>
                 }

@@ -5,7 +5,7 @@ import {App} from "./index";
 import {AppStore} from "./store";
 import {configureStore} from "@reduxjs/toolkit";
 import taskSlice from "./task/task_slice";
-import documentationSlice from "./task/documentation_slice";
+import documentationSlice from "./task/documentation/documentation_slice";
 import log from "loglevel";
 import platformSlice from "./task/platform/platform_slice";
 

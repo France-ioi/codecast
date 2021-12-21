@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
-import {Button, ButtonGroup, Intent, Slider} from "@blueprintjs/core";
+import {Button, ButtonGroup, Slider} from "@blueprintjs/core";
 import {formatTime} from "../common/utils";
 import {ActionTypes} from "../player/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
@@ -8,10 +8,8 @@ import {getMessage} from "../lang";
 import {SubtitlesPopup} from "../subtitles/SubtitlesPopup";
 import {useAppSelector} from "../hooks";
 import {LayoutPlayerMode} from "./layout/layout";
-import {askConfirmation} from "../alert";
-import {getBufferModel} from "../buffers/selectors";
 
-export function PlayerControlsTask() {
+export function PlayerControls() {
     const player = useAppSelector(state => state.player);
     const isReady = player.isReady;
     const isPlaying = player.isPlaying;
