@@ -126,7 +126,7 @@ export function TaskApp() {
                         {taskLevels && 1 < Object.keys(taskLevels).length && <TaskLevelTabs/>}
 
                         <div className="task-body">
-                            <LayoutLoader width={null} height={null}/>
+                            <LayoutLoader/>
                             {displayEditor &&
                                 <div key="subtitles" className="subtitles-pane-container">
                                     <SubtitlesEditor

@@ -41,7 +41,7 @@ export function RecorderControls(props: RecorderControlsProps) {
     } else {
         canRecord = /ready|paused/.test(recorderStatus);
         canStop = /recording|paused/.test(recorderStatus);
-        canPlay = recorderStatus === RecorderStatus.Paused;
+        canPlay = false;
         canPause = recorderStatus === RecorderStatus.Recording;
         position = duration = recorder.elapsed || 0;
         playPause = 'pause';

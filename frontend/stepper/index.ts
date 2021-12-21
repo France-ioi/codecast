@@ -864,13 +864,15 @@ function* stepperStepSaga(app: App, action) {
                 if (!(ex instanceof StepperError)) {
                     ex = new StepperError('error', stringifyError(ex));
                 }
-                if (ex.condition === 'interrupt') {
-                    stepperContext.interrupted = true;
+                if (ex instanceof StepperError) {
+                    if (ex.condition === 'interrupt') {
+                        stepperContext.interrupted = true;
 
-                    yield* put({type: ActionTypes.StepperInterrupted});
-                }
-                if (ex.condition === 'error') {
-                    yield* put(stepperExecutionError(ex.message));
+                        yield* put({type: ActionTypes.StepperInterrupted});
+                    }
+                    if (ex.condition === 'error') {
+                        yield* put(stepperExecutionError(ex.message));
+                    }
                 }
             }
 
