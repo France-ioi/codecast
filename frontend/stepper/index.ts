@@ -75,7 +75,7 @@ import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
-import {taskResetDone} from "../task/task_slice";
+import {selectCurrentTest, taskResetDone} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonInterpreter from "./python/python_interpreter";
@@ -928,7 +928,7 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
         yield* put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: true});
 
         taskContext.display = false;
-        taskContext.resetAndReloadState(state.task.currentTest, state);
+        taskContext.resetAndReloadState(selectCurrentTest(state), state);
         stepperContext.state.contextState = getCurrentImmerState(taskContext.getInnerState());
 
         console.log('current task state', taskContext.getInnerState());
@@ -1041,7 +1041,7 @@ function postLink(app: App) {
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context) {
                 const state = yield* select();
-                context.resetAndReloadState(state.task.currentTest, state);
+                context.resetAndReloadState(selectCurrentTest(state), state);
             }
         })
     });

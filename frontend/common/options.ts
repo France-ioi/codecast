@@ -9,76 +9,76 @@ import {parseCodecastUrl} from "../../backend/options";
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
-        state.options.language = query.language;
+        options.language = query.language;
     }
 
     if ('noLanguageChange' in query) {
-        state.options.canChangeLanguage = false;
+        options.canChangeLanguage = false;
     }
 
     (query.stepperControls || '').split(',').forEach(function (controlStr) {
         // No prefix to highlight, '-' to disable.
         const m = /^([-_])?(.*)$/.exec(controlStr);
         if (m) {
-            state.options.controls[m[2]] = m[1] || '+';
+            options.controls[m[2]] = m[1] || '+';
         }
     });
     if ('noStepper' in query) {
-        state.options.showStepper = false;
-        state.options.showStack = false;
-        state.options.showViews = false;
-        state.options.showIO = false;
+        options.showStepper = false;
+        options.showStack = false;
+        options.showViews = false;
+        options.showIO = false;
     }
     if ('noStack' in query) {
-        state.options.showStack = false;
+        options.showStack = false;
     }
     if ('noViews' in query) {
-        state.options.showViews = false;
+        options.showViews = false;
     }
     if ('noIO' in query) {
-        state.options.showIO = false;
+        options.showIO = false;
     }
     if ('noMenu' in query) {
-        state.options.showMenu = false;
+        options.showMenu = false;
     }
     if ('noDoc' in query) {
-        state.options.showDocumentation = false;
+        options.showDocumentation = false;
     }
     if ('noFullScreen' in query) {
-        state.options.showFullScreen = false;
+        options.showFullScreen = false;
     }
     if ('record' in query) {
-        state.options.canRecord = true;
+        options.canRecord = true;
     }
     if ('platform' in query) {
-        state.options.platform = query.platform;
-        state.options.canChangePlatform = false;
+        options.platform = query.platform;
+        options.canChangePlatform = false;
     }
     if ('source' in query) {
-        state.options.source = query.source || '';
+        options.source = query.source || '';
     }
     if ('input' in query) {
-        state.options.input = query.input || '';
+        options.input = query.input || '';
     }
     if ('level' in query) {
-        state.options.level = query.level || null;
+        options.level = query.level || null;
     }
     if ('theme' in query) {
-        state.options.theme = query.theme || null;
+        options.theme = query.theme || null;
     }
     if ('directives' in query) {
         options.showDirectives = true;
     }
 
     if (query.recording) {
-        state.options.baseDataUrl = query.recording;
-        state.options.audioUrl = `${options.baseDataUrl}.mp3`;
+        options.baseDataUrl = query.recording;
+        options.audioUrl = `${options.baseDataUrl}.mp3`;
         const {s3Bucket: bucket, uploadPath: folder, id: codecast} = parseCodecastUrl(options.baseDataUrl);
-        state.options.codecastData = {bucket, folder, codecast};
+        options.codecastData = {bucket, folder, codecast};
         if (query.mode === 'edit') {
-            state.options.mode = CodecastOptionsMode.Edit;
+            options.mode = CodecastOptionsMode.Edit;
         } else {
-            state.options.mode = CodecastOptionsMode.Play;
+            options.mode = CodecastOptionsMode.Play;
         }
     }
 }

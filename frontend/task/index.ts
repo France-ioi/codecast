@@ -34,7 +34,6 @@ import DocumentationBundle from "./doc";
 import PlatformBundle, {
     getTaskAnswerAggregated,
     setPlatformBundleParameters,
-    taskApi,
     taskGradeAnswerEventSaga
 } from "./platform/platform";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
@@ -431,11 +430,16 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
 }
 
 function* contextResetAndReloadStateSaga() {
-    const state = yield* select();
+    const state: AppStore = yield* select();
     const currentTest = selectCurrentTest(state);
 
-    const context = quickAlgoLibraries.getContext(null, 'main');
-    context.resetAndReloadState(currentTest, state);
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+    if (context) {
+        context.resetAndReloadState(currentTest, state);
+        const contextState = getCurrentImmerState(context.getInnerState());
+        console.log('get new state', contextState);
+        yield* put(taskUpdateState(contextState));
+    }
 }
 
 function* getTaskAnswer () {
@@ -523,13 +527,9 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(StepperActionTypes.StepperExit, function* () {
-            const state = yield* select();
-            const context = quickAlgoLibraries.getContext(null, state.environment);
-            if (context) {
-                context.resetAndReloadState(state.task.currentTest, state);
-                console.log('put task reset done to true');
-                yield* put(taskResetDone(true));
-            }
+            yield* call(contextResetAndReloadStateSaga);
+            console.log('put task reset done to true');
+            yield* put(taskResetDone(true));
         });
 
         // Store inputs to be replayed in the next method
