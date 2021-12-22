@@ -114,9 +114,15 @@ function addBackendRoutes(app, config, store) {
 
     app.get('/task', function (req, res) {
         buildOptions(config, req, 'task', function (err, options) {
+            const files = fs.readFileSync('bundled_files.txt', 'utf8')
+              .split("\n")
+              .filter(file => file.length)
+              .map(file => file.split('/').slice(-1));
+
             res.render('task', {
                 development: config.isDevelopment,
                 rebaseUrl: config.rebaseUrl,
+                files,
                 options
             });
         });

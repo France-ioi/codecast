@@ -11,6 +11,8 @@ const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPl
 const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
 const smp = new SpeedMeasurePlugin();
 
+const bundledFiles = fs.readFileSync('bundled_files.txt', 'utf8').split("\n").filter(a => a.length);
+
 module.exports = (env, argv) => {
     if (!argv.mode) {
         argv.mode = 'development';
@@ -174,18 +176,7 @@ module.exports = (env, argv) => {
                 }
             }),
             new CopyPlugin({
-                patterns: [
-                    'bebras-modules/pemFioi/blocklyRobot_lib-1.0.0.js',
-                    'bebras-modules/integrationAPI.01/official/platform-pr.js',
-                    'bebras-modules/integrationAPI.01/installationAPI.01/pemFioi/installation.js',
-                    'bebras-modules/integrationAPI.01/official/miniPlatform.js',
-                    'bebras-modules/ext/jquery/1.7/jquery.min.js',
-                    'bebras-modules/ext/raphael/2.2.1/raphael.min.js',
-                    'bebras-modules/ext/jschannel/jschannel.js',
-                    'bebras-modules/pemFioi/delayFactory-1.0.js',
-                    'bebras-modules/pemFioi/raphaelFactory-1.0.js',
-                    'bebras-modules/pemFioi/conceptViewer-1.0-mobileFirst.js',
-                ],
+                patterns: bundledFiles,
             }),
             new MiniCssExtractPlugin(),
             // new BundleAnalyzerPlugin(),
