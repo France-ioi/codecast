@@ -1,5 +1,5 @@
 import * as C from '@france-ioi/persistent-c';
-import {AppStore} from "../../store";
+import {AppStore, CodecastPlatform} from "../../store";
 import {StepperContext} from "../api";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
@@ -14,7 +14,7 @@ export default function(bundle: Bundle) {
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
             const {platform} = state.options;
 
-            if (platform === 'unix' || platform === 'arduino') {
+            if (platform === CodecastPlatform.Unix || platform === CodecastPlatform.Arduino) {
                 const {programState, options} = stepperState;
 
                 heapInit(programState, options.stackSize);

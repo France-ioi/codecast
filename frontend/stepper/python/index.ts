@@ -1,10 +1,9 @@
 import {channel} from 'redux-saga';
 import {call, put, take} from 'typed-redux-saga';
-import {writeString} from "../io/terminal";
-import PythonInterpreter from "./python_interpreter";
+import PythonRunner from "./python_runner";
 import {ActionTypes} from './actionTypes';
 import {ActionTypes as CompileActionTypes, stepperExecutionError} from '../actionTypes';
-import {AppStore} from "../../store";
+import {AppStore, CodecastPlatform} from "../../store";
 import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
@@ -48,7 +47,7 @@ export default function(bundle: Bundle) {
             const context = quickAlgoLibraries.getContext(null, environment);
 
             console.log('init stepper', environment);
-            if (platform === 'python') {
+            if (platform === CodecastPlatform.Python) {
                 let channel = pythonInterpreterChannel;
 
                 context.onError = (diagnostics) => {
@@ -82,29 +81,9 @@ export default function(bundle: Bundle) {
 
                 const blocksData = getContextBlocksDataSelector(state, context);
 
-                const pythonInterpreter = new PythonInterpreter(context);
+                const pythonInterpreter = new PythonRunner(context);
                 pythonInterpreter.initCodes([pythonSource], blocksData);
             }
         });
     })
 };
-
-export function getNewTerminal(terminal, message) {
-    if (terminal) {
-        if (message) {
-            return writeString(terminal, message);
-        }
-
-        return terminal;
-    }
-
-    return null;
-}
-
-export function getNewOutput(stepperState, message) {
-    if (message) {
-        return stepperState.output + message;
-    }
-
-    return stepperState.output;
-}

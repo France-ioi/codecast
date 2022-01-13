@@ -24,26 +24,15 @@ The stepper's state has the following shape:
 
 */
 
-import {
-    apply,
-    call,
-    cancel,
-    delay,
-    fork,
-    put,
-    race,
-    select,
-    take,
-    takeEvery,
-    takeLatest,
-} from 'typed-redux-saga';
+import {apply, call, cancel, delay, fork, put, race, select, take, takeEvery, takeLatest,} from 'typed-redux-saga';
 import * as C from '@france-ioi/persistent-c';
 
 import {
     default as ApiBundle,
     makeContext,
     performStep,
-    StepperContext, StepperContextParameters,
+    StepperContext,
+    StepperContextParameters,
     StepperError,
 } from './api';
 import CompileBundle, {CompileStatus} from './compile';
@@ -60,7 +49,9 @@ import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./py
 import {Directive, parseDirectives} from "./python/directives";
 import {
     ActionTypes as StepperActionTypes,
-    ActionTypes, stepperDisplayError, stepperExecutionError,
+    ActionTypes,
+    stepperDisplayError,
+    stepperExecutionError,
     stepperExecutionSuccess
 } from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
@@ -78,7 +69,7 @@ import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {selectCurrentTest, taskResetDone} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
-import PythonInterpreter from "./python/python_interpreter";
+import PythonRunner from "./python/python_runner";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
 
 export enum StepperStepMode {
@@ -120,7 +111,7 @@ export type StepperControls = typeof initialStepperStateControls;
 
 // TODO: Separate the needs per platform (StepperStatePython, StepperStateC, etc)
 const initialStateStepperState = {
-    platform: 'unix' as CodecastPlatform,
+    platform: CodecastPlatform.Unix,
     input: '',
     output: '', // Only used for python
     terminal: null as TermBuffer, // Only used for python
@@ -305,7 +296,7 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
     }
 
     /* TODO: extend stepper API to add enrichers that run here */
-    if (stepperState.platform === 'python') {
+    if (stepperState.platform === CodecastPlatform.Python) {
         if (context === 'Stepper.Progress') {
             // Don't reanalyse after program is finished :
             // keep the last state of the stack and set isFinished state.
@@ -360,7 +351,7 @@ export function getNodeRange(stepperState?: StepperState) {
         return null;
     }
 
-    if (stepperState.platform === 'python') {
+    if (stepperState.platform === CodecastPlatform.Python) {
         const {functionCallStack} = stepperState.analysis;
         const stackFrame = functionCallStack[0];
         if (!stackFrame) {
@@ -421,7 +412,7 @@ function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}})
          */
         stepperState = {...stepperState};
     } else {
-        if (platform === 'python') {
+        if (platform === CodecastPlatform.Python) {
             stepperState = state.stepper.initialStepperState;
 
             const source = state.buffers['source'].model.document.toString();
@@ -482,7 +473,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     stepperContext.state = {...stepperContext.state};
 
     if (false !== progress) {
-        if (stepperContext.state.platform === 'python') {
+        if (stepperContext.state.platform === CodecastPlatform.Python) {
             // Save scope.
             stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
         }
@@ -788,7 +779,7 @@ function* stepperInterruptSaga(app: App) {
 
     const stepperContext = createStepperContext(getStepper(state), {dispatch: app.dispatch, environment: app.environment});
 
-    if (stepperContext.state.platform === 'python') {
+    if (stepperContext.state.platform === CodecastPlatform.Python) {
         yield* call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
     }
 
@@ -853,7 +844,7 @@ function* stepperStepSaga(app: App, action) {
 
             console.log('[stepper.step] Creating new stepper context', stepperContext, stepperContext.resume, state.environment, stepperContext.environment);
 
-            if (stepperContext.state.platform === 'python') {
+            if (stepperContext.state.platform === CodecastPlatform.Python) {
                 yield* call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
             }
 
@@ -876,10 +867,10 @@ function* stepperStepSaga(app: App, action) {
                 }
             }
 
-            if (stepperContext.state.platform === 'python') {
+            if (stepperContext.state.platform === CodecastPlatform.Python) {
                 // Save scope.
                 stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
-            } else if (stepperContext.state.platform === 'unix') {
+            } else if (stepperContext.state.platform === CodecastPlatform.Unix) {
                 stepperContext.state.isFinished = !stepperContext.state.programState.control;
             }
 
@@ -937,7 +928,7 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
 
         const blocksData = getContextBlocksDataSelector(state, taskContext);
 
-        const pythonInterpreter = new PythonInterpreter(taskContext);
+        const pythonInterpreter = new PythonRunner(taskContext);
         pythonInterpreter.initCodes([stepperContext.state.analysis.code], blocksData);
         while (pythonInterpreter._steps < stepperContext.state.analysis.stepNum) {
             yield* apply(pythonInterpreter, pythonInterpreter.runStep, [stepperContext.quickAlgoCallsExecutor]);
@@ -1233,7 +1224,7 @@ function postLink(app: App) {
         const {platform} = state.options;
 
         switch (platform) {
-            case 'python':
+            case CodecastPlatform.Python:
                 stepperState.lastProgramState = {};
                 stepperState.programState = {...stepperState.lastProgramState};
 

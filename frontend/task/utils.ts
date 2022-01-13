@@ -75,7 +75,7 @@ export function checkCompilingCode(code, platform: CodecastPlatform, state: AppS
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
 
-    if ('python' === platform) {
+    if (CodecastPlatform.Python === platform) {
         const context = quickAlgoLibraries.getContext(null, state.environment);
         if (context) {
             checkPythonCode(code, context, state);
@@ -84,7 +84,7 @@ export function checkCompilingCode(code, platform: CodecastPlatform, state: AppS
 }
 
 export function getDefaultSourceCode(platform: CodecastPlatform, environment: string) {
-    if ('python' === platform) {
+    if (CodecastPlatform.Python === platform) {
         const context = quickAlgoLibraries.getContext(null, environment);
         if (context) {
             const availableModules = getAvailableModules(context);

@@ -5,7 +5,7 @@ import {scanfBuiltin} from './scanf';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
-import {AppStore} from "../../store";
+import {AppStore, CodecastPlatform} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {StepperContext} from "../api";
@@ -36,7 +36,7 @@ export default function(bundle: Bundle) {
     function updateIoPaneState(state: AppStore) {
         const {platform} = state.options;
 
-        if (platform === 'arduino') {
+        if (platform === CodecastPlatform.Arduino) {
             /* Arduino is forced to terminal mode. */
             state.ioPane.mode = IoMode.Terminal;
             state.ioPane.modeSelect = false;

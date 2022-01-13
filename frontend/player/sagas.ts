@@ -11,7 +11,7 @@ import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {getPlayerState} from "./selectors";
-import {AppStore, AppStoreReplay} from "../store";
+import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
 import {makeContext, QuickalgoLibraryCall, StepperContext} from "../stepper/api";
@@ -108,7 +108,7 @@ function* playerPrepare(app: App, action) {
     /* Compute the future state after every event. */
     const chan = yield* call(requestAnimationFrames, 50);
 
-    let platform = 'unix';
+    let platform = CodecastPlatform.Unix;
     if (data.options) {
         platform = data.options.platform;
     }

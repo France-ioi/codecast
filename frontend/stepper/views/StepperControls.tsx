@@ -3,7 +3,7 @@ import {Button, ButtonGroup, Intent, Slider} from "@blueprintjs/core";
 import {IconName} from "@blueprintjs/icons";
 import {ActionTypes} from "../actionTypes";
 import {connect} from "react-redux";
-import {AppStore} from "../../store";
+import {AppStore, CodecastPlatform} from "../../store";
 import {getStepper, isStepperInterrupting} from "../selectors";
 import * as C from '@france-ioi/persistent-c';
 import {StepperControlsType, StepperStepMode} from "../index";
@@ -11,7 +11,16 @@ import {formatTime} from "../../common/utils";
 import {CompileStatus} from "../compile";
 import {LayoutType} from "../../task/layout/layout";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faTachometerAlt, faPlay, faPause, faFastForward, faStop, faShoePrints, faWalking, faRunning} from '@fortawesome/free-solid-svg-icons';
+import {
+    faFastForward,
+    faPause,
+    faPlay,
+    faRunning,
+    faShoePrints,
+    faStop,
+    faTachometerAlt,
+    faWalking
+} from '@fortawesome/free-solid-svg-icons';
 import {getMessage} from "../../lang";
 
 interface StepperControlsStateToProps {
@@ -48,12 +57,12 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
     let canInterrupt = false, canUndo = false, canRedo = false;
     let isFinished = false;
-    let showExpr = platform !== 'python';
+    let showExpr = platform !== CodecastPlatform.Python;
     let compileOrExecuteMessage = '';
     let speed = 0;
     let controlsType = StepperControlsType.Normal;
 
-    if (platform === 'python') {
+    if (platform === CodecastPlatform.Python) {
         compileOrExecuteMessage = getMessage('EXECUTE');
     } else {
         compileOrExecuteMessage = getMessage('COMPILE');
@@ -77,7 +86,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
             showEdit = true;
             showControls = true;
             canExit = enabled;
-            if (platform === 'python') {
+            if (platform === CodecastPlatform.Python) {
                 // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
                 canStepOut = (currentStepperState.suspensions && (currentStepperState.suspensions.length > 1));
                 canStep = !currentStepperState.isFinished;

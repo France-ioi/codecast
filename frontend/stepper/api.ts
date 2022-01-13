@@ -8,9 +8,9 @@
 */
 
 import * as C from '@france-ioi/persistent-c';
-import {all, call, select, take} from 'typed-redux-saga';
+import {all, call} from 'typed-redux-saga';
 import {clearLoadedReferences} from "./python/analysis/analysis";
-import {AppStore, AppStoreReplay} from "../store";
+import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
@@ -145,7 +145,7 @@ export default function(bundle: Bundle) {
             executeEffects,
         });
 
-        if (stepperContext.state.platform === 'python') {
+        if (stepperContext.state.platform === CodecastPlatform.Python) {
             return stepperContext.state;
         } else {
             while (!inUserCode(stepperContext.state)) {
@@ -257,7 +257,7 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
 
-    if (state.platform === 'python') {
+    if (state.platform === CodecastPlatform.Python) {
         return {
             ...stepperContext,
             state: {
@@ -296,7 +296,7 @@ async function executeSingleStep(stepperContext: StepperContext) {
         console.log('end wait for progress, continuing');
     }
 
-    if (stepperContext.state.platform === 'python') {
+    if (stepperContext.state.platform === CodecastPlatform.Python) {
         const result = await window.currentPythonRunner.runStep(stepperContext.quickAlgoCallsExecutor);
 
         console.log('FINAL INTERACT', result);
@@ -339,7 +339,7 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
             return;
         }
         if (!stop && stopCond) {
-            if (stepperContext.state.platform === 'python') {
+            if (stepperContext.state.platform === CodecastPlatform.Python) {
                 if (stopCond(stepperContext.state)) {
                     stop = true;
                 }
@@ -376,7 +376,7 @@ async function stepInto(stepperContext: StepperContext) {
     // Take a first step.
     await executeSingleStep(stepperContext);
 
-    if (stepperContext.state.platform === 'unix' || stepperContext.state.platform === 'arduino') {
+    if (stepperContext.state.platform === CodecastPlatform.Unix || stepperContext.state.platform === CodecastPlatform.Python) {
         // Step out of the current statement.
         await stepUntil(stepperContext, C.outOfCurrentStmt);
         // Step into the next statement.
@@ -387,7 +387,7 @@ async function stepInto(stepperContext: StepperContext) {
 async function stepOut(stepperContext: StepperContext) {
     // The program must be running.
     if (!isStuck(stepperContext.state)) {
-        if (stepperContext.state.platform === 'python') {
+        if (stepperContext.state.platform === CodecastPlatform.Python) {
             const nbSuspensions = stepperContext.state.suspensions.length;
 
             // Take a first step.
@@ -412,7 +412,7 @@ async function stepOut(stepperContext: StepperContext) {
 }
 
 async function stepOver(stepperContext: StepperContext) {
-    if (stepperContext.state.platform === 'python') {
+    if (stepperContext.state.platform === CodecastPlatform.Python) {
         if (stepperContext.state.suspensions) {
             const nbSuspensions = stepperContext.state.suspensions.length;
 
@@ -467,7 +467,7 @@ export async function performStep(stepperContext: StepperContext, mode) {
 
 
 function isStuck(stepperState: StepperState): boolean {
-    if (stepperState.platform === 'python') {
+    if (stepperState.platform === CodecastPlatform.Python) {
         return stepperState.isFinished;
     } else {
         return !stepperState.programState.control;
@@ -475,7 +475,7 @@ function isStuck(stepperState: StepperState): boolean {
 }
 
 function inUserCode(stepperState: StepperState) {
-    if (stepperState.platform === 'python') {
+    if (stepperState.platform === CodecastPlatform.Python) {
         return true;
     } else {
         return !!stepperState.programState.control.node[1].begin;

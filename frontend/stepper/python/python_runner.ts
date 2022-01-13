@@ -36,7 +36,7 @@ function definePythonNumber() {
 
 const PythonNumber = definePythonNumber();
 
-export default class PythonInterpreter {
+export default class PythonRunner {
     private context;
     private _debugger;
     private _code = '';
@@ -164,7 +164,7 @@ export default class PythonInterpreter {
             for (let block of blocks.filter(block => block.type === BlockType.Function)) {
                 const {code, generatorName, name, params, type} = block;
                 console.log(block, generatorName);
-                modContents += PythonInterpreter._skulptifyHandler(code, generatorName, name, params, type);
+                modContents += PythonRunner._skulptifyHandler(code, generatorName, name, params, type);
                 // We do want to override Python's naturel input and output to replace them with our own modules
                 if (generatorName === 'printer' && ('input' === code || 'print' === code)) {
                     const newCode = 'print' === code ? 'customPrint' : code;
@@ -174,7 +174,7 @@ export default class PythonInterpreter {
 
             for (let block of blocks.filter(block => block.type === BlockType.Constant)) {
                 const {name, value} = block;
-                modContents += PythonInterpreter._skulptifyConst(name, value);
+                modContents += PythonRunner._skulptifyConst(name, value);
             }
 
             modContents += "\nreturn mod;\n};";
@@ -292,7 +292,7 @@ export default class PythonInterpreter {
     }
 
     returnCallback(callback, value) {
-        log.getLogger('python_interpreter').debug('RETURN CALLBACK', value);
+        log.getLogger('python_runner').debug('RETURN CALLBACK', value);
         let primitive = this._createPrimitive(value);
         if (primitive !== Sk.builtin.none.none$) {
             this._resetCallstackOnNextStep = true;
@@ -303,7 +303,7 @@ export default class PythonInterpreter {
     }
 
     waitDelay(callback, value, delay) {
-        log.getLogger('python_interpreter').debug('WAIT DELAY', value, delay);
+        log.getLogger('python_runner').debug('WAIT DELAY', value, delay);
         this._paused = true;
         if (delay > 0) {
             let _noDelay = this.noDelay.bind(this, callback, value);
@@ -315,7 +315,7 @@ export default class PythonInterpreter {
 
     waitCallback(callback) {
         // Returns a callback to be called once we can continue the execution
-        log.getLogger('python_interpreter').debug('WAIT CALLBACK');
+        log.getLogger('python_runner').debug('WAIT CALLBACK');
         this._paused = true;
 
         return (value) => {
@@ -324,7 +324,7 @@ export default class PythonInterpreter {
     }
 
     noDelay(callback, value) {
-        log.getLogger('python_interpreter').debug('NO DELAY');
+        log.getLogger('python_runner').debug('NO DELAY');
         let primitive = this._createPrimitive(value);
         if (primitive !== Sk.builtin.none.none$) {
             // Apparently when we create a new primitive, the debugger adds a call to
@@ -369,7 +369,7 @@ export default class PythonInterpreter {
             inputfun: this.onInput,
             inputfunTakesPrompt: true,
             debugout: console.log,
-            read: PythonInterpreter._builtinRead,
+            read: PythonRunner._builtinRead,
             yieldLimit: null,
             execLimit: null,
             debugging: true,

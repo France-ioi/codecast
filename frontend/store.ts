@@ -24,7 +24,12 @@ import {BufferState} from "./buffers";
 import {EditorState} from "./editor";
 import {PlatformState, TaskLevelName} from "./task/platform/platform_slice";
 
-export type CodecastPlatform = 'python' | 'unix' | 'arduino';
+export enum CodecastPlatform {
+    Python = 'python',
+    Unix = 'unix',
+    Arduino = 'arduino',
+    Blockly = 'blockly',
+}
 
 export enum CodecastOptionsMode {
     Edit = 'edit',

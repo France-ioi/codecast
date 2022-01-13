@@ -2,6 +2,7 @@ import React from "react";
 import {PythonStackView} from "../../stepper/python/analysis/components/PythonStackView";
 import {StackView} from "../../stepper/views/c/StackView";
 import {useAppSelector} from "../../hooks";
+import {CodecastPlatform} from "../../store";
 
 export function LayoutStackView() {
     const currentStepperState = useAppSelector(state => state.stepper ? state.stepper.currentStepperState : null);
@@ -15,7 +16,7 @@ export function LayoutStackView() {
     return (
         <div style={{fontSize: `${zoomLevel}rem`}}>
             {
-                currentStepperState && currentStepperState.platform === 'python'
+                currentStepperState && currentStepperState.platform === CodecastPlatform.Python
                     ? <PythonStackView analysis={props.analysis} height={null}/>
                     : <StackView/>
             }

@@ -40,7 +40,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "./selectors";
 import {current, immerable} from "immer";
-import {AppStore} from "../store";
+import {AppStore, CodecastPlatform} from "../store";
 import {ReplayContext} from "../player/sagas";
 import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
@@ -343,7 +343,7 @@ function addRecordHooks({recordApi}: App) {
         const range = {start, end};
 
         const {platform} = state.options;
-        if (buffer === 'output' && platform === 'python') {
+        if (buffer === 'output' && platform === CodecastPlatform.Python) {
             // For python, the full output is retrieved from the interpreter at each step.
 
             return;

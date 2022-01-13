@@ -3,40 +3,46 @@ import {BufferEditor} from "../../buffers/BufferEditor";
 import {getPlayerState} from "../../player/selectors";
 import {useAppSelector} from "../../hooks";
 import {AvailableBlocks} from "../blocks/AvailableBlocks";
+import {CodecastPlatform} from "../../store";
+import {BlocklyEditor} from "../../stepper/js/BlocklyEditor";
 
 export function LayoutEditor() {
-    const {platform} = useAppSelector(state => state.options);
+    const platform = useAppSelector(state => state.options.platform);
     const currentTask = useAppSelector(state => state.task.currentTask);
-    let mode;
+    let sourceMode;
     switch (platform) {
-        case 'arduino':
-            mode = 'arduino';
+        case CodecastPlatform.Arduino:
+            sourceMode = 'arduino';
             break;
-        case 'python':
-            mode = 'python';
+        case CodecastPlatform.Python:
+            sourceMode = 'python';
             break;
         default:
-            mode = 'c_cpp';
+            sourceMode = 'c_cpp';
             break;
     }
 
-    const sourceMode = mode;
     const player = useAppSelector(state => getPlayerState(state));
     const preventInput = player.isPlaying;
 
     return (
         <div className="layout-editor">
             {currentTask && <AvailableBlocks/>}
-            <BufferEditor
-                buffer="source"
-                readOnly={false}
-                shield={preventInput}
-                mode={sourceMode}
-                theme="textmate"
-                requiredWidth="100%"
-                requiredHeight="100%"
-                hasAutocompletion
-            />
+            {CodecastPlatform.Blockly === platform ?
+                <BlocklyEditor
+                />
+                :
+                <BufferEditor
+                    buffer="source"
+                    readOnly={false}
+                    shield={preventInput}
+                    mode={sourceMode}
+                    theme="textmate"
+                    requiredWidth="100%"
+                    requiredHeight="100%"
+                    hasAutocompletion
+                />
+            }
         </div>
     );
 }

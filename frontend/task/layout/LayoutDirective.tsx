@@ -1,6 +1,6 @@
 import React from "react";
 import {connect} from "react-redux";
-import {AppStore} from "../../store";
+import {AppStore, CodecastPlatform} from "../../store";
 import {initialStepperStateControls, StepperState} from "../../stepper";
 import {DirectivePanel} from "../../stepper/views/DirectivePanel";
 import {getCurrentStepperState} from "../../stepper/selectors";
@@ -41,7 +41,7 @@ export class _LayoutDirective extends React.PureComponent<LayoutDirectiveProps> 
         const {key} = this.props.directive;
         const dirControls = (controls.hasOwnProperty(key)) ? controls[key] : initialStepperStateControls;
         let functionCallStack = null;
-        if (platform === 'unix' || platform === 'arduino') {
+        if (platform === CodecastPlatform.Unix || platform === CodecastPlatform.Arduino) {
             functionCallStack = functionCallStackMap[key];
         }
 

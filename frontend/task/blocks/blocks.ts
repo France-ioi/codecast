@@ -1,4 +1,4 @@
-import {AppStoreReplay} from "../../store";
+import {AppStoreReplay, CodecastPlatform} from "../../store";
 import {getPythonSpecificBlocks} from "../python_utils";
 import {QuickAlgoLibrary} from "../libs/quickalgo_librairies";
 import {getCSpecificBlocks} from "../../stepper/views/c/utils";
@@ -151,16 +151,16 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
         }
     }
 
-    if ('python' === platform) {
+    if (CodecastPlatform.Python === platform) {
        const pythonSpecificBlocks = getPythonSpecificBlocks(contextIncludeBlocks);
        availableBlocks = [...availableBlocks, ...pythonSpecificBlocks];
-    } else if ('unix' === platform) {
+    } else if (CodecastPlatform.Unix === platform) {
         const cSpecificBlocks = getCSpecificBlocks(contextIncludeBlocks);
         availableBlocks = [...availableBlocks, ...cSpecificBlocks];
     }
 
     availableBlocks.forEach((block => {
-        if (block.name in contextStrings.description) {
+        if (contextStrings.description && block.name in contextStrings.description) {
             block.description = contextStrings.description[block.name];
         }
 

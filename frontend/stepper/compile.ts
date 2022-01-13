@@ -13,7 +13,7 @@ Shape of the 'compile' state:
 
 */
 
-import {call, put, select, takeLatest, takeEvery, take, race} from 'typed-redux-saga';
+import {call, put, race, select, take, takeEvery, takeLatest} from 'typed-redux-saga';
 
 import {asyncRequestJson} from '../utils/api';
 
@@ -22,7 +22,7 @@ import {clearStepper} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "../buffers/selectors";
-import {AppStore, AppStoreReplay} from "../store";
+import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
@@ -97,7 +97,7 @@ export default function(bundle: Bundle) {
             }
 
             let response;
-            if (platform === 'python') {
+            if (platform === CodecastPlatform.Python) {
                 yield* put({
                     type: ActionTypes.CompileSucceeded,
                     platform
@@ -248,7 +248,7 @@ function compileStartedReducer(state: AppStore, action): void {
 }
 
 function compileSucceededReducer(state: AppStore, action): void {
-    if (action.platform === 'python') {
+    if (action.platform === CodecastPlatform.Python) {
         state.compile.status = CompileStatus.Done;
         state.stepper.error = null;
     } else {

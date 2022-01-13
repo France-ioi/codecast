@@ -12,6 +12,7 @@ import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 import {ActionTypes} from "../../buffers/actionTypes";
 import {documentModelFromString} from "../../buffers";
 import {getMessage} from "../../lang";
+import {CodecastPlatform} from "../../store";
 
 interface DocumentationProps {
     standalone: boolean,
@@ -98,7 +99,7 @@ export function Documentation(props: DocumentationProps) {
         });
         dispatch({
             type: CommonActionTypes.PlatformChanged,
-            payload: 'c' === language ? 'unix' : language,
+            payload: 'c' === language ? CodecastPlatform.Unix : language,
         });
         closeDocumentation();
     };

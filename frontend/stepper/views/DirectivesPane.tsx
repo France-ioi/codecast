@@ -5,7 +5,7 @@ import {Alignment, Navbar, NavbarGroup} from "@blueprintjs/core";
 import {ActionTypes} from "../actionTypes";
 import {connect} from "react-redux";
 import {getCurrentStepperState} from "../selectors";
-import {AppStore} from "../../store";
+import {AppStore, CodecastPlatform} from "../../store";
 
 interface DirectivesPaneStateToProps {
     stepperState: any,
@@ -66,7 +66,7 @@ class _DirectivesPane extends React.PureComponent<DirectivesPaneProps> {
             );
 
             let functionCallStack = null;
-            if (platform === 'unix' || platform === 'arduino') {
+            if (platform === CodecastPlatform.Unix || platform === CodecastPlatform.Arduino) {
                 functionCallStack = functionCallStackMap[key];
             }
 
