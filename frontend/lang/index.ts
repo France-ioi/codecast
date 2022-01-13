@@ -108,7 +108,9 @@ export const getMessage = (message, defaultText = null) => {
     return localGetMessage(message, defaultText);
 }
 
-getMessage.format = localGetFormat;
+export const getMessageFormat = (value) => {
+    return localGetFormat(value);
+}
 
 export class LocalizedError extends Error {
     constructor(message, public args) {

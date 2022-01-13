@@ -11,6 +11,7 @@ import {getMessage} from "../../../lang";
 export function InputOutputVisualization() {
     const ioMode = useAppSelector(state => state.ioPane.mode);
     const hasStepper = useAppSelector(state => !!getCurrentStepperState(state) || !state.task.resetDone);
+    const currentTask = useAppSelector(state => state.task.currentTask);
 
     if (hasStepper) {
         if (IoMode.Terminal === ioMode) {
@@ -32,13 +33,17 @@ export function InputOutputVisualization() {
                     requiredHeight='150px'
                 />
 
-                <p className="mt-4">{getMessage('IOPANE_INITIAL_OUTPUT')}</p>
-                <BufferEditor
-                    buffer={outputBufferLibTest}
-                    mode='text'
-                    requiredWidth='100%'
-                    requiredHeight='150px'
-                />
+                {currentTask &&
+                    <React.Fragment>
+                      <p className="mt-4">{getMessage('IOPANE_INITIAL_OUTPUT')}</p>
+                      <BufferEditor
+                        buffer={outputBufferLibTest}
+                        mode='text'
+                        requiredWidth='100%'
+                        requiredHeight='150px'
+                      />
+                    </React.Fragment>
+                }
             </div>
         );
     }

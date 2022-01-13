@@ -20,7 +20,7 @@ import {ReplayApi} from "./replay";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {taskLoad} from "../task";
-import {PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
+import {inputBufferLibTest, outputBufferLibTest, PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
 import {RECORDING_FORMAT_VERSION} from "../version";
 import {getCurrentImmerState} from "../task/utils";
 import {createDraft, finishDraft} from "immer";
@@ -258,7 +258,16 @@ function ensureBackwardsCompatibility(events: any[], version?: string) {
         }
 
         if ((key === 'stepper.step' || key === 'stepper.progress') && versionComponents[0] < 7) {
-            params.push('immediate'); // Special mode to ensure backwards compatibility, we didn't have timeouts between each step in previous versions
+            // Special mode to ensure backwards compatibility, we didn't have timeouts between each step in previous versions
+            params.push('immediate');
+        }
+
+        if (key.split('.')[0] === 'buffer' && params[0] === 'input') {
+            params[0] = inputBufferLibTest;
+        }
+        if (key.split('.')[0] === 'buffer' && params[0] === 'output' && versionComponents[0] < 7) {
+            // There was no such thing as expected output before v7
+            continue;
         }
 
         transformedEvents.push([t, key, ...params]);
