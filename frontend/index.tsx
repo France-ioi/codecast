@@ -18,7 +18,6 @@ import statisticsBundle from './statistics/index';
 import {isLocalMode} from "./utils/app";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "./common/actionTypes";
-import {ActionTypes as RecorderActionTypes} from "./recorder/actionTypes";
 import {ActionTypes as StatisticsActionTypes} from "./statistics/actionTypes";
 import {TaskApp} from "./task/TaskApp";
 import {StatisticsApp} from "./statistics/StatisticsApp";
@@ -96,6 +95,13 @@ declare global {
         json: any, // object that contains the data of a task, defined in the index.html of such task
         task_token: any, // instance that can generate a task token
         options: any, // this is used to store default data about task
+        Blockly: any,
+        FioiBlockly: any,
+        getBlocklyHelper: any,
+        quickAlgoInterface: any,
+        arrayContains,
+        mergeIntoArray: any,
+        mergeIntoObject: any,
     }
 }
 

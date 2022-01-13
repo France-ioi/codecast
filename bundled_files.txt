@@ -19,3 +19,4 @@ bebras-modules/ext/blockly/fr.js
 bebras-modules/ext/blockly/en.js
 bebras-modules/ext/blockly-fioi/fioi-blockly.min.js
 bebras-modules/pemFioi/quickAlgo/blockly_blocks.js
+bebras-modules/pemFioi/quickAlgo/blockly_interface.js
