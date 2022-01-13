@@ -208,12 +208,13 @@ Codecast.start = function(options) {
     }
 
     const urlParams = new URLSearchParams(window.location.search);
+    let startScreen = options.start;
     if (!!urlParams.get('documentation')) {
-        options.start = 'documentation';
+        startScreen = 'documentation';
     }
 
     let appDisplay;
-    switch (options.start) {
+    switch (startScreen) {
         case 'recorder':
             autoLogin();
 
@@ -267,7 +268,7 @@ Codecast.start = function(options) {
             break;
         default:
             appDisplay = function AppDisplay () {
-                return <p>{"No such application: "}{options.start}</p>;
+                return <p>{"No such application: "}{startScreen}</p>;
             };
 
             break;
