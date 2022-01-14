@@ -28,7 +28,7 @@ export const PythonStackView = (props: PythonStackViewProps): JSX.Element => {
                 {'… +'}{firstVisible}
             </div>
             }
-            {props.analysis.functionCallStack.reverse().map((func, index) => (
+            {props.analysis.functionCallStack.slice().reverse().map((func, index) => (
                 <PythonFunctionView
                     key={index}
                     scopeIndex={func.scopeIndex}
