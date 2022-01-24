@@ -39,7 +39,9 @@ module.exports = (env, argv) => {
         resolve: {
             fallback: {
                 assert: false,
-                fs: false
+                fs: false,
+                crypto: require.resolve('crypto-browserify'),
+                util: require.resolve('util'),
             },
             alias: {
                 lamejs: 'lamejs/src/js/',
@@ -174,10 +176,12 @@ module.exports = (env, argv) => {
             new CopyPlugin({
                 patterns: [
                     'bebras-modules/pemFioi/blocklyRobot_lib-1.0.0.js',
+                    'bebras-modules/integrationAPI.01/official/platform-pr.js',
+                    'bebras-modules/integrationAPI.01/installationAPI.01/pemFioi/installation.js',
+                    'bebras-modules/integrationAPI.01/official/miniPlatform.js',
                     'bebras-modules/ext/jquery/1.7/jquery.min.js',
                     'bebras-modules/ext/raphael/2.2.1/raphael.min.js',
                     'bebras-modules/ext/jschannel/jschannel.js',
-                    'bebras-modules/pemFioi/blocklyRobot_lib-1.0.0.js',
                     'bebras-modules/pemFioi/delayFactory-1.0.js',
                     'bebras-modules/pemFioi/raphaelFactory-1.0.js',
                     'bebras-modules/pemFioi/conceptViewer-1.0-mobileFirst.js',

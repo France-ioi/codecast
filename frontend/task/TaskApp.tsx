@@ -22,8 +22,8 @@ import {ZOOM_LEVEL_LOW} from "./layout/layout";
 import {getMessage} from "../lang";
 import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
-import {TaskLevelName} from "./task_slice";
 import {SubtitlesPane} from "../subtitles/SubtitlesPane";
+import {TaskLevelName} from "./platform/platform_slice";
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -40,7 +40,7 @@ export function TaskApp() {
     const user = useAppSelector(state => state.user);
     const audioLoaded = editor.audioLoaded;
     const [initialUserCheck, setInitialUserCheck] = useState(false);
-    const taskLevels = useAppSelector(state => state.task.levels);
+    const taskLevels = useAppSelector(state => state.platform.levels);
 
     let progress = null;
     let progressMessage = null;

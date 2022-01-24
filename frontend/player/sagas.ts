@@ -27,6 +27,7 @@ import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
 import {taskLoaded} from "../task/task_slice";
 import {LayoutPlayerMode} from "../task/layout/layout";
+import {setTaskEventsEnvironment} from "../task/platform/platform";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -157,7 +158,9 @@ function* playerPrepare(app: App, action) {
     };
 
     try {
+        setTaskEventsEnvironment('replay');
         yield* call(computeInstants, replayApi, replayContext);
+        setTaskEventsEnvironment('main');
 
         /* The duration of the recording is the timestamp of the last event. */
         const instants = replayContext.instants;
