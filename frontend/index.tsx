@@ -4,6 +4,8 @@ import url from 'url';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import {Provider} from 'react-redux';
+import HTML5toTouch from 'react-dnd-multi-backend/dist/esm/HTML5toTouch';
+import MultiBackend from 'react-dnd-multi-backend';
 import log from 'loglevel';
 import 'rc-slider/assets/index.css?global';
 import {AppStore} from './store';
@@ -36,6 +38,8 @@ import '@france-ioi/skulpt/dist/skulpt.min.js';
 import '@france-ioi/skulpt/dist/skulpt-stdlib.js';
 import '@france-ioi/skulpt/dist/debugger.js';
 import {Portal} from "@blueprintjs/core";
+import {DndProvider} from "react-dnd";
+import {CustomDragLayer} from "./task/CustomDragLayer";
 
 setAutoFreeze(true);
 log.setLevel('trace');
@@ -284,7 +288,10 @@ Codecast.start = function(options) {
     ReactDOM.render(
         <Provider store={mainStore}>
             <AppErrorBoundary>
-                {appDisplay}
+                <DndProvider backend={MultiBackend} options={HTML5toTouch}>
+                    <CustomDragLayer/>
+                    {appDisplay}
+                </DndProvider>
             </AppErrorBoundary>
         </Provider>, container
     );

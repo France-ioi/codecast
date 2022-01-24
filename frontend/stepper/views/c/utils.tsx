@@ -8,6 +8,8 @@ import classnames from 'classnames';
 import * as C from '@france-ioi/persistent-c';
 
 import {LocalizedError} from '../../../lang';
+import {Block, BlockType} from "../../../task/blocks/blocks";
+import {C_directiveViewDict} from "../index";
 
 interface ViewElement {
     kind: any,
@@ -509,3 +511,21 @@ export const highlightColors = [
     {fg: '#CDDC39', bg: '#F0F4C3', name: 'lime'},
     {fg: '#3F51B5', bg: '#C5CAE9', name: 'indigo'}
 ];
+
+export function getCSpecificBlocks(contextIncludeBlocks: any): Block[] {
+    const availableBlocks: Block[] = [];
+
+    for (let [directive, directiveData] of Object.entries(C_directiveViewDict)) {
+        if (!directiveData.snippet) {
+            continue;
+        }
+        availableBlocks.push({
+            name: directive,
+            type: BlockType.Directive,
+            caption: directive,
+            code: directiveData.snippet,
+        });
+    }
+
+    return availableBlocks;
+}

@@ -9,6 +9,10 @@ Codecast note: this module comes from https://github.com/France-ioi/bebras-modul
 
 import {getAvailableModules} from "./utils";
 import {getMessage} from "../lang";
+import {Block, BlockType, getContextBlocksDataSelector} from "./blocks/blocks";
+import {AppStore} from "../store";
+import {QuickAlgoLibrary} from "./libs/quickalgo_librairies";
+import {pythonDirectiveViewDict} from "../stepper/views";
 
 const pythonCountPatterns = [
     // Comments
@@ -369,92 +373,7 @@ export const pythonFindLimited = function (code, limitedUses, blockToCode) {
     return false;
 }
 
-export const getContextFunctions = function(context) {
-    const definedFunctions = [];
-    const argumentsByBlock = {};
-    const handlers = [];
-    const constants = [];
-
-    if (context.infos && context.infos.includeBlocks && context.infos.includeBlocks.generatedBlocks) {
-        // Flatten customBlocks information for easy access
-        const blocksInfos = {};
-        for (let generatorName in context.customBlocks) {
-            for (let typeName in context.customBlocks[generatorName]) {
-                let blockList = context.customBlocks[generatorName][typeName];
-                for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
-                    let blockInfo = blockList[iBlock];
-                    blocksInfos[blockInfo.name] = {
-                        nbArgs: 0, // handled below
-                        type: typeName
-                    };
-                    blocksInfos[blockInfo.name].nbsArgs = [];
-                    if (blockInfo.anyArgs) {
-                        // Allows to specify the function can accept any number of arguments
-                        blocksInfos[blockInfo.name].nbsArgs.push(Infinity);
-                    }
-                    let variants = blockInfo.variants ? blockInfo.variants : (blockInfo.params ? [blockInfo.params] : []);
-                    if (variants.length) {
-                        for (let i = 0; i < variants.length; i++) {
-                            blocksInfos[blockInfo.name].nbsArgs.push(variants[i].length);
-                        }
-                    }
-                }
-            }
-        }
-
-        // Generate functions used in the task
-        for (let generatorName in context.infos.includeBlocks.generatedBlocks) {
-            let blockList = context.infos.includeBlocks.generatedBlocks[generatorName];
-            if (!blockList.length) {
-                continue;
-            }
-
-            if (!argumentsByBlock[generatorName]) {
-                argumentsByBlock[generatorName] = {};
-            }
-            for (let iBlock = 0; iBlock < blockList.length; iBlock++) {
-                let blockName = blockList[iBlock];
-                let code = context.strings.code[blockName];
-                if (typeof (code) == "undefined") {
-                    code = blockName;
-                }
-                let nbsArgs = blocksInfos[blockName] ? (blocksInfos[blockName].nbsArgs ? blocksInfos[blockName].nbsArgs : []) : [];
-                let type = blocksInfos[blockName] ? blocksInfos[blockName].type : 'actions';
-
-                if (type == 'actions') {
-                    // this._hasActions = true;
-                }
-
-                argumentsByBlock[generatorName][blockName] = nbsArgs;
-                handlers.push({code, generatorName, blockName, nbsArgs, type});
-
-                if (-1 === definedFunctions.indexOf(code)) {
-                    definedFunctions.push(code);
-                }
-            }
-
-            if (context.customConstants && context.customConstants[generatorName]) {
-                let constList = context.customConstants[generatorName];
-                for (let iConst = 0; iConst < constList.length; iConst++) {
-                    let name = constList[iConst].name;
-                    if (context.strings.constant && context.strings.constant[name]) {
-                        name = context.strings.constant[name];
-                    }
-                    constants.push({name, generatorName, value: constList[iConst].value});
-                }
-            }
-        }
-    }
-
-    return {
-        definedFunctions,
-        argumentsByBlock,
-        handlers,
-        constants,
-    };
-}
-
-export const checkPythonCode = function (code, context) {
+export const checkPythonCode = function (code: string, context: QuickAlgoLibrary, state: AppStore) {
     const includeBlocks = context.infos.includeBlocks;
     const forbidden = pythonForbidden(code, includeBlocks);
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
@@ -490,7 +409,8 @@ export const checkPythonCode = function (code, context) {
 
     // Check for functions used as values
     let re = /def\W+([^(]+)\(/g;
-    const {definedFunctions} = getContextFunctions(context);
+    const availableBlocks = getContextBlocksDataSelector(state, context);
+    const definedFunctions = [...new Set(availableBlocks.filter(block => BlockType.Function === block.type).map(block => block.code))];
     let match;
     while (match = re.exec(code)) {
         definedFunctions.push(match[1]);
@@ -501,4 +421,100 @@ export const checkPythonCode = function (code, context) {
             throw getMessage('CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS').format({funcName: definedFunctions[j]});
         }
     }
+}
+
+export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
+    const availableBlocks: Block[] = [];
+
+    let specialSnippets = {
+        variables: {
+            caption: "x =",
+            snippet: "x = $1",
+            captionMeta: getMessage('VARIABLE').s,
+            showInBlocks: false,
+        },
+        if: {
+            caption: "if",
+            snippet: "if ${1:condition}:\n\t${2:pass}",
+        },
+        while: {
+            caption: "while",
+            snippet: "while ${1:condition}:\n\t${2:pass}",
+        },
+        elif: {
+            caption: "elif",
+            snippet: "elif ${1:condition}:\n\t${2:pass}",
+        },
+    };
+
+    if (contextIncludeBlocks && contextIncludeBlocks.pythonAdditionalFunctions) {
+        for (let i = 0; i < contextIncludeBlocks.pythonAdditionalFunctions.length; i++) {
+            let func = contextIncludeBlocks.pythonAdditionalFunctions[i];
+            availableBlocks.push({
+                name: func,
+                caption: func,
+                type: BlockType.Function,
+                code: func + '()',
+            });
+        }
+    }
+
+    if (contextIncludeBlocks) {
+        const allowedTokens = pythonForbiddenLists(contextIncludeBlocks).allowed;
+        const bracketsWords = { list_brackets: 'crochets [ ]+[]', dict_brackets: 'accolades { }+{}', var_assign: 'variables+x =' };
+        for(let bracketsCode in bracketsWords) {
+            const bracketsIdx = allowedTokens.indexOf(bracketsCode);
+            if (bracketsIdx !== -1) {
+                allowedTokens[bracketsIdx] = bracketsWords[bracketsCode];
+            }
+        }
+
+        const tokenCategories = {};
+        for (let [category, elements] of Object.entries(pythonForbiddenBlocks)) {
+            for (let tokens of Object.values(elements)) {
+                for (let token of tokens) {
+                    tokenCategories[token] = category;
+                }
+            }
+        }
+
+        for (let token of allowedTokens) {
+            let tokenParts = token.split('+');
+            let name = tokenParts.length > 1 ? tokenParts[0] : token;
+            let code = tokenParts.length > 1 ? tokenParts[1] : token;
+
+            availableBlocks.push({
+                name,
+                type: BlockType.Token,
+                caption: name in specialSnippets ? specialSnippets[name].caption : code,
+                captionMeta: name in specialSnippets && specialSnippets[name].captionMeta ? specialSnippets[name].captionMeta : null,
+                snippet: name in specialSnippets ? specialSnippets[name].snippet : code,
+                code,
+                category: tokenCategories[token],
+                showInBlocks: name in specialSnippets && false === specialSnippets[name].showInBlocks ? false : undefined,
+            });
+        }
+
+        let toAdd = ['True', 'False'];
+        for (let name of toAdd) {
+            availableBlocks.push({
+                name,
+                type: BlockType.Constant,
+                caption: name,
+                code: name,
+                showInBlocks: false,
+            });
+        }
+    }
+
+    for (let [directive, directiveData] of Object.entries(pythonDirectiveViewDict)) {
+        availableBlocks.push({
+            name: directive,
+            type: BlockType.Directive,
+            caption: directive,
+            code: directiveData.snippet,
+        });
+    }
+
+    return availableBlocks;
 }

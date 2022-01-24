@@ -611,10 +611,6 @@ export class PrinterLib extends QuickAlgoLibrary {
             .join("");
     };
 
-    getTerminalText() {
-        return getTerminalText(this.innerState.ioEvents);
-    };
-
     checkOutputHelper() {
         const currentOutputText = this.getOutputText();
         let expectedLines = this.taskInfos.output.replace(/\s*$/,"").split("\n");

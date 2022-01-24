@@ -35,6 +35,8 @@ export interface TaskState {
     currentSubmission?: TaskSubmission,
     inputNeeded?: boolean,
     inputs?: any[],
+    contextStrings: any,
+    contextIncludeBlocks: any,
 }
 
 export interface TaskInputEnteredPayload {
@@ -72,6 +74,8 @@ export const taskInitialState = {
     successMessage: null,
     inputNeeded: false,
     inputs: [],
+    contextStrings: {},
+    contextIncludeBlocks: {},
 } as TaskState;
 
 export const selectCurrentTest = (state: AppStore) => {
@@ -186,6 +190,12 @@ export const taskSlice = createSlice({
                 message: action.payload.message,
             };
         },
+        taskSetContextStrings(state: TaskState, action: PayloadAction<any>) {
+            state.contextStrings = action.payload;
+        },
+        taskSetContextIncludeBlocks(state: TaskState, action: PayloadAction<any>) {
+            state.contextIncludeBlocks = action.payload;
+        },
     },
 });
 
@@ -210,6 +220,8 @@ export const {
     taskSubmissionSetTestResult,
     updateTestContextState,
     taskCurrentLevelChange,
+    taskSetContextStrings,
+    taskSetContextIncludeBlocks,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

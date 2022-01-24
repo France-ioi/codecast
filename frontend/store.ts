@@ -43,9 +43,12 @@ export interface CodecastOptions {
     baseDataUrl: string,
     audioWorkerUrl: string,
     data: any,
+    source?: string,
+    input?: string,
     mode: CodecastOptionsMode,
     canChangePlatform: boolean,
     canChangeLanguage: boolean,
+    disableQueryOptions: boolean,
     authProviders: string[],
     referer: any,
     showIO: boolean,
@@ -54,6 +57,7 @@ export interface CodecastOptions {
     showViews: boolean,
     showDocumentation: boolean,
     showFullScreen: boolean,
+    showDirectives: boolean,
     showMenu: boolean,
     canRecord: boolean,
     user: typeof initialStateUser // TODO: Why is this in options AND in store.user and not only in store.user ?
@@ -66,8 +70,6 @@ export interface CodecastOptions {
     origin: string,
     task?: string,
     taskInstructions?: string,
-    source?: string,
-    input?: string,
     theme?: string,
 }
 

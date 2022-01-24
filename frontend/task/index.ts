@@ -20,7 +20,7 @@ import taskSlice, {
     taskInputNeeded,
     taskLoaded,
     taskRecordableActions,
-    taskResetDone,
+    taskResetDone, taskSetContextIncludeBlocks, taskSetContextStrings,
     TaskSubmissionResultPayload,
     taskSuccess,
     taskSuccessClear,
@@ -34,7 +34,6 @@ import DocumentationBundle from "./doc";
 import PlatformBundle, {
     getTaskAnswerAggregated,
     setPlatformBundleParameters,
-    taskApi,
     taskGradeAnswerEventSaga
 } from "./platform/platform";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
@@ -178,27 +177,11 @@ function* createContext() {
     console.log('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     console.log('Created context', context);
-    context.resetAndReloadState(testData, state);
-}
-
-export interface AutocompletionParameters {
-    includeBlocks: any,
-    strings: any,
-    constants: any,
-}
-
-export function getAutocompletionParameters (context, currentLevel: TaskLevelName): AutocompletionParameters {
-    if (!context.strings || 0 === Object.keys(context.strings).length) {
-        return null;
+    yield* put(taskSetContextStrings(context.strings));
+    if (context.infos && context.infos.includeBlocks) {
+        yield* put(taskSetContextIncludeBlocks(context.infos.includeBlocks));
     }
-
-    const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
-
-    return {
-        includeBlocks: curIncludeBlocks,
-        strings: context.strings,
-        constants: context.customConstants,
-    };
+    context.resetAndReloadState(testData, state);
 }
 
 let oldSagasTasks = {};
@@ -447,11 +430,16 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
 }
 
 function* contextResetAndReloadStateSaga() {
-    const state = yield* select();
+    const state: AppStore = yield* select();
     const currentTest = selectCurrentTest(state);
 
-    const context = quickAlgoLibraries.getContext(null, 'main');
-    context.resetAndReloadState(currentTest, state);
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+    if (context) {
+        context.resetAndReloadState(currentTest, state);
+        const contextState = getCurrentImmerState(context.getInnerState());
+        console.log('get new state', contextState);
+        yield* put(taskUpdateState(contextState));
+    }
 }
 
 function* getTaskAnswer () {
@@ -539,13 +527,9 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(StepperActionTypes.StepperExit, function* () {
-            const state = yield* select();
-            const context = quickAlgoLibraries.getContext(null, state.environment);
-            if (context) {
-                context.resetAndReloadState(state.task.currentTest, state);
-                console.log('put task reset done to true');
-                yield* put(taskResetDone(true));
-            }
+            yield* call(contextResetAndReloadStateSaga);
+            console.log('put task reset done to true');
+            yield* put(taskResetDone(true));
         });
 
         // Store inputs to be replayed in the next method

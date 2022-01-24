@@ -1,14 +1,12 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {Editor} from "./Editor";
 import {ActionTypes} from "./actionTypes";
-import {connect} from "react-redux";
-import {withResizeDetector} from 'react-resize-detector/build/withPolyfill';
+import {useDispatch} from "react-redux";
+import {useResizeDetector} from "react-resize-detector";
+import {withResizeDetector} from "react-resize-detector/build/withPolyfill";
+import {Block, BlockType} from "../task/blocks/blocks";
 
-interface BufferEditorDispatchToProps {
-    dispatch: Function
-}
-
-interface BufferEditorProps extends BufferEditorDispatchToProps {
+interface BufferEditorProps {
     readOnly?: boolean,
     shield?: boolean,
     theme?: string,
@@ -21,54 +19,56 @@ interface BufferEditorProps extends BufferEditorDispatchToProps {
     hasAutocompletion?: boolean,
 }
 
-export class _BufferEditor extends React.PureComponent<BufferEditorProps> {
-    componentDidUpdate(prevProps) {
-        const {width, height} = this.props;
-        if (width !== prevProps.width || height !== prevProps.height) {
-            const {dispatch, buffer} = this.props;
+const _BufferEditor = (props: BufferEditorProps) => {
+    const {buffer, width, height} = props;
+
+    const [prevWidth, setPrevWidth] = useState(0);
+    const [prevHeight, setPrevHeight] = useState(0);
+
+    const dispatch = useDispatch();
+
+    useEffect(() => {
+        if ((width !== prevWidth || height !== prevHeight) && width && height) {
             dispatch({type: ActionTypes.BufferResize, buffer});
         }
-    }
+        setPrevWidth(width);
+        setPrevHeight(height);
+    }, [props.width, props.height])
 
-    onInit = (editor) => {
-        const {dispatch, buffer} = this.props;
-
+    const onInit = (editor) => {
         dispatch({type: ActionTypes.BufferInit, buffer, editor})
     };
 
-    onSelect = (selection) => {
-        const {dispatch, buffer} = this.props;
-
+    const onSelect = (selection) => {
         dispatch({type: ActionTypes.BufferSelect, buffer, selection});
     };
 
-    onEdit = (delta) => {
-        const {dispatch, buffer} = this.props;
-
+    const onEdit = (delta) => {
         dispatch({type: ActionTypes.BufferEdit, buffer, delta});
     };
 
-    onScroll = (firstVisibleRow) => {
-        const {dispatch, buffer} = this.props;
-
+    const onScroll = (firstVisibleRow) => {
         dispatch({type: ActionTypes.BufferScroll, buffer, firstVisibleRow});
     };
 
-    render() {
-        return <Editor
-            onInit={this.onInit}
-            onEdit={this.onEdit}
-            onSelect={this.onSelect}
-            onScroll={this.onScroll}
-            readOnly={this.props.readOnly}
-            shield={this.props.shield}
-            theme={this.props.theme}
-            mode={this.props.mode}
-            width={this.props.requiredWidth}
-            height={this.props.requiredHeight}
-            hasAutocompletion={this.props.hasAutocompletion}
-        />;
+    const onDropBlock = (block: Block, pos) => {
+        dispatch({type: ActionTypes.BufferInsertBlock, payload: {buffer, block, pos}});
     };
+
+    return <Editor
+        onInit={onInit}
+        onEdit={onEdit}
+        onSelect={onSelect}
+        onScroll={onScroll}
+        onDropBlock={onDropBlock}
+        readOnly={props.readOnly}
+        shield={props.shield}
+        theme={props.theme}
+        mode={props.mode}
+        width={props.requiredWidth}
+        height={props.requiredHeight}
+        hasAutocompletion={props.hasAutocompletion}
+    />;
 }
 
-export const BufferEditor = connect()(withResizeDetector(_BufferEditor));
+export const BufferEditor = withResizeDetector(_BufferEditor);

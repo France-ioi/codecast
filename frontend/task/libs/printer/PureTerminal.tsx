@@ -1,12 +1,11 @@
 import React, {useEffect, useRef} from "react";
-import {TermBuffer} from "../../../stepper/io/terminal";
 
 interface PureTerminalProps {
     onInit: Function,
     onBackspace: Function,
     onEnter: Function,
     onKeyPress: Function,
-    terminalBuffer: TermBuffer
+    terminalContent: string,
 }
 
 export function PureTerminal(props: PureTerminalProps) {
@@ -48,9 +47,14 @@ export function PureTerminal(props: PureTerminalProps) {
         props.onKeyPress(event.key);
     };
 
-    const {terminalBuffer} = props;
-    const cursor = terminalBuffer.cursor;
-    const ci = cursor.line, cj = cursor.column;
+    const {terminalContent} = props;
+
+    useEffect(() => {
+        const terminal = refTerminal.current;
+        terminal.scrollTop = terminal.scrollHeight;
+    }, [terminalContent]);
+
+    const lines = terminalContent.split("\n");
 
     return (
         <div
@@ -58,22 +62,15 @@ export function PureTerminal(props: PureTerminalProps) {
             className="terminal"
             tabIndex={1}
             onKeyDown={onKeyDown}
-             onKeyUp={onKeyUp}
+            onKeyUp={onKeyUp}
             onKeyPress={onKeyPress}
         >
-            {terminalBuffer.lines.map(function(line, i) {
-                return (
-                    <div key={i} className="terminal-line" style={{width: '100%'}}>
-                        {line.map(function(cell, j) {
-                            if (i == ci && j == cj) {
-                                return <span key={j} className="terminal-cursor">{cell.char}</span>;
-                            }
-
-                            return <span key={j}>{cell.char}</span>;
-                        })}
-                    </div>
-                );
-            })}
+            {lines.map((line, i) =>
+                <div key={i} className="terminal-line" style={{width: '100%'}}>
+                    {line}
+                    {i === lines.length - 1 && <span className="terminal-cursor">&nbsp;</span>}
+                </div>
+            )}
         </div>
     );
 }

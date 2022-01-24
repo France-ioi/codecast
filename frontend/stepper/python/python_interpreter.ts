@@ -4,7 +4,7 @@
 */
 
 import log from "loglevel";
-import {getContextFunctions} from "../../task/python_utils";
+import {Block, BlockType} from "../../task/blocks/blocks";
 
 if (!window.hasOwnProperty('currentPythonContext')) {
     window.currentPythonContext = null;
@@ -28,8 +28,7 @@ export default function(context) {
     this._timeouts = [];
     this._editorMarker = null;
     this.availableModules = [];
-    this._argumentsByBlock = {};
-    this._definedFunctions = [];
+    this.availableBlocks = [] as Block[];
     this._isFinished = false;
     this._printedDuringStep = '';
     this._futureInputValue = null;
@@ -118,24 +117,34 @@ export default function(context) {
 
     this._injectFunctions = () => {
         // Generate Python custom libraries from all generated blocks
-        const {argumentsByBlock, handlers, constants} = getContextFunctions(this.context);
-        this._argumentsByBlock = argumentsByBlock;
+        console.log('inject functions', this.availableBlocks);
 
-        for (let generatorName in context.infos.includeBlocks.generatedBlocks) {
+        let blocksByGeneratorName: {[generatorName: string]: Block[]} = {};
+        for (let block of this.availableBlocks) {
+            if (block.generatorName) {
+                if (!(block.generatorName in blocksByGeneratorName)) {
+                    blocksByGeneratorName[block.generatorName] = [];
+                }
+                blocksByGeneratorName[block.generatorName].push(block);
+            }
+        }
+
+        for (let [generatorName, blocks] of Object.entries(blocksByGeneratorName)) {
             let modContents = "var $builtinmodule = function(name) {\n\nvar mod = {};\nmod.__package__ = Sk.builtin.none.none$;\n";
 
-            for (let handler of handlers.filter(handler => generatorName === handler.generatorName)) {
-                const {code, generatorName, blockName, nbsArgs, type} = handler;
-                modContents += this._skulptifyHandler(code, generatorName, blockName, nbsArgs, type);
+            for (let block of blocks.filter(block => block.type === BlockType.Function)) {
+                const {code, generatorName, name, params, type} = block;
+                console.log(block, generatorName);
+                modContents += this._skulptifyHandler(code, generatorName, name, params, type);
                 // We do want to override Python's naturel input and output to replace them with our own modules
                 if (generatorName === 'printer' && ('input' === code || 'print' === code)) {
                     const newCode = 'print' === code ? 'customPrint' : code;
-                    Sk.builtins[newCode] = this._createBuiltin(code, generatorName, blockName, nbsArgs, type);
+                    Sk.builtins[newCode] = this._createBuiltin(code, generatorName, name, params, type);
                 }
             }
 
-            for (let constant of constants.filter(constant => generatorName === constant.generatorName)) {
-                const {name, value} = constant;
+            for (let block of blocks.filter(block => block.type === BlockType.Constant)) {
+                const {name, value} = block;
                 modContents += this._skulptifyConst(name, value);
             }
 
@@ -149,11 +158,12 @@ export default function(context) {
         let msg = '';
 
         // Check the number of arguments corresponds to a variant of the function
-        if (!this._argumentsByBlock[generatorName] || !this._argumentsByBlock[generatorName][blockName]) {
+        const block = this.availableBlocks.find(block => generatorName === block.generatorName && blockName === block.name);
+        if (!block) {
             console.error("Couldn't find the number of arguments for " + generatorName + "/" + blockName + ".");
             return;
         }
-        var nbsArgs = this._argumentsByBlock[generatorName][blockName];
+        let nbsArgs = block.params;
         if (nbsArgs.length === 0) {
             // This function doesn't have arguments
             if (args.length > 0) {
@@ -431,7 +441,7 @@ export default function(context) {
         }
     };
 
-    this.initCodes = (codes) => {
+    this.initCodes = (codes, availableBlocks) => {
         // For reportValue in Skulpt.
         window.currentPythonRunner = this;
 
@@ -448,6 +458,7 @@ export default function(context) {
         }
 
         window.currentPythonContext = this.context;
+        this.availableBlocks = availableBlocks;
         this._debugger = new Sk.Debugger(this._editor_filename, this);
         this._configure();
         this._injectFunctions();
