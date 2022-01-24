@@ -26,7 +26,7 @@ user interaction change the view.
 
 */
 
-import {call, put, select, takeEvery} from 'redux-saga/effects';
+import {call, put, select, takeEvery} from 'typed-redux-saga';
 import {compressRange, Document, documentFromString, emptyDocument, expandRange, Selection} from "./document";
 
 import 'brace';
@@ -187,6 +187,7 @@ function bufferResetReducer(state: AppStore, action): void {
 
 function bufferEditReducer(state: AppStore, action): void {
     const {buffer, delta} = action;
+    initBufferIfNeeded(state, buffer);
     const oldDoc = state.buffers[buffer].model.document;
 
     state.buffers[buffer].model.document = oldDoc.applyDelta(delta);
@@ -213,8 +214,8 @@ function getBufferEditor(state, buffer) {
 }
 
 function* buffersSaga() {
-    yield takeEvery(ActionTypes.BufferInit, function* (action) {
-        const state: AppStore = yield select();
+    yield* takeEvery(ActionTypes.BufferInit, function* (action) {
+        const state: AppStore = yield* select();
 
         // @ts-ignore
         const {buffer, editor} = action;
@@ -224,8 +225,8 @@ function* buffersSaga() {
             resetEditor(editor, model);
         }
     });
-    yield takeEvery(ActionTypes.BufferReset, function* (action) {
-        const state: AppStore = yield select();
+    yield* takeEvery(ActionTypes.BufferReset, function* (action) {
+        const state: AppStore = yield* select();
         // @ts-ignore
         const {buffer, model, quiet, goToEnd} = action;
         if (!quiet) {
@@ -235,8 +236,8 @@ function* buffersSaga() {
             }
         }
     });
-    yield takeEvery(ActionTypes.BufferModelSelect, function* (action) {
-        const state: AppStore = yield select();
+    yield* takeEvery(ActionTypes.BufferModelSelect, function* (action) {
+        const state: AppStore = yield* select();
 
         // @ts-ignore
         const {buffer, selection} = action;
@@ -245,8 +246,8 @@ function* buffersSaga() {
             editor.setSelection(selection);
         }
     });
-    yield takeEvery(ActionTypes.BufferModelEdit, function* (action) {
-        const state: AppStore = yield select();
+    yield* takeEvery(ActionTypes.BufferModelEdit, function* (action) {
+        const state: AppStore = yield* select();
 
         // @ts-ignore
         const {buffer, delta, deltas} = action;
@@ -255,8 +256,8 @@ function* buffersSaga() {
             editor.applyDeltas(deltas || [delta]);
         }
     });
-    yield takeEvery(ActionTypes.BufferModelScroll, function* (action) {
-        const state: AppStore = yield select();
+    yield* takeEvery(ActionTypes.BufferModelScroll, function* (action) {
+        const state: AppStore = yield* select();
 
         // @ts-ignore
         const {buffer, firstVisibleRow} = action;
@@ -265,8 +266,8 @@ function* buffersSaga() {
             editor.scrollToLine(firstVisibleRow);
         }
     });
-    yield takeEvery(ActionTypes.BufferHighlight, function* (action) {
-        const state: AppStore = yield select();
+    yield* takeEvery(ActionTypes.BufferHighlight, function* (action) {
+        const state: AppStore = yield* select();
 
         // @ts-ignore
         const {buffer, range} = action;
@@ -275,8 +276,8 @@ function* buffersSaga() {
             editor.highlight(range);
         }
     });
-    yield takeEvery(ActionTypes.BufferResize, function* (action) {
-        const state: AppStore = yield select();
+    yield* takeEvery(ActionTypes.BufferResize, function* (action) {
+        const state: AppStore = yield* select();
 
         // @ts-ignore
         const {buffer} = action;
@@ -303,7 +304,7 @@ function resetEditor(editor, model: DocumentModel, goToEnd?: boolean) {
 
 function addRecordHooks({recordApi}: App) {
     recordApi.onStart(function* (init) {
-        const state: AppStore = yield select();
+        const state: AppStore = yield* select();
 
         init.buffers = {};
         for (let bufferName of Object.keys(state.buffers)) {
@@ -319,10 +320,10 @@ function addRecordHooks({recordApi}: App) {
     recordApi.on(ActionTypes.BufferSelect, function* (addEvent, action) {
         const {buffer, selection} = action;
 
-        yield call(addEvent, 'buffer.select', buffer, compressRange(selection));
+        yield* call(addEvent, 'buffer.select', buffer, compressRange(selection));
     });
     recordApi.on(ActionTypes.BufferEdit, function* (addEvent, action) {
-        const state: AppStore = yield select();
+        const state: AppStore = yield* select();
         const {buffer, delta} = action;
         const {start, end} = delta;
         const range = {start, end};
@@ -335,15 +336,15 @@ function addRecordHooks({recordApi}: App) {
         }
 
         if (delta.action === 'insert') {
-            yield call(addEvent, 'buffer.insert', buffer, compressRange(range), delta.lines);
+            yield* call(addEvent, 'buffer.insert', buffer, compressRange(range), delta.lines);
         } else {
-            yield call(addEvent, 'buffer.delete', buffer, compressRange(range));
+            yield* call(addEvent, 'buffer.delete', buffer, compressRange(range));
         }
     });
     recordApi.on(ActionTypes.BufferScroll, function* (addEvent, action) {
         const {buffer, firstVisibleRow} = action;
 
-        yield call(addEvent, 'buffer.scroll', buffer, firstVisibleRow);
+        yield* call(addEvent, 'buffer.scroll', buffer, firstVisibleRow);
     });
 }
 
@@ -353,7 +354,7 @@ function addReplayHooks({replayApi}: App) {
         const {buffers} = event[2];
         for (let bufferName of Object.keys(buffers)) {
             const text = buffers[bufferName].document;
-            yield put({type: ActionTypes.BufferLoad, buffer: bufferName, text});
+            yield* put({type: ActionTypes.BufferLoad, buffer: bufferName, text});
         }
 
     });
@@ -362,10 +363,10 @@ function addReplayHooks({replayApi}: App) {
         const buffer = event[2];
         const selection = expandRange(event[3]);
 
-        yield put({type: ActionTypes.BufferSelect, buffer, selection});
+        yield* put({type: ActionTypes.BufferSelect, buffer, selection});
 
         replayContext.addSaga(function* () {
-            yield put({type: ActionTypes.BufferModelSelect, buffer, selection});
+            yield* put({type: ActionTypes.BufferModelSelect, buffer, selection});
         });
     });
     replayApi.on(['buffer.insert', 'buffer.delete'], function*(replayContext: ReplayContext, event) {
@@ -389,11 +390,11 @@ function addReplayHooks({replayApi}: App) {
         }
 
         if (delta) {
-            yield put({type: ActionTypes.BufferEdit, buffer, delta});
-            yield call(replayApi.applyEvent,'buffer.edit', replayContext, [buffer]);
+            yield* put({type: ActionTypes.BufferEdit, buffer, delta});
+            yield* call(replayApi.applyEvent,'buffer.edit', replayContext, [buffer]);
 
             replayContext.addSaga(function* () {
-                yield put({type: ActionTypes.BufferModelEdit, buffer, delta});
+                yield* put({type: ActionTypes.BufferModelEdit, buffer, delta});
             });
         }
     });
@@ -402,10 +403,10 @@ function addReplayHooks({replayApi}: App) {
         const buffer = event[2];
         const firstVisibleRow = event[3];
 
-        yield put({type: ActionTypes.BufferScroll, buffer, firstVisibleRow});
+        yield* put({type: ActionTypes.BufferScroll, buffer, firstVisibleRow});
 
         replayContext.addSaga(function* () {
-            yield put({type: ActionTypes.BufferModelScroll, buffer, firstVisibleRow});
+            yield* put({type: ActionTypes.BufferModelScroll, buffer, firstVisibleRow});
         });
     });
     replayApi.onReset(function* ({state}: PlayerInstant, quick) {
@@ -414,10 +415,10 @@ function addReplayHooks({replayApi}: App) {
         for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer].model;
 
-            yield put({type: ActionTypes.BufferReset, buffer, model, quiet: quick});
+            yield* put({type: ActionTypes.BufferReset, buffer, model, quiet: quick});
         }
 
         const range = getNodeRange(getCurrentStepperState(state));
-        yield put({type: ActionTypes.BufferHighlight, buffer: 'source', range});
+        yield* put({type: ActionTypes.BufferHighlight, buffer: 'source', range});
     });
 }

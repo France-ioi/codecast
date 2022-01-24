@@ -1,6 +1,6 @@
 import {updateCurrentItem} from './utils';
 import {getPersistentOptions} from './options';
-import {put, select, takeLatest} from 'redux-saga/effects';
+import {put, select, takeLatest} from 'typed-redux-saga';
 import {ActionTypes as PlayerActionTypes} from '../player/actionTypes';
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
@@ -22,14 +22,14 @@ export default function(bundle: Bundle) {
     bundle.addSaga(function* () {
         /* When the player is ready, automatically reload the last selected
            subtitles language, if available. */
-        yield takeLatest(PlayerActionTypes.PlayerReady, function* () {
+        yield* takeLatest(PlayerActionTypes.PlayerReady, function* () {
             const {language} = getPersistentOptions();
-            const state: AppStore = yield select();
+            const state: AppStore = yield* select();
             const {availableOptions} = state.subtitles;
             if (language && language !== "none" && language in availableOptions) {
                 const option = availableOptions[language];
 
-                yield put({type: ActionTypes.SubtitlesLoadFromUrl, payload: option});
+                yield* put({type: ActionTypes.SubtitlesLoadFromUrl, payload: option});
             }
         });
     });

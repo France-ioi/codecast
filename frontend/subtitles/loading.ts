@@ -2,7 +2,7 @@
    (obtained in a number of ways) and making the individual subtitle
    items ({start, end, text} objects, timestamps in milliseconds) */
 import {parseSync, stringifySync} from 'subtitle';
-import {call, put, select, takeLatest} from 'redux-saga/effects';
+import {call, put, select, takeLatest} from 'typed-redux-saga';
 
 import {readFileAsText} from '../common/utils';
 import {filterItems, getSubtitles, updateCurrentItem} from './utils';
@@ -109,26 +109,26 @@ function subtitlesTrimDoneReducer(state: AppStore, {payload: {subtitles: data}})
 }
 
 function* subtitlesLoadSaga() {
-    yield takeLatest(ActionTypes.SubtitlesLoadFromText, subtitlesLoadFromTextSaga);
-    yield takeLatest(ActionTypes.SubtitlesLoadFromUrl, subtitlesLoadFromUrlSaga);
-    yield takeLatest(ActionTypes.SubtitlesLoadFromFile, subtitlesLoadFromFileSaga);
-    yield takeLatest(ActionTypes.SubtitlesReload, subtitlesReloadSaga);
-    yield takeLatest(EditorActionTypes.EditorTrimEnter, subtitlesLoadForTrimSaga);
+    yield* takeLatest(ActionTypes.SubtitlesLoadFromText, subtitlesLoadFromTextSaga);
+    yield* takeLatest(ActionTypes.SubtitlesLoadFromUrl, subtitlesLoadFromUrlSaga);
+    yield* takeLatest(ActionTypes.SubtitlesLoadFromFile, subtitlesLoadFromFileSaga);
+    yield* takeLatest(ActionTypes.SubtitlesReload, subtitlesReloadSaga);
+    yield* takeLatest(EditorActionTypes.EditorTrimEnter, subtitlesLoadForTrimSaga);
 }
 
 function* subtitlesLoadFromTextSaga(action) {
-    yield put({type: ActionTypes.SubtitlesLoadStarted, payload: {key: action.payload.key}});
+    yield* put({type: ActionTypes.SubtitlesLoadStarted, payload: {key: action.payload.key}});
 
     let items;
     try {
         items = parseSync(action.payload.text);
     } catch (ex) {
-        yield put({type: ActionTypes.SubtitlesLoadFailed, payload: {key: action.payload.key, error: ex}});
+        yield* put({type: ActionTypes.SubtitlesLoadFailed, payload: {key: action.payload.key, error: ex}});
 
         return;
     }
 
-    yield put({
+    yield* put({
         type: ActionTypes.SubtitlesLoadSucceeded, payload: {
             key: action.payload.key,
             text: action.payload.text,
@@ -138,9 +138,9 @@ function* subtitlesLoadFromTextSaga(action) {
 }
 
 function* subtitlesLoadFromUrlSaga(action) {
-    const options = yield select(state => state.options);
+    const options = yield* select(state => state.options);
     if (options.data && options.data.subtitlesData && action.payload.key in options.data.subtitlesData) {
-        yield put({
+        yield* put({
             type: ActionTypes.SubtitlesLoadSucceeded,
             payload: {
                 key: action.payload.key,
@@ -151,7 +151,7 @@ function* subtitlesLoadFromUrlSaga(action) {
         return;
     }
 
-    yield put({
+    yield* put({
         type: ActionTypes.SubtitlesLoadStarted,
         payload: {
             key: action.payload.key
@@ -159,10 +159,10 @@ function* subtitlesLoadFromUrlSaga(action) {
     });
 
     try {
-        const text = yield call(getSubtitles, action.payload.url);
+        const text = yield* call(getSubtitles, action.payload.url);
         const items = parseSync(text);
 
-        yield put({
+        yield* put({
             type: ActionTypes.SubtitlesLoadSucceeded,
             payload: {
                 key: action.payload.key,
@@ -171,7 +171,7 @@ function* subtitlesLoadFromUrlSaga(action) {
             }
         });
     } catch (ex) {
-        yield put({
+        yield* put({
             type: ActionTypes.SubtitlesLoadFailed,
             payload: {
                 key: action.payload.key,
@@ -183,19 +183,19 @@ function* subtitlesLoadFromUrlSaga(action) {
 
 function* subtitlesLoadFromFileSaga(action) {
     try {
-        const text = yield call(readFileAsText, action.payload.file);
+        const text = yield* call(readFileAsText, action.payload.file);
         const items = parseSync(text);
-        yield put({
+        yield* put({
             type: ActionTypes.SubtitlesLoadSucceeded,
             payload: {key: action.payload.key, text: action.payload.text, items}
         });
     } catch (ex) {
-        yield put({type: ActionTypes.SubtitlesLoadFailed, payload: {key: action.payload.key, error: ex}});
+        yield* put({type: ActionTypes.SubtitlesLoadFailed, payload: {key: action.payload.key, error: ex}});
     }
 }
 
 function* subtitlesReloadSaga(_action) {
-    const state: AppStore = yield select();
+    const state: AppStore = yield* select();
     const {selectedKey: key, availableOptions} = state.subtitles;
 
     if (key) {
@@ -217,12 +217,12 @@ function* subtitlesReloadSaga(_action) {
             });
         }
 
-        yield put({type: ActionTypes.SubtitlesLoadFromText, payload: {key, text}});
+        yield* put({type: ActionTypes.SubtitlesLoadFromText, payload: {key, text}});
     }
 }
 
 export function* subtitlesLoadForTrimSaga() {
-    const state: AppStore = yield select();
+    const state: AppStore = yield* select();
     const {availableOptions} = state.subtitles;
     const availKeys = Object.keys(availableOptions).sort();
 
@@ -233,12 +233,12 @@ export function* subtitlesLoadForTrimSaga() {
         try {
             console.log('here text', {text});
             if (!text) {
-                text = yield call(getSubtitles, url);
+                text = yield* call(getSubtitles, url);
                 console.log('get subtitles');
             }
             const items = parseSync(text);
             console.log('rsult items', {items});
-            yield put({type: ActionTypes.SubtitlesLoadForTrimSucceeded, payload: {key, items}});
+            yield* put({type: ActionTypes.SubtitlesLoadForTrimSucceeded, payload: {key, items}});
         } catch (ex) {
         }
     }

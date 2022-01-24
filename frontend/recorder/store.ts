@@ -1,6 +1,7 @@
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {CodecastWorker} from "../utils/worker_utils";
 
 /*
 
@@ -31,7 +32,7 @@ export enum RecorderStatus {
 export const initialStateRecorder = {
     progress: 0,
     status: null as RecorderStatus,
-    context: null as any,
+    context: null as {worker: CodecastWorker, audioContext: AudioContext, scriptProcessor: ScriptProcessorNode},
     junkTime: 0,
     elapsed: 0,
     suspendedAt: 0,

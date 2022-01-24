@@ -1,5 +1,5 @@
 import React from 'react';
-import {call, put, select, take, takeEvery} from 'redux-saga/effects';
+import {call, put, select, take, takeEvery} from 'typed-redux-saga';
 import {getAudio} from '../common/utils';
 import {extractWaveform} from './waveform/tools';
 import OverviewBundle from './overview';
@@ -138,7 +138,7 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.SetupScreenTabChanged, setupScreenTabChangedReducer);
 
     bundle.addSaga(function* editorSaga(app: App) {
-        yield takeEvery(ActionTypes.EditorPrepare, editorPrepareSaga, app);
+        yield* takeEvery(ActionTypes.EditorPrepare, editorPrepareSaga, app);
 
     });
 
@@ -170,28 +170,28 @@ function editorAudioLoadProgressReducer(state: AppStore, {payload: {value}}): vo
 
 function* editorPrepareSaga(app: App, action) {
     /* Require the user to be logged in. */
-    while (!(yield select((state: AppStore) => state.user))) {
-        yield take(CommonActionTypes.LoginFeedback);
+    while (!(yield* select((state: AppStore) => state.user))) {
+        yield* take(CommonActionTypes.LoginFeedback);
     }
 
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Setup}});
+    yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Setup}});
 
     const audioUrl = `${action.payload.baseDataUrl}.mp3`;
     const eventsUrl = `${action.payload.baseDataUrl}.json`;
 
     /* Load the audio stream. */
-    const {blob: audioBlob, audioBuffer} = yield call(getAudioSaga, audioUrl);
+    const {blob: audioBlob, audioBuffer} = yield* call(getAudioSaga, audioUrl);
     const inMemoryAudioUrl = URL.createObjectURL(audioBlob);
     const duration = audioBuffer.duration * 1000;
 
     // TODO: send progress events during extractWaveform?
     const waveform = extractWaveform(audioBuffer, Math.floor(duration * 60 / 1000));
-    yield put({type: ActionTypes.EditorAudioLoaded, payload: {duration, audioBlob, audioBuffer, waveform}});
+    yield* put({type: ActionTypes.EditorAudioLoaded, payload: {duration, audioBlob, audioBuffer, waveform}});
 
     /* Prepare the player and wait until ready.
        This order (load audio, prepare player) is faster, the reverse
        (as of Chrome 64) leads to redundant concurrent fetches of the audio. */
-    yield put({
+    yield* put({
         type: PlayerActionTypes.PlayerPrepare,
         payload: {
             baseDataUrl: action.payload.baseDataUrl,
@@ -199,22 +199,22 @@ function* editorPrepareSaga(app: App, action) {
         }
     });
 
-    const {payload: {data}} = yield take(PlayerActionTypes.PlayerReady);
+    const {payload: {data}}: any = yield* take(PlayerActionTypes.PlayerReady);
 
-    yield put({type: ActionTypes.EditorPlayerReady, payload: {data}});
+    yield* put({type: ActionTypes.EditorPlayerReady, payload: {data}});
 }
 
 function* getAudioSaga(audioUrl: string) {
-    const chan = yield call(getAudio, audioUrl);
+    const chan = yield* call(getAudio, audioUrl);
     while (true) {
-        let event = yield take(chan);
+        let event = yield* take(chan);
         switch (event.type) {
             case 'done':
                 return event;
             case 'error':
                 throw event.error;
             case 'progress':
-                yield put({type: ActionTypes.EditorAudioLoadProgress, payload: {value: event.value}});
+                yield* put({type: ActionTypes.EditorAudioLoadProgress, payload: {value: event.value}});
                 break;
         }
     }

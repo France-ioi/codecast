@@ -3,8 +3,17 @@ head(lang='fr')
   meta(charset='utf-8')
   title Codecast - Signed in
 body
-  script
-    if user
-      | window.opener.postMessage(!{JSON.stringify({dispatch: {type: 'Login.Feedback', payload: {user: user}}})}, window.location.origin); window.close();
-    else
-      | window.opener.postMessage(!{JSON.stringify({dispatch: {type: 'Login.Feedback', payload: {error: error}}})}, window.location.origin); window.close();
+  script(type='text/javascript', src=rebaseUrl('build/jschannel.js'))
+  script.
+    var channel = window.Channel.build({window: window.opener, origin: '*', scope: 'login'});
+    channel.call({
+        method: 'sendLoginFeedback',
+        params: {
+            user: !{user ? JSON.stringify(user) : "null"},
+            token: !{token ? JSON.stringify(token) : "null"},
+            error: !{error ? JSON.stringify(error) : "null"}
+        },
+        success: function () {
+            window.close();
+        }
+    });

@@ -1,5 +1,5 @@
 import {Bundle} from "../linker";
-import {call, put, select, takeEvery} from "redux-saga/effects";
+import {call, put, select, takeEvery} from "typed-redux-saga";
 import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
 import {extractLevelSpecific} from "./utils";
 import {
@@ -37,7 +37,7 @@ export const documentationLoad = (standalone: boolean): DocumentationLoadAction 
 });
 
 function getConceptsFromChannel() {
-    return new Promise((resolve, reject) => {
+    return new Promise<{concepts: any, selectedConceptId: number, screen: string, language: DocumentationLanguage}>((resolve, reject) => {
         if (!openerChannel) {
             openerChannel = window.Channel.build({window: window.opener, origin: '*', scope: 'test'});
         }
@@ -76,28 +76,28 @@ export function sendCodeExampleToOpener(code, language) {
 function* documentationLoadSaga(standalone: boolean) {
     if (standalone) {
         try {
-            const {concepts, selectedConceptId, screen, language} = yield call(getConceptsFromChannel);
-            const currentScreen = yield select(state => state.screen);
+            const {concepts, selectedConceptId, screen, language} = yield* call(getConceptsFromChannel);
+            const currentScreen = yield* select(state => state.screen);
             if (currentScreen !== screen) {
-                yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen}});
+                yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen}});
             }
-            yield put(documentationLanguageChanged(language));
-            yield call(loadDocumentationConcepts, concepts, selectedConceptId);
+            yield* put(documentationLanguageChanged(language));
+            yield* call(loadDocumentationConcepts, concepts, selectedConceptId);
         } catch (e) {
-            yield put({type: CommonActionTypes.Error, payload: {error: e.message}});
+            yield* put({type: CommonActionTypes.Error, payload: {error: e}});
         }
         return;
     }
 
     let context = quickAlgoLibraries.getContext(null, 'main');
     if (context.display && context.infos.conceptViewer) {
-        const language = yield select(state => state.documentation.language);
+        const language = yield* select(state => state.documentation.language);
         let concepts = [], allConcepts = [];
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
             allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts());
 
-            const currentLevel = yield select(state => state.task.currentLevel);
+            const currentLevel = yield* select(state => state.task.currentLevel);
             const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
 
             concepts = window.getConceptsFromBlocks(curIncludeBlocks, allConcepts, context);
@@ -131,27 +131,27 @@ function* documentationLoadSaga(standalone: boolean) {
             ...documentationConcepts,
         ];
 
-        yield call(loadDocumentationConcepts, documentationConceptsWithTask);
+        yield* call(loadDocumentationConcepts, documentationConceptsWithTask);
     }
 }
 
 function* loadDocumentationConcepts(documentationConcepts, selectedConceptId = null) {
-    yield put(documentationConceptsLoaded(documentationConcepts));
+    yield* put(documentationConceptsLoaded(documentationConcepts));
 
     if (selectedConceptId) {
-        yield put(documentationConceptSelected(selectedConceptId));
+        yield* put(documentationConceptSelected(selectedConceptId));
     } else {
-        const selectedConceptId = yield select(state => state.documentation.selectedConceptId);
+        const selectedConceptId = yield* select(state => state.documentation.selectedConceptId);
         if (documentationConcepts.length && (!selectedConceptId || !documentationConcepts.find(concept => selectedConceptId === concept.id))) {
-            yield put(documentationConceptSelected(documentationConcepts[0].id));
+            yield* put(documentationConceptSelected(documentationConcepts[0].id));
         }
     }
 }
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
-        yield takeEvery(DocumentationActionTypes.DocumentationLoad, function* (action: DocumentationLoadAction) {
-            yield call(documentationLoadSaga, action.payload.standalone);
+        yield* takeEvery(DocumentationActionTypes.DocumentationLoad, function* (action: DocumentationLoadAction) {
+            yield* call(documentationLoadSaga, action.payload.standalone);
         });
     });
 }

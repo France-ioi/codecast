@@ -4,7 +4,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
-import {put, takeEvery} from "redux-saga/effects";
+import {put, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {taskLoad} from "../task";
 
@@ -36,9 +36,9 @@ export default function(bundle: Bundle) {
 
     bundle.addSaga(function* () {
         // Quit stepper and reload task (and current context) after each language selection
-        yield takeEvery(ActionTypes.LanguageSet, function* () {
-            yield put({type: StepperActionTypes.StepperExit});
-            yield put(taskLoad({reloadContext: true}));
+        yield* takeEvery(ActionTypes.LanguageSet, function* () {
+            yield* put({type: StepperActionTypes.StepperExit});
+            yield* put(taskLoad({reloadContext: true}));
         });
     });
 }
@@ -108,7 +108,9 @@ export const getMessage = (message, defaultText = null) => {
     return localGetMessage(message, defaultText);
 }
 
-getMessage.format = localGetFormat;
+export const getMessageFormat = (value) => {
+    return localGetFormat(value);
+}
 
 export class LocalizedError extends Error {
     constructor(message, public args) {

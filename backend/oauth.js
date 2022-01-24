@@ -6,6 +6,7 @@ const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const request = require('request');
 const randomstring = require('randomstring');
+const jwt = require("jsonwebtoken");
 
 /*
 
@@ -36,13 +37,17 @@ module.exports = function (app, config, callback) {
     });
 
     function guestUserLogin(req, res) {
-        req.session.provider = 'guest';
-        req.session.user_id = 0;
-        req.session.identity = {id: 0, login: 'guest'};
         getUserConfig(0, function (err, userConfig) {
-            if (err) return res.render('after_login', {error: err.toString()});
-            req.session.grants = userConfig.grants;
-            res.render('after_login', {user: getFrontendUser(req.session)});
+            if (err) return res.render('after_login', {error: err.toString(), rebaseUrl: config.rebaseUrl});
+
+            const user = {
+                user_id: 0,
+                grants: getFrontEndGrants(userConfig.grants),
+            };
+
+            const token = jwt.sign({provider: 'guest', user_id: 0}, config.ownSecret, {expiresIn: '1 year'});
+
+            res.render('after_login', {user, token, rebaseUrl: config.rebaseUrl});
         });
     }
 
@@ -53,17 +58,15 @@ module.exports = function (app, config, callback) {
         client.code.getToken(req.originalUrl, {state})
             .then(function (token) {
                 // Save token data in session.
-                req.session.provider = provider;
-                req.session.token = token.data;
                 // Query identity provider with token.
                 request(token.sign({
                     method: 'GET',
                     url: authConfig.identityProviderUri
                 }), function (err, response, body) {
                     if (err) {
-                        return res.render('after_login', {error: err.toString()});
+                        return res.render('after_login', {error: err.toString(), rebaseUrl: config.rebaseUrl});
                     }
-                    if (response.statusCode != 200) {
+                    if (response.statusCode !== 200) {
                         return res.status(response.statusCode).send(body);
                     }
 
@@ -71,28 +74,31 @@ module.exports = function (app, config, callback) {
                     try {
                         identity = JSON.parse(body);
                     } catch (ex) {
-                        if (err) return res.render('after_login', {error: 'malformed user profile'});
+                        if (err) return res.render('after_login', {error: 'malformed user profile', rebaseUrl: config.rebaseUrl});
                     }
 
-                    req.session.identity = identity;
-                    req.session.user_id = identity.id;
                     if (process.env.NODE_ENV === 'development') {
                         console.log('user_id :', identity.id);
                     }
 
                     getUserConfig(identity.id, function (err, userConfig) {
                         if (err) {
-                            return res.render('after_login', {error: err.toString()});
+                            return res.render('after_login', {error: err.toString(), rebaseUrl: config.rebaseUrl});
                         }
 
-                        req.session.grants = userConfig.grants;
+                        const user = {
+                            user_id: identity.id,
+                            grants: getFrontEndGrants(userConfig.grants),
+                        };
 
-                        res.render('after_login', {user: getFrontendUser(req.session)});
+                        const token = jwt.sign({provider, user_id: identity.id}, config.ownSecret, {expiresIn: '1 year'});
+
+                        res.render('after_login', {user, token, rebaseUrl: config.rebaseUrl});
                     })
                 });
             })
             .catch(function (err) {
-                return res.render('after_login', {error: err.toString()});
+                return res.render('after_login', {error: err.toString(), rebaseUrl: config.rebaseUrl});
             });
     });
 
@@ -100,22 +106,16 @@ module.exports = function (app, config, callback) {
      * Get the current logged user object.
      */
     app.get('/me', function (req, res) {
-        res.json({
-            user: getFrontendUser(req.session)
-        });
-    });
+        config.getUserConfig(req, async function (err, userConfig) {
+            if (err) {
+                return res.status(400).json({error: err.toString()});
+            }
 
-    app.get('/logout', function (req, res) {
-        const {provider} = req.session;
-        let logoutUri;
-        if (provider && provider !== 'guest') {
-            logoutUri = getOauthConfig(provider).config.logoutUri;
-        }
-
-        req.session.destroy(function(err) {
-            res.render('after_logout', {
-                rebaseUrl: config.rebaseUrl,
-                logoutUri
+            res.json({
+                user: {
+                    user_id: userConfig.user_id,
+                    grants: getFrontEndGrants(userConfig.grants),
+                },
             });
         });
     });
@@ -138,33 +138,45 @@ module.exports = function (app, config, callback) {
     function getFrontendUser(session) {
         if (!session.identity) return false;
         const {id, login} = session.identity;
-        const grants = [];
+        let grants = [];
         if (session.grants) {
-            for (let grant of session.grants) {
-                const {type, s3Bucket, s3Region, uploadPath} = grant;
-
-                grants.push({
-                    description: `s3:${s3Bucket}/${uploadPath}`,
-                    url: `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}/`,
-                    type, s3Bucket, s3Region, uploadPath
-                });
-            }
+            grants = getFrontEndGrants(session.grants);
         }
 
         return {id, login, grants};
     }
 
+    function getFrontEndGrants(serverGrants) {
+        const grants = [];
+        for (let grant of serverGrants) {
+            const {type, s3Bucket, s3Region, uploadPath} = grant;
+
+            grants.push({
+                description: `s3:${s3Bucket}/${uploadPath}`,
+                url: `https://${s3Bucket}.s3.amazonaws.com/${uploadPath}/`,
+                type, s3Bucket, s3Region, uploadPath
+            });
+        }
+
+        return grants;
+    }
+
     config.optionsHook = function (req, options, callback) {
         const authProviders = Object.keys(config.auth);
         authProviders.push('guest');
-
-        const user = getFrontendUser(req.session);
-
-        callback(null, {...options, authProviders, user});
+        callback(null, {...options, authProviders});
     };
 
     config.getUserConfig = function (req, callback) {
-        getUserConfig(req.session.user_id, callback);
+        jwt.verify(req.body.token || req.query.token, config.ownSecret, {}, function (err, token) {
+            let userId = 0;
+            if (!err && token.user_id) {
+                console.log('token', token);
+                userId = token.user_id;
+            }
+
+            getUserConfig(userId, callback);
+        });
     };
 
     /* Retrieve the local configuration for the given user_id. */
@@ -235,7 +247,7 @@ module.exports = function (app, config, callback) {
                 return callback(err);
             }
 
-            callback(null, {grants});
+            callback(null, {user_id, grants});
         }
     }
 

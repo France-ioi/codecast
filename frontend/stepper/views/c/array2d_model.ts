@@ -2,7 +2,7 @@ import * as C from '@france-ioi/persistent-c';
 
 import {evalExpr, readScalarBasic, stringifyExpr} from './utils';
 import {getCursorMap} from './array_utils';
-import {getMessage} from "../../../lang";
+import {getMessage, getMessageFormat} from "../../../lang";
 
 export const extractView = function(context, stackFrame, refExpr, options) {
     const {programState} = context;
@@ -14,7 +14,7 @@ export const extractView = function(context, stackFrame, refExpr, options) {
         return {
             error: getMessage('ARRAY2D_EXPR_NOVAL').format({
                 expr: stringifyExpr(refExpr),
-                ex: getMessage.format(ex)
+                ex: getMessageFormat(ex)
             })
         };
     }

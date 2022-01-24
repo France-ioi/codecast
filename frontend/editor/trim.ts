@@ -1,15 +1,14 @@
 import url from 'url';
 import {stringifySync} from 'subtitle';
-import {call, put, select, take, takeLatest} from 'redux-saga/effects';
+import {call, put, select, take, takeLatest} from 'typed-redux-saga';
 import {RECORDING_FORMAT_VERSION} from '../version';
 import {asyncRequestJson} from '../utils/api';
 import {uploadBlobChannel} from '../utils/blobs';
-import {spawnWorker} from '../utils/worker_utils';
+import {CodecastWorker, spawnWorker} from '../utils/worker_utils';
 // @ts-ignore
 import AudioWorker from '../audio_worker/index.worker';
 import {IntervalTree} from './interval_tree';
 import {findInstantIndex} from '../player/utils';
-import {postJson} from '../common/utils';
 import {findSubtitleIndex} from '../subtitles/utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
@@ -19,6 +18,7 @@ import {Bundle} from "../linker";
 import {Screen} from "../common/screens";
 import {EditorSaveState, EditorSavingStep} from "./index";
 import {subtitlesLoadForTrimSaga} from "../subtitles/loading";
+import {UploadResponse} from "../recorder/save_screen";
 
 export const initialStateTrimSaving = {
     unsaved: false,
@@ -123,57 +123,57 @@ function addJumpInstants(instants, intervals) {
 }
 
 function* trimSaga() {
-    yield takeLatest(ActionTypes.EditorTrimEnter, editorTrimEnterSaga);
-    yield takeLatest(ActionTypes.EditorTrimReturn, editorTrimReturnSaga);
-    yield takeLatest(ActionTypes.EditorTrimSave, editorTrimSaveSaga);
+    yield* takeLatest(ActionTypes.EditorTrimEnter, editorTrimEnterSaga);
+    yield* takeLatest(ActionTypes.EditorTrimReturn, editorTrimReturnSaga);
+    yield* takeLatest(ActionTypes.EditorTrimSave, editorTrimSaveSaga);
 }
 
 function* editorTrimEnterSaga(_action) {
     /* XXX install return button */
-    yield put({
+    yield* put({
         type: ActionTypes.EditorControlsChanged,
         payload: {
             controls: 'trim'
         }
     });
 
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Edit}});
+    yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Edit}});
 }
 
 function* editorTrimReturnSaga(_action) {
-    yield put({type: ActionTypes.EditorControlsChanged, payload: {controls: 'none'}});
-    yield put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Setup}});
+    yield* put({type: ActionTypes.EditorControlsChanged, payload: {controls: 'none'}});
+    yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Setup}});
 }
 
 function* editorTrimSaveSaga(action) {
     try {
-        let state: AppStore = yield select();
+        let state: AppStore = yield* select();
         const editor = state.editor;
         const {intervals} = editor.trim;
-        const {targets, playerUrl, editorUrl} = yield call(trimEditorPrepareUpload, action.payload.target);
+        const {targets, playerUrl, editorUrl} = yield* call(trimEditorPrepareUpload, action.payload.target);
 
         const data = editor.data;
         const eventsBlob = trimEvents(data, intervals);
 
-        yield call(trimEditorUpload, EditorSavingStep.UploadEvents, targets.events, eventsBlob);
+        yield* call(trimEditorUpload, EditorSavingStep.UploadEvents, targets.events, eventsBlob);
 
         const audioBuffer = editor.audioBuffer;
-        const worker = yield call(trimEditorAssembleAudio, audioBuffer, intervals);
-        const mp3Blob = yield call(trimEditorEncodeAudio, worker);
+        const worker = yield* call(trimEditorAssembleAudio, audioBuffer, intervals);
+        const mp3Blob = yield* call(trimEditorEncodeAudio, worker);
 
-        yield call(trimEditorUpload, EditorSavingStep.UploadAudio, targets.audio, mp3Blob);
+        yield* call(trimEditorUpload, EditorSavingStep.UploadAudio, targets.audio, mp3Blob);
 
-        yield call(subtitlesLoadForTrimSaga);
-        const subtitles = yield call(trimEditorUpdateSubtitles, intervals);
+        yield* call(subtitlesLoadForTrimSaga);
+        const subtitles = yield* call(trimEditorUpdateSubtitles, intervals);
         if (!subtitles) {
             return;
         }
 
-        yield call(trimSubtitleUpload, playerUrl, subtitles);
-        yield put({type: ActionTypes.EditorSaveSucceeded, payload: {playerUrl, editorUrl}});
+        yield* call(trimSubtitleUpload, playerUrl, subtitles);
+        yield* put({type: ActionTypes.EditorSaveSucceeded, payload: {playerUrl, editorUrl}});
     } catch (ex) {
         console.error('failed', ex);
-        yield put({type: ActionTypes.EditorSaveFailed, payload: {error: ex}});
+        yield* put({type: ActionTypes.EditorSaveFailed, payload: {error: ex}});
     }
 }
 
@@ -327,60 +327,67 @@ function* trimEditorUpdateSubtitles(intervals) {
     const step = EditorSavingStep.UpdateSubtitles;
 
     try {
-        yield put({type: ActionTypes.EditorSavingStep, payload: {step}});
+        yield* put({type: ActionTypes.EditorSavingStep, payload: {step}});
 
-        const state: AppStore = yield select();
+        const state: AppStore = yield* select();
         const {loaded: subtitleData} = state.subtitles.trim;
         const subtitles = trimSubtitles(subtitleData, intervals); // return [{key, text}]
 
-        yield put({type: SubtitlesActionTypes.SubtitlesTrimDone, payload: {subtitles}});
-        yield put({type: ActionTypes.EditorSavingStep, payload: {step, progress: 100}});
-        yield put({type: ActionTypes.EditorSavingStep, payload: {step}});
+        yield* put({type: SubtitlesActionTypes.SubtitlesTrimDone, payload: {subtitles}});
+        yield* put({type: ActionTypes.EditorSavingStep, payload: {step, progress: 100}});
+        yield* put({type: ActionTypes.EditorSavingStep, payload: {step}});
 
         return subtitles;
     } catch (error) {
         console.error('Subtitles Trim Error:', error);
 
-        yield put({type: ActionTypes.EditorSavingStep, payload: {step, status: EditorSaveState.Failure, error: error.toString()}});
+        yield* put({type: ActionTypes.EditorSavingStep, payload: {step, status: EditorSaveState.Failure, error: error.toString()}});
     }
 }
 
 function* trimEditorPrepareUpload(target) {
-    yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.PrepareUpload}});
+    yield* put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.PrepareUpload}});
 
-    const targets = yield call(asyncRequestJson, 'upload', target);
-    yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.PrepareUpload}});
+    const state: AppStore = yield* select();
+    const {baseUrl} = state.options;
+    const uploadParameters = {
+        ...target,
+        basePlayerUrl: window.location.href.split('?')[0],
+    };
+    const targets: UploadResponse = (yield* call(asyncRequestJson, `${baseUrl}/upload`, uploadParameters)) as UploadResponse;
+    yield* put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.PrepareUpload}});
 
     return {targets, playerUrl: targets.player_url, editorUrl: targets.editor_url}; // XXX clean up /upload endpoint interface
 }
 
 function* trimEditorUpload(step, target, data) {
-    yield put({type: ActionTypes.EditorSavingStep, payload: {step}});
-    const channel = yield call(uploadBlobChannel, target, data);
+    yield* put({type: ActionTypes.EditorSavingStep, payload: {step}});
+    const channel = yield* call(uploadBlobChannel, target, data);
 
     while (true) {
-        const event = yield take(channel);
+        const event = yield* take(channel);
         if (!event) break;
         switch (event.type) {
             case 'response':
-                yield put({type: ActionTypes.EditorSavingStep, payload: {step}});
+                yield* put({type: ActionTypes.EditorSavingStep, payload: {step}});
                 channel.close();
                 return event.response;
             case 'error':
-                yield put({type: ActionTypes.EditorSavingStep, payload: {step, status: EditorSaveState.Failure, error: event.error}});
+                yield* put({type: ActionTypes.EditorSavingStep, payload: {step, status: EditorSaveState.Failure, error: event.error}});
                 break;
             case 'progress':
-                yield put({type: ActionTypes.EditorSavingStep, payload: {step, progress: event.percent / 100}});
+                yield* put({type: ActionTypes.EditorSavingStep, payload: {step, progress: event.percent / 100}});
                 break;
         }
     }
 
-    yield put({type: ActionTypes.EditorSavingStep, payload: {step, status: EditorSaveState.Failure, error: 'unexpected end'}});
+    yield* put({type: ActionTypes.EditorSavingStep, payload: {step, status: EditorSaveState.Failure, error: 'unexpected end'}});
 }
 
 function* trimEditorAssembleAudio(audioBuffer, intervals) {
-    yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.AssembleAudio}});
-    const worker = yield call(spawnWorker, AudioWorker);
+    yield* put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.AssembleAudio}});
+    const state: AppStore = yield* select();
+    const worker = yield* call(spawnWorker, AudioWorker, state.options.audioWorkerUrl);
     const {sampleRate, numberOfChannels, duration} = audioBuffer;
 
     /* Extract the list of chunks to retain. */
@@ -398,7 +405,7 @@ function* trimEditorAssembleAudio(audioBuffer, intervals) {
         }
     }
 
-    yield call(worker.call, 'init', {sampleRate, numberOfChannels});
+    yield* call(worker.call, 'init', {sampleRate, numberOfChannels});
 
     let addedLength = 0;
     for (let chunk of chunks) {
@@ -412,31 +419,31 @@ function* trimEditorAssembleAudio(audioBuffer, intervals) {
         }
         addedLength += chunk.length;
 
-        yield call(worker.call, 'addSamples', {samples});
-        yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.AssembleAudio, progress: addedLength / length}});
+        yield* call(worker.call, 'addSamples', {samples});
+        yield* put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.AssembleAudio, progress: addedLength / length}});
     }
 
-    yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.AssembleAudio}});
+    yield* put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.AssembleAudio}});
 
     return worker;
 }
 
-function* trimEditorEncodeAudio(worker) {
+function* trimEditorEncodeAudio(worker: CodecastWorker) {
     const step = EditorSavingStep.EncodeAudio;
-    yield put({type: ActionTypes.EditorSavingStep, payload: {step}});
+    yield* put({type: ActionTypes.EditorSavingStep, payload: {step}});
 
-    const {mp3: mp3Blob} = yield call(worker.call, 'export', {mp3: true}, function* ({progress}) {
-        yield put({type: ActionTypes.EditorSavingStep, payload: {step, progress}});
+    const {mp3: mp3Blob}: any = yield* call(worker.call, 'export', {mp3: true}, function* ({progress}) {
+        yield* put({type: ActionTypes.EditorSavingStep, payload: {step, progress}});
     });
-    yield put({type: ActionTypes.EditorSavingStep, payload: {step}});
+    yield* put({type: ActionTypes.EditorSavingStep, payload: {step}});
 
     return mp3Blob;
 }
 
 function* trimSubtitleUpload(playerUrl, subtitles) {
-    yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.UploadSubtitles}});
+    yield* put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.UploadSubtitles}});
 
-    const state: AppStore = yield select();
+    const state: AppStore = yield* select();
     const {baseUrl} = state.options;
     const urlParsed = url.parse(playerUrl, true);
     const base = urlParsed.query['recording']; //newly generated codecast's base
@@ -445,12 +452,12 @@ function* trimSubtitleUpload(playerUrl, subtitles) {
     const changes = {name, subtitles};
 
     try {
-        yield call(postJson, `${baseUrl}/save`, {base, changes});
+        yield* call(asyncRequestJson, `${baseUrl}/save`, {base, changes});
 
-        yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.UploadSubtitles, progress: 100}});
-        yield put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.UploadSubtitles}});
+        yield* put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.UploadSubtitles, progress: 100}});
+        yield* put({type: ActionTypes.EditorSavingStep, payload: {step: EditorSavingStep.UploadSubtitles}});
     } catch (ex) {
-        yield put({
+        yield* put({
             type: ActionTypes.EditorSavingStep,
             payload: {step: EditorSavingStep.UploadSubtitles, status: EditorSaveState.Failure, error: ex.toString()}
         });

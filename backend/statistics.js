@@ -87,6 +87,35 @@ export async function logLoadingData(config, logData) {
     }
 }
 
+export async function logUploadData(config, {userId, playerUrl, basePlayerUrl}) {
+    let db;
+    try {
+        db = await getDB(config);
+        const query = `
+            INSERT INTO \`recordings\`(
+                \`user_id\`,
+                \`codecast_url\`,
+                \`date_time\`,
+                \`task_url\`
+            ) VALUES (?,?,NOW(),?)
+        `;
+
+        db.query(query, [
+            userId,
+            playerUrl,
+            basePlayerUrl,
+        ], function (err) {
+            if (err) {
+                console.error('Statistics:DB:Codecast:Log:Query failed', err);
+            }
+        });
+    } catch (err) {
+        console.error('Statistics:DB:Codecast:Log failed', err);
+    } finally {
+        db.end();
+    }
+}
+
 export async function logCompileData(config, logData) {
     let db;
     try {

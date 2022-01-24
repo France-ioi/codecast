@@ -105,7 +105,9 @@ export const parseDirectives = function(analysis: SkulptAnalysis) {
     if (analysis.functionCallStack.length > 1) {
         activeFunctionCallStacks.push(analysis.functionCallStack[analysis.functionCallStack.length - 1]); // Active.
     }
-    activeFunctionCallStacks.push(analysis.functionCallStack[0]); // Global.
+    if (analysis.functionCallStack.length > 0) {
+        activeFunctionCallStacks.push(analysis.functionCallStack[0]); // Global.
+    }
 
     let nextId = 1;
     let directives = [];

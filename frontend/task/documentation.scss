@@ -43,7 +43,7 @@
       }
       &.is-active {
         .documentation-tab-title {
-          color: $primary;
+          color: var(--primary-color);
         }
         &:after {
           position: absolute;
@@ -72,7 +72,7 @@
     position: relative;
     color: #7c7c7c;
     &.is-active {
-      background-color: $primary;
+      background-color: var(--primary-color);
       color: white;
       font-weight: bold;
       .bp3-icon {
@@ -80,7 +80,7 @@
       }
     }
     .bp3-icon {
-      color: $primary;
+      color: var(--primary-color);
       margin-right: 5px;
     }
     .documentation-tab-title {
@@ -91,7 +91,7 @@
 
   .documentation-tabs-menu {
     padding: 0 1.5rem;
-    color: $primary;
+    color: var(--primary-color);
     svg {
       width: 20px;
       height: 20px;
@@ -103,7 +103,7 @@
   }
 
   .documentation-header-icon {
-    background: #4a4a4a;
+    background: var(--secondary-color);
     border-top-right-radius: 100px;
     border-bottom-right-radius: 100px;
     margin-right: .8rem;
@@ -116,7 +116,7 @@
     align-items: center;
     height: 30px;
     &.is-blue {
-      background: $primary;
+      background: var(--primary-color);
       border-left-color: #3f618e;
     }
     svg {
@@ -252,7 +252,7 @@
         outline: none;
         -webkit-appearance: none;
         -moz-appearance: none;
-        background: $primary;
+        background: var(--primary-color);
         background-image: url("data:image/svg+xml;utf8,<svg fill='white' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'><path d='M7 10l5 5 5-5z'/><path d='M0 0h24v24H0z' fill='none'/></svg>");
         background-repeat: no-repeat;
         background-position-x: calc(100% - 3px);
@@ -262,7 +262,7 @@
   }
 
   .documentation-new-window {
-    color: $primary;
+    color: var(--primary-color);
     margin-right: .75em;
   }
 }

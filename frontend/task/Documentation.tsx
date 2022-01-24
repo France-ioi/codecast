@@ -6,7 +6,7 @@ import {documentationLoad, sendCodeExampleToOpener} from "./doc";
 import {useAppSelector} from "../hooks";
 import {documentationConceptSelected, DocumentationLanguage, documentationLanguageChanged} from "./documentation_slice";
 import {Screen} from "../common/screens";
-import {select} from "redux-saga/effects";
+import {select} from "typed-redux-saga";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 import {ActionTypes} from "../buffers/actionTypes";

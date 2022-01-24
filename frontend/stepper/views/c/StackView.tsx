@@ -97,7 +97,7 @@ class _StackView extends React.PureComponent<StackViewProps> {
         });
 
         /* Display the functionCallStack in reverse order (top of the stack last). */
-        functionCallStack = functionCallStack.reverse();
+        functionCallStack = functionCallStack.slice().reverse();
         const beyondVisible = Math.min(functionCallStack.size, firstVisible + maxVisible);
         const tailCount = functionCallStack.size - beyondVisible;
         const views = functionCallStack.slice(firstVisible, beyondVisible).map(function(stackFrame, depth) {

@@ -8,7 +8,7 @@
 */
 
 import * as C from '@france-ioi/persistent-c';
-import {all, call, select, take} from 'redux-saga/effects';
+import {all, call, select, take} from 'typed-redux-saga';
 import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay} from "../store";
 import {initialStepperStateControls, Stepper, StepperState} from "./index";
@@ -64,7 +64,7 @@ export interface StepperApi {
     addSaga?: Function,
     onEffect?: Function,
     addBuiltin?: Function,
-    buildState?: any,
+    buildState?: (state: AppStoreReplay, environment: string) => Promise<StepperState>,
     rootStepperSaga?: any,
     executeEffects?: Function,
 }
@@ -97,7 +97,7 @@ export default function(bundle: Bundle) {
 
     /* The root stepper saga does a parallel call of registered stepper sagas. */
     function* rootStepperSaga(...args) {
-        yield all(stepperSagas.map(saga => call(saga, ...args)));
+        yield* all(stepperSagas.map(saga => call(saga, ...args)));
     }
 
     /* An effect is a generator that may alter the stepperContext/state/programState, and

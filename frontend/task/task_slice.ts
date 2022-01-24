@@ -142,7 +142,14 @@ export const taskSlice = createSlice({
             state.currentTestId = action.payload.testId;
         },
         updateCurrentTest(state: TaskState, action: PayloadAction<object>) {
-            if (state.currentTestId in state.taskTests) {
+            if (null === state.currentTestId) {
+                // Create a new test
+                state.taskTests.push({
+                    data: action.payload,
+                    contextState: null,
+                } as TaskTest);
+                state.currentTestId = state.taskTests.length - 1;
+            } else if (state.currentTestId in state.taskTests) {
                 let currentTest = state.taskTests[state.currentTestId].data;
 
                 state.taskTests[state.currentTestId].data = {
@@ -168,6 +175,9 @@ export const taskSlice = createSlice({
         },
         taskLoaded(state: TaskState) {
             state.loaded = true;
+        },
+        taskUpdateState(state: TaskState, action: PayloadAction<any>) {
+            state.state = action.payload;
         },
         taskClearInputs(state: TaskState) {
             state.inputs = [];
@@ -237,6 +247,7 @@ export const {
     taskInputEntered,
     taskResetDone,
     taskLoaded,
+    taskUpdateState,
     currentTaskChangePredefined,
     currentTaskChange,
     taskAddInput,

@@ -1,10 +1,10 @@
 import {EventEmitter2} from 'eventemitter2';
-import {call, take} from 'redux-saga/effects';
+import {call, take} from 'typed-redux-saga';
 import {buffers, eventChannel} from 'redux-saga';
 
-export function spawnWorker(Worker) {
-    return new Promise(function(resolve, reject) {
-        const worker = new Worker();
+export function spawnWorker(audioWorker, audioWorkerUrl) {
+    return new Promise<CodecastWorker>(function(resolve, reject) {
+        const worker = audioWorkerUrl ? new Worker(audioWorkerUrl) : new audioWorker();
         worker.onerror = function(event) {
             worker.onerror = null;
             worker.onmessage = null;
@@ -34,7 +34,15 @@ class WorkerError extends Error {
     }
 }
 
-function wrapWorker(worker) {
+export interface CodecastWorker {
+    emitter: EventEmitter2,
+    kill: () => void,
+    post: (command, payload) => void,
+    listen: (id, buffer?) => void,
+    call: (command, payload, progress?) => any,
+}
+
+function wrapWorker(worker): CodecastWorker {
     const emitter = new EventEmitter2();
     let nextTransactionId = 1;
     worker.onmessage = function(message) {
@@ -52,7 +60,7 @@ function wrapWorker(worker) {
     }
 
     function listen(id, buffer?) {
-        return eventChannel(function(listener) {
+        return eventChannel<{error: string, done: Function, payload: any}>(function(listener) {
             emitter.on(id, listener);
             return function() {
                 emitter.off(id, listener);
@@ -63,11 +71,11 @@ function wrapWorker(worker) {
     function* callSaga(command, payload, progress) {
         const request = {id: 't' + nextTransactionId, command, payload};
         nextTransactionId += 1;
-        const channel = yield call(listen, request.id);
+        const channel = yield* call(listen, request.id);
         worker.postMessage(request);
         try {
             while (true) {
-                const response = yield take(channel);
+                const response = yield* take(channel);
                 if (response.error) {
                     throw new WorkerError(request, response);
                 }
@@ -75,7 +83,7 @@ function wrapWorker(worker) {
                     return response.payload;
                 }
                 if (typeof progress === 'function') {
-                    yield call(progress, response.payload);
+                    yield* call(progress, response.payload);
                 }
             }
         } finally {

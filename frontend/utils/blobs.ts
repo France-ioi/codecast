@@ -39,7 +39,7 @@ export function uploadBlob(upload, blob: Blob) {
 }
 
 export function uploadBlobChannel({params, form_url}, blob) {
-    return eventChannel(function(listener) {
+    return eventChannel<{type: string, percent?: number, error?: string, response?: any}>(function(listener) {
         const formData = new FormData();
         Object.keys(params).forEach(function(key) {
             formData.append(key, params[key]);

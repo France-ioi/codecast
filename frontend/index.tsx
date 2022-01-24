@@ -35,6 +35,7 @@ import {Documentation} from "./task/Documentation";
 import '@france-ioi/skulpt/dist/skulpt.min.js';
 import '@france-ioi/skulpt/dist/skulpt-stdlib.js';
 import '@france-ioi/skulpt/dist/debugger.js';
+import {Portal} from "@blueprintjs/core";
 
 setAutoFreeze(true);
 log.setLevel('trace');
@@ -183,6 +184,9 @@ function clearUrl() {
   }
 **/
 Codecast.start = function(options) {
+    // Fix bug when bundle is loaded in head before body is initialized, dialogs would not appear
+    Portal.defaultProps.container = document.body;
+
     const mainStore = Codecast.environments['main'].store;
 
     const urlParameters = new URLSearchParams(window.location.search);
@@ -204,12 +208,13 @@ Codecast.start = function(options) {
     }
 
     const urlParams = new URLSearchParams(window.location.search);
+    let startScreen = options.start;
     if (!!urlParams.get('documentation')) {
-        options.start = 'documentation';
+        startScreen = 'documentation';
     }
 
     let appDisplay;
-    switch (options.start) {
+    switch (startScreen) {
         case 'recorder':
             autoLogin();
 
@@ -263,7 +268,7 @@ Codecast.start = function(options) {
             break;
         default:
             appDisplay = function AppDisplay () {
-                return <p>{"No such application: "}{options.start}</p>;
+                return <p>{"No such application: "}{startScreen}</p>;
             };
 
             break;
@@ -281,12 +286,14 @@ Codecast.start = function(options) {
 
 function autoLogin() {
     let user = null;
+    let token = null;
     try {
         user = JSON.parse(window.localStorage.getItem('user') || 'null');
+        token = window.localStorage.getItem('token');
     } catch (ex) {
         return;
     }
 
     const mainStore = Codecast.environments['main'].store;
-    mainStore.dispatch({type: CommonActionTypes.LoginFeedback, payload: {user}});
+    mainStore.dispatch({type: CommonActionTypes.LoginFeedback, payload: {user, token}});
 }

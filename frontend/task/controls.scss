@@ -42,7 +42,7 @@
     box-shadow: 1px 1px 0 0 rgb(0 0 0 / 10%) inset;
     border-radius: 5px;
     font-size: 18px;
-    color: #4a4a4a;
+    color: var(--secondary-color);
     height: 36px;
     display: flex;
     align-items: center;
@@ -64,7 +64,7 @@
       height: 3px;
     }
     .bp3-slider-handle {
-      background: $primary;
+      background: var(--primary-color);
       border-radius: 50px;
       width: 30px;
       outline: none;
@@ -82,7 +82,7 @@
       }
     }
     .bp3-slider-progress.bp3-intent-primary {
-      background-color: $primary;
+      background-color: var(--primary-color);
     }
     .extremity {
       opacity: 0.5;
@@ -109,7 +109,7 @@
     justify-content: center;
     white-space: nowrap;
     border-radius: 500px;
-    background: $primary;
+    background: var(--primary-color);
     color: white;
     height: 40px;
     width: 40px;
@@ -138,10 +138,19 @@
   }
 }
 
+.task.task-player-replay .controls-stepper {
+  .bp3-button, .bp3-slider {
+    opacity: 0.3;
+    &:hover:not([disabled]) {
+      opacity: 1;
+    }
+  }
+}
+
 // Responsive
 .layout-mobile-horizontal.task, .layout-mobile-vertical.task {
   .stepper-controls-container {
-    background: $primary;
+    background: var(--primary-color);
   }
 
   .speed-slider {
@@ -154,7 +163,7 @@
     .bp3-slider-handle {
       background: white;
       &:after {
-        border-bottom-color: $primary;
+        border-bottom-color: var(--primary-color);
       }
     }
     .bp3-slider-progress {

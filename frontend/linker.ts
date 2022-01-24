@@ -1,5 +1,5 @@
 import {default as createSagaMiddleware} from 'redux-saga';
-import {all, call} from 'redux-saga/effects';
+import {all, call} from 'typed-redux-saga';
 import produce from "immer";
 import {App} from "./index";
 import {AppStore} from "./store";
@@ -356,7 +356,7 @@ export class Bundle {
             for (let bundle of bundles) {
                 effects.push(call(bundle._saga(), args));
             }
-            yield all(effects);
+            yield* all(effects);
         };
     }
 

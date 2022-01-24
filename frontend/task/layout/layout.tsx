@@ -7,8 +7,10 @@ import React, {createElement, ReactElement, ReactNode} from 'react';
 import {AppStore, CodecastOptions} from "../../store";
 import {ControlsAndErrors} from "../ControlsAndErrors";
 import {Bundle} from "../../linker";
-import {ActionTypes} from "./actionTypes";
+import {ActionTypes as LayoutActionTypes, ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
+import {ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
+import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {Directive} from "../../stepper/python/directives";
 import {MultiVisualization} from "./MultiVisualization";
 import {ZoneLayoutVisualizationGroup} from "./ZoneLayoutVisualizationGroup";
@@ -19,6 +21,11 @@ import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_librairi
 import {Screen} from "../../common/screens";
 import {Documentation} from "../Documentation";
 import {getMessage} from "../../lang";
+import {call, put, select, takeEvery} from "typed-redux-saga";
+import {App} from "../../index";
+import {PlayerInstant} from "../../player";
+import {getBufferModel} from "../../buffers/selectors";
+import {askConfirmation} from "../../alert";
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -718,6 +725,10 @@ function layoutRequiredTypeChangedReducer(state: AppStore, {payload: {requiredTy
     state.layout.requiredType = requiredType;
 }
 
+function layoutPlayerModeChangedReducer(state: AppStore, {payload: {playerMode}}) {
+    state.layout.playerMode = playerMode;
+}
+
 export function makeVisualizationAsPreferred(visualizations: string[], visualization: string): string[] {
     if (-1 !== visualizations.indexOf(visualization)) {
         visualizations.splice(visualizations.indexOf(visualization), 1);
@@ -752,12 +763,58 @@ export enum LayoutMobileMode {
     Player = 'player',
 }
 
+export enum LayoutPlayerMode {
+    Execution = 'execution',
+    Replay = 'replay',
+}
+
 export interface LayoutState {
     preferredVisualizations: string[], // least preferred at the beginning, most preferred at the end
     type: LayoutType,
     requiredType?: LayoutType,
     mobileMode: LayoutMobileMode,
     zoomLevel: number, // 1 is normal
+    playerMode: LayoutPlayerMode,
+}
+
+function* layoutSaga({replayApi}: App) {
+    yield* takeEvery(StepperActionTypes.StepperRestart, function* () {
+        const environment = yield* select((state: AppStore) => state.environment);
+        if ('replay' === environment) {
+            yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Player}});
+        }
+    });
+
+    yield* takeEvery(StepperActionTypes.StepperExit, function* () {
+        const environment = yield* select((state: AppStore) => state.environment);
+        if ('replay' === environment) {
+            yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Editor}});
+        }
+    });
+
+    yield* takeEvery(ActionTypes.LayoutPlayerModeBackToReplay, function* () {
+        const state: AppStore = yield* select();
+        const currentSource = getBufferModel(state, 'source').document.toString();
+
+        const instant = state.player.current;
+        const instantSource = getBufferModel(instant.state, 'source').document.toString();
+
+        console.log('current source', currentSource, instantSource);
+
+        let confirmed = true;
+        if (currentSource !== instantSource) {
+            confirmed = yield* call(askConfirmation,{
+                text: getMessage('RESUME_PLAYBACK_WARNING'),
+                confirmText: getMessage('RESUME_PLAYBACK_CONFIRM'),
+                cancelText: getMessage('CANCEL'),
+            });
+        }
+
+        if (confirmed) {
+            yield* put({type: LayoutActionTypes.LayoutPlayerModeChanged, payload: {playerMode: LayoutPlayerMode.Replay}});
+            yield* call(replayApi.reset, instant);
+        }
+    });
 }
 
 export default function (bundle: Bundle) {
@@ -767,6 +824,7 @@ export default function (bundle: Bundle) {
             type: LayoutType.Desktop,
             mobileMode: LayoutMobileMode.Instructions,
             zoomLevel: 1,
+            playerMode: LayoutPlayerMode.Execution,
         };
     });
 
@@ -781,4 +839,16 @@ export default function (bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.LayoutRequiredTypeChanged);
     bundle.addReducer(ActionTypes.LayoutRequiredTypeChanged, layoutRequiredTypeChangedReducer);
-};
+
+    bundle.defineAction(ActionTypes.LayoutPlayerModeChanged);
+    bundle.addReducer(ActionTypes.LayoutPlayerModeChanged, layoutPlayerModeChangedReducer);
+
+    bundle.addSaga(layoutSaga);
+
+    bundle.defer(function ({replayApi}: App) {
+        replayApi.onReset(function* (instant: PlayerInstant) {
+            const mobileMode = instant.state.layout.mobileMode;
+            yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
+        });
+    });
+}

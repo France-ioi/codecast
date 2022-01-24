@@ -13,7 +13,7 @@ Shape of the 'compile' state:
 
 */
 
-import {call, put, select, takeLatest, takeEvery, take, race} from 'redux-saga/effects';
+import {call, put, select, takeLatest, takeEvery, take, race} from 'typed-redux-saga';
 
 import {asyncRequestJson} from '../utils/api';
 
@@ -72,14 +72,14 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.CompileWait);
 
     bundle.addSaga(function* watchCompile() {
-        yield takeLatest(ActionTypes.Compile, function* () {
-            let state: AppStore = yield select();
+        yield* takeLatest(ActionTypes.Compile, function* () {
+            let state: AppStore = yield* select();
 
             const sourceModel = getBufferModel(state, 'source');
             const source = sourceModel.document.toString();
             const {platform} = state.options;
 
-            yield put({
+            yield* put({
                 type: ActionTypes.CompileStarted,
                 source
             });
@@ -87,10 +87,10 @@ export default function(bundle: Bundle) {
             try {
                 checkCompilingCode(source.trim(), platform, state.environment);
             } catch (e) {
-                yield put({
+                yield* put({
                     type: ActionTypes.CompileFailed,
                     payload: {
-                        error: e,
+                        error: String(e),
                     },
                 });
                 return;
@@ -98,39 +98,39 @@ export default function(bundle: Bundle) {
 
             let response;
             if (platform === 'python') {
-                yield put({
+                yield* put({
                     type: ActionTypes.CompileSucceeded,
                     platform
                 });
             } else {
-                state = yield select();
+                state = yield* select();
                 try {
                     const logData = state.statistics.logData;
                     const postData = {source, platform, logData};
                     const {baseUrl} = state.options;
 
-                    response = yield call(asyncRequestJson, baseUrl + '/compile', postData);
+                    response = yield* call(asyncRequestJson, baseUrl + '/compile', postData);
                 } catch (ex) {
                     response = {error: ex.toString()};
                 }
 
                 response.platform = platform;
                 if (response.ast) {
-                    yield put({
+                    yield* put({
                         type: ActionTypes.CompileSucceeded,
                         response,
                         platform
                     });
                 } else {
-                    yield put({type: ActionTypes.CompileFailed, payload: {error: {type: 'compilation', content: response.diagnostics}}});
+                    yield* put({type: ActionTypes.CompileFailed, payload: {error: {type: 'compilation', content: response.diagnostics}}});
                 }
             }
         });
 
         // @ts-ignore
-        yield takeEvery(ActionTypes.CompileWait, function* ({payload: {callback, keepSubmission}}) {
-            yield put({type: ActionTypes.Compile, payload: {keepSubmission}});
-            const outcome = yield race({
+        yield* takeEvery(ActionTypes.CompileWait, function* ({payload: {callback, keepSubmission}}) {
+            yield* put({type: ActionTypes.Compile, payload: {keepSubmission}});
+            const outcome = yield* race({
                 [CompileStatus.Done]: take(ActionTypes.StepperRestart),
                 [CompileStatus.Error]: take(ActionTypes.CompileFailed),
             });
@@ -140,37 +140,51 @@ export default function(bundle: Bundle) {
 
     bundle.defer(function({recordApi, replayApi}: App) {
         replayApi.on('start', function* () {
-            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: initialStateCompile}});
+            yield* put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: initialStateCompile}});
         });
 
         recordApi.on(ActionTypes.CompileStarted, function* (addEvent, action) {
             const {source} = action;
 
-            yield call(addEvent, 'compile.start', source); // XXX should also have platform
+            yield* call(addEvent, 'compile.start', source); // XXX should also have platform
         });
         replayApi.on(['stepper.compile', 'compile.start'], function* (replayContext: ReplayContext, event) {
             const source = event[2];
 
-            yield put({type: ActionTypes.CompileStarted, source});
+            yield* put({type: ActionTypes.CompileStarted, source});
         });
 
         recordApi.on(ActionTypes.CompileSucceeded, function* (addEvent, action) {
-            yield call(addEvent, 'compile.success', action);
+            yield* call(addEvent, 'compile.success', action);
         });
         replayApi.on('compile.success', function* (replayContext: ReplayContext, event) {
             const action = event[2];
 
-            yield put({type: ActionTypes.CompileSucceeded, ...action});
+            yield* put({type: ActionTypes.CompileSucceeded, ...action});
+        });
+
+        recordApi.on(ActionTypes.CompileFailed, function* (addEvent, {payload}) {
+            yield* call(addEvent, 'compile.failure', payload.error);
+        });
+        replayApi.on('compile.failure', function* (replayContext: ReplayContext, event) {
+            let error = event[2];
+
+            // Ensure retro-compatibility with Codecast V6
+            if (error.diagnostics) {
+                error = {type: 'compilation', content: error.diagnostics}
+            }
+
+            yield* put({type: ActionTypes.CompileFailed, payload: {error}});
         });
 
         replayApi.on('stepper.exit', function* () {
-            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: initialStateCompile}});
+            yield* put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: initialStateCompile}});
         });
 
         replayApi.onReset(function* (instant: PlayerInstant) {
             const compileModel = instant.state.compile;
 
-            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: compileModel}});
+            yield* put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'compile', state: compileModel}});
         });
     });
 };

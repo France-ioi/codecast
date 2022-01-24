@@ -23,6 +23,7 @@ import {getMessage} from "../lang";
 import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
 import {TaskLevelName} from "./task_slice";
+import {SubtitlesPane} from "../subtitles/SubtitlesPane";
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -32,8 +33,10 @@ export function TaskApp() {
     const isPlayerReady = player.isReady;
     const options = useAppSelector(state => state.options);
     const layoutType = useAppSelector(state => state.layout.type);
+    const layoutPlayerMode = useAppSelector(state => state.layout.playerMode);
     const editor = useAppSelector(state => state.editor);
     const displayEditor = editor && editor.playerReady;
+    const displaySubtitlesPane = useAppSelector(state => !!(state.subtitles && state.subtitles.paneEnabled && state.subtitles.items && !!state.subtitles.items.length));
     const user = useAppSelector(state => state.user);
     const audioLoaded = editor.audioLoaded;
     const [initialUserCheck, setInitialUserCheck] = useState(false);
@@ -53,12 +56,15 @@ export function TaskApp() {
 
     useEffect(() => {
         // Wait that the html is loaded before we create the context because some of them use jQuery to select elements
+        if (options.theme) {
+            document.documentElement.setAttribute('data-theme', options.theme);
+        }
+
         setTimeout(() => {
             const taskLoadParameters: {level?: TaskLevelName} = {};
             if (options.level) {
                 taskLoadParameters.level = options.level;
             }
-            dispatch(taskLoad(taskLoadParameters));
 
             if (options.audioUrl) {
                 if (CodecastOptionsMode.Edit === options.mode) {
@@ -72,7 +78,7 @@ export function TaskApp() {
                 } else {
                     dispatch({type: LayoutActionTypes.LayoutZoomLevelChanged, payload: {zoomLevel: ZOOM_LEVEL_LOW}});
 
-                dispatch({
+                    dispatch({
                         type: PlayerActionTypes.PlayerPrepare,
                         payload: {
                             baseDataUrl: options.baseDataUrl,
@@ -82,6 +88,9 @@ export function TaskApp() {
                         }
                     });
                 }
+            } else {
+                // If we have a recording, taskLoad is triggered afterwards, in playerPrepare, when we have the events data and know the task
+                dispatch(taskLoad(taskLoadParameters));
             }
         });
     }, []);
@@ -105,47 +114,58 @@ export function TaskApp() {
     }
 
     return (
-        <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType}`}>
-            <div className="task-section">
-                <div className="task-header">
-                    <span className="task-header__quick">QUICK</span>
-                    <span className="task-header__algo">ALGO</span>
-                </div>
-
-                {taskLevels && 1 < Object.keys(taskLevels).length && <TaskLevelTabs/>}
-
-                <div className="task-body">
-                    <LayoutLoader width={null} height={null}/>
-                    {displayEditor &&
-                        <div key="subtitles" className="subtitles-pane-container">
-                            <SubtitlesEditor
-                              light={true}
-                            />
-                            <SubtitlesEditorPane/>
+        <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode}`}>
+            <div className="layout-general">
+                <div className={`task-section`}>
+                    <div className="task-section-container">
+                        <div className="task-header">
+                            <span className="task-header__quick">QUICK</span>
+                            <span className="task-header__algo">ALGO</span>
                         </div>
-                    }
+
+                        {taskLevels && 1 < Object.keys(taskLevels).length && <TaskLevelTabs/>}
+
+                        <div className="task-body">
+                            <LayoutLoader width={null} height={null}/>
+                            {displayEditor &&
+                                <div key="subtitles" className="subtitles-pane-container">
+                                    <SubtitlesEditor
+                                        light={true}
+                                    />
+                                    <SubtitlesEditorPane/>
+                                </div>
+                            }
+                            {!displayEditor && displaySubtitlesPane &&
+                                <div key="subtitles-view" className="subtitles-pane-container">
+                                    <SubtitlesPane/>
+                                </div>
+                            }
+                        </div>
+
+                        <MenuTask/>
+                    </div>
+
                 </div>
 
                 {recordingEnabled &&
-                    <div className="task-footer">
+                    <div className="layout-footer">
                       <RecorderControlsTask/>
                     </div>
                 }
 
                 {playerEnabled && isPlayerReady &&
-                    <div className="task-footer">
+                    <div className="layout-footer">
                       <PlayerControlsTask/>
                       <SubtitlesBand/>
                     </div>
                 }
 
                 {displayEditor &&
-                    <div className="task-footer">
+                    <div className="layout-footer">
                       <EditorInterface/>
                     </div>
                 }
             </div>
-            <MenuTask/>
 
             <Dialog isOpen={!!progressMessage} title={progressMessage ? progressMessage : 'Info'} isCloseButtonShown={false}>
                 <div style={{margin: '20px 20px 0 20px'}}>

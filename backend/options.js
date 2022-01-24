@@ -21,6 +21,7 @@ export function buildCommonOptions(config, start) {
 export function buildOptions(config, req, start, callback) {
     const options = buildCommonOptions(config, start);
     options.baseUrl = config.baseUrl;
+    options.audioWorkerUrl = config.audioWorkerUrl;
     options.callbackUrl = req.originalUrl;
     options.referer = req.headers.referer || null;
     if (/sandbox/.test(start)) {
@@ -41,18 +42,6 @@ export function buildOptions(config, req, start, callback) {
         options.isStatisticsReady = !!config.database;
     }
     if (/recorder|editor|statistics|task/.test(start)) {
-        if (req.query.recording) {
-            options.baseDataUrl = req.query.recording;
-            options.audioUrl = `${options.baseDataUrl}.mp3`;
-            const {s3Bucket: bucket, uploadPath: folder, id: codecast} = parseCodecastUrl(options.baseDataUrl);
-            options.codecastData = {bucket, folder, codecast};
-            if (req.query.mode === 'edit') {
-                options.mode = 'edit';
-            } else {
-                options.mode = 'play';
-            }
-        }
-
         return config.optionsHook(req, options, callback);
     } else {
         return callback(null, options);

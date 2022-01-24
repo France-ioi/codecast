@@ -51,7 +51,7 @@ class _SubtitlesPane extends React.PureComponent<SubtitlesPaneProps> {
         const {subtitles, currentIndex, editing, audioTime, filterText, filterRegexp, windowHeight} = this.props;
 
         return (
-            <div className='subtitles-pane vbox' style={{height: `${windowHeight - 89}px`}}>
+            <div className='subtitles-pane subtitles-pane-view vbox'>
                 {!editing &&
                     <InputGroup
                         leftIcon={IconNames.SEARCH}

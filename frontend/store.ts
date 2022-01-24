@@ -40,6 +40,7 @@ export interface CodecastOptions {
     examplesUrl: string,
     audioUrl: string,
     baseDataUrl: string,
+    audioWorkerUrl: string,
     data: any,
     mode: CodecastOptionsMode,
     canChangePlatform: boolean,
@@ -64,6 +65,9 @@ export interface CodecastOptions {
     origin: string,
     task?: string,
     taskInstructions?: string,
+    source?: string,
+    input?: string,
+    theme?: string,
 }
 
 export interface Panes {
@@ -88,6 +92,7 @@ export interface AppStoreReplay {
     environment: string,
 
     stopped: boolean,
+    layout: LayoutState,
 }
 
 export interface AppAction extends Action {
@@ -111,7 +116,6 @@ export interface AppStore extends Store, AppStoreReplay {
     terminalElement: any,
     vumeterElement: any,
     task: TaskState,
-    layout: LayoutState,
 
     // TODO: Put the following in a "window" attribute instead of at the root of the store
     mainViewGeometry: typeof mainViewGeometries[0],

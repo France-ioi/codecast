@@ -1,4 +1,4 @@
-import {call, put, select} from 'redux-saga/effects';
+import {call, put, select} from 'typed-redux-saga';
 import * as C from '@france-ioi/persistent-c';
 import {printfBuiltin} from './printf';
 import {scanfBuiltin} from './scanf';
@@ -55,7 +55,7 @@ export default function(bundle: Bundle) {
 
     bundle.defer(function({recordApi, replayApi, stepperApi}: App) {
         recordApi.onStart(function* (init) {
-            const state: AppStore = yield select();
+            const state: AppStore = yield* select();
 
             init.ioPaneMode = state.ioPane.mode;
         });
@@ -67,22 +67,22 @@ export default function(bundle: Bundle) {
                 mode: ioPaneMode,
             };
 
-            yield put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'ioPane', state: newState}});
+            yield* put({type: PlayerActionTypes.PlayerReset, payload: {sliceName: 'ioPane', state: newState}});
         });
 
         replayApi.onReset(function* (instant: PlayerInstant) {
             const {mode} = instant.state.ioPane;
 
-            yield put({type: ActionTypes.IoPaneModeChanged, payload: {mode}});
+            yield* put({type: ActionTypes.IoPaneModeChanged, payload: {mode}});
         });
 
         recordApi.on(ActionTypes.IoPaneModeChanged, function* (addEvent, {payload: {mode}}) {
-            yield call(addEvent, 'ioPane.mode', mode);
+            yield* call(addEvent, 'ioPane.mode', mode);
         });
         replayApi.on('ioPane.mode', function* (replayContext: ReplayContext, event) {
             const mode = event[2];
 
-            yield put({type: ActionTypes.IoPaneModeChanged, payload: {mode}});
+            yield* put({type: ActionTypes.IoPaneModeChanged, payload: {mode}});
         });
 
         stepperApi.addBuiltin('printf', printfBuiltin);

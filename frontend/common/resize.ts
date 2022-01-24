@@ -1,5 +1,5 @@
 import {buffers, eventChannel} from 'redux-saga';
-import {put, take} from 'redux-saga/effects';
+import {put, take} from 'typed-redux-saga';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
@@ -43,7 +43,7 @@ export default function(bundle: Bundle) {
 
     // Event channel for resize events.
     // Only the most recent event is kept in the buffer.
-    const resizeMonitorChannel = eventChannel(function(listener) {
+    const resizeMonitorChannel = eventChannel<{width: number, height: number}>(function(listener) {
         function onResize() {
             const width = window.innerWidth;
             const height = window.innerHeight;
@@ -67,9 +67,9 @@ export default function(bundle: Bundle) {
         }
 
         while (true) {
-            let {width, height} = yield take(resizeMonitorChannel);
+            let {width, height} = yield* take(resizeMonitorChannel);
 
-            yield put({type: ActionTypes.WindowResized, width, height});
+            yield* put({type: ActionTypes.WindowResized, width, height});
         }
     });
 

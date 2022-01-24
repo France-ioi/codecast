@@ -96,7 +96,7 @@ class _SubtitlesBand extends React.PureComponent<SubtitlesBandProps> {
         return (
             <div
                 className={classnames(['subtitles-band', `subtitles-band-${active ? '' : 'in'}active`, isMoving && 'subtitles-band-moving', 'no-select', `mainView-${geometry.size}`])}
-                style={{top: `${top}px`, transform: translation, width: `100%`}}
+                style={{top: `${top}px`, transform: translation}}
                 ref={this._refBand}
             >
                 <div className='subtitles-band-frame'>
