@@ -19,7 +19,7 @@ import {LayoutEditor} from "./LayoutEditor";
 import {LayoutDirective} from "./LayoutDirective";
 import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_librairies";
 import {Screen} from "../../common/screens";
-import {Documentation} from "../Documentation";
+import {Documentation} from "../documentation/Documentation";
 import {getMessage} from "../../lang";
 import {call, put, select, takeEvery} from "typed-redux-saga";
 import {App} from "../../index";

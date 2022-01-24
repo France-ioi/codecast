@@ -178,7 +178,7 @@ function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: Return
         } else {
             yield* call(success);
         }
-    } catch (ex) {
+    } catch (ex: any) {
         yield* call(error, `bad answer: ${ex.message}`);
     }
 }
@@ -195,7 +195,7 @@ function* taskGetStateEventSaga ({payload: {success}}: ReturnType<typeof taskGet
 function* taskReloadStateEventSaga ({payload: {success, error}}: ReturnType<typeof taskReloadStateEvent>) {
     try {
         yield* call(success);
-    } catch (ex) {
+    } catch (ex: any) {
         yield* call(error, `bad state: ${ex.message}`);
     }
 }
@@ -305,7 +305,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             yield* put(platformAnswerGraded({score, message}));
             yield* call(success, score, message, scoreToken);
         }
-    } catch (ex) {
+    } catch (ex: any) {
         const message = ex.message === 'Network request failed' ? "Vous n'êtes actuellement pas connecté à Internet."
             : (ex.message ? ex.message : ex.toString());
         yield* put(platformAnswerGraded({error: message}));

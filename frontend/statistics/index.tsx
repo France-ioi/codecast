@@ -45,6 +45,7 @@ function getBrowser() {
     const isIE = /*@cc_on!@*/!!document.documentMode;
 
     // Edge 20+
+    // @ts-ignore
     const isEdge = !isIE && !!window.StyleMedia;
 
     // Chrome 1+

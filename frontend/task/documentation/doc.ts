@@ -1,16 +1,16 @@
-import {Bundle} from "../linker";
+import {Bundle} from "../../linker";
 import {call, put, select, takeEvery} from "typed-redux-saga";
-import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
-import {extractLevelSpecific} from "./utils";
+import {quickAlgoLibraries} from "../libs/quickalgo_librairies";
+import {extractLevelSpecific} from "../utils";
 import {
     DocumentationConcept,
     documentationConceptSelected,
     documentationConceptsLoaded, DocumentationLanguage,
     documentationLanguageChanged
 } from "./documentation_slice";
-import {AppAction} from "../store";
-import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
-import {getMessage} from "../lang";
+import {AppAction} from "../../store";
+import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
+import {getMessage} from "../../lang";
 
 let openerChannel;
 
@@ -83,7 +83,7 @@ function* documentationLoadSaga(standalone: boolean) {
             }
             yield* put(documentationLanguageChanged(language));
             yield* call(loadDocumentationConcepts, concepts, selectedConceptId);
-        } catch (e) {
+        } catch (e: any) {
             yield* put({type: CommonActionTypes.Error, payload: {error: e}});
         }
         return;

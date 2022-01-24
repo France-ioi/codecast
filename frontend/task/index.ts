@@ -30,7 +30,7 @@ import taskSlice, {
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
-import DocumentationBundle from "./doc";
+import DocumentationBundle from "./documentation/doc";
 import PlatformBundle, {
     getTaskAnswerAggregated,
     setPlatformBundleParameters,

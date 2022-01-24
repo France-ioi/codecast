@@ -171,7 +171,6 @@ module.exports = function (app, config, callback) {
         jwt.verify(req.body.token || req.query.token, config.ownSecret, {}, function (err, token) {
             let userId = 0;
             if (!err && token.user_id) {
-                console.log('token', token);
                 userId = token.user_id;
             }
 
