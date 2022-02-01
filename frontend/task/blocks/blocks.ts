@@ -160,7 +160,7 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
     }
 
     availableBlocks.forEach((block => {
-        if (block.name in contextStrings.description) {
+        if (contextStrings.description && block.name in contextStrings.description) {
             block.description = contextStrings.description[block.name];
         }
 

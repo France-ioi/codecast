@@ -206,10 +206,10 @@ export class QuickAlgoLibrary {
         }
     };
 
-    resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null) {
+    resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null, innerState: any = null) {
         this.reset(taskInfos, appState);
         if (this.reloadInnerState) {
-            this.reloadInnerState(createDraft(this.getInnerState()));
+            this.reloadInnerState(createDraft(innerState ? innerState : this.getInnerState()));
         }
     };
 
