@@ -118,6 +118,8 @@ export default function(bundle: Bundle) {
     async function buildState(state: AppStoreReplay, environment: string): Promise<StepperState> {
         const {platform} = state.options;
 
+        console.log('do build state', state, environment);
+
         /*
          * Call all the init callbacks. Pass the global state so the player can
          * build stepper states without having to install the pre-computed state
@@ -130,7 +132,6 @@ export default function(bundle: Bundle) {
             callback(curStepperState, state, environment);
         }
 
-        console.log('do build state');
 
         const stepper: Stepper = {
             ...state.stepper,

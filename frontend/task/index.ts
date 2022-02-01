@@ -676,7 +676,7 @@ export default function (bundle: Bundle) {
         app.stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
             const currentTest = selectCurrentTest(state);
 
-            console.log('stepper init, current test', currentTest);
+            console.log('stepper init, current test', currentTest, state.environment);
 
             const context = quickAlgoLibraries.getContext(null, state.environment);
             context.resetAndReloadState(currentTest, state);

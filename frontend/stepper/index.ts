@@ -80,6 +80,7 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonInterpreter from "./python/python_interpreter";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
+import {produce} from "immer";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -633,7 +634,7 @@ function* compileSucceededSaga(app: App) {
         /* Build the stepper state. This automatically runs into user source code. */
         let state: AppStore = yield* select();
 
-        let stepperState = yield* call(app.stepperApi.buildState, state, app.environment);
+        let stepperState = yield* call(app.stepperApi.buildState, state, state.environment);
         console.log('[stepper init] current state', state.task.state, 'context state', stepperState.contextState);
         const newState = yield* select();
         console.log('[stepper init] new state', newState.task.state);
@@ -1146,6 +1147,14 @@ function postLink(app: App) {
         const stepperContext = replayContext.stepperContext;
 
         yield* put({type: ActionTypes.StepperInterrupt, payload: {stepperContext}});
+    });
+
+    replayApi.on('stepper.restart', function* () {
+        const state = yield* select();
+        const stepperState = yield* call(app.stepperApi.buildState, state, state.environment);
+
+        yield* put({type: ActionTypes.StepperEnabled});
+        yield* put({type: ActionTypes.StepperRestart, payload: {stepperState}});
     });
 
     function stepperSuspend(stepperContext: StepperContext, cont) {
