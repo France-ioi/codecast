@@ -1,3 +1,5 @@
+import {isLocalStorageEnabled} from "../common/utils";
+
 export function getPersistentOptions() {
     let opts;
     try {
@@ -16,5 +18,7 @@ export function setPersistentOption(key, value) {
     const opts = getPersistentOptions();
     opts[key] = value;
 
-    window.localStorage.setItem('subtitles', JSON.stringify(opts));
+    if (isLocalStorageEnabled()) {
+        window.localStorage.setItem('subtitles', JSON.stringify(opts));
+    }
 }

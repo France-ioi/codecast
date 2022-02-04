@@ -11,6 +11,7 @@ import {AppStore, CodecastOptions} from "../store";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {Screen} from "../common/screens";
+import {isLocalStorageEnabled} from "../common/utils";
 
 export type CodecastRecord = {
     version: string,
@@ -122,7 +123,7 @@ export function* ensureLoggedSaga() {
     const state: AppStore = yield* select();
     const {baseUrl} = state.options;
 
-    const token = window.localStorage.getItem('token');
+    const token = isLocalStorageEnabled() ? window.localStorage.getItem('token') : null;
     if (token) {
         const response: any = yield* call(asyncGetJson, baseUrl + '/me');
         if (response.user) {

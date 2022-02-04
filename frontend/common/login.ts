@@ -1,6 +1,7 @@
 import {ActionTypes} from "./actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
+import {isLocalStorageEnabled} from "./utils";
 
 export interface User {
     id: number,
@@ -21,11 +22,13 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.LoginFeedback);
     bundle.addReducer(ActionTypes.LoginFeedback, (state: AppStore, {payload: {user, token, error}}): void => {
         if (!error) {
-            window.localStorage.setItem('user', JSON.stringify(user));
-            if (token) {
-                window.localStorage.setItem('token', token);
-            } else {
-                window.localStorage.removeItem('token');
+            if (isLocalStorageEnabled()) {
+                window.localStorage.setItem('user', JSON.stringify(user));
+                if (token) {
+                    window.localStorage.setItem('token', token);
+                } else {
+                    window.localStorage.removeItem('token');
+                }
             }
             state.user = user;
         }

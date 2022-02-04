@@ -7,6 +7,7 @@ import {Bundle} from "../linker";
 import {put, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {taskLoad} from "../task";
+import {isLocalStorageEnabled} from "../common/utils";
 
 export const Languages = {
     'en-US': require('./en-US.js'),
@@ -19,7 +20,7 @@ export default function(bundle: Bundle) {
         if (navigator.language in Languages) {
             language = navigator.language;
         }
-        if (window.localStorage.getItem('language') && window.localStorage.getItem('language') in Languages) {
+        if (isLocalStorageEnabled() && window.localStorage.getItem('language') && window.localStorage.getItem('language') in Languages) {
             language = window.localStorage.getItem('language');
         }
         if (options.language && options.language in Languages) {
