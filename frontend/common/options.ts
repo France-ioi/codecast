@@ -69,6 +69,7 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('directives' in query) {
         options.showDirectives = true;
     }
+    options.canDownload = !('noDownload' in query);
 
     if (query.recording) {
         options.baseDataUrl = query.recording;
