@@ -1,8 +1,8 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
 import {StepperControls} from "../stepper/views/StepperControls";
 import {stepperClearError} from "../stepper/actionTypes";
 import {useDispatch} from "react-redux";
-import {Icon} from "@blueprintjs/core";
+import {Dialog, Icon} from "@blueprintjs/core";
 import {LayoutMobileMode, LayoutType} from "./layout/layout";
 import {ActionTypes} from "./layout/actionTypes";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -11,6 +11,7 @@ import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
 import {TaskTestsSubmissionResultOverview} from "./TaskTestsSubmissionResultOverview";
 import {getMessage} from "../lang";
+import {DraggableDialog} from "../common/DraggableDialog";
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -25,6 +26,14 @@ export function ControlsAndErrors() {
 
     const hasError = !!stepperError;
     const hasModes = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
+
+    const [errorDialogOpen, setErrorDialogOpen] = useState(false);
+
+    useEffect(() => {
+        if (!hasError) {
+            setErrorDialogOpen(false);
+        }
+    }, [hasError]);
 
     let error = null;
     if (hasError) {
@@ -45,6 +54,12 @@ export function ControlsAndErrors() {
     const onClearError = () => {
         dispatch(stepperClearError());
     };
+
+    const onMaximizeError = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setErrorDialogOpen(true);
+    }
 
     const selectMode = (mobileMode: LayoutMobileMode) => {
         dispatch({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
@@ -93,13 +108,32 @@ export function ControlsAndErrors() {
               <button type="button" className="close-button" onClick={onClearError}>
                 <Icon icon="cross"/>
               </button>
-              <div className="message-wrapper">
+              <button type="button" className="maximize-button hidden-mobile" onClick={onMaximizeError}>
+                <Icon icon="maximize"/>
+              </button>
+              <div className="error-message-wrapper">
                 <Icon icon="notifications" className="bell-icon"/>
                 <div className="message">
                     {error}
                 </div>
               </div>
             </div>}
+
+            {hasError && <DraggableDialog
+              rndProps={{}}
+              icon='error'
+              title={getMessage('ERROR')}
+              isOpen={errorDialogOpen}
+              onClose={() => setErrorDialogOpen(false)}
+            >
+                <div className='bp3-dialog-body'>
+                  <div className="error-message-wrapper">
+                    <div className="message">
+                        {error}
+                    </div>
+                  </div>
+                </div>
+            </DraggableDialog>}
         </div>
     );
 }
