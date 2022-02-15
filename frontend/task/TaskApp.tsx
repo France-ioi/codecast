@@ -161,7 +161,7 @@ export function TaskApp() {
                 }
 
                 {displayEditor &&
-                    <div className="layout-footer">
+                    <div className="layout-footer editor-footer">
                       <EditorInterface/>
                     </div>
                 }
