@@ -86,6 +86,7 @@ module.exports = {
     MENU_RECORDER: "Enregistrement",
     MENU_EDIT_RECORDING: "Enregistrement",
     MENU_EDIT_RECORDING_TITLE: "Enregistrement",
+    MENU_ABOUT: "À propos",
     EXAMPLES_LABEL: "Exemples: ",
     EXAMPLES_BUTTON_TITLE: "Afficher la liste",
     EXAMPLES_MESSAGE: "Charger un exemple interrompt toute activité en cours",
@@ -217,4 +218,9 @@ module.exports = {
     CODE_CONSTRAINTS_LIMITED_ASSIGN: "Vous n'avez pas le droit de réassigner un mot-clé à utilisation limitée : {keyword}.",
     CODE_CONSTRAINTS_EMPTY_PROGRAM: "Vous ne pouvez pas valider un programme vide.",
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS: "Vous utilisez la fonction \"{funcName}\" sans les parenthèses. Ajoutez les parenthèses pour appeler la fonction.",
+
+    ABOUT_AUTHORS: "Ce sujet a été créé par :",
+    ABOUT_TRANSLATORS: "et a été traduit par :",
+    ABOUT_LICENSE: "License :",
+    ABOUT_CODECAST: "Codecast est un projet de France-IOI",
 };

@@ -85,6 +85,7 @@ module.exports = {
     MENU_SETTINGS: "Settings",
     MENU_RECORDER: "Recorder",
     MENU_EDIT_RECORDING: "Recording",
+    MENU_ABOUT: "About",
     EXAMPLES_LABEL: "Examples: ",
     EXAMPLES_BUTTON_TITLE: "View list",
     EXAMPLES_MESSAGE: "Loading an example interrupts any pending action",
@@ -216,4 +217,9 @@ module.exports = {
     CODE_CONSTRAINTS_LIMITED_ASSIGN: "You are not allowed to reassign a keyword with limited uses: {keyword}.",
     CODE_CONSTRAINTS_EMPTY_PROGRAM: "You cannot submit an empty program.",
     CODE_CONSTRAINTS_FUNCTIONS_WITHOUT_PARENTHESIS: "You use the function \"{funcName}\" without the parentheses. Add the parentheses to call the function.",
+
+    ABOUT_AUTHORS: "This task was created by:",
+    ABOUT_TRANSLATORS: "and translated by:",
+    ABOUT_LICENSE: "Licence:",
+    ABOUT_CODECAST: "Codecast is a France-ioi Project",
 };

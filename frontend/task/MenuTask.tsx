@@ -1,179 +1,107 @@
-import React from 'react';
-import {Icon} from '@blueprintjs/core';
-import {connect} from "react-redux";
-import {AppStore} from "../store";
+import React, {useEffect, useRef, useState} from 'react';
+import {Dialog, Icon} from '@blueprintjs/core';
 import {MenuIconsTask} from "./MenuIconsTask";
-import {IoMode} from "../stepper/io";
 import {recordingEnabledChange} from "./task_slice";
-import {StepperStatus} from "../stepper";
 import {SettingsDialog} from "../common/SettingsDialog";
 import {EditRecordingDialog} from "../editor/EditRecordingDialog";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
-import {getMessage, Languages} from "../lang";
+import {getMessage} from "../lang";
+import {TaskAbout} from "./TaskAbout";
+import {useDispatch} from "react-redux";
+import {useAppSelector} from "../hooks";
 
-interface MenuTaskStateToProps {
-    recordingEnabled: boolean,
-    playerEnabled: boolean,
-    ioMode: IoMode,
-    ioModeSelect: boolean,
-    editorEnabled: boolean,
-    screen: Screen,
-    canRecord: boolean,
-    language: keyof typeof Languages,
-}
+export function MenuTask() {
+    const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
+    const playerEnabled = useAppSelector(state => !!(state.options.audioUrl));
+    const editorEnabled = useAppSelector(state => state.editor && state.editor.playerReady);
+    const screen = useAppSelector(state => state.screen);
+    const canRecord = useAppSelector(state => state.options.canRecord);
+    const currentTask = useAppSelector(state => state.task.currentTask);
 
-function mapStateToProps(state: AppStore): MenuTaskStateToProps {
-    const recordingEnabled = state.task.recordingEnabled;
-    const playerEnabled = !!(state.options.audioUrl);
-    const {mode: ioMode, modeSelect} = state.ioPane;
-    const ioModeSelect = modeSelect && (!state.stepper || state.stepper.status === StepperStatus.Clear);
-    const displayEditor = state.editor && state.editor.playerReady;
-    const screen = state.screen;
-    const canRecord = state.options.canRecord;
-    const language = state.options.language;
+    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(false);
+    const [aboutOpen, setAboutOpen] = useState(false);
 
-    return {
-        recordingEnabled, playerEnabled, ioMode, ioModeSelect,
-        screen,
-        editorEnabled: displayEditor,
-        canRecord,
-        // Force re-render of menu when language is changed
-        language,
-    };
-}
+    const wrapperRef = useRef<HTMLDivElement>();
+    const dispatch = useDispatch();
 
-interface MenuTaskDispatchToProps {
-    dispatch: Function
-}
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
 
-interface MenuTaskState {
-    settingsOpen: boolean,
-    menuOpen: boolean,
-}
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        }
+    })
 
-interface MenuTaskProps extends MenuTaskStateToProps, MenuTaskDispatchToProps {
-
-}
-
-class _MenuTask extends React.PureComponent<MenuTaskProps, MenuTaskState> {
-    state = {
-        settingsOpen: false,
-        menuOpen: false,
-    };
-
-    private wrapperRef: React.RefObject<HTMLDivElement>;
-
-    constructor(props) {
-        super(props);
-
-        this.wrapperRef = React.createRef();
-        this.setWrapperRef = this.setWrapperRef.bind(this);
-        this.handleClickOutside = this.handleClickOutside.bind(this);
-    }
-
-    componentDidMount() {
-        document.addEventListener('mousedown', this.handleClickOutside);
-    }
-
-    componentWillUnmount() {
-        document.removeEventListener('mousedown', this.handleClickOutside);
-    }
-
-    render() {
-        const {playerEnabled, editorEnabled, screen, canRecord} = this.props;
-        const {settingsOpen} = this.state;
-
-        return (
-            <div ref={this.wrapperRef} className={`menu-container ${this.state.menuOpen ? 'is-open' : ''}`}>
-                {screen !== Screen.DocumentationSmall && screen !== Screen.DocumentationBig && <div className="menu-icons">
-                    <MenuIconsTask
-                        toggleMenu={this.toggleMenu}
-                        toggleDocumentation={this.toggleDocumentation}
-                    />
-                </div>}
-                <div className={`task-menu`}>
-                    <div className="menu-item" onClick={this.toggleSettings}>
-                        <Icon icon="cog"/>
-                        <span>{getMessage('MENU_SETTINGS')}</span>
-                    </div>
-                    {!playerEnabled && canRecord && <div className="menu-item" onClick={this.toggleRecording}>
-                        <Icon icon="record" color="#ff001f"/>
-                        <span>{getMessage('MENU_RECORDER')}</span>
-                    </div>}
-                    {editorEnabled && <div className="menu-item" onClick={this.toggleEditRecording}>
-                      <Icon icon="edit"/>
-                      <span>{getMessage('MENU_EDIT_RECORDING')}</span>
-                    </div>}
-                </div>
-                <SettingsDialog
-                    open={settingsOpen}
-                    onClose={this.closeSettings}
-                />
-                <EditRecordingDialog
-                    open={screen === Screen.EditorSave}
-                    onClose={this.closeEditRecording}
-                />
-            </div>
-        );
-    }
-
-    setWrapperRef(node) {
-        this.wrapperRef = node;
-    }
-
-    handleClickOutside(event) {
+    const handleClickOutside = (event) => {
         if (
-            this.wrapperRef
-            && !this.wrapperRef.current.contains(event.target)
+            wrapperRef.current
+            && !wrapperRef.current.contains(event.target)
             && !event.target.closest('.bp3-portal')
-            && this.state.menuOpen
+            && menuOpen
         ) {
-            this.closeMenu();
+            setMenuOpen(false);
         }
     }
 
-    toggleSettings = () => {
-        this.setState(prevState => ({
-            settingsOpen: !prevState.settingsOpen,
-        }));
+    const toggleDocumentation = () => {
+        const newScreen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen ? null : Screen.DocumentationSmall;
+        dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: newScreen}});
     };
 
-    toggleMenu = () => {
-        this.setState(prevState => ({
-            menuOpen: !prevState.menuOpen,
-        }));
+    const toggleRecording = () => {
+        dispatch(recordingEnabledChange(!recordingEnabled));
+        setMenuOpen(false);
     };
 
-    toggleDocumentation = () => {
-        const newScreen = Screen.DocumentationSmall === this.props.screen || Screen.DocumentationBig === this.props.screen ? null : Screen.DocumentationSmall;
-        this.props.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: newScreen}});
+    const toggleEditRecording = () => {
+        dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.EditorSave}});
     };
 
-    toggleRecording = () => {
-        this.props.dispatch(recordingEnabledChange(!this.props.recordingEnabled));
-        this.closeMenu();
+    const closeEditRecording = () => {
+        dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
     };
 
-    toggleEditRecording = () => {
-        this.props.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.EditorSave}});
-    };
-
-    closeSettings = () => {
-        this.setState({
-            settingsOpen: false,
-        });
-    };
-
-    closeMenu = () => {
-        this.setState({
-            menuOpen: false,
-        });
-    };
-
-    closeEditRecording = () => {
-        this.props.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
-    };
+    return (
+        <div ref={wrapperRef} className={`menu-container ${menuOpen ? 'is-open' : ''}`}>
+            {screen !== Screen.DocumentationSmall && screen !== Screen.DocumentationBig && <div className="menu-icons">
+                <MenuIconsTask
+                    toggleMenu={() => setMenuOpen(!menuOpen)}
+                    toggleDocumentation={toggleDocumentation}
+                />
+            </div>}
+            <div className={`task-menu`}>
+                <div className="menu-item" onClick={() => setSettingsOpen(!settingsOpen)}>
+                    <Icon icon="cog"/>
+                    <span>{getMessage('MENU_SETTINGS')}</span>
+                </div>
+                {!playerEnabled && canRecord && <div className="menu-item" onClick={toggleRecording}>
+                    <Icon icon="record" color="#ff001f"/>
+                    <span>{getMessage('MENU_RECORDER')}</span>
+                </div>}
+                {editorEnabled && <div className="menu-item" onClick={toggleEditRecording}>
+                  <Icon icon="edit"/>
+                  <span>{getMessage('MENU_EDIT_RECORDING')}</span>
+                </div>}
+                {currentTask && <div className="menu-item" onClick={() => setAboutOpen(!aboutOpen)}>
+                    <Icon icon="help"/>
+                    <span>{getMessage('MENU_ABOUT')}</span>
+                </div>}
+            </div>
+            <SettingsDialog
+                open={settingsOpen}
+                onClose={() => setSettingsOpen(false)}
+            />
+            <EditRecordingDialog
+                open={screen === Screen.EditorSave}
+                onClose={closeEditRecording}
+            />
+            <Dialog title={getMessage('MENU_ABOUT')} isOpen={aboutOpen} onClose={() => setAboutOpen(false)}>
+                <div className='bp3-dialog-body'>
+                    <TaskAbout/>
+                </div>
+            </Dialog>
+        </div>
+    );
 }
-
-export const MenuTask = connect(mapStateToProps)(_MenuTask);
