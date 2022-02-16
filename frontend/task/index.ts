@@ -444,8 +444,9 @@ function* contextResetAndReloadStateSaga(innerState = null) {
 
 function* getTaskAnswer () {
     const state: AppStore = yield* select();
+    const buffer = getBufferModel(state, 'source');
 
-    return getBufferModel(state, 'source').document.toString();
+    return buffer ? buffer.document.toString() : '';
 }
 
 function* getTaskState () {
