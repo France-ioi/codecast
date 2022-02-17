@@ -83,6 +83,8 @@ export interface LayoutElementMetadata {
     overflow?: boolean,
     desiredSize?: string,
     stackingOrientation?: RelativeLayoutOrientation,
+    allocatedWidth?: number,
+    allocatedHeight?: number,
 }
 
 export interface LayoutVisualizationGroup {
