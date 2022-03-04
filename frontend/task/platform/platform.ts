@@ -72,6 +72,7 @@ export function getTaskMetadata() {
         minWidth: "auto",
     };
     metadata.autoHeight = true;
+    metadata.disablePlatformProgress = true;
 
     return metadata;
 }
