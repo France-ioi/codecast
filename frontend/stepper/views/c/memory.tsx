@@ -279,6 +279,7 @@ interface MemoryViewProps {
     cursorExprs: any,
     nBytesShown: any,
     directive: any,
+    allocatedWidth: number,
     onChange: Function
 }
 
@@ -294,12 +295,12 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
         const {
             scale, cursorRows, widthFactor,
             layout, centerAddress, maxAddress,
-            bytes, cursorMap, variables, extraRows, viewTransform
+            bytes, cursorMap, variables, extraRows, viewTransform, allocatedWidth,
         } = this.props;
         return (
             <DirectiveFrame {...this.props}>
                 <div className="memory-controls directive-controls">
-                    <div className="memory-slider-container" style={{width: `${Math.round(400 * widthFactor)}px`}}>
+                    <div className="memory-slider-container" style={{width: `${Math.min(400, allocatedWidth / 2)}px`}}>
                         <Slider prefixCls="memory-slider" value={centerAddress} min={0}
                                 max={maxAddress} onChange={this.onSeek}>
                             <div className="memory-slider-background"/>
@@ -692,19 +693,19 @@ interface Layout {
     bottom?: number,
 }
 
-function MemoryViewSelector({scale, directive, context, controls, functionCallStack}) {
+function MemoryViewSelector({scale, directive, context, controls, functionCallStack, allocatedWidth}) {
     const localMap = functionCallStack[0].get('localMap');
     const {byName, byPos} = directive;
     const extraExprs = getList(byName.extras, []);
     const cursorExprs = getList(byName.cursors, []);
     const cursorRows = getNumber(byName.cursorRows, 1);
-    const nBytesShown = getNumber(byName.bytes, 32);
     const widthFactor = getNumber(byName.width, 1);
     const maxAddress = context.programState.memory.size - 1;
     const layout: Layout = {};
     layout.textLineHeight = 18;
     layout.textBaseline = 5;
     layout.cellWidth = 32;
+    const nBytesShown = getNumber(byName.bytes, 2 * Math.floor(allocatedWidth / (layout.cellWidth + 2) / 2));
     layout.cellPadding = 4;
     layout.cellHeight = layout.cellPadding * 2 + layout.textLineHeight * 2;
     layout.addressAngle = 60;
@@ -751,7 +752,8 @@ function MemoryViewSelector({scale, directive, context, controls, functionCallSt
         scale, directive, context, controls, localMap,
         extraExprs, cursorExprs, cursorRows, nBytesShown, widthFactor,
         centerAddress, startAddress, maxAddress,
-        layout, bytes, cursorMap, variables, extraRows, viewTransform
+        layout, bytes, cursorMap, variables, extraRows, viewTransform,
+        allocatedWidth,
     };
 }
 

@@ -3,7 +3,7 @@ import {DirectiveFrame} from "./DirectiveFrame";
 import {C_directiveViewDict, pythonDirectiveViewDict} from "./index";
 import {CodecastPlatform} from "../../store";
 
-export function DirectivePanel({scale, directive, controls, context, functionCallStack, platform, onChange}) {
+export function DirectivePanel({scale, directive, controls, context, functionCallStack, platform, onChange, allocatedWidth, allocatedHeight}) {
     const {kind} = directive;
     const hide = controls.hide;
     if (hide) {
@@ -28,7 +28,7 @@ export function DirectivePanel({scale, directive, controls, context, functionCal
         directiveDescription = C_directiveViewDict[kind];
     }
 
-    const props = directiveDescription.selector({scale, directive, context, controls, functionCallStack});
+    const props = directiveDescription.selector({scale, directive, context, controls, functionCallStack, allocatedWidth, allocatedHeight});
 
     return (
         <directiveDescription.View

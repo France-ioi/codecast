@@ -38,7 +38,7 @@ export function PlayerControls() {
         }
 
         function handleClickOutside(event) {
-            const excludedClasses = '.bp3-portal, .bp3-portal *, .subtitles-band, .subtitles-band *, .subtitles-pane-container, .subtitles-pane-container *';
+            const excludedClasses = '.bp3-portal, .bp3-portal *, .subtitles-band, .subtitles-band *, .subtitles-pane-container, .subtitles-pane-container *, .editor-footer, .editor-footer *';
             if (wrapperRef.current && !wrapperRef.current.contains(event.target) && !event.target.matches(excludedClasses)) {
                 onPausePlayback();
                 dispatch({type: LayoutActionTypes.LayoutPlayerModeChanged, payload: {playerMode: LayoutPlayerMode.Execution}});

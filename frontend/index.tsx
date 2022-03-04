@@ -18,6 +18,7 @@ import statisticsBundle from './statistics/index';
 import {isLocalMode} from "./utils/app";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "./common/actionTypes";
+import {ActionTypes as RecorderActionTypes} from "./recorder/actionTypes";
 import {ActionTypes as StatisticsActionTypes} from "./statistics/actionTypes";
 import {TaskApp} from "./task/TaskApp";
 import {StatisticsApp} from "./statistics/StatisticsApp";
@@ -220,12 +221,13 @@ Codecast.start = function(options) {
     }
 
     const urlParams = new URLSearchParams(window.location.search);
+    let startScreen = options.start;
     if (!!urlParams.get('documentation')) {
-        options.start = 'documentation';
+        startScreen = 'documentation';
     }
 
     let appDisplay;
-    switch (options.start) {
+    switch (startScreen) {
         case 'statistics':
             autoLogin();
 
@@ -253,7 +255,7 @@ Codecast.start = function(options) {
             break;
         default:
             appDisplay = function AppDisplay () {
-                return <p>{"No such application: "}{options.start}</p>;
+                return <p>{"No such application: "}{startScreen}</p>;
             };
 
             break;

@@ -429,13 +429,13 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
     }
 }
 
-function* contextResetAndReloadStateSaga() {
+function* contextResetAndReloadStateSaga(innerState = null) {
     const state: AppStore = yield* select();
     const currentTest = selectCurrentTest(state);
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context) {
-        context.resetAndReloadState(currentTest, state);
+        context.resetAndReloadState(currentTest, state, innerState);
         const contextState = getCurrentImmerState(context.getInnerState());
         console.log('get new state', contextState);
         yield* put(taskUpdateState(contextState));
@@ -444,8 +444,9 @@ function* contextResetAndReloadStateSaga() {
 
 function* getTaskAnswer () {
     const state: AppStore = yield* select();
+    const buffer = getBufferModel(state, 'source');
 
-    return getBufferModel(state, 'source').document.toString();
+    return buffer ? buffer.document.toString() : '';
 }
 
 function* getTaskState () {
@@ -644,17 +645,10 @@ export default function (bundle: Bundle) {
             }
 
             console.log('TASK REPLAY API RESET', instant.event, taskData);
-            if (!quick || -1 !== ['compile.success', 'task/changeLevel'].indexOf(instant.event[1])) {
-                yield* call(contextResetAndReloadStateSaga);
-            }
 
             const context = quickAlgoLibraries.getContext(null, 'main');
-            if (!quick || -1 !== ['task/updateCurrentTestId', 'task/changeLevel'].indexOf(instant.event[1])) {
-                if (taskData && taskData.state) {
-                    console.log('do reload state', taskData.state);
-                    const draft = createDraft(taskData.state);
-                    context.reloadInnerState(draft);
-                }
+            if (context && (!quick || -1 !== ['compile.success', 'task/updateCurrentTestId', 'task/changeLevel'].indexOf(instant.event[1]))) {
+                yield* call(contextResetAndReloadStateSaga, taskData && taskData.state ? taskData.state : null);
                 console.log('DO RESET DISPLAY');
                 context.redrawDisplay();
             }
@@ -683,7 +677,7 @@ export default function (bundle: Bundle) {
         app.stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
             const currentTest = selectCurrentTest(state);
 
-            console.log('stepper init, current test', currentTest);
+            console.log('stepper init, current test', currentTest, state.environment);
 
             const context = quickAlgoLibraries.getContext(null, state.environment);
             context.resetAndReloadState(currentTest, state);

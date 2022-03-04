@@ -3,7 +3,7 @@ import {FibonacciHeap, INode} from '@tyriar/fibonacci-heap';
 import range from 'node-range';
 
 import {evalExpr, readScalarBasic, stringifyExpr} from './utils';
-import {getMessage} from "../../../lang";
+import {getMessage, getMessageFormat} from "../../../lang";
 
 interface HeapNode {
     key: any,
@@ -106,7 +106,7 @@ export const extractView = function(context, stackFrame, refExpr, options) {
             return {
                 error: getMessage('ARRAY1D_DIM_NOVAL').format({
                     dim: stringifyExpr(dimExpr),
-                    ex: getMessage.format(ex)
+                    ex: getMessageFormat(ex)
                 })
             };
         }
@@ -119,7 +119,7 @@ export const extractView = function(context, stackFrame, refExpr, options) {
         return {
             error: getMessage('ARRAY1D_EXPR_NOVAL').format({
                 expr: stringifyExpr(refExpr),
-                ex: getMessage.format(ex)
+                ex: getMessageFormat(ex)
             })
         };
     }

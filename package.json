@@ -92,6 +92,7 @@
     "react-portal": "^4.2.1",
     "react-redux": "^7.2.6",
     "react-resize-detector": "^6.7.6",
+    "react-rnd": "^10.3.5",
     "react-svg-pan-zoom": "^3.10.0",
     "react-transition-group": "^4.4.2",
     "redux": "^4.1.2",

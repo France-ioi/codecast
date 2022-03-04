@@ -6,10 +6,22 @@ import {Bundle} from "../linker";
 import {put, takeEvery} from "typed-redux-saga";
 import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
+import {Languages} from "../lang";
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
         options.language = query.language;
+    }
+
+    if ('sLocale' in query) {
+        const locale = query.sLocale;
+        for (let language of Object.keys(Languages)) {
+            const [leftPart] = language.split('-');
+            if (locale === leftPart) {
+                options.language = language as keyof typeof Languages;
+                break;
+            }
+        }
     }
 
     if ('noLanguageChange' in query) {
@@ -69,6 +81,7 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('directives' in query) {
         options.showDirectives = true;
     }
+    options.canDownload = !('noDownload' in query);
 
     if (query.recording) {
         options.baseDataUrl = query.recording;

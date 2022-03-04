@@ -6,6 +6,7 @@ import {DirectivePanel} from "../../stepper/views/DirectivePanel";
 import {getCurrentStepperState} from "../../stepper/selectors";
 import {ActionTypes} from "../../stepper/actionTypes";
 import {directiveDimensionsDict} from "../../stepper/views";
+import {LayoutElementMetadata} from "./layout";
 
 interface LayoutDirectiveStateToProps {
     stepperState: any,
@@ -26,11 +27,12 @@ interface LayoutDirectiveProps extends LayoutDirectiveStateToProps {
     dispatch: Function,
     currentStepperState: StepperState,
     directive: any,
+    metadata: LayoutElementMetadata,
 }
 
 export class _LayoutDirective extends React.PureComponent<LayoutDirectiveProps> {
     render() {
-        const {stepperState, zoomLevel} = this.props;
+        const {stepperState, zoomLevel, metadata} = this.props;
         if (!stepperState || !stepperState.analysis) {
             return false;
         }
@@ -54,6 +56,8 @@ export class _LayoutDirective extends React.PureComponent<LayoutDirectiveProps> 
                 context={context}
                 functionCallStack={functionCallStack}
                 platform={platform}
+                allocatedWidth={metadata.allocatedWidth}
+                allocatedHeight={metadata.allocatedHeight}
                 onChange={this.onControlsChange}
             />
         );

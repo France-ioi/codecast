@@ -71,6 +71,7 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonRunner from "./python/python_runner";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
+import {produce} from "immer";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -353,7 +354,7 @@ export function getNodeRange(stepperState?: StepperState) {
 
     if (stepperState.platform === CodecastPlatform.Python) {
         const {functionCallStack} = stepperState.analysis;
-        const stackFrame = functionCallStack[0];
+        const stackFrame = functionCallStack[functionCallStack.length - 1];
         if (!stackFrame) {
             return null;
         }
@@ -624,7 +625,7 @@ function* compileSucceededSaga(app: App) {
         /* Build the stepper state. This automatically runs into user source code. */
         let state: AppStore = yield* select();
 
-        let stepperState = yield* call(app.stepperApi.buildState, state, app.environment);
+        let stepperState = yield* call(app.stepperApi.buildState, state, state.environment);
         console.log('[stepper init] current state', state.task.state, 'context state', stepperState.contextState);
         const newState = yield* select();
         console.log('[stepper init] new state', newState.task.state);
@@ -1137,6 +1138,14 @@ function postLink(app: App) {
         const stepperContext = replayContext.stepperContext;
 
         yield* put({type: ActionTypes.StepperInterrupt, payload: {stepperContext}});
+    });
+
+    replayApi.on('stepper.restart', function* () {
+        const state = yield* select();
+        const stepperState = yield* call(app.stepperApi.buildState, state, state.environment);
+
+        yield* put({type: ActionTypes.StepperEnabled});
+        yield* put({type: ActionTypes.StepperRestart, payload: {stepperState}});
     });
 
     function stepperSuspend(stepperContext: StepperContext, cont) {

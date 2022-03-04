@@ -3,6 +3,7 @@ import {getMessage, Languages} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {connect} from "react-redux";
 import {AppStore} from "../store";
+import {isLocalStorageEnabled} from "../common/utils";
 
 interface LanguageSelectionStoreToProps {
     language: string,
@@ -46,10 +47,8 @@ class _LanguageSelection extends React.PureComponent<LanguageSelectionProps> {
         const language = event.target.value;
         const {closeMenu, dispatch} = this.props;
         closeMenu();
-        try {
+        if (isLocalStorageEnabled()) {
             window.localStorage.setItem('language', language);
-        } catch (ex) {
-            // No local storage access.
         }
         setTimeout(() => dispatch({type: ActionTypes.LanguageSet, payload: {language}}), 0);
     };

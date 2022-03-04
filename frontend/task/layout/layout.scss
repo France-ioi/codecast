@@ -128,7 +128,7 @@
       font-weight: bold;
     }
     &.is-active {
-      background: #4a90e2;
+      background: var(--primary-color);
       flex: 2 0 auto;
     }
     &:not(.is-active) + .mode:not(.is-active) {

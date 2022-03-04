@@ -188,6 +188,7 @@ function bufferResetReducer(state: AppStore, action): void {
 
 function bufferEditReducer(state: AppStore, action): void {
     const {buffer, delta} = action;
+    initBufferIfNeeded(state, buffer);
     const oldDoc = state.buffers[buffer].model.document;
 
     state.buffers[buffer].model.document = oldDoc.applyDelta(delta);

@@ -303,11 +303,11 @@ export class PrinterLib extends QuickAlgoLibrary {
             this.ioMode = appState.ioPane.mode;
         }
 
-        if (this.display) {
-            executionChannels.main.put({
-                action: PrinterLibAction.reset,
-            });
-        }
+        // if (this.display) {
+        //     executionChannels.main.put({
+        //         action: PrinterLibAction.reset,
+        //     });
+        // }
     };
 
     getInnerState() {
@@ -480,6 +480,12 @@ export class PrinterLib extends QuickAlgoLibrary {
                 log.getLogger('printer_lib').debug('READ', 'before', inputValue, 'after', inputValue.substring(index + 1));
                 context.innerState.initial = inputValue.substring(index + 1);
             }
+
+            context.innerState.ioEvents.push({type: PrinterLineEventType.input, content: readResult + "\n"});
+            context.innerState.inputPosition = createDraft({
+                event: context.innerState.ioEvents.length - 1,
+                pos: context.innerState.ioEvents[context.innerState.ioEvents.length - 1].content.length,
+            });
 
             if (context.display) {
                 log.getLogger('printer_lib').debug('now result, update', context.getInputText());
@@ -747,28 +753,41 @@ export class PrinterLib extends QuickAlgoLibrary {
         log.getLogger('printer_lib').debug('PRINTER HANDLE REQUEST', parameters);
 
         switch (action) {
-            case PrinterLibAction.reset: {
-                const currentTest = yield* select(selectCurrentTest);
-                if (currentTest && currentTest.input) {
-                    yield* put({
-                        type: ActionTypes.BufferReset,
-                        buffer: inputBufferLibTest,
-                        model: documentModelFromString(currentTest.input),
-                    });
-                }
-                if (currentTest && currentTest.output) {
-                    yield* put({
-                        type: ActionTypes.BufferReset,
-                        buffer: outputBufferLibTest,
-                        model: documentModelFromString(currentTest.output),
-                    });
-                }
-
-                yield* call(context.syncInputOutputBuffers, context);
-                break;
-            }
+            // case PrinterLibAction.reset: {
+            //     const currentTest = yield* select(selectCurrentTest);
+            //     if (currentTest && currentTest.input) {
+            //         yield* put({
+            //             type: ActionTypes.BufferReset,
+            //             buffer: inputBufferLibTest,
+            //             model: documentModelFromString(currentTest.input),
+            //         });
+            //     }
+            //     if (currentTest && currentTest.output) {
+            //         yield* put({
+            //             type: ActionTypes.BufferReset,
+            //             buffer: outputBufferLibTest,
+            //             model: documentModelFromString(currentTest.output),
+            //         });
+            //     }
+            //
+            //     yield* call(context.syncInputOutputBuffers, context);
+            //     break;
+            // }
             case PrinterLibAction.syncBuffers: {
-                log.getLogger('printer_lib').debug('SYNC BUFFERS');
+                const currentTest = yield* select(selectCurrentTest);
+                log.getLogger('printer_lib').debug('SYNC BUFFERS', currentTest);
+                const inputText = currentTest && currentTest.input ? currentTest.input : '';
+                const outputText = currentTest && currentTest.output ? currentTest.output : '';
+                yield* put({
+                    type: ActionTypes.BufferReset,
+                    buffer: inputBufferLibTest,
+                    model: documentModelFromString(inputText),
+                });
+                yield* put({
+                    type: ActionTypes.BufferReset,
+                    buffer: outputBufferLibTest,
+                    model: documentModelFromString(outputText),
+                });
                 yield* call(context.syncInputOutputBuffers, context);
                 break;
             }
