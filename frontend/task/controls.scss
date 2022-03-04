@@ -138,7 +138,7 @@
   }
 }
 
-.task.task-player-replay .controls-stepper {
+.task.task-player-replay .controls-stepper, .task.task-player-replay .controls-compile {
   .bp3-button, .bp3-slider {
     opacity: 0.3;
     &:hover:not([disabled]) {

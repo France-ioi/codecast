@@ -100,7 +100,7 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    <StepperControls enabled={true} newControls={true}/>
+                    <StepperControls enabled={true}/>
                 </div>}
             </div>}
 
