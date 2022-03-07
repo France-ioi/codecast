@@ -40,8 +40,9 @@ export function PlayerControls() {
         function handleClickOutside(event) {
             const excludedClasses = '.bp3-portal, .bp3-portal *, .subtitles-band, .subtitles-band *, .subtitles-pane-container, .subtitles-pane-container *, .editor-footer, .editor-footer *';
             if (wrapperRef.current && !wrapperRef.current.contains(event.target) && !event.target.matches(excludedClasses)) {
+                const wasPlaying = player.isPlaying;
                 onPausePlayback();
-                dispatch({type: LayoutActionTypes.LayoutPlayerModeChanged, payload: {playerMode: LayoutPlayerMode.Execution}});
+                dispatch({type: LayoutActionTypes.LayoutPlayerModeChanged, payload: {playerMode: LayoutPlayerMode.Execution, resumeImmediately: wasPlaying}});
             }
         }
 
@@ -49,7 +50,7 @@ export function PlayerControls() {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [wrapperRef, layoutPlayerMode]);
+    }, [wrapperRef, layoutPlayerMode, player.isPlaying]);
 
     const onStartPlayback = () => {
         dispatch({type: ActionTypes.PlayerStart});
