@@ -222,5 +222,5 @@ module.exports = {
     ABOUT_AUTHORS: "Ce sujet a été créé par :",
     ABOUT_TRANSLATORS: "et a été traduit par :",
     ABOUT_LICENSE: "License :",
-    ABOUT_CODECAST: "Codecast est un projet de France-IOI",
+    ABOUT_CODECAST: "Codecast est un projet de France-IOI.",
 };

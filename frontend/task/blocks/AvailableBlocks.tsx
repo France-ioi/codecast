@@ -6,7 +6,11 @@ import {AvailableBlock} from "./AvailableBlock";
 import {AvailableBlockCategory} from "./AvailableBlockCategory";
 import {getMessage} from "../../lang";
 
-export function AvailableBlocks() {
+export interface AvailableBlocksProps {
+    collapsed: boolean,
+}
+
+export function AvailableBlocks(props: AvailableBlocksProps) {
     const context = quickAlgoLibraries.getContext(null, 'main');
     const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector(state, context) : []);
     const showDirectives = useAppSelector(state => state.options.showDirectives);
@@ -44,7 +48,7 @@ export function AvailableBlocks() {
     };
 
     return (
-        <div className={`task-available-blocks-container ${isDragging ? 'is-dragging' : ''}`}>
+        <div className={`task-available-blocks-container ${isDragging ? 'is-dragging' : ''} ${props.collapsed ? 'is-collapsed' : ''}`}>
             <div className="task-available-blocks-header">
                 <h2 className="title">{getMessage('TASK_BLOCKS_TITLE')}</h2>
                 <p className="subtitle">{getMessage('TASK_BLOCKS_SUBTITLE')}</p>
