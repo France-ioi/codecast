@@ -1,7 +1,7 @@
 import {extractLevelSpecific, getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest} from "typed-redux-saga";
+import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, delay} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
@@ -50,7 +50,6 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {
     platformAnswerGraded,
     platformAnswerLoaded,
-    taskGetAnswerEvent,
     taskGradeAnswerEvent
 } from "./platform/actionTypes";
 import {isStepperInterrupting} from "../stepper/selectors";
@@ -250,9 +249,12 @@ function* taskLoadSaga(app: App, action) {
 
     if (oldSagasTasks[app.environment]) {
         // Unload task first
+        console.log('unload task first');
         yield* cancel(oldSagasTasks[app.environment]);
         yield* put(taskUnload());
     }
+
+    console.log('create new context');
 
     let context = quickAlgoLibraries.getContext(null, state.environment);
     if (!context || (action.payload && action.payload.reloadContext)) {
@@ -279,52 +281,66 @@ function* taskLoadSaga(app: App, action) {
 }
 
 function* handleLibrariesEventListenerSaga(app: App) {
-    const stepperContext: StepperContext = {
-        interactAfter: (arg) => {
-            return new Promise((resolve, reject) => {
-                app.dispatch({
-                    type: StepperActionTypes.StepperInteract,
-                    payload: {stepperContext, arg},
-                    meta: {resolve, reject}
+    try {
+        const stepperContext: StepperContext = {
+            interactAfter: (arg) => {
+                return new Promise((resolve, reject) => {
+                    app.dispatch({
+                        type: StepperActionTypes.StepperInteract,
+                        payload: {stepperContext, arg},
+                        meta: {resolve, reject}
+                    });
+                });
+            },
+            dispatch: app.dispatch,
+            quickAlgoContext: quickAlgoLibraries.getContext(null, app.environment),
+        };
+
+        stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
+
+        const listeners = quickAlgoLibraries.getEventListeners();
+        console.log('task listeners', listeners);
+        for (let [eventName, {module, method}] of Object.entries(listeners)) {
+            console.log({eventName, method});
+
+            if ('main' === app.environment) {
+                app.recordApi.on(eventName, function* (addEvent, {payload}) {
+                    yield* call(addEvent, eventName, payload);
+                });
+
+                app.replayApi.on(eventName, function* (replayContext: ReplayContext, event) {
+                    const payload = event[2];
+                    console.log('trigger method ', method, 'for event name ', eventName);
+                    yield* put({type: eventName, payload});
+                });
+            }
+
+            // @ts-ignore
+            yield* takeEvery(eventName, function* ({payload}) {
+                console.log('make payload', payload);
+                const args = payload ? payload : [];
+                const state = yield* select();
+                yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
+                    console.log('exec done, update task state');
+                    const context = quickAlgoLibraries.getContext(null, state.environment);
+                    const contextState = getCurrentImmerState(context.getInnerState());
+                    console.log('get new state', contextState);
+                    app.dispatch(taskUpdateState(contextState));
                 });
             });
-        },
-        dispatch: app.dispatch,
-        quickAlgoContext: quickAlgoLibraries.getContext(null, app.environment),
-    };
-
-    stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
-
-    const listeners = quickAlgoLibraries.getEventListeners();
-    console.log('task listeners', listeners);
-    for (let [eventName, {module, method}] of Object.entries(listeners)) {
-        console.log({eventName, method});
-
-        if ('main' === app.environment) {
-            app.recordApi.on(eventName, function* (addEvent, {payload}) {
-                yield* call(addEvent, eventName, payload);
-            });
-
-            app.replayApi.on(eventName, function* (replayContext: ReplayContext, event) {
-                const payload = event[2];
-                console.log('trigger method ', method, 'for event name ', eventName);
-                yield* put({type: eventName, payload});
-            });
         }
+    } finally {
+        console.log('cancel saga');
+        const listeners = quickAlgoLibraries.getEventListeners();
+        for (let [eventName, {module, method}] of Object.entries(listeners)) {
+            console.log({eventName, method});
 
-        // @ts-ignore
-        yield* takeEvery(eventName, function* ({payload}) {
-            console.log('make payload', payload);
-            const args = payload ? payload : [];
-            const state = yield* select();
-            yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
-                console.log('exec done, update task state');
-                const context = quickAlgoLibraries.getContext(null, state.environment);
-                const contextState = getCurrentImmerState(context.getInnerState());
-                console.log('get new state', contextState);
-                app.dispatch(taskUpdateState(contextState));
-            });
-        });
+            if ('main' === app.environment) {
+                console.log('remove event', eventName);
+                app.recordApi.off(eventName);
+                app.replayApi.off(eventName);
+            }
+        }
     }
 }
 

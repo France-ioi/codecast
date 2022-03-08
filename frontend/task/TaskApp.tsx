@@ -43,6 +43,7 @@ export function TaskApp() {
     const [initialUserCheck, setInitialUserCheck] = useState(false);
     const taskLevels = useAppSelector(state => state.platform.levels);
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const language = useAppSelector(state => state.options.language);
 
     let progress = null;
     let progressMessage = null;
@@ -116,7 +117,7 @@ export function TaskApp() {
     }
 
     return (
-        <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode}`}>
+        <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode}`}>
             <div className="layout-general">
                 <div className={`task-section`}>
                     <div className="task-section-container">
