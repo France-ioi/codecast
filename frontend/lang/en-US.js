@@ -85,6 +85,7 @@ module.exports = {
     MENU_SETTINGS: "Settings",
     MENU_RECORDER: "Recorder",
     MENU_EDIT_RECORDING: "Recording",
+    MENU_EDIT_RECORDING_TITLE: "Recording",
     MENU_ABOUT: "About",
     EXAMPLES_LABEL: "Examples: ",
     EXAMPLES_BUTTON_TITLE: "View list",
