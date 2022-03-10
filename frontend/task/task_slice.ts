@@ -37,6 +37,7 @@ export interface TaskState {
     inputs?: any[],
     contextStrings: any,
     contextIncludeBlocks: any,
+    blocksPanelCollapsed?: boolean,
 }
 
 export interface TaskInputEnteredPayload {
@@ -76,6 +77,7 @@ export const taskInitialState = {
     inputs: [],
     contextStrings: {},
     contextIncludeBlocks: {},
+    blocksPanelCollapsed: false,
 } as TaskState;
 
 export const selectCurrentTest = (state: AppStore) => {
@@ -196,6 +198,9 @@ export const taskSlice = createSlice({
         taskSetContextIncludeBlocks(state: TaskState, action: PayloadAction<any>) {
             state.contextIncludeBlocks = action.payload;
         },
+        taskSetBlocksPanelCollapsed(state: TaskState, action: PayloadAction<boolean>) {
+            state.blocksPanelCollapsed = action.payload;
+        },
     },
 });
 
@@ -222,6 +227,7 @@ export const {
     taskCurrentLevelChange,
     taskSetContextStrings,
     taskSetContextIncludeBlocks,
+    taskSetBlocksPanelCollapsed,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [
@@ -229,6 +235,7 @@ export const taskRecordableActions = [
     'taskSuccessClear',
     'taskInputNeeded',
     'updateCurrentTestId',
+    'taskSetBlocksPanelCollapsed',
 ];
 
 export default taskSlice;

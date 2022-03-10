@@ -1,7 +1,7 @@
 import {extractLevelSpecific, getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, delay, cancelled} from "typed-redux-saga";
+import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, cancelled} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
@@ -20,7 +20,7 @@ import taskSlice, {
     taskInputNeeded,
     taskLoaded,
     taskRecordableActions,
-    taskResetDone, taskSetContextIncludeBlocks, taskSetContextStrings,
+    taskResetDone, taskSetBlocksPanelCollapsed, taskSetContextIncludeBlocks, taskSetContextStrings,
     TaskSubmissionResultPayload,
     taskSuccess,
     taskSuccessClear,
@@ -179,6 +179,9 @@ function* createContext() {
     yield* put(taskSetContextStrings(context.strings));
     if (context.infos && context.infos.includeBlocks) {
         yield* put(taskSetContextIncludeBlocks(context.infos.includeBlocks));
+    }
+    if (context.infos && context.infos.panelCollapsed) {
+        yield* put(taskSetBlocksPanelCollapsed(true));
     }
     context.resetAndReloadState(testData, state);
 }

@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {BufferEditor} from "../../buffers/BufferEditor";
 import {getPlayerState} from "../../player/selectors";
 import {useAppSelector} from "../../hooks";
@@ -7,11 +7,14 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {quickAlgoLibraries} from "../libs/quickalgo_librairies";
 import {getContextBlocksDataSelector} from "../blocks/blocks";
+import {taskSetBlocksPanelCollapsed} from "../task_slice";
+import {useDispatch} from "react-redux";
 
 export function LayoutEditor() {
     const {platform} = useAppSelector(state => state.options);
     const currentTask = useAppSelector(state => state.task.currentTask);
-    const [blocksCollapsed, setBlocksCollapsed] = useState(false);
+    const blocksCollapsed = useAppSelector(state => state.task.blocksPanelCollapsed);
+    const taskLoaded = useAppSelector(state => state.task.loaded);
     let mode;
     switch (platform) {
         case 'arduino':
@@ -29,8 +32,10 @@ export function LayoutEditor() {
     const player = useAppSelector(state => getPlayerState(state));
     const preventInput = player.isPlaying;
 
+    const dispatch = useDispatch();
+
     const collapseBlocks = () => {
-        setBlocksCollapsed(!blocksCollapsed);
+        dispatch(taskSetBlocksPanelCollapsed(!blocksCollapsed));
     };
 
     const context = quickAlgoLibraries.getContext(null, 'main');
