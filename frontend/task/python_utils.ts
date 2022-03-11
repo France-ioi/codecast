@@ -8,7 +8,7 @@ Codecast note: this module comes from https://github.com/France-ioi/bebras-modul
 */
 
 import {getAvailableModules} from "./utils";
-import {getMessage} from "../lang";
+import {getMessage, getMessageChoices} from "../lang";
 import {Block, BlockType, getContextBlocksDataSelector} from "./blocks/blocks";
 import {AppStore} from "../store";
 import {QuickAlgoLibrary} from "./libs/quickalgo_librairies";
@@ -390,8 +390,13 @@ export const checkPythonCode = function (code: string, context: QuickAlgoLibrary
     if (forbidden) {
         throw getMessage('CODE_CONSTRAINTS_FORBIDDEN_KEYWORD').format({keyword: forbidden});
     }
-    if (maxInstructions && pythonCount(code) > maxInstructions) {
-        throw getMessage('CODE_CONSTRAINTS_MAX_INSTRUCTIONS_PYTHON');
+
+    const totalCount = pythonCount(code);
+    if (maxInstructions && totalCount > maxInstructions) {
+        throw getMessageChoices('TASK_BLOCKS_OVER_LIMIT', totalCount - maxInstructions).format({
+            limit: maxInstructions,
+            overLimit: totalCount - maxInstructions,
+        });
     }
 
     const limitations = context.infos.limitedUses ? pythonFindLimited(code, context.infos.limitedUses, context.strings.code) : [];
