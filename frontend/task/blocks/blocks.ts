@@ -1,7 +1,17 @@
-import {AppStoreReplay} from "../../store";
+import {AppStore, AppStoreReplay} from "../../store";
 import {getPythonSpecificBlocks} from "../python_utils";
-import {QuickAlgoLibrary} from "../libs/quickalgo_librairies";
+import {quickAlgoLibraries, QuickAlgoLibrary} from "../libs/quickalgo_librairies";
 import {getCSpecificBlocks} from "../../stepper/views/c/utils";
+import {Bundle} from "../../linker";
+import {call, debounce, delay, put, select, takeEvery, takeLatest} from "typed-redux-saga";
+import {DocumentationActionTypes, DocumentationLoadAction} from "../documentation/doc";
+import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
+import {StepperStatus} from "../../stepper";
+import {ActionTypes, ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
+import {BlocksUsage, taskClearSubmission, taskSetBlocksUsage} from "../task_slice";
+import {useAppSelector} from "../../hooks";
+import {getBufferModel} from "../../buffers/selectors";
+import {checkCompilingCode, getBlocksUsage} from "../utils";
 
 export enum BlockType {
     Function = 'function',
@@ -191,4 +201,48 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
     }))
 
     return availableBlocks;
+}
+
+function* checkSourceSaga() {
+    const state: AppStore = yield* select();
+    const sourceModel = getBufferModel(state, 'source');
+    const currentSource = sourceModel ? sourceModel.document.toString() : null;
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    const currentTask = state.task.currentTask;
+    if (!context || !currentTask) {
+        yield* put(taskSetBlocksUsage(null));
+        return;
+    }
+
+    try {
+        checkCompilingCode(currentSource.trim(), state.options.platform, state, false);
+
+        const currentUsage = getBlocksUsage(currentSource.trim(), state.options.platform);
+        const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
+
+        const blocksUsage: BlocksUsage = {
+            blocksCurrent: currentUsage.blocksCurrent,
+            blocksLimit: maxInstructions,
+            limitations: currentUsage.limitations.filter(limitation => 'uses' === limitation.type),
+        };
+
+        yield* put(taskSetBlocksUsage(blocksUsage));
+    } catch (e) {
+        yield* put(taskSetBlocksUsage({error: e.toString()}));
+    }
+}
+
+export default function (bundle: Bundle) {
+    bundle.addSaga(function* () {
+        yield* debounce(500, BufferActionTypes.BufferEdit, checkSourceSaga);
+        yield* debounce(500, BufferActionTypes.BufferReset, checkSourceSaga);
+
+        yield* takeEvery(BufferActionTypes.BufferInit, function* (action) {
+            // @ts-ignore
+            const {buffer} = action;
+            if ('source' === buffer) {
+                yield* call(checkSourceSaga);
+            }
+        });
+    });
 }

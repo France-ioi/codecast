@@ -283,7 +283,7 @@ export const pythonForbidden = function (code, includeBlocks) {
 
 export const pythonFindLimited = function (code, limitedUses, blockToCode) {
     if (!code || !limitedUses) {
-        return false;
+        return [];
     }
 
     let limitedPointers = {};
@@ -323,6 +323,7 @@ export const pythonFindLimited = function (code, limitedUses, blockToCode) {
         }
     }
 
+    const limitations = [];
     for (let pyKey in limitedPointers) {
         // Keys to ignore
         if (pyKey == 'else') {
@@ -340,7 +341,7 @@ export const pythonFindLimited = function (code, limitedUses, blockToCode) {
             // Check for assign statements
             re = new RegExp('=\\W*' + pyKey + '([^(]|$)');
             if (re.exec(code)) {
-                return {type: 'assign', name: pyKey};
+                limitations.push({type: 'assign', name: pyKey});
             }
 
             re = new RegExp('(^|\\W)' + pyKey + '(\\W|$)', 'g');
@@ -353,27 +354,35 @@ export const pythonFindLimited = function (code, limitedUses, blockToCode) {
                 usesCount[pointer] = 0;
             }
             usesCount[pointer] += count;
-            if (usesCount[pointer] > limitedUses[pointer].nbUses) {
-                // TODO :: i18n ?
-                let name;
-                if (pyKey == 'list_brackets') {
-                    name = 'crochets [ ]';
-                } else if (pyKey == 'dict_brackets') {
-                    name = 'accolades { }';
-                } else if (pyKey == 'math_number') {
-                    name = 'nombres';
-                } else {
-                    name = pyKey;
-                }
-                return {type: 'uses', name: name};
+            // TODO :: i18n ?
+            let name;
+            if (pyKey == 'list_brackets') {
+                name = 'crochets [ ]';
+            } else if (pyKey == 'dict_brackets') {
+                name = 'accolades { }';
+            } else if (pyKey == 'math_number') {
+                name = 'nombres';
+            } else {
+                name = pyKey;
             }
+
+            limitations.push({type: 'uses', name, current: usesCount[pointer], limit: limitedUses[pointer].nbUses});
         }
     }
 
-    return false;
+    return limitations;
 }
 
-export const checkPythonCode = function (code: string, context: QuickAlgoLibrary, state: AppStore) {
+export const getPythonBlocksUsage = function (code: string, context: QuickAlgoLibrary) {
+    const limitations = (context.infos.limitedUses ? pythonFindLimited(code, context.infos.limitedUses, context.strings.code) : []) as {type: string, name: string, current: number, limit: number}[];
+
+    return {
+        blocksCurrent: pythonCount(code),
+        limitations,
+    };
+};
+
+export const checkPythonCode = function (code: string, context: QuickAlgoLibrary, state: AppStore, withEmptyCheck: boolean = true) {
     const includeBlocks = context.infos.includeBlocks;
     const forbidden = pythonForbidden(code, includeBlocks);
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
@@ -385,13 +394,16 @@ export const checkPythonCode = function (code: string, context: QuickAlgoLibrary
         throw getMessage('CODE_CONSTRAINTS_MAX_INSTRUCTIONS_PYTHON');
     }
 
-    const limited = context.infos.limitedUses ? pythonFindLimited(code, context.infos.limitedUses, context.strings.code) : false;
-    if (limited && limited.type == 'uses') {
-        throw getMessage('CODE_CONSTRAINTS_LIMITED_USES').format({keyword: limited.name});
-    } else if (limited && limited.type == 'assign') {
-        throw getMessage('CODE_CONSTRAINTS_LIMITED_ASSIGN').format({keyword: limited.name});
+    const limitations = context.infos.limitedUses ? pythonFindLimited(code, context.infos.limitedUses, context.strings.code) : [];
+    for (let limitation of limitations) {
+        if (limitation.type == 'uses' && limitation.current > limitation.limit) {
+            throw getMessage('CODE_CONSTRAINTS_LIMITED_USES').format({keyword: limitation.name});
+        } else if (limitation.type == 'assign') {
+            throw getMessage('CODE_CONSTRAINTS_LIMITED_ASSIGN').format({keyword: limitation.name});
+        }
     }
-    if (pythonCount(code) <= 0) {
+
+    if (withEmptyCheck && pythonCount(code) <= 0) {
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
 

@@ -31,6 +31,7 @@ import taskSlice, {
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation/doc";
+import BlocksBundle from "./blocks/blocks";
 import PlatformBundle, {
     getTaskAnswerAggregated,
     setPlatformBundleParameters,
@@ -481,6 +482,7 @@ function* getTaskLevel () {
 export default function (bundle: Bundle) {
     bundle.include(DocumentationBundle);
     bundle.include(PlatformBundle);
+    bundle.include(BlocksBundle);
 
     setPlatformBundleParameters({
         getTaskAnswer,
