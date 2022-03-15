@@ -32,7 +32,7 @@ import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation/doc";
 import PlatformBundle, {
-    getTaskAnswerAggregated,
+    getTaskAnswerAggregated, platformApi,
     setPlatformBundleParameters,
     taskGradeAnswerEventSaga
 } from "./platform/platform";
@@ -71,6 +71,13 @@ export enum TaskActionTypes {
     TaskUnload = 'task/unload',
     TaskRunExecution = 'task/runExecution',
 }
+
+export enum TaskPlatformMode {
+    Source = 'source',
+    RecordingProgress = 'recording_progress',
+}
+
+export const recordingProgressSteps = 10;
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
     testId?: number,
@@ -465,9 +472,23 @@ function* contextResetAndReloadStateSaga(innerState = null) {
 
 function* getTaskAnswer () {
     const state: AppStore = yield* select();
-    const buffer = getBufferModel(state, 'source');
+    const taskPlatformMode = getTaskPlatformMode(state);
 
-    return buffer ? buffer.document.toString() : '';
+    if (TaskPlatformMode.RecordingProgress === taskPlatformMode) {
+        return getAudioTimeStep(state);
+    }
+
+    if (TaskPlatformMode.Source === taskPlatformMode) {
+        const buffer = getBufferModel(state, 'source');
+
+        return buffer ? buffer.document.toString() : '';
+    }
+
+    return null;
+}
+
+export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
+    return !state.task.currentTask && state.player.instants ? TaskPlatformMode.RecordingProgress : TaskPlatformMode.Source;
 }
 
 function* getTaskState () {
@@ -476,6 +497,32 @@ function* getTaskState () {
 
 function* getTaskLevel () {
     return yield* select((state: AppStore) => state.task.currentLevel);
+}
+
+function getAudioTimeStep(state: AppStore) {
+    if (state.player && state.player.duration) {
+        return Math.floor(recordingProgressSteps * state.player.audioTime / state.player.duration);
+    }
+
+    return null;
+}
+
+function* watchRecordingProgressSaga(app: App) {
+    if ('main' !== app.environment) {
+        return;
+    }
+
+    console.log('[recording.progress] watching');
+    while (true) {
+        const previousStep = yield* select((state: AppStore) => getAudioTimeStep(state));
+        yield take(PlayerActionTypes.PlayerTick);
+        const nextStep = yield* select((state: AppStore) => getAudioTimeStep(state));
+        const shouldUpdate = previousStep !== nextStep;
+        if (shouldUpdate) {
+            console.log('[recording.progress] update', previousStep, nextStep);
+            yield* call([platformApi, platformApi.validate], 'done');
+        }
+    }
 }
 
 export default function (bundle: Bundle) {
@@ -488,7 +535,9 @@ export default function (bundle: Bundle) {
         getTaskLevel,
         taskChangeLevel,
         taskGrader: taskSubmissionExecutor,
-    })
+    });
+
+    bundle.addSaga(watchRecordingProgressSaga);
 
     bundle.addSaga(function* (app: App) {
         console.log('INIT TASK SAGAS');
@@ -595,7 +644,6 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(platformAnswerGraded.type, function*({payload: {score, message, error}}: ReturnType<typeof platformAnswerGraded>) {
-            log.getLogger('tests').debug('Submission execution over');
             if (score >= 1) {
                 yield* put(taskSuccess(message));
             } else if (error) {

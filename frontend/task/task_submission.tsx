@@ -8,7 +8,7 @@ import {call, delay, put, select} from "typed-redux-saga";
 import {AppStore} from "../store";
 import {Codecast} from "../index";
 import {getBufferModel} from "../buffers/selectors";
-import {TaskActionTypes} from "./index";
+import {getTaskPlatformMode, recordingProgressSteps, TaskActionTypes, TaskPlatformMode} from "./index";
 import log from "loglevel";
 import {stepperDisplayError} from "../stepper/actionTypes";
 import React from "react";
@@ -145,6 +145,14 @@ class TaskSubmissionExecutor {
         const {level, answer, maxScore, minScore} = parameters;
         let lastMessage = null;
         const state: AppStore = yield* select();
+
+        console.log('do grade answer');
+        if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state)) {
+            return {
+                score: minScore + (maxScore - minScore) * Number(answer) / recordingProgressSteps,
+            }
+        }
+
         const environment = state.environment;
         console.log('start grading answer', environment);
         const tests = yield* select(state => state.task.taskTests);

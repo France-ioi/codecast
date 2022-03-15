@@ -266,7 +266,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
         const taskLevels = yield* select((state: AppStore) => state.platform.levels);
         console.log('task levels', taskLevels);
         const {minScore, maxScore, noScore} = yield* call(platformApi.getTaskParams, null, null);
-        if (taskLevels) {
+        if (taskLevels && Object.keys(taskLevels).length) {
             const versionsScore = {};
             const currentLevel = yield getTaskLevel();
             let currentScore = null;
