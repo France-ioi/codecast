@@ -516,7 +516,7 @@ function* watchRecordingProgressSaga(app: App) {
     console.log('[recording.progress] watching');
     while (true) {
         const previousStep = yield* select((state: AppStore) => getAudioTimeStep(state));
-        yield take(PlayerActionTypes.PlayerTick);
+        yield* take(PlayerActionTypes.PlayerTick);
         const nextStep = yield* select((state: AppStore) => getAudioTimeStep(state));
         const shouldUpdate = previousStep !== nextStep;
         if (shouldUpdate) {
