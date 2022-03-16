@@ -100,9 +100,10 @@ declare global {
         FioiBlockly: any,
         getBlocklyHelper: any,
         quickAlgoInterface: any,
-        arrayContains,
+        arrayContains: any,
         mergeIntoArray: any,
         mergeIntoObject: any,
+        debounce: any,
     }
 }
 

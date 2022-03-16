@@ -1,10 +1,13 @@
 import React, { useEffect } from "react";
-import {getBlocklyHelper} from "./blockly";
 import {useAppSelector} from "../../hooks";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
+import {select} from "typed-redux-saga";
+import {extractLevelSpecific} from "../../task/utils";
 
 export const BlocklyEditor = () => {
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const currentLevel = useAppSelector(state => state.task.currentLevel);
+
     const context = quickAlgoLibraries.getContext(null, 'main');
 
     const onLoad = () => {
@@ -13,8 +16,34 @@ export const BlocklyEditor = () => {
             return;
         }
 
-        console.log('load blocky helper');
-        const blocklyHelper = getBlocklyHelper(currentTask, context);
+        // TODO
+        window.quickAlgoInterface = {
+            displayCapacity: () => {},
+            onEditorChange: (a, b) => console.log('on editor change', a, b),
+            resetTestScores: () => {},
+            displayError: (e) => {
+                if (e) {
+                    console.error(e);
+                }
+            },
+            setPlayPause: () => {},
+            updateControlsDisplay: () => {},
+        };
+
+        console.log('[blockly.editor] load blocky helper');
+        const blocklyHelper = window.getBlocklyHelper(currentTask, context);
+        context.blocklyHelper = blocklyHelper;
+        context.onChange = (a, b) => {
+            console.log('on change', a, b);
+        };
+
+
+
+        console.log('[blockly.editor] load context into blockly editor');
+        blocklyHelper.loadContext(context);
+
+        const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
+        blocklyHelper.setIncludeBlocks(curIncludeBlocks);
 
 //         const blocklyOptions = {
 //             readOnly: !!subTask.taskParams.readOnly,
@@ -43,6 +72,7 @@ export const BlocklyEditor = () => {
 //             blocklyOptions.scrollbars = this.context.infos.scrollbars;
 //         }
 
+        console.log('[blockly.editor] load blockly editor');
         blocklyHelper.load('fr', true, 1, {});
     }
 
@@ -52,8 +82,6 @@ export const BlocklyEditor = () => {
 
     return (
         <div className="blockly-editor">
-            Blockly editor
-
             <div id='blocklyContainer'>
                 <div id='blocklyDiv' className='language_blockly'/>
                 <textarea id='program' className='language_javascript' style={{width: '100%', height: '100%', display: 'none'}}/>

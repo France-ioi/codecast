@@ -106,3 +106,65 @@ export function getCurrentImmerState(object) {
         )
     )
 }
+
+// These functions are for retro-compatibility with blockly_block.js
+/// -- START ---
+window.debounce = function(fn, threshold, wait) {
+    let timeout;
+
+    return function debounced() {
+        if (timeout) {
+            if(wait) {
+                clearTimeout(timeout);
+            } else {
+                return;
+            }
+        }
+        function delayed() {
+            fn();
+            timeout = null;
+        }
+        timeout = setTimeout(delayed, threshold || 100);
+    }
+}
+window.arrayContains = function(array, needle) {
+    for (let index in array) {
+        if (needle == array[index]) {
+            return true;
+        }
+    }
+    return false;
+};
+window.mergeIntoArray = function(into, other) {
+    for (let iOther in other) {
+        let intoContains = false;
+
+        for (let iInto in into) {
+            if (other[iOther] == into[iInto]) {
+                intoContains = true;
+            }
+        }
+
+        if (!intoContains) {
+            into.push(other[iOther]);
+        }
+    }
+}
+window.mergeIntoObject = function (into, other) {
+    for (let property in other) {
+        if (other[property] instanceof Array) {
+            if (!(into[property] instanceof Array)) {
+                into[property] = [];
+            }
+            window.mergeIntoArray(into[property], other[property]);
+        }
+        if (other[property] instanceof Object) {
+            if (!(into[property] instanceof Object)) {
+                into[property] = {};
+            }
+            window.mergeIntoObject(into[property], other[property]);
+        }
+        into[property] = other[property];
+    }
+}
+/// -- END ---

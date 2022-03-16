@@ -27,7 +27,7 @@ export function LayoutEditor() {
 
     return (
         <div className="layout-editor">
-            {currentTask && <AvailableBlocks/>}
+            {currentTask && CodecastPlatform.Blockly !== platform && <AvailableBlocks/>}
             {CodecastPlatform.Blockly === platform ?
                 <BlocklyEditor
                 />
