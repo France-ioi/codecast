@@ -150,6 +150,7 @@ class TaskSubmissionExecutor {
         if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state)) {
             return {
                 score: minScore + (maxScore - minScore) * Number(answer) / recordingProgressSteps,
+                message: '',
             }
         }
 
@@ -159,6 +160,7 @@ class TaskSubmissionExecutor {
         if (!tests || 0 === Object.values(tests).length) {
             return {
                 score: 0,
+                message: '',
             };
         }
 
