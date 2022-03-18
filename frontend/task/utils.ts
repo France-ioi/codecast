@@ -81,6 +81,9 @@ export function checkCompilingCode(code, platform: CodecastPlatform, state: AppS
             checkPythonCode(code, context, state);
         }
     }
+    if (CodecastPlatform.Blockly === platform) {
+        // TODO: check blockly
+    }
 }
 
 export function getDefaultSourceCode(platform: CodecastPlatform, environment: string) {

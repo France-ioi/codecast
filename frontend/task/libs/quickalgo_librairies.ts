@@ -86,6 +86,7 @@ window.quickAlgoLoadedLibraries = quickAlgoLibraries;
 export class QuickAlgoLibrary {
     display: boolean;
     infos: any;
+    placeholderBlocks: any;
     nbCodes: number;
     nbNodes: number;
     strings: any;

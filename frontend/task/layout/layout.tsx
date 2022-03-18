@@ -26,6 +26,7 @@ import {App} from "../../index";
 import {PlayerInstant} from "../../player";
 import {getBufferModel} from "../../buffers/selectors";
 import {askConfirmation} from "../../alert";
+import {selectAnswer} from "../selectors";
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -796,10 +797,10 @@ function* layoutSaga({replayApi}: App) {
 
     yield* takeEvery(ActionTypes.LayoutPlayerModeBackToReplay, function* () {
         const state: AppStore = yield* select();
-        const currentSource = getBufferModel(state, 'source').document.toString();
+        const currentSource = selectAnswer(state);
 
         const instant = state.player.current;
-        const instantSource = getBufferModel(instant.state, 'source').document.toString();
+        const instantSource = selectAnswer(instant.state);
 
         console.log('current source', currentSource, instantSource);
 

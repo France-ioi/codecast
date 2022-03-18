@@ -5,6 +5,10 @@
 
 import log from "loglevel";
 import {Block, BlockType} from "../../task/blocks/blocks";
+import AbstractRunner from "../abstract_runner";
+import {StepperContext} from "../api";
+import {StepperState} from "../index";
+import {clearLoadedReferences} from "./analysis/analysis";
 
 if (!window.hasOwnProperty('currentPythonContext')) {
     window.currentPythonContext = null;
@@ -36,7 +40,7 @@ function definePythonNumber() {
 
 const PythonNumber = definePythonNumber();
 
-export default class PythonRunner {
+export default class PythonRunner extends AbstractRunner {
     private context;
     private _debugger;
     private _code = '';
@@ -61,10 +65,36 @@ export default class PythonRunner {
     private _nbActions = 0;
 
     constructor(context) {
+        super();
         this.context = context;
         this.onInput = context.onInput;
         this.onError = context.onError;
         this.onSuccess = context.onSuccess;
+    }
+
+    public needsCompilation(): boolean {
+        return false;
+    }
+
+    public enrichStepperContext(stepperContext: StepperContext, state: StepperState) {
+        if (state.analysis) {
+            stepperContext.state.lastAnalysis = Object.freeze(clearLoadedReferences(state.analysis));
+        }
+    }
+
+    public isStuck(stepperState: StepperState): boolean {
+        return stepperState.isFinished;
+    }
+
+    public async runNewStep(stepperContext: StepperContext) {
+        const result = await window.currentPythonRunner.runStep(stepperContext.quickAlgoCallsExecutor);
+
+        console.log('FINAL INTERACT', result);
+        stepperContext.makeDelay = true;
+        await stepperContext.interactAfter({
+            position: 0,
+        });
+        console.log('AFTER FINAL INTERACT');
     }
 
     private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type) {

@@ -18,17 +18,17 @@ import {call, put, race, select, take, takeEvery, takeLatest} from 'typed-redux-
 import {asyncRequestJson} from '../utils/api';
 
 import {TextEncoder} from "text-encoding-utf-8";
-import {clearStepper} from "./index";
+import {clearStepper, createRunnerSaga} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {getBufferModel} from "../buffers/selectors";
-import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
+import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
-import {App} from "../index";
+import {App, Codecast} from "../index";
 import {checkCompilingCode} from "../task/utils";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {selectAnswer} from "../task/selectors";
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -74,9 +74,7 @@ export default function(bundle: Bundle) {
     bundle.addSaga(function* watchCompile() {
         yield* takeLatest(ActionTypes.Compile, function* () {
             let state: AppStore = yield* select();
-
-            const sourceModel = getBufferModel(state, 'source');
-            const source = sourceModel.document.toString();
+            const source = selectAnswer(state);
             const {platform} = state.options;
 
             yield* put({
@@ -85,7 +83,7 @@ export default function(bundle: Bundle) {
             });
 
             try {
-                checkCompilingCode(source.trim(), platform, state);
+                checkCompilingCode(source, platform, state);
             } catch (e) {
                 yield* put({
                     type: ActionTypes.CompileFailed,
@@ -97,7 +95,7 @@ export default function(bundle: Bundle) {
             }
 
             let response;
-            if (platform === CodecastPlatform.Python) {
+            if (!Codecast.runner.needsCompilation()) {
                 yield* put({
                     type: ActionTypes.CompileSucceeded,
                     platform
@@ -129,6 +127,9 @@ export default function(bundle: Bundle) {
 
         // @ts-ignore
         yield* takeEvery(ActionTypes.CompileWait, function* ({payload: {callback, keepSubmission}}) {
+            // Create a runner for this
+            Codecast.runner = yield* call(createRunnerSaga);
+
             yield* put({type: ActionTypes.Compile, payload: {keepSubmission}});
             const outcome = yield* race({
                 [CompileStatus.Done]: take(ActionTypes.StepperRestart),
@@ -248,7 +249,7 @@ function compileStartedReducer(state: AppStore, action): void {
 }
 
 function compileSucceededReducer(state: AppStore, action): void {
-    if (action.platform === CodecastPlatform.Python) {
+    if (!Codecast.runner.needsCompilation()) {
         state.compile.status = CompileStatus.Done;
         state.stepper.error = null;
     } else {

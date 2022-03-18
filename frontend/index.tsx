@@ -36,6 +36,7 @@ import '@france-ioi/skulpt/dist/debugger.js';
 import {Portal} from "@blueprintjs/core";
 import {DndProvider} from "react-dnd";
 import {CustomDragLayer} from "./task/CustomDragLayer";
+import AbstractRunner from "./stepper/abstract_runner";
 
 setAutoFreeze(true);
 log.setLevel('trace');
@@ -54,6 +55,7 @@ interface Codecast {
     environments: {[key: string]: CodecastEnvironment},
     start?: Function,
     restartSagas?: Function,
+    runner?: AbstractRunner,
 }
 
 export interface App {
@@ -89,6 +91,7 @@ declare global {
         conceptsFill: Function,
         Channel: any,
         DelayFactory: any,
+        Interpreter: any, // JsInterpreter
         RaphaelFactory: any,
         jQuery: any,
         task: any, // task object defined to receive data from platform

@@ -44,6 +44,7 @@ import IoBundle from './io/index';
 import ViewsBundle from './views/index';
 import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle from './python';
+import BlocklyBundle from './js';
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
 import {Directive, parseDirectives} from "./python/directives";
@@ -71,7 +72,11 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonRunner from "./python/python_runner";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
-import {produce} from "immer";
+import {selectAnswer} from "../task/selectors";
+import AbstractRunner from "./abstract_runner";
+import {SagaIterator} from "redux-saga";
+import BlocklyRunner from "./js/blockly_runner";
+import UnixRunner from "./c/unix_runner";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -165,6 +170,24 @@ export const initialStateStepper = {
     synchronizingAnalysis: false,
     error: null as any,
 };
+
+export function* createRunnerSaga(): SagaIterator<AbstractRunner> {
+    const environment = yield* select((state: AppStore) => state.environment);
+    const platform = yield* select((state: AppStore) => state.options.platform);
+    const context = quickAlgoLibraries.getContext(null, environment);
+
+    if (CodecastPlatform.Python === platform) {
+        return new PythonRunner(context);
+    }
+    if (CodecastPlatform.Unix === platform) {
+        return new UnixRunner();
+    }
+    if (CodecastPlatform.Blockly === platform) {
+        return new BlocklyRunner(context, () => {}, {});
+    }
+
+    throw "This platform does not have a runner: " + platform;
+}
 
 export type Stepper = typeof initialStateStepper;
 
@@ -281,6 +304,7 @@ export default function(bundle: Bundle) {
     bundle.include(ViewsBundle);
     bundle.include(ArduinoBundle);
     bundle.include(PythonBundle);
+    bundle.include(BlocklyBundle);
 };
 
 /**
@@ -352,6 +376,8 @@ export function getNodeRange(stepperState?: StepperState) {
         return null;
     }
 
+
+
     if (stepperState.platform === CodecastPlatform.Python) {
         const {functionCallStack} = stepperState.analysis;
         const stackFrame = functionCallStack[functionCallStack.length - 1];
@@ -372,6 +398,9 @@ export function getNodeRange(stepperState?: StepperState) {
                 column: 100,
             }
         };
+    } else if (stepperState.platform === CodecastPlatform.Blockly) {
+        //TODO
+        return null;
     } else {
         const {control} = stepperState.programState;
         if (!control || !control.node) {
@@ -416,7 +445,7 @@ function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}})
         if (platform === CodecastPlatform.Python) {
             stepperState = state.stepper.initialStepperState;
 
-            const source = state.buffers['source'].model.document.toString();
+            const source = selectAnswer(state);
 
             /**
              * Add a last instruction at the end of the code so Skupt will generate a Suspension state
@@ -1238,7 +1267,8 @@ function postLink(app: App) {
                 stepperState.programState = {...stepperState.lastProgramState};
 
                 break;
-            default:
+            case CodecastPlatform.Arduino:
+            case CodecastPlatform.Unix:
                 const syntaxTree = state.compile.syntaxTree;
                 const options = stepperState.options = {
                     memorySize: 0x10000,

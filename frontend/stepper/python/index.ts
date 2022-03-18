@@ -7,10 +7,11 @@ import {AppStore, CodecastPlatform} from "../../store";
 import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
-import {App} from "../../index";
+import {App, Codecast} from "../../index";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
 import {Action} from "redux";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
+import {selectAnswer} from "../../task/selectors";
 
 export default function(bundle: Bundle) {
     const pythonInterpreterChannel = channel<Action>();
@@ -43,7 +44,7 @@ export default function(bundle: Bundle) {
 
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore, environment: string) {
             const {platform} = state.options;
-            const source = state.buffers['source'].model.document.toString();
+            const source = selectAnswer(state);
             const context = quickAlgoLibraries.getContext(null, environment);
 
             console.log('init stepper', environment);
@@ -81,7 +82,7 @@ export default function(bundle: Bundle) {
 
                 const blocksData = getContextBlocksDataSelector(state, context);
 
-                const pythonInterpreter = new PythonRunner(context);
+                const pythonInterpreter = Codecast.runner;
                 pythonInterpreter.initCodes([pythonSource], blocksData);
             }
         });

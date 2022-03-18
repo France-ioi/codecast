@@ -17,6 +17,7 @@ import {
     PlatformTaskGradingParameters,
     PlatformTaskGradingResult,
 } from "./platform/platform";
+import {selectAnswer} from "./selectors";
 
 export const levelScoringData = {
     basic: {
@@ -52,7 +53,7 @@ class TaskSubmissionExecutor {
         let currentSubmission = state.task.currentSubmission;
         const environment = state.environment;
         const level = state.task.currentLevel;
-        const source = getBufferModel(state, 'source').document.toString();
+        const source = selectAnswer(state);
         const tests = yield* select(state => state.task.taskTests);
         if (!tests || 0 === Object.values(tests).length) {
             return;

@@ -17,6 +17,7 @@ import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {createDraft} from "immer";
 import {getCurrentImmerState} from "../task/utils";
 import {ActionTypes as CompileActionTypes} from "./actionTypes";
+import {Codecast} from "../index";
 
 export interface QuickalgoLibraryCall {
     module: string,
@@ -140,15 +141,23 @@ export default function(bundle: Bundle) {
 
         /* Run until in user code */
         const stepperContext = makeContext(stepper, {
-            interactBefore,
-            interactAfter,
+            interactBefore: () => {
+                return Promise.resolve(true);
+            },
+            interactAfter: ({saga}) => {
+                return new Promise((resolve, reject) => {
+                    if (saga) {
+                        return reject(new StepperError('error', 'cannot interact in buildState'));
+                    }
+
+                    resolve(true);
+                });
+            },
             environment,
             executeEffects,
         });
 
-        if (stepperContext.state.platform === CodecastPlatform.Python) {
-            return stepperContext.state;
-        } else {
+        if (stepperContext.state.platform === CodecastPlatform.Unix || stepperContext.state.platform === CodecastPlatform.Arduino) {
             while (!inUserCode(stepperContext.state)) {
                 /* Mutate the stepper context to advance execution by a single step. */
                 const effects = C.step(stepperContext.state.programState);
@@ -156,23 +165,9 @@ export default function(bundle: Bundle) {
                     await executeEffects(stepperContext, effects[Symbol.iterator]());
                 }
             }
-
-            return stepperContext.state;
         }
 
-        function interactBefore() {
-            return Promise.resolve(true);
-        }
-
-        function interactAfter({saga}) {
-            return new Promise((resolve, reject) => {
-                if (saga) {
-                    return reject(new StepperError('error', 'cannot interact in buildState'));
-                }
-
-                resolve(true);
-            });
-        }
+        return stepperContext.state;
     }
 
     async function executeEffects(stepperContext: StepperContext, iterator) {
@@ -211,8 +206,8 @@ export default function(bundle: Bundle) {
     bundle.defineValue('stepperApi', stepperApi);
 }
 
-function getNodeStartRow(stepperState: StepperState) {
-    if (!stepperState) {
+export function getNodeStartRow(stepperState: StepperState) {
+    if (!stepperState || !stepperState.programState) {
         return undefined;
     }
 
@@ -250,6 +245,7 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
         unixNextStepCondition: 0,
         state: {
             ...state,
+            controls: resetControls(state.controls),
         },
         quickAlgoContext: quickAlgoLibraries.getContext(null, environment),
         environment,
@@ -258,26 +254,9 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
 
-    if (state.platform === CodecastPlatform.Python) {
-        return {
-            ...stepperContext,
-            state: {
-                ...stepperContext.state,
-                ...(state.analysis ? {lastAnalysis: Object.freeze(clearLoadedReferences(state.analysis))} : {}),
-                controls: resetControls(state.controls),
-            },
-        };
-    } else {
-        return {
-            ...stepperContext,
-            state: {
-                ...stepperContext.state,
-                programState: C.clearMemoryLog(state.programState),
-                lastProgramState: {...state.programState},
-                controls: resetControls(state.controls),
-            },
-        }
-    }
+    Codecast.runner.enrichStepperContext(stepperContext, state);
+
+    return stepperContext;
 }
 
 function resetControls(controls) {
@@ -297,39 +276,7 @@ async function executeSingleStep(stepperContext: StepperContext) {
         console.log('end wait for progress, continuing');
     }
 
-    if (stepperContext.state.platform === CodecastPlatform.Python) {
-        const result = await window.currentPythonRunner.runStep(stepperContext.quickAlgoCallsExecutor);
-
-        console.log('FINAL INTERACT', result);
-        stepperContext.makeDelay = true;
-        await stepperContext.interactAfter({
-            position: 0,
-        });
-        console.log('AFTER FINAL INTERACT');
-    } else {
-        const effects = C.step(stepperContext.state.programState);
-        await stepperContext.executeEffects(stepperContext, effects[Symbol.iterator]());
-
-        /* Update the current position in source code. */
-        const position = getNodeStartRow(stepperContext.state);
-
-        if (0 === stepperContext.unixNextStepCondition % 3 && C.outOfCurrentStmt(stepperContext.state.programState)) {
-            stepperContext.unixNextStepCondition++;
-        }
-        if (1 === stepperContext.unixNextStepCondition % 3 && C.intoNextStmt(stepperContext.state.programState)) {
-            stepperContext.unixNextStepCondition++;
-        }
-
-        if (stepperContext.unixNextStepCondition % 3 === 2 || isStuck(stepperContext.state)) {
-            console.log('do interact');
-            stepperContext.makeDelay = true;
-            stepperContext.unixNextStepCondition = 0;
-            await stepperContext.interactAfter({
-                position
-            });
-            stepperContext.position = position;
-        }
-    }
+    await Codecast.runner.runNewStep(stepperContext);
 }
 
 async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
@@ -466,13 +413,8 @@ export async function performStep(stepperContext: StepperContext, mode) {
     }
 }
 
-
-function isStuck(stepperState: StepperState): boolean {
-    if (stepperState.platform === CodecastPlatform.Python) {
-        return stepperState.isFinished;
-    } else {
-        return !stepperState.programState.control;
-    }
+export function isStuck(stepperState: StepperState): boolean {
+    return Codecast.runner.isStuck(stepperState);
 }
 
 function inUserCode(stepperState: StepperState) {

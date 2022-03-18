@@ -50,7 +50,6 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {
     platformAnswerGraded,
     platformAnswerLoaded,
-    taskGetAnswerEvent,
     taskGradeAnswerEvent
 } from "./platform/actionTypes";
 import {isStepperInterrupting} from "../stepper/selectors";
@@ -66,6 +65,7 @@ import {
 import log from "loglevel";
 import {getTaskTokenForLevel} from "./platform/task_token";
 import {createAction} from "@reduxjs/toolkit";
+import {selectAnswer} from "./selectors";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -266,8 +266,7 @@ function* taskLoadSaga(app: App, action) {
     });
 
     state = yield* select();
-    const sourceModel = getBufferModel(state, 'source');
-    const source = sourceModel ? sourceModel.document.toString() : null;
+    const source = selectAnswer(state);
     if ((!source || !source.length) && currentTask) {
         const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment);
         console.log('Load default source code', defaultSourceCode);
@@ -358,7 +357,7 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     yield* put(taskSuccessClear({record: false}));
 
     // Save old answer
-    const source = getBufferModel(state, 'source').document.toString();
+    const source = selectAnswer(state);
     yield* put(platformSaveAnswer({level: currentLevel, answer: source}));
 
     // Grade old answer
@@ -444,9 +443,8 @@ function* contextResetAndReloadStateSaga(innerState = null) {
 
 function* getTaskAnswer () {
     const state: AppStore = yield* select();
-    const buffer = getBufferModel(state, 'source');
 
-    return buffer ? buffer.document.toString() : '';
+    return selectAnswer(state) ?? '';
 }
 
 function* getTaskState () {
@@ -504,6 +502,16 @@ export default function (bundle: Bundle) {
                 if (null !== currentSubmission) {
                     yield* put(taskClearSubmission());
                 }
+            }
+        });
+
+        yield* takeEvery([BufferActionTypes.BufferEdit, BufferActionTypes.BufferReset, BufferActionTypes.BufferLoad], function* (action) {
+            // @ts-ignore
+            const {buffer} = action;
+            if (buffer === 'source') {
+                const source = yield* select(state => getBufferModel(state, 'source').document.toString());
+                const currentLevel = yield* select((state: AppStore) => state.task.currentLevel);
+                yield* put(platformSaveAnswer({level: currentLevel, answer: source}));
             }
         });
 
@@ -668,8 +676,7 @@ export default function (bundle: Bundle) {
         app.replayApi.on(taskChangeLevel.type, function* (replayContext: ReplayContext, event) {
             yield* put(taskChangeLevel(event[2]));
             replayContext.addSaga(function* (instant: PlayerInstant) {
-                const sourceModel = getBufferModel(instant.state, 'source');
-                const source = sourceModel ? sourceModel.document.toString() : '';
+                const source = selectAnswer(instant.state);
                 yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: documentModelFromString(source), goToEnd: true});
             })
         });

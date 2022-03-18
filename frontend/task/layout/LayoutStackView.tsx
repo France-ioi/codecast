@@ -13,16 +13,17 @@ export function LayoutStackView() {
 
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
 
+    let stackView = null;
+    if (currentStepperState && currentStepperState.platform === CodecastPlatform.Python) {
+        stackView = <PythonStackView analysis={props.analysis} height={null}/>
+    } else if (currentStepperState && currentStepperState.platform === CodecastPlatform.Unix) {
+        stackView = <StackView/>
+    }
     return (
         <div style={{fontSize: `${zoomLevel}rem`}}>
-            {
-                currentStepperState && currentStepperState.platform === CodecastPlatform.Python
-                    ? <PythonStackView analysis={props.analysis} height={null}/>
-                    : <StackView/>
-            }
+            {stackView}
         </div>
-    )
-
+    );
 }
 
 LayoutStackView.computeDimensions = (width: number, height: number) => {
