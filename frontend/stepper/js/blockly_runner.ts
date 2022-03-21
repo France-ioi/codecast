@@ -1,5 +1,5 @@
 import AbstractRunner from "../abstract_runner";
-import {Stepper} from "../index";
+import {Stepper, StepperState} from "../index";
 import {StepperContext} from "../api";
 
 export default class BlocklyRunner extends AbstractRunner {
@@ -42,6 +42,7 @@ export default class BlocklyRunner extends AbstractRunner {
 
     // First highlightBlock of this run
     private firstHighlight = true;
+    public _isFinished: boolean = false;
 
     constructor(context, messageCallback, languageStrings) {
         super();
@@ -167,12 +168,12 @@ export default class BlocklyRunner extends AbstractRunner {
             this.delayFactory.createTimeout("wait_" + Math.random(), () => {
                 this.stackResetting = false;
                 callback(primitive);
-                this.runSyncBlock();
+                // this.runSyncBlock();
             }, delay);
         } else {
             this.stackCount += 1;
             callback(primitive);
-            this.runSyncBlock();
+            // this.runSyncBlock();
         }
     };
 
@@ -250,13 +251,13 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     initInterpreter(interpreter, scope) {
-        console.log('init interpreter', this);
+        const self = this;
+
         // Wrapper for async functions
         let createAsync = (func) => {
-            return () => {
+            return function () {
                 let args = [];
                 for(let i=0; i < arguments.length-1; i++) {
-                    // TODO :: Maybe JS-Interpreter has a better way of knowing?
                     if(typeof arguments[i] != 'undefined' && arguments[i].isObject) {
                         args.push(interpreter.pseudoToNative(arguments[i]));
                     } else {
@@ -271,12 +272,13 @@ export default class BlocklyRunner extends AbstractRunner {
         let makeHandler = (runner, handler) => {
             // For commands belonging to the "actions" category, we count the
             // number of actions to put a limit on steps without actions
-            return () => {
-                this.nbActions += 1;
-                handler.apply(this, arguments);
+            return function () {
+                self.nbActions += 1;
+                handler.apply(self, arguments);
             };
         };
 
+        //TODO: make them like Python
         for (let objectName in this.context.customBlocks) {
             for (let category in this.context.customBlocks[objectName]) {
                 for (let iBlock in this.context.customBlocks[objectName][category]) {
@@ -300,13 +302,13 @@ export default class BlocklyRunner extends AbstractRunner {
         }
 
         let makeNative = (func) => {
-            return () => {
+            return function() {
                 let value = func.apply(func, arguments);
                 let primitive = undefined;
                 if (value != undefined) {
                     if(typeof value.length != 'undefined') {
                         // It's an array, create a primitive out of it
-                        primitive = this.interpreters[this.context.curNode].nativeToPseudo(value);
+                        primitive = self.interpreters[self.context.curNode].nativeToPseudo(value);
                     } else {
                         primitive = value;
                     }
@@ -327,7 +329,9 @@ export default class BlocklyRunner extends AbstractRunner {
               interpreter.setProperty(scope, objectName + "_" + generator.labelEn, interpreter.createAsyncFunction(generator.fct));
            }
         }*/
-        interpreter.setProperty(scope, "program_end", interpreter.createAsyncFunction(createAsync(this.program_end)));
+        interpreter.setProperty(scope, "program_end", interpreter.createAsyncFunction(createAsync((callback) => {
+            this.program_end(callback);
+        })));
 
         let highlightBlock = (id, callback) => {
             id = id ? id.toString() : '';
@@ -363,6 +367,8 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     program_end(callback) {
+        this._isFinished = true;
+        console.log('program end, is finished = true');
         let curNode = this.context.curNode;
         if(!this.context.programEnded[curNode]) {
             this.context.programEnded[curNode] = true;
@@ -372,6 +378,11 @@ export default class BlocklyRunner extends AbstractRunner {
         }
         this.noDelay(callback);
     };
+
+    public isStuck(stepperState: StepperState): boolean {
+        console.log('check is stuck', stepperState.isFinished);
+        return stepperState.isFinished;
+    }
 
     stop(aboutToPlay) {
         for (let iInterpreter = 0; iInterpreter < this.interpreters.length; iInterpreter++) {
@@ -397,6 +408,7 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     runSyncBlock() {
+        console.log('start run sync block');
         this.resetDone = false;
         this.stepInProgress = true;
         this.oneStepDone = false;
@@ -523,6 +535,7 @@ export default class BlocklyRunner extends AbstractRunner {
         this.context.programEnded = [];
         this.interpreterEnded = [];
         this.context.curSteps = [];
+        this._isFinished = false;
         this.reset(true);
         for (let iInterpreter = 0; iInterpreter < codes.length; iInterpreter++) {
             this.context.curSteps[iInterpreter] = {
@@ -597,9 +610,10 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     public async runNewStep(stepperContext: StepperContext) {
-        const result = this.step();
+        console.log('init new step');
+        this.step();
+        console.log('end new step');
 
-        console.log('FINAL INTERACT', result);
         stepperContext.makeDelay = true;
         await stepperContext.interactAfter({
             position: 0,

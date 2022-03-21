@@ -2,6 +2,9 @@ import {StepperContext} from "./api";
 import {StepperState} from "./index";
 
 export default abstract class AbstractRunner {
+    //TODO: improve this
+    public _isFinished: boolean = false;
+
     public abstract needsCompilation(): boolean;
 
     public enrichStepperContext(stepperContext: StepperContext, state: StepperState): void {

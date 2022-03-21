@@ -65,7 +65,7 @@ import {TermBuffer} from "./io/terminal";
 import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
-import {App} from "../index";
+import {App, Codecast} from "../index";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {selectCurrentTest, taskResetDone} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -321,11 +321,19 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
     }
 
     /* TODO: extend stepper API to add enrichers that run here */
-    if (stepperState.platform === CodecastPlatform.Python) {
+    console.log('make enrich', stepperState, Codecast.runner);
+    if (stepperState.platform === CodecastPlatform.Blockly) {
+        if (context === 'Stepper.Progress') {
+            if (Codecast.runner._isFinished) {
+                console.log('bim is finished');
+                stepperState.isFinished = true;
+            }
+        }
+    } else if (stepperState.platform === CodecastPlatform.Python) {
         if (context === 'Stepper.Progress') {
             // Don't reanalyse after program is finished :
             // keep the last state of the stack and set isFinished state.
-            if (window.currentPythonRunner._isFinished) {
+            if (Codecast.runner._isFinished) {
                 stepperState.isFinished = true;
             } else {
                 console.log('INCREASE STEP NUM TO ', stepperState.analysis.stepNum + 1);
@@ -1263,6 +1271,7 @@ function postLink(app: App) {
 
         switch (platform) {
             case CodecastPlatform.Python:
+            case CodecastPlatform.Blockly:
                 stepperState.lastProgramState = {};
                 stepperState.programState = {...stepperState.lastProgramState};
 

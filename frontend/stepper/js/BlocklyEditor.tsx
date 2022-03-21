@@ -20,6 +20,9 @@ export const BlocklyEditor = () => {
 
         let blocklyHelper;
 
+        window.Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
+        window.Blockly.JavaScript.addReservedWords('highlightBlock');
+
         // TODO
         window.quickAlgoInterface = {
             displayCapacity: () => {},
