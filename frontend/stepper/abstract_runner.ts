@@ -5,7 +5,13 @@ export default abstract class AbstractRunner {
     //TODO: improve this
     public _isFinished: boolean = false;
 
-    public abstract needsCompilation(): boolean;
+    public static needsCompilation(): boolean {
+        return false;
+    }
+
+    public static hasMicroSteps(): boolean {
+        return false;
+    }
 
     public enrichStepperContext(stepperContext: StepperContext, state: StepperState): void {
     };

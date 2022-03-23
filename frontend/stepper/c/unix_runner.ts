@@ -4,7 +4,11 @@ import * as C from '@france-ioi/persistent-c';
 import {StepperState} from "../index";
 
 export default class UnixRunner extends AbstractRunner {
-    public needsCompilation(): boolean {
+    public static needsCompilation(): boolean {
+        return true;
+    }
+
+    public static hasMicroSteps(): boolean {
         return true;
     }
 

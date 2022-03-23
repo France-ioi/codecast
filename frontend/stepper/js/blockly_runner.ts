@@ -56,7 +56,7 @@ export default class BlocklyRunner extends AbstractRunner {
         this.delayFactory = new window.DelayFactory();
     }
 
-    public needsCompilation(): boolean {
+    public static needsCompilation(): boolean {
         return false;
     }
 

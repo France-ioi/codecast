@@ -18,7 +18,7 @@ import {call, put, race, select, take, takeEvery, takeLatest} from 'typed-redux-
 import {asyncRequestJson} from '../utils/api';
 
 import {TextEncoder} from "text-encoding-utf-8";
-import {clearStepper, createRunnerSaga} from "./index";
+import {clearStepper, createRunnerSaga, getRunnerClassFromPlatform} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {AppStore, AppStoreReplay} from "../store";
@@ -95,7 +95,8 @@ export default function(bundle: Bundle) {
             }
 
             let response;
-            if (!Codecast.runner.needsCompilation()) {
+            const runnerClass = getRunnerClassFromPlatform(platform);
+            if (!runnerClass.needsCompilation()) {
                 yield* put({
                     type: ActionTypes.CompileSucceeded,
                     platform
@@ -249,7 +250,9 @@ function compileStartedReducer(state: AppStore, action): void {
 }
 
 function compileSucceededReducer(state: AppStore, action): void {
-    if (!Codecast.runner.needsCompilation()) {
+    const runnerClass = getRunnerClassFromPlatform(state.options.platform);
+
+    if (!runnerClass.needsCompilation()) {
         state.compile.status = CompileStatus.Done;
         state.stepper.error = null;
     } else {

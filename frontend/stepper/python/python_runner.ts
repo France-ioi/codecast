@@ -72,7 +72,7 @@ export default class PythonRunner extends AbstractRunner {
         this.onSuccess = context.onSuccess;
     }
 
-    public needsCompilation(): boolean {
+    public static needsCompilation(): boolean {
         return false;
     }
 

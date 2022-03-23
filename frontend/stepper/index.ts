@@ -175,15 +175,20 @@ export function* createRunnerSaga(): SagaIterator<AbstractRunner> {
     const environment = yield* select((state: AppStore) => state.environment);
     const platform = yield* select((state: AppStore) => state.options.platform);
     const context = quickAlgoLibraries.getContext(null, environment);
+    const runnerClass = getRunnerClassFromPlatform(platform);
 
+    return new runnerClass(context, {});
+}
+
+export function getRunnerClassFromPlatform(platform: CodecastPlatform) {
     if (CodecastPlatform.Python === platform) {
-        return new PythonRunner(context);
+        return PythonRunner;
     }
     if (CodecastPlatform.Unix === platform) {
-        return new UnixRunner();
+        return UnixRunner;
     }
     if (CodecastPlatform.Blockly === platform) {
-        return new BlocklyRunner(context, {});
+        return BlocklyRunner;
     }
 
     throw "This platform does not have a runner: " + platform;
