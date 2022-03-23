@@ -9,6 +9,7 @@ import {quickAlgoLibraries} from "../libs/quickalgo_librairies";
 import {getContextBlocksDataSelector} from "../blocks/blocks";
 import {taskSetBlocksPanelCollapsed} from "../task_slice";
 import {useDispatch} from "react-redux";
+import {BlocksUsage} from "../blocks/BlocksUsage";
 
 export function LayoutEditor() {
     const {platform} = useAppSelector(state => state.options);
@@ -61,6 +62,7 @@ export function LayoutEditor() {
                     hasAutocompletion
                 />
             </div>
+            <BlocksUsage/>
         </div>
     );
 }
