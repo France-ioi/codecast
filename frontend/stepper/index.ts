@@ -183,7 +183,7 @@ export function* createRunnerSaga(): SagaIterator<AbstractRunner> {
         return new UnixRunner();
     }
     if (CodecastPlatform.Blockly === platform) {
-        return new BlocklyRunner(context, () => {}, {});
+        return new BlocklyRunner(context, {});
     }
 
     throw "This platform does not have a runner: " + platform;
@@ -429,7 +429,7 @@ export function getNodeRange(stepperState?: StepperState) {
 }
 
 function stringifyError(error) {
-    if (process.env['NODE_ENV'] === 'production') {
+    if (process.env['NODE_ENV'] === 'production' || typeof error === 'string') {
         return error.toString();
     }
     if (error && error.stack) {

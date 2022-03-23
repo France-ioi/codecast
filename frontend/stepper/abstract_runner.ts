@@ -21,4 +21,8 @@ export default abstract class AbstractRunner {
     public initCodes(codes, availableBlocks = null) {
 
     }
+
+    public onError(e): void {
+        console.error(e);
+    }
 }

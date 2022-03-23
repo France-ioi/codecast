@@ -59,7 +59,7 @@ export default class PythonRunner extends AbstractRunner {
     public _isFinished = false;
     private _printedDuringStep = '';
     private onInput;
-    private onError;
+    public onError;
     private onSuccess;
     private executeQuickAlgoLibraryCall;
     private _nbActions = 0;
@@ -149,7 +149,8 @@ export default class PythonRunner extends AbstractRunner {
                         const result = window.currentPythonContext.runner.executeQuickAlgoLibraryCall(generatorName, blockName, args, resolve);
                         if (result instanceof Promise) result.catch((e) => { window.currentPythonContext.runner._onStepError(e) })
                     } catch (e) {
-                        window.currentPythonContext.runner._onStepError(e)}
+                        window.currentPythonContext.runner._onStepError(e)
+                    }
                 }).then(function (value) {
                     result = value;
                     return value;

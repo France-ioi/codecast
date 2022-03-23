@@ -4,6 +4,7 @@ import {Bundle} from "../../linker";
 import {App, Codecast} from "../../index";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
 import {selectAnswer} from "../../task/selectors";
+import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 
 export default function(bundle: Bundle) {
     bundle.defer(function({stepperApi}: App) {
@@ -28,8 +29,10 @@ export default function(bundle: Bundle) {
                     console.error('Input should go to the printer lib');
                 }
 
+                const blocksData = getContextBlocksDataSelector(state, context);
+
                 const blocklyInterpreter = Codecast.runner;
-                blocklyInterpreter.initCodes(codes);
+                blocklyInterpreter.initCodes(codes, blocksData);
             }
         });
     })

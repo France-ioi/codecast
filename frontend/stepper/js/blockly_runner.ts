@@ -1,6 +1,8 @@
 import AbstractRunner from "../abstract_runner";
 import {Stepper, StepperState} from "../index";
 import {StepperContext} from "../api";
+import {Block, BlockType} from "../../task/blocks/blocks";
+import {Codecast} from "../../index";
 
 export default class BlocklyRunner extends AbstractRunner {
     private context;
@@ -8,6 +10,9 @@ export default class BlocklyRunner extends AbstractRunner {
     private isRunningInterpreter = [];
     private toStopInterpreter = [];
     private interpreterEnded = [];
+    private availableBlocks = [] as Block[];
+    private executeQuickAlgoLibraryCall;
+    private executeOnResolve;
 
     private hasActions = false;
     private nbActions = 0;
@@ -34,7 +39,6 @@ export default class BlocklyRunner extends AbstractRunner {
     // During step-by-step mode
     private stepInProgress = false;
     private stepMode = false;
-    private messageCallback;
     private nextCallback;
 
     // TODO: use our own translation system?
@@ -44,11 +48,10 @@ export default class BlocklyRunner extends AbstractRunner {
     private firstHighlight = true;
     public _isFinished: boolean = false;
 
-    constructor(context, messageCallback, languageStrings) {
+    constructor(context, languageStrings) {
         super();
         this.context = context;
         this.strings = languageStrings;
-        this.messageCallback = messageCallback;
         this.scratchMode = context.blocklyHelper ? context.blocklyHelper.scratchMode : false;
         this.delayFactory = new window.DelayFactory();
     }
@@ -77,6 +80,7 @@ export default class BlocklyRunner extends AbstractRunner {
 
     reportBlockValue(id, value, varName) {
         // Show a popup displaying the value of a block in step-by-step mode
+        console.log('report block value', id, value, varName);
         if (this.context.display && this.stepMode) {
             let displayStr = this.valueToString(value);
             if(value && value.type == 'boolean') {
@@ -141,6 +145,7 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     noDelay(callback, value = null) {
+        console.log('Call no delay with values', callback, value);
         let primitive = undefined;
         if (value !== undefined) {
             if(value && (typeof value.length != 'undefined' ||
@@ -171,82 +176,10 @@ export default class BlocklyRunner extends AbstractRunner {
                 // this.runSyncBlock();
             }, delay);
         } else {
+            console.log('callback primitive', primitive);
             this.stackCount += 1;
             callback(primitive);
             // this.runSyncBlock();
-        }
-    };
-
-    allowSwitch(callback) {
-        // Tells the runner that we can switch the execution to another node
-        let curNode = this.context.curNode;
-        let ready = (readyCallback) => {
-            if(!this.isRunning()) { return; }
-            if(this.waitingOnReadyNode) {
-                this.curNode = curNode;
-                this.waitingOnReadyNode = false;
-                this.context.setCurNode(curNode);
-                readyCallback(callback);
-            } else {
-                this.nodesReady[curNode] = function() {
-                    readyCallback(callback);
-                };
-            }
-        };
-        this.nodesReady[curNode] = false;
-        this.startNextNode(curNode);
-        return ready;
-    };
-
-    selectNextNode(runner, previousNode) {
-        let i = previousNode + 1;
-        if(i >= this.nbNodes) { i = 0; }
-        while(i != previousNode) {
-            if(this.nodesReady[i]) {
-                break;
-            } else {
-                i++;
-            }
-            if(i >= this.nbNodes) { i = 0; }
-        }
-        return i;
-    };
-
-
-    startNextNode(curNode) {
-        // Start the next node when one has been switched from
-        let newNode = this.selectNextNode(this, curNode);
-        let setWaiting = () => {
-            for(let i = 0; i < this.nodesReady.length ; i++) {
-                if(!this.context.programEnded[i]) {
-                    // TODO :: Timeout?
-                    this.waitingOnReadyNode = true;
-                    return;
-                }
-            }
-            // All nodes finished their program
-            // TODO :: better message
-            if(this.nodesReady.length > 1) {
-                throw "all nodes finished (blockly_runner)";
-            }
-        }
-        if(newNode == curNode) {
-            // No ready node
-            setWaiting();
-        } else {
-            this.curNode = newNode;
-            let ready = this.nodesReady[newNode];
-            if(ready) {
-                this.context.setCurNode(newNode);
-                this.nodesReady[newNode] = false;
-                if(typeof ready == 'function') {
-                    ready();
-                } else {
-                    this.runSyncBlock();
-                }
-            } else {
-                setWaiting();
-            }
         }
     };
 
@@ -269,35 +202,54 @@ export default class BlocklyRunner extends AbstractRunner {
             };
         };
 
-        let makeHandler = (runner, handler) => {
+        let makeHandler = (code, generatorName, blockName, category) => {
             // For commands belonging to the "actions" category, we count the
             // number of actions to put a limit on steps without actions
             return function () {
-                self.nbActions += 1;
-                handler.apply(self, arguments);
+                console.log('elements', arguments);
+                if ('actions' === category) {
+                    self.nbActions += 1;
+                }
+
+                let args = [...arguments].slice(0, arguments.length - 1);
+                let resolve = arguments[arguments.length - 1];
+
+                try {
+                    console.log('start quickalgo call', generatorName, blockName, args);
+                    const result = self.executeQuickAlgoLibraryCall(generatorName, blockName, args, (res) => {
+                        console.log('after execution', res);
+                        resolve(res);
+                    });
+                    console.log('the result', result);
+                    if (result instanceof Promise) result.catch((e) => { Codecast.runner.onError(e) });
+
+                    return result;
+                } catch (e) {
+                    window.currentPythonContext.runner._onStepError(e)
+                }
             };
         };
 
-        //TODO: make them like Python
-        for (let objectName in this.context.customBlocks) {
-            for (let category in this.context.customBlocks[objectName]) {
-                for (let iBlock in this.context.customBlocks[objectName][category]) {
-                    let blockInfo = this.context.customBlocks[objectName][category][iBlock];
-                    let code = this.context.strings.code[blockInfo.name];
-                    if (typeof(code) == "undefined") {
-                        code = blockInfo.name;
-                    }
-
-                    let handler;
-                    if(category == 'actions') {
-                        this.hasActions = true;
-                        handler = makeHandler(this, blockInfo.handler);
-                    } else {
-                        handler = blockInfo.handler;
-                    }
-
-                    interpreter.setProperty(scope, code, interpreter.createAsyncFunction(createAsync(handler)));
+        let blocksByGeneratorName: {[generatorName: string]: Block[]} = {};
+        for (let block of this.availableBlocks) {
+            if (block.generatorName) {
+                if (!(block.generatorName in blocksByGeneratorName)) {
+                    blocksByGeneratorName[block.generatorName] = [];
                 }
+                blocksByGeneratorName[block.generatorName].push(block);
+            }
+        }
+
+        for (let [generatorName, blocks] of Object.entries(blocksByGeneratorName)) {
+            for (let block of blocks.filter(block => block.type === BlockType.Function)) {
+                const {code, generatorName, name, category, type} = block;
+                let handler;
+                if (category === 'actions') {
+                    this.hasActions = true;
+                }
+
+                handler = makeHandler(code, generatorName, name, category);
+                interpreter.setProperty(scope, code, interpreter.createAsyncFunction(createAsync(handler)));
             }
         }
 
@@ -323,12 +275,6 @@ export default class BlocklyRunner extends AbstractRunner {
             }
         }
 
-        /*for (let objectName in context.generators) {
-           for (let iGen = 0; iGen < context.generators[objectName].length; iGen++) {
-              let generator = context.generators[objectName][iGen];
-              interpreter.setProperty(scope, objectName + "_" + generator.labelEn, interpreter.createAsyncFunction(generator.fct));
-           }
-        }*/
         interpreter.setProperty(scope, "program_end", interpreter.createAsyncFunction(createAsync((callback) => {
             this.program_end(callback);
         })));
@@ -349,11 +295,16 @@ export default class BlocklyRunner extends AbstractRunner {
             if(this.firstHighlight || !this.stepMode) {
                 this.firstHighlight = false;
                 callback();
-                this.runSyncBlock();
+                // this.runSyncBlock();
             } else {
                 // Interrupt here for step mode, allows to stop before each
                 // instruction
+                console.log('highlight, stop here');
                 this.nextCallback = callback;
+                if (this.executeOnResolve) {
+                    console.log('do execute on resolve');
+                    this.executeOnResolve();
+                }
                 this.stepInProgress = false;
             }
         }
@@ -362,8 +313,9 @@ export default class BlocklyRunner extends AbstractRunner {
         interpreter.setProperty(scope, 'highlightBlock', interpreter.createAsyncFunction(createAsync(highlightBlock)));
 
         // Add an API function to report a value.
-        interpreter.setProperty(scope, 'reportBlockValue', interpreter.createNativeFunction(this.reportBlockValue));
-
+        interpreter.setProperty(scope, 'reportBlockValue', interpreter.createNativeFunction((id, value, varName) => {
+            return this.reportBlockValue(id, value, varName);
+        }));
     };
 
     program_end(callback) {
@@ -407,8 +359,7 @@ export default class BlocklyRunner extends AbstractRunner {
         this.firstHighlight = true;
     };
 
-    runSyncBlock() {
-        console.log('start run sync block');
+    runSyncBlock(reject) {
         this.resetDone = false;
         this.stepInProgress = true;
         this.oneStepDone = false;
@@ -436,10 +387,12 @@ export default class BlocklyRunner extends AbstractRunner {
                     break;
                 }
                 if (!interpreter.step() || this.toStopInterpreter[iInterpreter]) {
+                    console.log('interpreter not running');
                     this.isRunningInterpreter[iInterpreter] = false;
                     return;
                 }
                 if (interpreter.paused_) {
+                    console.log('interpreter paused');
                     this.oneStepDone = !wasPaused;
                     return;
                 }
@@ -464,10 +417,12 @@ export default class BlocklyRunner extends AbstractRunner {
 
             if(this.context.programEnded[iInterpreter] && !this.interpreterEnded[iInterpreter]) {
                 this.interpreterEnded[iInterpreter] = true;
-                this.startNextNode(iInterpreter);
             }
+
+            console.log('end run sync block');
         } catch (e: any) {
             console.error(e);
+            console.log('error during run');
             this.context.onExecutionEnd && this.context.onExecutionEnd();
             this.stepInProgress = false;
 
@@ -510,19 +465,18 @@ export default class BlocklyRunner extends AbstractRunner {
                 }
             }
             this.delayFactory.destroyAll();
-            if(window.quickAlgoInterface) {
-                window.quickAlgoInterface.setPlayPause(false);
-            }
-            setTimeout(() => {
-                this.messageCallback(message);
-            }, 0);
+            console.log('call reject', message);
+            this.executeOnResolve = null;
+            this._isFinished = true;
+            reject(message);
         }
     };
 
-    initCodes(codes) {
+    initCodes(codes, availableBlocks) {
         this.delayFactory.destroyAll();
         this.interpreters = [];
         this.nbNodes = codes.length;
+        this.availableBlocks = availableBlocks;
         this.curNode = 0;
         this.nodesReady = [];
         this.waitingOnReadyNode = false;
@@ -535,8 +489,9 @@ export default class BlocklyRunner extends AbstractRunner {
         this.context.programEnded = [];
         this.interpreterEnded = [];
         this.context.curSteps = [];
+        this.context.callCallback = this.noDelay.bind(this);
         this._isFinished = false;
-        this.reset(true);
+        // this.reset(true);
         for (let iInterpreter = 0; iInterpreter < codes.length; iInterpreter++) {
             this.context.curSteps[iInterpreter] = {
                 total: 0,
@@ -577,41 +532,45 @@ export default class BlocklyRunner extends AbstractRunner {
         }
     };
 
-    runCodes(codes) {
-        if(!codes || !codes.length) { return; }
-        this.initCodes(codes);
-        this.runSyncBlock();
-    };
-
-    run() {
-        this.stepMode = false;
-        if(!this.stepInProgress) {
-            // XXX :: left to avoid breaking tasks in case I'm wrong, but we
-            // should be able to remove this code (it breaks multi-interpreter
-            // step-by-step)
-            if(this.interpreters.length == 1) {
-                this.interpreters[0].paused_ = false;
-            }
-            this.runSyncBlock();
+    continueExecution(resolve, reject) {
+        console.log('continue execution', this.nextCallback, this.executeOnResolve)
+        if (!this.nextCallback && this.executeOnResolve) {
+            console.log('interpreter paused, continue');
+            setTimeout(() => {
+                console.log('start new round');
+                this.runSyncBlock(reject);
+                this.continueExecution(resolve, reject);
+            });
         }
-    };
+    }
 
-    step() {
-        this.stepMode = true;
-        if(!this.stepInProgress) {
-            // XXX :: left to avoid breaking tasks in case I'm wrong, but we
-            // should be able to remove this code (it breaks multi-interpreter
-            // step-by-step)
-            if(this.interpreters.length == 1) {
-                this.interpreters[0].paused_ = false;
+    step(executeQuickAlgoLibraryCall) {
+        return new Promise<void>((resolve, reject) => {
+            this.stepMode = true;
+            this.executeQuickAlgoLibraryCall = executeQuickAlgoLibraryCall;
+            this.executeOnResolve = resolve;
+            console.log('step in progress', this.stepInProgress);
+            if (this.stepInProgress) {
+                resolve();
+                return;
+            } else {
+                if (this.interpreters.length == 1) {
+                    this.interpreters[0].paused_ = false;
+                }
+
+                this.runSyncBlock(reject);
+                console.log('after first run sync');
+                this.continueExecution(resolve, reject);
             }
-            this.runSyncBlock();
-        }
+        }).finally(() => {
+            console.log('make finally');
+            this.executeOnResolve = null;
+        })
     };
 
     public async runNewStep(stepperContext: StepperContext) {
         console.log('init new step');
-        this.step();
+        await this.step(stepperContext.quickAlgoCallsExecutor);
         console.log('end new step');
 
         stepperContext.makeDelay = true;
@@ -620,37 +579,4 @@ export default class BlocklyRunner extends AbstractRunner {
         });
         console.log('AFTER FINAL INTERACT');
     }
-
-    nbRunning() {
-        let nbRunning = 0;
-        for (let iInterpreter = 0; iInterpreter < this.interpreters.length; iInterpreter++) {
-            if (this.isRunningInterpreter[iInterpreter]) {
-                nbRunning++;
-            }
-        }
-        return nbRunning;
-    };
-
-    isRunning() {
-        return this.nbRunning() > 0;
-    };
-
-    reset(aboutToPlay) {
-        if(this.resetDone) { return; }
-        this.context.reset();
-        this.stop(aboutToPlay);
-        this.resetDone = true;
-    };
-
-    signalAction() {
-        // Allows contexts to signal an "action" happened
-        for (let iInterpreter = 0; iInterpreter < this.interpreters.length; iInterpreter++) {
-            this.context.curSteps[iInterpreter].withoutAction = 0;
-        }
-    };
 }
-
-
-// context.runner = runner;
-// context.callCallback = this.noDelay;
-// context.programEnded = [];

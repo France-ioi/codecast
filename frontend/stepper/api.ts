@@ -304,7 +304,7 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
 
         if (!first && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255 && stepperContext.makeDelay) {
             stepperContext.makeDelay = false;
-            await delay(255 - stepperContext.speed);
+            await delay(500 - stepperContext.speed);
         }
 
         await executeSingleStep(stepperContext);
@@ -427,6 +427,7 @@ function inUserCode(stepperState: StepperState) {
 
 export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, reloadState = false) {
     return async (module: string, action: string, args: any[], callback: Function) => {
+        console.log('call quickalgo', module, action, args, callback);
         let libraryCallResult;
         const context = stepperContext.quickAlgoContext;
 
@@ -447,11 +448,16 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
             context.redrawDisplay();
         }
 
+        let callbackArguments = [];
+
         const makeLibraryCall = async () => {
-            let result = context[module][action].apply(context, [...args, callback]);
+            let result = context[module][action].apply(context, [...args, function (a) {
+                callbackArguments = [...arguments];
+            }]);
 
             console.log('MODULE RESULT', result);
             if (!(Symbol.iterator in Object(result))) {
+                console.log('return result');
                 return result;
             }
 
@@ -479,6 +485,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         console.log('before make async library call', {module, action});
         try {
             libraryCallResult = await makeLibraryCall();
+            console.log('after make async lib call', libraryCallResult);
         } catch (e) {
             console.log('context error 2', e);
             await stepperContext.dispatch({
@@ -492,7 +499,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
                 },
             });
         }
-        console.log('after make async library call');
+        console.log('after make async library call', libraryCallResult);
 
         const newStateValue = context.getInnerState();
         const newState = getCurrentImmerState(newStateValue);
@@ -506,7 +513,8 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
             console.log('stepper context after', stepperContext.state.contextState);
         }
 
-        context.waitDelay(callback, libraryCallResult);
+        console.log('call callback arguments', callbackArguments);
+        callback.apply(callback, callbackArguments);
 
         return libraryCallResult;
     }
