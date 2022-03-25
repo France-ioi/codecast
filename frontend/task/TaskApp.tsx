@@ -24,7 +24,7 @@ import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
 import {SubtitlesPane} from "../subtitles/SubtitlesPane";
 import {TaskLevelName} from "./platform/platform_slice";
-import {TaskAbout} from "./TaskAbout";
+import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -42,8 +42,8 @@ export function TaskApp() {
     const audioLoaded = editor.audioLoaded;
     const [initialUserCheck, setInitialUserCheck] = useState(false);
     const taskLevels = useAppSelector(state => state.platform.levels);
-    const currentTask = useAppSelector(state => state.task.currentTask);
     const language = useAppSelector(state => state.options.language);
+    const displayAbout = useAppSelector(state => selectDisplayAbout(state));
 
     let progress = null;
     let progressMessage = null;
@@ -175,7 +175,7 @@ export function TaskApp() {
                     <ProgressBar value={progress} intent={Intent.SUCCESS}/>
                 </div>
 
-                {currentTask && <div style={{margin: '20px 20px 0 20px'}}>
+                {displayAbout && <div style={{margin: '20px 20px 0 20px'}}>
                     <TaskAbout/>
                 </div>}
             </Dialog>

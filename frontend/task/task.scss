@@ -664,4 +664,13 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
 
 .task-license {
   text-align: center;
+
+  img {
+    max-width: 200px;
+    margin: 10px 20px;
+  }
+
+  hr {
+    margin: 1.5rem 0;
+  }
 }
