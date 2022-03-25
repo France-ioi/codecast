@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../../hooks";
 import {getMessage, getMessageChoices} from "../../lang";
 
@@ -6,15 +6,30 @@ export function BlocksUsage() {
     const blocksUsage = useAppSelector(state => state.task.blocksUsage);
     const [collapsed, setCollapsed] = useState(true);
 
-    if (!blocksUsage) {
-        return null;
-    }
-
     const toggleCollapsed = () => {
         if (!blocksUsage.error) {
             setCollapsed(!collapsed);
         }
     };
+
+    const wrapperRef = useRef<HTMLDivElement>();
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target) && !collapsed) {
+                setCollapsed(true);
+            }
+        }
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [wrapperRef, collapsed]);
+
+    if (!blocksUsage) {
+        return null;
+    }
 
     const limitations = blocksUsage.limitations ? blocksUsage.limitations.map(limitation => {
         return getMessageChoices('TASK_BLOCKS_LIMIT_BLOCK', limitation.limit - limitation.current).format({
@@ -24,7 +39,7 @@ export function BlocksUsage() {
     }).join(', ') : null;
 
     return (
-        <div className={`blocks-usage ${blocksUsage.error ? 'has-error' : ''} ${collapsed ? 'is-collapsed' : ''}`} onClick={toggleCollapsed}>
+        <div ref={wrapperRef} className={`blocks-usage ${blocksUsage.error ? 'has-error' : ''} ${collapsed ? 'is-collapsed' : ''}`} onClick={toggleCollapsed}>
             {collapsed ?
                 <React.Fragment>
                     {blocksUsage.error ? blocksUsage.error : <span>

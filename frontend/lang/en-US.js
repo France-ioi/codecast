@@ -225,5 +225,5 @@ module.exports = {
     ABOUT_AUTHORS: "This task was created by:",
     ABOUT_TRANSLATORS: "and translated by:",
     ABOUT_LICENSE: "Licence:",
-    ABOUT_CODECAST: "Codecast is a France-ioi Project",
+    ABOUT_CODECAST: "Codecast is a France-ioi project developed under MIT License",
 };

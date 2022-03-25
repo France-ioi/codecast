@@ -7,7 +7,7 @@ import {EditRecordingDialog} from "../editor/EditRecordingDialog";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
 import {getMessage} from "../lang";
-import {TaskAbout} from "./TaskAbout";
+import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
 
@@ -17,7 +17,7 @@ export function MenuTask() {
     const editorEnabled = useAppSelector(state => state.editor && state.editor.playerReady);
     const screen = useAppSelector(state => state.screen);
     const canRecord = useAppSelector(state => state.options.canRecord);
-    const currentTask = useAppSelector(state => state.task.currentTask);
+    const displayAbout = useAppSelector(state => selectDisplayAbout(state));
 
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
@@ -84,7 +84,7 @@ export function MenuTask() {
                   <Icon icon="edit"/>
                   <span>{getMessage('MENU_EDIT_RECORDING')}</span>
                 </div>}
-                {currentTask && <div className="menu-item" onClick={() => setAboutOpen(!aboutOpen)}>
+                {displayAbout && <div className="menu-item" onClick={() => setAboutOpen(!aboutOpen)}>
                     <Icon icon="help"/>
                     <span>{getMessage('MENU_ABOUT')}</span>
                 </div>}
