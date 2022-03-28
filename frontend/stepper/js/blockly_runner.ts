@@ -13,6 +13,7 @@ export default class BlocklyRunner extends AbstractRunner {
     private availableBlocks = [] as Block[];
     private executeQuickAlgoLibraryCall;
     private executeOnResolve;
+    private currentBlockId = null;
 
     private hasActions = false;
     private nbActions = 0;
@@ -282,14 +283,14 @@ export default class BlocklyRunner extends AbstractRunner {
         let highlightBlock = (id, callback) => {
             id = id ? id.toString() : '';
 
-            if (this.context.display) {
-                try {
-                    if (this.context.infos && !this.context.infos.actionDelay) {
-                        id = null;
-                    }
-                    this.context.blocklyHelper.highlightBlock(id);
-                } catch(e) {}
-            }
+            // if (this.context.display) {
+            //     try {
+            //         if (this.context.infos && !this.context.infos.actionDelay) {
+            //             id = null;
+            //         }
+            //         this.context.blocklyHelper.highlightBlock(id);
+            //     } catch(e) {}
+            // }
 
             // We always execute directly the first highlightBlock
             if(this.firstHighlight || !this.stepMode) {
@@ -301,6 +302,7 @@ export default class BlocklyRunner extends AbstractRunner {
                 // instruction
                 console.log('highlight, stop here');
                 this.nextCallback = callback;
+                this.currentBlockId = id;
                 if (this.executeOnResolve) {
                     console.log('do execute on resolve');
                     this.executeOnResolve();
@@ -473,6 +475,7 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     initCodes(codes, availableBlocks) {
+        console.log('init codes', codes);
         this.delayFactory.destroyAll();
         this.interpreters = [];
         this.nbNodes = codes.length;
@@ -491,6 +494,7 @@ export default class BlocklyRunner extends AbstractRunner {
         this.context.curSteps = [];
         this.context.callCallback = this.noDelay.bind(this);
         this._isFinished = false;
+        this.currentBlockId = [...codes[0].matchAll(/highlightBlock\('(.+)'\)/g)][1][1];
         // this.reset(true);
         for (let iInterpreter = 0; iInterpreter < codes.length; iInterpreter++) {
             this.context.curSteps[iInterpreter] = {
@@ -578,5 +582,9 @@ export default class BlocklyRunner extends AbstractRunner {
             position: 0,
         });
         console.log('AFTER FINAL INTERACT');
+    }
+
+    public getCurrentBlockId(): string {
+        return this.currentBlockId;
     }
 }

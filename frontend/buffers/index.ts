@@ -435,5 +435,6 @@ function addReplayHooks({replayApi}: App) {
 
         const range = getNodeRange(getCurrentStepperState(state));
         yield* put({type: ActionTypes.BufferHighlight, buffer: 'source', range});
+        //TODO: block highlighting
     });
 }

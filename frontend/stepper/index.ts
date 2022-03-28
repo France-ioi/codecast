@@ -145,6 +145,7 @@ const initialStateStepperState = {
     },
     isFinished: false, // Only used for python
     contextState: {} as any,
+    currentBlockId: null, // Only used for Blockly
 };
 
 export type StepperState = typeof initialStateStepperState;
@@ -328,6 +329,8 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
     /* TODO: extend stepper API to add enrichers that run here */
     console.log('make enrich', stepperState, Codecast.runner);
     if (stepperState.platform === CodecastPlatform.Blockly) {
+        stepperState.currentBlockId = (Codecast.runner as BlocklyRunner).getCurrentBlockId();
+        console.log('got block id', stepperState.currentBlockId);
         if (context === 'Stepper.Progress') {
             if (Codecast.runner._isFinished) {
                 console.log('bim is finished');
@@ -388,8 +391,6 @@ export function getNodeRange(stepperState?: StepperState) {
     if (!stepperState) {
         return null;
     }
-
-
 
     if (stepperState.platform === CodecastPlatform.Python) {
         const {functionCallStack} = stepperState.analysis;
@@ -712,10 +713,7 @@ export function* stepperDisabledSaga(action, leaveContext = false) {
         yield* put({type: ActionTypes.StepperTaskCancelled});
     }
 
-    /* Clear source highlighting. */
-    const startPos = {row: 0, column: 0};
-
-    yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
+    yield* call(clearSourceHighlightSaga);
 }
 
 function* stepperInteractBeforeSaga(app: App, {meta: {resolve, reject}}) {
@@ -1000,13 +998,36 @@ function* updateSourceHighlightSaga() {
     const state: AppStore = yield* select();
     const stepperState = state.stepper.currentStepperState;
 
-    const range = getNodeRange(stepperState);
+    if (state.options.platform === CodecastPlatform.Blockly) {
+        if (stepperState.currentBlockId) {
+            const context = quickAlgoLibraries.getContext(null, state.environment);
+            // Fix of a code in blockly_interface.js making double consecutive highlight for the same block not working
+            window.Blockly.selected = null;
+            context.blocklyHelper.highlightBlock(stepperState.currentBlockId);
+        } else {
+            yield* call(clearSourceHighlightSaga);
+        }
+    } else {
+        const range = getNodeRange(stepperState);
 
-    yield* put({
-        type: BufferActionTypes.BufferHighlight,
-        buffer: 'source',
-        range
-    });
+        yield* put({
+            type: BufferActionTypes.BufferHighlight,
+            buffer: 'source',
+            range
+        });
+    }
+}
+
+function* clearSourceHighlightSaga() {
+    const state: AppStore = yield* select();
+
+    if (state.options.platform === CodecastPlatform.Blockly) {
+        const context = quickAlgoLibraries.getContext(null, state.environment);
+        context.blocklyHelper.highlightBlock(null);
+    } else {
+        const startPos = {row: 0, column: 0};
+        yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
+    }
 }
 
 function* stepperSaga(args) {
