@@ -1,7 +1,9 @@
 import {AppStoreReplay} from "../store";
+import {getBufferModel} from "../buffers/selectors";
 
-export function selectAnswer(state: AppStoreReplay) {
-    const currentLevel = state.task.currentLevel;
+export function selectAnswer(state: AppStoreReplay): any {
+    const sourceModel = getBufferModel(state, 'source');
+    console.log('select old answer', sourceModel);
 
-    return currentLevel ? state.platform.levels[currentLevel].answer : null;
+    return sourceModel ? sourceModel.document.getContent() : null;
 }

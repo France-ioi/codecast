@@ -27,7 +27,15 @@ user interaction change the view.
 */
 
 import {call, put, select, takeEvery} from 'typed-redux-saga';
-import {compressRange, Document, documentFromString, emptyDocument, expandRange, Selection} from "./document";
+import {
+    compressRange,
+    Document,
+    documentFromString,
+    emptyDocument,
+    expandRange,
+    ObjectDocument,
+    Selection
+} from "./document";
 
 import 'brace';
 import 'brace/mode/c_cpp';
@@ -94,7 +102,15 @@ const AceThemes = [
     // 'tomorrow_night_eighties', 'twilight', 'vibrant_ink', 'xcode'
 ];
 
-export class DocumentModel {
+export abstract class BufferContentModel {
+    [immerable] = true;
+
+    public document;
+    public selection;
+    public firstVisibleRow: number = 0;
+}
+
+export class DocumentModel extends BufferContentModel {
     [immerable] = true;
 
     constructor(
@@ -102,7 +118,18 @@ export class DocumentModel {
         public selection: Selection = new Selection(),
         public firstVisibleRow: number = 0
     ) {
+        super();
+    }
+}
 
+export class BlockDocumentModel extends BufferContentModel {
+    [immerable] = true;
+
+    constructor(
+        public document: ObjectDocument = new ObjectDocument(null),
+        public selection: string = null,
+    ) {
+        super();
     }
 }
 
@@ -122,9 +149,9 @@ export const documentModelFromString = function (text: string): DocumentModel {
     return new DocumentModel(doc);
 }
 
-function initBufferIfNeeded(state: AppStore, buffer: string) {
+function initBufferIfNeeded(state: AppStore, buffer: string, editor = null) {
     if (!(buffer in state.buffers)) {
-        state.buffers[buffer] = new BufferState();
+        state.buffers[buffer] = editor ? new BufferState(editor.getEmptyModel()) : new BufferState();
     }
 }
 
@@ -143,7 +170,7 @@ export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.BufferInit);
     bundle.addReducer(ActionTypes.BufferInit, (state: AppStore, action) => {
         const {buffer, editor} = action;
-        initBufferIfNeeded(state, buffer);
+        initBufferIfNeeded(state, buffer, editor);
 
         state.buffers[buffer].editor = editor;
     });
@@ -156,6 +183,9 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.BufferEdit);
     bundle.addReducer(ActionTypes.BufferEdit, bufferEditReducer);
+
+    bundle.defineAction(ActionTypes.BufferEditPlain);
+    bundle.addReducer(ActionTypes.BufferEditPlain, bufferEditPlainReducer);
 
     bundle.defineAction(ActionTypes.BufferSelect);
     bundle.addReducer(ActionTypes.BufferSelect, bufferSelectReducer);
@@ -183,6 +213,8 @@ function bufferLoadReducer(state: AppStore, action): void {
 function bufferResetReducer(state: AppStore, action): void {
     const {buffer, model} = action;
     initBufferIfNeeded(state, buffer);
+    if (null === model) {
+    }
     state.buffers[buffer].model = model;
 }
 
@@ -192,6 +224,12 @@ function bufferEditReducer(state: AppStore, action): void {
     const oldDoc = state.buffers[buffer].model.document;
 
     state.buffers[buffer].model.document = oldDoc.applyDelta(delta);
+}
+
+function bufferEditPlainReducer(state: AppStore, action): void {
+    const {buffer, document} = action;
+    initBufferIfNeeded(state, buffer);
+    state.buffers[buffer].model.document = document;
 }
 
 function bufferSelectReducer(state: AppStore, action): void {
@@ -206,12 +244,8 @@ function bufferScrollReducer(state: AppStore, action): void {
     state.buffers[buffer].model.firstVisibleRow = firstVisibleRow;
 }
 
-function loadBufferModel(dump) {
-    return new DocumentModel(documentFromString(dump.document), expandRange(dump.selection), dump.firstVisibleRow || 0);
-}
-
 export function getBufferEditor(state, buffer) {
-    return state.buffers[buffer].editor;
+    return buffer in state.buffers ? state.buffers[buffer].editor : null;
 }
 
 function* buffersSaga() {
@@ -303,15 +337,18 @@ function* buffersSaga() {
     });
 }
 
-function resetEditor(editor, model: DocumentModel, goToEnd?: boolean) {
+function resetEditor(editor, model?: BufferContentModel, goToEnd?: boolean) {
+    console.log('reset editor', editor, model, model.document);
     try {
-        const text = model.document.toString();
-
-        editor.reset(text, model.selection, model.firstVisibleRow);
-
-        if (goToEnd) {
-            editor.goToEnd();
+        if (null === model) {
+            editor.reset(null, null, null);
+        } else {
+            editor.reset(model.document, model.selection, model.firstVisibleRow);
+            if (goToEnd && editor.goToEnd) {
+                editor.goToEnd();
+            }
         }
+
     } catch (error) {
         console.log('failed to update editor view with model', error);
     }
@@ -355,6 +392,10 @@ function addRecordHooks({recordApi}: App) {
         } else {
             yield* call(addEvent, 'buffer.delete', buffer, compressRange(range));
         }
+    });
+    recordApi.on(ActionTypes.BufferEditPlain, function* (addEvent, action) {
+        const {buffer, document} = action;
+        yield* call(addEvent, 'buffer.edit_plain', buffer, document);
     });
     recordApi.on(ActionTypes.BufferScroll, function* (addEvent, action) {
         const {buffer, firstVisibleRow} = action;

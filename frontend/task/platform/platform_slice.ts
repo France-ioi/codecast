@@ -29,6 +29,15 @@ export const platformInitialState = {
     levels: {},
 } as PlatformState;
 
+export const getDefaultTaskLevel = (level: TaskLevelName) => {
+    return {
+        level,
+        answer: null,
+        bestAnswer: null,
+        score: 0,
+    } as TaskLevel;
+};
+
 export const platformSlice = createSlice({
     name: 'platform',
     initialState: platformInitialState,
@@ -66,6 +75,9 @@ export const platformSlice = createSlice({
             return newState;
         },
         platformSaveAnswer(state: PlatformState, action: PayloadAction<{level: TaskLevelName, answer: any}>) {
+            if (!(action.payload.level in state.levels)) {
+                state.levels[action.payload.level] = getDefaultTaskLevel(action.payload.level);
+            }
             const taskLevel = state.levels[action.payload.level];
             taskLevel.answer = action.payload.answer;
         },

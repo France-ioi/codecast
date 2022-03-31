@@ -2,9 +2,10 @@ import React, {useEffect, useState} from "react";
 import {Editor} from "./Editor";
 import {ActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
-import {useResizeDetector} from "react-resize-detector";
 import {withResizeDetector} from "react-resize-detector/build/withPolyfill";
-import {Block, BlockType} from "../task/blocks/blocks";
+import {Block} from "../task/blocks/blocks";
+import {CodecastPlatform} from "../store";
+import {BlocklyEditor} from "../stepper/js/BlocklyEditor";
 
 interface BufferEditorProps {
     readOnly?: boolean,
@@ -17,10 +18,11 @@ interface BufferEditorProps {
     height?: number,
     buffer: any,
     hasAutocompletion?: boolean,
+    platform?: CodecastPlatform,
 }
 
 const _BufferEditor = (props: BufferEditorProps) => {
-    const {buffer, width, height} = props;
+    const {buffer, width, height, platform} = props;
 
     const [prevWidth, setPrevWidth] = useState(0);
     const [prevHeight, setPrevHeight] = useState(0);
@@ -36,6 +38,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
     }, [props.width, props.height])
 
     const onInit = (editor) => {
+        console.log('on init');
         dispatch({type: ActionTypes.BufferInit, buffer, editor})
     };
 
@@ -47,6 +50,10 @@ const _BufferEditor = (props: BufferEditorProps) => {
         dispatch({type: ActionTypes.BufferEdit, buffer, delta});
     };
 
+    const onEditPlain = (document) => {
+        dispatch({type: ActionTypes.BufferEditPlain, buffer, document});
+    };
+
     const onScroll = (firstVisibleRow) => {
         dispatch({type: ActionTypes.BufferScroll, buffer, firstVisibleRow});
     };
@@ -54,6 +61,13 @@ const _BufferEditor = (props: BufferEditorProps) => {
     const onDropBlock = (block: Block, pos) => {
         dispatch({type: ActionTypes.BufferInsertBlock, payload: {buffer, block, pos}});
     };
+
+    if (CodecastPlatform.Blockly === platform) {
+        return <BlocklyEditor
+            onInit={onInit}
+            onEditPlain={onEditPlain}
+        />
+    }
 
     return <Editor
         onInit={onInit}

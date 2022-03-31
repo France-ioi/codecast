@@ -4,6 +4,7 @@ export enum ActionTypes {
     BufferReset = 'Buffer.Reset',
     BufferInsertBlock = 'Buffer.InsertBlock',
     BufferEdit = 'Buffer.Edit',
+    BufferEditPlain = 'Buffer.EditPlain',
     BufferSelect = 'Buffer.Select',
     BufferScroll = 'Buffer.Scroll',
     BufferModelEdit = 'Buffer.Model.Edit',

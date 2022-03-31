@@ -28,21 +28,17 @@ export function LayoutEditor() {
     return (
         <div className="layout-editor">
             {currentTask && CodecastPlatform.Blockly !== platform && <AvailableBlocks/>}
-            {CodecastPlatform.Blockly === platform ?
-                <BlocklyEditor
-                />
-                :
-                <BufferEditor
-                    buffer="source"
-                    readOnly={false}
-                    shield={preventInput}
-                    mode={sourceMode}
-                    theme="textmate"
-                    requiredWidth="100%"
-                    requiredHeight="100%"
-                    hasAutocompletion
-                />
-            }
+            <BufferEditor
+                platform={platform}
+                buffer="source"
+                readOnly={false}
+                shield={preventInput}
+                mode={sourceMode}
+                theme="textmate"
+                requiredWidth="100%"
+                requiredHeight="100%"
+                hasAutocompletion
+            />
         </div>
     );
 }

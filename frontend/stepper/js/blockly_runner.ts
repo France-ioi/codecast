@@ -462,9 +462,6 @@ export default class BlocklyRunner extends AbstractRunner {
             }
             if (this.context.success) {
                 message = "<span style='color:green;font-weight:bold'>" + message + "</span>";
-                if (this.context.linkBack) {
-                    //message += "<br/><span onclick='window.parent.backToList()' style='font-weight:bold;cursor:pointer;text-decoration:underline;color:blue'>Retour à la liste des questions</span>";
-                }
             }
             this.delayFactory.destroyAll();
             console.log('call reject', message);
@@ -474,7 +471,8 @@ export default class BlocklyRunner extends AbstractRunner {
         }
     };
 
-    initCodes(codes, availableBlocks) {
+    initCodes(answer, availableBlocks) {
+        const codes = [this.context.blocklyHelper.getFullCode(answer.blocklyJS)];
         console.log('init codes', codes);
         this.delayFactory.destroyAll();
         this.interpreters = [];
@@ -494,7 +492,8 @@ export default class BlocklyRunner extends AbstractRunner {
         this.context.curSteps = [];
         this.context.callCallback = this.noDelay.bind(this);
         this._isFinished = false;
-        this.currentBlockId = [...codes[0].matchAll(/highlightBlock\('(.+)'\)/g)][1][1];
+        let highlightBlocks = [...codes[0].matchAll(/highlightBlock\('(.+)'\)/g)];
+        this.currentBlockId = highlightBlocks.length > 1 ? highlightBlocks[1][1] : null;
         // this.reset(true);
         for (let iInterpreter = 0; iInterpreter < codes.length; iInterpreter++) {
             this.context.curSteps[iInterpreter] = {

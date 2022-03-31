@@ -999,14 +999,11 @@ function* updateSourceHighlightSaga() {
     const stepperState = state.stepper.currentStepperState;
 
     if (state.options.platform === CodecastPlatform.Blockly) {
-        if (stepperState.currentBlockId) {
-            const context = quickAlgoLibraries.getContext(null, state.environment);
-            // Fix of a code in blockly_interface.js making double consecutive highlight for the same block not working
-            window.Blockly.selected = null;
-            context.blocklyHelper.highlightBlock(stepperState.currentBlockId);
-        } else {
-            yield* call(clearSourceHighlightSaga);
-        }
+        yield* put({
+            type: BufferActionTypes.BufferHighlight,
+            buffer: 'source',
+            range: stepperState.currentBlockId,
+        });
     } else {
         const range = getNodeRange(stepperState);
 
@@ -1022,8 +1019,7 @@ function* clearSourceHighlightSaga() {
     const state: AppStore = yield* select();
 
     if (state.options.platform === CodecastPlatform.Blockly) {
-        const context = quickAlgoLibraries.getContext(null, state.environment);
-        context.blocklyHelper.highlightBlock(null);
+        yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: null});
     } else {
         const startPos = {row: 0, column: 0};
         yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});

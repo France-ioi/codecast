@@ -53,7 +53,7 @@ class TaskSubmissionExecutor {
         let currentSubmission = state.task.currentSubmission;
         const environment = state.environment;
         const level = state.task.currentLevel;
-        const source = selectAnswer(state);
+        const answer = selectAnswer(state);
         const tests = yield* select(state => state.task.taskTests);
         if (!tests || 0 === Object.values(tests).length) {
             return;
@@ -88,7 +88,7 @@ class TaskSubmissionExecutor {
                 yield* delay(0);
             }
             log.getLogger('tests').debug('[Tests] Start new execution for test', testIndex);
-            const payload: TaskSubmissionResultPayload = yield this.makeBackgroundExecution(level, testIndex, source);
+            const payload: TaskSubmissionResultPayload = yield this.makeBackgroundExecution(level, testIndex, answer);
             log.getLogger('tests').debug('[Tests] End execution, result=', payload);
             yield* put(taskSubmissionSetTestResult(payload));
             if ('main' === environment) {
@@ -132,13 +132,13 @@ class TaskSubmissionExecutor {
         }
     }
 
-    *makeBackgroundExecution(level, testId, source) {
+    *makeBackgroundExecution(level, testId, answer) {
         const backgroundStore = Codecast.environments['background'].store;
         const state: AppStore = yield* select();
         const tests = state.task.taskTests.map(test => test.data);
 
         return yield new Promise<TaskSubmissionResultPayload>(resolve => {
-            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, source, resolve}});
+            backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
         });
     }
 

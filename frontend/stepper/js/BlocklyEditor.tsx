@@ -1,63 +1,73 @@
-import React, { useEffect } from "react";
+import React, {useEffect} from "react";
 import {useAppSelector} from "../../hooks";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
-import {extractLevelSpecific} from "../../task/utils";
-import {useDispatch} from "react-redux";
-import {platformSaveAnswer} from "../../task/platform/platform_slice";
+import {ObjectDocument} from "../../buffers/document";
+import {BlockDocumentModel} from "../../buffers";
 
-export const BlocklyEditor = () => {
+export interface BlocklyEditorProps {
+    onInit: Function,
+    onEditPlain: Function,
+}
+
+export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
+    const contextId = useAppSelector(state => state.task.contextId);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
 
-    const dispatch = useDispatch();
+    const reset = (value, selection, firstVisibleRow) => {
+        console.log('[blockly.editor] reset', value);
+
+        if (null === value.getContent()) {
+            let defaultBlockly = context.blocklyHelper.getDefaultContent();
+            console.log('get default', defaultBlockly);
+            context.blocklyHelper.programs = [{javascript:"", blockly: defaultBlockly, blocklyJS: ""}];
+            context.blocklyHelper.languages[0] = "blockly";
+        } else {
+            context.blocklyHelper.programs[0].blockly = value.getContent().blockly;
+            context.blocklyHelper.languages[0] = "blockly";
+        }
+
+        console.log('imported content', context.blocklyHelper.programs[0].blockly);
+        context.blocklyHelper.loadPrograms();
+        // context.blocklyHelper.loadPlayer(that.player);
+    };
+
+    const highlight = (range) => {
+        console.log('[blockly.editor] highlight', range);
+        // Fix of a code in blockly_interface.js making double consecutive highlight for the same block not working
+        window.Blockly.selected = null;
+
+        context.blocklyHelper.highlightBlock(range);
+    };
+
+    const resize = () => {
+        console.log('[blockly.editor] resize');
+    };
 
     const onLoad = () => {
         if (!currentTask || !context) {
+            console.log('[blockly.editor] load no data');
             return;
         }
 
-        let blocklyHelper;
+        let loaded = false;
 
-        window.Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
-        window.Blockly.JavaScript.addReservedWords('highlightBlock');
+        console.log('[blockly.editor] load with data', context.infos.includeBlocks);
 
-        // TODO
-        window.quickAlgoInterface = {
-            displayCapacity: () => {},
-            onEditorChange: (a, b) => {
-                console.log('on editor change', a, b, blocklyHelper.languages);
-                if (blocklyHelper.languages && blocklyHelper.languages.length) {
-                    blocklyHelper.savePrograms();
-                    const answer = blocklyHelper.getAllCodes();
-                    console.log('new value', answer);
-                    dispatch(platformSaveAnswer({level: currentLevel, answer}));
-                }
-            },
-            resetTestScores: () => {},
-            displayError: (e) => {
-                if (e) {
-                    console.error(e);
-                }
-            },
-            setPlayPause: () => {},
-            updateControlsDisplay: () => {},
-            onResize: () => {},
+        window.quickAlgoInterface.onEditorChange = () => {
+            console.log('on editor change');
+            if (blocklyHelper.languages && blocklyHelper.languages.length && loaded) {
+                blocklyHelper.savePrograms();
+                const answer = {...blocklyHelper.programs[0]};
+                const document = new ObjectDocument(answer);
+                console.log('new value', answer);
+                props.onEditPlain(document);
+            }
         };
 
-        console.log('[blockly.editor] load blocky helper', currentTask);
-        blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
-        context.blocklyHelper = blocklyHelper;
-        context.onChange = (a, b) => {
-            // console.log('on change', a, b);
-        };
-
-        console.log('[blockly.editor] load context into blockly editor');
-        blocklyHelper.loadContext(context);
-
-        const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
-        blocklyHelper.setIncludeBlocks(curIncludeBlocks);
+        const blocklyHelper = context.blocklyHelper;
 
         const blocklyOptions = {
             // readOnly: !!subTask.taskParams.readOnly,
@@ -90,11 +100,41 @@ export const BlocklyEditor = () => {
         console.log('[blockly.editor] load blockly editor');
         //TODO: handle i18n
         blocklyHelper.load('fr', true, 1, blocklyOptions);
+
+        if (typeof props.onInit === 'function') {
+            const api = {
+                reset,
+                // applyDeltas,
+                // setSelection: doSetSelection,
+                // focus,
+                // scrollToLine,
+                // getSelectionRange,
+                highlight,
+                resize,
+                // goToEnd,
+                // insert,
+                // insertSnippet,
+                getEmptyModel() {
+                    return new BlockDocumentModel();
+                },
+            };
+            props.onInit(api);
+        }
+
+        loaded = true;
     }
 
     useEffect(() => {
         onLoad();
-    }, [currentTask, context, currentLevel]);
+
+        return () => {
+            console.log('[blockly.editor] unload');
+
+            if (context && context.blocklyHelper) {
+                context.blocklyHelper.unload();
+            }
+        };
+    }, [currentTask, currentLevel, contextId]);
 
     return (
         <div className="blockly-editor">

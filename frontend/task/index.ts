@@ -5,7 +5,7 @@ import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest} from 
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
-import {AppStore} from "../store";
+import {AppStore, CodecastPlatform} from "../store";
 import {quickAlgoLibraries, QuickAlgoLibrary} from "./libs/quickalgo_librairies";
 import stringify from 'json-stable-stringify-without-jsonify';
 import taskSlice, {
@@ -15,7 +15,7 @@ import taskSlice, {
     selectCurrentTest,
     taskAddInput,
     taskClearSubmission,
-    taskCurrentLevelChange,
+    taskCurrentLevelChange, taskIncreaseContextId,
     taskInputEntered,
     taskInputNeeded,
     taskLoaded,
@@ -50,12 +50,14 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {
     platformAnswerGraded,
     platformAnswerLoaded,
-    taskGradeAnswerEvent
+    platformTaskRefresh,
+    taskGradeAnswerEvent,
 } from "./platform/actionTypes";
 import {isStepperInterrupting} from "../stepper/selectors";
 import {getBufferModel} from "../buffers/selectors";
-import {documentModelFromString} from "../buffers";
+import {BlockDocumentModel, DocumentModel, documentModelFromString} from "../buffers";
 import {
+    getDefaultTaskLevel,
     platformSaveAnswer,
     platformSetTaskLevels, platformTokenUpdated,
     TaskLevel,
@@ -66,6 +68,8 @@ import log from "loglevel";
 import {getTaskTokenForLevel} from "./platform/task_token";
 import {createAction} from "@reduxjs/toolkit";
 import {selectAnswer} from "./selectors";
+import {loadBlocklyHelperSaga} from "../stepper/js";
+import {ObjectDocument} from "../buffers/document";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -173,10 +177,15 @@ function* createContext() {
         }
     }
 
+    if (CodecastPlatform.Blockly === state.options.platform && currentTask) {
+        yield* call(loadBlocklyHelperSaga, contextLib, currentLevel);
+    }
+
     const testData = selectCurrentTest(state);
     console.log('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     console.log('Created context', context);
+    yield* put(taskIncreaseContextId());
     yield* put(taskSetContextStrings(context.strings));
     if (context.infos && context.infos.includeBlocks) {
         yield* put(taskSetContextIncludeBlocks(context.infos.includeBlocks));
@@ -234,12 +243,7 @@ function* taskLoadSaga(app: App, action) {
                     continue;
                 }
 
-                levels[level] = {
-                    level,
-                    answer: null,
-                    bestAnswer: null,
-                    score: 0,
-                } as TaskLevel;
+                levels[level] = getDefaultTaskLevel(level as TaskLevelName);
             }
 
             yield* put(platformSetTaskLevels(levels));
@@ -269,8 +273,10 @@ function* taskLoadSaga(app: App, action) {
     const source = selectAnswer(state);
     if ((!source || !source.length) && currentTask) {
         const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment);
-        console.log('Load default source code', defaultSourceCode);
-        yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: documentModelFromString(defaultSourceCode), goToEnd: true});
+        if (null !== defaultSourceCode) {
+            console.log('Load default source code', defaultSourceCode);
+            yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: documentModelFromString(defaultSourceCode), goToEnd: true});
+        }
     }
 
     console.log('task loaded', app.environment);
@@ -329,10 +335,10 @@ function* handleLibrariesEventListenerSaga(app: App) {
 
 function* taskRunExecution(app: App, {type, payload}) {
     console.log('START RUN EXECUTION', type, payload);
-    const {level, testId, tests, options, source, resolve} = payload;
+    const {level, testId, tests, options, answer, resolve} = payload;
 
     yield* put({type: AppActionTypes.AppInit, payload: {options: {...options}, environment: 'background'}});
-    yield* put({type: BufferActionTypes.BufferLoad, buffer: 'source', text: source});
+    yield* put(platformSaveAnswer({level, answer}));
     yield* put(taskLoad({testId, level, tests, reloadContext: true}));
     yield* take(taskLoaded.type);
 
@@ -357,8 +363,8 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     yield* put(taskSuccessClear({record: false}));
 
     // Save old answer
-    const source = selectAnswer(state);
-    yield* put(platformSaveAnswer({level: currentLevel, answer: source}));
+    const oldAnswer = selectAnswer(state);
+    yield* put(platformSaveAnswer({level: currentLevel, answer: oldAnswer}));
 
     // Grade old answer
     const answer = stringify(yield* getTaskAnswerAggregated());
@@ -374,10 +380,11 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
 
     // Reload answer
     let newLevelAnswer = yield* select((state: AppStore) => state.platform.levels[newLevel].answer);
-    if (!newLevelAnswer || !newLevelAnswer.length) {
+    console.log('new level answer', newLevelAnswer);
+    if (!newLevelAnswer || (typeof newLevelAnswer === 'string' && !newLevelAnswer.length)) {
         newLevelAnswer = getDefaultSourceCode(state.options.platform, state.environment);
     }
-    yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: documentModelFromString(newLevelAnswer), goToEnd: true});
+    yield* put(platformAnswerLoaded(newLevelAnswer));
 
     const currentTask = state.task.currentTask;
     const tests = currentTask.data[newLevel];
@@ -455,6 +462,19 @@ function* getTaskLevel () {
     return yield* select((state: AppStore) => state.task.currentLevel);
 }
 
+function getModelFromAnswer(answer: any, platform: CodecastPlatform) {
+    if (null === answer) {
+        return CodecastPlatform.Blockly === platform ? new BlockDocumentModel() : new DocumentModel();
+    }
+
+    console.log('get model from answer', answer);
+    if (typeof answer === 'object' && answer.blocklyJS) {
+        return new BlockDocumentModel(new ObjectDocument(answer));
+    }
+
+    return documentModelFromString(answer);
+}
+
 export default function (bundle: Bundle) {
     bundle.include(DocumentationBundle);
     bundle.include(PlatformBundle);
@@ -487,7 +507,7 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(BufferActionTypes.BufferEdit, function* (action) {
+        yield* takeEvery([BufferActionTypes.BufferEdit, BufferActionTypes.BufferEditPlain], function* (action) {
             // @ts-ignore
             const {buffer} = action;
             if (buffer === 'source') {
@@ -505,15 +525,15 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery([BufferActionTypes.BufferEdit, BufferActionTypes.BufferReset, BufferActionTypes.BufferLoad], function* (action) {
-            // @ts-ignore
-            const {buffer} = action;
-            if (buffer === 'source') {
-                const source = yield* select(state => getBufferModel(state, 'source').document.toString());
-                const currentLevel = yield* select((state: AppStore) => state.task.currentLevel);
-                yield* put(platformSaveAnswer({level: currentLevel, answer: source}));
-            }
-        });
+        // yield* takeEvery([BufferActionTypes.BufferEdit, BufferActionTypes.BufferReset, BufferActionTypes.BufferLoad], function* (action) {
+        //     // @ts-ignore
+        //     const {buffer} = action;
+        //     if (buffer === 'source') {
+        //         const source = yield* select(state => getBufferModel(state, 'source').document.toString());
+        //         const currentLevel = yield* select((state: AppStore) => state.task.currentLevel);
+        //         yield* put(platformSaveAnswer({level: currentLevel, answer: source}));
+        //     }
+        // });
 
         // @ts-ignore
         yield* takeEvery(StepperActionTypes.StepperExecutionSuccess, function* ({payload}) {
@@ -592,7 +612,8 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery(platformAnswerLoaded.type, function*({payload: {answer}}: ReturnType<typeof platformAnswerLoaded>) {
             console.log('Platform answer loaded', answer);
-            yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: documentModelFromString(answer), goToEnd: true});
+            const platform = yield* select((state: AppStore) => state.options.platform);
+            yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: getModelFromAnswer(answer, platform), goToEnd: true});
         });
     });
 
@@ -676,8 +697,9 @@ export default function (bundle: Bundle) {
         app.replayApi.on(taskChangeLevel.type, function* (replayContext: ReplayContext, event) {
             yield* put(taskChangeLevel(event[2]));
             replayContext.addSaga(function* (instant: PlayerInstant) {
-                const source = selectAnswer(instant.state);
-                yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: documentModelFromString(source), goToEnd: true});
+                const answer = selectAnswer(instant.state);
+                const platform = instant.state.options.platform;
+                yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: getModelFromAnswer(answer, platform), goToEnd: true});
             })
         });
 

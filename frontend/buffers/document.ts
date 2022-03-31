@@ -44,6 +44,10 @@ export class Document {
         return this.lines.toJS().join('\n');
     }
 
+    getContent(): string {
+        return this.toString();
+    }
+
     applyDelta(delta): Document {
         const docLines = this.lines;
         const row = delta.start.row;
@@ -99,6 +103,18 @@ export class Document {
         const column = this.lines.get(row).length;
 
         return {row, column};
+    }
+}
+
+export class ObjectDocument {
+    [immerable] = true;
+
+    constructor(public content: any) {
+        this.content = content;
+    }
+
+    getContent(): string {
+        return this.content;
     }
 }
 
