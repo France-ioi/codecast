@@ -106,7 +106,7 @@ export default function(bundle: Bundle) {
 
         stepperApi.onEffect('write', function* writeEffect(stepperContext: StepperContext, text) {
             const executor = stepperContext.quickAlgoCallsExecutor;
-            const executorPromise = executor('printer', 'print_end', [text], () => {});
+            const executorPromise = executor('printer', 'print_end', [text]);
             yield ['promise', executorPromise];
         });
 
@@ -154,7 +154,7 @@ export default function(bundle: Bundle) {
 
         stepperApi.onEffect('ungets', function* ungetsHandler(stepperContext: StepperContext, count) {
             const executor = stepperContext.quickAlgoCallsExecutor;
-            const executorPromise = executor('printer', 'ungets', [count], () => {});
+            const executorPromise = executor('printer', 'ungets', [count]);
             yield ['promise', executorPromise];
         });
     });

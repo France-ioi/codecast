@@ -426,7 +426,7 @@ function inUserCode(stepperState: StepperState) {
 }
 
 export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, reloadState = false) {
-    return async (module: string, action: string, args: any[], callback: Function) => {
+    return async (module: string, action: string, args: any[], callback?: Function) => {
         console.log('call quickalgo', module, action, args, callback);
         let libraryCallResult;
         const context = stepperContext.quickAlgoContext;
@@ -448,12 +448,17 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
             context.redrawDisplay();
         }
 
-        let callbackArguments = [];
 
         const makeLibraryCall = async () => {
+            let callbackArguments = [];
             let result = context[module][action].apply(context, [...args, function (a) {
+                console.log('receive callback', arguments);
                 callbackArguments = [...arguments];
             }]);
+            if (callbackArguments.length && !result) {
+                result = callbackArguments[0];
+                console.log('set result', result);
+            }
 
             console.log('MODULE RESULT', result);
             if (!(Symbol.iterator in Object(result))) {
@@ -513,8 +518,22 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
             console.log('stepper context after', stepperContext.state.contextState);
         }
 
-        console.log('call callback arguments', callbackArguments);
-        callback.apply(callback, callbackArguments);
+        // let primitiveValue;
+        // if (libraryCallResult) {
+        //     context.waitDelay((primitive) => {
+        //         console.log('receive primitive value', primitive);
+        //         primitiveValue = primitive;
+        //
+        //
+        //     }, libraryCallResult);
+        // }
+
+        if (callback) {
+            console.log('call callback arguments', libraryCallResult);
+            callback(libraryCallResult);
+        }
+
+        console.log('return library call result', libraryCallResult);
 
         return libraryCallResult;
     }

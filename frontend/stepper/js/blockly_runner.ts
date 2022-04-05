@@ -11,7 +11,7 @@ export default class BlocklyRunner extends AbstractRunner {
     private toStopInterpreter = [];
     private interpreterEnded = [];
     private availableBlocks = [] as Block[];
-    private executeQuickAlgoLibraryCall;
+    private quickAlgoCallsExecutor;
     private executeOnResolve;
     private currentBlockId = null;
 
@@ -217,16 +217,17 @@ export default class BlocklyRunner extends AbstractRunner {
 
                 try {
                     console.log('start quickalgo call', generatorName, blockName, args);
-                    const result = self.executeQuickAlgoLibraryCall(generatorName, blockName, args, (res) => {
+                    const result = self.quickAlgoCallsExecutor(generatorName, blockName, args, (res) => {
                         console.log('after execution', res);
-                        resolve(res);
                     });
                     console.log('the result', result);
-                    if (result instanceof Promise) result.catch((e) => { Codecast.runner.onError(e) });
+                    if (result instanceof Promise) {
+                        result.then(resolve).catch((e) => { Codecast.runner.onError(e) })
+                    }
 
                     return result;
                 } catch (e) {
-                    window.currentPythonContext.runner._onStepError(e)
+                    Codecast.runner.onError(e);
                 }
             };
         };
@@ -553,10 +554,10 @@ export default class BlocklyRunner extends AbstractRunner {
         }
     }
 
-    step(executeQuickAlgoLibraryCall) {
+    step(quickAlgoCallsExecutor) {
         return new Promise<void>((resolve, reject) => {
             this.stepMode = true;
-            this.executeQuickAlgoLibraryCall = executeQuickAlgoLibraryCall;
+            this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
             this.executeOnResolve = resolve;
             console.log('step in progress', this.stepInProgress);
             if (this.stepInProgress) {

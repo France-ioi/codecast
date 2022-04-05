@@ -523,9 +523,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                     console.log('start call execution', quickalgoCall);
 
                     // @ts-ignore
-                    yield* spawn(executor, module, action, args, () => {
-                        console.log('execution over');
-                    });
+                    yield* spawn(executor, module, action, args);
                 }
             }
         }

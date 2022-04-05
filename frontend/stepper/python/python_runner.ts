@@ -9,6 +9,7 @@ import AbstractRunner from "../abstract_runner";
 import {StepperContext} from "../api";
 import {StepperState} from "../index";
 import {clearLoadedReferences} from "./analysis/analysis";
+import {Codecast} from "../../index";
 
 if (!window.hasOwnProperty('currentPythonContext')) {
     window.currentPythonContext = null;
@@ -59,7 +60,7 @@ export default class PythonRunner extends AbstractRunner {
     public _isFinished = false;
     private _printedDuringStep = '';
     public onError;
-    private executeQuickAlgoLibraryCall;
+    private quickAlgoCallsExecutor;
     private _nbActions = 0;
 
     constructor(context) {
@@ -113,8 +114,10 @@ export default class PythonRunner extends AbstractRunner {
         }
 
         handler += "\n\ttry {";
-        handler += '\n\t\tconst result = currentPythonContext.runner.executeQuickAlgoLibraryCall("' + generatorName + '", "' + blockName + '", args, resolve);';
-        handler += '\n\t\tif (result instanceof Promise) result.catch((e) => { currentPythonContext.runner._onStepError(e) })';
+        handler += '\n\t\tconst result = currentPythonContext.runner.quickAlgoCallsExecutor("' + generatorName + '", "' + blockName + '", args);';
+        handler += '\n\t\tif (result instanceof Promise) {';
+        handler += '\n\t\t\tresult.then(resolve).catch((e) => { window.currentPythonContext.runner._onStepError(e) })';
+        handler += '\n\t\t}';
         handler += "\n\t} catch (e) {";
         handler += "\n\t\tcurrentPythonContext.runner._onStepError(e)}";
         handler += '\n\t}).then(function (value) {\nresult = value;\nreturn value;\n })};';
@@ -142,8 +145,10 @@ export default class PythonRunner extends AbstractRunner {
                     }
 
                     try {
-                        const result = window.currentPythonContext.runner.executeQuickAlgoLibraryCall(generatorName, blockName, args, resolve);
-                        if (result instanceof Promise) result.catch((e) => { window.currentPythonContext.runner._onStepError(e) })
+                        const result = window.currentPythonContext.runner.quickAlgoCallsExecutor(generatorName, blockName, args);
+                        if (result instanceof Promise) {
+                            result.then(resolve).catch((e) => { window.currentPythonContext.runner._onStepError(e) })
+                        }
                     } catch (e) {
                         window.currentPythonContext.runner._onStepError(e)
                     }
@@ -493,8 +498,8 @@ export default class PythonRunner extends AbstractRunner {
         this._isRunning = true;
     }
 
-    runStep(executeQuickAlgoLibraryCall) {
-        this.executeQuickAlgoLibraryCall = executeQuickAlgoLibraryCall;
+    runStep(quickAlgoCallsExecutor) {
+        this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
         return new Promise((resolve, reject) => {
             this.stepMode = true;
             this._printedDuringStep = '';
