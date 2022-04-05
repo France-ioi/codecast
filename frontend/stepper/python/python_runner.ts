@@ -58,18 +58,14 @@ export default class PythonRunner extends AbstractRunner {
     private availableBlocks = [] as Block[];
     public _isFinished = false;
     private _printedDuringStep = '';
-    private onInput;
     public onError;
-    private onSuccess;
     private executeQuickAlgoLibraryCall;
     private _nbActions = 0;
 
     constructor(context) {
         super();
         this.context = context;
-        this.onInput = context.onInput;
         this.onError = context.onError;
-        this.onSuccess = context.onSuccess;
     }
 
     public static needsCompilation(): boolean {
@@ -397,7 +393,7 @@ export default class PythonRunner extends AbstractRunner {
     private _configure() {
         Sk.configure({
             output: this.print,
-            inputfun: this.onInput,
+            inputfun: () => { console.log('input should be overloaded by our input method'); },
             inputfunTakesPrompt: true,
             debugout: console.log,
             read: PythonRunner._builtinRead,
@@ -611,9 +607,7 @@ export default class PythonRunner extends AbstractRunner {
         }
 
         // Transform message depending on whether we successfully
-        if (this.context.success) {
-            this.onSuccess(message);
-        } else {
+        if (!this.context.success) {
             message = this.context.messagePrefixFailure + message;
             this.onError(message);
         }

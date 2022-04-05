@@ -258,14 +258,6 @@ export class QuickAlgoLibrary {
     onError(diagnostics: any): void {
 
     }
-
-    onSuccess(message: any): void {
-
-    }
-
-    onInput(): void {
-
-    }
 }
 
 window.quickAlgoResponsive = true;

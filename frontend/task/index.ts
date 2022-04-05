@@ -338,7 +338,7 @@ function* taskRunExecution(app: App, {type, payload}) {
     const {level, testId, tests, options, answer, resolve} = payload;
 
     yield* put({type: AppActionTypes.AppInit, payload: {options: {...options}, environment: 'background'}});
-    yield* put(platformSaveAnswer({level, answer}));
+    yield* put(platformAnswerLoaded(answer));
     yield* put(taskLoad({testId, level, tests, reloadContext: true}));
     yield* take(taskLoaded.type);
 

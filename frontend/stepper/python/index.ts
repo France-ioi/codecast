@@ -58,12 +58,6 @@ export default function(bundle: Bundle) {
                     });
                     channel.put(stepperExecutionError(diagnostics));
                 };
-                context.onSuccess = () => {
-                    console.error('Success should be handled at an upper level');
-                };
-                context.onInput = () => {
-                    console.error('Input should go to the printer lib');
-                }
 
                 stepperState.directives = {
                     ordered: [],

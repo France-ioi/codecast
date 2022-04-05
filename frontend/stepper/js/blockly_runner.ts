@@ -460,13 +460,17 @@ export default class BlocklyRunner extends AbstractRunner {
                     message = this.context.messagePrefixFailure + message;
                 }
             }
-            if (this.context.success) {
-                message = "<span style='color:green;font-weight:bold'>" + message + "</span>";
-            }
+
             this.delayFactory.destroyAll();
             console.log('call reject', message);
             this.executeOnResolve = null;
             this._isFinished = true;
+
+            if (this.context.success) {
+                // message = "<span style='color:green;font-weight:bold'>" + message + "</span>";
+                return;
+            }
+
             reject(message);
         }
     };
@@ -544,6 +548,8 @@ export default class BlocklyRunner extends AbstractRunner {
                 this.runSyncBlock(reject);
                 this.continueExecution(resolve, reject);
             });
+        } else {
+            resolve();
         }
     }
 

@@ -304,7 +304,7 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
 
         if (!first && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255 && stepperContext.makeDelay) {
             stepperContext.makeDelay = false;
-            await delay(500 - stepperContext.speed);
+            await delay(255 - stepperContext.speed);
         }
 
         await executeSingleStep(stepperContext);

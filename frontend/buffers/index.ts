@@ -213,8 +213,6 @@ function bufferLoadReducer(state: AppStore, action): void {
 function bufferResetReducer(state: AppStore, action): void {
     const {buffer, model} = action;
     initBufferIfNeeded(state, buffer);
-    if (null === model) {
-    }
     state.buffers[buffer].model = model;
 }
 
