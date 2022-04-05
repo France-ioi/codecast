@@ -564,7 +564,7 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     step(resolve, reject) {
-        console.trace('continue step', resolve, reject);
+        console.log('continue step', resolve, reject);
         this._resetCallstack();
         this._stepInProgress = true;
 

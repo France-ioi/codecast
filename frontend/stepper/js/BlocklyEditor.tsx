@@ -131,7 +131,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             console.log('[blockly.editor] unload');
 
             if (context && context.blocklyHelper) {
-                context.blocklyHelper.unload();
+                context.blocklyHelper.unloadLevel();
             }
         };
     }, [currentTask, currentLevel, contextId]);
