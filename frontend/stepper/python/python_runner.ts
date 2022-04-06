@@ -11,9 +11,6 @@ import {StepperState} from "../index";
 import {clearLoadedReferences} from "./analysis/analysis";
 import {Codecast} from "../../index";
 
-if (!window.hasOwnProperty('currentPythonContext')) {
-    window.currentPythonContext = null;
-}
 if (!window.hasOwnProperty('currentPythonRunner')) {
     window.currentPythonRunner = null;
 }
@@ -84,7 +81,7 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     public async runNewStep(stepperContext: StepperContext) {
-        const result = await window.currentPythonRunner.runStep(stepperContext.quickAlgoCallsExecutor);
+        const result = await this.runStep(stepperContext.quickAlgoCallsExecutor);
 
         console.log('FINAL INTERACT', result);
         stepperContext.makeDelay = true;
@@ -96,30 +93,30 @@ export default class PythonRunner extends AbstractRunner {
 
     private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type) {
         let handler = '';
-        handler += "\tcurrentPythonContext.runner.checkArgs('" + name + "', '" + generatorName + "', '" + blockName + "', arguments);";
+        handler += "\tCodecast.runner.checkArgs('" + name + "', '" + generatorName + "', '" + blockName + "', arguments);";
 
         handler += "\n\tvar susp = new Sk.misceval.Suspension();";
         handler += "\n\tvar result = Sk.builtin.none.none$;";
 
         // If there are arguments, convert them from Skulpt format to the libs format
         handler += "\n\tvar args = Array.prototype.slice.call(arguments);";
-        handler += "\n\tfor(var i=0; i<args.length; i++) { args[i] = currentPythonContext.runner.skToJs(args[i]); };";
+        handler += "\n\tfor(var i=0; i<args.length; i++) { args[i] = Codecast.runner.skToJs(args[i]); };";
 
         handler += "\n\tsusp.resume = function() { return result; };";
         handler += "\n\tsusp.data = {type: 'Sk.promise', promise: new Promise(function(resolve) {";
 
         // Count actions
         if(type == 'actions') {
-            handler += "\n\tcurrentPythonContext.runner._nbActions += 1;";
+            handler += "\n\tCodecast.runner._nbActions += 1;";
         }
 
         handler += "\n\ttry {";
-        handler += '\n\t\tconst result = currentPythonContext.runner.quickAlgoCallsExecutor("' + generatorName + '", "' + blockName + '", args);';
+        handler += '\n\t\tconst result = Codecast.runner.quickAlgoCallsExecutor("' + generatorName + '", "' + blockName + '", args);';
         handler += '\n\t\tif (result instanceof Promise) {';
-        handler += '\n\t\t\tresult.then(resolve).catch((e) => { window.currentPythonContext.runner._onStepError(e) })';
+        handler += '\n\t\t\tresult.then(resolve).catch((e) => { Codecast.runner._onStepError(e) })';
         handler += '\n\t\t}';
         handler += "\n\t} catch (e) {";
-        handler += "\n\t\tcurrentPythonContext.runner._onStepError(e)}";
+        handler += "\n\t\tCodecast.runner._onStepError(e)}";
         handler += '\n\t}).then(function (value) {\nresult = value;\nreturn value;\n })};';
         handler += '\n\treturn susp;';
 
@@ -127,8 +124,10 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     private _createBuiltin(name, generatorName, blockName, nbArgs, type) {
+        const self = this;
+
         return function () {
-            window.currentPythonContext.runner.checkArgs(name, generatorName, blockName, arguments);
+            self.checkArgs(name, generatorName, blockName, arguments);
 
             let susp = new Sk.misceval.Suspension();
             let result = Sk.builtin.none.none$;
@@ -141,16 +140,16 @@ export default class PythonRunner extends AbstractRunner {
                 promise: new Promise(function(resolve) {
                     // Count actions
                     if (type == 'actions') {
-                        window.currentPythonContext.runner._nbActions += 1;
+                        self._nbActions += 1;
                     }
 
                     try {
-                        const result = window.currentPythonContext.runner.quickAlgoCallsExecutor(generatorName, blockName, args);
+                        const result = self.quickAlgoCallsExecutor(generatorName, blockName, args);
                         if (result instanceof Promise) {
-                            result.then(resolve).catch((e) => { window.currentPythonContext.runner._onStepError(e) })
+                            result.then(resolve).catch((e) => { self._onStepError(e) })
                         }
                     } catch (e) {
-                        window.currentPythonContext.runner._onStepError(e)
+                        self._onStepError(e)
                     }
                 }).then(function (value) {
                     result = value;
@@ -464,8 +463,6 @@ export default class PythonRunner extends AbstractRunner {
             return;
         }
 
-        window.currentPythonContext = this.context;
-        window.currentPythonContext.runner = this;
         this.availableBlocks = availableBlocks;
         this._debugger = new Sk.Debugger(this._editor_filename, this);
         this._configure();
