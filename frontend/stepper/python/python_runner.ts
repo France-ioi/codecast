@@ -40,8 +40,8 @@ const PythonNumber = definePythonNumber();
 
 export default class PythonRunner extends AbstractRunner {
     private context;
-    private _debugger;
-    private _code = '';
+    public _debugger;
+    public _code = '';
     private _editor_filename = "<stdin>";
     private _maxIterations = 4000;
     private _resetCallstackOnNextStep = false;
@@ -639,8 +639,8 @@ export default class PythonRunner extends AbstractRunner {
 
         const analysisStepNum = analysis.stepNum;
         const analysisCode = analysis.code;
-        const currentPythonStepNum = window.currentPythonRunner._steps;
-        const currentPythonCode = window.currentPythonRunner._code;
+        const currentPythonStepNum = this._steps;
+        const currentPythonCode = this._code;
         console.log('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentPythonStepNum);
 
         return !(analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode);

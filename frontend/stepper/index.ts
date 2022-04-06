@@ -357,15 +357,15 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
         if (!stepperState.analysis) {
             stepperState.analysis =  {
                 functionCallStack: [],
-                code: window.currentPythonRunner._code,
-                lines: window.currentPythonRunner._code.split("\n"),
+                code: (Codecast.runner as PythonRunner)._code,
+                lines: (Codecast.runner as PythonRunner)._code.split("\n"),
                 stepNum: 0
             };
 
             stepperState.lastAnalysis = {
                 functionCallStack: [],
-                code: window.currentPythonRunner._code,
-                lines: window.currentPythonRunner._code.split("\n"),
+                code: (Codecast.runner as PythonRunner)._code,
+                lines: (Codecast.runner as PythonRunner)._code.split("\n"),
                 stepNum: 0
             };
         }
@@ -519,7 +519,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     if (false !== progress) {
         if (stepperContext.state.platform === CodecastPlatform.Python) {
             // Save scope.
-            stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
+            stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
         }
 
         // Set new currentStepperState state and go back to idle.
@@ -910,7 +910,7 @@ function* stepperStepSaga(app: App, action) {
 
             if (stepperContext.state.platform === CodecastPlatform.Python) {
                 // Save scope.
-                stepperContext.state.suspensions = getSkulptSuspensionsCopy(window.currentPythonRunner._debugger.suspension_stack);
+                stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
             } else if (stepperContext.state.platform === CodecastPlatform.Unix) {
                 stepperContext.state.isFinished = !stepperContext.state.programState.control;
             }
