@@ -28,13 +28,14 @@ user interaction change the view.
 
 import {call, put, select, takeEvery} from 'typed-redux-saga';
 import {
+    compressDocument,
     compressRange,
     Document,
     documentFromString,
     emptyDocument,
-    expandRange,
+    expandRange, modelFromDocument,
     ObjectDocument,
-    Selection
+    Selection, uncompressIntoDocument
 } from "./document";
 
 import 'brace';
@@ -160,10 +161,10 @@ export default function(bundle: Bundle) {
         state.buffers = {};
 
         if (source) {
-            bufferLoadReducer(state, {buffer: 'source', text: source || ''});
+            bufferResetReducer(state, {buffer: 'source', text: new DocumentModel(documentFromString(source || ''))});
         }
         if (input) {
-            bufferLoadReducer(state, {buffer: 'input', text: input || ''});
+            bufferResetReducer(state, {buffer: 'input', text: new DocumentModel(documentFromString(input || ''))});
         }
     });
 
@@ -174,9 +175,6 @@ export default function(bundle: Bundle) {
 
         state.buffers[buffer].editor = editor;
     });
-
-    bundle.defineAction(ActionTypes.BufferLoad);
-    bundle.addReducer(ActionTypes.BufferLoad, bufferLoadReducer);
 
     bundle.defineAction(ActionTypes.BufferReset);
     bundle.addReducer(ActionTypes.BufferReset, bufferResetReducer);
@@ -203,12 +201,6 @@ export default function(bundle: Bundle) {
     bundle.defer(addRecordHooks);
     bundle.defer(addReplayHooks);
 };
-
-function bufferLoadReducer(state: AppStore, action): void {
-    const {buffer, text} = action;
-    initBufferIfNeeded(state, buffer);
-    state.buffers[buffer].model = new DocumentModel(documentFromString(text));
-}
 
 function bufferResetReducer(state: AppStore, action): void {
     const {buffer, model} = action;
@@ -361,7 +353,7 @@ function addRecordHooks({recordApi}: App) {
             const bufferModel = getBufferModel(state, bufferName);
 
             init.buffers[bufferName] = {
-                document: bufferModel.document.toString(),
+                document: compressDocument(bufferModel.document),
                 selection: compressRange(bufferModel.selection),
                 firstVisibleRow: bufferModel.firstVisibleRow
             }
@@ -393,7 +385,8 @@ function addRecordHooks({recordApi}: App) {
     });
     recordApi.on(ActionTypes.BufferEditPlain, function* (addEvent, action) {
         const {buffer, document} = action;
-        yield* call(addEvent, 'buffer.edit_plain', buffer, document);
+        let content = compressDocument(document);
+        yield* call(addEvent, 'buffer.edit_plain', buffer, content);
     });
     recordApi.on(ActionTypes.BufferScroll, function* (addEvent, action) {
         const {buffer, firstVisibleRow} = action;
@@ -407,8 +400,11 @@ function addReplayHooks({replayApi}: App) {
     replayApi.on('start', function* (replayContext: ReplayContext, event) {
         const {buffers} = event[2];
         for (let bufferName of Object.keys(buffers)) {
-            const text = buffers[bufferName].document;
-            yield* put({type: ActionTypes.BufferLoad, buffer: bufferName, text});
+            const content = buffers[bufferName].document;
+            const document = uncompressIntoDocument(content);
+            const model = modelFromDocument(document);
+            console.log('gotten document', document);
+            yield* put({type: ActionTypes.BufferReset, buffer: bufferName, model});
         }
 
     });
@@ -422,6 +418,13 @@ function addReplayHooks({replayApi}: App) {
         replayContext.addSaga(function* () {
             yield* put({type: ActionTypes.BufferModelSelect, buffer, selection});
         });
+    });
+    replayApi.on('buffer.edit_plain', function* (replayContext: ReplayContext, event) {
+        const buffer = event[2];
+        const content = event[3];
+        const document = uncompressIntoDocument(content);
+
+        yield* put({type: ActionTypes.BufferEditPlain, buffer, document});
     });
     replayApi.on(['buffer.insert', 'buffer.delete'], function*(replayContext: ReplayContext, event) {
         // XXX use reducer imported from common/buffers
@@ -469,7 +472,7 @@ function addReplayHooks({replayApi}: App) {
         for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer].model;
 
-            yield* put({type: ActionTypes.BufferReset, buffer, model, quiet: quick});
+            yield* put({type: ActionTypes.BufferReset, buffer, model, quiet: quick && model instanceof DocumentModel});
         }
 
         const range = getNodeRange(getCurrentStepperState(state));

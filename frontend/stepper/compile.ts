@@ -128,9 +128,6 @@ export default function(bundle: Bundle) {
 
         // @ts-ignore
         yield* takeEvery(ActionTypes.CompileWait, function* ({payload: {callback, keepSubmission}}) {
-            // Create a runner for this
-            Codecast.runner = yield* call(createRunnerSaga);
-
             yield* put({type: ActionTypes.Compile, payload: {keepSubmission}});
             const outcome = yield* race({
                 [CompileStatus.Done]: take(ActionTypes.StepperRestart),

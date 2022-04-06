@@ -1,6 +1,5 @@
 export enum ActionTypes {
     BufferInit = 'Buffer.Init',
-    BufferLoad = 'Buffer.Load',
     BufferReset = 'Buffer.Reset',
     BufferInsertBlock = 'Buffer.InsertBlock',
     BufferEdit = 'Buffer.Edit',

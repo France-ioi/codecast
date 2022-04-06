@@ -525,16 +525,6 @@ export default function (bundle: Bundle) {
             }
         });
 
-        // yield* takeEvery([BufferActionTypes.BufferEdit, BufferActionTypes.BufferReset, BufferActionTypes.BufferLoad], function* (action) {
-        //     // @ts-ignore
-        //     const {buffer} = action;
-        //     if (buffer === 'source') {
-        //         const source = yield* select(state => getBufferModel(state, 'source').document.toString());
-        //         const currentLevel = yield* select((state: AppStore) => state.task.currentLevel);
-        //         yield* put(platformSaveAnswer({level: currentLevel, answer: source}));
-        //     }
-        // });
-
         // @ts-ignore
         yield* takeEvery(StepperActionTypes.StepperExecutionSuccess, function* ({payload}) {
             const currentTestId = yield* select(state => state.task.currentTestId);

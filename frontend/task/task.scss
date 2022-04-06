@@ -36,6 +36,18 @@
   }
 }
 
+$spaceamounts: (1, 2, 3, 4);
+$sides: (top, bottom, left, right);
+
+@each $space in $spaceamounts {
+  @each $side in $sides {
+    .m#{str-slice($side, 0, 1)}-#{$space} {
+      margin-#{$side}: #{$space * 5}px !important;
+    }
+  }
+}
+
+
 @import "./layout/layout.scss";
 @import "./controls.scss";
 @import "./documentation/documentation.scss";
