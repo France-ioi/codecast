@@ -473,7 +473,7 @@ function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}})
             const context = quickAlgoLibraries.getContext(null, state.environment);
             const blocksData = getContextBlocksDataSelector(state, context);
 
-            window.currentPythonRunner.initCodes([pythonSource], blocksData);
+            Codecast.runner.initCodes([pythonSource], blocksData);
         } else {
             stepperState = state.stepper.initialStepperState;
         }
@@ -955,7 +955,7 @@ function* stepperStepSaga(app: App, action) {
  * we need to move the python runner to the same point before we can to a step.
  */
 function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContext) {
-    if (!window.currentPythonRunner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
+    if (!(Codecast.runner as PythonRunner).isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
         console.log('Run python from beginning is necessary');
         const state = yield* select();
         const taskContext = quickAlgoLibraries.getContext(null, state.environment);

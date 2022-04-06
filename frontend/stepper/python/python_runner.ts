@@ -9,11 +9,6 @@ import AbstractRunner from "../abstract_runner";
 import {StepperContext} from "../api";
 import {StepperState} from "../index";
 import {clearLoadedReferences} from "./analysis/analysis";
-import {Codecast} from "../../index";
-
-if (!window.hasOwnProperty('currentPythonRunner')) {
-    window.currentPythonRunner = null;
-}
 
 function definePythonNumber() {
     // Create a class which behaves as a Number, but can have extra properties
