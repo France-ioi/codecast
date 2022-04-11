@@ -30,8 +30,9 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         }
 
         console.log('imported content', context.blocklyHelper.programs[0].blockly);
+        context.blocklyHelper.loadingPrograms = true;
         context.blocklyHelper.loadPrograms();
-        // context.blocklyHelper.loadPlayer(that.player);
+        context.blocklyHelper.loadingPrograms = false;
     };
 
     const highlight = (range) => {
@@ -58,7 +59,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
         window.quickAlgoInterface.onEditorChange = () => {
             console.log('on editor change');
-            if (blocklyHelper.languages && blocklyHelper.languages.length && loaded) {
+            if (blocklyHelper.languages && blocklyHelper.languages.length && loaded && !blocklyHelper.loadingPrograms) {
                 blocklyHelper.savePrograms();
                 const answer = {...blocklyHelper.programs[0]};
                 const document = new ObjectDocument(answer);

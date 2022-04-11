@@ -468,7 +468,7 @@ function getModelFromAnswer(answer: any, platform: CodecastPlatform) {
     }
 
     console.log('get model from answer', answer);
-    if (typeof answer === 'object' && answer.blocklyJS) {
+    if (typeof answer === 'object' && answer.blockly) {
         return new BlockDocumentModel(new ObjectDocument(answer));
     }
 

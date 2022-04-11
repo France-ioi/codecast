@@ -46,9 +46,18 @@ log.getLogger('printer_lib').setLevel('info');
 log.getLogger('tests').setLevel('debug');
 log.getLogger('platform').setLevel('debug');
 
+export interface CodecastEnvironmentMonitoring {
+    effectTriggered: Function,
+    effectResolved: Function,
+    effectRejected: Function,
+    effectCancelled: Function,
+    clearListeners: Function,
+}
+
 interface CodecastEnvironment {
     store: AppStore,
     restart: Function,
+    monitoring: CodecastEnvironmentMonitoring,
 }
 
 interface Codecast {
@@ -130,7 +139,7 @@ window.Codecast = {
 for (let environment of ['main', 'replay', 'background']) {
     const initScope = {environment} as App;
 
-    const {store, scope, finalize, start} = link(function(bundle: Bundle) {
+    const {store, scope, finalize, start, monitoring} = link(function(bundle: Bundle) {
         bundle.defineAction(ActionTypes.AppInit);
         bundle.addReducer(ActionTypes.AppInit, () => {
             // return {};
@@ -161,7 +170,7 @@ for (let environment of ['main', 'replay', 'background']) {
         task = start(scope);
     }
 
-    window.Codecast.environments[environment] = {store, restart};
+    window.Codecast.environments[environment] = {store, restart, monitoring};
 }
 
 export const Codecast: Codecast = window.Codecast;

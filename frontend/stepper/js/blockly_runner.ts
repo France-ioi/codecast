@@ -13,6 +13,7 @@ export default class BlocklyRunner extends AbstractRunner {
     private availableBlocks = [] as Block[];
     private quickAlgoCallsExecutor;
     private executeOnResolve;
+    private executeOnReject;
     private currentBlockId = null;
 
     private hasActions = false;
@@ -38,7 +39,7 @@ export default class BlocklyRunner extends AbstractRunner {
     private stackResetting = false;
 
     // During step-by-step mode
-    private stepInProgress = false;
+    private _stepInProgress = false;
     private stepMode = false;
     private nextCallback;
 
@@ -214,15 +215,22 @@ export default class BlocklyRunner extends AbstractRunner {
 
                 let args = [...arguments].slice(0, arguments.length - 1);
                 let resolve = arguments[arguments.length - 1];
+                let result;
 
                 try {
                     console.log('start quickalgo call', generatorName, blockName, args);
-                    const result = self.quickAlgoCallsExecutor(generatorName, blockName, args, (res) => {
+                    result = self.quickAlgoCallsExecutor(generatorName, blockName, args, (res) => {
                         console.log('after execution', res);
                     });
                     console.log('the result', result);
                     if (result instanceof Promise) {
-                        result.then(resolve).catch((e) => { Codecast.runner.onError(e) })
+                        result
+                            .then(resolve)
+                            .catch((e) => { Codecast.runner.onError(e) })
+                            .finally(() => {
+                                console.log('after promise');
+                                self.runSyncBlock();
+                            });
                     }
 
                     return result;
@@ -304,11 +312,12 @@ export default class BlocklyRunner extends AbstractRunner {
                 console.log('highlight, stop here');
                 this.nextCallback = callback;
                 this.currentBlockId = id;
+                this._stepInProgress = false;
+                console.log('highlight, stop here');
                 if (this.executeOnResolve) {
                     console.log('do execute on resolve');
                     this.executeOnResolve();
                 }
-                this.stepInProgress = false;
             }
         }
 
@@ -335,7 +344,6 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     public isStuck(stepperState: StepperState): boolean {
-        console.log('check is stuck', stepperState.isFinished);
         return stepperState.isFinished;
     }
 
@@ -357,14 +365,15 @@ export default class BlocklyRunner extends AbstractRunner {
         }
 
         this.nbActions = 0;
-        this.stepInProgress = false;
+        this._stepInProgress = false;
         this.stepMode = false;
         this.firstHighlight = true;
     };
 
-    runSyncBlock(reject) {
+    runSyncBlock() {
+        console.log('run sync block', this._stepInProgress);
         this.resetDone = false;
-        this.stepInProgress = true;
+        this._stepInProgress = true;
         this.oneStepDone = false;
         // Handle the callback from last highlightBlock
         if(this.nextCallback) {
@@ -374,7 +383,7 @@ export default class BlocklyRunner extends AbstractRunner {
 
         try {
             if(this.stepMode && this.oneStepDone) {
-                this.stepInProgress = false;
+                this._stepInProgress = false;
                 return;
             }
             let iInterpreter = this.curNode;
@@ -395,7 +404,7 @@ export default class BlocklyRunner extends AbstractRunner {
                     return;
                 }
                 if (interpreter.paused_) {
-                    console.log('interpreter paused');
+                    console.log('interpreter paused', this._stepInProgress);
                     this.oneStepDone = !wasPaused;
                     return;
                 }
@@ -427,7 +436,7 @@ export default class BlocklyRunner extends AbstractRunner {
             console.error(e);
             console.log('error during run');
             this.context.onExecutionEnd && this.context.onExecutionEnd();
-            this.stepInProgress = false;
+            this._stepInProgress = false;
 
             for (let iInterpreter = 0; iInterpreter < this.interpreters.length; iInterpreter++) {
                 this.isRunningInterpreter[iInterpreter] = false;
@@ -464,7 +473,9 @@ export default class BlocklyRunner extends AbstractRunner {
 
             this.delayFactory.destroyAll();
             console.log('call reject', message);
+            let executeOnReject = this.executeOnReject;
             this.executeOnResolve = null;
+            this.executeOnReject = null;
             this._isFinished = true;
 
             if (this.context.success) {
@@ -472,12 +483,11 @@ export default class BlocklyRunner extends AbstractRunner {
                 return;
             }
 
-            reject(message);
+            executeOnReject(message);
         }
     };
 
-    initCodes(answer, availableBlocks) {
-        const codes = [this.context.blocklyHelper.getFullCode(answer.blocklyJS)];
+    initCodes(codes, availableBlocks) {
         console.log('init codes', codes);
         this.delayFactory.destroyAll();
         this.interpreters = [];
@@ -487,7 +497,7 @@ export default class BlocklyRunner extends AbstractRunner {
         this.nodesReady = [];
         this.waitingOnReadyNode = false;
         this.nbActions = 0;
-        this.stepInProgress = false;
+        this._stepInProgress = false;
         this.stepMode = false;
         this.allowStepsWithoutDelay = 0;
         this.firstHighlight = true;
@@ -540,27 +550,14 @@ export default class BlocklyRunner extends AbstractRunner {
         }
     };
 
-    continueExecution(resolve, reject) {
-        console.log('continue execution', this.nextCallback, this.executeOnResolve)
-        if (!this.nextCallback && this.executeOnResolve) {
-            console.log('interpreter paused, continue');
-            setTimeout(() => {
-                console.log('start new round');
-                this.runSyncBlock(reject);
-                this.continueExecution(resolve, reject);
-            });
-        } else {
-            resolve();
-        }
-    }
-
     step(quickAlgoCallsExecutor) {
         return new Promise<void>((resolve, reject) => {
             this.stepMode = true;
             this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
             this.executeOnResolve = resolve;
-            console.log('step in progress', this.stepInProgress);
-            if (this.stepInProgress) {
+            this.executeOnReject = reject;
+            if (this._stepInProgress) {
+                console.log('step already in progress');
                 resolve();
                 return;
             } else {
@@ -568,9 +565,11 @@ export default class BlocklyRunner extends AbstractRunner {
                     this.interpreters[0].paused_ = false;
                 }
 
-                this.runSyncBlock(reject);
+                this.runSyncBlock();
                 console.log('after first run sync');
-                this.continueExecution(resolve, reject);
+                if (this.nextCallback || !this.executeOnResolve) {
+                    resolve();
+                }
             }
         }).finally(() => {
             console.log('make finally');
@@ -587,7 +586,6 @@ export default class BlocklyRunner extends AbstractRunner {
         await stepperContext.interactAfter({
             position: 0,
         });
-        console.log('AFTER FINAL INTERACT');
     }
 
     public getCurrentBlockId(): string {

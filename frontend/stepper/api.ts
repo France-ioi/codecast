@@ -58,7 +58,7 @@ export interface StepperContextParameters {
     executeEffects?: Function,
 }
 
-const delay = delay => new Promise((resolve) => setTimeout(resolve, delay));
+export const delay = delay => new Promise((resolve) => setTimeout(resolve, delay));
 
 export interface StepperApi {
     onInit?: Function,
@@ -130,7 +130,7 @@ export default function(bundle: Bundle) {
             platform
         } as StepperState;
         for (let callback of initCallbacks) {
-            callback(curStepperState, state, environment);
+            await callback(curStepperState, state, environment);
         }
 
 
