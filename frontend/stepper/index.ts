@@ -335,7 +335,25 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
             if (Codecast.runner._isFinished) {
                 console.log('bim is finished');
                 stepperState.isFinished = true;
+            } else {
+                stepperState.analysis = {
+                    ...stepperState.lastAnalysis,
+                    stepNum: stepperState.analysis.stepNum + 1,
+                };
             }
+        }
+
+        // TODO: enrich Blockly analysis
+        if (!stepperState.analysis) {
+            stepperState.analysis =  {
+                code: (Codecast.runner as BlocklyRunner)._code,
+                stepNum: 0
+            };
+
+            stepperState.lastAnalysis = {
+                code: (Codecast.runner as BlocklyRunner)._code,
+                stepNum: 0
+            };
         }
     } else if (stepperState.platform === CodecastPlatform.Python) {
         if (context === 'Stepper.Progress') {
@@ -824,9 +842,7 @@ function* stepperInterruptSaga(app: App) {
 
     const stepperContext = createStepperContext(getStepper(state), {dispatch: app.dispatch, environment: app.environment});
 
-    if (stepperContext.state.platform === CodecastPlatform.Python) {
-        yield* call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
-    }
+    yield* call(stepperRunFromBeginningIfNecessary, stepperContext);
 
     yield* put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
 }
@@ -889,9 +905,7 @@ function* stepperStepSaga(app: App, action) {
 
             console.log('[stepper.step] Creating new stepper context', stepperContext, stepperContext.resume, state.environment, stepperContext.environment);
 
-            if (stepperContext.state.platform === CodecastPlatform.Python) {
-                yield* call(stepperPythonRunFromBeginningIfNecessary, stepperContext);
-            }
+            yield* call(stepperRunFromBeginningIfNecessary, stepperContext);
 
             try {
                 yield* call(performStep, stepperContext, action.payload.mode);
@@ -958,9 +972,10 @@ function* stepperStepSaga(app: App, action) {
  * If it is different, it means the analysis has been overwritten by playing a record, and so
  * we need to move the python runner to the same point before we can to a step.
  */
-function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContext) {
-    if (!(Codecast.runner as PythonRunner).isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
-        console.log('Run python from beginning is necessary');
+function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
+    console.log('check stepper run', stepperContext.state.analysis);
+    if (!Codecast.runner.isSynchronizedWithAnalysis(stepperContext.state.analysis)) {
+        console.log('Run from beginning is necessary');
         const state = yield* select();
         const taskContext = quickAlgoLibraries.getContext(null, state.environment);
         yield* put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: true});
@@ -973,12 +988,13 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
 
         const blocksData = getContextBlocksDataSelector(state, taskContext);
 
-        const pythonInterpreter = new PythonRunner(taskContext);
-        pythonInterpreter.initCodes([stepperContext.state.analysis.code], blocksData);
-        while (pythonInterpreter._steps < stepperContext.state.analysis.stepNum) {
-            yield* apply(pythonInterpreter, pythonInterpreter.runStep, [stepperContext.quickAlgoCallsExecutor]);
+        const interpreter = Codecast.runner;
+        interpreter.initCodes([stepperContext.state.analysis.code], blocksData);
+        while (interpreter._steps < stepperContext.state.analysis.stepNum) {
+            console.log('Make new step', interpreter._steps);
+            yield* apply(interpreter, interpreter.runStep, [stepperContext.quickAlgoCallsExecutor]);
 
-            if (pythonInterpreter._isFinished) {
+            if (interpreter._isFinished) {
                 break;
             }
         }
@@ -986,7 +1002,7 @@ function* stepperPythonRunFromBeginningIfNecessary(stepperContext: StepperContex
 
         taskContext.display = true;
         taskContext.redrawDisplay();
-        console.log('End run python from beginning');
+        console.log('End run from beginning');
     }
 }
 

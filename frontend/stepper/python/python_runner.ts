@@ -44,7 +44,6 @@ export default class PythonRunner extends AbstractRunner {
     private _isRunning = false;
     private _stepInProgress = false;
     private stepMode = false;
-    public _steps = 0;
     private _timeouts = [];
     private _editorMarker = null;
     private availableModules = [];

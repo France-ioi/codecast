@@ -24,6 +24,7 @@ export default class BlocklyRunner extends AbstractRunner {
     private oneStepDone = false;
 
     // Node status
+    public _code = '';
     private nbNodes = 1;
     private curNode = 0;
     private nodesReady = [];
@@ -497,6 +498,8 @@ export default class BlocklyRunner extends AbstractRunner {
         this.nodesReady = [];
         this.waitingOnReadyNode = false;
         this.nbActions = 0;
+        this._steps = 0;
+        this._code = codes[0];
         this._stepInProgress = false;
         this.stepMode = false;
         this.allowStepsWithoutDelay = 0;
@@ -550,7 +553,7 @@ export default class BlocklyRunner extends AbstractRunner {
         }
     };
 
-    step(quickAlgoCallsExecutor) {
+    runStep(quickAlgoCallsExecutor) {
         return new Promise<void>((resolve, reject) => {
             this.stepMode = true;
             this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
@@ -566,6 +569,7 @@ export default class BlocklyRunner extends AbstractRunner {
                 }
 
                 this.runSyncBlock();
+                this._steps += 1;
                 console.log('after first run sync');
                 if (this.nextCallback || !this.executeOnResolve) {
                     resolve();
@@ -579,7 +583,7 @@ export default class BlocklyRunner extends AbstractRunner {
 
     public async runNewStep(stepperContext: StepperContext) {
         console.log('init new step');
-        await this.step(stepperContext.quickAlgoCallsExecutor);
+        await this.runStep(stepperContext.quickAlgoCallsExecutor);
         console.log('end new step');
 
         stepperContext.makeDelay = true;
@@ -590,5 +594,17 @@ export default class BlocklyRunner extends AbstractRunner {
 
     public getCurrentBlockId(): string {
         return this.currentBlockId;
+    }
+
+    public isSynchronizedWithAnalysis(analysis) {
+        // Must be at the same step number and have the same source code.
+
+        const analysisStepNum = analysis.stepNum;
+        const analysisCode = analysis.code;
+        const currentStepNum = this._steps;
+        const currentPythonCode = this._code;
+        console.log('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentStepNum);
+
+        return !(analysisStepNum !== currentStepNum || analysisCode !== currentPythonCode);
     }
 }

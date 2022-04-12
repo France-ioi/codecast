@@ -9,7 +9,6 @@
 
 import * as C from '@france-ioi/persistent-c';
 import {all, call} from 'typed-redux-saga';
-import {clearLoadedReferences} from "./python/analysis/analysis";
 import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
