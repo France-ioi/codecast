@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {useEffect, useRef} from "react";
 import {useAppSelector} from "../../hooks";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
 import {ObjectDocument} from "../../buffers/document";
@@ -15,6 +15,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const contextId = useAppSelector(state => state.task.contextId);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
+    const previousValue = useRef(null);
 
     const reset = (value, selection, firstVisibleRow) => {
         console.log('[blockly.editor] reset', value);
@@ -30,15 +31,17 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         }
 
         console.log('imported content', context.blocklyHelper.programs[0].blockly);
-        context.blocklyHelper.loadingPrograms = true;
+        context.blocklyHelper.reloading = true;
         context.blocklyHelper.loadPrograms();
-        context.blocklyHelper.loadingPrograms = false;
+        context.blocklyHelper.reloading = false;
     };
 
     const highlight = (range) => {
         console.log('[blockly.editor] highlight', range);
         // Fix of a code in blockly_interface.js making double consecutive highlight for the same block not working
-        window.Blockly.selected = null;
+        if (null !== range) {
+            window.Blockly.selected = null;
+        }
 
         context.blocklyHelper.highlightBlock(range);
     };
@@ -54,17 +57,30 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         }
 
         let loaded = false;
+        let timeout;
 
         console.log('[blockly.editor] load with data', context.infos.includeBlocks);
 
         window.quickAlgoInterface.onEditorChange = () => {
             console.log('on editor change');
-            if (blocklyHelper.languages && blocklyHelper.languages.length && loaded && !blocklyHelper.loadingPrograms) {
+            if (blocklyHelper.languages && blocklyHelper.languages.length && loaded && !blocklyHelper.reloading) {
                 blocklyHelper.savePrograms();
                 const answer = {...blocklyHelper.programs[0]};
-                const document = new ObjectDocument(answer);
-                console.log('new value', answer);
-                props.onEditPlain(document);
+                if (answer.blockly !== previousValue.current) {
+                    const document = new ObjectDocument(answer);
+                    previousValue.current = answer.blockly;
+                    console.log('new value', answer);
+                    props.onEditPlain(document);
+                    if (!blocklyHelper.reloading) {
+                        console.log('timeout before removing highlight');
+                        if (timeout) {
+                            clearTimeout(timeout);
+                        }
+                        timeout = setTimeout(() => {
+                            blocklyHelper.onChangeResetDisplayFct();
+                        }, 500);
+                    }
+                }
             }
         };
 

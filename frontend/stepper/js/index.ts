@@ -15,22 +15,28 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     window.Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
     window.Blockly.JavaScript.addReservedWords('highlightBlock');
 
-    window.quickAlgoInterface = {
-        displayCapacity: () => {},
-        onEditorChange: () => {}, // will be overriden in BlocklyEditor
-        resetTestScores: () => {},
-        displayError: (e) => {
-            if (e) {
-                console.error(e);
-            }
-        },
-        setPlayPause: () => {},
-        updateControlsDisplay: () => {},
-        onResize: () => {},
-    };
+    if (!window.quickAlgoInterface) {
+        window.quickAlgoInterface = {
+            displayCapacity: () => {},
+            onEditorChange: () => {}, // will be overriden in BlocklyEditor
+            resetTestScores: () => {},
+            displayError: (e) => {
+                if (e) {
+                    console.error(e);
+                }
+            },
+            setPlayPause: () => {},
+            updateControlsDisplay: () => {},
+            onResize: () => {},
+        };
+    }
 
     console.log('[blockly.editor] load blocky helper');
     blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
+    // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
+    // during loadPrograms at the start of the program execution
+    blocklyHelper.onChangeResetDisplay = () => {
+    };
     context.blocklyHelper = blocklyHelper;
     context.onChange = () => {};
 
@@ -73,13 +79,13 @@ export default function(bundle: Bundle) {
                 blocklyHelper.programs[0].blockly = blocklyXmlCode;
                 console.log('xml code', blocklyXmlCode);
 
-                blocklyHelper.loadingPrograms = true;
+                blocklyHelper.reloading = true;
                 blocklyHelper.loadPrograms();
                 // Wait that program is loaded (Blockly fires some event including an onChange event
                 if ('main' === environment) {
                     await delay(0);
                 }
-                blocklyHelper.loadingPrograms = false;
+                blocklyHelper.reloading = false;
 
                 blocklyHelper.programs[0].blocklyJS = blocklyHelper.getCode("javascript");
 

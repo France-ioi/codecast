@@ -561,7 +561,7 @@ export default function (bundle: Bundle) {
             }
         });
 
-        // Replay inputs when needed from stepperPythonRunFromBeginningIfNecessary
+        // Replay inputs when needed from stepperRunFromBeginningIfNecessary
         // @ts-ignore
         yield* takeEvery(taskInputNeeded.type, function* ({payload}) {
             console.log('task input needed', payload);
@@ -638,6 +638,9 @@ export default function (bundle: Bundle) {
 
             const taskData = instant.state.task;
             if (taskData) {
+                const currentLevel = yield* select((state: AppStore) => state.task.currentLevel);
+                const changeLevel = taskData.currentLevel !== currentLevel;
+
                 yield* put({
                     type: PlayerActionTypes.PlayerReset,
                     payload: {
@@ -655,6 +658,10 @@ export default function (bundle: Bundle) {
                         },
                     },
                 });
+
+                if (changeLevel) {
+                    yield* call(createContext);
+                }
 
                 if (taskData.success) {
                     yield* put(taskSuccess(taskData.successMessage));

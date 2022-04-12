@@ -998,9 +998,11 @@ function* stepperExitSaga() {
     yield* put({type: ActionTypes.CompileClear});
 }
 
-function* updateSourceHighlightSaga() {
-    const state: AppStore = yield* select();
+export function* updateSourceHighlightSaga(state: AppStoreReplay) {
     const stepperState = state.stepper.currentStepperState;
+    if (!stepperState) {
+        return;
+    }
 
     if (state.options.platform === CodecastPlatform.Blockly) {
         yield* put({
@@ -1356,6 +1358,9 @@ function postLink(app: App) {
             ActionTypes.StepperRedo,
             ActionTypes.StepperStackUp,
             ActionTypes.StepperStackDown
-        ], updateSourceHighlightSaga);
+        ], function* () {
+            const state = yield* select();
+            yield* call(updateSourceHighlightSaga, state);
+        });
     });
 }

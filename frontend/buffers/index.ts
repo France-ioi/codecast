@@ -55,7 +55,7 @@ import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {getCurrentStepperState} from "../stepper/selectors";
-import {getNodeRange} from "../stepper";
+import {getNodeRange, updateSourceHighlightSaga} from "../stepper";
 import {BlockType} from "../task/blocks/blocks";
 
 // import 'brace/theme/ambiance';
@@ -475,8 +475,6 @@ function addReplayHooks({replayApi}: App) {
             yield* put({type: ActionTypes.BufferReset, buffer, model, quiet: quick && model instanceof DocumentModel});
         }
 
-        const range = getNodeRange(getCurrentStepperState(state));
-        yield* put({type: ActionTypes.BufferHighlight, buffer: 'source', range});
-        //TODO: block highlighting
+        yield* call(updateSourceHighlightSaga, state);
     });
 }
