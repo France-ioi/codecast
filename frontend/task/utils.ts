@@ -88,8 +88,8 @@ export function checkCompilingCode(code, platform: CodecastPlatform, state: AppS
 
 export function getDefaultSourceCode(platform: CodecastPlatform, environment: string) {
     console.log('get default source code');
+    const context = quickAlgoLibraries.getContext(null, environment);
     if (CodecastPlatform.Python === platform) {
-        const context = quickAlgoLibraries.getContext(null, environment);
         if (context) {
             const availableModules = getAvailableModules(context);
             let content = '';
@@ -99,7 +99,11 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
             return content;
         }
     } else if (CodecastPlatform.Blockly === platform) {
-        return null;
+        if (context) {
+            return {blockly: context.blocklyHelper.getDefaultContent()};
+        } else {
+            return null;
+        }
     }
 
     return '';

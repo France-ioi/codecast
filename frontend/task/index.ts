@@ -275,7 +275,8 @@ function* taskLoadSaga(app: App, action) {
         const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment);
         if (null !== defaultSourceCode) {
             console.log('Load default source code', defaultSourceCode);
-            yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: documentModelFromString(defaultSourceCode), goToEnd: true});
+            const platform = yield* select((state: AppStore) => state.options.platform);
+            yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: getModelFromAnswer(defaultSourceCode, platform), goToEnd: true});
         }
     }
 

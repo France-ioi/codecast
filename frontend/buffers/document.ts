@@ -127,8 +127,8 @@ export const emptyDocument = documentFromString('');
 
 export const compressDocument = function (document) {
     const content = document.getContent();
-    if (content.blockly) {
-        return content.blockly;
+    if (document instanceof ObjectDocument) {
+        return content && content.blockly ? content.blockly : null;
     }
 
     return content;
