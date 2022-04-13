@@ -65,6 +65,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
     if (CodecastPlatform.Blockly === platform) {
         return <BlocklyEditor
             onInit={onInit}
+            onSelect={onSelect}
             onEditPlain={onEditPlain}
         />
     }

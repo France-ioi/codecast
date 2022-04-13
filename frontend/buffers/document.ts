@@ -164,6 +164,10 @@ export const compressRange = function(range) {
 };
 
 export const expandRange = function(range): Selection {
+    if (!Array.isArray(range)) {
+        return range;
+    }
+
     if (range.length === 2) {
         const pos = {row: range[0], column: range[1]};
 

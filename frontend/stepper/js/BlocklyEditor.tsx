@@ -3,10 +3,12 @@ import {useAppSelector} from "../../hooks";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
 import {ObjectDocument} from "../../buffers/document";
 import {BlockDocumentModel} from "../../buffers";
+import {ActionTypes} from "../../buffers/actionTypes";
 
 export interface BlocklyEditorProps {
     onInit: Function,
     onEditPlain: Function,
+    onSelect: Function,
 }
 
 export const BlocklyEditor = (props: BlocklyEditorProps) => {
@@ -33,7 +35,10 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         console.log('imported content', context.blocklyHelper.programs[0].blockly);
         context.blocklyHelper.reloading = true;
         context.blocklyHelper.loadPrograms();
-        context.blocklyHelper.reloading = false;
+        setTimeout(() => {
+            context.blocklyHelper.reloading = false;
+            console.log('end reloading');
+        });
     };
 
     const highlight = (range) => {
@@ -48,6 +53,14 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const resize = () => {
         console.log('[blockly.editor] resize');
+    };
+
+    const onBlocklyEvent = (event) => {
+        console.log('blockly event', event);
+        if ('selected' === event.element) {
+            console.log('is selected');
+            props.onSelect(event.newValue);
+        }
     };
 
     const onLoad = () => {
@@ -118,11 +131,13 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         //TODO: handle i18n
         blocklyHelper.load('fr', true, 1, blocklyOptions);
 
+        blocklyHelper.workspace.addChangeListener(onBlocklyEvent);
+
         if (typeof props.onInit === 'function') {
             const api = {
                 reset,
                 // applyDeltas,
-                // setSelection: doSetSelection,
+                setSelection: highlight,
                 // focus,
                 // scrollToLine,
                 // getSelectionRange,
