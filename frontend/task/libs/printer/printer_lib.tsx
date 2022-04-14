@@ -302,12 +302,9 @@ export class PrinterLib extends QuickAlgoLibrary {
         if (appState && appState.ioPane.mode) {
             this.ioMode = appState.ioPane.mode;
         }
-
-        // if (this.display) {
-        //     executionChannels.main.put({
-        //         action: PrinterLibAction.reset,
-        //     });
-        // }
+        if (this.display) {
+            this.redrawDisplay();
+        }
     };
 
     getInnerState() {

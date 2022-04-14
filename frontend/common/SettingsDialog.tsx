@@ -20,9 +20,10 @@ interface SettingsDialogProps {
 
 export function SettingsDialog(props: SettingsDialogProps) {
     const {baseUrl, baseDataUrl, platform, canChangePlatform, canChangeLanguage, canDownload} = useAppSelector(state => state.options);
+    const currentTask = useAppSelector(state => state.task.currentTask);
     const {mode: ioMode, modeSelect} = useAppSelector(state => state.ioPane);
     const stepper = useAppSelector(state => state.stepper);
-    const ioModeSelect = modeSelect && (!stepper || stepper.status === StepperStatus.Clear);
+    const ioModeSelect = modeSelect && (!stepper || stepper.status === StepperStatus.Clear) && !currentTask;
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
     const layoutRequiredType = useAppSelector(state => state.layout.requiredType);
 

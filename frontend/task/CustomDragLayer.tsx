@@ -19,10 +19,12 @@ export const CustomDragLayer = () => {
         y: clientOffset && clientOffset.y ? clientOffset.y : 0,
     };
 
-    if ('block' === itemType) {
-        position.x -= 3;
-        position.y -= 22;
+    if ('block' !== itemType) {
+        return null;
     }
+
+    position.x -= 3;
+    position.y -= 22;
 
     return (<div
             role="presentation"
