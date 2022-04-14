@@ -175,6 +175,10 @@ module.exports = {
     TASK_LEVEL_SUCCESS_FINISHED: "Vous avez entièrement résolu cette question.",
     TASK_BLOCKS_TITLE: "Blocs disponibles",
     TASK_BLOCKS_SUBTITLE: "Cliquez pour insérer",
+    TASK_BLOCKS_LIMIT_EXPANDED: '{current}/{limit} bloc restant|{current}/{limit} blocs restants',
+    TASK_BLOCKS_LIMIT_BLOCK: '{remaining} bloc "{name}"|{remaining} blocs "{name}"',
+    TASK_BLOCKS_LIMIT_REMAINING: 'reste :',
+    TASK_BLOCKS_OVER_LIMIT: '{overLimit} bloc en trop utilisé pour {limit} autorisés|{overLimit} blocs en trop utilisés pour {limit} autorisés',
     TASK_BLOCK_CATEGORY_ACTIONS: "Actions",
     TASK_BLOCK_CATEGORY_SENSORS: "Capteurs",
     TASK_BLOCK_CATEGORY_LOOPS: "Boucles",
@@ -223,5 +227,5 @@ module.exports = {
     ABOUT_AUTHORS: "Ce sujet a été créé par :",
     ABOUT_TRANSLATORS: "et a été traduit par :",
     ABOUT_LICENSE: "License :",
-    ABOUT_CODECAST: "Codecast est un projet de France-IOI",
+    ABOUT_CODECAST: "Codecast est un projet de France-IOI développé sous la licence MIT",
 };

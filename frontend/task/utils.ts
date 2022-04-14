@@ -1,6 +1,6 @@
 import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
 import {current, isDraft} from "immer";
-import {checkPythonCode} from "./python_utils";
+import {checkPythonCode, getPythonBlocksUsage} from "./python_utils";
 import {getMessage} from "../lang";
 import {AppStore, CodecastPlatform} from "../store";
 
@@ -70,20 +70,31 @@ export function getAvailableModules(context) {
     }
 }
 
-export function checkCompilingCode(code, platform: CodecastPlatform, state: AppStore) {
-    if (!code) {
+export function checkCompilingCode(code, platform: CodecastPlatform, state: AppStore, withEmptyCheck: boolean = true) {
+    if (withEmptyCheck && !code) {
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
 
     if (CodecastPlatform.Python === platform) {
         const context = quickAlgoLibraries.getContext(null, state.environment);
         if (context) {
-            checkPythonCode(code, context, state);
+            checkPythonCode(code, context, state, withEmptyCheck);
         }
     }
     if (CodecastPlatform.Blockly === platform) {
         // TODO: check blockly
     }
+}
+
+export function getBlocksUsage(code: string, platform: CodecastPlatform) {
+    if ('python' === platform) {
+        const context = quickAlgoLibraries.getContext(null, 'main');
+        if (context) {
+            return getPythonBlocksUsage(code, context);
+        }
+    }
+
+    return null;
 }
 
 export function getDefaultSourceCode(platform: CodecastPlatform, environment: string) {

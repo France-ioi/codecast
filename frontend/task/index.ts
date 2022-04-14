@@ -1,7 +1,7 @@
 import {extractLevelSpecific, getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest} from "typed-redux-saga";
+import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, cancelled} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
@@ -20,7 +20,7 @@ import taskSlice, {
     taskInputNeeded,
     taskLoaded,
     taskRecordableActions,
-    taskResetDone, taskSetContextIncludeBlocks, taskSetContextStrings,
+    taskResetDone, taskSetBlocksPanelCollapsed, taskSetContextIncludeBlocks, taskSetContextStrings,
     TaskSubmissionResultPayload,
     taskSuccess,
     taskSuccessClear,
@@ -31,8 +31,9 @@ import taskSlice, {
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation/doc";
+import BlocksBundle from "./blocks/blocks";
 import PlatformBundle, {
-    getTaskAnswerAggregated,
+    getTaskAnswerAggregated, platformApi,
     setPlatformBundleParameters,
     taskGradeAnswerEventSaga
 } from "./platform/platform";
@@ -76,6 +77,13 @@ export enum TaskActionTypes {
     TaskUnload = 'task/unload',
     TaskRunExecution = 'task/runExecution',
 }
+
+export enum TaskPlatformMode {
+    Source = 'source',
+    RecordingProgress = 'recording_progress',
+}
+
+export const recordingProgressSteps = 10;
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
     testId?: number,
@@ -190,6 +198,9 @@ function* createContext() {
     if (context.infos && context.infos.includeBlocks) {
         yield* put(taskSetContextIncludeBlocks(context.infos.includeBlocks));
     }
+    if (context.infos && context.infos.panelCollapsed) {
+        yield* put(taskSetBlocksPanelCollapsed(true));
+    }
     context.resetAndReloadState(testData, state);
 }
 
@@ -258,15 +269,24 @@ function* taskLoadSaga(app: App, action) {
         yield* put(taskUnload());
     }
 
+    console.log('create new context');
+
     let context = quickAlgoLibraries.getContext(null, state.environment);
     if (!context || (action.payload && action.payload.reloadContext)) {
         yield* call(createContext);
     }
 
-    const sagas = quickAlgoLibraries.getSagas(app);
     oldSagasTasks[app.environment] = yield* fork(function* () {
-        sagas.push(handleLibrariesEventListenerSaga(app));
-        yield* all(sagas);
+        try {
+            const sagas = quickAlgoLibraries.getSagas(app);
+            sagas.push(handleLibrariesEventListenerSaga(app));
+            yield* all(sagas);
+        } finally {
+            if (yield* cancelled()) {
+                console.log('finished, do cancel');
+                yield* call(cancelHandleLibrariesEventListenerSaga, app);
+            }
+        }
     });
 
     state = yield* select();
@@ -302,10 +322,8 @@ function* handleLibrariesEventListenerSaga(app: App) {
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
 
     const listeners = quickAlgoLibraries.getEventListeners();
-    console.log('task listeners', listeners);
+    console.log('create task listeners on ', app.environment, listeners);
     for (let [eventName, {module, method}] of Object.entries(listeners)) {
-        console.log({eventName, method});
-
         if ('main' === app.environment) {
             app.recordApi.on(eventName, function* (addEvent, {payload}) {
                 yield* call(addEvent, eventName, payload);
@@ -331,6 +349,18 @@ function* handleLibrariesEventListenerSaga(app: App) {
                 app.dispatch(taskUpdateState(contextState));
             });
         });
+    }
+}
+
+function* cancelHandleLibrariesEventListenerSaga(app: App) {
+    console.log('cancel saga on ', app.environment);
+    const listeners = quickAlgoLibraries.getEventListeners();
+    for (let eventName of Object.keys(listeners)) {
+        if ('main' === app.environment) {
+            console.log('remove event', eventName);
+            app.recordApi.off(eventName);
+            app.replayApi.off(eventName);
+        }
     }
 }
 
@@ -451,8 +481,21 @@ function* contextResetAndReloadStateSaga(innerState = null) {
 
 function* getTaskAnswer () {
     const state: AppStore = yield* select();
+    const taskPlatformMode = getTaskPlatformMode(state);
 
-    return selectAnswer(state) ?? '';
+    if (TaskPlatformMode.RecordingProgress === taskPlatformMode) {
+        return getAudioTimeStep(state);
+    }
+
+    if (TaskPlatformMode.Source === taskPlatformMode) {
+        return selectAnswer(state) ?? '';
+    }
+
+    return null;
+}
+
+export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
+    return !state.task.currentTask && state.player.instants ? TaskPlatformMode.RecordingProgress : TaskPlatformMode.Source;
 }
 
 function* getTaskState () {
@@ -461,6 +504,32 @@ function* getTaskState () {
 
 function* getTaskLevel () {
     return yield* select((state: AppStore) => state.task.currentLevel);
+}
+
+function getAudioTimeStep(state: AppStore) {
+    if (state.player && state.player.duration) {
+        return Math.ceil(recordingProgressSteps * state.player.audioTime / state.player.duration);
+    }
+
+    return null;
+}
+
+function* watchRecordingProgressSaga(app: App) {
+    if ('main' !== app.environment) {
+        return;
+    }
+
+    console.log('[recording.progress] watching');
+    while (true) {
+        const previousStep = yield* select((state: AppStore) => getAudioTimeStep(state));
+        yield* take(PlayerActionTypes.PlayerTick);
+        const nextStep = yield* select((state: AppStore) => getAudioTimeStep(state));
+        const shouldUpdate = previousStep !== nextStep;
+        if (shouldUpdate) {
+            console.log('[recording.progress] update', previousStep, nextStep);
+            yield* call([platformApi, platformApi.validate], 'done');
+        }
+    }
 }
 
 function getModelFromAnswer(answer: any, platform: CodecastPlatform) {
@@ -479,6 +548,7 @@ function getModelFromAnswer(answer: any, platform: CodecastPlatform) {
 export default function (bundle: Bundle) {
     bundle.include(DocumentationBundle);
     bundle.include(PlatformBundle);
+    bundle.include(BlocksBundle);
 
     setPlatformBundleParameters({
         getTaskAnswer,
@@ -486,7 +556,9 @@ export default function (bundle: Bundle) {
         getTaskLevel,
         taskChangeLevel,
         taskGrader: taskSubmissionExecutor,
-    })
+    });
+
+    bundle.addSaga(watchRecordingProgressSaga);
 
     bundle.addSaga(function* (app: App) {
         console.log('INIT TASK SAGAS');
@@ -593,7 +665,6 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(platformAnswerGraded.type, function*({payload: {score, message, error}}: ReturnType<typeof platformAnswerGraded>) {
-            log.getLogger('tests').debug('Submission execution over');
             if (score >= 1) {
                 yield* put(taskSuccess(message));
             } else if (error) {

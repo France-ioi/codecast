@@ -50,6 +50,10 @@ export default function (app, config, store) {
                     to: {file: urlJoin(ownPath, 'index.html')},
                 },
                 {
+                    from: {url: `${config.baseUrl}/offline/license?t=${token}`},
+                    to: {file: urlJoin(ownPath, 'LICENSE.txt')},
+                },
+                {
                     from: {url: `${query.recording}.mp3`},
                     to: {file: urlJoin(ownPath, 'audio.mp3')},
                 }
@@ -96,6 +100,43 @@ export default function (app, config, store) {
                         return `${url}`;
                     },
                 });
+            });
+        });
+    });
+
+    app.get('/offline/license', function (req, res) {
+        jwt.verify(req.query.t, config.ownSecret, {audience: 'offline'}, function (err, token) {
+            if (err) {
+                return res.status(400).send(err.toString());
+            }
+
+            const {query} = token;
+            const {ownPath, sharedPath} = query;
+            const options = buildCommonOptions(config,'task');
+            options.audioUrl = urlJoin(pathReverse(sharedPath), ownPath, "audio.mp3");
+
+            request(`${query.recording}.json`, async function (err, response, body) {
+                if (err) {
+                    return res.status(400).send(err.toString());
+                }
+                if (response.statusCode !== 200) {
+                    return res.status(response.statusCode).send(body);
+                }
+
+                try {
+                    options.data = JSON.parse(body);
+                    if (options.data && options.data.version && Number(options.data.version.split('.')[0]) < 7) {
+                        return res.send(`Content authored by Petra Bonfert-Taylor (Dartmouth College)
+and Rémi Sharrock (Télécom Paris)
+under Creative Commons CC BY-NC-SA 3.0 license.
+
+Codecast is developed by France-ioi under MIT License.`);
+                    }
+
+                    return res.status(400);
+                } catch (ex) {
+                    return res.status(400).send(ex.toString());
+                }
             });
         });
     });

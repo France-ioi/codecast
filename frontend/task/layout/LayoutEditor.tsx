@@ -3,12 +3,19 @@ import {BufferEditor} from "../../buffers/BufferEditor";
 import {getPlayerState} from "../../player/selectors";
 import {useAppSelector} from "../../hooks";
 import {AvailableBlocks} from "../blocks/AvailableBlocks";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
+import {quickAlgoLibraries} from "../libs/quickalgo_librairies";
+import {getContextBlocksDataSelector} from "../blocks/blocks";
+import {taskSetBlocksPanelCollapsed} from "../task_slice";
+import {useDispatch} from "react-redux";
+import {BlocksUsage} from "../blocks/BlocksUsage";
 import {CodecastPlatform} from "../../store";
-import {BlocklyEditor} from "../../stepper/js/BlocklyEditor";
 
 export function LayoutEditor() {
     const platform = useAppSelector(state => state.options.platform);
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const blocksCollapsed = useAppSelector(state => state.task.blocksPanelCollapsed);
     let sourceMode;
     switch (platform) {
         case CodecastPlatform.Arduino:
@@ -25,20 +32,36 @@ export function LayoutEditor() {
     const player = useAppSelector(state => getPlayerState(state));
     const preventInput = player.isPlaying;
 
+    const dispatch = useDispatch();
+
+    const collapseBlocks = () => {
+        dispatch(taskSetBlocksPanelCollapsed(!blocksCollapsed));
+    };
+
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector(state, context) : []);
+    const blocks = allBlocks.filter(block => false !== block.showInBlocks);
+    const displayBlocks = !!(context && blocks.length && CodecastPlatform.Python === platform);
+
     return (
         <div className="layout-editor">
-            {currentTask && CodecastPlatform.Blockly !== platform && <AvailableBlocks/>}
-            <BufferEditor
-                platform={platform}
-                buffer="source"
-                readOnly={false}
-                shield={preventInput}
-                mode={sourceMode}
-                theme="textmate"
-                requiredWidth="100%"
-                requiredHeight="100%"
-                hasAutocompletion
-            />
+            {currentTask && displayBlocks && <AvailableBlocks collapsed={blocksCollapsed}/>}
+            <div className="task-layout-editor-container">
+                {currentTask && displayBlocks && <div className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>
+                  <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft}/>
+                </div>}
+                <BufferEditor
+                    buffer="source"
+                    readOnly={false}
+                    shield={preventInput}
+                    mode={sourceMode}
+                    theme="textmate"
+                    requiredWidth="100%"
+                    requiredHeight="100%"
+                    hasAutocompletion
+                />
+            </div>
+            <BlocksUsage/>
         </div>
     );
 }
