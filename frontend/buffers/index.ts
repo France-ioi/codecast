@@ -328,7 +328,6 @@ function* buffersSaga() {
 }
 
 function resetEditor(editor, model?: BufferContentModel, goToEnd?: boolean) {
-    console.log('reset editor', editor, model, model.document);
     try {
         if (null === model) {
             editor.reset(null, null, null);

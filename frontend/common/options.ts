@@ -2,11 +2,14 @@ import {initialStateCompile} from "../stepper/compile";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
+import {ActionTypes as BufferActionTypes} from '../buffers/actionTypes';
 import {Bundle} from "../linker";
-import {put, takeEvery} from "typed-redux-saga";
+import {put, select, takeEvery} from "typed-redux-saga";
 import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
 import {Languages} from "../lang";
+import {taskLoad} from "../task";
+import {platformSaveAnswer, TaskLevelName} from "../task/platform/platform_slice";
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
@@ -117,6 +120,12 @@ export default function(bundle: Bundle) {
     bundle.addSaga(function* () {
         yield* takeEvery(ActionTypes.PlatformChanged, function* () {
             yield* put({type: StepperActionTypes.StepperExit});
+            yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: null});
+            const levels = yield* select((state: AppStore) => state.platform.levels);
+            for (let level of Object.keys(levels)) {
+                yield* put(platformSaveAnswer({level: level as TaskLevelName, answer: null}));
+            }
+            yield* put(taskLoad({reloadContext: true}));
         });
     });
 }
