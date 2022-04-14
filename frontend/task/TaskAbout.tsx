@@ -11,7 +11,6 @@ export const selectDisplayAbout = (state: AppStore) => {
 export function TaskAbout() {
     const metadata = getTaskMetadata();
 
-
     const recordingVersion = useAppSelector(state => {
         if (state.player && state.player.data && state.player.data.version) {
             let versionComponents = state.player.data.version.split('.').map(Number);
@@ -22,7 +21,7 @@ export function TaskAbout() {
         return null;
     });
 
-    if (7 > recordingVersion) {
+    if (null !== recordingVersion && 7 > recordingVersion) {
         return (
             <div className="task-license">
                 <p>Content authored by Petra Bonfert-Taylor (Dartmouth College) and Rémi Sharrock (Télécom Paris) under Creative Commons CC BY-NC-SA 3.0 license.</p>
