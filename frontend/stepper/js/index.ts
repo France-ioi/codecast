@@ -8,11 +8,16 @@ import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {TaskLevelName} from "../../task/platform/platform_slice";
 import {extractLevelSpecific} from "../../task/utils";
 import {delay} from "../api";
-import {pythonFindLimited, pythonForbidden} from "../../task/python_utils";
 import {getMessage, getMessageChoices} from "../../lang";
+import {select} from "typed-redux-saga";
 
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
     let blocklyHelper;
+
+    const language = yield* select((state: AppStore) => state.options.language.split('-')[0]);
+    const languageTranslations = require('../../lang/blockly_' + language + '.js');
+    window.goog.provide('Blockly.Msg.' + language);
+    window.Blockly.Msg = {...window.Blockly.Msg, ...languageTranslations.Msg};
 
     window.Blockly.JavaScript.STATEMENT_PREFIX = 'highlightBlock(%1);\n';
     window.Blockly.JavaScript.addReservedWords('highlightBlock');
@@ -157,6 +162,7 @@ export default function(bundle: Bundle) {
             const {platform} = state.options;
             const answer = selectAnswer(state);
             const context = quickAlgoLibraries.getContext(null, environment);
+            const language = state.options.language.split('-')[0];
 
             console.log('init stepper', environment);
             if (platform === CodecastPlatform.Blockly) {
@@ -175,7 +181,7 @@ export default function(bundle: Bundle) {
                 console.log('display', context.display);
                 const blocklyXmlCode = answer.blockly;
                 if (!blocklyHelper.workspace) {
-                    blocklyHelper.load('fr', context.display, 1, {});
+                    blocklyHelper.load(language, context.display, 1, {});
                 }
                 if (0 === blocklyHelper.programs.length) {
                     blocklyHelper.programs.push({});

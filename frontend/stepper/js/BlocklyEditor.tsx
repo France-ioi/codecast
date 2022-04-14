@@ -15,6 +15,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const contextId = useAppSelector(state => state.task.contextId);
+    const language = useAppSelector(state => state.options.language.split('-')[0]);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     const previousValue = useRef(null);
@@ -128,8 +129,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         }
 
         console.log('[blockly.editor] load blockly editor');
-        //TODO: handle i18n
-        blocklyHelper.load('fr', true, 1, blocklyOptions);
+        blocklyHelper.load(language, true, 1, blocklyOptions);
 
         blocklyHelper.workspace.addChangeListener(onBlocklyEvent);
 

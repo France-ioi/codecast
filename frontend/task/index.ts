@@ -291,7 +291,7 @@ function* taskLoadSaga(app: App, action) {
 
     state = yield* select();
     const source = selectAnswer(state);
-    if ((!source || !source.length) && currentTask) {
+    if ((!source || (typeof source === 'string' && !source.length)) && currentTask) {
         const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment);
         if (null !== defaultSourceCode) {
             console.log('Load default source code', defaultSourceCode);

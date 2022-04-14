@@ -108,6 +108,7 @@ declare global {
         task_token: any, // instance that can generate a task token
         options: any, // this is used to store default data about task
         Blockly: any,
+        goog: any,
         FioiBlockly: any,
         getBlocklyHelper: any,
         quickAlgoInterface: any,
