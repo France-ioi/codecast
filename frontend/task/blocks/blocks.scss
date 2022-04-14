@@ -143,6 +143,9 @@
     bottom: 10px;
     right: 10px;
   }
+  &.platform-blockly {
+    bottom: 100px;
+  }
   background: var(--primary-color);
   font-weight: bold;
   font-size: 16px;

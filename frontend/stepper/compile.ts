@@ -84,10 +84,6 @@ export default function(bundle: Bundle) {
             });
 
             try {
-                if (!source.trim()) {
-                    throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
-                }
-
                 checkCompilingCode(source, platform, state);
             } catch (e) {
                 yield* put({

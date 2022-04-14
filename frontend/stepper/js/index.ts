@@ -8,6 +8,8 @@ import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {TaskLevelName} from "../../task/platform/platform_slice";
 import {extractLevelSpecific} from "../../task/utils";
 import {delay} from "../api";
+import {pythonFindLimited, pythonForbidden} from "../../task/python_utils";
+import {getMessage, getMessageChoices} from "../../lang";
 
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
     let blocklyHelper;
@@ -45,6 +47,108 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
 
     const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
     blocklyHelper.setIncludeBlocks(curIncludeBlocks);
+}
+
+export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, state: AppStore, withEmptyCheck: boolean = true) {
+    console.log('check blockly code', answer, context.strings.code);
+
+    if (!answer || !answer.blockly) {
+        return;
+    }
+
+
+    const blocks = getBlocksFromXml(answer.blockly);
+
+    const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
+
+    const totalCount = blocks.length - 1;
+    if (maxInstructions && totalCount > maxInstructions) {
+        throw getMessageChoices('TASK_BLOCKS_OVER_LIMIT', totalCount - maxInstructions).format({
+            limit: maxInstructions,
+            overLimit: totalCount - maxInstructions,
+        });
+    }
+
+    const limitations = context.infos.limitedUses ? blocklyFindLimited(blocks, context.infos.limitedUses, context) : [];
+    for (let limitation of limitations) {
+        if (limitation.type == 'uses' && limitation.current > limitation.limit) {
+            throw getMessage('CODE_CONSTRAINTS_LIMITED_USES').format({keyword: limitation.name});
+        } else if (limitation.type == 'assign') {
+            throw getMessage('CODE_CONSTRAINTS_LIMITED_ASSIGN').format({keyword: limitation.name});
+        }
+    }
+
+    if (withEmptyCheck && totalCount <= 0) {
+        throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
+    }
+}
+
+export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary) {
+    if (!answer || !answer.blockly) {
+        return {
+            blocksCurrent: 0,
+            limitations: [],
+        };
+    }
+
+    console.log('blocks usage', answer);
+
+    const blocks = getBlocksFromXml(answer.blockly);
+    const limitations = (context.infos.limitedUses ? blocklyFindLimited(blocks, context.infos.limitedUses, context) : []) as {type: string, name: string, current: number, limit: number}[];
+
+    console.log('limitations', limitations);
+
+    return {
+        blocksCurrent: blocks.length - 1,
+        limitations,
+    };
+};
+
+const getBlocksFromXml = function (xmlText) {
+    const xml = window.Blockly.Xml.textToDom(xmlText)
+    const tmpOptions = new window.Blockly.Options({});
+    const tmpWorkspace = new window.Blockly.Workspace(tmpOptions);
+    window.Blockly.Xml.domToWorkspace(xml, tmpWorkspace);
+
+    return tmpWorkspace.getAllBlocks();
+};
+
+export const blocklyFindLimited = (blocks, limitedUses, context) => {
+    if (!blocks || !limitedUses) {
+        return [];
+    }
+
+    context.blocklyHelper.makeLimitedUsesPointers();
+
+    const usesCount = {};
+    const limitations = [];
+    for (let i = 0; i < blocks.length; i++) {
+        let blockType = blocks[i].type;
+        blockType = context.blocklyHelper.normalizeType(blockType);
+        if (!context.blocklyHelper.limitedPointers[blockType]) {
+            continue;
+        }
+        for (let j = 0; j < context.blocklyHelper.limitedPointers[blockType].length; j++) {
+            // Each pointer is a position in the limitedUses array that
+            // this block appears in
+            var pointer = context.blocklyHelper.limitedPointers[blockType][j];
+            if (!usesCount[pointer]) {
+                usesCount[pointer] = 0;
+            }
+            usesCount[pointer]++;
+
+            // Exceeded the number of uses
+            const limits = limitedUses[pointer];
+            if (usesCount[pointer] === limits.nbUses + 1) {
+                for (let limitBlock of limits.blocks) {
+                    const blockName = limitBlock in context.strings.code ? context.strings.code[limitBlock] : limitBlock;
+                    limitations.push({type: 'uses', name: blockName, current: usesCount[pointer], limit: limitedUses[pointer].nbUses});
+                }
+            }
+        }
+    }
+
+    return limitations;
 }
 
 export default function(bundle: Bundle) {

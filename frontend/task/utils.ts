@@ -3,6 +3,7 @@ import {current, isDraft} from "immer";
 import {checkPythonCode, getPythonBlocksUsage} from "./python_utils";
 import {getMessage} from "../lang";
 import {AppStore, CodecastPlatform} from "../store";
+import {checkBlocklyCode, getBlocklyBlocksUsage} from "../stepper/js";
 
 export function extractLevelSpecific(item, level) {
     if ((typeof item != "object")) {
@@ -75,23 +76,28 @@ export function checkCompilingCode(code, platform: CodecastPlatform, state: AppS
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
 
-    if (CodecastPlatform.Python === platform) {
-        const context = quickAlgoLibraries.getContext(null, state.environment);
-        if (context) {
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+    if (context) {
+        if (CodecastPlatform.Python === platform) {
             checkPythonCode(code, context, state, withEmptyCheck);
         }
-    }
-    if (CodecastPlatform.Blockly === platform) {
-        // TODO: check blockly
+        if (CodecastPlatform.Blockly === platform) {
+            checkBlocklyCode(code, context, state, withEmptyCheck);
+        }
     }
 }
 
-export function getBlocksUsage(code: string, platform: CodecastPlatform) {
-    if ('python' === platform) {
-        const context = quickAlgoLibraries.getContext(null, 'main');
-        if (context) {
-            return getPythonBlocksUsage(code, context);
-        }
+export function getBlocksUsage(answer, platform: CodecastPlatform) {
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    if (!context) {
+        return null;
+    }
+
+    if (CodecastPlatform.Python === platform) {
+        return getPythonBlocksUsage(answer, context);
+    }
+    if (CodecastPlatform.Blockly === platform) {
+        return getBlocklyBlocksUsage(answer, context);
     }
 
     return null;

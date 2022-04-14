@@ -1,9 +1,11 @@
 import React, {useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../../hooks";
 import {getMessage, getMessageChoices} from "../../lang";
+import {AppStore} from "../../store";
 
 export function BlocksUsage() {
     const blocksUsage = useAppSelector(state => state.task.blocksUsage);
+    const platform = useAppSelector((state: AppStore) => state.options.platform);
     const [collapsed, setCollapsed] = useState(true);
 
     const toggleCollapsed = () => {
@@ -39,7 +41,7 @@ export function BlocksUsage() {
     }).join(', ') : null;
 
     return (
-        <div ref={wrapperRef} className={`blocks-usage ${blocksUsage.error ? 'has-error' : ''} ${collapsed ? 'is-collapsed' : ''}`} onClick={toggleCollapsed}>
+        <div ref={wrapperRef} className={`blocks-usage ${blocksUsage.error ? 'has-error' : ''} ${collapsed ? 'is-collapsed' : ''} platform-${platform}`} onClick={toggleCollapsed}>
             {collapsed ?
                 <React.Fragment>
                     {blocksUsage.error ? blocksUsage.error : <span>

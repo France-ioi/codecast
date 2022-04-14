@@ -8,6 +8,7 @@ import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {BlocksUsage, taskSetBlocksUsage} from "../task_slice";
 import {getBufferModel} from "../../buffers/selectors";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
+import {selectAnswer} from "../selectors";
 
 export enum BlockType {
     Function = 'function',
@@ -201,8 +202,7 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
 
 function* checkSourceSaga() {
     const state: AppStore = yield* select();
-    const sourceModel = getBufferModel(state, 'source');
-    const currentSource = sourceModel ? sourceModel.document.toString() : null;
+    const answer = selectAnswer(state);
     const context = quickAlgoLibraries.getContext(null, 'main');
     const currentTask = state.task.currentTask;
     if (!context || !currentTask) {
@@ -211,9 +211,9 @@ function* checkSourceSaga() {
     }
 
     try {
-        checkCompilingCode(currentSource.trim(), state.options.platform, state, false);
+        checkCompilingCode(answer, state.options.platform, state, false);
 
-        const currentUsage = getBlocksUsage(currentSource.trim(), state.options.platform);
+        const currentUsage = getBlocksUsage(answer, state.options.platform);
         const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
 
         const blocksUsage: BlocksUsage = {
@@ -231,6 +231,7 @@ function* checkSourceSaga() {
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
         yield* debounce(500, BufferActionTypes.BufferEdit, checkSourceSaga);
+        yield* debounce(500, BufferActionTypes.BufferEditPlain, checkSourceSaga);
         yield* debounce(500, BufferActionTypes.BufferReset, checkSourceSaga);
 
         yield* takeEvery(BufferActionTypes.BufferInit, function* (action) {

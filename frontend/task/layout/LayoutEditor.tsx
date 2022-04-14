@@ -51,6 +51,7 @@ export function LayoutEditor() {
                   <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft}/>
                 </div>}
                 <BufferEditor
+                    platform={platform}
                     buffer="source"
                     readOnly={false}
                     shield={preventInput}
