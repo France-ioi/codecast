@@ -178,14 +178,16 @@ function* createContext() {
     }
     if (!contextLib) {
         try {
-            const contextLib = new PrinterLib(display, levelGridInfos);
+            contextLib = new PrinterLib(display, levelGridInfos);
             quickAlgoLibraries.addLibrary(contextLib, 'printer', state.environment);
         } catch (e) {
             console.error("Cannot create context", e);
-            const contextLib = new QuickAlgoLibrary(display, levelGridInfos);
+            contextLib = new QuickAlgoLibrary(display, levelGridInfos);
             quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);
         }
     }
+
+    console.log('created context', contextLib);
 
     if (CodecastPlatform.Blockly === state.options.platform && currentTask) {
         yield* call(loadBlocklyHelperSaga, contextLib, currentLevel);

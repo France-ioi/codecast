@@ -38,7 +38,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
         };
     }
 
-    console.log('[blockly.editor] load blocky helper');
+    console.log('[blockly.editor] load blockly helper', context);
     blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
     // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
     // during loadPrograms at the start of the program execution
@@ -199,10 +199,15 @@ export default function(bundle: Bundle) {
 
                 blocklyHelper.programs[0].blocklyJS = blocklyHelper.getCode("javascript");
 
-                let code = blocklyHelper.getFullCode(blocklyHelper.programs[0].blocklyJS);
+                let fullCode = blocklyHelper.getBlocklyLibCode(blocklyHelper.generators)
+                    + blocklyHelper.programs[0].blocklyJS
+                    + "highlightBlock(undefined);\n"
+                    + "program_end();"
+
+                console.log('full code', fullCode);
 
                 const blocklyInterpreter = Codecast.runner;
-                blocklyInterpreter.initCodes([code], blocksData);
+                blocklyInterpreter.initCodes([fullCode], blocksData);
             }
         });
     })

@@ -292,21 +292,10 @@ export default class BlocklyRunner extends AbstractRunner {
 
         let highlightBlock = (id, callback) => {
             id = id ? id.toString() : '';
-
-            // if (this.context.display) {
-            //     try {
-            //         if (this.context.infos && !this.context.infos.actionDelay) {
-            //             id = null;
-            //         }
-            //         this.context.blocklyHelper.highlightBlock(id);
-            //     } catch(e) {}
-            // }
-
             // We always execute directly the first highlightBlock
             if(this.firstHighlight || !this.stepMode) {
                 this.firstHighlight = false;
                 callback();
-                // this.runSyncBlock();
             } else {
                 // Interrupt here for step mode, allows to stop before each
                 // instruction
