@@ -27,6 +27,7 @@ export function InputOutputVisualization() {
                 <BufferEditor
                     buffer={inputBufferLibTest}
                     mode='text'
+                    readOnly={!!currentTask}
                     requiredWidth='100%'
                     requiredHeight='150px'
                 />
@@ -36,6 +37,7 @@ export function InputOutputVisualization() {
                       <p className="mt-4">{getMessage('IOPANE_INITIAL_OUTPUT')}</p>
                       <BufferEditor
                         buffer={outputBufferLibTest}
+                        readOnly={true}
                         mode='text'
                         requiredWidth='100%'
                         requiredHeight='150px'
