@@ -254,13 +254,18 @@ function* buffersSaga() {
         const state: AppStore = yield* select();
         // @ts-ignore
         const {buffer, block, pos} = action.payload;
-        const withoutNewLine = BlockType.Token === block.type;
         const editor = getBufferEditor(state, buffer);
         if (editor) {
+            let insertNewLineBefore = false;
+            let insertNewLineAfter = false;
+            if ((BlockType.Function === block.type && block.category !== 'sensors') || BlockType.Directive === block.type) {
+                insertNewLineBefore = insertNewLineAfter = true;
+            }
+
             if (block.snippet) {
-                editor.insertSnippet(block.snippet, pos ? pos : null);
+                editor.insert(block.snippet, pos ? pos : null, true, insertNewLineBefore, insertNewLineAfter);
             } else {
-                editor.insert(block.code, pos ? pos : null, withoutNewLine);
+                editor.insert(block.code, pos ? pos : null, false, insertNewLineBefore, insertNewLineAfter);
             }
         }
     });

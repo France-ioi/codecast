@@ -175,27 +175,32 @@ export function Editor(props: EditorProps) {
         editor.current.gotoLine(Infinity, Infinity, false);
     }
 
-    const insert = (text, pos = null, withoutNewLine = false, snippet = false) => {
+    const insert = (text, pos = null, snippet = false, newLineBefore = false, newLineAfter = false) => {
         if (!editor.current) {
             return;
         }
 
-        const cursorPosition = pos ? pos : editor.current.getCursorPosition();
+        let cursorPosition = pos ? pos : editor.current.getCursorPosition();
         const textAfter = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, cursorPosition.column, Infinity, Infinity));
         const indentationCurrentLine = editor.current.session.doc.getLine(cursorPosition.row).search(/\S|$/);
+        const textBeforeOnLine = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, 0, cursorPosition.row, cursorPosition.column));
+        const hasTextBeforeOnLine = textBeforeOnLine && textBeforeOnLine.trim().length;
+
         if (snippet) {
+            if (hasTextBeforeOnLine && newLineBefore) {
+                editor.current.session.insert(cursorPosition, "\n" + ' '.repeat(indentationCurrentLine));
+            }
+            cursorPosition = editor.current.getCursorPosition();
             editor.current.insertSnippet(text, cursorPosition);
-            if (text.indexOf("${") === -1) {
-                editor.current.session.insert({row: cursorPosition.row + 1, column: cursorPosition.column}, (!textAfter.trim().length && !withoutNewLine ? "\n" + ' '.repeat(indentationCurrentLine) : ""));
+            cursorPosition = editor.current.getCursorPosition();
+            if (newLineAfter) {
+                editor.current.session.insert(cursorPosition, "\n" + ' '.repeat(indentationCurrentLine));
             }
         } else {
-            editor.current.session.insert(cursorPosition, text + (!textAfter.trim().length && !withoutNewLine ? "\n" + ' '.repeat(indentationCurrentLine) : ""));
+            const insertNewLine = true;
+            const textToInsert = (insertNewLine ?  "\n" + ' '.repeat(indentationCurrentLine) : "") + text + (!textAfter.trim().length && newLineAfter ? "\n" + ' '.repeat(indentationCurrentLine) : "");
         }
         editor.current.focus();
-    }
-
-    const insertSnippet = (snippet, pos) => {
-        insert(snippet, pos, false, true);
     }
 
     const resize = () => {
@@ -279,7 +284,6 @@ export function Editor(props: EditorProps) {
                 resize,
                 goToEnd,
                 insert,
-                insertSnippet,
                 getEmptyModel() {
                     return new DocumentModel();
                 },
