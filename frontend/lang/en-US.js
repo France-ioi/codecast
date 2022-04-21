@@ -127,6 +127,7 @@ module.exports = {
     PLATFORM_ARDUINO: "C (Arduino)",
     PLATFORM_PYTHON: "Python",
     PLATFORM_BLOCKLY: "Blockly",
+    PLATFORM_SCRATCH: "Scratch",
     PROGRAM_MISSING_LIB: "You must include the line {line} in your program.",
 
     EDITOR_SPLIT: 'Split',

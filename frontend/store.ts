@@ -29,6 +29,7 @@ export enum CodecastPlatform {
     Unix = 'unix',
     Arduino = 'arduino',
     Blockly = 'blockly',
+    Scratch = 'scratch',
 }
 
 export enum CodecastOptionsMode {

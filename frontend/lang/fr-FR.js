@@ -127,6 +127,7 @@ module.exports = {
     PLATFORM_ARDUINO: "C (Arduino)",
     PLATFORM_PYTHON: "Python",
     PLATFORM_BLOCKLY: "Blockly",
+    PLATFORM_SCRATCH: "Scratch",
     PROGRAM_MISSING_LIB: "Vous devez mettre la ligne {line} dans votre programme.",
 
     USER_SELECT_LOGIN_METHOD: "Choisissez une méthode de connexion :",

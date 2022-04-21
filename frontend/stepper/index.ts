@@ -44,7 +44,7 @@ import IoBundle from './io/index';
 import ViewsBundle from './views/index';
 import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle from './python';
-import BlocklyBundle from './js';
+import BlocklyBundle, {hasBlockPlatform} from './js';
 import {analyseState, collectDirectives} from './c/analysis';
 import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
 import {Directive, parseDirectives} from "./python/directives";
@@ -188,7 +188,7 @@ export function getRunnerClassFromPlatform(platform: CodecastPlatform) {
     if (CodecastPlatform.Unix === platform) {
         return UnixRunner;
     }
-    if (CodecastPlatform.Blockly === platform) {
+    if (hasBlockPlatform(platform)) {
         return BlocklyRunner;
     }
 
@@ -328,7 +328,7 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
 
     /* TODO: extend stepper API to add enrichers that run here */
     console.log('make enrich', stepperState, Codecast.runner);
-    if (stepperState.platform === CodecastPlatform.Blockly) {
+    if (hasBlockPlatform(stepperState.platform)) {
         stepperState.currentBlockId = (Codecast.runner as BlocklyRunner).getCurrentBlockId();
         console.log('got block id', stepperState.currentBlockId);
         if (context === 'Stepper.Progress') {
@@ -430,7 +430,7 @@ export function getNodeRange(stepperState?: StepperState) {
                 column: 100,
             }
         };
-    } else if (stepperState.platform === CodecastPlatform.Blockly) {
+    } else if (hasBlockPlatform(stepperState.platform)) {
         //TODO
         return null;
     } else {
@@ -1022,7 +1022,7 @@ export function* updateSourceHighlightSaga(state: AppStoreReplay) {
         return;
     }
 
-    if (state.options.platform === CodecastPlatform.Blockly) {
+    if (hasBlockPlatform(state.options.platform)) {
         yield* put({
             type: BufferActionTypes.BufferHighlight,
             buffer: 'source',
@@ -1042,7 +1042,7 @@ export function* updateSourceHighlightSaga(state: AppStoreReplay) {
 function* clearSourceHighlightSaga() {
     const state: AppStore = yield* select();
 
-    if (state.options.platform === CodecastPlatform.Blockly) {
+    if (hasBlockPlatform(state.options.platform)) {
         yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: null});
     } else {
         const startPos = {row: 0, column: 0};
@@ -1318,6 +1318,7 @@ function postLink(app: App) {
         switch (platform) {
             case CodecastPlatform.Python:
             case CodecastPlatform.Blockly:
+            case CodecastPlatform.Scratch:
                 stepperState.lastProgramState = {};
                 stepperState.programState = {...stepperState.lastProgramState};
 

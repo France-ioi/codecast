@@ -71,7 +71,7 @@ import {createAction} from "@reduxjs/toolkit";
 import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
 import {IoMode} from "../stepper/io";
 import {selectAnswer} from "./selectors";
-import {loadBlocklyHelperSaga} from "../stepper/js";
+import {hasBlockPlatform, loadBlocklyHelperSaga} from "../stepper/js";
 import {ObjectDocument} from "../buffers/document";
 
 export enum TaskActionTypes {
@@ -189,7 +189,7 @@ function* createContext() {
 
     console.log('created context', contextLib);
 
-    if (CodecastPlatform.Blockly === state.options.platform && currentTask) {
+    if (hasBlockPlatform(state.options.platform) && currentTask) {
         yield* call(loadBlocklyHelperSaga, contextLib, currentLevel);
     }
 
@@ -543,7 +543,7 @@ function* watchRecordingProgressSaga(app: App) {
 
 function getModelFromAnswer(answer: any, platform: CodecastPlatform) {
     if (null === answer) {
-        return CodecastPlatform.Blockly === platform ? new BlockDocumentModel() : new DocumentModel();
+        return hasBlockPlatform(platform) ? new BlockDocumentModel() : new DocumentModel();
     }
 
     console.log('get model from answer', answer);

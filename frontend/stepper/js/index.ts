@@ -88,6 +88,10 @@ export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, sta
     }
 }
 
+export const hasBlockPlatform = (platform: CodecastPlatform) => {
+    return CodecastPlatform.Blockly === platform || CodecastPlatform.Scratch === platform;
+};
+
 export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary) {
     if (!answer || !answer.blockly) {
         return {
@@ -165,7 +169,7 @@ export default function(bundle: Bundle) {
             const language = state.options.language.split('-')[0];
 
             console.log('init stepper', environment);
-            if (platform === CodecastPlatform.Blockly) {
+            if (hasBlockPlatform(platform)) {
                 context.onError = (diagnostics) => {
                     console.log('context error', diagnostics);
                     // channel.put({

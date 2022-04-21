@@ -6,6 +6,7 @@ import {withResizeDetector} from "react-resize-detector/build/withPolyfill";
 import {Block} from "../task/blocks/blocks";
 import {CodecastPlatform} from "../store";
 import {BlocklyEditor} from "../stepper/js/BlocklyEditor";
+import {hasBlockPlatform} from "../stepper/js";
 
 interface BufferEditorProps {
     readOnly?: boolean,
@@ -62,7 +63,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
         dispatch({type: ActionTypes.BufferInsertBlock, payload: {buffer, block, pos}});
     };
 
-    if (CodecastPlatform.Blockly === platform) {
+    if (hasBlockPlatform(platform)) {
         return <BlocklyEditor
             onInit={onInit}
             onSelect={onSelect}

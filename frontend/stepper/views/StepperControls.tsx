@@ -24,6 +24,7 @@ import {
 import {getMessage} from "../../lang";
 import {Codecast} from "../../index";
 import BlocklyRunner from "../js/blockly_runner";
+import {hasBlockPlatform} from "../js";
 
 interface StepperControlsStateToProps {
     showStepper: boolean,
@@ -100,7 +101,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
             showEdit = true;
             showControls = true;
             canExit = enabled;
-            if (platform === CodecastPlatform.Blockly) {
+            if (hasBlockPlatform(platform)) {
                 canStep = !currentStepperState.isFinished;
             } else if (platform === CodecastPlatform.Python) {
                 // We can step out only if we are in >= 2 levels of functions (the global state + in a function).

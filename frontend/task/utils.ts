@@ -3,7 +3,7 @@ import {current, isDraft} from "immer";
 import {checkPythonCode, getPythonBlocksUsage} from "./python_utils";
 import {getMessage} from "../lang";
 import {AppStore, CodecastPlatform} from "../store";
-import {checkBlocklyCode, getBlocklyBlocksUsage} from "../stepper/js";
+import {checkBlocklyCode, getBlocklyBlocksUsage, hasBlockPlatform} from "../stepper/js";
 
 export function extractLevelSpecific(item, level) {
     if ((typeof item != "object")) {
@@ -81,7 +81,7 @@ export function checkCompilingCode(code, platform: CodecastPlatform, state: AppS
         if (CodecastPlatform.Python === platform) {
             checkPythonCode(code, context, state, withEmptyCheck);
         }
-        if (CodecastPlatform.Blockly === platform) {
+        if (hasBlockPlatform(platform)) {
             checkBlocklyCode(code, context, state, withEmptyCheck);
         }
     }
@@ -96,7 +96,7 @@ export function getBlocksUsage(answer, platform: CodecastPlatform) {
     if (CodecastPlatform.Python === platform) {
         return getPythonBlocksUsage(answer, context);
     }
-    if (CodecastPlatform.Blockly === platform) {
+    if (hasBlockPlatform(platform)) {
         return getBlocklyBlocksUsage(answer, context);
     }
 
@@ -115,7 +115,7 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
             }
             return content;
         }
-    } else if (CodecastPlatform.Blockly === platform) {
+    } else if (hasBlockPlatform(platform)) {
         if (context) {
             return {blockly: context.blocklyHelper.getDefaultContent()};
         } else {

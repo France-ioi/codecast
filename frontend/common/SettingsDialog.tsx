@@ -84,6 +84,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
                             <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
                             <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
                             <option value='blockly'>{getMessage('PLATFORM_BLOCKLY')}</option>
+                            <option value='scratch'>{getMessage('PLATFORM_SCRATCH')}</option>
                           </select>
                         </div>
                       </label>
