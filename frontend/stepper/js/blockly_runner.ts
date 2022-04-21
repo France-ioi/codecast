@@ -83,14 +83,14 @@ export default class BlocklyRunner extends AbstractRunner {
 
     reportBlockValue(id, value, varName) {
         // Show a popup displaying the value of a block in step-by-step mode
-        console.log('report block value', id, value, varName);
+        console.log('report block value', id, value, varName, this.strings);
         if (this.context.display && this.stepMode) {
             let displayStr = this.valueToString(value);
             if(value && value.type == 'boolean') {
-                displayStr = value.data ? this.strings.valueTrue : this.strings.valueFalse;
+                displayStr = value.data ? this.context.blocklyHelper.strings.valueTrue : this.context.blocklyHelper.strings.valueFalse;
             }
             if(varName == '@@LOOP_ITERATION@@') {
-                displayStr = this.strings.loopIteration + ' ' + displayStr;
+                displayStr = this.context.blocklyHelper.strings.loopIteration + ' ' + displayStr;
             } else if(varName) {
                 varName = varName.toString();
                 // Get the original variable name
@@ -445,12 +445,12 @@ export default class BlocklyRunner extends AbstractRunner {
                         break;
                     }
                 }
-                message = this.strings.uninitializedlet + ' ' + varName;
+                message = this.context.blocklyHelper.strings.uninitializedlet + ' ' + varName;
             }
 
             if(message.indexOf('undefined') != -1) {
                 console.error(e)
-                message += '. ' + this.strings.undefinedMsg;
+                message += '. ' + this.context.blocklyHelper.strings.undefinedMsg;
             }
 
             if ((this.context.nbTestCases != undefined) && (this.context.nbTestCases > 1)) {
