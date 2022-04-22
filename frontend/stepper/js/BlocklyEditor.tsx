@@ -19,6 +19,8 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const context = quickAlgoLibraries.getContext(null, 'main');
     const previousValue = useRef(null);
+    const loaded = useRef(false);
+    const resetDisplayTimeout = useRef(null);
 
     const reset = (value, selection, firstVisibleRow) => {
         console.log('[blockly.editor] reset', value);
@@ -49,7 +51,11 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             window.Blockly.selected = null;
         }
 
-        context.blocklyHelper.highlightBlock(range);
+        try {
+            context.blocklyHelper.highlightBlock(range);
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     const resize = () => {
@@ -58,26 +64,23 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const onBlocklyEvent = (event) => {
         console.log('blockly event', event);
+        const eventType = event ? event.constructor : null;
+
+        let isBlockEvent = event ? (
+            // eventType === window.Blockly.Events.Create ||
+            eventType === window.Blockly.Events.Delete ||
+            eventType === window.Blockly.Events.Move ||
+            eventType === window.Blockly.Events.Change) : true;
+
         if ('selected' === event.element) {
             console.log('is selected');
             props.onSelect(event.newValue);
         }
-    };
 
-    const onLoad = () => {
-        if (!currentTask || !context) {
-            console.log('[blockly.editor] load no data');
-            return;
-        }
-
-        let loaded = false;
-        let timeout;
-
-        console.log('[blockly.editor] load with data', context.infos.includeBlocks);
-
-        window.quickAlgoInterface.onEditorChange = () => {
+        if (isBlockEvent) {
+            const blocklyHelper = context.blocklyHelper;
             console.log('on editor change');
-            if (blocklyHelper.languages && blocklyHelper.languages.length && loaded && !blocklyHelper.reloading) {
+            if (blocklyHelper.languages && blocklyHelper.languages.length && loaded.current && !blocklyHelper.reloading) {
                 blocklyHelper.savePrograms();
                 const answer = {...blocklyHelper.programs[0]};
                 if (answer.blockly !== previousValue.current) {
@@ -87,17 +90,26 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                     props.onEditPlain(document);
                     if (!blocklyHelper.reloading) {
                         console.log('timeout before removing highlight');
-                        if (timeout) {
-                            clearTimeout(timeout);
+                        if (resetDisplayTimeout.current) {
+                            clearTimeout(resetDisplayTimeout.current);
+                            resetDisplayTimeout.current = null;
                         }
-                        timeout = setTimeout(() => {
+                        resetDisplayTimeout.current = setTimeout(() => {
                             blocklyHelper.onChangeResetDisplayFct();
                         }, 500);
                     }
                 }
             }
-        };
+        }
+    };
 
+    const onLoad = () => {
+        if (!currentTask || !context) {
+            console.log('[blockly.editor] load no data');
+            return;
+        }
+
+        console.log('[blockly.editor] load with data', context.infos.includeBlocks);
         const blocklyHelper = context.blocklyHelper;
 
         const blocklyOptions = {
@@ -153,7 +165,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             props.onInit(api);
         }
 
-        loaded = true;
+        loaded.current = true;
     }
 
     useEffect(() => {
