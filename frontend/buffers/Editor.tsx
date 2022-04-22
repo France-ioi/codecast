@@ -181,7 +181,7 @@ export function Editor(props: EditorProps) {
         }
 
         let cursorPosition = pos ? pos : editor.current.getCursorPosition();
-        const textAfter = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, cursorPosition.column, Infinity, Infinity));
+        // const textAfter = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, cursorPosition.column, Infinity, Infinity));
         const indentationCurrentLine = editor.current.session.doc.getLine(cursorPosition.row).search(/\S|$/);
         const textBeforeOnLine = editor.current.session.doc.getTextRange(new Range(cursorPosition.row, 0, cursorPosition.row, cursorPosition.column));
         const hasTextBeforeOnLine = textBeforeOnLine && textBeforeOnLine.trim().length;
@@ -197,8 +197,8 @@ export function Editor(props: EditorProps) {
                 editor.current.session.insert(cursorPosition, "\n" + ' '.repeat(indentationCurrentLine));
             }
         } else {
-            const insertNewLine = true;
-            const textToInsert = (insertNewLine ?  "\n" + ' '.repeat(indentationCurrentLine) : "") + text + (!textAfter.trim().length && newLineAfter ? "\n" + ' '.repeat(indentationCurrentLine) : "");
+            const textToInsert = (newLineBefore ?  "\n" + ' '.repeat(indentationCurrentLine) : "") + text + (newLineAfter ? "\n" + ' '.repeat(indentationCurrentLine) : "");
+            editor.current.session.insert(cursorPosition, textToInsert);
         }
         editor.current.focus();
     }
