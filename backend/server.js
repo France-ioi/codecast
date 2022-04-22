@@ -124,7 +124,7 @@ function addBackendRoutes(app, config, store) {
                 }
 
                 let [platform, filePath] = -1 !== file.indexOf(':') ? file.split(':') : [null, file];
-                if (null === platform || platform === options.platform) {
+                if ((options.platform === 'scratch' && platform !== 'blockly') || (options.platform !== 'scratch' && platform !== 'scratch')) {
                     filePaths.push(filePath);
                 }
             }

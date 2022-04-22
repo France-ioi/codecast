@@ -214,15 +214,17 @@ function* checkSourceSaga() {
         checkCompilingCode(answer, state.options.platform, state, false);
 
         const currentUsage = getBlocksUsage(answer, state.options.platform);
-        const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
+        if (currentUsage) {
+            const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
 
-        const blocksUsage: BlocksUsage = {
-            blocksCurrent: currentUsage.blocksCurrent,
-            blocksLimit: maxInstructions,
-            limitations: currentUsage.limitations.filter(limitation => 'uses' === limitation.type),
-        };
+            const blocksUsage: BlocksUsage = {
+                blocksCurrent: currentUsage.blocksCurrent,
+                blocksLimit: maxInstructions,
+                limitations: currentUsage.limitations.filter(limitation => 'uses' === limitation.type),
+            };
 
-        yield* put(taskSetBlocksUsage(blocksUsage));
+            yield* put(taskSetBlocksUsage(blocksUsage));
+        }
     } catch (e) {
         yield* put(taskSetBlocksUsage({error: e.toString()}));
     }
