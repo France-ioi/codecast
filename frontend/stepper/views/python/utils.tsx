@@ -1,5 +1,6 @@
 import React from 'react';
 import {SkulptAnalysis, SkulptScope, SkulptVariable} from "../../python/analysis/analysis";
+import {AnalysisSnapshot} from "../../analysis";
 
 /**
  * Gets the scope's loaded references from a variable name.
@@ -9,15 +10,15 @@ import {SkulptAnalysis, SkulptScope, SkulptVariable} from "../../python/analysis
  *
  * @return {object|null}
  */
-export const getLoadedReferencesFromVariable = function(analysis: SkulptAnalysis, name: string): SkulptVariable {
+export const getLoadedReferencesFromVariable = function(analysis: AnalysisSnapshot, name: string): SkulptVariable {
     // Check in the last (the current) and the first (which is the global) scopes.
 
-    const nbScopes = analysis.functionCallStack.length;
-    if (getVariableInScope(analysis.functionCallStack[nbScopes - 1], name)) {
-        return analysis.functionCallStack[nbScopes - 1].loadedReferences;
+    const nbScopes = analysis.stackFrames.length;
+    if (getVariableInScope(analysis.stackFrames[nbScopes - 1], name)) {
+        return analysis.stackFrames[nbScopes - 1].loadedReferences;
     }
-    if (nbScopes > 1 && getVariableInScope(analysis.functionCallStack[0], name)) {
-        return analysis.functionCallStack[0].loadedReferences;
+    if (nbScopes > 1 && getVariableInScope(analysis.stackFrames[0], name)) {
+        return analysis.stackFrames[0].loadedReferences;
     }
 
     // @ts-ignore
@@ -32,7 +33,7 @@ export const getLoadedReferencesFromVariable = function(analysis: SkulptAnalysis
  *
  * @return {object|null}
  */
-export const getVariable = function(analysis: SkulptAnalysis, name: string): SkulptVariable {
+export const getVariable = function(analysis: AnalysisSnapshot, name: string): SkulptVariable {
     // Check in the last (the current) and the first (which is the global) scopes.
 
     const nbScopes = analysis.functionCallStack.length;

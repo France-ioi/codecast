@@ -46,7 +46,7 @@ import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle from './python';
 import BlocklyBundle, {hasBlockPlatform} from './js';
 import {analyseState, collectDirectives} from './c/analysis';
-import {analyseSkulptState, getSkulptSuspensionsCopy, SkulptAnalysis} from "./python/analysis/analysis";
+import {convertSkulptStateToAnalysisSnapshot, getSkulptSuspensionsCopy} from "./python/analysis/analysis";
 import {Directive, parseDirectives} from "./python/directives";
 import {
     ActionTypes as StepperActionTypes,
@@ -77,6 +77,7 @@ import AbstractRunner from "./abstract_runner";
 import {SagaIterator} from "redux-saga";
 import BlocklyRunner from "./js/blockly_runner";
 import UnixRunner from "./c/unix_runner";
+import {AnalysisSnapshot} from "./analysis";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -127,8 +128,8 @@ const initialStateStepperState = {
     ports: [] as ArduinoPort[], // Only used for arduino
     selectedPort: {} as any, // Only used for arduino
     controls: initialStepperStateControls, // Only used for c
-    analysis: null as SkulptAnalysis | any,
-    lastAnalysis: null as SkulptAnalysis, // Only used for python
+    analysis: null as AnalysisSnapshot,
+    lastAnalysis: null as AnalysisSnapshot, // Only used for python
     directives: {
         ordered: [],
         functionCallStack: null,
@@ -363,7 +364,7 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
                 stepperState.isFinished = true;
             } else {
                 console.log('INCREASE STEP NUM TO ', stepperState.analysis.stepNum + 1);
-                stepperState.analysis = analyseSkulptState(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
+                stepperState.analysis = convertSkulptStateToAnalysisSnapshot(stepperState.suspensions, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
                 stepperState.directives = {
                     ordered: parseDirectives(stepperState.analysis),
                     functionCallStackMap: null,
@@ -374,14 +375,14 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
 
         if (!stepperState.analysis) {
             stepperState.analysis =  {
-                functionCallStack: [],
+                stackFrames: [],
                 code: (Codecast.runner as PythonRunner)._code,
                 lines: (Codecast.runner as PythonRunner)._code.split("\n"),
                 stepNum: 0
             };
 
             stepperState.lastAnalysis = {
-                functionCallStack: [],
+                stackFrames: [],
                 code: (Codecast.runner as PythonRunner)._code,
                 lines: (Codecast.runner as PythonRunner)._code.split("\n"),
                 stepNum: 0
@@ -411,14 +412,14 @@ export function getNodeRange(stepperState?: StepperState) {
     }
 
     if (stepperState.platform === CodecastPlatform.Python) {
-        const {functionCallStack} = stepperState.analysis;
-        const stackFrame = functionCallStack[functionCallStack.length - 1];
+        const {stackFrames} = stepperState.analysis;
+        const stackFrame = stackFrames[stackFrames.length - 1];
         if (!stackFrame) {
             return null;
         }
 
-        const line = stackFrame.currentLine;
-        const columnNumber = stackFrame.currentColumn;
+        const line = stackFrame.line;
+        const columnNumber = stackFrame.column;
 
         return {
             start: {
@@ -443,11 +444,11 @@ export function getNodeRange(stepperState?: StepperState) {
         if (focusDepth === 0) {
             return control.node[1].range;
         } else {
-            const {functionCallStack} = stepperState.analysis;
-            const stackFrame = functionCallStack[functionCallStack.length - focusDepth];
+            const {stackFrames} = stepperState.analysis;
+            const stackFrame = stackFrames[stackFrames.length - focusDepth];
 
             // @ts-ignore
-            return stackFrame.scope.cont.node[1].range;
+            return stackFrame.scopes[0].cont.node[1].range;
         }
     }
 }
@@ -628,7 +629,7 @@ function stepperStackUpReducer(state: AppStoreReplay): void {
 
         controls.stack.focusDepth = focusDepth;
 
-        const directives = collectDirectives(analysis.functionCallStack, focusDepth);
+        const directives = collectDirectives(analysis.stackFrames, focusDepth);
         state.stepper.currentStepperState.controls = controls;
         state.stepper.currentStepperState.directives = directives;
     }
@@ -636,14 +637,14 @@ function stepperStackUpReducer(state: AppStoreReplay): void {
 
 function stepperStackDownReducer(state: AppStoreReplay): void {
     let {controls, analysis} = state.stepper.currentStepperState;
-    const stackDepth = analysis.functionCallStack.length;
+    const stackDepth = analysis.stackFrames.length;
     let focusDepth = controls.stack.focusDepth;
     if (focusDepth + 1 < stackDepth) {
         focusDepth += 1;
 
         controls.stack.focusDepth = focusDepth;
 
-        const directives = collectDirectives(analysis.functionCallStack, focusDepth);
+        const directives = collectDirectives(analysis.stackFrames, focusDepth);
         state.stepper.currentStepperState.controls = controls;
         state.stepper.currentStepperState.directives = directives;
     }

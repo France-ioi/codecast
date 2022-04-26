@@ -29,7 +29,7 @@ export default function(bundle: Bundle) {
     function stackViewPathToggleReducer(state: AppStore, action): void {
         const {scopeIndex, path, isOpened} = action.payload;
 
-        state.stepper.currentStepperState.analysis.functionCallStack[scopeIndex].openedPaths[path] = isOpened;
+        state.stepper.currentStepperState.analysis.stackFrames[scopeIndex].openedPaths[path] = isOpened;
     }
 
     bundle.defer(function({recordApi, replayApi, stepperApi}: App) {
