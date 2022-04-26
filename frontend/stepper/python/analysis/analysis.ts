@@ -1,10 +1,6 @@
 import {VIEW_DIRECTIVE_PREFIX} from "../directives";
-import {AnalysisScope, AnalysisSnapshot, AnalysisStackFrame, AnalysisVariable} from "../../analysis";
+import {AnalysisScope, AnalysisSnapshot, AnalysisStackFrame, AnalysisVariable} from "../../analysis/helpers";
 import {DebugProtocol} from "vscode-debugprotocol";
-import * as React from "react";
-import {isLoaded} from "../../analysis/helpers";
-import {isEmptyObject} from "../../../utils/javascript";
-import {AnalysisVariableValue} from "../../analysis/AnalysisVariableValue";
 
 export interface SkulptAnalysis {
     functionCallStack?: SkulptScope[],

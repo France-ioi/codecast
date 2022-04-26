@@ -1,5 +1,4 @@
-import {SkulptAnalysis} from "./analysis/analysis";
-import {AnalysisSnapshot, AnalysisStackFrame} from "../analysis";
+import {AnalysisSnapshot, AnalysisStackFrame} from "../analysis/helpers";
 
 export const VIEW_DIRECTIVE_PREFIX = '_VIEW_';
 

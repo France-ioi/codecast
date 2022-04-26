@@ -1,6 +1,6 @@
 import React from 'react';
 import {SkulptAnalysis, SkulptScope, SkulptVariable} from "../../python/analysis/analysis";
-import {AnalysisSnapshot} from "../../analysis";
+import {AnalysisSnapshot} from "../../analysis/helpers";
 
 /**
  * Gets the scope's loaded references from a variable name.

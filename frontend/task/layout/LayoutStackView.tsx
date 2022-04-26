@@ -1,5 +1,4 @@
 import React from "react";
-import {PythonStackView} from "../../stepper/python/analysis/components/PythonStackView";
 import {StackView} from "../../stepper/views/c/StackView";
 import {useAppSelector} from "../../hooks";
 import {CodecastPlatform} from "../../store";

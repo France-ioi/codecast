@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {AnalysisVariableValue} from "./AnalysisVariableValue";
-import {AnalysisVariable as AnalysisVariableType, CodecastAnalysisVariable} from "../analysis";
+import {CodecastAnalysisVariable} from "./helpers";
 
 interface AnalysisVariableProps {
     path?: string,
