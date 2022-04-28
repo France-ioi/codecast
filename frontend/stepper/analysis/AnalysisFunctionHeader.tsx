@@ -1,13 +1,8 @@
 import * as React from 'react';
-import {AnalysisVariableValue} from "./AnalysisVariableValue";
-import {CodecastAnalysisStackFrame} from "./helpers";
+import {CodecastAnalysisStackFrame} from "./index";
 
 interface AnalysisFunctionHeaderProps {
     stackFrame: CodecastAnalysisStackFrame,
-    openedPaths: {
-        [key: string]: boolean
-    },
-    scopeIndex: number
 }
 
 export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.Element => {

@@ -77,7 +77,7 @@ import AbstractRunner from "./abstract_runner";
 import {SagaIterator} from "redux-saga";
 import BlocklyRunner from "./js/blockly_runner";
 import UnixRunner from "./c/unix_runner";
-import {AnalysisSnapshot} from "./analysis/helpers";
+import {AnalysisSnapshot} from "./analysis";
 
 export enum StepperStepMode {
     Run = 'run',

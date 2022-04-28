@@ -26,12 +26,11 @@ export interface AutoRecordingParams {
     sliceName: string,
     actionNames: string[],
     actions: any,
-    reducers: any,
     initialState?: any,
     onResetDisabled?: boolean,
 }
 
-export function addAutoRecordingBehaviour({recordApi, replayApi}: App, {sliceName, actions, actionNames, reducers, initialState, onResetDisabled}: AutoRecordingParams) {
+export function addAutoRecordingBehaviour({recordApi, replayApi}: App, {sliceName, actions, actionNames, initialState, onResetDisabled}: AutoRecordingParams) {
     for (let actionName of actionNames) {
         const action = actions[actionName];
         recordApi.on(action.type, function* (addEvent, {payload}) {

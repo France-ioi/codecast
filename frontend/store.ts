@@ -23,6 +23,7 @@ import {DocumentationState} from "./task/documentation/documentation_slice";
 import {BufferState} from "./buffers";
 import {EditorState} from "./editor";
 import {PlatformState, TaskLevelName} from "./task/platform/platform_slice";
+import {AnalysisState} from "./stepper/analysis/analysis_slice";
 
 export enum CodecastPlatform {
     Python = 'python',
@@ -138,4 +139,5 @@ export interface AppStore extends Store, AppStoreReplay {
     viewportTooSmall: boolean,
 
     documentation: DocumentationState,
+    analysis: AnalysisState,
 }

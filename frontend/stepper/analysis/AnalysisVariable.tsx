@@ -1,16 +1,11 @@
 import * as React from 'react';
 import {AnalysisVariableValue} from "./AnalysisVariableValue";
-import {CodecastAnalysisVariable} from "./helpers";
+import {CodecastAnalysisVariable} from "./index";
 
 interface AnalysisVariableProps {
     path?: string,
     variable: CodecastAnalysisVariable,
-    visited: any,
-    loadedReferences: any,
-    scopeIndex: number,
-    openedPaths: {
-        [key: string]: boolean
-    }
+    stackFrameId: number,
 }
 
 export const AnalysisVariable = (props: AnalysisVariableProps): JSX.Element => {
@@ -23,12 +18,7 @@ export const AnalysisVariable = (props: AnalysisVariableProps): JSX.Element => {
     //     }
     // }
 
-    let path = null;
-    if (props.path) {
-        path = props.path;
-    } else if (variable.name) {
-        path = variable.name;
-    }
+    let path = props.path;
 
     return (
         <span className={classes}>
@@ -39,13 +29,9 @@ export const AnalysisVariable = (props: AnalysisVariableProps): JSX.Element => {
             <span className="vardecl-value">
                 <span className="value">
                     <AnalysisVariableValue
-                        cur={variable.value}
-                        old={variable.previousValue}
-                        visited={props.visited}
+                        variable={variable}
                         path={path}
-                        loadedReferences={props.loadedReferences}
-                        openedPaths={props.openedPaths}
-                        scopeIndex={props.scopeIndex}
+                        stackFrameId={props.stackFrameId}
                     />
                 </span>
             </span>

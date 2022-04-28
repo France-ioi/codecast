@@ -765,7 +765,6 @@ export default function (bundle: Bundle) {
             sliceName: taskSlice.name,
             actionNames: taskRecordableActions,
             actions: taskSlice.actions,
-            reducers: taskSlice.caseReducers,
             onResetDisabled: true,
         });
 

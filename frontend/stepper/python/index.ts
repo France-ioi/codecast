@@ -1,10 +1,7 @@
 import {channel} from 'redux-saga';
-import {call, put, take} from 'typed-redux-saga';
-import PythonRunner from "./python_runner";
-import {ActionTypes} from './actionTypes';
+import {put, take} from 'typed-redux-saga';
 import {ActionTypes as CompileActionTypes, stepperExecutionError} from '../actionTypes';
 import {AppStore, CodecastPlatform} from "../../store";
-import {ReplayContext} from "../../player/sagas";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App, Codecast} from "../../index";
@@ -23,25 +20,7 @@ export default function(bundle: Bundle) {
         }
     });
 
-    bundle.defineAction(ActionTypes.StackViewPathToggle);
-    bundle.addReducer(ActionTypes.StackViewPathToggle, stackViewPathToggleReducer);
-
-    function stackViewPathToggleReducer(state: AppStore, action): void {
-        const {scopeIndex, path, isOpened} = action.payload;
-
-        state.stepper.currentStepperState.analysis.stackFrames[scopeIndex].openedPaths[path] = isOpened;
-    }
-
-    bundle.defer(function({recordApi, replayApi, stepperApi}: App) {
-        recordApi.on(ActionTypes.StackViewPathToggle, function* (addEvent, action) {
-            yield* call(addEvent, 'stackview.path.toggle', action);
-        });
-        replayApi.on('stackview.path.toggle', function* (replayContext: ReplayContext, event) {
-            const action = event[2];
-
-            yield* put({type: ActionTypes.StackViewPathToggle, payload: action});
-        });
-
+    bundle.defer(function({stepperApi}: App) {
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore, environment: string) {
             const {platform} = state.options;
             const source = selectAnswer(state);

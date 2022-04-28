@@ -1,5 +1,5 @@
 import {VIEW_DIRECTIVE_PREFIX} from "../directives";
-import {AnalysisScope, AnalysisSnapshot, AnalysisStackFrame, AnalysisVariable} from "../../analysis/helpers";
+import {AnalysisScope, AnalysisSnapshot, AnalysisStackFrame, AnalysisVariable} from "../../analysis";
 import {DebugProtocol} from "vscode-debugprotocol";
 
 export interface SkulptAnalysis {
@@ -284,28 +284,7 @@ export const getSkulptSuspensionsCopy = function(suspensions) {
     return Object.freeze(copies);
 }
 
-/**
- * Clears the loaded references.
- *
- * @param analysis
- */
-export const clearLoadedReferences = function(analysis: AnalysisSnapshot) {
-    //TODO this
-    // const clearedAnalysis = {
-    //     ...analysis,
-    //     functionCallStack: []
-    // };
-    // for (let idx = 0; idx < analysis.functionCallStack.length; idx++) {
-    //     const clearedFunctionCallStack = {
-    //         ...analysis.functionCallStack[idx],
-    //         loadedReferences: {}
-    //     }
-    //
-    //     clearedAnalysis.functionCallStack.push(clearedFunctionCallStack);
-    // }
-
-    return analysis;
-}
+let variableReferenceCount = 1;
 
 export const convertSkulptValueToDAPVariable = (name: string, value: any): AnalysisVariable => {
     let variableData = {
@@ -329,280 +308,38 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any): Analy
         };
     }
 
-    return {
-        ...variableData,
-        value: value.v,
-        variablesReference: 0,
-    };
+    if (value instanceof Sk.builtin.dict) {
+        return {
+            ...variableData,
+            value: null,
+            variables: Object.entries(value.entries).map(([key, item]) => {
+                return convertSkulptValueToDAPVariable(key, item[1]);
+            }),
+            variablesReference: variableReferenceCount++,
+        };
+    }
 
-//     if (value instanceof Sk.builtin.dict) {
-//         const elements = [];
-//         let isEmpty = true;
-//         const entries = Object.entries(value.entries);
-//         for (let i in entries) {
-//             const key = entries[i][0];
-//             const item = entries[i][1];
-//
-//             // Ignore the element with name __dict__ that appears in objects dictionnaries.
-//             if (key === '__dict__') {
-//                 continue;
-//             }
-//
-//             let old = undefined;
-//             if (this.props.old && this.props.old instanceof Sk.builtin.dict) {
-//                 const oldEntry = Object.entries(this.props.old.entries)[i];
-//                 if (oldEntry) {
-//                     old = oldEntry[1][1];
-//                 }
-//             }
-//
-//             const path = this.props.path + ':' + key;
-//             const loaded = this.props.loadedReferences.hasOwnProperty(value._uuid + '_' + key);
-//
-//             elements.push({
-//                 name: key,
-//                 value: {
-//                     cur: item[1],
-//                     old: old
-//                 },
-//                 path: path,
-//                 loaded: loaded
-//             });
-//             isEmpty = false;
-//         }
-//
-//         const wasVisited = this.props.visited[value._uuid];
-//         const visited = {
-//             ...this.props.visited,
-//
-//         }
-//         visited[value._uuid] = true;
-//
-//         let renderedElements;
-//         if (wasVisited) {
-//             renderedElements = '...';
-//         } else if (isEmpty) {
-//             renderedElements = <span className="value-empty">&lt;&gt;</span>;
-//         } else {
-//             renderedElements = elements.map((element) => {
-//                 let loadedReferences = {};
-//                 if (element.loaded) {
-//                     loadedReferences = this.props.loadedReferences;
-//                 }
-//
-//                 return (
-//                     <li key={element.name}>
-//                     <AnalysisVariable
-//                         name={element.name}
-//                 value={element.value}
-//                 visited={visited}
-//                 path={element.path}
-//                 loadedReferences={loadedReferences}
-//                 openedPaths={this.props.openedPaths}
-//                 scopeIndex={this.props.scopeIndex}
-//                 />
-//                 </li>
-//             );
-//             });
-//         }
-//
-//         return (
-//             <React.Fragment>
-//                 {this.isOpened() ? (
-//                         <React.Fragment>
-//                             <span className="object-toggle object-toggle-open" onClick={this.toggleOpened}>
-//                     <span className="toggle-icon">▾</span>
-//         </span>
-//         <ul className="object_scope">
-//             {renderedElements}
-//             </ul>
-//             </React.Fragment>
-//     ) : (
-//             <span className="object-toggle" onClick={this.toggleOpened}>
-//         <span className="toggle-icon">▸</span>
-//         <span className="value-object-closed">
-//             &lt;dict&gt;
-//                 </span>
-//             </span>
-//     )}
-//         </React.Fragment>
-//     )
-//     }
-//
-//     if (value instanceof Sk.builtin.set || value instanceof Sk.builtin.frozenset) {
-//         const elements = [];
-//         let isEmpty = true;
-//         const entries = Object.entries(value.v.entries);
-//         for (let i in entries) {
-//             const key = entries[i][0];
-//
-//             // Ignore the element with name __dict__ that appears in objects dictionnaries.
-//             if (key === '__dict__') {
-//                 continue;
-//             }
-//
-//             let old = undefined;
-//             if (this.props.old && this.props.old.v instanceof Sk.builtin.dict) {
-//                 const oldEntry = this.props.old.v.entries[i];
-//                 if (oldEntry) {
-//                     old = oldEntry[1][0];
-//                 }
-//             }
-//
-//             const path = this.props.path + ':' + key;
-//             const loaded = this.props.loadedReferences.hasOwnProperty(value.v._uuid + '_' + key);
-//
-//             elements.push({
-//                 name: key,
-//                 value: {
-//                     cur: entries[i][1][0],
-//                     old: old
-//                 },
-//                 path: path,
-//                 loaded: loaded
-//             });
-//             isEmpty = false;
-//         }
-//
-//         const wasVisited = this.props.visited[value.v._uuid];
-//         const visited = {
-//             ...this.props.visited,
-//
-//         }
-//         visited[value.v._uuid] = true;
-//
-//         let renderedElements;
-//         if (wasVisited) {
-//             renderedElements = '...';
-//         } else if (isEmpty) {
-//             renderedElements = <span className="value-empty">&lt;&gt;</span>;
-//         } else {
-//             renderedElements = elements.map((element, index) => {
-//                 let loadedReferences = {};
-//                 if (element.loaded) {
-//                     loadedReferences = this.props.loadedReferences;
-//                 }
-//
-//                 return (
-//                     <span key={element.name}>
-//                     <AnalysisVariableValue
-//                         cur={element.value.cur}
-//                 old={element.value.old}
-//                 visited={visited}
-//                 path={element.path}
-//                 loadedReferences={loadedReferences}
-//                 openedPaths={this.props.openedPaths}
-//                 scopeIndex={this.props.scopeIndex}
-//                 />
-//                 {(index + 1) < elements.length ? ', ' : null}
-//                 </span>
-//             );
-//             });
-//         }
-//
-//         return (
-//             <React.Fragment>
-//                 {this.isOpened() ? (
-//                         <React.Fragment>
-//                             <span className="list-toggle list-toggle-open" onClick={this.toggleOpened}>
-//                     <span className="toggle-icon">▾</span>
-//         </span>
-//         &#x7B;{renderedElements}&#x7D;
-//         </React.Fragment>
-//     ) : (
-//             <span className="list-toggle" onClick={this.toggleOpened}>
-//         <span className="toggle-icon">▸</span>
-//         <span className="value-list-closed">
-//             &lt;{value instanceof Sk.builtin.frozenset ? 'frozenset' : 'set'}&gt;
-//                 </span>
-//             </span>
-//     )}
-//         </React.Fragment>
-//     )
-//     }
-//
-//     if (value instanceof Sk.builtin.list || value instanceof Sk.builtin.tuple || value instanceof Sk.builtin.range_) {
-//         const nbElements = value.v.length;
-//
-//         const elements = [];
-//         for (let idx = 0; idx < value.v.length; idx++) {
-//             let old = undefined;
-//             if (this.props.old && this.props.old instanceof Sk.builtin.list) {
-//                 old = this.props.old.v[idx];
-//             }
-//
-//             const path = this.props.path + ':' + idx;
-//             const loaded = this.props.loadedReferences.hasOwnProperty(value._uuid + '_' + idx);
-//
-//             elements.push({
-//                 cur: value.v[idx],
-//                 old: old,
-//                 path: path,
-//                 loaded: loaded
-//             });
-//         }
-//
-//         const wasVisited = this.props.visited[value._uuid];
-//         const visited = {
-//             ...this.props.visited,
-//
-//         }
-//         visited[value._uuid] = true;
-//
-//         let renderedElements;
-//         if (wasVisited) {
-//             renderedElements = '...';
-//         } else {
-//             renderedElements = elements.map((element, index) => {
-//                 let loadedReferences = {};
-//                 if (element.loaded) {
-//                     loadedReferences = this.props.loadedReferences;
-//                 }
-//
-//                 return (
-//                     <span key={index}>
-//                     <AnalysisVariableValue
-//                         cur={element.cur}
-//                 old={element.old}
-//                 visited={visited}
-//                 path={element.path}
-//                 loadedReferences={loadedReferences}
-//                 openedPaths={this.props.openedPaths}
-//                 scopeIndex={this.props.scopeIndex}
-//                 />
-//                 {(index + 1) < nbElements ? ', ' : null}
-//                 </span>
-//             );
-//             });
-//         }
-//
-//         let variableType = 'list';
-//         if (value instanceof Sk.builtin.tuple) {
-//             variableType = 'tuple';
-//         } else if (value instanceof Sk.builtin.range_) {
-//             variableType = 'range';
-//         }
-//
-//         return (
-//             <React.Fragment>
-//                 {this.isOpened() ? (
-//                         <React.Fragment>
-//                             <span className="list-toggle list-toggle-open" onClick={this.toggleOpened}>
-//                     <span className="toggle-icon">▾</span>
-//         </span>
-//             [{renderedElements}]
-//         </React.Fragment>
-//     ) : (
-//             <span className="list-toggle" onClick={this.toggleOpened}>
-//         <span className="toggle-icon">▸</span>
-//         <span className="value-list-closed">
-//             &lt;{variableType}&gt;
-//                 </span>
-//             </span>
-//     )}
-//         </React.Fragment>
-//     )
-//     }
+    if (value instanceof Sk.builtin.set || value instanceof Sk.builtin.frozenset) {
+        return {
+            ...variableData,
+            value: null,
+            variables: Object.entries(value.v.entries).map(([key, item]) => {
+                return convertSkulptValueToDAPVariable(key, item[0]);
+            }),
+            variablesReference: variableReferenceCount++,
+        };
+    }
+
+    if (value instanceof Sk.builtin.list || value instanceof Sk.builtin.tuple || value instanceof Sk.builtin.range_) {
+        return {
+            ...variableData,
+            value: null,
+            variables: value.v.map((value, index) => {
+                return convertSkulptValueToDAPVariable(index, value);
+            }),
+            variablesReference: variableReferenceCount++,
+        };
+    }
 //
 //     if (value instanceof Sk.builtin.object && value.hasOwnProperty('$d')) {
 //         /**
@@ -675,95 +412,63 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any): Analy
 //     );
 //     }
 //
-//     let classes = 'value-scalar';
-//     if (!isEmptyObject(this.props.loadedReferences)) {
-//         classes = ' value-loaded';
-//     }
-//
-//     if (value instanceof Sk.builtin.str) {
-//         return (
-//             <React.Fragment>
-//                 <span className={classes}>&quot;{value.v}&quot;</span>
-//         {(this.props.old && (value.v !== this.props.old.v)) ?
-//             <span className="value-previous">&quot;{this.props.old.v}&quot;</span>
-//         : null}
-//         </React.Fragment>
-//     )
-//     }
-//     if (value instanceof Sk.builtin.bool) {
-//         return (
-//             <React.Fragment>
-//                 <span className={classes}>{Sk.misceval.isTrue(value.v) ? 'True' : 'False'}</span>
-//         {(this.props.old && (value.v !== this.props.old.v)) ?
-//             <span className="value-previous">{Sk.misceval.isTrue(this.props.old.v) ? 'True' : 'False'}</span>
-//             : null}
-//         </React.Fragment>
-//     )
-//     }
-//
-//     if (value instanceof Sk.builtin.float_) {
-//         return (
-//             <React.Fragment>
-//                 <span className={classes}>{String(value.v).indexOf('.') !== -1 ? value.v : value.v + '.0'}</span>
-//         {(this.props.old && (value.v !== this.props.old.v)) ?
-//             <span className="value-previous">{String(this.props.old.v).indexOf('.') !== -1 ? this.props.old.v : this.props.old.v + '.0'}</span>
-//         : null}
-//         </React.Fragment>
-//     )
-//     }
-//
-//     if (value instanceof Sk.builtin.bytes) {
-//         const byteToString = (byte: number) => {
-//             return String.fromCharCode(byte).match(/^[a-zA-Z0-9]$/) ? String.fromCharCode(byte) : "\\x" + byte.toString(16);
-//         };
-//
-//         return (
-//             <React.Fragment>
-//                 <span className={classes}>b&#39;{Array.from<number>(value.v).map(byteToString).join('')}&#39;</span>
-//         {(this.props.old && (value.v !== this.props.old.v)) ?
-//             <span className="value-previous">b&#39;{Array.from<number>(this.props.old.v).map(byteToString).join('')}&#39;</span>
-//         : null}
-//         </React.Fragment>
-//     )
-//     }
-//
-//     if (value instanceof Sk.builtin.complex) {
-//         const complexToString = (complex: {imag: number, real: number}) => {
-//             const parts = [
-//                 ...(complex.real !== 0 ? [complex.real] : []),
-//                 ...(complex.imag !== 0 ? [complex.imag + 'j'] : []),
-//             ];
-//
-//             return parts.length ? parts.join('+') : '0';
-//         };
-//
-//         return (
-//             <React.Fragment>
-//                 <span className={classes}>{complexToString(value)}</span>
-//         {(this.props.old && (value.real !== this.props.old.real || value.imag !== this.props.old.imag)) ?
-//             <span className="value-previous">{complexToString(this.props.old)}</span>
-//         : null}
-//         </React.Fragment>
-//     )
-//     }
-//
-//     if (value && undefined !== value.v && null !== value.v) {
-//         return (
-//             <React.Fragment>
-//                 <span className={classes}>{value.v}</span>
-//         {(this.props.old && (value.v !== this.props.old.v)) && !Array.isArray(this.props.old.v) ?
-//             <span className="value-previous">{this.props.old.v}</span>
-//             : null}
-//         </React.Fragment>
-//     );
-//     }
-//
-//     return (
-//         <React.Fragment>
-//             <span className={classes}>{value}</span>
-//     {(this.props.old && (value !== this.props.old)) ?
-//         <span className="value-previous">{this.props.old}</span>
-//         : null}
-//     </React.Fragment>
-// );
+
+    if (value instanceof Sk.builtin.str) {
+        return {
+            ...variableData,
+            value: `"${value.v}"`,
+            variablesReference: 0,
+        };
+    }
+
+    if (value instanceof Sk.builtin.bool) {
+        return {
+            ...variableData,
+            value: Sk.misceval.isTrue(value.v) ? 'True' : 'False',
+            variablesReference: 0,
+        };
+    }
+
+    if (value instanceof Sk.builtin.float_) {
+        return {
+            ...variableData,
+            value: String(value.v).indexOf('.') !== -1 ? value.v : value.v + '.0',
+            variablesReference: 0,
+        };
+    }
+
+    if (value instanceof Sk.builtin.bytes) {
+        const byteToString = (byte: number) => {
+            return String.fromCharCode(byte).match(/^[a-zA-Z0-9]$/) ? String.fromCharCode(byte) : "\\x" + byte.toString(16);
+        };
+
+        return {
+            ...variableData,
+            value: `b'${Array.from<number>(value.v).map(byteToString).join('')}'`,
+            variablesReference: 0,
+        };
+    }
+
+    if (value instanceof Sk.builtin.complex) {
+        const complexToString = (complex: {imag: number, real: number}) => {
+            const parts = [
+                ...(complex.real !== 0 ? [complex.real] : []),
+                ...(complex.imag !== 0 ? [complex.imag + 'j'] : []),
+            ];
+
+            return parts.length ? parts.join('+') : '0';
+        };
+
+        return {
+            ...variableData,
+            value: complexToString(value),
+            variablesReference: 0,
+        };
+    }
+
+    return {
+        ...variableData,
+        value: value.v,
+        variablesReference: 0,
+    };
 }

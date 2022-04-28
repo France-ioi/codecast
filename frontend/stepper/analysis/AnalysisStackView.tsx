@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {AnalysisFunctionView} from "./AnalysisFunctionView";
 import {Button, ButtonGroup} from "@blueprintjs/core";
-import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./helpers";
+import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./index";
 import {useEffect, useState} from "react";
 
 interface AnalysisStackViewProps {
@@ -47,8 +47,6 @@ export const AnalysisStackView = (props: AnalysisStackViewProps): JSX.Element =>
             {expandedAnalysis.stackFrames.slice().reverse().map((analysisStackFrame, index) => (
                 <AnalysisFunctionView
                     key={index}
-                    openedPaths={{}}
-                    loadedReferences={{}}
                     stackFrame={analysisStackFrame}
                 />
             ))}

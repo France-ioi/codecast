@@ -1,6 +1,6 @@
 import React from 'react';
 import {SkulptAnalysis, SkulptScope, SkulptVariable} from "../../python/analysis/analysis";
-import {AnalysisSnapshot} from "../../analysis/helpers";
+import {AnalysisSnapshot} from "../../analysis";
 
 /**
  * Gets the scope's loaded references from a variable name.
@@ -13,13 +13,13 @@ import {AnalysisSnapshot} from "../../analysis/helpers";
 export const getLoadedReferencesFromVariable = function(analysis: AnalysisSnapshot, name: string): SkulptVariable {
     // Check in the last (the current) and the first (which is the global) scopes.
 
-    const nbScopes = analysis.stackFrames.length;
-    if (getVariableInScope(analysis.stackFrames[nbScopes - 1], name)) {
-        return analysis.stackFrames[nbScopes - 1].loadedReferences;
-    }
-    if (nbScopes > 1 && getVariableInScope(analysis.stackFrames[0], name)) {
-        return analysis.stackFrames[0].loadedReferences;
-    }
+    // const nbScopes = analysis.stackFrames.length;
+    // if (getVariableInScope(analysis.stackFrames[nbScopes - 1], name)) {
+    //     return analysis.stackFrames[nbScopes - 1].loadedReferences;
+    // }
+    // if (nbScopes > 1 && getVariableInScope(analysis.stackFrames[0], name)) {
+    //     return analysis.stackFrames[0].loadedReferences;
+    // }
 
     // @ts-ignore
     return {};
@@ -36,14 +36,14 @@ export const getLoadedReferencesFromVariable = function(analysis: AnalysisSnapsh
 export const getVariable = function(analysis: AnalysisSnapshot, name: string): SkulptVariable {
     // Check in the last (the current) and the first (which is the global) scopes.
 
-    const nbScopes = analysis.functionCallStack.length;
+    const nbScopes = analysis.stackFrames.length;
     let variable = null;
-    if (nbScopes) {
-        variable = getVariableInScope(analysis.functionCallStack[nbScopes - 1], name);
-    }
-    if (!variable && nbScopes > 1) {
-        variable = getVariableInScope(analysis.functionCallStack[0], name);
-    }
+    // if (nbScopes) {
+    //     variable = getVariableInScope(analysis.stackFrames[nbScopes - 1], name);
+    // }
+    // if (!variable && nbScopes > 1) {
+    //     variable = getVariableInScope(analysis.stackFrames[0], name);
+    // }
 
     return variable;
 };

@@ -1,4 +1,4 @@
-import {AnalysisSnapshot, AnalysisStackFrame} from "../analysis/helpers";
+import {AnalysisSnapshot, AnalysisStackFrame} from "../analysis";
 
 export const VIEW_DIRECTIVE_PREFIX = '_VIEW_';
 

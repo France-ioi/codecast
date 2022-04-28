@@ -8,7 +8,6 @@ import {Block, BlockType} from "../../task/blocks/blocks";
 import AbstractRunner from "../abstract_runner";
 import {StepperContext} from "../api";
 import {StepperState} from "../index";
-import {clearLoadedReferences} from "./analysis/analysis";
 
 function definePythonNumber() {
     // Create a class which behaves as a Number, but can have extra properties
@@ -66,7 +65,7 @@ export default class PythonRunner extends AbstractRunner {
 
     public enrichStepperContext(stepperContext: StepperContext, state: StepperState) {
         if (state.analysis) {
-            stepperContext.state.lastAnalysis = Object.freeze(clearLoadedReferences(state.analysis));
+            stepperContext.state.lastAnalysis = Object.freeze(state.analysis);
         }
     }
 

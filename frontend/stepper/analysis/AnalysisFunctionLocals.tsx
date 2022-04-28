@@ -1,13 +1,9 @@
 import * as React from 'react';
 import {AnalysisVariable} from "./AnalysisVariable";
-import {CodecastAnalysisStackFrame} from "./helpers";
+import {CodecastAnalysisStackFrame} from "./index";
 
 interface AnalysisFunctionLocalsProps {
-    loadedReferences: any,
     stackFrame: CodecastAnalysisStackFrame,
-    openedPaths: {
-        [key: string]: boolean
-    },
 }
 
 export const AnalysisFunctionLocals = (props: AnalysisFunctionLocalsProps): JSX.Element => {
@@ -18,19 +14,11 @@ export const AnalysisFunctionLocals = (props: AnalysisFunctionLocalsProps): JSX.
     const variablesTemplate = variables.map((variable) => {
         const {name, value, type} = variable;
         if (value !== undefined && 'module' !== type && 'function' !== type) {
-            let loadedReferences = {};
-            // if (props.loadedReferences.hasOwnProperty(name)) {
-            //     loadedReferences = props.loadedReferences;
-            // }
-
             return (
                 <li key={name}>
                     <AnalysisVariable
                         variable={variable}
-                        visited={{}}
-                        loadedReferences={loadedReferences}
-                        openedPaths={props.openedPaths}
-                        scopeIndex={props.stackFrame.id}
+                        stackFrameId={props.stackFrame.id}
                     />
                 </li>
             );
