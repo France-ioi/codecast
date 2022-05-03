@@ -25,6 +25,7 @@ export interface AnalysisScope extends DebugProtocol.Scope {
 }
 export interface AnalysisVariable extends DebugProtocol.Variable {
     variables?: (AnalysisVariable | string)[], // It can be a variablesReference to avoid cycles
+    alreadyVisited?: boolean,
 }
 
 // Codecast format for visual display
@@ -45,6 +46,7 @@ export interface CodecastAnalysisVariable {
     previousValue?: string,
     type?: string,
     variablesReference: number,
+    alreadyVisited?: boolean,
 }
 
 
@@ -62,7 +64,11 @@ export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, l
     for (let stackFrameId = 0; stackFrameId < analysis.stackFrames.length; stackFrameId++) {
         let stackFrame = analysis.stackFrames[stackFrameId];
         let codecastStackFrame: CodecastAnalysisStackFrame = {
-            ...stackFrame,
+            id: stackFrame.id,
+            name: stackFrame.name,
+            directives: stackFrame.directives,
+            line: stackFrame.line,
+            column: stackFrame.column,
             variables: [],
         };
 
@@ -98,7 +104,7 @@ export const convertVariableDAPToCodecastFormat = (stackFrameId: number, scopeId
             return convertVariableDAPToCodecastFormat(stackFrameId, scopeId, newPath, innerVariable, previousValues, variablesByReference);
         }) : null,
         previousValue,
-        path,
+        path: newPath,
     } as CodecastAnalysisVariable;
 }
 

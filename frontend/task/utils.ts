@@ -77,7 +77,7 @@ export function checkCompilingCode(code, platform: CodecastPlatform, state: AppS
     }
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
-    if (context) {
+    if (context && state.task.currentTask) {
         if (CodecastPlatform.Python === platform) {
             checkPythonCode(code, context, state, withEmptyCheck);
         }

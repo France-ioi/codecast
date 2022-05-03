@@ -7,7 +7,6 @@ import {useAppSelector} from "../../hooks";
 
 interface AnalysisVariableValueProps {
     variable: CodecastAnalysisVariable,
-    path: string,
     defaultopened?: boolean,
     stackFrameId: number,
 }
@@ -20,7 +19,7 @@ export const AnalysisVariableValue = (props: AnalysisVariableValueProps) => {
     //     opened = true;
     }
 
-    const isOpen = useAppSelector(state => props.stackFrameId in state.analysis.openedPaths && -1 !== state.analysis.openedPaths[props.stackFrameId].indexOf(props.path));
+    const isOpen = useAppSelector(state => props.stackFrameId in state.analysis.openedPaths && -1 !== state.analysis.openedPaths[props.stackFrameId].indexOf(props.variable.path));
 
    // const isOpened = () => {
    //      let opened = false;
@@ -47,7 +46,7 @@ export const AnalysisVariableValue = (props: AnalysisVariableValueProps) => {
     const toggleOpened = () => {
         // const isOpened = !isOpened();
 
-        dispatch(analysisTogglePath({stackFrameId: props.stackFrameId, path: props.path}));
+        dispatch(analysisTogglePath({stackFrameId: props.stackFrameId, path: props.variable.path}));
     };
 
     const variable = props.variable;
@@ -236,18 +235,34 @@ export const AnalysisVariableValue = (props: AnalysisVariableValueProps) => {
     //     )
     // }
 
-    if (variable.variables && variable.variables.length) {
-        let renderedElements = variable.variables.map((variable) => {
+    if (variable.alreadyVisited) {
+        return (
+            <React.Fragment>
+                <span className="object-toggle object-toggle-open" onClick={toggleOpened}>
+                    <span className="toggle-icon">▾</span>
+                </span>
+                <ul className="object_scope">
+                    <li>...</li>
+                </ul>
+            </React.Fragment>
+        )
+    }
+
+    if (Array.isArray(variable.variables)) {
+        let renderedElements = variable.variables.length ? variable.variables.map((variable) => {
             return (
                 <li key={variable.name}>
                     <AnalysisVariable
                         variable={variable}
-                        path={variable.path}
                         stackFrameId={props.stackFrameId}
                     />
                 </li>
             );
-        });
+        }) : (
+            <li>
+                <span className="value-empty">&lt;&gt;</span>
+            </li>
+        );
 
         return (
             <React.Fragment>

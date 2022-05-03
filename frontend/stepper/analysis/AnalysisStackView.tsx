@@ -15,13 +15,13 @@ export const AnalysisStackView = (props: AnalysisStackViewProps): JSX.Element =>
     const firstVisible = 0;
     const tailCount = 0;
 
-    console.log('analysis', props.analysis, props.lastAnalysis);
+    console.log('python analysis', props.analysis, props.lastAnalysis);
 
     const [expandedAnalysis, setExpandedAnalysis] = useState<CodecastAnalysisSnapshot>(null);
 
     useEffect(() => {
         const codecastFormatAnalysis = convertAnalysisDAPToCodecastFormat(props.analysis, props.lastAnalysis);
-        console.log('update analysis', codecastFormatAnalysis);
+        console.log('codecast analysis', codecastFormatAnalysis);
         setExpandedAnalysis(codecastFormatAnalysis);
     }, [props.analysis]);
 

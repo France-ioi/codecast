@@ -154,15 +154,17 @@ export const analyseSkulptScope = function(suspension: any, newStepNum: number, 
 
     for (let variableName of variableNames) {
         let value = suspVariables[variableName];
+        if (value === undefined) {
+            continue;
+        }
 
         if (typeof value === 'function') {
             if (!value.prototype || !value.prototype.tp$name) {
                 continue;
             }
-            value = `<class '${value.prototype.tp$name}'>`;
         }
 
-        const variable = convertSkulptValueToDAPVariable(Sk.unfixReserved(variableName), value);
+        const variable = convertSkulptValueToDAPVariable(Sk.unfixReserved(variableName), value, {});
         variables.push(variable);
     }
 
@@ -286,11 +288,29 @@ export const getSkulptSuspensionsCopy = function(suspensions) {
 
 let variableReferenceCount = 1;
 
-export const convertSkulptValueToDAPVariable = (name: string, value: any): AnalysisVariable => {
+export const convertSkulptValueToDAPVariable = (name: string, value: any, visited: {[uuid: string]: boolean}): AnalysisVariable => {
+    console.log('convert value', name, value);
     let variableData = {
         name,
         type: value.constructor.prototype.tp$name,
     };
+
+    if (value._uuid && value._uuid in visited) {
+        return {
+            ...variableData,
+            value: null,
+            alreadyVisited: true,
+            variablesReference: 0,
+        };
+    }
+
+    if (typeof value === 'function') {
+        return {
+            ...variableData,
+            value: `<class '${value.prototype.tp$name}'>`,
+            variablesReference: 0,
+        };
+    }
 
     if (value instanceof Sk.builtin.module) {
         return {
@@ -313,7 +333,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any): Analy
             ...variableData,
             value: null,
             variables: Object.entries(value.entries).map(([key, item]) => {
-                return convertSkulptValueToDAPVariable(key, item[1]);
+                return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value._uuid]: true});
             }),
             variablesReference: variableReferenceCount++,
         };
@@ -324,7 +344,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any): Analy
             ...variableData,
             value: null,
             variables: Object.entries(value.v.entries).map(([key, item]) => {
-                return convertSkulptValueToDAPVariable(key, item[0]);
+                return convertSkulptValueToDAPVariable(key, item[0], {...visited, [value._uuid]: true});
             }),
             variablesReference: variableReferenceCount++,
         };
@@ -335,83 +355,36 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any): Analy
             ...variableData,
             value: null,
             variables: value.v.map((value, index) => {
-                return convertSkulptValueToDAPVariable(index, value);
+                return convertSkulptValueToDAPVariable(index, value, {...visited, [value._uuid]: true});
             }),
             variablesReference: variableReferenceCount++,
         };
     }
-//
-//     if (value instanceof Sk.builtin.object && value.hasOwnProperty('$d')) {
-//         /**
-//          * An object's representation is as follow :
-//          *
-//          * test : Sk.builtin.object
-//          *   - $d : Sk.builtin.dict
-//          */
-//
-//         console.log('object => ', this.props);
-//
-//         let old = this.props.old;
-//         if (old && old instanceof Sk.builtin.object) {
-//             old = old.$d;
-//         }
-//
-//         const wasVisited = this.props.visited[value._uuid];
-//         const visited = {
-//             ...this.props.visited,
-//
-//         }
-//         visited[value._uuid] = true;
-//
-//         let loadedReferences = {};
-//         if (isLoaded(this.props.loadedReferences, this.props)) {
-//             loadedReferences = this.props.loadedReferences;
-//         }
-//
-//         return (
-//             <React.Fragment>
-//                 {wasVisited ? '...' : (
-//                         <AnalysisVariableValue
-//                             cur={value.$d}
-//                     old={old}
-//                     visited={visited}
-//                     path={this.props.path}
-//                     loadedReferences={loadedReferences}
-//                     openedPaths={this.props.openedPaths}
-//                     scopeIndex={this.props.scopeIndex}
-//         />
-//     )}
-//         </React.Fragment>
-//     )
-//     }
-//
-//     if (value && value.hasOwnProperty('$__iterType')) {
-//         let old = this.props.old;
-//         if (old && old.hasOwnProperty('$__iterType')) {
-//             old = old.myobj;
-//         }
-//
-//         const iteratorType = value.$__iterType;
-//         const loadedReferences = {};
-//
-//         return (
-//             <React.Fragment>
-//                 <span className="value-iterator">&lt;{iteratorType}&gt;</span>
-//             (
-//                 <AnalysisVariableValue
-//                     cur={value.myobj}
-//         old={old}
-//         loadedReferences={loadedReferences}
-//         visited={this.props.visited}
-//         path={this.props.path}
-//         openedPaths={this.props.openedPaths}
-//         scopeIndex={this.props.scopeIndex}
-//         />
-//     )
-//         </React.Fragment>
-//     );
-//     }
-//
+
+    if (value instanceof Sk.builtin.object && value.hasOwnProperty('$d')) {
+        console.log('BAM', value.$d);
+
+        return {
+            ...variableData,
+            value: null,
+            variables: Object.entries(value.$d.entries).map(([key, item]) => {
+                return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value._uuid]: true});
+            }),
+            variablesReference: variableReferenceCount++,
+        };
+
+    }
+
+    if (value && value.hasOwnProperty('$__iterType')) {
+        return {
+            ...variableData,
+            value: null,
+            variables: Object.entries(value.myobj.entries).map(([key, item]) => {
+                return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value._uuid]: true});
+            }),
+            variablesReference: variableReferenceCount++,
+        };
+    }
 
     if (value instanceof Sk.builtin.str) {
         return {
