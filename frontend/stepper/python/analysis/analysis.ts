@@ -2,35 +2,6 @@ import {VIEW_DIRECTIVE_PREFIX} from "../directives";
 import {AnalysisScope, AnalysisSnapshot, AnalysisStackFrame, AnalysisVariable} from "../../analysis";
 import {DebugProtocol} from "vscode-debugprotocol";
 
-export interface SkulptAnalysis {
-    functionCallStack?: SkulptScope[],
-    stepNum: number,
-    code: string,
-    lines?: string[]
-}
-
-export interface SkulptVariable {
-    cur: any,
-    old: any
-}
-
-export interface SkulptScope {
-    variables: {
-        [key: string]: SkulptVariable
-    },
-    directives: any[],
-    name: string,
-    args: string[],
-    openedPaths: {
-        [key: string]: boolean
-    },
-    loadedReferences: any, // TODO: Add type
-    currentLine: number,
-    currentColumn: number,
-    suspensionIdx: number,
-    scopeIndex: number
-}
-
 /**
  * Enable debug of skulpt analysis.
  *
@@ -81,7 +52,10 @@ export const convertSkulptStateToAnalysisSnapshot = function (suspensions: reado
                 directives: getDirectiveVariables(suspVariables),
                 scopes: [],
                 args: suspension._argnames,
+                loadedReferences: suspension.$loaded_references,
             };
+
+            console.log('suspension loaded', suspension.$loaded_references);
 
             const scope = analyseSkulptScope(suspension);
             stackFrame.scopes.push(scope);
