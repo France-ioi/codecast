@@ -80,9 +80,10 @@ export const convertSkulptStateToAnalysisSnapshot = function (suspensions: reado
                 line: suspension.$lineno,
                 directives: getDirectiveVariables(suspVariables),
                 scopes: [],
+                args: suspension._argnames,
             };
 
-            const scope = analyseSkulptScope(suspension, newStepNum, suspensionIdx, stackFrameIndex);
+            const scope = analyseSkulptScope(suspension);
             stackFrame.scopes.push(scope);
             stackFrame.name = scope.name;
             stackFrames.push(stackFrame);
@@ -119,13 +120,8 @@ const isProgramSuspension = function(suspension): boolean {
 
 /**
  * Transforms the skulpt scope (one suspension) to something readable with the variables content.
- *
- * @param suspension    The skulpt suspension.
- * @param newStepNum    The new Skulpt step number.
- * @param suspensionIdx
- * @param scopeIndex
  */
-export const analyseSkulptScope = function(suspension: any, newStepNum: number, suspensionIdx: number, scopeIndex: number): AnalysisScope {
+export const analyseSkulptScope = function(suspension: any): AnalysisScope {
     // @ts-ignore
     if (SKULPT_ANALYSIS_DEBUG === 2) {
         console.log('////// Analyse scope...');
@@ -139,8 +135,6 @@ export const analyseSkulptScope = function(suspension: any, newStepNum: number, 
         name = '';
     }
 
-    const args = suspension._argnames;
-
     let suspVariables;
     if (Object.keys(suspension.$loc).length === 0 && suspension.$loc.constructor === Object) {
         // If $loc is empty, we are in a function's scope.
@@ -150,7 +144,7 @@ export const analyseSkulptScope = function(suspension: any, newStepNum: number, 
         suspVariables = suspension.$loc;
     }
 
-    const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspVariables)), args);
+    const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspVariables)), suspension._argnames);
 
     for (let variableName of variableNames) {
         let value = suspVariables[variableName];
@@ -289,13 +283,14 @@ export const getSkulptSuspensionsCopy = function(suspensions) {
 let variableReferenceCount = 1;
 
 export const convertSkulptValueToDAPVariable = (name: string, value: any, visited: {[uuid: string]: boolean}): AnalysisVariable => {
-    console.log('convert value', name, value);
+    console.log('convert value', name, value, visited);
     let variableData = {
         name,
         type: value.constructor.prototype.tp$name,
     };
 
     if (value._uuid && value._uuid in visited) {
+        console.log('already visited', visited, value._uuid);
         return {
             ...variableData,
             value: null,
@@ -335,6 +330,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
             variables: Object.entries(value.entries).map(([key, item]) => {
                 return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value._uuid]: true});
             }),
+            namedVariables: Object.keys(value.entries).length,
             variablesReference: variableReferenceCount++,
         };
     }
@@ -346,6 +342,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
             variables: Object.entries(value.v.entries).map(([key, item]) => {
                 return convertSkulptValueToDAPVariable(key, item[0], {...visited, [value._uuid]: true});
             }),
+            namedVariables: Object.keys(value.v.entries).length,
             variablesReference: variableReferenceCount++,
         };
     }
@@ -354,22 +351,22 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
         return {
             ...variableData,
             value: null,
-            variables: value.v.map((value, index) => {
-                return convertSkulptValueToDAPVariable(index, value, {...visited, [value._uuid]: true});
+            variables: value.v.map((item, index) => {
+                return convertSkulptValueToDAPVariable(index, item, {...visited, [value._uuid]: true});
             }),
+            indexedVariables: value.v.length,
             variablesReference: variableReferenceCount++,
         };
     }
 
     if (value instanceof Sk.builtin.object && value.hasOwnProperty('$d')) {
-        console.log('BAM', value.$d);
-
         return {
             ...variableData,
             value: null,
             variables: Object.entries(value.$d.entries).map(([key, item]) => {
                 return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value._uuid]: true});
             }),
+            namedVariables: Object.keys(value.$d.entries).length,
             variablesReference: variableReferenceCount++,
         };
 
@@ -382,6 +379,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
             variables: Object.entries(value.myobj.entries).map(([key, item]) => {
                 return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value._uuid]: true});
             }),
+            namedVariables: Object.keys(value.myobj.entries).length,
             variablesReference: variableReferenceCount++,
         };
     }

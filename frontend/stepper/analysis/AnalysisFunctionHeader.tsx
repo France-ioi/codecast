@@ -1,25 +1,20 @@
 import * as React from 'react';
 import {CodecastAnalysisStackFrame} from "./index";
+import {AnalysisVariableValue} from "./AnalysisVariableValue";
 
 interface AnalysisFunctionHeaderProps {
     stackFrame: CodecastAnalysisStackFrame,
 }
 
 export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.Element => {
-    // const argCount = props.stackFrame.args.length;
-    //
-    // const args = props.stackFrame.args.map((name) => {
-    //     const argument = {
-    //         ...props.stackFrame.variables[name],
-    //         path: null
-    //     };
-    //
-    //     if (argument.cur && argument.cur.hasOwnProperty('_uuid')) {
-    //         argument.path = '#' + name;
-    //     }
-    //
-    //     return argument;
-    // });
+    const args = props.stackFrame.args && props.stackFrame.args.length ? props.stackFrame.args.map((name) => {
+        const variable = props.stackFrame.variables.find(variable => name === variable.name);
+
+        return {
+            ...variable,
+            path: variable.path + "#args",
+        };
+    }) : [];
 
     return (
         <div className="scope-function-title">
@@ -31,25 +26,17 @@ export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.
                   </span>
               ) : null}
                 <span>
-                    {/*{args.map(function(argument, index) {*/}
-                    {/*    const loadedReferences = {};*/}
-
-                    {/*    return (*/}
-                    {/*        <span key={index}>*/}
-                    {/*            <AnalysisVariableValue*/}
-                    {/*                cur={argument.cur}*/}
-                    {/*                old={argument.old}*/}
-                    {/*                visited={{}}*/}
-                    {/*                defaultopened={false}*/}
-                    {/*                path={argument.path}*/}
-                    {/*                loadedReferences={loadedReferences}*/}
-                    {/*                openedPaths={props.openedPaths}*/}
-                    {/*                scopeIndex={props.scopeIndex}*/}
-                    {/*            />*/}
-                    {/*            {(index + 1) < argCount ? ', ' : null}*/}
-                    {/*        </span>*/}
-                    {/*    );*/}
-                    {/*})}*/}
+                    {args.map(function(argument, index) {
+                        return (
+                            <span key={index}>
+                                <AnalysisVariableValue
+                                    variable={argument}
+                                    stackFrameId={props.stackFrame.id}
+                                />
+                                {(index + 1) < props.stackFrame.args.length ? ', ' : null}
+                            </span>
+                        );
+                    })}
                 </span>{props.stackFrame.name ? ')' : null}
             </span>
         </div>

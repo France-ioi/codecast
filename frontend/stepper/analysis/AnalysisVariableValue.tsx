@@ -12,44 +12,18 @@ interface AnalysisVariableValueProps {
 }
 
 export const AnalysisVariableValue = (props: AnalysisVariableValueProps) => {
-    let opened = false;
-    if (props.hasOwnProperty('defaultopened')) {
-        opened = props.defaultopened;
-    // } else if (this.props.cur instanceof Sk.builtin.list || this.props.cur instanceof Sk.builtin.tuple) {
-    //     opened = true;
+    const variable = props.variable;
+
+    let isOpen = useAppSelector(state => props.stackFrameId in state.analysis.openedPaths && -1 !== state.analysis.openedPaths[props.stackFrameId].indexOf(props.variable.path));
+    if (['list', 'tuple', 'range', 'set', 'frozenset'].indexOf(variable.type) !== -1) {
+        isOpen = true;
     }
-
-    const isOpen = useAppSelector(state => props.stackFrameId in state.analysis.openedPaths && -1 !== state.analysis.openedPaths[props.stackFrameId].indexOf(props.variable.path));
-
-   // const isOpened = () => {
-   //      let opened = false;
-   //      // if (
-   //      //     this.props.cur instanceof Sk.builtin.list
-   //      //     || this.props.cur instanceof Sk.builtin.tuple
-   //      //     || this.props.cur instanceof Sk.builtin.range_
-   //      //     || this.props.cur instanceof Sk.builtin.set
-   //      //     || this.props.cur instanceof Sk.builtin.frozenset
-   //      // ) {
-   //      //     opened = true;
-   //      // } else if (this.props.openedPaths.hasOwnProperty(this.props.path)) {
-   //      //     opened = this.props.openedPaths[this.props.path];
-   //      // } else if (this.props.cur.hasOwnProperty('_uuid')) {
-   //      //     if (this.props.hasOwnProperty('defaultopened')) {
-   //      //         opened = this.props.defaultopened;
-   //      //     }
-   //      // }
-   //
-   //      return opened;
-   //  };
 
     const dispatch = useDispatch();
     const toggleOpened = () => {
-        // const isOpened = !isOpened();
-
         dispatch(analysisTogglePath({stackFrameId: props.stackFrameId, path: props.variable.path}));
     };
 
-    const variable = props.variable;
     // if (this.props.cur instanceof Sk.builtin.dict) {
     //     const elements = [];
     //     let isEmpty = true;
@@ -248,37 +222,87 @@ export const AnalysisVariableValue = (props: AnalysisVariableValueProps) => {
         )
     }
 
+    // if (this.props.cur instanceof Sk.builtin.list || this.props.cur instanceof Sk.builtin.tuple || this.props.cur instanceof Sk.builtin.range_) {
+    //
+    //     let renderedElements;
+    //     if (wasVisited) {
+    //         renderedElements = '...';
+    //     } else {
+    //         renderedElements =
+    //     }
+    //
+    //     return (
+    //         <React.Fragment>
+    //             {this.isOpened() ? (
+    //                 <React.Fragment>
+    //                         <span className="list-toggle list-toggle-open" onClick={this.toggleOpened}>
+    //                             <span className="toggle-icon">▾</span>
+    //                         </span>
+    //                     [{renderedElements}]
+    //                 </React.Fragment>
+    //             ) : (
+    //                 <span className="list-toggle" onClick={this.toggleOpened}>
+    //                         <span className="toggle-icon">▸</span>
+    //                         <span className="value-list-closed">
+    //                             &lt;{variableType}&gt;
+    //                         </span>
+    //                     </span>
+    //             )}
+    //         </React.Fragment>
+    //     )
+    // }
+
     if (Array.isArray(variable.variables)) {
-        let renderedElements = variable.variables.length ? variable.variables.map((variable) => {
-            return (
-                <li key={variable.name}>
-                    <AnalysisVariable
-                        variable={variable}
-                        stackFrameId={props.stackFrameId}
-                    />
-                </li>
-            );
-        }) : (
-            <li>
-                <span className="value-empty">&lt;&gt;</span>
-            </li>
-        );
+        const isCollapsed = -1 !== ['list', 'tuple', 'range', 'set', 'frozenset'].indexOf(variable.type);
+
+        let renderedElements;
+        if (isCollapsed) {
+            let delimiters = -1 !== ['set', 'frozenset'].indexOf(variable.type) ? '{}' : '[]';
+            renderedElements = (<React.Fragment>
+                {delimiters[0]}{variable.variables.map((innerVariable, index) => {
+                    return (
+                        <span key={innerVariable.name}>
+                            <AnalysisVariableValue
+                                variable={innerVariable}
+                                stackFrameId={props.stackFrameId}
+                            />
+                            {(index + 1) < variable.variables.length ? ', ' : null}
+                        </span>
+                    );
+                })}{delimiters[1]}
+            </React.Fragment>);
+        } else {
+            renderedElements = (<ul className="object_scope">
+                {variable.variables.length ? variable.variables.map((innerVariable) => {
+                    return (
+                        <li key={innerVariable.name}>
+                            <AnalysisVariable
+                                variable={innerVariable}
+                                stackFrameId={props.stackFrameId}
+                            />
+                        </li>
+                    );
+                }) : (
+                    <li>
+                        <span className="value-empty">&lt;&gt;</span>
+                    </li>
+                )}
+            </ul>);
+        }
 
         return (
             <React.Fragment>
                 {isOpen ? (
                     <React.Fragment>
-                        <span className="object-toggle object-toggle-open" onClick={toggleOpened}>
+                        <span className={isCollapsed ? "list-toggle list-toggle-open" : "object-toggle object-toggle-open"} onClick={toggleOpened}>
                             <span className="toggle-icon">▾</span>
                         </span>
-                        <ul className="object_scope">
-                            {renderedElements}
-                        </ul>
+                        {renderedElements}
                     </React.Fragment>
                 ) : (
-                    <span className="object-toggle" onClick={toggleOpened}>
+                    <span className={isCollapsed ? "list-toggle" : "object-toggle"} onClick={toggleOpened}>
                         <span className="toggle-icon">▸</span>
-                        <span className="value-object-closed">
+                        <span className={isCollapsed ? "value-list-closed" : "value-object-closed"}>
                             &lt;{variable.type}&gt;
                         </span>
                     </span>

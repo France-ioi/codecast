@@ -18,6 +18,7 @@ export interface AnalysisSnapshot {
 export interface AnalysisStackFrame extends DebugProtocol.StackFrame {
     scopes: AnalysisScope[],
     directives?: any[],
+    args: string[],
 }
 export interface AnalysisScope extends DebugProtocol.Scope {
     variables: (AnalysisVariable | string)[], // It can be a variablesReference to avoid cycles
@@ -36,6 +37,7 @@ export interface CodecastAnalysisSnapshot {
 export interface CodecastAnalysisStackFrame extends DebugProtocol.StackFrame {
     variables: CodecastAnalysisVariable[],
     directives?: any[],
+    args: string[],
 }
 
 export interface CodecastAnalysisVariable {
@@ -69,6 +71,7 @@ export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, l
             directives: stackFrame.directives,
             line: stackFrame.line,
             column: stackFrame.column,
+            args: stackFrame.args,
             variables: [],
         };
 
