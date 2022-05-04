@@ -35,14 +35,14 @@ interface SortViewParams {
     cursorMap?: any
 }
 
-function getValueClass(view, index, loadedReferences) {
+function getValueClass(view, index) {
     const {ref} = view;
     const list = ref.cur.v;
 
     if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(index) && ref.old.v[index] !== list[index]) {
         return 'store';
     }
-    if (loadedReferences.hasOwnProperty(ref.cur._uuid + '_' + index)) {
+    if (ref.variables[index].loaded) {
         return 'load';
     }
 
@@ -50,7 +50,7 @@ function getValueClass(view, index, loadedReferences) {
 }
 
 function Bar({view, index}) {
-    const {loadedReferences, maxValue, ref} = view;
+    const {maxValue, ref} = view;
     const list = ref.cur.v;
     const cellElement = list[index];
     const value = cellElement.v;
@@ -62,7 +62,7 @@ function Bar({view, index}) {
     const y0 = MARGIN_TOP;                    // y0: absolute top corner of bar
     const x1 = BAR_WIDTH / 2;                 // x1: relative horizontal center of text
 
-    const rectClass = getValueClass(view, index, loadedReferences);
+    const rectClass = getValueClass(view, index);
     const y3 = y1 - TEXT_BASELINE - BAR_PADDING_BOTTOM;
     const y4 = y3 - TEXT_LINE_HEIGHT;
     const h1 = BAR_HEIGHT * value / maxValue; // y3: bar height based on value

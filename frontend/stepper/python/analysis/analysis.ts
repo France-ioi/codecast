@@ -52,7 +52,6 @@ export const convertSkulptStateToAnalysisSnapshot = function (suspensions: reado
                 directives: getDirectiveVariables(suspVariables),
                 scopes: [],
                 args: suspension._argnames,
-                loadedReferences: suspension.$loaded_references,
             };
 
             console.log('suspension loaded', suspension.$loaded_references);
@@ -119,6 +118,7 @@ export const analyseSkulptScope = function(suspension: any): AnalysisScope {
     }
 
     const variableNames = sortArgumentsFirst(filterInternalVariables(Object.keys(suspVariables)), suspension._argnames);
+    const loadedReferences = suspension.$loaded_references ? suspension.$loaded_references : {};
 
     for (let variableName of variableNames) {
         let value = suspVariables[variableName];
@@ -132,7 +132,7 @@ export const analyseSkulptScope = function(suspension: any): AnalysisScope {
             }
         }
 
-        const variable = convertSkulptValueToDAPVariable(Sk.unfixReserved(variableName), value, {});
+        const variable = convertSkulptValueToDAPVariable(Sk.unfixReserved(variableName), value, {}, null, loadedReferences);
         variables.push(variable);
     }
 
@@ -141,9 +141,6 @@ export const analyseSkulptScope = function(suspension: any): AnalysisScope {
         variablesReference: 0,
         expensive: false,
         name,
-        // args,
-        // suspensionIdx,
-        // scopeIndex
     };
 
     // @ts-ignore
@@ -256,11 +253,12 @@ export const getSkulptSuspensionsCopy = function(suspensions) {
 
 let variableReferenceCount = 1;
 
-export const convertSkulptValueToDAPVariable = (name: string, value: any, visited: {[uuid: string]: boolean}): AnalysisVariable => {
-    console.log('convert value', name, value, visited);
+export const convertSkulptValueToDAPVariable = (name: string, value: any, visited: {[uuid: string]: boolean}, loadReference: string, loadedReferences): AnalysisVariable => {
+    console.log('convert value', name, value, visited, loadedReferences);
     let variableData = {
         name,
         type: value.constructor.prototype.tp$name,
+        loaded: name in loadedReferences || (null !== loadReference && loadReference in loadedReferences),
     };
 
     if (value._uuid && value._uuid in visited) {
@@ -302,7 +300,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
             ...variableData,
             value: null,
             variables: Object.entries(value.entries).map(([key, item]) => {
-                return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value._uuid]: true});
+                return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value._uuid]: true}, value._uuid + '_' + key, loadedReferences);
             }),
             namedVariables: Object.keys(value.entries).length,
             variablesReference: variableReferenceCount++,
@@ -314,7 +312,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
             ...variableData,
             value: null,
             variables: Object.entries(value.v.entries).map(([key, item]) => {
-                return convertSkulptValueToDAPVariable(key, item[0], {...visited, [value._uuid]: true});
+                return convertSkulptValueToDAPVariable(key, item[0], {...visited, [value.v._uuid]: true}, value._uuid + '_' + key, loadedReferences);
             }),
             namedVariables: Object.keys(value.v.entries).length,
             variablesReference: variableReferenceCount++,
@@ -326,7 +324,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
             ...variableData,
             value: null,
             variables: value.v.map((item, index) => {
-                return convertSkulptValueToDAPVariable(index, item, {...visited, [value._uuid]: true});
+                return convertSkulptValueToDAPVariable(index, item, {...visited, [value._uuid]: true}, value._uuid + '_' + index, loadedReferences);
             }),
             indexedVariables: value.v.length,
             variablesReference: variableReferenceCount++,
@@ -338,7 +336,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
             ...variableData,
             value: null,
             variables: Object.entries(value.$d.entries).map(([key, item]) => {
-                return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value._uuid]: true});
+                return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value.$d._uuid]: true}, value._uuid + '_' + key, loadedReferences);
             }),
             namedVariables: Object.keys(value.$d.entries).length,
             variablesReference: variableReferenceCount++,
@@ -351,7 +349,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
             ...variableData,
             value: null,
             variables: Object.entries(value.myobj.entries).map(([key, item]) => {
-                return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value._uuid]: true});
+                return convertSkulptValueToDAPVariable(key, item[1], {...visited, [value.myobj._uuid]: true}, value._uuid + '_' + key, loadedReferences);
             }),
             namedVariables: Object.keys(value.myobj.entries).length,
             variablesReference: variableReferenceCount++,

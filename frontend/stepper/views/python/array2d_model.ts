@@ -1,4 +1,4 @@
-import {getLoadedReferencesFromVariable, getVariable} from './utils';
+import {getVariable} from './utils';
 import {getCursorMap} from './array_utils';
 import {getMessage} from "../../../lang";
 
@@ -10,12 +10,12 @@ export const extractView = function(context, name: string, options) {
         return {error: getMessage('PYTHON_ARRAY2D_REF_UNDEFINED').format({name})};
     }
 
-    if (!(ref.cur instanceof Sk.builtin.list)) {
+    if ('list' !== ref.type) {
         return {error: getMessage('PYTHON_ARRAY2D_REF_NOT_LIST').format({name})};
     }
 
-    const rowCount = (options.rowCount) ? options.rowCount : ref.cur.v.length;
-    const colCount = (options.colCount) ? options.colCount : ref.cur.v[0].v.length;
+    const rowCount = (options.rowCount) ? options.rowCount : ref.variables.length;
+    const colCount = (options.colCount) ? options.colCount : ref.variables[0].variables.length;
 
     // Inspect cursors.
     const rowInfoMap = getCursorMap(analysis, options.rowCursors, {
@@ -48,6 +48,5 @@ export const extractView = function(context, name: string, options) {
         colCount,
         rowInfoMap,
         colInfoMap,
-        loadedReferences: getLoadedReferencesFromVariable(analysis, name)
     };
 };

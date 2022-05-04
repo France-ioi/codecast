@@ -8,16 +8,12 @@ import {AnalysisStackView} from "../../stepper/analysis/AnalysisStackView";
 export function LayoutStackView() {
     const currentStepperState = useAppSelector(state => state.stepper ? state.stepper.currentStepperState : null);
 
-    const props = {
-        analysis: currentStepperState ? currentStepperState.analysis : null,
-        lastAnalysis: currentStepperState ? currentStepperState.lastAnalysis : null,
-    }
-
+    const analysis = currentStepperState ? currentStepperState.codecastAnalysis : null;
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
 
     let stackView;
     if (currentStepperState && currentStepperState.platform === CodecastPlatform.Python) {
-        stackView = <AnalysisStackView analysis={props.analysis} lastAnalysis={props.lastAnalysis} height={null}/>
+        stackView = <AnalysisStackView analysis={analysis} height={null}/>
     } else if (currentStepperState && currentStepperState.platform === CodecastPlatform.Unix) {
         stackView = <StackView/>
     } else {

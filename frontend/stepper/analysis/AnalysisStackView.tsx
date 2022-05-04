@@ -6,28 +6,13 @@ import {useEffect, useState} from "react";
 
 interface AnalysisStackViewProps {
     height: number,
-    analysis: AnalysisSnapshot,
-    lastAnalysis: AnalysisSnapshot,
+    analysis: CodecastAnalysisSnapshot,
     showStackControls?: boolean,
 }
 
 export const AnalysisStackView = (props: AnalysisStackViewProps): JSX.Element => {
     const firstVisible = 0;
     const tailCount = 0;
-
-    console.log('python analysis', props.analysis, props.lastAnalysis);
-
-    const [expandedAnalysis, setExpandedAnalysis] = useState<CodecastAnalysisSnapshot>(null);
-
-    useEffect(() => {
-        const codecastFormatAnalysis = convertAnalysisDAPToCodecastFormat(props.analysis, props.lastAnalysis);
-        console.log('codecast analysis', codecastFormatAnalysis);
-        setExpandedAnalysis(codecastFormatAnalysis);
-    }, [props.analysis]);
-
-    if (!expandedAnalysis) {
-        return null;
-    }
 
     return (
         <div className="stack-view" style={{maxHeight: props.height}}>
@@ -44,7 +29,7 @@ export const AnalysisStackView = (props: AnalysisStackViewProps): JSX.Element =>
                 {'… +'}{firstVisible}
             </div>
             }
-            {expandedAnalysis.stackFrames.slice().reverse().map((analysisStackFrame, index) => (
+            {props.analysis.stackFrames.slice().reverse().map((analysisStackFrame, index) => (
                 <AnalysisFunctionView
                     key={index}
                     stackFrame={analysisStackFrame}

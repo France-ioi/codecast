@@ -383,6 +383,9 @@ export const AnalysisVariableValue = (props: AnalysisVariableValueProps) => {
     // }
 
     let classes = 'value-scalar';
+    if (variable.loaded) {
+        classes += ' value-loaded';
+    }
 
     return (
         <React.Fragment>

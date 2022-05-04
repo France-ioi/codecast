@@ -6,6 +6,7 @@ import {extractView} from './array_utils';
 import {SvgPan} from '../SvgPan';
 import {DirectiveFrame} from '../DirectiveFrame';
 import {StepperControls} from "../../index";
+import {CodecastAnalysisVariable} from "../../analysis";
 
 const TEXT_LINE_HEIGHT = 18;
 const TEXT_BASELINE = 5; // from bottom
@@ -33,13 +34,13 @@ function baseline(i) {
     return TEXT_LINE_HEIGHT * (i + 1) - TEXT_BASELINE;
 }
 
-function getCellClasses(ref, index, cursor, loadedReferences) {
-    const list = ref.cur.v;
+function getCellClasses(ref: CodecastAnalysisVariable, index, cursor) {
+    const list = ref.variables;
 
     if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(index) && ref.old.v[index] !== list[index]) {
         return 'cell cell-store';
     }
-    if (loadedReferences.hasOwnProperty(ref.cur._uuid + '_' + index)) {
+    if (list[index].loaded) {
         return 'cell cell-load';
     }
     if (cursor) {
@@ -50,7 +51,7 @@ function getCellClasses(ref, index, cursor, loadedReferences) {
 }
 
 function Grid({view, cellWidth}) {
-    const {ref, cursorMap, loadedReferences} = view;
+    const {ref, cursorMap} = view;
     const elements = [];
 
     const nbRows = (ref.cur) ? ref.cur.v.length : 0;
@@ -60,7 +61,7 @@ function Grid({view, cellWidth}) {
     const y2 = TEXT_LINE_HEIGHT * 2;
     const y3 = baseline(2);
     for (let i = 0, x = 0; i < nbRows; i += 1, x += cellWidth) {
-        const cellClasses = getCellClasses(ref, i, cursorMap[i], loadedReferences);
+        const cellClasses = getCellClasses(ref, i, cursorMap[i]);
 
         elements.push(
             <g key={`h${i}`}>

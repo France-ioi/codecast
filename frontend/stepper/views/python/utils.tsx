@@ -1,29 +1,9 @@
 import React from 'react';
-import {SkulptAnalysis, SkulptScope, SkulptVariable} from "../../python/analysis/analysis";
-import {AnalysisSnapshot} from "../../analysis";
-
-/**
- * Gets the scope's loaded references from a variable name.
- *
- * @param {object} analysis The analysis.
- * @param {string} name     The variable name.
- *
- * @return {object|null}
- */
-export const getLoadedReferencesFromVariable = function(analysis: AnalysisSnapshot, name: string): SkulptVariable {
-    // Check in the last (the current) and the first (which is the global) scopes.
-
-    // const nbScopes = analysis.stackFrames.length;
-    // if (getVariableInScope(analysis.stackFrames[nbScopes - 1], name)) {
-    //     return analysis.stackFrames[nbScopes - 1].loadedReferences;
-    // }
-    // if (nbScopes > 1 && getVariableInScope(analysis.stackFrames[0], name)) {
-    //     return analysis.stackFrames[0].loadedReferences;
-    // }
-
-    // @ts-ignore
-    return {};
-};
+import {
+    CodecastAnalysisSnapshot,
+    CodecastAnalysisStackFrame,
+    CodecastAnalysisVariable
+} from "../../analysis";
 
 /**
  * Gets a variable by name in analysis.
@@ -33,17 +13,18 @@ export const getLoadedReferencesFromVariable = function(analysis: AnalysisSnapsh
  *
  * @return {object|null}
  */
-export const getVariable = function(analysis: AnalysisSnapshot, name: string): SkulptVariable {
+export const getVariable = function(analysis: CodecastAnalysisSnapshot, name: string): CodecastAnalysisVariable {
     // Check in the last (the current) and the first (which is the global) scopes.
 
+    console.log('get variable', analysis, name);
     const nbScopes = analysis.stackFrames.length;
     let variable = null;
-    // if (nbScopes) {
-    //     variable = getVariableInScope(analysis.stackFrames[nbScopes - 1], name);
-    // }
-    // if (!variable && nbScopes > 1) {
-    //     variable = getVariableInScope(analysis.stackFrames[0], name);
-    // }
+    if (nbScopes) {
+        variable = getVariableInScope(analysis.stackFrames[nbScopes - 1], name);
+    }
+    if (!variable && nbScopes > 1) {
+        variable = getVariableInScope(analysis.stackFrames[0], name);
+    }
 
     return variable;
 };
@@ -56,7 +37,7 @@ export const getVariable = function(analysis: AnalysisSnapshot, name: string): S
  *
  * @return {object|null}
  */
-export const getVariables = function(analysis: SkulptAnalysis, names: string[]): {name: string, value: SkulptVariable}[] {
+export const getVariables = function(analysis: CodecastAnalysisSnapshot, names: string[]): {name: string, value: CodecastAnalysisVariable}[] {
     return names.map((name) => {
         return {
             name,
@@ -67,18 +48,11 @@ export const getVariables = function(analysis: SkulptAnalysis, names: string[]):
 
 /**
  * Gets a variable by name in a scope.
- *
- * @param {object} scope The scope.
- * @param {string} name  The name.
- *
- * @return {object|null}
  */
-const getVariableInScope = function(scope: SkulptScope, name: string): SkulptVariable {
-    if (scope.variables.hasOwnProperty(name)) {
-        return scope.variables[name];
-    }
+const getVariableInScope = function(stackFrame: CodecastAnalysisStackFrame, name: string): CodecastAnalysisVariable {
+    let variable = stackFrame.variables.find(variable => name === variable.name);
 
-    return null;
+    return variable ? variable : null;
 };
 
 export const renderValue = function(value) {
@@ -112,26 +86,3 @@ export const renderArrow = function(x: number, y: number, dir: 'right' | 'down' 
     return <polygon points={ps} transform={`translate(${x},${y})`} {...style} />;
 };
 
-export const highlightColors = [
-    {fg: '#2196F3', bg: '#BBDEFB', name: 'blue'},
-    {fg: '#4CAF50', bg: '#C8E6C9', name: 'green'},
-    {fg: '#F44336', bg: '#FFCDD2', name: 'red'},
-    {fg: '#00BCD4', bg: '#B2EBF2', name: 'cyan'},
-    {fg: '#FFEB3B', bg: '#FFF9C4', name: 'yellow'},
-    {fg: '#9C27B0', bg: '#E1BEE7', name: 'purple'},
-    {fg: '#FF9800', bg: '#FFE0B2', name: 'orange'},
-    {fg: '#9E9E9E', bg: '#F5F5F5', name: 'grey'},
-    {fg: '#03A9F4', bg: '#B3E5FC', name: 'light blue'},
-    {fg: '#8BC34A', bg: '#DCEDC8', name: 'light green'},
-    {fg: '#E91E63', bg: '#F8BBD0', name: 'pink'},
-    {fg: '#009688', bg: '#B2DFDB', name: 'teal'},
-    {fg: '#FFC107', bg: '#FFECB3', name: 'amber'},
-    {fg: '#673AB7', bg: '#D1C4E9', name: 'deep purple'},
-    {fg: '#FF5722', bg: '#FFCCBC', name: 'deep orange'},
-    {fg: '#607D8B', bg: '#CFD8DC', name: 'blue grey'},
-    {fg: '#795548', bg: '#D7CCC8', name: 'brown'},
-    {fg: '#CDDC39', bg: '#F0F4C3', name: 'lime'},
-    {fg: '#3F51B5', bg: '#C5CAE9', name: 'indigo'}
-];
-
-export const noColor = {fg: '#777777', bg: '#F0F0F0', name: 'light gray'};

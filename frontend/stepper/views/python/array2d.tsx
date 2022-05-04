@@ -5,6 +5,7 @@ import {renderArrow, renderValue} from './utils';
 import {SvgPan} from '../SvgPan';
 import {DirectiveFrame} from "../DirectiveFrame";
 import {StepperControls} from "../../index";
+import {CodecastAnalysisVariable} from "../../analysis";
 
 const TEXT_LINE_HEIGHT = 18;
 const TEXT_BASELINE = 5; // from bottom
@@ -80,9 +81,8 @@ function drawCells(view) {
     return <g transform={`translate(${GRID_LEFT},${GRID_TOP})`}>{elements}</g>;
 }
 
-function getCellClasses(ref, row, column, rowCursor, colCursor, loadedReferences) {
-    const rootList = ref.cur;
-    const rowList = rootList.v[row];
+function getCellClasses(ref: CodecastAnalysisVariable, row, column, rowCursor, colCursor) {
+    const rowList = ref.variables[row].variables;
 
     if (
         ref.old &&
@@ -94,7 +94,7 @@ function getCellClasses(ref, row, column, rowCursor, colCursor, loadedReferences
     ) {
         return 'cell cell-store';
     }
-    if (loadedReferences.hasOwnProperty(rowList._uuid + '_' + column)) {
+    if (rowList[column].loaded) {
         return 'cell cell-load';
     }
     if (rowCursor || colCursor) {
@@ -105,7 +105,7 @@ function getCellClasses(ref, row, column, rowCursor, colCursor, loadedReferences
 }
 
 function drawGrid(view) {
-    const {ref, rowCount, colCount, rowInfoMap, colInfoMap, loadedReferences} = view;
+    const {ref, rowCount, colCount, rowInfoMap, colInfoMap} = view;
     const elements = [];
 
     // Cell backgrounds
@@ -113,7 +113,7 @@ function drawGrid(view) {
         for (let j = 0; j < colCount; j++) {
             const x1 = GRID_LEFT + j * CELL_WIDTH;
             const y1 = GRID_TOP + i * CELL_HEIGHT;
-            const classes = getCellClasses(ref, i, j, rowInfoMap[i], colInfoMap[j], loadedReferences);
+            const classes = getCellClasses(ref, i, j, rowInfoMap[i], colInfoMap[j]);
 
             elements.push(<rect key={`r${i},${j}`} x={x1} y={y1} width={CELL_WIDTH} height={CELL_HEIGHT}
                                 className={classes}/>);

@@ -19,7 +19,6 @@ export interface AnalysisStackFrame extends DebugProtocol.StackFrame {
     scopes: AnalysisScope[],
     directives?: any[],
     args: string[],
-    loadedReferences: {[reference: string]: boolean},
 }
 export interface AnalysisScope extends DebugProtocol.Scope {
     variables: (AnalysisVariable | string)[], // It can be a variablesReference to avoid cycles
@@ -28,6 +27,7 @@ export interface AnalysisScope extends DebugProtocol.Scope {
 export interface AnalysisVariable extends DebugProtocol.Variable {
     variables?: (AnalysisVariable | string)[], // It can be a variablesReference to avoid cycles
     alreadyVisited?: boolean,
+    loaded?: boolean,
 }
 
 // Codecast format for visual display
@@ -46,12 +46,12 @@ export interface CodecastAnalysisVariable {
     value: string,
     path: string,
     variables: CodecastAnalysisVariable[],
+    loaded?: boolean
     previousValue?: string,
     type?: string,
     variablesReference: number,
     alreadyVisited?: boolean,
 }
-
 
 export const convertAnalysisDAPToCodecastFormat = (analysis: AnalysisSnapshot, lastAnalysis: AnalysisSnapshot): CodecastAnalysisSnapshot => {
     let codecastAnalysis: CodecastAnalysisSnapshot = {

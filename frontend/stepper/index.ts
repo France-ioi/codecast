@@ -77,7 +77,7 @@ import AbstractRunner from "./abstract_runner";
 import {SagaIterator} from "redux-saga";
 import BlocklyRunner from "./js/blockly_runner";
 import UnixRunner from "./c/unix_runner";
-import {AnalysisSnapshot} from "./analysis";
+import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./analysis";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -128,6 +128,7 @@ const initialStateStepperState = {
     ports: [] as ArduinoPort[], // Only used for arduino
     selectedPort: {} as any, // Only used for arduino
     controls: initialStepperStateControls, // Only used for c
+    codecastAnalysis: null as CodecastAnalysisSnapshot,
     analysis: null as AnalysisSnapshot,
     lastAnalysis: null as AnalysisSnapshot, // Only used for python
     directives: {
@@ -388,10 +389,14 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
                 stepNum: 0
             };
         }
+
+        console.log('python analysis', stepperState.analysis);
+        stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
+        console.log('codecast analysis', stepperState.codecastAnalysis);
     } else {
-        const analysis = stepperState.analysis = analyseState(programState);
+        const analysis = stepperState.analysis = analyseState(programState) as AnalysisSnapshot;
         const focusDepth = controls.stack.focusDepth;
-        stepperState.directives = collectDirectives(analysis.functionCallStack, focusDepth);
+        stepperState.directives = collectDirectives(analysis.stackFrames, focusDepth);
 
         // TODO? initialize controls for each directive added, clear controls for each directive removed (except 'stack').
     }
