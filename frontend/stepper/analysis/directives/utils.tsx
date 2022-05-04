@@ -3,7 +3,7 @@ import {
     CodecastAnalysisSnapshot,
     CodecastAnalysisStackFrame,
     CodecastAnalysisVariable
-} from "../../analysis";
+} from "../analysis";
 
 /**
  * Gets a variable by name in analysis.

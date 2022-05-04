@@ -2,10 +2,10 @@ import React from 'react';
 
 import {getVariables, renderArrow, renderValue} from './utils';
 import {extractView} from './array_utils';
-import {SvgPan} from '../SvgPan';
-import {DirectiveFrame} from "../DirectiveFrame";
+import {SvgPan} from '../../views/SvgPan';
+import {DirectiveFrame} from "../../views/DirectiveFrame";
 import {StepperControls} from "../../index";
-import {CodecastAnalysisVariable} from "../../analysis";
+import {CodecastAnalysisVariable} from "../analysis";
 
 const DEFAULT_MAX_VISIBLE_CELLS = 40;
 const MARGIN_LEFT = 100;

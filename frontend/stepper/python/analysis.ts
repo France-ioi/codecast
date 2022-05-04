@@ -1,5 +1,5 @@
-import {VIEW_DIRECTIVE_PREFIX} from "../directives";
-import {AnalysisScope, AnalysisSnapshot, AnalysisStackFrame, AnalysisVariable} from "../../analysis";
+import {VIEW_DIRECTIVE_PREFIX} from "./directives";
+import {AnalysisScope, AnalysisSnapshot, AnalysisStackFrame, AnalysisVariable} from "../analysis/analysis";
 import {DebugProtocol} from "vscode-debugprotocol";
 
 /**

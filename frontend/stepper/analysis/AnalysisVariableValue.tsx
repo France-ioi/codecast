@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {AnalysisVariable} from "./AnalysisVariable";
 import {useDispatch} from "react-redux";
-import {CodecastAnalysisVariable} from "./index";
+import {CodecastAnalysisVariable} from "./analysis";
 import {analysisTogglePath} from "./analysis_slice";
 import {useAppSelector} from "../../hooks";
 

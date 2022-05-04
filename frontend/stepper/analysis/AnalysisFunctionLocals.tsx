@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {AnalysisVariable} from "./AnalysisVariable";
-import {CodecastAnalysisStackFrame} from "./index";
+import {CodecastAnalysisStackFrame} from "./analysis";
 
 interface AnalysisFunctionLocalsProps {
     stackFrame: CodecastAnalysisStackFrame,

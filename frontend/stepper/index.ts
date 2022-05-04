@@ -46,7 +46,7 @@ import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle from './python';
 import BlocklyBundle, {hasBlockPlatform} from './js';
 import {analyseState, collectDirectives} from './c/analysis';
-import {convertSkulptStateToAnalysisSnapshot, getSkulptSuspensionsCopy} from "./python/analysis/analysis";
+import {convertSkulptStateToAnalysisSnapshot, getSkulptSuspensionsCopy} from "./python/analysis";
 import {Directive, parseDirectives} from "./python/directives";
 import {
     ActionTypes as StepperActionTypes,
@@ -77,7 +77,7 @@ import AbstractRunner from "./abstract_runner";
 import {SagaIterator} from "redux-saga";
 import BlocklyRunner from "./js/blockly_runner";
 import UnixRunner from "./c/unix_runner";
-import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./analysis";
+import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./analysis/analysis";
 
 export enum StepperStepMode {
     Run = 'run',

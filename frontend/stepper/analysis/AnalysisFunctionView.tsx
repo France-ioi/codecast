@@ -1,7 +1,7 @@
 import * as React from 'react';
 import {AnalysisFunctionHeader} from "./AnalysisFunctionHeader";
 import {AnalysisFunctionLocals} from "./AnalysisFunctionLocals";
-import {CodecastAnalysisStackFrame} from "./index";
+import {CodecastAnalysisStackFrame} from "./analysis";
 
 interface AnalysisFunctionViewProps {
     stackFrame: CodecastAnalysisStackFrame,

@@ -2,10 +2,10 @@ import React from 'react';
 
 import {extractView} from './array2d_model';
 import {renderArrow, renderValue} from './utils';
-import {SvgPan} from '../SvgPan';
-import {DirectiveFrame} from "../DirectiveFrame";
+import {SvgPan} from '../../views/SvgPan';
+import {DirectiveFrame} from "../../views/DirectiveFrame";
 import {StepperControls} from "../../index";
-import {CodecastAnalysisVariable} from "../../analysis";
+import {CodecastAnalysisVariable} from "../analysis";
 
 const TEXT_LINE_HEIGHT = 18;
 const TEXT_BASELINE = 5; // from bottom

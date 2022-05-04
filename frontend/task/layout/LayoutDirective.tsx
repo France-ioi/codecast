@@ -8,7 +8,7 @@ import {directiveDimensionsDict} from "../../stepper/views";
 import {LayoutElementMetadata} from "./layout";
 import {useAppSelector} from "../../hooks";
 import {useDispatch} from "react-redux";
-import {CodecastAnalysisSnapshot} from "../../stepper/analysis";
+import {CodecastAnalysisSnapshot} from "../../stepper/analysis/analysis";
 
 interface LayoutDirectiveProps {
     directive: any,

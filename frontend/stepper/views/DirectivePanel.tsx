@@ -1,6 +1,6 @@
 import React from "react";
 import {DirectiveFrame} from "./DirectiveFrame";
-import {C_directiveViewDict, pythonDirectiveViewDict} from "./index";
+import {analysisDirectiveViewDict, C_directiveViewDict} from "./index";
 import {CodecastPlatform} from "../../store";
 
 export function DirectivePanel({scale, directive, controls, context, functionCallStack, platform, onChange, allocatedWidth, allocatedHeight}) {
@@ -15,11 +15,11 @@ export function DirectivePanel({scale, directive, controls, context, functionCal
 
     let directiveDescription;
     if (platform === CodecastPlatform.Python) {
-        if (!pythonDirectiveViewDict[kind]) {
+        if (!analysisDirectiveViewDict[kind]) {
             return <p>{'Error: undefined view kind '}{kind}</p>;
         }
 
-        directiveDescription = pythonDirectiveViewDict[kind];
+        directiveDescription = analysisDirectiveViewDict[kind];
     } else {
         if (!C_directiveViewDict[kind]) {
             return <p>{'Error: undefined view kind '}{kind}</p>;

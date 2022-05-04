@@ -1,8 +1,7 @@
 import * as React from 'react';
 import {AnalysisFunctionView} from "./AnalysisFunctionView";
 import {Button, ButtonGroup} from "@blueprintjs/core";
-import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./index";
-import {useEffect, useState} from "react";
+import {CodecastAnalysisSnapshot} from "./analysis";
 
 interface AnalysisStackViewProps {
     height: number,
