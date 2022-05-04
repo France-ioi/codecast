@@ -16,7 +16,6 @@ import {
 export const getVariable = function(analysis: CodecastAnalysisSnapshot, name: string): CodecastAnalysisVariable {
     // Check in the last (the current) and the first (which is the global) scopes.
 
-    console.log('get variable', analysis, name);
     const nbScopes = analysis.stackFrames.length;
     let variable = null;
     if (nbScopes) {

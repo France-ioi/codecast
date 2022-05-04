@@ -43,35 +43,32 @@ function drawCells(view) {
     const {ref} = view;
     const elements = [];
 
-    ref.cur.v.forEach(function(rowList, i) {
+    ref.variables.forEach(function(rowList, i) {
         const y1 = TEXT_LINE_HEIGHT - TEXT_BASELINE;
         const y1a = y1 - STRIKE_THROUGH_HEIGHT;
         const y2 = TEXT_LINE_HEIGHT * 2 - TEXT_BASELINE;
 
-        let oldRowList = null;
-        if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(i)) {
-            oldRowList = ref.old.v[i];
-        }
-
-        rowList.v.forEach(function(cellElement, j) {
+        rowList.variables.forEach(function(cellElement, j) {
             const x = 0.5 * CELL_WIDTH;
 
             let oldCellElement = null;
-            if (oldRowList && oldRowList.v.hasOwnProperty(j)) {
-                oldCellElement = oldRowList.v[j];
+            if (ref.variables && ref.variables.length && i in ref.variables
+                && ref.variables[i].variables && ref.variables[i].variables.length && j in ref.variables[i].variables
+            ) {
+                oldCellElement = ref.variables[i].variables[j].previousValue;
             }
 
             elements.push(
                 <g key={`${i},${j}`} transform={`translate(${j * CELL_WIDTH},${i * CELL_HEIGHT})`}
                    clipPath="url(#cell)">
-                    {oldCellElement && (oldCellElement !== cellElement) && <g>
+                    {null !== oldCellElement && (oldCellElement !== cellElement.value) && <g>
                         <text x={x} y={y1} textAnchor="middle" fill="#777">
-                            {renderValue(oldCellElement.v)}
+                            {renderValue(oldCellElement)}
                         </text>
                         <line x1={5} x2={CELL_WIDTH - 5} y1={y1a} y2={y1a} stroke="#777" strokeWidth="1"/>
                     </g>}
                     <text x={x} y={y2} textAnchor="middle" fill="#000">
-                        {renderValue(cellElement.v)}
+                        {renderValue(cellElement.value)}
                     </text>
                 </g>
             );
@@ -84,13 +81,10 @@ function drawCells(view) {
 function getCellClasses(ref: CodecastAnalysisVariable, row, column, rowCursor, colCursor) {
     const rowList = ref.variables[row].variables;
 
-    if (
-        ref.old &&
-        ref.old instanceof Sk.builtin.list &&
-        ref.old.v.hasOwnProperty(row) &&
-        ref.old.v[row] instanceof Sk.builtin.list &&
-        ref.old.v[row].v.hasOwnProperty(column) &&
-        ref.old.v[row].v[column] !== rowList.v[column]
+    if (ref.variables && ref.variables.length && row in ref.variables
+        && ref.variables[row].variables && ref.variables[row].variables.length && column in ref.variables[row].variables
+        && null !== ref.variables[row].variables[column].previousValue
+        && rowList[column].value !== ref.variables[row].variables[column].previousValue
     ) {
         return 'cell cell-store';
     }

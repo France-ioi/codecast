@@ -37,7 +37,7 @@ function baseline(i) {
 function getCellClasses(ref: CodecastAnalysisVariable, index, cursor) {
     const list = ref.variables;
 
-    if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(index) && ref.old.v[index] !== list[index]) {
+    if (ref.variables && ref.variables.length && index in ref.variables && null !== ref.variables[index].previousValue && ref.variables[index].previousValue !== ref.variables[index].value) {
         return 'cell cell-store';
     }
     if (list[index].loaded) {
@@ -54,7 +54,7 @@ function Grid({view, cellWidth}) {
     const {ref, cursorMap} = view;
     const elements = [];
 
-    const nbRows = (ref.cur) ? ref.cur.v.length : 0;
+    const nbRows = (ref.variables) ? ref.variables.length : 0;
 
     // Column labels and horizontal lines
     const y1 = TEXT_LINE_HEIGHT;
@@ -87,24 +87,24 @@ function Cell({view, index}) {
     const y0a = y0 - (TEXT_LINE_HEIGHT - TEXT_BASELINE) / 3;
     const y1 = baseline(1);
 
-    const cellElement = ref.cur.v[index];
+    const cellElement = ref.variables[index];
 
     let oldElement = null;
-    if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(index)) {
-        oldElement = ref.old.v[index];
+    if (ref.variables && ref.variables.length && index in ref.variables) {
+        oldElement = ref.variables[index].previousValue;
     }
 
     return (
         <g transform={`translate(${index * cellWidth},0)`} clipPath="url(#cell)">
-            {oldElement && (oldElement !== cellElement) &&
+            {null !== oldElement && (oldElement !== cellElement.value) &&
             <g className="previous-content">
                 <text x={cellWidth / 2} y={y0}>
-                    {renderValue(oldElement.v)}
+                    {renderValue(oldElement)}
                 </text>
                 <line x1={2} x2={cellWidth - 2} y1={y0a} y2={y0a}/>
             </g>}
             <text x={cellWidth / 2} y={y1} className="current-content">
-                {cellElement && renderValue(cellElement.v)}
+                {cellElement && renderValue(cellElement.value)}
             </text>
         </g>
     );
@@ -205,7 +205,7 @@ export class Array1D extends React.PureComponent<Array1DProps> {
                                 )}
                             </g>
                             <g className="cells">
-                                {view.ref.cur.v.map((cell, index) =>
+                                {view.ref.variables.map((cell, index) =>
                                     <Cell key={index} index={index} view={view} />
                                 )}
                             </g>
