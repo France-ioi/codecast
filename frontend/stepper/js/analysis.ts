@@ -16,7 +16,7 @@ export const fetchLatestBlocklyAnalysis = function (localVariables: any, lastAna
     const variables = [];
     if (localVariables) {
         for (let [name, value] of Object.entries(localVariables)) {
-            const variable = convertBlocklyValueToDAPFormat(name, value, {});
+            const variable = convertBlocklyValueToDAPFormat(name, value, []);
             variables.push(variable);
         }
     }
@@ -42,19 +42,29 @@ export const fetchLatestBlocklyAnalysis = function (localVariables: any, lastAna
 
 let variableReferenceCount = 1;
 
-export const convertBlocklyValueToDAPFormat = (name: string, value: any, visited: {[uuid: string]: boolean}): AnalysisVariable => {
+export const convertBlocklyValueToDAPFormat = (name: string, value: any, visited: any[]): AnalysisVariable => {
     console.log('convert value', name, value, visited);
     let variableData = {
         name,
         type: value && value.class ? value.class : (value && value.type ? value.type : typeof value),
     };
 
+    if (visited.find(visitedElement => visitedElement === value)) {
+        console.log('already visited', visited);
+        return {
+            ...variableData,
+            value: null,
+            alreadyVisited: true,
+            variablesReference: 0,
+        };
+    }
+
     if (value && value.class === 'Array') {
         return {
             ...variableData,
             value: null,
             variables: Object.entries(value.properties).map(([index, item]) => {
-                return convertBlocklyValueToDAPFormat(index, item, {...visited, [value._uuid]: true});
+                return convertBlocklyValueToDAPFormat(index, item, [...visited, value]);
             }),
             indexedVariables: Object.entries(value.properties).length,
             variablesReference: variableReferenceCount++,
@@ -66,7 +76,7 @@ export const convertBlocklyValueToDAPFormat = (name: string, value: any, visited
             ...variableData,
             value: null,
             variables: Object.entries(value.properties).map(([key, item]) => {
-                return convertBlocklyValueToDAPFormat(key, item, {...visited, [value._uuid]: true});
+                return convertBlocklyValueToDAPFormat(key, item, [...visited, value]);
             }),
             namedVariables: Object.entries(value.properties).length,
             variablesReference: variableReferenceCount++,

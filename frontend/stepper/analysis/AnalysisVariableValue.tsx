@@ -28,12 +28,10 @@ export const AnalysisVariableValue = (props: AnalysisVariableValueProps) => {
     if (variable.alreadyVisited) {
         return (
             <React.Fragment>
-                <span className="object-toggle object-toggle-open" onClick={toggleOpened}>
+                <span className="object-toggle" onClick={toggleOpened}>
                     <span className="toggle-icon">▾</span>
                 </span>
-                <ul className="object_scope">
-                    <li>...</li>
-                </ul>
+                <span>...</span>
             </React.Fragment>
         )
     }
