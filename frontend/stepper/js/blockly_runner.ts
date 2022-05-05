@@ -3,6 +3,8 @@ import {Stepper, StepperState} from "../index";
 import {StepperContext} from "../api";
 import {Block, BlockType} from "../../task/blocks/blocks";
 import {Codecast} from "../../index";
+import {AnalysisSnapshot} from "../analysis/analysis";
+import {fetchLatestBlocklyAnalysis} from "./analysis";
 
 export default class BlocklyRunner extends AbstractRunner {
     private context;
@@ -43,6 +45,8 @@ export default class BlocklyRunner extends AbstractRunner {
     private _stepInProgress = false;
     private stepMode = false;
     private nextCallback;
+
+    private localVariables = {};
 
     // TODO: use our own translation system?
     private strings;
@@ -85,13 +89,7 @@ export default class BlocklyRunner extends AbstractRunner {
         // Show a popup displaying the value of a block in step-by-step mode
         console.log('report block value', id, value, varName, this.strings);
         if (this.context.display && this.stepMode) {
-            let displayStr = this.valueToString(value);
-            if(value && value.type == 'boolean') {
-                displayStr = value.data ? this.context.blocklyHelper.strings.valueTrue : this.context.blocklyHelper.strings.valueFalse;
-            }
-            if(varName == '@@LOOP_ITERATION@@') {
-                displayStr = this.context.blocklyHelper.strings.loopIteration + ' ' + displayStr;
-            } else if(varName) {
+            if(varName != '@@LOOP_ITERATION@@') {
                 varName = varName.toString();
                 // Get the original variable name
                 for(let dbIdx in window.Blockly.JavaScript.variableDB_.db_) {
@@ -108,9 +106,11 @@ export default class BlocklyRunner extends AbstractRunner {
                         break;
                     }
                 }
-                displayStr = varName + ' = ' + displayStr;
+                this.localVariables = {
+                    ...this.localVariables,
+                    [varName]: value,
+                }
             }
-            this.context.blocklyHelper.workspace.reportValue(id, displayStr);
         }
         return value;
     };
@@ -497,6 +497,7 @@ export default class BlocklyRunner extends AbstractRunner {
         this.context.programEnded = [];
         this.interpreterEnded = [];
         this.context.curSteps = [];
+        this.localVariables = {};
         this.context.callCallback = this.noDelay.bind(this);
         this._isFinished = false;
         let highlightBlocks = [...codes[0].matchAll(/highlightBlock\('(.+)'\)/g)];
@@ -585,6 +586,11 @@ export default class BlocklyRunner extends AbstractRunner {
         return this.currentBlockId;
     }
 
+    public getLocalVariables() {
+        console.log('fetch local variables', this.localVariables);
+        return this.localVariables;
+    }
+
     public isSynchronizedWithAnalysis(analysis) {
         // Must be at the same step number and have the same source code.
 
@@ -595,5 +601,15 @@ export default class BlocklyRunner extends AbstractRunner {
         console.log('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentStepNum);
 
         return !(analysisStepNum !== currentStepNum || analysisCode !== currentPythonCode);
+    }
+
+    public fetchLatestBlocklyAnalysis = function (localVariables: any, lastAnalysis: AnalysisSnapshot, newStepNum: number): AnalysisSnapshot {
+        return fetchLatestBlocklyAnalysis(localVariables, lastAnalysis, newStepNum);
+    }
+
+    public enrichStepperContext(stepperContext: StepperContext, state: StepperState) {
+        if (state.analysis) {
+            stepperContext.state.lastAnalysis = Object.freeze(state.analysis);
+        }
     }
 }

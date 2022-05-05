@@ -121,6 +121,7 @@ const initialStateStepperState = {
     platform: CodecastPlatform.Unix,
     input: '',
     output: '', // Only used for python
+    localVariables: {} as any, // Only used for blockly
     terminal: null as TermBuffer, // Only used for python
     suspensions: [] as readonly any[],  // Only used for python // TODO: Don't put this in the store
     programState: {} as any, // Only used for c
@@ -328,7 +329,6 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
         return;
     }
 
-    /* TODO: extend stepper API to add enrichers that run here */
     console.log('make enrich', stepperState, Codecast.runner);
     if (hasBlockPlatform(stepperState.platform)) {
         stepperState.currentBlockId = (Codecast.runner as BlocklyRunner).getCurrentBlockId();
@@ -338,25 +338,28 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
                 console.log('bim is finished');
                 stepperState.isFinished = true;
             } else {
-                stepperState.analysis = {
-                    ...stepperState.lastAnalysis,
-                    stepNum: stepperState.analysis.stepNum + 1,
-                };
+                stepperState.analysis = (Codecast.runner as BlocklyRunner).fetchLatestBlocklyAnalysis(stepperState.localVariables, stepperState.lastAnalysis, stepperState.analysis.stepNum + 1);
             }
         }
 
-        // TODO: enrich Blockly analysis
         if (!stepperState.analysis) {
             stepperState.analysis =  {
+                stackFrames: [],
                 code: (Codecast.runner as BlocklyRunner)._code,
                 stepNum: 0
             };
 
             stepperState.lastAnalysis = {
+                stackFrames: [],
                 code: (Codecast.runner as BlocklyRunner)._code,
                 stepNum: 0
             };
         }
+
+        console.log('blockly analysis', stepperState.analysis);
+        console.log('last analysis', stepperState.lastAnalysis);
+        stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
+        console.log('codecast analysis', stepperState.codecastAnalysis);
     } else if (stepperState.platform === CodecastPlatform.Python) {
         if (context === 'Stepper.Progress') {
             // Don't reanalyse after program is finished :
@@ -541,8 +544,9 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     stepperContext.state = {...stepperContext.state};
 
     if (false !== progress) {
-        if (stepperContext.state.platform === CodecastPlatform.Python) {
-            // Save scope.
+        if (stepperContext.state.platform === CodecastPlatform.Blockly) {
+            stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
+        } else if (stepperContext.state.platform === CodecastPlatform.Python) {
             stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
         }
 
@@ -934,8 +938,9 @@ function* stepperStepSaga(app: App, action) {
                 }
             }
 
-            if (stepperContext.state.platform === CodecastPlatform.Python) {
-                // Save scope.
+            if (stepperContext.state.platform === CodecastPlatform.Blockly) {
+                stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
+            } else if (stepperContext.state.platform === CodecastPlatform.Python) {
                 stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
             } else if (stepperContext.state.platform === CodecastPlatform.Unix) {
                 stepperContext.state.isFinished = !stepperContext.state.programState.control;

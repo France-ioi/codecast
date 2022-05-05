@@ -10,11 +10,13 @@ interface AnalysisVariableValueProps {
     stackFrameId: number,
 }
 
+const collapsedTypes = ['list', 'tuple', 'range', 'set', 'frozenset', 'Array'];
+
 export const AnalysisVariableValue = (props: AnalysisVariableValueProps) => {
     const variable = props.variable;
 
     let isOpen = useAppSelector(state => props.stackFrameId in state.analysis.openedPaths && -1 !== state.analysis.openedPaths[props.stackFrameId].indexOf(props.variable.path));
-    if (['list', 'tuple', 'range', 'set', 'frozenset'].indexOf(variable.type) !== -1) {
+    if (collapsedTypes.indexOf(variable.type) !== -1) {
         isOpen = true;
     }
 
@@ -37,7 +39,7 @@ export const AnalysisVariableValue = (props: AnalysisVariableValueProps) => {
     }
 
     if (Array.isArray(variable.variables)) {
-        const isCollapsed = -1 !== ['list', 'tuple', 'range', 'set', 'frozenset'].indexOf(variable.type);
+        const isCollapsed = -1 !== collapsedTypes.indexOf(variable.type);
 
         let renderedElements;
         if (isCollapsed) {

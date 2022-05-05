@@ -12,10 +12,13 @@ export function LayoutStackView() {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
 
     let stackView;
-    if (currentStepperState && currentStepperState.platform === CodecastPlatform.Python) {
-        stackView = <AnalysisStackView analysis={analysis} height={null}/>
-    } else if (currentStepperState && currentStepperState.platform === CodecastPlatform.Unix) {
-        stackView = <StackView/>
+    if (currentStepperState) {
+        if (currentStepperState.platform === CodecastPlatform.Unix) {
+            //TODO: convert this to use AnalysisStackView like Python and Blockly
+            stackView = <StackView/>
+        } else {
+            stackView = <AnalysisStackView analysis={analysis}/>
+        }
     } else {
         stackView = <div className="stack-view">
             <p>{getMessage('PROGRAM_STOPPED')}</p>

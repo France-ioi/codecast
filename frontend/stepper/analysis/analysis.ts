@@ -18,7 +18,7 @@ export interface AnalysisSnapshot {
 export interface AnalysisStackFrame extends DebugProtocol.StackFrame {
     scopes: AnalysisScope[],
     directives?: any[],
-    args: string[],
+    args?: string[],
 }
 export interface AnalysisScope extends DebugProtocol.Scope {
     variables: (AnalysisVariable | string)[], // It can be a variablesReference to avoid cycles

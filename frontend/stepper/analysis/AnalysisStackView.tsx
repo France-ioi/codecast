@@ -4,7 +4,7 @@ import {Button, ButtonGroup} from "@blueprintjs/core";
 import {CodecastAnalysisSnapshot} from "./analysis";
 
 interface AnalysisStackViewProps {
-    height: number,
+    height?: number,
     analysis: CodecastAnalysisSnapshot,
     showStackControls?: boolean,
 }
