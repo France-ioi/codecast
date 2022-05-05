@@ -45,7 +45,7 @@ import ViewsBundle from './views/index';
 import ArduinoBundle, {ArduinoPort} from './arduino';
 import PythonBundle from './python';
 import BlocklyBundle, {hasBlockPlatform} from './js';
-import {analyseState, collectDirectives} from './c/analysis';
+import {analyseState, AnalysisC, collectDirectives} from './c/analysis';
 import {convertSkulptStateToAnalysisSnapshot, getSkulptSuspensionsCopy} from "./python/analysis";
 import {Directive, parseDirectives} from "./python/directives";
 import {
@@ -129,7 +129,7 @@ const initialStateStepperState = {
     selectedPort: {} as any, // Only used for arduino
     controls: initialStepperStateControls, // Only used for c
     codecastAnalysis: null as CodecastAnalysisSnapshot,
-    analysis: null as AnalysisSnapshot,
+    analysis: null as any,
     lastAnalysis: null as AnalysisSnapshot, // Only used for python
     directives: {
         ordered: [],
@@ -394,9 +394,9 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
         stepperState.codecastAnalysis = convertAnalysisDAPToCodecastFormat(stepperState.analysis, stepperState.lastAnalysis);
         console.log('codecast analysis', stepperState.codecastAnalysis);
     } else {
-        const analysis = stepperState.analysis = analyseState(programState) as AnalysisSnapshot;
+        const analysis = stepperState.analysis = analyseState(programState);
         const focusDepth = controls.stack.focusDepth;
-        stepperState.directives = collectDirectives(analysis.stackFrames, focusDepth);
+        stepperState.directives = collectDirectives(analysis.functionCallStack, focusDepth);
 
         // TODO? initialize controls for each directive added, clear controls for each directive removed (except 'stack').
     }

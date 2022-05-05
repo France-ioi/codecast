@@ -9,7 +9,7 @@ A `Stored Value` can have one of these shapes:
 import {List, Map, Record} from 'immutable';
 import {StepperDirectives} from "../index";
 
-interface AnalysisC {
+export interface AnalysisC {
     functionCallStack: any,
     callReturn?: {
         func: any,
