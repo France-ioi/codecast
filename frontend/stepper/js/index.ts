@@ -10,6 +10,7 @@ import {extractLevelSpecific} from "../../task/utils";
 import {delay} from "../api";
 import {getMessage, getMessageChoices} from "../../lang";
 import {select} from "typed-redux-saga";
+import {displayModal} from "../../common/prompt_modal";
 
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
     let blocklyHelper;
@@ -35,6 +36,30 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
             setPlayPause: () => {},
             updateControlsDisplay: () => {},
             onResize: () => {},
+        };
+    }
+
+    if (!window.displayHelper) {
+        window.displayHelper = {
+            showPopupMessage: async function (message, mode, yesButtonText, agreeFunc, noButtonText, avatarMood, defaultText, disagreeFunc) {
+                console.log('popup message', defaultText, noButtonText);
+                const result = await new Promise(resolve => {
+                    const mainStore = Codecast.environments['main'].store;
+                    mainStore.dispatch(displayModal({message, mode, defaultInput: defaultText, noButtonText, callback: resolve}));
+                });
+
+                if (false !== result && agreeFunc) {
+                    if (mode === 'input') {
+                        agreeFunc(result);
+                    } else {
+                        agreeFunc();
+                    }
+                }
+
+                if (false === result && disagreeFunc) {
+                    disagreeFunc();
+                }
+            },
         };
     }
 

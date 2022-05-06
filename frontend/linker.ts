@@ -9,6 +9,7 @@ import documentationSlice from "./task/documentation/documentation_slice";
 import log from "loglevel";
 import platformSlice from "./task/platform/platform_slice";
 import analysisSlice from "./stepper/analysis/analysis_slice";
+import modalSlice from "./common/modal_slice";
 
 export interface Linker {
     scope: App,
@@ -218,6 +219,7 @@ export function link(rootBuilder, globalScope: App): Linker {
             [platformSlice.name]: platformSlice.reducer,
             [documentationSlice.name]: documentationSlice.reducer,
             [analysisSlice.name]: analysisSlice.reducer,
+            [modalSlice.name]: modalSlice.reducer,
         })(newState, action);
 
         let end2 = window.performance.now();

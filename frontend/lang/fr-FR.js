@@ -9,6 +9,7 @@ module.exports = {
     MESSAGES: 'Messages',
     ERROR: 'Erreur',
     CLOSE: 'Fermer',
+    VALIDATE: 'Valider',
     NONE: 'Aucun',
     CANCEL: 'Annuler',
     FULLSCREEN: "plein écran",

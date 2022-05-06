@@ -24,6 +24,7 @@ import {BufferState} from "./buffers";
 import {EditorState} from "./editor";
 import {PlatformState, TaskLevelName} from "./task/platform/platform_slice";
 import {AnalysisState} from "./stepper/analysis/analysis_slice";
+import {ModalState} from "./common/modal_slice";
 
 export enum CodecastPlatform {
     Python = 'python',
@@ -140,4 +141,5 @@ export interface AppStore extends Store, AppStoreReplay {
 
     documentation: DocumentationState,
     analysis: AnalysisState,
+    modal: ModalState,
 }

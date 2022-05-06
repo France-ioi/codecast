@@ -112,6 +112,7 @@ declare global {
         FioiBlockly: any,
         getBlocklyHelper: any,
         quickAlgoInterface: any,
+        displayHelper: any,
         arrayContains: any,
         mergeIntoArray: any,
         mergeIntoObject: any,
