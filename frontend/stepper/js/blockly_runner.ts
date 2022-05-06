@@ -89,7 +89,7 @@ export default class BlocklyRunner extends AbstractRunner {
         // Show a popup displaying the value of a block in step-by-step mode
         console.log('report block value', id, value, varName, this.strings);
         if (this.context.display && this.stepMode) {
-            if(varName != '@@LOOP_ITERATION@@') {
+            if(varName && varName !== '@@LOOP_ITERATION@@') {
                 varName = varName.toString();
                 // Get the original variable name
                 for(let dbIdx in window.Blockly.JavaScript.variableDB_.db_) {
