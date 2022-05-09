@@ -67,7 +67,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         const eventType = event ? event.constructor : null;
 
         let isBlockEvent = event ? (
-            // eventType === window.Blockly.Events.Create ||
+            eventType === window.Blockly.Events.Create ||
             eventType === window.Blockly.Events.Delete ||
             eventType === window.Blockly.Events.Move ||
             eventType === window.Blockly.Events.Change) : true;
