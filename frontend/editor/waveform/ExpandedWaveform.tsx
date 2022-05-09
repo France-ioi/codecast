@@ -24,8 +24,8 @@ export class ExpandedWaveform extends React.PureComponent<ExpandedWaveformProps>
 
     render() {
         return <canvas height={this.props.height} width={this.props.width} ref={this.refCanvas}
-                       onMouseDown={this.mouseDown} onMouseUp={this.mouseUp} onMouseMove={this.mouseMove}
-                       style={{cursor: 'move'}}/>;
+            onMouseDown={this.mouseDown} onMouseUp={this.mouseUp} onMouseMove={this.mouseMove}
+            style={{cursor: 'move'}}/>;
     }
 
     componentDidMount() {

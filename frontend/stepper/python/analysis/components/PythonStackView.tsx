@@ -17,10 +17,10 @@ export const PythonStackView = (props: PythonStackViewProps): JSX.Element => {
         <div className="stack-view" style={{maxHeight: props.height}}>
             {props.showStackControls &&
                 <div className="stack-controls">
-                  <ButtonGroup>
-                    <Button minimal small title="navigate up the stack" icon='arrow-up'/>
-                    <Button minimal small title="navigate down the stack" icon='arrow-down'/>
-                  </ButtonGroup>
+                    <ButtonGroup>
+                        <Button minimal small title="navigate up the stack" icon='arrow-up'/>
+                        <Button minimal small title="navigate down the stack" icon='arrow-down'/>
+                    </ButtonGroup>
                 </div>
             }
             {firstVisible > 0 &&

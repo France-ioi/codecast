@@ -171,16 +171,16 @@ class _StatisticsScreen extends React.PureComponent<StatisticsScreenProps> {
                                 condensed
                             >
                                 <thead>
-                                <tr>
-                                    <th>DateTime</th>
-                                    <th>Codecast</th>
-                                    <th>Name</th>
-                                    <th>Folder</th>
-                                    <th>Bucket</th>
-                                    <th>Views</th>
-                                    <th>Compilations</th>
-                                    <th>Total Compile Time (ms)</th>
-                                </tr >
+                                    <tr>
+                                        <th>DateTime</th>
+                                        <th>Codecast</th>
+                                        <th>Name</th>
+                                        <th>Folder</th>
+                                        <th>Bucket</th>
+                                        <th>Views</th>
+                                        <th>Compilations</th>
+                                        <th>Total Compile Time (ms)</th>
+                                    </tr >
                                 </thead >
                                 <tbody>
                                     {rowData.map(({codecast, folder, bucket, name, date_time, views, compiles, compile_time}, index) => (
@@ -223,7 +223,7 @@ class _StatisticsScreen extends React.PureComponent<StatisticsScreenProps> {
                                 }} data={this.getCSVData()} >Export CSV</CSVLink>
                             </div>
                         </React.Fragment>
-                    )}
+                        )}
                 </div>
             </div >
         );

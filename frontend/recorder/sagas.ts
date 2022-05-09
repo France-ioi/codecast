@@ -357,7 +357,7 @@ function getAudioStream(): Promise<MediaStream> {
     } else {
         // Use deprecated API taking two callbacks.
         // @ts-ignore
-      const getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+        const getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
         return new Promise(function(resolve, reject) {
             getUserMedia.call(navigator, constraints, resolve, reject);
         });

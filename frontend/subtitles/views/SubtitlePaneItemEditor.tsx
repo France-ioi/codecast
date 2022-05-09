@@ -31,7 +31,7 @@ export class SubtitlePaneItemEditor extends React.PureComponent<SubtitlePaneItem
                         <div className='col-sm-6'>
                             <div className="subtitle-item-editor">
                                 <span className='is-narrow'>
-                                  <Button small disabled={start <= minStart} onClick={this._onShiftMinus} icon={IconNames.CHEVRON_LEFT}/>
+                                    <Button small disabled={start <= minStart} onClick={this._onShiftMinus} icon={IconNames.CHEVRON_LEFT}/>
                                 </span>
                                 <span className='subtitles-timestamp-start'>{formatTimeLong(start)}</span>
                                 <span className='is-narrow'>
@@ -48,8 +48,8 @@ export class SubtitlePaneItemEditor extends React.PureComponent<SubtitlePaneItem
                             <div className="subtitle-item-editor">
                                 <span className='subtitles-timestamp-end'>{formatTimeLong(end)}</span>
                                 <span className='is-narrow'>
-                                <Button small disabled={!this.props.onRemove} onClick={this._onRemove} icon={IconNames.TRASH} />
-                            </span>
+                                    <Button small disabled={!this.props.onRemove} onClick={this._onRemove} icon={IconNames.TRASH} />
+                                </span>
                             </div>
                         </div>
                     </div>

@@ -159,15 +159,15 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
             <div className="controls-compile">
                 {this._button('compile', this.onCompile, null, null, compileOrExecuteMessage)}
             </div>
-        :
+            :
             (<div className={`controls controls-stepper ${controlsType}`}>
                 {showControls && <React.Fragment>
                     {(LayoutType.MobileVertical !== layoutType || !this.state.speedDisplayed) &&
                         <React.Fragment>
-                              {this._button('restart', this.onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faStop}/>, null, 'is-small')}
-                              {!canInterrupt && this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
-                              {canInterrupt && this._button('interrupt', this.onInterrupt, getMessage('CONTROL_INTERRUPT'), <FontAwesomeIcon icon={faPause}/>, null, 'is-big')}
-                              {this._button('into', this.onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
+                            {this._button('restart', this.onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faStop}/>, null, 'is-small')}
+                            {!canInterrupt && this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
+                            {canInterrupt && this._button('interrupt', this.onInterrupt, getMessage('CONTROL_INTERRUPT'), <FontAwesomeIcon icon={faPause}/>, null, 'is-big')}
+                            {this._button('into', this.onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
                         </React.Fragment>
                     }
                     {controlsType === StepperControlsType.Normal && LayoutType.MobileVertical === layoutType &&

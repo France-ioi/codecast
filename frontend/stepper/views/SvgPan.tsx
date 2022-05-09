@@ -35,8 +35,8 @@ export class SvgPan extends React.PureComponent<SvgPanProps, SvgPanState> {
         const viewTransform = `matrix(${scale},0,0,${scale},${-x},${-y})`;
         return (
             <svg version='1.1' xmlns='http://www.w3.org/2000/svg'
-                 width={width} height={height}
-                 onMouseDown={this.onMouseDown} onMouseMove={this.onMouseMove} onMouseUp={this.onMouseUp}>
+                width={width} height={height}
+                onMouseDown={this.onMouseDown} onMouseMove={this.onMouseMove} onMouseUp={this.onMouseUp}>
                 <g transform={viewTransform} className={className}>
                     {this.props.children}
                 </g>

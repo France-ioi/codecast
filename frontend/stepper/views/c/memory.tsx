@@ -302,30 +302,30 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
                 <div className="memory-controls directive-controls">
                     <div className="memory-slider-container" style={{width: `${Math.min(400, allocatedWidth / 2)}px`}}>
                         <Slider prefixCls="memory-slider" value={centerAddress} min={0}
-                                max={maxAddress} onChange={this.onSeek}>
+                            max={maxAddress} onChange={this.onSeek}>
                             <div className="memory-slider-background"/>
                         </Slider>
                     </div>
                     <span style={{verticalAlign: '6px', marginRight: '2px'}}>
-            <ButtonGroup>
-              <Button small onClick={this.onShiftLeft} title={getMessage('MEMORY_SHIFT_VIEW_LEFT')} icon='arrow-left'/>
-              <Button small onClick={this.onShiftRight} title={getMessage('MEMORY_SHIFT_VIEW_RIGHT')}
-                      icon='arrow-right'/>
-            </ButtonGroup>
-          </span>
+                        <ButtonGroup>
+                            <Button small onClick={this.onShiftLeft} title={getMessage('MEMORY_SHIFT_VIEW_LEFT')} icon='arrow-left'/>
+                            <Button small onClick={this.onShiftRight} title={getMessage('MEMORY_SHIFT_VIEW_RIGHT')}
+                                icon='arrow-right'/>
+                        </ButtonGroup>
+                    </span>
                 </div>
                 <div className='clearfix' style={{padding: '2px'}}>
                     <div style={{width: '100%', height: `${layout.bottom * scale}px`}}>
                         <svg width='100%' height={layout.bottom * scale} version='1.1' xmlns='http://www.w3.org/2000/svg'
-                             onMouseDown={this.onMouseDown} onMouseMove={this.onMouseMove} onMouseUp={this.onMouseUp}>
+                            onMouseDown={this.onMouseDown} onMouseMove={this.onMouseMove} onMouseUp={this.onMouseUp}>
                             <g className='memory-view' ref={this.refViewer} transform={viewTransform}>
                                 <g style={{pointerEvents: "none"}}>
                                     <g className='grid'>
                                         <BytesGrid layout={layout} bytes={bytes}/>
                                         <VariablesGrid layout={layout} variables={variables}/>
                                         {extraRows.map((extraRow, index) => <ExtraRowGrid key={index} index={index}
-                                                                                          layout={layout}
-                                                                                          extraRow={extraRow}/>)}
+                                            layout={layout}
+                                            extraRow={extraRow}/>)}
                                     </g>
                                     <ByteAddresses layout={layout} bytes={bytes}/>
                                     <ByteValues layout={layout} bytes={bytes}/>
@@ -333,8 +333,8 @@ class MemoryView extends React.PureComponent<MemoryViewProps> {
                                     <Variables layout={layout} variables={variables}/>
                                     <g className='extraRows'>
                                         {extraRows.map((extraRow, index) => <ExtraRow key={index} index={index}
-                                                                                      layout={layout}
-                                                                                      extraRow={extraRow}/>)}
+                                            layout={layout}
+                                            extraRow={extraRow}/>)}
                                     </g>
                                 </g>
                             </g>
@@ -538,7 +538,7 @@ function ByteAddresses({layout, bytes}) {
         if (address !== undefined) {
             elements.push(
                 <text key={address} transform={`translate(${x1 + dx1},${y0}) rotate(${-layout.addressAngle})`}
-                      className={center && 'center'}>
+                    className={center && 'center'}>
                     {formatAddress(address)}
                 </text>
             );
@@ -581,7 +581,7 @@ function Variables({layout, variables}) {
             <g className='cell' key={`0x${address}`} transform={`translate(${x},${y0})`}>
                 {drawCellContent(cell, 'variable', renderValue, layout)}
                 <text x={x1} y={y1 + (cell.center ? layout.textLineHeight : 0)}
-                      className={cell.center ? 'var-name-center' : 'var-name'}>{name}</text>
+                    className={cell.center ? 'var-name-center' : 'var-name'}>{name}</text>
             </g>
         );
     }

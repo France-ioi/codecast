@@ -60,7 +60,7 @@ export function AvailableBlocks(props: AvailableBlocksProps) {
                         <AvailableBlockCategory blocks={blocks} name={category} key={category} onDragging={onDragging}/>
                     )}
                 </div>
-            :
+                :
                 <div className="task-available-blocks">
                     {normalBlocks.map(block =>
                         <AvailableBlock key={block.name} block={block} onDragging={onDragging}/>
