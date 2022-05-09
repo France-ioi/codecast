@@ -96,18 +96,18 @@ export function PlayerControls() {
                 <ButtonGroup>
                     {showStartPlayback &&
                         <Button
-                          onClick={onStartPlayback}
-                          disabled={!canStartPlayback}
-                          title={getMessage('START_PLAYBACK')}
-                          icon={isAtEnd ? 'repeat' : 'play'}
+                            onClick={onStartPlayback}
+                            disabled={!canStartPlayback}
+                            title={getMessage('START_PLAYBACK')}
+                            icon={isAtEnd ? 'repeat' : 'play'}
                         />
                     }
                     {showPausePlayback &&
                         <Button
-                          onClick={onPausePlayback}
-                          disabled={!canPausePlayback}
-                          title={getMessage('PAUSE_PLAYBACK')}
-                          icon='pause'
+                            onClick={onPausePlayback}
+                            disabled={!canPausePlayback}
+                            title={getMessage('PAUSE_PLAYBACK')}
+                            icon='pause'
                         />
                     }
                 </ButtonGroup>
@@ -150,13 +150,13 @@ export function PlayerControls() {
             <div className="player-slider-container">
                 {!Number.isNaN(duration) &&
                     <Slider
-                      value={Math.min(audioTime, duration)}
-                      onChange={onSeek}
-                      min={0}
-                      max={duration}
-                      stepSize={100}
-                      labelStepSize={duration}
-                      labelRenderer={formatTime}
+                        value={Math.min(audioTime, duration)}
+                        onChange={onSeek}
+                        min={0}
+                        max={duration}
+                        stepSize={100}
+                        labelStepSize={duration}
+                        labelRenderer={formatTime}
                     />
                 }
             </div>
@@ -167,12 +167,12 @@ export function PlayerControls() {
             </div>
             {showSubtitles &&
                 <div className="controls-subtitles">
-                  <Button
-                    onClick={() => setSubtitlesOpen(!subtitlesOpen)}
-                    title={getMessage('CLOSED_CAPTIONS_TOOLTIP').s}
-                    text='CC'
-                  />
-                  <SubtitlesPopup open={subtitlesOpen} onClose={() => setSubtitlesOpen(false)}/>
+                    <Button
+                        onClick={() => setSubtitlesOpen(!subtitlesOpen)}
+                        title={getMessage('CLOSED_CAPTIONS_TOOLTIP').s}
+                        text='CC'
+                    />
+                    <SubtitlesPopup open={subtitlesOpen} onClose={() => setSubtitlesOpen(false)}/>
                 </div>
             }
         </div>

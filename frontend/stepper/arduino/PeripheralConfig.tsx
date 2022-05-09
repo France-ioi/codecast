@@ -48,7 +48,7 @@ export class PeripheralConfig extends React.PureComponent<PeripheralConfigProps>
                 <p>{"—"}</p>}
                 {value.type === 'LED' &&
                 <div className={classnames(['arduino-peri-led', readOnly || 'clickable'])}
-                     onClick={this.onSelectNextLedColor}>
+                    onClick={this.onSelectNextLedColor}>
                     {"LED"}
                     <Icon icon='full-circle' style={{color: colorToCss[value.color]}}/>
                 </div>}

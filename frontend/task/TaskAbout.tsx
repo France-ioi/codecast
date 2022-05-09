@@ -41,12 +41,12 @@ export function TaskAbout() {
         <div className="task-license">
             {!!metadata.authors &&
               <React.Fragment>
-                <p>{getMessage('ABOUT_AUTHORS')}</p>
-                <p>{metadata.authors}</p>
+                  <p>{getMessage('ABOUT_AUTHORS')}</p>
+                  <p>{metadata.authors}</p>
                   {!!(metadata.translators && metadata.translators.length) &&
                     <React.Fragment>
-                      <p>{getMessage('ABOUT_TRANSLATORS')}</p>
-                      <p>{metadata.translators.join(', ')}</p>
+                        <p>{getMessage('ABOUT_TRANSLATORS')}</p>
+                        <p>{metadata.translators.join(', ')}</p>
                     </React.Fragment>
                   }
               </React.Fragment>

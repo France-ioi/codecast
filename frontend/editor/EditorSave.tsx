@@ -124,25 +124,25 @@ export function EditorSave() {
 
             {playerUrl &&
                 <FormGroup labelFor='playerUrlInput' label={getMessage('PLAYBACK_LINK')} className="mt-4">
-                  <InputGroup
-                    leftIcon={IconNames.LINK}
-                    type='text'
-                    value={playerUrl}
-                    readOnly
-                    rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
-                  />
+                    <InputGroup
+                        leftIcon={IconNames.LINK}
+                        type='text'
+                        value={playerUrl}
+                        readOnly
+                        rightElement={<AnchorButton href={playerUrl} icon={IconNames.PLAY} minimal target='_blank' rel="noreferrer"/>}
+                    />
                 </FormGroup>
             }
 
             {editorUrl &&
                 <FormGroup labelFor='editorUrlInput' label={getMessage('EDITOR_LINK')} className="mt-2">
-                  <InputGroup
-                    leftIcon={IconNames.LINK}
-                    type='text'
-                    value={editorUrl}
-                    readOnly
-                    rightElement={<AnchorButton href={editorUrl} icon={IconNames.EDIT} minimal target='_blank' rel="noreferrer"/>}
-                  />
+                    <InputGroup
+                        leftIcon={IconNames.LINK}
+                        type='text'
+                        value={editorUrl}
+                        readOnly
+                        rightElement={<AnchorButton href={editorUrl} icon={IconNames.EDIT} minimal target='_blank' rel="noreferrer"/>}
+                    />
                 </FormGroup>
             }
         </div>

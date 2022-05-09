@@ -105,33 +105,33 @@ export function ControlsAndErrors() {
             </div>}
 
             {hasError && <div className="error-message" onClick={onClearError}>
-              <button type="button" className="close-button" onClick={onClearError}>
-                <Icon icon="cross"/>
-              </button>
-              <button type="button" className="maximize-button hidden-mobile" onClick={onMaximizeError}>
-                <Icon icon="maximize"/>
-              </button>
-              <div className="error-message-wrapper">
-                <Icon icon="notifications" className="bell-icon"/>
-                <div className="message">
-                    {error}
-                </div>
-              </div>
-            </div>}
-
-            {hasError && <DraggableDialog
-              rndProps={{}}
-              icon='error'
-              title={getMessage('ERROR')}
-              isOpen={errorDialogOpen}
-              onClose={() => setErrorDialogOpen(false)}
-            >
-                <div className='bp3-dialog-body'>
-                  <div className="error-message-wrapper">
+                <button type="button" className="close-button" onClick={onClearError}>
+                    <Icon icon="cross"/>
+                </button>
+                <button type="button" className="maximize-button hidden-mobile" onClick={onMaximizeError}>
+                    <Icon icon="maximize"/>
+                </button>
+                <div className="error-message-wrapper">
+                    <Icon icon="notifications" className="bell-icon"/>
                     <div className="message">
                         {error}
                     </div>
-                  </div>
+                </div>
+            </div>}
+
+            {hasError && <DraggableDialog
+                rndProps={{}}
+                icon='error'
+                title={getMessage('ERROR')}
+                isOpen={errorDialogOpen}
+                onClose={() => setErrorDialogOpen(false)}
+            >
+                <div className='bp3-dialog-body'>
+                    <div className="error-message-wrapper">
+                        <div className="message">
+                            {error}
+                        </div>
+                    </div>
                 </div>
             </DraggableDialog>}
         </div>

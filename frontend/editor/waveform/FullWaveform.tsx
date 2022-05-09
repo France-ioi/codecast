@@ -23,8 +23,8 @@ export class FullWaveform extends React.PureComponent<FullWaveformProps> {
     render() {
         const {onPan, width, height} = this.props;
         return <canvas width={width} height={height} ref={this.refCanvas}
-                       onMouseDown={this.mouseDown} onMouseUp={this.mouseUp} onMouseMove={this.mouseMove}
-                       style={{cursor: onPan ? 'pointer' : 'default'}}/>;
+            onMouseDown={this.mouseDown} onMouseUp={this.mouseUp} onMouseMove={this.mouseMove}
+            style={{cursor: onPan ? 'pointer' : 'default'}}/>;
     }
 
     componentDidMount() {
