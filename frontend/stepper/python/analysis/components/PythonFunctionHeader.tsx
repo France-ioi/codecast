@@ -29,12 +29,12 @@ export const PythonFunctionHeader = (props: PythonFunctionHeaderProps): JSX.Elem
     return (
         <div className="scope-function-title">
             <span>
-              {props.func.name ? (
-                  <span>
-                      <span className="function-name">{props.func.name}</span>
-                      {'('}
-                  </span>
-              ) : null}
+                {props.func.name ? (
+                    <span>
+                        <span className="function-name">{props.func.name}</span>
+                        {'('}
+                    </span>
+                ) : null}
                 <span>
                     {args.map(function(argument, index) {
                         const loadedReferences = {};

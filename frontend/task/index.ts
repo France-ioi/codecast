@@ -66,6 +66,8 @@ import {
 import log from "loglevel";
 import {getTaskTokenForLevel} from "./platform/task_token";
 import {createAction} from "@reduxjs/toolkit";
+import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
+import {IoMode} from "../stepper/io";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -184,6 +186,9 @@ function* createContext() {
     console.log('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     console.log('Created context', context);
+    if (context instanceof PrinterLib && currentTask) {
+        yield* put({type: IOActionTypes.IoPaneModeChanged, payload: {mode: IoMode.Split}});
+    }
     yield* put(taskSetContextStrings(context.strings));
     if (context.infos && context.infos.includeBlocks) {
         yield* put(taskSetContextIncludeBlocks(context.infos.includeBlocks));
@@ -379,6 +384,8 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     const currentLevel = state.task.currentLevel;
     const newLevel = payload.level;
     console.log('level change', currentLevel, newLevel);
+
+    yield* put({type: StepperActionTypes.StepperExit});
 
     const currentSubmission = yield* select((state: AppStore) => state.task.currentSubmission);
     if (null !== currentSubmission) {

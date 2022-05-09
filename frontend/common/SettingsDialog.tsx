@@ -20,9 +20,10 @@ interface SettingsDialogProps {
 
 export function SettingsDialog(props: SettingsDialogProps) {
     const {baseUrl, baseDataUrl, platform, canChangePlatform, canChangeLanguage, canDownload} = useAppSelector(state => state.options);
+    const currentTask = useAppSelector(state => state.task.currentTask);
     const {mode: ioMode, modeSelect} = useAppSelector(state => state.ioPane);
     const stepper = useAppSelector(state => state.stepper);
-    const ioModeSelect = modeSelect && (!stepper || stepper.status === StepperStatus.Clear);
+    const ioModeSelect = modeSelect && (!stepper || stepper.status === StepperStatus.Clear) && !currentTask;
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
     const layoutRequiredType = useAppSelector(state => state.layout.requiredType);
 
@@ -75,53 +76,53 @@ export function SettingsDialog(props: SettingsDialogProps) {
                 </div>}
                 {canChangePlatform &&
                     <div>
-                      <label className='bp3-label'>
-                          {getMessage('PLATFORM_SETTING')}
-                        <div className='bp3-select'>
-                          <select onChange={setPlatform} value={platform}>
-                            <option value='python'>{getMessage('PLATFORM_PYTHON')}</option>
-                            <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
-                            <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
-                          </select>
-                        </div>
-                      </label>
+                        <label className='bp3-label'>
+                            {getMessage('PLATFORM_SETTING')}
+                            <div className='bp3-select'>
+                                <select onChange={setPlatform} value={platform}>
+                                    <option value='python'>{getMessage('PLATFORM_PYTHON')}</option>
+                                    <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
+                                    <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
+                                </select>
+                            </div>
+                        </label>
                     </div>
                 }
                 {ioModeSelect &&
                     <div>
-                      <label className='bp3-label'>
-                          {getMessage('IOPANE_MODE')}
-                        <div className='bp3-select'>
-                          <select value={ioMode} onChange={onIOModeChanged}>
-                              {modeOptions.map(p =>
-                                  <option
-                                      key={p.value}
-                                      value={p.value}
-                                  >
-                                      {getMessage(p.label)}
-                                  </option>)}
-                          </select>
-                        </div>
-                      </label>
+                        <label className='bp3-label'>
+                            {getMessage('IOPANE_MODE')}
+                            <div className='bp3-select'>
+                                <select value={ioMode} onChange={onIOModeChanged}>
+                                    {modeOptions.map(p =>
+                                        <option
+                                            key={p.value}
+                                            value={p.value}
+                                        >
+                                            {getMessage(p.label)}
+                                        </option>)}
+                                </select>
+                            </div>
+                        </label>
                     </div>
                 }
                 {recordingEnabled &&
                     <div>
-                      <label className='bp3-label'>
-                          {getMessage('LAYOUT_TYPE_REQUIRED_LABEL')}
-                        <div className='bp3-select'>
-                          <select value={layoutRequiredType || ''} onChange={onLayoutRequiredTypeChanged}>
-                              <option key="null" value={''}>{getMessage('NONE')}</option>
-                              {layoutChoices.map(p =>
-                                  <option
-                                      key={p}
-                                      value={p}
-                                  >
-                                      {getMessage('LAYOUT_' + p)}
-                                  </option>)}
-                          </select>
-                        </div>
-                      </label>
+                        <label className='bp3-label'>
+                            {getMessage('LAYOUT_TYPE_REQUIRED_LABEL')}
+                            <div className='bp3-select'>
+                                <select value={layoutRequiredType || ''} onChange={onLayoutRequiredTypeChanged}>
+                                    <option key="null" value={''}>{getMessage('NONE')}</option>
+                                    {layoutChoices.map(p =>
+                                        <option
+                                            key={p}
+                                            value={p}
+                                        >
+                                            {getMessage('LAYOUT_' + p)}
+                                        </option>)}
+                                </select>
+                            </div>
+                        </label>
                     </div>
                 }
                 {offlineDownloadUrl &&

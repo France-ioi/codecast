@@ -28,7 +28,7 @@ export class PortConfig extends React.PureComponent<PortConfigProps> {
                 <PortHeader defn={defn}/>
                 <div className='arduino-port-periph'>
                     <PeripheralConfig defn={defn} value={peripheral} onChange={this.onChangePeripheral}
-                                      readOnly={preventInput}/>
+                        readOnly={preventInput}/>
                 </div>
             </div>
         );

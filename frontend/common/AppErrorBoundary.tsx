@@ -31,6 +31,7 @@ class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
         }
 
         const {source, error, info} = lastError;
+        const closable = false !== lastError.closable;
 
         return (
             <div className='error-wrapper'>
@@ -38,6 +39,9 @@ class _AppErrorBoundary extends React.Component<AppErrorBoundaryProps> {
                     icon="error"
                     isOpen={true}
                     onClose={this._clearError}
+                    isCloseButtonShown={closable}
+                    canEscapeKeyClose={closable}
+                    canOutsideClickClose={closable}
                     title={getMessage('AN_ERROR_OCCURRED')}
                 >
                     <div className='bp3-dialog-body'>

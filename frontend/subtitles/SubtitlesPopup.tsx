@@ -88,7 +88,7 @@ export function SubtitlesPopup(props: SubtitlesPopupProps) {
                 {isLoaded &&
                     <div style={{textAlign: 'center'}} className="mt-4">
                         <a {...(hasLocalSubtitles ? {onClick: downloadSubtitles} : {href: availableOptions[loadedKey].url})} className='bp3-button bp3-small bp3-icon-download'
-                           target='_blank' rel="noreferrer" download>
+                            target='_blank' rel="noreferrer" download>
                             {getMessage('CLOSED_CAPTIONS_DOWNLOAD_SELECTED')}
                         </a>
                     </div>

@@ -27,19 +27,21 @@ export function InputOutputVisualization() {
                 <BufferEditor
                     buffer={inputBufferLibTest}
                     mode='text'
+                    readOnly={!!currentTask}
                     requiredWidth='100%'
                     requiredHeight='150px'
                 />
 
                 {currentTask &&
                     <React.Fragment>
-                      <p className="mt-4">{getMessage('IOPANE_INITIAL_OUTPUT')}</p>
-                      <BufferEditor
-                        buffer={outputBufferLibTest}
-                        mode='text'
-                        requiredWidth='100%'
-                        requiredHeight='150px'
-                      />
+                        <p className="mt-4">{getMessage('IOPANE_INITIAL_OUTPUT')}</p>
+                        <BufferEditor
+                            buffer={outputBufferLibTest}
+                            readOnly={true}
+                            mode='text'
+                            requiredWidth='100%'
+                            requiredHeight='150px'
+                        />
                     </React.Fragment>
                 }
             </div>

@@ -152,20 +152,20 @@ export function TaskApp() {
 
                 {recordingEnabled &&
                     <div className="layout-footer">
-                      <RecorderControls/>
+                        <RecorderControls/>
                     </div>
                 }
 
                 {playerEnabled && isPlayerReady &&
                     <div className="layout-footer">
-                      <PlayerControls/>
-                      <SubtitlesBand/>
+                        <PlayerControls/>
+                        <SubtitlesBand/>
                     </div>
                 }
 
                 {displayEditor &&
                     <div className="layout-footer editor-footer">
-                      <EditorInterface/>
+                        <EditorInterface/>
                     </div>
                 }
             </div>

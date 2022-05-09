@@ -164,6 +164,7 @@ module.exports = {
     TASK_DOCUMENTATION: 'Informations',
     TASK_DOCUMENTATION_INSTRUCTIONS: 'Mission details',
     TASK_DOCUMENTATION_CODE_EXAMPLES: 'Code examples',
+    TASK_DOCUMENTATION_LOAD_ERROR: "This content cannot be displayed because the connection to the task has been terminated. Close this tab and reopen the documentation from the task.",
     TASK_EDITOR: 'Editor',
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualization {number}",

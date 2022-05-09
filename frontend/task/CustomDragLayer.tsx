@@ -19,32 +19,34 @@ export const CustomDragLayer = () => {
         y: clientOffset && clientOffset.y ? clientOffset.y : 0,
     };
 
-    if ('block' === itemType) {
-        position.x -= 3;
-        position.y -= 22;
+    if ('block' !== itemType) {
+        return null;
     }
 
+    position.x -= 3;
+    position.y -= 22;
+
     return (<div
-            role="presentation"
-            style={{
-                position: "fixed",
-                pointerEvents: "none",
-                top: 0,
-                left: 0,
-                zIndex: 100,
-                width: '100%',
-                height: '100%',
-                display: 'inline-block',
-                transform: `translate(${position.x}px, ${position.y}px)`,
-            }}
-        >
-            <div id="custom-drag-layer" className="custom-drag-layer">
-                <div className="task-available-block">
-                    <div className="task-available-block-name">
-                        {item.block.caption}
-                    </div>
+        role="presentation"
+        style={{
+            position: "fixed",
+            pointerEvents: "none",
+            top: 0,
+            left: 0,
+            zIndex: 100,
+            width: '100%',
+            height: '100%',
+            display: 'inline-block',
+            transform: `translate(${position.x}px, ${position.y}px)`,
+        }}
+    >
+        <div id="custom-drag-layer" className="custom-drag-layer">
+            <div className="task-available-block">
+                <div className="task-available-block-name">
+                    {item.block.caption}
                 </div>
             </div>
         </div>
+    </div>
     );
 };

@@ -462,6 +462,10 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
             caption: "elif",
             snippet: "elif ${1:condition}:\n\t${2:pass}",
         },
+        for: {
+            caption: "for",
+            snippet: "for ${1:iteration}:\n\t${2:pass}",
+        },
     };
 
     if (contextIncludeBlocks && contextIncludeBlocks.pythonAdditionalFunctions) {
