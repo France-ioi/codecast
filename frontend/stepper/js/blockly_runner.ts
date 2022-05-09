@@ -89,7 +89,13 @@ export default class BlocklyRunner extends AbstractRunner {
         // Show a popup displaying the value of a block in step-by-step mode
         console.log('report block value', id, value, varName, this.strings);
         if (this.context.display && this.stepMode) {
-            if(varName && varName !== '@@LOOP_ITERATION@@') {
+            let displayStr = this.valueToString(value);
+            if(value && value.type == 'boolean') {
+                displayStr = value.data ? this.context.strings.valueTrue : this.context.strings.valueFalse;
+            }
+            if(varName == '@@LOOP_ITERATION@@') {
+                displayStr = this.context.strings.loopIteration + ' ' + displayStr;
+            } else if(varName) {
                 varName = varName.toString();
                 // Get the original variable name
                 for(let dbIdx in window.Blockly.JavaScript.variableDB_.db_) {
@@ -110,7 +116,10 @@ export default class BlocklyRunner extends AbstractRunner {
                     ...this.localVariables,
                     [varName]: value,
                 }
+                displayStr = varName + ' = ' + displayStr;
             }
+
+            this.context.blocklyHelper.workspace.reportValue(id, displayStr);
         }
         return value;
     };
