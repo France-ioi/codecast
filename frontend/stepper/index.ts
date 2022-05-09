@@ -80,6 +80,7 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonInterpreter from "./python/python_interpreter";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
+import {produce} from "immer";
 
 export enum StepperStepMode {
     Run = 'run',
@@ -633,7 +634,7 @@ function* compileSucceededSaga(app: App) {
         /* Build the stepper state. This automatically runs into user source code. */
         let state: AppStore = yield* select();
 
-        let stepperState = yield* call(app.stepperApi.buildState, state, app.environment);
+        let stepperState = yield* call(app.stepperApi.buildState, state, state.environment);
         console.log('[stepper init] current state', state.task.state, 'context state', stepperState.contextState);
         const newState = yield* select();
         console.log('[stepper init] new state', newState.task.state);
@@ -795,7 +796,7 @@ function* stepperInterruptSaga(app: App) {
     yield* put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
 }
 
-function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quickAlgoCallsLogger, environment, speed, executeEffects}: StepperContextParameters) {
+function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, waitForProgressOnlyAfterIterationsCount, quickAlgoCallsLogger, environment, speed, executeEffects}: StepperContextParameters) {
     let stepperContext = makeContext(stepper, {
         interactBefore: (arg) => {
             return new Promise((resolve, reject) => {
@@ -816,6 +817,7 @@ function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, quic
             });
         },
         waitForProgress,
+        waitForProgressOnlyAfterIterationsCount,
         quickAlgoCallsLogger,
         dispatch,
         environment,
@@ -840,6 +842,7 @@ function* stepperStepSaga(app: App, action) {
             stepperContext = createStepperContext(stepper, {
                 dispatch: app.dispatch,
                 waitForProgress,
+                waitForProgressOnlyAfterIterationsCount: action.payload.immediate ? 10000 : null, // For BC, we let at maximum 10.000 actions before forcing waiting a stepper.progress event
                 quickAlgoCallsLogger,
                 environment: state.environment,
                 speed: action.payload.useSpeed && !action.payload.immediate ? stepper.speed : null,
@@ -1063,7 +1066,7 @@ function postLink(app: App) {
 
         const immediate = -1 !== event.indexOf('immediate');
 
-        const waitForProgress = immediate ? null : (stepperContext) => {
+        const waitForProgress = (stepperContext) => {
             return new Promise((cont) => {
                 console.log('[stepper.step] stepper suspend', cont);
                 stepperSuspend(stepperContext, cont);
@@ -1109,11 +1112,9 @@ function postLink(app: App) {
     replayApi.on('stepper.progress', function* (replayContext: ReplayContext, event) {
         console.log('[stepper.progress] start');
 
-        const immediate = -1 !== event.indexOf('immediate');
-
         const promise = new Promise((resolve) => {
             console.log('[stepper.progress] set onStepperDone', resolve);
-            replayContext.stepperContext.waitForProgress = immediate ? null : (stepperContext) => {
+            replayContext.stepperContext.waitForProgress = (stepperContext) => {
                 return new Promise((cont) => {
                     console.log('[stepper.progress] stepper suspend', cont);
                     stepperSuspend(stepperContext, cont);
@@ -1129,8 +1130,10 @@ function postLink(app: App) {
         if (resume) {
             try {
                 console.log('[stepper.progress] do resume');
+                replayContext.stepperContext.resume = null;
                 resume();
                 yield promise;
+                console.log('[stepper.progress] end resume');
             } catch (e) {
                 console.error('exception', e);
             }
@@ -1146,6 +1149,14 @@ function postLink(app: App) {
         const stepperContext = replayContext.stepperContext;
 
         yield* put({type: ActionTypes.StepperInterrupt, payload: {stepperContext}});
+    });
+
+    replayApi.on('stepper.restart', function* () {
+        const state = yield* select();
+        const stepperState = yield* call(app.stepperApi.buildState, state, state.environment);
+
+        yield* put({type: ActionTypes.StepperEnabled});
+        yield* put({type: ActionTypes.StepperRestart, payload: {stepperState}});
     });
 
     function stepperSuspend(stepperContext: StepperContext, cont) {

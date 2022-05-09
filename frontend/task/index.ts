@@ -1,7 +1,7 @@
 import {extractLevelSpecific, getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest} from "typed-redux-saga";
+import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, cancelled} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
@@ -20,7 +20,7 @@ import taskSlice, {
     taskInputNeeded,
     taskLoaded,
     taskRecordableActions,
-    taskResetDone, taskSetContextIncludeBlocks, taskSetContextStrings,
+    taskResetDone, taskSetBlocksPanelCollapsed, taskSetContextIncludeBlocks, taskSetContextStrings,
     TaskSubmissionResultPayload,
     taskSuccess,
     taskSuccessClear,
@@ -31,8 +31,9 @@ import taskSlice, {
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation/doc";
+import BlocksBundle from "./blocks/blocks";
 import PlatformBundle, {
-    getTaskAnswerAggregated,
+    getTaskAnswerAggregated, platformApi,
     setPlatformBundleParameters,
     taskGradeAnswerEventSaga
 } from "./platform/platform";
@@ -50,7 +51,6 @@ import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {
     platformAnswerGraded,
     platformAnswerLoaded,
-    taskGetAnswerEvent,
     taskGradeAnswerEvent
 } from "./platform/actionTypes";
 import {isStepperInterrupting} from "../stepper/selectors";
@@ -66,12 +66,21 @@ import {
 import log from "loglevel";
 import {getTaskTokenForLevel} from "./platform/task_token";
 import {createAction} from "@reduxjs/toolkit";
+import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
+import {IoMode} from "../stepper/io";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
     TaskUnload = 'task/unload',
     TaskRunExecution = 'task/runExecution',
 }
+
+export enum TaskPlatformMode {
+    Source = 'source',
+    RecordingProgress = 'recording_progress',
+}
+
+export const recordingProgressSteps = 10;
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
     testId?: number,
@@ -177,9 +186,15 @@ function* createContext() {
     console.log('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     console.log('Created context', context);
+    if (context instanceof PrinterLib && currentTask) {
+        yield* put({type: IOActionTypes.IoPaneModeChanged, payload: {mode: IoMode.Split}});
+    }
     yield* put(taskSetContextStrings(context.strings));
     if (context.infos && context.infos.includeBlocks) {
         yield* put(taskSetContextIncludeBlocks(context.infos.includeBlocks));
+    }
+    if (context.infos && context.infos.panelCollapsed) {
+        yield* put(taskSetBlocksPanelCollapsed(true));
     }
     context.resetAndReloadState(testData, state);
 }
@@ -254,15 +269,24 @@ function* taskLoadSaga(app: App, action) {
         yield* put(taskUnload());
     }
 
+    console.log('create new context');
+
     let context = quickAlgoLibraries.getContext(null, state.environment);
     if (!context || (action.payload && action.payload.reloadContext)) {
         yield* call(createContext);
     }
 
-    const sagas = quickAlgoLibraries.getSagas(app);
     oldSagasTasks[app.environment] = yield* fork(function* () {
-        sagas.push(handleLibrariesEventListenerSaga(app));
-        yield* all(sagas);
+        try {
+            const sagas = quickAlgoLibraries.getSagas(app);
+            sagas.push(handleLibrariesEventListenerSaga(app));
+            yield* all(sagas);
+        } finally {
+            if (yield* cancelled()) {
+                console.log('finished, do cancel');
+                yield* call(cancelHandleLibrariesEventListenerSaga, app);
+            }
+        }
     });
 
     state = yield* select();
@@ -296,10 +320,8 @@ function* handleLibrariesEventListenerSaga(app: App) {
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
 
     const listeners = quickAlgoLibraries.getEventListeners();
-    console.log('task listeners', listeners);
+    console.log('create task listeners on ', app.environment, listeners);
     for (let [eventName, {module, method}] of Object.entries(listeners)) {
-        console.log({eventName, method});
-
         if ('main' === app.environment) {
             app.recordApi.on(eventName, function* (addEvent, {payload}) {
                 yield* call(addEvent, eventName, payload);
@@ -328,6 +350,18 @@ function* handleLibrariesEventListenerSaga(app: App) {
     }
 }
 
+function* cancelHandleLibrariesEventListenerSaga(app: App) {
+    console.log('cancel saga on ', app.environment);
+    const listeners = quickAlgoLibraries.getEventListeners();
+    for (let eventName of Object.keys(listeners)) {
+        if ('main' === app.environment) {
+            console.log('remove event', eventName);
+            app.recordApi.off(eventName);
+            app.replayApi.off(eventName);
+        }
+    }
+}
+
 function* taskRunExecution(app: App, {type, payload}) {
     console.log('START RUN EXECUTION', type, payload);
     const {level, testId, tests, options, source, resolve} = payload;
@@ -350,6 +384,8 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     const currentLevel = state.task.currentLevel;
     const newLevel = payload.level;
     console.log('level change', currentLevel, newLevel);
+
+    yield* put({type: StepperActionTypes.StepperExit});
 
     const currentSubmission = yield* select((state: AppStore) => state.task.currentSubmission);
     if (null !== currentSubmission) {
@@ -429,13 +465,13 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
     }
 }
 
-function* contextResetAndReloadStateSaga() {
+function* contextResetAndReloadStateSaga(innerState = null) {
     const state: AppStore = yield* select();
     const currentTest = selectCurrentTest(state);
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context) {
-        context.resetAndReloadState(currentTest, state);
+        context.resetAndReloadState(currentTest, state, innerState);
         const contextState = getCurrentImmerState(context.getInnerState());
         console.log('get new state', contextState);
         yield* put(taskUpdateState(contextState));
@@ -444,8 +480,23 @@ function* contextResetAndReloadStateSaga() {
 
 function* getTaskAnswer () {
     const state: AppStore = yield* select();
+    const taskPlatformMode = getTaskPlatformMode(state);
 
-    return getBufferModel(state, 'source').document.toString();
+    if (TaskPlatformMode.RecordingProgress === taskPlatformMode) {
+        return getAudioTimeStep(state);
+    }
+
+    if (TaskPlatformMode.Source === taskPlatformMode) {
+        const buffer = getBufferModel(state, 'source');
+
+        return buffer ? buffer.document.toString() : '';
+    }
+
+    return null;
+}
+
+export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
+    return !state.task.currentTask && state.player.instants ? TaskPlatformMode.RecordingProgress : TaskPlatformMode.Source;
 }
 
 function* getTaskState () {
@@ -456,9 +507,36 @@ function* getTaskLevel () {
     return yield* select((state: AppStore) => state.task.currentLevel);
 }
 
+function getAudioTimeStep(state: AppStore) {
+    if (state.player && state.player.duration) {
+        return Math.ceil(recordingProgressSteps * state.player.audioTime / state.player.duration);
+    }
+
+    return null;
+}
+
+function* watchRecordingProgressSaga(app: App) {
+    if ('main' !== app.environment) {
+        return;
+    }
+
+    console.log('[recording.progress] watching');
+    while (true) {
+        const previousStep = yield* select((state: AppStore) => getAudioTimeStep(state));
+        yield* take(PlayerActionTypes.PlayerTick);
+        const nextStep = yield* select((state: AppStore) => getAudioTimeStep(state));
+        const shouldUpdate = previousStep !== nextStep;
+        if (shouldUpdate) {
+            console.log('[recording.progress] update', previousStep, nextStep);
+            yield* call([platformApi, platformApi.validate], 'done');
+        }
+    }
+}
+
 export default function (bundle: Bundle) {
     bundle.include(DocumentationBundle);
     bundle.include(PlatformBundle);
+    bundle.include(BlocksBundle);
 
     setPlatformBundleParameters({
         getTaskAnswer,
@@ -466,7 +544,9 @@ export default function (bundle: Bundle) {
         getTaskLevel,
         taskChangeLevel,
         taskGrader: taskSubmissionExecutor,
-    })
+    });
+
+    bundle.addSaga(watchRecordingProgressSaga);
 
     bundle.addSaga(function* (app: App) {
         console.log('INIT TASK SAGAS');
@@ -573,7 +653,6 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(platformAnswerGraded.type, function*({payload: {score, message, error}}: ReturnType<typeof platformAnswerGraded>) {
-            log.getLogger('tests').debug('Submission execution over');
             if (score >= 1) {
                 yield* put(taskSuccess(message));
             } else if (error) {
@@ -644,17 +723,10 @@ export default function (bundle: Bundle) {
             }
 
             console.log('TASK REPLAY API RESET', instant.event, taskData);
-            if (!quick || -1 !== ['compile.success', 'task/changeLevel'].indexOf(instant.event[1])) {
-                yield* call(contextResetAndReloadStateSaga);
-            }
 
             const context = quickAlgoLibraries.getContext(null, 'main');
-            if (!quick || -1 !== ['task/updateCurrentTestId', 'task/changeLevel'].indexOf(instant.event[1])) {
-                if (taskData && taskData.state) {
-                    console.log('do reload state', taskData.state);
-                    const draft = createDraft(taskData.state);
-                    context.reloadInnerState(draft);
-                }
+            if (context && (!quick || -1 !== ['compile.success', 'task/updateCurrentTestId', 'task/changeLevel'].indexOf(instant.event[1]))) {
+                yield* call(contextResetAndReloadStateSaga, taskData && taskData.state ? taskData.state : null);
                 console.log('DO RESET DISPLAY');
                 context.redrawDisplay();
             }
@@ -683,7 +755,7 @@ export default function (bundle: Bundle) {
         app.stepperApi.onInit(function(stepperState: StepperState, state: AppStore) {
             const currentTest = selectCurrentTest(state);
 
-            console.log('stepper init, current test', currentTest);
+            console.log('stepper init, current test', currentTest, state.environment);
 
             const context = quickAlgoLibraries.getContext(null, state.environment);
             context.resetAndReloadState(currentTest, state);

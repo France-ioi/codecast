@@ -10,7 +10,7 @@ import {Bundle} from "../../linker";
 import {ActionTypes as LayoutActionTypes, ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
-import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
+import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 import {Directive} from "../../stepper/python/directives";
 import {MultiVisualization} from "./MultiVisualization";
 import {ZoneLayoutVisualizationGroup} from "./ZoneLayoutVisualizationGroup";
@@ -83,6 +83,8 @@ export interface LayoutElementMetadata {
     overflow?: boolean,
     desiredSize?: string,
     stackingOrientation?: RelativeLayoutOrientation,
+    allocatedWidth?: number,
+    allocatedHeight?: number,
 }
 
 export interface LayoutVisualizationGroup {
@@ -725,8 +727,9 @@ function layoutRequiredTypeChangedReducer(state: AppStore, {payload: {requiredTy
     state.layout.requiredType = requiredType;
 }
 
-function layoutPlayerModeChangedReducer(state: AppStore, {payload: {playerMode}}) {
+function layoutPlayerModeChangedReducer(state: AppStore, {payload: {playerMode, resumeImmediately}}) {
     state.layout.playerMode = playerMode;
+    state.layout.playerModeResumeImmediately = !!resumeImmediately;
 }
 
 export function makeVisualizationAsPreferred(visualizations: string[], visualization: string): string[] {
@@ -775,6 +778,7 @@ export interface LayoutState {
     mobileMode: LayoutMobileMode,
     zoomLevel: number, // 1 is normal
     playerMode: LayoutPlayerMode,
+    playerModeResumeImmediately?: boolean,
 }
 
 function* layoutSaga({replayApi}: App) {
@@ -792,7 +796,8 @@ function* layoutSaga({replayApi}: App) {
         }
     });
 
-    yield* takeEvery(ActionTypes.LayoutPlayerModeBackToReplay, function* () {
+    // @ts-ignore
+    yield* takeEvery(ActionTypes.LayoutPlayerModeBackToReplay, function* ({payload}) {
         const state: AppStore = yield* select();
         const currentSource = getBufferModel(state, 'source').document.toString();
 
@@ -813,6 +818,9 @@ function* layoutSaga({replayApi}: App) {
         if (confirmed) {
             yield* put({type: LayoutActionTypes.LayoutPlayerModeChanged, payload: {playerMode: LayoutPlayerMode.Replay}});
             yield* call(replayApi.reset, instant);
+            if ((payload && payload.resumeImmediately) || state.layout.playerModeResumeImmediately) {
+                yield* put({type: PlayerActionTypes.PlayerStart});
+            }
         }
     });
 }

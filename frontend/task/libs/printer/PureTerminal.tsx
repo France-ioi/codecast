@@ -54,7 +54,7 @@ export function PureTerminal(props: PureTerminalProps) {
         terminal.scrollTop = terminal.scrollHeight;
     }, [terminalContent]);
 
-    const lines = terminalContent.split("\n");
+    const lines = terminalContent.replace(/ /g, "\u00a0").split("\n");
 
     return (
         <div

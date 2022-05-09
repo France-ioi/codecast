@@ -66,6 +66,17 @@ export function* getTaskAnswerAggregated () {
     }
 }
 
+export function getTaskMetadata() {
+    const metadata = window.json ? window.json : {
+        fullFeedback: true,
+        minWidth: "auto",
+    };
+    metadata.autoHeight = true;
+    metadata.disablePlatformProgress = true;
+
+    return metadata;
+}
+
 function* linkTaskPlatformSaga (app: App) {
     if ('main' !== app.environment) {
         return;
@@ -142,11 +153,7 @@ function* taskUnloadEventSaga ({payload: {success}}: ReturnType<typeof taskUnloa
 }
 
 function* taskGetMetaDataEventSaga ({payload: {success, error: _error}}: ReturnType<typeof taskGetMetadataEvent>) {
-    const metadata = window.json ? window.json : {
-        fullFeedback: true,
-        minWidth: "auto",
-    };
-    metadata.autoHeight = true;
+   const metadata = getTaskMetadata();
 
     yield* call(success, metadata);
 }
@@ -259,7 +266,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
         const taskLevels = yield* select((state: AppStore) => state.platform.levels);
         console.log('task levels', taskLevels);
         const {minScore, maxScore, noScore} = yield* call(platformApi.getTaskParams, null, null);
-        if (taskLevels) {
+        if (taskLevels && Object.keys(taskLevels).length) {
             const versionsScore = {};
             const currentLevel = yield getTaskLevel();
             let currentScore = null;

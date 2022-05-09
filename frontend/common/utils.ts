@@ -57,3 +57,14 @@ export function formatTimeLong(ms: number) {
 
     return `${zeroPad2(m)}:${zeroPad2(s)}.${tenths}`;
 }
+
+export function isLocalStorageEnabled() {
+    let test = '__testvariable__';
+    try {
+        localStorage.setItem(test, test);
+        localStorage.removeItem(test);
+        return true;
+    } catch(e) {
+        return false;
+    }
+}

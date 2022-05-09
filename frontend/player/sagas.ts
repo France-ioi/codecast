@@ -88,6 +88,19 @@ function* playerPrepare(app: App, action) {
     audio.src = audioUrl;
     audio.load();
 
+    if (navigator && navigator.mediaSession) {
+        navigator.mediaSession.setActionHandler('play', function(ev) {
+            console.log('[media session] made play');
+            audio.pause();
+            app.dispatch({type: LayoutActionTypes.LayoutPlayerModeBackToReplay, payload: {resumeImmediately: true}});
+        });
+
+        navigator.mediaSession.setActionHandler('pause', function(ev) {
+            console.log('[media session] made pause', ev);
+            app.dispatch({type: ActionTypes.PlayerPause});
+        });
+    }
+
     /* Load the events. */
     let data;
     if (action.payload.data) {

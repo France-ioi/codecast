@@ -65,6 +65,7 @@ export interface RecordApi {
     onStart: Function,
     start: any,
     on: (actionType: string, handler) => void,
+    off: (actionType: string) => void,
 }
 
 export default function(bundle: Bundle) {
@@ -95,7 +96,12 @@ export default function(bundle: Bundle) {
                 throw new Error(`multiple record handlers for ${actionType}`);
             }
             actionHandlers.set(actionType, handler);
-        }
+        },
+        off: (actionType: string) => {
+            if (actionHandlers.has(actionType)) {
+                actionHandlers.delete(actionType);
+            }
+        },
     };
 
     bundle.defineValue('recordApi', recordApi);

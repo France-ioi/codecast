@@ -13,6 +13,7 @@ import {LayoutType} from "../../task/layout/layout";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faTachometerAlt, faPlay, faPause, faFastForward, faStop, faShoePrints, faWalking, faRunning} from '@fortawesome/free-solid-svg-icons';
 import {getMessage} from "../../lang";
+import {RECORDING_FORMAT_VERSION} from "../../version";
 
 interface StepperControlsStateToProps {
     showStepper: boolean,
@@ -52,6 +53,14 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     let compileOrExecuteMessage = '';
     let speed = 0;
     let controlsType = StepperControlsType.Normal;
+
+    if (state.player && state.player.data && state.player.data.version) {
+        let versionComponents = state.player.data.version.split('.').map(Number);
+        if (versionComponents[0] < 7) {
+            // Backwards compatibility: for v7 don't show controls by default. Instead show a Compile button
+            showControls = false;
+        }
+    }
 
     if (platform === 'python') {
         compileOrExecuteMessage = getMessage('EXECUTE');
@@ -130,7 +139,6 @@ interface StepperControlsState {
 
 interface StepperControlsProps extends StepperControlsStateToProps, StepperControlsDispatchToProps {
     enabled?: boolean,
-    newControls?: boolean,
 }
 
 class _StepperControls extends React.PureComponent<StepperControlsProps, StepperControlsState> {
@@ -139,15 +147,19 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
     };
 
     render = () => {
-        const {showStepper, newControls, layoutType} = this.props;
+        const {showStepper, layoutType} = this.props;
         if (!showStepper) {
             return null;
         }
 
-        const {showControls, showEdit, showCompile, compileOrExecuteMessage, speed, controlsType, canInterrupt} = this.props;
+        const {showControls, showCompile, compileOrExecuteMessage, speed, controlsType, canInterrupt} = this.props;
         const speedDisplayed = LayoutType.MobileVertical !== layoutType || this.state.speedDisplayed;
 
-        return newControls ?
+        return (!showControls && showCompile ?
+            <div className="controls-compile">
+                {this._button('compile', this.onCompile, null, null, compileOrExecuteMessage)}
+            </div>
+        :
             (<div className={`controls controls-stepper ${controlsType}`}>
                 {showControls && <React.Fragment>
                     {(LayoutType.MobileVertical !== layoutType || !this.state.speedDisplayed) &&
@@ -196,34 +208,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
                     }
                 </React.Fragment>}
             </div>)
-            :
-            (<div className="controls controls-stepper">
-                <div className="controls-stepper-wrapper">
-                    {showControls && <ButtonGroup className="controls-stepper-execution">
-                        {this._button('run', this.onStepRun, getMessage('CONTROL_RUN'), <i
-                            className="bp3-icon fi fi-run"/>)}
-                        {this._button('expr', this.onStepExpr, getMessage('CONTROL_EXPR'), <i
-                            className="bp3-icon fi fi-step-expr"/>)}
-                        {this._button('into', this.onStepInto, getMessage('CONTROL_INTO'), <i
-                            className="bp3-icon fi fi-step-into"/>)}
-                        {this._button('out', this.onStepOut, getMessage('CONTROL_OUT'), <i
-                            className="bp3-icon fi fi-step-out"/>)}
-                        {this._button('over', this.onStepOver, getMessage('CONTROL_OVER'), <i
-                            className="bp3-icon fi fi-step-over"/>)}
-                        {this._button('interrupt', this.onInterrupt, getMessage('CONTROL_INTERRUPT'), <i
-                            className="bp3-icon fi fi-interrupt"/>)}
-                        {this._button('restart', this.onRestart, getMessage('CONTROL_RESTART'), <i
-                            className="bp3-icon fi fi-restart"/>)}
-                        {this._button('undo', this.onUndo, getMessage('CONTROL_UNDO'), 'undo')}
-                        {this._button('redo', this.onRedo, getMessage('CONTROL_REDO'), 'redo')}
-                    </ButtonGroup>}
-                </div>
-                <div className="controls-compile">
-                    {showEdit && this._button('edit', this.onEdit, null, null, getMessage('EDIT'))}
-                    {showCompile && this._button('compile', this.onCompile, null, null, compileOrExecuteMessage)}
-                </div>
-            </div>)
-            ;
+        );
     };
 
     _button = (key: string, onClick: any, title: string, icon: IconName|JSX.Element, text?: string, classNames?: string): ReactElement => {

@@ -30,6 +30,7 @@ export interface StepperContext {
     interactBefore?: Function,
     interactAfter: Function,
     waitForProgress?: Function,
+    waitForProgressOnlyAfterIterationsCount?: number, // For backwards compatibility
     onStepperDone?: Function,
     dispatch?: Function,
     quickAlgoCallsLogger?: Function,
@@ -49,6 +50,7 @@ export interface StepperContextParameters {
     interactBefore?: Function,
     interactAfter?: Function,
     waitForProgress?: Function,
+    waitForProgressOnlyAfterIterationsCount?: number, // For backward compatbility with previous recordings
     onStepperDone?: Function,
     dispatch?: Function,
     quickAlgoCallsLogger?: Function,
@@ -118,6 +120,8 @@ export default function(bundle: Bundle) {
     async function buildState(state: AppStoreReplay, environment: string): Promise<StepperState> {
         const {platform} = state.options;
 
+        console.log('do build state', state, environment);
+
         /*
          * Call all the init callbacks. Pass the global state so the player can
          * build stepper states without having to install the pre-computed state
@@ -130,7 +134,6 @@ export default function(bundle: Bundle) {
             callback(curStepperState, state, environment);
         }
 
-        console.log('do build state');
 
         const stepper: Stepper = {
             ...state.stepper,
@@ -225,7 +228,7 @@ function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, dispatch, quickAlgoCallsLogger, environment, speed, executeEffects}: StepperContextParameters): StepperContext {
+export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, waitForProgressOnlyAfterIterationsCount, dispatch, quickAlgoCallsLogger, environment, speed, executeEffects}: StepperContextParameters): StepperContext {
     /**
      * We create a new state object here instead of mutating the state. This is intended.
      */
@@ -240,6 +243,7 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
             return Promise.resolve(true);
         },
         waitForProgress,
+        waitForProgressOnlyAfterIterationsCount,
         dispatch,
         quickAlgoCallsLogger,
         resume: null,
@@ -291,9 +295,18 @@ async function executeSingleStep(stepperContext: StepperContext) {
 
     await stepperContext.interactBefore();
     if (stepperContext.waitForProgress) {
-        console.log('wait for progress');
-        await stepperContext.waitForProgress(stepperContext);
-        console.log('end wait for progress, continuing');
+        if (!stepperContext.waitForProgressOnlyAfterIterationsCount || stepperContext.lineCounter >= stepperContext.waitForProgressOnlyAfterIterationsCount) {
+            console.log('wait for progress', stepperContext.lineCounter);
+            if (stepperContext.waitForProgressOnlyAfterIterationsCount) {
+                // For BC, after the first round of 10.000 actions, we leave at most 20 actions for the next rounds between each stepper.progress event
+                // This is to improve performance, for recordings with an infinite loop program
+                stepperContext.lineCounter = Math.max(0, stepperContext.waitForProgressOnlyAfterIterationsCount - 20);
+            }
+            await stepperContext.waitForProgress(stepperContext);
+            console.log('end wait for progress, continuing');
+        } else {
+            stepperContext.lineCounter += 1;
+        }
     }
 
     if (stepperContext.state.platform === 'python') {

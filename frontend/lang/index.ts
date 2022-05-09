@@ -7,6 +7,7 @@ import {Bundle} from "../linker";
 import {put, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {taskLoad} from "../task";
+import {isLocalStorageEnabled} from "../common/utils";
 
 export const Languages = {
     'en-US': require('./en-US.js'),
@@ -19,7 +20,7 @@ export default function(bundle: Bundle) {
         if (navigator.language in Languages) {
             language = navigator.language;
         }
-        if (window.localStorage.getItem('language') && window.localStorage.getItem('language') in Languages) {
+        if (isLocalStorageEnabled() && window.localStorage.getItem('language') && window.localStorage.getItem('language') in Languages) {
             language = window.localStorage.getItem('language');
         }
         if (options.language && options.language in Languages) {
@@ -64,6 +65,7 @@ Object.defineProperty(Message, 's', {
 });
 
 let localGetMessage;
+let localGetMessageChoices;
 let localGetFormat;
 
 function setLanguageReducer(state: AppStore, {payload: {language}}) {
@@ -91,10 +93,24 @@ function setLanguageReducer(state: AppStore, {payload: {language}}) {
         });
     });
 
+    localGetMessageChoices = function (value, number) {
+        const string = localGetMessage(value.toString());
+        const elements = string ? string._m.split('|') : '';
+
+        if (elements.length === 2) {
+            return number > 1 ? elements[1] : elements[0];
+        }
+        if (elements.length === 3) {
+            return number > 1 ? elements[2] : (number === 1 ? elements[1] : elements[0]);
+        }
+
+        return string;
+    }
+
     localGetFormat = function(value) {
         if (value instanceof Error && value.name === 'LocalizedError') {
             // @ts-ignore
-            return getMessage(value.message).format(value.args);
+            return localGetMessage(value.message).format(value.args);
         }
 
         return localGetMessage(value.toString());
@@ -110,6 +126,10 @@ export const getMessage = (message, defaultText = null) => {
 
 export const getMessageFormat = (value) => {
     return localGetFormat(value);
+}
+
+export const getMessageChoices = (value, number) => {
+    return localGetMessageChoices(value, number);
 }
 
 export class LocalizedError extends Error {

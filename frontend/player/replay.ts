@@ -5,6 +5,7 @@ import {Bundle} from "../linker";
 
 export interface ReplayApi {
     on: (keys: string[] | string, saga: any) => void,
+    off: (keys: string[] | string) => void,
     applyEvent: any,
     onReset: (saga: (instant: PlayerInstant, quick?: boolean) => void) => void,
     reset: any,
@@ -36,6 +37,16 @@ export default function(bundle: Bundle) {
                 }
 
                 sagas.push(saga);
+            }
+        },
+        off: function(keys: string[] | string) {
+            if (typeof keys === 'string') {
+                keys = [keys];
+            }
+            for (let key of keys) {
+                if (eventHandlers.has(key)) {
+                    eventHandlers.delete(key);
+                }
             }
         },
         applyEvent: function* (key: string, replayContext: ReplayContext, event) {

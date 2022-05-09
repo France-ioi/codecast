@@ -29,6 +29,7 @@ import {Bundle} from "../linker";
 import {App} from "../index";
 import {checkCompilingCode} from "../task/utils";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {getMessage} from "../lang";
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -85,6 +86,10 @@ export default function(bundle: Bundle) {
             });
 
             try {
+                if (!source.trim()) {
+                    throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
+                }
+
                 checkCompilingCode(source.trim(), platform, state);
             } catch (e) {
                 yield* put({

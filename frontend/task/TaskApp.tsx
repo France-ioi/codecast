@@ -24,6 +24,7 @@ import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
 import {SubtitlesPane} from "../subtitles/SubtitlesPane";
 import {TaskLevelName} from "./platform/platform_slice";
+import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -41,6 +42,8 @@ export function TaskApp() {
     const audioLoaded = editor.audioLoaded;
     const [initialUserCheck, setInitialUserCheck] = useState(false);
     const taskLevels = useAppSelector(state => state.platform.levels);
+    const language = useAppSelector(state => state.options.language);
+    const displayAbout = useAppSelector(state => selectDisplayAbout(state));
 
     let progress = null;
     let progressMessage = null;
@@ -114,7 +117,7 @@ export function TaskApp() {
     }
 
     return (
-        <Container fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode}`}>
+        <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode}`}>
             <div className="layout-general">
                 <div className={`task-section`}>
                     <div className="task-section-container">
@@ -161,7 +164,7 @@ export function TaskApp() {
                 }
 
                 {displayEditor &&
-                    <div className="layout-footer">
+                    <div className="layout-footer editor-footer">
                       <EditorInterface/>
                     </div>
                 }
@@ -171,6 +174,10 @@ export function TaskApp() {
                 <div style={{margin: '20px 20px 0 20px'}}>
                     <ProgressBar value={progress} intent={Intent.SUCCESS}/>
                 </div>
+
+                {displayAbout && <div style={{margin: '20px 20px 0 20px'}}>
+                    <TaskAbout/>
+                </div>}
             </Dialog>
 
             <TaskSuccessDialog/>
