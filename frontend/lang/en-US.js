@@ -203,6 +203,7 @@ module.exports = {
     TASK_BLOCK_CATEGORY_PRINT: "Writing",
     TASK_BLOCK_CATEGORY_INTERNET: "Internet",
     TASK_BLOCK_CATEGORY_DISPLAY: "Display",
+    TASK_BLOCK_CATEGORY_TURTLE: "Turtle",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Preview a specific layout:",
     LAYOUT_DefaultLayoutDesktop: 'Desktop',

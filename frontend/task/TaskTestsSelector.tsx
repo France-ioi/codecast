@@ -20,7 +20,7 @@ export function TaskTestsSelector() {
         dispatch(updateCurrentTestId({testId: index}));
     }
 
-    const existingImages = currentTask.gridInfos && currentTask.gridInfos.images ? currentTask.gridInfos.images.map(module => module.default) : [];
+    const existingImages = currentTask.gridInfos && currentTask.gridInfos.images ? currentTask.gridInfos.images.map(element => element.path.default) : [];
 
     const getTestThumbNail = (testIndex) => {
         const file = `test_${currentLevel}_${testIndex + 1}`;

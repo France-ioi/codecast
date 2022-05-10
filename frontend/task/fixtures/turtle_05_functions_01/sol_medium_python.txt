@@ -1,0 +1,25 @@
+from turtle import *
+
+def maison():
+    baisserPinceau()
+    for loop in range(4):
+        droite(90)
+        avancer(50)
+    droite(30)
+    for loop in range(3):
+        avancer(50)
+        droite(120)
+    gauche(30)
+    leverPinceau()
+    
+maison()
+gauche(90)
+avancer(150)
+droite(90)
+maison()
+avancer(100)
+droite(90)
+avancer(50)
+gauche(90)
+maison()
+        

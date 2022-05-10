@@ -197,6 +197,11 @@ function* createContext() {
     console.log('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     console.log('Created context', context);
+    if (!context.blocklyHelper) {
+        context.blocklyHelper = {
+            updateSize: () => {},
+        };
+    }
     if (context instanceof PrinterLib && currentTask) {
         yield* put({type: IOActionTypes.IoPaneModeChanged, payload: {mode: IoMode.Split}});
     }

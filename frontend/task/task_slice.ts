@@ -1,11 +1,13 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import StringRotationFixture from './fixtures/14_strings_05_rotation/index';
-import SokobanFixture from './fixtures/11_variable_08_sokoban/index';
+import StringRotationFixture from './fixtures/14_strings_05_rotation';
+import TurtleFixture from './fixtures/turtle_05_functions_01';
+import SokobanFixture from './fixtures/11_variable_08_sokoban';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 
 const availableTasks = {
     robot: SokobanFixture,
+    turtle: TurtleFixture,
     printer: StringRotationFixture,
 };
 

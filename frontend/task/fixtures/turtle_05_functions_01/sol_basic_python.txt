@@ -1,0 +1,12 @@
+from turtle import *
+
+def triangle():
+    for loop in range(3):
+        avancer(50)
+        gauche(120)
+    avancer(50)
+        
+triangle()
+triangle()
+avancer(50)
+triangle()

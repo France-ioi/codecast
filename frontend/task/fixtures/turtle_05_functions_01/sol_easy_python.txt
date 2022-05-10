@@ -1,0 +1,20 @@
+from turtle import *
+
+def carre():
+    for loop in range(4):
+        baisserPinceau()
+        avancer(50)
+        gauche(90)
+        leverPinceau()
+        
+carre()
+reculer(50)
+droite(90)
+avancer(150)
+gauche(90)
+carre()
+reculer(100)
+gauche(90)
+avancer(50)
+droite(90)
+carre()
