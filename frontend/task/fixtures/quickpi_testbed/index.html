@@ -1,0 +1,83 @@
+﻿<!doctype html>
+<html>
+<head>
+        <meta name="viewport" content="width=device-width">
+    <meta charset="utf-8">
+    <title>Quick Pi Test Template</title>
+    <script>
+        window.stringsLanguage = 'fr';
+    </script>
+    <script class="remove" type="text/javascript" src="../../_common/modules/pemFioi/importModules-1.4-mobileFirst.js" id="import-modules"></script>
+    <script class="remove" type="text/javascript">
+        var modulesPath = '../../_common/modules/';
+        importModules([
+            'jquery-1.7.1', 'JSON-js', 'raphael-2.2.1', 'beaver-task-2.0', 'jschannel', 'raphaelFactory-1.0', 'delayFactory-1.0', 'simulationFactory-1.0',
+            'platform-pr', 'buttonsAndMessages', 'beav-1.0', 'installationAPI.01', 'miniPlatform',
+            'conceptDisplay-1.0', 'conceptViewer-1.0', 'conceptViewer_css-1.0',
+            'taskStyles-mobileFirst', 'quickpi-board', 'quickpi-connection', 'quickpi-screen', 'blockly-quickpi' ]);
+
+        // set Blockly as default language when none is specified through ?language=
+        importLanguageModules('blockly');
+    </script>
+    <script class="remove" type="text/javascript">
+        var json = {
+            "id": "test-template",
+            "language": "fr",
+            "version": "fr.01",
+            "authors": "",
+            "translators": [],
+            "license": "",
+            "taskPathPrefix": "",
+            "modulesPathPrefix": "",
+            "browserSupport": [],
+            "acceptedAnswers": [""],
+            "fullFeedback": true,
+            "minWidth": "auto"
+        };
+
+        var strings = {
+            outputCorrect: "Bravo ! La sortie est correcte.",
+            outputIncorrect: "La sortie est incorrecte."
+        };
+    </script>
+    <script type="text/javascript" src="task.js"></script>
+</head>
+
+   <body onresize="task.displayedSubTask.updateScale()">
+      <div id="task">
+         <h1>Exemple d'exercice</h1>
+
+         <div id="tabsContainer"></div>
+         <div id="taskContent">
+            <div id="taskIntro">
+                <!--
+               <p>
+                  Turn led on in port D5.
+               </p>
+                -->
+               <div class="basic">
+                   <p></p>
+               </div>
+
+               <div class="easy">
+                   <p>
+                    Bac à sable QuickPi, créez vos propres projets !
+                   </p>
+               </div>
+               <div class="medium">
+                   <p> 
+                   </p>
+               </div>
+               <div class="hard">
+                   <p>
+                   </p>
+               </div>
+
+            </div>
+            <div id="gridContainer"></div>
+            <div id="blocklyLibContent"></div>
+         </div>
+      </div><!-- task -->
+   </body>
+</html>
+ 
