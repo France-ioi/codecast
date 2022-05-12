@@ -1,6 +1,6 @@
 import * as React from 'react';
 import {CodecastAnalysisStackFrame} from "./analysis";
-import {AnalysisVariableValue} from "./AnalysisVariableValue";
+import {AnalysisVariable} from "./AnalysisVariable";
 
 interface AnalysisFunctionHeaderProps {
     stackFrame: CodecastAnalysisStackFrame,
@@ -29,9 +29,10 @@ export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.
                     {args.map(function(argument, index) {
                         return (
                             <span key={index}>
-                                <AnalysisVariableValue
+                                <AnalysisVariable
                                     variable={argument}
                                     stackFrameId={props.stackFrame.id}
+                                    onlyValue={true}
                                 />
                                 {(index + 1) < props.stackFrame.args.length ? ', ' : null}
                             </span>

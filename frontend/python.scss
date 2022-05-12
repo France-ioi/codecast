@@ -9,7 +9,7 @@
 }
 .object-toggle-open {
   display: inline-block;
-  min-width: 60px;
+  //min-width: 60px;
 }
 
 .variable-container {
@@ -37,6 +37,12 @@
   font-weight: bold;
 }
 
-.value-object-closed, .value-list-closed, .value-iterator, .value-module, .value-function {
+.value-type {
   color: #b8b246;
+  font-size: 0.9em;
+}
+
+.value-count {
+  color: grey;
+  font-size: 0.9em;
 }
