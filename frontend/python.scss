@@ -32,9 +32,16 @@
 .value-empty {
   color: #ffcc1e;
 }
+.value-has-changed {
+  border-radius: 100px;
+  background-color: #ffdb95;
+  padding: 1px 5px;
+}
 
 .value-loaded {
-  font-weight: bold;
+  border-radius: 100px;
+  background-color: #b8ceee;
+  padding: 1px 5px;
 }
 
 .value-type {

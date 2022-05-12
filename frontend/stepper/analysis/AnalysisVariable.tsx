@@ -52,7 +52,6 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
                 isOpen ? (isCollapsed ? 100 : 20) : Math.floor(askedDisplayedMaxLength / (isCollapsed ? 4 : 15))
             );
             const displayMaxLength = (isOpen ? 1000 : askedDisplayedMaxLength) / elementsToDisplay;
-            console.log('element to display', {isOpen, isCollapsed, elementsToDisplay, displayMaxLength, askedDisplayedMaxLength});
             if (isCollapsed || !isOpen) {
                 let delimiters = -1 !== ['set', 'frozenset'].indexOf(variable.type) || !isCollapsed ? '{}' : '[]';
                 renderedElements = (<React.Fragment>
@@ -98,33 +97,28 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
                     <span className={isCollapsed ? `list-toggle ${isOpen ? 'list-toggle-open' : ''}` : `object-toggle ${isOpen ? 'object-toggle-open' : ''}`}>
                         <span className="toggle-icon">{isOpen ? '▾' : '▸'}</span>
                     </span>
-                    <span className="value-type">
+                    {!isCollapsed && <span className="value-type">
                         &lt;{variable.type}&gt;
-                    </span>
-                    {isCollapsed ? <span className="value-count"> {`(${variable.variables.length})`}</span> : ''}
+                    </span>}
+                    {isCollapsed ? <span className="value-count">{`(${variable.variables.length})`}</span> : ''}
                     {elementsToDisplay > 0 && <span>&nbsp;{renderedElements}</span>}
                 </span>
             )
         }
 
-        let classes = 'value-scalar';
-        if (variable.loaded) {
-            classes += ' value-loaded';
-        }
+        const hasPreviousValue = null !== variable.previousValue && variable.value !== variable.previousValue;
 
         return (
             <React.Fragment>
-                <span className={classes}>{variable.value}</span>
-                {null !== variable.previousValue && variable.value !== variable.previousValue ?
-                    <span className="value-previous">{variable.previousValue}</span>
+                <span className={`value-scalar ${hasPreviousValue ? 'value-has-changed' : ''} ${!hasPreviousValue && variable.loaded ? 'value-loaded' : ''}`}>{variable.value}</span>
+                {hasPreviousValue ?
+                    <span className={`value-previous ${variable.loaded ? 'value-loaded' : ''}`}>{variable.previousValue}</span>
                     : null}
             </React.Fragment>
         );
     }
 
     const variableValue = getVariableValue();
-
-    console.log('only value', props.onlyValue);
 
     if (props.onlyValue) {
         return variableValue;

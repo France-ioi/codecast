@@ -10,6 +10,16 @@
   --secondary-color: #1f1f1f;
   --font-family-sans-serif: 'Source Sans Pro', sans-serif;
   --default-border-radius: 0;
+  svg {
+    .grid {
+      rect.cell-load {
+        fill: #DCEDC8;
+      }
+      rect.cell-store {
+        fill: #FFCDD2;
+      }
+    }
+  }
 }
 
 @mixin mobile {
