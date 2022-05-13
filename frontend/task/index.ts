@@ -1,7 +1,7 @@
 import {extractLevelSpecific, getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, cancelled} from "typed-redux-saga";
+import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, cancelled, spawn} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {PrinterLib} from "./libs/printer/printer_lib";
@@ -44,7 +44,7 @@ import {PlayerInstant} from "../player";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
-import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
+import {createQuickAlgoLibraryExecutor, makeContext, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -168,6 +168,7 @@ function* createContext() {
             const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
             try {
                 contextLib = contextFactory(display, levelGridInfos);
+                console.log('create new library', contextLib);
                 quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context, state.environment);
             } catch (e) {
                 console.error("Cannot create context", e);
@@ -356,9 +357,11 @@ function* handleLibrariesEventListenerSaga(app: App) {
             yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
                 console.log('exec done, update task state');
                 const context = quickAlgoLibraries.getContext(null, state.environment);
-                const contextState = getCurrentImmerState(context.getInnerState());
-                console.log('get new state', contextState);
-                app.dispatch(taskUpdateState(contextState));
+                if (context && context.implementsInnerState()) {
+                    const contextState = getCurrentImmerState(context.getInnerState());
+                    console.log('get new state', contextState);
+                    app.dispatch(taskUpdateState(contextState));
+                }
             });
         });
     }
@@ -445,7 +448,7 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
     console.log('update current test', context);
 
     // Save context state for the test we have just left
-    if (context && !payload.recreateContext && null !== state.task.previousTestId) {
+    if (context && !payload.recreateContext && null !== state.task.previousTestId && context.implementsInnerState()) {
         const currentState = getCurrentImmerState(context.getInnerState());
         yield* put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState}));
     }
@@ -480,16 +483,81 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
     }
 }
 
-function* contextResetAndReloadStateSaga(innerState = null) {
+function* contextResetAndReloadStateSaga(app: App, innerState = null, instant: PlayerInstant = null) {
     const state: AppStore = yield* select();
     const currentTest = selectCurrentTest(state);
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context) {
         context.resetAndReloadState(currentTest, state, innerState);
-        const contextState = getCurrentImmerState(context.getInnerState());
-        console.log('get new state', contextState);
-        yield* put(taskUpdateState(contextState));
+        if (instant) {
+            if (context.implementsInnerState()) {
+                const contextState = getCurrentImmerState(context.getInnerState());
+                console.log('get new state', contextState);
+                yield* put(taskUpdateState(contextState));
+            } else {
+                yield* call(contextReplayPreviousQuickalgoCalls, app, instant);
+            }
+        }
+    }
+}
+
+function* contextReplayPreviousQuickalgoCalls(app: App, instant: PlayerInstant) {
+    const state: AppStore = yield* select();
+    let instants = state.player.instants;
+    let currentInstantIndex = instants.indexOf(instant);
+    let startReplayInstantIndex = 0;
+    for (let i = currentInstantIndex; i >= 0; i--) {
+        let consideredInstant = instants[i];
+        if (-1 !== ['stepper.exit', 'task/updateCurrentTestId', 'task/changeLevel'].indexOf(consideredInstant.event[1])) {
+            // If this is the first event we find (before compile.success), it means we weren't in a program
+            return;
+        }
+        if (consideredInstant.event[1] === 'compile.success') {
+            startReplayInstantIndex = i;
+            break;
+        }
+    }
+
+    const stepperState = instants[startReplayInstantIndex].state.stepper;
+    if (stepperState.currentStepperState) {
+        console.log('Task reset without inner state', {
+            currentInstantIndex,
+            startReplayInstantIndex,
+            stepperState
+        });
+
+        const stepperContext = makeContext(stepperState, {
+            interactAfter: (arg) => {
+                return new Promise((resolve, reject) => {
+                    app.dispatch({
+                        type: StepperActionTypes.StepperInteract,
+                        payload: {stepperContext, arg},
+                        meta: {resolve, reject}
+                    });
+                });
+            },
+            dispatch: app.dispatch,
+            environment: app.environment,
+        });
+
+        const executor = stepperContext.quickAlgoCallsExecutor;
+
+        console.log('our executor', executor);
+
+        for (let i = startReplayInstantIndex; i <= currentInstantIndex; i++) {
+            let consideredInstant = instants[i];
+            if (consideredInstant.quickalgoLibraryCalls && consideredInstant.quickalgoLibraryCalls.length) {
+                console.log('replay quickalgo library calls', consideredInstant.quickalgoLibraryCalls);
+                for (let quickalgoCall of consideredInstant.quickalgoLibraryCalls) {
+                    const {module, action, args} = quickalgoCall;
+                    console.log('start call execution', quickalgoCall);
+
+                    // @ts-ignore
+                    yield* spawn(executor, module, action, args);
+                }
+            }
+        }
     }
 }
 
@@ -634,7 +702,7 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(StepperActionTypes.StepperExit, function* () {
-            yield* call(contextResetAndReloadStateSaga);
+            yield* call(contextResetAndReloadStateSaga, app);
             console.log('put task reset done to true');
             yield* put(taskResetDone(true));
         });
@@ -761,7 +829,7 @@ export default function (bundle: Bundle) {
 
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context && (!quick || -1 !== ['compile.success', 'task/updateCurrentTestId', 'task/changeLevel'].indexOf(instant.event[1]))) {
-                yield* call(contextResetAndReloadStateSaga, taskData && taskData.state ? taskData.state : null);
+                yield* call(contextResetAndReloadStateSaga, app, taskData && taskData.state ? taskData.state : null, instant);
                 console.log('DO RESET DISPLAY');
                 context.redrawDisplay();
             }
@@ -793,7 +861,10 @@ export default function (bundle: Bundle) {
 
             const context = quickAlgoLibraries.getContext(null, state.environment);
             context.resetAndReloadState(currentTest, state);
-            stepperState.contextState = getCurrentImmerState(context.getInnerState());
+
+            if (context.implementsInnerState()) {
+                stepperState.contextState = getCurrentImmerState(context.getInnerState());
+            }
         });
     });
 }

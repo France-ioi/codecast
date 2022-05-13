@@ -214,7 +214,7 @@ export class QuickAlgoLibrary {
 
     resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null, innerState: any = null) {
         this.reset(taskInfos, appState);
-        if (this.reloadInnerState) {
+        if (this.implementsInnerState()) {
             this.reloadInnerState(createDraft(innerState ? innerState : this.getInnerState()));
         }
     };
@@ -241,8 +241,12 @@ export class QuickAlgoLibrary {
     };
 
     getInnerState() {
-        return {};
+        return null;
     };
+
+    implementsInnerState() {
+        return false;
+    }
 
     reloadInnerState(state: any): void {
     }

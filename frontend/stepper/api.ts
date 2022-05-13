@@ -517,16 +517,17 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         }
         console.log('after make async library call', libraryCallResult);
 
-        const newStateValue = context.getInnerState();
-        const newState = getCurrentImmerState(newStateValue);
-        console.log('NEW LIBRARY STATE', newState);
+        if (context.implementsInnerState()) {
+            const newState = getCurrentImmerState(context.getInnerState());
+            console.log('NEW LIBRARY STATE', newState);
 
-        if (stepperContext.state) {
-            stepperContext.state = {
-                ...stepperContext.state,
-                contextState: newState,
-            };
-            console.log('stepper context after', stepperContext.state.contextState);
+            if (stepperContext.state) {
+                stepperContext.state = {
+                    ...stepperContext.state,
+                    contextState: newState,
+                };
+                console.log('stepper context after', stepperContext.state.contextState);
+            }
         }
 
         // let primitiveValue;

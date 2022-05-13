@@ -555,9 +555,8 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     }
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
-    if (context && context.getInnerState) {
-        const contextState = context.getInnerState();
-        state.task.state = getCurrentImmerState(contextState);
+    if (context && context.implementsInnerState()) {
+        state.task.state = getCurrentImmerState(context.getInnerState());
     }
 
     state.stepper.currentStepperState = stepperContext.state;
@@ -995,9 +994,10 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
 
         taskContext.display = false;
         taskContext.resetAndReloadState(selectCurrentTest(state), state);
-        stepperContext.state.contextState = getCurrentImmerState(taskContext.getInnerState());
-
-        console.log('current task state', taskContext.getInnerState());
+        if (taskContext.implementsInnerState()) {
+            stepperContext.state.contextState = getCurrentImmerState(taskContext.getInnerState());
+            console.log('current task state', taskContext.getInnerState());
+        }
 
         const blocksData = getContextBlocksDataSelector(state, taskContext);
 
