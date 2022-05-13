@@ -529,7 +529,8 @@ function getAudioTimeStep(state: AppStore) {
 }
 
 function* watchRecordingProgressSaga(app: App) {
-    if ('main' !== app.environment) {
+    const state = yield* select();
+    if ('main' !== app.environment || TaskPlatformMode.RecordingProgress !== getTaskPlatformMode(state)) {
         return;
     }
 
