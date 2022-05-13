@@ -32,7 +32,7 @@ export default {
             standardBlocks: {
                 includeAll: false,
                 wholeCategories: [],
-                singleBlocks: ["controls_repeat", "procedures_defnoreturn"],
+                singleBlocks: ["controls_repeat", "procedures_defnoreturn", "math_number"],
             }
         },
         overlayFileName: images.find(image => -1 !== image.path.default.indexOf("grid5.png")).path.default,

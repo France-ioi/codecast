@@ -2,6 +2,7 @@ import {App} from "../../index";
 import {AppStore, AppStoreReplay} from "../../store";
 import {createDraft} from "immer";
 import quickalgoI18n from "../../lang/quickalgoI18n";
+import merge from 'lodash.merge';
 
 //TODO: Handle multiples libraries at once.
 // For now, we only use 1 library
@@ -136,16 +137,17 @@ export class QuickAlgoLibrary {
 
     // Set the localLanguageStrings for this context
     setLocalLanguageStrings(localLanguageStrings) {
+        console.log('set local language strings', localLanguageStrings);
         window.stringsLanguage = window.stringsLanguage && window.stringsLanguage in localLanguageStrings ? window.stringsLanguage : "fr";
         window.languageStrings = window.languageStrings || {};
 
         if (typeof window.languageStrings != "object") {
             console.error("window.languageStrings is not an object");
         } else { // merge translations
-            window.languageStrings = {
-                ...window.languageStrings,
-                ...localLanguageStrings[window.stringsLanguage],
-            }
+            window.languageStrings = merge(
+                window.languageStrings,
+                localLanguageStrings[window.stringsLanguage],
+            );
         }
         this.strings = window.languageStrings;
 
@@ -197,6 +199,15 @@ export class QuickAlgoLibrary {
             // When a function is used outside of an execution
             callback(value);
         }
+    };
+
+    debug_alert (message, callback) {
+        // Display debug information
+        message = message ? message.toString() : '';
+        if (this.display) {
+            alert(message);
+        }
+        this.callCallback(callback, null);
     };
 
     setCurNode(curNode) {
