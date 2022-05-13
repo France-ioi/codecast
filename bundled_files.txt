@@ -5,6 +5,12 @@ bebras-modules/pemFioi/delayFactory-1.0.js
 bebras-modules/pemFioi/raphaelFactory-1.0.js
 bebras-modules/pemFioi/conceptViewer-1.0-mobileFirst.js
 bebras-modules/pemFioi/blocklyRobot_lib-1.0.0.js
+bebras-modules/pemFioi/blocklyTurtle_lib.js
+bebras_modules/pemFioi/quickpi/quickpi_board.js
+bebras_modules/ext/quickpi/quickpi.js
+bebras_modules/pemFioi/quickpi/blocklyQuickPi_screen.js
+bebras_modules/pemFioi/quickpi/blocklyQuickPi_store.js
+bebras_modules/pemFioi/quickpi/blocklyQuickPi_lib.js
 bebras-modules/integrationAPI.01/official/platform-pr.js
 bebras-modules/integrationAPI.01/installationAPI.01/pemFioi/installation.js
 bebras-modules/integrationAPI.01/official/miniPlatform.js
