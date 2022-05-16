@@ -143,13 +143,15 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
                 let constList = context.customConstants[generatorName];
                 for (let iConst = 0; iConst < constList.length; iConst++) {
                     let name = constList[iConst].name;
-                    if (contextStrings.constant && contextStrings.constant[name]) {
-                        name = contextStrings.constant[name];
-                    }
+                    // if (contextStrings.constant && contextStrings.constant[name]) {
+                    //     name = contextStrings.constant[name];
+                    // }
                     availableBlocks.push({
                         generatorName,
                         name,
                         caption: name,
+                        code: name,
+                        category: 'constants',
                         type: BlockType.Constant,
                         value: constList[iConst].value,
                     });
@@ -171,7 +173,22 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
             block.description = contextStrings.description[block.name];
         }
 
-        if (BlockType.Function === block.type) {
+        if (BlockType.Function !== block.type) {
+            return;
+        }
+
+        if (context.docGenerator) {
+            let blockDesc = context.docGenerator.blockDescription(block.name);
+            let funcProto = blockDesc.substring(blockDesc.indexOf('<code>') + 6, blockDesc.indexOf('</code>'));
+            let blockHelp = blockDesc.substring(blockDesc.indexOf('</code>') + 7);
+            if (blockHelp.trim().substring(0, 1) === ':') {
+                blockHelp = blockHelp.substring(blockHelp.indexOf(':') + 1).trim();
+            }
+            block.caption = funcProto;
+            block.description = blockHelp;
+            block.snippet = getSnippet(block.caption);
+            // console.log('generated description', {blockDesc, funcProto, blockHelp});
+        } else {
             if (block.description) {
                 block.description = block.description.replace(/@/g, block.code);
             }

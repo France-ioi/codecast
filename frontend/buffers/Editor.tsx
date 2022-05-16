@@ -193,7 +193,7 @@ export function Editor(props: EditorProps) {
             cursorPosition = editor.current.getCursorPosition();
             editor.current.insertSnippet(text, cursorPosition);
             cursorPosition = editor.current.getCursorPosition();
-            if (newLineAfter) {
+            if (newLineAfter && -1 === text.indexOf('${')) {
                 editor.current.session.insert(cursorPosition, "\n" + ' '.repeat(indentationCurrentLine));
             }
         } else {

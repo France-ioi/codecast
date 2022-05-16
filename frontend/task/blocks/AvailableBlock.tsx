@@ -4,6 +4,7 @@ import {useDrag} from "react-dnd";
 import {getEmptyImage} from "react-dnd-html5-backend";
 import {useDispatch} from "react-redux";
 import {ActionTypes as BufferActionTypes} from '../../buffers/actionTypes';
+import {toHtml} from "../../utils/sanitize";
 
 export interface AvailableBlockProps {
     block: Block,
@@ -43,9 +44,7 @@ export function AvailableBlock(props: AvailableBlockProps) {
                 {block.caption}
             </div>
 
-            {block.description && <div className="task-available-block-description">
-                {block.description}
-            </div>}
+            {block.description && <div className="task-available-block-description" dangerouslySetInnerHTML={toHtml(block.description)}/>}
         </div>
     )
 }

@@ -6,6 +6,7 @@ import {getMessage} from "../../lang";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCaretUp} from "@fortawesome/free-solid-svg-icons/faCaretUp";
 import {faCaretDown} from "@fortawesome/free-solid-svg-icons/faCaretDown";
+import {quickAlgoLibraries} from "../libs/quickalgo_librairies";
 
 export interface AvailableBlockCategoryProps {
     blocks: Block[],
@@ -17,11 +18,15 @@ export function AvailableBlockCategory(props: AvailableBlockCategoryProps) {
     const {name, blocks} = props;
 
     const [open, setOpen] = useState(false);
+    const context = quickAlgoLibraries.getContext(null, 'main');
+
+    const categoryName = context && context.strings && context.strings.categories && name in context.strings.categories ?
+        context.strings.categories[name] : getMessage('TASK_BLOCK_CATEGORY_' + name.toLocaleUpperCase());
 
     return (
         <div className="block-category">
             <div className="block-category-header" onClick={() => setOpen(!open)}>
-                <div className="block-category-name">{getMessage('TASK_BLOCK_CATEGORY_' + name.toLocaleUpperCase())}</div>
+                <div className="block-category-name">{categoryName}</div>
                 <div className="block-category-caret">
                     <FontAwesomeIcon icon={open ? faCaretUp : faCaretDown}/>
                 </div>

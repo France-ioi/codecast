@@ -512,7 +512,7 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
                 snippet: name in specialSnippets ? specialSnippets[name].snippet : code,
                 code,
                 category: tokenCategories[token],
-                showInBlocks: name in specialSnippets && false === specialSnippets[name].showInBlocks ? false : undefined,
+                showInBlocks: (name in specialSnippets && false === specialSnippets[name].showInBlocks) || -1 !== Object.values(bracketsWords).indexOf(token) ? false : undefined,
             });
         }
 
