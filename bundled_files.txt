@@ -29,3 +29,5 @@ scratch:bebras-modules/ext/scratch/fixes.js
 scratch:bebras-modules/ext/scratch/procedures.js
 bebras-modules/pemFioi/quickAlgo/blockly_blocks.js
 bebras-modules/pemFioi/quickAlgo/blockly_interface.js
+bebras-modules/ext/processing/1.4.8/processing.min.js
+bebras-modules/pemFioi/blocklyProcessing_lib.js

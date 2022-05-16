@@ -105,6 +105,7 @@ export class QuickAlgoLibrary {
     raphaelFactory: any;
     blocklyHelper: any;
     onChange: any;
+    docGenerator: any;
 
     constructor(display: boolean, infos: any) {
         this.display = display;

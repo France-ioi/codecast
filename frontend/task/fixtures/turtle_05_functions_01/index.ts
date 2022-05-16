@@ -7,8 +7,6 @@ const images = [
     {id: 'turtleUpImg', path: require('./turtleup.png')},
 ];
 
-console.log('images', images, images.find(image => -1 !== image.path.default.indexOf("turtle.png")).path.default);
-
 export default {
     gridInfos: {
         context: 'turtle',
