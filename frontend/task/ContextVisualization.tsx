@@ -1,8 +1,10 @@
 import React, {useEffect} from "react";
-import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
+import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "./libs/quickalgo_libraries";
 import {useAppSelector} from "../hooks";
 import {useResizeDetector} from "react-resize-detector";
 import {TaskTestsSelector} from "./TaskTestsSelector";
+import {put} from "typed-redux-saga";
+import {useDispatch} from "react-redux";
 
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();
@@ -11,13 +13,17 @@ export function ContextVisualization() {
     const taskLoaded = useAppSelector(state => state.task.loaded);
     const {width, height, ref} = useResizeDetector();
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
+    const dispatch = useDispatch();
+
+    const context = quickAlgoLibraries.getContext(null, 'main');
 
     useEffect(() => {
-        quickAlgoLibraries.redrawDisplay();
+        if (context) {
+            dispatch({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
+        }
     }, [taskLoaded]);
 
     useEffect(() => {
-        const context = quickAlgoLibraries.getContext(null, 'main');
         if (context) {
             context.updateScale();
         }

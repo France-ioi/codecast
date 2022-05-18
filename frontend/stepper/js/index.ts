@@ -2,7 +2,7 @@ import {AppStore, CodecastPlatform} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App, Codecast} from "../../index";
-import {quickAlgoLibraries, QuickAlgoLibrary} from "../../task/libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {selectAnswer} from "../../task/selectors";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {TaskLevelName} from "../../task/platform/platform_slice";
@@ -11,6 +11,7 @@ import {delay} from "../api";
 import {getMessage, getMessageChoices} from "../../lang";
 import {select} from "typed-redux-saga";
 import {displayModal} from "../../common/prompt_modal";
+import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
 
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
     let blocklyHelper;

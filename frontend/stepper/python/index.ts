@@ -5,7 +5,7 @@ import {AppStore, CodecastPlatform} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App, Codecast} from "../../index";
-import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {Action} from "redux";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {selectAnswer} from "../../task/selectors";

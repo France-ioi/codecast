@@ -1,6 +1,6 @@
 import React from "react";
 import {InputOutputVisualization} from "./InputOutputVisualization";
-import {QuickAlgoLibrary} from "../quickalgo_librairies";
+import {QuickAlgoLibrary} from "../quickalgo_library";
 import {call, fork, put, race, select, take, takeEvery} from "typed-redux-saga";
 import {AppStore} from "../../../store";
 import {channel} from "redux-saga";

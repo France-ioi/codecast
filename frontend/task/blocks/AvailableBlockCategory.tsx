@@ -6,7 +6,7 @@ import {getMessage} from "../../lang";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCaretUp} from "@fortawesome/free-solid-svg-icons/faCaretUp";
 import {faCaretDown} from "@fortawesome/free-solid-svg-icons/faCaretDown";
-import {quickAlgoLibraries} from "../libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 
 export interface AvailableBlockCategoryProps {
     blocks: Block[],

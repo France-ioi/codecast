@@ -30,7 +30,7 @@ import * as C from '@france-ioi/persistent-c';
 import {
     default as ApiBundle,
     makeContext,
-    performStep,
+    performStep, QuickalgoLibraryCall,
     StepperContext,
     StepperContextParameters,
     StepperError,
@@ -66,7 +66,7 @@ import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App, Codecast} from "../index";
-import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
+import {mainQuickAlgoLogger, quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
 import {selectCurrentTest, taskResetDone} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
@@ -903,7 +903,9 @@ function* stepperStepSaga(app: App, action) {
                 dispatch: app.dispatch,
                 waitForProgress,
                 waitForProgressOnlyAfterIterationsCount: action.payload.immediate ? 10000 : null, // For BC, we let at maximum 10.000 actions before forcing waiting a stepper.progress event
-                quickAlgoCallsLogger,
+                quickAlgoCallsLogger: quickAlgoCallsLogger ? quickAlgoCallsLogger : ('main' === state.environment ? (quickAlgoCall: QuickalgoLibraryCall) => {
+                    mainQuickAlgoLogger.logQuickAlgoLibraryCall(quickAlgoCall);
+                } : null),
                 environment: state.environment,
                 speed: action.payload.useSpeed && !action.payload.immediate ? stepper.speed : null,
                 executeEffects: app.stepperApi.executeEffects,
@@ -1014,7 +1016,7 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         yield* put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: false});
 
         taskContext.display = true;
-        taskContext.redrawDisplay();
+        yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         console.log('End run from beginning');
     }
 }

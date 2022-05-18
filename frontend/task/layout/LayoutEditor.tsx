@@ -5,7 +5,7 @@ import {useAppSelector} from "../../hooks";
 import {AvailableBlocks} from "../blocks/AvailableBlocks";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
-import {quickAlgoLibraries} from "../libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {getContextBlocksDataSelector} from "../blocks/blocks";
 import {taskSetBlocksPanelCollapsed} from "../task_slice";
 import {useDispatch} from "react-redux";

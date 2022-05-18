@@ -8,11 +8,11 @@
 */
 
 import * as C from '@france-ioi/persistent-c';
-import {all, call} from 'typed-redux-saga';
+import {all, call, put} from 'typed-redux-saga';
 import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
-import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
+import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
 import {createDraft} from "immer";
 import {getCurrentImmerState} from "../task/utils";
 import {ActionTypes as CompileActionTypes} from "./actionTypes";
@@ -227,7 +227,7 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
      * We create a new state object here instead of mutating the state. This is intended.
      */
 
-    const state = stepper.currentStepperState;
+    const state = stepper ? stepper.currentStepperState : null;
 
     const stepperContext: StepperContext = {
         interactBefore: interactBefore ? interactBefore : () => {
@@ -243,12 +243,12 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
         resume: null,
         position: getNodeStartRow(state),
         lineCounter: 0,
-        speed: undefined !== speed ? speed : stepper.speed,
+        speed: undefined !== speed ? speed : (stepper ? stepper.speed : 0),
         unixNextStepCondition: 0,
-        state: {
+        state: state ? {
             ...state,
             controls: resetControls(state.controls),
-        },
+        } : {} as StepperState,
         quickAlgoContext: quickAlgoLibraries.getContext(null, environment),
         environment,
         executeEffects,
@@ -256,7 +256,9 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
 
-    Codecast.runner.enrichStepperContext(stepperContext, state);
+    if (Codecast.runner && state) {
+        Codecast.runner.enrichStepperContext(stepperContext, state);
+    }
 
     return stepperContext;
 }
@@ -456,7 +458,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
             // console.log('RELOAD CONTEXT STATE', draft.contextState, original(draft.contextState));
             const draft = createDraft(stepperContext.state.contextState);
             context.reloadInnerState(draft);
-            context.redrawDisplay();
+            await stepperContext.dispatch({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         }
 
 

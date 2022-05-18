@@ -1,4 +1,4 @@
-import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
 import {current, isDraft} from "immer";
 import {checkPythonCode, getPythonBlocksUsage} from "./python_utils";
 import {getMessage} from "../lang";

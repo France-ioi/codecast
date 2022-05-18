@@ -11,7 +11,7 @@ import {getAvailableModules} from "./utils";
 import {getMessage, getMessageChoices} from "../lang";
 import {Block, BlockType, getContextBlocksDataSelector} from "./blocks/blocks";
 import {AppStore} from "../store";
-import {QuickAlgoLibrary} from "./libs/quickalgo_librairies";
+import {QuickAlgoLibrary} from "./libs/quickalgo_library";
 import {analysisDirectiveViewDict} from "../stepper/views";
 
 const pythonCountPatterns = [

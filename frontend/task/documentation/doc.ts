@@ -1,6 +1,6 @@
 import {Bundle} from "../../linker";
 import {call, put, select, takeEvery} from "typed-redux-saga";
-import {quickAlgoLibraries} from "../libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {extractLevelSpecific} from "../utils";
 import {
     DocumentationConcept,

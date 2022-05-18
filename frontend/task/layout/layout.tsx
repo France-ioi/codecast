@@ -17,14 +17,13 @@ import {ZoneLayoutVisualizationGroup} from "./ZoneLayoutVisualizationGroup";
 import {LayoutStackView} from "./LayoutStackView";
 import {LayoutEditor} from "./LayoutEditor";
 import {LayoutDirective} from "./LayoutDirective";
-import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_librairies";
+import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {Screen} from "../../common/screens";
 import {Documentation} from "../documentation/Documentation";
 import {getMessage} from "../../lang";
 import {call, put, select, takeEvery} from "typed-redux-saga";
 import {App} from "../../index";
 import {PlayerInstant} from "../../player";
-import {getBufferModel} from "../../buffers/selectors";
 import {askConfirmation} from "../../alert";
 import {selectAnswer} from "../selectors";
 

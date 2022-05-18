@@ -1,88 +1,8 @@
 import {App} from "../../index";
-import {AppStore, AppStoreReplay} from "../../store";
+import {AppStoreReplay} from "../../store";
 import {createDraft} from "immer";
 import quickalgoI18n from "../../lang/quickalgoI18n";
 import merge from 'lodash.merge';
-
-//TODO: Handle multiples libraries at once.
-// For now, we only use 1 library
-export class QuickAlgoLibraries {
-    libraries: {[name: string]: {[mode: string]: QuickAlgoLibrary}} = {};
-
-    addLibrary(library: QuickAlgoLibrary, name: string, environment: string) {
-        if (!(name in this.libraries)) {
-            this.libraries[name] = {};
-        }
-        this.libraries[name][environment] = library;
-    }
-
-    getContext(name: string = null, environment: string): QuickAlgoLibrary {
-        if (name in this.libraries) {
-            return this.libraries[name][environment];
-        }
-
-        return Object.keys(this.libraries).length ? this.libraries[Object.keys(this.libraries)[0]][environment] : null;
-    }
-
-    reset(taskInfos = null, appState: AppStore = null) {
-        this.applyOnLibraries('reset', [taskInfos, appState]);
-    }
-
-    redrawDisplay(taskInfos = null) {
-        this.applyOnLibraries('redrawDisplay', [taskInfos]);
-    }
-
-    applyOnLibraries(method, args) {
-        for (let library of this.getAllLibraries()) {
-            library[method].apply(library, args);
-        }
-    }
-
-    getVisualization() {
-        for (let library of this.getAllLibraries()) {
-            if (library.getComponent()) {
-                return library.getComponent();
-            }
-        }
-
-        return null;
-    }
-
-    getSagas(app: App) {
-        const sagas = [];
-        for (let library of this.getAllLibraries()) {
-            const librarySagas = library.getSaga(app);
-            if (librarySagas) {
-                sagas.push(librarySagas);
-            }
-        }
-
-        return sagas;
-    }
-
-    getEventListeners() {
-        let listeners = {} as {[key: string]: {module: string, method: string}};
-        for (let [module, libraries] of Object.entries(this.libraries)) {
-            for (let library of Object.values(libraries)) {
-                const libraryListeners = library.getEventListeners();
-                if (libraryListeners && Object.keys(libraryListeners).length) {
-                    for (let [eventName, method] of Object.entries(libraryListeners)) {
-                        listeners[eventName] = {module, method};
-                    }
-                }
-            }
-        }
-
-        return listeners;
-    }
-
-    getAllLibraries() {
-        return Object.values(this.libraries).reduce((prev, libs) => [...prev, ...Object.values(libs)], []);
-    }
-}
-
-export const quickAlgoLibraries = new QuickAlgoLibraries();
-window.quickAlgoLoadedLibraries = quickAlgoLibraries;
 
 export class QuickAlgoLibrary {
     display: boolean;
@@ -216,12 +136,8 @@ export class QuickAlgoLibrary {
         this.curNode = curNode;
     };
 
-    // Placeholders, should be actually defined by the library
+    // Should be actually defined by the library
     reset(taskInfos = null, appState: AppStoreReplay = null) {
-        // Reset the context
-        if (this.display) {
-            this.redrawDisplay();
-        }
     };
 
     resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null, innerState: any = null) {
@@ -229,10 +145,6 @@ export class QuickAlgoLibrary {
         if (this.implementsInnerState()) {
             this.reloadInnerState(createDraft(innerState ? innerState : this.getInnerState()));
         }
-    };
-
-    redrawDisplay() {
-        // Reset the context display
     };
 
     updateScale() {
@@ -276,8 +188,3 @@ export class QuickAlgoLibrary {
     }
 }
 
-window.quickAlgoResponsive = true;
-
-window.quickAlgoContext = function (display: boolean, infos: any) {
-    return new QuickAlgoLibrary(display, infos);
-}

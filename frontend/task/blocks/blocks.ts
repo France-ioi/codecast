@@ -1,14 +1,14 @@
 import {AppStore, AppStoreReplay, CodecastPlatform} from "../../store";
 import {getPythonSpecificBlocks} from "../python_utils";
-import {quickAlgoLibraries, QuickAlgoLibrary} from "../libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {getCSpecificBlocks} from "../../stepper/views/c/utils";
 import {Bundle} from "../../linker";
 import {call, debounce, put, select, takeEvery} from "typed-redux-saga";
 import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {BlocksUsage, taskSetBlocksUsage} from "../task_slice";
-import {getBufferModel} from "../../buffers/selectors";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
 import {selectAnswer} from "../selectors";
+import {QuickAlgoLibrary} from "../libs/quickalgo_library";
 
 export enum BlockType {
     Function = 'function',
