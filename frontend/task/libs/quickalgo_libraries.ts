@@ -224,18 +224,27 @@ export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = 
                         }
                     }
 
-                    yield* call(contextReplayPreviousQuickalgoCalls, app, quickAlgoCalls);
+                    mainQuickAlgoLogger.setQuickAlgoLibraryCalls(quickAlgoCalls);
                 }
             }
-        } else if ('main' === state.environment && !context.implementsInnerState()) {
-            const callsToReplay = mainQuickAlgoLogger.getQuickAlgoLibraryCalls();
-            console.log('calls to replay', callsToReplay);
-            yield* call(contextReplayPreviousQuickalgoCalls, app, callsToReplay);
         }
     }
 }
 
+export function* quickAlgoLibraryRedrawDisplaySaga(app: App) {
+    const state: AppStore = yield* select();
+
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+    if (context && 'main' === state.environment && !context.implementsInnerState()) {
+        const callsToReplay = mainQuickAlgoLogger.getQuickAlgoLibraryCalls();
+        console.log('calls to replay', callsToReplay);
+        yield* call(contextReplayPreviousQuickalgoCalls, app, callsToReplay);
+    }
+}
+
 function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: QuickalgoLibraryCall[]) {
+    yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
+
     const stepperContext = makeContext(null, {
         interactAfter: (arg) => {
             return new Promise((resolve, reject) => {
@@ -279,13 +288,18 @@ class MainQuickAlgoLogger {
     getQuickAlgoLibraryCalls() {
         return this.quickalgoLibraryCalls;
     }
+
+    setQuickAlgoLibraryCalls(calls: QuickalgoLibraryCall[]) {
+        this.quickalgoLibraryCalls = calls;
+    }
 }
 
 export const mainQuickAlgoLogger = new MainQuickAlgoLogger();
 
 export default function(bundle: Bundle) {
     bundle.addSaga(function* (app: App) {
-        yield* takeEvery(QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay, function* () {
+        // @ts-ignore
+        yield* takeEvery(QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay, function* ({payload}) {
             console.log('ici redraw display');
             const state = yield* select();
             const context = quickAlgoLibraries.getContext(null, state.environment);
@@ -295,7 +309,7 @@ export default function(bundle: Bundle) {
                     // @ts-ignore
                     context.redrawDisplay();
                 } else {
-                    yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
+                    yield* call(quickAlgoLibraryRedrawDisplaySaga, app);
                 }
             }
         });
