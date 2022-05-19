@@ -54,7 +54,7 @@ export default class PythonRunner extends AbstractRunner {
     private _nbActions = 0;
 
     constructor(context) {
-        super();
+        super(context);
         this.context = context;
         this.onError = context.onError;
     }

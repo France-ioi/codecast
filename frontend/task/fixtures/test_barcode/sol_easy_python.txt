@@ -1,0 +1,20 @@
+from barcode import *
+
+firstOne = 100
+lastOne = 100
+
+digits = [0]*20
+w = width()
+for col in range(20):
+    lum = getPixelLuminosity(col, 0)
+    if lum < 100:
+        if firstOne == 100:
+            firstOne = col
+        lastOne = col
+        digits[col] = 1
+    else:
+        digits[col] = 0
+string = ""
+for col in range(firstOne, lastOne + 1):
+    string = string + str(digits[col])
+printResult(string)

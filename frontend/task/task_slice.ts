@@ -2,6 +2,7 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import StringRotationFixture from './fixtures/14_strings_05_rotation';
 import TurtleFixture from './fixtures/turtle_05_functions_01';
 import ProcessingFixture from './fixtures/test_processing';
+import BarcodeFixture from './fixtures/test_barcode';
 import QuickPiFixture from './fixtures/quickpi_testbed';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
 import {AppStore} from "../store";
@@ -13,6 +14,7 @@ const availableTasks = {
     quickpi: QuickPiFixture,
     processing: ProcessingFixture,
     printer: StringRotationFixture,
+    barcode: BarcodeFixture,
 };
 
 export interface TaskSubmission {

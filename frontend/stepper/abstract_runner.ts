@@ -6,6 +6,10 @@ export default abstract class AbstractRunner {
     public _isFinished: boolean = false;
     public _steps: number = 0;
 
+    constructor(context) {
+        context.runner = this;
+    }
+
     public static needsCompilation(): boolean {
         return false;
     }

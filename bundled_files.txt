@@ -31,3 +31,6 @@ bebras-modules/pemFioi/quickAlgo/blockly_blocks.js
 bebras-modules/pemFioi/quickAlgo/blockly_interface.js
 bebras-modules/ext/processing/1.4.8/processing.min.js
 bebras-modules/pemFioi/blocklyProcessing_lib.js
+bebras-modules/pemFioi/barcode/context.js
+bebras-modules/pemFioi/barcode/display.js
+bebras-modules/pemFioi/shared/blocks_helper.js
