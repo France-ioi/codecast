@@ -1,6 +1,7 @@
 export default {
     gridInfos: {
         context: 'barcode',
+        importModules: ['blocks_helper', 'barcode_display', 'barcode_context'],
         hideSaveOrLoad: false,
         actionDelay: 200,
         includeBlocks: {
@@ -11,7 +12,7 @@ export default {
                     'setPixelLuminosity',
                     'width',
                     'height',
-                    'printResult'
+                    'printResult',
                 ]
             },
             standardBlocks: {

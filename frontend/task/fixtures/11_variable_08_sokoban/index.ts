@@ -19,6 +19,7 @@ export default {
     gridInfos: {
         context: 'robot',
         images,
+        importModules: ['blockly-robot-1.0'],
         conceptViewer: ["extra_variable"],
         contextType: "sokoban",
         backgroundColor: "#c2c6f2",

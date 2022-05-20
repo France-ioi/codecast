@@ -17,6 +17,7 @@ import {ActionTypes as IOActionTypes} from "../../stepper/io/actionTypes";
 import {IoMode} from "../../stepper/io";
 import {PlayerInstant} from "../../player";
 import {makeContext, QuickalgoLibraryCall} from "../../stepper/api";
+import {importModules} from "./import_modules";
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -127,6 +128,9 @@ export function* createQuickalgoLibrary() {
             },
         },
     };
+    if (levelGridInfos.importModules) {
+        yield* call(importModules, levelGridInfos.importModules, 'bebras-modules');
+    }
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];

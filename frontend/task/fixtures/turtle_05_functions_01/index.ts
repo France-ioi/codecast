@@ -10,6 +10,7 @@ const images = [
 export default {
     gridInfos: {
         context: 'turtle',
+        importModules: ['blockly-turtle'],
         images,
         hideSaveOrLoad: false,
         turtleFileName: images.find(image => -1 !== image.path.default.indexOf("turtle.png")).path.default,

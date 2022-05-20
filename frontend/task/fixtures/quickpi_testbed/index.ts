@@ -1,6 +1,7 @@
 export default {
     gridInfos: {
         context: 'quickpi',
+        importModules: ['quickpi-board', 'quickpi-connection', 'quickpi-screen', 'blockly-quickpi'],
         hideSaveOrLoad: false,
         actionDelay: 0,
         conceptViewer: [

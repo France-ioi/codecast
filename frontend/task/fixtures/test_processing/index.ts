@@ -1,6 +1,7 @@
 export default {
    gridInfos: {
       context: 'processing',
+      importModules: ['processing-1.4.8', 'blockly-processing'],
       hideSaveOrLoad: false,
       actionDelay: 200,
       buttonHideInitialDrawing: true,

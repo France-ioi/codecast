@@ -4,13 +4,6 @@ bebras-modules/ext/jschannel/jschannel.js
 bebras-modules/pemFioi/delayFactory-1.0.js
 bebras-modules/pemFioi/raphaelFactory-1.0.js
 bebras-modules/pemFioi/conceptViewer-1.0-mobileFirst.js
-bebras-modules/pemFioi/blocklyRobot_lib-1.0.0.js
-bebras-modules/pemFioi/blocklyTurtle_lib.js
-bebras-modules/pemFioi/quickpi/quickpi_board.js
-bebras-modules/ext/quickpi/quickpi.js
-bebras-modules/pemFioi/quickpi/blocklyQuickPi_screen.js
-bebras-modules/pemFioi/quickpi/blocklyQuickPi_store.js
-bebras-modules/pemFioi/quickpi/blocklyQuickPi_lib.js
 bebras-modules/integrationAPI.01/official/platform-pr.js
 bebras-modules/integrationAPI.01/installationAPI.01/pemFioi/installation.js
 bebras-modules/integrationAPI.01/official/miniPlatform.js
@@ -29,8 +22,4 @@ scratch:bebras-modules/ext/scratch/fixes.js
 scratch:bebras-modules/ext/scratch/procedures.js
 bebras-modules/pemFioi/quickAlgo/blockly_blocks.js
 bebras-modules/pemFioi/quickAlgo/blockly_interface.js
-bebras-modules/ext/processing/1.4.8/processing.min.js
-bebras-modules/pemFioi/blocklyProcessing_lib.js
-bebras-modules/pemFioi/barcode/context.js
-bebras-modules/pemFioi/barcode/display.js
-bebras-modules/pemFioi/shared/blocks_helper.js
+bebras-modules/pemFioi/importModules-1.4-mobileFirst.js
