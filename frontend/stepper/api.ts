@@ -462,23 +462,32 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         }
 
 
-        const makeLibraryCall = async () => {
-            let callbackArguments = [];
-            let result = context[module][action].apply(context, [...args, function (a) {
-                console.log('receive callback', arguments);
-                callbackArguments = [...arguments];
-            }]);
-            if (callbackArguments.length && !result) {
-                result = callbackArguments[0];
-                console.log('set result', result);
-            }
+        const makeLibraryCall = () => {
+            return new Promise(resolve => {
+                let callbackArguments = [];
+                let result = context[module][action].apply(context, [...args, function (a) {
+                    console.log('receive callback', arguments);
+                    callbackArguments = [...arguments];
+                    if (callbackArguments.length) {
+                        let argumentResult = callbackArguments[0];
+                        console.log('set result', argumentResult);
+                        resolve(argumentResult);
+                    }
+                }]);
 
-            console.log('MODULE RESULT', result);
-            if (!(Symbol.iterator in Object(result))) {
-                console.log('return result');
-                return result;
-            }
+                console.log('MODULE RESULT', result);
+                if (!(Symbol.iterator in Object(result))) {
+                    console.log('return result');
+                    resolve(result);
+                    return;
+                }
 
+                iterateResult(result)
+                    .then(resolve);
+            });
+        }
+
+        const iterateResult = async (result) => {
             let lastResult;
             while (true) {
                 /* Pull the next effect from the builtin's iterator. */

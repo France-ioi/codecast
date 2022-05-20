@@ -45,4 +45,14 @@ export default abstract class AbstractRunner {
     public isSynchronizedWithAnalysis(analysis): boolean {
         return true;
     }
+
+    waitCallback(callback) {
+        return (value) => {
+            this.noDelay(callback, value);
+        };
+    }
+
+    noDelay(callback, value) {
+        callback(value);
+    }
 }

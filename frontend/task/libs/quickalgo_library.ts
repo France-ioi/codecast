@@ -105,7 +105,7 @@ export class QuickAlgoLibrary {
     waitDelay(callback, value = null) {
         // This function is used only to call the callback to move to next step,
         // but we handle the speed delay in an upper level
-        if (this.runner) {
+        if (this.runner && this.runner.returnCallback) {
             this.runner.returnCallback(callback, value);
         } else {
             callback(value);
