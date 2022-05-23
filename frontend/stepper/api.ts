@@ -468,11 +468,9 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
                 let result = context[module][action].apply(context, [...args, function (a) {
                     console.log('receive callback', arguments);
                     callbackArguments = [...arguments];
-                    if (callbackArguments.length) {
-                        let argumentResult = callbackArguments[0];
-                        console.log('set result', argumentResult);
-                        resolve(argumentResult);
-                    }
+                    let argumentResult = callbackArguments.length ? callbackArguments[0] : undefined;
+                    console.log('set result', argumentResult);
+                    resolve(argumentResult);
                 }]);
 
                 console.log('MODULE RESULT', result);
@@ -483,7 +481,11 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
                 }
 
                 iterateResult(result)
-                    .then(resolve);
+                    .then((argumentResult) => {
+                        console.log('returned element', module, action, argumentResult);
+                        // Use context.waitDelay to transform result to primitive when the library uses generators
+                        context.waitDelay(resolve, argumentResult);
+                    });
             });
         }
 
@@ -492,7 +494,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
             while (true) {
                 /* Pull the next effect from the builtin's iterator. */
                 const {done, value} = result.next();
-                console.log('ITERATOR RESULT', done, value);
+                console.log('ITERATOR RESULT', module, action, done, value);
                 if (done) {
                     return value;
                 }
