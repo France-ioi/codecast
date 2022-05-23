@@ -195,6 +195,7 @@ export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = 
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context) {
+        console.log('quickalgo reset and reload state', innerState);
         context.resetAndReloadState(currentTest, state, innerState);
         if (instant) {
             if (context.implementsInnerState()) {
@@ -231,6 +232,10 @@ export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = 
                     mainQuickAlgoLogger.setQuickAlgoLibraryCalls(quickAlgoCalls);
                 }
             }
+        } else if (context.implementsInnerState()) {
+            const contextState = getCurrentImmerState(context.getInnerState());
+            console.log('get new state without instant', contextState);
+            yield* put(taskUpdateState(contextState));
         }
     }
 }
