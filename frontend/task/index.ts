@@ -6,6 +6,7 @@ import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {AppStore, CodecastPlatform} from "../store";
 import {
+    contextReplayPreviousQuickalgoCalls,
     createQuickalgoLibrary, mainQuickAlgoLogger,
     quickAlgoLibraries,
     QuickAlgoLibrariesActionType,
@@ -30,7 +31,7 @@ import taskSlice, {
     taskSuccessClear,
     taskUpdateState,
     updateCurrentTestId,
-    updateTaskTests, updateTestContextState,
+    updateTaskTests, updateTestContextState, updateTestQuickalgoCalls,
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
@@ -359,15 +360,21 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     yield* put(updateCurrentTestId({testId: 0, record: false, recreateContext: true}));
 }
 
-function* taskUpdateCurrentTestIdSaga({payload}) {
+function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
     const state: AppStore = yield* select();
     const context = quickAlgoLibraries.getContext(null, state.environment);
     console.log('update current test', context);
 
     // Save context state for the test we have just left
-    if (context && !payload.recreateContext && null !== state.task.previousTestId && context.implementsInnerState()) {
-        const currentState = getCurrentImmerState(context.getInnerState());
-        yield* put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState}));
+    if (context && !payload.recreateContext && null !== state.task.previousTestId) {
+        if (context.implementsInnerState()) {
+            const currentState = getCurrentImmerState(context.getInnerState());
+            yield* put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState}));
+        } else {
+            const quickalgoCalls = mainQuickAlgoLogger.getQuickAlgoLibraryCalls();
+            console.log('save quickalgo calls', quickalgoCalls);
+            yield* put(updateTestQuickalgoCalls({testId: state.task.previousTestId, quickalgoCalls}));
+        }
     }
 
     // Stop current execution if there is one
@@ -387,11 +394,15 @@ function* taskUpdateCurrentTestIdSaga({payload}) {
             console.error("Test " + state.task.currentTestId + " does not exist on task ", state.task);
             throw "Couldn't update test during replay, check if the replay is using the appropriate task";
         }
+        context.iTestCase = state.task.currentTestId;
         const contextState = state.task.taskTests[state.task.currentTestId].contextState;
-        if (null !== contextState) {
+        if (null !== contextState && context.implementsInnerState()) {
             console.log('reload context state', contextState);
             context.reloadInnerState(createDraft(contextState));
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
+        } else if (!context.implementsInnerState()) {
+            const callsToReplay = state.task.taskTests[state.task.currentTestId].quickalgoCalls;
+            yield* call(contextReplayPreviousQuickalgoCalls, app, callsToReplay);
         } else {
             const currentTest = selectCurrentTest(state);
             console.log('reload current test', currentTest);
@@ -579,7 +590,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(taskChangeLevel.type, taskChangeLevelSaga);
 
         // @ts-ignore
-        yield* takeEvery(updateCurrentTestId.type, taskUpdateCurrentTestIdSaga);
+        yield* takeEvery(updateCurrentTestId.type, taskUpdateCurrentTestIdSaga, app);
 
         yield* takeLatest(TaskActionTypes.TaskRunExecution, taskRunExecution, app);
 

@@ -7,6 +7,7 @@ import QuickPiFixture from './fixtures/quickpi_testbed';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
+import {QuickalgoLibraryCall} from "../stepper/api";
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -68,14 +69,10 @@ export interface TaskSubmissionResultPayload {
     message?: string,
 }
 
-export interface UpdateTestContextStatePayload {
-    testId: number,
-    contextState: any,
-}
-
 export interface TaskTest {
     data: any,
     contextState: any,
+    quickalgoCalls: QuickalgoLibraryCall[],
 }
 
 export const taskInitialState = {
@@ -142,6 +139,7 @@ export const taskSlice = createSlice({
             state.taskTests = action.payload.map(testData => ({
                 data: testData,
                 contextState: null,
+                quickalgoCalls: [],
             } as TaskTest));
         },
         updateCurrentTestId(state: TaskState, action: PayloadAction<{testId: number, record?: boolean, recreateContext?: boolean}>) {
@@ -154,6 +152,7 @@ export const taskSlice = createSlice({
                 state.taskTests.push({
                     data: action.payload,
                     contextState: null,
+                    quickalgoCalls: [],
                 } as TaskTest);
                 state.currentTestId = state.taskTests.length - 1;
             } else if (state.currentTestId in state.taskTests) {
@@ -167,8 +166,11 @@ export const taskSlice = createSlice({
                 state.taskTests[state.currentTestId].data = action.payload;
             }
         },
-        updateTestContextState(state: TaskState, action: PayloadAction<UpdateTestContextStatePayload>) {
+        updateTestContextState(state: TaskState, action: PayloadAction<{testId: number, contextState: any}>) {
             state.taskTests[action.payload.testId].contextState = action.payload.contextState;
+        },
+        updateTestQuickalgoCalls(state: TaskState, action: PayloadAction<{testId: number, quickalgoCalls: QuickalgoLibraryCall[]}>) {
+            state.taskTests[action.payload.testId].quickalgoCalls = action.payload.quickalgoCalls;
         },
         taskInputNeeded(state: TaskState, action: PayloadAction<boolean>) {
             state.inputNeeded = action.payload;
@@ -249,6 +251,7 @@ export const {
     taskSubmissionStartTest,
     taskSubmissionSetTestResult,
     updateTestContextState,
+    updateTestQuickalgoCalls,
     taskCurrentLevelChange,
     taskIncreaseContextId,
     taskSetContextStrings,

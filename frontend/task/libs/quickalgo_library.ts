@@ -8,6 +8,7 @@ export class QuickAlgoLibrary {
     display: boolean;
     infos: any;
     placeholderBlocks: any;
+    iTestCase: number; // Required for some libs such as barcode
     nbCodes: number;
     nbNodes: number;
     strings: any;
@@ -142,6 +143,8 @@ export class QuickAlgoLibrary {
 
     resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null, innerState: any = null) {
         this.reset(taskInfos, appState);
+        // We do a second call because some libraries like barcode only reset their internal state when taskInfos is empty...
+        this.reset();
         if (this.implementsInnerState()) {
             this.reloadInnerState(createDraft(innerState ? innerState : this.getInnerState()));
         }

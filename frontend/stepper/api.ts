@@ -438,7 +438,7 @@ function inUserCode(stepperState: StepperState) {
     }
 }
 
-export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, reloadState = false) {
+export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
     return async (module: string, action: string, args: any[], callback?: Function) => {
         console.log('call quickalgo', module, action, args, callback);
         let libraryCallResult;
@@ -453,14 +453,6 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
             stepperContext.quickAlgoCallsLogger(quickAlgoLibraryCall);
             console.log('LOG ACTION', module, action, args);
         }
-
-        if (reloadState) {
-            // console.log('RELOAD CONTEXT STATE', draft.contextState, original(draft.contextState));
-            const draft = createDraft(stepperContext.state.contextState);
-            context.reloadInnerState(draft);
-            await stepperContext.dispatch({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
-        }
-
 
         const makeLibraryCall = () => {
             return new Promise(resolve => {

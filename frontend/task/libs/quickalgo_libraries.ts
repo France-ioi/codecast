@@ -161,6 +161,7 @@ export function* createQuickalgoLibrary() {
     }
 
     console.log('created context', contextLib);
+    contextLib.iTestCase = state.task.currentTestId;
 
     if (hasBlockPlatform(state.options.platform) && currentTask) {
         yield* call(loadBlocklyHelperSaga, contextLib, currentLevel);
@@ -251,7 +252,7 @@ export function* quickAlgoLibraryRedrawDisplaySaga(app: App) {
     }
 }
 
-function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: QuickalgoLibraryCall[]) {
+export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: QuickalgoLibraryCall[]) {
     yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
 
     const stepperContext = makeContext(null, {
@@ -284,7 +285,7 @@ function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: Quickalg
 }
 
 class MainQuickAlgoLogger {
-    private quickalgoLibraryCalls = [];
+    private quickalgoLibraryCalls: QuickalgoLibraryCall[] = [];
 
     logQuickAlgoLibraryCall(quickalgoLibraryCall: QuickalgoLibraryCall) {
         this.quickalgoLibraryCalls.push(quickalgoLibraryCall);
@@ -294,8 +295,8 @@ class MainQuickAlgoLogger {
         this.quickalgoLibraryCalls = [];
     }
 
-    getQuickAlgoLibraryCalls() {
-        return this.quickalgoLibraryCalls;
+    getQuickAlgoLibraryCalls(): QuickalgoLibraryCall[] {
+        return [...this.quickalgoLibraryCalls];
     }
 
     setQuickAlgoLibraryCalls(calls: QuickalgoLibraryCall[]) {
