@@ -474,18 +474,14 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
                 }]);
 
                 console.log('MODULE RESULT', result);
-                if (!(Symbol.iterator in Object(result))) {
-                    console.log('return result');
-                    resolve(result);
-                    return;
+                if (Symbol.iterator in Object(result)) {
+                    iterateResult(result)
+                        .then((argumentResult) => {
+                            console.log('returned element', module, action, argumentResult);
+                            // Use context.waitDelay to transform result to primitive when the library uses generators
+                            context.waitDelay(resolve, argumentResult);
+                        });
                 }
-
-                iterateResult(result)
-                    .then((argumentResult) => {
-                        console.log('returned element', module, action, argumentResult);
-                        // Use context.waitDelay to transform result to primitive when the library uses generators
-                        context.waitDelay(resolve, argumentResult);
-                    });
             });
         }
 

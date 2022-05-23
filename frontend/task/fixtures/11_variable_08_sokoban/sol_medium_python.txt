@@ -1,0 +1,14 @@
+from robot import *
+
+avancer()
+ligneCaisse = nombreSurCase()
+avancer()
+colonneCaisse = nombreSurCase()
+while colonneRobot() < colonneCaisse - 1:
+    avancer()
+tournerDroite()
+while ligneRobot () < ligneCaisse:
+    avancer()
+tournerGauche()
+pousserCaisse()
+
