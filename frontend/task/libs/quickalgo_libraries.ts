@@ -330,10 +330,16 @@ export default function(bundle: Bundle) {
             const state = yield* select();
             const context = quickAlgoLibraries.getContext(null, state.environment);
             if (context) {
+                const currentTest = selectCurrentTest(state);
+                const contextState = getCurrentImmerState(context.getInnerState());
+                // For libs like barcode where we need to call context.reset to recreate context
+                context.resetAndReloadState(currentTest, state, contextState);
+
                 // @ts-ignore
                 if (context.redrawDisplay) {
                     // @ts-ignore
                     context.redrawDisplay();
+                    console.log('redraw display done it');
                 } else {
                     yield* call(quickAlgoLibraryRedrawDisplaySaga, app);
                 }
