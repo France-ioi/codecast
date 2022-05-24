@@ -3,6 +3,7 @@ import {AppStoreReplay} from "../../store";
 import {createDraft} from "immer";
 import quickalgoI18n from "../../lang/quickalgoI18n";
 import merge from 'lodash.merge';
+import {getCurrentImmerState} from "../utils";
 
 export class QuickAlgoLibrary {
     display: boolean;
@@ -146,7 +147,8 @@ export class QuickAlgoLibrary {
         // We do a second call because some libraries like barcode only reset their internal state when taskInfos is empty...
         this.reset();
         if (this.implementsInnerState()) {
-            this.reloadInnerState(createDraft(innerState ? innerState : this.getInnerState()));
+            const newInnerState = innerState ? innerState : getCurrentImmerState(this.getInnerState());
+            this.reloadInnerState(createDraft(newInnerState));
         }
     };
 

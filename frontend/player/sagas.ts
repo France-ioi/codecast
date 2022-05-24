@@ -28,6 +28,7 @@ import {asyncGetJson} from "../utils/api";
 import {taskLoaded} from "../task/task_slice";
 import {LayoutPlayerMode} from "../task/layout/layout";
 import {setTaskEventsEnvironment} from "../task/platform/platform";
+import {createRunnerSaga} from "../stepper";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -553,6 +554,11 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
             // We start from the end state of the last instant, and apply the calls that happened during this instant
             const stepperState = instants[instantIndex-1].state.stepper;
             if (context) {
+                if (!Codecast.runner) {
+                    Codecast.runner = yield* call(createRunnerSaga);
+                }
+                context.runner = Codecast.runner;
+
                 const stepperContext = makeContext(stepperState, {
                     interactAfter: (arg) => {
                         return new Promise((resolve, reject) => {

@@ -1,4 +1,4 @@
-import {App} from "../../index";
+import {App, Codecast} from "../../index";
 import {AppStore} from "../../store";
 import {QuickAlgoLibrary} from "./quickalgo_library";
 import {Bundle} from "../../linker";
@@ -18,6 +18,7 @@ import {IoMode} from "../../stepper/io";
 import {PlayerInstant} from "../../player";
 import {makeContext, QuickalgoLibraryCall} from "../../stepper/api";
 import {importModules} from "./import_modules";
+import {createRunnerSaga} from "../../stepper";
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -196,7 +197,7 @@ export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = 
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context) {
-        console.log('quickalgo reset and reload state', innerState);
+        console.log('quickalgo reset and reload state', state.environment, context, innerState, currentTest);
         context.resetAndReloadState(currentTest, state, innerState);
         if (instant) {
             if (context.implementsInnerState()) {
@@ -204,6 +205,7 @@ export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = 
                 console.log('get new state', contextState);
                 yield* put(taskUpdateState(contextState));
             } else {
+                console.log('quickalgo compute calls to replay');
                 const state: AppStore = yield* select();
                 let instants = state.player.instants;
                 let currentInstantIndex = instants.indexOf(instant);
@@ -212,6 +214,7 @@ export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = 
                     let consideredInstant = instants[i];
                     if (-1 !== ['stepper.exit', 'task/updateCurrentTestId', 'task/changeLevel'].indexOf(consideredInstant.event[1])) {
                         // If this is the first event we find (before compile.success), it means we weren't in a program
+                        mainQuickAlgoLogger.setQuickAlgoLibraryCalls([]);
                         return;
                     }
                     if (consideredInstant.event[1] === 'compile.success') {
@@ -231,6 +234,8 @@ export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = 
                     }
 
                     mainQuickAlgoLogger.setQuickAlgoLibraryCalls(quickAlgoCalls);
+                } else {
+                    mainQuickAlgoLogger.setQuickAlgoLibraryCalls([]);
                 }
             }
         } else if (context.implementsInnerState()) {
@@ -254,6 +259,16 @@ export function* quickAlgoLibraryRedrawDisplaySaga(app: App) {
 
 export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: QuickalgoLibraryCall[]) {
     yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
+
+    console.log('replay previous quickalgo calls', quickAlgoCalls);
+    if (!Codecast.runner) {
+        Codecast.runner = yield* call(createRunnerSaga);
+    }
+    const environment = yield* select((state: AppStore) => state.environment);
+    const context = quickAlgoLibraries.getContext(null, environment);
+    if (context) {
+        context.runner = Codecast.runner;
+    }
 
     const stepperContext = makeContext(null, {
         interactAfter: (arg) => {
@@ -288,6 +303,7 @@ class MainQuickAlgoLogger {
     private quickalgoLibraryCalls: QuickalgoLibraryCall[] = [];
 
     logQuickAlgoLibraryCall(quickalgoLibraryCall: QuickalgoLibraryCall) {
+        console.log('LOG ACTION', quickalgoLibraryCall);
         this.quickalgoLibraryCalls.push(quickalgoLibraryCall);
     }
 

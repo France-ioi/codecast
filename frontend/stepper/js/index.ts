@@ -13,6 +13,8 @@ import {select} from "typed-redux-saga";
 import {displayModal} from "../../common/prompt_modal";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
 
+let originalFireNow;
+
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
     let blocklyHelper;
 
@@ -72,6 +74,19 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     };
     context.blocklyHelper = blocklyHelper;
     context.onChange = () => {};
+
+    if (!originalFireNow) {
+        originalFireNow = window.Blockly.Events.fireNow_;
+    }
+
+    // There is a setTimeout delay in Blockly lib between blockly program loading and Blockly firing events.
+    // We overload this function to catch the Blockly firing event instant so that we know when the program
+    // is successfully reloaded and that the events won't trigger an editor content update which would trigger
+    // a stepper.exit
+    window.Blockly.Events.fireNow_ = () => {
+        originalFireNow();
+        blocklyHelper.reloading = false;
+    }
 
     console.log('[blockly.editor] load context into blockly editor');
     blocklyHelper.loadContext(context);

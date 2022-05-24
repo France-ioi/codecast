@@ -397,8 +397,9 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
         context.iTestCase = state.task.currentTestId;
         const contextState = state.task.taskTests[state.task.currentTestId].contextState;
         if (null !== contextState && context.implementsInnerState()) {
-            console.log('reload context state', contextState);
-            context.reloadInnerState(createDraft(contextState));
+            const currentTest = selectCurrentTest(state);
+            console.log('reload current test', currentTest, contextState);
+            context.resetAndReloadState(currentTest, state, contextState);
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         } else if (!context.implementsInnerState()) {
             const callsToReplay = state.task.taskTests[state.task.currentTestId].quickalgoCalls;
@@ -647,9 +648,13 @@ export default function (bundle: Bundle) {
             }
 
             const taskData = instant.state.task;
+            let hasChangedLevel = false;
+            let hasChangedTest = false;
             if (taskData) {
                 const currentLevel = yield* select((state: AppStore) => state.task.currentLevel);
-                const changeLevel = taskData.currentLevel !== currentLevel;
+                const currentTestId = yield* select((state: AppStore) => state.task.currentTestId);
+                hasChangedLevel = taskData.currentLevel !== currentLevel;
+                hasChangedTest = taskData.currentTestId !== currentTestId;
 
                 yield* put({
                     type: PlayerActionTypes.PlayerReset,
@@ -669,7 +674,7 @@ export default function (bundle: Bundle) {
                     },
                 });
 
-                if (changeLevel) {
+                if (hasChangedLevel) {
                     yield* call(createQuickalgoLibrary);
                 }
 
@@ -683,7 +688,7 @@ export default function (bundle: Bundle) {
             console.log('TASK REPLAY API RESET', instant.event, taskData);
 
             const context = quickAlgoLibraries.getContext(null, 'main');
-            if (context && (!quick || -1 !== ['compile.success', 'task/updateCurrentTestId', 'task/changeLevel'].indexOf(instant.event[1]))) {
+            if (context && (!quick || -1 !== ['compile.success'].indexOf(instant.event[1]) || hasChangedLevel || hasChangedTest)) {
                 yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, taskData && taskData.state ? taskData.state : null, instant);
                 console.log('DO RESET DISPLAY');
                 yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
