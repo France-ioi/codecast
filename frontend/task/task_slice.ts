@@ -5,6 +5,7 @@ import ProcessingFixture from './fixtures/test_processing';
 import BarcodeFixture from './fixtures/test_barcode';
 import QuickPiFixture from './fixtures/quickpi_testbed';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
+import DatabaseFixture from './fixtures/test_database';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {QuickalgoLibraryCall} from "../stepper/api";
@@ -16,6 +17,7 @@ const availableTasks = {
     processing: ProcessingFixture,
     printer: StringRotationFixture,
     barcode: BarcodeFixture,
+    database: DatabaseFixture,
 };
 
 export interface TaskSubmission {
