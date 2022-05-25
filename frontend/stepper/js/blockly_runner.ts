@@ -128,9 +128,9 @@ export default class BlocklyRunner extends AbstractRunner {
         if (delay > 0) {
             this.stackCount = 0;
             this.delayFactory.createTimeout("wait" + this.context.curNode + "_" + Math.random(), () => {
-                    this.noDelay(callback, value);
-                },
-                delay
+                this.noDelay(callback, value);
+            },
+            delay
             );
             this.allowStepsWithoutDelay = Math.min(this.allowStepsWithoutDelay + Math.ceil(delay/10), 100);
         } else {

@@ -56,19 +56,19 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
                 let delimiters = -1 !== ['set', 'frozenset'].indexOf(variable.type) || !isCollapsed ? '{}' : '[]';
                 renderedElements = (<React.Fragment>
                     {delimiters[0]}{variable.variables.slice(0, elementsToDisplay).map((innerVariable, index) => {
-                    return (
-                        <span key={innerVariable.name}>
-                            <AnalysisVariable
-                                variable={innerVariable}
-                                stackFrameId={props.stackFrameId}
-                                onlyValue={isCollapsed}
-                                displayMaxLength={displayMaxLength}
-                                recursionLevel={(props.recursionLevel ? props.recursionLevel : 0) + 1}
-                            />
-                            {(index + 1) < variable.variables.length ? ', ' : null}
-                        </span>
-                    );
-                })}{variable.variables.length > elementsToDisplay ? '...' : ''}{delimiters[1]}
+                        return (
+                            <span key={innerVariable.name}>
+                                <AnalysisVariable
+                                    variable={innerVariable}
+                                    stackFrameId={props.stackFrameId}
+                                    onlyValue={isCollapsed}
+                                    displayMaxLength={displayMaxLength}
+                                    recursionLevel={(props.recursionLevel ? props.recursionLevel : 0) + 1}
+                                />
+                                {(index + 1) < variable.variables.length ? ', ' : null}
+                            </span>
+                        );
+                    })}{variable.variables.length > elementsToDisplay ? '...' : ''}{delimiters[1]}
                 </React.Fragment>);
             } else {
                 renderedElements = (<ul className="object_scope">

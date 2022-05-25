@@ -48,7 +48,7 @@ export function LayoutEditor() {
             {currentTask && displayBlocks && <AvailableBlocks collapsed={blocksCollapsed}/>}
             <div className="task-layout-editor-container">
                 {currentTask && displayBlocks && <div className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>
-                  <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft}/>
+                    <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft}/>
                 </div>}
                 <BufferEditor
                     platform={platform}

@@ -19,12 +19,12 @@ export const AnalysisFunctionHeader = (props: AnalysisFunctionHeaderProps): JSX.
     return (
         <div className="scope-function-title">
             <span>
-              {props.stackFrame.name ? (
-                  <span>
-                      <span className="function-name">{props.stackFrame.name}</span>
-                      {'('}
-                  </span>
-              ) : null}
+                {props.stackFrame.name ? (
+                    <span>
+                        <span className="function-name">{props.stackFrame.name}</span>
+                        {'('}
+                    </span>
+                ) : null}
                 <span>
                     {args.map(function(argument, index) {
                         return (
