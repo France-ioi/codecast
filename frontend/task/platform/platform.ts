@@ -153,7 +153,7 @@ function* taskUnloadEventSaga ({payload: {success}}: ReturnType<typeof taskUnloa
 }
 
 function* taskGetMetaDataEventSaga ({payload: {success, error: _error}}: ReturnType<typeof taskGetMetadataEvent>) {
-   const metadata = getTaskMetadata();
+    const metadata = getTaskMetadata();
 
     yield* call(success, metadata);
 }

@@ -81,8 +81,8 @@ export function MenuTask() {
                     <span>{getMessage('MENU_RECORDER')}</span>
                 </div>}
                 {editorEnabled && <div className="menu-item" onClick={toggleEditRecording}>
-                  <Icon icon="edit"/>
-                  <span>{getMessage('MENU_EDIT_RECORDING')}</span>
+                    <Icon icon="edit"/>
+                    <span>{getMessage('MENU_EDIT_RECORDING')}</span>
                 </div>}
                 {displayAbout && <div className="menu-item" onClick={() => setAboutOpen(!aboutOpen)}>
                     <Icon icon="help"/>

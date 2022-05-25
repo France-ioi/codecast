@@ -175,8 +175,8 @@ export class SortView extends React.PureComponent<SortViewProps> {
          * kind: "showSort"
          */
 
-            // Controls
-            //   - fullView: read and render all cells
+        // Controls
+        //   - fullView: read and render all cells
         const fullView = controls.fullView;
         const {byName, byPos} = directive;
 
@@ -216,7 +216,7 @@ export class SortView extends React.PureComponent<SortViewProps> {
             <DirectiveFrame {...this.props} hasFullView>
                 <div className='clearfix' style={{padding: '2px'}}>
                     <SvgPan className='svg-sortview' width='100%' height={svgHeight * scale} scale={scale} x={cellPan * (BAR_WIDTH + BAR_SPACING) - 10}
-                            y={0} getPosition={this.getPosition} onPan={this.onPan}>
+                        y={0} getPosition={this.getPosition} onPan={this.onPan}>
                         <clipPath id="barClipping">
                             <rect x="0" y="0" width={BAR_WIDTH} height={BAR_HEIGHT}/>
                         </clipPath>
@@ -229,7 +229,7 @@ export class SortView extends React.PureComponent<SortViewProps> {
                             </g>
                             <g className="thresholds">
                                 {view.thresholds.map((threshold, i) => <Threshold key={i} view={view}
-                                                                                  threshold={threshold}/>)}
+                                    threshold={threshold}/>)}
                             </g>
                         </g>
                     </SvgPan>

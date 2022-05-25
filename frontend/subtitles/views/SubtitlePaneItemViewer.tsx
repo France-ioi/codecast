@@ -28,8 +28,8 @@ export class SubtitlePaneItemViewer extends React.PureComponent<SubtitlePaneItem
                     </div>
                 </div>
                 <span className='subtitles-text'>
-          {text}
-        </span>
+                    {text}
+                </span>
             </div>
         );
     }

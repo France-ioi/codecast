@@ -69,8 +69,8 @@ export class Document {
 
                 return new Document(
                     docLines.splice.apply(docLines, args)
-                    .update(row, firstLine => line.substring(0, startColumn) + firstLine)
-                    .update(row + nLines - 1, lastLine => lastLine + line.substring(startColumn))
+                        .update(row, firstLine => line.substring(0, startColumn) + firstLine)
+                        .update(row + nLines - 1, lastLine => lastLine + line.substring(startColumn))
                 );
             }
         }

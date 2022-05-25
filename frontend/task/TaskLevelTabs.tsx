@@ -49,6 +49,6 @@ export function TaskLevelTabs() {
                     </a>}
                 </div>
             )}
-      </nav>
+        </nav>
     );
 }
