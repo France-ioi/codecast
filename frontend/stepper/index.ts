@@ -1001,6 +1001,11 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
             console.log('current task state', taskContext.getInnerState());
         }
 
+        if (!Codecast.runner) {
+            Codecast.runner = yield* call(createRunnerSaga);
+        }
+        taskContext.runner = Codecast.runner;
+
         const blocksData = getContextBlocksDataSelector(state, taskContext);
 
         const interpreter = Codecast.runner;
