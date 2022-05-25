@@ -159,8 +159,8 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
     }
 
     if (CodecastPlatform.Python === platform) {
-       const pythonSpecificBlocks = getPythonSpecificBlocks(contextIncludeBlocks);
-       availableBlocks = [...availableBlocks, ...pythonSpecificBlocks];
+        const pythonSpecificBlocks = getPythonSpecificBlocks(contextIncludeBlocks);
+        availableBlocks = [...availableBlocks, ...pythonSpecificBlocks];
     } else if (CodecastPlatform.Unix === platform) {
         const cSpecificBlocks = getCSpecificBlocks(contextIncludeBlocks);
         availableBlocks = [...availableBlocks, ...cSpecificBlocks];

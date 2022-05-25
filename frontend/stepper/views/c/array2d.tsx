@@ -53,7 +53,7 @@ function drawCells(view) {
             const x = 0.5 * cellWidth;
             elements.push(
                 <g key={`${i},${j}`} transform={`translate(${colIndex * cellWidth},${rowIndex * cellHeight})`}
-                   clipPath="url(#cell)">
+                    clipPath="url(#cell)">
                     {content && 'store' in content && <g>
                         <text x={x} y={y1} textAnchor="middle" fill="#777">
                             {renderValue(content.previous)}
@@ -94,20 +94,20 @@ function drawGrid(view) {
             const cell = row && row[j] && row[j].content;
             const classes = getCellClasses(cell, rowInfoMap[i], colInfoMap[j]);
             elements.push(<rect key={`r${i},${j}`} x={x1} y={y1} width={cellWidth} height={cellHeight}
-                                className={classes}/>);
+                className={classes}/>);
         }
     }
     // Horizontal lines
     const x1 = gridLeft, x2 = x1 + colCount * cellWidth;
     for (let i = 0, y = gridTop; i <= rowCount; i += 1, y += cellHeight) {
         elements.push(<line key={`h${i}`} x1={x1} x2={x2} y1={y} y2={y} stroke={gridStroke}
-                            strokeWidth={gridStrokeWidth}/>);
+            strokeWidth={gridStrokeWidth}/>);
     }
     // Vertical lines
     const y1 = gridTop, y2 = y1 + rowCount * cellHeight;
     for (let j = 0, x = gridLeft; j <= colCount; j += 1, x += cellWidth) {
         elements.push(<line key={`v${j}`} x1={x} x2={x} y1={y1} y2={y2} stroke={gridStroke}
-                            strokeWidth={gridStrokeWidth}/>);
+            strokeWidth={gridStrokeWidth}/>);
     }
     // Row labels
     let y = gridTop + (cellHeight + textLineHeight) / 2 - textBaseline;
@@ -207,7 +207,7 @@ export class Array2D extends React.PureComponent<Array2DProps> {
                 <div className='clearfix' style={{padding: '2px'}}>
                     <div style={{width: '100%', height: divHeight}}>
                         <SvgPan width='100%' height={svgHeight * scale} scale={scale} x={hPan * cellWidth} y={vPan * cellHeight}
-                                getPosition={this.getPosition} onPan={this.onPan} className="array2d">
+                            getPosition={this.getPosition} onPan={this.onPan} className="array2d">
                             <clipPath id="cell">
                                 <rect x="0" y="0" width={cellWidth} height={cellHeight}/>
                             </clipPath>

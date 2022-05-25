@@ -120,9 +120,9 @@ export function SaveScreen(props: SaveScreenProps) {
             <div className="encoding-status">
                 {busy ?
                     <Spinner size={Spinner.SIZE_SMALL} className="mr-2" />
-                : (step === SaveStep.Done ?
-                    <Icon icon='tick' intent={Intent.SUCCESS} />
-                : null)}
+                    : (step === SaveStep.Done ?
+                        <Icon icon='tick' intent={Intent.SUCCESS} />
+                        : null)}
 
                 {message}
             </div>
@@ -139,10 +139,10 @@ export function SaveScreen(props: SaveScreenProps) {
                 />}
                 {SaveStep.Done !== step &&
                     <Button
-                      onClick={props.onCancel}
-                      intent={Intent.DANGER}
-                      icon={'trash'}
-                      text={getMessage('DELETE_RECORDING')}
+                        onClick={props.onCancel}
+                        intent={Intent.DANGER}
+                        icon={'trash'}
+                        text={getMessage('DELETE_RECORDING')}
                     />
                 }
             </div>
@@ -155,7 +155,7 @@ export function SaveScreen(props: SaveScreenProps) {
 
             {editorUrl &&
                 <FormGroup labelFor='editorUrlInput' label={getMessage('EDITOR_LINK')} className="mt-4">
-                  <input id='editorUrlInput' type='text' className='bp3-input bp3-fill' value={editorUrl} readOnly onFocus={handleFocus}/>
+                    <input id='editorUrlInput' type='text' className='bp3-input bp3-fill' value={editorUrl} readOnly onFocus={handleFocus}/>
                 </FormGroup>
             }
         </form>

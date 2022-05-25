@@ -86,45 +86,45 @@ export function SettingsDialog(props: SettingsDialogProps) {
                             <option value='blockly'>{getMessage('PLATFORM_BLOCKLY')}</option>
                             <option value='scratch'>{getMessage('PLATFORM_SCRATCH')}</option>
                           </select>
-                        </div>
-                      </label>
+                            </div>
+                        </label>
                     </div>
                 }
                 {ioModeSelect &&
                     <div>
-                      <label className='bp3-label'>
-                          {getMessage('IOPANE_MODE')}
-                        <div className='bp3-select'>
-                          <select value={ioMode} onChange={onIOModeChanged}>
-                              {modeOptions.map(p =>
-                                  <option
-                                      key={p.value}
-                                      value={p.value}
-                                  >
-                                      {getMessage(p.label)}
-                                  </option>)}
-                          </select>
-                        </div>
-                      </label>
+                        <label className='bp3-label'>
+                            {getMessage('IOPANE_MODE')}
+                            <div className='bp3-select'>
+                                <select value={ioMode} onChange={onIOModeChanged}>
+                                    {modeOptions.map(p =>
+                                        <option
+                                            key={p.value}
+                                            value={p.value}
+                                        >
+                                            {getMessage(p.label)}
+                                        </option>)}
+                                </select>
+                            </div>
+                        </label>
                     </div>
                 }
                 {recordingEnabled &&
                     <div>
-                      <label className='bp3-label'>
-                          {getMessage('LAYOUT_TYPE_REQUIRED_LABEL')}
-                        <div className='bp3-select'>
-                          <select value={layoutRequiredType || ''} onChange={onLayoutRequiredTypeChanged}>
-                              <option key="null" value={''}>{getMessage('NONE')}</option>
-                              {layoutChoices.map(p =>
-                                  <option
-                                      key={p}
-                                      value={p}
-                                  >
-                                      {getMessage('LAYOUT_' + p)}
-                                  </option>)}
-                          </select>
-                        </div>
-                      </label>
+                        <label className='bp3-label'>
+                            {getMessage('LAYOUT_TYPE_REQUIRED_LABEL')}
+                            <div className='bp3-select'>
+                                <select value={layoutRequiredType || ''} onChange={onLayoutRequiredTypeChanged}>
+                                    <option key="null" value={''}>{getMessage('NONE')}</option>
+                                    {layoutChoices.map(p =>
+                                        <option
+                                            key={p}
+                                            value={p}
+                                        >
+                                            {getMessage('LAYOUT_' + p)}
+                                        </option>)}
+                                </select>
+                            </div>
+                        </label>
                     </div>
                 }
                 {offlineDownloadUrl &&

@@ -92,7 +92,7 @@ class _SubtitlesEditor extends React.PureComponent<SubtitlesEditorProps> {
                                     <Button onClick={this._removeSelected} icon={IconNames.CROSS} text={'Remove'}/>
                                 </div>
                             </div>
-                        :
+                            :
                             <NonIdealState
                                 icon='arrow-left'
                                 title={"No language selected"}

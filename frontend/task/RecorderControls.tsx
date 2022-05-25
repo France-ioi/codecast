@@ -117,7 +117,7 @@ export function RecorderControls(props: RecorderControlsProps) {
             </div>
             {recorderStatus === RecorderStatus.Recording &&
                 <div className="sound-meter">
-                  <Vumeter width={82} height={20} />
+                    <Vumeter width={82} height={20} />
                 </div>
             }
             <div className="controls-time">
@@ -128,15 +128,15 @@ export function RecorderControls(props: RecorderControlsProps) {
             </div>
             {isPlayback &&
                 <div className="player-slider-container">
-                  <Slider
-                    value={Math.min(position, duration)}
-                    onChange={onSeek}
-                    stepSize={100}
-                    labelStepSize={30000}
-                    min={0}
-                    max={duration}
-                    labelRenderer={formatTime}
-                  />
+                    <Slider
+                        value={Math.min(position, duration)}
+                        onChange={onSeek}
+                        stepSize={100}
+                        labelStepSize={30000}
+                        min={0}
+                        max={duration}
+                        labelRenderer={formatTime}
+                    />
                 </div>
             }
             {isPlayback &&

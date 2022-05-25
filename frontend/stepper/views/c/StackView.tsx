@@ -114,10 +114,10 @@ class _StackView extends React.PureComponent<StackViewProps> {
             <div className="stack-view" style={{maxHeight: height}}>
                 {this.props.showStackControls &&
                     <div className="stack-controls">
-                      <ButtonGroup>
-                        <Button minimal small onClick={this.onStackUp} title="navigate up the stack" icon='arrow-up'/>
-                        <Button minimal small onClick={this.onStackDown} title="navigate down the stack" icon='arrow-down'/>
-                      </ButtonGroup>
+                        <ButtonGroup>
+                            <Button minimal small onClick={this.onStackUp} title="navigate up the stack" icon='arrow-up'/>
+                            <Button minimal small onClick={this.onStackDown} title="navigate down the stack" icon='arrow-down'/>
+                        </ButtonGroup>
                     </div>
                 }
                 {callReturn && <CallReturn view={callReturn}/>}
@@ -177,8 +177,8 @@ function CallReturn({view}) {
             {' '}
             <Icon icon='arrow-right'/>
             <span className="scope-function-retval">
-            {renderValue(result)}
-          </span>
+                {renderValue(result)}
+            </span>
         </div>
     );
 }

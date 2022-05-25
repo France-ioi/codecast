@@ -312,48 +312,48 @@ export function StoredValue({value}) {
         // details.
         return (
             <span className='value'>
-        <span className={classnames(['load' in value && 'value-load'])}>
-          {renderValue(value.current)}
-        </span>
+                <span className={classnames(['load' in value && 'value-load'])}>
+                    {renderValue(value.current)}
+                </span>
                 {'store' in value &&
                 <span className='value-previous'>
-            {renderValue(value.previous)}
-          </span>}
-      </span>
+                    {renderValue(value.previous)}
+                </span>}
+            </span>
         );
     }
     if (value.kind === 'array') {
         const {cells} = value;
         return (
             <span className='value value-array'>
-        {'{'}
+                {'{'}
                 {cells.map((cell, i) =>
-                        <span key={cell.index}>
-            <span className='value-array-cell'>
-              <StoredValue value={cell.content}/>
-            </span>
-                            {i + 1 === cells.length || ', '}
-          </span>
+                    <span key={cell.index}>
+                        <span className='value-array-cell'>
+                            <StoredValue value={cell.content}/>
+                        </span>
+                        {i + 1 === cells.length || ', '}
+                    </span>
                 )}
                 {'}'}
-      </span>
+            </span>
         );
     }
     if (value.kind === 'record') {
         const {fields} = value;
         return (
             <span className='value value-record'>
-        {'{'}
+                {'{'}
                 {fields.map((field, i) =>
-                        <span key={field.name}>
-            <span className='value-record-field' title={field.name}>
-              <StoredValue value={field.content}/>
-            </span>
-                            {i + 1 === fields.length || ', '}
-          </span>
+                    <span key={field.name}>
+                        <span className='value-record-field' title={field.name}>
+                            <StoredValue value={field.content}/>
+                        </span>
+                        {i + 1 === fields.length || ', '}
+                    </span>
                 )}
                 {'}'}
-      </span>
+            </span>
         );
     }
     return <span className='value'>{`unknown value kind ${value.kind}`}</span>;
@@ -393,20 +393,20 @@ export function FunctionCall({func, args}) {
     const argCount = args.length;
     return (
         <span>
-      {func.name}
+            {func.name}
             {'('}
             <span>
-        {args.map(function(value, i) {
-            return (
-                <span key={i}>
-              {renderValue(value)}
-                    {i + 1 < argCount && ', '}
+                {args.map(function(value, i) {
+                    return (
+                        <span key={i}>
+                            {renderValue(value)}
+                            {i + 1 < argCount && ', '}
+                        </span>
+                    );
+                })}
             </span>
-            );
-        })}
-      </span>
             {')'}
-    </span>
+        </span>
     );
 }
 
