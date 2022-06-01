@@ -1,0 +1,3 @@
+from database import *
+table = loadTable("test_table")
+displayTable(table)
