@@ -31,7 +31,8 @@ import taskSlice, {
     taskSuccessClear,
     taskUpdateState,
     updateCurrentTestId,
-    updateTaskTests, updateTestContextState, updateTestQuickalgoCalls,
+    updateTaskTests,
+    updateTestContextState,
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
@@ -275,7 +276,7 @@ function* handleLibrariesEventListenerSaga(app: App) {
             yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
                 console.log('exec done, update task state');
                 const context = quickAlgoLibraries.getContext(null, state.environment);
-                if (context && context.implementsInnerState()) {
+                if (context) {
                     const contextState = getCurrentImmerState(context.getInnerState());
                     console.log('get new state', contextState);
                     app.dispatch(taskUpdateState(contextState));
@@ -367,14 +368,8 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
 
     // Save context state for the test we have just left
     if (context && !payload.recreateContext && null !== state.task.previousTestId) {
-        if (context.implementsInnerState()) {
-            const currentState = getCurrentImmerState(context.getInnerState());
-            yield* put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState}));
-        } else {
-            const quickalgoCalls = mainQuickAlgoLogger.getQuickAlgoLibraryCalls();
-            console.log('save quickalgo calls', quickalgoCalls);
-            yield* put(updateTestQuickalgoCalls({testId: state.task.previousTestId, quickalgoCalls}));
-        }
+        const currentState = getCurrentImmerState(context.getInnerState());
+        yield* put(updateTestContextState({testId: state.task.previousTestId, contextState: currentState}));
     }
 
     // Stop current execution if there is one
@@ -395,17 +390,14 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
         }
         context.iTestCase = state.task.currentTestId;
         const contextState = state.task.taskTests[state.task.currentTestId].contextState;
-        if (null !== contextState && context.implementsInnerState()) {
+        if (null !== contextState) {
             const currentTest = selectCurrentTest(state);
-            console.log('reload current test', currentTest, contextState);
+            console.log('[taskUpdateCurrentTestIdSaga] reload current test', currentTest, contextState);
             context.resetAndReloadState(currentTest, state, contextState);
             yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
-        } else if (!context.implementsInnerState()) {
-            const callsToReplay = state.task.taskTests[state.task.currentTestId].quickalgoCalls;
-            yield* call(contextReplayPreviousQuickalgoCalls, app, callsToReplay);
         } else {
             const currentTest = selectCurrentTest(state);
-            console.log('reload current test', currentTest);
+            console.log('[taskUpdateCurrentTestIdSaga] reload current test without state', currentTest);
             context.resetAndReloadState(currentTest, state);
         }
     }
@@ -721,9 +713,7 @@ export default function (bundle: Bundle) {
             const context = quickAlgoLibraries.getContext(null, state.environment);
             context.resetAndReloadState(currentTest, state);
 
-            if (context.implementsInnerState()) {
-                stepperState.contextState = getCurrentImmerState(context.getInnerState());
-            }
+            stepperState.contextState = getCurrentImmerState(context.getInnerState());
         });
     });
 }

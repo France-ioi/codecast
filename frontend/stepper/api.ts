@@ -451,7 +451,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
         if (stepperContext.quickAlgoCallsLogger) {
             const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, args};
             stepperContext.quickAlgoCallsLogger(quickAlgoLibraryCall);
-            console.log('LOG ACTION', module, action, args);
+            console.log('call quickalgo calls logger', module, action, args);
         }
 
         const makeLibraryCall = () => {
@@ -518,17 +518,15 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
         }
         console.log('after make async library call', libraryCallResult);
 
-        if (context.implementsInnerState()) {
-            const newState = getCurrentImmerState(context.getInnerState());
-            console.log('NEW LIBRARY STATE', newState);
+        const newState = getCurrentImmerState(context.getInnerState());
+        console.log('NEW LIBRARY STATE', newState);
 
-            if (stepperContext.state) {
-                stepperContext.state = {
-                    ...stepperContext.state,
-                    contextState: newState,
-                };
-                console.log('stepper context after', stepperContext.state.contextState);
-            }
+        if (stepperContext.state) {
+            stepperContext.state = {
+                ...stepperContext.state,
+                contextState: newState,
+            };
+            console.log('stepper context after', stepperContext.state.contextState);
         }
 
         // let primitiveValue;

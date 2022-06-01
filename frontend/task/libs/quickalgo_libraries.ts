@@ -199,50 +199,10 @@ export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = 
     if (context) {
         console.log('quickalgo reset and reload state', state.environment, context, innerState, currentTest);
         context.resetAndReloadState(currentTest, state, innerState);
-        if (instant) {
-            if (context.implementsInnerState()) {
-                const contextState = getCurrentImmerState(context.getInnerState());
-                console.log('get new state', contextState);
-                yield* put(taskUpdateState(contextState));
-            } else {
-                console.log('quickalgo compute calls to replay');
-                const state: AppStore = yield* select();
-                let instants = state.player.instants;
-                let currentInstantIndex = instants.indexOf(instant);
-                let startReplayInstantIndex = 0;
-                for (let i = currentInstantIndex; i >= 0; i--) {
-                    let consideredInstant = instants[i];
-                    if (-1 !== ['stepper.exit', 'task/updateCurrentTestId', 'task/changeLevel'].indexOf(consideredInstant.event[1])) {
-                        // If this is the first event we find (before compile.success), it means we weren't in a program
-                        mainQuickAlgoLogger.setQuickAlgoLibraryCalls([]);
-                        return;
-                    }
-                    if (consideredInstant.event[1] === 'compile.success') {
-                        startReplayInstantIndex = i;
-                        break;
-                    }
-                }
 
-                const stepperState = instants[startReplayInstantIndex].state.stepper;
-                if (stepperState.currentStepperState) {
-                    let quickAlgoCalls = [];
-                    for (let i = startReplayInstantIndex; i <= currentInstantIndex; i++) {
-                        let consideredInstant = instants[i];
-                        if (consideredInstant.quickalgoLibraryCalls && consideredInstant.quickalgoLibraryCalls.length) {
-                            quickAlgoCalls = [...quickAlgoCalls, ...consideredInstant.quickalgoLibraryCalls];
-                        }
-                    }
-
-                    mainQuickAlgoLogger.setQuickAlgoLibraryCalls(quickAlgoCalls);
-                } else {
-                    mainQuickAlgoLogger.setQuickAlgoLibraryCalls([]);
-                }
-            }
-        } else if (context.implementsInnerState()) {
-            const contextState = getCurrentImmerState(context.getInnerState());
-            console.log('get new state without instant', contextState);
-            yield* put(taskUpdateState(contextState));
-        }
+        const contextState = getCurrentImmerState(context.getInnerState());
+        console.log('get new state without instant', contextState);
+        yield* put(taskUpdateState(contextState));
     }
 }
 
@@ -297,6 +257,8 @@ export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: Q
         // @ts-ignore
         yield* spawn(executor, module, action, args);
     }
+
+    mainQuickAlgoLogger.setQuickAlgoLibraryCalls(quickAlgoCalls);
 }
 
 class MainQuickAlgoLogger {
@@ -308,10 +270,12 @@ class MainQuickAlgoLogger {
     }
 
     clearQuickAlgoLibraryCalls() {
+        console.log('clear quickalgo calls');
         this.quickalgoLibraryCalls = [];
     }
 
     getQuickAlgoLibraryCalls(): QuickalgoLibraryCall[] {
+        console.log('get quickalgo calls', this.quickalgoLibraryCalls);
         return [...this.quickalgoLibraryCalls];
     }
 

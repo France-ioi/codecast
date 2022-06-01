@@ -327,9 +327,7 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         // Get Redux state and context state and store them
         const instantState = createDraft(replayStore.getState());
         const context = quickAlgoLibraries.getContext(null, 'replay');
-        if (context.implementsInnerState()) {
-            instantState.task.state = getCurrentImmerState(context.getInnerState());
-        }
+        instantState.task.state = getCurrentImmerState(context.getInnerState());
         instant.state = finishDraft(instantState);
 
         Object.freeze(instant);

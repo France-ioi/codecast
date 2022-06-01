@@ -4,6 +4,7 @@ import {createDraft} from "immer";
 import quickalgoI18n from "../../lang/quickalgoI18n";
 import merge from 'lodash.merge';
 import {getCurrentImmerState} from "../utils";
+import {mainQuickAlgoLogger} from "./quickalgo_libraries";
 
 export class QuickAlgoLibrary {
     display: boolean;
@@ -143,12 +144,20 @@ export class QuickAlgoLibrary {
     };
 
     resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null, innerState: any = null) {
+        console.log('reset and reload state', taskInfos, innerState);
         this.reset(taskInfos, appState);
         // We do a second call because some libraries like barcode only reset their internal state when taskInfos is empty...
         this.reset();
+        mainQuickAlgoLogger.clearQuickAlgoLibraryCalls();
+        const newInnerState = innerState ? innerState : getCurrentImmerState(this.getInnerState());
         if (this.implementsInnerState()) {
-            const newInnerState = innerState ? innerState : getCurrentImmerState(this.getInnerState());
             this.reloadInnerState(createDraft(newInnerState));
+        } else {
+            if (newInnerState.calls) {
+                // in fact maybe not necessary since redrawDisplay is the method that should update the display
+                console.log('TODO replay calls', newInnerState.calls);
+                mainQuickAlgoLogger.setQuickAlgoLibraryCalls(newInnerState.calls);
+            }
         }
     };
 
@@ -169,8 +178,9 @@ export class QuickAlgoLibrary {
         return null;
     };
 
-    getInnerState() {
-        return null;
+    getInnerState(): any {
+        // For libs that don't implement inner state, we replay them
+        return {calls: [...mainQuickAlgoLogger.getQuickAlgoLibraryCalls()]};
     };
 
     implementsInnerState() {

@@ -181,9 +181,6 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
             let blockDesc = context.docGenerator.blockDescription(block.name);
             let funcProto = blockDesc.substring(blockDesc.indexOf('<code>') + 6, blockDesc.indexOf('</code>'));
             let blockHelp = blockDesc.substring(blockDesc.indexOf('</code>') + 7);
-            if (blockHelp.trim().substring(0, 1) === ':') {
-                blockHelp = blockHelp.substring(blockHelp.indexOf(':') + 1).trim();
-            }
             block.caption = funcProto;
             block.description = blockHelp;
             block.snippet = getSnippet(block.caption);
@@ -210,9 +207,16 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
                 }
             }
 
+            if (block.caption && block.caption.trim().substring(0, 1) === '%') {
+                block.caption = block.caption.substring(block.caption.indexOf('%') + 1).trim();
+            }
             block.snippet = getSnippet(block.caption);
         }
-    }))
+
+        if (block.description && block.description.trim().substring(0, 1) === ':') {
+            block.description = block.description.substring(block.description.indexOf(':') + 1).trim();
+        }
+    }));
 
     return availableBlocks;
 }
