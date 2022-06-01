@@ -2,7 +2,7 @@ import {App, Codecast} from "../../index";
 import {AppStore} from "../../store";
 import {QuickAlgoLibrary} from "./quickalgo_library";
 import {Bundle} from "../../linker";
-import {call, put, select, spawn, takeEvery} from "typed-redux-saga";
+import {call, put, select, spawn, takeEvery, apply} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
 import {extractLevelSpecific, getCurrentImmerState} from "../utils";
 import {PrinterLib} from "./printer/printer_lib";
@@ -189,6 +189,7 @@ export function* createQuickalgoLibrary() {
         yield* put(taskSetBlocksPanelCollapsed(true));
     }
     context.resetAndReloadState(testData, state);
+    yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
 }
 
 export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = null, instant: PlayerInstant = null) {
@@ -302,7 +303,7 @@ export default function(bundle: Bundle) {
                 // @ts-ignore
                 if (context.redrawDisplay) {
                     // @ts-ignore
-                    context.redrawDisplay();
+                    yield* apply(context, context.redrawDisplay);
                     console.log('redraw display done it');
                 } else {
                     yield* call(quickAlgoLibraryRedrawDisplaySaga, app);

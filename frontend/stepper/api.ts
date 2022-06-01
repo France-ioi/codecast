@@ -66,7 +66,7 @@ export interface StepperApi {
     addSaga?: Function,
     onEffect?: Function,
     addBuiltin?: Function,
-    buildState?: (state: AppStoreReplay, environment: string) => Promise<StepperState>,
+    buildState?: (state: AppStoreReplay, environment: string) => Generator<any, StepperState>,
     rootStepperSaga?: any,
     executeEffects?: Function,
 }
@@ -117,7 +117,7 @@ export default function(bundle: Bundle) {
 
 
     /* Build a stepper state from the given init data. */
-    async function buildState(state: AppStoreReplay, environment: string): Promise<StepperState> {
+    function* buildState(state: AppStoreReplay, environment: string): Generator<any, StepperState> {
         const {platform} = state.options;
 
         console.log('do build state', state, environment);
@@ -131,7 +131,7 @@ export default function(bundle: Bundle) {
             platform
         } as StepperState;
         for (let callback of initCallbacks) {
-            await callback(curStepperState, state, environment);
+            yield* call(callback, curStepperState, state, environment);
         }
 
 
@@ -163,7 +163,7 @@ export default function(bundle: Bundle) {
                 /* Mutate the stepper context to advance execution by a single step. */
                 const effects = C.step(stepperContext.state.programState);
                 if (effects) {
-                    await executeEffects(stepperContext, effects[Symbol.iterator]());
+                    yield* call(executeEffects, stepperContext, effects[Symbol.iterator]());
                 }
             }
         }
