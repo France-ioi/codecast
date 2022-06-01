@@ -234,11 +234,19 @@ body {
     height: 100%;
     position: relative;
     min-height: 150px;
-    #grid {
+    #testSelector {
       position: absolute;
       width: 100%;
       height: 100%;
       text-align: center;
+      display: flex;
+      justify-content: center;
+      flex-direction: column;
+      #grid {
+        width: 100%;
+        height: 100%;
+        text-align: center;
+      }
     }
     .card {
       width: 100%;

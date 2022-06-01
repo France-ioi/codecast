@@ -6,9 +6,9 @@ import BarcodeFixture from './fixtures/test_barcode';
 import QuickPiFixture from './fixtures/quickpi_testbed';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
 import DatabaseFixture from './fixtures/test_database';
+import P5Fixture from './fixtures/test_p5';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
-import {QuickalgoLibraryCall} from "../stepper/api";
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -18,6 +18,7 @@ const availableTasks = {
     printer: StringRotationFixture,
     barcode: BarcodeFixture,
     database: DatabaseFixture,
+    p5: P5Fixture,
 };
 
 export interface TaskSubmission {

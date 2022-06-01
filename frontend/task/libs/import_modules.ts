@@ -130,6 +130,7 @@ function importableModules(modulesPath) {
 
         'files_repository': {src: modulesPath+"/pemFioi/shared/files_repository.js", id: "files_repository"},
         'blocks_helper': {src: modulesPath+"/pemFioi/shared/blocks_helper.js", id: "blocks_helper"},
+        'logger': {src: modulesPath+"/pemFioi/shared/logger.js", id: "logger"},
         'numeric_keypad': {src: modulesPath+"/pemFioi/shared/numeric_keypad/keypad.js", id: "numeric_keypad"},
         'numeric_keypad_css': {type: "stylesheet", src: modulesPath+"/pemFioi/shared/numeric_keypad/keypad.css", id: "numeric_keypad_css"},
 
@@ -187,6 +188,12 @@ function importableModules(modulesPath) {
         // json text editor
         'json-text-editor': {src: modulesPath+"/pemFioi/components/json-text-editor/editor.js", id: "json-text-editor"},
         'json-text-editor-jsonlint': {src: modulesPath+"/pemFioi/components/json-text-editor/jsonlint.js", id: "json-text-editor-jsonlint"},
+
+        // p5
+        'p5': {src: modulesPath+"/pemFioi/p5/p5.js", id: "p5"},
+        'p5.sound': {src: modulesPath+"/pemFioi/p5/p5.sound.js", id: "p5.sound"},
+        'player_p5': {src: modulesPath+"/pemFioi/p5/player_p5.js", id: "player_p5"},
+        'blockly_p5': {src: modulesPath+"/pemFioi/p5/blockly_p5.js", id: "blockly_p5"},
 
         // Bundles
         'bebras-base': {src: modulesPath+"bundles/bebras-base.js", id: "bundle-bebras-base"},

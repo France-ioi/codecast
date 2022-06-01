@@ -44,7 +44,7 @@ export function ContextVisualization() {
                             <img id={element.id} key={key} src={element.path.default} style={{display: 'none'}}/>
                         )
                     }
-                    {Visualization ? <Visualization/> : <div id="grid"/>}
+                    {Visualization ? <Visualization/> : <div id="testSelector"><div id="grid"/></div>}
                 </div>
             </div>
 

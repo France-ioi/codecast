@@ -69,13 +69,13 @@ const pythonForbiddenBlocks = {
         'dicts_create_with': ['dict_brackets'],
         'dict_get_literal': ['dict_brackets'],
         'dict_set_literal': ['dict_brackets'],
-        'dict_keys': ['dict_brackets']
+        'dict_keys': ['dict_brackets'],
     },
     'logic': {
         'controls_if': ['if', 'else', 'elif'],
         'controls_if_else': ['if', 'else', 'elif'],
         'logic_negate': ['not'],
-        'logic_operation': ['and', 'or']
+        'logic_operation': ['and', 'or'],
     },
     'loops': {
         'controls_repeat': ['for'],
@@ -84,7 +84,8 @@ const pythonForbiddenBlocks = {
         'controls_forEach': ['for'],
         'controls_whileUntil': ['while'],
         'controls_untilWhile': ['while'],
-        'controls_infiniteloop': ['while']
+        'controls_infiniteloop': ['while'],
+        'controls_break_continue': ['break', 'continue'],
     },
     'lists': {
         'lists_create_with_empty': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
@@ -98,17 +99,19 @@ const pythonForbiddenBlocks = {
         'lists_getSublist': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
         'lists_sort': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
         'lists_split': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_append': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__']
+        'lists_append': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+        'lists_map_split': ['map', 'split'],
     },
     'maths': {
-        'math_number': ['math_number']
+        'math_number': ['math_number'],
     },
     'functions': {
         'procedures_defnoreturn': ['def', 'lambda'],
-        'procedures_defreturn': ['def', 'lambda']
+        'procedures_defreturn': ['def', 'lambda'],
+        'setattr' : ['setattr'],
     },
     'variables': {
-        'variables_set': ['var_assign']
+        'variables_set': ['var_assign'],
     }
 };
 
