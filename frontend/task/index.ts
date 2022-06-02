@@ -1,12 +1,11 @@
 import {getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, cancelled, spawn} from "typed-redux-saga";
+import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, cancelled} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {AppStore, CodecastPlatform} from "../store";
 import {
-    contextReplayPreviousQuickalgoCalls,
     createQuickalgoLibrary, mainQuickAlgoLogger,
     quickAlgoLibraries,
     QuickAlgoLibrariesActionType,
@@ -46,7 +45,6 @@ import PlatformBundle, {
 } from "./platform/platform";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
 import {ZOOM_LEVEL_HIGH} from "./layout/layout";
-import {createDraft} from "immer";
 import {PlayerInstant} from "../player";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
@@ -69,7 +67,6 @@ import {
     TaskLevelName,
     taskLevelsList
 } from "./platform/platform_slice";
-import log from "loglevel";
 import {getTaskTokenForLevel} from "./platform/task_token";
 import {createAction} from "@reduxjs/toolkit";
 import {selectAnswer} from "./selectors";
@@ -134,6 +131,10 @@ if (!String.prototype.format) {
 
         return str;
     }
+}
+
+if (!window.modulesPath) {
+    window.modulesPath = 'bebras-modules/';
 }
 
 let oldSagasTasks = {};

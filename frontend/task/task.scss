@@ -64,6 +64,7 @@ $sides: (top, bottom, left, right);
 @import "./task_tests.scss";
 @import "./levels.scss";
 @import "./blocks/blocks.scss";
+@import "./libs/quickpi.scss";
 @import "../stepper/js/blockly.scss";
 
 html {
@@ -234,18 +235,25 @@ body {
     height: 100%;
     position: relative;
     min-height: 150px;
-    #testSelector {
+    #taskContent {
       position: absolute;
       width: 100%;
       height: 100%;
-      text-align: center;
       display: flex;
       justify-content: center;
       flex-direction: column;
-      #grid {
+      #testSelector {
         width: 100%;
         height: 100%;
         text-align: center;
+        display: flex;
+        justify-content: center;
+        flex-direction: column;
+        #grid {
+          width: 100%;
+          height: 100%;
+          text-align: center;
+        }
       }
     }
     .card {
@@ -554,7 +562,8 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   background: #fff;
   color: #787878;
   padding: 20px;
-  width: 680px;
+  width: 800px;
+  max-width: 100vw;
 
   .simple-dialog-success {
     color: green;
@@ -562,6 +571,7 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   }
 
   .simple-dialog-buttons {
+    margin-top: 20px;
     display: flex;
     align-items: center;
     justify-content: center;

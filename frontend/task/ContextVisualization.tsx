@@ -3,7 +3,6 @@ import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "./libs/quickalgo
 import {useAppSelector} from "../hooks";
 import {useResizeDetector} from "react-resize-detector";
 import {TaskTestsSelector} from "./TaskTestsSelector";
-import {put} from "typed-redux-saga";
 import {useDispatch} from "react-redux";
 
 export function ContextVisualization() {
@@ -44,7 +43,13 @@ export function ContextVisualization() {
                             <img id={element.id} key={key} src={element.path.default} style={{display: 'none'}}/>
                         )
                     }
-                    {Visualization ? <Visualization/> : <div id="testSelector"><div id="grid"/></div>}
+                    {Visualization ? <Visualization/> :
+                        <div id="taskContent">
+                            <div id="taskIntro"/>
+                            <div id="testSelector">
+                                <div id="grid"/>
+                            </div>
+                        </div>}
                 </div>
             </div>
 

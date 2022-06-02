@@ -10,6 +10,7 @@ module.exports = {
     ERROR: 'Error',
     CLOSE: 'Close',
     VALIDATE: 'Validate',
+    ALRIGHT: 'Alright',
     NONE: 'None',
     CANCEL: 'Cancel',
     FULLSCREEN: "fullscreen",

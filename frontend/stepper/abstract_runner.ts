@@ -46,6 +46,11 @@ export default abstract class AbstractRunner {
         return true;
     }
 
+    public isRunning(): boolean {
+        // TODO: implement this if necessary
+        return false;
+    }
+
     waitCallback(callback) {
         return (value) => {
             this.noDelay(callback, value);

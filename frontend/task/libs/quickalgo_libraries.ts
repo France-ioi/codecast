@@ -2,16 +2,18 @@ import {App, Codecast} from "../../index";
 import {AppStore} from "../../store";
 import {QuickAlgoLibrary} from "./quickalgo_library";
 import {Bundle} from "../../linker";
-import {call, put, select, spawn, takeEvery, apply} from "typed-redux-saga";
+import {apply, call, put, select, spawn, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
 import {extractLevelSpecific, getCurrentImmerState} from "../utils";
 import {PrinterLib} from "./printer/printer_lib";
 import {hasBlockPlatform, loadBlocklyHelperSaga} from "../../stepper/js";
 import {
     selectCurrentTest,
-    taskIncreaseContextId, taskSetBlocksPanelCollapsed,
+    taskIncreaseContextId,
+    taskSetBlocksPanelCollapsed,
     taskSetContextIncludeBlocks,
-    taskSetContextStrings, taskUpdateState
+    taskSetContextStrings,
+    taskUpdateState
 } from "../task_slice";
 import {ActionTypes as IOActionTypes} from "../../stepper/io/actionTypes";
 import {IoMode} from "../../stepper/io";
@@ -19,6 +21,8 @@ import {PlayerInstant} from "../../player";
 import {makeContext, QuickalgoLibraryCall} from "../../stepper/api";
 import {importModules} from "./import_modules";
 import {createRunnerSaga} from "../../stepper";
+import {cancelModal, displayModal} from "../../common/prompt_modal";
+import {ModalType} from "../../common/modal_slice";
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -130,7 +134,7 @@ export function* createQuickalgoLibrary() {
         },
     };
     if (levelGridInfos.importModules) {
-        yield* call(importModules, levelGridInfos.importModules, 'bebras-modules');
+        yield* call(importModules, levelGridInfos.importModules, window.modulesPath);
     }
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
@@ -164,6 +168,7 @@ export function* createQuickalgoLibrary() {
     console.log('created context', contextLib);
     contextLib.iTestCase = state.task.currentTestId;
 
+    yield* call(createDisplayHelper);
     if (hasBlockPlatform(state.options.platform) && currentTask) {
         yield* call(loadBlocklyHelperSaga, contextLib, currentLevel);
     }
@@ -260,6 +265,46 @@ export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: Q
     }
 
     mainQuickAlgoLogger.setQuickAlgoLibraryCalls(quickAlgoCalls);
+}
+
+function* createDisplayHelper() {
+    if (!window.displayHelper) {
+        window.displayHelper = new DisplayHelper();
+    }
+}
+
+class DisplayHelper {
+    async showPopupMessage(message, mode, yesButtonText, agreeFunc, noButtonText, avatarMood, defaultText, disagreeFunc) {
+        console.log('popup message', defaultText, noButtonText);
+        const result = await new Promise(resolve => {
+            const mainStore = Codecast.environments['main'].store;
+            mainStore.dispatch(displayModal({message, mode, defaultInput: defaultText, noButtonText, callback: resolve}));
+        });
+
+        if (false !== result && agreeFunc) {
+            if (mode === 'input') {
+                agreeFunc(result);
+            } else {
+                agreeFunc();
+            }
+        }
+
+        if (false === result && disagreeFunc) {
+            disagreeFunc();
+        }
+    }
+    async showPopupDialog(message) {
+        const dialog = `<div id="popupMessage">${message}</div>`;
+        const mainStore = Codecast.environments['main'].store;
+        mainStore.dispatch(displayModal({message: dialog, mode: ModalType.dialog}));
+    }
+    set popupMessageShown(value) {
+        console.log('change value', value);
+        if (false === value) {
+            const mainStore = Codecast.environments['main'].store;
+            mainStore.dispatch(cancelModal());
+        }
+    }
 }
 
 class MainQuickAlgoLogger {

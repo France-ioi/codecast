@@ -1,0 +1,312 @@
+.panel-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.panel-heading .exit {
+    cursor: pointer;
+    font-size: 18px;
+    color: #4a90e2;
+    border: 0;
+    background-color: transparent;
+    box-shadow: none;
+}
+h2.sectionTitle {
+    font-size: 22px;
+    font-weight: 100;
+    color: #4a90e2;
+    margin: 0;
+}
+h2.sectionTitle .icon {
+    color: #fff;
+    background-color: #4a90e2;
+    border-radius: 50%;
+    width: 2em;
+    line-height: 2em;
+    text-align: center;
+    font-size: 14px;
+    vertical-align: text-bottom;
+    margin-right: 10px;
+}
+
+/* QuickPi */
+#taskIntro.piui .introContent {
+    padding: 10px 20px 2em;
+}
+@media /* Tablets portrait */
+screen and (min-width: 768px) and (orientation: portrait) {
+    #taskIntro.piui .introContent {
+        padding-bottom: 60px;
+    }
+}
+.piui #introControls {
+    justify-content: space-between;
+}
+#piui > * {
+    margin-bottom: 10px;
+}
+#piui .btn {
+    color: #fff;
+    background: #4a90e2;
+    border: none;
+    border-radius: 50px;
+    box-shadow: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 12px;
+    vertical-align: initial;
+}
+#piui .btn span + span {
+    margin-left: 10px;
+}
+.btn#piconnect {
+    background-color: #f5a623;
+}
+.connectPi #piconnectionlabel {
+    text-align: center;
+}
+.connectPi #piconnectionlabel .deviceName {
+    color: #4a90e2;
+    font-weight: bold;
+}
+.connectPi #piconnectionlabel .deviceName i {
+    padding-right: 10px;
+}
+
+/* QuickPi connexion popup */
+#popupMessage .container {
+    position: relative;
+    margin: .5em 0;
+    padding: 8px;
+}
+#popupMessage.floatingMessage .container {
+    min-height: 100px;
+    width: 94%;
+    max-width: 680px;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 5px;
+    background: #fff;
+    color:#787878;
+    padding: 20px;
+    top: 50%;
+    transform: translate(0,-50%);
+}
+#popupMessage .container img.messageArrow {
+    display: none;
+}
+#popupMessage.floatingMessage .container img.beaver {
+    display: none;
+}
+#popupMessage .message {
+    font-size: 18px;
+}
+#popupMessage p {
+    margin: .5em 0 0;
+}
+#popupMessage p:first-child {
+    margin-top: 0;
+}
+#popupMessage input {
+    margin-top: 1em;
+    margin-left: 200px;
+}
+#popupMessage .buttonsWrapper {
+    margin: 2em auto 0;
+    text-align: center;
+}
+#popupMessage button {
+    padding: 7px 20px;
+    background-color: #4a90e2;
+    color: #fff;
+    border-radius: 100px;
+    border: none;
+    box-shadow: none;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 14px;
+    cursor: pointer;
+}
+#popupMessage button.buttonYes::before {
+    content: "\f00c";
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    margin-right: 10px;
+}
+
+#popupMessage .qpi .panel-heading {
+    margin: -20px -20px 0;
+    padding: 20px
+}
+#popupMessage .qpi .sectionTitle {
+    color: inherit;
+}
+#popupMessage .qpi .sectionTitle .iconTag {
+    margin-left: -20px; /* panel-heading padding */
+    margin-right: 14px;
+    padding-left: 24px;
+    padding-right: 12px;
+    background-color: #4a90e2;
+    border-left: 2px solid rgba(0,0,0,0.8);
+    border-radius: 0 50px 50px 0;
+}
+#popupMessage .qpi .sectionTitle .iconTag .icon {
+    width: auto;
+    background-color: transparent;
+    margin-right: 0;
+    line-height: 31px;
+    font-size: 12px;
+}
+#popupMessage .qpi .panel-body {
+    margin-left: 44px; /* Align left to .sectionTitle text left */
+    font-size: 12px;
+}
+#popupMessage .qpi .panel-body label {
+    display: block;
+    margin-top: 2em;
+}
+#popupMessage .qpi .form-group {
+    position: relative;
+}
+#popupMessage .qpi .form-control,
+#popupMessage .qpi select {
+    background-color: transparent;
+    border: none;
+    font-size: 16px;
+    height: 36px;
+    line-height: 1.6;
+    color: #555555;
+    border-radius: 5px;
+}
+#popupMessage .qpi .form-control {
+    flex-grow: 1;
+    margin: 0;
+    padding: 6px 12px;
+}
+#popupMessage .qpi input {
+    margin-left: 0;
+}
+#popupMessage .qpi select {
+    padding: 6px 12px;
+}
+#popupMessage .qpi .input-group {
+    position: relative;
+    width: 100%;
+    margin: 10px 0 0;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    -ms-flex-align: stretch;
+    align-items: stretch;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+}
+#popupMessage .qpi .input-group .input-group-prepend {
+    border-radius: 5px 0 0 5px;
+    line-height: 1.2rem;
+    padding: 6px 12px;
+    border: none;
+    color: #c5c4c4;
+    padding: 6px 9px;
+    font-weight: bold;
+}
+#popupMessage .qpi .input-group button.input-group-prepend {
+    color: #fff;
+}
+#popupMessage .qpi .input-group .custom-select {
+    position: relative;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    margin-bottom: 0;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+#popupMessage .qpi .btn {
+    margin: 10px auto 0;
+    border-radius: 50px;
+    padding: 6px 50px;
+    text-transform: uppercase;
+    font-weight: bold;
+    line-height: 1.5;
+    border: none;
+    font-size: 1rem;
+    position: relative;
+}
+#popupMessage .qpi .btn .icon {
+    position: absolute;
+    left: 16px;
+    top: 7px;
+    top: calc(50% - 0.5em);
+}
+#popupMessage .qpi .btn-group.switchRadio {
+    display: flex;
+    background-color: #e5e5e5;
+    border-radius: 50px;
+    margin: 2em 0;
+    box-shadow: 1px 1px 0 0 #ccc inset;
+}
+#popupMessage .qpi .btn-group.switchRadio .btn {
+    flex: 1 1 auto;
+    margin: 0;
+    border-left: 1px solid #d3d3d3;
+    transition: all ease 250ms;
+}
+#popupMessage .qpi .btn-group.switchRadio .btn:not(.active) {
+    background-color: transparent;
+    border-radius: 0;
+    color: #bbbbbb;
+}
+#popupMessage .qpi .btn-group.switchRadio .btn:first-child,
+#popupMessage .qpi .btn-group.switchRadio .btn.active + .btn {
+    border-left: 0;
+}
+#popupMessage .qpi .btn-group.switchRadio .btn .icon {
+    position: static;
+    padding-right: 10px;
+}
+#popupMessage .qpi #sensorPicker .flex-container {
+    align-items: center;
+    margin: 2em 0 4em;
+}
+#popupMessage .qpi #selector-image-container {
+    text-align: center;
+    position: relative;
+    height: 70px;
+}
+#popupMessage .qpi #selector-image-container img {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translate(-50%, 0);
+}
+#popupMessage .qpi #sensorPicker #selector-label {
+    position: absolute;
+    top: 15px;
+    left: 3px;
+    font-style: italic;
+}
+.qpi .inlineButtons {
+    text-align: center;
+    margin: 2em 0;
+    display: flex;
+}
+.qpi .inlineButtons button {
+    flex: 1 0 0;
+}
+.qpi .singleButton {
+    margin: 2em 0;
+    text-align: center;
+}
+.qpi button:disabled {
+    background-color: #e3e3e3 !important;
+    cursor: not-allowed !important;
+}
+#popupMessage .qpi .inlineButtons button + button {
+    margin-left: 10px;
+}

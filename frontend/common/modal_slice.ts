@@ -11,6 +11,7 @@ export const modalInitialState: ModalState = {
 export enum ModalType {
     input = 'input',
     message = 'message',
+    dialog = 'dialog',
 }
 
 export interface PromptModalOptions {

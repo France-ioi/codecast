@@ -42,30 +42,6 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
         };
     }
 
-    if (!window.displayHelper) {
-        window.displayHelper = {
-            showPopupMessage: async function (message, mode, yesButtonText, agreeFunc, noButtonText, avatarMood, defaultText, disagreeFunc) {
-                console.log('popup message', defaultText, noButtonText);
-                const result = await new Promise(resolve => {
-                    const mainStore = Codecast.environments['main'].store;
-                    mainStore.dispatch(displayModal({message, mode, defaultInput: defaultText, noButtonText, callback: resolve}));
-                });
-
-                if (false !== result && agreeFunc) {
-                    if (mode === 'input') {
-                        agreeFunc(result);
-                    } else {
-                        agreeFunc();
-                    }
-                }
-
-                if (false === result && disagreeFunc) {
-                    disagreeFunc();
-                }
-            },
-        };
-    }
-
     console.log('[blockly.editor] load blockly helper', context);
     blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
     // Override this function to keep handling the display, and avoiding a call to un-highlight the current block

@@ -213,6 +213,8 @@ function importableModules(modulesPath) {
 
         'traceroute-context': { src: modulesPath + "/pemFioi/network/traceroute/context.js", id: "traceroute-context" },
         'scanip-context': { src: modulesPath + "/pemFioi/network/scanip/context.js", id: "scanip-context" },
+
+        'font-awesome': {type: "stylesheet", src: modulesPath + "/fonts/fontAwesome/css/all.css", id: "font-awesome" },
     }
 }
 

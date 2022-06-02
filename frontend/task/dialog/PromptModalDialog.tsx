@@ -25,9 +25,17 @@ export function PromptModalDialog() {
         dispatch(cancelModal());
     };
 
+    const canClose = ModalType.dialog === modalData.mode;
+
+    const onClose = () => {
+        if (canClose) {
+            cancel();
+        }
+    }
+
     return (
-        <Dialog isOpen={modalData.open} className="simple-dialog" canOutsideClickClose={false} canEscapeKeyClose={false}>
-            <p dangerouslySetInnerHTML={{__html: modalData.message}}></p>
+        <Dialog isOpen={modalData.open} className="simple-dialog" canOutsideClickClose={canClose} canEscapeKeyClose={canClose} onClose={onClose}>
+            <div dangerouslySetInnerHTML={{__html: modalData.message}}></div>
 
             {ModalType.input === modalData.mode &&
                 <div className="text-center mb-4">
@@ -35,18 +43,20 @@ export function PromptModalDialog() {
                 </div>
             }
 
-            <div className="simple-dialog-buttons">
-                <button className="simple-dialog-button" onClick={validate}>
-                    <Icon icon="small-tick" iconSize={24}/>
-                    <span>{getMessage('VALIDATE')}</span>
-                </button>
+            {ModalType.dialog !== modalData.mode &&
+              <div className="simple-dialog-buttons">
+                  <button className="simple-dialog-button" onClick={validate}>
+                      <Icon icon="small-tick" iconSize={24}/>
+                      <span>{getMessage(modalData.noButtonText ? 'VALIDATE' : 'ALRIGHT')}</span>
+                  </button>
 
-                {modalData.noButtonText &&
+                  {modalData.noButtonText &&
                     <button className="simple-dialog-button ml-2" onClick={cancel}>
                         <span>{modalData.noButtonText}</span>
                     </button>
-                }
-            </div>
+                  }
+              </div>
+            }
         </Dialog>
     );
 }
