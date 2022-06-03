@@ -130,7 +130,10 @@ function* playerPrepare(app: App, action) {
     if (platform !== state.options.platform) {
         yield* put({
             type: CommonActionTypes.PlatformChanged,
-            payload: platform
+            payload: {
+                platform,
+                reloadTask: false,
+            },
         });
     }
 
