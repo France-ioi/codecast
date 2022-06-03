@@ -31,6 +31,17 @@ h2.sectionTitle .icon {
     margin-right: 10px;
 }
 
+.btn-centered {
+    margin: 10px auto 0;
+    display: block;
+}
+.flex-container {
+    display: flex;
+}
+.flex-container .flex-col.half {
+    flex: 1 0 0;
+}
+
 /* QuickPi */
 #taskIntro.piui .introContent {
     padding: 10px 20px 2em;
@@ -235,7 +246,7 @@ screen and (min-width: 768px) and (orientation: portrait) {
     font-weight: bold;
     line-height: 1.5;
     border: none;
-    font-size: 1rem;
+    font-size: 0.9rem;
     position: relative;
 }
 #popupMessage .qpi .btn .icon {

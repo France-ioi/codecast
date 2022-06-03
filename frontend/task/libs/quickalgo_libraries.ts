@@ -278,7 +278,7 @@ class DisplayHelper {
         console.log('popup message', defaultText, noButtonText);
         const result = await new Promise(resolve => {
             const mainStore = Codecast.environments['main'].store;
-            mainStore.dispatch(displayModal({message, mode, defaultInput: defaultText, noButtonText, callback: resolve}));
+            mainStore.dispatch(displayModal({message, mode, defaultInput: defaultText, yesButtonText, noButtonText, callback: resolve}));
         });
 
         if (false !== result && agreeFunc) {

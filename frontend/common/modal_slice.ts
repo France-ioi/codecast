@@ -2,10 +2,12 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 
 export interface ModalState extends PromptModalOptions {
     open: boolean,
+    id: number,
 }
 
 export const modalInitialState: ModalState = {
     open: false,
+    id: 0,
 };
 
 export enum ModalType {
@@ -17,6 +19,7 @@ export enum ModalType {
 export interface PromptModalOptions {
     message?: string,
     defaultInput?: string,
+    yesButtonText?: string,
     noButtonText?: string,
     callback?: Function,
     mode?: ModalType,
@@ -28,8 +31,10 @@ export const modalSlice = createSlice({
     reducers: {
         modalShow(state, action: PayloadAction<PromptModalOptions>) {
             state.open = true;
+            state.id++;
             state.message = action.payload.message;
             state.mode = action.payload.mode;
+            state.yesButtonText = action.payload.yesButtonText;
             state.noButtonText = action.payload.noButtonText;
             state.defaultInput = action.payload.defaultInput;
             state.callback = action.payload.callback;

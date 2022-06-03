@@ -34,7 +34,7 @@ export function PromptModalDialog() {
     }
 
     return (
-        <Dialog isOpen={modalData.open} className="simple-dialog" canOutsideClickClose={canClose} canEscapeKeyClose={canClose} onClose={onClose}>
+        <Dialog isOpen={modalData.open} className="simple-dialog" canOutsideClickClose={canClose} canEscapeKeyClose={canClose} onClose={onClose} key={modalData.id}>
             <div dangerouslySetInnerHTML={{__html: modalData.message}}></div>
 
             {ModalType.input === modalData.mode &&
@@ -47,7 +47,7 @@ export function PromptModalDialog() {
               <div className="simple-dialog-buttons">
                   <button className="simple-dialog-button" onClick={validate}>
                       <Icon icon="small-tick" iconSize={24}/>
-                      <span>{getMessage(modalData.noButtonText ? 'VALIDATE' : 'ALRIGHT')}</span>
+                      <span>{modalData.yesButtonText ? modalData.yesButtonText : getMessage((modalData.noButtonText ? 'VALIDATE' : 'ALRIGHT'))}</span>
                   </button>
 
                   {modalData.noButtonText &&
