@@ -108,11 +108,19 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
 
         const hasPreviousValue = null !== variable.previousValue && variable.value !== variable.previousValue;
 
+        const sanitizeValue = (value) => {
+            if ('string' === typeof value && value.substring(0, 1) === '"') {
+                return value.length > 100 ? value.substring(0, 98) + '..."' : '';
+            }
+
+            return value;
+        }
+
         return (
             <React.Fragment>
-                <span className={`value-scalar ${hasPreviousValue ? 'value-has-changed' : ''} ${!hasPreviousValue && variable.loaded ? 'value-loaded' : ''}`}>{variable.value}</span>
+                <span className={`value-scalar ${hasPreviousValue ? 'value-has-changed' : ''} ${!hasPreviousValue && variable.loaded ? 'value-loaded' : ''}`}>{sanitizeValue(variable.value)}</span>
                 {hasPreviousValue ?
-                    <span className={`value-previous ${variable.loaded ? 'value-loaded' : ''}`}>{variable.previousValue}</span>
+                    <span className={`value-previous ${variable.loaded ? 'value-loaded' : ''}`}>{sanitizeValue(variable.previousValue)}</span>
                     : null}
             </React.Fragment>
         );
