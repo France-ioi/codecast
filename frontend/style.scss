@@ -32,6 +32,7 @@ $grid-gutter-width: 6px;
 @import "python";
 @import "subtitles";
 @import "controls";
+@import "./tralalere/tralalere.scss";
 
 html {
   margin-left: calc(100vw - 100%);

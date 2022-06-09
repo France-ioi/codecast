@@ -1,0 +1,114 @@
+$tralalere-green-blue: #05A8AA;
+$tralalere-violet: #5158BB;
+$tralalere-dark-blue: #043565;
+$tralalere-green: #85FF00;
+
+[data-theme="tralalere"] {
+  --primary-color: #043565;
+  --secondary-color: #1f1f1f;
+  --font-family-sans-serif: 'Roboto', sans-serif;
+  --default-border-radius: 7px;
+}
+
+.tralalere {
+  .tralalere-instructions {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 1000px;
+
+    .tralalere-instructions-container {
+      margin-left: 20px;
+      margin-top: 12px;
+      padding-left: 134px;
+      width: 100%;
+
+      background: $tralalere-green-blue;
+      border-radius: 50px;
+      box-shadow: -15px 15px #383961;
+
+      .task-mission {
+        color: white;
+        height: 80px;
+        overflow: hidden;
+        padding-top: 12px;
+
+        h1 {
+          color: white;
+          font-weight: bold !important;
+          font-size: 1rem !important;
+          margin-bottom: .5rem !important;
+        }
+      }
+    }
+
+    .tralalere-instructions-window {
+      position: absolute;
+      left: 60px;
+      top: 3px;
+    }
+
+    .tralalere-instructions-left {
+      position: absolute;
+      left: 4px;
+      top: 2px;
+    }
+    .tralalere-instructions-around-left {
+      box-shadow: -15px 15px #383961;
+      border-radius: 50px;
+      position: absolute;
+      left: 14px;
+      top: 3px;
+      width: 134px;
+      height: 95px;
+      display: block;
+    }
+  }
+
+  .tralalere-section {
+    display: flex;
+    flex: 1 0;
+    min-height: 0;
+    width: 100vw;
+    background: radial-gradient(65.09% 65.09% at 50% 50%, #05A8AA 0%, #383961 100%);
+  }
+
+  .tralalere-visualization, .blockly-editor {
+    flex: 1 0;
+    min-height: 0;
+  }
+
+  .tralalere-visualization {
+    margin-top: 90px;
+    background-size: cover;
+    padding-top: 40px;
+    border-radius: 6px 6px 0px 0px;
+  }
+
+  .tralalere-menu-icons {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+
+    .menu-task-element {
+      height: 50px;
+      width: 50px;
+
+      background: $tralalere-dark-blue;
+      border: 2px solid $tralalere-green;
+      border-radius: 7px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: $tralalere-green;
+      font-size: 30px;
+      cursor: pointer;
+      font-weight: 900;
+      box-shadow: -4px 4px #1D1E47;
+    }
+  }
+}
+
+

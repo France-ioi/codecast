@@ -37,6 +37,7 @@ import {Portal} from "@blueprintjs/core";
 import {DndProvider} from "react-dnd";
 import {CustomDragLayer} from "./task/CustomDragLayer";
 import AbstractRunner from "./stepper/abstract_runner";
+import {TralalereApp} from "./tralalere/TralalereApp";
 
 setAutoFreeze(true);
 log.setLevel('trace');
@@ -241,6 +242,9 @@ Codecast.start = function(options) {
     if (!!urlParams.get('documentation')) {
         startScreen = 'documentation';
     }
+    if ('tralalere' === options.app && 'task' === startScreen) {
+        startScreen = 'tralalere';
+    }
 
     let appDisplay;
     switch (startScreen) {
@@ -262,7 +266,11 @@ Codecast.start = function(options) {
 
             autoLogin();
 
-            appDisplay = <TaskApp />;
+            appDisplay = <TaskApp/>;
+
+            break;
+        case 'tralalere':
+            appDisplay = <TralalereApp/>;
 
             break;
         case 'documentation':
