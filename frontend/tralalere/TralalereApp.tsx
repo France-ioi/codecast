@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
 import {taskLoad} from "../task";
@@ -18,6 +18,7 @@ export function TralalereApp() {
     const layoutType = useAppSelector(state => state.layout.type);
     const language = useAppSelector(state => state.options.language);
     const screen = useAppSelector(state => state.screen);
+    const [instructionsExpanded, setInstructionsExpanded] = useState(false);
 
     const dispatch = useDispatch();
 
@@ -39,20 +40,38 @@ export function TralalereApp() {
         dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: newScreen}});
     };
 
+    const expandInstructions = () => {
+        setInstructionsExpanded(!instructionsExpanded);
+    };
+
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere`}>
             <div className="layout-general">
                 <div className="tralalere-instructions">
+                    {instructionsExpanded ?
+                        <img className="tralalere-instructions-shadow-down"
+                             src={require('./images/instructions-shadow-down.png').default}/>
+                        :
+                        <img className="tralalere-instructions-shadow-right"
+                             src={require('./images/instructions-shadow-right.png').default}/>
+                    }
+
                     <img className="tralalere-instructions-window" src={require('./images/instructions-window.png').default}/>
                     <div className="tralalere-instructions-around-left"/>
                     <img className="tralalere-instructions-left" src={require('./images/instructions-left-folded.png').default}/>
-                    <div className="tralalere-instructions-container">
+                    <div className={`tralalere-instructions-container ${!instructionsExpanded ? 'is-limited' : ''}`}>
                         <TaskInstructions/>
+
+                        <div>
+                            <div className="tralalere-button" onClick={expandInstructions}>
+                                {instructionsExpanded ? '-' : '+'}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div className="tralalere-menu-icons">
-                    <div className="menu-task-element" onClick={toggleDocumentation}>
+                    <div className="tralalere-button" onClick={toggleDocumentation}>
                         <img className="menu-task-icon" src={require('./images/documentation.svg').default}/>
                     </div>
                 </div>

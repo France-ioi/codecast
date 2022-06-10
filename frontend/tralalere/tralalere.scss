@@ -15,7 +15,8 @@ $tralalere-green: #85FF00;
     position: fixed;
     top: 0;
     left: 0;
-    width: 1000px;
+    width: 900px;
+    z-index: 1;
 
     .tralalere-instructions-container {
       margin-left: 20px;
@@ -27,11 +28,14 @@ $tralalere-green: #85FF00;
       border-radius: 50px;
       box-shadow: -15px 15px #383961;
 
+      display: flex;
+      align-items: center;
+      padding-right: 30px;
+
       .task-mission {
         color: white;
-        height: 80px;
-        overflow: hidden;
         padding-top: 12px;
+        margin-right: 20px;
 
         h1 {
           color: white;
@@ -39,6 +43,11 @@ $tralalere-green: #85FF00;
           font-size: 1rem !important;
           margin-bottom: .5rem !important;
         }
+      }
+
+      &.is-limited .task-mission {
+        height: 80px;
+        overflow: hidden;
       }
     }
 
@@ -52,6 +61,16 @@ $tralalere-green: #85FF00;
       position: absolute;
       left: 4px;
       top: 2px;
+    }
+    .tralalere-instructions-shadow-right {
+      position: absolute;
+      left: 6px;
+      top: 6px;
+    }
+    .tralalere-instructions-shadow-down {
+      position: absolute;
+      left: 6px;
+      top: 6px;
     }
     .tralalere-instructions-around-left {
       box-shadow: -15px 15px #383961;
@@ -90,25 +109,24 @@ $tralalere-green: #85FF00;
     top: 10px;
     right: 10px;
     z-index: 10;
-
-    .menu-task-element {
-      height: 50px;
-      width: 50px;
-
-      background: $tralalere-dark-blue;
-      border: 2px solid $tralalere-green;
-      border-radius: 7px;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: $tralalere-green;
-      font-size: 30px;
-      cursor: pointer;
-      font-weight: 900;
-      box-shadow: -4px 4px #1D1E47;
-    }
   }
 }
 
+.tralalere-button {
+  height: 50px;
+  width: 50px;
+
+  background: $tralalere-dark-blue;
+  border: 2px solid $tralalere-green;
+  border-radius: 7px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $tralalere-green;
+  font-size: 30px;
+  cursor: pointer;
+  font-weight: 900;
+  box-shadow: -4px 4px #1D1E47;
+}
 

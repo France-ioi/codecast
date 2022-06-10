@@ -1,12 +1,13 @@
 import {getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {call, put, select, takeEvery, all, fork, cancel, take, takeLatest, cancelled} from "typed-redux-saga";
+import {all, call, cancel, cancelled, fork, put, select, take, takeEvery, takeLatest} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {App} from "../index";
 import {AppStore, CodecastPlatform} from "../store";
-import {
-    createQuickalgoLibrary, mainQuickAlgoLogger,
+import QuickalgoLibsBundle, {
+    createQuickalgoLibrary,
+    mainQuickAlgoLogger,
     quickAlgoLibraries,
     QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
@@ -37,9 +38,9 @@ import {addAutoRecordingBehaviour} from "../recorder/record";
 import {ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation/doc";
 import BlocksBundle from "./blocks/blocks";
-import QuickalgoLibsBundle from "./libs/quickalgo_libraries";
 import PlatformBundle, {
-    getTaskAnswerAggregated, platformApi,
+    getTaskAnswerAggregated,
+    platformApi,
     setPlatformBundleParameters,
     taskGradeAnswerEventSaga
 } from "./platform/platform";
@@ -53,17 +54,14 @@ import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
-import {
-    platformAnswerGraded,
-    platformAnswerLoaded,
-    taskGradeAnswerEvent,
-} from "./platform/actionTypes";
+import {platformAnswerGraded, platformAnswerLoaded, taskGradeAnswerEvent,} from "./platform/actionTypes";
 import {isStepperInterrupting} from "../stepper/selectors";
 import {BlockDocumentModel, DocumentModel, documentModelFromString} from "../buffers";
 import {
     getDefaultTaskLevel,
     platformSaveAnswer,
-    platformSetTaskLevels, platformTokenUpdated,
+    platformSetTaskLevels,
+    platformTokenUpdated,
     TaskLevelName,
     taskLevelsList
 } from "./platform/platform_slice";
@@ -134,7 +132,8 @@ if (!String.prototype.format) {
 }
 
 if (!window.modulesPath) {
-    window.modulesPath = 'bebras-modules/';
+    const href = window.location.href;
+    window.modulesPath = href.substring(0, href.lastIndexOf('/')) + "/bebras-modules/";
 }
 
 let oldSagasTasks = {};

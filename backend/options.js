@@ -15,7 +15,6 @@ export function buildCommonOptions(config, start) {
         canChangePlatform: /sandbox|recorder|task/.test(start),
         canChangeLanguage: true,
         controls: {},
-        app: config.app,
     };
 }
 
@@ -25,6 +24,7 @@ export function buildOptions(config, req, start, callback) {
     options.audioWorkerUrl = config.audioWorkerUrl;
     options.callbackUrl = req.originalUrl;
     options.referer = req.headers.referer || null;
+    options.app = 'crane' === req.query.task ? 'tralalere' : config.app;
     if (req.query.platform) {
         options.platform = req.query.platform;
     }

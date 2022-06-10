@@ -7,6 +7,7 @@ import QuickPiFixture from './fixtures/quickpi_testbed';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
 import DatabaseFixture from './fixtures/test_database';
 import P5Fixture from './fixtures/test_p5';
+import CraneFixture from './fixtures/test_crane';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 
@@ -19,6 +20,7 @@ const availableTasks = {
     barcode: BarcodeFixture,
     database: DatabaseFixture,
     p5: P5Fixture,
+    crane: CraneFixture,
 };
 
 export interface TaskSubmission {
