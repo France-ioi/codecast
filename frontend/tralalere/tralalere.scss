@@ -69,8 +69,8 @@ $tralalere-green: #85FF00;
     }
     .tralalere-instructions-shadow-down {
       position: absolute;
-      left: 6px;
-      top: 6px;
+      left: -5px;
+      top: 20px;
     }
     .tralalere-instructions-around-left {
       box-shadow: -15px 15px #383961;
@@ -128,5 +128,6 @@ $tralalere-green: #85FF00;
   cursor: pointer;
   font-weight: 900;
   box-shadow: -4px 4px #1D1E47;
+  user-select: none;
 }
 

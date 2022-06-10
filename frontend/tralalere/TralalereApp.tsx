@@ -11,6 +11,7 @@ import {ContextVisualization} from "../task/ContextVisualization";
 import {LayoutEditor} from "../task/layout/LayoutEditor";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
+import {LayoutType} from "../task/layout/layout";
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -19,6 +20,8 @@ export function TralalereApp() {
     const language = useAppSelector(state => state.options.language);
     const screen = useAppSelector(state => state.screen);
     const [instructionsExpanded, setInstructionsExpanded] = useState(false);
+
+    const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
 
     const dispatch = useDispatch();
 
@@ -57,7 +60,7 @@ export function TralalereApp() {
                     }
 
                     <img className="tralalere-instructions-window" src={require('./images/instructions-window.png').default}/>
-                    <div className="tralalere-instructions-around-left"/>
+                    {!instructionsExpanded && <div className="tralalere-instructions-around-left"/>}
                     <img className="tralalere-instructions-left" src={require('./images/instructions-left-folded.png').default}/>
                     <div className={`tralalere-instructions-container ${!instructionsExpanded ? 'is-limited' : ''}`}>
                         <TaskInstructions/>
