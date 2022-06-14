@@ -64,7 +64,7 @@ $tralalere-green: #85FF00;
     }
     .tralalere-instructions-shadow-right {
       position: absolute;
-      left: 6px;
+      left: 5px;
       top: 6px;
     }
     .tralalere-instructions-shadow-down {
@@ -129,5 +129,31 @@ $tralalere-green: #85FF00;
   font-weight: 900;
   box-shadow: -4px 4px #1D1E47;
   user-select: none;
+
+  &[disabled] {
+    opacity: 0.4;
+  }
 }
 
+.tralalere-controls {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  z-index: 1;
+  height: 100px;
+  width: 300px;
+  background: radial-gradient(65.09% 65.09% at 50% 50%, #05A8AA 0%, #383961 100%);
+}
+
+.tralalere-control-button-container {
+  margin-right: 15px;
+  .tralalere-button {
+    height: 70px;
+    width: 70px;
+    border-radius: 20px;
+    svg {
+      width: 40px;
+      height: 40px;
+    }
+  }
+}

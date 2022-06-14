@@ -80,6 +80,7 @@ export interface CodecastOptions {
     task?: string,
     taskInstructions?: string,
     theme?: string,
+    app?: string,
 }
 
 export interface Panes {

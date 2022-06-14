@@ -12,6 +12,7 @@ import {LayoutEditor} from "../task/layout/LayoutEditor";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
 import {LayoutType} from "../task/layout/layout";
+import {TralalereControls} from "./TralalereControls";
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -53,10 +54,10 @@ export function TralalereApp() {
                 <div className="tralalere-instructions">
                     {instructionsExpanded ?
                         <img className="tralalere-instructions-shadow-down"
-                             src={require('./images/instructions-shadow-down.png').default}/>
+                            src={require('./images/instructions-shadow-down.png').default}/>
                         :
                         <img className="tralalere-instructions-shadow-right"
-                             src={require('./images/instructions-shadow-right.png').default}/>
+                            src={require('./images/instructions-shadow-right.png').default}/>
                     }
 
                     <img className="tralalere-instructions-window" src={require('./images/instructions-window.png').default}/>
@@ -85,6 +86,9 @@ export function TralalereApp() {
                     </div>
                     <div className="blockly-editor">
                         <LayoutEditor/>
+                    </div>
+                    <div className="tralalere-controls">
+                        <TralalereControls enabled={true}/>
                     </div>
                 </div>
             </div>

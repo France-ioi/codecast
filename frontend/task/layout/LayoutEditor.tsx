@@ -13,7 +13,8 @@ import {BlocksUsage} from "../blocks/BlocksUsage";
 import {CodecastPlatform} from "../../store";
 
 export function LayoutEditor() {
-    const platform = useAppSelector(state => state.options.platform);
+    const options = useAppSelector(state => state.options);
+    const platform = options.platform;
     const currentTask = useAppSelector(state => state.task.currentTask);
     const blocksCollapsed = useAppSelector(state => state.task.blocksPanelCollapsed);
     let sourceMode;
@@ -62,7 +63,7 @@ export function LayoutEditor() {
                     hasAutocompletion
                 />
             </div>
-            <BlocksUsage/>
+            {'tralalere' !== options.app && <BlocksUsage/>}
         </div>
     );
 }
