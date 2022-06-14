@@ -2,6 +2,29 @@ const images = [
     {path: require('./icon.png')},
     {path: require('./crane.png')},
     {path: require('./crane.svg')},
+    {path: require('./assets/background.png')},
+    {path: require('./assets/cloud_1.png')},
+    {path: require('./assets/cloud_2.png')},
+    {path: require('./assets/cloud_3.png')},
+    {path: require('./assets/crane_left_claw.png')},
+    {path: require('./assets/crane_left_claw_open.png')},
+    {path: require('./assets/crane_line.png')},
+    {path: require('./assets/crane_right_claw.png')},
+    {path: require('./assets/crane_right_claw_open.png')},
+    {path: require('./assets/crane_shaft.png')},
+    {path: require('./assets/crane_wheels.png')},
+    {path: require('./assets/tower_1.png')},
+    {path: require('./assets/tower_2.png')},
+    {path: require('./assets/tower_3.png')},
+    {path: require('./assets/tower_4.png')},
+    {path: require('./assets/tower_5.png')},
+    {path: require('./assets/tower_6.png')},
+    {path: require('./assets/tower_7.png')},
+    {path: require('./assets/tower_8.png')},
+    {path: require('./assets/tower_9.png')},
+    {path: require('./assets/tower_10.png')},
+    {path: require('./assets/tower_11.png')},
+    {path: require('./assets/tower_12.png')},
 ];
 
 export default {
@@ -14,8 +37,8 @@ export default {
         rowLabelEnabled: false,
         showContLabels: true,
         showContOutline: true,
-        contextType: "default",
-        hideControls: {saveOrLoad: false},
+        contextType: "sciFi",
+        hideControls: { saveOrLoad: false},
 
         nbPlatforms: 100,
         maxInstructions: {
@@ -37,28 +60,37 @@ export default {
             // procedures: { disableArgs: true }
         },
         intro: {
-            default: false
+            default: false,
+            more: {
+                shared: [ { type: "custom", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." } ]
+            }
         }
     },
     data: {
         easy: [
             {
                 container: [
-                    [1, 1, 1],
-                    [2, 3, 1],
-                    [2, 3, 4]
+                    // [1,1,1],
+                    // [2,3,1],
+                    // [2,3,4]
                 ],
                 tiles: [
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [3, 1, 1, 1, 1, 1, 1]
+                    [ 1, 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1, 1],
+                    [ 6, 7, 2, 1, 1, 1, 1],
+                    [ 8, 9, 3, 1, 1, 1, 1],
+                    [ 10, 11, 5, 1, 1, 1, 1],
+                    [ 12, 13, 4, 1, 1, 1, 1]
                 ],
                 target: [
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 3, 1, 1, 1]
+                    [ 1, 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 2, 3, 1],
+                    [ 1, 1, 1, 1, 4, 5, 1],
+                    [ 1, 1, 1, 1, 6, 7, 1],
+                    [ 1, 1, 1, 1, 8, 9, 1],
+                    [ 1, 1, 1, 1, 10, 11, 1],
+                    [ 1, 1, 1, 1, 12, 13, 1]
                 ],
                 initItems: [
                     // { row: 8, col: 0, dir: 0, type: "robot" },
@@ -69,16 +101,16 @@ export default {
         medium: [
             {
                 tiles: [
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [2, 3, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [2, 3, 4, 3, 1, 1, 1, 1, 1, 1]
+                    [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [ 2, 3, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [ 2, 3, 4, 3, 1, 1, 1, 1, 1, 1]
                 ],
                 target: [
-                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 1, 4, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 2, 2, 1, 1, 1],
-                    [1, 1, 1, 1, 1, 3, 3, 3, 1, 1]
+                    [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1, 4, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 2, 2, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 3, 3, 3, 1, 1]
                 ],
                 initItems: [
                     // { row: 8, col: 0, dir: 0, type: "robot" },
