@@ -170,7 +170,22 @@ export class QuickAlgoLibrary {
     };
 
     provideBlocklyColours() {
-        // Provide colours for Blockly
+        // return {
+        //     categories: {
+        //         logic: 210,
+        //         loops: 120,
+        //         math: 220,
+        //         text: 250,
+        //         lists: 60,
+        //         colour: 310,
+        //         variables: 340,
+        //         functions: 20,
+        //         actions: 260,
+        //         sensors : 340,
+        //         _default: 280
+        //     },
+        //     blocks: {}
+        // };
         return {};
     };
 

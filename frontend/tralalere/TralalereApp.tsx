@@ -51,29 +51,6 @@ export function TralalereApp() {
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere`}>
             <div className="layout-general">
-                <div className="tralalere-instructions">
-                    {instructionsExpanded ?
-                        <img className="tralalere-instructions-shadow-down"
-                            src={require('./images/instructions-shadow-down.png').default}/>
-                        :
-                        <img className="tralalere-instructions-shadow-right"
-                            src={require('./images/instructions-shadow-right.png').default}/>
-                    }
-
-                    <img className="tralalere-instructions-window" src={require('./images/instructions-window.png').default}/>
-                    {!instructionsExpanded && <div className="tralalere-instructions-around-left"/>}
-                    <img className="tralalere-instructions-left" src={require('./images/instructions-left-folded.png').default}/>
-                    <div className={`tralalere-instructions-container ${!instructionsExpanded ? 'is-limited' : ''}`}>
-                        <TaskInstructions/>
-
-                        <div>
-                            <div className="tralalere-button" onClick={expandInstructions}>
-                                {instructionsExpanded ? '-' : '+'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div className="tralalere-menu-icons">
                     <div className="tralalere-button" onClick={toggleDocumentation}>
                         <img className="menu-task-icon" src={require('./images/documentation.svg').default}/>
@@ -82,9 +59,32 @@ export function TralalereApp() {
 
                 <div className={`tralalere-section`}>
                     <div className="tralalere-visualization" style={{backgroundImage: `url(${require('./images/visualization-background.png').default}`}}>
+                        <div className="tralalere-instructions">
+                            {instructionsExpanded ?
+                                <img className="tralalere-instructions-shadow-down"
+                                    src={require('./images/instructions-shadow-down.png').default}/>
+                                :
+                                <img className="tralalere-instructions-shadow-right"
+                                    src={require('./images/instructions-shadow-right.png').default}/>
+                            }
+
+                            <img className="tralalere-instructions-window" src={require('./images/instructions-window.png').default}/>
+                            {!instructionsExpanded && <div className="tralalere-instructions-around-left"/>}
+                            <img className="tralalere-instructions-left" src={require('./images/instructions-left-folded.png').default}/>
+                            <div className={`tralalere-instructions-container ${!instructionsExpanded ? 'is-limited' : ''}`}>
+                                <TaskInstructions/>
+
+                                <div>
+                                    <div className="tralalere-button" onClick={expandInstructions}>
+                                        {instructionsExpanded ? '-' : '+'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <ContextVisualization/>
                     </div>
-                    <div className="blockly-editor">
+                    <div className="blockly-editor" style={{backgroundImage: `url(${require('./images/editor-cross.png').default}`}}>
                         <LayoutEditor/>
                     </div>
                     <div className="tralalere-controls">

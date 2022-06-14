@@ -12,17 +12,16 @@ $tralalere-green: #85FF00;
 
 .tralalere {
   .tralalere-instructions {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
-    width: 900px;
+    right: 0;
     z-index: 1;
 
     .tralalere-instructions-container {
       margin-left: 20px;
       margin-top: 12px;
       padding-left: 134px;
-      width: 100%;
 
       background: $tralalere-green-blue;
       border-radius: 50px;
@@ -86,22 +85,26 @@ $tralalere-green: #85FF00;
 
   .tralalere-section {
     display: flex;
-    flex: 1 0;
+    flex: 50%;
     min-height: 0;
     width: 100vw;
     background: radial-gradient(65.09% 65.09% at 50% 50%, #05A8AA 0%, #383961 100%);
   }
 
   .tralalere-visualization, .blockly-editor {
-    flex: 1 0;
+    flex: 50%;
     min-height: 0;
   }
 
   .tralalere-visualization {
-    margin-top: 90px;
     background-size: cover;
     padding-top: 40px;
     border-radius: 6px 6px 0px 0px;
+    position: relative;
+
+    .context-visualization {
+      margin-top: 90px;
+    }
   }
 
   .tralalere-menu-icons {
@@ -109,6 +112,20 @@ $tralalere-green: #85FF00;
     top: 10px;
     right: 10px;
     z-index: 10;
+  }
+
+  .blockly-editor {
+    .blocklySvg {
+      background: transparent;
+    }
+    .blocklyFlyoutBackground {
+      fill: $tralalere-dark-blue;
+      stroke: $tralalere-green-blue;
+      stroke-width: 3;
+    }
+    .blocklyTrash {
+      display: none;
+    }
   }
 }
 
@@ -131,6 +148,10 @@ $tralalere-green: #85FF00;
   user-select: none;
 
   &[disabled] {
+    cursor: not-allowed;
+  }
+
+  &[disabled] svg {
     opacity: 0.4;
   }
 }
@@ -142,7 +163,7 @@ $tralalere-green: #85FF00;
   z-index: 1;
   height: 100px;
   width: 300px;
-  background: radial-gradient(65.09% 65.09% at 50% 50%, #05A8AA 0%, #383961 100%);
+  //background: radial-gradient(65.09% 65.09% at 50% 50%, #05A8AA 0%, #383961 100%);
 }
 
 .tralalere-control-button-container {

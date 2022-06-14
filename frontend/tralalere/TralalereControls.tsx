@@ -134,8 +134,8 @@ export function TralalereControls(props: StepperControlsProps) {
         return new Promise<boolean>((resolve) => {
             if (stepperControlsState.showCompile) {
                 dispatch({type: ActionTypes.CompileWait, payload: {callback: (result) => {
-                            resolve(CompileStatus.Done === result);
-                        }}});
+                    resolve(CompileStatus.Done === result);
+                }}});
             } else {
                 resolve(true);
             }
