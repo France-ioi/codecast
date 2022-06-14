@@ -120,6 +120,7 @@ declare global {
         debounce: any,
         processingEndConditions: any,
         modulesPath: string,
+        app: string,
     }
 }
 

@@ -169,23 +169,26 @@ export class QuickAlgoLibrary {
         // Unload the context, cleaning up
     };
 
-    provideBlocklyColours() {
-        // return {
-        //     categories: {
-        //         logic: 210,
-        //         loops: 120,
-        //         math: 220,
-        //         text: 250,
-        //         lists: 60,
-        //         colour: 310,
-        //         variables: 340,
-        //         functions: 20,
-        //         actions: 260,
-        //         sensors : 340,
-        //         _default: 280
-        //     },
-        //     blocks: {}
-        // };
+    provideBlocklyColours(): any {
+        if ('tralalere' === window.app) {
+            return {
+                categories: {
+                    logic: 210,
+                    loops: 120,
+                    control: 120,
+                    math: 230,
+                    operator: 230,
+                    texts: 160,
+                    lists: 260,
+                    colour: 20,
+                    variables: 330,
+                    functions: 65,
+                    _default: 290,
+                },
+                blocks: {}
+            };
+        }
+
         return {};
     };
 

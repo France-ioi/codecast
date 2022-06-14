@@ -12,7 +12,7 @@ import {useDispatch} from "react-redux";
 import {BlocksUsage} from "../blocks/BlocksUsage";
 import {CodecastPlatform} from "../../store";
 
-export function LayoutEditor() {
+export function LayoutEditor({style}) {
     const options = useAppSelector(state => state.options);
     const platform = options.platform;
     const currentTask = useAppSelector(state => state.task.currentTask);
@@ -45,7 +45,7 @@ export function LayoutEditor() {
     const displayBlocks = !!(context && blocks.length && CodecastPlatform.Python === platform);
 
     return (
-        <div className="layout-editor">
+        <div className="layout-editor" style={style}>
             {currentTask && displayBlocks && <AvailableBlocks collapsed={blocksCollapsed}/>}
             <div className="task-layout-editor-container">
                 {currentTask && displayBlocks && <div className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>

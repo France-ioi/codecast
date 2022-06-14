@@ -2,6 +2,7 @@ $tralalere-green-blue: #05A8AA;
 $tralalere-violet: #5158BB;
 $tralalere-dark-blue: #043565;
 $tralalere-green: #85FF00;
+$tralalere-red: #FF3C11;
 
 [data-theme="tralalere"] {
   --primary-color: #043565;
@@ -94,6 +95,8 @@ $tralalere-green: #85FF00;
   .tralalere-visualization, .blockly-editor {
     flex: 50%;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .tralalere-visualization {
@@ -115,16 +118,38 @@ $tralalere-green: #85FF00;
   }
 
   .blockly-editor {
+    position: relative;
+    .layout-editor {
+      min-height: 0;
+    }
     .blocklySvg {
       background: transparent;
     }
     .blocklyFlyoutBackground {
       fill: $tralalere-dark-blue;
-      stroke: $tralalere-green-blue;
+      //stroke: $tralalere-green-blue;
       stroke-width: 3;
+      fill-opacity: 1;
     }
     .blocklyTrash {
       display: none;
+    }
+    .blockly-flyout-wrapper {
+      border: solid 4px $tralalere-green-blue;
+      position: absolute;
+      pointer-events: none;
+      top: 0;
+      left: 0;
+      width: var(--flyout-width);
+      bottom: 0;
+      border-radius: 15px;
+      background: linear-gradient(to bottom, rgba(255,0,0,0) 0%, rgba(255,0,0,0) 80%, $tralalere-dark-blue 80%, $tralalere-dark-blue 100%);
+    }
+    .blockly-flyout-wrapper-bottom {
+      position: absolute;
+      bottom: 0;
+      right: -3px;
+      border-bottom-right-radius: 12px;
     }
   }
 }
@@ -149,6 +174,7 @@ $tralalere-green: #85FF00;
 
   &[disabled] {
     cursor: not-allowed;
+    border: 2px solid rgba(133, 255, 0, 0.3);
   }
 
   &[disabled] svg {
@@ -157,13 +183,63 @@ $tralalere-green: #85FF00;
 }
 
 .tralalere-controls {
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  z-index: 1;
   height: 100px;
-  width: 300px;
-  //background: radial-gradient(65.09% 65.09% at 50% 50%, #05A8AA 0%, #383961 100%);
+  width: 100%;
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  padding-left: var(--flyout-width);
+  > div {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .error-message {
+    background: $tralalere-dark-blue;
+    border: 3px solid $tralalere-red;
+    box-shadow: -6px 6px #1D1E47;
+    border-radius: 7px;
+    margin-left: 6px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    .close-button {
+      background: #043565;
+      border: 2px solid $tralalere-red;
+      border-radius: 7px;
+      box-shadow: -6px 6px #1D1E47;
+      top: -10px;
+      right: -10px;
+      width: 30px;
+      height: 30px;
+      color: $tralalere-red;
+      padding: 0;
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+    .error-message-wrapper {
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      svg {
+        margin-left: 15px;
+        margin-right: 15px;
+      }
+    }
+    .message {
+      color: white;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 19px;
+    }
+  }
 }
 
 .tralalere-control-button-container {
