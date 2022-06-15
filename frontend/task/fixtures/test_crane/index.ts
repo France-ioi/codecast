@@ -30,7 +30,7 @@ const images = [
 export default {
     gridInfos: {
         context: 'crane',
-        importModules: ['blockly-crane-1.0'],
+        importModules: ['blockly-crane-1.0', 'beav-1.0'],
         images,
         conceptViewer: ["extra_list"],
         showLabels: true,
