@@ -42,7 +42,7 @@ export function LayoutEditor({style}) {
     const context = quickAlgoLibraries.getContext(null, 'main');
     const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector(state, context) : []);
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
-    const displayBlocks = !!(context && blocks.length && CodecastPlatform.Python === platform);
+    const displayBlocks = !!(context && blocks.length && CodecastPlatform.Python === platform && 'tralalere' !== options.app);
 
     return (
         <div className="layout-editor" style={style}>

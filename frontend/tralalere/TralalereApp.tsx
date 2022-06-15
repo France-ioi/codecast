@@ -15,10 +15,8 @@ import {TralalereControls} from "./TralalereControls";
 import {Dialog, Icon} from "@blueprintjs/core";
 import {toHtml} from "../utils/sanitize";
 import {stepperClearError} from "../stepper/actionTypes";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {ModalType} from "../common/modal_slice";
-import {getMessage} from "../lang";
 import {Documentation} from "../task/documentation/Documentation";
+import {CodecastPlatform} from "../store";
 
 
 export function TralalereApp() {
@@ -26,6 +24,7 @@ export function TralalereApp() {
     const options = useAppSelector(state => state.options);
     const layoutType = useAppSelector(state => state.layout.type);
     const language = useAppSelector(state => state.options.language);
+    const platform = useAppSelector(state => state.options.platform);
     const screen = useAppSelector(state => state.screen);
     const [instructionsExpanded, setInstructionsExpanded] = useState(false);
     const contextId = useAppSelector(state => state.task.contextId);
@@ -74,6 +73,8 @@ export function TralalereApp() {
         if (flyout.length && (flyout[0] as SVGGraphicsElement).getBBox()) {
             const width = (flyout[0] as SVGGraphicsElement).getBBox().width;
             document.documentElement.style.setProperty('--flyout-width', width + 'px');
+        } else {
+            document.documentElement.style.setProperty('--flyout-width', '0px');
         }
     }, [contextId, windowWidth]);
 
@@ -135,9 +136,9 @@ export function TralalereApp() {
                     </div>
                     <div className="blockly-editor">
                         <LayoutEditor style={{backgroundImage: `url(${require('./images/editor-cross.png').default}`}}/>
-                        <div className="blockly-flyout-wrapper">
+                        {CodecastPlatform.Blockly === platform && <div className="blockly-flyout-wrapper">
                             <img className="blockly-flyout-wrapper-bottom" src={require('./images/editor-bottom-background.png').default}/>
-                        </div>
+                        </div>}
                         <div className="tralalere-controls">
                             <div>
                                 {hasError && <div className="error-message" onClick={onClearError}>
