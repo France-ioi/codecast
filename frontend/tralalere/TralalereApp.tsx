@@ -17,6 +17,7 @@ import {toHtml} from "../utils/sanitize";
 import {stepperClearError} from "../stepper/actionTypes";
 import {Documentation} from "../task/documentation/Documentation";
 import {CodecastPlatform} from "../store";
+import {TaskHints} from "../task/hints/TaskHints";
 
 
 export function TralalereApp() {
@@ -30,16 +31,11 @@ export function TralalereApp() {
     const contextId = useAppSelector(state => state.task.contextId);
 
     const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
+    const hintsOpen = Screen.Hints === screen;
     const stepperError = useAppSelector(state => state.stepper.error);
     const hasError = !!stepperError;
-    const [errorDialogOpen, setErrorDialogOpen] = useState(false);
     const windowWidth = useAppSelector(state => state.windowWidth);
-
-    useEffect(() => {
-        if (!hasError) {
-            setErrorDialogOpen(false);
-        }
-    }, [hasError]);
+    const availableHints = useAppSelector(state => state.hints.availableHints);
 
     let error = null;
     if (hasError) {
@@ -83,6 +79,11 @@ export function TralalereApp() {
         dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: newScreen}});
     };
 
+    const toggleHints = () => {
+        const newScreen = Screen.Hints === screen ? null : Screen.Hints;
+        dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: newScreen}});
+    };
+
     const expandInstructions = () => {
         setInstructionsExpanded(!instructionsExpanded);
     };
@@ -102,6 +103,10 @@ export function TralalereApp() {
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere`}>
             <div className="layout-general">
                 <div className="tralalere-menu-icons">
+                    {0 < availableHints.length && <div className="tralalere-button" onClick={toggleHints}>
+                        ?
+                    </div>}
+
                     <div className="tralalere-button" onClick={toggleDocumentation}>
                         <img className="menu-task-icon" src={require('./images/documentation.svg').default}/>
                     </div>
@@ -138,6 +143,9 @@ export function TralalereApp() {
                         <LayoutEditor style={{backgroundImage: `url(${require('./images/editor-cross.png').default}`}}/>
                         {CodecastPlatform.Blockly === platform && <div className="blockly-flyout-wrapper">
                             <img className="blockly-flyout-wrapper-bottom" src={require('./images/editor-bottom-background.png').default}/>
+                        </div>}
+                        {hintsOpen && <div className="tralalere-hints">
+                            <TaskHints/>
                         </div>}
                         <div className="tralalere-controls">
                             <div>

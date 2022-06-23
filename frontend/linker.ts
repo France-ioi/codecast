@@ -6,6 +6,7 @@ import {AppStore} from "./store";
 import {configureStore} from "@reduxjs/toolkit";
 import taskSlice from "./task/task_slice";
 import documentationSlice from "./task/documentation/documentation_slice";
+import hintsSlice from "./task/hints/hints_slice";
 import log from "loglevel";
 import platformSlice from "./task/platform/platform_slice";
 import analysisSlice from "./stepper/analysis/analysis_slice";
@@ -218,6 +219,7 @@ export function link(rootBuilder, globalScope: App): Linker {
             [taskSlice.name]: taskSlice.reducer,
             [platformSlice.name]: platformSlice.reducer,
             [documentationSlice.name]: documentationSlice.reducer,
+            [hintsSlice.name]: hintsSlice.reducer,
             [analysisSlice.name]: analysisSlice.reducer,
             [modalSlice.name]: modalSlice.reducer,
         })(newState, action);

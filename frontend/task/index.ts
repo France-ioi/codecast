@@ -70,6 +70,7 @@ import {createAction} from "@reduxjs/toolkit";
 import {selectAnswer} from "./selectors";
 import {hasBlockPlatform} from "../stepper/js";
 import {ObjectDocument} from "../buffers/document";
+import {hintsLoaded} from "./hints/hints_slice";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -150,6 +151,11 @@ function* taskLoadSaga(app: App, action) {
         yield* put(currentTaskChangePredefined(selectedTask));
     } else if (action.payload.selectedTask) {
         yield* put(currentTaskChangePredefined(action.payload.selectedTask));
+    }
+
+    if (state.options.taskHints) {
+        console.log('load hints', state.options.taskHints);
+        yield* put(hintsLoaded(state.options.taskHints));
     }
 
     const currentTask = yield* select((state: AppStore) => state.task.currentTask);

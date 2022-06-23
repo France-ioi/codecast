@@ -25,6 +25,7 @@ import {EditorState} from "./editor";
 import {PlatformState, TaskLevelName} from "./task/platform/platform_slice";
 import {AnalysisState} from "./stepper/analysis/analysis_slice";
 import {ModalState} from "./common/modal_slice";
+import {HintsState, TaskHint} from "./task/hints/hints_slice";
 
 export enum CodecastPlatform {
     Python = 'python',
@@ -79,6 +80,7 @@ export interface CodecastOptions {
     origin: string,
     task?: string,
     taskInstructions?: string,
+    taskHints?: TaskHint[],
     theme?: string,
     app?: string,
 }
@@ -131,6 +133,7 @@ export interface AppStore extends Store, AppStoreReplay {
     vumeterElement: any,
     task: TaskState,
     platform: PlatformState,
+    hints: HintsState,
 
     // TODO: Put the following in a "window" attribute instead of at the root of the store
     mainViewGeometry: typeof mainViewGeometries[0],
