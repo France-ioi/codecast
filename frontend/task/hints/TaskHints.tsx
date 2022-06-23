@@ -20,7 +20,7 @@ export function TaskHints() {
 
     const carouselElements = unlockedHintIds.map(unlockedHintId => {
         return (
-            <div className="hint-carousel-item" dangerouslySetInnerHTML={toHtml(availableHints[unlockedHintId].content)}></div>
+            <div key={unlockedHintId} className="hint-carousel-item" dangerouslySetInnerHTML={toHtml(availableHints[unlockedHintId].content)}></div>
         )
     });
 
