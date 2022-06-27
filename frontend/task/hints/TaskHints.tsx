@@ -1,8 +1,7 @@
 import React from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faTimes, faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
+import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {Carousel} from 'react-bootstrap';
-import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../../hooks";
 import {toHtml} from "../../utils/sanitize";
@@ -40,29 +39,8 @@ export function TaskHints() {
         );
     }
 
-    const closeHints = () => {
-        dispatch({
-            type: CommonActionTypes.AppSwitchToScreen,
-            payload: {screen: null},
-        });
-    };
-
     return (
         <div className="hints-container">
-            <div className="hints-header">
-                <div className="hints-icon">
-                    ?
-                </div>
-                <div className="hints-title">
-                    Indice
-                </div>
-                <div className="hints-close">
-                    <div className="tralalere-button" onClick={closeHints}>
-                        <FontAwesomeIcon icon={faTimes}/>
-                    </div>
-                </div>
-            </div>
-
             <div className="hints-content">
                 <Carousel
                     interval={null}

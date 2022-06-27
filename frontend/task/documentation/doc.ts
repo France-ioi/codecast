@@ -23,6 +23,7 @@ export interface DocumentationLoadAction extends AppAction {
     type: DocumentationActionTypes.DocumentationLoad,
     payload: {
         standalone: boolean,
+        hasTaskInstructions: boolean,
     },
 }
 
@@ -30,10 +31,11 @@ export interface ConceptViewer {
     loadConcepts: Function,
 }
 
-export const documentationLoad = (standalone: boolean): DocumentationLoadAction => ({
+export const documentationLoad = (standalone: boolean, hasTaskInstructions?: boolean): DocumentationLoadAction => ({
     type: DocumentationActionTypes.DocumentationLoad,
     payload: {
         standalone,
+        hasTaskInstructions: true === hasTaskInstructions,
     },
 });
 
@@ -82,7 +84,7 @@ export function convertPlatformToDocumentationLanguage(platform: CodecastPlatfor
     }
 }
 
-function* documentationLoadSaga(standalone: boolean) {
+function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolean) {
     if (standalone) {
         try {
             const {concepts, selectedConceptId, screen, language} = yield* call(getConceptsFromChannel);
@@ -134,13 +136,15 @@ function* documentationLoadSaga(standalone: boolean) {
             name: getMessage('TASK_DOCUMENTATION_INSTRUCTIONS').s,
         };
 
-        const documentationConcepts: DocumentationConcept[] = window.conceptsFill(concepts, allConcepts);
-        const documentationConceptsWithTask: DocumentationConcept[] = [
-            taskConcept,
-            ...documentationConcepts,
-        ];
+        let documentationConcepts: DocumentationConcept[] = window.conceptsFill(concepts, allConcepts);
+        if (hasTaskInstructions) {
+            documentationConcepts = [
+                taskConcept,
+                ...documentationConcepts,
+            ];
+        }
 
-        yield* call(loadDocumentationConcepts, documentationConceptsWithTask);
+        yield* call(loadDocumentationConcepts, documentationConcepts);
     }
 }
 
@@ -160,7 +164,7 @@ function* loadDocumentationConcepts(documentationConcepts, selectedConceptId = n
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
         yield* takeEvery(DocumentationActionTypes.DocumentationLoad, function* (action: DocumentationLoadAction) {
-            yield* call(documentationLoadSaga, action.payload.standalone);
+            yield* call(documentationLoadSaga, action.payload.standalone, action.payload.hasTaskInstructions);
         });
     });
 }

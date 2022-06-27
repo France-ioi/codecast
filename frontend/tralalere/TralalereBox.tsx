@@ -1,7 +1,7 @@
-import React, {ReactElement} from "react";
+import React from "react";
 
 export interface TralalereBoxProps {
-    children: ReactElement,
+    children: JSX.Element | JSX.Element[],
 }
 
 export function TralalereBox(props: TralalereBoxProps) {

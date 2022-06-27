@@ -16,6 +16,7 @@ import {CodecastPlatform} from "../../store";
 
 interface DocumentationProps {
     standalone: boolean,
+    hasTaskInstructions?: boolean,
     header?: ReactFragment,
 }
 
@@ -48,7 +49,7 @@ export function Documentation(props: DocumentationProps) {
         if (platformDocumentationLanguage !== documentationLanguage) {
             dispatch(documentationLanguageChanged(platformDocumentationLanguage));
         }
-        dispatch(documentationLoad(props.standalone));
+        dispatch(documentationLoad(props.standalone, !!props.hasTaskInstructions));
     }, [documentationLanguage]);
 
     const iframeLoaded = () => {

@@ -22,7 +22,7 @@ import {getMessage} from "../lang";
 import {select} from "typed-redux-saga";
 import {DocumentationLanguage} from "../task/documentation/documentation_slice";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
+import {faExternalLinkAlt, faTimes} from "@fortawesome/free-solid-svg-icons";
 import {TralalereBox} from "./TralalereBox";
 
 
@@ -109,6 +109,13 @@ export function TralalereApp() {
         });
     };
 
+    const closeHints = () => {
+        dispatch({
+            type: CommonActionTypes.AppSwitchToScreen,
+            payload: {screen: null},
+        });
+    };
+
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere`}>
             <div className="layout-general">
@@ -155,9 +162,22 @@ export function TralalereApp() {
                             <img className="blockly-flyout-wrapper-bottom" src={window.modulesPath + 'img/algorea/crane/editor-bottom-background.png'}/>
                         </div>}
                         {hintsOpen && <div className="tralalere-hints">
-                            <TralalereBox>
-                                <TaskHints/>
-                            </TralalereBox>
+                          <TralalereBox>
+                            <div className="tralalere-box-header">
+                              <div className="tralalere-box-header-icon">
+                                ?
+                              </div>
+                              <div className="tralalere-box-header-title">
+                                Indice
+                              </div>
+                              <div className="tralalere-box-header-close">
+                                <div className="tralalere-button" onClick={closeHints}>
+                                  <FontAwesomeIcon icon={faTimes}/>
+                                </div>
+                              </div>
+                            </div>
+                            <TaskHints/>
+                          </TralalereBox>
                         </div>}
                         <div className="tralalere-controls">
                             <div>
@@ -190,14 +210,18 @@ export function TralalereApp() {
                 <TralalereBox>
                     <Documentation
                         standalone={false}
+                        hasTaskInstructions={false}
                         header={
-                            <div className="documentation-header">
-                                <div className="documentation-header-icon">
-                                    <Icon icon="zoom-in"/>
+                            <div className="tralalere-box-header">
+                                <div className="tralalere-box-header-icon">
+                                    <img className="menu-task-icon" src={window.modulesPath + 'img/algorea/crane/documentation_white.svg'}/>
                                 </div>
-                                <h2>{getMessage('TASK_DOCUMENTATION')}</h2>
-                                <div className="documentation-close-container">
-                                    <div className="documentation-close" onClick={closeDocumentation}>
+                                <div className="tralalere-box-header-title">
+                                    Documentation
+                                </div>
+                                <div className="tralalere-box-header-close">
+                                    <div className="tralalere-button" onClick={closeDocumentation}>
+                                        <FontAwesomeIcon icon={faTimes}/>
                                     </div>
                                 </div>
                             </div>
