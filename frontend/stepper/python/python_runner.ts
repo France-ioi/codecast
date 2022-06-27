@@ -48,7 +48,6 @@ export default class PythonRunner extends AbstractRunner {
     private availableModules = [];
     private availableBlocks = [] as Block[];
     public _isFinished = false;
-    private _printedDuringStep = '';
     public onError;
     private quickAlgoCallsExecutor;
     private _nbActions = 0;
@@ -190,8 +189,7 @@ export default class PythonRunner extends AbstractRunner {
                 modContents += PythonRunner._skulptifyHandler(code, generatorName, name, params, type);
                 // We do want to override Python's naturel input and output to replace them with our own modules
                 if (generatorName === 'printer' && ('input' === code || 'print' === code)) {
-                    const newCode = 'print' === code ? 'customPrint' : code;
-                    Sk.builtins[newCode] = this._createBuiltin(code, generatorName, name, params, type);
+                    Sk.builtins[code] = this._createBuiltin(code, generatorName, name, params, type);
                 }
             }
 
@@ -388,7 +386,7 @@ export default class PythonRunner extends AbstractRunner {
 
     private _configure() {
         Sk.configure({
-            output: this.print,
+            // output: this.print,
             inputfun: () => { console.log('input should be overloaded by our input method'); },
             inputfunTakesPrompt: true,
             debugout: console.log,
@@ -411,11 +409,6 @@ export default class PythonRunner extends AbstractRunner {
     print(message) {
         if (message.trim() === 'Program execution complete') {
             this._isFinished = true;
-        } else {
-            if (message && 'customPrint' in Sk.builtins) {
-                Sk.builtins['customPrint'](message.trim());
-            }
-            this._printedDuringStep += message;
         }
     }
 
@@ -491,7 +484,6 @@ export default class PythonRunner extends AbstractRunner {
         this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
         return new Promise((resolve, reject) => {
             this.stepMode = true;
-            this._printedDuringStep = '';
             if (this._isRunning && !this._stepInProgress) {
                 this.step(resolve, reject);
             }
