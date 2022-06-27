@@ -162,22 +162,22 @@ export function TralalereApp() {
                             <img className="blockly-flyout-wrapper-bottom" src={window.modulesPath + 'img/algorea/crane/editor-bottom-background.png'}/>
                         </div>}
                         {hintsOpen && <div className="tralalere-hints">
-                          <TralalereBox>
-                            <div className="tralalere-box-header">
-                              <div className="tralalere-box-header-icon">
+                            <TralalereBox>
+                                <div className="tralalere-box-header">
+                                    <div className="tralalere-box-header-icon">
                                 ?
-                              </div>
-                              <div className="tralalere-box-header-title">
+                                    </div>
+                                    <div className="tralalere-box-header-title">
                                 Indice
-                              </div>
-                              <div className="tralalere-box-header-close">
-                                <div className="tralalere-button" onClick={closeHints}>
-                                  <FontAwesomeIcon icon={faTimes}/>
+                                    </div>
+                                    <div className="tralalere-box-header-close">
+                                        <div className="tralalere-button" onClick={closeHints}>
+                                            <FontAwesomeIcon icon={faTimes}/>
+                                        </div>
+                                    </div>
                                 </div>
-                              </div>
-                            </div>
-                            <TaskHints/>
-                          </TralalereBox>
+                                <TaskHints/>
+                            </TralalereBox>
                         </div>}
                         <div className="tralalere-controls">
                             <div>
