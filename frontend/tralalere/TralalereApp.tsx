@@ -18,6 +18,12 @@ import {stepperClearError} from "../stepper/actionTypes";
 import {Documentation} from "../task/documentation/Documentation";
 import {CodecastPlatform} from "../store";
 import {TaskHints} from "../task/hints/TaskHints";
+import {getMessage} from "../lang";
+import {select} from "typed-redux-saga";
+import {DocumentationLanguage} from "../task/documentation/documentation_slice";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
+import {TralalereBox} from "./TralalereBox";
 
 
 export function TralalereApp() {
@@ -36,6 +42,10 @@ export function TralalereApp() {
     const hasError = !!stepperError;
     const windowWidth = useAppSelector(state => state.windowWidth);
     const availableHints = useAppSelector(state => state.hints.availableHints);
+    // const availableHints = [
+    //     {content: 'aazazaz'},
+    //     {content: 'aazazazazazazz'},
+    // ];
 
     let error = null;
     if (hasError) {
@@ -75,7 +85,7 @@ export function TralalereApp() {
     }, [contextId, windowWidth]);
 
     const toggleDocumentation = () => {
-        const newScreen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen ? null : Screen.DocumentationSmall;
+        const newScreen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen ? null : Screen.DocumentationBig;
         dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: newScreen}});
     };
 
@@ -108,24 +118,24 @@ export function TralalereApp() {
                     </div>}
 
                     <div className="tralalere-button" onClick={toggleDocumentation}>
-                        <img className="menu-task-icon" src={require('./images/documentation.svg').default}/>
+                        <img className="menu-task-icon" src={window.modulesPath + 'img/algorea/crane/documentation.svg'}/>
                     </div>
                 </div>
 
                 <div className={`tralalere-section`}>
-                    <div className="tralalere-visualization" style={{backgroundImage: `url(${require('./images/visualization-background.png').default}`}}>
+                    <div className="tralalere-visualization" style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
                         <div className="tralalere-instructions">
                             {instructionsExpanded ?
                                 <img className="tralalere-instructions-shadow-down"
-                                    src={require('./images/instructions-shadow-down.png').default}/>
+                                    src={window.modulesPath + 'img/algorea/crane/instructions-shadow-down.png'}/>
                                 :
                                 <img className="tralalere-instructions-shadow-right"
-                                    src={require('./images/instructions-shadow-right.png').default}/>
+                                    src={window.modulesPath + 'img/algorea/crane/instructions-shadow-right.png'}/>
                             }
 
-                            <img className="tralalere-instructions-window" src={require('./images/instructions-window.png').default}/>
+                            <img className="tralalere-instructions-window" src={window.modulesPath + 'img/algorea/crane/instructions-window.png'}/>
                             {!instructionsExpanded && <div className="tralalere-instructions-around-left"/>}
-                            <img className="tralalere-instructions-left" src={require('./images/instructions-left-folded.png').default}/>
+                            <img className="tralalere-instructions-left" src={window.modulesPath + 'img/algorea/crane/instructions-left-folded.png'}/>
                             <div className={`tralalere-instructions-container ${!instructionsExpanded ? 'is-limited' : ''}`}>
                                 <TaskInstructions/>
 
@@ -140,12 +150,14 @@ export function TralalereApp() {
                         <ContextVisualization/>
                     </div>
                     <div className="blockly-editor">
-                        <LayoutEditor style={{backgroundImage: `url(${require('./images/editor-cross.png').default}`}}/>
+                        <LayoutEditor style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/editor-cross.png'}`}}/>
                         {CodecastPlatform.Blockly === platform && <div className="blockly-flyout-wrapper">
-                            <img className="blockly-flyout-wrapper-bottom" src={require('./images/editor-bottom-background.png').default}/>
+                            <img className="blockly-flyout-wrapper-bottom" src={window.modulesPath + 'img/algorea/crane/editor-bottom-background.png'}/>
                         </div>}
                         {hintsOpen && <div className="tralalere-hints">
-                            <TaskHints/>
+                            <TralalereBox>
+                                <TaskHints/>
+                            </TralalereBox>
                         </div>}
                         <div className="tralalere-controls">
                             <div>
@@ -174,8 +186,24 @@ export function TralalereApp() {
 
             <PromptModalDialog/>
 
-            <Dialog isOpen={documentationOpen} className="simple-dialog" canOutsideClickClose={true} canEscapeKeyClose={true} onClose={closeDocumentation}>
-                <Documentation standalone={false}/>
+            <Dialog isOpen={documentationOpen} className="simple-dialog tralalere-doc" canOutsideClickClose={true} canEscapeKeyClose={true} onClose={closeDocumentation}>
+                <TralalereBox>
+                    <Documentation
+                        standalone={false}
+                        header={
+                            <div className="documentation-header">
+                                <div className="documentation-header-icon">
+                                    <Icon icon="zoom-in"/>
+                                </div>
+                                <h2>{getMessage('TASK_DOCUMENTATION')}</h2>
+                                <div className="documentation-close-container">
+                                    <div className="documentation-close" onClick={closeDocumentation}>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    />
+                </TralalereBox>
             </Dialog>
         </Container>
     );

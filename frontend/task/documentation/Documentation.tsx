@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {ReactFragment, useEffect, useState} from 'react';
 import {Icon} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
@@ -16,6 +16,7 @@ import {CodecastPlatform} from "../../store";
 
 interface DocumentationProps {
     standalone: boolean,
+    header?: ReactFragment,
 }
 
 export function Documentation(props: DocumentationProps) {
@@ -142,7 +143,7 @@ export function Documentation(props: DocumentationProps) {
 
     return (
         <div className={`documentation ${Screen.DocumentationBig === screen ? 'is-big' : 'is-small'} ${props.standalone ? 'is-standalone' : ''}`}>
-            <div className="documentation-header">
+            {props.header ? props.header : <div className="documentation-header">
                 <div className="documentation-header-icon">
                     <Icon icon="zoom-in"/>
                 </div>
@@ -168,7 +169,7 @@ export function Documentation(props: DocumentationProps) {
                     <div className="documentation-close" onClick={closeDocumentation}>
                     </div>
                 </div>}
-            </div>
+            </div>}
             <div className="documentation-language-dropdown">
                 <div className="documentation-tabs-menu">
                     <Icon icon="code"/>

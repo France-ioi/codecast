@@ -62,7 +62,6 @@ export function TaskHints() {
                     </div>
                 </div>
             </div>
-            <img className="blockly-flyout-wrapper-bottom" src={require('../../tralalere/images/editor-bottom-background.png').default}/>
 
             <div className="hints-content">
                 <Carousel
