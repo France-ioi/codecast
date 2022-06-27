@@ -44,8 +44,9 @@ log.setLevel('trace');
 log.getLogger('performance').setLevel('info');
 log.getLogger('python_runner').setLevel('info');
 log.getLogger('printer_lib').setLevel('info');
-log.getLogger('tests').setLevel('debug');
-log.getLogger('platform').setLevel('debug');
+log.getLogger('tests').setLevel('info');
+log.getLogger('platform').setLevel('info');
+log.getLogger('stepper').setLevel('info');
 
 export interface CodecastEnvironmentMonitoring {
     effectTriggered: Function,

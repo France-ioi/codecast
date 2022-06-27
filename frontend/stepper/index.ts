@@ -24,7 +24,7 @@ The stepper's state has the following shape:
 
 */
 
-import {apply, call, cancel, delay, fork, put, race, select, take, takeEvery, takeLatest,} from 'typed-redux-saga';
+import {apply, call, cancel, delay, fork, put, race, select, take, takeEvery, takeLatest, throttle,} from 'typed-redux-saga';
 import * as C from '@france-ioi/persistent-c';
 
 import {
@@ -78,6 +78,9 @@ import {SagaIterator} from "redux-saga";
 import BlocklyRunner from "./js/blockly_runner";
 import UnixRunner from "./c/unix_runner";
 import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./analysis/analysis";
+import log from "loglevel";
+
+export const stepperThrottleDisplayDelay = 50; // ms
 
 export enum StepperStepMode {
     Run = 'run',
@@ -955,6 +958,7 @@ function* stepperStepSaga(app: App, action) {
 
             if (stepperContext.state.isFinished) {
                 console.log('check end condition');
+                yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
                 const taskContext = quickAlgoLibraries.getContext(null, state.environment);
                 if (taskContext && taskContext.infos.checkEndCondition) {
                     try {
@@ -1001,6 +1005,7 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         yield* put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: true});
 
         taskContext.display = false;
+        stepperContext.displayTimeoutRunning = true;
         taskContext.resetAndReloadState(selectCurrentTest(state), state);
         stepperContext.state.contextState = getCurrentImmerState(taskContext.getInnerState());
         console.log('current task state', taskContext.getInnerState());
@@ -1039,6 +1044,7 @@ function* stepperExitSaga() {
 }
 
 export function* updateSourceHighlightSaga(state: AppStoreReplay) {
+    log.getLogger('stepper').debug('update source hightlight');
     const stepperState = state.stepper.currentStepperState;
     if (!stepperState) {
         return;
@@ -1399,11 +1405,12 @@ function postLink(app: App) {
             if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
                 yield* put({type: ActionTypes.StepperInterrupt, payload: {}});
             }
+            yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
             yield* call(stepperDisabledSaga, true);
         });
 
         /* Highlight the range of the current source fragment. */
-        yield* takeLatest([
+        yield* throttle(stepperThrottleDisplayDelay, [
             ActionTypes.StepperProgress,
             ActionTypes.StepperIdle,
             ActionTypes.StepperRestart,

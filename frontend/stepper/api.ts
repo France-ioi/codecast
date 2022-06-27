@@ -10,13 +10,14 @@
 import * as C from '@france-ioi/persistent-c';
 import {all, call, put} from 'typed-redux-saga';
 import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
-import {initialStepperStateControls, Stepper, StepperState} from "./index";
+import {initialStepperStateControls, Stepper, StepperState, stepperThrottleDisplayDelay} from "./index";
 import {Bundle} from "../linker";
 import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
 import {createDraft} from "immer";
 import {getCurrentImmerState} from "../task/utils";
 import {ActionTypes as CompileActionTypes} from "./actionTypes";
 import {Codecast} from "../index";
+import log from "loglevel";
 
 export interface QuickalgoLibraryCall {
     module: string,
@@ -26,6 +27,7 @@ export interface QuickalgoLibraryCall {
 
 export interface StepperContext {
     state?: StepperState,
+    displayTimeoutRunning?: boolean,
     interrupted?: boolean,
     interactBefore?: Function,
     interactAfter: Function,
@@ -317,7 +319,9 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
 
         if (!first && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255 && stepperContext.makeDelay) {
             stepperContext.makeDelay = false;
-            await delay(255 - stepperContext.speed);
+            const delayToWait = Math.floor((255 - stepperContext.speed) / 4);
+            log.getLogger('stepper').debug('make delay', delayToWait);
+            await delay(delayToWait);
         }
 
         await executeSingleStep(stepperContext);
@@ -500,11 +504,34 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
         }
 
         console.log('before make async library call', {module, action});
+        let hideDisplay = false;
         try {
+            if (stepperContext.displayTimeoutRunning && 'main' === stepperContext.environment) {
+                hideDisplay = true;
+                context.display = false;
+            } else {
+            }
+
             libraryCallResult = await makeLibraryCall();
             console.log('after make async lib call', libraryCallResult);
+
+            if (hideDisplay) {
+                context.display = true;
+            }
+
+            // Leave stepperThrottleDisplayDelay ms before displaying again the context
+            if (!stepperContext.displayTimeoutRunning) {
+                stepperContext.displayTimeoutRunning = true;
+                setTimeout(() => {
+                    stepperContext.displayTimeoutRunning = false;
+                }, stepperThrottleDisplayDelay);
+            }
         } catch (e) {
             console.log('context error 2', e);
+            if (hideDisplay) {
+                context.display = true;
+            }
+
             await stepperContext.dispatch({
                 type: CompileActionTypes.StepperInterrupting,
             });
@@ -516,6 +543,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
                 },
             });
         }
+
         console.log('after make async library call', libraryCallResult);
 
         const newState = getCurrentImmerState(context.getInnerState());

@@ -108,10 +108,15 @@ export class QuickAlgoLibrary {
     waitDelay(callback, value = null) {
         // This function is used only to call the callback to move to next step,
         // but we handle the speed delay in an upper level
-        if (this.runner && this.runner.returnCallback) {
-            this.runner.returnCallback(callback, value);
+        const delay = this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : 255;
+        console.log('Quickalgo wait delay', callback, this.runner, delay);
+        if (this.runner) {
+            this.runner.waitDelay(callback, value, delay);
         } else {
-            callback(value);
+            // When a function is used outside of an execution
+            setTimeout(function () {
+                callback(value);
+            }, delay);
         }
     };
 

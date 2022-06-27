@@ -216,7 +216,7 @@ export function StepperControls(props: StepperControlsProps) {
                             value={speed}
                             onChange={onChangeSpeed}
                             min={0}
-                            max={225}
+                            max={255}
                             stepSize={1}
                             labelStepSize={255}
                             labelRenderer={formatTime}
