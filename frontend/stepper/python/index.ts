@@ -1,6 +1,9 @@
 import {channel} from 'redux-saga';
-import {put, take} from 'typed-redux-saga';
-import {ActionTypes as CompileActionTypes, stepperExecutionError} from '../actionTypes';
+import {apply, call, delay, put, select, take} from 'typed-redux-saga';
+import {
+    ActionTypes,
+    stepperExecutionError
+} from '../actionTypes';
 import {AppStore, CodecastPlatform} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
@@ -9,6 +12,47 @@ import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {Action} from "redux";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {selectAnswer} from "../../task/selectors";
+
+export function* compilePythonCodeSaga(source: string) {
+    console.log('compile python code', source);
+    const state = yield* select();
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+
+    let compileError = null;
+    context.onError = (error) => {
+        compileError = error;
+    }
+
+    /**
+     * Add a last instruction at the end of the code so Skupt will generate a Suspension state
+     * for after the user's last instruction. Otherwise it would be impossible to retrieve the
+     * modifications made by the last user's line.
+     *
+     * @type {string} pythonSource
+     */
+    const pythonSource = source + "\npass";
+
+    const blocksData = getContextBlocksDataSelector(state, context);
+
+    const pythonInterpreter = Codecast.runner;
+    pythonInterpreter.initCodes([pythonSource], blocksData);
+
+    yield* delay(0);
+
+    if (compileError) {
+        yield* put({
+            type: ActionTypes.CompileFailed,
+            payload: {
+                error: String(compileError),
+            },
+        });
+    } else {
+        yield* put({
+            type: ActionTypes.CompileSucceeded,
+            platform: CodecastPlatform.Python,
+        });
+    }
+}
 
 export default function(bundle: Bundle) {
     const pythonInterpreterChannel = channel<Action>();
@@ -23,18 +67,14 @@ export default function(bundle: Bundle) {
     bundle.defer(function({stepperApi}: App) {
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore, environment: string) {
             const {platform} = state.options;
-            const source = selectAnswer(state);
             const context = quickAlgoLibraries.getContext(null, environment);
 
-            console.log('init stepper', environment);
+            console.log('init stepper python', environment);
             if (platform === CodecastPlatform.Python) {
                 let channel = pythonInterpreterChannel;
 
                 context.onError = (diagnostics) => {
                     console.log('context error', diagnostics);
-                    channel.put({
-                        type: CompileActionTypes.StepperInterrupting,
-                    });
                     channel.put(stepperExecutionError(diagnostics));
                 };
 
@@ -43,20 +83,6 @@ export default function(bundle: Bundle) {
                     functionCallStackMap: {},
                     functionCallStack: {}
                 };
-
-                /**
-                 * Add a last instruction at the end of the code so Skupt will generate a Suspension state
-                 * for after the user's last instruction. Otherwise it would be impossible to retrieve the
-                 * modifications made by the last user's line.
-                 *
-                 * @type {string} pythonSource
-                 */
-                const pythonSource = source + "\npass";
-
-                const blocksData = getContextBlocksDataSelector(state, context);
-
-                const pythonInterpreter = Codecast.runner;
-                pythonInterpreter.initCodes([pythonSource], blocksData);
             }
         });
     })

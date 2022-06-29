@@ -696,9 +696,6 @@ function* compileSucceededSaga(app: App) {
     try {
         yield* put({type: ActionTypes.StepperDisabled});
 
-        // Create a runner for this
-        Codecast.runner = yield* call(createRunnerSaga);
-
         /* Build the stepper state. This automatically runs into user source code. */
         let state: AppStore = yield* select();
 

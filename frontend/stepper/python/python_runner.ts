@@ -48,18 +48,16 @@ export default class PythonRunner extends AbstractRunner {
     private availableModules = [];
     private availableBlocks = [] as Block[];
     public _isFinished = false;
-    public onError;
     private quickAlgoCallsExecutor;
     private _nbActions = 0;
 
     constructor(context) {
         super(context);
         this.context = context;
-        this.onError = context.onError;
     }
 
     public static needsCompilation(): boolean {
-        return false;
+        return true;
     }
 
     public enrichStepperContext(stepperContext: StepperContext, state: StepperState) {
@@ -468,10 +466,10 @@ export default class PythonRunner extends AbstractRunner {
             }, (error) => {
                 this._debugger.error.bind(this._debugger);
 
-                this.onError(error + "\n");
+                this.context.onError(error + "\n");
             });
         } catch (e) {
-            this.onError(e.toString() + "\n");
+            this.context.onError(e.toString() + "\n");
         }
 
         this._resetInterpreterState();
@@ -595,7 +593,7 @@ export default class PythonRunner extends AbstractRunner {
         // Transform message depending on whether we successfully
         if (!this.context.success) {
             message = this.context.messagePrefixFailure + message;
-            this.onError(message);
+            this.context.onError(message);
         }
 
         if (typeof callback === 'function') {

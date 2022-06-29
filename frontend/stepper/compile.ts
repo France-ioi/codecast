@@ -21,7 +21,7 @@ import {TextEncoder} from "text-encoding-utf-8";
 import {clearStepper, createRunnerSaga, getRunnerClassFromPlatform} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {AppStore, AppStoreReplay} from "../store";
+import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
@@ -30,6 +30,7 @@ import {checkCompilingCode} from "../task/utils";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getMessage} from "../lang";
 import {selectAnswer} from "../task/selectors";
+import {compilePythonCodeSaga} from "./python";
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -80,8 +81,11 @@ export default function(bundle: Bundle) {
 
             yield* put({
                 type: ActionTypes.CompileStarted,
-                source
+                source,
             });
+
+            // Create a runner for this
+            Codecast.runner = yield* call(createRunnerSaga);
 
             try {
                 checkCompilingCode(source, platform, state);
@@ -102,6 +106,12 @@ export default function(bundle: Bundle) {
                     type: ActionTypes.CompileSucceeded,
                     platform
                 });
+            } else if (CodecastPlatform.Python === platform) {
+                try {
+                    yield* call(compilePythonCodeSaga, source);
+                } catch (ex) {
+                    yield* put({type: ActionTypes.CompileFailed, payload: {error: String(ex)}});
+                }
             } else {
                 state = yield* select();
                 try {
@@ -248,18 +258,16 @@ function compileStartedReducer(state: AppStore, action): void {
 }
 
 function compileSucceededReducer(state: AppStore, action): void {
-    const runnerClass = getRunnerClassFromPlatform(state.options.platform);
-
-    if (!runnerClass.needsCompilation()) {
-        state.compile.status = CompileStatus.Done;
-        state.stepper.error = null;
-    } else {
+    if (-1 !== [CodecastPlatform.Unix, CodecastPlatform.Arduino].indexOf(state.options.platform)) {
         const {ast, diagnostics} = action.response;
         const source = state.compile.source;
 
         state.compile.status = CompileStatus.Done;
         state.compile.syntaxTree = addNodeRanges(source, ast);
         state.stepper.error = diagnostics;
+    } else {
+        state.compile.status = CompileStatus.Done;
+        state.stepper.error = null;
     }
 }
 

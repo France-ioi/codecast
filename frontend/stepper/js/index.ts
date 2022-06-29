@@ -185,8 +185,8 @@ export default function(bundle: Bundle) {
             const context = quickAlgoLibraries.getContext(null, environment);
             const language = state.options.language.split('-')[0];
 
-            console.log('init stepper', environment);
             if (hasBlockPlatform(platform)) {
+                console.log('init stepper js', environment);
                 context.onError = (diagnostics) => {
                     console.log('context error', diagnostics);
                     // channel.put({
