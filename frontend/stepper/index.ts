@@ -737,14 +737,16 @@ export function* stepperDisabledSaga(action, leaveContext = false) {
         yield* put(taskResetDone(false));
     }
 
+    yield* call(clearSourceHighlightSaga);
+
     if (oldTask) {
+        yield* put({type: ActionTypes.StepperTaskCancelled});
+
         // @ts-ignore
         yield* cancel(oldTask);
 
-        yield* put({type: ActionTypes.StepperTaskCancelled});
+        // Warning: put no code after this, because the cancel will instantly kill this saga
     }
-
-    yield* call(clearSourceHighlightSaga);
 }
 
 function* stepperInteractBeforeSaga(app: App, {meta: {resolve, reject}}) {

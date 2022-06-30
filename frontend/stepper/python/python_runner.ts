@@ -559,13 +559,13 @@ export default class PythonRunner extends AbstractRunner {
         this._paused = this.stepMode;
         this._debugger.enable_step_mode();
         this._debugger.resume.call(this._debugger, resolve, reject);
-        this._steps += 1;
     }
 
     // Used in Skulpt
     _onStepSuccess(callback) {
         // If there are still timeouts, there's still a step in progress
         this._stepInProgress = !!this._timeouts.length;
+        this._steps += 1;
         this._continue();
 
         if (typeof callback === 'function') {
