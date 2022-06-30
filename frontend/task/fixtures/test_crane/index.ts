@@ -32,12 +32,12 @@ export default {
         context: 'crane',
         importModules: ['blockly-crane-1.0', 'beav-1.0'],
         images,
-        conceptViewer: ["extra_list"],
+        conceptViewer: true,
         showLabels: true,
         rowLabelEnabled: false,
         showContLabels: true,
         showContOutline: true,
-        contextType: "sciFi",
+        contextType: "numbers",
         hideControls: { saveOrLoad: false},
 
         nbPlatforms: 100,
@@ -49,15 +49,13 @@ export default {
         includeBlocks: {
             groupByCategory: false,
             generatedBlocks: {
-                robot: ["left", "right", "take", "drop"]
+                robot: ["left", "right", "take", "putDown" ]
             },
             standardBlocks: {
                 includeAll: false,
                 // wholeCategories: ["variables"],
                 singleBlocks: ["controls_repeat"]
-                // singleBlocks: ["lists_create_with_empty", "lists_repeat", "lists_getIndex", "lists_setIndex", "controls_repeat_ext", "controls_whileUntil", "controls_if", "controls_if_else", "math_number", "math_arithmetic", "logic_compare", "logic_boolean", "logic_negate"]
-            },
-            // procedures: { disableArgs: true }
+            }
         },
         intro: {
             default: false,
@@ -70,50 +68,24 @@ export default {
         easy: [
             {
                 container: [
-                    // [1,1,1],
-                    // [2,3,1],
-                    // [2,3,4]
+
                 ],
                 tiles: [
-                    [ 1, 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1, 1],
-                    [ 6, 7, 2, 1, 1, 1, 1],
-                    [ 8, 9, 3, 1, 1, 1, 1],
-                    [ 10, 11, 5, 1, 1, 1, 1],
-                    [ 12, 13, 4, 1, 1, 1, 1]
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 ]
+                ],
+                broken: [
+
                 ],
                 target: [
-                    [ 1, 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 2, 3, 1],
-                    [ 1, 1, 1, 1, 4, 5, 1],
-                    [ 1, 1, 1, 1, 6, 7, 1],
-                    [ 1, 1, 1, 1, 8, 9, 1],
-                    [ 1, 1, 1, 1, 10, 11, 1],
-                    [ 1, 1, 1, 1, 12, 13, 1]
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 ],
+                    [1, 3, 1, 5, 1, 7, 1, 9, 1, 11, 1 ],
+                    [1, 2, 1, 4, 1, 6, 1, 8, 1, 10, 1 ]
                 ],
                 initItems: [
-                    // { row: 8, col: 0, dir: 0, type: "robot" },
-                ],
-                initCranePos: 0
-            }
-        ],
-        medium: [
-            {
-                tiles: [
-                    [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [ 2, 3, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [ 2, 3, 4, 3, 1, 1, 1, 1, 1, 1]
-                ],
-                target: [
-                    [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 1, 4, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 2, 2, 1, 1, 1],
-                    [ 1, 1, 1, 1, 1, 3, 3, 3, 1, 1]
-                ],
-                initItems: [
-                    // { row: 8, col: 0, dir: 0, type: "robot" },
                 ],
                 initCranePos: 0
             }
