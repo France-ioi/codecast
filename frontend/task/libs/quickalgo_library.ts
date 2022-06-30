@@ -105,6 +105,10 @@ export class QuickAlgoLibrary {
         this.infos.actionDelay = newDelay;
     };
 
+    getDelay(): number {
+        return this.infos.actionDelay;
+    };
+
     waitDelay(callback, value = null) {
         // This function is used only to call the callback to move to next step,
         // but we handle the speed delay in an upper level

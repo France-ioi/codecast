@@ -851,6 +851,8 @@ function* stepperInterruptSaga(app: App) {
         return;
     }
 
+    yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
+
     const stepperContext = createStepperContext(getStepper(state), {
         dispatch: app.dispatch,
         environment: app.environment,

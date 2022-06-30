@@ -505,11 +505,13 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
 
         console.log('before make async library call', {module, action});
         let hideDisplay = false;
+        let previousDelay = context.getDelay();
         try {
             if (stepperContext.displayTimeoutRunning && 'main' === stepperContext.environment) {
-                hideDisplay = true;
                 context.display = false;
+                hideDisplay = true;
             } else {
+                context.changeDelay(0);
             }
 
             libraryCallResult = await makeLibraryCall();
@@ -517,6 +519,8 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
 
             if (hideDisplay) {
                 context.display = true;
+            } else {
+                context.changeDelay(previousDelay);
             }
 
             // Leave stepperThrottleDisplayDelay ms before displaying again the context
@@ -530,6 +534,8 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
             console.log('context error 2', e);
             if (hideDisplay) {
                 context.display = true;
+            } else {
+                context.changeDelay(previousDelay);
             }
 
             await stepperContext.dispatch({
