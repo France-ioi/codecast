@@ -1404,7 +1404,7 @@ function postLink(app: App) {
             if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
                 yield* put({type: ActionTypes.StepperInterrupt, payload: {}});
             }
-            yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
+            // yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
             yield* call(stepperDisabledSaga, true);
         });
 
