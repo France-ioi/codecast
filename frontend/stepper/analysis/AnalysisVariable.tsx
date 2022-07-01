@@ -108,9 +108,10 @@ export const AnalysisVariable = (props: AnalysisVariableProps) => {
 
         const hasPreviousValue = null !== variable.previousValue && variable.value !== variable.previousValue;
 
+
         const sanitizeValue = (value) => {
-            if ('string' === typeof value && value.substring(0, 1) === '"') {
-                return value.length > 100 ? value.substring(0, 98) + '..."' : '';
+            if ('string' === typeof value && value.substring(0, 1) === '"' && value.length > 100) {
+                return value.substring(0, 98) + '..."';
             }
 
             return value;

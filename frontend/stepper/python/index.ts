@@ -83,6 +83,16 @@ export default function(bundle: Bundle) {
                     functionCallStackMap: {},
                     functionCallStack: {}
                 };
+
+                // Currently in replay we don't compile Python code.
+                // TODO: compile Python code so we don't need this
+                const source = selectAnswer(state);
+                const pythonSource = source + "\npass";
+
+                const blocksData = getContextBlocksDataSelector(state, context);
+
+                const pythonInterpreter = Codecast.runner;
+                pythonInterpreter.initCodes([pythonSource], blocksData);
             }
         });
     })

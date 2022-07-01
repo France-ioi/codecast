@@ -27,7 +27,7 @@ export interface QuickalgoLibraryCall {
 
 export interface StepperContext {
     state?: StepperState,
-    displayTimeoutRunning?: boolean,
+    taskDisplayNoneStatus?: string | null,
     interrupted?: boolean,
     interactBefore?: Function,
     interactAfter: Function,
@@ -507,11 +507,13 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
         let hideDisplay = false;
         let previousDelay = context.getDelay();
         try {
-            if (stepperContext.displayTimeoutRunning && 'main' === stepperContext.environment) {
-                context.display = false;
-                hideDisplay = true;
-            } else {
-                context.changeDelay(0);
+            if ('main' === stepperContext.environment) {
+                if ('running' === stepperContext.taskDisplayNoneStatus) {
+                    context.display = false;
+                    hideDisplay = true;
+                } else if ('end' === stepperContext.taskDisplayNoneStatus) {
+                    context.changeDelay(0);
+                }
             }
 
             libraryCallResult = await makeLibraryCall();
@@ -524,10 +526,10 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
             }
 
             // Leave stepperThrottleDisplayDelay ms before displaying again the context
-            if (!stepperContext.displayTimeoutRunning) {
-                stepperContext.displayTimeoutRunning = true;
+            if (null === stepperContext.taskDisplayNoneStatus) {
+                stepperContext.taskDisplayNoneStatus = 'running';
                 setTimeout(() => {
-                    stepperContext.displayTimeoutRunning = false;
+                    stepperContext.taskDisplayNoneStatus = 'end';
                 }, stepperThrottleDisplayDelay);
             }
         } catch (e) {

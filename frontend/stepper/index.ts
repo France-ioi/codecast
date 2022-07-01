@@ -696,6 +696,9 @@ function* compileSucceededSaga(app: App) {
     try {
         yield* put({type: ActionTypes.StepperDisabled});
 
+        // TODO: Check to see if we can move this into compilation step
+        Codecast.runner = yield* call(createRunnerSaga);
+
         /* Build the stepper state. This automatically runs into user source code. */
         let state: AppStore = yield* select();
 
@@ -719,7 +722,6 @@ function* compileSucceededSaga(app: App) {
 
 function* recorderStoppingSaga() {
     /* Disable the stepper when recording stops. */
-    yield* put({type: ActionTypes.StepperInterrupt});
     yield* put({type: ActionTypes.StepperExit});
 }
 
@@ -774,27 +776,14 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
         /* Emit a progress action so that an up-to-date state gets displayed. */
 
         yield* put({type: ActionTypes.StepperProgress, payload: {stepperContext, progress: arg.progress}});
-
-        /* Has the stepper been interrupted? */
-        if (isStepperInterrupting(state) || StepperStatus.Clear === state.stepper.status) {
-            console.log('stepper is still interrupting');
-            yield* call(reject, new StepperError('interrupt', 'interrupted'));
-
-            return;
-        }
     }
 
     /* Run the provided saga if any, or wait until next animation frame. */
     const saga = arg.saga || ('main' === stepperContext.environment ? stepperWaitSaga : null);
     let completed = true;
-    let interrupted = false;
     if (saga) {
-        const result = yield* race({
-            completed: call(saga, stepperContext),
-            interrupted: take(ActionTypes.StepperInterrupt)
-        });
-        completed = !!result.completed;
-        interrupted = !!result.interrupted;
+        // @ts-ignore
+        completed = yield* call(saga, stepperContext);
     }
 
     // console.log('current stepper state2', stepperContext.state.contextState);
@@ -824,17 +813,9 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
 
     // console.log('current stepper state3', stepperContext.state.contextState);
 
-    /* Check whether to interrupt or resume the stepper. */
-    if (interrupted) {
-        /**
-         * It is strange to use reject() for a behavior that is normal (pausing the stepper).
-         */
-        yield* call(reject, new StepperError('interrupt', 'interrupted'));
-    } else {
-        /* Continue stepper execution, passing the saga's return value as the
-           result of yielding the interact effect. */
-        yield* call(resolve, completed);
-    }
+    /* Continue stepper execution, passing the saga's return value as the
+       result of yielding the interact effect. */
+    yield* call(resolve, completed);
 }
 
 function* stepperWaitSaga() {
@@ -1006,7 +987,7 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         yield* put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: true});
 
         taskContext.display = false;
-        stepperContext.displayTimeoutRunning = true;
+        stepperContext.taskDisplayNoneStatus = 'running';
         taskContext.resetAndReloadState(selectCurrentTest(state), state);
         stepperContext.state.contextState = getCurrentImmerState(taskContext.getInnerState());
         console.log('current task state', taskContext.getInnerState());
@@ -1255,13 +1236,13 @@ function postLink(app: App) {
         }
     });
 
-    recordApi.on(ActionTypes.StepperInterrupt, function* (addEvent) {
+    recordApi.on(ActionTypes.StepperInterrupting, function* (addEvent) {
         yield* call(addEvent, 'stepper.interrupt');
     });
     replayApi.on('stepper.interrupt', function* (replayContext: ReplayContext) {
         const stepperContext = replayContext.stepperContext;
 
-        yield* put({type: ActionTypes.StepperInterrupt, payload: {stepperContext}});
+        yield* put({type: ActionTypes.StepperInterrupting, payload: {stepperContext}});
     });
 
     replayApi.on('stepper.restart', function* () {
@@ -1404,7 +1385,7 @@ function postLink(app: App) {
         ], function*() {
             let state: AppStore = yield* select();
             if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
-                yield* put({type: ActionTypes.StepperInterrupt, payload: {}});
+                yield* put({type: ActionTypes.StepperInterrupting, payload: {}});
             }
             // yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
             yield* call(stepperDisabledSaga, true);

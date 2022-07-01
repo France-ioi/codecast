@@ -32,11 +32,6 @@ export function TralalereControls(props: StepperControlsProps) {
         let disabled = false;
         const style: React.CSSProperties = {};
 
-        let intent: Intent = Intent.NONE;
-        if (key === 'compile') {
-            intent = Intent.PRIMARY;
-        }
-
         switch (key) {
             case 'interrupt':
                 disabled = !stepperControlsState.canInterrupt;
@@ -87,13 +82,6 @@ export function TralalereControls(props: StepperControlsProps) {
             if (mod === '-') {
                 disabled = true;
             }
-            if (mod) {
-                intent = mod === '+' ? Intent.PRIMARY : Intent.NONE;
-            }
-        }
-
-        if (!title) {
-            title = undefined;
         }
 
         return (
@@ -113,7 +101,7 @@ export function TralalereControls(props: StepperControlsProps) {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         dispatch({type: ActionTypes.StepperExit, payload: {}});
     };
-    const onInterrupt = () => dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
+    const onInterrupt = () => dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
     const onCompile = () => dispatch({type: ActionTypes.Compile, payload: {}});
     const onStepByStep = async () => {
         if (!await compileIfNecessary()) {
@@ -126,7 +114,7 @@ export function TralalereControls(props: StepperControlsProps) {
         if (stepperControlsState.canStep) {
             dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into, useSpeed: true}});
         } else {
-            dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
+            dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
         }
     };
 

@@ -568,6 +568,7 @@ export default class BlocklyRunner extends AbstractRunner {
                 }
 
                 this.runSyncBlock();
+                this._steps += 1;
                 console.log('after first run sync');
                 if (this.nextCallback || !this.executeOnResolve) {
                     resolve();
@@ -575,7 +576,6 @@ export default class BlocklyRunner extends AbstractRunner {
             }
         }).finally(() => {
             console.log('make finally');
-            this._steps += 1;
             this.executeOnResolve = null;
         })
     };

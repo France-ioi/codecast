@@ -381,8 +381,6 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
     // Stop current execution if there is one
     if (state.stepper && state.stepper.status !== StepperStatus.Clear) {
         yield* put({type: StepperActionTypes.StepperExit, payload: {record: false}});
-    } else if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
-        yield* put({type: StepperActionTypes.StepperInterrupt, payload: {record: false}});
     }
 
     // Reload context state for the new test

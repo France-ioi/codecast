@@ -132,7 +132,7 @@ export function StepperControls(props: StepperControlsProps) {
     const onToggleSpeed = () => {
         setSpeedDisplayedState(!speedDisplayedState);
     }
-    const onInterrupt = () => dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
+    const onInterrupt = () => dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
     const onRestart = () => dispatch({type: ActionTypes.StepperRestart, payload: {}});
     const onStop = async () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
@@ -154,7 +154,7 @@ export function StepperControls(props: StepperControlsProps) {
         if (stepperControlsState.canStep) {
             dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into, useSpeed: true}});
         } else {
-            dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
+            dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
         }
     };
     const onGoToEnd = async () => {
@@ -165,11 +165,12 @@ export function StepperControls(props: StepperControlsProps) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         }
         if (!stepperControlsState.canStep) {
-            dispatch({type: ActionTypes.StepperInterrupt, payload: {}});
+            dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
         }
+        //TODO: await interruption
         setTimeout(() => {
             dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});
-        }, 250);
+        }, 300);
     };
     const onChangeSpeed = (speed) => dispatch({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
 
