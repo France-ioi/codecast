@@ -10,11 +10,11 @@ export function TralalereInstructions(props: TralalereInstructionsProps) {
     return (
         <div className={`tralalere-instructions ${props.expanded ? 'is-expanded' : ''}`}>
             {/*{props.expanded ?*/}
-                <img className="tralalere-instructions-shadow-down"
-                     src={window.modulesPath + 'img/algorea/crane/instructions-shadow-down.png'}/>
-                {/*:*/}
-                {/*<img className="tralalere-instructions-shadow-right"*/}
-                {/*     src={window.modulesPath + 'img/algorea/crane/instructions-shadow-right.png'}/>*/}
+            <img className="tralalere-instructions-shadow-down"
+                src={window.modulesPath + 'img/algorea/crane/instructions-shadow-down.png'}/>
+            {/*:*/}
+            {/*<img className="tralalere-instructions-shadow-right"*/}
+            {/*     src={window.modulesPath + 'img/algorea/crane/instructions-shadow-right.png'}/>*/}
             {/*}*/}
 
             <img className="tralalere-instructions-window" src={window.modulesPath + 'img/algorea/crane/instructions-window.png'}/>

@@ -15,8 +15,20 @@ export function TaskInstructions() {
             <p>
                 Pour pousser une caisse, mettez d'abord le robot face à la caisse, il avancera en la poussant.
             </p>
-            <p>
+            <p className="short">
                 <strong>Attention :</strong> vous ne pouvez utiliser qu'une fois l'instruction "pousser la caisse".
+            </p>
+            <p className="long">
+                Plus de détails sur la mission
+            </p>
+            <p className="long">
+                Plus de détails sur la mission
+            </p>
+            <p className="long">
+                Plus de détails sur la mission
+            </p>
+            <p className="long">
+                Plus de détails sur la mission
             </p>
         </React.Fragment>
     );
