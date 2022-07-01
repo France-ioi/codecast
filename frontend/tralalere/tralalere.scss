@@ -13,11 +13,32 @@ $tralalere-red: #FF3C11;
 
 .tralalere {
   .tralalere-instructions {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1;
+    .task-mission {
+      .short, .long {
+        display: none !important;
+      }
+    }
+
+    &.is-expanded {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1;
+
+      .task-mission {
+        .long {
+          display: block !important;
+        }
+      }
+    }
+    &:not(.is-expanded) {
+      .task-mission {
+        .short {
+          display: block !important;
+        }
+      }
+    }
 
     .tralalere-instructions-container {
       margin-left: 20px;
@@ -101,12 +122,11 @@ $tralalere-red: #FF3C11;
 
   .tralalere-visualization {
     background-size: cover;
-    padding-top: 40px;
     border-radius: 6px 6px 0px 0px;
     position: relative;
 
     .context-visualization {
-      margin-top: 90px;
+      margin-top: 40px;
     }
   }
 

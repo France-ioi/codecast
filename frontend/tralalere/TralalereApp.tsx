@@ -24,6 +24,7 @@ import {DocumentationLanguage} from "../task/documentation/documentation_slice";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faExternalLinkAlt, faTimes} from "@fortawesome/free-solid-svg-icons";
 import {TralalereBox} from "./TralalereBox";
+import {TralalereInstructions} from "./TralalereInstructions";
 
 
 export function TralalereApp() {
@@ -130,29 +131,10 @@ export function TralalereApp() {
                 </div>
 
                 <div className={`tralalere-section`}>
-                    <div className="tralalere-visualization" style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
-                        <div className="tralalere-instructions">
-                            {instructionsExpanded ?
-                                <img className="tralalere-instructions-shadow-down"
-                                    src={window.modulesPath + 'img/algorea/crane/instructions-shadow-down.png'}/>
-                                :
-                                <img className="tralalere-instructions-shadow-right"
-                                    src={window.modulesPath + 'img/algorea/crane/instructions-shadow-right.png'}/>
-                            }
+                    <div className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`} style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
+                        <TralalereInstructions onExpand={expandInstructions}/>
 
-                            <img className="tralalere-instructions-window" src={window.modulesPath + 'img/algorea/crane/instructions-window.png'}/>
-                            {!instructionsExpanded && <div className="tralalere-instructions-around-left"/>}
-                            <img className="tralalere-instructions-left" src={window.modulesPath + 'img/algorea/crane/instructions-left-folded.png'}/>
-                            <div className={`tralalere-instructions-container ${!instructionsExpanded ? 'is-limited' : ''}`}>
-                                <TaskInstructions/>
-
-                                <div>
-                                    <div className="tralalere-button" onClick={expandInstructions}>
-                                        {instructionsExpanded ? '-' : '+'}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        {instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
 
                         <ContextVisualization/>
                     </div>
