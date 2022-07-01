@@ -50,6 +50,7 @@ export default class PythonRunner extends AbstractRunner {
     public _isFinished = false;
     private quickAlgoCallsExecutor;
     private _nbActions = 0;
+    public hasCalledHandler = false;
 
     constructor(context) {
         super(context);
@@ -84,6 +85,7 @@ export default class PythonRunner extends AbstractRunner {
     private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type) {
         let handler = '';
         handler += "\tCodecast.runner.checkArgs('" + name + "', '" + generatorName + "', '" + blockName + "', arguments);";
+        handler += "\tCodecast.runner.hasCalledHandler = true;";
 
         handler += "\n\tvar susp = new Sk.misceval.Suspension();";
         handler += "\n\tvar result = Sk.builtin.none.none$;";
@@ -118,6 +120,7 @@ export default class PythonRunner extends AbstractRunner {
 
         return function () {
             self.checkArgs(name, generatorName, blockName, arguments);
+            self.hasCalledHandler = true;
 
             let susp = new Sk.misceval.Suspension();
             let result = Sk.builtin.none.none$;
@@ -351,7 +354,6 @@ export default class PythonRunner extends AbstractRunner {
             this._resetCallstackOnNextStep = true;
             this.reportValue(value);
         }
-
         callback(primitive);
     }
 
@@ -485,7 +487,16 @@ export default class PythonRunner extends AbstractRunner {
             if (this._isRunning && !this._stepInProgress) {
                 this.step(resolve, reject);
             }
-        });
+        }).then(() => {
+            if (this.hasCalledHandler) {
+                // Fix for Python: when Skulpt executes a custom handler it counts this as two execution steps.
+                // Therefore we need to do one more execution step
+                this.hasCalledHandler = false;
+                this._steps--;
+
+                return this.runStep(quickAlgoCallsExecutor);
+            }
+        })
     }
 
     reportValue(origValue, varName = null) {
