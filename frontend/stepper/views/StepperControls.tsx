@@ -3,7 +3,7 @@ import {Button, Intent, Slider} from "@blueprintjs/core";
 import {IconName} from "@blueprintjs/icons";
 import {ActionTypes} from "../actionTypes";
 import {useDispatch, useSelector} from "react-redux";
-import {StepperControlsType, StepperStepMode} from "../index";
+import {StepperControlsType, stepperMaxSpeed, StepperStepMode} from "../index";
 import {formatTime} from "../../common/utils";
 import {CompileStatus} from "../compile";
 import {LayoutType} from "../../task/layout/layout";
@@ -217,9 +217,9 @@ export function StepperControls(props: StepperControlsProps) {
                             value={speed}
                             onChange={onChangeSpeed}
                             min={0}
-                            max={255}
+                            max={stepperMaxSpeed}
                             stepSize={1}
-                            labelStepSize={255}
+                            labelStepSize={stepperMaxSpeed}
                             labelRenderer={formatTime}
                         />
                         <FontAwesomeIcon icon={faRunning} className="extremity extremity-right"/>

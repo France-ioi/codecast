@@ -5,6 +5,7 @@ import quickalgoI18n from "../../lang/quickalgoI18n";
 import merge from 'lodash.merge';
 import {getCurrentImmerState} from "../utils";
 import {mainQuickAlgoLogger} from "./quickalgo_libraries";
+import {stepperMaxSpeed} from "../../stepper";
 
 export class QuickAlgoLibrary {
     display: boolean;
@@ -112,7 +113,7 @@ export class QuickAlgoLibrary {
     waitDelay(callback, value = null) {
         // This function is used only to call the callback to move to next step,
         // but we handle the speed delay in an upper level
-        const delay = this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : 255;
+        const delay = this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : stepperMaxSpeed;
         console.log('Quickalgo wait delay', callback, this.runner, delay);
         if (this.runner) {
             this.runner.waitDelay(callback, value, delay);

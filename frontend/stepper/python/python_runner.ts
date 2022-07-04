@@ -71,8 +71,12 @@ export default class PythonRunner extends AbstractRunner {
         return stepperState.isFinished;
     }
 
-    public async runNewStep(stepperContext: StepperContext) {
-        const result = await this.runStep(stepperContext.quickAlgoCallsExecutor);
+    public async runNewStep(stepperContext: StepperContext, noInteractive = false) {
+        const result = await this.runStep(stepperContext.quickAlgoCallsExecutor, noInteractive);
+
+        if (noInteractive && !this._isFinished) {
+            return;
+        }
 
         console.log('FINAL INTERACT', result);
         stepperContext.makeDelay = true;
@@ -480,10 +484,10 @@ export default class PythonRunner extends AbstractRunner {
         this._isRunning = true;
     }
 
-    runStep(quickAlgoCallsExecutor) {
+    runStep(quickAlgoCallsExecutor, noInteractive = false) {
         this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
         return new Promise((resolve, reject) => {
-            this.stepMode = true;
+            this.stepMode = !noInteractive;
             if (this._isRunning && !this._stepInProgress) {
                 this.step(resolve, reject);
             }

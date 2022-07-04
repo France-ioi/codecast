@@ -5,6 +5,7 @@ import {Block, BlockType} from "../../task/blocks/blocks";
 import {Codecast} from "../../index";
 import {AnalysisSnapshot} from "../analysis/analysis";
 import {fetchLatestBlocklyAnalysis} from "./analysis";
+import log from "loglevel";
 
 export default class BlocklyRunner extends AbstractRunner {
     private context;
@@ -87,8 +88,8 @@ export default class BlocklyRunner extends AbstractRunner {
 
     reportBlockValue(id, value, varName) {
         // Show a popup displaying the value of a block in step-by-step mode
-        console.log('report block value', id, value, varName, this.strings);
         if (this.context.display && this.stepMode) {
+            log.getLogger('blockly_runner').debug('report block value', id, value, varName, this.strings);
             let displayStr = this.valueToString(value);
             if(value && value.type == 'boolean') {
                 displayStr = value.data ? this.context.strings.valueTrue : this.context.strings.valueFalse;
@@ -157,7 +158,7 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     noDelay(callback, value = null) {
-        console.log('Call no delay with values', callback, value);
+        log.getLogger('blockly_runner').debug('Call no delay with values', callback, value);
         let primitive = undefined;
         if (value !== undefined) {
             if(value && (typeof value.length != 'undefined' ||
@@ -188,7 +189,6 @@ export default class BlocklyRunner extends AbstractRunner {
                 // this.runSyncBlock();
             }, delay);
         } else {
-            console.log('callback primitive', primitive);
             this.stackCount += 1;
             callback(primitive);
             // this.runSyncBlock();
@@ -218,7 +218,6 @@ export default class BlocklyRunner extends AbstractRunner {
             // For commands belonging to the "actions" category, we count the
             // number of actions to put a limit on steps without actions
             return function () {
-                console.log('elements', arguments);
                 if ('actions' === category) {
                     self.nbActions += 1;
                 }
@@ -228,17 +227,12 @@ export default class BlocklyRunner extends AbstractRunner {
                 let result;
 
                 try {
-                    console.log('start quickalgo call', generatorName, blockName, args);
-                    result = self.quickAlgoCallsExecutor(generatorName, blockName, args, (res) => {
-                        console.log('after execution', res);
-                    });
-                    console.log('the result', result);
+                    result = self.quickAlgoCallsExecutor(generatorName, blockName, args);
                     if (result instanceof Promise) {
                         result
                             .then(resolve)
                             .catch((e) => { Codecast.runner.onError(e) })
                             .finally(() => {
-                                console.log('after promise');
                                 self.runSyncBlock();
                             });
                     }
@@ -302,19 +296,18 @@ export default class BlocklyRunner extends AbstractRunner {
         let highlightBlock = (id, callback) => {
             id = id ? id.toString() : '';
             // We always execute directly the first highlightBlock
-            if(this.firstHighlight || !this.stepMode) {
+            if (this.firstHighlight) {
                 this.firstHighlight = false;
                 callback();
             } else {
                 // Interrupt here for step mode, allows to stop before each
                 // instruction
-                console.log('highlight, stop here');
+                log.getLogger('blockly_runner').debug('highlight, stop here');
                 this.nextCallback = callback;
                 this.currentBlockId = id;
                 this._stepInProgress = false;
-                console.log('highlight, stop here');
                 if (this.executeOnResolve) {
-                    console.log('do execute on resolve');
+                    log.getLogger('blockly_runner').debug('do execute on resolve');
                     this.executeOnResolve();
                 }
             }
@@ -331,15 +324,13 @@ export default class BlocklyRunner extends AbstractRunner {
 
     program_end(callback) {
         this._isFinished = true;
-        console.log('program end, is finished = true');
-        let curNode = this.context.curNode;
-        if(!this.context.programEnded[curNode]) {
-            this.context.programEnded[curNode] = true;
-            if(this.context.programEnded.indexOf(false) == -1) {
-                this.context.infos.checkEndCondition(this.context, true);
-            }
+        log.getLogger('blockly_runner').debug('program end, is finished = true');
+        this._stepInProgress = false;
+        callback();
+        if (this.executeOnResolve) {
+            log.getLogger('blockly_runner').debug('do execute on resolve');
+            this.executeOnResolve();
         }
-        this.noDelay(callback);
     };
 
     public isStuck(stepperState: StepperState): boolean {
@@ -370,7 +361,7 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     runSyncBlock() {
-        console.log('run sync block', this._stepInProgress);
+        log.getLogger('blockly_runner').debug('run sync block', this._stepInProgress);
         this.resetDone = false;
         this._stepInProgress = true;
         this.oneStepDone = false;
@@ -398,12 +389,12 @@ export default class BlocklyRunner extends AbstractRunner {
                     break;
                 }
                 if (!interpreter.step() || this.toStopInterpreter[iInterpreter]) {
-                    console.log('interpreter not running');
+                    log.getLogger('blockly_runner').debug('interpreter not running');
                     this.isRunningInterpreter[iInterpreter] = false;
                     return;
                 }
                 if (interpreter.paused_) {
-                    console.log('interpreter paused', this._stepInProgress);
+                    log.getLogger('blockly_runner').debug('interpreter paused', this._stepInProgress);
                     this.oneStepDone = !wasPaused;
                     return;
                 }
@@ -430,10 +421,10 @@ export default class BlocklyRunner extends AbstractRunner {
                 this.interpreterEnded[iInterpreter] = true;
             }
 
-            console.log('end run sync block');
+            log.getLogger('blockly_runner').debug('end run sync block');
         } catch (e: any) {
             console.error(e);
-            console.log('error during run');
+            log.getLogger('blockly_runner').debug('error during run');
             this.context.onExecutionEnd && this.context.onExecutionEnd();
             this._stepInProgress = false;
 
@@ -471,7 +462,7 @@ export default class BlocklyRunner extends AbstractRunner {
             }
 
             this.delayFactory.destroyAll();
-            console.log('call reject', message);
+            log.getLogger('blockly_runner').debug('call reject', message);
             let executeOnReject = this.executeOnReject;
             this.executeOnResolve = null;
             this.executeOnReject = null;
@@ -487,7 +478,7 @@ export default class BlocklyRunner extends AbstractRunner {
     };
 
     initCodes(codes, availableBlocks) {
-        console.log('init codes', codes);
+        log.getLogger('blockly_runner').debug('init codes', codes);
         this.delayFactory.destroyAll();
         this.interpreters = [];
         this.nbNodes = codes.length;
@@ -552,14 +543,14 @@ export default class BlocklyRunner extends AbstractRunner {
         }
     };
 
-    runStep(quickAlgoCallsExecutor) {
+    runStep(quickAlgoCallsExecutor, noInteractive = false) {
         return new Promise<void>((resolve, reject) => {
-            this.stepMode = true;
+            this.stepMode = !noInteractive;
             this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
             this.executeOnResolve = resolve;
             this.executeOnReject = reject;
             if (this._stepInProgress) {
-                console.log('step already in progress');
+                log.getLogger('blockly_runner').debug('step already in progress');
                 resolve();
                 return;
             } else {
@@ -569,21 +560,25 @@ export default class BlocklyRunner extends AbstractRunner {
 
                 this.runSyncBlock();
                 this._steps += 1;
-                console.log('after first run sync');
+                log.getLogger('blockly_runner').debug('after first run sync');
                 if (this.nextCallback || !this.executeOnResolve) {
                     resolve();
                 }
             }
         }).finally(() => {
-            console.log('make finally');
+            log.getLogger('blockly_runner').debug('make finally');
             this.executeOnResolve = null;
         })
     };
 
-    public async runNewStep(stepperContext: StepperContext) {
-        console.log('init new step');
-        await this.runStep(stepperContext.quickAlgoCallsExecutor);
-        console.log('end new step');
+    public async runNewStep(stepperContext: StepperContext, noInteractive = false) {
+        log.getLogger('blockly_runner').debug('init new step');
+        await this.runStep(stepperContext.quickAlgoCallsExecutor, noInteractive);
+        log.getLogger('blockly_runner').debug('end new step');
+
+        if (noInteractive && !this._isFinished) {
+            return;
+        }
 
         stepperContext.makeDelay = true;
         await stepperContext.interactAfter({
@@ -596,7 +591,7 @@ export default class BlocklyRunner extends AbstractRunner {
     }
 
     public getLocalVariables() {
-        console.log('fetch local variables', this.localVariables);
+        log.getLogger('blockly_runner').debug('fetch local variables', this.localVariables);
         return this.localVariables;
     }
 
@@ -607,7 +602,7 @@ export default class BlocklyRunner extends AbstractRunner {
         const analysisCode = analysis.code;
         const currentStepNum = this._steps;
         const currentPythonCode = this._code;
-        console.log('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentStepNum);
+        log.getLogger('blockly_runner').debug('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentStepNum);
 
         return !(analysisStepNum !== currentStepNum || analysisCode !== currentPythonCode);
     }

@@ -81,6 +81,7 @@ import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecast
 import log from "loglevel";
 
 export const stepperThrottleDisplayDelay = 50; // ms
+export const stepperMaxSpeed = 255; // 255 - speed in ms
 
 export enum StepperStepMode {
     Run = 'run',
@@ -751,10 +752,8 @@ export function* stepperDisabledSaga(action, leaveContext = false) {
     }
 }
 
-function* stepperInteractBeforeSaga(app: App, {meta: {resolve, reject}}) {
+function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: {resolve, reject}}) {
     let state: AppStore = yield* select();
-
-    console.log('inside stepper interact before');
 
     /* Has the stepper been interrupted? */
     if (isStepperInterrupting(state) || StepperStatus.Clear === state.stepper.status) {
@@ -762,6 +761,18 @@ function* stepperInteractBeforeSaga(app: App, {meta: {resolve, reject}}) {
         yield* call(reject, new StepperError('interrupt', 'interrupted'));
 
         return;
+    }
+
+    // Update speed if we use speed
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+    if (context && context.changeDelay) {
+        let newSpeed = 0;
+        if (null !== stepperContext.speed) {
+            stepperContext.speed = getStepper(state).speed;
+            newSpeed = stepperMaxSpeed - stepperContext.speed;
+        }
+
+        context.changeDelay(newSpeed);
     }
 
     yield* call(resolve, true);
@@ -797,19 +808,6 @@ function* stepperInteractSaga(app: App, {payload: {stepperContext, arg}, meta: {
        the effects of user interaction. */
     state = yield* select();
     stepperContext.state = {...getCurrentStepperState(state)};
-
-    // Update speed if we use speed
-    const context = quickAlgoLibraries.getContext(null, state.environment);
-    if (null !== stepperContext.speed) {
-        stepperContext.speed = getStepper(state).speed;
-        if (context && context.changeDelay) {
-            context.changeDelay(255 - stepperContext.speed);
-        }
-    } else {
-        if (context && context.changeDelay) {
-            context.changeDelay(0);
-        }
-    }
 
     // console.log('current stepper state3', stepperContext.state.contextState);
 
@@ -929,6 +927,8 @@ function* stepperStepSaga(app: App, action) {
                     }
                 }
             }
+
+            console.log('end stepper step');
 
             if (stepperContext.state.platform === CodecastPlatform.Blockly) {
                 stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
@@ -1187,7 +1187,7 @@ function postLink(app: App) {
             console.log('[stepper.step] set speed', speed);
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context && context.changeDelay) {
-                context.changeDelay(255 - speed);
+                context.changeDelay(stepperMaxSpeed - speed);
             }
         });
     });
@@ -1311,7 +1311,7 @@ function postLink(app: App) {
         replayContext.addSaga(function* () {
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context && context.changeDelay) {
-                context.changeDelay(255 - speed);
+                context.changeDelay(stepperMaxSpeed - speed);
             }
         });
     });

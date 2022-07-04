@@ -21,9 +21,13 @@ export default class UnixRunner extends AbstractRunner {
         return !stepperState.programState.control;
     }
 
-    public async runNewStep(stepperContext: StepperContext) {
+    public async runNewStep(stepperContext: StepperContext, noInteractive = false) {
         const effects = C.step(stepperContext.state.programState);
         await stepperContext.executeEffects(stepperContext, effects[Symbol.iterator]());
+
+        if (noInteractive) {
+            return;
+        }
 
         /* Update the current position in source code. */
         const position = getNodeStartRow(stepperContext.state);

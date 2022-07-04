@@ -8,9 +8,15 @@
 */
 
 import * as C from '@france-ioi/persistent-c';
-import {all, call, put} from 'typed-redux-saga';
+import {all, apply, call, put} from 'typed-redux-saga';
 import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
-import {initialStepperStateControls, Stepper, StepperState, stepperThrottleDisplayDelay} from "./index";
+import {
+    initialStepperStateControls,
+    Stepper,
+    stepperMaxSpeed,
+    StepperState,
+    stepperThrottleDisplayDelay
+} from "./index";
 import {Bundle} from "../linker";
 import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
 import {createDraft} from "immer";
@@ -291,7 +297,13 @@ async function executeSingleStep(stepperContext: StepperContext) {
         }
     }
 
-    await Codecast.runner.runNewStep(stepperContext);
+    // const context = quickAlgoLibraries.getContext(null, stepperContext.environment);
+    // context.changeDelay(0);
+    // context.display = false;
+
+    const noInteractive = null === stepperContext.speed || stepperMaxSpeed === stepperContext.speed;
+    await Codecast.runner.runNewStep(stepperContext, noInteractive);
+    // context.display = true;
 }
 
 async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
@@ -444,36 +456,36 @@ function inUserCode(stepperState: StepperState) {
 
 export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
     return async (module: string, action: string, args: any[], callback?: Function) => {
-        console.log('call quickalgo', module, action, args, callback);
+        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] call quickalgo', module, action, args, callback);
         let libraryCallResult;
         const context = stepperContext.quickAlgoContext;
 
         if (stepperContext.state) {
-            console.log('stepper context before', stepperContext.state.contextState);
+            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] stepper context before', stepperContext.state.contextState);
         }
 
         if (stepperContext.quickAlgoCallsLogger) {
             const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, args};
             stepperContext.quickAlgoCallsLogger(quickAlgoLibraryCall);
-            console.log('call quickalgo calls logger', module, action, args);
+            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] call quickalgo calls logger', module, action, args);
         }
 
         const makeLibraryCall = () => {
             return new Promise(resolve => {
                 let callbackArguments = [];
                 let result = context[module][action].apply(context, [...args, function (a) {
-                    console.log('receive callback', arguments);
+                    log.getLogger('quickalgo_executor').debug('[quickalgo_executor] receive callback', arguments);
                     callbackArguments = [...arguments];
                     let argumentResult = callbackArguments.length ? callbackArguments[0] : undefined;
-                    console.log('set result', argumentResult);
+                    log.getLogger('quickalgo_executor').debug('[quickalgo_executor] set result', argumentResult);
                     resolve(argumentResult);
                 }]);
 
-                console.log('MODULE RESULT', result);
+                log.getLogger('quickalgo_executor').debug('[quickalgo_executor] MODULE RESULT', result);
                 if (Symbol.iterator in Object(result)) {
                     iterateResult(result)
                         .then((argumentResult) => {
-                            console.log('returned element', module, action, argumentResult);
+                            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] returned element', module, action, argumentResult);
                             // Use context.waitDelay to transform result to primitive when the library uses generators
                             context.waitDelay(resolve, argumentResult);
                         });
@@ -486,24 +498,24 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
             while (true) {
                 /* Pull the next effect from the builtin's iterator. */
                 const {done, value} = result.next();
-                console.log('ITERATOR RESULT', module, action, done, value);
+                log.getLogger('quickalgo_executor').debug('[quickalgo_executor] ITERATOR RESULT', module, action, done, value);
                 if (done) {
                     return value;
                 }
 
                 const name = value[0];
                 if (name === 'interact') {
-                    console.log('ASK FOR INTERACT', stepperContext.interactAfter);
+                    log.getLogger('quickalgo_executor').debug('[quickalgo_executor] ASK FOR INTERACT', stepperContext.interactAfter);
                     lastResult = await stepperContext.interactAfter({...(value[1] || {}), progress: false});
-                    console.log('last result', lastResult);
+                    log.getLogger('quickalgo_executor').debug('[quickalgo_executor] last result', lastResult);
                 } else if (name == 'put') {
-                    console.log('ask put dispatch', value[1]);
+                    log.getLogger('quickalgo_executor').debug('[quickalgo_executor] ask put dispatch', value[1]);
                     await stepperContext.dispatch(value[1]);
                 }
             }
         }
 
-        console.log('before make async library call', {module, action});
+        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] before make async library call', {module, action});
         let hideDisplay = false;
         let previousDelay = context.getDelay();
         try {
@@ -517,7 +529,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
             }
 
             libraryCallResult = await makeLibraryCall();
-            console.log('after make async lib call', libraryCallResult);
+            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async lib call', libraryCallResult);
 
             if (hideDisplay) {
                 context.display = true;
@@ -533,7 +545,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
                 }, stepperThrottleDisplayDelay);
             }
         } catch (e) {
-            console.log('context error 2', e);
+            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] context error 2', e);
             if (hideDisplay) {
                 context.display = true;
             } else {
@@ -552,35 +564,25 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
             });
         }
 
-        console.log('after make async library call', libraryCallResult);
+        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async library call', libraryCallResult);
 
         const newState = getCurrentImmerState(context.getInnerState());
-        console.log('NEW LIBRARY STATE', newState);
+        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] NEW LIBRARY STATE', newState);
 
         if (stepperContext.state) {
             stepperContext.state = {
                 ...stepperContext.state,
                 contextState: newState,
             };
-            console.log('stepper context after', stepperContext.state.contextState);
+            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] stepper context after', stepperContext.state.contextState);
         }
 
-        // let primitiveValue;
-        // if (libraryCallResult) {
-        //     context.waitDelay((primitive) => {
-        //         console.log('receive primitive value', primitive);
-        //         primitiveValue = primitive;
-        //
-        //
-        //     }, libraryCallResult);
-        // }
-
         if (callback) {
-            console.log('call callback arguments', libraryCallResult);
+            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] call callback arguments', libraryCallResult);
             callback(libraryCallResult);
         }
 
-        console.log('return library call result', libraryCallResult);
+        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] return library call result', libraryCallResult);
 
         return libraryCallResult;
     }
