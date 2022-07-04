@@ -25,7 +25,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const reset = (value, selection, firstVisibleRow) => {
         console.log('[blockly.editor] reset', value);
 
-        if (null === value.getContent()) {
+        if (null === value || null === value.getContent()) {
             let defaultBlockly = context.blocklyHelper.getDefaultContent();
             console.log('get default', defaultBlockly);
             context.blocklyHelper.programs = [{javascript:"", blockly: defaultBlockly, blocklyJS: ""}];
@@ -104,7 +104,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     };
 
     const onLoad = () => {
-        if (!currentTask || !context) {
+        if (!currentTask || !context || !context.blocklyHelper) {
             console.log('[blockly.editor] load no data');
             return;
         }

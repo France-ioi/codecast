@@ -10,6 +10,7 @@ import {parseCodecastUrl} from "../../backend/options";
 import {Languages} from "../lang";
 import {taskLoad} from "../task";
 import {platformSaveAnswer, TaskLevelName} from "../task/platform/platform_slice";
+import {isLocalStorageEnabled} from "./utils";
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
@@ -105,6 +106,10 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
         return;
     }
 
+    if (isLocalStorageEnabled() && window.localStorage.getItem('platform')) {
+        state.options.platform = window.localStorage.getItem('platform') as CodecastPlatform;
+    }
+
     loadOptionsFromQuery(options, query);
 }
 
@@ -120,10 +125,8 @@ export default function(bundle: Bundle) {
     bundle.addSaga(function* () {
         yield* takeEvery(ActionTypes.PlatformChanged, function* () {
             const newPlatform = yield* select((state: AppStore) => state.options.platform);
-            if (CodecastPlatform.Blockly === newPlatform || CodecastPlatform.Scratch === newPlatform) {
-                const searchParams = new URLSearchParams(window.location.search);
-                searchParams.set('platform', newPlatform);
-                window.location.search = searchParams.toString();
+            if (isLocalStorageEnabled()) {
+                window.localStorage.setItem('platform', newPlatform);
             }
             yield* put({type: StepperActionTypes.StepperExit});
             yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: null});

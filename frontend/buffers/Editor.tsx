@@ -129,7 +129,7 @@ export function Editor(props: EditorProps) {
 
     const reset = (value: Document, selection, firstVisibleRow) => {
         wrapModelToEditor(() => {
-            editor.current.getSession().setValue(value.toString());
+            editor.current.getSession().setValue(null === value ? '' : value.toString());
             editor.current.resize(true);
             setSelection(null);
             doSetSelection(selection);

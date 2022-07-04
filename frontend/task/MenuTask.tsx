@@ -10,12 +10,15 @@ import {getMessage} from "../lang";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
+import {hasBlockPlatform} from "../stepper/js";
+import {getJsLibLoaded} from "./libs/import_modules";
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
     const playerEnabled = useAppSelector(state => !!(state.options.audioUrl));
     const editorEnabled = useAppSelector(state => state.editor && state.editor.playerReady);
     const screen = useAppSelector(state => state.screen);
+    const platform = useAppSelector(state => state.options.platform);
     const canRecord = useAppSelector(state => state.options.canRecord);
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
 
@@ -63,6 +66,8 @@ export function MenuTask() {
         dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
     };
 
+    const forceSettingsOpen = hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded();
+
     return (
         <div ref={wrapperRef} className={`menu-container ${menuOpen ? 'is-open' : ''}`}>
             {screen !== Screen.DocumentationSmall && screen !== Screen.DocumentationBig && <div className="menu-icons">
@@ -90,7 +95,8 @@ export function MenuTask() {
                 </div>}
             </div>
             <SettingsDialog
-                open={settingsOpen}
+                open={settingsOpen || forceSettingsOpen}
+                closable={!forceSettingsOpen}
                 onClose={() => setSettingsOpen(false)}
             />
             <EditRecordingDialog

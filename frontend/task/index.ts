@@ -73,6 +73,7 @@ import {IoMode} from "../stepper/io";
 import {selectAnswer} from "./selectors";
 import {hasBlockPlatform, loadBlocklyHelperSaga} from "../stepper/js";
 import {ObjectDocument} from "../buffers/document";
+import {importPlatformModules} from "./libs/import_modules";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -159,6 +160,10 @@ function* createContext() {
             },
         },
     };
+
+    const platform = yield* select((state: AppStore) => state.options.platform);
+    yield* call(importPlatformModules, platform, 'bebras-modules');
+
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
