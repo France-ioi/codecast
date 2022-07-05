@@ -4,10 +4,9 @@ import {
     taskSubmissionSetTestResult,
     taskSubmissionStartTest,
 } from "./task_slice";
-import {call, delay, put, select} from "typed-redux-saga";
+import {call, put, select} from "typed-redux-saga";
 import {AppStore} from "../store";
 import {Codecast} from "../index";
-import {getBufferModel} from "../buffers/selectors";
 import {getTaskPlatformMode, recordingProgressSteps, TaskActionTypes, TaskPlatformMode} from "./index";
 import log from "loglevel";
 import {stepperDisplayError} from "../stepper/actionTypes";
@@ -18,6 +17,7 @@ import {
     PlatformTaskGradingResult,
 } from "./platform/platform";
 import {selectAnswer} from "./selectors";
+import {delay} from "../player/sagas";
 
 export const levelScoringData = {
     basic: {

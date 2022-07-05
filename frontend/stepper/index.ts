@@ -24,7 +24,7 @@ The stepper's state has the following shape:
 
 */
 
-import {apply, call, cancel, delay, fork, put, race, select, take, takeEvery, takeLatest, throttle,} from 'typed-redux-saga';
+import {apply, call, cancel, fork, put, select, takeEvery, takeLatest, throttle} from 'typed-redux-saga';
 import * as C from '@france-ioi/persistent-c';
 
 import {
@@ -63,7 +63,7 @@ import {getCurrentStepperState, getStepper, isStepperInterrupting} from "./selec
 import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {TermBuffer} from "./io/terminal";
 import {PlayerInstant} from "../player";
-import {ReplayContext} from "../player/sagas";
+import {delay, ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App, Codecast} from "../index";
 import {mainQuickAlgoLogger, quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
@@ -82,6 +82,7 @@ import log from "loglevel";
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
+export const stepperMaxStepsBetweenInteractBefore = 50;
 
 export enum StepperStepMode {
     Run = 'run',
@@ -775,6 +776,9 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
         context.changeDelay(newSpeed);
     }
 
+    stepperContext.noInteractive = null === stepperContext.speed || stepperMaxSpeed === stepperContext.speed;
+    stepperContext.noInteractiveSteps = 1;
+
     yield* call(resolve, true);
 }
 
@@ -1200,7 +1204,7 @@ function postLink(app: App) {
         }
 
         const range = getNodeRange(getCurrentStepperState(state));
-        yield* call(addEvent, 'stepper.progress', range ? range.start : null);
+        yield* call(addEvent, 'stepper.progress', range ? range.start : null, Codecast.runner._steps);
     });
 
     replayApi.on('stepper.progress', function* (replayContext: ReplayContext, event) {

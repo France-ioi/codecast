@@ -4,10 +4,11 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
-import {delay, put, takeEvery} from "typed-redux-saga";
+import {put, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {taskLoad} from "../task";
 import {isLocalStorageEnabled} from "../common/utils";
+import {delay} from "../player/sagas";
 
 export const Languages = {
     'en-US': require('./en-US.js'),

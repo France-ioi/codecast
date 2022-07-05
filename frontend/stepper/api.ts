@@ -13,7 +13,7 @@ import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {
     initialStepperStateControls,
     Stepper,
-    stepperMaxSpeed,
+    stepperMaxSpeed, stepperMaxStepsBetweenInteractBefore,
     StepperState,
     stepperThrottleDisplayDelay
 } from "./index";
@@ -52,6 +52,8 @@ export interface StepperContext {
     quickAlgoContext?: any,
     environment?: string,
     executeEffects?: Function,
+    noInteractive?: boolean,
+    noInteractiveSteps?: number,
 }
 
 export interface StepperContextParameters {
@@ -281,28 +283,33 @@ async function executeSingleStep(stepperContext: StepperContext) {
         throw new StepperError('stuck', 'execution cannot proceed');
     }
 
-    await stepperContext.interactBefore();
-    if (stepperContext.waitForProgress) {
-        if (!stepperContext.waitForProgressOnlyAfterIterationsCount || stepperContext.lineCounter >= stepperContext.waitForProgressOnlyAfterIterationsCount) {
-            console.log('wait for progress', stepperContext.lineCounter);
-            if (stepperContext.waitForProgressOnlyAfterIterationsCount) {
-                // For BC, after the first round of 10.000 actions, we leave at most 20 actions for the next rounds between each stepper.progress event
-                // This is to improve performance, for recordings with an infinite loop program
-                stepperContext.lineCounter = Math.max(0, stepperContext.waitForProgressOnlyAfterIterationsCount - 20);
+    console.log('execute single step, no interactive = ', stepperContext.noInteractive);
+    if (!stepperContext.noInteractive || stepperContext.noInteractiveSteps % stepperMaxStepsBetweenInteractBefore === 0) {
+        await stepperContext.interactBefore();
+
+        if (stepperContext.waitForProgress) {
+            if (!stepperContext.waitForProgressOnlyAfterIterationsCount || stepperContext.lineCounter >= stepperContext.waitForProgressOnlyAfterIterationsCount) {
+                console.log('wait for progress', stepperContext.lineCounter);
+                if (stepperContext.waitForProgressOnlyAfterIterationsCount) {
+                    // For BC, after the first round of 10.000 actions, we leave at most 20 actions for the next rounds between each stepper.progress event
+                    // This is to improve performance, for recordings with an infinite loop program
+                    stepperContext.lineCounter = Math.max(0, stepperContext.waitForProgressOnlyAfterIterationsCount - 20);
+                }
+                await stepperContext.waitForProgress(stepperContext);
+                console.log('end wait for progress, continuing');
+            } else {
+                stepperContext.lineCounter += 1;
             }
-            await stepperContext.waitForProgress(stepperContext);
-            console.log('end wait for progress, continuing');
-        } else {
-            stepperContext.lineCounter += 1;
         }
+    } else {
+        stepperContext.noInteractiveSteps++;
     }
 
     // const context = quickAlgoLibraries.getContext(null, stepperContext.environment);
     // context.changeDelay(0);
     // context.display = false;
 
-    const noInteractive = null === stepperContext.speed || stepperMaxSpeed === stepperContext.speed;
-    await Codecast.runner.runNewStep(stepperContext, noInteractive);
+    await Codecast.runner.runNewStep(stepperContext, stepperContext.noInteractive);
     // context.display = true;
 }
 

@@ -3,7 +3,7 @@
 // where source and input are buffer models (of shape {document, selection, firstVisibleRow}).
 
 import {buffers, eventChannel} from 'redux-saga';
-import {call, put, race, select, take, takeLatest, spawn, delay} from 'typed-redux-saga';
+import {call, put, race, select, take, takeLatest, spawn} from 'typed-redux-saga';
 import {findInstantIndex} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
@@ -29,6 +29,7 @@ import {taskLoaded} from "../task/task_slice";
 import {LayoutPlayerMode} from "../task/layout/layout";
 import {setTaskEventsEnvironment} from "../task/platform/platform";
 import {createRunnerSaga} from "../stepper";
+import {delay as delay$1} from 'typed-redux-saga';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -47,6 +48,25 @@ export interface ReplayContext {
     stepperDone: any,
     stepperContext: StepperContext
 }
+
+let timersStarted = 0;
+let timersEnded = 0;
+export function* delay<T = true>(
+    ms: number,
+    val?: T,
+) {
+    timersStarted++;
+
+    let returned;
+    try {
+        returned = yield* delay$1(ms, val);
+    } finally {
+        timersEnded++;
+    }
+
+    return returned;
+}
+
 
 function* playerSaga(action) {
     yield* takeLatest(ActionTypes.PlayerPrepare, playerPrepare, action);
@@ -383,17 +403,19 @@ function* playerReplayEvent(app: App, {type, payload}) {
     });
 
     let remainingEffects = null;
+    let steps = 0;
     while (true) {
         let newRemainingEffects = JSON.stringify(Object.keys(triggeredEffects).filter(effectId => !triggeredEffects[effectId]));
-        console.log('new remaining effects', newRemainingEffects);
-        if (newRemainingEffects === remainingEffects) {
+        console.log('new remaining effects', newRemainingEffects, timersStarted, timersEnded);
+        if (newRemainingEffects === remainingEffects && timersStarted === timersEnded) {
             break;
         }
 
         remainingEffects = newRemainingEffects;
-        console.log('PLAY REPLAY, before yield');
+        console.log('PLAY REPLAY, before yield', steps);
         yield* delay(0);
-        console.log('after wait delay');
+        console.log('after wait delay', steps);
+        steps++;
     }
 
     console.log('END REPLAY EVENT (playerReplayEvent)');

@@ -35,7 +35,7 @@ import taskSlice, {
     updateTestContextState,
 } from "./task_slice";
 import {addAutoRecordingBehaviour} from "../recorder/record";
-import {ReplayContext} from "../player/sagas";
+import {delay, ReplayContext} from "../player/sagas";
 import DocumentationBundle from "./documentation/doc";
 import BlocksBundle from "./blocks/blocks";
 import PlatformBundle, {

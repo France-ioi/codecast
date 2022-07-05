@@ -1,5 +1,5 @@
 import {channel} from 'redux-saga';
-import {apply, call, delay, put, select, take} from 'typed-redux-saga';
+import {put, select, take} from 'typed-redux-saga';
 import {
     ActionTypes,
     stepperExecutionError
@@ -12,6 +12,7 @@ import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {Action} from "redux";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {selectAnswer} from "../../task/selectors";
+import {delay} from "../../player/sagas";
 
 export function* compilePythonCodeSaga(source: string) {
     console.log('compile python code', source);
