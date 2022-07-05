@@ -16,7 +16,7 @@ export const Languages = {
 
 export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state, {payload: {options}}) => {
-        let language = 'en-US';
+        let language = 'fr-FR';
         if (navigator.language in Languages) {
             language = navigator.language;
         }

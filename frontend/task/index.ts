@@ -72,6 +72,7 @@ import {createAction} from "@reduxjs/toolkit";
 import {selectAnswer} from "./selectors";
 import {hasBlockPlatform} from "../stepper/js";
 import {ObjectDocument} from "../buffers/document";
+import {importPlatformModules} from "./libs/import_modules";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
