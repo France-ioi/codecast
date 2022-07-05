@@ -5,10 +5,11 @@ import {extractLevelSpecific} from "../utils";
 import {
     DocumentationConcept,
     documentationConceptSelected,
-    documentationConceptsLoaded, DocumentationLanguage,
+    documentationConceptsLoaded,
+    DocumentationLanguage,
     documentationLanguageChanged
 } from "./documentation_slice";
-import {AppAction} from "../../store";
+import {AppAction, CodecastPlatform} from "../../store";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {getMessage} from "../../lang";
 
@@ -71,6 +72,14 @@ export function sendCodeExampleToOpener(code, language) {
         error: function () {
         }
     });
+}
+
+export function convertPlatformToDocumentationLanguage(platform: CodecastPlatform): DocumentationLanguage {
+    if (CodecastPlatform.Unix === platform || CodecastPlatform.Arduino === platform) {
+        return DocumentationLanguage.C;
+    } else {
+        return platform as unknown as DocumentationLanguage;
+    }
 }
 
 function* documentationLoadSaga(standalone: boolean) {

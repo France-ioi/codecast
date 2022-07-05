@@ -12,7 +12,7 @@ import {getMessage, getMessageChoices} from "../lang";
 import {Block, BlockType, getContextBlocksDataSelector} from "./blocks/blocks";
 import {AppStore} from "../store";
 import {QuickAlgoLibrary} from "./libs/quickalgo_librairies";
-import {pythonDirectiveViewDict} from "../stepper/views";
+import {analysisDirectiveViewDict} from "../stepper/views";
 
 const pythonCountPatterns = [
     // Comments
@@ -41,6 +41,10 @@ const pythonCountPatterns = [
 ];
 
 function pythonCount(text) {
+    if (null === text) {
+        return 0;
+    }
+
     let remainingText = text;
     let nbBlocks = 0;
     while (remainingText != '') {
@@ -528,7 +532,7 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
         }
     }
 
-    for (let [directive, directiveData] of Object.entries(pythonDirectiveViewDict)) {
+    for (let [directive, directiveData] of Object.entries(analysisDirectiveViewDict)) {
         availableBlocks.push({
             name: directive,
             type: BlockType.Directive,

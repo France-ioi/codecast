@@ -11,7 +11,7 @@ import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {getPlayerState} from "./selectors";
-import {AppStore, AppStoreReplay} from "../store";
+import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {PlayerInstant} from "./index";
 import {Bundle} from "../linker";
 import {makeContext, QuickalgoLibraryCall, StepperContext} from "../stepper/api";
@@ -121,7 +121,7 @@ function* playerPrepare(app: App, action) {
     /* Compute the future state after every event. */
     const chan = yield* call(requestAnimationFrames, 50);
 
-    let platform = 'unix';
+    let platform = CodecastPlatform.Unix;
     if (data.options) {
         platform = data.options.platform;
     }
@@ -348,6 +348,28 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
 function* playerReplayEvent(app: App, {type, payload}) {
     console.log('START REPLAY EVENT (playerReplayEvent)', type, payload);
     const {replayApi, key, replayContext, event, resolve} = payload;
+    const environment = app.environment;
+    console.log('environment', environment);
+
+    const triggeredEffects = {};
+
+    Codecast.environments[environment].monitoring.clearListeners();
+    Codecast.environments[environment].monitoring.effectTriggered(({effectId}) => {
+        // console.log('effect triggered', effectId);
+        triggeredEffects[effectId] = false;
+    });
+    Codecast.environments[environment].monitoring.effectResolved((effectId) => {
+        // console.log('effect resolved', effectId);
+        triggeredEffects[effectId] = true;
+    });
+    Codecast.environments[environment].monitoring.effectRejected((effectId) => {
+        // console.log('effect rejected', effectId);
+        triggeredEffects[effectId] = true;
+    });
+    Codecast.environments[environment].monitoring.effectCancelled((effectId) => {
+        // console.log('effect cancelled', effectId);
+        triggeredEffects[effectId] = true;
+    });
 
     // Play event, except if we need an input: in this case, end the event execution and continue
     // playing events until we get the input
@@ -356,7 +378,20 @@ function* playerReplayEvent(app: App, {type, payload}) {
         inputNeeded: take('task/taskInputNeeded'),
     });
 
-    yield* delay(0);
+    let remainingEffects = null;
+    while (true) {
+        let newRemainingEffects = JSON.stringify(Object.keys(triggeredEffects).filter(effectId => !triggeredEffects[effectId]));
+        console.log('new remaining effects', newRemainingEffects);
+        if (newRemainingEffects === remainingEffects) {
+            break;
+        }
+
+        remainingEffects = newRemainingEffects;
+        console.log('PLAY REPLAY, before yield');
+        yield* delay(0);
+        console.log('after wait delay');
+    }
+
     console.log('END REPLAY EVENT (playerReplayEvent)');
     resolve();
 }
@@ -536,9 +571,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                     console.log('start call execution', quickalgoCall);
 
                     // @ts-ignore
-                    yield* spawn(executor, module, action, args, () => {
-                        console.log('execution over');
-                    });
+                    yield* spawn(executor, module, action, args);
                 }
             }
         }

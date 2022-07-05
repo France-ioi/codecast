@@ -9,6 +9,7 @@ module.exports = {
     MESSAGES: 'Messages',
     ERROR: 'Erreur',
     CLOSE: 'Fermer',
+    VALIDATE: 'Valider',
     NONE: 'Aucun',
     CANCEL: 'Annuler',
     FULLSCREEN: "plein écran",
@@ -126,6 +127,9 @@ module.exports = {
     PLATFORM_UNIX: "C (Unix)",
     PLATFORM_ARDUINO: "C (Arduino)",
     PLATFORM_PYTHON: "Python",
+    PLATFORM_BLOCKLY: "Blockly",
+    PLATFORM_SCRATCH: "Scratch",
+    PLATFORM_RELOAD: "Impossible d'afficher le langage {platform} dans le mode actuel, veuillez recharger la page pour mettre l'interface à jour.",
     PROGRAM_MISSING_LIB: "Vous devez mettre la ligne {line} dans votre programme.",
 
     USER_SELECT_LOGIN_METHOD: "Choisissez une méthode de connexion :",

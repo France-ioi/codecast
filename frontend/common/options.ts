@@ -2,11 +2,15 @@ import {initialStateCompile} from "../stepper/compile";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
+import {ActionTypes as BufferActionTypes} from '../buffers/actionTypes';
 import {Bundle} from "../linker";
-import {put, takeEvery} from "typed-redux-saga";
-import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
+import {put, select, takeEvery} from "typed-redux-saga";
+import {AppStore, CodecastOptions, CodecastOptionsMode, CodecastPlatform} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
 import {Languages} from "../lang";
+import {taskLoad} from "../task";
+import {platformSaveAnswer, TaskLevelName} from "../task/platform/platform_slice";
+import {isLocalStorageEnabled} from "./utils";
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
@@ -102,6 +106,10 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
         return;
     }
 
+    if (isLocalStorageEnabled() && window.localStorage.getItem('platform')) {
+        state.options.platform = window.localStorage.getItem('platform') as CodecastPlatform;
+    }
+
     loadOptionsFromQuery(options, query);
 }
 
@@ -116,7 +124,17 @@ export default function(bundle: Bundle) {
 
     bundle.addSaga(function* () {
         yield* takeEvery(ActionTypes.PlatformChanged, function* () {
+            const newPlatform = yield* select((state: AppStore) => state.options.platform);
+            if (isLocalStorageEnabled()) {
+                window.localStorage.setItem('platform', newPlatform);
+            }
             yield* put({type: StepperActionTypes.StepperExit});
+            yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: null});
+            const levels = yield* select((state: AppStore) => state.platform.levels);
+            for (let level of Object.keys(levels)) {
+                yield* put(platformSaveAnswer({level: level as TaskLevelName, answer: null}));
+            }
+            yield* put(taskLoad({reloadContext: true}));
         });
     });
 }

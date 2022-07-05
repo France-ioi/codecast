@@ -3,10 +3,12 @@ import classnames from 'classnames';
 import * as ace from 'brace';
 import {addAutocompletion} from "./editorAutocompletion";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
+import {Document} from "./document";
 import {getMessage} from "../lang";
 import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
 import {useAppSelector} from "../hooks";
 import {useDrop} from "react-dnd";
+import {DocumentModel} from "./index";
 
 const Range = ace.acequire('ace/range').Range;
 
@@ -125,9 +127,9 @@ export function Editor(props: EditorProps) {
         }
     };
 
-    const reset = (value, selection, firstVisibleRow) => {
+    const reset = (value: Document, selection, firstVisibleRow) => {
         wrapModelToEditor(() => {
-            editor.current.getSession().setValue(value);
+            editor.current.getSession().setValue(null === value ? '' : value.toString());
             editor.current.resize(true);
             setSelection(null);
             doSetSelection(selection);
@@ -282,6 +284,9 @@ export function Editor(props: EditorProps) {
                 resize,
                 goToEnd,
                 insert,
+                getEmptyModel() {
+                    return new DocumentModel();
+                },
             };
             onInit(api);
         }

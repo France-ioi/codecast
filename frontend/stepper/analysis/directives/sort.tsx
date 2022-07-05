@@ -2,9 +2,10 @@ import React from 'react';
 
 import {getVariables, renderArrow, renderValue} from './utils';
 import {extractView} from './array_utils';
-import {SvgPan} from '../SvgPan';
-import {DirectiveFrame} from "../DirectiveFrame";
+import {SvgPan} from '../../views/SvgPan';
+import {DirectiveFrame} from "../../views/DirectiveFrame";
 import {StepperControls} from "../../index";
+import {CodecastAnalysisVariable} from "../analysis";
 
 const DEFAULT_MAX_VISIBLE_CELLS = 40;
 const MARGIN_LEFT = 100;
@@ -35,14 +36,13 @@ interface SortViewParams {
     cursorMap?: any
 }
 
-function getValueClass(view, index, loadedReferences) {
+function getValueClass(view, index) {
     const {ref} = view;
-    const list = ref.cur.v;
 
-    if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(index) && ref.old.v[index] !== list[index]) {
+    if (ref.variables && ref.variables.length && index in ref.variables && null !== ref.variables[index].previousValue && ref.variables[index].previousValue !== ref.variables[index].value) {
         return 'store';
     }
-    if (loadedReferences.hasOwnProperty(ref.cur._uuid + '_' + index)) {
+    if (ref.variables[index].loaded) {
         return 'load';
     }
 
@@ -50,10 +50,9 @@ function getValueClass(view, index, loadedReferences) {
 }
 
 function Bar({view, index}) {
-    const {loadedReferences, maxValue, ref} = view;
-    const list = ref.cur.v;
+    const {maxValue, ref} = view;
+    const list = ref.variables;
     const cellElement = list[index];
-    const value = cellElement.v;
 
     const w1 = BAR_WIDTH + BAR_SPACING;        // w1: total bar width
     const y1 = BAR_HEIGHT;                    // y1: relative bottom corner of bar rect
@@ -62,15 +61,15 @@ function Bar({view, index}) {
     const y0 = MARGIN_TOP;                    // y0: absolute top corner of bar
     const x1 = BAR_WIDTH / 2;                 // x1: relative horizontal center of text
 
-    const rectClass = getValueClass(view, index, loadedReferences);
+    const rectClass = getValueClass(view, index);
     const y3 = y1 - TEXT_BASELINE - BAR_PADDING_BOTTOM;
     const y4 = y3 - TEXT_LINE_HEIGHT;
-    const h1 = BAR_HEIGHT * value / maxValue; // y3: bar height based on value
+    const h1 = BAR_HEIGHT * cellElement.value / maxValue; // y3: bar height based on value
     const h2 = (TEXT_LINE_HEIGHT - TEXT_BASELINE) / 3 // strike-through height from line
 
     let oldElement = null;
-    if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(index)) {
-        oldElement = ref.old.v[index];
+    if (ref.variables && ref.variables.length && index in ref.variables) {
+        oldElement = ref.variables[index].previousValue;
     }
 
     return (
@@ -78,15 +77,15 @@ function Bar({view, index}) {
             <rect className={rectClass} x="0" y={y1 - h1} width={BAR_WIDTH} height={h1}/>
             <text x={x1} y={y5} className="index">{index}</text>
             <g clipPath="url(#barClipping)">
-                {oldElement && (oldElement !== cellElement) &&
+                {null !== oldElement && (oldElement !== cellElement.value) &&
                 <g className="previous-content">
                     <text x={x1} y={y4}>
-                        {renderValue(oldElement.v)}
+                        {renderValue(oldElement)}
                     </text>
                     <line x1={2} x2={BAR_WIDTH - 2} y1={y4 - h2} y2={y4 - h2}/>
                 </g>
                 }
-                <text x={x1} y={y3} className="current-content">{renderValue(cellElement.v)}</text>
+                <text x={x1} y={y3} className="current-content">{renderValue(cellElement.value)}</text>
             </g>
         </g>
     );
@@ -123,16 +122,16 @@ interface ThresholdProps {
 }
 
 function Threshold({view, threshold}: ThresholdProps) {
-    const {name, value} = threshold;
+    const {name, value}: {name: string, value: CodecastAnalysisVariable} = threshold;
 
-    if (!value.hasOwnProperty('cur') || !value.cur) {
+    if (!value || !value.value) {
         return null;
     }
 
     const x0 = MARGIN_LEFT - THRESHOLD_LINE_EXT;
     const x1 = MARGIN_LEFT + (BAR_WIDTH + BAR_SPACING) * view.nbCells + THRESHOLD_LINE_EXT;
     const x2 = MARGIN_LEFT - THRESHOLD_MARGIN_RIGHT;
-    const y0 = MARGIN_TOP + BAR_HEIGHT * value.cur.v / view.maxValue;
+    const y0 = MARGIN_TOP + BAR_HEIGHT * Number(value.value) / view.maxValue;
     const y1 = y0 + TEXT_BASELINE;
 
     return (
@@ -203,13 +202,15 @@ export class SortView extends React.PureComponent<SortViewProps> {
 
         view.thresholds = getVariables(context.analysis, thresholds);
 
-        const list = view.ref.cur.v;
+        const list = view.ref.variables;
         view.nbCells = list.length;
 
         // Find the maximum value.
         view.maxValue = list.reduce((currentMax, element) => {
-            return Math.max(currentMax, element.v);
+            return Math.max(currentMax, element.value);
         }, 0);
+
+        console.log('thresholds', view.thresholds);
 
         return (
             <DirectiveFrame {...this.props} hasFullView>

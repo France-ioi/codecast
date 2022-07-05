@@ -1,85 +1,80 @@
 import React from "react";
-import {connect} from "react-redux";
-import {AppStore} from "../../store";
-import {initialStepperStateControls, StepperState} from "../../stepper";
+import {CodecastPlatform} from "../../store";
+import {initialStepperStateControls} from "../../stepper";
 import {DirectivePanel} from "../../stepper/views/DirectivePanel";
 import {getCurrentStepperState} from "../../stepper/selectors";
 import {ActionTypes} from "../../stepper/actionTypes";
 import {directiveDimensionsDict} from "../../stepper/views";
 import {LayoutElementMetadata} from "./layout";
+import {useAppSelector} from "../../hooks";
+import {useDispatch} from "react-redux";
+import {CodecastAnalysisSnapshot} from "../../stepper/analysis/analysis";
 
-interface LayoutDirectiveStateToProps {
-    stepperState: any,
-    zoomLevel: number,
-}
-
-function mapStateToProps(state: AppStore): LayoutDirectiveStateToProps {
-    const stepperState = getCurrentStepperState(state);
-    const zoomLevel = state.layout.zoomLevel;
-
-    return {
-        stepperState,
-        zoomLevel,
-    };
-}
-
-interface LayoutDirectiveProps extends LayoutDirectiveStateToProps {
-    dispatch: Function,
-    currentStepperState: StepperState,
+interface LayoutDirectiveProps {
     directive: any,
     metadata: LayoutElementMetadata,
 }
 
-export class _LayoutDirective extends React.PureComponent<LayoutDirectiveProps> {
-    render() {
-        const {stepperState, zoomLevel, metadata} = this.props;
-        if (!stepperState || !stepperState.analysis) {
-            return false;
-        }
+interface LayoutDirectiveContext {
+    analysis: CodecastAnalysisSnapshot,
+    programState: any,
+    lastProgramState: any,
+}
 
-        const {analysis, programState, lastProgramState, controls, directives, platform} = stepperState;
-        const {functionCallStackMap} = directives;
-        const context = {analysis, programState, lastProgramState};
-        const {key} = this.props.directive;
-        const dirControls = (controls.hasOwnProperty(key)) ? controls[key] : initialStepperStateControls;
-        let functionCallStack = null;
-        if (platform === 'unix' || platform === 'arduino') {
-            functionCallStack = functionCallStackMap[key];
-        }
+export function LayoutDirective(props: LayoutDirectiveProps) {
+    const {metadata} = props;
 
-        return (
-            <DirectivePanel
-                key={key}
-                directive={this.props.directive}
-                controls={dirControls}
-                scale={zoomLevel}
-                context={context}
-                functionCallStack={functionCallStack}
-                platform={platform}
-                allocatedWidth={metadata.allocatedWidth}
-                allocatedHeight={metadata.allocatedHeight}
-                onChange={this.onControlsChange}
-            />
-        );
-    }
+    const stepperState = useAppSelector(state => getCurrentStepperState(state));
+    const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
 
-    onControlsChange = (directive, update) => {
+    const dispatch = useDispatch();
+
+    const onControlsChange = (directive, update) => {
         const {key} = directive;
-        this.props.dispatch({type: ActionTypes.StepperViewControlsChanged, key, update});
+        dispatch({type: ActionTypes.StepperViewControlsChanged, key, update});
     };
 
-    static computeDimensions(width: number, height: number, props: any) {
-        const {kind} = props.directive;
+    if (!stepperState || !stepperState.analysis) {
+        return false;
+    }
 
-        if (kind in directiveDimensionsDict) {
-            return directiveDimensionsDict[kind](width, height, props.directive.byName);
-        } else {
-            return {
-                taken: {width, height},
-                minimum: {width, height},
-            }
+    const {codecastAnalysis, programState, lastProgramState, controls, directives, platform} = stepperState;
+    const {functionCallStackMap} = directives;
+    const context: LayoutDirectiveContext = {analysis: codecastAnalysis, programState, lastProgramState};
+    const {key} = props.directive;
+    const dirControls = (controls.hasOwnProperty(key)) ? controls[key] : initialStepperStateControls;
+    let functionCallStack = null;
+    if (platform === CodecastPlatform.Unix || platform === CodecastPlatform.Arduino) {
+        functionCallStack = functionCallStackMap[key];
+    }
+
+    console.log('layout directive context', context);
+
+    return (
+        <DirectivePanel
+            key={key}
+            directive={props.directive}
+            controls={dirControls}
+            scale={zoomLevel}
+            context={context}
+            functionCallStack={functionCallStack}
+            platform={platform}
+            allocatedWidth={metadata.allocatedWidth}
+            allocatedHeight={metadata.allocatedHeight}
+            onChange={onControlsChange}
+        />
+    );
+}
+
+LayoutDirective.computeDimensions = (width: number, height: number, props: any) => {
+    const {kind} = props.directive;
+
+    if (kind in directiveDimensionsDict) {
+        return directiveDimensionsDict[kind](width, height, props.directive.byName);
+    } else {
+        return {
+            taken: {width, height},
+            minimum: {width, height},
         }
     }
 }
-
-export const LayoutDirective = connect(mapStateToProps)(_LayoutDirective);

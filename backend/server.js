@@ -114,9 +114,25 @@ function addBackendRoutes(app, config, store) {
 
     app.get('/task', function (req, res) {
         buildOptions(config, req, 'task', function (err, options) {
+            const files = fs.readFileSync('bundled_files.txt', 'utf8')
+              .split("\n");
+
+            let filePaths = [];
+            for (let file of files) {
+                if (!(file.length && file.trim().split('')[0] !== '#')) {
+                    continue;
+                }
+
+                let [platform, filePath] = -1 !== file.indexOf(':') ? file.split(':') : [null, file];
+                if ((options.platform === 'scratch' && platform !== 'blockly') || (options.platform !== 'scratch' && platform !== 'scratch')) {
+                    filePaths.push(filePath);
+                }
+            }
+
             res.render('task', {
                 development: config.isDevelopment,
                 rebaseUrl: config.rebaseUrl,
+                files: filePaths,
                 options
             });
         });

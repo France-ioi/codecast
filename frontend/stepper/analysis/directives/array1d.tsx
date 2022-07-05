@@ -3,9 +3,10 @@ import classnames from 'classnames';
 
 import {renderArrow, renderValue} from './utils';
 import {extractView} from './array_utils';
-import {SvgPan} from '../SvgPan';
-import {DirectiveFrame} from '../DirectiveFrame';
+import {SvgPan} from '../../views/SvgPan';
+import {DirectiveFrame} from '../../views/DirectiveFrame';
 import {StepperControls} from "../../index";
+import {CodecastAnalysisVariable} from "../analysis";
 
 const TEXT_LINE_HEIGHT = 18;
 const TEXT_BASELINE = 5; // from bottom
@@ -33,13 +34,13 @@ function baseline(i) {
     return TEXT_LINE_HEIGHT * (i + 1) - TEXT_BASELINE;
 }
 
-function getCellClasses(ref, index, cursor, loadedReferences) {
-    const list = ref.cur.v;
+function getCellClasses(ref: CodecastAnalysisVariable, index, cursor) {
+    const list = ref.variables;
 
-    if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(index) && ref.old.v[index] !== list[index]) {
+    if (ref.variables && ref.variables.length && index in ref.variables && null !== ref.variables[index].previousValue && ref.variables[index].previousValue !== ref.variables[index].value) {
         return 'cell cell-store';
     }
-    if (loadedReferences.hasOwnProperty(ref.cur._uuid + '_' + index)) {
+    if (list[index].loaded) {
         return 'cell cell-load';
     }
     if (cursor) {
@@ -50,17 +51,17 @@ function getCellClasses(ref, index, cursor, loadedReferences) {
 }
 
 function Grid({view, cellWidth}) {
-    const {ref, cursorMap, loadedReferences} = view;
+    const {ref, cursorMap} = view;
     const elements = [];
 
-    const nbRows = (ref.cur) ? ref.cur.v.length : 0;
+    const nbRows = (ref.variables) ? ref.variables.length : 0;
 
     // Column labels and horizontal lines
     const y1 = TEXT_LINE_HEIGHT;
     const y2 = TEXT_LINE_HEIGHT * 2;
     const y3 = baseline(2);
     for (let i = 0, x = 0; i < nbRows; i += 1, x += cellWidth) {
-        const cellClasses = getCellClasses(ref, i, cursorMap[i], loadedReferences);
+        const cellClasses = getCellClasses(ref, i, cursorMap[i]);
 
         elements.push(
             <g key={`h${i}`}>
@@ -86,24 +87,24 @@ function Cell({view, index}) {
     const y0a = y0 - (TEXT_LINE_HEIGHT - TEXT_BASELINE) / 3;
     const y1 = baseline(1);
 
-    const cellElement = ref.cur.v[index];
+    const cellElement = ref.variables[index];
 
     let oldElement = null;
-    if (ref.old && ref.old instanceof Sk.builtin.list && ref.old.v.hasOwnProperty(index)) {
-        oldElement = ref.old.v[index];
+    if (ref.variables && ref.variables.length && index in ref.variables) {
+        oldElement = ref.variables[index].previousValue;
     }
 
     return (
         <g transform={`translate(${index * cellWidth},0)`} clipPath="url(#cell)">
-            {oldElement && (oldElement !== cellElement) &&
+            {null !== oldElement && (oldElement !== cellElement.value) &&
             <g className="previous-content">
                 <text x={cellWidth / 2} y={y0}>
-                    {renderValue(oldElement.v)}
+                    {renderValue(oldElement)}
                 </text>
                 <line x1={2} x2={cellWidth - 2} y1={y0a} y2={y0a}/>
             </g>}
             <text x={cellWidth / 2} y={y1} className="current-content">
-                {cellElement && renderValue(cellElement.v)}
+                {cellElement && renderValue(cellElement.value)}
             </text>
         </g>
     );
@@ -204,7 +205,7 @@ export class Array1D extends React.PureComponent<Array1DProps> {
                                 )}
                             </g>
                             <g className="cells">
-                                {view.ref.cur.v.map((cell, index) =>
+                                {view.ref.variables.map((cell, index) =>
                                     <Cell key={index} index={index} view={view} />
                                 )}
                             </g>

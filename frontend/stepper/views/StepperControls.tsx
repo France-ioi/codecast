@@ -1,19 +1,30 @@
 import React, {ReactElement} from "react";
-import {Button, ButtonGroup, Intent, Slider} from "@blueprintjs/core";
+import {Button, Intent, Slider} from "@blueprintjs/core";
 import {IconName} from "@blueprintjs/icons";
 import {ActionTypes} from "../actionTypes";
 import {connect} from "react-redux";
-import {AppStore} from "../../store";
+import {AppStore, CodecastPlatform} from "../../store";
 import {getStepper, isStepperInterrupting} from "../selectors";
 import * as C from '@france-ioi/persistent-c';
-import {StepperControlsType, StepperStepMode} from "../index";
+import {getRunnerClassFromPlatform, StepperControlsType, StepperStepMode} from "../index";
 import {formatTime} from "../../common/utils";
 import {CompileStatus} from "../compile";
 import {LayoutType} from "../../task/layout/layout";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faTachometerAlt, faPlay, faPause, faFastForward, faStop, faShoePrints, faWalking, faRunning} from '@fortawesome/free-solid-svg-icons';
+import {
+    faFastForward,
+    faPause,
+    faPlay,
+    faRunning,
+    faShoePrints,
+    faStop,
+    faTachometerAlt,
+    faWalking
+} from '@fortawesome/free-solid-svg-icons';
 import {getMessage} from "../../lang";
-import {RECORDING_FORMAT_VERSION} from "../../version";
+import {Codecast} from "../../index";
+import BlocklyRunner from "../js/blockly_runner";
+import {hasBlockPlatform} from "../js";
 
 interface StepperControlsStateToProps {
     showStepper: boolean,
@@ -26,6 +37,7 @@ interface StepperControlsStateToProps {
     canStep: boolean,
     canExit: boolean,
     canStepOut: boolean,
+    canStepOver: boolean,
     canCompile: boolean,
     canRestart: boolean,
     canUndo: boolean,
@@ -45,11 +57,14 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
     const layoutType = state.layout.type;
     const inputNeeded = state.task.inputNeeded;
 
+    const runnerClass = getRunnerClassFromPlatform(platform);
+
     let showCompile = false, showControls = true, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
+    let canStepOver = false;
     let canInterrupt = false, canUndo = false, canRedo = false;
     let isFinished = false;
-    let showExpr = platform !== 'python';
+    let showExpr = runnerClass.hasMicroSteps();
     let compileOrExecuteMessage = '';
     let speed = 0;
     let controlsType = StepperControlsType.Normal;
@@ -62,10 +77,10 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
         }
     }
 
-    if (platform === 'python') {
-        compileOrExecuteMessage = getMessage('EXECUTE');
-    } else {
+    if (runnerClass.needsCompilation()) {
         compileOrExecuteMessage = getMessage('COMPILE');
+    } else {
+        compileOrExecuteMessage = getMessage('EXECUTE');
     }
 
     const stepper = getStepper(state);
@@ -86,10 +101,13 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
             showEdit = true;
             showControls = true;
             canExit = enabled;
-            if (platform === 'python') {
+            if (hasBlockPlatform(platform)) {
+                canStep = !currentStepperState.isFinished;
+            } else if (platform === CodecastPlatform.Python) {
                 // We can step out only if we are in >= 2 levels of functions (the global state + in a function).
                 canStepOut = (currentStepperState.suspensions && (currentStepperState.suspensions.length > 1));
                 canStep = !currentStepperState.isFinished;
+                canStepOver = canStep;
                 canUndo = enabled && (stepper.undo.length > 0);
                 canRedo = enabled && (stepper.redo.length > 0);
             } else {
@@ -98,6 +116,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
 
                     canStepOut = !!C.findClosestFunctionScope(scope);
                     canStep = control && !!control.node;
+                    canStepOver = canStep;
                     canRestart = enabled && (stepper.currentStepperState !== stepper.initialStepperState);
                     canUndo = enabled && (stepper.undo.length > 0);
                     canRedo = enabled && (stepper.redo.length > 0);
@@ -118,7 +137,7 @@ function mapStateToProps(state: AppStore, props): StepperControlsStateToProps {
         showEdit, canExit,
         showExpr,
         showCompile, canCompile,
-        canRestart, canStep, canStepOut, canInterrupt,
+        canRestart, canStep, canStepOut, canInterrupt, canStepOver,
         canUndo, canRedo,
         compileOrExecuteMessage,
         isFinished,
@@ -242,7 +261,7 @@ class _StepperControls extends React.PureComponent<StepperControlsProps, Stepper
                 disabled = !this.props.canStep;
                 break;
             case 'over':
-                disabled = !this.props.canStep;
+                disabled = !this.props.canStepOver;
                 break;
             case 'expr':
                 disabled = !this.props.canStep;

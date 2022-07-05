@@ -4,7 +4,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from '../actionTypes';
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
-import {put, takeEvery} from "typed-redux-saga";
+import {delay, put, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {taskLoad} from "../task";
 import {isLocalStorageEnabled} from "../common/utils";
@@ -38,6 +38,7 @@ export default function(bundle: Bundle) {
     bundle.addSaga(function* () {
         // Quit stepper and reload task (and current context) after each language selection
         yield* takeEvery(ActionTypes.LanguageSet, function* () {
+            yield* delay(0);
             yield* put({type: StepperActionTypes.StepperExit});
             yield* put(taskLoad({reloadContext: true}));
         });

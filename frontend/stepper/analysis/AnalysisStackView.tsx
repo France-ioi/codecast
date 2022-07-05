@@ -1,15 +1,15 @@
 import * as React from 'react';
-import {PythonFunctionView} from "./PythonFunctionView";
+import {AnalysisFunctionView} from "./AnalysisFunctionView";
 import {Button, ButtonGroup} from "@blueprintjs/core";
-import {SkulptAnalysis} from "../analysis";
+import {CodecastAnalysisSnapshot} from "./analysis";
 
-interface PythonStackViewProps {
-    height: number,
-    analysis: SkulptAnalysis,
+interface AnalysisStackViewProps {
+    height?: number,
+    analysis: CodecastAnalysisSnapshot,
     showStackControls?: boolean,
 }
 
-export const PythonStackView = (props: PythonStackViewProps): JSX.Element => {
+export const AnalysisStackView = (props: AnalysisStackViewProps): JSX.Element => {
     const firstVisible = 0;
     const tailCount = 0;
 
@@ -28,13 +28,10 @@ export const PythonStackView = (props: PythonStackViewProps): JSX.Element => {
                 {'… +'}{firstVisible}
             </div>
             }
-            {props.analysis.functionCallStack.slice().reverse().map((func, index) => (
-                <PythonFunctionView
+            {props.analysis.stackFrames.slice().reverse().map((analysisStackFrame, index) => (
+                <AnalysisFunctionView
                     key={index}
-                    scopeIndex={func.scopeIndex}
-                    openedPaths={func.openedPaths}
-                    loadedReferences={func.loadedReferences}
-                    func={func}
+                    stackFrame={analysisStackFrame}
                 />
             ))}
             {tailCount > 0 &&

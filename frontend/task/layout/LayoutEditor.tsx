@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {BufferEditor} from "../../buffers/BufferEditor";
 import {getPlayerState} from "../../player/selectors";
 import {useAppSelector} from "../../hooks";
@@ -10,26 +10,25 @@ import {getContextBlocksDataSelector} from "../blocks/blocks";
 import {taskSetBlocksPanelCollapsed} from "../task_slice";
 import {useDispatch} from "react-redux";
 import {BlocksUsage} from "../blocks/BlocksUsage";
+import {CodecastPlatform} from "../../store";
 
 export function LayoutEditor() {
-    const {platform} = useAppSelector(state => state.options);
+    const platform = useAppSelector(state => state.options.platform);
     const currentTask = useAppSelector(state => state.task.currentTask);
     const blocksCollapsed = useAppSelector(state => state.task.blocksPanelCollapsed);
-    const taskLoaded = useAppSelector(state => state.task.loaded);
-    let mode;
+    let sourceMode;
     switch (platform) {
-        case 'arduino':
-            mode = 'arduino';
+        case CodecastPlatform.Arduino:
+            sourceMode = 'arduino';
             break;
-        case 'python':
-            mode = 'python';
+        case CodecastPlatform.Python:
+            sourceMode = 'python';
             break;
         default:
-            mode = 'c_cpp';
+            sourceMode = 'c_cpp';
             break;
     }
 
-    const sourceMode = mode;
     const player = useAppSelector(state => getPlayerState(state));
     const preventInput = player.isPlaying;
 
@@ -42,7 +41,7 @@ export function LayoutEditor() {
     const context = quickAlgoLibraries.getContext(null, 'main');
     const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector(state, context) : []);
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
-    const displayBlocks = !!(context && blocks.length);
+    const displayBlocks = !!(context && blocks.length && CodecastPlatform.Python === platform);
 
     return (
         <div className="layout-editor">
@@ -52,6 +51,7 @@ export function LayoutEditor() {
                     <FontAwesomeIcon icon={blocksCollapsed ? faChevronRight : faChevronLeft}/>
                 </div>}
                 <BufferEditor
+                    platform={platform}
                     buffer="source"
                     readOnly={false}
                     shield={preventInput}

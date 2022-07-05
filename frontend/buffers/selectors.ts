@@ -1,6 +1,6 @@
 import {AppStoreReplay} from "../store";
-import {DocumentModel} from "./index";
+import {BufferContentModel} from "./index";
 
-export function getBufferModel(state: AppStoreReplay, buffer: string): DocumentModel {
+export function getBufferModel(state: AppStoreReplay, buffer: string): BufferContentModel {
     return state.buffers[buffer] ? state.buffers[buffer].model : null;
 }

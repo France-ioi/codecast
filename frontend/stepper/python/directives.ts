@@ -1,4 +1,4 @@
-import {SkulptAnalysis} from "./analysis/analysis";
+import {AnalysisSnapshot, AnalysisStackFrame} from "../analysis/analysis";
 
 export const VIEW_DIRECTIVE_PREFIX = '_VIEW_';
 
@@ -96,24 +96,24 @@ export interface Directive {
  *
  * @returns {[]}
  */
-export const parseDirectives = function(analysis: SkulptAnalysis) {
+export const parseDirectives = function(analysis: AnalysisSnapshot) {
     /**
      * Search for directives in the current and in the global callstack.
      * Put the current first so it overrides directives in the global scope.
      */
-    const activeFunctionCallStacks = [];
-    if (analysis.functionCallStack.length > 1) {
-        activeFunctionCallStacks.push(analysis.functionCallStack[analysis.functionCallStack.length - 1]); // Active.
+    const activeStackFrames: AnalysisStackFrame[] = [];
+    if (analysis.stackFrames.length > 1) {
+        activeStackFrames.push(analysis.stackFrames[analysis.stackFrames.length - 1]); // Active.
     }
-    if (analysis.functionCallStack.length > 0) {
-        activeFunctionCallStacks.push(analysis.functionCallStack[0]); // Global.
+    if (analysis.stackFrames.length > 0) {
+        activeStackFrames.push(analysis.stackFrames[0]); // Global.
     }
 
     let nextId = 1;
     let directives = [];
     let directiveKeyExists = {};
-    for (let functionCallStack of activeFunctionCallStacks) {
-        for (let directiveString of functionCallStack.directives) {
+    for (let activeStackFrame of activeStackFrames) {
+        for (let directiveString of activeStackFrame.directives) {
             const directive = parseDirective(directiveString);
             if (directive.key) {
                 if (directiveKeyExists.hasOwnProperty(directive.key)) {

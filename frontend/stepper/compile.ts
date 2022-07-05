@@ -13,23 +13,23 @@ Shape of the 'compile' state:
 
 */
 
-import {call, put, select, takeLatest, takeEvery, take, race} from 'typed-redux-saga';
+import {call, put, race, select, take, takeEvery, takeLatest} from 'typed-redux-saga';
 
 import {asyncRequestJson} from '../utils/api';
 
 import {TextEncoder} from "text-encoding-utf-8";
-import {clearStepper} from "./index";
+import {clearStepper, createRunnerSaga, getRunnerClassFromPlatform} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {getBufferModel} from "../buffers/selectors";
 import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
-import {App} from "../index";
+import {App, Codecast} from "../index";
 import {checkCompilingCode} from "../task/utils";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getMessage} from "../lang";
+import {selectAnswer} from "../task/selectors";
 
 export enum CompileStatus {
     Clear = 'clear',
@@ -75,9 +75,7 @@ export default function(bundle: Bundle) {
     bundle.addSaga(function* watchCompile() {
         yield* takeLatest(ActionTypes.Compile, function* () {
             let state: AppStore = yield* select();
-
-            const sourceModel = getBufferModel(state, 'source');
-            const source = sourceModel.document.toString();
+            const source = selectAnswer(state);
             const {platform} = state.options;
 
             yield* put({
@@ -86,11 +84,7 @@ export default function(bundle: Bundle) {
             });
 
             try {
-                if (!source.trim()) {
-                    throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
-                }
-
-                checkCompilingCode(source.trim(), platform, state);
+                checkCompilingCode(source, platform, state);
             } catch (e) {
                 yield* put({
                     type: ActionTypes.CompileFailed,
@@ -102,7 +96,8 @@ export default function(bundle: Bundle) {
             }
 
             let response;
-            if (platform === 'python') {
+            const runnerClass = getRunnerClassFromPlatform(platform);
+            if (!runnerClass.needsCompilation()) {
                 yield* put({
                     type: ActionTypes.CompileSucceeded,
                     platform
@@ -253,7 +248,9 @@ function compileStartedReducer(state: AppStore, action): void {
 }
 
 function compileSucceededReducer(state: AppStore, action): void {
-    if (action.platform === 'python') {
+    const runnerClass = getRunnerClassFromPlatform(state.options.platform);
+
+    if (!runnerClass.needsCompilation()) {
         state.compile.status = CompileStatus.Done;
         state.stepper.error = null;
     } else {

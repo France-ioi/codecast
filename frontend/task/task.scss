@@ -10,6 +10,16 @@
   --secondary-color: #1f1f1f;
   --font-family-sans-serif: 'Source Sans Pro', sans-serif;
   --default-border-radius: 0;
+  svg {
+    .grid {
+      rect.cell-load {
+        fill: #DCEDC8;
+      }
+      rect.cell-store {
+        fill: #FFCDD2;
+      }
+    }
+  }
 }
 
 @mixin mobile {
@@ -36,12 +46,25 @@
   }
 }
 
+$spaceamounts: (1, 2, 3, 4);
+$sides: (top, bottom, left, right);
+
+@each $space in $spaceamounts {
+  @each $side in $sides {
+    .m#{str-slice($side, 0, 1)}-#{$space} {
+      margin-#{$side}: #{$space * 5}px !important;
+    }
+  }
+}
+
+
 @import "./layout/layout.scss";
 @import "./controls.scss";
 @import "./documentation/documentation.scss";
 @import "./task_tests.scss";
 @import "./levels.scss";
 @import "./blocks/blocks.scss";
+@import "../stepper/js/blockly.scss";
 
 html {
   margin: 0 !important;
@@ -673,4 +696,12 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   hr {
     margin: 1.5rem 0;
   }
+}
+
+.text-center {
+  text-align: center;
+}
+
+.modal-input {
+  max-width: 300px;
 }

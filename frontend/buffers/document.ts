@@ -1,5 +1,6 @@
 import {List} from 'immutable';
 import {immerable} from "immer";
+import {BlockDocumentModel, DocumentModel, documentModelFromString} from "./index";
 
 interface Range {
     row: number,
@@ -42,6 +43,10 @@ export class Document {
 
     toString(): string {
         return this.lines.toJS().join('\n');
+    }
+
+    getContent(): string {
+        return this.toString();
     }
 
     applyDelta(delta): Document {
@@ -102,22 +107,67 @@ export class Document {
     }
 }
 
+export class ObjectDocument {
+    [immerable] = true;
+
+    constructor(public content: any) {
+        this.content = content;
+    }
+
+    getContent(): string {
+        return this.content;
+    }
+}
+
 export const documentFromString = function(text: string): Document {
     return new Document(List<string>(text.split('\n')));
 };
 
 export const emptyDocument = documentFromString('');
 
-export const compressRange = function(range) {
-    const {start, end} = range;
-    if (start.row === end.row && start.column === end.column) {
-        return [start.row, start.column];
+export const compressDocument = function (document) {
+    const content = document.getContent();
+    if (document instanceof ObjectDocument) {
+        return content && content.blockly ? content.blockly : null;
+    }
+
+    return content;
+}
+
+export const uncompressIntoDocument = function (content) {
+    if (content.substring(0, 4) === '<xml') {
+        return new ObjectDocument({blockly: content});
     } else {
-        return [start.row, start.column, end.row, end.column];
+        return documentFromString(content);
+    }
+}
+
+export const modelFromDocument = function (document) {
+    if (document instanceof ObjectDocument) {
+        return new BlockDocumentModel(document);
+    } else {
+        return new DocumentModel(document);
+    }
+}
+
+export const compressRange = function(range) {
+    if ('object' === typeof range && null !== range) {
+        const {start, end} = range;
+        if (start.row === end.row && start.column === end.column) {
+            return [start.row, start.column];
+        } else {
+            return [start.row, start.column, end.row, end.column];
+        }
+    } else {
+        return range;
     }
 };
 
 export const expandRange = function(range): Selection {
+    if (!Array.isArray(range)) {
+        return range;
+    }
+
     if (range.length === 2) {
         const pos = {row: range[0], column: range[1]};
 

@@ -24,6 +24,9 @@ export function buildOptions(config, req, start, callback) {
     options.audioWorkerUrl = config.audioWorkerUrl;
     options.callbackUrl = req.originalUrl;
     options.referer = req.headers.referer || null;
+    if (req.query.platform) {
+        options.platform = req.query.platform;
+    }
     if (/sandbox/.test(start)) {
         options.origin = req.query.origin || null;
     }

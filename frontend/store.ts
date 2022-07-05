@@ -23,8 +23,16 @@ import {DocumentationState} from "./task/documentation/documentation_slice";
 import {BufferState} from "./buffers";
 import {EditorState} from "./editor";
 import {PlatformState, TaskLevelName} from "./task/platform/platform_slice";
+import {AnalysisState} from "./stepper/analysis/analysis_slice";
+import {ModalState} from "./common/modal_slice";
 
-export type CodecastPlatform = 'python' | 'unix' | 'arduino';
+export enum CodecastPlatform {
+    Python = 'python',
+    Unix = 'unix',
+    Arduino = 'arduino',
+    Blockly = 'blockly',
+    Scratch = 'scratch',
+}
 
 export enum CodecastOptionsMode {
     Edit = 'edit',
@@ -132,4 +140,6 @@ export interface AppStore extends Store, AppStoreReplay {
     viewportTooSmall: boolean,
 
     documentation: DocumentationState,
+    analysis: AnalysisState,
+    modal: ModalState,
 }

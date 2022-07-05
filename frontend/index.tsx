@@ -36,24 +36,35 @@ import '@france-ioi/skulpt/dist/debugger.js';
 import {Portal} from "@blueprintjs/core";
 import {DndProvider} from "react-dnd";
 import {CustomDragLayer} from "./task/CustomDragLayer";
+import AbstractRunner from "./stepper/abstract_runner";
 
 setAutoFreeze(true);
 log.setLevel('trace');
 log.getLogger('performance').setLevel('info');
-log.getLogger('python_interpreter').setLevel('info');
+log.getLogger('python_runner').setLevel('info');
 log.getLogger('printer_lib').setLevel('info');
 log.getLogger('tests').setLevel('debug');
 log.getLogger('platform').setLevel('debug');
 
+export interface CodecastEnvironmentMonitoring {
+    effectTriggered: Function,
+    effectResolved: Function,
+    effectRejected: Function,
+    effectCancelled: Function,
+    clearListeners: Function,
+}
+
 interface CodecastEnvironment {
     store: AppStore,
     restart: Function,
+    monitoring: CodecastEnvironmentMonitoring,
 }
 
 interface Codecast {
     environments: {[key: string]: CodecastEnvironment},
     start?: Function,
     restartSagas?: Function,
+    runner?: AbstractRunner,
 }
 
 export interface App {
@@ -72,7 +83,6 @@ declare global {
         replayStore: EnhancedStore<AppStore>,
         Codecast: Codecast,
         currentPythonRunner: any,
-        currentPythonContext: any,
         languageStrings: any,
         __REDUX_DEVTOOLS_EXTENSION__: any,
         __REDUX_DEVTOOLS_EXTENSION_COMPOSE__: any,
@@ -89,6 +99,7 @@ declare global {
         conceptsFill: Function,
         Channel: any,
         DelayFactory: any,
+        Interpreter: any, // JsInterpreter
         RaphaelFactory: any,
         jQuery: any,
         task: any, // task object defined to receive data from platform
@@ -96,6 +107,16 @@ declare global {
         json: any, // object that contains the data of a task, defined in the index.html of such task
         task_token: any, // instance that can generate a task token
         options: any, // this is used to store default data about task
+        Blockly: any,
+        goog: any,
+        FioiBlockly: any,
+        getBlocklyHelper: any,
+        quickAlgoInterface: any,
+        displayHelper: any,
+        arrayContains: any,
+        mergeIntoArray: any,
+        mergeIntoObject: any,
+        debounce: any,
     }
 }
 
@@ -120,7 +141,7 @@ window.Codecast = {
 for (let environment of ['main', 'replay', 'background']) {
     const initScope = {environment} as App;
 
-    const {store, scope, finalize, start} = link(function(bundle: Bundle) {
+    const {store, scope, finalize, start, monitoring} = link(function(bundle: Bundle) {
         bundle.defineAction(ActionTypes.AppInit);
         bundle.addReducer(ActionTypes.AppInit, () => {
             // return {};
@@ -151,7 +172,7 @@ for (let environment of ['main', 'replay', 'background']) {
         task = start(scope);
     }
 
-    window.Codecast.environments[environment] = {store, restart};
+    window.Codecast.environments[environment] = {store, restart, monitoring};
 }
 
 export const Codecast: Codecast = window.Codecast;

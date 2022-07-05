@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {Icon} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
-import {documentationLoad, sendCodeExampleToOpener} from "./doc";
+import {convertPlatformToDocumentationLanguage, documentationLoad, sendCodeExampleToOpener} from "./doc";
 import {useAppSelector} from "../../hooks";
 import {documentationConceptSelected, DocumentationLanguage, documentationLanguageChanged} from "./documentation_slice";
 import {Screen} from "../../common/screens";
@@ -12,6 +12,7 @@ import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 import {ActionTypes} from "../../buffers/actionTypes";
 import {documentModelFromString} from "../../buffers";
 import {getMessage} from "../../lang";
+import {CodecastPlatform} from "../../store";
 
 interface DocumentationProps {
     standalone: boolean,
@@ -24,6 +25,7 @@ export function Documentation(props: DocumentationProps) {
     const selectedConceptId = useAppSelector(state => state.documentation.selectedConceptId);
     const selectedConcept = selectedConceptId ? concepts.find(concept => selectedConceptId === concept.id) : null;
     const documentationLanguage = useAppSelector(state => state.documentation.language);
+    const platform = useAppSelector(state => state.options.platform);
     const screen = useAppSelector(state => state.screen);
     const firstConcepts = concepts.slice(0, 3);
 
@@ -41,6 +43,10 @@ export function Documentation(props: DocumentationProps) {
     }
 
     useEffect(() => {
+        const platformDocumentationLanguage = convertPlatformToDocumentationLanguage(platform);
+        if (platformDocumentationLanguage !== documentationLanguage) {
+            dispatch(documentationLanguageChanged(platformDocumentationLanguage));
+        }
         dispatch(documentationLoad(props.standalone));
     }, [documentationLanguage]);
 
@@ -98,7 +104,7 @@ export function Documentation(props: DocumentationProps) {
         });
         dispatch({
             type: CommonActionTypes.PlatformChanged,
-            payload: 'c' === language ? 'unix' : language,
+            payload: 'c' === language ? CodecastPlatform.Unix : language,
         });
         closeDocumentation();
     };

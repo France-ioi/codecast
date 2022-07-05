@@ -12,9 +12,12 @@ import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {IoMode} from "../stepper/io";
 import {getMessage} from "../lang";
+import {getJsLibLoaded} from "../task/libs/import_modules";
+import {hasBlockPlatform} from "../stepper/js";
 
 interface SettingsDialogProps {
     open: boolean,
+    closable?: boolean,
     onClose: () => void,
 }
 
@@ -68,8 +71,10 @@ export function SettingsDialog(props: SettingsDialogProps) {
         'DefaultLayoutMobileVerticalPlayer',
     ];
 
+    const closable = props.closable !== false;
+
     return (
-        <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={props.open} onClose={props.onClose}>
+        <Dialog icon='menu' title={getMessage('SETTINGS_MENU_TITLE')} isOpen={props.open} onClose={props.onClose} canEscapeKeyClose={closable} canOutsideClickClose={closable} isCloseButtonShown={closable}>
             <div className='bp3-dialog-body'>
                 {canChangeLanguage && <div style={{marginBottom: '10px'}}>
                     <LanguageSelection closeMenu={props.onClose}/>
@@ -83,9 +88,15 @@ export function SettingsDialog(props: SettingsDialogProps) {
                                     <option value='python'>{getMessage('PLATFORM_PYTHON')}</option>
                                     <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
                                     <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
+                                    <option value='blockly'>{getMessage('PLATFORM_BLOCKLY')}</option>
+                                    <option value='scratch'>{getMessage('PLATFORM_SCRATCH')}</option>
                                 </select>
                             </div>
                         </label>
+
+                        {hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded() && <div className="mt-4">
+                            {getMessage('PLATFORM_RELOAD').format({platform: getMessage('PLATFORM_' + platform.toLocaleUpperCase())})}
+                        </div>}
                     </div>
                 }
                 {ioModeSelect &&

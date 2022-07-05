@@ -42,6 +42,7 @@ export interface TaskState {
     currentSubmission?: TaskSubmission,
     inputNeeded?: boolean,
     inputs?: any[],
+    contextId: number,
     contextStrings: any,
     contextIncludeBlocks: any,
     blocksPanelCollapsed?: boolean,
@@ -83,6 +84,7 @@ export const taskInitialState = {
     successMessage: null,
     inputNeeded: false,
     inputs: [],
+    contextId: 0,
     contextStrings: {},
     contextIncludeBlocks: {},
     blocksPanelCollapsed: false,
@@ -201,6 +203,9 @@ export const taskSlice = createSlice({
                 message: action.payload.message,
             };
         },
+        taskIncreaseContextId(state: TaskState) {
+            state.contextId++;
+        },
         taskSetContextStrings(state: TaskState, action: PayloadAction<any>) {
             state.contextStrings = action.payload;
         },
@@ -237,6 +242,7 @@ export const {
     taskSubmissionSetTestResult,
     updateTestContextState,
     taskCurrentLevelChange,
+    taskIncreaseContextId,
     taskSetContextStrings,
     taskSetContextIncludeBlocks,
     taskSetBlocksPanelCollapsed,

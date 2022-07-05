@@ -1,17 +1,14 @@
 import {channel} from 'redux-saga';
-import {call, put, take} from 'typed-redux-saga';
-import {writeString} from "../io/terminal";
-import PythonInterpreter from "./python_interpreter";
-import {ActionTypes} from './actionTypes';
+import {put, take} from 'typed-redux-saga';
 import {ActionTypes as CompileActionTypes, stepperExecutionError} from '../actionTypes';
-import {AppStore} from "../../store";
-import {ReplayContext} from "../../player/sagas";
+import {AppStore, CodecastPlatform} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
-import {App} from "../../index";
+import {App, Codecast} from "../../index";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
 import {Action} from "redux";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
+import {selectAnswer} from "../../task/selectors";
 
 export default function(bundle: Bundle) {
     const pythonInterpreterChannel = channel<Action>();
@@ -23,32 +20,14 @@ export default function(bundle: Bundle) {
         }
     });
 
-    bundle.defineAction(ActionTypes.StackViewPathToggle);
-    bundle.addReducer(ActionTypes.StackViewPathToggle, stackViewPathToggleReducer);
-
-    function stackViewPathToggleReducer(state: AppStore, action): void {
-        const {scopeIndex, path, isOpened} = action.payload;
-
-        state.stepper.currentStepperState.analysis.functionCallStack[scopeIndex].openedPaths[path] = isOpened;
-    }
-
-    bundle.defer(function({recordApi, replayApi, stepperApi}: App) {
-        recordApi.on(ActionTypes.StackViewPathToggle, function* (addEvent, action) {
-            yield* call(addEvent, 'stackview.path.toggle', action);
-        });
-        replayApi.on('stackview.path.toggle', function* (replayContext: ReplayContext, event) {
-            const action = event[2];
-
-            yield* put({type: ActionTypes.StackViewPathToggle, payload: action});
-        });
-
+    bundle.defer(function({stepperApi}: App) {
         stepperApi.onInit(function(stepperState: StepperState, state: AppStore, environment: string) {
             const {platform} = state.options;
-            const source = state.buffers['source'].model.document.toString();
+            const source = selectAnswer(state);
             const context = quickAlgoLibraries.getContext(null, environment);
 
             console.log('init stepper', environment);
-            if (platform === 'python') {
+            if (platform === CodecastPlatform.Python) {
                 let channel = pythonInterpreterChannel;
 
                 context.onError = (diagnostics) => {
@@ -58,12 +37,6 @@ export default function(bundle: Bundle) {
                     });
                     channel.put(stepperExecutionError(diagnostics));
                 };
-                context.onSuccess = () => {
-                    console.error('Success should be handled at an upper level');
-                };
-                context.onInput = () => {
-                    console.error('Input should go to the printer lib');
-                }
 
                 stepperState.directives = {
                     ordered: [],
@@ -82,29 +55,9 @@ export default function(bundle: Bundle) {
 
                 const blocksData = getContextBlocksDataSelector(state, context);
 
-                const pythonInterpreter = new PythonInterpreter(context);
+                const pythonInterpreter = Codecast.runner;
                 pythonInterpreter.initCodes([pythonSource], blocksData);
             }
         });
     })
 };
-
-export function getNewTerminal(terminal, message) {
-    if (terminal) {
-        if (message) {
-            return writeString(terminal, message);
-        }
-
-        return terminal;
-    }
-
-    return null;
-}
-
-export function getNewOutput(stepperState, message) {
-    if (message) {
-        return stepperState.output + message;
-    }
-
-    return stepperState.output;
-}

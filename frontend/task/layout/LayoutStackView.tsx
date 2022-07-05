@@ -1,27 +1,35 @@
 import React from "react";
-import {PythonStackView} from "../../stepper/python/analysis/components/PythonStackView";
 import {StackView} from "../../stepper/views/c/StackView";
 import {useAppSelector} from "../../hooks";
+import {CodecastPlatform} from "../../store";
+import {getMessage} from "../../lang";
+import {AnalysisStackView} from "../../stepper/analysis/AnalysisStackView";
 
 export function LayoutStackView() {
     const currentStepperState = useAppSelector(state => state.stepper ? state.stepper.currentStepperState : null);
 
-    const props = {
-        analysis: currentStepperState ? currentStepperState.analysis : null,
-    }
-
+    const analysis = currentStepperState ? currentStepperState.codecastAnalysis : null;
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
+
+    let stackView;
+    if (currentStepperState) {
+        if (currentStepperState.platform === CodecastPlatform.Unix) {
+            //TODO: convert this to use AnalysisStackView like Python and Blockly
+            stackView = <StackView/>
+        } else {
+            stackView = <AnalysisStackView analysis={analysis}/>
+        }
+    } else {
+        stackView = <div className="stack-view">
+            <p>{getMessage('PROGRAM_STOPPED')}</p>
+        </div>;
+    }
 
     return (
         <div style={{fontSize: `${zoomLevel}rem`}}>
-            {
-                currentStepperState && currentStepperState.platform === 'python'
-                    ? <PythonStackView analysis={props.analysis} height={null}/>
-                    : <StackView/>
-            }
+            {stackView}
         </div>
-    )
-
+    );
 }
 
 LayoutStackView.computeDimensions = (width: number, height: number) => {

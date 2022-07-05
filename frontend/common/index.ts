@@ -12,6 +12,7 @@ import optionsBundle from './options';
 import resizeBundle from './resize';
 import fullscreenBundle from './fullscreen';
 import loginBundle from './login';
+import promptModalBundle from './prompt_modal';
 import clientApiBundle from './client_api';
 import subtitlesBundle from '../subtitles';
 import taskBundle from '../task';
@@ -42,6 +43,7 @@ export default function(bundle: Bundle) {
     bundle.include(clientApiBundle);
     bundle.include(subtitlesBundle);
     bundle.include(examplesBundle);
+    bundle.include(promptModalBundle);
 
     bundle.include(taskBundle);
     bundle.include(layoutBundle);

@@ -5,77 +5,127 @@
 
 import log from "loglevel";
 import {Block, BlockType} from "../../task/blocks/blocks";
+import AbstractRunner from "../abstract_runner";
+import {StepperContext} from "../api";
+import {StepperState} from "../index";
 
-if (!window.hasOwnProperty('currentPythonContext')) {
-    window.currentPythonContext = null;
+function definePythonNumber() {
+    // Create a class which behaves as a Number, but can have extra properties
+    const pythonNumber = function(val) {
+        this.val = Number(val);
+    };
+    pythonNumber.prototype = Object.create(Number.prototype);
+
+    function makePrototype(func) {
+        return function() {
+            return Number.prototype[func].call(this.val);
+        }
+    }
+
+    let funcs = ['toExponential', 'toFixed', 'toLocaleString', 'toPrecision', 'toSource', 'toString', 'valueOf'];
+    for (let i = 0; i < funcs.length; i++) {
+        pythonNumber.prototype[funcs[i]] = makePrototype(funcs[i]);
+    }
+
+    return pythonNumber;
 }
-if (!window.hasOwnProperty('currentPythonRunner')) {
-    window.currentPythonRunner = null;
-}
 
-export default function(context) {
-    this.context = context;
-    this._code = '';
-    this._editor_filename = "<stdin>";
-    this.context.runner = this;
-    this._maxIterations = 4000;
-    this._resetCallstackOnNextStep = false;
-    this._paused = false;
-    this._isRunning = false;
-    this._stepInProgress = false;
-    this.stepMode = false;
-    this._steps = 0;
-    this._timeouts = [];
-    this._editorMarker = null;
-    this.availableModules = [];
-    this.availableBlocks = [] as Block[];
-    this._isFinished = false;
-    this._printedDuringStep = '';
-    this._futureInputValue = null;
-    this.onInput = context.onInput;
-    this.onError = context.onError;
-    this.onSuccess = context.onSuccess;
+const PythonNumber = definePythonNumber();
 
-    var that = this;
+export default class PythonRunner extends AbstractRunner {
+    private context;
+    public _debugger;
+    public _code = '';
+    private _editor_filename = "<stdin>";
+    private _maxIterations = 4000;
+    private _resetCallstackOnNextStep = false;
+    private _paused = false;
+    private _isRunning = false;
+    private _stepInProgress = false;
+    private stepMode = false;
+    private _timeouts = [];
+    private _editorMarker = null;
+    private availableModules = [];
+    private availableBlocks = [] as Block[];
+    public _isFinished = false;
+    private _printedDuringStep = '';
+    public onError;
+    private quickAlgoCallsExecutor;
+    private _nbActions = 0;
 
-    this._skulptifyHandler = function (name, generatorName, blockName, nbArgs, type) {
-        var handler = '';
-        handler += "\tcurrentPythonContext.runner.checkArgs('" + name + "', '" + generatorName + "', '" + blockName + "', arguments);";
+    constructor(context) {
+        super();
+        this.context = context;
+        this.onError = context.onError;
+    }
+
+    public static needsCompilation(): boolean {
+        return false;
+    }
+
+    public enrichStepperContext(stepperContext: StepperContext, state: StepperState) {
+        if (state.analysis) {
+            stepperContext.state.lastAnalysis = Object.freeze(state.analysis);
+        }
+    }
+
+    public isStuck(stepperState: StepperState): boolean {
+        return stepperState.isFinished;
+    }
+
+    public async runNewStep(stepperContext: StepperContext) {
+        const result = await this.runStep(stepperContext.quickAlgoCallsExecutor);
+
+        console.log('FINAL INTERACT', result);
+        stepperContext.makeDelay = true;
+        await stepperContext.interactAfter({
+            position: 0,
+        });
+        console.log('AFTER FINAL INTERACT');
+    }
+
+    private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type) {
+        let handler = '';
+        handler += "\tCodecast.runner.checkArgs('" + name + "', '" + generatorName + "', '" + blockName + "', arguments);";
 
         handler += "\n\tvar susp = new Sk.misceval.Suspension();";
         handler += "\n\tvar result = Sk.builtin.none.none$;";
 
         // If there are arguments, convert them from Skulpt format to the libs format
         handler += "\n\tvar args = Array.prototype.slice.call(arguments);";
-        handler += "\n\tfor(var i=0; i<args.length; i++) { args[i] = currentPythonContext.runner.skToJs(args[i]); };";
+        handler += "\n\tfor(var i=0; i<args.length; i++) { args[i] = Codecast.runner.skToJs(args[i]); };";
 
         handler += "\n\tsusp.resume = function() { return result; };";
         handler += "\n\tsusp.data = {type: 'Sk.promise', promise: new Promise(function(resolve) {";
 
         // Count actions
         if(type == 'actions') {
-            handler += "\n\tcurrentPythonContext.runner._nbActions += 1;";
+            handler += "\n\tCodecast.runner._nbActions += 1;";
         }
 
         handler += "\n\ttry {";
-        handler += '\n\t\tconst result = currentPythonContext.runner.executeQuickAlgoLibraryCall("' + generatorName + '", "' + blockName + '", args, resolve);';
-        handler += '\n\t\tif (result instanceof Promise) result.catch((e) => { currentPythonContext.runner._onStepError(e) })';
+        handler += '\n\t\tconst result = Codecast.runner.quickAlgoCallsExecutor("' + generatorName + '", "' + blockName + '", args);';
+        handler += '\n\t\tif (result instanceof Promise) {';
+        handler += '\n\t\t\tresult.then(resolve).catch((e) => { Codecast.runner._onStepError(e) })';
+        handler += '\n\t\t}';
         handler += "\n\t} catch (e) {";
-        handler += "\n\t\tcurrentPythonContext.runner._onStepError(e)}";
+        handler += "\n\t\tCodecast.runner._onStepError(e)}";
         handler += '\n\t}).then(function (value) {\nresult = value;\nreturn value;\n })};';
         handler += '\n\treturn susp;';
 
         return '\nmod.' + name + ' = new Sk.builtin.func(function () {\n' + handler + '\n});\n';
-    };
+    }
 
-    this._createBuiltin = function (name, generatorName, blockName, nbArgs, type) {
+    private _createBuiltin(name, generatorName, blockName, nbArgs, type) {
+        const self = this;
+
         return function () {
-            window.currentPythonContext.runner.checkArgs(name, generatorName, blockName, arguments);
+            self.checkArgs(name, generatorName, blockName, arguments);
 
-            var susp = new Sk.misceval.Suspension();
-            var result = Sk.builtin.none.none$;
+            let susp = new Sk.misceval.Suspension();
+            let result = Sk.builtin.none.none$;
 
-            var args = Array.prototype.slice.call(arguments);
+            let args = Array.prototype.slice.call(arguments);
 
             susp.resume = function() { return result; };
             susp.data = {
@@ -83,14 +133,17 @@ export default function(context) {
                 promise: new Promise(function(resolve) {
                     // Count actions
                     if (type == 'actions') {
-                        window.currentPythonContext.runner._nbActions += 1;
+                        self._nbActions += 1;
                     }
 
                     try {
-                        const result = window.currentPythonContext.runner.executeQuickAlgoLibraryCall(generatorName, blockName, args, resolve);
-                        if (result instanceof Promise) result.catch((e) => { window.currentPythonContext.runner._onStepError(e) })
+                        const result = self.quickAlgoCallsExecutor(generatorName, blockName, args);
+                        if (result instanceof Promise) {
+                            result.then(resolve).catch((e) => { self._onStepError(e) })
+                        }
                     } catch (e) {
-                        window.currentPythonContext.runner._onStepError(e)}
+                        self._onStepError(e)
+                    }
                 }).then(function (value) {
                     result = value;
                     return value;
@@ -98,9 +151,9 @@ export default function(context) {
 
             return susp;
         }
-    };
+    }
 
-    this._skulptifyConst = (name, value) => {
+    private static _skulptifyConst(name, value) {
         let handler = '';
         if (typeof value === "number") {
             handler = 'Sk.builtin.int_(' + value + ');';
@@ -113,9 +166,9 @@ export default function(context) {
         }
 
         return '\nmod.' + name + ' = new ' + handler + '\n';
-    };
+    }
 
-    this._injectFunctions = () => {
+    private _injectFunctions() {
         // Generate Python custom libraries from all generated blocks
         console.log('inject functions', this.availableBlocks);
 
@@ -135,7 +188,7 @@ export default function(context) {
             for (let block of blocks.filter(block => block.type === BlockType.Function)) {
                 const {code, generatorName, name, params, type} = block;
                 console.log(block, generatorName);
-                modContents += this._skulptifyHandler(code, generatorName, name, params, type);
+                modContents += PythonRunner._skulptifyHandler(code, generatorName, name, params, type);
                 // We do want to override Python's naturel input and output to replace them with our own modules
                 if (generatorName === 'printer' && ('input' === code || 'print' === code)) {
                     const newCode = 'print' === code ? 'customPrint' : code;
@@ -145,7 +198,7 @@ export default function(context) {
 
             for (let block of blocks.filter(block => block.type === BlockType.Constant)) {
                 const {name, value} = block;
-                modContents += this._skulptifyConst(name, value);
+                modContents += PythonRunner._skulptifyConst(name, value);
             }
 
             modContents += "\nreturn mod;\n};";
@@ -154,7 +207,7 @@ export default function(context) {
         }
     };
 
-    this.checkArgs = (name, generatorName, blockName, args) => {
+    checkArgs(name, generatorName, blockName, args) {
         let msg = '';
 
         // Check the number of arguments corresponds to a variant of the function
@@ -191,48 +244,26 @@ export default function(context) {
 
             throw new Sk.builtin.TypeError(msg);
         }
-    };
+    }
 
-    this._definePythonNumber = () => {
-        // Create a class which behaves as a Number, but can have extra properties
-        this.pythonNumber = function(val) {
-            this.val = Number(val);
-        };
-        this.pythonNumber.prototype = Object.create(Number.prototype);
-
-        function makePrototype(func) {
-            return function() {
-                return Number.prototype[func].call(this.val);
-            }
-        }
-
-        var funcs = ['toExponential', 'toFixed', 'toLocaleString', 'toPrecision', 'toSource', 'toString', 'valueOf'];
-        for (let i = 0; i < funcs.length; i++) {
-            this.pythonNumber.prototype[funcs[i]] = makePrototype(funcs[i]);
-        }
-    };
-
-    this.skToJs = (val) => {
+    skToJs (val) {
         // Convert Skulpt item to JavaScript
         if (val instanceof Sk.builtin.bool) {
-            return val.v ? true : false;
+            return !!val.v;
         } else if (val instanceof Sk.builtin.func) {
             return () => {
-                var args = [];
+                let args = [];
                 for (let i = 0; i < arguments.length; i++) {
-                    args.push(that._createPrimitive(arguments[i]));
+                    args.push(this._createPrimitive(arguments[i]));
                 }
 
-                let retp = new Promise(function(resolve, reject) {
-                    let p = Sk.misceval.asyncToPromise(() => {
+                return new Promise((resolve, reject) => {
+                    Sk.misceval.asyncToPromise(() => {
                         return val.tp$call(args);
-                    });
-                    p.then((val) => {
-                        resolve(that.skToJs(val));
+                    }).then((val) => {
+                        resolve(this.skToJs(val));
                     });
                 });
-
-                return retp;
             }
         } else if (val instanceof Sk.builtin.dict) {
             let dictKeys = Object.keys(val);
@@ -242,7 +273,7 @@ export default function(context) {
                 if (key == 'size' || key == '__class__') {
                     continue;
                 }
-                var subItems = val[key].items;
+                let subItems = val[key].items;
                 for (let j = 0; j < subItems.length; j++) {
                     let subItem = subItems[j];
 
@@ -263,7 +294,7 @@ export default function(context) {
                 retVal.isTuple = true;
             }
             if (val instanceof Sk.builtin.float_) {
-                retVal = new this.pythonNumber(retVal);
+                retVal = new PythonNumber(retVal);
                 retVal.isFloat = true;
             }
 
@@ -271,37 +302,32 @@ export default function(context) {
         }
     };
 
-    this._setTimeout = (func, time) => {
-        let timeoutId = null;
-        let that = this;
-
-        function wrapper() {
-            let idx = that._timeouts.indexOf(timeoutId);
+    private _setTimeout(func, time) {
+        let timeoutId = window.setTimeout(() => {
+            let idx = this._timeouts.indexOf(timeoutId);
             if (idx > -1) {
-                that._timeouts.splice(idx, 1);
+                this._timeouts.splice(idx, 1);
             }
 
             func();
-        }
-
-        timeoutId = window.setTimeout(wrapper, time);
+        }, time);
 
         this._timeouts.push(timeoutId);
-    };
+    }
 
-    this.returnCallback = (callback, value) => {
-        log.getLogger('python_interpreter').debug('RETURN CALLBACK', value);
-        var primitive = this._createPrimitive(value);
+    returnCallback(callback, value) {
+        log.getLogger('python_runner').debug('RETURN CALLBACK', value);
+        let primitive = this._createPrimitive(value);
         if (primitive !== Sk.builtin.none.none$) {
             this._resetCallstackOnNextStep = true;
             this.reportValue(value);
         }
 
         callback(primitive);
-    };
+    }
 
-    this.waitDelay = (callback, value, delay) => {
-        log.getLogger('python_interpreter').debug('WAIT DELAY', value, delay);
+    waitDelay(callback, value, delay) {
+        log.getLogger('python_runner').debug('WAIT DELAY', value, delay);
         this._paused = true;
         if (delay > 0) {
             let _noDelay = this.noDelay.bind(this, callback, value);
@@ -309,33 +335,21 @@ export default function(context) {
         } else {
             this.noDelay(callback, value);
         }
-    };
+    }
 
-    this.waitEvent = (callback, target, eventName, func) => {
-        log.getLogger('python_interpreter').debug('WAIT EVENT');
-        this._paused = true;
-        var listenerFunc = null;
-        var that = this;
-        listenerFunc = function(e) {
-            target.removeEventListener(eventName, listenerFunc);
-            that.noDelay(callback, func(e));
-        };
-        target.addEventListener(eventName, listenerFunc);
-    };
-
-    this.waitCallback = (callback) => {
+    waitCallback(callback) {
         // Returns a callback to be called once we can continue the execution
-        log.getLogger('python_interpreter').debug('WAIT CALLBACK');
+        log.getLogger('python_runner').debug('WAIT CALLBACK');
         this._paused = true;
-        var that = this;
-        return (value) => {
-            that.noDelay(callback, value);
-        };
-    };
 
-    this.noDelay = (callback, value) => {
-        log.getLogger('python_interpreter').debug('NO DELAY');
-        var primitive = this._createPrimitive(value);
+        return (value) => {
+            this.noDelay(callback, value);
+        };
+    }
+
+    noDelay(callback, value) {
+        log.getLogger('python_runner').debug('NO DELAY');
+        let primitive = this._createPrimitive(value);
         if (primitive !== Sk.builtin.none.none$) {
             // Apparently when we create a new primitive, the debugger adds a call to
             // the callstack.
@@ -344,9 +358,9 @@ export default function(context) {
         }
 
         callback(primitive);
-    };
+    }
 
-    this._createPrimitive = (data) => {
+    private _createPrimitive(data) {
         if (data === undefined || data === null) {
             return Sk.builtin.none.none$;  // Reuse the same object.
         }
@@ -371,24 +385,15 @@ export default function(context) {
             result = new Sk.builtin.list(skl);
         }
         return result;
-    };
+    }
 
-    /**
-     * Prints the javascript code generated by skulpt.
-     *
-     * @param text
-     */
-    this._onDebugOut = (text) => {
-        console.log(text);
-    };
-
-    this._configure = () => {
+    private _configure() {
         Sk.configure({
             output: this.print,
-            inputfun: this.onInput,
+            inputfun: () => { console.log('input should be overloaded by our input method'); },
             inputfunTakesPrompt: true,
-            debugout: this._onDebugOut,
-            read: this._builtinRead.bind(this),
+            debugout: console.log,
+            read: PythonRunner._builtinRead,
             yieldLimit: null,
             execLimit: null,
             debugging: true,
@@ -401,12 +406,10 @@ export default function(context) {
         // Disable document library
         delete Sk.builtinFiles['files']['src/lib/document.js'];
 
-        this._definePythonNumber();
-
         this.context.callCallback = this.noDelay.bind(this);
-    };
+    }
 
-    this.print = (message) => {
+    print(message) {
         if (message.trim() === 'Program execution complete') {
             this._isFinished = true;
         } else {
@@ -415,33 +418,29 @@ export default function(context) {
             }
             this._printedDuringStep += message;
         }
-    };
+    }
 
-    this._onFinished = () => {
-        this.stop();
-    };
-
-    this._builtinRead = (x) => {
+    private static _builtinRead(x) {
         if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
             throw 'File not found: ' + x;
         }
 
         return Sk.builtinFiles["files"][x];
-    };
+    }
 
-    this.get_source_line = (lineno) => {
+    // Used in Skulpt
+    public get_source_line(lineno) {
         return this._code.split('\n')[lineno];
     };
 
-    this._continue = () => {
+    _continue() {
+        console.log('make continue', this._paused, this._isRunning);
         if (this._steps >= this._maxIterations) {
             this._onStepError(window.languageStrings.tooManyIterations);
-        } else if (!this._paused && this._isRunning) {
-            this.step();
         }
-    };
+    }
 
-    this.initCodes = (codes, availableBlocks) => {
+    public initCodes(codes, availableBlocks) {
         // For reportValue in Skulpt.
         window.currentPythonRunner = this;
 
@@ -457,7 +456,6 @@ export default function(context) {
             return;
         }
 
-        window.currentPythonContext = this.context;
         this.availableBlocks = availableBlocks;
         this._debugger = new Sk.Debugger(this._editor_filename, this);
         this._configure();
@@ -488,10 +486,10 @@ export default function(context) {
 
         Sk.running = true;
         this._isRunning = true;
-    };
+    }
 
-    this.runStep = (executeQuickAlgoLibraryCall) => {
-        this.executeQuickAlgoLibraryCall = executeQuickAlgoLibraryCall;
+    runStep(quickAlgoCallsExecutor) {
+        this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
         return new Promise((resolve, reject) => {
             this.stepMode = true;
             this._printedDuringStep = '';
@@ -499,66 +497,22 @@ export default function(context) {
                 this.step(resolve, reject);
             }
         });
-    };
+    }
 
-    this.nbRunning = () => {
-        return this._isRunning ? 1 : 0;
-    };
-
-    this.unSkulptValue = (origValue) => {
-        let value = null;
-
-        // Transform a value, possibly a Skulpt one, into a printable value
-        if (typeof origValue !== 'object' || origValue === null) {
-            value = origValue;
-        } else if (origValue.constructor === Sk.builtin.dict) {
-            let keys = Object.keys(origValue);
-            let dictElems = [];
-            for (let i = 0; i < keys.length; i++) {
-                if (keys[i] == 'size' || keys[i] == '__class__'
-                    || !origValue[keys[i]].items
-                    || !origValue[keys[i]].items[0]) {
-
-                    continue;
-                }
-
-                var items = origValue[keys[i]].items[0];
-                dictElems.push('' + this.unSkulptValue(items.lhs) + ': ' + this.unSkulptValue(items.rhs));
-            }
-            value = '{' + dictElems.join(',') + '}';
-        } else if (origValue.constructor === Sk.builtin.list) {
-            let oldArray = origValue.v;
-            let newArray = [];
-            for (let i = 0; i < oldArray.length; i++) {
-                newArray.push(this.unSkulptValue(oldArray[i]));
-            }
-            value = '[' + newArray.join(', ') + ']';
-        } else if (origValue.v !== undefined) {
-            value = origValue.v;
-            if (typeof value == 'string') {
-                value = '"' + value + '"';
-            }
-        } else if (typeof origValue == 'object') {
-            value = origValue;
-        }
-
-        return value;
-    };
-
-    this.reportValue = (origValue, varName) => {
+    reportValue(origValue, varName = null) {
         // Show a popup displaying the value of a block in step-by-step mode
         if (origValue === undefined
             || (origValue && origValue.constructor === Sk.builtin.func)
             || !this._editorMarker
-            || !context.display
+            || !this.context.display
             || !this.stepMode) {
             return origValue;
         }
 
         return origValue;
-    };
+    }
 
-    this.stop = () => {
+    stop() {
         for (let i = 0; i < this._timeouts.length; i += 1) {
             window.clearTimeout(this._timeouts[i]);
         }
@@ -575,9 +529,9 @@ export default function(context) {
         this._resetInterpreterState();
 
         this._isFinished = true;
-    };
+    }
 
-    this._resetInterpreterState = () => {
+    private _resetInterpreterState() {
         this._steps = 0;
         this._nbActions = 0;
 
@@ -588,52 +542,39 @@ export default function(context) {
         this._paused = false;
         Sk.running = false;
         if (Sk.runQueue && Sk.runQueue.length > 0) {
-            var nextExec = Sk.runQueue.shift();
+            let nextExec = Sk.runQueue.shift();
             setTimeout(function() {
                 nextExec.ctrl.runCodes(nextExec.codes);
             }, 100);
         }
 
         this._isFinished = false;
-    };
+    }
 
-    this._resetCallstack = () => {
+    private _resetCallstack() {
         if (this._resetCallstackOnNextStep) {
             this._resetCallstackOnNextStep = false;
             this._debugger.suspension_stack.pop();
         }
-    };
+    }
 
-    this.step = (resolve, reject) => {
+    step(resolve, reject) {
+        console.log('continue step', resolve, reject);
         this._resetCallstack();
         this._stepInProgress = true;
 
         this.realStep(resolve, reject);
-    };
+    }
 
-    this.realStep = (resolve, reject) => {
+    realStep(resolve, reject) {
         this._paused = this.stepMode;
         this._debugger.enable_step_mode();
         this._debugger.resume.call(this._debugger, resolve, reject);
         this._steps += 1;
-    };
+    }
 
-    /**
-     * Get the current debugger's suspension.
-     */
-    this.getCurrentSuspension = () => {
-        let curIndex = (this._debugger.suspension_stack.length - 1);
-        let suspension = null;
-        do {
-            suspension = this._debugger.suspension_stack[curIndex];
-
-            curIndex--;
-        } while (curIndex >= 0 && !suspension.hasOwnProperty('$loc'));
-
-        return suspension;
-    };
-
-    this._onStepSuccess = (callback) => {
+    // Used in Skulpt
+    _onStepSuccess(callback) {
         // If there are still timeouts, there's still a step in progress
         this._stepInProgress = !!this._timeouts.length;
         this._continue();
@@ -641,11 +582,11 @@ export default function(context) {
         if (typeof callback === 'function') {
             callback();
         }
-    };
+    }
 
-    this._onStepError = (message, callback) => {
+    _onStepError(message, callback = null) {
         console.error(message);
-        context.onExecutionEnd && context.onExecutionEnd();
+        this.context.onExecutionEnd && this.context.onExecutionEnd();
         // We always get there, even on a success
         this.stop();
 
@@ -661,9 +602,7 @@ export default function(context) {
         }
 
         // Transform message depending on whether we successfully
-        if (this.context.success) {
-            this.onSuccess(message);
-        } else {
+        if (!this.context.success) {
             message = this.context.messagePrefixFailure + message;
             this.onError(message);
         }
@@ -671,15 +610,15 @@ export default function(context) {
         if (typeof callback === 'function') {
             callback();
         }
-    };
+    }
 
-    this._setBreakpoint = (bp, isTemporary) => {
+    private _setBreakpoint(bp, isTemporary) {
         this._debugger.add_breakpoint(this._editor_filename + '.py', bp, '0', isTemporary);
-    };
+    }
 
-    this._asyncCallback = function() {
+    private _asyncCallback() {
         return Sk.importMainWithBody(this._editor_filename, true, this._code, true);
-    };
+    }
 
     /**
      * Checks whether the interpreter is synchronized with the analysis object.
@@ -688,18 +627,15 @@ export default function(context) {
      *
      * @return {boolean}
      */
-    this.isSynchronizedWithAnalysis = function(analysis) {
+    public isSynchronizedWithAnalysis(analysis) {
         // Must be at the same step number and have the same source code.
 
         const analysisStepNum = analysis.stepNum;
         const analysisCode = analysis.code;
-        const currentPythonStepNum = window.currentPythonRunner._steps;
-        const currentPythonCode = window.currentPythonRunner._code;
+        const currentPythonStepNum = this._steps;
+        const currentPythonCode = this._code;
         console.log('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentPythonStepNum);
-        if (analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode) {
-            return false;
-        }
 
-        return true;
+        return !(analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode);
     }
 }

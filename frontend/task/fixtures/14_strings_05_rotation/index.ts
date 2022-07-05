@@ -8,7 +8,7 @@ export default {
         includeBlocks: {
             groupByCategory: false,
             generatedBlocks: {
-                printer: ["print", "read", "manipulate"]
+                printer: ["print", "read"]
             },
             standardBlocks: {
                 includeAll: false,

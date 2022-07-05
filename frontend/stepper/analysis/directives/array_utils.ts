@@ -1,6 +1,6 @@
 import range from 'node-range';
 
-import {getLoadedReferencesFromVariable, getVariable} from './utils';
+import {getVariable} from './utils';
 import {getMessage} from "../../../lang";
 
 /**
@@ -89,8 +89,8 @@ export const extractView = function(context, name, options) {
             elemCount = dim;
         } else {
             const dimVariable = getVariable(analysis, dim);
-            if (dimVariable && dimVariable.cur) {
-                elemCount = dimVariable.cur.v;
+            if (dimVariable && dimVariable.value) {
+                elemCount = dimVariable.value;
             }
         }
     }
@@ -100,12 +100,12 @@ export const extractView = function(context, name, options) {
         return {error: getMessage('PYTHON_ARRAY1D_REF_UNDEFINED').format({name})};
     }
 
-    if (!(ref.cur instanceof Sk.builtin.list)) {
+    if ('list' !== ref.type) {
         return {error: getMessage('PYTHON_ARRAY1D_REF_NOT_LIST').format({name})};
     }
 
     if (elemCount === undefined) {
-        elemCount = ref.cur.v.length;
+        elemCount = ref.variables.length;
     }
 
     const cursorMap = getCursorMap(analysis, cursors, {
@@ -119,7 +119,6 @@ export const extractView = function(context, name, options) {
     return {
         ref,
         cursorMap,
-        loadedReferences: getLoadedReferencesFromVariable(analysis, name)
     };
 };
 
@@ -140,11 +139,11 @@ export const getCursorMap = function(analysis, cursorNames, options) {
             return;
         }
 
-        if (!(cursorVariable.cur instanceof Sk.builtin.int_)) {
+        if ('int' !== cursorVariable.type) {
             return;
         }
 
-        const index = cursorVariable.cur.v;
+        const index = cursorVariable.value;
 
         if (index >= minIndex && index <= maxIndex) {
             // TODO: We currently do not attempt to find the previous value of the cursor (and when it changed) ?

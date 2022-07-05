@@ -285,16 +285,18 @@ body#app, #app h1, #app h2, #app h3 {
 }
 .value-previous {
   color: #999999;
-  font-style: italic;
+  position: relative;
 }
 .value-previous::before {
-  content: '(';
-}
-.value-previous::after {
-  content: ')';
+  content: '';
+  border-bottom: 2px solid #bbb;
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  top: 45%;
 }
 span + .value-previous {
-  padding-left: 0.5em;
+  margin-left: 0.5em;
 }
 
 .vardecl {
@@ -509,8 +511,8 @@ svg {
     }
     rect.cell           { fill: none;    }
     rect.cell-cursor    { fill: #EEEEEE; }
-    rect.cell-load      { fill: #DCEDC8; }
-    rect.cell-store     { fill: #FFCDD2; }
+    rect.cell-load      { fill: #b8ceee; }
+    rect.cell-store     { fill: #ffdb95; }
   }
 
   .array1d {

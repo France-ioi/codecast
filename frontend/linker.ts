@@ -1,13 +1,15 @@
-import {default as createSagaMiddleware} from 'redux-saga';
+import {default as createSagaMiddleware, Saga} from 'redux-saga';
 import {all, call} from 'typed-redux-saga';
 import produce from "immer";
-import {App} from "./index";
+import {App, CodecastEnvironmentMonitoring} from "./index";
 import {AppStore} from "./store";
 import {configureStore} from "@reduxjs/toolkit";
 import taskSlice from "./task/task_slice";
 import documentationSlice from "./task/documentation/documentation_slice";
 import log from "loglevel";
 import platformSlice from "./task/platform/platform_slice";
+import analysisSlice from "./stepper/analysis/analysis_slice";
+import modalSlice from "./common/modal_slice";
 
 export interface Linker {
     scope: App,
@@ -16,7 +18,8 @@ export interface Linker {
     },
     store: AppStore,
     finalize: Function
-    start: Function
+    start: Function,
+    monitoring: CodecastEnvironmentMonitoring,
 }
 
 export function link(rootBuilder, globalScope: App): Linker {
@@ -118,8 +121,62 @@ export function link(rootBuilder, globalScope: App): Linker {
         rootBundle._lateReducer()
     ].reduce(reverseCompose, null);
 
+    let sagaMonitoringListeners = {
+        effectTriggered: [],
+        effectResolved: [],
+        effectRejected: [],
+        effectCancelled: [],
+    };
+
+    const sagaMonitor = {
+        effectTriggered: function () {
+            for (let listener of sagaMonitoringListeners.effectTriggered) {
+                listener(...arguments);
+            }
+        },
+        effectResolved: function () {
+            for (let listener of sagaMonitoringListeners.effectResolved) {
+                listener(...arguments);
+            }
+        },
+        effectRejected: function () {
+            for (let listener of sagaMonitoringListeners.effectRejected) {
+                listener(...arguments);
+            }
+        },
+        effectCancelled: function () {
+            for (let listener of sagaMonitoringListeners.effectCancelled) {
+                listener(...arguments);
+            }
+        },
+    };
+
+    const monitoring: CodecastEnvironmentMonitoring = {
+        effectTriggered: (callback) => {
+            sagaMonitoringListeners.effectTriggered.push(callback);
+        },
+        effectResolved: (callback) => {
+            sagaMonitoringListeners.effectResolved.push(callback);
+        },
+        effectRejected: (callback) => {
+            sagaMonitoringListeners.effectRejected.push(callback);
+        },
+        effectCancelled: (callback) => {
+            sagaMonitoringListeners.effectCancelled.push(callback);
+        },
+        clearListeners() {
+            sagaMonitoringListeners = {
+                effectTriggered: [],
+                effectResolved: [],
+                effectRejected: [],
+                effectCancelled: [],
+            };
+        },
+    };
+
     // Compose the enhancers.
     const sagaMiddleware = createSagaMiddleware({
+        sagaMonitor,
         onError: (error) => {
             console.error(error);
             setImmediate(() => {
@@ -161,6 +218,8 @@ export function link(rootBuilder, globalScope: App): Linker {
             [taskSlice.name]: taskSlice.reducer,
             [platformSlice.name]: platformSlice.reducer,
             [documentationSlice.name]: documentationSlice.reducer,
+            [analysisSlice.name]: analysisSlice.reducer,
+            [modalSlice.name]: modalSlice.reducer,
         })(newState, action);
 
         let end2 = window.performance.now();
@@ -200,6 +259,7 @@ export function link(rootBuilder, globalScope: App): Linker {
         store: store as AppStore,
         finalize,
         start,
+        monitoring,
     };
 }
 

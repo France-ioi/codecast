@@ -8,15 +8,15 @@
 */
 
 import * as C from '@france-ioi/persistent-c';
-import {all, call, select, take} from 'typed-redux-saga';
-import {clearLoadedReferences} from "./python/analysis/analysis";
-import {AppStore, AppStoreReplay} from "../store";
+import {all, call} from 'typed-redux-saga';
+import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
 import {createDraft} from "immer";
 import {getCurrentImmerState} from "../task/utils";
 import {ActionTypes as CompileActionTypes} from "./actionTypes";
+import {Codecast} from "../index";
 
 export interface QuickalgoLibraryCall {
     module: string,
@@ -59,7 +59,7 @@ export interface StepperContextParameters {
     executeEffects?: Function,
 }
 
-const delay = delay => new Promise((resolve) => setTimeout(resolve, delay));
+export const delay = delay => new Promise((resolve) => setTimeout(resolve, delay));
 
 export interface StepperApi {
     onInit?: Function,
@@ -131,7 +131,7 @@ export default function(bundle: Bundle) {
             platform
         } as StepperState;
         for (let callback of initCallbacks) {
-            callback(curStepperState, state, environment);
+            await callback(curStepperState, state, environment);
         }
 
 
@@ -142,15 +142,23 @@ export default function(bundle: Bundle) {
 
         /* Run until in user code */
         const stepperContext = makeContext(stepper, {
-            interactBefore,
-            interactAfter,
+            interactBefore: () => {
+                return Promise.resolve(true);
+            },
+            interactAfter: ({saga}) => {
+                return new Promise((resolve, reject) => {
+                    if (saga) {
+                        return reject(new StepperError('error', 'cannot interact in buildState'));
+                    }
+
+                    resolve(true);
+                });
+            },
             environment,
             executeEffects,
         });
 
-        if (stepperContext.state.platform === 'python') {
-            return stepperContext.state;
-        } else {
+        if (stepperContext.state.platform === CodecastPlatform.Unix || stepperContext.state.platform === CodecastPlatform.Arduino) {
             while (!inUserCode(stepperContext.state)) {
                 /* Mutate the stepper context to advance execution by a single step. */
                 const effects = C.step(stepperContext.state.programState);
@@ -158,23 +166,9 @@ export default function(bundle: Bundle) {
                     await executeEffects(stepperContext, effects[Symbol.iterator]());
                 }
             }
-
-            return stepperContext.state;
         }
 
-        function interactBefore() {
-            return Promise.resolve(true);
-        }
-
-        function interactAfter({saga}) {
-            return new Promise((resolve, reject) => {
-                if (saga) {
-                    return reject(new StepperError('error', 'cannot interact in buildState'));
-                }
-
-                resolve(true);
-            });
-        }
+        return stepperContext.state;
     }
 
     async function executeEffects(stepperContext: StepperContext, iterator) {
@@ -213,8 +207,8 @@ export default function(bundle: Bundle) {
     bundle.defineValue('stepperApi', stepperApi);
 }
 
-function getNodeStartRow(stepperState: StepperState) {
-    if (!stepperState) {
+export function getNodeStartRow(stepperState: StepperState) {
+    if (!stepperState || !stepperState.programState) {
         return undefined;
     }
 
@@ -253,6 +247,7 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
         unixNextStepCondition: 0,
         state: {
             ...state,
+            controls: resetControls(state.controls),
         },
         quickAlgoContext: quickAlgoLibraries.getContext(null, environment),
         environment,
@@ -261,26 +256,9 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
 
-    if (state.platform === 'python') {
-        return {
-            ...stepperContext,
-            state: {
-                ...stepperContext.state,
-                ...(state.analysis ? {lastAnalysis: Object.freeze(clearLoadedReferences(state.analysis))} : {}),
-                controls: resetControls(state.controls),
-            },
-        };
-    } else {
-        return {
-            ...stepperContext,
-            state: {
-                ...stepperContext.state,
-                programState: C.clearMemoryLog(state.programState),
-                lastProgramState: {...state.programState},
-                controls: resetControls(state.controls),
-            },
-        }
-    }
+    Codecast.runner.enrichStepperContext(stepperContext, state);
+
+    return stepperContext;
 }
 
 function resetControls(controls) {
@@ -309,39 +287,7 @@ async function executeSingleStep(stepperContext: StepperContext) {
         }
     }
 
-    if (stepperContext.state.platform === 'python') {
-        const result = await window.currentPythonRunner.runStep(stepperContext.quickAlgoCallsExecutor);
-
-        console.log('FINAL INTERACT', result);
-        stepperContext.makeDelay = true;
-        await stepperContext.interactAfter({
-            position: 0,
-        });
-        console.log('AFTER FINAL INTERACT');
-    } else {
-        const effects = C.step(stepperContext.state.programState);
-        await stepperContext.executeEffects(stepperContext, effects[Symbol.iterator]());
-
-        /* Update the current position in source code. */
-        const position = getNodeStartRow(stepperContext.state);
-
-        if (0 === stepperContext.unixNextStepCondition % 3 && C.outOfCurrentStmt(stepperContext.state.programState)) {
-            stepperContext.unixNextStepCondition++;
-        }
-        if (1 === stepperContext.unixNextStepCondition % 3 && C.intoNextStmt(stepperContext.state.programState)) {
-            stepperContext.unixNextStepCondition++;
-        }
-
-        if (stepperContext.unixNextStepCondition % 3 === 2 || isStuck(stepperContext.state)) {
-            console.log('do interact');
-            stepperContext.makeDelay = true;
-            stepperContext.unixNextStepCondition = 0;
-            await stepperContext.interactAfter({
-                position
-            });
-            stepperContext.position = position;
-        }
-    }
+    await Codecast.runner.runNewStep(stepperContext);
 }
 
 async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
@@ -352,7 +298,7 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
             return;
         }
         if (!stop && stopCond) {
-            if (stepperContext.state.platform === 'python') {
+            if (stepperContext.state.platform === CodecastPlatform.Python) {
                 if (stopCond(stepperContext.state)) {
                     stop = true;
                 }
@@ -389,7 +335,7 @@ async function stepInto(stepperContext: StepperContext) {
     // Take a first step.
     await executeSingleStep(stepperContext);
 
-    if (stepperContext.state.platform === 'unix' || stepperContext.state.platform === 'arduino') {
+    if (stepperContext.state.platform === CodecastPlatform.Unix || stepperContext.state.platform === CodecastPlatform.Arduino) {
         // Step out of the current statement.
         await stepUntil(stepperContext, C.outOfCurrentStmt);
         // Step into the next statement.
@@ -400,7 +346,7 @@ async function stepInto(stepperContext: StepperContext) {
 async function stepOut(stepperContext: StepperContext) {
     // The program must be running.
     if (!isStuck(stepperContext.state)) {
-        if (stepperContext.state.platform === 'python') {
+        if (stepperContext.state.platform === CodecastPlatform.Python) {
             const nbSuspensions = stepperContext.state.suspensions.length;
 
             // Take a first step.
@@ -425,7 +371,7 @@ async function stepOut(stepperContext: StepperContext) {
 }
 
 async function stepOver(stepperContext: StepperContext) {
-    if (stepperContext.state.platform === 'python') {
+    if (stepperContext.state.platform === CodecastPlatform.Python) {
         if (stepperContext.state.suspensions) {
             const nbSuspensions = stepperContext.state.suspensions.length;
 
@@ -478,17 +424,12 @@ export async function performStep(stepperContext: StepperContext, mode) {
     }
 }
 
-
-function isStuck(stepperState: StepperState): boolean {
-    if (stepperState.platform === 'python') {
-        return stepperState.isFinished;
-    } else {
-        return !stepperState.programState.control;
-    }
+export function isStuck(stepperState: StepperState): boolean {
+    return Codecast.runner.isStuck(stepperState);
 }
 
 function inUserCode(stepperState: StepperState) {
-    if (stepperState.platform === 'python') {
+    if (stepperState.platform === CodecastPlatform.Python) {
         return true;
     } else {
         return !!stepperState.programState.control.node[1].begin;
@@ -496,7 +437,8 @@ function inUserCode(stepperState: StepperState) {
 }
 
 export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, reloadState = false) {
-    return async (module: string, action: string, args: any[], callback: Function) => {
+    return async (module: string, action: string, args: any[], callback?: Function) => {
+        console.log('call quickalgo', module, action, args, callback);
         let libraryCallResult;
         const context = stepperContext.quickAlgoContext;
 
@@ -517,11 +459,21 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
             context.redrawDisplay();
         }
 
+
         const makeLibraryCall = async () => {
-            let result = context[module][action].apply(context, [...args, callback]);
+            let callbackArguments = [];
+            let result = context[module][action].apply(context, [...args, function (a) {
+                console.log('receive callback', arguments);
+                callbackArguments = [...arguments];
+            }]);
+            if (callbackArguments.length && !result) {
+                result = callbackArguments[0];
+                console.log('set result', result);
+            }
 
             console.log('MODULE RESULT', result);
             if (!(Symbol.iterator in Object(result))) {
+                console.log('return result');
                 return result;
             }
 
@@ -549,6 +501,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         console.log('before make async library call', {module, action});
         try {
             libraryCallResult = await makeLibraryCall();
+            console.log('after make async lib call', libraryCallResult);
         } catch (e) {
             console.log('context error 2', e);
             await stepperContext.dispatch({
@@ -562,7 +515,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
                 },
             });
         }
-        console.log('after make async library call');
+        console.log('after make async library call', libraryCallResult);
 
         const newStateValue = context.getInnerState();
         const newState = getCurrentImmerState(newStateValue);
@@ -576,7 +529,22 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
             console.log('stepper context after', stepperContext.state.contextState);
         }
 
-        context.waitDelay(callback, libraryCallResult);
+        // let primitiveValue;
+        // if (libraryCallResult) {
+        //     context.waitDelay((primitive) => {
+        //         console.log('receive primitive value', primitive);
+        //         primitiveValue = primitive;
+        //
+        //
+        //     }, libraryCallResult);
+        // }
+
+        if (callback) {
+            console.log('call callback arguments', libraryCallResult);
+            callback(libraryCallResult);
+        }
+
+        console.log('return library call result', libraryCallResult);
 
         return libraryCallResult;
     }

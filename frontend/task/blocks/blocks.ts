@@ -1,17 +1,14 @@
-import {AppStore, AppStoreReplay} from "../../store";
+import {AppStore, AppStoreReplay, CodecastPlatform} from "../../store";
 import {getPythonSpecificBlocks} from "../python_utils";
 import {quickAlgoLibraries, QuickAlgoLibrary} from "../libs/quickalgo_librairies";
 import {getCSpecificBlocks} from "../../stepper/views/c/utils";
 import {Bundle} from "../../linker";
-import {call, debounce, delay, put, select, takeEvery, takeLatest} from "typed-redux-saga";
-import {DocumentationActionTypes, DocumentationLoadAction} from "../documentation/doc";
+import {call, debounce, put, select, takeEvery} from "typed-redux-saga";
 import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
-import {StepperStatus} from "../../stepper";
-import {ActionTypes, ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
-import {BlocksUsage, taskClearSubmission, taskSetBlocksUsage} from "../task_slice";
-import {useAppSelector} from "../../hooks";
+import {BlocksUsage, taskSetBlocksUsage} from "../task_slice";
 import {getBufferModel} from "../../buffers/selectors";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
+import {selectAnswer} from "../selectors";
 
 export enum BlockType {
     Function = 'function',
@@ -161,10 +158,10 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
         }
     }
 
-    if ('python' === platform) {
+    if (CodecastPlatform.Python === platform) {
         const pythonSpecificBlocks = getPythonSpecificBlocks(contextIncludeBlocks);
         availableBlocks = [...availableBlocks, ...pythonSpecificBlocks];
-    } else if ('unix' === platform) {
+    } else if (CodecastPlatform.Unix === platform) {
         const cSpecificBlocks = getCSpecificBlocks(contextIncludeBlocks);
         availableBlocks = [...availableBlocks, ...cSpecificBlocks];
     }
@@ -205,8 +202,7 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
 
 function* checkSourceSaga() {
     const state: AppStore = yield* select();
-    const sourceModel = getBufferModel(state, 'source');
-    const currentSource = sourceModel ? sourceModel.document.toString() : null;
+    const answer = selectAnswer(state);
     const context = quickAlgoLibraries.getContext(null, 'main');
     const currentTask = state.task.currentTask;
     if (!context || !currentTask) {
@@ -215,18 +211,20 @@ function* checkSourceSaga() {
     }
 
     try {
-        checkCompilingCode(currentSource.trim(), state.options.platform, state, false);
+        checkCompilingCode(answer, state.options.platform, state, false);
 
-        const currentUsage = getBlocksUsage(currentSource.trim(), state.options.platform);
-        const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
+        const currentUsage = getBlocksUsage(answer, state.options.platform);
+        if (currentUsage) {
+            const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
 
-        const blocksUsage: BlocksUsage = {
-            blocksCurrent: currentUsage.blocksCurrent,
-            blocksLimit: maxInstructions,
-            limitations: currentUsage.limitations.filter(limitation => 'uses' === limitation.type),
-        };
+            const blocksUsage: BlocksUsage = {
+                blocksCurrent: currentUsage.blocksCurrent,
+                blocksLimit: maxInstructions,
+                limitations: currentUsage.limitations.filter(limitation => 'uses' === limitation.type),
+            };
 
-        yield* put(taskSetBlocksUsage(blocksUsage));
+            yield* put(taskSetBlocksUsage(blocksUsage));
+        }
     } catch (e) {
         yield* put(taskSetBlocksUsage({error: e.toString()}));
     }
@@ -235,6 +233,7 @@ function* checkSourceSaga() {
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
         yield* debounce(500, BufferActionTypes.BufferEdit, checkSourceSaga);
+        yield* debounce(500, BufferActionTypes.BufferEditPlain, checkSourceSaga);
         yield* debounce(500, BufferActionTypes.BufferReset, checkSourceSaga);
 
         yield* takeEvery(BufferActionTypes.BufferInit, function* (action) {

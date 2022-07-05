@@ -9,7 +9,7 @@
 }
 .object-toggle-open {
   display: inline-block;
-  min-width: 60px;
+  //min-width: 60px;
 }
 
 .variable-container {
@@ -32,11 +32,24 @@
 .value-empty {
   color: #ffcc1e;
 }
-
-.value-loaded {
-  font-weight: bold;
+.value-has-changed {
+  border-radius: 100px;
+  background-color: #ffdb95;
+  padding: 1px 5px;
 }
 
-.value-object-closed, .value-list-closed, .value-iterator, .value-module, .value-function {
+.value-loaded {
+  border-radius: 100px;
+  background-color: #b8ceee;
+  padding: 1px 5px;
+}
+
+.value-type {
   color: #b8b246;
+  font-size: 0.9em;
+}
+
+.value-count {
+  color: grey;
+  font-size: 0.9em;
 }

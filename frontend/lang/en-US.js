@@ -9,6 +9,7 @@ module.exports = {
     MESSAGES: 'Messages',
     ERROR: 'Error',
     CLOSE: 'Close',
+    VALIDATE: 'Validate',
     NONE: 'None',
     CANCEL: 'Cancel',
     FULLSCREEN: "fullscreen",
@@ -126,6 +127,9 @@ module.exports = {
     PLATFORM_UNIX: "C (Unix)",
     PLATFORM_ARDUINO: "C (Arduino)",
     PLATFORM_PYTHON: "Python",
+    PLATFORM_BLOCKLY: "Blockly",
+    PLATFORM_SCRATCH: "Scratch",
+    PLATFORM_RELOAD: "We can't display the language {platform} in the current mode, please reload the page to update the display.",
     PROGRAM_MISSING_LIB: "You must include the line {line} in your program.",
 
     EDITOR_SPLIT: 'Split',

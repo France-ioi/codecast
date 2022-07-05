@@ -1,6 +1,7 @@
 import {App} from "../../index";
 import {AppStore, AppStoreReplay} from "../../store";
 import {createDraft} from "immer";
+import quickalgoI18n from "../../lang/quickalgoI18n";
 
 //TODO: Handle multiples libraries at once.
 // For now, we only use 1 library
@@ -85,6 +86,7 @@ window.quickAlgoLoadedLibraries = quickAlgoLibraries;
 export class QuickAlgoLibrary {
     display: boolean;
     infos: any;
+    placeholderBlocks: any;
     nbCodes: number;
     nbNodes: number;
     strings: any;
@@ -100,6 +102,8 @@ export class QuickAlgoLibrary {
     linkBack: boolean;
     delayFactory: any;
     raphaelFactory: any;
+    blocklyHelper: any;
+    onChange: any;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -121,6 +125,8 @@ export class QuickAlgoLibrary {
         // These classes are provided by the bebras-modules
         this.delayFactory = new window.DelayFactory();
         this.raphaelFactory = new window.RaphaelFactory();
+
+        this.setLocalLanguageStrings(quickalgoI18n);
 
         // this.blocklyHelper = {
         //     updateSize: function () {
@@ -250,14 +256,6 @@ export class QuickAlgoLibrary {
     };
 
     onError(diagnostics: any): void {
-
-    }
-
-    onSuccess(message: any): void {
-
-    }
-
-    onInput(): void {
 
     }
 }

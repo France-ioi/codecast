@@ -25,6 +25,7 @@ import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
 import {SubtitlesPane} from "../subtitles/SubtitlesPane";
 import {TaskLevelName} from "./platform/platform_slice";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
+import {PromptModalDialog} from "./dialog/PromptModalDialog";
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -181,6 +182,8 @@ export function TaskApp() {
             </Dialog>
 
             <TaskSuccessDialog/>
+
+            <PromptModalDialog/>
         </Container>
     );
 }

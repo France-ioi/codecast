@@ -21,7 +21,7 @@ import './style.scss';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {NPorts} from "./config";
-import {AppStore} from "../../store";
+import {AppStore, CodecastPlatform} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {StepperContext} from "../api";
@@ -104,7 +104,7 @@ export default function(bundle: Bundle) {
         recordApi.onStart(function* (init) {
             const state: AppStore = yield* select();
             const {platform} = state.options;
-            if (platform === 'arduino') {
+            if (platform === CodecastPlatform.Arduino) {
                 init.arduino = state.arduino;
             }
         });

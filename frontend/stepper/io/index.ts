@@ -5,7 +5,7 @@ import {scanfBuiltin} from './scanf';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
-import {AppStore} from "../../store";
+import {AppStore, CodecastPlatform} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {StepperContext} from "../api";
@@ -36,7 +36,7 @@ export default function(bundle: Bundle) {
     function updateIoPaneState(state: AppStore) {
         const {platform} = state.options;
 
-        if (platform === 'arduino') {
+        if (platform === CodecastPlatform.Arduino) {
             /* Arduino is forced to terminal mode. */
             state.ioPane.mode = IoMode.Terminal;
             state.ioPane.modeSelect = false;
@@ -106,7 +106,7 @@ export default function(bundle: Bundle) {
 
         stepperApi.onEffect('write', function* writeEffect(stepperContext: StepperContext, text) {
             const executor = stepperContext.quickAlgoCallsExecutor;
-            const executorPromise = executor('printer', 'print_end', [text], () => {});
+            const executorPromise = executor('printer', 'print_end', [text]);
             yield ['promise', executorPromise];
         });
 
@@ -154,7 +154,7 @@ export default function(bundle: Bundle) {
 
         stepperApi.onEffect('ungets', function* ungetsHandler(stepperContext: StepperContext, count) {
             const executor = stepperContext.quickAlgoCallsExecutor;
-            const executorPromise = executor('printer', 'ungets', [count], () => {});
+            const executorPromise = executor('printer', 'ungets', [count]);
             yield ['promise', executorPromise];
         });
     });

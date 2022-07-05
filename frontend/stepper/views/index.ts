@@ -5,9 +5,9 @@ import {Array1D as C_Array1D} from "./c/array1d";
 import {Array2D as C_Array2D} from "./c/array2d";
 import {SortView as C_SortView} from "./c/sort";
 import MemoryViewDirective from "./c/memory";
-import {Array1D as pythonArray1D} from "./python/array1d";
-import {Array2D as pythonArray2D} from "./python/array2d";
-import {SortView as pythonSortView} from "./python/sort";
+import {Array1D as analysisArray1D} from "../analysis/directives/array1d";
+import {Array2D as analysisArray2D} from "../analysis/directives/array2d";
+import {SortView as analysisSortView} from "../analysis/directives/sort";
 
 export const directiveDimensionsDict = {
     showArray: (width: number, height: number, props: any) => {
@@ -43,10 +43,10 @@ export const C_directiveViewDict = {
     showSort: {View: C_SortView, selector: obj => obj, snippet: "//! quicksort = showSort(array, cursors=[left, right, i, j], dim=size, thresholds=[pivot])"},
     showMemory: MemoryViewDirective,
 };
-export const pythonDirectiveViewDict = {
-    showArray: {View: pythonArray1D, selector: obj => obj, snippet: "_VIEW_arr = \"showArray(arr, cursors=[index], cursorRows=20)\""},
-    showArray2D: {View: pythonArray2D, selector: obj => obj, snippet: "_VIEW_arr = \"showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=2, cols=3)\""},
-    showSort: {View: pythonSortView, selector: obj => obj, snippet: "_VIEW_quicksort= \"showSort(quicksort, cursors=[left, right, i, j], dim=size, thresholds=[pivot])\""},
+export const analysisDirectiveViewDict = {
+    showArray: {View: analysisArray1D, selector: obj => obj, snippet: "_VIEW_arr = \"showArray(arr, cursors=[index], cursorRows=20)\""},
+    showArray2D: {View: analysisArray2D, selector: obj => obj, snippet: "_VIEW_arr = \"showArray2D(matrix, rowCursors=[line], colCursors=[col], rows=2, cols=3)\""},
+    showSort: {View: analysisSortView, selector: obj => obj, snippet: "_VIEW_quicksort= \"showSort(quicksort, cursors=[left, right, i, j], dim=size, thresholds=[pivot])\""},
 };
 
 export default function(bundle: Bundle) {
