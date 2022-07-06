@@ -18,7 +18,6 @@ import statisticsBundle from './statistics/index';
 import {isLocalMode} from "./utils/app";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "./common/actionTypes";
-import {ActionTypes as RecorderActionTypes} from "./recorder/actionTypes";
 import {ActionTypes as StatisticsActionTypes} from "./statistics/actionTypes";
 import {TaskApp} from "./task/TaskApp";
 import {StatisticsApp} from "./statistics/StatisticsApp";

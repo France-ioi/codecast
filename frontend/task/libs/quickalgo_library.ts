@@ -30,6 +30,9 @@ export class QuickAlgoLibrary {
     blocklyHelper: any;
     onChange: any;
     docGenerator: any;
+    delaysStartedCount: number = 0;
+    delaysEndedCount: number = 0;
+    callbacksOnReady: Function[] = [];
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -116,7 +119,11 @@ export class QuickAlgoLibrary {
         const delay = this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : stepperMaxSpeed;
         console.log('Quickalgo wait delay', callback, this.runner, delay);
         if (this.runner) {
-            this.runner.waitDelay(callback, value, delay);
+            this.runner.returnCallback(callback, value);
+            this.delaysStartedCount++;
+            setTimeout(() => {
+                this.delayOver();
+            }, delay);
         } else {
             // When a function is used outside of an execution
             setTimeout(function () {
@@ -228,6 +235,30 @@ export class QuickAlgoLibrary {
 
     onError(diagnostics: any): void {
 
+    }
+
+    delayOver() {
+        this.delaysEndedCount++;
+        console.log('delay over', this.delaysStartedCount, this.delaysEndedCount, this.callbacksOnReady);
+        if (this.delaysEndedCount === this.delaysStartedCount) {
+            if (this.callbacksOnReady.length) {
+                for (let callback of this.callbacksOnReady) {
+                    callback();
+                }
+            }
+        }
+    }
+
+    // Execute this function when all animation delays are over
+    executeWhenReady(callback: Function) {
+        console.log('execute on ready', this.delaysStartedCount, this.delaysEndedCount, performance.now());
+        if (this.delaysEndedCount === this.delaysStartedCount) {
+            console.log('already ready');
+            callback();
+        } else {
+            console.log('not ready yet');
+            this.callbacksOnReady.push(callback);
+        }
     }
 }
 
