@@ -1,7 +1,6 @@
 import React, {ReactElement} from "react";
-import {Intent} from "@blueprintjs/core";
 import {IconName} from "@blueprintjs/icons";
-import {ActionTypes} from "../stepper/actionTypes";
+import {ActionTypes, stepperRunBackground} from "../stepper/actionTypes";
 import {useDispatch, useSelector} from "react-redux";
 import {StepperControlsType, StepperStepMode} from "../stepper";
 import {CompileStatus} from "../stepper/compile";
@@ -14,6 +13,7 @@ import {
 import {getMessage} from "../lang";
 import {getStepperControlsSelector} from "../stepper/selectors";
 import {AppStore} from "../store";
+import {TaskSubmissionResultPayload} from "../task/task_slice";
 
 interface StepperControlsProps {
     enabled: boolean,
@@ -95,7 +95,14 @@ export function TralalereControls(props: StepperControlsProps) {
 
     const onStepRun = async () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
-        dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, useSpeed: true}});
+
+        const result: TaskSubmissionResultPayload = await new Promise<TaskSubmissionResultPayload>((resolve) => {
+            dispatch(stepperRunBackground(resolve));
+        });
+
+        console.log('background execution result', result);
+
+        dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, useSpeed: true, backgroundRunData: result}});
     };
     const onStop = async () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});

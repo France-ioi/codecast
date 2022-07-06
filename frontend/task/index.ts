@@ -3,7 +3,7 @@ import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {all, call, cancel, cancelled, fork, put, select, take, takeEvery, takeLatest} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
-import {App} from "../index";
+import {App, Codecast} from "../index";
 import {AppStore, CodecastPlatform} from "../store";
 import QuickalgoLibsBundle, {
     createQuickalgoLibrary,
@@ -534,6 +534,7 @@ export default function (bundle: Bundle) {
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
                 result: true,
+                steps: Codecast.runner._steps,
                 message: payload.message,
             });
         });
@@ -544,6 +545,7 @@ export default function (bundle: Bundle) {
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
                 result: false,
+                steps: Codecast.runner._steps,
                 message: payload.error,
             });
         });

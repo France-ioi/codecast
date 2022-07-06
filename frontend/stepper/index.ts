@@ -67,7 +67,7 @@ import {delay, ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App, Codecast} from "../index";
 import {mainQuickAlgoLogger, quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
-import {selectCurrentTest, taskResetDone} from "../task/task_slice";
+import {selectCurrentTest, taskResetDone, TaskSubmissionResultPayload} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonRunner from "./python/python_runner";
@@ -79,6 +79,7 @@ import BlocklyRunner from "./js/blockly_runner";
 import UnixRunner from "./c/unix_runner";
 import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./analysis/analysis";
 import log from "loglevel";
+import {taskSubmissionExecutor} from "../task/task_submission";
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -753,7 +754,7 @@ export function* stepperDisabledSaga(action, leaveContext = false) {
     }
 }
 
-function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: {resolve, reject}}) {
+function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: {resolve, reject}}: {payload: {stepperContext: StepperContext}, meta: {resolve: any, reject: any}}) {
     let state: AppStore = yield* select();
 
     /* Has the stepper been interrupted? */
@@ -766,14 +767,20 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
 
     // Update speed if we use speed
     const context = quickAlgoLibraries.getContext(null, state.environment);
-    if (context && context.changeDelay) {
-        let newSpeed = 0;
-        if (null !== stepperContext.speed) {
-            stepperContext.speed = getStepper(state).speed;
-            newSpeed = stepperMaxSpeed - stepperContext.speed;
+    let newDelay = 0;
+    if (null !== stepperContext.speed) {
+        stepperContext.speed = getStepper(state).speed;
+        newDelay = stepperMaxSpeed - stepperContext.speed;
+    }
+    if (stepperContext.backgroundRunData) {
+        const runData = stepperContext.backgroundRunData;
+        if (runData.result || (!runData.result && runData.steps && runData.steps >= Codecast.runner._steps + 10)) {
+            newDelay = newDelay / 4;
         }
+    }
 
-        context.changeDelay(newSpeed);
+    if (context && context.changeDelay) {
+        context.changeDelay(newDelay);
     }
 
     stepperContext.noInteractive = null === stepperContext.speed || stepperMaxSpeed === stepperContext.speed;
@@ -849,7 +856,9 @@ function* stepperInterruptSaga(app: App) {
     yield* put({type: ActionTypes.StepperIdle, payload: {stepperContext}});
 }
 
-function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, waitForProgressOnlyAfterIterationsCount, quickAlgoCallsLogger, environment, speed, executeEffects}: StepperContextParameters) {
+function createStepperContext(stepper: Stepper, stepperContextParameters: StepperContextParameters) {
+    const {dispatch} = stepperContextParameters;
+
     let stepperContext = makeContext(stepper, {
         interactBefore: (arg) => {
             return new Promise((resolve, reject) => {
@@ -869,13 +878,7 @@ function createStepperContext(stepper: Stepper, {dispatch, waitForProgress, wait
                 });
             });
         },
-        waitForProgress,
-        waitForProgressOnlyAfterIterationsCount,
-        quickAlgoCallsLogger,
-        dispatch,
-        environment,
-        speed,
-        executeEffects,
+        ...stepperContextParameters,
     });
 
     return stepperContext;
@@ -891,7 +894,6 @@ function* stepperStepSaga(app: App, action) {
         if (stepper.status === StepperStatus.Starting) {
             yield* put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
 
-            console.log('execution speed', action.payload.useSpeed ? stepper.speed : null)
             stepperContext = createStepperContext(stepper, {
                 dispatch: app.dispatch,
                 waitForProgress,
@@ -901,6 +903,7 @@ function* stepperStepSaga(app: App, action) {
                 } : null),
                 environment: state.environment,
                 speed: action.payload.useSpeed && !action.payload.immediate ? stepper.speed : null,
+                backgroundRunData: action.payload.backgroundRunData,
                 executeEffects: app.stepperApi.executeEffects,
             });
             console.log('execution stepper context', stepperContext);
@@ -1088,6 +1091,17 @@ function* stepperSaga(args) {
         }
 
         yield* put({type: StepperActionTypes.StepperStep, payload});
+    }, args);
+
+    yield* takeLatest(ActionTypes.StepperRunBackground, function* (app: App, {payload: {callback}}) {
+        const state: AppStore = yield* select();
+        const answer = selectAnswer(state);
+        const level = state.task.currentLevel;
+        const testId = state.task.currentTestId;
+        const result = yield* call([taskSubmissionExecutor, taskSubmissionExecutor.makeBackgroundExecution], level, testId, answer);
+        yield* delay(0);
+        console.log('run background result', result);
+        callback(result);
     }, args);
 
     // @ts-ignore

@@ -72,6 +72,7 @@ export interface TaskSubmissionResultPayload {
     testId: number,
     result: boolean,
     message?: string,
+    steps?: number,
 }
 
 export interface TaskTest {

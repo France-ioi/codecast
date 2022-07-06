@@ -13,17 +13,17 @@ import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {
     initialStepperStateControls,
     Stepper,
-    stepperMaxSpeed, stepperMaxStepsBetweenInteractBefore,
+    stepperMaxStepsBetweenInteractBefore,
     StepperState,
     stepperThrottleDisplayDelay
 } from "./index";
 import {Bundle} from "../linker";
-import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
-import {createDraft} from "immer";
+import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
 import {getCurrentImmerState} from "../task/utils";
 import {ActionTypes as CompileActionTypes} from "./actionTypes";
 import {Codecast} from "../index";
 import log from "loglevel";
+import {TaskSubmissionResult, TaskSubmissionResultPayload} from "../task/task_slice";
 
 export interface QuickalgoLibraryCall {
     module: string,
@@ -54,6 +54,7 @@ export interface StepperContext {
     executeEffects?: Function,
     noInteractive?: boolean,
     noInteractiveSteps?: number,
+    backgroundRunData?: TaskSubmissionResultPayload,
 }
 
 export interface StepperContextParameters {
@@ -67,6 +68,7 @@ export interface StepperContextParameters {
     environment?: string,
     speed?: number,
     executeEffects?: Function,
+    backgroundRunData?: TaskSubmissionResultPayload,
 }
 
 export const delay = delay => new Promise((resolve) => setTimeout(resolve, delay));
@@ -232,24 +234,25 @@ export function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, {interactBefore, interactAfter, waitForProgress, waitForProgressOnlyAfterIterationsCount, dispatch, quickAlgoCallsLogger, environment, speed, executeEffects}: StepperContextParameters): StepperContext {
+export function makeContext(stepper: Stepper, stepperContextParameters: StepperContextParameters): StepperContext {
     /**
      * We create a new state object here instead of mutating the state. This is intended.
      */
 
+    const {dispatch, environment, speed} = stepperContextParameters;
+
     const state = stepper ? stepper.currentStepperState : null;
 
     const stepperContext: StepperContext = {
-        interactBefore: interactBefore ? interactBefore : () => {
+        // These may be overriden by stepperContextParameters
+        interactBefore: () => {
             return Promise.resolve(true);
         },
-        interactAfter: interactAfter ? interactAfter : () => {
+        interactAfter: () => {
             return Promise.resolve(true);
         },
-        waitForProgress,
-        waitForProgressOnlyAfterIterationsCount,
+        ...stepperContextParameters,
         dispatch,
-        quickAlgoCallsLogger,
         resume: null,
         position: getNodeStartRow(state),
         lineCounter: 0,
@@ -260,8 +263,6 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
             controls: resetControls(state.controls),
         } : {} as StepperState,
         quickAlgoContext: quickAlgoLibraries.getContext(null, environment),
-        environment,
-        executeEffects,
     };
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
