@@ -39,6 +39,11 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
             setPlayPause: () => {},
             updateControlsDisplay: () => {},
             onResize: () => {},
+            displayKeypad: function(initialValue, position, callbackModify, callbackFinished) {
+                if (window.displayHelper) {
+                    window.displayHelper.showKeypad(initialValue, position, callbackModify, callbackFinished);
+                }
+            },
         };
     }
 

@@ -5,6 +5,7 @@ import {useDispatch} from "react-redux";
 import {getMessage} from "../../lang";
 import {cancelModal, validateModal} from "../../common/prompt_modal";
 import {ModalType} from "../../common/modal_slice";
+import {NumericKeypad} from "../blocks/NumericKeypad";
 
 export function PromptModalDialog() {
     const modalData = useAppSelector(state => state.modal);
@@ -22,10 +23,15 @@ export function PromptModalDialog() {
     };
 
     const cancel = () => {
+        if (ModalType.keypad === modalData.mode) {
+            validate();
+            return;
+        }
+
         dispatch(cancelModal());
     };
 
-    const canClose = ModalType.dialog === modalData.mode;
+    const canClose = ModalType.dialog === modalData.mode || ModalType.keypad === modalData.mode;
 
     const onClose = () => {
         if (canClose) {
@@ -34,7 +40,16 @@ export function PromptModalDialog() {
     }
 
     return (
-        <Dialog isOpen={modalData.open} className="simple-dialog" canOutsideClickClose={canClose} canEscapeKeyClose={canClose} onClose={onClose} key={modalData.id}>
+        <Dialog
+            transitionName={ModalType.keypad === modalData.mode ? "none" : null}
+            isOpen={modalData.open}
+            className={`simple-dialog mode-${modalData.mode}`}
+            canOutsideClickClose={canClose}
+            canEscapeKeyClose={canClose}
+            backdropClassName={`dialog-backdrop dialog-backdrop-${modalData.mode}`}
+            onClose={onClose}
+            key={modalData.id}
+        >
             <div dangerouslySetInnerHTML={{__html: modalData.message}}></div>
 
             {ModalType.input === modalData.mode &&
@@ -43,19 +58,34 @@ export function PromptModalDialog() {
                 </div>
             }
 
-            {ModalType.dialog !== modalData.mode &&
-              <div className="simple-dialog-buttons">
-                  <button className="simple-dialog-button" onClick={validate}>
-                      <Icon icon="small-tick" iconSize={24}/>
-                      <span>{modalData.yesButtonText ? modalData.yesButtonText : getMessage((modalData.noButtonText ? 'VALIDATE' : 'ALRIGHT'))}</span>
-                  </button>
-
-                  {modalData.noButtonText &&
-                    <button className="simple-dialog-button ml-2" onClick={cancel}>
-                        <span>{modalData.noButtonText}</span>
+            {ModalType.dialog !== modalData.mode && ModalType.keypad !== modalData.mode &&
+                <div className="simple-dialog-buttons">
+                    <button className="simple-dialog-button" onClick={validate}>
+                        <Icon icon="small-tick" iconSize={24}/>
+                        <span>{modalData.yesButtonText ? modalData.yesButtonText : getMessage((modalData.noButtonText ? 'VALIDATE' : 'ALRIGHT'))}</span>
                     </button>
-                  }
-              </div>
+
+                    {modalData.noButtonText &&
+                      <button className="simple-dialog-button ml-2" onClick={cancel}>
+                          <span>{modalData.noButtonText}</span>
+                      </button>
+                    }
+                </div>
+            }
+
+            {ModalType.keypad === modalData.mode &&
+                <NumericKeypad
+                    initialValue={modalData.defaultInput}
+                    position={modalData.position}
+                    callbackModify={(value) => {
+                        setInputValue(value);
+                        modalData.callbackModify(value);
+                    }}
+                    callbackFinished={(value) => {
+                        setInputValue(value);
+                        dispatch(validateModal(value));
+                    }}
+                />
             }
         </Dialog>
     );

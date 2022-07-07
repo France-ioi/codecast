@@ -14,6 +14,7 @@ export enum ModalType {
     input = 'input',
     message = 'message',
     dialog = 'dialog',
+    keypad = 'keypad',
 }
 
 export interface PromptModalOptions {
@@ -23,6 +24,8 @@ export interface PromptModalOptions {
     noButtonText?: string,
     callback?: Function,
     mode?: ModalType,
+    position?: any,
+    callbackModify?: Function,
 }
 
 export const modalSlice = createSlice({
@@ -38,6 +41,8 @@ export const modalSlice = createSlice({
             state.noButtonText = action.payload.noButtonText;
             state.defaultInput = action.payload.defaultInput;
             state.callback = action.payload.callback;
+            state.position = action.payload.position;
+            state.callbackModify = action.payload.callbackModify;
         },
         modalHide(state) {
             state.open = false;
