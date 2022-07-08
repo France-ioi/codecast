@@ -75,6 +75,7 @@ export interface LayoutProps {
     screen: Screen,
     options: CodecastOptions,
     currentTask: any,
+    showVariables: boolean,
 }
 
 export interface LayoutElementMetadata {
@@ -653,7 +654,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 },
             })
         } : {}),
-        ...(layoutProps.options.showStack ? {
+        ...(layoutProps.showVariables ? {
             Variables: (attrs) => ({
                 type: LayoutStackView,
                 metadata: {

@@ -7,6 +7,7 @@ import {ActionTypes} from "./actionTypes";
 import {withResizeDetector} from 'react-resize-detector/build/withPolyfill';
 import {Directive} from "../../stepper/python/directives";
 import {Screen} from "../../common/screens";
+import {pythonForbiddenLists} from "../python_utils";
 
 interface LayoutLoaderStateToProps {
     advisedVisualization: string,
@@ -19,6 +20,7 @@ interface LayoutLoaderStateToProps {
     screen: Screen,
     options: CodecastOptions,
     currentTask: any,
+    showVariables: boolean,
 }
 
 function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
@@ -32,6 +34,12 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     const screen = state.screen;
     const options = state.options;
     const currentTask = state.task.currentTask;
+    let showVariables = options.showStack;
+    if (null !== currentTask) {
+        const forbidden = pythonForbiddenLists(state.task.contextIncludeBlocks).forbidden;
+        showVariables = showVariables && -1 === forbidden.indexOf('var_assign');
+    }
+
     let layoutMobileMode = state.layout.mobileMode;
     if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
         layoutMobileMode = LayoutMobileMode.Editor;
@@ -40,6 +48,7 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     return {
         orderedDirectives, fullScreenActive, advisedVisualization, preferredVisualizations,
         layoutType, layoutMobileMode, screen, options, currentTask, layoutRequiredType,
+        showVariables,
     };
 }
 
