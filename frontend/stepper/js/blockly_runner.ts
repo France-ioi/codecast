@@ -337,7 +337,7 @@ export default class BlocklyRunner extends AbstractRunner {
         return stepperState.isFinished;
     }
 
-    stop(aboutToPlay) {
+    stop() {
         for (let iInterpreter = 0; iInterpreter < this.interpreters.length; iInterpreter++) {
             if (this.isRunningInterpreter[iInterpreter]) {
                 this.toStopInterpreter[iInterpreter] = true;
@@ -345,14 +345,10 @@ export default class BlocklyRunner extends AbstractRunner {
             }
         }
 
-        if(this.scratchMode) {
-            window.Blockly.DropDownDiv.hide();
-            this.context.blocklyHelper.highlightBlock(null);
-        }
-
-        if(!aboutToPlay && window.quickAlgoInterface) {
-            window.quickAlgoInterface.setPlayPause(false);
-        }
+        // if(this.scratchMode) {
+        //     window.Blockly.DropDownDiv.hide();
+        //     this.context.blocklyHelper.highlightBlock(null);
+        // }
 
         this.nbActions = 0;
         this._stepInProgress = false;

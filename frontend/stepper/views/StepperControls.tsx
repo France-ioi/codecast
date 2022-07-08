@@ -3,7 +3,7 @@ import {Button, Intent, Slider} from "@blueprintjs/core";
 import {IconName} from "@blueprintjs/icons";
 import {ActionTypes, stepperRunBackground} from "../actionTypes";
 import {useDispatch, useSelector} from "react-redux";
-import {StepperControlsType, stepperMaxSpeed, StepperStepMode} from "../index";
+import {StepperControlsType, stepperMaxSpeed, StepperStatus, StepperStepMode} from "../index";
 import {formatTime} from "../../common/utils";
 import {CompileStatus} from "../compile";
 import {LayoutType} from "../../task/layout/layout";
@@ -22,6 +22,7 @@ import {getMessage} from "../../lang";
 import {getStepperControlsSelector} from "../selectors";
 import {AppStore} from "../../store";
 import {TaskSubmissionResultPayload} from "../../task/task_slice";
+import {useAppSelector} from "../../hooks";
 
 interface StepperControlsProps {
     enabled: boolean,
@@ -29,7 +30,8 @@ interface StepperControlsProps {
 
 export function StepperControls(props: StepperControlsProps) {
     const [speedDisplayedState, setSpeedDisplayedState] = useState(false);
-    const stepperControlsState = useSelector((state: AppStore) => {
+    const stepperStatus = useAppSelector(state => state.stepper.status);
+    const stepperControlsState = useAppSelector(state => {
         return getStepperControlsSelector(state, props);
     });
     const {showControls, showCompile, compileOrExecuteMessage, speed, controlsType, canInterrupt, showStepper, layoutType} = stepperControlsState;
@@ -123,13 +125,16 @@ export function StepperControls(props: StepperControlsProps) {
     const onStepRun = async () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
 
-        const result: TaskSubmissionResultPayload = await new Promise<TaskSubmissionResultPayload>((resolve) => {
-            dispatch(stepperRunBackground(resolve));
-        });
+        let backgroundRunData: TaskSubmissionResultPayload = null;
+        if (StepperStatus.Clear === stepperStatus) {
+            backgroundRunData = await new Promise<TaskSubmissionResultPayload>((resolve) => {
+                dispatch(stepperRunBackground(resolve));
+            });
 
-        console.log('background execution result', result);
+            console.log('background execution result', backgroundRunData);
+        }
 
-        dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, useSpeed: true, backgroundRunData: result}});
+        dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, useSpeed: true, backgroundRunData}});
     };
     const onStepExpr = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Expr, useSpeed: true}});
     const onStepInto = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into, useSpeed: true}});

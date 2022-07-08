@@ -1,8 +1,8 @@
 import React, {ReactElement} from "react";
 import {IconName} from "@blueprintjs/icons";
 import {ActionTypes, stepperRunBackground} from "../stepper/actionTypes";
-import {useDispatch, useSelector} from "react-redux";
-import {StepperControlsType, StepperStepMode} from "../stepper";
+import {useDispatch} from "react-redux";
+import {StepperControlsType, StepperStatus, StepperStepMode} from "../stepper";
 import {CompileStatus} from "../stepper/compile";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
@@ -12,15 +12,16 @@ import {
 } from '@fortawesome/free-solid-svg-icons';
 import {getMessage} from "../lang";
 import {getStepperControlsSelector} from "../stepper/selectors";
-import {AppStore} from "../store";
 import {TaskSubmissionResultPayload} from "../task/task_slice";
+import {useAppSelector} from "../hooks";
 
 interface StepperControlsProps {
     enabled: boolean,
 }
 
 export function TralalereControls(props: StepperControlsProps) {
-    const stepperControlsState = useSelector((state: AppStore) => {
+    const stepperStatus = useAppSelector(state => state.stepper.status);
+    const stepperControlsState = useAppSelector(state => {
         return getStepperControlsSelector(state, props);
     });
     const {showControls, showCompile, compileOrExecuteMessage, controlsType, canInterrupt, showStepper} = stepperControlsState;
@@ -96,13 +97,16 @@ export function TralalereControls(props: StepperControlsProps) {
     const onStepRun = async () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
 
-        const result: TaskSubmissionResultPayload = await new Promise<TaskSubmissionResultPayload>((resolve) => {
-            dispatch(stepperRunBackground(resolve));
-        });
+        let backgroundRunData: TaskSubmissionResultPayload = null;
+        if (StepperStatus.Clear === stepperStatus) {
+            backgroundRunData = await new Promise<TaskSubmissionResultPayload>((resolve) => {
+                dispatch(stepperRunBackground(resolve));
+            });
 
-        console.log('background execution result', result);
+            console.log('background execution result', backgroundRunData);
+        }
 
-        dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, useSpeed: true, backgroundRunData: result}});
+        dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, useSpeed: true, backgroundRunData}});
     };
     const onStop = async () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});

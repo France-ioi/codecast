@@ -38,6 +38,10 @@ export default abstract class AbstractRunner {
 
     }
 
+    public stop() {
+
+    }
+
     public onError(e): void {
         console.error(e);
     }

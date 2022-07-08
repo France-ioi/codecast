@@ -469,9 +469,12 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
         const context = stepperContext.quickAlgoContext;
 
         // Wait that the context has finished all previous animations
+        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] before ready check');
         await new Promise((resolve) => {
             context.executeWhenReady(resolve);
         });
+
+        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] ready for call');
 
         if (stepperContext.state) {
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] stepper context before', stepperContext.state.contextState);
@@ -568,6 +571,8 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
             await stepperContext.dispatch({
                 type: CompileActionTypes.StepperInterrupting,
             });
+
+            Codecast.runner.stop();
 
             await stepperContext.dispatch({
                 type: CompileActionTypes.StepperExecutionError,
