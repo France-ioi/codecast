@@ -1,18 +1,19 @@
 import React, {ReactElement} from "react";
 import {IconName} from "@blueprintjs/icons";
-import {ActionTypes, stepperRunBackground} from "../stepper/actionTypes";
+import {ActionTypes} from "../stepper/actionTypes";
 import {useDispatch} from "react-redux";
-import {StepperControlsType, StepperStatus, StepperStepMode} from "../stepper";
+import {StepperControlsType, StepperStepMode} from "../stepper";
 import {CompileStatus} from "../stepper/compile";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
     faPlay,
     faStepForward,
-    faStepBackward, faPause,
+    faStepBackward,
+    faPause,
+    faSpinner,
 } from '@fortawesome/free-solid-svg-icons';
 import {getMessage} from "../lang";
 import {getStepperControlsSelector} from "../stepper/selectors";
-import {TaskSubmissionResultPayload} from "../task/task_slice";
 import {useAppSelector} from "../hooks";
 
 interface StepperControlsProps {
@@ -20,7 +21,6 @@ interface StepperControlsProps {
 }
 
 export function TralalereControls(props: StepperControlsProps) {
-    const stepperStatus = useAppSelector(state => state.stepper.status);
     const stepperControlsState = useAppSelector(state => {
         return getStepperControlsSelector(state, props);
     });
@@ -47,7 +47,7 @@ export function TralalereControls(props: StepperControlsProps) {
                 disabled = !stepperControlsState.canRedo;
                 break;
             case 'run':
-                disabled = !stepperControlsState.canStep;
+                disabled = !stepperControlsState.canStep || stepperControlsState.runningBackground;
                 break;
             case 'into':
                 disabled = !stepperControlsState.canStep;
@@ -96,17 +96,7 @@ export function TralalereControls(props: StepperControlsProps) {
 
     const onStepRun = async () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
-
-        let backgroundRunData: TaskSubmissionResultPayload = null;
-        if (StepperStatus.Clear === stepperStatus) {
-            backgroundRunData = await new Promise<TaskSubmissionResultPayload>((resolve) => {
-                dispatch(stepperRunBackground(resolve));
-            });
-
-            console.log('background execution result', backgroundRunData);
-        }
-
-        dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, useSpeed: true, backgroundRunData}});
+        dispatch({type: ActionTypes.StepperRun});
     };
     const onStop = async () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
@@ -153,7 +143,7 @@ export function TralalereControls(props: StepperControlsProps) {
         (<div className={`controls controls-stepper ${controlsType}`}>
             {showControls && <React.Fragment>
                 {_button('restart', onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faStepBackward}/>, null, 'is-small')}
-                {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
+                {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), stepperControlsState.runningBackground ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
                 {canInterrupt && _button('interrupt', onInterrupt, getMessage('CONTROL_INTERRUPT'), <FontAwesomeIcon icon={faPause}/>, null, 'is-big')}
                 {_button('into', onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faStepForward}/>, null, 'is-big')}
             </React.Fragment>}

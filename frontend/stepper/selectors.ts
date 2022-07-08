@@ -40,6 +40,7 @@ interface StepperControlsStateToProps {
     controlsType: StepperControlsType,
     compileStatus: CompileStatus,
     layoutType: LayoutType,
+    runningBackground: boolean,
 }
 
 export function getStepperControlsSelector(state: AppStore, {enabled}): StepperControlsStateToProps {
@@ -123,6 +124,8 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
         }
     }
 
+    const runningBackground = state.stepper.runningBackground;
+
     return {
         showStepper, showControls, controls,
         showEdit, canExit,
@@ -136,5 +139,6 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
         controlsType,
         compileStatus,
         layoutType,
+        runningBackground,
     };
 }

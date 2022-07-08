@@ -1,9 +1,9 @@
 import React, {ReactElement, useState} from "react";
-import {Button, Intent, Slider} from "@blueprintjs/core";
+import {Button, Intent, Slider, Spinner} from "@blueprintjs/core";
 import {IconName} from "@blueprintjs/icons";
-import {ActionTypes, stepperRunBackground} from "../actionTypes";
-import {useDispatch, useSelector} from "react-redux";
-import {StepperControlsType, stepperMaxSpeed, StepperStatus, StepperStepMode} from "../index";
+import {ActionTypes} from "../actionTypes";
+import {useDispatch} from "react-redux";
+import {StepperControlsType, stepperMaxSpeed, StepperStepMode} from "../index";
 import {formatTime} from "../../common/utils";
 import {CompileStatus} from "../compile";
 import {LayoutType} from "../../task/layout/layout";
@@ -14,14 +14,13 @@ import {
     faPlay,
     faRunning,
     faShoePrints,
+    faSpinner,
     faStop,
     faTachometerAlt,
-    faWalking
+    faWalking,
 } from '@fortawesome/free-solid-svg-icons';
 import {getMessage} from "../../lang";
 import {getStepperControlsSelector} from "../selectors";
-import {AppStore} from "../../store";
-import {TaskSubmissionResultPayload} from "../../task/task_slice";
 import {useAppSelector} from "../../hooks";
 
 interface StepperControlsProps {
@@ -30,7 +29,6 @@ interface StepperControlsProps {
 
 export function StepperControls(props: StepperControlsProps) {
     const [speedDisplayedState, setSpeedDisplayedState] = useState(false);
-    const stepperStatus = useAppSelector(state => state.stepper.status);
     const stepperControlsState = useAppSelector(state => {
         return getStepperControlsSelector(state, props);
     });
@@ -62,7 +60,7 @@ export function StepperControls(props: StepperControlsProps) {
                 disabled = !stepperControlsState.canRedo;
                 break;
             case 'run':
-                disabled = !stepperControlsState.canStep;
+                disabled = !stepperControlsState.canStep || stepperControlsState.runningBackground;
                 break;
             case 'into':
                 disabled = !stepperControlsState.canStep;
@@ -124,17 +122,7 @@ export function StepperControls(props: StepperControlsProps) {
 
     const onStepRun = async () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
-
-        let backgroundRunData: TaskSubmissionResultPayload = null;
-        if (StepperStatus.Clear === stepperStatus) {
-            backgroundRunData = await new Promise<TaskSubmissionResultPayload>((resolve) => {
-                dispatch(stepperRunBackground(resolve));
-            });
-
-            console.log('background execution result', backgroundRunData);
-        }
-
-        dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, useSpeed: true, backgroundRunData}});
+        dispatch({type: ActionTypes.StepperRun});
     };
     const onStepExpr = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Expr, useSpeed: true}});
     const onStepInto = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into, useSpeed: true}});
@@ -215,7 +203,7 @@ export function StepperControls(props: StepperControlsProps) {
                 {(LayoutType.MobileVertical !== layoutType || !speedDisplayedState) &&
                     <React.Fragment>
                         {_button('restart', onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faStop}/>, null, 'is-small')}
-                        {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
+                        {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), stepperControlsState.runningBackground ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
                         {canInterrupt && _button('interrupt', onInterrupt, getMessage('CONTROL_INTERRUPT'), <FontAwesomeIcon icon={faPause}/>, null, 'is-big')}
                         {_button('into', onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
                     </React.Fragment>

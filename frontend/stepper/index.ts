@@ -53,7 +53,7 @@ import {
     ActionTypes,
     stepperDisplayError,
     stepperExecutionError,
-    stepperExecutionSuccess
+    stepperExecutionSuccess, stepperRunBackground, stepperRunBackgroundFinished
 } from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
@@ -80,6 +80,7 @@ import UnixRunner from "./c/unix_runner";
 import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./analysis/analysis";
 import log from "loglevel";
 import {taskSubmissionExecutor} from "../task/task_submission";
+import {useAppSelector} from "../hooks";
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -179,6 +180,7 @@ export const initialStateStepper = {
     controls: StepperControlsType.Normal,
     synchronizingAnalysis: false,
     error: null as any,
+    runningBackground: false,
 };
 
 export function* createRunnerSaga(): SagaIterator<AbstractRunner> {
@@ -298,6 +300,12 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.StepperClearError);
     bundle.addReducer(ActionTypes.StepperClearError, stepperClearErrorReducer);
+
+    bundle.defineAction(ActionTypes.StepperRunBackground);
+    bundle.addReducer(ActionTypes.StepperRunBackground, stepperRunBackgroundReducer);
+
+    bundle.defineAction(ActionTypes.StepperRunBackgroundFinished);
+    bundle.addReducer(ActionTypes.StepperRunBackgroundFinished, stepperRunBackgroundFinishedReducer);
 
     /* END view stuff to move out of here */
 
@@ -693,6 +701,14 @@ function stepperClearErrorReducer(state: AppStore): void {
     state.stepper.error = null;
 }
 
+function stepperRunBackgroundReducer(state: AppStore): void {
+    state.stepper.runningBackground = true;
+}
+
+function stepperRunBackgroundFinishedReducer(state: AppStore): void {
+    state.stepper.runningBackground = false;
+}
+
 /* saga */
 
 function* compileSucceededSaga(app: App) {
@@ -1067,10 +1083,42 @@ function* clearSourceHighlightSaga() {
     }
 }
 
-function* stepperSaga(args) {
-    yield* takeLatest(ActionTypes.CompileSucceeded, compileSucceededSaga, args);
+function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
+    const state: AppStore = yield* select();
+    const answer = selectAnswer(state);
+    const level = state.task.currentLevel;
+    const testId = state.task.currentTestId;
+    const result = yield* call([taskSubmissionExecutor, taskSubmissionExecutor.makeBackgroundExecution], level, testId, answer);
+    yield* delay(0);
+    console.log('run background result', result);
+    callback(result);
+}
+
+function* stepperRunSaga() {
+    const stepperStatus = yield* select((state: AppStore) => state.stepper.status);
+
+    let backgroundRunData: TaskSubmissionResultPayload = null;
+    if (StepperStatus.Clear === stepperStatus) {
+        let runBackgroundOver;
+        const promise = new Promise((resolve) => {
+            runBackgroundOver = resolve;
+        });
+
+        yield* put(stepperRunBackground(runBackgroundOver));
+
+        backgroundRunData = yield promise;
+        console.log('background execution result', backgroundRunData);
+
+        yield* put(stepperRunBackgroundFinished());
+    }
+
+    yield* put({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, useSpeed: true, backgroundRunData}});
+}
+
+function* stepperSaga(app: App) {
+    yield* takeLatest(ActionTypes.CompileSucceeded, compileSucceededSaga, app);
     yield* takeLatest(RecorderActionTypes.RecorderStopping, recorderStoppingSaga);
-    yield* takeLatest(ActionTypes.StepperEnabled, stepperEnabledSaga, args);
+    yield* takeLatest(ActionTypes.StepperEnabled, stepperEnabledSaga, app);
     yield* takeLatest(ActionTypes.StepperDisabled, stepperDisabledSaga);
     yield* takeLatest(ActionTypes.StepperCompileAndStep, function*(app: App, {payload}) {
         const stepperState = yield* select((state: AppStore) => state.stepper.status);
@@ -1091,18 +1139,11 @@ function* stepperSaga(args) {
         }
 
         yield* put({type: StepperActionTypes.StepperStep, payload});
-    }, args);
+    }, app);
 
-    yield* takeLatest(ActionTypes.StepperRunBackground, function* (app: App, {payload: {callback}}) {
-        const state: AppStore = yield* select();
-        const answer = selectAnswer(state);
-        const level = state.task.currentLevel;
-        const testId = state.task.currentTestId;
-        const result = yield* call([taskSubmissionExecutor, taskSubmissionExecutor.makeBackgroundExecution], level, testId, answer);
-        yield* delay(0);
-        console.log('run background result', result);
-        callback(result);
-    }, args);
+    // @ts-ignore
+    yield* takeLatest(ActionTypes.StepperRunBackground, stepperRunBackgroundSaga, app);
+    yield* takeLatest(ActionTypes.StepperRun, stepperRunSaga);
 
     // @ts-ignore
     yield* takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function*({payload}) {
