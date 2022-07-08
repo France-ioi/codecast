@@ -179,7 +179,7 @@ $tralalere-red: #FF3C11;
   border-bottom-right-radius: 12px;
 }
 
-.tralalere-button {
+@mixin tralalere-button {
   height: 50px;
   width: 50px;
 
@@ -187,6 +187,7 @@ $tralalere-red: #FF3C11;
   border: 2px solid $tralalere-green;
   border-radius: 7px;
 
+  font-family: 'Roboto', sans-serif;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -205,6 +206,10 @@ $tralalere-red: #FF3C11;
   &[disabled] svg {
     opacity: 0.4;
   }
+}
+
+.tralalere-button {
+  @include tralalere-button;
 }
 
 .tralalere-controls {
@@ -451,5 +456,55 @@ $tralalere-red: #FF3C11;
 
   .documentation-content {
     padding: 1rem;
+  }
+}
+
+.tralalere-box .keypad {
+  background: transparent !important;
+  height: initial !important;
+  width: initial !important;
+  .keypad-btn {
+    @include tralalere-button;
+    margin: 2px 6px;
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 18px !important;
+  }
+  .keypad-row {
+    justify-content: center;
+  }
+  .keypad-row-margin:last-child {
+    margin-top: 0 !important;
+    margin-bottom: 15px;
+  }
+
+  .keypad-value {
+    background: $tralalere-green-blue;
+    box-shadow: -4px 4px #1D1E47;
+    border-radius: 7px;
+    height: 38px;
+    color: white;
+    font-size: 18px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    border: none;
+    width: 134px !important;
+    outline: none;
+  }
+}
+
+.tralalere-box .keypad-close {
+  position: absolute;
+  right: -15px;
+  top: -15px;
+  svg {
+    width: 12px;
+  }
+  .tralalere-button {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
   }
 }

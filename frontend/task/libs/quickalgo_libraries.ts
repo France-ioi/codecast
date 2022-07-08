@@ -300,7 +300,7 @@ class DisplayHelper {
     }
     async showKeypad(initialValue, position, callbackModify, callbackFinished) {
         const mainStore = Codecast.environments['main'].store;
-        mainStore.dispatch(displayModal({mode: ModalType.keypad, callback: callbackFinished, defaultInput: initialValue, position, callbackModify}));
+        mainStore.dispatch(displayModal({mode: ModalType.keypad, callbackFinished, defaultInput: initialValue, position, callbackModify}));
     }
     set popupMessageShown(value) {
         console.log('change value', value);

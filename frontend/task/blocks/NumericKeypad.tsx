@@ -105,45 +105,43 @@ export function NumericKeypad(props: NumericKeypadProps) {
     });
 
     return (
-        <div id="numeric-keypad" style={props.position}>
-            <div className="keypad">
-                <div className="keypad-row">
-                    <input
-                        ref={keypadInputRef}
-                        inputMode="none"
-                        className={`keypad-value ${keypadValue && keypadValue.length > 12 ? 'keypad-value-small' : ''}`}
-                        value={keypadValue}
-                        onKeyDown={onKeypadKeyDown}
-                        onChange={() => {}}
-                    />
+        <div className="keypad">
+            <div className="keypad-row">
+                <input
+                    ref={keypadInputRef}
+                    inputMode="none"
+                    className={`keypad-value ${keypadValue && keypadValue.length > 12 ? 'keypad-value-small' : ''}`}
+                    value={keypadValue}
+                    onKeyDown={onKeypadKeyDown}
+                    onChange={() => {}}
+                />
+            </div>
+            <div className="keypad-row keypad-row-margin">
+                <div className="keypad-btn" onClick={() => handleKeypadKey("1")}>1</div>
+                <div className="keypad-btn" onClick={() => handleKeypadKey("2")}>2</div>
+                <div className="keypad-btn" onClick={() => handleKeypadKey("3")}>3</div>
+            </div>
+            <div className="keypad-row">
+                <div className="keypad-btn" onClick={() => handleKeypadKey("4")}>4</div>
+                <div className="keypad-btn" onClick={() => handleKeypadKey("5")}>5</div>
+                <div className="keypad-btn" onClick={() => handleKeypadKey("6")}>6</div>
+            </div>
+            <div className="keypad-row">
+                <div className="keypad-btn" onClick={() => handleKeypadKey("7")}>7</div>
+                <div className="keypad-btn" onClick={() => handleKeypadKey("8")}>8</div>
+                <div className="keypad-btn" onClick={() => handleKeypadKey("9")}>9</div>
+            </div>
+            <div className="keypad-row">
+                <div className="keypad-btn" onClick={() => handleKeypadKey("0")}>0</div>
+                <div className="keypad-btn" onClick={() => handleKeypadKey(".")}>.</div>
+                <div className="keypad-btn" onClick={() => handleKeypadKey("-")}>+/-</div>
+            </div>
+            <div className="keypad-row keypad-row-margin">
+                <div className="keypad-btn keypad-btn-r" onClick={() => handleKeypadKey("R")}>
+                    <FontAwesomeIcon icon={faBackspace}/>
                 </div>
-                <div className="keypad-row keypad-row-margin">
-                    <div className="keypad-btn" onClick={() => handleKeypadKey("1")}>1</div>
-                    <div className="keypad-btn" onClick={() => handleKeypadKey("2")}>2</div>
-                    <div className="keypad-btn" onClick={() => handleKeypadKey("3")}>3</div>
-                </div>
-                <div className="keypad-row">
-                    <div className="keypad-btn" onClick={() => handleKeypadKey("4")}>4</div>
-                    <div className="keypad-btn" onClick={() => handleKeypadKey("5")}>5</div>
-                    <div className="keypad-btn" onClick={() => handleKeypadKey("6")}>6</div>
-                </div>
-                <div className="keypad-row">
-                    <div className="keypad-btn" onClick={() => handleKeypadKey("7")}>7</div>
-                    <div className="keypad-btn" onClick={() => handleKeypadKey("8")}>8</div>
-                    <div className="keypad-btn" onClick={() => handleKeypadKey("9")}>9</div>
-                </div>
-                <div className="keypad-row">
-                    <div className="keypad-btn" onClick={() => handleKeypadKey("0")}>0</div>
-                    <div className="keypad-btn" onClick={() => handleKeypadKey(".")}>.</div>
-                    <div className="keypad-btn" onClick={() => handleKeypadKey("-")}>+/-</div>
-                </div>
-                <div className="keypad-row keypad-row-margin">
-                    <div className="keypad-btn keypad-btn-r" onClick={() => handleKeypadKey("R")}>
-                        <FontAwesomeIcon icon={faBackspace}/>
-                    </div>
-                    <div className="keypad-btn keypad-btn-v" onClick={() => handleKeypadKey("V")}>
-                        <FontAwesomeIcon icon={faCheckCircle}/>
-                    </div>
+                <div className="keypad-btn keypad-btn-v" onClick={() => handleKeypadKey("V")}>
+                    <FontAwesomeIcon icon={faCheckCircle}/>
                 </div>
             </div>
         </div>

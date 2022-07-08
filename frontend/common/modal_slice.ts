@@ -25,7 +25,8 @@ export interface PromptModalOptions {
     callback?: Function,
     mode?: ModalType,
     position?: any,
-    callbackModify?: Function,
+    callbackModify?: Function, // for keypad
+    callbackFinished?: Function, // for keypad
 }
 
 export const modalSlice = createSlice({
@@ -43,6 +44,7 @@ export const modalSlice = createSlice({
             state.callback = action.payload.callback;
             state.position = action.payload.position;
             state.callbackModify = action.payload.callbackModify;
+            state.callbackFinished = action.payload.callbackFinished;
         },
         modalHide(state) {
             state.open = false;

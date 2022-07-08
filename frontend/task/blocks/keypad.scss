@@ -1,4 +1,4 @@
-#numeric-keypad {
+.numeric-keypad {
   position: absolute;
   z-index: 50;
 }
@@ -13,9 +13,8 @@
   width: initial;
 }
 
-#numeric-keypad .keypad {
+.numeric-keypad .keypad {
   font-family: 'Titillium Web', Arial, Helvetica, sans-serif;
-  position: absolute;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -29,7 +28,7 @@
   user-select: none;
 }
 
-#numeric-keypad .keypad-value {
+.numeric-keypad .keypad-value {
   width: 204px;
   height: 30px;
   background-color: #FFF;
@@ -39,11 +38,11 @@
   line-height: 30px;
   font-size: 26px;
 }
-#numeric-keypad .keypad-value.keypad-value-small {
+.numeric-keypad .keypad-value.keypad-value-small {
   font-size: 18px;
 }
 
-#numeric-keypad .keypad-row {
+.numeric-keypad .keypad-row {
   display: -ms-flexbox;
   display: flex;
   -ms-flex-pack: justify;
@@ -51,11 +50,11 @@
   padding: 4px;
 }
 
-#numeric-keypad .keypad-row.keypad-row-margin {
+.numeric-keypad .keypad-row.keypad-row-margin {
   margin-top: 8px;
 }
 
-#numeric-keypad .keypad-btn {
+.numeric-keypad .keypad-btn {
   background-color: #4A90E2;
   color: #FFF;
   width: 64px;
@@ -69,17 +68,17 @@
   justify-content: center;
 }
 
-#numeric-keypad .keypad-btn.keypad-btn-r {
+.numeric-keypad .keypad-btn.keypad-btn-r {
   background-color: #DB8B0A;
 }
 
-#numeric-keypad .keypad-btn.keypad-btn-v {
+.numeric-keypad .keypad-btn.keypad-btn-v {
   width: 136px;
   background-color: #88BB88;
   font-size: 24px;
 }
 
-#numeric-keypad .keypad-exit {
+.numeric-keypad .keypad-exit {
   position: absolute;
   right: -20px;
   top: -20px;

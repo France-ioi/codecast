@@ -6,9 +6,13 @@ import {getMessage} from "../../lang";
 import {cancelModal, validateModal} from "../../common/prompt_modal";
 import {ModalType} from "../../common/modal_slice";
 import {NumericKeypad} from "../blocks/NumericKeypad";
+import {TralalereBox} from "../../tralalere/TralalereBox";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faTimes} from "@fortawesome/free-solid-svg-icons";
 
 export function PromptModalDialog() {
     const modalData = useAppSelector(state => state.modal);
+    const options = useAppSelector(state => state.options);
     const dispatch = useDispatch();
 
     const [inputValue, setInputValue] = useState('');
@@ -24,8 +28,7 @@ export function PromptModalDialog() {
 
     const cancel = () => {
         if (ModalType.keypad === modalData.mode) {
-            validate();
-            return;
+            modalData.callbackFinished(inputValue, true);
         }
 
         dispatch(cancelModal());
@@ -39,8 +42,48 @@ export function PromptModalDialog() {
         }
     }
 
+    console.log('modal data type', modalData.mode, modalData.open);
+
+    let keypad = (
+        <NumericKeypad
+            initialValue={modalData.defaultInput}
+            position={modalData.position}
+            callbackModify={(value) => {
+                setInputValue(value);
+                modalData.callbackModify(value);
+            }}
+            callbackFinished={(value) => {
+                setInputValue(value);
+                modalData.callbackFinished(value, true);
+                dispatch(validateModal(value));
+            }}
+        />
+    );
+
+    if ('tralalere' === options.app) {
+        keypad = (
+            <div className="numeric-keypad" style={modalData.position}>
+                <TralalereBox>
+                    <div className="keypad-close">
+                        <div className="tralalere-button" onClick={cancel}>
+                            <FontAwesomeIcon icon={faTimes}/>
+                        </div>
+                    </div>
+                    {keypad}
+                </TralalereBox>
+            </div>
+        )
+    } else {
+        keypad = (
+            <div className="numeric-keypad" style={modalData.position}>
+                {keypad}
+            </div>
+        )
+    };
+
     return (
         <Dialog
+            transitionDuration={ModalType.keypad === modalData.mode ? 0 : undefined}
             transitionName={ModalType.keypad === modalData.mode ? "none" : null}
             isOpen={modalData.open}
             className={`simple-dialog mode-${modalData.mode}`}
@@ -73,20 +116,7 @@ export function PromptModalDialog() {
                 </div>
             }
 
-            {ModalType.keypad === modalData.mode &&
-                <NumericKeypad
-                    initialValue={modalData.defaultInput}
-                    position={modalData.position}
-                    callbackModify={(value) => {
-                        setInputValue(value);
-                        modalData.callbackModify(value);
-                    }}
-                    callbackFinished={(value) => {
-                        setInputValue(value);
-                        dispatch(validateModal(value));
-                    }}
-                />
-            }
+            {ModalType.keypad === modalData.mode && keypad}
         </Dialog>
     );
 }
