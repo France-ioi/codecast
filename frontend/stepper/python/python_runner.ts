@@ -317,17 +317,6 @@ export default class PythonRunner extends AbstractRunner {
         this._timeouts.push(timeoutId);
     }
 
-    returnCallback(callback, value) {
-        log.getLogger('python_runner').debug('RETURN CALLBACK', value);
-        let primitive = this._createPrimitive(value);
-        if (primitive !== Sk.builtin.none.none$) {
-            this._resetCallstackOnNextStep = true;
-            this.reportValue(value);
-        }
-
-        callback(primitive);
-    }
-
     waitDelay(callback, value, delay) {
         log.getLogger('python_runner').debug('WAIT DELAY', value, delay);
         this._paused = true;

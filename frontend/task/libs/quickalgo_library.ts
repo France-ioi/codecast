@@ -119,7 +119,7 @@ export class QuickAlgoLibrary {
         const delay = this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : stepperMaxSpeed;
         console.log('Quickalgo wait delay', callback, this.runner, delay);
         if (this.runner) {
-            this.runner.returnCallback(callback, value);
+            this.runner.noDelay(callback, value);
             this.delaysStartedCount++;
             setTimeout(() => {
                 this.delayOver();
