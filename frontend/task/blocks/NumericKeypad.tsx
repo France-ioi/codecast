@@ -3,14 +3,22 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faBackspace} from "@fortawesome/free-solid-svg-icons";
 import {faCheckCircle} from "@fortawesome/free-solid-svg-icons";
 
+export interface NumericKeypadOptions {
+    minimum?: number,
+    maximum?: number,
+    precision?: number,
+}
+
 export interface NumericKeypadProps {
     initialValue: string,
     position: any,
     callbackModify: Function,
     callbackFinished: Function,
+    options: NumericKeypadOptions,
 }
 
 export function NumericKeypad(props: NumericKeypadProps) {
+    console.log('keypad options', props.options);
     const [keypadValue, setKeypadValue] = useState('0');
     const keypadInputRef = useRef<HTMLInputElement>();
 
@@ -133,8 +141,8 @@ export function NumericKeypad(props: NumericKeypadProps) {
             </div>
             <div className="keypad-row">
                 <div className="keypad-btn" onClick={() => handleKeypadKey("0")}>0</div>
-                <div className="keypad-btn" onClick={() => handleKeypadKey(".")}>.</div>
-                <div className="keypad-btn" onClick={() => handleKeypadKey("-")}>+/-</div>
+                {props.options.precision !== 1 && <div className="keypad-btn" onClick={() => handleKeypadKey(".")}>.</div>}
+                {props.options.minimum < 0 && <div className="keypad-btn" onClick={() => handleKeypadKey("-")}>+/-</div>}
             </div>
             <div className="keypad-row keypad-row-margin">
                 <div className="keypad-btn keypad-btn-r" onClick={() => handleKeypadKey("R")}>

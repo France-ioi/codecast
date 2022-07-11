@@ -57,6 +57,7 @@ export function PromptModalDialog() {
                 modalData.callbackFinished(value, true);
                 dispatch(validateModal(value));
             }}
+            options={modalData.options}
         />
     );
 
