@@ -121,10 +121,12 @@ export class QuickAlgoLibrary {
         console.log('Quickalgo wait delay', callback, this.runner, delay);
         if (this.runner) {
             this.runner.noDelay(callback, value);
-            this.delaysStartedCount++;
-            setTimeout(() => {
-                this.delayOver();
-            }, delay);
+            if (delay > 0) {
+                this.delaysStartedCount++;
+                setTimeout(() => {
+                    this.delayOver();
+                }, delay);
+            }
         } else {
             // When a function is used outside of an execution
             setTimeout(function () {
