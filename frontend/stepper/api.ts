@@ -539,8 +539,10 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
                 if ('running' === stepperContext.taskDisplayNoneStatus) {
                     context.display = false;
                     hideDisplay = true;
+                    context.needsRedrawDisplay = true;
                 } else if ('end' === stepperContext.taskDisplayNoneStatus) {
                     context.changeDelay(0);
+                    stepperContext.taskDisplayNoneStatus = null;
                 }
             }
 
@@ -554,7 +556,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
             }
 
             // Leave stepperThrottleDisplayDelay ms before displaying again the context
-            if (null === stepperContext.taskDisplayNoneStatus) {
+            if (!stepperContext.taskDisplayNoneStatus) {
                 stepperContext.taskDisplayNoneStatus = 'running';
                 setTimeout(() => {
                     stepperContext.taskDisplayNoneStatus = 'end';

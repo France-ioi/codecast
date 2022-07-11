@@ -47,7 +47,7 @@ import PlatformBundle, {
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
 import {ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {PlayerInstant} from "../player";
-import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
+import {ActionTypes as StepperActionTypes, stepperClearError, stepperDisplayError} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
@@ -524,6 +524,11 @@ export default function (bundle: Bundle) {
                 const currentSubmission = yield* select((state: AppStore) => state.task.currentSubmission);
                 if (null !== currentSubmission) {
                     yield* put(taskClearSubmission());
+                }
+
+                const currentError = yield* select((state: AppStore) => state.stepper.error);
+                if (null !== currentError) {
+                    yield* put(stepperClearError());
                 }
             }
         });

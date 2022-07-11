@@ -962,9 +962,11 @@ function* stepperStepSaga(app: App, action) {
             }
 
             if (stepperContext.state.isFinished) {
-                console.log('check end condition');
-                yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
                 const taskContext = quickAlgoLibraries.getContext(null, state.environment);
+                console.log('check end condition');
+                if (taskContext && taskContext.needsRedrawDisplay) {
+                    yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
+                }
                 if (taskContext && taskContext.infos.checkEndCondition) {
                     try {
                         taskContext.infos.checkEndCondition(taskContext, true);

@@ -33,6 +33,7 @@ export class QuickAlgoLibrary {
     delaysStartedCount: number = 0;
     delaysEndedCount: number = 0;
     callbacksOnReady: Function[] = [];
+    needsRedrawDisplay: boolean = false;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
