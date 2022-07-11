@@ -8,6 +8,7 @@ import {call, put, select} from "typed-redux-saga";
 import {AppStore} from "../store";
 import {Codecast} from "../index";
 import {getTaskPlatformMode, recordingProgressSteps, TaskActionTypes, TaskPlatformMode} from "./index";
+import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import log from "loglevel";
 import {stepperDisplayError} from "../stepper/actionTypes";
 import React from "react";
@@ -140,6 +141,11 @@ class TaskSubmissionExecutor {
         return yield new Promise<TaskSubmissionResultPayload>(resolve => {
             backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
         });
+    }
+
+    *cancelBackgroundExecution() {
+        const backgroundStore = Codecast.environments['background'].store;
+        backgroundStore.dispatch({type: StepperActionTypes.StepperExit});
     }
 
     *gradeAnswer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {

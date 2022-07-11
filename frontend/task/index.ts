@@ -514,7 +514,7 @@ export default function (bundle: Bundle) {
             // @ts-ignore
             const {buffer} = action;
             if (buffer === 'source') {
-                const needsReset = yield* select(state => StepperStatus.Clear !== state.stepper.status || !state.task.resetDone);
+                const needsReset = yield* select(state => StepperStatus.Clear !== state.stepper.status || !state.task.resetDone || state.stepper.runningBackground);
                 console.log('needs reset', needsReset);
                 if (needsReset) {
                     console.log('HANDLE RESET');
@@ -559,6 +559,9 @@ export default function (bundle: Bundle) {
             const state = yield* select();
             if ('main' === state.environment) {
                 mainQuickAlgoLogger.clearQuickAlgoLibraryCalls();
+            }
+            if (Codecast.runner) {
+                Codecast.runner.stop();
             }
             yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
             console.log('put task reset done to true');

@@ -24,7 +24,7 @@ The stepper's state has the following shape:
 
 */
 
-import {apply, call, cancel, fork, put, select, takeEvery, takeLatest, throttle} from 'typed-redux-saga';
+import {apply, call, cancel, fork, put, race, select, take, takeEvery, takeLatest, throttle} from 'typed-redux-saga';
 import * as C from '@france-ioi/persistent-c';
 
 import {
@@ -81,6 +81,7 @@ import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecast
 import log from "loglevel";
 import {taskSubmissionExecutor} from "../task/task_submission";
 import {useAppSelector} from "../hooks";
+import {PayloadAction} from "@reduxjs/toolkit";
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -421,6 +422,7 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
 
 export function clearStepper(stepper: Stepper) {
     stepper.status = StepperStatus.Clear;
+    stepper.runningBackground = false;
     stepper.undo = [];
     stepper.redo = [];
     stepper.interrupting = false;
@@ -1090,10 +1092,19 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     const answer = selectAnswer(state);
     const level = state.task.currentLevel;
     const testId = state.task.currentTestId;
-    const result = yield* call([taskSubmissionExecutor, taskSubmissionExecutor.makeBackgroundExecution], level, testId, answer);
+
+    const {success, exit} = yield* race({
+        success: call([taskSubmissionExecutor, taskSubmissionExecutor.makeBackgroundExecution], level, testId, answer),
+        exit: take(ActionTypes.StepperExit),
+    });
     yield* delay(0);
-    console.log('run background result', result);
-    callback(result);
+    if (success) {
+        console.log('run background result', success);
+        callback(success);
+    } else if (exit) {
+        console.log('cancel background execution');
+        yield* call([taskSubmissionExecutor, taskSubmissionExecutor.cancelBackgroundExecution]);
+    }
 }
 
 function* stepperRunSaga() {

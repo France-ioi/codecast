@@ -50,6 +50,7 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
     const inputNeeded = state.task.inputNeeded;
 
     const runnerClass = getRunnerClassFromPlatform(platform);
+    const runningBackground = state.stepper.runningBackground;
 
     let showCompile = false, showControls = true, showEdit = false;
     let canCompile = false, canExit = false, canRestart = false, canStep = false, canStepOut = false;
@@ -124,7 +125,8 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
         }
     }
 
-    const runningBackground = state.stepper.runningBackground;
+    canStep = canStep && !runningBackground;
+    canRestart = canRestart || runningBackground;
 
     return {
         showStepper, showControls, controls,

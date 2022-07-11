@@ -60,7 +60,7 @@ export function StepperControls(props: StepperControlsProps) {
                 disabled = !stepperControlsState.canRedo;
                 break;
             case 'run':
-                disabled = !stepperControlsState.canStep || stepperControlsState.runningBackground;
+                disabled = !stepperControlsState.canStep;
                 break;
             case 'into':
                 disabled = !stepperControlsState.canStep;
