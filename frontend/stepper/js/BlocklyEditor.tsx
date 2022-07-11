@@ -119,10 +119,12 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         let maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
         let zoomOptions = {
             controls: false,
+            wheel: false,
             scale: maxInstructions > 20 ? 1 : 1.1
         };
         if (context.infos && context.infos.zoom) {
             zoomOptions.controls = !!context.infos.zoom.controls;
+            zoomOptions.wheel = !!context.infos.zoom.wheel;
             zoomOptions.scale = (typeof context.infos.zoom.scale != 'undefined') ? context.infos.zoom.scale : zoomOptions.scale;
         }
         blocklyOptions.zoom = zoomOptions;

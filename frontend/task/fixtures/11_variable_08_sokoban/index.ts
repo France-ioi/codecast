@@ -30,6 +30,9 @@ export default {
             medium: 30,
             hard: 40
         },
+        zoom: {
+            wheel: true,
+        },
         includeBlocks: {
             groupByCategory: {
                 easy: false,
