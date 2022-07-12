@@ -53,6 +53,7 @@ export interface StepperContext {
     environment?: string,
     executeEffects?: Function,
     noInteractive?: boolean,
+    delayToWait?: number,
     noInteractiveSteps?: number,
     backgroundRunData?: TaskSubmissionResultPayload,
 }
@@ -337,9 +338,10 @@ async function stepUntil(stepperContext: StepperContext, stopCond = undefined) {
             return;
         }
 
-        if (!first && null !== stepperContext.speed && undefined !== stepperContext.speed && stepperContext.speed < 255 && stepperContext.makeDelay) {
+        if (!first && stepperContext.delayToWait > 0 && stepperContext.makeDelay) {
             stepperContext.makeDelay = false;
-            const delayToWait = Math.floor((255 - stepperContext.speed) / 4);
+            let delayToWait = Math.floor(stepperContext.delayToWait / 4);
+
             log.getLogger('stepper').debug('make delay', delayToWait);
             await delay(delayToWait);
         }

@@ -786,7 +786,7 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
     // Update speed if we use speed
     const context = quickAlgoLibraries.getContext(null, state.environment);
     let newDelay = 0;
-    if (null !== stepperContext.speed) {
+    if (null !== stepperContext.speed && undefined !== stepperContext.speed) {
         stepperContext.speed = getStepper(state).speed;
         newDelay = stepperMaxSpeed - stepperContext.speed;
     }
@@ -797,9 +797,14 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
         }
     }
 
+    stepperContext.delayToWait = newDelay;
+
     if (context && context.changeDelay) {
         context.changeDelay(newDelay);
     }
+
+    // This is a way to allow some time to refresh the display
+    yield* delay(0);
 
     stepperContext.noInteractive = null === stepperContext.speed || stepperMaxSpeed === stepperContext.speed;
     stepperContext.noInteractiveSteps = 1;
