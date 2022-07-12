@@ -537,10 +537,10 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
         try {
             if ('main' === stepperContext.environment) {
                 if ('running' === stepperContext.taskDisplayNoneStatus) {
-                    context.display = false;
+                    // context.display = false;
                     hideDisplay = true;
-                    context.needsRedrawDisplay = true;
-                } else if ('end' === stepperContext.taskDisplayNoneStatus) {
+                    // context.needsRedrawDisplay = true;
+                    // } else if ('end' === stepperContext.taskDisplayNoneStatus) {
                     context.changeDelay(0);
                     stepperContext.taskDisplayNoneStatus = null;
                 }
@@ -550,8 +550,8 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] after make async lib call', libraryCallResult);
 
             if (hideDisplay) {
-                context.display = true;
-            } else {
+                // context.display = true;
+            // } else {
                 context.changeDelay(previousDelay);
             }
 
@@ -565,8 +565,8 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
         } catch (e) {
             log.getLogger('quickalgo_executor').debug('[quickalgo_executor] context error 2', e);
             if (hideDisplay) {
-                context.display = true;
-            } else {
+                // context.display = true;
+            // } else {
                 context.changeDelay(previousDelay);
             }
 
