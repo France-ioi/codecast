@@ -52,13 +52,13 @@ function sameSelection(s1, s2) {
 }
 
 export function Editor(props: EditorProps) {
-    const [selection, setSelection] = useState<any>(null);
     const [scrollTop, setScrollTop] = useState(0);
     const [firstVisibleRow, setFirstVisibleRow] = useState(0);
     const [willUpdateSelection, setWillUpdateSelection] = useState(false);
 
     const editor = useRef(null);
     const mute = useRef(false);
+    const selection = useRef(null);
     const marker = useRef();
 
     const context = quickAlgoLibraries.getContext(null, 'main');
@@ -82,9 +82,10 @@ export function Editor(props: EditorProps) {
         window.requestAnimationFrame(() => {
             setWillUpdateSelection(false);
             const selection_ = editor.current.selection.getRange();
-            if (sameSelection(selection, selection_))
+            if (sameSelection(selection.current, selection_))
                 return;
-            setSelection(selection_);
+            console.log('new selection', selection.current, selection_);
+            selection.current = selection_;
             props.onSelect(selection_);
         });
     };
@@ -127,12 +128,12 @@ export function Editor(props: EditorProps) {
         }
     };
 
-    const reset = (value: Document, selection, firstVisibleRow) => {
+    const reset = (value: Document, newSelection, firstVisibleRow) => {
         wrapModelToEditor(() => {
             editor.current.getSession().setValue(value.toString());
             editor.current.resize(true);
-            setSelection(null);
-            doSetSelection(selection);
+            selection.current = null;
+            doSetSelection(newSelection);
             setFirstVisibleRow(firstVisibleRow);
             editor.current.scrollToLine(firstVisibleRow);
             setScrollTop(editor.current.getSession().getScrollTop());
@@ -213,10 +214,10 @@ export function Editor(props: EditorProps) {
 
     const doSetSelection = (selection_) => {
         wrapModelToEditor(() => {
-            if (sameSelection(selection, selection_)) {
+            if (sameSelection(selection.current, selection_)) {
                 return;
             }
-            setSelection(selection_);
+            selection.current = selection_;
             if (selection_ && selection_.start && selection_.end) {
                 editor.current.selection.setRange(toRange(selection_));
             } else {
@@ -229,14 +230,12 @@ export function Editor(props: EditorProps) {
         console.log('make highlight');
         wrapModelToEditor(() => {
             const session = editor.current.session;
-            console.log('remove marker', marker.current);
             if (marker.current) {
                 session.removeMarker(marker.current);
                 marker.current = null;
             }
             if (range && range.start && range.end) {
                 // Add (and save) the marker.
-                console.log('add maker');
                 marker.current = session.addMarker(toRange(range), 'code-highlight', 'text');
                 if (!props.shield) {
                     /* Also scroll so that the line is visible.  Skipped if the editor has

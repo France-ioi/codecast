@@ -46,10 +46,11 @@ export const stepperExecutionSuccess = (message) => ({
     },
 });
 
-export const stepperExecutionError = (error) => ({
+export const stepperExecutionError = (error, clearHighlight = true) => ({
     type: ActionTypes.StepperExecutionError,
     payload: {
         error,
+        clearHighlight,
     },
 });
 

@@ -49,7 +49,7 @@ import {ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {PlayerInstant} from "../player";
 import {ActionTypes as StepperActionTypes, stepperClearError, stepperDisplayError} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
-import {StepperState, StepperStatus, StepperStepMode} from "../stepper";
+import {clearSourceHighlightSaga, StepperState, StepperStatus, StepperStepMode} from "../stepper";
 import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
@@ -563,6 +563,7 @@ export default function (bundle: Bundle) {
             if (Codecast.runner) {
                 Codecast.runner.stop();
             }
+            yield* call(clearSourceHighlightSaga);
             yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
             console.log('put task reset done to true');
             yield* put(taskResetDone(true));

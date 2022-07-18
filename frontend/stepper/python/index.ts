@@ -76,7 +76,7 @@ export default function(bundle: Bundle) {
 
                 context.onError = (diagnostics) => {
                     console.log('context error', diagnostics);
-                    channel.put(stepperExecutionError(diagnostics));
+                    channel.put(stepperExecutionError(diagnostics, false));
                 };
 
                 stepperState.directives = {

@@ -80,8 +80,6 @@ import UnixRunner from "./c/unix_runner";
 import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./analysis/analysis";
 import log from "loglevel";
 import {taskSubmissionExecutor} from "../task/task_submission";
-import {useAppSelector} from "../hooks";
-import {PayloadAction} from "@reduxjs/toolkit";
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -751,16 +749,18 @@ function* stepperEnabledSaga(app: App) {
     currentStepperTask = yield* fork(app.stepperApi.rootStepperSaga, app);
 }
 
-export function* stepperDisabledSaga(action, leaveContext = false) {
+export function* stepperDisabledSaga(action, leaveContext = false, clearSourceHighlight = true) {
     /* Cancel the stepper task if still running. */
     const oldTask = currentStepperTask;
-    console.log('try to disable stepper', oldTask, leaveContext);
+    console.log('try to disable stepper', oldTask, action, leaveContext, clearSourceHighlight, arguments);
 
     if (leaveContext) {
         yield* put(taskResetDone(false));
     }
 
-    yield* call(clearSourceHighlightSaga);
+    if (clearSourceHighlight) {
+        yield* call(clearSourceHighlightSaga);
+    }
 
     if (oldTask) {
         yield* put({type: ActionTypes.StepperTaskCancelled});
@@ -953,7 +953,7 @@ function* stepperStepSaga(app: App, action) {
                         yield* put({type: ActionTypes.StepperInterrupted});
                     }
                     if (ex.condition === 'error') {
-                        yield* put(stepperExecutionError(ex.message));
+                        yield* put(stepperExecutionError(ex.message, false));
                     }
                 }
             }
@@ -1081,14 +1081,13 @@ export function* updateSourceHighlightSaga(state: AppStoreReplay) {
     }
 }
 
-function* clearSourceHighlightSaga() {
+export function* clearSourceHighlightSaga() {
     const state: AppStore = yield* select();
 
     if (hasBlockPlatform(state.options.platform)) {
         yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: null});
     } else {
-        const startPos = {row: 0, column: 0};
-        yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: {start: startPos, end: startPos}});
+        yield* put({type: BufferActionTypes.BufferHighlight, buffer: 'source', range: null});
     }
 }
 
@@ -1459,13 +1458,14 @@ function postLink(app: App) {
             StepperActionTypes.StepperExecutionSuccess,
             StepperActionTypes.StepperExecutionError,
             StepperActionTypes.CompileFailed,
-        ], function*() {
+        // @ts-ignore
+        ], function*({payload}) {
             let state: AppStore = yield* select();
             if (state.stepper && state.stepper.status === StepperStatus.Running && !isStepperInterrupting(state)) {
                 yield* put({type: ActionTypes.StepperInterrupting, payload: {}});
             }
             // yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
-            yield* call(stepperDisabledSaga, true);
+            yield* call(stepperDisabledSaga, null, true, false !== payload.clearHighlight);
         });
 
         /* Highlight the range of the current source fragment. */

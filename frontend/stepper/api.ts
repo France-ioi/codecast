@@ -582,6 +582,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
                 type: CompileActionTypes.StepperExecutionError,
                 payload: {
                     error: e,
+                    clearHighlight: false,
                 },
             });
         }

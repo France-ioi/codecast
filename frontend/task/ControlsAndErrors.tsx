@@ -119,11 +119,10 @@ export function ControlsAndErrors() {
                 </div>
             </div>}
 
-            {hasError && <DraggableDialog
+            {hasError && errorDialogOpen && <DraggableDialog
                 rndProps={{}}
                 icon='error'
                 title={getMessage('ERROR')}
-                isOpen={errorDialogOpen}
                 onClose={() => setErrorDialogOpen(false)}
             >
                 <div className='bp3-dialog-body'>
