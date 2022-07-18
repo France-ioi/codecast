@@ -114,24 +114,24 @@ export class QuickAlgoLibrary {
         return this.infos.actionDelay;
     };
 
-    waitDelay(callback, value = null) {
+    waitDelay(callback, value = null, delay = null) {
         // This function is used only to call the callback to move to next step,
         // but we handle the speed delay in an upper level
-        const delay = this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : stepperMaxSpeed;
-        console.log('Quickalgo wait delay', callback, this.runner, delay);
+        let computedDelay = null !== delay ? delay : (this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : stepperMaxSpeed);
+        console.log('Quickalgo wait delay', callback, this.runner, computedDelay);
         if (this.runner) {
             this.runner.noDelay(callback, value);
-            if (delay > 0) {
+            if (computedDelay > 0) {
                 this.delaysStartedCount++;
                 setTimeout(() => {
                     this.delayOver();
-                }, delay);
+                }, computedDelay);
             }
         } else {
             // When a function is used outside of an execution
             setTimeout(function () {
                 callback(value);
-            }, delay);
+            }, computedDelay);
         }
     };
 
