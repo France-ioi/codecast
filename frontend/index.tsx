@@ -37,6 +37,7 @@ import {DndProvider} from "react-dnd";
 import {CustomDragLayer} from "./task/CustomDragLayer";
 import AbstractRunner from "./stepper/abstract_runner";
 import {TralalereApp} from "./tralalere/TralalereApp";
+import {TaskLevelName} from "./task/platform/platform_slice";
 
 setAutoFreeze(true);
 log.setLevel('trace');
@@ -123,6 +124,8 @@ declare global {
         processingEndConditions: any,
         modulesPath: string,
         app: string,
+        algoreaInstructionsStrings: string[][],
+        getAlgoreaInstructionsAsHtml: (strings: string[], gridInfos: any, data: any, taskLevel: TaskLevelName) => string,
     }
 }
 

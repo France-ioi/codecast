@@ -19,7 +19,7 @@ export default {
     gridInfos: {
         context: 'robot',
         images,
-        importModules: ['blockly-robot-1.0'],
+        importModules: ['blockly-robot-1.0', 'createAlgoreaInstructions-1.0', 'algoreaInstructionsStrings'],
         conceptViewer: ["extra_variable"],
         contextType: "sokoban",
         backgroundColor: "#c2c6f2",
@@ -65,7 +65,14 @@ export default {
                 easy: ["colonneCaisse"],
                 medium: ["ligneCaisse", "colonneCaisse"]
             }
-        }
+        },
+        intro: {
+            default: true,
+            more: {
+                medium: [ { type: "helpConcept", concepts: ["extra_function"] } ],
+                hard: [ { type: "helpConcept", concepts: ["extra_function"] } ]
+            }
+        },
     },
     data: {
         easy: [
