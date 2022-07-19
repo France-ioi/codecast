@@ -519,8 +519,10 @@ export default class PythonRunner extends AbstractRunner {
                 }
             }
         }
-        this._resetInterpreterState();
 
+        Sk.running = false;
+        this._isRunning = false;
+        this._resetCallstackOnNextStep = false;
         this._isFinished = true;
     }
 

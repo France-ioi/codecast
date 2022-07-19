@@ -790,11 +790,19 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
         stepperContext.speed = getStepper(state).speed;
         newDelay = stepperMaxSpeed - stepperContext.speed;
     }
-    if (stepperContext.backgroundRunData) {
+    if (stepperContext.backgroundRunData && stepperContext.backgroundRunData.steps) {
         const runData = stepperContext.backgroundRunData;
-        if (runData.result || (!runData.result && runData.steps && runData.steps >= Codecast.runner._steps + 10)) {
-            newDelay = newDelay / 4;
-        }
+        // if (runData.result || (!runData.result && runData.steps && runData.steps >= Codecast.runner._steps + 10)) {
+        //     newDelay = newDelay / 4;
+        // }
+        const t = Codecast.runner._steps / runData.steps;
+        const y0 = newDelay;
+        const y1 = newDelay / 40;
+        const y2 = newDelay / 40;
+        const y3 = newDelay;
+
+        newDelay = (1-t)*((1-t)*((1-t)*y0+t*y1)+t*((1-t)*y1+t*y2))+t*((1-t)*((1-t)*y1+t*y2)+t*((1-t)*y2+t*y3));
+        // console.log('new delay definition', {runData, steps: Codecast.runner._steps, maxSteps: runData.steps, t, newDelay})
     }
 
     stepperContext.delayToWait = newDelay;
