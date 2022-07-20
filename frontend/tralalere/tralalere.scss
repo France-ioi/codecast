@@ -109,6 +109,7 @@ $tralalere-red: #FF3C11;
     display: flex;
     flex: 50%;
     min-height: 0;
+    min-width: 0;
     width: 100vw;
     background: radial-gradient(65.09% 65.09% at 50% 50%, #05A8AA 0%, #383961 100%);
   }
@@ -116,6 +117,7 @@ $tralalere-red: #FF3C11;
   .tralalere-visualization, .blockly-editor {
     flex: 50%;
     min-height: 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
   }
