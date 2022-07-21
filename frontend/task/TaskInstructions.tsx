@@ -17,7 +17,13 @@ export function TaskInstructions() {
             const strLang = window.stringsLanguage;
             const strings = window.algoreaInstructionsStrings[strLang];
             let newInstructions = window.getAlgoreaInstructionsAsHtml(strings, currentTask.gridInfos, currentTask.data, taskLevel);
-            setAlgoreaInstructionsHtml(newInstructions);
+            if (newInstructions) {
+                const innerText = window.jQuery(newInstructions).text();
+                console.log('Extracted Algorea instructions', newInstructions);
+                if (innerText.length) {
+                    setAlgoreaInstructionsHtml(newInstructions);
+                }
+            }
         }
     }, [contextId]);
 

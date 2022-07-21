@@ -25,6 +25,7 @@ export default {
         backgroundColor: "#c2c6f2",
         borderColor: "a4aacd",
         showLabels: true,
+        logOption: true,
         maxInstructions: {
             easy: 20,
             medium: 30,

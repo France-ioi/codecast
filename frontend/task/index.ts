@@ -12,6 +12,7 @@ import QuickalgoLibsBundle, {
     QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from "./libs/quickalgo_libraries";
+import SrlBundle from './srl';
 import stringify from 'json-stable-stringify-without-jsonify';
 import taskSlice, {
     currentTaskChange,
@@ -238,6 +239,8 @@ function* taskLoadSaga(app: App, action) {
         }
     }
 
+    yield* call(taskLevelLoadedSaga);
+
     console.log('task loaded', app.environment);
     yield* put(taskLoaded());
 }
@@ -365,6 +368,19 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     yield* put(updateTaskTests(tests));
 
     yield* put(updateCurrentTestId({testId: 0, record: false, recreateContext: true}));
+
+    yield* call(taskLevelLoadedSaga);
+}
+
+function* taskLevelLoadedSaga() {
+    const state: AppStore = yield* select();
+    const currentTask = state.task.currentTask;
+    const currentLevel = state.task.currentLevel;
+
+    if (currentTask && currentTask.gridInfos.logOption && 'main' === state.environment && window.SrlLogger) {
+        window.SrlLogger.load();
+        window.SrlLogger.levelLoaded(currentLevel);
+    }
 }
 
 function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
@@ -479,6 +495,7 @@ export default function (bundle: Bundle) {
     bundle.include(PlatformBundle);
     bundle.include(BlocksBundle);
     bundle.include(QuickalgoLibsBundle);
+    bundle.include(SrlBundle);
 
     setPlatformBundleParameters({
         getTaskAnswer,

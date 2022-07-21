@@ -137,7 +137,7 @@ export function StepperControls(props: StepperControlsProps) {
     const onRestart = () => dispatch({type: ActionTypes.StepperRestart, payload: {}});
     const onStop = async () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
-        dispatch({type: ActionTypes.StepperExit, payload: {}});
+        dispatch({type: ActionTypes.StepperExit, payload: {fromControls: true}});
     };
 
     const onEdit = () => dispatch({type: ActionTypes.StepperExit, payload: {}});

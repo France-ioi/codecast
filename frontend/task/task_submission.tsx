@@ -117,6 +117,9 @@ class TaskSubmissionExecutor {
         const finalScore = worstRate;
         if (finalScore >= 1) {
             yield* call([platformApi, platformApi.validate], 'done');
+            if (window.SrlLogger) {
+                window.SrlLogger.validation(100, 'none', 0);
+            }
         } else {
             log.getLogger('tests').debug('Submission execution over', currentSubmission.results);
             console.log(currentSubmission.results.reduce((agg, next) => agg && next.result, true));

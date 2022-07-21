@@ -126,6 +126,7 @@ declare global {
         app: string,
         algoreaInstructionsStrings: string[][],
         getAlgoreaInstructionsAsHtml: (strings: string[], gridInfos: any, data: any, taskLevel: TaskLevelName) => string,
+        SrlLogger: any,
     }
 }
 
