@@ -121,15 +121,20 @@ export function StepperControls(props: StepperControlsProps) {
     };
 
     const onStepRun = async () => {
-        dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
-        dispatch({type: ActionTypes.StepperRun});
+        if (!await compileIfNecessary()) {
+            return;
+        }
+
+        if (stepperControlsState.controlsType !== StepperControlsType.Normal) {
+            dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
+        }
+
+        dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run, useSpeed: true}});
     };
     const onStepExpr = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Expr, useSpeed: true}});
     const onStepInto = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into, useSpeed: true}});
     const onStepOut = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Out, useSpeed: true}});
-    const onStepOver = async () => {
-        dispatch({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Over, useSpeed: true}});
-    }
+    const onStepOver = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Over, useSpeed: true}});
     const onToggleSpeed = () => {
         setSpeedDisplayedState(!speedDisplayedState);
     }
@@ -178,9 +183,12 @@ export function StepperControls(props: StepperControlsProps) {
     const compileIfNecessary = () => {
         return new Promise<boolean>((resolve) => {
             if (stepperControlsState.showCompile) {
-                dispatch({type: ActionTypes.CompileWait, payload: {callback: (result) => {
-                    resolve(CompileStatus.Done === result);
-                }}});
+                dispatch({
+                    type: ActionTypes.StepperCompileFromControls,
+                    payload: {
+                        callback: resolve,
+                    },
+                });
             } else {
                 resolve(true);
             }

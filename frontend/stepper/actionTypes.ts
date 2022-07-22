@@ -3,7 +3,7 @@ export enum ActionTypes {
     StepperRestart = 'Stepper.Restart',
     StepperReset = 'Stepper.Reset',
     StepperCompileAndStep = 'Stepper.CompileAndStep',
-    StepperRun = 'Stepper.Run',
+    StepperCompileFromControls = 'Stepper.CompileFromControls',
     StepperRunBackground = 'Stepper.RunBackground',
     StepperRunBackgroundFinished = 'Stepper.RunBackgroundFinished',
     StepperStep = 'Stepper.Step',
@@ -72,6 +72,9 @@ export const stepperRunBackground = (callback) => ({
     },
 });
 
-export const stepperRunBackgroundFinished = () => ({
+export const stepperRunBackgroundFinished = (backgroundRunData) => ({
     type: ActionTypes.StepperRunBackgroundFinished,
+    payload: {
+        backgroundRunData,
+    },
 });

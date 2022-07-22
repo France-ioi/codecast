@@ -8,6 +8,7 @@ export function TaskInstructions() {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const taskLevel = useAppSelector(state => state.task.currentLevel);
     const contextId = useAppSelector(state => state.task.contextId);
+    const isBackend = useAppSelector(state => state.options.backend);
     const taskInstructionsHtmlFromOptions = useAppSelector(state => state.options.taskInstructions);
     const [algoreaInstructionsHtml, setAlgoreaInstructionsHtml] = useState(null);
 
@@ -55,7 +56,7 @@ export function TaskInstructions() {
         </React.Fragment>
     );
 
-    if (!instructionsHtml) {
+    if (!instructionsHtml && !isBackend) {
         return null;
     }
 

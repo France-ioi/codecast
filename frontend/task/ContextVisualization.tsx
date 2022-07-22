@@ -31,7 +31,7 @@ export function ContextVisualization() {
     let testsSelectorEnabled = false;
     if (currentTask && currentLevel) {
         const levelData = currentTask.data[currentLevel];
-        testsSelectorEnabled = 1 < levelData.length;
+        testsSelectorEnabled = 1 < levelData.length && !currentTask.gridInfos.hiddenTests;
     }
 
     return (

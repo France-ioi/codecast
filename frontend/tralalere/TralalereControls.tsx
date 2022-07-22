@@ -95,8 +95,15 @@ export function TralalereControls(props: StepperControlsProps) {
     };
 
     const onStepRun = async () => {
-        dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
-        dispatch({type: ActionTypes.StepperRun});
+        if (!await compileIfNecessary()) {
+            return;
+        }
+
+        if (stepperControlsState.controlsType !== StepperControlsType.Normal) {
+            dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
+        }
+
+        dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run, useSpeed: true}});
     };
     const onStop = async () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
@@ -122,9 +129,12 @@ export function TralalereControls(props: StepperControlsProps) {
     const compileIfNecessary = () => {
         return new Promise<boolean>((resolve) => {
             if (stepperControlsState.showCompile) {
-                dispatch({type: ActionTypes.CompileWait, payload: {callback: (result) => {
-                    resolve(CompileStatus.Done === result);
-                }}});
+                dispatch({
+                    type: ActionTypes.StepperCompileFromControls,
+                    payload: {
+                        callback: resolve,
+                    },
+                });
             } else {
                 resolve(true);
             }

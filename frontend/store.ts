@@ -83,6 +83,7 @@ export interface CodecastOptions {
     taskHints?: TaskHint[],
     theme?: string,
     app?: string,
+    backend?: boolean,
 }
 
 export interface Panes {

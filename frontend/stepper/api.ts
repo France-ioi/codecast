@@ -69,7 +69,6 @@ export interface StepperContextParameters {
     environment?: string,
     speed?: number,
     executeEffects?: Function,
-    backgroundRunData?: TaskSubmissionResultPayload,
 }
 
 export const delay = delay => new Promise((resolve) => setTimeout(resolve, delay));
@@ -264,6 +263,7 @@ export function makeContext(stepper: Stepper, stepperContextParameters: StepperC
             controls: resetControls(state.controls),
         } : {} as StepperState,
         quickAlgoContext: quickAlgoLibraries.getContext(null, environment),
+        backgroundRunData: stepper ? stepper.backgroundRunData : null,
     };
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);

@@ -67,7 +67,7 @@ import {delay, ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App, Codecast} from "../index";
 import {mainQuickAlgoLogger, quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
-import {selectCurrentTest, taskResetDone, TaskSubmissionResultPayload} from "../task/task_slice";
+import {selectCurrentTest, taskResetDone, TaskSubmissionResultPayload, updateCurrentTestId} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
 import PythonRunner from "./python/python_runner";
@@ -180,6 +180,7 @@ export const initialStateStepper = {
     synchronizingAnalysis: false,
     error: null as any,
     runningBackground: false,
+    backgroundRunData: null as TaskSubmissionResultPayload,
 };
 
 export function* createRunnerSaga(): SagaIterator<AbstractRunner> {
@@ -421,6 +422,7 @@ function enrichStepperState(stepperState: StepperState, context: 'Stepper.Restar
 export function clearStepper(stepper: Stepper) {
     stepper.status = StepperStatus.Clear;
     stepper.runningBackground = false;
+    stepper.backgroundRunData = null;
     stepper.undo = [];
     stepper.redo = [];
     stepper.interrupting = false;
@@ -705,8 +707,9 @@ function stepperRunBackgroundReducer(state: AppStore): void {
     state.stepper.runningBackground = true;
 }
 
-function stepperRunBackgroundFinishedReducer(state: AppStore): void {
+function stepperRunBackgroundFinishedReducer(state: AppStore, {payload: {backgroundRunData}}): void {
     state.stepper.runningBackground = false;
+    state.stepper.backgroundRunData = backgroundRunData;
 }
 
 /* saga */
@@ -790,6 +793,7 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
         stepperContext.speed = getStepper(state).speed;
         newDelay = stepperMaxSpeed - stepperContext.speed;
     }
+    // console.log('stepper interact before background run data', stepperContext.backgroundRunData);
     if (stepperContext.backgroundRunData && stepperContext.backgroundRunData.steps) {
         const runData = stepperContext.backgroundRunData;
         // if (runData.result || (!runData.result && runData.steps && runData.steps >= Codecast.runner._steps + 10)) {
@@ -934,7 +938,6 @@ function* stepperStepSaga(app: App, action) {
                 } : null),
                 environment: state.environment,
                 speed: action.payload.useSpeed && !action.payload.immediate ? stepper.speed : null,
-                backgroundRunData: action.payload.backgroundRunData,
                 executeEffects: app.stepperApi.executeEffects,
             });
             console.log('execution stepper context', stepperContext);
@@ -1105,21 +1108,40 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     const level = state.task.currentLevel;
     const testId = state.task.currentTestId;
 
-    const {success, exit} = yield* race({
-        success: call([taskSubmissionExecutor, taskSubmissionExecutor.makeBackgroundExecution], level, testId, answer),
-        exit: take(ActionTypes.StepperExit),
-    });
-    yield* delay(0);
-    if (success) {
-        console.log('run background result', success);
-        callback(success);
-    } else if (exit) {
-        console.log('cancel background execution');
-        yield* call([taskSubmissionExecutor, taskSubmissionExecutor.cancelBackgroundExecution]);
+    const tests = yield* select((state: AppStore) => state.task.taskTests);
+
+    let preExecutionTests: number[] = [testId];
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    if (context && context.infos.hiddenTests) {
+        preExecutionTests = [...tests.keys()];
     }
+
+    let lastBackgroundResult;
+    for (let preExecutionTestId of preExecutionTests) {
+        const {success, exit} = yield* race({
+            success: call([taskSubmissionExecutor, taskSubmissionExecutor.makeBackgroundExecution], level, preExecutionTestId, answer),
+            exit: take(ActionTypes.StepperExit),
+        });
+        yield* delay(0);
+        if (success) {
+            console.log('run background result', success);
+            lastBackgroundResult = success;
+            // @ts-ignore
+            if (!success.result) {
+                break;
+            }
+        } else if (exit) {
+            console.log('cancel background execution');
+            yield* call([taskSubmissionExecutor, taskSubmissionExecutor.cancelBackgroundExecution]);
+            break;
+        }
+    }
+
+    console.log('return result');
+    callback(lastBackgroundResult);
 }
 
-function* stepperRunSaga() {
+function* stepperCompileFromControlsSaga(app: App, {payload: {callback}}) {
     const stepperStatus = yield* select((state: AppStore) => state.stepper.status);
 
     let backgroundRunData: TaskSubmissionResultPayload = null;
@@ -1134,10 +1156,25 @@ function* stepperRunSaga() {
         backgroundRunData = yield promise;
         console.log('background execution result', backgroundRunData);
 
-        yield* put(stepperRunBackgroundFinished());
+        const context = quickAlgoLibraries.getContext(null, 'main');
+        const currentTestId = yield* select((state: AppStore) => state.task.currentTestId);
+        if (context && context.infos.hiddenTests && !backgroundRunData.result && backgroundRunData.testId !== currentTestId) {
+            console.log('change test', backgroundRunData.testId);
+            yield* put(updateCurrentTestId({testId: backgroundRunData.testId}));
+        }
     }
 
-    yield* put({type: ActionTypes.StepperCompileAndStep, payload: {mode: StepperStepMode.Run, useSpeed: true, backgroundRunData}});
+    yield* put({
+        type: ActionTypes.CompileWait,
+        payload: {
+            callback(result) {
+                if (null !== backgroundRunData) {
+                    app.dispatch(stepperRunBackgroundFinished(backgroundRunData));
+                }
+                callback(CompileStatus.Done === result);
+            }
+        },
+    });
 }
 
 function* stepperSaga(app: App) {
@@ -1168,7 +1205,8 @@ function* stepperSaga(app: App) {
 
     // @ts-ignore
     yield* takeLatest(ActionTypes.StepperRunBackground, stepperRunBackgroundSaga, app);
-    yield* takeLatest(ActionTypes.StepperRun, stepperRunSaga);
+    // @ts-ignore
+    yield* takeLatest(ActionTypes.StepperCompileFromControls, stepperCompileFromControlsSaga, app);
 
     // @ts-ignore
     yield* takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function*({payload}) {
