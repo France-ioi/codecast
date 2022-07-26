@@ -3,18 +3,21 @@ import {IconName} from "@blueprintjs/icons";
 import {ActionTypes} from "../stepper/actionTypes";
 import {useDispatch} from "react-redux";
 import {StepperControlsType, StepperStepMode} from "../stepper";
-import {CompileStatus} from "../stepper/compile";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
     faPlay,
-    faStepForward,
+    faVolumeUp,
+    faVolumeMute,
     faStepBackward,
     faPause,
     faSpinner,
+    faForward,
+    faEject,
 } from '@fortawesome/free-solid-svg-icons';
 import {getMessage} from "../lang";
 import {getStepperControlsSelector} from "../stepper/selectors";
 import {useAppSelector} from "../hooks";
+import {taskChangeSoundEnabled} from "../task/task_slice";
 
 interface StepperControlsProps {
     enabled: boolean,
@@ -111,6 +114,21 @@ export function TralalereControls(props: StepperControlsProps) {
     };
     const onInterrupt = () => dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
     const onCompile = () => dispatch({type: ActionTypes.Compile, payload: {}});
+    const onGoToEnd = async () => {
+        if (!await compileIfNecessary()) {
+            return;
+        }
+        if (stepperControlsState.controlsType !== StepperControlsType.Normal) {
+            dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
+        }
+        if (!stepperControlsState.canStep) {
+            dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
+        }
+        //TODO: await interruption
+        setTimeout(() => {
+            dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});
+        }, 300);
+    };
     const onStepByStep = async () => {
         if (!await compileIfNecessary()) {
             return;
@@ -124,6 +142,10 @@ export function TralalereControls(props: StepperControlsProps) {
         } else {
             dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
         }
+    };
+
+    const toggleSound = () => {
+        dispatch(taskChangeSoundEnabled(!stepperControlsState.soundEnabled));
     };
 
     const compileIfNecessary = () => {
@@ -150,13 +172,18 @@ export function TralalereControls(props: StepperControlsProps) {
             {_button('compile', onCompile, null, null, compileOrExecuteMessage)}
         </div>
         :
-        (<div className={`controls controls-stepper ${controlsType}`}>
+        (<div className="tralalere-controls-container"><div className={`controls controls-stepper ${controlsType}`}>
             {showControls && <React.Fragment>
                 {_button('restart', onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faStepBackward}/>, null, 'is-small')}
                 {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), stepperControlsState.runningBackground ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
                 {canInterrupt && _button('interrupt', onInterrupt, getMessage('CONTROL_INTERRUPT'), <FontAwesomeIcon icon={faPause}/>, null, 'is-big')}
-                {_button('into', onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faStepForward}/>, null, 'is-big')}
+                {_button('into', onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faEject} rotation={90}/>, null, 'is-big')}
+                {_button('gotoend', onGoToEnd, getMessage('CONTROL_GO_TO_END'), <FontAwesomeIcon icon={faForward}/>, null, 'is-big')}
             </React.Fragment>}
-        </div>)
+        </div><div className={`controls controls-stepper ${controlsType} controls-right`}>
+            {showControls && <React.Fragment>
+                {_button('sound', toggleSound, getMessage('CONTROL_SOUND'), <FontAwesomeIcon icon={stepperControlsState.soundEnabled ? faVolumeUp : faVolumeMute}/>, null, 'is-big')}
+            </React.Fragment>}
+        </div></div>)
     );
 }

@@ -815,6 +815,10 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
         context.changeDelay(newDelay);
     }
 
+    if (context && context.changeSoundEnabled) {
+        context.changeSoundEnabled(state.task.soundEnabled);
+    }
+
     // This is a way to allow some time to refresh the display
     yield* delay(0);
 

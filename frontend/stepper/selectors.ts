@@ -41,6 +41,7 @@ interface StepperControlsStateToProps {
     compileStatus: CompileStatus,
     layoutType: LayoutType,
     runningBackground: boolean,
+    soundEnabled: boolean,
 }
 
 export function getStepperControlsSelector(state: AppStore, {enabled}): StepperControlsStateToProps {
@@ -48,6 +49,7 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
     const compileStatus = state.compile.status;
     const layoutType = state.layout.type;
     const inputNeeded = state.task.inputNeeded;
+    const soundEnabled = state.task.soundEnabled;
 
     const runnerClass = getRunnerClassFromPlatform(platform);
     const runningBackground = state.stepper.runningBackground;
@@ -142,5 +144,6 @@ export function getStepperControlsSelector(state: AppStore, {enabled}): StepperC
         compileStatus,
         layoutType,
         runningBackground,
+        soundEnabled,
     };
 }

@@ -106,8 +106,11 @@ export class QuickAlgoLibrary {
 
     // Default implementations
     changeDelay(newDelay) {
-        // Change the action delay while displaying
         this.infos.actionDelay = newDelay;
+    };
+
+    // Default implementation
+    changeSoundEnabled(soundEnabled: boolean): void {
     };
 
     getDelay(): number {

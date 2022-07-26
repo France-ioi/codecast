@@ -214,12 +214,21 @@ $tralalere-red: #FF3C11;
   @include tralalere-button;
 }
 
-.tralalere-controls {
-  height: 100px;
+.tralalere-controls-container {
+  display: flex;
   width: 100%;
-  min-height: 100px;
+  .controls-stepper.controls-right {
+    flex: 0 1;
+    justify-content: end;
+  }
+}
+
+.tralalere-controls {
+  width: calc(100% - 12px);
   display: flex;
   align-items: center;
+  position: absolute;
+  bottom: 15px;
   padding-left: var(--flyout-width);
   > div {
     position: relative;
@@ -227,6 +236,13 @@ $tralalere-red: #FF3C11;
     width: 100%;
     display: flex;
     align-items: center;
+  }
+
+  .controls-stepper {
+    padding-left: 12px;
+    padding-right: 12px;
+    flex: 1 0;
+    max-width: initial !important;
   }
 
   .error-message {
@@ -237,7 +253,6 @@ $tralalere-red: #FF3C11;
     margin-left: 6px;
     margin-right: 10px;
     margin-bottom: 10px;
-    min-height: 90px;
     display: flex;
     align-items: center;
     .close-button {
@@ -275,14 +290,14 @@ $tralalere-red: #FF3C11;
 }
 
 .tralalere-control-button-container {
-  margin-right: 15px;
+  margin-right: 8px;
   .tralalere-button {
-    height: 70px;
-    width: 70px;
-    border-radius: 20px;
+    height: 50px;
+    width: 50px;
+    border-radius: 14px;
     svg {
-      width: 40px;
-      height: 40px;
+      width: 25px;
+      height: 25px;
     }
   }
 }
