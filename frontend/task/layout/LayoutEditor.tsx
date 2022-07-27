@@ -11,6 +11,7 @@ import {taskSetBlocksPanelCollapsed} from "../task_slice";
 import {useDispatch} from "react-redux";
 import {BlocksUsage} from "../blocks/BlocksUsage";
 import {CodecastPlatform} from "../../store";
+import {TralalereBlocksUsage} from "../../tralalere/TralalereBlocksUsage";
 
 export function LayoutEditor({style}) {
     const options = useAppSelector(state => state.options);
@@ -63,7 +64,7 @@ export function LayoutEditor({style}) {
                     hasAutocompletion
                 />
             </div>
-            {'tralalere' !== options.app && <BlocksUsage/>}
+            {'tralalere' === options.app ? <TralalereBlocksUsage/> : <BlocksUsage/>}
         </div>
     );
 }

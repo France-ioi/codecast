@@ -181,6 +181,7 @@ module.exports = {
     TASK_BLOCKS_SUBTITLE: "Cliquez pour insérer",
     TASK_BLOCKS_LIMIT_EXPANDED: '{current}/{limit} bloc restant|{current}/{limit} blocs restants',
     TASK_BLOCKS_LIMIT_BLOCK: '{remaining} bloc "{name}"|{remaining} blocs "{name}"',
+    TASK_BLOCKS_REMAINING_BLOCKS: '{remaining} Bloc|{remaining} Blocs',
     TASK_BLOCKS_LIMIT_REMAINING: 'reste :',
     TASK_BLOCKS_OVER_LIMIT: '{overLimit} bloc en trop utilisé pour {limit} autorisés|{overLimit} blocs en trop utilisés pour {limit} autorisés',
     TASK_BLOCK_CATEGORY_ACTIONS: "Actions",

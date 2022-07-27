@@ -181,6 +181,7 @@ module.exports = {
     TASK_BLOCKS_SUBTITLE: "Click to insert",
     TASK_BLOCKS_LIMIT_EXPANDED: '{current}/{limit} remaining block|{current}/{limit} remaining blocks',
     TASK_BLOCKS_LIMIT_BLOCK: '{remaining} block "{name}"|{remaining} blocks "{name}"',
+    TASK_BLOCKS_REMAINING_BLOCKS: '{remaining} Block|{remaining} Blocks',
     TASK_BLOCKS_LIMIT_REMAINING: 'remaining:',
     TASK_BLOCK_CATEGORY_ACTIONS: "Actions",
     TASK_BLOCK_CATEGORY_SENSORS: "Sensors",
