@@ -160,6 +160,14 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             props.onInit(api);
         }
 
+        const treeRows = document.getElementsByClassName('blocklyTreeRow');
+        for (let treeRow of treeRows) {
+            // @ts-ignore
+            const color = treeRow.style.borderLeftColor;
+            // @ts-ignore
+            treeRow.style.setProperty('--color', color);
+        }
+
         loaded.current = true;
     }
 
@@ -175,8 +183,10 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         };
     }, [currentTask, currentLevel, contextId]);
 
+    const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
+
     return (
-        <div className="blockly-editor">
+        <div className={`blockly-editor ${groupsCategory ? 'group-by-category' : ''}`}>
             <div id='blocklyContainer'>
                 <div id='blocklyDiv' className='language_blockly'/>
                 <textarea id='program' className='language_javascript' style={{width: '100%', height: '100%', display: 'none'}}/>

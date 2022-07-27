@@ -18,7 +18,8 @@ let originalFireNow;
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
     let blocklyHelper;
 
-    const language = yield* select((state: AppStore) => state.options.language.split('-')[0]);
+    const options = yield* select((state: AppStore) => state.options);
+    const language = options.language.split('-')[0];
     const languageTranslations = require('../../lang/blockly_' + language + '.js');
     window.goog.provide('Blockly.Msg.' + language);
     window.Blockly.Msg = {...window.Blockly.Msg, ...languageTranslations.Msg};
@@ -74,7 +75,54 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
 
     const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
     blocklyHelper.setIncludeBlocks(curIncludeBlocks);
+
+    const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
+    if (groupsCategory && 'tralalere' === options.app) {
+        overrideBlocklyFlyoutForCategories();
+    }
 }
+
+export const overrideBlocklyFlyoutForCategories = () => {
+    // Override function from Blockly for two reasons:
+    // 1. Control width and height of Blockly flyout
+    // 2. Add border radiuses at top-left and bottom-left
+    window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = function(width, height) {
+        let atRight = this.toolboxPosition_ == window.Blockly.TOOLBOX_AT_RIGHT;
+        let computedHeight = Math.min(400, height);
+        let computedWidth = Math.max(300, width);
+        // Decide whether to start on the left or right.
+        let path = ['M ' + (atRight ? this.width_ - this.CORNER_RADIUS : this.CORNER_RADIUS) + ',0'];
+        // Top.
+        path.push('h', String(computedWidth - this.CORNER_RADIUS));
+        // Rounded corner top-right
+        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
+            atRight ? "0" : "1",
+            atRight ? -this.CORNER_RADIUS : this.CORNER_RADIUS,
+            this.CORNER_RADIUS);
+        // Side closest to workspace.
+        path.push('v', String(Math.max(0, computedHeight - this.CORNER_RADIUS * 2)));
+        // Rounded corner bottom-right
+        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
+            atRight ? "0" : "1",
+            atRight ? this.CORNER_RADIUS : -this.CORNER_RADIUS,
+            this.CORNER_RADIUS);
+        // Bottom.
+        path.push('h', String(-(computedWidth - this.CORNER_RADIUS)));
+        // Rounded corner bottom-left
+        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
+            atRight ? "0" : "1",
+            atRight ? this.CORNER_RADIUS : -this.CORNER_RADIUS,
+            String(-this.CORNER_RADIUS));
+        path.push('v', String(-Math.max(0, computedHeight - this.CORNER_RADIUS * 2)));
+        // Rounded corner top-left
+        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
+            atRight ? "0" : "1",
+            atRight ? -this.CORNER_RADIUS : this.CORNER_RADIUS,
+            String(-this.CORNER_RADIUS));
+        path.push('z');
+        this.svgBackground_.setAttribute('d', path.join(' '));
+    };
+};
 
 export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, state: AppStore, withEmptyCheck: boolean = true) {
     console.log('check blockly code', answer, context.strings.code);

@@ -22,7 +22,6 @@ import {faTimes} from "@fortawesome/free-solid-svg-icons";
 import {TralalereBox} from "./TralalereBox";
 import {TralalereInstructions} from "./TralalereInstructions";
 
-
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
     const options = useAppSelector(state => state.options);
@@ -72,8 +71,12 @@ export function TralalereApp() {
     }, []);
 
     useEffect(() => {
+        const flyoutToolbox = document.getElementsByClassName('blocklyToolboxDiv');
         const flyout = document.getElementsByClassName('blocklyFlyout');
-        if (flyout.length && (flyout[0] as SVGGraphicsElement).getBBox()) {
+        if (flyoutToolbox.length && (flyoutToolbox[0] as HTMLElement).clientWidth) {
+            const width = (flyoutToolbox[0] as HTMLElement).clientWidth;
+            document.documentElement.style.setProperty('--flyout-width', width + 'px');
+        } else if (flyout.length && (flyout[0] as SVGGraphicsElement).getBBox()) {
             const width = (flyout[0] as SVGGraphicsElement).getBBox().width;
             document.documentElement.style.setProperty('--flyout-width', width + 'px');
         } else {
