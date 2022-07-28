@@ -21,6 +21,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTimes} from "@fortawesome/free-solid-svg-icons";
 import {TralalereBox} from "./TralalereBox";
 import {TralalereInstructions} from "./TralalereInstructions";
+import {taskSetMenuHelpsOpen} from "../task/task_slice";
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -31,6 +32,7 @@ export function TralalereApp() {
     const screen = useAppSelector(state => state.screen);
     const [instructionsExpanded, setInstructionsExpanded] = useState(false);
     const contextId = useAppSelector(state => state.task.contextId);
+    const menuHelpsOpen = useAppSelector(state => state.task.menuHelpsOpen);
 
     const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
     const hintsOpen = Screen.Hints === screen;
@@ -119,13 +121,15 @@ export function TralalereApp() {
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere`}>
             <div className="layout-general">
-                <div className="tralalere-menu-icons">
+                <div className={`tralalere-menu-icons ${menuHelpsOpen ? 'has-helps' : ''}`}>
                     {0 < availableHints.length && <div className="tralalere-button" onClick={toggleHints}>
                         ?
+                        <div className="tralalere-menu-label">Indices</div>
                     </div>}
 
                     <div className="tralalere-button" onClick={toggleDocumentation}>
                         <img className="menu-task-icon" src={window.modulesPath + 'img/algorea/crane/documentation.svg'}/>
+                        <div className="tralalere-menu-label">Documentation</div>
                     </div>
                 </div>
 
@@ -146,10 +150,10 @@ export function TralalereApp() {
                             <TralalereBox>
                                 <div className="tralalere-box-header">
                                     <div className="tralalere-box-header-icon">
-                                ?
+                                        ?
                                     </div>
                                     <div className="tralalere-box-header-title">
-                                Indice
+                                        Indice
                                     </div>
                                     <div className="tralalere-box-header-close">
                                         <div className="tralalere-button" onClick={closeHints}>

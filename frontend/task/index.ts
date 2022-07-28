@@ -13,6 +13,7 @@ import QuickalgoLibsBundle, {
     quickAlgoLibraryResetAndReloadStateSaga
 } from "./libs/quickalgo_libraries";
 import SrlBundle from './srl';
+import BehaviourBundle from './behaviour';
 import stringify from 'json-stable-stringify-without-jsonify';
 import taskSlice, {
     currentTaskChange,
@@ -496,6 +497,7 @@ export default function (bundle: Bundle) {
     bundle.include(BlocksBundle);
     bundle.include(QuickalgoLibsBundle);
     bundle.include(SrlBundle);
+    bundle.include(BehaviourBundle);
 
     setPlatformBundleParameters({
         getTaskAnswer,

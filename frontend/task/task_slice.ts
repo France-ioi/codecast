@@ -62,6 +62,7 @@ export interface TaskState {
     blocksPanelCollapsed?: boolean,
     blocksUsage?: BlocksUsage,
     soundEnabled?: boolean,
+    menuHelpsOpen?: boolean,
 }
 
 export interface TaskInputEnteredPayload {
@@ -101,6 +102,7 @@ export const taskInitialState = {
     blocksPanelCollapsed: false,
     blocksUsage: null,
     soundEnabled: true,
+    menuHelpsOpen: false,
 } as TaskState;
 
 export const selectCurrentTest = (state: AppStore) => {
@@ -232,7 +234,10 @@ export const taskSlice = createSlice({
         },
         taskChangeSoundEnabled(state: TaskState, action: PayloadAction<boolean>) {
             state.soundEnabled = action.payload
-        }
+        },
+        taskSetMenuHelpsOpen(state: TaskState, action: PayloadAction<boolean>) {
+            state.menuHelpsOpen = action.payload;
+        },
     },
 });
 
@@ -263,6 +268,7 @@ export const {
     taskSetBlocksPanelCollapsed,
     taskSetBlocksUsage,
     taskChangeSoundEnabled,
+    taskSetMenuHelpsOpen,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

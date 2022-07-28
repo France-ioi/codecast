@@ -38,6 +38,9 @@ export function TaskInstructions() {
             <p>
                 Pour pousser une caisse, mettez d'abord le robot face à la caisse, il avancera en la poussant.
             </p>
+            <div className="advice">
+                Pour le fonctionnement des blocs de boucle, pense à regarder la documentation.
+            </div>
             <p className="short">
                 <strong>Attention :</strong> vous ne pouvez utiliser qu'une fois l'instruction "pousser la caisse".
             </p>

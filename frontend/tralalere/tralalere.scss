@@ -57,12 +57,30 @@ $tralalere-red: #FF3C11;
         color: white;
         padding-top: 12px;
         margin-right: 20px;
+        line-height: 22px;
 
         h1 {
           color: white;
           font-weight: bold !important;
           font-size: 1rem !important;
           margin-bottom: .5rem !important;
+        }
+
+        .advice {
+          display: block;
+          background: $tralalere-dark-blue;
+          border: 4px solid $tralalere-green-blue;
+          box-shadow: -5px 5px 0px #1D1E47;
+          border-radius: 15px;
+          padding: 10px 20px;
+          margin-left: -22px;
+          margin-bottom: 1rem;
+          &:before {
+            content: 'Conseil';
+            display: block;
+            font-style: italic;
+            font-weight: 900;
+          }
         }
       }
 
@@ -140,6 +158,37 @@ $tralalere-red: #FF3C11;
 
     > div:not(:first-child) {
       margin-top: 10px;
+    }
+
+    .tralalere-menu-label {
+      display: none;
+      position: absolute;
+      color: white;
+      font-weight: 900;
+      font-size: 16px;
+      align-items: center;
+      text-align: center;
+      right: 50px;
+      padding: 5px 20px;
+
+      background: $tralalere-violet;
+      border-radius: 7px 0 0 7px;
+      box-shadow: -4px 4px #1D1E47;
+
+      &:after {
+        content: '';
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        top: -4px;
+        left: -4px;
+        background: #85FF00;
+        border-radius: 3px;
+      }
+    }
+
+    &.has-helps .tralalere-menu-label {
+      display: flex;
     }
   }
 
