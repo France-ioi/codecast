@@ -19,7 +19,7 @@ import {ActionTypes as IOActionTypes} from "../../stepper/io/actionTypes";
 import {IoMode} from "../../stepper/io";
 import {PlayerInstant} from "../../player";
 import {makeContext, QuickalgoLibraryCall} from "../../stepper/api";
-import {importModules} from "./import_modules";
+import {importModules, importPlatformModules} from "./import_modules";
 import {createRunnerSaga} from "../../stepper";
 import {cancelModal, displayModal} from "../../common/prompt_modal";
 import {ModalType} from "../../common/modal_slice";
@@ -133,9 +133,14 @@ export function* createQuickalgoLibrary() {
             },
         },
     };
+
+    const platform = yield* select((state: AppStore) => state.options.platform);
+    yield* call(importPlatformModules, platform, window.modulesPath);
+
     if (levelGridInfos.importModules) {
         yield* call(importModules, levelGridInfos.importModules, window.modulesPath);
     }
+
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
@@ -177,11 +182,11 @@ export function* createQuickalgoLibrary() {
     console.log('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     console.log('Created context', context);
-    if (!context.blocklyHelper) {
-        context.blocklyHelper = {
-            updateSize: () => {},
-        };
-    }
+    // if (!context.blocklyHelper) {
+    //     context.blocklyHelper = {
+    //         updateSize: () => {},
+    //     };
+    // }
     if (context instanceof PrinterLib && currentTask) {
         yield* put({type: IOActionTypes.IoPaneModeChanged, payload: {mode: IoMode.Split}});
     }

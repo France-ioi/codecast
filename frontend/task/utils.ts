@@ -75,6 +75,9 @@ export function checkCompilingCode(code, platform: CodecastPlatform, state: AppS
     if (withEmptyCheck && !code) {
         throw getMessage('CODE_CONSTRAINTS_EMPTY_PROGRAM');
     }
+    if (null === code) {
+        return;
+    }
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context && state.task.currentTask) {

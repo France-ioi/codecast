@@ -57,7 +57,6 @@ import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {platformAnswerGraded, platformAnswerLoaded, taskGradeAnswerEvent,} from "./platform/actionTypes";
-import {isStepperInterrupting} from "../stepper/selectors";
 import {BlockDocumentModel, DocumentModel, documentModelFromString} from "../buffers";
 import {
     getDefaultTaskLevel,

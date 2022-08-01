@@ -10,17 +10,5 @@ bebras-modules/integrationAPI.01/official/miniPlatform.js
 bebras-modules/ext/js-interpreter/acorn.js
 bebras-modules/ext/acorn/walk.js
 bebras-modules/ext/js-interpreter/interpreter.js
-blockly:bebras-modules/ext/blockly/blockly_compressed.js
-blockly:bebras-modules/ext/blockly/blocks_compressed.js
-scratch:bebras-modules/ext/scratch/blockly_compressed_vertical.js
-scratch:bebras-modules/ext/scratch/blocks_compressed.js
-scratch:bebras-modules/ext/scratch/blocks_compressed_vertical.js
-bebras-modules/ext/blockly/javascript_compressed.js
-bebras-modules/ext/blockly/python_compressed.js
-bebras-modules/ext/blockly-fioi/fioi-blockly.min.js
-scratch:bebras-modules/ext/scratch/fixes.js
-scratch:bebras-modules/ext/scratch/procedures.js
-bebras-modules/pemFioi/quickAlgo/blockly_blocks.js
-bebras-modules/pemFioi/quickAlgo/blockly_interface.js
 bebras-modules/pemFioi/quickAlgo/utils.js
 bebras-modules/pemFioi/importModules-1.4-mobileFirst.js

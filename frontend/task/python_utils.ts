@@ -41,6 +41,10 @@ const pythonCountPatterns = [
 ];
 
 function pythonCount(text) {
+    if (null === text) {
+        return 0;
+    }
+
     let remainingText = text;
     let nbBlocks = 0;
     while (remainingText != '') {

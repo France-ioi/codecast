@@ -1,5 +1,7 @@
 // Extracted from "importModules-1.4-mobileFirst.js"
 
+import {hasBlockPlatform} from "../../stepper/js";
+
 let importedModules = {};
 
 function importableModules(modulesPath) {
@@ -306,6 +308,30 @@ async function importModules(modulesList, modulesPath) {
             console.error("Module '"+moduleName+"' unknown.");
         }
     }
+}
+
+let jsLibLoaded = null;
+
+export async function importPlatformModules(platform, modulesPath) {
+    if (!hasBlockPlatform(platform)) {
+        return;
+    }
+
+    if (null !== jsLibLoaded) {
+        return;
+    }
+    jsLibLoaded = platform;
+
+    const modulesToImport = {
+        blockly: ['blockly', 'blockly_blocks', 'blockly_javascript', 'blockly_python', 'blockly_fioi', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
+        scratch: ['scratch', 'scratch_blocks_common', 'scratch_blocks',  'blockly_javascript', 'blockly_python', 'blockly_fioi', 'scratch_fixes', 'scratch_procedures', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
+    }
+
+    await importModules(modulesToImport[platform], modulesPath);
+}
+
+export function getJsLibLoaded() {
+    return jsLibLoaded;
 }
 
 function getScript(modSrc, modId, modClass, callback) {
