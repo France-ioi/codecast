@@ -1,92 +1,16 @@
 import {App} from "../../index";
-import {AppStore, AppStoreReplay} from "../../store";
+import {AppStoreReplay} from "../../store";
 import {createDraft} from "immer";
 import quickalgoI18n from "../../lang/quickalgoI18n";
-
-//TODO: Handle multiples libraries at once.
-// For now, we only use 1 library
-export class QuickAlgoLibraries {
-    libraries: {[name: string]: {[mode: string]: QuickAlgoLibrary}} = {};
-
-    addLibrary(library: QuickAlgoLibrary, name: string, environment: string) {
-        if (!(name in this.libraries)) {
-            this.libraries[name] = {};
-        }
-        this.libraries[name][environment] = library;
-    }
-
-    getContext(name: string = null, environment: string): QuickAlgoLibrary {
-        if (name in this.libraries) {
-            return this.libraries[name][environment];
-        }
-
-        return Object.keys(this.libraries).length ? this.libraries[Object.keys(this.libraries)[0]][environment] : null;
-    }
-
-    reset(taskInfos = null, appState: AppStore = null) {
-        this.applyOnLibraries('reset', [taskInfos, appState]);
-    }
-
-    redrawDisplay(taskInfos = null) {
-        this.applyOnLibraries('redrawDisplay', [taskInfos]);
-    }
-
-    applyOnLibraries(method, args) {
-        for (let library of this.getAllLibraries()) {
-            library[method].apply(library, args);
-        }
-    }
-
-    getVisualization() {
-        for (let library of this.getAllLibraries()) {
-            if (library.getComponent()) {
-                return library.getComponent();
-            }
-        }
-
-        return null;
-    }
-
-    getSagas(app: App) {
-        const sagas = [];
-        for (let library of this.getAllLibraries()) {
-            const librarySagas = library.getSaga(app);
-            if (librarySagas) {
-                sagas.push(librarySagas);
-            }
-        }
-
-        return sagas;
-    }
-
-    getEventListeners() {
-        let listeners = {} as {[key: string]: {module: string, method: string}};
-        for (let [module, libraries] of Object.entries(this.libraries)) {
-            for (let library of Object.values(libraries)) {
-                const libraryListeners = library.getEventListeners();
-                if (libraryListeners && Object.keys(libraryListeners).length) {
-                    for (let [eventName, method] of Object.entries(libraryListeners)) {
-                        listeners[eventName] = {module, method};
-                    }
-                }
-            }
-        }
-
-        return listeners;
-    }
-
-    getAllLibraries() {
-        return Object.values(this.libraries).reduce((prev, libs) => [...prev, ...Object.values(libs)], []);
-    }
-}
-
-export const quickAlgoLibraries = new QuickAlgoLibraries();
-window.quickAlgoLoadedLibraries = quickAlgoLibraries;
+import merge from 'lodash.merge';
+import {getCurrentImmerState} from "../utils";
+import {mainQuickAlgoLogger} from "./quickalgo_libraries";
 
 export class QuickAlgoLibrary {
     display: boolean;
     infos: any;
     placeholderBlocks: any;
+    iTestCase: number; // Required for some libs such as barcode
     nbCodes: number;
     nbNodes: number;
     strings: any;
@@ -104,6 +28,7 @@ export class QuickAlgoLibrary {
     raphaelFactory: any;
     blocklyHelper: any;
     onChange: any;
+    docGenerator: any;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -136,16 +61,17 @@ export class QuickAlgoLibrary {
 
     // Set the localLanguageStrings for this context
     setLocalLanguageStrings(localLanguageStrings) {
+        console.log('set local language strings', localLanguageStrings);
         window.stringsLanguage = window.stringsLanguage && window.stringsLanguage in localLanguageStrings ? window.stringsLanguage : "fr";
         window.languageStrings = window.languageStrings || {};
 
         if (typeof window.languageStrings != "object") {
             console.error("window.languageStrings is not an object");
         } else { // merge translations
-            window.languageStrings = {
-                ...window.languageStrings,
-                ...localLanguageStrings[window.stringsLanguage],
-            }
+            window.languageStrings = merge(
+                window.languageStrings,
+                localLanguageStrings[window.stringsLanguage],
+            );
         }
         this.strings = window.languageStrings;
 
@@ -182,7 +108,7 @@ export class QuickAlgoLibrary {
     waitDelay(callback, value = null) {
         // This function is used only to call the callback to move to next step,
         // but we handle the speed delay in an upper level
-        if (this.runner) {
+        if (this.runner && this.runner.returnCallback) {
             this.runner.returnCallback(callback, value);
         } else {
             callback(value);
@@ -199,28 +125,40 @@ export class QuickAlgoLibrary {
         }
     };
 
+    debug_alert (message, callback) {
+        // Display debug information
+        message = message ? message.toString() : '';
+        if (this.display) {
+            alert(message);
+        }
+        this.callCallback(callback, null);
+    };
+
     setCurNode(curNode) {
         // Set the current node
         this.curNode = curNode;
     };
 
-    // Placeholders, should be actually defined by the library
+    // Should be actually defined by the library
     reset(taskInfos = null, appState: AppStoreReplay = null) {
-        // Reset the context
-        if (this.display) {
-            this.redrawDisplay();
-        }
     };
 
     resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null, innerState: any = null) {
+        console.log('reset and reload state', taskInfos, innerState);
         this.reset(taskInfos, appState);
-        if (this.reloadInnerState) {
-            this.reloadInnerState(createDraft(innerState ? innerState : this.getInnerState()));
+        // We do a second call because some libraries like barcode only reset their internal state when taskInfos is empty...
+        this.reset();
+        mainQuickAlgoLogger.clearQuickAlgoLibraryCalls();
+        const newInnerState = innerState ? innerState : getCurrentImmerState(this.getInnerState());
+        if (this.implementsInnerState()) {
+            this.reloadInnerState(createDraft(newInnerState));
+        } else {
+            if (newInnerState.calls) {
+                // in fact maybe not necessary since redrawDisplay is the method that should update the display
+                console.log('TODO replay calls', newInnerState.calls);
+                mainQuickAlgoLogger.setQuickAlgoLibraryCalls(newInnerState.calls);
+            }
         }
-    };
-
-    redrawDisplay() {
-        // Reset the context display
     };
 
     updateScale() {
@@ -240,9 +178,14 @@ export class QuickAlgoLibrary {
         return null;
     };
 
-    getInnerState() {
-        return {};
+    getInnerState(): any {
+        // For libs that don't implement inner state, we replay them
+        return {calls: [...mainQuickAlgoLogger.getQuickAlgoLibraryCalls()]};
     };
+
+    implementsInnerState() {
+        return false;
+    }
 
     reloadInnerState(state: any): void {
     }
@@ -260,8 +203,3 @@ export class QuickAlgoLibrary {
     }
 }
 
-window.quickAlgoResponsive = true;
-
-window.quickAlgoContext = function (display: boolean, infos: any) {
-    return new QuickAlgoLibrary(display, infos);
-}

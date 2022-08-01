@@ -30,7 +30,7 @@ import * as C from '@france-ioi/persistent-c';
 import {
     default as ApiBundle,
     makeContext,
-    performStep,
+    performStep, QuickalgoLibraryCall,
     StepperContext,
     StepperContextParameters,
     StepperError,
@@ -66,7 +66,7 @@ import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App, Codecast} from "../index";
-import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
+import {mainQuickAlgoLogger, quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
 import {selectCurrentTest, taskResetDone} from "../task/task_slice";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {getCurrentImmerState} from "../task/utils";
@@ -555,9 +555,8 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     }
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
-    if (context && context.getInnerState) {
-        const contextState = context.getInnerState();
-        state.task.state = getCurrentImmerState(contextState);
+    if (context) {
+        state.task.state = getCurrentImmerState(context.getInnerState());
     }
 
     state.stepper.currentStepperState = stepperContext.state;
@@ -850,7 +849,13 @@ function* stepperInterruptSaga(app: App) {
         return;
     }
 
-    const stepperContext = createStepperContext(getStepper(state), {dispatch: app.dispatch, environment: app.environment});
+    const stepperContext = createStepperContext(getStepper(state), {
+        dispatch: app.dispatch,
+        environment: app.environment,
+        quickAlgoCallsLogger: ('main' === state.environment || 'replay' === state.environment ? (quickAlgoCall: QuickalgoLibraryCall) => {
+            mainQuickAlgoLogger.logQuickAlgoLibraryCall(quickAlgoCall);
+        } : null),
+    });
 
     yield* call(stepperRunFromBeginningIfNecessary, stepperContext);
 
@@ -904,7 +909,9 @@ function* stepperStepSaga(app: App, action) {
                 dispatch: app.dispatch,
                 waitForProgress,
                 waitForProgressOnlyAfterIterationsCount: action.payload.immediate ? 10000 : null, // For BC, we let at maximum 10.000 actions before forcing waiting a stepper.progress event
-                quickAlgoCallsLogger,
+                quickAlgoCallsLogger: quickAlgoCallsLogger ? quickAlgoCallsLogger : ('main' === state.environment || 'replay' === state.environment ? (quickAlgoCall: QuickalgoLibraryCall) => {
+                    mainQuickAlgoLogger.logQuickAlgoLibraryCall(quickAlgoCall);
+                } : null),
                 environment: state.environment,
                 speed: action.payload.useSpeed && !action.payload.immediate ? stepper.speed : null,
                 executeEffects: app.stepperApi.executeEffects,
@@ -996,8 +1003,12 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         taskContext.display = false;
         taskContext.resetAndReloadState(selectCurrentTest(state), state);
         stepperContext.state.contextState = getCurrentImmerState(taskContext.getInnerState());
-
         console.log('current task state', taskContext.getInnerState());
+
+        if (!Codecast.runner) {
+            Codecast.runner = yield* call(createRunnerSaga);
+        }
+        taskContext.runner = Codecast.runner;
 
         const blocksData = getContextBlocksDataSelector(state, taskContext);
 
@@ -1014,7 +1025,7 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         yield* put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: false});
 
         taskContext.display = true;
-        taskContext.redrawDisplay();
+        yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         console.log('End run from beginning');
     }
 }
@@ -1165,7 +1176,19 @@ function postLink(app: App) {
 
 
         console.log('[stepper.step] before put step', immediate);
-        yield* put({type: ActionTypes.StepperStep, payload: {mode, waitForProgress, immediate, setStepperContext, quickAlgoCallsLogger: replayContext.addQuickAlgoLibraryCall}});
+        yield* put({
+            type: ActionTypes.StepperStep,
+            payload: {
+                mode,
+                waitForProgress,
+                immediate,
+                setStepperContext,
+                quickAlgoCallsLogger: (call) => {
+                    mainQuickAlgoLogger.logQuickAlgoLibraryCall(call);
+                    replayContext.addQuickAlgoLibraryCall(call);
+                },
+            },
+        });
 
         console.log('[stepper.step] before yield promise', promise);
         yield promise;

@@ -43,7 +43,7 @@ export const fetchLatestBlocklyAnalysis = function (localVariables: any, lastAna
 let variableReferenceCount = 1;
 
 export const convertBlocklyValueToDAPFormat = (name: string, value: any, visited: any[]): AnalysisVariable => {
-    console.log('convert value', name, value, visited);
+    // console.log('convert value', name, value, visited);
     let variableData = {
         name,
         type: value && value.class ? value.class : (value && value.type ? value.type : typeof value),

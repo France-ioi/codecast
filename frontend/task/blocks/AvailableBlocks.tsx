@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {quickAlgoLibraries} from "../libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {Block, BlockType, getContextBlocksDataSelector} from "./blocks";
 import {useAppSelector} from "../../hooks";
 import {AvailableBlock} from "./AvailableBlock";

@@ -104,7 +104,9 @@ export function Documentation(props: DocumentationProps) {
         });
         dispatch({
             type: CommonActionTypes.PlatformChanged,
-            payload: 'c' === language ? CodecastPlatform.Unix : language,
+            payload: {
+                platform: 'c' === language ? CodecastPlatform.Unix : language,
+            },
         });
         closeDocumentation();
     };

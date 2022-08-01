@@ -8,11 +8,11 @@
 */
 
 import * as C from '@france-ioi/persistent-c';
-import {all, call} from 'typed-redux-saga';
+import {all, call, put} from 'typed-redux-saga';
 import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {initialStepperStateControls, Stepper, StepperState} from "./index";
 import {Bundle} from "../linker";
-import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
+import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
 import {createDraft} from "immer";
 import {getCurrentImmerState} from "../task/utils";
 import {ActionTypes as CompileActionTypes} from "./actionTypes";
@@ -66,7 +66,7 @@ export interface StepperApi {
     addSaga?: Function,
     onEffect?: Function,
     addBuiltin?: Function,
-    buildState?: (state: AppStoreReplay, environment: string) => Promise<StepperState>,
+    buildState?: (state: AppStoreReplay, environment: string) => Generator<any, StepperState>,
     rootStepperSaga?: any,
     executeEffects?: Function,
 }
@@ -117,7 +117,7 @@ export default function(bundle: Bundle) {
 
 
     /* Build a stepper state from the given init data. */
-    async function buildState(state: AppStoreReplay, environment: string): Promise<StepperState> {
+    function* buildState(state: AppStoreReplay, environment: string): Generator<any, StepperState> {
         const {platform} = state.options;
 
         console.log('do build state', state, environment);
@@ -131,7 +131,7 @@ export default function(bundle: Bundle) {
             platform
         } as StepperState;
         for (let callback of initCallbacks) {
-            await callback(curStepperState, state, environment);
+            yield* call(callback, curStepperState, state, environment);
         }
 
 
@@ -163,7 +163,7 @@ export default function(bundle: Bundle) {
                 /* Mutate the stepper context to advance execution by a single step. */
                 const effects = C.step(stepperContext.state.programState);
                 if (effects) {
-                    await executeEffects(stepperContext, effects[Symbol.iterator]());
+                    yield* call(executeEffects, stepperContext, effects[Symbol.iterator]());
                 }
             }
         }
@@ -227,7 +227,7 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
      * We create a new state object here instead of mutating the state. This is intended.
      */
 
-    const state = stepper.currentStepperState;
+    const state = stepper ? stepper.currentStepperState : null;
 
     const stepperContext: StepperContext = {
         interactBefore: interactBefore ? interactBefore : () => {
@@ -243,12 +243,12 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
         resume: null,
         position: getNodeStartRow(state),
         lineCounter: 0,
-        speed: undefined !== speed ? speed : stepper.speed,
+        speed: undefined !== speed ? speed : (stepper ? stepper.speed : 0),
         unixNextStepCondition: 0,
-        state: {
+        state: state ? {
             ...state,
             controls: resetControls(state.controls),
-        },
+        } : {} as StepperState,
         quickAlgoContext: quickAlgoLibraries.getContext(null, environment),
         environment,
         executeEffects,
@@ -256,7 +256,9 @@ export function makeContext(stepper: Stepper, {interactBefore, interactAfter, wa
 
     stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
 
-    Codecast.runner.enrichStepperContext(stepperContext, state);
+    if (Codecast.runner && state) {
+        Codecast.runner.enrichStepperContext(stepperContext, state);
+    }
 
     return stepperContext;
 }
@@ -436,7 +438,7 @@ function inUserCode(stepperState: StepperState) {
     }
 }
 
-export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, reloadState = false) {
+export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
     return async (module: string, action: string, args: any[], callback?: Function) => {
         console.log('call quickalgo', module, action, args, callback);
         let libraryCallResult;
@@ -449,39 +451,38 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         if (stepperContext.quickAlgoCallsLogger) {
             const quickAlgoLibraryCall: QuickalgoLibraryCall = {module, action, args};
             stepperContext.quickAlgoCallsLogger(quickAlgoLibraryCall);
-            console.log('LOG ACTION', module, action, args);
+            console.log('call quickalgo calls logger', module, action, args);
         }
 
-        if (reloadState) {
-            // console.log('RELOAD CONTEXT STATE', draft.contextState, original(draft.contextState));
-            const draft = createDraft(stepperContext.state.contextState);
-            context.reloadInnerState(draft);
-            context.redrawDisplay();
+        const makeLibraryCall = () => {
+            return new Promise(resolve => {
+                let callbackArguments = [];
+                let result = context[module][action].apply(context, [...args, function (a) {
+                    console.log('receive callback', arguments);
+                    callbackArguments = [...arguments];
+                    let argumentResult = callbackArguments.length ? callbackArguments[0] : undefined;
+                    console.log('set result', argumentResult);
+                    resolve(argumentResult);
+                }]);
+
+                console.log('MODULE RESULT', result);
+                if (Symbol.iterator in Object(result)) {
+                    iterateResult(result)
+                        .then((argumentResult) => {
+                            console.log('returned element', module, action, argumentResult);
+                            // Use context.waitDelay to transform result to primitive when the library uses generators
+                            context.waitDelay(resolve, argumentResult);
+                        });
+                }
+            });
         }
 
-
-        const makeLibraryCall = async () => {
-            let callbackArguments = [];
-            let result = context[module][action].apply(context, [...args, function (a) {
-                console.log('receive callback', arguments);
-                callbackArguments = [...arguments];
-            }]);
-            if (callbackArguments.length && !result) {
-                result = callbackArguments[0];
-                console.log('set result', result);
-            }
-
-            console.log('MODULE RESULT', result);
-            if (!(Symbol.iterator in Object(result))) {
-                console.log('return result');
-                return result;
-            }
-
+        const iterateResult = async (result) => {
             let lastResult;
             while (true) {
                 /* Pull the next effect from the builtin's iterator. */
                 const {done, value} = result.next();
-                console.log('ITERATOR RESULT', done, value);
+                console.log('ITERATOR RESULT', module, action, done, value);
                 if (done) {
                     return value;
                 }
@@ -517,8 +518,7 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext, r
         }
         console.log('after make async library call', libraryCallResult);
 
-        const newStateValue = context.getInnerState();
-        const newState = getCurrentImmerState(newStateValue);
+        const newState = getCurrentImmerState(context.getInnerState());
         console.log('NEW LIBRARY STATE', newState);
 
         if (stepperContext.state) {

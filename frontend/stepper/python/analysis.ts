@@ -254,7 +254,7 @@ export const getSkulptSuspensionsCopy = function(suspensions) {
 let variableReferenceCount = 1;
 
 export const convertSkulptValueToDAPVariable = (name: string, value: any, visited: {[uuid: string]: boolean}, loadReference: string, loadedReferences): AnalysisVariable => {
-    console.log('convert value', name, value, visited, loadedReferences);
+    // console.log('convert value', name, value, visited, loadedReferences);
     let variableData = {
         name,
         type: value.constructor.prototype.tp$name,

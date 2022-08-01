@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
 import * as ace from 'brace';
 import {addAutocompletion} from "./editorAutocompletion";
-import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
 import {Document} from "./document";
 import {getMessage} from "../lang";
 import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/blocks";
@@ -193,7 +193,7 @@ export function Editor(props: EditorProps) {
             cursorPosition = editor.current.getCursorPosition();
             editor.current.insertSnippet(text, cursorPosition);
             cursorPosition = editor.current.getCursorPosition();
-            if (newLineAfter) {
+            if (newLineAfter && -1 === text.indexOf('${')) {
                 editor.current.session.insert(cursorPosition, "\n" + ' '.repeat(indentationCurrentLine));
             }
         } else {

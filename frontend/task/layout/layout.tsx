@@ -17,16 +17,16 @@ import {ZoneLayoutVisualizationGroup} from "./ZoneLayoutVisualizationGroup";
 import {LayoutStackView} from "./LayoutStackView";
 import {LayoutEditor} from "./LayoutEditor";
 import {LayoutDirective} from "./LayoutDirective";
-import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_librairies";
+import {QuickAlgoLibraries, quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {Screen} from "../../common/screens";
 import {Documentation} from "../documentation/Documentation";
 import {getMessage} from "../../lang";
 import {call, put, select, takeEvery} from "typed-redux-saga";
 import {App} from "../../index";
 import {PlayerInstant} from "../../player";
-import {getBufferModel} from "../../buffers/selectors";
 import {askConfirmation} from "../../alert";
 import {selectAnswer} from "../selectors";
+import {StepperStatus} from "../../stepper";
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -817,6 +817,10 @@ function* layoutSaga({replayApi}: App) {
         }
 
         if (confirmed) {
+            const needsExit = yield* select(state => state.stepper && StepperStatus.Clear !== state.stepper.status);
+            if (needsExit) {
+                yield* put({type: StepperActionTypes.StepperExit});
+            }
             yield* put({type: LayoutActionTypes.LayoutPlayerModeChanged, payload: {playerMode: LayoutPlayerMode.Replay}});
             yield* call(replayApi.reset, instant);
             if ((payload && payload.resumeImmediately) || state.layout.playerModeResumeImmediately) {

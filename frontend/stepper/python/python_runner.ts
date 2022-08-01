@@ -54,7 +54,7 @@ export default class PythonRunner extends AbstractRunner {
     private _nbActions = 0;
 
     constructor(context) {
-        super();
+        super(context);
         this.context = context;
         this.onError = context.onError;
     }
@@ -187,7 +187,6 @@ export default class PythonRunner extends AbstractRunner {
 
             for (let block of blocks.filter(block => block.type === BlockType.Function)) {
                 const {code, generatorName, name, params, type} = block;
-                console.log(block, generatorName);
                 modContents += PythonRunner._skulptifyHandler(code, generatorName, name, params, type);
                 // We do want to override Python's naturel input and output to replace them with our own modules
                 if (generatorName === 'printer' && ('input' === code || 'print' === code)) {

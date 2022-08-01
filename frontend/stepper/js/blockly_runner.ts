@@ -56,7 +56,7 @@ export default class BlocklyRunner extends AbstractRunner {
     public _isFinished: boolean = false;
 
     constructor(context, languageStrings) {
-        super();
+        super(context);
         this.context = context;
         this.strings = languageStrings;
         this.scratchMode = context.blocklyHelper ? context.blocklyHelper.scratchMode : false;

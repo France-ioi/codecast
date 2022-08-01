@@ -17,10 +17,10 @@ import {Bundle} from "../linker";
 import {makeContext, QuickalgoLibraryCall, StepperContext} from "../stepper/api";
 import {App, Codecast} from "../index";
 import {ReplayApi} from "./replay";
-import {quickAlgoLibraries} from "../task/libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {taskLoad} from "../task";
-import {inputBufferLibTest, outputBufferLibTest, PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
+import {inputBufferLibTest, PrinterLibActionTypes} from "../task/libs/printer/printer_lib";
 import {RECORDING_FORMAT_VERSION} from "../version";
 import {getCurrentImmerState} from "../task/utils";
 import {createDraft, finishDraft} from "immer";
@@ -28,6 +28,7 @@ import {asyncGetJson} from "../utils/api";
 import {taskLoaded} from "../task/task_slice";
 import {LayoutPlayerMode} from "../task/layout/layout";
 import {setTaskEventsEnvironment} from "../task/platform/platform";
+import {createRunnerSaga} from "../stepper";
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -129,7 +130,10 @@ function* playerPrepare(app: App, action) {
     if (platform !== state.options.platform) {
         yield* put({
             type: CommonActionTypes.PlatformChanged,
-            payload: platform
+            payload: {
+                platform,
+                reloadTask: false,
+            },
         });
     }
 
@@ -551,6 +555,11 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
             // We start from the end state of the last instant, and apply the calls that happened during this instant
             const stepperState = instants[instantIndex-1].state.stepper;
             if (context) {
+                if (!Codecast.runner) {
+                    Codecast.runner = yield* call(createRunnerSaga);
+                }
+                context.runner = Codecast.runner;
+
                 const stepperContext = makeContext(stepperState, {
                     interactAfter: (arg) => {
                         return new Promise((resolve, reject) => {

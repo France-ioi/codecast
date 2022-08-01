@@ -29,14 +29,16 @@ export function* showPopupMessageSaga(modalOptions: PromptModalOptions) {
     console.log('show popup', modalOptions);
     yield* put(modalShow(modalOptions));
 
-    const {validate} = yield* race({
+    const {validate, newDisplay} = yield* race({
         validate: take<PayloadAction<{inputValue?: string}>>(ModalActionTypes.Validate),
         cancel: take(ModalActionTypes.Cancel),
-    })
+        newDisplay: take(ModalActionTypes.Display),
+    });
 
     console.log('validation', validate);
-
-    yield* put(modalHide());
+    if (!newDisplay) {
+        yield* put(modalHide());
+    }
 
     if (validate) {
         return validate.payload.inputValue;

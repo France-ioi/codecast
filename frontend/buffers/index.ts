@@ -261,6 +261,9 @@ function* buffersSaga() {
             if ((BlockType.Function === block.type && block.category !== 'sensors') || BlockType.Directive === block.type) {
                 insertNewLineBefore = insertNewLineAfter = true;
             }
+            if (BlockType.Token === block.type && block.snippet && -1 !== block.snippet.indexOf('${')) {
+                insertNewLineBefore = true;
+            }
 
             if (block.snippet) {
                 editor.insert(block.snippet, pos ? pos : null, true, insertNewLineBefore, insertNewLineAfter);

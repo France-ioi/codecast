@@ -1,6 +1,6 @@
 import React, {useEffect, useRef} from "react";
 import {useAppSelector} from "../../hooks";
-import {quickAlgoLibraries} from "../../task/libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {ObjectDocument} from "../../buffers/document";
 import {BlockDocumentModel} from "../../buffers";
 import {ActionTypes} from "../../buffers/actionTypes";
@@ -38,10 +38,6 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         console.log('imported content', context.blocklyHelper.programs[0].blockly);
         context.blocklyHelper.reloading = true;
         context.blocklyHelper.loadPrograms();
-        setTimeout(() => {
-            context.blocklyHelper.reloading = false;
-            console.log('end reloading');
-        });
     };
 
     const highlight = (range) => {
@@ -88,16 +84,14 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
                     previousValue.current = answer.blockly;
                     console.log('new value', answer);
                     props.onEditPlain(document);
-                    if (!blocklyHelper.reloading) {
-                        console.log('timeout before removing highlight');
-                        if (resetDisplayTimeout.current) {
-                            clearTimeout(resetDisplayTimeout.current);
-                            resetDisplayTimeout.current = null;
-                        }
-                        resetDisplayTimeout.current = setTimeout(() => {
-                            blocklyHelper.onChangeResetDisplayFct();
-                        }, 500);
+                    console.log('timeout before removing highlight');
+                    if (resetDisplayTimeout.current) {
+                        clearTimeout(resetDisplayTimeout.current);
+                        resetDisplayTimeout.current = null;
                     }
+                    resetDisplayTimeout.current = setTimeout(() => {
+                        blocklyHelper.onChangeResetDisplayFct();
+                    }, 500);
                 }
             }
         }

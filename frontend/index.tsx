@@ -117,6 +117,8 @@ declare global {
         mergeIntoArray: any,
         mergeIntoObject: any,
         debounce: any,
+        processingEndConditions: any,
+        modulesPath: string,
     }
 }
 

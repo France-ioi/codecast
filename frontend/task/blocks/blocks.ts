@@ -1,14 +1,14 @@
 import {AppStore, AppStoreReplay, CodecastPlatform} from "../../store";
 import {getPythonSpecificBlocks} from "../python_utils";
-import {quickAlgoLibraries, QuickAlgoLibrary} from "../libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
 import {getCSpecificBlocks} from "../../stepper/views/c/utils";
 import {Bundle} from "../../linker";
 import {call, debounce, put, select, takeEvery} from "typed-redux-saga";
 import {ActionTypes as BufferActionTypes} from "../../buffers/actionTypes";
 import {BlocksUsage, taskSetBlocksUsage} from "../task_slice";
-import {getBufferModel} from "../../buffers/selectors";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
 import {selectAnswer} from "../selectors";
+import {QuickAlgoLibrary} from "../libs/quickalgo_library";
 
 export enum BlockType {
     Function = 'function',
@@ -143,13 +143,15 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
                 let constList = context.customConstants[generatorName];
                 for (let iConst = 0; iConst < constList.length; iConst++) {
                     let name = constList[iConst].name;
-                    if (contextStrings.constant && contextStrings.constant[name]) {
-                        name = contextStrings.constant[name];
-                    }
+                    // if (contextStrings.constant && contextStrings.constant[name]) {
+                    //     name = contextStrings.constant[name];
+                    // }
                     availableBlocks.push({
                         generatorName,
                         name,
                         caption: name,
+                        code: name,
+                        category: 'constants',
                         type: BlockType.Constant,
                         value: constList[iConst].value,
                     });
@@ -171,7 +173,19 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
             block.description = contextStrings.description[block.name];
         }
 
-        if (BlockType.Function === block.type) {
+        if (BlockType.Function !== block.type) {
+            return;
+        }
+
+        if (context.docGenerator) {
+            let blockDesc = context.docGenerator.blockDescription(block.name);
+            let funcProto = blockDesc.substring(blockDesc.indexOf('<code>') + 6, blockDesc.indexOf('</code>'));
+            let blockHelp = blockDesc.substring(blockDesc.indexOf('</code>') + 7);
+            block.caption = funcProto;
+            block.description = blockHelp;
+            block.snippet = getSnippet(block.caption);
+            // console.log('generated description', {blockDesc, funcProto, blockHelp});
+        } else {
             if (block.description) {
                 block.description = block.description.replace(/@/g, block.code);
             }
@@ -193,9 +207,16 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
                 }
             }
 
+            if (block.caption && block.caption.trim().substring(0, 1) === '%') {
+                block.caption = block.caption.substring(block.caption.indexOf('%') + 1).trim();
+            }
             block.snippet = getSnippet(block.caption);
         }
-    }))
+
+        if (block.description && block.description.trim().substring(0, 1) === ':') {
+            block.description = block.description.substring(block.description.indexOf(':') + 1).trim();
+        }
+    }));
 
     return availableBlocks;
 }

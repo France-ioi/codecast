@@ -1,12 +1,24 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import StringRotationFixture from './fixtures/14_strings_05_rotation/index';
-import SokobanFixture from './fixtures/11_variable_08_sokoban/index';
+import StringRotationFixture from './fixtures/14_strings_05_rotation';
+import TurtleFixture from './fixtures/turtle_05_functions_01';
+import ProcessingFixture from './fixtures/test_processing';
+import BarcodeFixture from './fixtures/test_barcode';
+import QuickPiFixture from './fixtures/quickpi_testbed';
+import SokobanFixture from './fixtures/11_variable_08_sokoban';
+import DatabaseFixture from './fixtures/test_database';
+import P5Fixture from './fixtures/test_p5';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 
 const availableTasks = {
     robot: SokobanFixture,
+    turtle: TurtleFixture,
+    quickpi: QuickPiFixture,
+    processing: ProcessingFixture,
     printer: StringRotationFixture,
+    barcode: BarcodeFixture,
+    database: DatabaseFixture,
+    p5: P5Fixture,
 };
 
 export interface TaskSubmission {
@@ -58,11 +70,6 @@ export interface TaskSubmissionResultPayload {
     testId: number,
     result: boolean,
     message?: string,
-}
-
-export interface UpdateTestContextStatePayload {
-    testId: number,
-    contextState: any,
 }
 
 export interface TaskTest {
@@ -159,7 +166,7 @@ export const taskSlice = createSlice({
                 state.taskTests[state.currentTestId].data = action.payload;
             }
         },
-        updateTestContextState(state: TaskState, action: PayloadAction<UpdateTestContextStatePayload>) {
+        updateTestContextState(state: TaskState, action: PayloadAction<{testId: number, contextState: any}>) {
             state.taskTests[action.payload.testId].contextState = action.payload.contextState;
         },
         taskInputNeeded(state: TaskState, action: PayloadAction<boolean>) {

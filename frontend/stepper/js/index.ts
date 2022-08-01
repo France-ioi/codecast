@@ -2,7 +2,7 @@ import {AppStore, CodecastPlatform} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App, Codecast} from "../../index";
-import {quickAlgoLibraries, QuickAlgoLibrary} from "../../task/libs/quickalgo_librairies";
+import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {selectAnswer} from "../../task/selectors";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {TaskLevelName} from "../../task/platform/platform_slice";
@@ -11,6 +11,9 @@ import {delay} from "../api";
 import {getMessage, getMessageChoices} from "../../lang";
 import {select} from "typed-redux-saga";
 import {displayModal} from "../../common/prompt_modal";
+import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
+
+let originalFireNow;
 
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
     let blocklyHelper;
@@ -39,30 +42,6 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
         };
     }
 
-    if (!window.displayHelper) {
-        window.displayHelper = {
-            showPopupMessage: async function (message, mode, yesButtonText, agreeFunc, noButtonText, avatarMood, defaultText, disagreeFunc) {
-                console.log('popup message', defaultText, noButtonText);
-                const result = await new Promise(resolve => {
-                    const mainStore = Codecast.environments['main'].store;
-                    mainStore.dispatch(displayModal({message, mode, defaultInput: defaultText, noButtonText, callback: resolve}));
-                });
-
-                if (false !== result && agreeFunc) {
-                    if (mode === 'input') {
-                        agreeFunc(result);
-                    } else {
-                        agreeFunc();
-                    }
-                }
-
-                if (false === result && disagreeFunc) {
-                    disagreeFunc();
-                }
-            },
-        };
-    }
-
     console.log('[blockly.editor] load blockly helper', context);
     blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
     // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
@@ -71,6 +50,19 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     };
     context.blocklyHelper = blocklyHelper;
     context.onChange = () => {};
+
+    if (!originalFireNow) {
+        originalFireNow = window.Blockly.Events.fireNow_;
+    }
+
+    // There is a setTimeout delay in Blockly lib between blockly program loading and Blockly firing events.
+    // We overload this function to catch the Blockly firing event instant so that we know when the program
+    // is successfully reloaded and that the events won't trigger an editor content update which would trigger
+    // a stepper.exit
+    window.Blockly.Events.fireNow_ = () => {
+        originalFireNow();
+        blocklyHelper.reloading = false;
+    }
 
     console.log('[blockly.editor] load context into blockly editor');
     blocklyHelper.loadContext(context);

@@ -117,24 +117,27 @@ export default function(bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, appInitReducer);
 
     bundle.defineAction(ActionTypes.PlatformChanged);
-    bundle.addReducer(ActionTypes.PlatformChanged, (state, {payload: platform}) => {
+    bundle.addReducer(ActionTypes.PlatformChanged, (state, {payload: {platform}}) => {
         state.options.platform = platform;
         state.compile = {...initialStateCompile};
     });
 
     bundle.addSaga(function* () {
-        yield* takeEvery(ActionTypes.PlatformChanged, function* () {
+        // @ts-ignore
+        yield* takeEvery(ActionTypes.PlatformChanged, function* ({payload: {reloadTask}}) {
             const newPlatform = yield* select((state: AppStore) => state.options.platform);
             if (isLocalStorageEnabled()) {
                 window.localStorage.setItem('platform', newPlatform);
             }
-            yield* put({type: StepperActionTypes.StepperExit});
-            yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: null});
-            const levels = yield* select((state: AppStore) => state.platform.levels);
-            for (let level of Object.keys(levels)) {
-                yield* put(platformSaveAnswer({level: level as TaskLevelName, answer: null}));
+            if (false !== reloadTask) {
+                yield* put({type: StepperActionTypes.StepperExit});
+                yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: null});
+                const levels = yield* select((state: AppStore) => state.platform.levels);
+                for (let level of Object.keys(levels)) {
+                    yield* put(platformSaveAnswer({level: level as TaskLevelName, answer: null}));
+                }
+                yield* put(taskLoad({reloadContext: true}));
             }
-            yield* put(taskLoad({reloadContext: true}));
         });
     });
 }

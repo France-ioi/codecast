@@ -1,5 +1,5 @@
-import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
-import {current, isDraft} from "immer";
+import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
+import {createDraft, current, isDraft} from "immer";
 import {checkPythonCode, getPythonBlocksUsage} from "./python_utils";
 import {getMessage} from "../lang";
 import {AppStore, CodecastPlatform} from "../store";
@@ -130,11 +130,7 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
 }
 
 export function getCurrentImmerState(object) {
-    return Object.fromEntries(
-        Object.entries(object).map(
-            ([k, v]) => [k, isDraft(v) ? current(v) : v],
-        )
-    )
+    return isDraft(object) ? current(object) : object;
 }
 
 // These functions are for retro-compatibility with blockly_block.js

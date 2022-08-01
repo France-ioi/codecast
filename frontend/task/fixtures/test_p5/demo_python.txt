@@ -1,0 +1,4 @@
+from p5 import *
+playSignal(1, "sinus", 2000, 1)
+sleep(1000)
+playStop()

@@ -1,0 +1,24 @@
+from turtle import *
+
+def etoile():
+    baisserPinceau()
+    for iCarre in range(8):
+        for iCote in range(4):
+            avancer(25)
+            droite(90)
+        droite(45)
+    leverPinceau()
+    
+etoile()
+avancer(150)
+etoile()
+gauche(90)
+avancer(150)
+droite(90)
+avancer(50)
+etoile()
+reculer(150)
+droite(90)
+avancer(50)
+gauche(90)
+etoile()

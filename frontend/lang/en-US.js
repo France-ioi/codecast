@@ -10,6 +10,7 @@ module.exports = {
     ERROR: 'Error',
     CLOSE: 'Close',
     VALIDATE: 'Validate',
+    ALRIGHT: 'Alright',
     NONE: 'None',
     CANCEL: 'Cancel',
     FULLSCREEN: "fullscreen",
@@ -204,6 +205,8 @@ module.exports = {
     TASK_BLOCK_CATEGORY_PRINT: "Writing",
     TASK_BLOCK_CATEGORY_INTERNET: "Internet",
     TASK_BLOCK_CATEGORY_DISPLAY: "Display",
+    TASK_BLOCK_CATEGORY_TURTLE: "Turtle",
+    TASK_BLOCK_CATEGORY_CONSTANTS: "Constants",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Preview a specific layout:",
     LAYOUT_DefaultLayoutDesktop: 'Desktop',

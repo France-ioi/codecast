@@ -29,7 +29,7 @@ export function BlocksUsage() {
         };
     }, [wrapperRef, collapsed]);
 
-    if (!blocksUsage) {
+    if (!blocksUsage || !blocksUsage.blocksLimit || Infinity === blocksUsage.blocksLimit) {
         return null;
     }
 

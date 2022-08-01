@@ -6,6 +6,10 @@ export default abstract class AbstractRunner {
     public _isFinished: boolean = false;
     public _steps: number = 0;
 
+    constructor(context) {
+        context.runner = this;
+    }
+
     public static needsCompilation(): boolean {
         return false;
     }
@@ -40,5 +44,20 @@ export default abstract class AbstractRunner {
 
     public isSynchronizedWithAnalysis(analysis): boolean {
         return true;
+    }
+
+    public isRunning(): boolean {
+        // TODO: implement this if necessary
+        return false;
+    }
+
+    waitCallback(callback) {
+        return (value) => {
+            this.noDelay(callback, value);
+        };
+    }
+
+    noDelay(callback, value) {
+        callback(value);
     }
 }

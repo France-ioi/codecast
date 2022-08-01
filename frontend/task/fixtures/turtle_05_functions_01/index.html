@@ -1,0 +1,98 @@
+<!doctype html>
+<html>
+   <head>
+    <meta charset="utf-8">
+    <title>turtle_05_functions_1_python</title>
+      <script>
+        window.stringsLanguage = 'fr';
+      </script>
+      <script class="remove" type="text/javascript" src="../../../_common/modules/pemFioi/importModules-1.4-mobileFirst.js" id="import-modules"></script>
+      <script class="remove" type="text/javascript">
+        var modulesPath = '../../../_common/modules/'
+        importModules([
+            'jquery-1.7.1', 'JSON-js', 'raphael-2.2.1', 'beaver-task-2.0', 'jschannel', 'raphaelFactory-1.0', 'delayFactory-1.0', 'simulationFactory-1.0',
+            'platform-pr', 'buttonsAndMessages', 'beav-1.0', 'installationAPI.01', 'miniPlatform',
+            'conceptDisplay-1.0', 'conceptViewer-1.0', 'conceptViewer_css-1.0',
+            'taskStyles-mobileFirst', 'blockly-turtle', 'codecast-7.0']);
+        // set Blockly as default language when none is specified through ?language=
+        // importLanguageModules('python');
+      </script>
+
+      <script class="remove" type="text/javascript">
+       var json = {
+          "id": "turtle_03_nested_boucles_02",
+          "language": "fr",
+          "version": "fr.01",
+          "authors": "Robert Czechowski, Marielle Léonard",
+          "translators": [],
+          "license": "",
+          "taskPathPrefix": "",
+          "modulesPathPrefix": "",
+          "browserSupport": [],
+          "acceptedAnswers": [""],
+          "fullFeedback": true,
+          "minWidth": "auto"
+      };
+      </script>
+      <script type="text/javascript" src="task.js"></script>
+      
+      <style>
+         code {
+            padding: 2px 4px;
+            font-size: 90%;
+            font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+            color: #c7254e;
+            background-color:#f9f2f4;
+            border-radius: 4px;
+         }
+      </style>
+
+   </head>
+   <body onresize="task.displayedSubTask.updateScale()">
+      <div id="task">
+         <h1>Fonctions - Peindre la trace 1</h1>
+			<img src="grid5.png" style="display: none" />
+			<img src="icon.png" style="display: none" />
+			<img src="turtle.png" id="turtleImg" style="display: none" />
+			<img src="turtleup.png" id="turtleUpImg" style="display: none" />
+			
+         <div id="tabsContainer"></div>
+         <div id="taskContent">
+            <div id="taskIntro">
+					<p>
+					   Programmez votre tortue pour qu'elle se déplace sur le trait gris et y peigne sa trace. 
+				   </p>
+				   <div>
+				      <div class="basic easy hard" style="display: inline-block; width: 35%; max-width: 150px; vertical-align: top; margin-right: 10px">
+				         <img src="angles.png" />
+			         </div>
+			         <div class="medium" style="display: inline-block; width: 35%; max-width: 150px; vertical-align: top; margin-right: 10px">
+				         <img src="angles60.png" />
+			         </div>
+			         <div style="display: inline-block; width: 60%; vertical-align: top">
+				         <p>
+					         Le côté d'une case mesure 50 pas de tortue. 
+				         </p>
+				         <p class="basic">
+				            <strong>Indication :</strong> créez un bloc pour le dessin d'un triangle.
+				         </p>
+				         <p class="hard">
+				            <strong>Indication :</strong> vous aurez besoin de la mesure de la moitié du côté d'une case, soit 25 pas de tortue.
+				         </p>
+				      </div>
+				   </div>
+            </div>
+            <div id="gridContainer"></div>
+            <div id="blocklyLibContent"></div>
+            <div id="hints" style="margin:20px;display:none;">
+              <p><b>Description des commandes : </b></p>
+               <ul>
+                  <li><b>Avancer:</b> Bewegt die Schildkröte vorwärts</li>
+                  <li><b>drehe nach links:</b> Dreht die Schildkröte um 90° gegen den Uhrzeigersinn</li>
+                  <li><b>drehe nach rechts:</b> Dreht die Schildkröte um 90° im Uhrzeigersinn</li>
+               </ul>
+            </div>
+         </div>
+      </div><!-- task -->
+   </body>
+</html>

@@ -1,8 +1,9 @@
 import React, {useEffect} from "react";
-import {quickAlgoLibraries} from "./libs/quickalgo_librairies";
+import {quickAlgoLibraries, QuickAlgoLibrariesActionType} from "./libs/quickalgo_libraries";
 import {useAppSelector} from "../hooks";
 import {useResizeDetector} from "react-resize-detector";
 import {TaskTestsSelector} from "./TaskTestsSelector";
+import {useDispatch} from "react-redux";
 
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();
@@ -11,13 +12,17 @@ export function ContextVisualization() {
     const taskLoaded = useAppSelector(state => state.task.loaded);
     const {width, height, ref} = useResizeDetector();
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
+    const dispatch = useDispatch();
+
+    const context = quickAlgoLibraries.getContext(null, 'main');
 
     useEffect(() => {
-        quickAlgoLibraries.redrawDisplay();
+        if (context) {
+            dispatch({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
+        }
     }, [taskLoaded]);
 
     useEffect(() => {
-        const context = quickAlgoLibraries.getContext(null, 'main');
         if (context) {
             context.updateScale();
         }
@@ -34,11 +39,17 @@ export function ContextVisualization() {
             <div className="task-visualization-container">
                 <div className="task-visualization" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
                     {currentTask && currentTask.gridInfos && currentTask.gridInfos.images &&
-                        currentTask.gridInfos.images.map((module, key) =>
-                            <img key={key} src={module.default} style={{display: 'none'}}/>
+                        currentTask.gridInfos.images.map((element, key) =>
+                            <img id={element.id} key={key} src={element.path.default} style={{display: 'none'}}/>
                         )
                     }
-                    {Visualization ? <Visualization/> : <div id="grid"/>}
+                    {Visualization ? <Visualization/> :
+                        <div id="taskContent">
+                            <div id="taskIntro"/>
+                            <div id="testSelector">
+                                <div id="grid"/>
+                            </div>
+                        </div>}
                 </div>
             </div>
 

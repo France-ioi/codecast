@@ -41,7 +41,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
         const platform = event.target.value;
         dispatch({
             type: CommonActionTypes.PlatformChanged,
-            payload: platform
+            payload: {platform},
         });
     };
 
