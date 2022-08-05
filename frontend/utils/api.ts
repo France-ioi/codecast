@@ -18,12 +18,12 @@ export const asyncRequestJson = function(path, body) {
     });
 };
 
-export const asyncGetJson = function(path) {
+export const asyncGetJson = function(path, withCredentials = true) {
     return new Promise(function(resolve, reject) {
         const req = request.get(path);
 
         req.set('Accept', 'application/json');
-        const token = isLocalStorageEnabled() ? window.localStorage.getItem('token') : null;
+        const token = isLocalStorageEnabled() && withCredentials ? window.localStorage.getItem('token') : null;
         if (token) {
             req.query({token});
         }

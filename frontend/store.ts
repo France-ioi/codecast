@@ -84,6 +84,8 @@ export interface CodecastOptions {
     theme?: string,
     app?: string,
     backend?: boolean,
+    taskId?: string,
+    taskPlatformUrl?: string,
 }
 
 export interface Panes {

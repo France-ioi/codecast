@@ -72,6 +72,7 @@ import {selectAnswer} from "./selectors";
 import {hasBlockPlatform} from "../stepper/js";
 import {ObjectDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
+import {getTaskFromId} from "../submission/task_platform";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -146,7 +147,32 @@ function* taskLoadSaga(app: App, action) {
 
     let state: AppStore = yield* select();
 
-    if (state.options.task) {
+    if (urlParameters.has('taskId')) {
+        const task = yield* getTaskFromId(urlParameters.get('taskId'));
+        const defaultTask = {
+            gridInfos: {
+                context: 'printer',
+                importModules: [],
+                showLabels: true,
+                conceptViewer: true,
+                // maxInstructions: {
+                //     easy: 20,
+                //     medium: 30,
+                //     hard: 40
+                // },
+                // nbPlatforms: 100,
+                includeBlocks: {
+                    groupByCategory: true,
+                    standardBlocks: {
+                        includeAll: true,
+                        // singleBlocks: ["controls_repeat", "controls_if"]
+                    }
+                },
+            },
+        };
+        const fullTask = {...defaultTask, ...task};
+        yield* put(currentTaskChange(fullTask));
+    } else if (state.options.task) {
         yield* put(currentTaskChange(state.options.task));
     } else if (selectedTask) {
         yield* put(currentTaskChangePredefined(selectedTask));
@@ -165,7 +191,7 @@ function* taskLoadSaga(app: App, action) {
 
         if (action.payload.level && action.payload.level in currentTask.data) {
             yield* put(taskCurrentLevelChange({level: action.payload.level, record: false}));
-        } else if (null === currentLevel || !(currentLevel in currentTask.data)) {
+        } else if (currentTask.data && (null === currentLevel || !(currentLevel in currentTask.data))) {
             // Select default level
             for (let level of taskLevelsList) {
                 if (level in currentTask.data) {
@@ -177,7 +203,7 @@ function* taskLoadSaga(app: App, action) {
         currentLevel = yield* select((state: AppStore) => state.task.currentLevel);
         console.log('new current level', currentLevel);
 
-        const tests = action.payload && action.payload.tests ? action.payload.tests : currentTask.data[currentLevel];
+        const tests = action.payload && action.payload.tests ? action.payload.tests : (currentTask.data ? currentTask.data[currentLevel] : []);
         console.log('[task.load] update task tests', tests);
         yield* put(updateTaskTests(tests));
 
@@ -188,12 +214,16 @@ function* taskLoadSaga(app: App, action) {
         const taskLevels = yield* select((state: AppStore) => state.platform.levels);
         if (0 === Object.keys(taskLevels).length) {
             const levels = {};
-            for (let level of Object.keys(currentTask.data)) {
-                if (state.options.level && state.options.level !== level) {
-                    continue;
-                }
+            if (currentTask.data && Object.keys(currentTask.data).length) {
+                for (let level of Object.keys(currentTask.data)) {
+                    if (state.options.level && state.options.level !== level) {
+                        continue;
+                    }
 
-                levels[level] = getDefaultTaskLevel(level as TaskLevelName);
+                    levels[level] = getDefaultTaskLevel(level as TaskLevelName);
+                }
+            } else {
+                levels[TaskLevelName.Medium] = getDefaultTaskLevel(TaskLevelName.Medium);
             }
 
             yield* put(platformSetTaskLevels(levels));
@@ -363,7 +393,7 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     yield* put(platformAnswerLoaded(newLevelAnswer));
 
     const currentTask = state.task.currentTask;
-    const tests = currentTask.data[newLevel];
+    const tests = currentTask.data ? currentTask.data[newLevel] : [];
     console.log('[task.currentLevelChange] update task tests', tests);
     yield* put(updateTaskTests(tests));
 
