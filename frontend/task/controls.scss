@@ -1,3 +1,36 @@
+@mixin control-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: 500px;
+  background: var(--primary-color);
+  color: white;
+  height: 40px;
+  width: 40px;
+  margin: 0 10px 0 0;
+  border: none;
+  box-shadow: none !important;
+  .bp3-icon {
+    color: inherit;
+  }
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+  &[disabled] {
+    opacity: 0.3;
+  }
+  &.is-small {
+    height: 30px;
+    width: 30px;
+    svg {
+      width: 13px;
+      height: 13px;
+    }
+  }
+}
+
 .task .controls-and-errors {
   position: relative;
   width: 100%;
@@ -12,13 +45,26 @@
 
 .task .stepper-controls-container {
   flex: 1 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.task .execution-controls {
+  width: 100%;
   display: flex;
   align-items: center;
-  height: 100%;
+  justify-content: space-between;
+  padding: 10px 20px;
+  div {
+    display: flex;
+    align-items: center;
+  }
 }
 
 .task .controls-stepper {
-  padding: 5px 15px;
+  padding: 10px 15px;
   display: flex;
   align-items: center;
   width: 100%;
@@ -104,37 +150,7 @@
   }
 
   .bp3-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    white-space: nowrap;
-    border-radius: 500px;
-    background: var(--primary-color);
-    color: white;
-    height: 40px;
-    width: 40px;
-    margin: 0 10px 0 0;
-    border: none;
-    box-shadow: none !important;
-    .bp3-icon {
-      color: inherit;
-    }
-    svg {
-      width: 18px;
-      height: 18px;
-    }
-    &[disabled] {
-      opacity: 0.3;
-    }
-  }
-
-  .bp3-button.is-small {
-    height: 30px;
-    width: 30px;
-    svg {
-      width: 13px;
-      height: 13px;
-    }
+    @include control-button;
   }
 }
 
@@ -203,4 +219,64 @@
 
 .layout-tablet-vertical .controls-stepper {
   justify-content: center;
+}
+
+.task .biswitch {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  .bp3-switch {
+    margin: 0 4px 0 10px;
+    input ~ .bp3-control-indicator {
+      background: #e4e5ea !important;
+    }
+    .bp3-control-indicator {
+      box-shadow: inset 1px 1px 1px 0px #b3b3b3 !important;
+      &:before {
+        background: var(--primary-color);
+      }
+      outline: none !important;
+    }
+  }
+  .biswitch-option {
+    &.is-active {
+      font-weight: bold;
+    }
+  }
+}
+
+.task .submission-controls {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+
+  .button-switch {
+    height: 36px;
+    background: #dfe0e4;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    margin-right: 20px;
+    .button-switch-option {
+      text-transform: uppercase;
+      color: #89898a;
+      cursor: pointer;
+      padding: 0 40px;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      &.is-active {
+        background: var(--primary-color);
+        border-radius: 100px;
+        color: white;
+        height: 100%;
+      }
+    }
+  }
+
+  .bp3-button {
+    @include control-button;
+  }
 }

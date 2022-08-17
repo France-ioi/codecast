@@ -2,22 +2,25 @@ import React, {useEffect, useState} from "react";
 import {StepperControls} from "../stepper/views/StepperControls";
 import {stepperClearError} from "../stepper/actionTypes";
 import {useDispatch} from "react-redux";
-import {Dialog, Icon} from "@blueprintjs/core";
+import {Icon, Switch} from "@blueprintjs/core";
 import {LayoutMobileMode, LayoutType} from "./layout/layout";
 import {ActionTypes} from "./layout/actionTypes";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faFileAlt, faPencilAlt, faPlay} from "@fortawesome/free-solid-svg-icons";
+import {faCogs, faFileAlt, faPencilAlt, faPlay} from "@fortawesome/free-solid-svg-icons";
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
 import {TaskTestsSubmissionResultOverview} from "./TaskTestsSubmissionResultOverview";
 import {getMessage} from "../lang";
 import {DraggableDialog} from "../common/DraggableDialog";
+import {submissionChangeExecutionMode, SubmissionExecutionMode} from "../submission/submission_slice";
+import {SubmissionControls} from "../submission/SubmissionControls";
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
     const layoutType = useAppSelector(state => state.layout.type);
     const {showStepper} = useAppSelector(state => state.options);
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const executionMode = useAppSelector(state => state.submission.executionMode);
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
@@ -65,6 +68,11 @@ export function ControlsAndErrors() {
         dispatch({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
     };
 
+    const changeExecutionMode = (e) => {
+        e.preventDefault();
+        dispatch(submissionChangeExecutionMode(SubmissionExecutionMode.Client === executionMode ? SubmissionExecutionMode.Server : SubmissionExecutionMode.Client));
+    };
+
     return (
         <div className="controls-and-errors">
             {(showStepper || hasModes) && <div className="mode-selector">
@@ -100,7 +108,21 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    <StepperControls enabled={true}/>
+                    {!hasModes && <div className="execution-controls">
+                        <div>
+                            <FontAwesomeIcon icon={faCogs} className="mr-2"/>
+                            <span>
+                                {getMessage('SUBMISSION_EXECUTE_ON')}
+                            </span>
+                        </div>
+                        <div className="biswitch" onClick={changeExecutionMode}>
+                            <div className={`biswitch-option ${SubmissionExecutionMode.Client === executionMode ? 'is-active' : ''}`}>{getMessage('SUBMISSION_EXECUTE_ON_CLIENT')}</div>
+                            <Switch checked={SubmissionExecutionMode.Server === executionMode}/>
+                            <div className={`biswitch-option ${SubmissionExecutionMode.Server === executionMode ? 'is-active' : ''}`}>{getMessage('SUBMISSION_EXECUTE_ON_SERVER')}</div>
+                        </div>
+                    </div>}
+                    {SubmissionExecutionMode.Client === executionMode && <StepperControls enabled={true}/>}
+                    {SubmissionExecutionMode.Server === executionMode && <SubmissionControls/>}
                 </div>}
             </div>}
 

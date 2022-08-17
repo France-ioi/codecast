@@ -235,4 +235,11 @@ module.exports = {
     ABOUT_TRANSLATORS: "and translated by:",
     ABOUT_LICENSE: "Licence:",
     ABOUT_CODECAST: "Codecast is a France-ioi project developed under MIT License",
+
+    SUBMISSION_EXECUTE_ON: 'Execute on...',
+    SUBMISSION_EXECUTE_ON_CLIENT: 'browser',
+    SUBMISSION_EXECUTE_ON_SERVER: 'server',
+    SUBMISSION_EXECUTE_THIS_TEST: 'This test',
+    SUBMISSION_EXECUTE_MY_TESTS: 'My tests',
+    SUBMISSION_EXECUTE_SUBMIT: 'Submit',
 };

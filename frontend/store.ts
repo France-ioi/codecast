@@ -26,6 +26,7 @@ import {PlatformState, TaskLevelName} from "./task/platform/platform_slice";
 import {AnalysisState} from "./stepper/analysis/analysis_slice";
 import {ModalState} from "./common/modal_slice";
 import {HintsState, TaskHint} from "./task/hints/hints_slice";
+import {SubmissionState} from "./submission/submission_slice";
 
 export enum CodecastPlatform {
     Python = 'python',
@@ -149,4 +150,5 @@ export interface AppStore extends Store, AppStoreReplay {
     documentation: DocumentationState,
     analysis: AnalysisState,
     modal: ModalState,
+    submission: SubmissionState,
 }
