@@ -2,6 +2,18 @@ import React, {useEffect, useState} from "react";
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
 import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
+import {getMessage} from "../lang";
+
+function findStringForLanguage(taskStrings: any[], languages: string[]) {
+    for (let language of languages) {
+        let taskString = taskStrings.find(string => string.language === language);
+        if (taskString) {
+            return taskString;
+        }
+    }
+
+    return taskStrings[0];
+}
 
 export function TaskInstructions() {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
@@ -9,12 +21,26 @@ export function TaskInstructions() {
     const taskLevel = useAppSelector(state => state.task.currentLevel);
     const contextId = useAppSelector(state => state.task.contextId);
     const isBackend = useAppSelector(state => state.options.backend);
+    const language = useAppSelector(state => state.options.language.split('-')[0]);
+    const platform = useAppSelector(state => state.options.platform);
     const taskInstructionsHtmlFromOptions = useAppSelector(state => state.options.taskInstructions);
+    const [instructionsTitle, setInstructionsTitle] = useState(null);
     const [algoreaInstructionsHtml, setAlgoreaInstructionsHtml] = useState(null);
 
     useEffect(() => {
         const context = quickAlgoLibraries.getContext(null, 'main');
-        if (context && window.algoreaInstructionsStrings && window.getAlgoreaInstructionsAsHtml && currentTask.gridInfos.intro) {
+        let newInstructionsTitle = null;
+        if (currentTask && currentTask.strings && currentTask.strings.length) {
+            const instructions = findStringForLanguage(currentTask.strings, [language, 'en', 'fr']);
+            const jQueryElement = window.jQuery(`<div>${instructions.statement}</div>`);
+            if (instructions.title) {
+                newInstructionsTitle = instructions.title;
+            }
+            if (jQueryElement.text().length) {
+                jQueryElement.find('[data-current-lang]').html(getMessage('PLATFORM_' + platform.toLocaleUpperCase()).s);
+                setAlgoreaInstructionsHtml(jQueryElement.html());
+            }
+        } else if (context && window.algoreaInstructionsStrings && window.getAlgoreaInstructionsAsHtml && currentTask.gridInfos.intro) {
             const strLang = window.stringsLanguage;
             const strings = window.algoreaInstructionsStrings[strLang];
             let newInstructions = window.getAlgoreaInstructionsAsHtml(strings, currentTask.gridInfos, currentTask.data, taskLevel);
@@ -26,6 +52,8 @@ export function TaskInstructions() {
                 }
             }
         }
+
+        setInstructionsTitle(newInstructionsTitle);
     }, [contextId]);
 
     let instructionsHtml = algoreaInstructionsHtml ? algoreaInstructionsHtml : taskInstructionsHtmlFromOptions;
@@ -65,7 +93,7 @@ export function TaskInstructions() {
 
     return (
         <div className={`task-mission level-${taskLevel}`} style={{fontSize: `${zoomLevel}rem`}}>
-            <h1>Votre mission</h1>
+            <h1>{instructionsTitle ? instructionsTitle : 'Votre mission'}</h1>
 
             {taskInstructions}
         </div>
