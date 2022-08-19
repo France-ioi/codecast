@@ -21,6 +21,7 @@ import taskSlice, {
     recordingEnabledChange,
     selectCurrentTest,
     taskAddInput,
+    taskChangeSoundEnabled,
     taskClearSubmission,
     taskCurrentLevelChange,
     taskInputEntered,
@@ -639,6 +640,14 @@ export default function (bundle: Bundle) {
             console.log('Platform answer loaded', answer);
             const platform = yield* select((state: AppStore) => state.options.platform);
             yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: getModelFromAnswer(answer, platform), goToEnd: true});
+        });
+
+        yield* takeEvery(taskChangeSoundEnabled.type, function* () {
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            const state: AppStore = yield* select();
+            if (context && context.changeSoundEnabled) {
+                context.changeSoundEnabled(state.task.soundEnabled);
+            }
         });
     });
 
