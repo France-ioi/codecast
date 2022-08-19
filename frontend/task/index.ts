@@ -73,6 +73,11 @@ import {hasBlockPlatform} from "../stepper/js";
 import {ObjectDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
 import {getTaskFromId} from "../submission/task_platform";
+import {
+    submissionChangeExecutionMode,
+    submissionChangePlatformName,
+    SubmissionExecutionMode
+} from "../submission/submission_slice";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -172,6 +177,10 @@ function* taskLoadSaga(app: App, action) {
         };
         const fullTask = {...defaultTask, ...task};
         yield* put(currentTaskChange(fullTask));
+        yield* put(submissionChangeExecutionMode(SubmissionExecutionMode.Server));
+        if (urlParameters.has('sPlatform')) {
+            yield* put(submissionChangePlatformName(urlParameters.get('sPlatform')));
+        }
     } else if (state.options.task) {
         yield* put(currentTaskChange(state.options.task));
     } else if (selectedTask) {
@@ -222,8 +231,8 @@ function* taskLoadSaga(app: App, action) {
 
                     levels[level] = getDefaultTaskLevel(level as TaskLevelName);
                 }
-            } else {
-                levels[TaskLevelName.Medium] = getDefaultTaskLevel(TaskLevelName.Medium);
+            // } else {
+            //     levels[TaskLevelName.Medium] = getDefaultTaskLevel(TaskLevelName.Medium);
             }
 
             yield* put(platformSetTaskLevels(levels));

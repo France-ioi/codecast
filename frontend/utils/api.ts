@@ -1,11 +1,11 @@
 import request from 'superagent';
 import {isLocalStorageEnabled} from "../common/utils";
 
-export const asyncRequestJson = function(path, body) {
+export const asyncRequestJson = function(path, body, withCredentials = true) {
     return new Promise<any>(function(resolve, reject) {
         const req = request.post(path);
 
-        const token = isLocalStorageEnabled() ? window.localStorage.getItem('token') : null;
+        const token = isLocalStorageEnabled() && withCredentials ? window.localStorage.getItem('token') : null;
         req.set('Accept', 'application/json');
         req.send({...body, token});
         req.end(function(err, res) {

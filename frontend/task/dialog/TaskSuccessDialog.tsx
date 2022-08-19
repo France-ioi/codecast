@@ -14,13 +14,14 @@ export function TaskSuccessDialog() {
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const dispatch = useDispatch();
 
-    if (!currentLevel || !(currentLevel in levels)) {
-        return null;
+    let currentLevelFinished = false;
+    let currentLevelIndex = null;
+    let hasNextLevel = false;
+    if (currentLevel && currentLevel in levels) {
+        currentLevelFinished = (levels[currentLevel].score >= 1);
+        currentLevelIndex = taskLevelsList.indexOf(currentLevel);
+        hasNextLevel = currentLevelIndex + 1 < taskLevelsList.length && taskLevelsList[currentLevelIndex + 1] in levels;
     }
-
-    const currentLevelFinished = (levels[currentLevel].score >= 1);
-    const currentLevelIndex = taskLevelsList.indexOf(currentLevel);
-    const hasNextLevel = currentLevelIndex + 1 < taskLevelsList.length && taskLevelsList[currentLevelIndex + 1] in levels;
 
     const increaseLevel = () => {
         dispatch(taskChangeLevel(taskLevelsList[currentLevelIndex + 1]));
@@ -32,13 +33,14 @@ export function TaskSuccessDialog() {
 
     return (
         <Dialog isOpen={taskSuccess} className="simple-dialog" onClose={closeTaskSuccess}>
-            <p className="simple-dialog-success">{taskSuccessMessage}</p>
+            {taskSuccessMessage && <p className="simple-dialog-success">{taskSuccessMessage}</p>}
 
             {currentLevelFinished && <React.Fragment>
                 {hasNextLevel
                     ? <p>{getMessage('TASK_LEVEL_SUCCESS_NEXT_LABEL').format({version: getMessage('TASK_LEVEL_VERSION').format({count: currentLevelIndex + 2})})}</p>
                     : <p>{getMessage('TASK_LEVEL_SUCCESS_FINISHED')}</p>}
             </React.Fragment>}
+            {!currentLevelFinished && <p>{getMessage('TASK_LEVEL_SUCCESS_FINISHED')}</p>}
 
             <div className="simple-dialog-buttons">
                 {currentLevelFinished && hasNextLevel

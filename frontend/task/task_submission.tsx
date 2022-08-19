@@ -19,6 +19,10 @@ import {
 } from "./platform/platform";
 import {selectAnswer} from "./selectors";
 import {delay} from "../player/sagas";
+import {SubmissionExecutionMode} from "../submission/submission_slice";
+import {makeServerSubmission} from "../submission/task_platform";
+import {getAnswerTokenForLevel, getTaskTokenForLevel} from "./platform/task_token";
+import stringify from 'json-stable-stringify-without-jsonify';
 
 export const levelScoringData = {
     basic: {
@@ -152,11 +156,9 @@ class TaskSubmissionExecutor {
     }
 
     *gradeAnswer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
-        const {level, answer, maxScore, minScore} = parameters;
-        let lastMessage = null;
+        const {answer, maxScore, minScore} = parameters;
         const state: AppStore = yield* select();
 
-        console.log('do grade answer');
         if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state)) {
             return {
                 score: minScore + (maxScore - minScore) * Number(answer) / recordingProgressSteps,
@@ -164,7 +166,37 @@ class TaskSubmissionExecutor {
             }
         }
 
+        if (SubmissionExecutionMode.Server === state.submission.executionMode) {
+            return yield* call(this.gradeAnswerServer, parameters);
+        } else {
+            return yield* call(this.gradeAnswerClient, parameters);
+        }
+    }
+
+    *gradeAnswerServer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
+        const {level, answer, maxScore, minScore} = parameters;
+        const state: AppStore = yield* select();
+
+        const randomSeed = state.platform.taskRandomSeed;
+        const newTaskToken = getTaskTokenForLevel(level, randomSeed);
+        const answerToken = getAnswerTokenForLevel(stringify(answer), level, randomSeed);
+
+        console.log('start grading answer on server', {randomSeed, newTaskToken, answerToken});
+
+        const submissionData = yield* makeServerSubmission(answer, newTaskToken, answerToken);
+
+        console.log('submission data', submissionData);
+
+        return {
+            score: 100,
+        };
+    }
+
+    *gradeAnswerClient(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
+        const {level, answer, maxScore, minScore} = parameters;
+        const state: AppStore = yield* select();
         const environment = state.environment;
+        let lastMessage = null;
         console.log('start grading answer', environment);
         const tests = yield* select(state => state.task.taskTests);
         if (!tests || 0 === Object.values(tests).length) {

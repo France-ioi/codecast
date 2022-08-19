@@ -6,6 +6,7 @@ import {useDispatch} from "react-redux";
 import {submissionChangeServerExecuteOn, SubmissionServerExecuteOn} from "./submission_slice";
 import {useAppSelector} from "../hooks";
 import {getMessage} from "../lang";
+import {submissionTriggerPlatformValidate} from "./submission";
 
 export function SubmissionControls() {
     const serverExecuteOn = useAppSelector(state => state.submission.serverExecuteOn);
@@ -17,6 +18,7 @@ export function SubmissionControls() {
 
     const submit = () => {
         console.log('submit');
+        dispatch(submissionTriggerPlatformValidate());
     }
 
     return (

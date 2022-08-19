@@ -307,6 +307,10 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             }
             yield* call(success, reconciledScore, currentMessage, currentScoreToken);
         } else {
+            // if (!answerToken) {
+            //     const answer = yield getTaskAnswer();
+            //     answerToken = window.task_token.getAnswerToken(stringify(answer));
+            // }
             const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer, minScore, maxScore, noScore});
 
             yield* put(platformAnswerGraded({score, message}));

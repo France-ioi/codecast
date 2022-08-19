@@ -16,6 +16,7 @@ import promptModalBundle from './prompt_modal';
 import clientApiBundle from './client_api';
 import subtitlesBundle from '../subtitles';
 import taskBundle from '../task';
+import submissionBundle from '../submission/submission';
 import layoutBundle from '../task/layout/layout';
 import examplesBundle from './examples';
 import stepperBundle from '../stepper';
@@ -46,6 +47,7 @@ export default function(bundle: Bundle) {
     bundle.include(promptModalBundle);
 
     bundle.include(taskBundle);
+    bundle.include(submissionBundle);
     bundle.include(layoutBundle);
 
     bundle.include(stepperBundle);
