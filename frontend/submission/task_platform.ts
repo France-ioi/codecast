@@ -12,14 +12,16 @@ export function* getTaskFromId (taskId: string): Generator<any, object> {
 export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string) {
     const state: AppStore = yield* select();
     const {taskPlatformUrl} = state.options;
+    const answerDecoded = JSON.parse(answer);
 
     const body = {
         token: taskToken,
         answerToken: answerToken,
         answer: {
             language: state.options.platform,
-            sourceCode: answer,
+            sourceCode: answerDecoded,
         },
+        userTests: [],
         locale: state.options.language.split('-')[0],
         platform: state.submission.platformName,
         taskId: state.task.currentTask.id,
@@ -33,5 +35,5 @@ export function* makeServerSubmission(answer: string, taskToken: string, answerT
         }
     };
 
-    return (yield* call(asyncRequestJson, taskPlatformUrl + '/submissions?XDEBUG_SESSIOn_START=PHPSTORM', body, false)) as object;
+    return (yield* call(asyncRequestJson, taskPlatformUrl + '/submissions?XDEBUG_SESSION_START=PHPSTORM', body, false)) as object;
 }
