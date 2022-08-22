@@ -196,16 +196,18 @@ export class QuickAlgoLibrary {
         if ('tralalere' === window.app) {
             return {
                 categories: {
-                    logic: 210,
-                    loops: 120,
-                    control: 120,
-                    math: 230,
-                    operator: 230,
+                    logic: 215,
+                    loops: 181,
+                    control: 215,
+                    math: 120,
+                    operator: 0,
                     texts: 160,
-                    lists: 260,
+                    lists: 222,
                     colour: 20,
-                    variables: 330,
-                    functions: 65,
+                    variables: 38,
+                    functions: 30,
+                    actions: 215,
+                    sensors: 215,
                     _default: 290,
                 },
                 blocks: {}
