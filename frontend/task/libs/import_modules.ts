@@ -314,6 +314,7 @@ let jsLibLoaded = null;
 
 export async function importPlatformModules(platform, modulesPath) {
     if (!hasBlockPlatform(platform)) {
+        await importModules(['quickAlgo_utils'], modulesPath);
         return;
     }
 
@@ -323,8 +324,8 @@ export async function importPlatformModules(platform, modulesPath) {
     jsLibLoaded = platform;
 
     const modulesToImport = {
-        blockly: ['blockly', 'blockly_blocks', 'blockly_javascript', 'blockly_python', 'blockly_fioi', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
-        scratch: ['scratch', 'scratch_blocks_common', 'scratch_blocks',  'blockly_javascript', 'blockly_python', 'blockly_fioi', 'scratch_fixes', 'scratch_procedures', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
+        blockly: ['acorn', 'acorn-walk', 'interpreter', 'blockly', 'blockly_blocks', 'blockly_javascript', 'blockly_python', 'blockly_fioi', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
+        scratch: ['acorn', 'acorn-walk', 'interpreter', 'scratch', 'scratch_blocks_common', 'scratch_blocks',  'blockly_javascript', 'blockly_python', 'blockly_fioi', 'scratch_fixes', 'scratch_procedures', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
     }
 
     await importModules(modulesToImport[platform], modulesPath);

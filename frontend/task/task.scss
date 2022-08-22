@@ -194,12 +194,14 @@ body {
     &.level-hard .hard {
       display: inline-block !important;
     }
-
     [data-lang] {
       display: none !important;
     }
 
-    [data-lang~="python"] {
+    &.platform-python [data-lang~="python"],
+    &.platform-blockly [data-lang~="blockly"],
+    &.platform-scratch [data-lang~="scratch"],
+    &.platform-unix [data-lang~="unix"] {
       display: inline-block !important;
     }
 

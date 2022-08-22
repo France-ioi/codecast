@@ -7,6 +7,7 @@ export function TaskInstructions() {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const currentTask = useAppSelector(state => state.task.currentTask);
     const taskLevel = useAppSelector(state => state.task.currentLevel);
+    const platform = useAppSelector(state => state.options.platform);
     const contextId = useAppSelector(state => state.task.contextId);
     const isBackend = useAppSelector(state => state.options.backend);
     const taskInstructionsHtmlFromOptions = useAppSelector(state => state.options.taskInstructions);
@@ -64,7 +65,7 @@ export function TaskInstructions() {
     }
 
     return (
-        <div className={`task-mission level-${taskLevel}`} style={{fontSize: `${zoomLevel}rem`}}>
+        <div className={`task-mission level-${taskLevel} platform-${platform}`} style={{fontSize: `${zoomLevel}rem`}}>
             <h1>Votre mission</h1>
 
             {taskInstructions}
