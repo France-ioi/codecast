@@ -1,9 +1,13 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
 import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
 
-export function TaskInstructions() {
+export interface TaskInstructionsProps {
+    changeDisplayShowMore?: (display: boolean) => void,
+}
+
+export function TaskInstructions(props: TaskInstructionsProps) {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const currentTask = useAppSelector(state => state.task.currentTask);
     const taskLevel = useAppSelector(state => state.task.currentLevel);
@@ -12,6 +16,7 @@ export function TaskInstructions() {
     const isBackend = useAppSelector(state => state.options.backend);
     const taskInstructionsHtmlFromOptions = useAppSelector(state => state.options.taskInstructions);
     const [algoreaInstructionsHtml, setAlgoreaInstructionsHtml] = useState(null);
+    const instructionsRef = useRef<HTMLDivElement>();
 
     useEffect(() => {
         const context = quickAlgoLibraries.getContext(null, 'main');
@@ -60,12 +65,19 @@ export function TaskInstructions() {
         </React.Fragment>
     );
 
+    useEffect(() => {
+        let hasShortOrLong = 0 < instructionsRef.current.getElementsByClassName('short').length || 0 < instructionsRef.current.getElementsByClassName('long').length;
+        if (props.changeDisplayShowMore) {
+            props.changeDisplayShowMore(hasShortOrLong);
+        }
+    }, [taskInstructions])
+
     if (!instructionsHtml && !isBackend) {
         return null;
     }
 
     return (
-        <div className={`task-mission level-${taskLevel} platform-${platform}`} style={{fontSize: `${zoomLevel}rem`}}>
+        <div ref={instructionsRef} className={`task-mission level-${taskLevel} platform-${platform}`} style={{fontSize: `${zoomLevel}rem`}}>
             <h1>Votre mission</h1>
 
             {taskInstructions}

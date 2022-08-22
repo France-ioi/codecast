@@ -30,7 +30,7 @@ export function TralalereApp() {
     const language = useAppSelector(state => state.options.language);
     const platform = useAppSelector(state => state.options.platform);
     const screen = useAppSelector(state => state.screen);
-    const [instructionsExpanded, setInstructionsExpanded] = useState(false);
+    const [instructionsExpanded, setInstructionsExpanded] = useState(true);
     const contextId = useAppSelector(state => state.task.contextId);
     const menuHelpsOpen = useAppSelector(state => state.task.menuHelpsOpen);
 
