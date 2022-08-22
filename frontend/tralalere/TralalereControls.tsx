@@ -18,6 +18,7 @@ import {getMessage} from "../lang";
 import {getStepperControlsSelector} from "../stepper/selectors";
 import {useAppSelector} from "../hooks";
 import {taskChangeSoundEnabled} from "../task/task_slice";
+import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
 
 interface StepperControlsProps {
     enabled: boolean,
@@ -181,6 +182,7 @@ export function TralalereControls(props: StepperControlsProps) {
                 {_button('gotoend', onGoToEnd, getMessage('CONTROL_GO_TO_END'), <FontAwesomeIcon icon={faForward}/>, null, 'is-big')}
             </React.Fragment>}
         </div><div className={`controls controls-stepper ${controlsType} controls-right`}>
+            <TralalereBlocksUsage/>
             {showControls && <React.Fragment>
                 {_button('sound', toggleSound, getMessage('CONTROL_SOUND'), <FontAwesomeIcon icon={stepperControlsState.soundEnabled ? faVolumeUp : faVolumeMute}/>, null, 'is-big')}
             </React.Fragment>}

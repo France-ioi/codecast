@@ -64,7 +64,7 @@ export function LayoutEditor({style}) {
                     hasAutocompletion
                 />
             </div>
-            {'tralalere' === options.app ? <TralalereBlocksUsage/> : <BlocksUsage/>}
+            {'tralalere' !== options.app && <BlocksUsage/>}
         </div>
     );
 }
