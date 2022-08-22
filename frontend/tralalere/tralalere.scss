@@ -81,6 +81,11 @@ $tralalere-red: #FF3C11;
             font-style: italic;
             font-weight: 900;
           }
+          a {
+            color: $tralalere-green;
+            font-weight: bold;
+            text-decoration: underline;
+          }
         }
       }
 

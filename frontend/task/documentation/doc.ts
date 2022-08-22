@@ -12,6 +12,8 @@ import {
 import {AppAction, CodecastPlatform} from "../../store";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {getMessage} from "../../lang";
+import {App} from "../../index";
+import {Screen} from "../../common/screens";
 
 let openerChannel;
 
@@ -28,7 +30,7 @@ export interface DocumentationLoadAction extends AppAction {
 }
 
 export interface ConceptViewer {
-    loadConcepts: Function,
+    showConcept: Function,
 }
 
 export const documentationLoad = (standalone: boolean, hasTaskInstructions?: boolean): DocumentationLoadAction => ({
@@ -121,15 +123,18 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
             concepts.push('base');
         }
 
-        // Add code examples to documentation
-        const conceptBaseUrl = (window.location.protocol == 'https:' ? 'https:' : 'http:') + '//'
-            + 'static4.castor-informatique.fr/help/examples_codecast.html';
-        allConcepts = allConcepts.concat([{
-            id: 'exemples',
-            name: getMessage('TASK_DOCUMENTATION_CODE_EXAMPLES').s,
-            url: conceptBaseUrl + '#examples',
-            isBase: true
-        }])
+        const currentTask = yield* select(state => state.task.currentTask);
+        if (!currentTask) {
+            // Add code examples to documentation
+            const conceptBaseUrl = (window.location.protocol == 'https:' ? 'https:' : 'http:') + '//'
+                + 'static4.castor-informatique.fr/help/examples_codecast.html';
+            allConcepts = allConcepts.concat([{
+                id: 'exemples',
+                name: getMessage('TASK_DOCUMENTATION_CODE_EXAMPLES').s,
+                url: conceptBaseUrl + '#examples',
+                isBase: true
+            }])
+        }
 
         const taskConcept = {
             id: 'task-instructions',
@@ -162,7 +167,20 @@ function* loadDocumentationConcepts(documentationConcepts, selectedConceptId = n
 }
 
 export default function (bundle: Bundle) {
-    bundle.addSaga(function* () {
+    bundle.addSaga(function* (app: App) {
+        if ('main' !== app.environment) {
+            return;
+        }
+
+        window.conceptViewer = {
+            showConcept(concept, show) {
+                if (concept) {
+                    app.dispatch(documentationConceptSelected(concept));
+                }
+                app.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationBig}});
+            },
+        };
+
         yield* takeEvery(DocumentationActionTypes.DocumentationLoad, function* (action: DocumentationLoadAction) {
             yield* call(documentationLoadSaga, action.payload.standalone, action.payload.hasTaskInstructions);
         });
