@@ -184,27 +184,6 @@ body {
       font-size: 1.5em !important;
     }
 
-    .basic, .easy, .medium, .hard {
-      display: none !important;
-    }
-
-    &.level-basic .basic,
-    &.level-easy .easy,
-    &.level-medium .medium,
-    &.level-hard .hard {
-      display: inline-block !important;
-    }
-    [data-lang] {
-      display: none !important;
-    }
-
-    &.platform-python [data-lang~="python"],
-    &.platform-blockly [data-lang~="blockly"],
-    &.platform-scratch [data-lang~="scratch"],
-    &.platform-unix [data-lang~="unix"] {
-      display: inline-block !important;
-    }
-
     ul {
       margin-bottom: 1rem !important;
     }
@@ -789,4 +768,8 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   border: none;
   background: none;
   cursor: pointer;
+}
+
+.ace_tooltip {
+  white-space: pre-wrap !important;
 }

@@ -2,10 +2,27 @@ import React, {useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
 import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
+import {platformsList} from "../store";
+import {taskLevelsList} from "./platform/platform_slice";
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
 }
+
+const defaultInstructionsHtml = `
+    <p>
+        Programmez le robot pour qu'il pousse les caisses sur les cases marquées.
+    </p>
+    <p>
+        Pour pousser une caisse, mettez d'abord le robot face à la caisse, il avancera en la poussant.
+    </p>
+    <div class="advice">
+        Pour le fonctionnement des blocs de boucle, pense à regarder la documentation.
+    </div>
+    <p class="long">
+        Plus de détails sur la mission
+    </p>
+`;
 
 export function TaskInstructions(props: TaskInstructionsProps) {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
@@ -15,10 +32,11 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const contextId = useAppSelector(state => state.task.contextId);
     const isBackend = useAppSelector(state => state.options.backend);
     const taskInstructionsHtmlFromOptions = useAppSelector(state => state.options.taskInstructions);
-    const [algoreaInstructionsHtml, setAlgoreaInstructionsHtml] = useState(null);
+    const [instructionsHtml, setInstructionsHtml] = useState(null);
     const instructionsRef = useRef<HTMLDivElement>();
 
     useEffect(() => {
+        let newInstructionsHtml = taskInstructionsHtmlFromOptions ? taskInstructionsHtmlFromOptions : defaultInstructionsHtml;
         const context = quickAlgoLibraries.getContext(null, 'main');
         if (context && window.algoreaInstructionsStrings && window.getAlgoreaInstructionsAsHtml && currentTask.gridInfos.intro) {
             const strLang = window.stringsLanguage;
@@ -26,51 +44,31 @@ export function TaskInstructions(props: TaskInstructionsProps) {
             let newInstructions = window.getAlgoreaInstructionsAsHtml(strings, currentTask.gridInfos, currentTask.data, taskLevel);
             if (newInstructions) {
                 const innerText = window.jQuery(newInstructions).text();
-                console.log('Extracted Algorea instructions', newInstructions);
                 if (innerText.length) {
-                    setAlgoreaInstructionsHtml(newInstructions);
+                    newInstructionsHtml = newInstructions;
                 }
             }
         }
-    }, [contextId]);
 
-    let instructionsHtml = algoreaInstructionsHtml ? algoreaInstructionsHtml : taskInstructionsHtmlFromOptions;
+        const instructionsJQuery = window.jQuery(`<div>${newInstructionsHtml}</div>`);
+        for (let availablePlatform of platformsList) {
+            if (platform !== availablePlatform) {
+                instructionsJQuery.find(`[data-lang="${availablePlatform}"]`).remove();
+            }
+        }
+        for (let availableLevel of taskLevelsList) {
+            if (taskLevel !== availableLevel) {
+                instructionsJQuery.find(`.${availableLevel}`).remove();
+            }
+        }
 
-    let taskInstructions = instructionsHtml ? (<div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>) : (
-        <React.Fragment>
-            <p>
-                Programmez le robot pour qu'il pousse les caisses sur les cases marquées.
-            </p>
-            <p>
-                Pour pousser une caisse, mettez d'abord le robot face à la caisse, il avancera en la poussant.
-            </p>
-            <div className="advice">
-                Pour le fonctionnement des blocs de boucle, pense à regarder la documentation.
-            </div>
-            <p className="short">
-                <strong>Attention :</strong> vous ne pouvez utiliser qu'une fois l'instruction "pousser la caisse".
-            </p>
-            <p className="long">
-                Plus de détails sur la mission
-            </p>
-            <p className="long">
-                Plus de détails sur la mission
-            </p>
-            <p className="long">
-                Plus de détails sur la mission
-            </p>
-            <p className="long">
-                Plus de détails sur la mission
-            </p>
-        </React.Fragment>
-    );
+        setInstructionsHtml(instructionsJQuery.html());
 
-    useEffect(() => {
-        let hasShortOrLong = 0 < instructionsRef.current.getElementsByClassName('short').length || 0 < instructionsRef.current.getElementsByClassName('long').length;
         if (props.changeDisplayShowMore) {
+            let hasShortOrLong = 0 < instructionsJQuery.find('.short').length || 0 < instructionsJQuery.find('.long').length;
             props.changeDisplayShowMore(hasShortOrLong);
         }
-    }, [taskInstructions])
+    }, [contextId]);
 
     if (!instructionsHtml && !isBackend) {
         return null;
@@ -80,7 +78,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         <div ref={instructionsRef} className={`task-mission level-${taskLevel} platform-${platform}`} style={{fontSize: `${zoomLevel}rem`}}>
             <h1>Votre mission</h1>
 
-            {taskInstructions}
+            <div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>
         </div>
     );
 }
