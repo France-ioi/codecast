@@ -54,6 +54,28 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     // during loadPrograms at the start of the program execution
     blocklyHelper.onChangeResetDisplay = () => {
     };
+    // Override this function to add x="0" y="0" so that cleanBlockAttributes works correctly by detecting x is not null
+    blocklyHelper.getEmptyContent = function() {
+        if (this.startingBlock) {
+            if(this.scratchMode) {
+                return '<xml><block type="robot_start" deletable="false" movable="false" x="10" y="20"></block></xml>';
+            } else {
+                return '<xml><block type="robot_start" deletable="false" movable="false" x="0" y="0"></block></xml>';
+            }
+        }
+        else {
+            return '<xml></xml>';
+        }
+    };
+    // Override this function to change parameters
+    blocklyHelper.getOrigin = function() {
+        // Get x/y origin
+        if(this.includeBlocks.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
+            return this.scratchMode ? {x: 340, y: 20} : {x: 105, y: 2};
+        }
+        return this.scratchMode ? {x: 20, y: 20} : {x: 20, y: 2};
+    };
+
     context.blocklyHelper = blocklyHelper;
     context.onChange = () => {};
 
