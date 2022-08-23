@@ -130,6 +130,7 @@ $tralalere-red: #FF3C11;
 
   .tralalere-section {
     display: flex;
+    position: relative;
     flex: 50%;
     min-height: 0;
     min-width: 0;
@@ -156,7 +157,7 @@ $tralalere-red: #FF3C11;
   }
 
   .tralalere-menu-icons {
-    position: fixed;
+    position: absolute;
     top: 10px;
     right: 10px;
     z-index: 10;
@@ -313,7 +314,6 @@ $tralalere-red: #FF3C11;
     border-radius: 7px;
     margin-left: 6px;
     margin-right: 10px;
-    margin-bottom: 10px;
     display: flex;
     align-items: center;
     .close-button {
@@ -681,5 +681,38 @@ $tralalere-red: #FF3C11;
       border: solid 2px rgba(0, 0, 0, 0.25);
       border-radius: 2px;
     }
+  }
+}
+
+.tralalere-mobile-tabs {
+  display: flex;
+  .tralalere-mobile-tab {
+    flex: 50%;
+    border-radius: 10px 10px 0 0;
+    font-family: 'Roboto';
+    font-weight: 900;
+    text-align: center;
+
+    background: #5158BB;
+    border: 3px solid #05A8AA;
+    color: white;
+    padding: 5px 10px;
+
+    &.is-active {
+      background: #85FF00;
+      border: 3px solid #85FF00;
+      color: #043565;
+    }
+  }
+}
+
+// Responsive
+.layout-mobile-horizontal.tralalere, .layout-mobile-vertical.tralalere {
+  .tralalere-controls {
+    width: 100%;
+    padding-left: initial;
+    background: $tralalere-dark-blue;
+    padding: 5px 0;
+    bottom: 0;
   }
 }

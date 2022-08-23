@@ -19,6 +19,7 @@ import {getStepperControlsSelector} from "../stepper/selectors";
 import {useAppSelector} from "../hooks";
 import {taskChangeSoundEnabled} from "../task/task_slice";
 import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
+import {LayoutType} from "../task/layout/layout";
 
 interface StepperControlsProps {
     enabled: boolean,
@@ -29,6 +30,9 @@ export function TralalereControls(props: StepperControlsProps) {
         return getStepperControlsSelector(state, props);
     });
     const {showControls, showCompile, compileOrExecuteMessage, controlsType, canInterrupt, showStepper} = stepperControlsState;
+    const layoutType = useAppSelector(state => state.layout.type);
+    const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
+
     const dispatch = useDispatch();
 
     const _button = (key: string, onClick: any, title: string, icon: IconName|JSX.Element, text?: string, classNames?: string): ReactElement => {
@@ -182,7 +186,7 @@ export function TralalereControls(props: StepperControlsProps) {
                 {_button('gotoend', onGoToEnd, getMessage('CONTROL_GO_TO_END'), <FontAwesomeIcon icon={faForward}/>, null, 'is-big')}
             </React.Fragment>}
         </div><div className={`controls controls-stepper ${controlsType} controls-right`}>
-            <TralalereBlocksUsage/>
+            {!isMobile && <TralalereBlocksUsage/>}
             {showControls && <React.Fragment>
                 {_button('sound', toggleSound, getMessage('CONTROL_SOUND'), <FontAwesomeIcon icon={stepperControlsState.soundEnabled ? faVolumeUp : faVolumeMute}/>, null, 'is-big')}
             </React.Fragment>}

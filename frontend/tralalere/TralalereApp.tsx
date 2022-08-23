@@ -10,23 +10,22 @@ import {ContextVisualization} from "../task/ContextVisualization";
 import {LayoutEditor} from "../task/layout/LayoutEditor";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
-import {TralalereControls} from "./TralalereControls";
-import {Dialog, Icon} from "@blueprintjs/core";
-import {toHtml} from "../utils/sanitize";
-import {stepperClearError} from "../stepper/actionTypes";
+import {Dialog} from "@blueprintjs/core";
 import {Documentation} from "../task/documentation/Documentation";
 import {CodecastPlatform} from "../store";
-import {TaskHints} from "../task/hints/TaskHints";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTimes} from "@fortawesome/free-solid-svg-icons";
 import {TralalereBox} from "./TralalereBox";
 import {TralalereInstructions} from "./TralalereInstructions";
-import {taskSetMenuHelpsOpen} from "../task/task_slice";
+import {LayoutMobileMode, LayoutType} from "../task/layout/layout";
+import {ActionTypes} from "../task/layout/actionTypes";
+import {TralalereFooter} from "./TralalereFooter";
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
     const options = useAppSelector(state => state.options);
     const layoutType = useAppSelector(state => state.layout.type);
+    const layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     const language = useAppSelector(state => state.options.language);
     const platform = useAppSelector(state => state.options.platform);
     const screen = useAppSelector(state => state.screen);
@@ -35,9 +34,7 @@ export function TralalereApp() {
     const menuHelpsOpen = useAppSelector(state => state.task.menuHelpsOpen);
 
     const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
-    const hintsOpen = Screen.Hints === screen;
-    const stepperError = useAppSelector(state => state.stepper.error);
-    const hasError = !!stepperError;
+
     const windowWidth = useAppSelector(state => state.windowWidth);
     const availableHints = useAppSelector(state => state.hints.availableHints);
     // const availableHints = [
@@ -45,22 +42,13 @@ export function TralalereApp() {
     //     {content: 'aazazazazazazz'},
     // ];
 
-    let error = null;
-    if (hasError) {
-        if ('compilation' === stepperError.type) {
-            const stepperErrorHtml = toHtml(stepperError.content);
-            error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;
-        } else {
-            const stepperErrorHtml = toHtml(stepperError);
-            error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
-        }
-    }
 
     const dispatch = useDispatch();
 
     useEffect(() => {
         window.app = 'tralalere';
         document.documentElement.setAttribute('data-theme', 'tralalere');
+        selectMode(LayoutMobileMode.Player);
 
         setTimeout(() => {
             const taskLoadParameters: {level?: TaskLevelName} = {};
@@ -100,9 +88,6 @@ export function TralalereApp() {
         setInstructionsExpanded(!instructionsExpanded);
     };
 
-    const onClearError = () => {
-        dispatch(stepperClearError());
-    };
 
     const closeDocumentation = () => {
         dispatch({
@@ -111,79 +96,54 @@ export function TralalereApp() {
         });
     };
 
-    const closeHints = () => {
-        dispatch({
-            type: CommonActionTypes.AppSwitchToScreen,
-            payload: {screen: null},
-        });
+    const selectMode = (mobileMode: LayoutMobileMode) => {
+        dispatch({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
     };
+
+    const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere`}>
             <div className="layout-general">
-                <div className={`tralalere-menu-icons ${menuHelpsOpen ? 'has-helps' : ''}`}>
-                    {0 < availableHints.length && <div className="tralalere-button" onClick={toggleHints}>
-                        ?
-                        <div className="tralalere-menu-label">Indices</div>
-                    </div>}
-
-                    <div className="tralalere-button" onClick={toggleDocumentation}>
-                        <img className="menu-task-icon" src={window.modulesPath + 'img/algorea/crane/documentation.svg'}/>
-                        <div className="tralalere-menu-label">Documentation</div>
+                {LayoutType.MobileVertical === layoutType && <div className="tralalere-mobile-tabs">
+                    <div className={`tralalere-mobile-tab ${LayoutMobileMode.Player === layoutMobileMode ? 'is-active' : ''}`} onClick={() => selectMode(LayoutMobileMode.Player)}>
+                    Représentation</div>
+                    <div className={`tralalere-mobile-tab ${LayoutMobileMode.Editor === layoutMobileMode ? 'is-active' : ''}`} onClick={() => selectMode(LayoutMobileMode.Editor)}>
+                    Coding
                     </div>
-                </div>
+                </div>}
 
                 <div className={`tralalere-section`}>
-                    <div className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`} style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
-                        <TralalereInstructions onExpand={expandInstructions}/>
+                    <div className={`tralalere-menu-icons ${menuHelpsOpen ? 'has-helps' : ''}`}>
+                        {0 < availableHints.length && <div className="tralalere-button" onClick={toggleHints}>
+                          ?
+                            <div className="tralalere-menu-label">Indices</div>
+                        </div>}
 
-                        {instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
+                        <div className="tralalere-button" onClick={toggleDocumentation}>
+                            <img className="menu-task-icon" src={window.modulesPath + 'img/algorea/crane/documentation.svg'}/>
+                            <div className="tralalere-menu-label">Documentation</div>
+                        </div>
+                    </div>
+
+                    {(!isMobile || LayoutMobileMode.Player === layoutMobileMode) && <div className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`} style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
+                        {!isMobile && <TralalereInstructions onExpand={expandInstructions}/>}
+
+                        {!isMobile && instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
 
                         <ContextVisualization/>
-                    </div>
-                    <div className="blockly-editor">
+
+                        {isMobile && <TralalereFooter/>}
+                    </div>}
+                    {(!isMobile || LayoutMobileMode.Editor === layoutMobileMode) && <div className="blockly-editor">
                         <LayoutEditor style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/editor-cross.png'}`}}/>
+
                         {CodecastPlatform.Blockly === platform && <div className="blockly-flyout-wrapper">
                             <img className="blockly-flyout-wrapper-bottom" src={window.modulesPath + 'img/algorea/crane/editor-bottom-background.png'}/>
                         </div>}
-                        {hintsOpen && <div className="tralalere-hints">
-                            <TralalereBox>
-                                <div className="tralalere-box-header">
-                                    <div className="tralalere-box-header-icon">
-                                        ?
-                                    </div>
-                                    <div className="tralalere-box-header-title">
-                                        Indice
-                                    </div>
-                                    <div className="tralalere-box-header-close">
-                                        <div className="tralalere-button" onClick={closeHints}>
-                                            <FontAwesomeIcon icon={faTimes}/>
-                                        </div>
-                                    </div>
-                                </div>
-                                <TaskHints/>
-                            </TralalereBox>
-                        </div>}
-                        <div className="tralalere-controls">
-                            <div>
-                                {hasError && <div className="error-message" onClick={onClearError}>
-                                    <button type="button" className="close-button" onClick={onClearError}>
-                                        <Icon icon="cross"/>
-                                    </button>
-                                    <div className="error-message-wrapper">
-                                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path fillRule="evenodd" clipRule="evenodd" d="M19.8304 0.192383H8.46988L0.429688 8.23257V19.5931L8.46988 27.6333H19.8304L27.8706 19.5931V8.23257L19.8304 0.192383ZM11.0044 8.82642C10.4686 8.29061 9.59988 8.29061 9.06406 8.82642C8.52825 9.36224 8.52825 10.231 9.06406 10.7668L12.21 13.9127L9.06406 17.0587C8.52825 17.5945 8.52825 18.4632 9.06406 18.9991C9.59988 19.5349 10.4686 19.5349 11.0044 18.9991L14.1504 15.8531L17.2963 18.9991C17.8322 19.5349 18.7009 19.5349 19.2367 18.9991C19.7725 18.4632 19.7725 17.5945 19.2367 17.0587L16.0908 13.9127L19.2367 10.7668C19.7725 10.231 19.7725 9.36224 19.2367 8.82642C18.7009 8.29061 17.8322 8.29061 17.2963 8.82642L14.1504 11.9724L11.0044 8.82642Z" fill="#FF3C11"/>
-                                        </svg>
-                                        <div className="message">
-                                            {error}
-                                        </div>
-                                    </div>
-                                </div>}
 
-                                <TralalereControls enabled={true}/>
-                            </div>
-                        </div>
-                    </div>
+                        <TralalereFooter/>
+                    </div>}
                 </div>
             </div>
 
