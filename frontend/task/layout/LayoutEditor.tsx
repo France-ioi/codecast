@@ -11,9 +11,12 @@ import {taskSetBlocksPanelCollapsed} from "../task_slice";
 import {useDispatch} from "react-redux";
 import {BlocksUsage} from "../blocks/BlocksUsage";
 import {CodecastPlatform} from "../../store";
-import {TralalereBlocksUsage} from "../../tralalere/TralalereBlocksUsage";
 
-export function LayoutEditor({style}) {
+export interface LayoutEditorProps {
+    style?: any,
+}
+
+export function LayoutEditor(props: LayoutEditorProps) {
     const options = useAppSelector(state => state.options);
     const platform = options.platform;
     const currentTask = useAppSelector(state => state.task.currentTask);
@@ -46,7 +49,7 @@ export function LayoutEditor({style}) {
     const displayBlocks = !!(context && blocks.length && CodecastPlatform.Python === platform && 'tralalere' !== options.app);
 
     return (
-        <div className="layout-editor" style={style}>
+        <div className="layout-editor" style={props.style}>
             {currentTask && displayBlocks && <AvailableBlocks collapsed={blocksCollapsed}/>}
             <div className="task-layout-editor-container">
                 {currentTask && displayBlocks && <div className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>

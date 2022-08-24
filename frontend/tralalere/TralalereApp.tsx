@@ -21,6 +21,7 @@ import {LayoutMobileMode, LayoutType} from "../task/layout/layout";
 import {ActionTypes} from "../task/layout/actionTypes";
 import {TralalereFooter} from "./TralalereFooter";
 import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
+import {StepperStatus} from "../stepper";
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -35,6 +36,7 @@ export function TralalereApp() {
     const menuHelpsOpen = useAppSelector(state => state.task.menuHelpsOpen);
     const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
     const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
+    const programRunning = useAppSelector(state => state.stepper && state.stepper.status !== StepperStatus.Clear);
 
     const windowWidth = useAppSelector(state => state.windowWidth);
     const availableHints = useAppSelector(state => state.hints.availableHints);
@@ -105,7 +107,6 @@ export function TralalereApp() {
         dispatch({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
     };
 
-
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere`}>
             <div className="layout-general">
@@ -155,6 +156,13 @@ export function TralalereApp() {
                         {!isMobile && <TralalereFooter/>}
                     </div>}
                 </div>
+
+                {isMobile && LayoutMobileMode.Player === layoutMobileMode && programRunning && <div className="tralalere-section tralalere-coding-overlay">
+                    <div className="blockly-editor">
+                        <LayoutEditor/>
+                    </div>
+                </div>}
+
                 {isMobile && LayoutMobileMode.Player === layoutMobileMode && <TralalereFooter
                     instructionsExpanded={instructionsExpanded}
                     expandInstructions={expandInstructions}

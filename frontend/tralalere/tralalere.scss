@@ -748,6 +748,7 @@ $tralalere-red: #FF3C11;
     padding-left: initial;
     padding: 5px 0;
     background: $tralalere-dark-blue;
+
     .tralalere-button {
       @include tralalere-button-small;
     }
@@ -759,6 +760,7 @@ $tralalere-red: #FF3C11;
       justify-content: center;
       margin-right: 70px;
     }
+
     .controls.controls-right {
       order: 1;
     }
@@ -782,9 +784,11 @@ $tralalere-red: #FF3C11;
     position: absolute;
     bottom: 10px;
     z-index: 20;
+
     .advice {
       margin-left: 0 !important;
     }
+
     .task-mission {
       margin-right: 0;
     }
@@ -797,26 +801,32 @@ $tralalere-red: #FF3C11;
   .blocklyTreeRoot {
     padding-left: 0;
     padding-right: 0;
+
     [role=treeitem] {
       margin-bottom: 8px;
     }
+
     .blocklyTreeRow {
       height: auto !important;
       text-align: center;
       padding: 6px 8px !important;
       border-radius: 0 !important;
+
       &:after {
         display: none;
       }
+
       .blocklyTreeIcon {
         display: block !important;
         width: 20px;
         height: 20px;
         margin: auto;
       }
+
       .blocklyTreeLabel {
         display: block !important;
       }
+
       &.blocklyTreeSelected {
         margin-right: initial !important;
         z-index: 1;
@@ -835,8 +845,22 @@ $tralalere-red: #FF3C11;
     position: absolute;
     left: calc(var(--flyout-width) + 13px);
     bottom: 18px;
+
     .tralalere-button {
       @include tralalere-button-small;
+    }
+  }
+
+  .tralalere-menu-icons {
+    z-index: 0 !important;
+  }
+
+  .tralalere-coding-overlay {
+    border: solid 2px $tralalere-green;
+    box-shadow: inset 0px 0px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 4px;
+    .blocklyToolboxDiv {
+      display: none;
     }
   }
 }
