@@ -14,12 +14,13 @@ import {Dialog} from "@blueprintjs/core";
 import {Documentation} from "../task/documentation/Documentation";
 import {CodecastPlatform} from "../store";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faTimes} from "@fortawesome/free-solid-svg-icons";
+import {faPlay, faTimes} from "@fortawesome/free-solid-svg-icons";
 import {TralalereBox} from "./TralalereBox";
 import {TralalereInstructions} from "./TralalereInstructions";
 import {LayoutMobileMode, LayoutType} from "../task/layout/layout";
 import {ActionTypes} from "../task/layout/actionTypes";
 import {TralalereFooter} from "./TralalereFooter";
+import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -77,7 +78,7 @@ export function TralalereApp() {
         } else {
             document.documentElement.style.setProperty('--flyout-width', '0px');
         }
-    }, [contextId, windowWidth]);
+    }, [contextId, windowWidth, layoutMobileMode]);
 
     const toggleDocumentation = () => {
         const newScreen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen ? null : Screen.DocumentationBig;
@@ -117,7 +118,7 @@ export function TralalereApp() {
                 </div>}
 
                 <div className={`tralalere-section`}>
-                    <div className={`tralalere-menu-icons ${menuHelpsOpen ? 'has-helps' : ''}`}>
+                    {(!isMobile || LayoutMobileMode.Editor === layoutMobileMode) && <div className={`tralalere-menu-icons ${menuHelpsOpen ? 'has-helps' : ''}`}>
                         {0 < availableHints.length && <div className="tralalere-button" onClick={toggleHints}>
                           ?
                             <div className="tralalere-menu-label">Indices</div>
@@ -127,7 +128,7 @@ export function TralalereApp() {
                             <img className="menu-task-icon" src={window.modulesPath + 'img/algorea/crane/documentation.svg'}/>
                             <div className="tralalere-menu-label">Documentation</div>
                         </div>
-                    </div>
+                    </div>}
 
                     {(!isMobile || LayoutMobileMode.Player === layoutMobileMode) && <div className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`} style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
                         {(!isMobile || instructionsExpanded) &&
@@ -145,10 +146,16 @@ export function TralalereApp() {
                             <img className="blockly-flyout-wrapper-bottom" src={window.modulesPath + 'img/algorea/crane/editor-bottom-background.png'}/>
                         </div>}
 
+                        {isMobile && <TralalereBlocksUsage/>}
+                        {isMobile && <div className="tralalere-editor-play">
+                            <button className="tralalere-button" onClick={() => selectMode(LayoutMobileMode.Player)}>
+                                <FontAwesomeIcon icon={faPlay}/>
+                            </button>
+                        </div>}
                         {!isMobile && <TralalereFooter/>}
                     </div>}
                 </div>
-                {isMobile && <TralalereFooter
+                {isMobile && LayoutMobileMode.Player === layoutMobileMode && <TralalereFooter
                     instructionsExpanded={instructionsExpanded}
                     expandInstructions={expandInstructions}
                 />}

@@ -234,6 +234,7 @@ $tralalere-red: #FF3C11;
   width: var(--flyout-width);
   bottom: 0;
   border-radius: 15px;
+  overflow: hidden;
   background: linear-gradient(to bottom, rgba(255,0,0,0) 0%, rgba(255,0,0,0) 80%, $tralalere-dark-blue 80%, $tralalere-dark-blue 100%);
 }
 .blockly-flyout-wrapper-bottom {
@@ -269,6 +270,16 @@ $tralalere-red: #FF3C11;
 
   &[disabled] svg {
     opacity: 0.4;
+  }
+}
+
+@mixin tralalere-button-small {
+  width: 35px;
+  height: 35px;
+  border-radius: 10px;
+  svg {
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -499,6 +510,10 @@ $tralalere-red: #FF3C11;
     border-left: none;
   }
 
+  .documentation-language-dropdown {
+    display: none;
+  }
+
   .documentation-menu {
     border-right: 4px solid $tralalere-green-blue !important;
     border-bottom: 4px solid $tralalere-green-blue !important;
@@ -718,15 +733,10 @@ $tralalere-red: #FF3C11;
   padding: 7px 7px 10px 10px;
   box-shadow: -5px 5px #383961;
   .tralalere-button {
-    width: 35px;
-    height: 35px;
+    @include tralalere-button-small;
     border-radius: 5px;
     font-size: 20px;
     border: 3px solid $tralalere-green;
-    svg {
-      width: 20px;
-      height: 20px;
-    }
   }
 }
 
@@ -736,16 +746,10 @@ $tralalere-red: #FF3C11;
     width: 100%;
     position: static;
     padding-left: initial;
-    background: $tralalere-dark-blue;
     padding: 5px 0;
+    background: $tralalere-dark-blue;
     .tralalere-button {
-      width: 35px;
-      height: 35px;
-      border-radius: 10px;
-      svg {
-        width: 20px;
-        height: 20px;
-      }
+      @include tralalere-button-small;
     }
 
     .controls.controls-left {
@@ -783,6 +787,56 @@ $tralalere-red: #FF3C11;
     }
     .task-mission {
       margin-right: 0;
+    }
+  }
+
+  .blocklyToolboxDiv {
+    min-width: initial;
+  }
+
+  .blocklyTreeRoot {
+    padding-left: 0;
+    padding-right: 0;
+    [role=treeitem] {
+      margin-bottom: 8px;
+    }
+    .blocklyTreeRow {
+      height: auto !important;
+      text-align: center;
+      padding: 6px 8px !important;
+      border-radius: 0 !important;
+      &:after {
+        display: none;
+      }
+      .blocklyTreeIcon {
+        display: block !important;
+        width: 20px;
+        height: 20px;
+        margin: auto;
+      }
+      .blocklyTreeLabel {
+        display: block !important;
+      }
+      &.blocklyTreeSelected {
+        margin-right: initial !important;
+        z-index: 1;
+        position: relative;
+      }
+    }
+  }
+
+  .tralalere-blocks-usage {
+    position: absolute;
+    bottom: 20px;
+    right: 10px;
+  }
+
+  .tralalere-editor-play {
+    position: absolute;
+    left: calc(var(--flyout-width) + 13px);
+    bottom: 18px;
+    .tralalere-button {
+      @include tralalere-button-small;
     }
   }
 }
