@@ -11,12 +11,20 @@ import {useDispatch} from "react-redux";
 import {toHtml} from "../utils/sanitize";
 import {useAppSelector} from "../hooks";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {LayoutType} from "../task/layout/layout";
 
-export function TralalereFooter () {
+export interface TralalereFooterProps {
+    instructionsExpanded?: boolean,
+    expandInstructions?: () => void,
+}
+
+export function TralalereFooter (props: TralalereFooterProps) {
     const stepperError = useAppSelector(state => state.stepper.error);
     const hasError = !!stepperError;
     const screen = useAppSelector(state => state.screen);
     const hintsOpen = Screen.Hints === screen;
+    const layoutType = useAppSelector(state => state.layout.type);
+    const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
     const dispatch = useDispatch();
 
@@ -40,6 +48,12 @@ export function TralalereFooter () {
             type: CommonActionTypes.AppSwitchToScreen,
             payload: {screen: null},
         });
+    };
+
+    const expandInstructions = () => {
+        if (props.expandInstructions) {
+            props.expandInstructions();
+        }
     };
 
     return (
@@ -81,6 +95,11 @@ export function TralalereFooter () {
                     <TralalereControls enabled={true}/>
                 </div>
             </div>
+            {isMobile && !props.instructionsExpanded && <div className="tralalere-instructions-icon">
+                <div className="tralalere-button" onClick={expandInstructions}>
+                    +
+                </div>
+            </div>}
         </div>
     )
 }

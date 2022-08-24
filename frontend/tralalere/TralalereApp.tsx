@@ -32,7 +32,7 @@ export function TralalereApp() {
     const [instructionsExpanded, setInstructionsExpanded] = useState(true);
     const contextId = useAppSelector(state => state.task.contextId);
     const menuHelpsOpen = useAppSelector(state => state.task.menuHelpsOpen);
-
+    const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
     const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
 
     const windowWidth = useAppSelector(state => state.windowWidth);
@@ -41,7 +41,6 @@ export function TralalereApp() {
     //     {content: 'aazazaz'},
     //     {content: 'aazazazazazazz'},
     // ];
-
 
     const dispatch = useDispatch();
 
@@ -59,6 +58,12 @@ export function TralalereApp() {
             dispatch(taskLoad(taskLoadParameters));
         });
     }, []);
+
+    useEffect(() => {
+        if (isMobile) {
+            setInstructionsExpanded(false);
+        }
+    }, [isMobile])
 
     useEffect(() => {
         const flyoutToolbox = document.getElementsByClassName('blocklyToolboxDiv');
@@ -88,7 +93,6 @@ export function TralalereApp() {
         setInstructionsExpanded(!instructionsExpanded);
     };
 
-
     const closeDocumentation = () => {
         dispatch({
             type: CommonActionTypes.AppSwitchToScreen,
@@ -100,7 +104,6 @@ export function TralalereApp() {
         dispatch({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
     };
 
-    const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere`}>
@@ -127,13 +130,13 @@ export function TralalereApp() {
                     </div>
 
                     {(!isMobile || LayoutMobileMode.Player === layoutMobileMode) && <div className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`} style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
-                        {!isMobile && <TralalereInstructions onExpand={expandInstructions}/>}
-
-                        {!isMobile && instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
+                        {(!isMobile || instructionsExpanded) &&
+                          <TralalereInstructions
+                              expanded={isMobile || instructionsExpanded}
+                              onExpand={expandInstructions}
+                          />}
 
                         <ContextVisualization/>
-
-                        {isMobile && <TralalereFooter/>}
                     </div>}
                     {(!isMobile || LayoutMobileMode.Editor === layoutMobileMode) && <div className="blockly-editor">
                         <LayoutEditor style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/editor-cross.png'}`}}/>
@@ -142,9 +145,13 @@ export function TralalereApp() {
                             <img className="blockly-flyout-wrapper-bottom" src={window.modulesPath + 'img/algorea/crane/editor-bottom-background.png'}/>
                         </div>}
 
-                        <TralalereFooter/>
+                        {!isMobile && <TralalereFooter/>}
                     </div>}
                 </div>
+                {isMobile && <TralalereFooter
+                    instructionsExpanded={instructionsExpanded}
+                    expandInstructions={expandInstructions}
+                />}
             </div>
 
             <TaskSuccessDialog/>

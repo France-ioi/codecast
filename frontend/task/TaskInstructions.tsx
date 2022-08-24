@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from "react";
+import React, {ReactElement, useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
 import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
@@ -7,6 +7,7 @@ import {taskLevelsList} from "./platform/platform_slice";
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
+    missionRightSlot: ReactElement,
 }
 
 const defaultInstructionsHtml = `
@@ -76,6 +77,8 @@ export function TaskInstructions(props: TaskInstructionsProps) {
 
     return (
         <div ref={instructionsRef} className={`task-mission level-${taskLevel} platform-${platform}`} style={{fontSize: `${zoomLevel}rem`}}>
+            {props.missionRightSlot}
+
             <h1>Votre mission</h1>
 
             <div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>
