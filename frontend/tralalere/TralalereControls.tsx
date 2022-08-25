@@ -19,7 +19,8 @@ import {getStepperControlsSelector} from "../stepper/selectors";
 import {useAppSelector} from "../hooks";
 import {taskChangeSoundEnabled} from "../task/task_slice";
 import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
-import {LayoutType} from "../task/layout/layout";
+import {LayoutMobileMode, LayoutType} from "../task/layout/layout";
+import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 
 interface StepperControlsProps {
     enabled: boolean,
@@ -154,6 +155,8 @@ export function TralalereControls(props: StepperControlsProps) {
     };
 
     const compileIfNecessary = () => {
+        dispatch({type: LayoutActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.EditorPlayer}});
+
         return new Promise<boolean>((resolve) => {
             if (stepperControlsState.showCompile) {
                 dispatch({

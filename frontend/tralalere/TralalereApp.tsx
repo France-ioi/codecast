@@ -27,7 +27,7 @@ export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
     const options = useAppSelector(state => state.options);
     const layoutType = useAppSelector(state => state.layout.type);
-    const layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
+    let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     const language = useAppSelector(state => state.options.language);
     const platform = useAppSelector(state => state.options.platform);
     const screen = useAppSelector(state => state.screen);
@@ -37,6 +37,9 @@ export function TralalereApp() {
     const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
     const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
     const programRunning = useAppSelector(state => state.stepper && state.stepper.status !== StepperStatus.Clear);
+    if (programRunning && isMobile && LayoutMobileMode.EditorPlayer !== layoutMobileMode) {
+        layoutMobileMode = LayoutMobileMode.EditorPlayer;
+    }
 
     const windowWidth = useAppSelector(state => state.windowWidth);
     const availableHints = useAppSelector(state => state.hints.availableHints);
@@ -111,7 +114,7 @@ export function TralalereApp() {
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere`}>
             <div className="layout-general">
                 {LayoutType.MobileVertical === layoutType && <div className="tralalere-mobile-tabs">
-                    <div className={`tralalere-mobile-tab ${LayoutMobileMode.Player === layoutMobileMode ? 'is-active' : ''}`} onClick={() => selectMode(LayoutMobileMode.Player)}>
+                    <div className={`tralalere-mobile-tab ${LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode ? 'is-active' : ''}`} onClick={() => selectMode(LayoutMobileMode.Player)}>
                     Représentation</div>
                     <div className={`tralalere-mobile-tab ${LayoutMobileMode.Editor === layoutMobileMode ? 'is-active' : ''}`} onClick={() => selectMode(LayoutMobileMode.Editor)}>
                     Coding
@@ -131,12 +134,15 @@ export function TralalereApp() {
                         </div>
                     </div>}
 
-                    {(!isMobile || LayoutMobileMode.Player === layoutMobileMode) && <div className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`} style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
-                        {(!isMobile || instructionsExpanded) &&
-                          <TralalereInstructions
-                              expanded={isMobile || instructionsExpanded}
-                              onExpand={expandInstructions}
-                          />}
+                    {(!isMobile || LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode) && <div className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`} style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
+                        {!isMobile &&
+                          <React.Fragment>
+                              <TralalereInstructions
+                                  onExpand={expandInstructions}
+                              />
+                              {instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
+                          </React.Fragment>
+                        }
 
                         <ContextVisualization/>
                     </div>}
@@ -149,7 +155,7 @@ export function TralalereApp() {
 
                         {isMobile && <TralalereBlocksUsage/>}
                         {isMobile && <div className="tralalere-editor-play">
-                            <button className="tralalere-button" onClick={() => selectMode(LayoutMobileMode.Player)}>
+                            <button className="tralalere-button" onClick={() => selectMode(LayoutMobileMode.EditorPlayer)}>
                                 <FontAwesomeIcon icon={faPlay}/>
                             </button>
                         </div>}
@@ -157,13 +163,20 @@ export function TralalereApp() {
                     </div>}
                 </div>
 
-                {isMobile && LayoutMobileMode.Player === layoutMobileMode && programRunning && <div className="tralalere-section tralalere-coding-overlay">
+                {isMobile && LayoutMobileMode.EditorPlayer === layoutMobileMode && <div className="tralalere-section tralalere-coding-overlay">
                     <div className="blockly-editor">
                         <LayoutEditor/>
                     </div>
                 </div>}
 
-                {isMobile && LayoutMobileMode.Player === layoutMobileMode && <TralalereFooter
+                {isMobile && instructionsExpanded &&
+                    <TralalereInstructions
+                        expanded
+                        onExpand={expandInstructions}
+                    />
+                }
+
+                {isMobile && (LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode) && <TralalereFooter
                     instructionsExpanded={instructionsExpanded}
                     expandInstructions={expandInstructions}
                 />}

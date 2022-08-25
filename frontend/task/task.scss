@@ -603,6 +603,9 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
       border-radius: 0;
     }
   }
+  .error-message-wrapper .message {
+    min-width: initial !important;
+  }
 }
 
 .offline-download-link {

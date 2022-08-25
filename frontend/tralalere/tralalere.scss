@@ -132,9 +132,6 @@ $tralalere-red: #FF3C11;
       .tralalere-instructions-more {
         float: right;
         margin-left: 20px;
-        .tralalere-button {
-          @include tralalere-button-small;
-        }
       }
     }
 
@@ -336,7 +333,7 @@ $tralalere-red: #FF3C11;
       border: 2px solid $tralalere-red;
       border-radius: 7px;
       box-shadow: -6px 6px #1D1E47;
-      top: -10px;
+      top: -16px;
       right: -10px;
       width: 30px;
       height: 30px;
@@ -358,7 +355,6 @@ $tralalere-red: #FF3C11;
     }
     .message {
       color: white;
-      margin-left: 20px;
       font-weight: 400;
       font-size: 16px;
       line-height: 19px;
@@ -777,6 +773,12 @@ $tralalere-red: #FF3C11;
     position: static;
   }
 
+  .tralalere-instructions-more {
+    .tralalere-button {
+      @include tralalere-button-small;
+    }
+  }
+
   .tralalere-instructions-container {
     margin-left: 10px;
     margin-top: 0;
@@ -785,7 +787,7 @@ $tralalere-red: #FF3C11;
     border-radius: 7px;
     box-shadow: -7px 7px #383961;
     position: absolute;
-    bottom: 10px;
+    bottom: 55px;
     z-index: 20;
 
     .advice {
@@ -867,6 +869,9 @@ $tralalere-red: #FF3C11;
     .tralalere-button {
       @include tralalere-button-small;
     }
+    .tralalere-menu-label {
+      right: 35px;
+    }
   }
 }
 
@@ -874,4 +879,7 @@ $tralalere-red: #FF3C11;
   .documentation-tabs-menu {
     display: none;
   }
+
+  width: 95vw;
+  max-height: 90vh;
 }

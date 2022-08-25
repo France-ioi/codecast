@@ -766,6 +766,7 @@ export enum LayoutMobileMode {
     Instructions = 'instructions',
     Editor = 'editor',
     Player = 'player',
+    EditorPlayer = 'editor_player',
 }
 
 export enum LayoutPlayerMode {

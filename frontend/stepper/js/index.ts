@@ -19,7 +19,8 @@ let originalFireNow;
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
     let blocklyHelper;
 
-    const options = yield* select((state: AppStore) => state.options);
+    const state: AppStore = yield* select();
+    const options = state.options;
     const language = options.language.split('-')[0];
     const languageTranslations = require('../../lang/blockly_' + language + '.js');
     const isMobile = yield* select((state: AppStore) => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
@@ -93,9 +94,11 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     // We overload this function to catch the Blockly firing event instant so that we know when the program
     // is successfully reloaded and that the events won't trigger an editor content update which would trigger
     // a stepper.exit
-    window.Blockly.Events.fireNow_ = () => {
-        originalFireNow();
-        blocklyHelper.reloading = false;
+    if ('main' === state.environment) {
+        window.Blockly.Events.fireNow_ = () => {
+            originalFireNow();
+            blocklyHelper.reloading = false;
+        };
     }
 
     console.log('[blockly.editor] load context into blockly editor');
