@@ -37,6 +37,7 @@ $tralalere-red: #FF3C11;
   width: 35px;
   height: 35px;
   border-radius: 5px;
+  font-size: 20px;
   svg, img {
     width: 20px;
     height: 20px;
@@ -432,10 +433,9 @@ $tralalere-red: #FF3C11;
     margin-top: 10px;
 
     .hint-button {
-      height: 40px;
       font-size: 16px;
       width: fit-content;
-      padding: 0 30px;
+      padding: 5px 30px;
       margin: auto;
     }
   }
@@ -461,7 +461,7 @@ $tralalere-red: #FF3C11;
       color: #ddd;
     }
     .carousel-item {
-      padding: 30px 60px 60px;
+      padding: 30px 40px 60px;
     }
     .carousel-indicators button {
       height: 6px;
@@ -782,7 +782,7 @@ $tralalere-red: #FF3C11;
   .tralalere-instructions-container {
     margin-left: 10px;
     margin-top: 0;
-    margin-right: 3px;
+    margin-right: 5px;
     padding: 5px 0 0;
     border-radius: 7px;
     box-shadow: -7px 7px #383961;
@@ -872,6 +872,13 @@ $tralalere-red: #FF3C11;
     .tralalere-menu-label {
       right: 35px;
     }
+  }
+
+  .hint-button {
+    padding: 5px 10px;
+  }
+  .carousel-control-prev, .carousel-control-next, .carousel-control-prev:focus, .carousel-control-next:focus {
+    width: 15%;
   }
 }
 

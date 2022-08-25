@@ -159,7 +159,9 @@ export function TralalereApp() {
                                 <FontAwesomeIcon icon={faPlay}/>
                             </button>
                         </div>}
-                        {!isMobile && <TralalereFooter/>}
+                        <TralalereFooter
+                            withoutControls={isMobile}
+                        />
                     </div>}
                 </div>
 

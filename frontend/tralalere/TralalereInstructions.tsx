@@ -1,5 +1,7 @@
 import {TaskInstructions} from "../task/TaskInstructions";
 import React, {useState} from "react";
+import {LayoutType} from "../task/layout/layout";
+import {useAppSelector} from "../hooks";
 
 export interface TralalereInstructionsProps {
     expanded?: boolean
@@ -8,6 +10,7 @@ export interface TralalereInstructionsProps {
 
 export function TralalereInstructions(props: TralalereInstructionsProps) {
     const [displayExpanded, setDisplayExpanded] = useState(false);
+    const isMobile = useAppSelector(state => LayoutType.MobileHorizontal === state.layout.type || LayoutType.MobileVertical ===  state.layout.type);
 
     return (
         <div className={`tralalere-instructions ${props.expanded ? 'is-expanded' : ''}`}>
@@ -19,7 +22,7 @@ export function TralalereInstructions(props: TralalereInstructionsProps) {
                 <TaskInstructions
                     changeDisplayShowMore={(displayExpanded) => setDisplayExpanded(displayExpanded)}
                     missionRightSlot={
-                        displayExpanded && <div className="tralalere-instructions-more">
+                        (isMobile || displayExpanded) && <div className="tralalere-instructions-more">
                             <div className="tralalere-button" onClick={() => props.onExpand()}>
                                 {props.expanded ? '-' : '+'}
                             </div>
