@@ -4,6 +4,45 @@ $tralalere-dark-blue: #043565;
 $tralalere-green: #85FF00;
 $tralalere-red: #FF3C11;
 
+@mixin tralalere-button {
+  height: 50px;
+  width: 50px;
+
+  background: $tralalere-dark-blue;
+  border: 2px solid $tralalere-green;
+  border-radius: 7px;
+
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $tralalere-green;
+  font-size: 30px;
+  cursor: pointer;
+  font-weight: 900;
+  box-shadow: -4px 4px #1D1E47;
+  user-select: none;
+
+  &[disabled] {
+    cursor: not-allowed;
+    border: 2px solid rgba(133, 255, 0, 0.3);
+  }
+
+  &[disabled] svg {
+    opacity: 0.4;
+  }
+}
+
+@mixin tralalere-button-small {
+  width: 35px;
+  height: 35px;
+  border-radius: 5px;
+  svg, img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
 [data-theme="tralalere"] {
   --primary-color: #043565;
   --secondary-color: #1f1f1f;
@@ -93,6 +132,9 @@ $tralalere-red: #FF3C11;
       .tralalere-instructions-more {
         float: right;
         margin-left: 20px;
+        .tralalere-button {
+          @include tralalere-button-small;
+        }
       }
     }
 
@@ -242,45 +284,6 @@ $tralalere-red: #FF3C11;
   bottom: 0;
   right: -3px;
   border-bottom-right-radius: 12px;
-}
-
-@mixin tralalere-button {
-  height: 50px;
-  width: 50px;
-
-  background: $tralalere-dark-blue;
-  border: 2px solid $tralalere-green;
-  border-radius: 7px;
-
-  font-family: 'Roboto', sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: $tralalere-green;
-  font-size: 30px;
-  cursor: pointer;
-  font-weight: 900;
-  box-shadow: -4px 4px #1D1E47;
-  user-select: none;
-
-  &[disabled] {
-    cursor: not-allowed;
-    border: 2px solid rgba(133, 255, 0, 0.3);
-  }
-
-  &[disabled] svg {
-    opacity: 0.4;
-  }
-}
-
-@mixin tralalere-button-small {
-  width: 35px;
-  height: 35px;
-  border-radius: 10px;
-  svg {
-    width: 20px;
-    height: 20px;
-  }
 }
 
 .tralalere-button {
@@ -734,7 +737,6 @@ $tralalere-red: #FF3C11;
   box-shadow: -5px 5px #383961;
   .tralalere-button {
     @include tralalere-button-small;
-    border-radius: 5px;
     font-size: 20px;
     border: 3px solid $tralalere-green;
   }
@@ -751,6 +753,7 @@ $tralalere-red: #FF3C11;
 
     .tralalere-button {
       @include tralalere-button-small;
+      border-radius: 10px;
     }
 
     .controls.controls-left {
@@ -851,10 +854,6 @@ $tralalere-red: #FF3C11;
     }
   }
 
-  .tralalere-menu-icons {
-    z-index: 0 !important;
-  }
-
   .tralalere-coding-overlay {
     border: solid 2px $tralalere-green;
     box-shadow: inset 0px 0px 20px rgba(0, 0, 0, 0.08);
@@ -862,5 +861,17 @@ $tralalere-red: #FF3C11;
     .blocklyToolboxDiv {
       display: none;
     }
+  }
+
+  .tralalere-menu-icons {
+    .tralalere-button {
+      @include tralalere-button-small;
+    }
+  }
+}
+
+.tralalere-doc.is-mobile {
+  .documentation-tabs-menu {
+    display: none;
   }
 }

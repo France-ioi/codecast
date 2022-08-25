@@ -12,6 +12,7 @@ import {getMessage, getMessageChoices} from "../../lang";
 import {select} from "typed-redux-saga";
 import {displayModal} from "../../common/prompt_modal";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
+import {LayoutMobileMode, LayoutType} from "../../task/layout/layout";
 
 let originalFireNow;
 
@@ -21,6 +22,11 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     const options = yield* select((state: AppStore) => state.options);
     const language = options.language.split('-')[0];
     const languageTranslations = require('../../lang/blockly_' + language + '.js');
+    const isMobile = yield* select((state: AppStore) => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
+    if (isMobile && context.infos && context.infos.includeBlocks) {
+        context.infos.includeBlocks.groupByCategory = true;
+    }
+
     window.goog.provide('Blockly.Msg.' + language);
     window.Blockly.Msg = {...window.Blockly.Msg, ...languageTranslations.Msg};
 
@@ -70,7 +76,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     // Override this function to change parameters
     blocklyHelper.getOrigin = function() {
         // Get x/y origin
-        if(this.includeBlocks.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
+        if (this.includeBlocks.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
             return this.scratchMode ? {x: 340, y: 20} : {x: 105, y: 2};
         }
         return this.scratchMode ? {x: 20, y: 20} : {x: 20, y: 2};
@@ -100,18 +106,18 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
 
     const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
     if (groupsCategory && 'tralalere' === options.app) {
-        overrideBlocklyFlyoutForCategories();
+        overrideBlocklyFlyoutForCategories(isMobile);
     }
 }
 
-export const overrideBlocklyFlyoutForCategories = () => {
+export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
     // Override function from Blockly for two reasons:
     // 1. Control width and height of Blockly flyout
     // 2. Add border radiuses at top-left and bottom-left
     window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = function(width, height) {
         let atRight = this.toolboxPosition_ == window.Blockly.TOOLBOX_AT_RIGHT;
-        let computedHeight = Math.min(400, height);
-        let computedWidth = Math.max(300, width);
+        let computedHeight = isMobile ? window.innerHeight - 110 : Math.min(400, height);
+        let computedWidth = isMobile ? window.innerWidth - this.targetWorkspace_.toolbox_.getWidth() - 2*this.CORNER_RADIUS + 4 : Math.max(300, width);
         // Decide whether to start on the left or right.
         let path = ['M ' + (atRight ? this.width_ - this.CORNER_RADIUS : this.CORNER_RADIUS) + ',0'];
         // Top.

@@ -173,7 +173,7 @@ export function TralalereApp() {
 
             <PromptModalDialog/>
 
-            <Dialog isOpen={documentationOpen} className="simple-dialog tralalere-doc" canOutsideClickClose={true} canEscapeKeyClose={true} onClose={closeDocumentation}>
+            <Dialog isOpen={documentationOpen} className={`simple-dialog tralalere-doc ${isMobile ? 'is-mobile' : ''}`} canOutsideClickClose={true} canEscapeKeyClose={true} onClose={closeDocumentation}>
                 <TralalereBox>
                     <Documentation
                         standalone={false}

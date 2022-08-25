@@ -70,9 +70,10 @@ import {
 import {getTaskTokenForLevel} from "./platform/task_token";
 import {createAction} from "@reduxjs/toolkit";
 import {selectAnswer} from "./selectors";
-import {hasBlockPlatform} from "../stepper/js";
+import {hasBlockPlatform, loadBlocklyHelperSaga} from "../stepper/js";
 import {ObjectDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
+import {ActionTypes} from "../common/actionTypes";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -647,6 +648,14 @@ export default function (bundle: Bundle) {
             const state: AppStore = yield* select();
             if (context && context.changeSoundEnabled) {
                 context.changeSoundEnabled(state.task.soundEnabled);
+            }
+        });
+
+        yield* takeEvery(ActionTypes.WindowResized, function* () {
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            const state: AppStore = yield* select();
+            if (hasBlockPlatform(state.options.platform) && state.task.currentTask) {
+                yield* call(loadBlocklyHelperSaga, context, state.task.currentLevel);
             }
         });
     });
