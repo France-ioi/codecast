@@ -118,7 +118,7 @@ export function TaskApp() {
     }
 
     return (
-        <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode}`}>
+        <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform}`}>
             <div className="layout-general">
                 <div className={`task-section`}>
                     <div className="task-section-container">

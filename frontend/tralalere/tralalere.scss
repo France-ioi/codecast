@@ -843,18 +843,30 @@ $tralalere-red: #FF3C11;
 
   .tralalere-blocks-usage {
     position: absolute;
-    bottom: 20px;
-    right: 10px;
+    bottom: 15px;
+    right: 50px;
   }
 
   .tralalere-editor-play {
     position: absolute;
-    left: calc(var(--flyout-width) + 13px);
-    bottom: 18px;
+    right: 15px;
+    bottom: 15px;
     z-index: 20;
 
     .tralalere-button {
       @include tralalere-button-small;
+    }
+  }
+
+  &.platform-blockly, &.platform-scratch {
+    .tralalere-blocks-usage {
+      bottom: 25px;
+      right: 60px;
+    }
+
+    .tralalere-editor-play {
+      right: 25px;
+      bottom: 25px;
     }
   }
 
