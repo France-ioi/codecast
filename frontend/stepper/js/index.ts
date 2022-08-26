@@ -118,9 +118,10 @@ export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
     // 1. Control width and height of Blockly flyout
     // 2. Add border radiuses at top-left and bottom-left
     window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = function(width, height) {
+        const toolboxWidth = this.targetWorkspace_ && this.targetWorkspace_.toolbox ? this.targetWorkspace_.toolbox.getWidth() : 0;
         let atRight = this.toolboxPosition_ == window.Blockly.TOOLBOX_AT_RIGHT;
         let computedHeight = isMobile ? window.innerHeight - 110 : Math.min(400, height);
-        let computedWidth = isMobile ? window.innerWidth - this.targetWorkspace_.toolbox_.getWidth() - 2*this.CORNER_RADIUS + 4 : Math.max(300, width);
+        let computedWidth = isMobile ? window.innerWidth - toolboxWidth - 2*this.CORNER_RADIUS + 4 : Math.max(300, width);
         // Decide whether to start on the left or right.
         let path = ['M ' + (atRight ? this.width_ - this.CORNER_RADIUS : this.CORNER_RADIUS) + ',0'];
         // Top.

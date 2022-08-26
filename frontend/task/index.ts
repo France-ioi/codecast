@@ -48,7 +48,7 @@ import PlatformBundle, {
     taskGradeAnswerEventSaga
 } from "./platform/platform";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
-import {LayoutMobileMode, ZOOM_LEVEL_HIGH} from "./layout/layout";
+import {LayoutMobileMode, LayoutType, ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {PlayerInstant} from "../player";
 import {ActionTypes as StepperActionTypes, stepperClearError, stepperDisplayError} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
@@ -662,7 +662,18 @@ export default function (bundle: Bundle) {
         yield* takeEvery(LayoutActionTypes.LayoutMobileModeChanged, function* () {
             const state: AppStore = yield* select();
             if (LayoutMobileMode.Editor === state.layout.mobileMode) {
+                const context = quickAlgoLibraries.getContext(null, 'main');
+                if (context && (LayoutType.MobileHorizontal === state.layout.type || LayoutType.MobileVertical === state.layout.type)) {
+                    // Use context.display = false when ContextVisualization is not displayed to avoid errors when
+                    // using context.reset or context.updateScale
+                    context.display = false;
+                }
                 yield* put({type: StepperActionTypes.StepperExit});
+            } else {
+                const context = quickAlgoLibraries.getContext(null, 'main');
+                if (context) {
+                    context.display = true;
+                }
             }
         });
     });

@@ -193,7 +193,7 @@ export function* createQuickalgoLibrary() {
     yield* put(taskIncreaseContextId());
     yield* put(taskSetContextStrings(context.strings));
     if (context.infos && context.infos.includeBlocks) {
-        yield* put(taskSetContextIncludeBlocks(context.infos.includeBlocks));
+        yield* put(taskSetContextIncludeBlocks({...context.infos.includeBlocks}));
     }
     if (context.infos && context.infos.panelCollapsed) {
         yield* put(taskSetBlocksPanelCollapsed(true));
