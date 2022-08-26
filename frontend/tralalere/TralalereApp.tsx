@@ -22,6 +22,7 @@ import {ActionTypes} from "../task/layout/actionTypes";
 import {TralalereFooter} from "./TralalereFooter";
 import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
 import {StepperStatus} from "../stepper";
+import {selectAnswer} from "../task/selectors";
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -43,6 +44,9 @@ export function TralalereApp() {
 
     const windowWidth = useAppSelector(state => state.windowWidth);
     const availableHints = useAppSelector(state => state.hints.availableHints);
+    const answer = useAppSelector(state => selectAnswer(state));
+    const compileStatus = useAppSelector(state => state.compile.status);
+
     // const availableHints = [
     //     {content: 'aazazaz'},
     //     {content: 'aazazazazazazz'},
@@ -69,7 +73,11 @@ export function TralalereApp() {
         if (isMobile) {
             setInstructionsExpanded(false);
         }
-    }, [isMobile])
+    }, [isMobile]);
+
+    useEffect(() => {
+        setInstructionsExpanded(false);
+    }, [answer, compileStatus]);
 
     useEffect(() => {
         const flyoutToolbox = document.getElementsByClassName('blocklyToolboxDiv');
