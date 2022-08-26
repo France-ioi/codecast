@@ -1,6 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
-import * as ace from 'brace';
 import {addAutocompletion} from "./editorAutocompletion";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
 import {Document} from "./document";
@@ -10,7 +9,7 @@ import {useAppSelector} from "../hooks";
 import {useDrop} from "react-dnd";
 import {DocumentModel} from "./index";
 
-const Range = ace.acequire('ace/range').Range;
+const Range = window.ace.acequire('ace/range').Range;
 
 interface EditorProps {
     readOnly: boolean,
@@ -342,7 +341,7 @@ export function Editor(props: EditorProps) {
     }
 
     useEffect(() => {
-        const editorObject = ace.edit(refEditor.current);
+        const editorObject = window.ace.edit(refEditor.current);
         console.log('create editor', editorObject);
         editor.current = editorObject;
         initEditor();
