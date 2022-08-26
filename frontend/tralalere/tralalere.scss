@@ -771,6 +771,7 @@ $tralalere-red: #FF3C11;
 
   .tralalere-instructions {
     position: static;
+    z-index: 5;
   }
 
   .tralalere-instructions-more {
@@ -850,6 +851,7 @@ $tralalere-red: #FF3C11;
     position: absolute;
     left: calc(var(--flyout-width) + 13px);
     bottom: 18px;
+    z-index: 20;
 
     .tralalere-button {
       @include tralalere-button-small;

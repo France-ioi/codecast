@@ -48,7 +48,7 @@ import PlatformBundle, {
     taskGradeAnswerEventSaga
 } from "./platform/platform";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
-import {ZOOM_LEVEL_HIGH} from "./layout/layout";
+import {LayoutMobileMode, ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {PlayerInstant} from "../player";
 import {ActionTypes as StepperActionTypes, stepperClearError, stepperDisplayError} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
@@ -656,6 +656,13 @@ export default function (bundle: Bundle) {
             const state: AppStore = yield* select();
             if (hasBlockPlatform(state.options.platform) && state.task.currentTask) {
                 yield* call(loadBlocklyHelperSaga, context, state.task.currentLevel);
+            }
+        });
+
+        yield* takeEvery(LayoutActionTypes.LayoutMobileModeChanged, function* () {
+            const state: AppStore = yield* select();
+            if (LayoutMobileMode.Editor === state.layout.mobileMode) {
+                yield* put({type: StepperActionTypes.StepperExit});
             }
         });
     });
