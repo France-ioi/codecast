@@ -173,13 +173,13 @@ export function TralalereApp() {
                             <div>Mission réussie</div>
                         </div>}
 
-                        {!isMobile && !taskSuccess &&
-                          <React.Fragment>
+                        {!isMobile &&
+                          <div className={taskSuccess ? 'visibility-hidden' : ''}>
                               <TralalereInstructions
                                   onExpand={expandInstructions}
                               />
                               {instructionsExpanded && <TralalereInstructions expanded onExpand={expandInstructions}/>}
-                          </React.Fragment>
+                          </div>
                         }
 
                         <ContextVisualization/>
