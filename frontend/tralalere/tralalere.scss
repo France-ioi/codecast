@@ -292,6 +292,8 @@ $tralalere-red: #FF3C11;
   display: flex;
   width: 100%;
   z-index: 5;
+  flex-wrap: wrap;
+  justify-content: right;
   .controls-stepper.controls-right {
     flex: 0 1;
     justify-content: end;
