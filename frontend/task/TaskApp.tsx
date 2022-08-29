@@ -26,6 +26,7 @@ import {SubtitlesPane} from "../subtitles/SubtitlesPane";
 import {TaskLevelName} from "./platform/platform_slice";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {PromptModalDialog} from "./dialog/PromptModalDialog";
+import {taskSuccessClear} from "./task_slice";
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -45,6 +46,7 @@ export function TaskApp() {
     const taskLevels = useAppSelector(state => state.platform.levels);
     const language = useAppSelector(state => state.options.language);
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
+    const taskSuccess = useAppSelector(state => state.task.success);
 
     let progress = null;
     let progressMessage = null;
@@ -57,6 +59,10 @@ export function TaskApp() {
     }
 
     const dispatch = useDispatch();
+
+    const closeTaskSuccess = () => {
+        dispatch(taskSuccessClear({}));
+    };
 
     useEffect(() => {
         // Wait that the html is loaded before we create the context because some of them use jQuery to select elements
@@ -181,7 +187,7 @@ export function TaskApp() {
                 </div>}
             </Dialog>
 
-            <TaskSuccessDialog/>
+            {taskSuccess && <TaskSuccessDialog onClose={closeTaskSuccess}/>}
 
             <PromptModalDialog/>
         </Container>

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
 import {taskLoad} from "../task";
@@ -23,6 +23,7 @@ import {TralalereFooter} from "./TralalereFooter";
 import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
 import {StepperStatus} from "../stepper";
 import {selectAnswer} from "../task/selectors";
+import {taskSuccessClear} from "../task/task_slice";
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -47,6 +48,9 @@ export function TralalereApp() {
     const availableHints = useAppSelector(state => state.hints.availableHints);
     const answer = useAppSelector(state => selectAnswer(state));
     const compileStatus = useAppSelector(state => state.compile.status);
+    const taskSuccess = useAppSelector(state => state.task.success);
+
+    const [displayTaskSuccessDialog, setDisplayTaskSuccessDialog] = useState(false);
 
     // const availableHints = [
     //     {content: 'aazazaz'},
@@ -79,8 +83,25 @@ export function TralalereApp() {
     useEffect(() => {
         if (taskLoaded) {
             setInstructionsExpanded(false);
+            if (taskSuccess) {
+                dispatch(taskSuccessClear({}));
+            }
         }
     }, [answer, compileStatus]);
+
+    useEffect(() => {
+        if (taskSuccess) {
+            setTimeout(() => {
+                setDisplayTaskSuccessDialog(true);
+            }, 3000);
+        } else {
+
+        }
+    }, [taskSuccess]);
+
+    const closeTaskSuccess = () => {
+        setDisplayTaskSuccessDialog(false);
+    };
 
     useEffect(() => {
         const flyoutToolbox = document.getElementsByClassName('blocklyToolboxDiv');
@@ -146,7 +167,13 @@ export function TralalereApp() {
                     </div>}
 
                     {(!isMobile || LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode) && <div className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`} style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
-                        {!isMobile &&
+                        {taskSuccess && <div className="tralalere-success">
+                            <img className="tralalere-success-left"
+                                src={window.modulesPath + 'img/algorea/crane/task-success.png'}/>
+                            <div>Mission réussie</div>
+                        </div>}
+
+                        {!isMobile && !taskSuccess &&
                           <React.Fragment>
                               <TralalereInstructions
                                   onExpand={expandInstructions}
@@ -195,7 +222,9 @@ export function TralalereApp() {
                 />}
             </div>
 
-            <TaskSuccessDialog/>
+            {displayTaskSuccessDialog && <TaskSuccessDialog
+                onClose={closeTaskSuccess}
+            />}
 
             <PromptModalDialog/>
 
