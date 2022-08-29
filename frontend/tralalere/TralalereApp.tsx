@@ -41,6 +41,7 @@ export function TralalereApp() {
     if (programRunning && isMobile && LayoutMobileMode.EditorPlayer !== layoutMobileMode) {
         layoutMobileMode = LayoutMobileMode.EditorPlayer;
     }
+    const taskLoaded = useAppSelector(state => state.task.loaded);
 
     const windowWidth = useAppSelector(state => state.windowWidth);
     const availableHints = useAppSelector(state => state.hints.availableHints);
@@ -76,7 +77,9 @@ export function TralalereApp() {
     }, [isMobile]);
 
     useEffect(() => {
-        setInstructionsExpanded(false);
+        if (taskLoaded) {
+            setInstructionsExpanded(false);
+        }
     }, [answer, compileStatus]);
 
     useEffect(() => {
