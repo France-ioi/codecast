@@ -659,21 +659,24 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(LayoutActionTypes.LayoutMobileModeChanged, function* () {
+        yield* takeEvery([ActionTypes.WindowResized, LayoutActionTypes.LayoutMobileModeChanged], function* () {
             const state: AppStore = yield* select();
-            if (LayoutMobileMode.Editor === state.layout.mobileMode) {
-                const context = quickAlgoLibraries.getContext(null, 'main');
-                if (context && (LayoutType.MobileHorizontal === state.layout.type || LayoutType.MobileVertical === state.layout.type)) {
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            if (!context) {
+                return;
+            }
+
+            if (LayoutType.MobileHorizontal === state.layout.type || LayoutType.MobileVertical === state.layout.type) {
+                if (LayoutMobileMode.Editor === state.layout.mobileMode) {
                     // Use context.display = false when ContextVisualization is not displayed to avoid errors when
                     // using context.reset or context.updateScale
                     context.display = false;
-                }
-                yield* put({type: StepperActionTypes.StepperExit});
-            } else {
-                const context = quickAlgoLibraries.getContext(null, 'main');
-                if (context) {
+                    yield* put({type: StepperActionTypes.StepperExit});
+                } else {
                     context.display = true;
                 }
+            } else {
+                context.display = true;
             }
         });
     });
