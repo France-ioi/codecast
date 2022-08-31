@@ -12,7 +12,7 @@ import QuickalgoLibsBundle, {
     QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from "./libs/quickalgo_libraries";
-import SrlBundle from './srl';
+import SrlBundle, {statsGetStateSaga} from './srl';
 import BehaviourBundle from './behaviour';
 import stringify from 'json-stable-stringify-without-jsonify';
 import taskSlice, {
@@ -445,7 +445,11 @@ export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
 }
 
 function* getTaskState () {
-    return {};
+    const statsState = yield* call(statsGetStateSaga);
+
+    return {
+        stats: statsState,
+    };
 }
 
 function* getTaskLevel () {
