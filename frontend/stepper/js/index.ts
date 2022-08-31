@@ -9,24 +9,38 @@ import {TaskLevelName} from "../../task/platform/platform_slice";
 import {extractLevelSpecific} from "../../task/utils";
 import {delay} from "../api";
 import {getMessage, getMessageChoices} from "../../lang";
-import {select} from "typed-redux-saga";
-import {displayModal} from "../../common/prompt_modal";
+import {put, select} from "typed-redux-saga";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
-import {LayoutMobileMode, LayoutType} from "../../task/layout/layout";
+import {LayoutType} from "../../task/layout/layout";
+import {taskIncreaseContextId} from "../../task/task_slice";
 
 let originalFireNow;
+let originalSetBackgroundPathVertical_;
 
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
     let blocklyHelper;
 
+    if (context && context.blocklyHelper) {
+        context.blocklyHelper.unloadLevel();
+    }
+
+    console.log('[stepper/js] load blockly helper', context.infos.includeBlocks, context.infos.includeBlocks.groupByCategory);
     const state: AppStore = yield* select();
     const options = state.options;
     const language = options.language.split('-')[0];
     const languageTranslations = require('../../lang/blockly_' + language + '.js');
     const isMobile = yield* select((state: AppStore) => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
-    if (isMobile && context.infos && context.infos.includeBlocks) {
-        context.infos.includeBlocks.groupByCategory = true;
+    if (context.infos && context.infos.includeBlocks) {
+        if (isMobile) {
+            if (undefined === context.infos.includeBlocks.originalGroupByCategory) {
+                context.infos.includeBlocks.originalGroupByCategory = !!context.infos.includeBlocks.groupByCategory;
+            }
+            context.infos.includeBlocks.groupByCategory = true;
+        } else if (undefined !== context.infos.includeBlocks.originalGroupByCategory) {
+            context.infos.includeBlocks.groupByCategory = !!context.infos.includeBlocks.originalGroupByCategory;
+        }
     }
+    console.log('group by category', context.infos.includeBlocks.groupByCategory);
 
     window.goog.provide('Blockly.Msg.' + language);
     window.Blockly.Msg = {...window.Blockly.Msg, ...languageTranslations.Msg};
@@ -110,18 +124,27 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
     if (groupsCategory && 'tralalere' === options.app) {
         overrideBlocklyFlyoutForCategories(isMobile);
+    } else if (originalSetBackgroundPathVertical_) {
+        window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = originalSetBackgroundPathVertical_;
     }
+
+    yield* put(taskIncreaseContextId());
 }
 
 export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
     // Override function from Blockly for two reasons:
     // 1. Control width and height of Blockly flyout
     // 2. Add border radiuses at top-left and bottom-left
+    if (!originalSetBackgroundPathVertical_) {
+        originalSetBackgroundPathVertical_ = window.Blockly.Flyout.prototype.setBackgroundPathVertical_;
+    }
+
     window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = function(width, height) {
-        const toolboxWidth = this.targetWorkspace_ && this.targetWorkspace_.toolbox ? this.targetWorkspace_.toolbox.getWidth() : 0;
+        const toolboxWidth = this.targetWorkspace_ && this.targetWorkspace_.toolbox_ ? this.targetWorkspace_.toolbox_.getWidth() : 0;
         let atRight = this.toolboxPosition_ == window.Blockly.TOOLBOX_AT_RIGHT;
-        let computedHeight = isMobile ? window.innerHeight - 110 : Math.min(400, height);
+        let computedHeight = isMobile ? window.innerHeight - 120 : Math.min(400, height);
         let computedWidth = isMobile ? window.innerWidth - toolboxWidth - 2*this.CORNER_RADIUS + 4 : Math.max(300, width);
+        console.log('background draw', {isMobile, toolboxWidth, width, computedWidth, windowWidth: window.innerWidth, workspace: this.targetWorkspace_});
         // Decide whether to start on the left or right.
         let path = ['M ' + (atRight ? this.width_ - this.CORNER_RADIUS : this.CORNER_RADIUS) + ',0'];
         // Top.

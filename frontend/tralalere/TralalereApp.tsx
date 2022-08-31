@@ -104,17 +104,20 @@ export function TralalereApp() {
     };
 
     useEffect(() => {
-        const flyoutToolbox = document.getElementsByClassName('blocklyToolboxDiv');
-        const flyout = document.getElementsByClassName('blocklyFlyout');
-        if (flyoutToolbox.length && (flyoutToolbox[0] as HTMLElement).clientWidth) {
-            const width = (flyoutToolbox[0] as HTMLElement).clientWidth;
-            document.documentElement.style.setProperty('--flyout-width', width + 'px');
-        } else if (flyout.length && (flyout[0] as SVGGraphicsElement).getBBox()) {
-            const width = (flyout[0] as SVGGraphicsElement).getBBox().width;
-            document.documentElement.style.setProperty('--flyout-width', width + 'px');
-        } else {
-            document.documentElement.style.setProperty('--flyout-width', '0px');
-        }
+        // Set timeout to give time to Blockly editor to load before
+        setTimeout(() => {
+            const flyoutToolbox = document.getElementsByClassName('blocklyToolboxDiv');
+            const flyout = document.getElementsByClassName('blocklyFlyout');
+            if (flyoutToolbox.length && (flyoutToolbox[0] as HTMLElement).clientWidth) {
+                const width = (flyoutToolbox[0] as HTMLElement).clientWidth;
+                document.documentElement.style.setProperty('--flyout-width', width + 'px');
+            } else if (flyout.length && (flyout[0] as SVGGraphicsElement).getBBox()) {
+                const width = (flyout[0] as SVGGraphicsElement).getBBox().width;
+                document.documentElement.style.setProperty('--flyout-width', width + 'px');
+            } else {
+                document.documentElement.style.setProperty('--flyout-width', '0px');
+            }
+        });
     }, [contextId, windowWidth, layoutMobileMode]);
 
     const toggleDocumentation = () => {
