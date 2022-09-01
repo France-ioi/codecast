@@ -30,9 +30,15 @@ let currentState: StatsState = {
 }
 
 export function* statsGetStateSaga(): Generator<any, StatsState, any> {
+    const state: AppStore = yield* select();
+
+    const context = quickAlgoLibraries.getContext(null, state.environment);
+
     return {
         ...currentState,
         timeSpentSeconds: currentState.timeSpentSeconds + Math.round(((new Date()).getTime() - timeSpentStartDate.getTime()) / 1000),
+        ...(context.infos.usedSkills ? {usedSkills: context.infos.usedSkills} : {}),
+        ...(context.infos.targetNbInstructions ? {targetNbInstructions: context.infos.targetNbInstructions} : {}),
     };
 }
 

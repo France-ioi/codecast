@@ -1,9 +1,8 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
 import {taskLoad} from "../task";
 import {useAppSelector} from "../hooks";
-import {TaskSuccessDialog} from "../task/dialog/TaskSuccessDialog";
 import {TaskLevelName} from "../task/platform/platform_slice";
 import {PromptModalDialog} from "../task/dialog/PromptModalDialog";
 import {ContextVisualization} from "../task/ContextVisualization";
@@ -50,8 +49,6 @@ export function TralalereApp() {
     const compileStatus = useAppSelector(state => state.compile.status);
     const taskSuccess = useAppSelector(state => state.task.success);
 
-    const [displayTaskSuccessDialog, setDisplayTaskSuccessDialog] = useState(false);
-
     // const availableHints = [
     //     {content: 'aazazaz'},
     //     {content: 'aazazazazazazz'},
@@ -88,20 +85,6 @@ export function TralalereApp() {
             }
         }
     }, [answer, compileStatus]);
-
-    useEffect(() => {
-        if (taskSuccess) {
-            setTimeout(() => {
-                setDisplayTaskSuccessDialog(true);
-            }, 3000);
-        } else {
-
-        }
-    }, [taskSuccess]);
-
-    const closeTaskSuccess = () => {
-        setDisplayTaskSuccessDialog(false);
-    };
 
     useEffect(() => {
         // Set timeout to give time to Blockly editor to load before
@@ -224,10 +207,6 @@ export function TralalereApp() {
                     expandInstructions={expandInstructions}
                 />}
             </div>
-
-            {displayTaskSuccessDialog && <TaskSuccessDialog
-                onClose={closeTaskSuccess}
-            />}
 
             <PromptModalDialog/>
 
