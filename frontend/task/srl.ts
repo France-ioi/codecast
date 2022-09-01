@@ -16,7 +16,7 @@ export interface StatsState {
     incorrectSubmissionsCount: number,
     blocksUsed: number,
     hintsTaken: number,
-    documentationOpen: boolean,
+    documentationOpened: boolean,
 }
 
 let timeSpentStartDate = new Date();
@@ -26,7 +26,7 @@ let currentState: StatsState = {
     incorrectSubmissionsCount: 0,
     blocksUsed: 0,
     hintsTaken: 0,
-    documentationOpen: false,
+    documentationOpened: false,
 }
 
 export function* statsGetStateSaga(): Generator<any, StatsState, any> {
@@ -59,7 +59,7 @@ export default function (bundle: Bundle) {
                 if (null === screenName) {
                     window.SrlLogger.navigation('Exercice');
                 } else if (Screen.DocumentationBig === screenName || Screen.DocumentationSmall === screenName) {
-                    currentState.documentationOpen = true;
+                    currentState.documentationOpened = true;
                     window.SrlLogger.navigation('Aide');
                 }
             }
@@ -108,7 +108,7 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery(taskSetBlocksUsage.type, function*() {
             const blockUsage = yield* select((state: AppStore) => state.task.blocksUsage);
-            if (null !== blockUsage.blocksCurrent) {
+            if (blockUsage && null !== blockUsage.blocksCurrent) {
                 currentState.blocksUsed = blockUsage.blocksCurrent;
             }
         });
