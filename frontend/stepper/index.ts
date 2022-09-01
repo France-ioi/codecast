@@ -815,7 +815,7 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
         context.changeDelay(newDelay);
     }
 
-    if (context && context.changeSoundEnabled) {
+    if (context && context.changeSoundEnabled && 'main' === state.environment) {
         context.changeSoundEnabled(state.task.soundEnabled);
     }
 
