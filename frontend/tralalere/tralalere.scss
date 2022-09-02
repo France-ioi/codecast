@@ -328,7 +328,9 @@ $tralalere-red: #FF3C11;
     box-shadow: -6px 6px #1D1E47;
     border-radius: 7px;
     margin-left: 6px;
-    margin-right: 10px;
+    &.is-closable {
+      margin-right: 10px;
+    }
     display: flex;
     align-items: center;
     .close-button {

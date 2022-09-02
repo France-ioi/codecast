@@ -21,11 +21,13 @@ export interface TralalereFooterProps {
 
 export function TralalereFooter (props: TralalereFooterProps) {
     const stepperError = useAppSelector(state => state.stepper.error);
-    const hasError = !!stepperError;
     const screen = useAppSelector(state => state.screen);
     const hintsOpen = Screen.Hints === screen;
     const layoutType = useAppSelector(state => state.layout.type);
     const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
+    const blocksUsage = useAppSelector(state => state.task.blocksUsage);
+    let hasError = !!stepperError;
+    let errorClosable = true;
 
     const dispatch = useDispatch();
 
@@ -38,10 +40,16 @@ export function TralalereFooter (props: TralalereFooterProps) {
             const stepperErrorHtml = toHtml(stepperError);
             error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
         }
+    } else if (blocksUsage && blocksUsage.error) {
+        hasError = true;
+        errorClosable = false;
+        error = <div>{blocksUsage.error}</div>;
     }
 
     const onClearError = () => {
-        dispatch(stepperClearError());
+        if (errorClosable) {
+            dispatch(stepperClearError());
+        }
     };
 
     const closeHints = () => {
@@ -80,10 +88,10 @@ export function TralalereFooter (props: TralalereFooterProps) {
             {!props.withoutControls && <React.Fragment>
                 <div className="tralalere-controls">
                     <div>
-                        {hasError && <div className="error-message" onClick={onClearError}>
-                            <button type="button" className="close-button" onClick={onClearError}>
+                        {hasError && <div className={`error-message ${errorClosable ? 'is-closable' : ''}`} onClick={onClearError}>
+                            {errorClosable && <button type="button" className="close-button" onClick={onClearError}>
                                 <Icon icon="cross"/>
-                            </button>
+                            </button>}
                             <div className="error-message-wrapper">
                                 <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path fillRule="evenodd" clipRule="evenodd" d="M19.8304 0.192383H8.46988L0.429688 8.23257V19.5931L8.46988 27.6333H19.8304L27.8706 19.5931V8.23257L19.8304 0.192383ZM11.0044 8.82642C10.4686 8.29061 9.59988 8.29061 9.06406 8.82642C8.52825 9.36224 8.52825 10.231 9.06406 10.7668L12.21 13.9127L9.06406 17.0587C8.52825 17.5945 8.52825 18.4632 9.06406 18.9991C9.59988 19.5349 10.4686 19.5349 11.0044 18.9991L14.1504 15.8531L17.2963 18.9991C17.8322 19.5349 18.7009 19.5349 19.2367 18.9991C19.7725 18.4632 19.7725 17.5945 19.2367 17.0587L16.0908 13.9127L19.2367 10.7668C19.7725 10.231 19.7725 9.36224 19.2367 8.82642C18.7009 8.29061 17.8322 8.29061 17.2963 8.82642L14.1504 11.9724L11.0044 8.82642Z" fill="#FF3C11"/>

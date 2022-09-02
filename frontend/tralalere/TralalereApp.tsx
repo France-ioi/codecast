@@ -141,15 +141,15 @@ export function TralalereApp() {
 
                 <div className={`tralalere-section`}>
                     {(!isMobile || LayoutMobileMode.Editor === layoutMobileMode) && <div className={`tralalere-menu-icons ${menuHelpsOpen ? 'has-helps' : ''}`}>
-                        {0 < availableHints.length && <div className="tralalere-button" onClick={toggleHints}>
-                          ?
-                            <div className="tralalere-menu-label">Indices</div>
-                        </div>}
-
                         <div className="tralalere-button" onClick={toggleDocumentation}>
                             <img className="menu-task-icon" src={window.modulesPath + 'img/algorea/crane/documentation.svg'}/>
                             <div className="tralalere-menu-label">Documentation</div>
                         </div>
+
+                        {0 < availableHints.length && <div className="tralalere-button" onClick={toggleHints}>
+                          ?
+                            <div className="tralalere-menu-label">Indices</div>
+                        </div>}
                     </div>}
 
                     {(!isMobile || LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode) && <div className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`} style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>

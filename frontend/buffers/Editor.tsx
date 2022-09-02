@@ -268,6 +268,7 @@ export function Editor(props: EditorProps) {
             enableSnippets: false,
             dragEnabled: true,
         });
+        editor.current.setOption("scrollPastEnd", 0.1);
 
         const {onInit, onSelect, onEdit} = props;
         if (typeof onInit === 'function') {
@@ -419,3 +420,4 @@ export function Editor(props: EditorProps) {
         </div>
     );
 }
+
