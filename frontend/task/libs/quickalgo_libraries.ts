@@ -173,6 +173,10 @@ export function* createQuickalgoLibrary() {
     console.log('created context', contextLib);
     contextLib.iTestCase = state.task.currentTestId;
 
+    if (contextLib.changeSoundEnabled) {
+        contextLib.changeSoundEnabled(state.task.soundEnabled);
+    }
+
     yield* call(createDisplayHelper);
     if (hasBlockPlatform(state.options.platform) && currentTask) {
         yield* call(loadBlocklyHelperSaga, contextLib, currentLevel);
