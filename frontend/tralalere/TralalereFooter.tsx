@@ -43,7 +43,7 @@ export function TralalereFooter (props: TralalereFooterProps) {
     } else if (blocksUsage && blocksUsage.error) {
         hasError = true;
         errorClosable = false;
-        error = <div>{blocksUsage.error}</div>;
+        error = <div dangerouslySetInnerHTML={toHtml(blocksUsage.error)}/>;
     }
 
     const onClearError = () => {
