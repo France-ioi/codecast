@@ -103,7 +103,7 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
     }
 
     let context = quickAlgoLibraries.getContext(null, 'main');
-    if (context.display && context.infos.conceptViewer) {
+    if (context.infos.conceptViewer) {
         const language = yield* select(state => state.documentation.language);
         let concepts = [], allConcepts = [];
         if (DocumentationLanguage.C !== language) {
