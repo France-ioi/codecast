@@ -1,5 +1,5 @@
 import {Bundle} from "../linker";
-import {select, takeEvery} from "typed-redux-saga";
+import {call, select, takeEvery} from "typed-redux-saga";
 import {ActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {Screen} from "../common/screens";
@@ -9,7 +9,7 @@ import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
 import {taskReloadStateEvent} from "./platform/actionTypes";
 import {hintUnlocked} from "./hints/hints_slice";
 import {AppStore} from "../store";
-import {taskSetBlocksUsage} from "./task_slice";
+import {taskSetBlocksUsage, taskSuccess} from "./task_slice";
 
 export interface StatsState {
     timeSpentSeconds?: number,
@@ -42,7 +42,7 @@ export function* statsGetStateSaga(): Generator<any, StatsState, any> {
     };
 }
 
-function* statsReloadStateSaga ({payload: {state}}: ReturnType<typeof taskReloadStateEvent>) {
+function* statsReloadStateSaga({payload: {state}}: ReturnType<typeof taskReloadStateEvent>) {
     console.log('receive new state from platform', state);
     if (state && state.stats) {
         currentState = {
@@ -50,6 +50,15 @@ function* statsReloadStateSaga ({payload: {state}}: ReturnType<typeof taskReload
             ...state.stats,
         };
         timeSpentStartDate = new Date();
+    }
+}
+
+function* onValidationErrorSaga() {
+    currentState.incorrectSubmissionsCount++;
+    const state: AppStore = yield* select();
+    const context = quickAlgoLibraries.getContext(null, 'main');
+    if (context && context.addSound && 'tralalere' === state.options.app) {
+        context.addSound('validationError');
     }
 }
 
@@ -92,16 +101,24 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(StepperActionTypes.CompileFailed, function*() {
-            currentState.incorrectSubmissionsCount++;
+            yield* call(onValidationErrorSaga);
             if (window.SrlLogger) {
                 window.SrlLogger.validation(0, 'code');
             }
         });
 
         yield* takeEvery(StepperActionTypes.StepperExecutionError, function*() {
-            currentState.incorrectSubmissionsCount++;
+            yield* call(onValidationErrorSaga);
             if (window.SrlLogger) {
                 window.SrlLogger.validation(0, 'execution', 0);
+            }
+        });
+
+        yield* takeEvery(taskSuccess.type, function*() {
+            const state: AppStore = yield* select();
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            if (context && context.addSound && 'tralalere' === state.options.app) {
+                context.addSound('validationSuccess');
             }
         });
 

@@ -242,7 +242,9 @@ export class QuickAlgoLibrary {
     };
 
     onError(diagnostics: any): void {
+    }
 
+    addSound(sound: string): void {
     }
 
     delayOver() {
