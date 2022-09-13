@@ -31,6 +31,7 @@
     "@fontsource/open-sans": "^4.5.2",
     "@fontsource/source-sans-pro": "^4.5.1",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
+    "@fortawesome/free-regular-svg-icons": "^6.2.0",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",
     "@fortawesome/react-fontawesome": "^0.1.16",
     "@france-ioi/persistent-c": "11.2.10",
