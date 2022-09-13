@@ -22,6 +22,8 @@ $tralalere-red: #FF3C11;
   font-weight: 900;
   box-shadow: -4px 4px #1D1E47;
   user-select: none;
+  padding-left: 0;
+  padding-right: 0;
 
   &[disabled] {
     cursor: not-allowed;
