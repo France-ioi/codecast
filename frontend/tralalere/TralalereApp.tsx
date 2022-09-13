@@ -132,7 +132,7 @@ export function TralalereApp() {
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere platform-${options.platform}`}>
             <div className="layout-general">
-                {LayoutType.MobileVertical === layoutType && <div className="tralalere-mobile-tabs">
+                {isMobile && <div className="tralalere-mobile-tabs">
                     <div className={`tralalere-mobile-tab ${LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode ? 'is-active' : ''}`} onClick={() => selectMode(LayoutMobileMode.Player)}>
                     Représentation</div>
                     <div className={`tralalere-mobile-tab ${LayoutMobileMode.Editor === layoutMobileMode ? 'is-active' : ''}`} onClick={() => selectMode(LayoutMobileMode.Editor)}>

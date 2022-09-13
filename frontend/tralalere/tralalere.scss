@@ -770,6 +770,14 @@ $tralalere-red: #FF3C11;
 
 // Responsive
 .layout-mobile-horizontal.tralalere, .layout-mobile-vertical.tralalere {
+  .context-visualization {
+    margin-top: 0;
+  }
+
+  .task-visualization {
+    min-height: 100px;
+  }
+
   .tralalere-controls {
     width: 100%;
     position: static;
