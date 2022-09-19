@@ -19,8 +19,7 @@ import {getStepperControlsSelector} from "../stepper/selectors";
 import {useAppSelector} from "../hooks";
 import {taskChangeSoundEnabled} from "../task/task_slice";
 import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
-import {LayoutMobileMode, LayoutType} from "../task/layout/layout";
-import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
+import {LayoutType} from "../task/layout/layout";
 
 interface StepperControlsProps {
     enabled: boolean,
@@ -49,38 +48,14 @@ export function TralalereControls(props: StepperControlsProps) {
             case 'restart':
                 disabled = !stepperControlsState.canRestart;
                 break;
-            case 'undo':
-                disabled = !stepperControlsState.canUndo;
-                break;
-            case 'redo':
-                disabled = !stepperControlsState.canRedo;
-                break;
             case 'run':
                 disabled = !stepperControlsState.canStep;
                 break;
             case 'into':
                 disabled = !stepperControlsState.canStep;
                 break;
-            case 'over':
-                disabled = !stepperControlsState.canStepOver;
-                break;
-            case 'expr':
-                disabled = !stepperControlsState.canStep;
-                if (!stepperControlsState.showExpr) {
-                    style.display = 'none';
-                }
-                break;
-            case 'out':
-                disabled = !(stepperControlsState.canStep && stepperControlsState.canStepOut);
-                break;
-            case 'edit':
-                disabled = !stepperControlsState.canExit;
-                break;
-            case 'compile':
-                disabled = !stepperControlsState.canCompile;
-                break;
             case 'gotoend':
-                disabled = !stepperControlsState.canStep || stepperControlsState.isFinished;
+                disabled = stepperControlsState.isFinished;
                 break;
         }
 
@@ -103,72 +78,36 @@ export function TralalereControls(props: StepperControlsProps) {
         );
     };
 
-    const onStepRun = async () => {
-        if (!await compileIfNecessary()) {
-            return;
-        }
-
+    const onStepRun = () => {
         if (stepperControlsState.controlsType !== StepperControlsType.Normal) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         }
 
-        dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run, useSpeed: true}});
+        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Run, useSpeed: true}})
     };
-    const onStop = async () => {
+    const onStop = () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         dispatch({type: ActionTypes.StepperExit, payload: {}});
     };
     const onInterrupt = () => dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
     const onCompile = () => dispatch({type: ActionTypes.Compile, payload: {}});
-    const onGoToEnd = async () => {
-        if (!await compileIfNecessary()) {
-            return;
-        }
+    const onGoToEnd = () => {
         if (stepperControlsState.controlsType !== StepperControlsType.Normal) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         }
-        if (!stepperControlsState.canStep) {
-            dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
-        }
-        //TODO: await interruption
-        setTimeout(() => {
-            dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});
-        }, 300);
-    };
-    const onStepByStep = async () => {
-        if (!await compileIfNecessary()) {
-            return;
-        }
 
+        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Run}})
+    };
+    const onStepByStep = () => {
         if (stepperControlsState.controlsType !== StepperControlsType.StepByStep) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.StepByStep}});
         }
-        if (stepperControlsState.canStep) {
-            dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into, useSpeed: true}});
-        } else {
-            dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
-        }
+
+        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Into, useSpeed: true}})
     };
 
     const toggleSound = () => {
         dispatch(taskChangeSoundEnabled(!stepperControlsState.soundEnabled));
-    };
-
-    const compileIfNecessary = () => {
-        dispatch({type: LayoutActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.EditorPlayer}});
-
-        return new Promise<boolean>((resolve) => {
-            if (stepperControlsState.showCompile) {
-                dispatch({
-                    type: ActionTypes.StepperCompileFromControls,
-                    payload: {
-                        callback: resolve,
-                    },
-                });
-            } else {
-                resolve(true);
-            }
-        });
     };
 
     if (!showStepper) {

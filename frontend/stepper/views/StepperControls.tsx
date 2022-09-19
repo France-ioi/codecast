@@ -1,11 +1,10 @@
 import React, {ReactElement, useState} from "react";
-import {Button, Intent, Slider, Spinner} from "@blueprintjs/core";
+import {Button, Intent, Slider} from "@blueprintjs/core";
 import {IconName} from "@blueprintjs/icons";
 import {ActionTypes} from "../actionTypes";
 import {useDispatch} from "react-redux";
 import {StepperControlsType, stepperMaxSpeed, StepperStepMode} from "../index";
 import {formatTime} from "../../common/utils";
-import {CompileStatus} from "../compile";
 import {LayoutType} from "../../task/layout/layout";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {
@@ -84,7 +83,7 @@ export function StepperControls(props: StepperControlsProps) {
                 disabled = !stepperControlsState.canCompile;
                 break;
             case 'gotoend':
-                disabled = !stepperControlsState.canStep || stepperControlsState.isFinished;
+                disabled = stepperControlsState.isFinished;
                 break;
         }
 
@@ -120,80 +119,43 @@ export function StepperControls(props: StepperControlsProps) {
         );
     };
 
-    const onStepRun = async () => {
-        if (!await compileIfNecessary()) {
-            return;
-        }
-
+    const onStepRun = () => {
         if (stepperControlsState.controlsType !== StepperControlsType.Normal) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         }
 
-        dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run, useSpeed: true}});
+        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Run, useSpeed: true}})
     };
     const onStepExpr = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Expr, useSpeed: true}});
-    const onStepInto = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into, useSpeed: true}});
     const onStepOut = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Out, useSpeed: true}});
     const onStepOver = () => dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Over, useSpeed: true}});
     const onToggleSpeed = () => {
         setSpeedDisplayedState(!speedDisplayedState);
     }
     const onInterrupt = () => dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
-    const onRestart = () => dispatch({type: ActionTypes.StepperRestart, payload: {}});
-    const onStop = async () => {
+    const onStop = () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         dispatch({type: ActionTypes.StepperExit, payload: {fromControls: true}});
     };
 
-    const onEdit = () => dispatch({type: ActionTypes.StepperExit, payload: {}});
     const onUndo = () => dispatch({type: ActionTypes.StepperUndo, payload: {}});
     const onRedo = () => dispatch({type: ActionTypes.StepperRedo, payload: {}});
     const onCompile = () => dispatch({type: ActionTypes.Compile, payload: {}});
-    const onStepByStep = async () => {
-        if (!await compileIfNecessary()) {
-            return;
-        }
-
+    const onStepByStep = () => {
         if (stepperControlsState.controlsType !== StepperControlsType.StepByStep) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.StepByStep}});
         }
-        if (stepperControlsState.canStep) {
-            dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into, useSpeed: true}});
-        } else {
-            dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
-        }
+
+        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Into, useSpeed: true}})
     };
-    const onGoToEnd = async () => {
-        if (!await compileIfNecessary()) {
-            return;
-        }
+    const onGoToEnd = () => {
         if (stepperControlsState.controlsType !== StepperControlsType.Normal) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         }
-        if (!stepperControlsState.canStep) {
-            dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
-        }
-        //TODO: await interruption
-        setTimeout(() => {
-            dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});
-        }, 300);
+
+        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Run}})
     };
     const onChangeSpeed = (speed) => dispatch({type: ActionTypes.StepperSpeedChanged, payload: {speed}});
-
-    const compileIfNecessary = () => {
-        return new Promise<boolean>((resolve) => {
-            if (stepperControlsState.showCompile) {
-                dispatch({
-                    type: ActionTypes.StepperCompileFromControls,
-                    payload: {
-                        callback: resolve,
-                    },
-                });
-            } else {
-                resolve(true);
-            }
-        });
-    };
 
     if (!showStepper) {
         return null;
