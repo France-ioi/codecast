@@ -4,6 +4,7 @@ import {toHtml} from "../utils/sanitize";
 import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
 import {platformsList} from "../store";
 import {taskLevelsList} from "./platform/platform_slice";
+import {getMessage} from "../lang";
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -41,12 +42,14 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         const context = quickAlgoLibraries.getContext(null, 'main');
         if (context && window.algoreaInstructionsStrings && window.getAlgoreaInstructionsAsHtml && currentTask.gridInfos.intro) {
             const strLang = window.stringsLanguage;
-            const strings = window.algoreaInstructionsStrings[strLang];
-            let newInstructions = window.getAlgoreaInstructionsAsHtml(strings, currentTask.gridInfos, currentTask.data, taskLevel);
-            if (newInstructions) {
-                const innerText = window.jQuery(newInstructions).text();
-                if (innerText.length) {
-                    newInstructionsHtml = newInstructions;
+            if (strLang in window.algoreaInstructionsStrings) {
+                const strings = window.algoreaInstructionsStrings[strLang];
+                let newInstructions = window.getAlgoreaInstructionsAsHtml(strings, currentTask.gridInfos, currentTask.data, taskLevel);
+                if (newInstructions) {
+                    const innerText = window.jQuery(newInstructions).text();
+                    if (innerText.length) {
+                        newInstructionsHtml = newInstructions;
+                    }
                 }
             }
         }
@@ -79,7 +82,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         <div ref={instructionsRef} className={`task-mission level-${taskLevel} platform-${platform}`} style={{fontSize: `${zoomLevel}rem`}}>
             {props.missionRightSlot}
 
-            <h1>Votre mission</h1>
+            <h1>{getMessage('TASK_INSTRUCTIONS')}</h1>
 
             <div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>
         </div>
