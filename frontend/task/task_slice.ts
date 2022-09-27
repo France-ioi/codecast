@@ -10,6 +10,7 @@ import P5Fixture from './fixtures/test_p5';
 import CraneFixture from './fixtures/test_crane';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
+import {isLocalStorageEnabled} from "../common/utils";
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -101,7 +102,7 @@ export const taskInitialState = {
     contextIncludeBlocks: {},
     blocksPanelCollapsed: false,
     blocksUsage: null,
-    soundEnabled: true,
+    soundEnabled: !isLocalStorageEnabled() || !window.localStorage.getItem('soundDisabled'),
     menuHelpsOpen: false,
 } as TaskState;
 
@@ -234,6 +235,13 @@ export const taskSlice = createSlice({
         },
         taskChangeSoundEnabled(state: TaskState, action: PayloadAction<boolean>) {
             state.soundEnabled = action.payload
+            if (isLocalStorageEnabled()) {
+                if (state.soundEnabled) {
+                    window.localStorage.removeItem('soundDisabled');
+                } else {
+                    window.localStorage.setItem('soundDisabled', 'yes');
+                }
+            }
         },
         taskSetMenuHelpsOpen(state: TaskState, action: PayloadAction<boolean>) {
             state.menuHelpsOpen = action.payload;

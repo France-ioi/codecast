@@ -27,7 +27,7 @@ export function ControlsAndErrors() {
         layoutMobileMode = LayoutMobileMode.Editor;
     }
 
-    const hasError = !!stepperError;
+    let hasError = !!stepperError;
     const hasModes = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
 
     const [errorDialogOpen, setErrorDialogOpen] = useState(false);
@@ -39,6 +39,7 @@ export function ControlsAndErrors() {
     }, [hasError]);
 
     let error = null;
+    let errorClosable = true;
     if (hasError) {
         console.log({stepperError})
         if ('task-tests-submission-results-overview' === stepperError.type) {
@@ -50,6 +51,10 @@ export function ControlsAndErrors() {
             const stepperErrorHtml = toHtml(stepperError);
             error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
         }
+    // } else if (blocksUsage && blocksUsage.error) {
+    //     hasError = true;
+    //     errorClosable = false;
+    //     error = <div>{blocksUsage.error}</div>;
     }
 
     const dispatch = useDispatch();
@@ -126,10 +131,10 @@ export function ControlsAndErrors() {
                 </div>}
             </div>}
 
-            {hasError && <div className="error-message" onClick={onClearError}>
-                <button type="button" className="close-button" onClick={onClearError}>
+            {hasError && <div className={`error-message ${errorClosable ? 'is-closable' : ''}`} onClick={onClearError}>
+                {errorClosable && <button type="button" className="close-button" onClick={onClearError}>
                     <Icon icon="cross"/>
-                </button>
+                </button>}
                 <button type="button" className="maximize-button hidden-mobile" onClick={onMaximizeError}>
                     <Icon icon="maximize"/>
                 </button>

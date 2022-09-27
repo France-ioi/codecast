@@ -36,6 +36,14 @@ export enum CodecastPlatform {
     Scratch = 'scratch',
 }
 
+export const platformsList = [
+    CodecastPlatform.Python,
+    CodecastPlatform.Unix,
+    CodecastPlatform.Arduino,
+    CodecastPlatform.Blockly,
+    CodecastPlatform.Scratch,
+];
+
 export enum CodecastOptionsMode {
     Edit = 'edit',
     Play = 'play',

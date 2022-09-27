@@ -173,6 +173,10 @@ export function* createQuickalgoLibrary() {
     console.log('created context', contextLib);
     contextLib.iTestCase = state.task.currentTestId;
 
+    if (contextLib.changeSoundEnabled && 'main' === state.environment) {
+        contextLib.changeSoundEnabled(state.task.soundEnabled);
+    }
+
     yield* call(createDisplayHelper);
     if (hasBlockPlatform(state.options.platform) && currentTask) {
         yield* call(loadBlocklyHelperSaga, contextLib, currentLevel);
@@ -193,7 +197,7 @@ export function* createQuickalgoLibrary() {
     yield* put(taskIncreaseContextId());
     yield* put(taskSetContextStrings(context.strings));
     if (context.infos && context.infos.includeBlocks) {
-        yield* put(taskSetContextIncludeBlocks(context.infos.includeBlocks));
+        yield* put(taskSetContextIncludeBlocks({...context.infos.includeBlocks}));
     }
     if (context.infos && context.infos.panelCollapsed) {
         yield* put(taskSetBlocksPanelCollapsed(true));

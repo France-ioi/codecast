@@ -18,6 +18,8 @@ import {getMessage} from "../lang";
 import {getStepperControlsSelector} from "../stepper/selectors";
 import {useAppSelector} from "../hooks";
 import {taskChangeSoundEnabled} from "../task/task_slice";
+import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
+import {LayoutType} from "../task/layout/layout";
 
 interface StepperControlsProps {
     enabled: boolean,
@@ -28,6 +30,9 @@ export function TralalereControls(props: StepperControlsProps) {
         return getStepperControlsSelector(state, props);
     });
     const {showControls, showCompile, compileOrExecuteMessage, controlsType, canInterrupt, showStepper} = stepperControlsState;
+    const layoutType = useAppSelector(state => state.layout.type);
+    const isMobile = (LayoutType.MobileHorizontal === layoutType || LayoutType.MobileVertical === layoutType);
+
     const dispatch = useDispatch();
 
     const _button = (key: string, onClick: any, title: string, icon: IconName|JSX.Element, text?: string, classNames?: string): ReactElement => {
@@ -43,38 +48,14 @@ export function TralalereControls(props: StepperControlsProps) {
             case 'restart':
                 disabled = !stepperControlsState.canRestart;
                 break;
-            case 'undo':
-                disabled = !stepperControlsState.canUndo;
-                break;
-            case 'redo':
-                disabled = !stepperControlsState.canRedo;
-                break;
             case 'run':
                 disabled = !stepperControlsState.canStep;
                 break;
             case 'into':
                 disabled = !stepperControlsState.canStep;
                 break;
-            case 'over':
-                disabled = !stepperControlsState.canStepOver;
-                break;
-            case 'expr':
-                disabled = !stepperControlsState.canStep;
-                if (!stepperControlsState.showExpr) {
-                    style.display = 'none';
-                }
-                break;
-            case 'out':
-                disabled = !(stepperControlsState.canStep && stepperControlsState.canStepOut);
-                break;
-            case 'edit':
-                disabled = !stepperControlsState.canExit;
-                break;
-            case 'compile':
-                disabled = !stepperControlsState.canCompile;
-                break;
             case 'gotoend':
-                disabled = !stepperControlsState.canStep || stepperControlsState.isFinished;
+                disabled = stepperControlsState.isFinished;
                 break;
         }
 
@@ -97,70 +78,36 @@ export function TralalereControls(props: StepperControlsProps) {
         );
     };
 
-    const onStepRun = async () => {
-        if (!await compileIfNecessary()) {
-            return;
-        }
-
+    const onStepRun = () => {
         if (stepperControlsState.controlsType !== StepperControlsType.Normal) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         }
 
-        dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run, useSpeed: true}});
+        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Run, useSpeed: true}})
     };
-    const onStop = async () => {
+    const onStop = () => {
         dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         dispatch({type: ActionTypes.StepperExit, payload: {}});
     };
     const onInterrupt = () => dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
     const onCompile = () => dispatch({type: ActionTypes.Compile, payload: {}});
-    const onGoToEnd = async () => {
-        if (!await compileIfNecessary()) {
-            return;
-        }
+    const onGoToEnd = () => {
         if (stepperControlsState.controlsType !== StepperControlsType.Normal) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.Normal}});
         }
-        if (!stepperControlsState.canStep) {
-            dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
-        }
-        //TODO: await interruption
-        setTimeout(() => {
-            dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Run}});
-        }, 300);
-    };
-    const onStepByStep = async () => {
-        if (!await compileIfNecessary()) {
-            return;
-        }
 
+        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Run}})
+    };
+    const onStepByStep = () => {
         if (stepperControlsState.controlsType !== StepperControlsType.StepByStep) {
             dispatch({type: ActionTypes.StepperControlsChanged, payload: {controls: StepperControlsType.StepByStep}});
         }
-        if (stepperControlsState.canStep) {
-            dispatch({type: ActionTypes.StepperStep, payload: {mode: StepperStepMode.Into, useSpeed: true}});
-        } else {
-            dispatch({type: ActionTypes.StepperInterrupting, payload: {}});
-        }
+
+        dispatch({type: ActionTypes.StepperStepFromControls, payload: {mode: StepperStepMode.Into, useSpeed: true}})
     };
 
     const toggleSound = () => {
         dispatch(taskChangeSoundEnabled(!stepperControlsState.soundEnabled));
-    };
-
-    const compileIfNecessary = () => {
-        return new Promise<boolean>((resolve) => {
-            if (stepperControlsState.showCompile) {
-                dispatch({
-                    type: ActionTypes.StepperCompileFromControls,
-                    payload: {
-                        callback: resolve,
-                    },
-                });
-            } else {
-                resolve(true);
-            }
-        });
     };
 
     if (!showStepper) {
@@ -172,7 +119,7 @@ export function TralalereControls(props: StepperControlsProps) {
             {_button('compile', onCompile, null, null, compileOrExecuteMessage)}
         </div>
         :
-        (<div className="tralalere-controls-container"><div className={`controls controls-stepper ${controlsType}`}>
+        (<div className="tralalere-controls-container"><div className={`controls controls-stepper controls-left ${controlsType}`}>
             {showControls && <React.Fragment>
                 {_button('restart', onStop, getMessage('CONTROL_RESTART'), <FontAwesomeIcon icon={faStepBackward}/>, null, 'is-small')}
                 {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), stepperControlsState.runningBackground ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
@@ -181,6 +128,7 @@ export function TralalereControls(props: StepperControlsProps) {
                 {_button('gotoend', onGoToEnd, getMessage('CONTROL_GO_TO_END'), <FontAwesomeIcon icon={faForward}/>, null, 'is-big')}
             </React.Fragment>}
         </div><div className={`controls controls-stepper ${controlsType} controls-right`}>
+            {!isMobile && <TralalereBlocksUsage/>}
             {showControls && <React.Fragment>
                 {_button('sound', toggleSound, getMessage('CONTROL_SOUND'), <FontAwesomeIcon icon={stepperControlsState.soundEnabled ? faVolumeUp : faVolumeMute}/>, null, 'is-big')}
             </React.Fragment>}

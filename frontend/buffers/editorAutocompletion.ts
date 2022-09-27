@@ -1,11 +1,10 @@
-import * as ace from 'brace';
 import {getMessage} from "../lang";
 import {Block, BlockType} from "../task/blocks/blocks";
 
 const hiddenWords = ['__getitem__', '__setitem__'];
 
 export const addAutocompletion = function (blocks: Block[], strings: any) {
-    let langTools = ace.acequire("ace/ext/language_tools");
+    let langTools = window.ace.acequire("ace/ext/language_tools");
 
     // This array will contain all functions for which we must add autocompletion
     let completions = [];
@@ -49,7 +48,14 @@ export const addAutocompletion = function (blocks: Block[], strings: any) {
     // creating the completer
     let completer = {
         getCompletions: function (editor, session, pos, prefix, callback) {
-            callback(null, completions);
+            const validCompletions = completions.filter(completion => {
+                if (!completion.name && !completion.caption) {
+                    return false;
+                }
+
+                return (completion.name || completion.caption).substring(0, prefix.length).trim().toLocaleLowerCase() === prefix.trim().toLocaleLowerCase();
+            });
+            callback(null, validCompletions);
         }
     };
 

@@ -75,6 +75,8 @@ function setLanguageReducer(state: AppStore, {payload: {language}}) {
         language = 'fr-FR';
     }
 
+    const familiarEnabled = 'tralalere' === state.options.app;
+
     const localizedMessage = Object.create(Message, {
         _l: {
             writable: false,
@@ -84,7 +86,7 @@ function setLanguageReducer(state: AppStore, {payload: {language}}) {
     });
 
     localGetMessage = memoize(function(message, defaultText) {
-        const value = Languages[language][message] || defaultText || `L:${message}`;
+        const value = Languages[language][message + (familiarEnabled ? '_FAMILIAR' : '')] || Languages[language][message] || defaultText || `L:${message}`;
 
         return Object.create(localizedMessage, {
             _m: {

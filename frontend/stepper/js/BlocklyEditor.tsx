@@ -41,6 +41,9 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const highlight = (range) => {
         console.log('[blockly.editor] highlight', range);
+        if (!context.blocklyHelper.workspace) {
+            return;
+        }
         // Fix of a code in blockly_interface.js making double consecutive highlight for the same block not working
         if (null !== range) {
             window.Blockly.selected = null;

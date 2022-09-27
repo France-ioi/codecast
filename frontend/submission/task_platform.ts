@@ -22,9 +22,9 @@ export function* makeServerSubmission(answer: string, taskToken: string, answerT
             sourceCode: answerDecoded,
         },
         userTests: [],
-        locale: state.options.language.split('-')[0],
+        sLocale: state.options.language.split('-')[0],
         platform: state.submission.platformName,
-        taskId: state.task.currentTask.id,
+        taskId: String(state.task.currentTask.id),
         taskParams: {
             minScore: 0,
             maxScore: 100,

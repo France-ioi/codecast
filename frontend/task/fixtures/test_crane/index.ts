@@ -40,6 +40,8 @@ export default {
         contextType: "numbers",
         hideControls: { saveOrLoad: false},
         hiddenTests: true,
+        usedSkills: ['logic', 'memory'],
+        targetNbInstructions: 5,
 
         nbPlatforms: 100,
         maxInstructions: {

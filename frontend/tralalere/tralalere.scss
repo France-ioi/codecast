@@ -4,6 +4,48 @@ $tralalere-dark-blue: #043565;
 $tralalere-green: #85FF00;
 $tralalere-red: #FF3C11;
 
+@mixin tralalere-button {
+  height: 50px;
+  width: 50px;
+
+  background: $tralalere-dark-blue;
+  border: 2px solid $tralalere-green;
+  border-radius: 7px;
+
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $tralalere-green;
+  font-size: 30px;
+  cursor: pointer;
+  font-weight: 900;
+  box-shadow: -4px 4px #1D1E47;
+  user-select: none;
+  padding-left: 0;
+  padding-right: 0;
+
+  &[disabled] {
+    cursor: not-allowed;
+    border: 2px solid rgba(133, 255, 0, 0.3);
+  }
+
+  &[disabled] svg {
+    opacity: 0.4;
+  }
+}
+
+@mixin tralalere-button-small {
+  width: 35px;
+  height: 35px;
+  border-radius: 5px;
+  font-size: 20px;
+  svg, img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
 [data-theme="tralalere"] {
   --primary-color: #043565;
   --secondary-color: #1f1f1f;
@@ -44,14 +86,10 @@ $tralalere-red: #FF3C11;
       margin-left: 20px;
       margin-top: 12px;
       padding-left: 134px;
-
+      padding-right: 30px;
       background: $tralalere-green-blue;
       border-radius: 50px;
       box-shadow: -15px 15px #383961;
-
-      display: flex;
-      align-items: center;
-      padding-right: 30px;
 
       .task-mission {
         color: white;
@@ -81,12 +119,22 @@ $tralalere-red: #FF3C11;
             font-style: italic;
             font-weight: 900;
           }
+          a {
+            color: $tralalere-green;
+            font-weight: bold;
+            text-decoration: underline;
+          }
         }
       }
 
       &.is-limited .task-mission {
         height: 80px;
         overflow: hidden;
+      }
+
+      .tralalere-instructions-more {
+        float: right;
+        margin-left: 20px;
       }
     }
 
@@ -125,11 +173,12 @@ $tralalere-red: #FF3C11;
 
   .tralalere-section {
     display: flex;
+    position: relative;
     flex: 50%;
     min-height: 0;
     min-width: 0;
     width: 100vw;
-    background: radial-gradient(65.09% 65.09% at 50% 50%, #05A8AA 0%, #383961 100%);
+    background: radial-gradient(65.09% 65.09% at 50% 50%, $tralalere-green-blue 0%, #383961 100%);
   }
 
   .tralalere-visualization, .blockly-editor {
@@ -151,7 +200,7 @@ $tralalere-red: #FF3C11;
   }
 
   .tralalere-menu-icons {
-    position: fixed;
+    position: absolute;
     top: 10px;
     right: 10px;
     z-index: 10;
@@ -227,6 +276,7 @@ $tralalere-red: #FF3C11;
   width: var(--flyout-width);
   bottom: 0;
   border-radius: 15px;
+  overflow: hidden;
   background: linear-gradient(to bottom, rgba(255,0,0,0) 0%, rgba(255,0,0,0) 80%, $tralalere-dark-blue 80%, $tralalere-dark-blue 100%);
 }
 .blockly-flyout-wrapper-bottom {
@@ -234,35 +284,6 @@ $tralalere-red: #FF3C11;
   bottom: 0;
   right: -3px;
   border-bottom-right-radius: 12px;
-}
-
-@mixin tralalere-button {
-  height: 50px;
-  width: 50px;
-
-  background: $tralalere-dark-blue;
-  border: 2px solid $tralalere-green;
-  border-radius: 7px;
-
-  font-family: 'Roboto', sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: $tralalere-green;
-  font-size: 30px;
-  cursor: pointer;
-  font-weight: 900;
-  box-shadow: -4px 4px #1D1E47;
-  user-select: none;
-
-  &[disabled] {
-    cursor: not-allowed;
-    border: 2px solid rgba(133, 255, 0, 0.3);
-  }
-
-  &[disabled] svg {
-    opacity: 0.4;
-  }
 }
 
 .tralalere-button {
@@ -273,6 +294,8 @@ $tralalere-red: #FF3C11;
   display: flex;
   width: 100%;
   z-index: 5;
+  flex-wrap: wrap;
+  justify-content: right;
   .controls-stepper.controls-right {
     flex: 0 1;
     justify-content: end;
@@ -307,8 +330,9 @@ $tralalere-red: #FF3C11;
     box-shadow: -6px 6px #1D1E47;
     border-radius: 7px;
     margin-left: 6px;
-    margin-right: 10px;
-    margin-bottom: 10px;
+    &.is-closable {
+      margin-right: 10px;
+    }
     display: flex;
     align-items: center;
     .close-button {
@@ -316,7 +340,7 @@ $tralalere-red: #FF3C11;
       border: 2px solid $tralalere-red;
       border-radius: 7px;
       box-shadow: -6px 6px #1D1E47;
-      top: -10px;
+      top: -16px;
       right: -10px;
       width: 30px;
       height: 30px;
@@ -334,6 +358,7 @@ $tralalere-red: #FF3C11;
       svg {
         margin-left: 15px;
         margin-right: 15px;
+        min-width: 28px !important;
       }
     }
     .message {
@@ -341,6 +366,9 @@ $tralalere-red: #FF3C11;
       font-weight: 400;
       font-size: 16px;
       line-height: 19px;
+    }
+    code {
+      color: $tralalere-red !important;
     }
   }
 }
@@ -366,7 +394,7 @@ $tralalere-red: #FF3C11;
   position: relative;
 
   .tralalere-box-header {
-    background: #05A8AA;
+    background: $tralalere-green-blue;
     border-radius: 7px;
     display: flex;
     height: 70px;
@@ -415,10 +443,9 @@ $tralalere-red: #FF3C11;
     margin-top: 10px;
 
     .hint-button {
-      height: 40px;
       font-size: 16px;
       width: fit-content;
-      padding: 0 30px;
+      padding: 5px 30px;
       margin: auto;
     }
   }
@@ -444,7 +471,7 @@ $tralalere-red: #FF3C11;
       color: #ddd;
     }
     .carousel-item {
-      padding: 30px 60px 60px;
+      padding: 30px 40px 60px;
     }
     .carousel-indicators button {
       height: 6px;
@@ -492,9 +519,13 @@ $tralalere-red: #FF3C11;
     border-left: none;
   }
 
+  .documentation-language-dropdown {
+    display: none;
+  }
+
   .documentation-menu {
-    border-right: 4px solid #05A8AA !important;
-    border-bottom: 4px solid #05A8AA !important;
+    border-right: 4px solid $tralalere-green-blue !important;
+    border-bottom: 4px solid $tralalere-green-blue !important;
     margin-bottom: -4px;
     border-bottom-left-radius: 15px;
     border-bottom-right-radius: 15px;
@@ -588,9 +619,6 @@ $tralalere-red: #FF3C11;
 }
 
 .tralalere-blocks-usage {
-  position: absolute;
-  top: 12px;
-  right: 80px;
   background: $tralalere-dark-blue;
   border: solid 4px $tralalere-green-blue;
   font-weight: bold;
@@ -598,6 +626,8 @@ $tralalere-red: #FF3C11;
   align-items: center;
   justify-content: center;
   font-size: 16px;
+  white-space: nowrap;
+  margin-right: 10px;
   color: #fff;
   height: 32px;
   padding: 0 35px 0 15px;
@@ -605,6 +635,7 @@ $tralalere-red: #FF3C11;
   z-index: 5;
   user-select: none;
   text-align: center;
+  position: relative;
 
   .block-usage-status {
     position: absolute;
@@ -677,4 +708,246 @@ $tralalere-red: #FF3C11;
       border-radius: 2px;
     }
   }
+}
+
+.tralalere-mobile-tabs {
+  display: flex;
+  .tralalere-mobile-tab {
+    flex: 50%;
+    border-radius: 10px 10px 0 0;
+    font-family: 'Roboto';
+    font-weight: 900;
+    text-align: center;
+
+    background: #5158BB;
+    border: 3px solid $tralalere-green-blue;
+    color: white;
+    padding: 5px 10px;
+
+    &.is-active {
+      background: $tralalere-green;
+      border: 3px solid $tralalere-green;
+      color: #043565;
+    }
+  }
+}
+
+.tralalere-instructions-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 5;
+  background: $tralalere-green-blue;
+  border-radius: 10px;
+  padding: 7px 7px 10px 10px;
+  box-shadow: -5px 5px #383961;
+  .tralalere-button {
+    @include tralalere-button-small;
+    font-size: 20px;
+    border: 3px solid $tralalere-green;
+  }
+}
+
+.tralalere-success {
+  background: $tralalere-green;
+  border-radius: 50px;
+  font-style: normal;
+  font-weight: 900;
+  font-size: 50px;
+  color: $tralalere-dark-blue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 100px;
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  right: 0;
+  z-index: 10;
+  height: 86px;
+  box-shadow: 0px 4px 22px #FFFFFF, -15px 15px #435456;
+  .tralalere-success-left {
+    position: absolute;
+    top: -8px;
+    left: -12px;
+  }
+}
+
+// Responsive
+.layout-mobile-horizontal.tralalere, .layout-mobile-vertical.tralalere {
+  .context-visualization {
+    margin-top: 0;
+  }
+
+  .task-visualization {
+    min-height: 100px;
+  }
+
+  .tralalere-controls {
+    width: 100%;
+    position: static;
+    padding-left: initial;
+    padding: 5px 0;
+    background: $tralalere-dark-blue;
+
+    .tralalere-button {
+      @include tralalere-button-small;
+      border-radius: 10px;
+    }
+
+    .controls.controls-left {
+      order: 2;
+      margin: auto;
+      align-items: center;
+      justify-content: center;
+      margin-right: 70px;
+    }
+
+    .controls.controls-right {
+      order: 1;
+    }
+  }
+
+  .tralalere-instructions-design {
+    display: none;
+  }
+
+  .tralalere-instructions {
+    position: static;
+    z-index: 5;
+  }
+
+  .tralalere-instructions-more {
+    .tralalere-button {
+      @include tralalere-button-small;
+    }
+  }
+
+  .tralalere-instructions-container {
+    margin-left: 10px;
+    margin-top: 0;
+    margin-right: 5px;
+    padding: 5px 0 0;
+    border-radius: 7px;
+    box-shadow: -7px 7px #383961;
+    position: absolute;
+    bottom: 55px;
+    z-index: 20;
+
+    .advice {
+      margin-left: 0 !important;
+    }
+
+    .task-mission {
+      margin-right: 0;
+    }
+  }
+
+  .blocklyToolboxDiv {
+    min-width: initial;
+  }
+
+  .blocklyTreeRoot {
+    padding-left: 0;
+    padding-right: 0;
+
+    [role=treeitem] {
+      margin-bottom: 8px;
+    }
+
+    .blocklyTreeRow {
+      height: auto !important;
+      text-align: center;
+      padding: 6px 8px !important;
+      border-radius: 0 !important;
+
+      &:after {
+        display: none;
+      }
+
+      .blocklyTreeIcon {
+        display: block !important;
+        width: 20px;
+        height: 20px;
+        margin: auto;
+      }
+
+      .blocklyTreeLabel {
+        display: block !important;
+      }
+
+      &.blocklyTreeSelected {
+        margin-right: initial !important;
+        z-index: 1;
+        position: relative;
+      }
+    }
+  }
+
+  .tralalere-blocks-usage {
+    position: absolute;
+    bottom: 15px;
+    right: 50px;
+  }
+
+  .tralalere-editor-play {
+    position: absolute;
+    right: 15px;
+    bottom: 15px;
+    z-index: 20;
+
+    .tralalere-button {
+      @include tralalere-button-small;
+    }
+  }
+
+  &.platform-blockly, &.platform-scratch {
+    .tralalere-blocks-usage {
+      bottom: 25px;
+      right: 60px;
+    }
+
+    .tralalere-editor-play {
+      right: 25px;
+      bottom: 25px;
+    }
+  }
+
+  .tralalere-coding-overlay {
+    border: solid 2px $tralalere-green;
+    box-shadow: inset 0px 0px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 4px;
+    .blocklyToolboxDiv {
+      display: none;
+    }
+  }
+
+  .tralalere-menu-icons {
+    .tralalere-button {
+      @include tralalere-button-small;
+    }
+    .tralalere-menu-label {
+      right: 35px;
+    }
+  }
+
+  .hint-button {
+    padding: 5px 10px;
+  }
+  .carousel-control-prev, .carousel-control-next, .carousel-control-prev:focus, .carousel-control-next:focus {
+    width: 15%;
+  }
+
+  .tralalere-success {
+    font-size: 25px;
+  }
+}
+
+.tralalere-doc.is-mobile {
+  .documentation-tabs-menu {
+    display: none;
+  }
+
+  width: 95vw;
+  max-height: 90vh;
 }

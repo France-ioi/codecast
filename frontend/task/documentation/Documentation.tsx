@@ -30,6 +30,7 @@ export function Documentation(props: DocumentationProps) {
     const platform = useAppSelector(state => state.options.platform);
     const screen = useAppSelector(state => state.screen);
     const firstConcepts = concepts.slice(0, 3);
+    const isTralalere = useAppSelector(state => 'tralalere' === state.options.app);
 
     const [iframeRef, setIframeRef] = useState(null);
 
@@ -40,6 +41,9 @@ export function Documentation(props: DocumentationProps) {
             urlSplit[urlSplit.length - 1] = documentationLanguage + '-' + urlSplit[urlSplit.length - 1];
         } else {
             urlSplit[1] = documentationLanguage;
+        }
+        if (isTralalere) {
+            urlSplit[0] = urlSplit[0].replace(/index\.html/g, 'index_tralalere.html');
         }
         conceptUrl = urlSplit.join('#');
     }

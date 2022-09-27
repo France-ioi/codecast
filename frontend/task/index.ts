@@ -12,7 +12,7 @@ import QuickalgoLibsBundle, {
     QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from "./libs/quickalgo_libraries";
-import SrlBundle from './srl';
+import SrlBundle, {statsGetStateSaga} from './srl';
 import BehaviourBundle from './behaviour';
 import stringify from 'json-stable-stringify-without-jsonify';
 import taskSlice, {
@@ -21,6 +21,7 @@ import taskSlice, {
     recordingEnabledChange,
     selectCurrentTest,
     taskAddInput,
+    taskChangeSoundEnabled,
     taskClearSubmission,
     taskCurrentLevelChange,
     taskInputEntered,
@@ -47,7 +48,7 @@ import PlatformBundle, {
     taskGradeAnswerEventSaga
 } from "./platform/platform";
 import {ActionTypes as LayoutActionTypes} from "./layout/actionTypes";
-import {ZOOM_LEVEL_HIGH} from "./layout/layout";
+import {LayoutMobileMode, LayoutType, ZOOM_LEVEL_HIGH} from "./layout/layout";
 import {PlayerInstant} from "../player";
 import {ActionTypes as StepperActionTypes, stepperClearError, stepperDisplayError} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
@@ -69,9 +70,10 @@ import {
 import {getTaskTokenForLevel} from "./platform/task_token";
 import {createAction} from "@reduxjs/toolkit";
 import {selectAnswer} from "./selectors";
-import {hasBlockPlatform} from "../stepper/js";
+import {hasBlockPlatform, loadBlocklyHelperSaga} from "../stepper/js";
 import {ObjectDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
+import {ActionTypes} from "../common/actionTypes";
 import {getTaskFromId} from "../submission/task_platform";
 import {
     submissionChangeExecutionMode,
@@ -482,7 +484,11 @@ export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
 }
 
 function* getTaskState () {
-    return {};
+    const statsState = yield* call(statsGetStateSaga);
+
+    return {
+        stats: statsState,
+    };
 }
 
 function* getTaskLevel () {
@@ -678,6 +684,43 @@ export default function (bundle: Bundle) {
             console.log('Platform answer loaded', answer);
             const platform = yield* select((state: AppStore) => state.options.platform);
             yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: getModelFromAnswer(answer, platform), goToEnd: true});
+        });
+
+        yield* takeEvery(taskChangeSoundEnabled.type, function* () {
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            const state: AppStore = yield* select();
+            if (context && context.changeSoundEnabled) {
+                context.changeSoundEnabled(state.task.soundEnabled);
+            }
+        });
+
+        yield* takeEvery(ActionTypes.WindowResized, function* () {
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            const state: AppStore = yield* select();
+            if (hasBlockPlatform(state.options.platform) && state.task.currentTask) {
+                yield* call(loadBlocklyHelperSaga, context, state.task.currentLevel);
+            }
+        });
+
+        yield* takeEvery([ActionTypes.WindowResized, LayoutActionTypes.LayoutMobileModeChanged], function* () {
+            const state: AppStore = yield* select();
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            if (!context) {
+                return;
+            }
+
+            if (LayoutType.MobileHorizontal === state.layout.type || LayoutType.MobileVertical === state.layout.type) {
+                if (LayoutMobileMode.Editor === state.layout.mobileMode) {
+                    // Use context.display = false when ContextVisualization is not displayed to avoid errors when
+                    // using context.reset or context.updateScale
+                    context.display = false;
+                    yield* put({type: StepperActionTypes.StepperExit});
+                } else {
+                    context.display = true;
+                }
+            } else {
+                context.display = true;
+            }
         });
     });
 

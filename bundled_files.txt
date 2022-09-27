@@ -7,8 +7,4 @@ bebras-modules/pemFioi/conceptViewer-1.0-mobileFirst.js
 bebras-modules/integrationAPI.01/official/platform-pr.js
 bebras-modules/integrationAPI.01/installationAPI.01/pemFioi/installation.js
 bebras-modules/integrationAPI.01/official/miniPlatform.js
-bebras-modules/ext/js-interpreter/acorn.js
-bebras-modules/ext/acorn/walk.js
-bebras-modules/ext/js-interpreter/interpreter.js
-bebras-modules/pemFioi/quickAlgo/utils.js
 bebras-modules/pemFioi/importModules-1.4-mobileFirst.js

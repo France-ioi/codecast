@@ -3,7 +3,7 @@ export enum ActionTypes {
     StepperRestart = 'Stepper.Restart',
     StepperReset = 'Stepper.Reset',
     StepperCompileAndStep = 'Stepper.CompileAndStep',
-    StepperCompileFromControls = 'Stepper.CompileFromControls',
+    StepperStepFromControls = 'Stepper.StepFromControls',
     StepperRunBackground = 'Stepper.RunBackground',
     StepperRunBackgroundFinished = 'Stepper.RunBackgroundFinished',
     StepperStep = 'Stepper.Step',

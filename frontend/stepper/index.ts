@@ -59,7 +59,7 @@ import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {getCurrentStepperState, getStepper, isStepperInterrupting} from "./selectors";
+import {getCurrentStepperState, getStepper, getStepperControlsSelector, isStepperInterrupting} from "./selectors";
 import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {TermBuffer} from "./io/terminal";
 import {PlayerInstant} from "../player";
@@ -80,6 +80,9 @@ import UnixRunner from "./c/unix_runner";
 import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./analysis/analysis";
 import log from "loglevel";
 import {taskSubmissionExecutor} from "../task/task_submission";
+import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
+import {LayoutMobileMode} from "../task/layout/layout";
+import {DeferredPromise} from "../utils/app";
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -815,7 +818,7 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
         context.changeDelay(newDelay);
     }
 
-    if (context && context.changeSoundEnabled) {
+    if (context && context.changeSoundEnabled && 'main' === state.environment) {
         context.changeSoundEnabled(state.task.soundEnabled);
     }
 
@@ -1145,7 +1148,7 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
     callback(lastBackgroundResult);
 }
 
-function* stepperCompileFromControlsSaga(app: App, {payload: {callback}}) {
+function* stepperCompileFromControlsSaga(app: App) {
     const stepperStatus = yield* select((state: AppStore) => state.stepper.status);
 
     let backgroundRunData: TaskSubmissionResultPayload = null;
@@ -1168,6 +1171,8 @@ function* stepperCompileFromControlsSaga(app: App, {payload: {callback}}) {
         }
     }
 
+    const deferredPromise = new DeferredPromise();
+
     yield* put({
         type: ActionTypes.CompileWait,
         payload: {
@@ -1175,10 +1180,32 @@ function* stepperCompileFromControlsSaga(app: App, {payload: {callback}}) {
                 if (null !== backgroundRunData) {
                     app.dispatch(stepperRunBackgroundFinished(backgroundRunData));
                 }
-                callback(CompileStatus.Done === result);
+                deferredPromise.resolve(CompileStatus.Done === result);
             }
         },
     });
+
+    yield* call(() => deferredPromise.promise);
+}
+
+function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
+    yield* put({type: LayoutActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.EditorPlayer}});
+
+    const state: AppStore = yield* select();
+    const stepperControlsState = getStepperControlsSelector(state, {enabled: true});
+    const stepper = getStepper(state);
+    const mustCompile = StepperStatus.Clear === stepper.status;
+
+    if (mustCompile) {
+        yield* call(stepperCompileFromControlsSaga, app);
+    }
+
+    if (!stepperControlsState.canStep) {
+        yield* put({type: ActionTypes.StepperInterrupting, payload: {}});
+        yield* take(ActionTypes.StepperInterrupted);
+    }
+
+    yield* put({type: ActionTypes.StepperStep, payload: {mode, useSpeed}});
 }
 
 function* stepperSaga(app: App) {
@@ -1210,7 +1237,7 @@ function* stepperSaga(app: App) {
     // @ts-ignore
     yield* takeLatest(ActionTypes.StepperRunBackground, stepperRunBackgroundSaga, app);
     // @ts-ignore
-    yield* takeLatest(ActionTypes.StepperCompileFromControls, stepperCompileFromControlsSaga, app);
+    yield* takeLatest(ActionTypes.StepperStepFromControls, stepperStepFromControlsSaga, app);
 
     // @ts-ignore
     yield* takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function*({payload}) {

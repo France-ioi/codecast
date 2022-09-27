@@ -9,18 +9,39 @@ import {TaskLevelName} from "../../task/platform/platform_slice";
 import {extractLevelSpecific} from "../../task/utils";
 import {delay} from "../api";
 import {getMessage, getMessageChoices} from "../../lang";
-import {select} from "typed-redux-saga";
-import {displayModal} from "../../common/prompt_modal";
+import {put, select} from "typed-redux-saga";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
+import {LayoutType} from "../../task/layout/layout";
+import {taskIncreaseContextId} from "../../task/task_slice";
 
 let originalFireNow;
+let originalSetBackgroundPathVertical_;
 
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
     let blocklyHelper;
 
-    const options = yield* select((state: AppStore) => state.options);
+    if (context && context.blocklyHelper) {
+        context.blocklyHelper.unloadLevel();
+    }
+
+    console.log('[stepper/js] load blockly helper', context.infos.includeBlocks, context.infos.includeBlocks.groupByCategory);
+    const state: AppStore = yield* select();
+    const options = state.options;
     const language = options.language.split('-')[0];
     const languageTranslations = require('../../lang/blockly_' + language + '.js');
+    const isMobile = yield* select((state: AppStore) => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
+    if (context.infos && context.infos.includeBlocks) {
+        if (isMobile) {
+            if (undefined === context.infos.includeBlocks.originalGroupByCategory) {
+                context.infos.includeBlocks.originalGroupByCategory = !!context.infos.includeBlocks.groupByCategory;
+            }
+            context.infos.includeBlocks.groupByCategory = true;
+        } else if (undefined !== context.infos.includeBlocks.originalGroupByCategory) {
+            context.infos.includeBlocks.groupByCategory = !!context.infos.includeBlocks.originalGroupByCategory;
+        }
+    }
+    console.log('group by category', context.infos.includeBlocks.groupByCategory);
+
     window.goog.provide('Blockly.Msg.' + language);
     window.Blockly.Msg = {...window.Blockly.Msg, ...languageTranslations.Msg};
 
@@ -54,6 +75,28 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     // during loadPrograms at the start of the program execution
     blocklyHelper.onChangeResetDisplay = () => {
     };
+    // Override this function to add x="0" y="0" so that cleanBlockAttributes works correctly by detecting x is not null
+    blocklyHelper.getEmptyContent = function() {
+        if (this.startingBlock) {
+            if(this.scratchMode) {
+                return '<xml><block type="robot_start" deletable="false" movable="false" x="10" y="20"></block></xml>';
+            } else {
+                return '<xml><block type="robot_start" deletable="false" movable="false" x="0" y="0"></block></xml>';
+            }
+        }
+        else {
+            return '<xml></xml>';
+        }
+    };
+    // Override this function to change parameters
+    blocklyHelper.getOrigin = function() {
+        // Get x/y origin
+        if (this.includeBlocks.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
+            return this.scratchMode ? {x: 340, y: 20} : {x: 105, y: 2};
+        }
+        return this.scratchMode ? {x: 20, y: 20} : {x: 20, y: 2};
+    };
+
     context.blocklyHelper = blocklyHelper;
     context.onChange = () => {};
 
@@ -65,9 +108,11 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     // We overload this function to catch the Blockly firing event instant so that we know when the program
     // is successfully reloaded and that the events won't trigger an editor content update which would trigger
     // a stepper.exit
-    window.Blockly.Events.fireNow_ = () => {
-        originalFireNow();
-        blocklyHelper.reloading = false;
+    if ('main' === state.environment) {
+        window.Blockly.Events.fireNow_ = () => {
+            originalFireNow();
+            blocklyHelper.reloading = false;
+        };
     }
 
     console.log('[blockly.editor] load context into blockly editor');
@@ -78,18 +123,28 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
 
     const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
     if (groupsCategory && 'tralalere' === options.app) {
-        overrideBlocklyFlyoutForCategories();
+        overrideBlocklyFlyoutForCategories(isMobile);
+    } else if (originalSetBackgroundPathVertical_) {
+        window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = originalSetBackgroundPathVertical_;
     }
+
+    yield* put(taskIncreaseContextId());
 }
 
-export const overrideBlocklyFlyoutForCategories = () => {
+export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
     // Override function from Blockly for two reasons:
     // 1. Control width and height of Blockly flyout
     // 2. Add border radiuses at top-left and bottom-left
+    if (!originalSetBackgroundPathVertical_) {
+        originalSetBackgroundPathVertical_ = window.Blockly.Flyout.prototype.setBackgroundPathVertical_;
+    }
+
     window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = function(width, height) {
+        const toolboxWidth = this.targetWorkspace_ && this.targetWorkspace_.toolbox_ ? this.targetWorkspace_.toolbox_.getWidth() : 0;
         let atRight = this.toolboxPosition_ == window.Blockly.TOOLBOX_AT_RIGHT;
-        let computedHeight = Math.min(400, height);
-        let computedWidth = Math.max(300, width);
+        let computedHeight = isMobile ? window.innerHeight - 120 : Math.min(400, height);
+        let computedWidth = isMobile ? window.innerWidth - toolboxWidth - 2*this.CORNER_RADIUS + 4 : Math.max(300, width);
+        console.log('background draw', {isMobile, toolboxWidth, width, computedWidth, windowWidth: window.innerWidth, workspace: this.targetWorkspace_});
         // Decide whether to start on the left or right.
         let path = ['M ' + (atRight ? this.width_ - this.CORNER_RADIUS : this.CORNER_RADIUS) + ',0'];
         // Top.
