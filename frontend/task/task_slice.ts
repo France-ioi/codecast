@@ -222,7 +222,8 @@ export const taskSlice = createSlice({
             state.contextId++;
         },
         taskSetContextStrings(state: TaskState, action: PayloadAction<any>) {
-            state.contextStrings = action.payload;
+            // Make a copy to put in the store so that the original "strings" object do not end frozen and thus immutable by Immer
+            state.contextStrings = action.payload ? JSON.parse(JSON.stringify(action.payload)) : {};
         },
         taskSetContextIncludeBlocks(state: TaskState, action: PayloadAction<any>) {
             state.contextIncludeBlocks = action.payload;
