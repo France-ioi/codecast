@@ -988,6 +988,12 @@ function* stepperStepSaga(app: App, action) {
 
             if (stepperContext.state.isFinished) {
                 const taskContext = quickAlgoLibraries.getContext(null, state.environment);
+
+                // Wait the end of animations and context delays before checking end condition and displaying success/error
+                yield new Promise((resolve) => {
+                    taskContext.executeWhenReady(resolve);
+                });
+
                 console.log('check end condition');
                 if (taskContext && taskContext.needsRedrawDisplay) {
                     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
