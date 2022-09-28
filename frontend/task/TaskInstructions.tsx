@@ -62,7 +62,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         }
         for (let availableLevel of taskLevelsList) {
             if (taskLevel !== availableLevel) {
-                instructionsJQuery.find(`.${availableLevel}`).remove();
+                instructionsJQuery.find(`.${availableLevel}:not(.${taskLevel})`).remove();
             }
         }
 
