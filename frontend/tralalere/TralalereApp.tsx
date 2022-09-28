@@ -24,6 +24,7 @@ import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
 import {StepperStatus} from "../stepper";
 import {selectAnswer} from "../task/selectors";
 import {taskSuccessClear} from "../task/task_slice";
+import {hasBlockPlatform} from "../stepper/js";
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -174,7 +175,7 @@ export function TralalereApp() {
                     {(!isMobile || LayoutMobileMode.Editor === layoutMobileMode) && <div className="blockly-editor">
                         <LayoutEditor style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/editor-cross.png'}`}}/>
 
-                        {CodecastPlatform.Blockly === platform && <div className="blockly-flyout-wrapper">
+                        {hasBlockPlatform(platform) && <div className="blockly-flyout-wrapper">
                             <img className="blockly-flyout-wrapper-bottom" src={window.modulesPath + 'img/algorea/crane/editor-bottom-background.png'}/>
                         </div>}
 

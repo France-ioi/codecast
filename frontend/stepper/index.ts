@@ -563,7 +563,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     stepperContext.state = {...stepperContext.state};
 
     if (false !== progress) {
-        if (stepperContext.state.platform === CodecastPlatform.Blockly) {
+        if (hasBlockPlatform(stepperContext.state.platform)) {
             stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
         } else if (stepperContext.state.platform === CodecastPlatform.Python) {
             stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
@@ -978,7 +978,7 @@ function* stepperStepSaga(app: App, action) {
 
             console.log('end stepper step');
 
-            if (stepperContext.state.platform === CodecastPlatform.Blockly) {
+            if (hasBlockPlatform(stepperContext.state.platform)) {
                 stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
             } else if (stepperContext.state.platform === CodecastPlatform.Python) {
                 stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
