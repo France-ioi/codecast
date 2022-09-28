@@ -53,7 +53,7 @@ export function Documentation(props: DocumentationProps) {
         if (platformDocumentationLanguage !== documentationLanguage) {
             dispatch(documentationLanguageChanged(platformDocumentationLanguage));
         }
-        dispatch(documentationLoad(props.standalone, !!props.hasTaskInstructions));
+        dispatch(documentationLoad(props.standalone, false !== props.hasTaskInstructions));
     }, [documentationLanguage]);
 
     const iframeLoaded = () => {
