@@ -128,6 +128,7 @@ declare global {
         getAlgoreaInstructionsAsHtml: (strings: string[], gridInfos: any, data: any, taskLevel: TaskLevelName) => string,
         SrlLogger: any,
         ace: any,
+        subTask: any,
     }
 }
 

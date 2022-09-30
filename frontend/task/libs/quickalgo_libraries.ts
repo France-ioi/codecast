@@ -121,6 +121,7 @@ export function* createQuickalgoLibrary() {
 
     const currentTask = yield* select(state => state.task.currentTask);
     const currentLevel = yield* select(state => state.task.currentLevel);
+    window.subTask = currentTask;
 
     let contextLib;
     let levelGridInfos = currentTask ? extractLevelSpecific(currentTask.gridInfos, currentLevel) : {

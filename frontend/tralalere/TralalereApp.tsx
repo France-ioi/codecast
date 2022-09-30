@@ -50,6 +50,7 @@ export function TralalereApp() {
     const answer = useAppSelector(state => selectAnswer(state));
     const compileStatus = useAppSelector(state => state.compile.status);
     const taskSuccess = useAppSelector(state => state.task.success);
+    const currentTask = useAppSelector(state => state.task.currentTask);
 
     // const availableHints = [
     //     {content: 'aazazaz'},
@@ -154,7 +155,10 @@ export function TralalereApp() {
                         </div>}
                     </div>}
 
-                    {(!isMobile || LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode) && <div className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`} style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
+                    {(!isMobile || LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode) && <div
+                        className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`}
+                        style={{backgroundImage: `url(${currentTask?.gridInfos?.backgroundSrc ? currentTask.gridInfos.backgroundSrc : window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}
+                    >
                         {taskSuccess && <div className="tralalere-success">
                             <img className="tralalere-success-left"
                                 src={window.modulesPath + 'img/algorea/crane/task-success.png'}/>
