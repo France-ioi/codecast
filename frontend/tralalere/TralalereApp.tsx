@@ -24,6 +24,7 @@ import {TralalereBlocksUsage} from "./TralalereBlocksUsage";
 import {StepperStatus} from "../stepper";
 import {selectAnswer} from "../task/selectors";
 import {taskSuccessClear} from "../task/task_slice";
+import {hasBlockPlatform} from "../stepper/js";
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -49,6 +50,7 @@ export function TralalereApp() {
     const answer = useAppSelector(state => selectAnswer(state));
     const compileStatus = useAppSelector(state => state.compile.status);
     const taskSuccess = useAppSelector(state => state.task.success);
+    const currentTask = useAppSelector(state => state.task.currentTask);
 
     // const availableHints = [
     //     {content: 'aazazaz'},
@@ -153,7 +155,10 @@ export function TralalereApp() {
                         </div>}
                     </div>}
 
-                    {(!isMobile || LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode) && <div className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`} style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}>
+                    {(!isMobile || LayoutMobileMode.Player === layoutMobileMode || LayoutMobileMode.EditorPlayer === layoutMobileMode) && <div
+                        className={`tralalere-visualization ${instructionsExpanded ? 'instructions-expanded' : ''}`}
+                        style={{backgroundImage: `url(${currentTask?.gridInfos?.backgroundSrc ? currentTask.gridInfos.backgroundSrc : window.modulesPath + 'img/algorea/crane/visualization-background.png'}`}}
+                    >
                         {taskSuccess && <div className="tralalere-success">
                             <img className="tralalere-success-left"
                                 src={window.modulesPath + 'img/algorea/crane/task-success.png'}/>
@@ -174,7 +179,7 @@ export function TralalereApp() {
                     {(!isMobile || LayoutMobileMode.Editor === layoutMobileMode) && <div className="blockly-editor">
                         <LayoutEditor style={{backgroundImage: `url(${window.modulesPath + 'img/algorea/crane/editor-cross.png'}`}}/>
 
-                        {CodecastPlatform.Blockly === platform && <div className="blockly-flyout-wrapper">
+                        {hasBlockPlatform(platform) && <div className="blockly-flyout-wrapper">
                             <img className="blockly-flyout-wrapper-bottom" src={window.modulesPath + 'img/algorea/crane/editor-bottom-background.png'}/>
                         </div>}
 

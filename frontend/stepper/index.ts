@@ -563,7 +563,7 @@ function stepperProgressReducer(state: AppStoreReplay, {payload: {stepperContext
     stepperContext.state = {...stepperContext.state};
 
     if (false !== progress) {
-        if (stepperContext.state.platform === CodecastPlatform.Blockly) {
+        if (hasBlockPlatform(stepperContext.state.platform)) {
             stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
         } else if (stepperContext.state.platform === CodecastPlatform.Python) {
             stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
@@ -978,7 +978,7 @@ function* stepperStepSaga(app: App, action) {
 
             console.log('end stepper step');
 
-            if (stepperContext.state.platform === CodecastPlatform.Blockly) {
+            if (hasBlockPlatform(stepperContext.state.platform)) {
                 stepperContext.state.localVariables = (Codecast.runner as BlocklyRunner).getLocalVariables();
             } else if (stepperContext.state.platform === CodecastPlatform.Python) {
                 stepperContext.state.suspensions = getSkulptSuspensionsCopy((Codecast.runner as PythonRunner)._debugger.suspension_stack);
@@ -988,6 +988,12 @@ function* stepperStepSaga(app: App, action) {
 
             if (stepperContext.state.isFinished) {
                 const taskContext = quickAlgoLibraries.getContext(null, state.environment);
+
+                // Wait the end of animations and context delays before checking end condition and displaying success/error
+                yield new Promise((resolve) => {
+                    taskContext.executeWhenReady(resolve);
+                });
+
                 console.log('check end condition');
                 if (taskContext && taskContext.needsRedrawDisplay) {
                     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});

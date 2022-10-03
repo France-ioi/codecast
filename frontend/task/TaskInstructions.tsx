@@ -77,12 +77,12 @@ export function TaskInstructions(props: TaskInstructionsProps) {
         const instructionsJQuery = window.jQuery(`<div>${newInstructionsHtml}</div>`);
         for (let availablePlatform of platformsList) {
             if (platform !== availablePlatform) {
-                instructionsJQuery.find(`[data-lang="${availablePlatform}"]`).remove();
+                instructionsJQuery.find(`[data-lang~="${availablePlatform}"]:not([data-lang~="${platform}"]`).remove();
             }
         }
         for (let availableLevel of taskLevelsList) {
             if (taskLevel !== availableLevel) {
-                instructionsJQuery.find(`.${availableLevel}`).remove();
+                instructionsJQuery.find(`.${availableLevel}:not(.${taskLevel})`).remove();
             }
         }
 
