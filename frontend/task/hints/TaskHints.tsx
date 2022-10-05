@@ -11,10 +11,6 @@ export function TaskHints() {
     const dispatch = useDispatch();
 
     const availableHints = useAppSelector(state => state.hints.availableHints);
-    // const availableHints = [
-    //     {content: 'aazazaz'},
-    //     {content: 'aazazazazazazz'},
-    // ];
     const unlockedHintIds = useAppSelector(state => state.hints.unlockedHintIds);
 
     const carouselElements = unlockedHintIds.map(unlockedHintId => {

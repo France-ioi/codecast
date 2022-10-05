@@ -243,6 +243,7 @@ $tralalere-red: #FF3C11;
 
   .blockly-editor {
     position: relative;
+    min-width: 550px;
     .layout-editor {
       min-height: 0;
     }
@@ -366,6 +367,7 @@ $tralalere-red: #FF3C11;
       font-weight: 400;
       font-size: 16px;
       line-height: 19px;
+      min-width: 0;
     }
     code {
       color: $tralalere-red !important;
@@ -432,12 +434,12 @@ $tralalere-red: #FF3C11;
 }
 
 .tralalere-hints {
-  position: absolute;
-  padding-left: calc(10px + var(--flyout-width));
-  width: calc(100% - 8px);
-  top: 8px;
-  left: 0;
-  z-index: 50;
+  max-width: 800px;
+  padding: 0;
+  background: transparent;
+  &.is-mobile {
+    width: 95vw;
+  }
 
   .hint-unlock {
     margin-top: 10px;
@@ -464,14 +466,14 @@ $tralalere-red: #FF3C11;
   .carousel {
     .carousel-control-prev, .carousel-control-next, .carousel-control-prev:focus, .carousel-control-next:focus {
       color: white;
-      width: 7%;
+      width: 50px;
       opacity: 1;
     }
     .carousel-control-prev:hover, .carousel-control-next:hover {
       color: #ddd;
     }
     .carousel-item {
-      padding: 30px 40px 60px;
+      padding: 30px 50px 60px;
     }
     .carousel-indicators button {
       height: 6px;
@@ -773,10 +775,48 @@ $tralalere-red: #FF3C11;
   }
 }
 
+
+
+.tralalere:not(.layout-mobile-horizontal):not(.layout-mobile-vertical) {
+  @media screen and (max-width: 1050px) {
+    .tralalere-instructions-left {
+      max-width: 90px;
+    }
+    .tralalere-instructions-shadow-down {
+      max-width: 90px;
+      top: 15px;
+      left: 0;
+    }
+    .tralalere-instructions-window {
+      left: 40px;
+    }
+    .tralalere-instructions .tralalere-instructions-container {
+      padding: 5px;
+      border-radius: 10px;
+      box-shadow: -10px 10px #383961;
+      h1 {
+        padding-top: 15px;
+        padding-left: 60px;
+        margin-bottom: 22px !important;
+      }
+      .advice {
+        margin-left: 0 !important;
+      }
+      .task-mission {
+        margin-right: 0;
+      }
+    }
+  }
+}
+
 // Responsive
 .layout-mobile-horizontal.tralalere, .layout-mobile-vertical.tralalere {
   .context-visualization {
     margin-top: 0;
+  }
+
+  .blockly-editor {
+    min-width: 0;
   }
 
   .task-visualization {

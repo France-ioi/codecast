@@ -52,11 +52,6 @@ export function TralalereApp() {
     const taskSuccess = useAppSelector(state => state.task.success);
     const currentTask = useAppSelector(state => state.task.currentTask);
 
-    // const availableHints = [
-    //     {content: 'aazazaz'},
-    //     {content: 'aazazazazazazz'},
-    // ];
-
     const dispatch = useDispatch();
 
     useEffect(() => {

@@ -156,6 +156,11 @@ function* taskLoadSaga(app: App, action) {
         yield* put(currentTaskChangePredefined(action.payload.selectedTask));
     }
 
+    // yield* put(hintsLoaded([
+    //     {content: 'aazazaz'},
+    //     {content: 'aazazazazazazz'},
+    // ]));
+
     if (state.options.taskHints) {
         console.log('load hints', state.options.taskHints);
         yield* put(hintsLoaded(state.options.taskHints));

@@ -3,7 +3,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTimes} from "@fortawesome/free-solid-svg-icons";
 import {faLightbulb} from "@fortawesome/free-regular-svg-icons";
 import {TaskHints} from "../task/hints/TaskHints";
-import {Icon} from "@blueprintjs/core";
+import {Dialog, Icon} from "@blueprintjs/core";
 import {TralalereControls} from "./TralalereControls";
 import React from "react";
 import {stepperClearError} from "../stepper/actionTypes";
@@ -68,7 +68,7 @@ export function TralalereFooter (props: TralalereFooterProps) {
 
     return (
         <div>
-            {hintsOpen && <div className="tralalere-hints">
+            <Dialog isOpen={hintsOpen} className={`simple-dialog tralalere-hints ${isMobile ? 'is-mobile' : ''}`} canOutsideClickClose={true} canEscapeKeyClose={true} onClose={closeHints}>
                 <TralalereBox>
                     <div className="tralalere-box-header">
                         <div className="tralalere-box-header-icon">
@@ -85,7 +85,8 @@ export function TralalereFooter (props: TralalereFooterProps) {
                     </div>
                     <TaskHints/>
                 </TralalereBox>
-            </div>}
+            </Dialog>
+
             {!props.withoutControls && <React.Fragment>
                 <div className="tralalere-controls">
                     <div>

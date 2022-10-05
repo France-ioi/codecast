@@ -25,6 +25,10 @@ const images = [
     {path: require('./assets/tower_10.png')},
     {path: require('./assets/tower_11.png')},
     {path: require('./assets/tower_12.png')},
+    {path: require('./assets/png/01.png')},
+    {path: require('./assets/png/02.png')},
+    {path: require('./assets/png/F-1.png')},
+    {path: require('./assets/png/F-1_alpha.png')},
 ];
 
 export default {
@@ -37,11 +41,11 @@ export default {
         rowLabelEnabled: false,
         showContLabels: true,
         showContOutline: true,
+        customItems: true,
         contextType: "numbers",
         hideControls: { saveOrLoad: false},
         hiddenTests: true,
-        usedSkills: ['logic', 'memory'],
-        targetNbInstructions: 5,
+        partialSuccessEnabled: false,
 
         nbPlatforms: 100,
         maxInstructions: {
@@ -52,17 +56,11 @@ export default {
         includeBlocks: {
             groupByCategory: false,
             generatedBlocks: {
-                robot: ["left", "right", "take", "putDown", "drop", "topBlockBroken" ]
+                robot: ["left", "right", "take", "drop", "topBlockBroken" ]
             },
             standardBlocks: {
                 includeAll: false,
                 singleBlocks: ["controls_repeat", "controls_if"]
-            }
-        },
-        intro: {
-            default: false,
-            more: {
-                shared: [ { type: "custom", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." } ]
             }
         }
     },
@@ -76,7 +74,7 @@ export default {
                     [ 1, 1, 1, 1, 1, 1 ],
                     [ 1, 1, 1, 1, 1, 1 ],
                     [ 1, 1, 3, 1, 3, 1 ],
-                    [23, 1, 2, 1, 2, 1 ]
+                    [99, 1, 2, 1, 2, 1 ]
                 ],
                 broken: [
                     [ 0, 0, 0, 0, 0, 0 ],
@@ -109,7 +107,7 @@ export default {
                     [ 1, 1, 1, 1, 1, 1 ],
                     [ 1, 1, 1, 1, 1, 1 ],
                     [ 1, 1, 3, 1, 3, 1 ],
-                    [23, 1, 2, 1, 2, 1 ]
+                    [99, 1, 2, 1, 2, 1 ]
                 ],
                 broken: [
                     [ 0, 0, 0, 0, 0, 0 ],
