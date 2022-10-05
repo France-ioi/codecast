@@ -20,7 +20,7 @@ import {
 import {selectAnswer} from "./selectors";
 import {delay} from "../player/sagas";
 import {SubmissionExecutionMode} from "../submission/submission_slice";
-import {makeServerSubmission} from "../submission/task_platform";
+import {getServerSubmissionResults, makeServerSubmission} from "../submission/task_platform";
 import {getAnswerTokenForLevel, getTaskTokenForLevel} from "./platform/task_token";
 import stringify from 'json-stable-stringify-without-jsonify';
 
@@ -184,8 +184,19 @@ class TaskSubmissionExecutor {
         console.log('start grading answer on server', {randomSeed, newTaskToken, answerToken});
 
         const submissionData = yield* makeServerSubmission(answer, newTaskToken, answerToken);
+        if (!submissionData.success) {
+            throw new Error("Impossible to create submission");
+        }
 
         console.log('submission data', submissionData);
+
+        const submissionId = submissionData.submissionId;
+        const submissionResults = yield* getServerSubmissionResults(submissionId);
+
+        // TODO: add server submission to list of server submissions in submission_slice
+        // When new submissionk, automatically open submission panel on the left (with transition)
+
+        console.log('submission results', submissionResults);
 
         return {
             score: 100,
