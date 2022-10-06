@@ -114,7 +114,7 @@ $tralalere-red: #FF3C11;
           margin-left: -22px;
           margin-bottom: 1rem;
           &:before {
-            content: 'Conseil';
+            content: attr(data-title);
             display: block;
             font-style: italic;
             font-weight: 900;

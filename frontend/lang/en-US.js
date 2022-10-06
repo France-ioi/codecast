@@ -236,4 +236,11 @@ module.exports = {
     ABOUT_TRANSLATORS: "and translated by:",
     ABOUT_LICENSE: "Licence:",
     ABOUT_CODECAST: "Codecast is a France-ioi project developed under MIT License",
+
+    TRALALERE_MENU_DOCUMENTATION: "Documentation",
+    TRALALERE_MENU_HINTS: "Hints",
+    TRALALERE_HINTS_TITLE: "Hint",
+    TRALALERE_HINTS_ASK: "Ask for a hint",
+    TRALALERE_ADVICE: "Advice",
+    TRALALERE_TASK_SUCCESS: "Mission accomplished",
 };

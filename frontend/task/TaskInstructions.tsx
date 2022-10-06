@@ -60,6 +60,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
                 instructionsJQuery.find(`[data-lang~="${availablePlatform}"]:not([data-lang~="${platform}"]`).remove();
             }
         }
+        instructionsJQuery.find('.advice').attr('data-title', getMessage('TRALALERE_ADVICE'));
         for (let availableLevel of taskLevelsList) {
             if (taskLevel !== availableLevel) {
                 instructionsJQuery.find(`.${availableLevel}:not(.${taskLevel})`).remove();
