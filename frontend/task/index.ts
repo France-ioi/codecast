@@ -1,7 +1,7 @@
 import {getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {all, call, cancel, cancelled, fork, put, select, take, takeEvery, takeLatest} from "typed-redux-saga";
+import {all, call, cancel, cancelled, delay, fork, put, select, take, takeEvery, takeLatest} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {App, Codecast} from "../index";
 import {AppStore, CodecastPlatform} from "../store";
@@ -686,6 +686,23 @@ export default function (bundle: Bundle) {
                 }
             } else {
                 context.display = true;
+            }
+        });
+
+        yield* takeEvery(taskSuccess.type, function*() {
+            const state: AppStore = yield* select();
+            if ('tralalere' === state.options.app) {
+                const levels = state.platform.levels;
+                const currentLevel = state.task.currentLevel;
+                if (!currentLevel || !(currentLevel in levels)) {
+                    return null;
+                }
+                const currentLevelIndex = taskLevelsList.indexOf(currentLevel);
+                const hasNextLevel = currentLevelIndex + 1 < taskLevelsList.length && taskLevelsList[currentLevelIndex + 1] in levels;
+                if (hasNextLevel) {
+                    yield* delay(1500);
+                    yield* put(taskChangeLevel(taskLevelsList[currentLevelIndex + 1]));
+                }
             }
         });
     });
