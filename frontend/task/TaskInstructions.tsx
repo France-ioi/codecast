@@ -17,6 +17,7 @@ const defaultInstructionsHtml = `
     </p>
     <p>
         Pour pousser une caisse, mettez d'abord le robot face à la caisse, il avancera en la poussant.
+        <a onclick="changeTaskLevel('medium')">Aller au tuto</a>
     </p>
     <div class="advice">
         Pour le fonctionnement des blocs de boucle, pense à regarder la documentation.

@@ -104,6 +104,12 @@ $tralalere-red: #FF3C11;
           margin-bottom: .5rem !important;
         }
 
+        a {
+          color: $tralalere-green;
+          font-weight: bold;
+          text-decoration: underline;
+        }
+
         .advice {
           display: block;
           background: $tralalere-dark-blue;
@@ -118,11 +124,6 @@ $tralalere-red: #FF3C11;
             display: block;
             font-style: italic;
             font-weight: 900;
-          }
-          a {
-            color: $tralalere-green;
-            font-weight: bold;
-            text-decoration: underline;
           }
         }
       }

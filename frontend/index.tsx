@@ -129,6 +129,7 @@ declare global {
         SrlLogger: any,
         ace: any,
         subTask: any,
+        changeTaskLevel: (levelName: TaskLevelName) => void,
     }
 }
 

@@ -74,6 +74,7 @@ import {hasBlockPlatform, loadBlocklyHelperSaga} from "../stepper/js";
 import {ObjectDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
 import {ActionTypes} from "../common/actionTypes";
+import {ActionTypes as StatisticsActionTypes} from '../statistics/actionTypes';
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -139,6 +140,13 @@ if (!window.modulesPath) {
     const href = window.location.href;
     window.modulesPath = href.substring(0, href.lastIndexOf('/')) + "/bebras-modules/";
 }
+
+window.changeTaskLevel = (levelName: TaskLevelName) => {
+    const mainStore = Codecast.environments['main'].store;
+    mainStore.dispatch(taskChangeLevel(levelName));
+
+    return false;
+};
 
 let oldSagasTasks = {};
 
