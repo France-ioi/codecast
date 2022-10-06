@@ -174,8 +174,8 @@ export function* createQuickalgoLibrary() {
     console.log('created context', contextLib);
     contextLib.iTestCase = state.task.currentTestId;
 
-    if (contextLib.changeSoundEnabled && 'main' === state.environment) {
-        contextLib.changeSoundEnabled(state.task.soundEnabled);
+    if (contextLib.changeSoundEnabled) {
+        contextLib.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);
     }
 
     yield* call(createDisplayHelper);
