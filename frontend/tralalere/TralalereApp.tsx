@@ -1,15 +1,15 @@
 import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
-import {taskLoad} from "../task";
+import {taskChangeLevel, taskLoad} from "../task";
 import {useAppSelector} from "../hooks";
-import {TaskLevelName} from "../task/platform/platform_slice";
+import {TaskLevelName, taskLevelsList} from "../task/platform/platform_slice";
 import {PromptModalDialog} from "../task/dialog/PromptModalDialog";
 import {ContextVisualization} from "../task/ContextVisualization";
 import {LayoutEditor} from "../task/layout/LayoutEditor";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
-import {Dialog} from "@blueprintjs/core";
+import {Dialog, Icon} from "@blueprintjs/core";
 import {Documentation} from "../task/documentation/Documentation";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPlay, faTimes} from "@fortawesome/free-solid-svg-icons";
@@ -50,6 +50,33 @@ export function TralalereApp() {
     const compileStatus = useAppSelector(state => state.compile.status);
     const taskSuccess = useAppSelector(state => state.task.success);
     const currentTask = useAppSelector(state => state.task.currentTask);
+
+    const levels = useAppSelector(state => state.platform.levels);
+    const currentLevel = useAppSelector(state => state.task.currentLevel);
+    let hasNextLevel = false;
+    if (currentLevel && currentLevel in levels) {
+        const currentLevelFinished = (levels[currentLevel].score >= 1);
+        if (currentLevelFinished) {
+            const currentLevelIndex = taskLevelsList.indexOf(currentLevel);
+            hasNextLevel = currentLevelIndex + 1 < taskLevelsList.length && taskLevelsList[currentLevelIndex + 1] in levels;
+        }
+    }
+
+    const [nextLevelOpen, setNextLevelOpen] = useState(false);
+
+    const increaseLevel = () => {
+        dispatch(taskChangeLevel(taskLevelsList[taskLevelsList.indexOf(currentLevel) + 1]));
+    };
+
+    useEffect(() => {
+        if (hasNextLevel && taskSuccess) {
+            setTimeout(() => {
+                setNextLevelOpen(true);
+            }, 1000);
+        } else {
+            setNextLevelOpen(false);
+        }
+    }, [hasNextLevel, taskSuccess])
 
     const dispatch = useDispatch();
 
@@ -124,6 +151,10 @@ export function TralalereApp() {
     const selectMode = (mobileMode: LayoutMobileMode) => {
         dispatch({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
     };
+
+    const closeNextLevelOpen = () => {
+        dispatch(taskSuccessClear({}));
+    }
 
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere platform-${options.platform}`}>
@@ -231,6 +262,22 @@ export function TralalereApp() {
                             </div>
                         }
                     />
+                </TralalereBox>
+            </Dialog>
+
+            <Dialog isOpen={nextLevelOpen} className={`simple-dialog tralalere-success-dialog ${isMobile ? 'is-mobile' : ''}`} canOutsideClickClose={true} canEscapeKeyClose={true} onClose={closeNextLevelOpen}>
+                <TralalereBox>
+                    <div>
+                        <p className="tralalere-success-dialog-message">{getMessage('TRALALERE_NEXT_LEVEL_MESSAGE')}</p>
+
+                        <div className="simple-dialog-buttons mb-4">
+                            <button className="tralalere-button next-button" onClick={increaseLevel}>
+                                <Icon icon="small-tick" iconSize={24}/>
+                                <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
+                            </button>
+                        </div>
+                    </div>
+
                 </TralalereBox>
             </Dialog>
         </Container>

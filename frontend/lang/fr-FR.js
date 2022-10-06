@@ -254,4 +254,5 @@ module.exports = {
     TRALALERE_HINTS_ASK: "Demander un indice",
     TRALALERE_ADVICE: "Conseil",
     TRALALERE_TASK_SUCCESS: "Mission réussie",
+    TRALALERE_NEXT_LEVEL_MESSAGE: "Maintenant, à ton tour !",
 };

@@ -992,3 +992,33 @@ $tralalere-red: #FF3C11;
   width: 95vw;
   max-height: 90vh;
 }
+
+
+.tralalere-success-dialog {
+  background: transparent;
+  padding: 0;
+  width: 80vw;
+  max-width: 600px;
+
+  > .tralalere-box {
+    height: 100%;
+  }
+
+  &.is-mobile {
+    width: 95vw;
+    max-height: 90vh;
+  }
+
+  .next-button {
+    font-size: 16px;
+    width: fit-content;
+    padding: 5px 30px;
+    margin: auto;
+  }
+
+  .tralalere-success-dialog-message {
+    color: white;
+    text-align: center;
+    margin-top: 20px;
+  }
+}

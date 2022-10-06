@@ -243,4 +243,5 @@ module.exports = {
     TRALALERE_HINTS_ASK: "Ask for a hint",
     TRALALERE_ADVICE: "Advice",
     TRALALERE_TASK_SUCCESS: "Mission accomplished",
+    TRALALERE_NEXT_LEVEL_MESSAGE: "And now, up to you!",
 };

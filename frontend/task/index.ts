@@ -74,7 +74,6 @@ import {hasBlockPlatform, loadBlocklyHelperSaga} from "../stepper/js";
 import {ObjectDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
 import {ActionTypes} from "../common/actionTypes";
-import {ActionTypes as StatisticsActionTypes} from '../statistics/actionTypes';
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -694,23 +693,6 @@ export default function (bundle: Bundle) {
                 }
             } else {
                 context.display = true;
-            }
-        });
-
-        yield* takeEvery(taskSuccess.type, function*() {
-            const state: AppStore = yield* select();
-            if ('tralalere' === state.options.app) {
-                const levels = state.platform.levels;
-                const currentLevel = state.task.currentLevel;
-                if (!currentLevel || !(currentLevel in levels)) {
-                    return null;
-                }
-                const currentLevelIndex = taskLevelsList.indexOf(currentLevel);
-                const hasNextLevel = currentLevelIndex + 1 < taskLevelsList.length && taskLevelsList[currentLevelIndex + 1] in levels;
-                if (hasNextLevel) {
-                    yield* delay(1500);
-                    yield* put(taskChangeLevel(taskLevelsList[currentLevelIndex + 1]));
-                }
             }
         });
     });
