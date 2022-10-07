@@ -99,19 +99,28 @@ function* linkTaskPlatformSaga (app: App) {
 }
 
 function* taskAnswerReloadedSaga () {
-    log.getLogger('platform').debug('Task answer reloaded');
+    const nextVersion = yield* call(taskGetNextLevelToIncreaseScore);
+    log.getLogger('platform').debug('Task answer reloaded, next version = ' + nextVersion);
+
+    if (null !== nextVersion) {
+        yield* put(taskChangeLevel(nextVersion));
+    }
+}
+
+export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevelName = null): Generator<any, TaskLevelName, any> {
     const taskLevels = yield* select((state: AppStore) => state.platform.levels);
     let nextVersion: TaskLevelName = null;
+
+    const {maxScore} = yield* call(platformApi.getTaskParams, null, null);
 
     let currentReconciledScore = 0;
     for (let {level, score} of Object.values(taskLevels)) {
         const {scoreCoefficient} = levelScoringData[level];
-        const versionScore = score * scoreCoefficient;
+        const versionScore = (currentLevelMaxScore === level ? maxScore : score) * scoreCoefficient;
         log.getLogger('platform').debug({level, score, scoreCoefficient, versionScore});
         currentReconciledScore = Math.max(currentReconciledScore, versionScore);
     }
 
-    const {maxScore} = yield* call(platformApi.getTaskParams, null, null);
     for (let {level} of Object.values(taskLevels)) {
         const levelMaxScore = maxScore * levelScoringData[level].scoreCoefficient;
         if (levelMaxScore > currentReconciledScore) {
@@ -120,11 +129,7 @@ function* taskAnswerReloadedSaga () {
         }
     }
 
-    log.getLogger('platform').debug('Task answer reloaded, next version = ' + nextVersion);
-
-    if (null !== nextVersion) {
-        yield* put(taskChangeLevel(nextVersion));
-    }
+    return nextVersion;
 }
 
 

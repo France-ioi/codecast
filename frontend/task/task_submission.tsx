@@ -16,6 +16,7 @@ import {
     platformApi,
     PlatformTaskGradingParameters,
     PlatformTaskGradingResult,
+    taskGetNextLevelToIncreaseScore,
 } from "./platform/platform";
 import {selectAnswer} from "./selectors";
 import {delay} from "../player/sagas";
@@ -116,7 +117,9 @@ class TaskSubmissionExecutor {
 
         const finalScore = worstRate;
         if (finalScore >= 1) {
-            yield* call([platformApi, platformApi.validate], 'done');
+            const nextVersion = yield* call(taskGetNextLevelToIncreaseScore, level);
+
+            yield* call([platformApi, platformApi.validate], null !== nextVersion ? 'stay' : 'done');
             if (window.SrlLogger) {
                 window.SrlLogger.validation(100, 'none', 0);
             }
