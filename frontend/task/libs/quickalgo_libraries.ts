@@ -135,11 +135,13 @@ export function* createQuickalgoLibrary() {
         },
     };
 
-    const platform = yield* select((state: AppStore) => state.options.platform);
-    yield* call(importPlatformModules, platform, window.modulesPath);
+    if (!state.options.preload) {
+        const platform = yield* select((state: AppStore) => state.options.platform);
+        yield* call(importPlatformModules, platform, window.modulesPath);
 
-    if (levelGridInfos.importModules) {
-        yield* call(importModules, levelGridInfos.importModules, window.modulesPath);
+        if (levelGridInfos.importModules) {
+            yield* call(importModules, levelGridInfos.importModules, window.modulesPath);
+        }
     }
 
     if (levelGridInfos.context) {

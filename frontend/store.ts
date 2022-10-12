@@ -92,6 +92,8 @@ export interface CodecastOptions {
     theme?: string,
     app?: string,
     backend?: boolean,
+    preload?: boolean, // If true, we consider that all necessary assets have already been preloaded; this is needed
+                       // for Castor platforms in which assets are inlined into the HTML
 }
 
 export interface Panes {
