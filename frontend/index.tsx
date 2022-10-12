@@ -130,6 +130,7 @@ declare global {
         ace: any,
         subTask: any,
         changeTaskLevel: (levelName: TaskLevelName) => void,
+        taskGetResourcesPost: (res, callback) => void,
     }
 }
 

@@ -23,6 +23,12 @@ export default function () {
     }, buffers.expanding(4));
 }
 
+// For Castor platform, we need to add custom scripts that will be added to the assets during the generation of the task
+window.taskGetResourcesPost = (res, callback) => {
+    res.task.unshift({type: 'javascript', content: `window.codecastPreload = true;`, id: 'codecast-preload'});
+    callback(res);
+};
+
 function makeTask (emit) {
     return {
         showViews: function (views, success, error) {
