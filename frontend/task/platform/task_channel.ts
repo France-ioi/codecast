@@ -24,8 +24,13 @@ export default function () {
 }
 
 // For Castor platform, we need to add custom scripts that will be added to the assets during the generation of the task
+const castorScriptInject = `window.codecastPreload = true;
+document.body.setAttribute('id', 'app');
+var reactContainerDiv = document.createElement('div');
+reactContainerDiv.setAttribute('id', 'react-container');
+document.body.appendChild(reactContainerDiv);`;
 window.taskGetResourcesPost = (res, callback) => {
-    res.task.unshift({type: 'javascript', content: `window.codecastPreload = true;`, id: 'codecast-preload'});
+    res.task.unshift({type: 'javascript', content: castorScriptInject, id: 'codecast-preload'});
     callback(res);
 };
 
