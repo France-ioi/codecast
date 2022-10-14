@@ -74,3 +74,9 @@ export const taskGradeAnswerEvent = createAction('taskEventGradeAnswer', (answer
         silent,
     },
 }));
+export const taskGetResourcesPost = createAction('taskEventGetResourcesPost', (resources, callback) => ({
+    payload: {
+        resources,
+        callback,
+    },
+}));

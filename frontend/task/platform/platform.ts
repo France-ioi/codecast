@@ -18,7 +18,7 @@ import {
     taskShowViewsEvent,
     taskUpdateTokenEvent,
     taskLoadEvent,
-    taskUnloadEvent, platformAnswerGraded, platformTaskRefresh, platformAnswerLoaded,
+    taskUnloadEvent, platformAnswerGraded, platformTaskRefresh, platformAnswerLoaded, taskGetResourcesPost,
 } from './actionTypes';
 import {App, Codecast} from "../../index";
 import {AppStore} from "../../store";
@@ -96,6 +96,10 @@ function* linkTaskPlatformSaga (app: App) {
 
     window.task = taskApi;
     yield* call(platformApi.initWithTask, taskApi);
+
+    window.taskGetResourcesPost = (res, callback) => {
+        Codecast.environments['main'].store.dispatch(taskGetResourcesPost(res, callback));
+    };
 }
 
 function* taskAnswerReloadedSaga () {
@@ -199,6 +203,28 @@ function* taskGetStateEventSaga ({payload: {success}}: ReturnType<typeof taskGet
     const currentState = yield getTaskState();
     const strDump = stringify(currentState);
     yield* call(success, strDump);
+}
+
+function* taskGetResourcesPostSaga ({payload: {resources, callback}}: ReturnType<typeof taskGetResourcesPost>) {
+    const options = yield* select((state: AppStore) => state.options);
+    const optionsToPreload = {
+        platform: options.platform,
+        language: options.language,
+    };
+
+    // For Castor platform, we need to add custom scripts that will be added to the assets during the generation of the task
+    const castorScriptInject = `window.codecastPreload = JSON.parse('${JSON.stringify(optionsToPreload)}');
+document.body.setAttribute('id', 'app');
+var reactContainerDiv = document.createElement('div');
+reactContainerDiv.setAttribute('id', 'react-container');
+document.body.appendChild(reactContainerDiv);
+try {
+    $('#question-iframe', window.parent.document).css('width', '100%');
+} catch(e) {
+}`;
+
+    resources.task.unshift({type: 'javascript', content: castorScriptInject, id: 'codecast-preload'});
+    callback(resources);
 }
 
 /**
@@ -379,5 +405,6 @@ export default function (bundle: Bundle) {
         yield* takeEvery(taskGetAnswerEvent.type, taskGetAnswerEventSaga);
         yield* takeEvery(taskGradeAnswerEvent.type, taskGradeAnswerEventSaga);
         yield* takeEvery(taskReloadAnswerEvent.type, taskReloadAnswerEventSaga);
+        yield* takeEvery(taskGetResourcesPost.type, taskGetResourcesPostSaga);
     });
 }
