@@ -34,6 +34,7 @@ import {generateTokenUrl} from "./task_token";
 import {levelScoringData} from "../task_submission";
 import {Effect} from "@redux-saga/types";
 import log from "loglevel";
+import {taskLoaded} from '../task_slice';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -206,7 +207,22 @@ function* taskGetStateEventSaga ({payload: {success}}: ReturnType<typeof taskGet
 }
 
 function* taskGetResourcesPostSaga ({payload: {resources, callback}}: ReturnType<typeof taskGetResourcesPost>) {
-    const options = yield* select((state: AppStore) => state.options);
+    const state: AppStore = yield* select();
+
+    // Make sure we wait that the task is loaded before we answer that,
+    // because we need all dependencies to be included in the page
+    if (!state.task.loaded) {
+        yield* take(taskLoaded.type);
+    }
+
+    window.jQuery('script.module').each(function() {
+        const scriptSrc = window.jQuery(this).attr('src');
+        if (scriptSrc && !resources.task_modules.find(resource => scriptSrc === resource.url)) {
+            resources.task_modules.push({type: 'javascript', url: scriptSrc, id: window.jQuery(this).attr('id')});
+        }
+    });
+
+    const options = state.options;
     const optionsToPreload = {
         platform: options.platform,
         language: options.language,
