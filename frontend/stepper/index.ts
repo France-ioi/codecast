@@ -1195,9 +1195,11 @@ function* stepperCompileFromControlsSaga(app: App) {
 }
 
 function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
-    yield* put({type: LayoutActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.EditorPlayer}});
-
     const state: AppStore = yield* select();
+    if ('tralalere' === state.options.app) {
+        yield* put({type: LayoutActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.EditorPlayer}});
+    }
+
     const stepperControlsState = getStepperControlsSelector(state, {enabled: true});
     const stepper = getStepper(state);
     const mustCompile = StepperStatus.Clear === stepper.status;

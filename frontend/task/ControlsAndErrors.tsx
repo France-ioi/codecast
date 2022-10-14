@@ -18,7 +18,6 @@ export function ControlsAndErrors() {
     const layoutType = useAppSelector(state => state.layout.type);
     const {showStepper} = useAppSelector(state => state.options);
     const currentTask = useAppSelector(state => state.task.currentTask);
-    const blocksUsage = useAppSelector(state => state.task.blocksUsage);
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
