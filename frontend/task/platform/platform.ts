@@ -308,13 +308,13 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             }
 
             if (!silent) {
-                yield* put(platformAnswerGraded({score: currentScore, message: currentMessage}));
+                yield* put(platformAnswerGraded({score: currentScore, message: currentMessage, maxScore}));
             }
             yield* call(success, reconciledScore, currentMessage, currentScoreToken);
         } else {
             const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer, minScore, maxScore, noScore});
 
-            yield* put(platformAnswerGraded({score, message}));
+            yield* put(platformAnswerGraded({score, message, maxScore}));
             yield* call(success, score, message, scoreToken);
         }
     } catch (ex: any) {

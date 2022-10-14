@@ -15,11 +15,12 @@ export const platformAnswerLoaded = createAction('platformAnswerLoaded', (answer
     },
 }));
 
-export const platformAnswerGraded = createAction('platformAnswerGraded', ({score, message, error}: {score?: number, message?: string, error?: string}) => ({
+export const platformAnswerGraded = createAction('platformAnswerGraded', ({score, message, error, maxScore}: {score?: number, message?: string, error?: string, maxScore?: number}) => ({
     payload: {
         score,
         message,
         error,
+        maxScore,
     },
 }));
 
