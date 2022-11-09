@@ -34,6 +34,7 @@ import {generateTokenUrl} from "./task_token";
 import {levelScoringData} from "../task_submission";
 import {Effect} from "@redux-saga/types";
 import log from "loglevel";
+import {importPlatformModules} from '../libs/import_modules';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -211,6 +212,17 @@ function* taskGetResourcesPostSaga ({payload: {resources, callback}}: ReturnType
         platform: options.platform,
         language: options.language,
     };
+
+    // Import necessary platform modules without waiting for them to be imported, the declaration is enough
+    const platform = yield* select((state: AppStore) => state.options.platform);
+    yield* call(importPlatformModules, platform, window.modulesPath);
+
+    window.jQuery('script.module').each(function() {
+        const scriptSrc = window.jQuery(this).attr('src');
+        if (scriptSrc && !resources.task_modules.find(resource => scriptSrc === resource.url)) {
+            resources.task_modules.push({type: 'javascript', url: scriptSrc, id: window.jQuery(this).attr('id')});
+        }
+    });
 
     // For Castor platform, we need to add custom scripts that will be added to the assets during the generation of the task
     const castorScriptInject = `window.codecastPreload = JSON.parse('${JSON.stringify(optionsToPreload)}');

@@ -279,7 +279,7 @@ async function importModules(modulesList, modulesPath) {
     const urlParameters = new URLSearchParams(window.location.search);
     const queryParameters = Object.fromEntries(urlParameters);
 
-    for(let iMod in modulesList) {
+    for (let iMod in modulesList) {
         let moduleName = modulesList[iMod];
         let curModule = importableModulesList[moduleName];
         if(curModule) {
@@ -340,7 +340,7 @@ function getScript(modSrc, modId, modClass, callback) {
     script.setAttribute('type', 'text/javascript');
     script.setAttribute('id', modId);
     script.setAttribute('class', modClass);
-    let prior = document.getElementsByTagName('script')[0];
+    let head = document.getElementsByTagName('head')[0];
 
     // @ts-ignore
     script.onload = script.onreadystatechange = function (_, isAbort) {
@@ -355,7 +355,7 @@ function getScript(modSrc, modId, modClass, callback) {
     };
 
     script.src = modSrc;
-    prior.parentNode.insertBefore(script, prior);
+    head.appendChild(script);
 }
 
 function getStyle(modSrc, modId, modClass) {
