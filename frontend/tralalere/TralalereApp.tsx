@@ -84,15 +84,6 @@ export function TralalereApp() {
         window.app = 'tralalere';
         document.documentElement.setAttribute('data-theme', 'tralalere');
         selectMode(LayoutMobileMode.Player);
-
-        setTimeout(() => {
-            const taskLoadParameters: {level?: TaskLevelName} = {};
-            if (options.level) {
-                taskLoadParameters.level = options.level;
-            }
-
-            dispatch(taskLoad(taskLoadParameters));
-        });
     }, []);
 
     useEffect(() => {

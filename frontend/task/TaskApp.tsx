@@ -71,11 +71,6 @@ export function TaskApp() {
         }
 
         setTimeout(() => {
-            const taskLoadParameters: {level?: TaskLevelName} = {};
-            if (options.level) {
-                taskLoadParameters.level = options.level;
-            }
-
             if (options.audioUrl) {
                 if (CodecastOptionsMode.Edit === options.mode) {
                     dispatch({
@@ -100,7 +95,11 @@ export function TaskApp() {
                 }
             } else {
                 // If we have a recording, taskLoad is triggered afterwards, in playerPrepare, when we have the events data and know the task
-                dispatch(taskLoad(taskLoadParameters));
+                // const taskLoadParameters: {level?: TaskLevelName} = {};
+                // if (options.level) {
+                //     taskLoadParameters.level = options.level;
+                // }
+                // dispatch(taskLoad(taskLoadParameters));
             }
         });
     }, []);

@@ -35,6 +35,8 @@ import {levelScoringData} from "../task_submission";
 import {Effect} from "@redux-saga/types";
 import log from "loglevel";
 import {importPlatformModules} from '../libs/import_modules';
+import {taskLoad} from '../index';
+import {taskLoaded} from '../task_slice';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -292,10 +294,17 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
     yield* put(platformTokenUpdated(taskToken));
 
     try {
-        if (serverApi) {
-            const taskData = yield* call(serverApi, 'tasks', 'taskData', {task: taskToken});
-            //yield* put({type: taskInit, payload: {taskData}});
+        const taskLoadParameters: {level?: TaskLevelName} = {};
+        if (options.level) {
+            taskLoadParameters.level = options.level;
         }
+        yield* put(taskLoad(taskLoadParameters));
+        yield* take(taskLoaded.type);
+
+        // if (serverApi) {
+        //     const taskData = yield* call(serverApi, 'tasks', 'taskData', {task: taskToken});
+        //     //yield* put({type: taskInit, payload: {taskData}});
+        // }
 
         yield* call(success);
         yield* fork(windowHeightMonitorSaga, platformApi);
