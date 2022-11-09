@@ -23,7 +23,6 @@ import {getMessage} from "../lang";
 import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
 import {SubtitlesPane} from "../subtitles/SubtitlesPane";
-import {TaskLevelName} from "./platform/platform_slice";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {PromptModalDialog} from "./dialog/PromptModalDialog";
 import {taskSuccessClear} from "./task_slice";
