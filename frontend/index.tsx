@@ -131,6 +131,7 @@ declare global {
         subTask: any,
         changeTaskLevel: (levelName: TaskLevelName) => void,
         taskGetResourcesPost: (res, callback) => void,
+        FontsLoader: any,
     }
 }
 
@@ -294,6 +295,18 @@ Codecast.start = function(options) {
             };
 
             break;
+    }
+
+    if (window.FontsLoader) {
+        const fontsToLoad = ['inconsolata'];
+        if ('coursera' === options.theme) {
+            fontsToLoad.push('source-sans-pro');
+        } else {
+            fontsToLoad.push('open-sans');
+        }
+        window.FontsLoader.loadFonts(fontsToLoad);
+    } else {
+        console.warn('FontsLoader is not defined, could not load fonts');
     }
 
     const container = document.getElementById('react-container');

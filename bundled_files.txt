@@ -3,6 +3,7 @@ bebras-modules/ext/raphael/2.2.1/raphael.min.js
 bebras-modules/ext/jschannel/jschannel.js
 bebras-modules/pemFioi/delayFactory-1.0.js
 bebras-modules/pemFioi/raphaelFactory-1.0.js
+bebras-modules/pemFioi/fontsLoader-1.0.js
 bebras-modules/pemFioi/conceptViewer-1.0-mobileFirst.js
 bebras-modules/integrationAPI.01/official/platform-pr.js
 bebras-modules/integrationAPI.01/installationAPI.01/pemFioi/installation.js
