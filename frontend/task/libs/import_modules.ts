@@ -314,7 +314,7 @@ let jsLibLoaded = null;
 
 export async function importPlatformModules(platform, modulesPath) {
     if (!hasBlockPlatform(platform)) {
-        await importModules(['quickAlgo_utils'], modulesPath);
+        await importModules(['fonts-loader-1.0', 'quickAlgo_utils'], modulesPath);
         return;
     }
 
@@ -324,11 +324,25 @@ export async function importPlatformModules(platform, modulesPath) {
     jsLibLoaded = platform;
 
     const modulesToImport = {
-        blockly: ['acorn', 'acorn-walk', 'interpreter', 'blockly', 'blockly_blocks', 'blockly_javascript', 'blockly_python', 'blockly_fioi', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
-        scratch: ['acorn', 'acorn-walk', 'interpreter', 'scratch', 'scratch_blocks_common', 'scratch_blocks',  'blockly_javascript', 'blockly_python', 'blockly_fioi', 'scratch_fixes', 'scratch_procedures', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
+        blockly: ['fonts-loader-1.0', 'acorn', 'acorn-walk', 'interpreter', 'blockly', 'blockly_blocks', 'blockly_javascript', 'blockly_python', 'blockly_fioi', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
+        scratch: ['fonts-loader-1.0', 'acorn', 'acorn-walk', 'interpreter', 'scratch', 'scratch_blocks_common', 'scratch_blocks',  'blockly_javascript', 'blockly_python', 'blockly_fioi', 'scratch_fixes', 'scratch_procedures', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
     }
 
     await importModules(modulesToImport[platform], modulesPath);
+}
+
+export function loadFonts(theme: string) {
+    if (window.FontsLoader) {
+        const fontsToLoad = ['inconsolata'];
+        if ('coursera' === theme) {
+            fontsToLoad.push('source-sans-pro');
+        } else {
+            fontsToLoad.push('open-sans');
+        }
+        window.FontsLoader.loadFonts(fontsToLoad);
+    } else {
+        console.warn('FontsLoader is not defined, could not load fonts');
+    }
 }
 
 export function getJsLibLoaded() {
