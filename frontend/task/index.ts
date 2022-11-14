@@ -135,11 +135,6 @@ if (!String.prototype.format) {
     }
 }
 
-if (!window.modulesPath) {
-    const href = window.location.href;
-    window.modulesPath = href.substring(0, href.lastIndexOf('/')) + "/bebras-modules/";
-}
-
 window.changeTaskLevel = (levelName: TaskLevelName) => {
     const mainStore = Codecast.environments['main'].store;
     mainStore.dispatch(taskChangeLevel(levelName));

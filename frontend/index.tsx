@@ -251,6 +251,11 @@ Codecast.start = function(options) {
         mainStore.dispatch({type: StatisticsActionTypes.StatisticsInitLogData});
     }
 
+    if (options.backend && !window.modulesPath) {
+        const href = window.location.href;
+        window.modulesPath = href.substring(0, href.lastIndexOf('/')) + "/bebras-modules/";
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     let startScreen = options.start;
     if (!!urlParams.get('documentation')) {

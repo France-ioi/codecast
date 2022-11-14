@@ -138,12 +138,12 @@ export function* createQuickalgoLibrary() {
     if (!state.options.preload) {
         const platform = state.options.platform
         yield* call(importPlatformModules, platform, window.modulesPath);
-        yield* call(loadFonts, state.options.theme);
 
         if (levelGridInfos.importModules) {
             yield* call(importModules, levelGridInfos.importModules, window.modulesPath);
         }
     }
+    yield* call(loadFonts, state.options.theme);
 
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
