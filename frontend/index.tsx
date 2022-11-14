@@ -49,6 +49,7 @@ log.getLogger('tests').setLevel('info');
 log.getLogger('platform').setLevel('info');
 log.getLogger('stepper').setLevel('info');
 log.getLogger('quickalgo_executor').setLevel('info');
+log.getLogger('replay').setLevel('info');
 
 export interface CodecastEnvironmentMonitoring {
     effectTriggered: Function,

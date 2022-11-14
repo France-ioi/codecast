@@ -26,6 +26,7 @@ import {SubtitlesPane} from "../subtitles/SubtitlesPane";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {PromptModalDialog} from "./dialog/PromptModalDialog";
 import {taskSuccessClear} from "./task_slice";
+import {platformTaskLink} from './platform/actionTypes';
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -99,6 +100,7 @@ export function TaskApp() {
                 //     taskLoadParameters.level = options.level;
                 // }
                 // dispatch(taskLoad(taskLoadParameters));
+                dispatch(platformTaskLink());
             }
         });
     }, []);

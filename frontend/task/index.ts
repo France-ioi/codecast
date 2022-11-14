@@ -159,8 +159,6 @@ function* taskLoadSaga(app: App, action) {
         yield* put(currentTaskChange(state.options.task));
     } else if (selectedTask) {
         yield* put(currentTaskChangePredefined(selectedTask));
-    } else if (action.payload.selectedTask) {
-        yield* put(currentTaskChangePredefined(action.payload.selectedTask));
     }
 
     // yield* put(hintsLoaded([

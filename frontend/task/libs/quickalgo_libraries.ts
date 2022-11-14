@@ -175,6 +175,7 @@ export function* createQuickalgoLibrary() {
 
     console.log('created context', contextLib);
     contextLib.iTestCase = state.task.currentTestId;
+    contextLib.environment = state.environment;
 
     if (contextLib.changeSoundEnabled) {
         contextLib.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);

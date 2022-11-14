@@ -72,18 +72,19 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     public async runNewStep(stepperContext: StepperContext, noInteractive = false) {
+        log.getLogger('python_runner').debug('[Python runner] Run new step, no interactive = ', noInteractive);
         const result = await this.runStep(stepperContext.quickAlgoCallsExecutor, noInteractive);
 
         if (noInteractive && !this._isFinished) {
             return;
         }
 
-        console.log('FINAL INTERACT', result);
+        log.getLogger('python_runner').debug('FINAL INTERACT', result);
         stepperContext.makeDelay = true;
         await stepperContext.interactAfter({
             position: 0,
         });
-        console.log('AFTER FINAL INTERACT');
+        log.getLogger('python_runner').debug('AFTER FINAL INTERACT');
     }
 
     private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type) {

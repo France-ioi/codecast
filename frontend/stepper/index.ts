@@ -792,27 +792,28 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
     // Update speed if we use speed
     const context = quickAlgoLibraries.getContext(null, state.environment);
     let newDelay = 0;
-    if (null !== stepperContext.speed && undefined !== stepperContext.speed) {
-        stepperContext.speed = getStepper(state).speed;
-        newDelay = stepperMaxSpeed - stepperContext.speed;
-    }
-    // console.log('stepper interact before background run data', stepperContext.backgroundRunData);
-    if (stepperContext.backgroundRunData && stepperContext.backgroundRunData.steps) {
-        const runData = stepperContext.backgroundRunData;
-        // if (runData.result || (!runData.result && runData.steps && runData.steps >= Codecast.runner._steps + 10)) {
-        //     newDelay = newDelay / 4;
-        // }
-        const t = Codecast.runner._steps / runData.steps;
-        const y0 = newDelay;
-        const y1 = newDelay / 40;
-        const y2 = newDelay / 40;
-        const y3 = newDelay;
+    if ('main' === state.environment) {
+        if (null !== stepperContext.speed && undefined !== stepperContext.speed) {
+            stepperContext.speed = getStepper(state).speed;
+            newDelay = stepperMaxSpeed - stepperContext.speed;
+        }
+        // console.log('stepper interact before background run data', stepperContext.backgroundRunData);
+        if (stepperContext.backgroundRunData && stepperContext.backgroundRunData.steps) {
+            const runData = stepperContext.backgroundRunData;
+            // if (runData.result || (!runData.result && runData.steps && runData.steps >= Codecast.runner._steps + 10)) {
+            //     newDelay = newDelay / 4;
+            // }
+            const t = Codecast.runner._steps / runData.steps;
+            const y0 = newDelay;
+            const y1 = newDelay / 40;
+            const y2 = newDelay / 40;
+            const y3 = newDelay;
 
-        newDelay = (1-t)*((1-t)*((1-t)*y0+t*y1)+t*((1-t)*y1+t*y2))+t*((1-t)*((1-t)*y1+t*y2)+t*((1-t)*y2+t*y3));
-        // console.log('new delay definition', {runData, steps: Codecast.runner._steps, maxSteps: runData.steps, t, newDelay})
+            newDelay = (1-t)*((1-t)*((1-t)*y0+t*y1)+t*((1-t)*y1+t*y2))+t*((1-t)*((1-t)*y1+t*y2)+t*((1-t)*y2+t*y3));
+            // console.log('new delay definition', {runData, steps: Codecast.runner._steps, maxSteps: runData.steps, t, newDelay})
+        }
+        stepperContext.delayToWait = newDelay;
     }
-
-    stepperContext.delayToWait = newDelay;
 
     if (context && context.changeDelay) {
         context.changeDelay(newDelay);
@@ -1042,7 +1043,11 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         const taskContext = quickAlgoLibraries.getContext(null, state.environment);
         yield* put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: true});
 
-        taskContext.display = false;
+        const changeDisplay = 'main' === state.environment;
+
+        if (changeDisplay) {
+            taskContext.display = false;
+        }
         stepperContext.taskDisplayNoneStatus = 'running';
         taskContext.resetAndReloadState(selectCurrentTest(state), state);
         stepperContext.state.contextState = getCurrentImmerState(taskContext.getInnerState());
@@ -1067,7 +1072,9 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         }
         yield* put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: false});
 
-        taskContext.display = true;
+        if (changeDisplay) {
+            taskContext.display = true;
+        }
         yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         console.log('End run from beginning');
     }
@@ -1331,6 +1338,7 @@ function postLink(app: App) {
                 mode,
                 waitForProgress,
                 immediate,
+                useSpeed: true,
                 setStepperContext,
                 quickAlgoCallsLogger: (call) => {
                     mainQuickAlgoLogger.logQuickAlgoLibraryCall(call);

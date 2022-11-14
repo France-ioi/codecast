@@ -8,6 +8,7 @@ const successErrorPayload = (success, error) => ({
 });
 
 export const platformTaskRefresh = createAction('platformTaskRefresh');
+export const platformTaskLink = createAction('platformTaskLink');
 
 export const platformAnswerLoaded = createAction('platformAnswerLoaded', (answer) => ({
     payload: {

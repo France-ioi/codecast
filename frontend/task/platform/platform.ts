@@ -18,7 +18,12 @@ import {
     taskShowViewsEvent,
     taskUpdateTokenEvent,
     taskLoadEvent,
-    taskUnloadEvent, platformAnswerGraded, platformTaskRefresh, platformAnswerLoaded, taskGetResourcesPost,
+    taskUnloadEvent,
+    platformAnswerGraded,
+    platformTaskRefresh,
+    platformAnswerLoaded,
+    taskGetResourcesPost,
+    platformTaskLink,
 } from './actionTypes';
 import {App, Codecast} from "../../index";
 import {AppStore} from "../../store";
@@ -80,8 +85,9 @@ export function getTaskMetadata() {
     return metadata;
 }
 
-function* linkTaskPlatformSaga (app: App) {
-    if ('main' !== app.environment) {
+function* linkTaskPlatformSaga() {
+    const state: AppStore = yield* select();
+    if ('main' !== state.environment) {
         return;
     }
 
@@ -411,8 +417,6 @@ export function setPlatformBundleParameters(parameters: PlatformBundleParameters
 }
 
 export default function (bundle: Bundle) {
-    bundle.addSaga(linkTaskPlatformSaga);
-
     bundle.addSaga(function* () {
         yield* takeEvery(taskLoadEvent.type, taskLoadEventSaga);
         yield* takeEvery(taskGetMetadataEvent.type, taskGetMetaDataEventSaga);
@@ -427,5 +431,6 @@ export default function (bundle: Bundle) {
         yield* takeEvery(taskGradeAnswerEvent.type, taskGradeAnswerEventSaga);
         yield* takeEvery(taskReloadAnswerEvent.type, taskReloadAnswerEventSaga);
         yield* takeEvery(taskGetResourcesPost.type, taskGetResourcesPostSaga);
+        yield* takeEvery(platformTaskLink.type, linkTaskPlatformSaga);
     });
 }
