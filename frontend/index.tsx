@@ -133,7 +133,7 @@ declare global {
         changeTaskLevel: (levelName: TaskLevelName) => void,
         taskGetResourcesPost: (res, callback) => void,
         FontsLoader: any,
-        implementGetResources: (task: any) => void,
+        implementGetResources?: (task: any) => void,
     }
 }
 
