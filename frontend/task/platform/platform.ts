@@ -104,6 +104,7 @@ function* linkTaskPlatformSaga() {
     });
 
     window.task = taskApi;
+    window.implementGetResources(window.task);
     yield* call(platformApi.initWithTask, taskApi);
 
     window.taskGetResourcesPost = (res, callback) => {
