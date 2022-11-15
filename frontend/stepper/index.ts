@@ -1130,13 +1130,16 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
 
     const tests = yield* select((state: AppStore) => state.task.taskTests);
 
-    let preExecutionTests: number[] = [testId];
+    let preExecutionTests: number[] = [];
+    if (null !== testId) {
+        preExecutionTests.push(testId);
+    }
     const context = quickAlgoLibraries.getContext(null, 'main');
     if (context && context.infos.hiddenTests) {
         preExecutionTests = [...tests.keys()];
     }
 
-    let lastBackgroundResult;
+    let lastBackgroundResult = null;
     for (let preExecutionTestId of preExecutionTests) {
         const {success, exit} = yield* race({
             success: call([taskSubmissionExecutor, taskSubmissionExecutor.makeBackgroundExecution], level, preExecutionTestId, answer),
@@ -1175,12 +1178,13 @@ function* stepperCompileFromControlsSaga(app: App) {
 
         backgroundRunData = yield promise;
         console.log('background execution result', backgroundRunData);
-
-        const context = quickAlgoLibraries.getContext(null, 'main');
-        const currentTestId = yield* select((state: AppStore) => state.task.currentTestId);
-        if (context && context.infos.hiddenTests && !backgroundRunData.result && backgroundRunData.testId !== currentTestId) {
-            console.log('change test', backgroundRunData.testId);
-            yield* put(updateCurrentTestId({testId: backgroundRunData.testId}));
+        if (null !== backgroundRunData) {
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            const currentTestId = yield* select((state: AppStore) => state.task.currentTestId);
+            if (context && context.infos.hiddenTests && !backgroundRunData.result && backgroundRunData.testId !== currentTestId) {
+                console.log('change test', backgroundRunData.testId);
+                yield* put(updateCurrentTestId({testId: backgroundRunData.testId}));
+            }
         }
     }
 
@@ -1190,9 +1194,7 @@ function* stepperCompileFromControlsSaga(app: App) {
         type: ActionTypes.CompileWait,
         payload: {
             callback(result) {
-                if (null !== backgroundRunData) {
-                    app.dispatch(stepperRunBackgroundFinished(backgroundRunData));
-                }
+                app.dispatch(stepperRunBackgroundFinished(backgroundRunData));
                 deferredPromise.resolve(CompileStatus.Done === result);
             }
         },
