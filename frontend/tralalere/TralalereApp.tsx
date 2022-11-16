@@ -1,20 +1,18 @@
 import React, {useEffect, useState} from 'react';
 import {useDispatch} from "react-redux";
 import {Container} from 'react-bootstrap';
-import {taskLoad} from "../task";
+import {taskChangeLevel, taskLoad} from "../task";
 import {useAppSelector} from "../hooks";
-import {TaskLevelName} from "../task/platform/platform_slice";
+import {TaskLevelName, taskLevelsList} from "../task/platform/platform_slice";
 import {PromptModalDialog} from "../task/dialog/PromptModalDialog";
 import {ContextVisualization} from "../task/ContextVisualization";
 import {LayoutEditor} from "../task/layout/LayoutEditor";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {Screen} from "../common/screens";
-import {Dialog} from "@blueprintjs/core";
+import {Dialog, Icon} from "@blueprintjs/core";
 import {Documentation} from "../task/documentation/Documentation";
-import {CodecastPlatform} from "../store";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPlay, faTimes} from "@fortawesome/free-solid-svg-icons";
-import {faLightbulb} from "@fortawesome/free-regular-svg-icons";
 import {TralalereBox} from "./TralalereBox";
 import {TralalereInstructions} from "./TralalereInstructions";
 import {LayoutMobileMode, LayoutType} from "../task/layout/layout";
@@ -25,6 +23,7 @@ import {StepperStatus} from "../stepper";
 import {selectAnswer} from "../task/selectors";
 import {taskSuccessClear} from "../task/task_slice";
 import {hasBlockPlatform} from "../stepper/js";
+import {getMessage} from '../lang';
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -52,10 +51,32 @@ export function TralalereApp() {
     const taskSuccess = useAppSelector(state => state.task.success);
     const currentTask = useAppSelector(state => state.task.currentTask);
 
-    // const availableHints = [
-    //     {content: 'aazazaz'},
-    //     {content: 'aazazazazazazz'},
-    // ];
+    const levels = useAppSelector(state => state.platform.levels);
+    const currentLevel = useAppSelector(state => state.task.currentLevel);
+    let hasNextLevel = false;
+    if (currentLevel && currentLevel in levels) {
+        const currentLevelFinished = (levels[currentLevel].score >= 1);
+        if (currentLevelFinished) {
+            const currentLevelIndex = taskLevelsList.indexOf(currentLevel);
+            hasNextLevel = currentLevelIndex + 1 < taskLevelsList.length && taskLevelsList[currentLevelIndex + 1] in levels;
+        }
+    }
+
+    const [nextLevelOpen, setNextLevelOpen] = useState(false);
+
+    const increaseLevel = () => {
+        dispatch(taskChangeLevel(taskLevelsList[taskLevelsList.indexOf(currentLevel) + 1]));
+    };
+
+    useEffect(() => {
+        if (hasNextLevel && taskSuccess) {
+            setTimeout(() => {
+                setNextLevelOpen(true);
+            }, 1000);
+        } else {
+            setNextLevelOpen(false);
+        }
+    }, [hasNextLevel, taskSuccess])
 
     const dispatch = useDispatch();
 
@@ -63,15 +84,6 @@ export function TralalereApp() {
         window.app = 'tralalere';
         document.documentElement.setAttribute('data-theme', 'tralalere');
         selectMode(LayoutMobileMode.Player);
-
-        setTimeout(() => {
-            const taskLoadParameters: {level?: TaskLevelName} = {};
-            if (options.level) {
-                taskLoadParameters.level = options.level;
-            }
-
-            dispatch(taskLoad(taskLoadParameters));
-        });
     }, []);
 
     useEffect(() => {
@@ -131,6 +143,10 @@ export function TralalereApp() {
         dispatch({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
     };
 
+    const closeNextLevelOpen = () => {
+        dispatch(taskSuccessClear({}));
+    }
+
     return (
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} tralalere platform-${options.platform}`}>
             <div className="layout-general">
@@ -146,12 +162,12 @@ export function TralalereApp() {
                     {(!isMobile || LayoutMobileMode.Editor === layoutMobileMode) && <div className={`tralalere-menu-icons ${menuHelpsOpen ? 'has-helps' : ''}`}>
                         <div className="tralalere-button" onClick={toggleDocumentation}>
                             <img className="menu-task-icon" src={window.modulesPath + 'img/algorea/crane/documentation.svg'}/>
-                            <div className="tralalere-menu-label">Documentation</div>
+                            <div className="tralalere-menu-label">{getMessage('TRALALERE_MENU_DOCUMENTATION')}</div>
                         </div>
 
                         {0 < availableHints.length && <div className="tralalere-button" onClick={toggleHints}>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 352 512" className="svg-inline--fa fa-w-14"><path fill="currentColor" d="M176 80c-52.94 0-96 43.06-96 96 0 8.84 7.16 16 16 16s16-7.16 16-16c0-35.3 28.72-64 64-64 8.84 0 16-7.16 16-16s-7.16-16-16-16zM96.06 459.17c0 3.15.93 6.22 2.68 8.84l24.51 36.84c2.97 4.46 7.97 7.14 13.32 7.14h78.85c5.36 0 10.36-2.68 13.32-7.14l24.51-36.84c1.74-2.62 2.67-5.7 2.68-8.84l.05-43.18H96.02l.04 43.18zM176 0C73.72 0 0 82.97 0 176c0 44.37 16.45 84.85 43.56 115.78 16.64 18.99 42.74 58.8 52.42 92.16v.06h48v-.12c-.01-4.77-.72-9.51-2.15-14.07-5.59-17.81-22.82-64.77-62.17-109.67-20.54-23.43-31.52-53.15-31.61-84.14-.2-73.64 59.67-128 127.95-128 70.58 0 128 57.42 128 128 0 30.97-11.24 60.85-31.65 84.14-39.11 44.61-56.42 91.47-62.1 109.46a47.507 47.507 0 0 0-2.22 14.3v.1h48v-.05c9.68-33.37 35.78-73.18 52.42-92.16C335.55 260.85 352 220.37 352 176 352 78.8 273.2 0 176 0z"/></svg>
-                            <div className="tralalere-menu-label">Indices</div>
+                            <div className="tralalere-menu-label">{getMessage('TRALALERE_MENU_HINTS')}</div>
                         </div>}
                     </div>}
 
@@ -162,7 +178,7 @@ export function TralalereApp() {
                         {taskSuccess && <div className="tralalere-success">
                             <img className="tralalere-success-left"
                                 src={window.modulesPath + 'img/algorea/crane/task-success.png'}/>
-                            <div>Mission réussie</div>
+                            <div>{getMessage('TRALALERE_TASK_SUCCESS')}</div>
                         </div>}
 
                         {!isMobile &&
@@ -227,7 +243,7 @@ export function TralalereApp() {
                                     <img className="menu-task-icon" src={window.modulesPath + 'img/algorea/crane/documentation_white.svg'}/>
                                 </div>
                                 <div className="tralalere-box-header-title">
-                                    Documentation
+                                    {getMessage('TRALALERE_MENU_DOCUMENTATION')}
                                 </div>
                                 <div className="tralalere-box-header-close">
                                     <div className="tralalere-button" onClick={closeDocumentation}>
@@ -237,6 +253,22 @@ export function TralalereApp() {
                             </div>
                         }
                     />
+                </TralalereBox>
+            </Dialog>
+
+            <Dialog isOpen={nextLevelOpen} className={`simple-dialog tralalere-success-dialog ${isMobile ? 'is-mobile' : ''}`} canOutsideClickClose={true} canEscapeKeyClose={true} onClose={closeNextLevelOpen}>
+                <TralalereBox>
+                    <div>
+                        <p className="tralalere-success-dialog-message">{getMessage('TRALALERE_NEXT_LEVEL_MESSAGE')}</p>
+
+                        <div className="simple-dialog-buttons mb-4">
+                            <button className="tralalere-button next-button" onClick={increaseLevel}>
+                                <Icon icon="small-tick" iconSize={24}/>
+                                <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
+                            </button>
+                        </div>
+                    </div>
+
                 </TralalereBox>
             </Dialog>
         </Container>

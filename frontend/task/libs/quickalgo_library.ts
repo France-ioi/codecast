@@ -131,7 +131,7 @@ export class QuickAlgoLibrary {
                 }, computedDelay);
             }
         } else {
-            // When a function is used outside of an execution
+            // When a function is used outside an execution
             setTimeout(function () {
                 callback(value);
             }, computedDelay);
@@ -143,7 +143,7 @@ export class QuickAlgoLibrary {
         if (this.runner) {
             this.runner.noDelay(callback, value);
         } else {
-            // When a function is used outside of an execution
+            // When a function is used outside an execution
             callback(value);
         }
     };

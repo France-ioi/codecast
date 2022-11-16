@@ -1,6 +1,6 @@
 {
   "name": "codecast",
-  "version": "7.0.0",
+  "version": "7.2.0",
   "description": "Live coding in the browser with recording for C and Python",
   "homepage": "https://github.com/France-ioi/codecast",
   "authors": [
@@ -27,9 +27,6 @@
     "@babel/runtime": "^7.16.5",
     "@blueprintjs/core": "^3.52.0",
     "@blueprintjs/datetime": "^3.23.19",
-    "@fontsource/inconsolata": "^4.5.0",
-    "@fontsource/open-sans": "^4.5.2",
-    "@fontsource/source-sans-pro": "^4.5.1",
     "@fortawesome/fontawesome-svg-core": "^1.2.36",
     "@fortawesome/free-regular-svg-icons": "^6.2.0",
     "@fortawesome/free-solid-svg-icons": "^5.15.4",

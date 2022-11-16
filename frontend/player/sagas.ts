@@ -25,11 +25,13 @@ import {RECORDING_FORMAT_VERSION} from "../version";
 import {getCurrentImmerState} from "../task/utils";
 import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
-import {taskLoaded} from "../task/task_slice";
+import {currentTaskChange, currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
 import {LayoutPlayerMode} from "../task/layout/layout";
 import {setTaskEventsEnvironment} from "../task/platform/platform";
 import {createRunnerSaga} from "../stepper";
 import {delay as delay$1} from 'typed-redux-saga';
+import {platformTaskLink} from '../task/platform/actionTypes';
+import log from 'loglevel';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -139,6 +141,11 @@ function* playerPrepare(app: App, action) {
 
         return;
     }
+
+    if (data.selectedTask) {
+        yield* put(currentTaskChangePredefined(data.selectedTask));
+    }
+
     /* Compute the future state after every event. */
     const chan = yield* call(requestAnimationFrames, 50);
 
@@ -157,7 +164,7 @@ function* playerPrepare(app: App, action) {
         });
     }
 
-    yield* put(taskLoad({selectedTask: data.selectedTask}));
+    yield* put(platformTaskLink());
     yield* take(taskLoaded.type);
     state = yield* select();
 
@@ -370,10 +377,9 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
  * This redux saga has been dispatched in the replay store and occurs in this store
  */
 function* playerReplayEvent(app: App, {type, payload}) {
-    console.log('START REPLAY EVENT (playerReplayEvent)', type, payload);
     const {replayApi, key, replayContext, event, resolve} = payload;
     const environment = app.environment;
-    console.log('environment', environment);
+    log.getLogger('replay').debug('START REPLAY EVENT (playerReplayEvent)', type, payload, environment);
 
     const triggeredEffects = {};
 
@@ -406,19 +412,19 @@ function* playerReplayEvent(app: App, {type, payload}) {
     let steps = 0;
     while (true) {
         let newRemainingEffects = JSON.stringify(Object.keys(triggeredEffects).filter(effectId => !triggeredEffects[effectId]));
-        console.log('new remaining effects', newRemainingEffects, timersStarted, timersEnded);
+        log.getLogger('replay').debug('new remaining effects', newRemainingEffects, timersStarted, timersEnded);
         if (newRemainingEffects === remainingEffects && timersStarted === timersEnded) {
             break;
         }
 
         remainingEffects = newRemainingEffects;
-        console.log('PLAY REPLAY, before yield', steps);
+        log.getLogger('replay').debug('PLAY REPLAY, before yield', steps);
         yield* delay(0);
-        console.log('after wait delay', steps);
+        log.getLogger('replay').debug('after wait delay', steps);
         steps++;
     }
 
-    console.log('END REPLAY EVENT (playerReplayEvent)');
+    log.getLogger('replay').debug('END REPLAY EVENT (playerReplayEvent)');
     resolve();
 }
 

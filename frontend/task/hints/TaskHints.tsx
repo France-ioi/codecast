@@ -6,15 +6,12 @@ import {useDispatch} from "react-redux";
 import {useAppSelector} from "../../hooks";
 import {toHtml} from "../../utils/sanitize";
 import {hintUnlocked} from "./hints_slice";
+import {getMessage} from '../../lang';
 
 export function TaskHints() {
     const dispatch = useDispatch();
 
     const availableHints = useAppSelector(state => state.hints.availableHints);
-    // const availableHints = [
-    //     {content: 'aazazaz'},
-    //     {content: 'aazazazazazazz'},
-    // ];
     const unlockedHintIds = useAppSelector(state => state.hints.unlockedHintIds);
 
     const carouselElements = unlockedHintIds.map(unlockedHintId => {
@@ -33,7 +30,7 @@ export function TaskHints() {
         carouselElements.push(
             <div className="hint-carousel-item hint-unlock">
                 <div className="tralalere-button hint-button" onClick={unlockNextHint}>
-                    Demander un indice
+                    {getMessage('TRALALERE_HINTS_ASK')}
                 </div>
             </div>
         );

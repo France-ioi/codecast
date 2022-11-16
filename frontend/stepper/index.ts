@@ -792,34 +792,35 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
     // Update speed if we use speed
     const context = quickAlgoLibraries.getContext(null, state.environment);
     let newDelay = 0;
-    if (null !== stepperContext.speed && undefined !== stepperContext.speed) {
-        stepperContext.speed = getStepper(state).speed;
-        newDelay = stepperMaxSpeed - stepperContext.speed;
-    }
-    // console.log('stepper interact before background run data', stepperContext.backgroundRunData);
-    if (stepperContext.backgroundRunData && stepperContext.backgroundRunData.steps) {
-        const runData = stepperContext.backgroundRunData;
-        // if (runData.result || (!runData.result && runData.steps && runData.steps >= Codecast.runner._steps + 10)) {
-        //     newDelay = newDelay / 4;
-        // }
-        const t = Codecast.runner._steps / runData.steps;
-        const y0 = newDelay;
-        const y1 = newDelay / 40;
-        const y2 = newDelay / 40;
-        const y3 = newDelay;
+    if ('main' === state.environment) {
+        if (null !== stepperContext.speed && undefined !== stepperContext.speed) {
+            stepperContext.speed = getStepper(state).speed;
+            newDelay = stepperMaxSpeed - stepperContext.speed;
+        }
+        // console.log('stepper interact before background run data', stepperContext.backgroundRunData);
+        if (stepperContext.backgroundRunData && stepperContext.backgroundRunData.steps) {
+            const runData = stepperContext.backgroundRunData;
+            // if (runData.result || (!runData.result && runData.steps && runData.steps >= Codecast.runner._steps + 10)) {
+            //     newDelay = newDelay / 4;
+            // }
+            const t = Codecast.runner._steps / runData.steps;
+            const y0 = newDelay;
+            const y1 = newDelay / 40;
+            const y2 = newDelay / 40;
+            const y3 = newDelay;
 
-        newDelay = (1-t)*((1-t)*((1-t)*y0+t*y1)+t*((1-t)*y1+t*y2))+t*((1-t)*((1-t)*y1+t*y2)+t*((1-t)*y2+t*y3));
-        // console.log('new delay definition', {runData, steps: Codecast.runner._steps, maxSteps: runData.steps, t, newDelay})
+            newDelay = (1-t)*((1-t)*((1-t)*y0+t*y1)+t*((1-t)*y1+t*y2))+t*((1-t)*((1-t)*y1+t*y2)+t*((1-t)*y2+t*y3));
+            // console.log('new delay definition', {runData, steps: Codecast.runner._steps, maxSteps: runData.steps, t, newDelay})
+        }
+        stepperContext.delayToWait = newDelay;
     }
-
-    stepperContext.delayToWait = newDelay;
 
     if (context && context.changeDelay) {
         context.changeDelay(newDelay);
     }
 
-    if (context && context.changeSoundEnabled && 'main' === state.environment) {
-        context.changeSoundEnabled(state.task.soundEnabled);
+    if (context && context.changeSoundEnabled) {
+        context.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);
     }
 
     // This is a way to allow some time to refresh the display
@@ -1042,7 +1043,11 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         const taskContext = quickAlgoLibraries.getContext(null, state.environment);
         yield* put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: true});
 
-        taskContext.display = false;
+        const changeDisplay = 'main' === state.environment;
+
+        if (changeDisplay) {
+            taskContext.display = false;
+        }
         stepperContext.taskDisplayNoneStatus = 'running';
         taskContext.resetAndReloadState(selectCurrentTest(state), state);
         stepperContext.state.contextState = getCurrentImmerState(taskContext.getInnerState());
@@ -1067,7 +1072,9 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         }
         yield* put({type: ActionTypes.StepperSynchronizingAnalysisChanged, payload: false});
 
-        taskContext.display = true;
+        if (changeDisplay) {
+            taskContext.display = true;
+        }
         yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         console.log('End run from beginning');
     }
@@ -1123,13 +1130,16 @@ function* stepperRunBackgroundSaga(app: App, {payload: {callback}}) {
 
     const tests = yield* select((state: AppStore) => state.task.taskTests);
 
-    let preExecutionTests: number[] = [testId];
+    let preExecutionTests: number[] = [];
+    if (null !== testId) {
+        preExecutionTests.push(testId);
+    }
     const context = quickAlgoLibraries.getContext(null, 'main');
     if (context && context.infos.hiddenTests) {
         preExecutionTests = [...tests.keys()];
     }
 
-    let lastBackgroundResult;
+    let lastBackgroundResult = null;
     for (let preExecutionTestId of preExecutionTests) {
         const {success, exit} = yield* race({
             success: call([taskSubmissionExecutor, taskSubmissionExecutor.makeBackgroundExecution], level, preExecutionTestId, answer),
@@ -1168,12 +1178,13 @@ function* stepperCompileFromControlsSaga(app: App) {
 
         backgroundRunData = yield promise;
         console.log('background execution result', backgroundRunData);
-
-        const context = quickAlgoLibraries.getContext(null, 'main');
-        const currentTestId = yield* select((state: AppStore) => state.task.currentTestId);
-        if (context && context.infos.hiddenTests && !backgroundRunData.result && backgroundRunData.testId !== currentTestId) {
-            console.log('change test', backgroundRunData.testId);
-            yield* put(updateCurrentTestId({testId: backgroundRunData.testId}));
+        if (null !== backgroundRunData) {
+            const context = quickAlgoLibraries.getContext(null, 'main');
+            const currentTestId = yield* select((state: AppStore) => state.task.currentTestId);
+            if (context && context.infos.hiddenTests && !backgroundRunData.result && backgroundRunData.testId !== currentTestId) {
+                console.log('change test', backgroundRunData.testId);
+                yield* put(updateCurrentTestId({testId: backgroundRunData.testId}));
+            }
         }
     }
 
@@ -1183,9 +1194,7 @@ function* stepperCompileFromControlsSaga(app: App) {
         type: ActionTypes.CompileWait,
         payload: {
             callback(result) {
-                if (null !== backgroundRunData) {
-                    app.dispatch(stepperRunBackgroundFinished(backgroundRunData));
-                }
+                app.dispatch(stepperRunBackgroundFinished(backgroundRunData));
                 deferredPromise.resolve(CompileStatus.Done === result);
             }
         },
@@ -1195,9 +1204,11 @@ function* stepperCompileFromControlsSaga(app: App) {
 }
 
 function* stepperStepFromControlsSaga(app: App, {payload: {mode, useSpeed}}) {
-    yield* put({type: LayoutActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.EditorPlayer}});
-
     const state: AppStore = yield* select();
+    if ('tralalere' === state.options.app) {
+        yield* put({type: LayoutActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.EditorPlayer}});
+    }
+
     const stepperControlsState = getStepperControlsSelector(state, {enabled: true});
     const stepper = getStepper(state);
     const mustCompile = StepperStatus.Clear === stepper.status;
@@ -1329,6 +1340,7 @@ function postLink(app: App) {
                 mode,
                 waitForProgress,
                 immediate,
+                useSpeed: true,
                 setStepperContext,
                 quickAlgoCallsLogger: (call) => {
                     mainQuickAlgoLogger.logQuickAlgoLibraryCall(call);

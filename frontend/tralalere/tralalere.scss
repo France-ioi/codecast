@@ -104,6 +104,12 @@ $tralalere-red: #FF3C11;
           margin-bottom: .5rem !important;
         }
 
+        a {
+          color: $tralalere-green;
+          font-weight: bold;
+          text-decoration: underline;
+        }
+
         .advice {
           display: block;
           background: $tralalere-dark-blue;
@@ -114,15 +120,10 @@ $tralalere-red: #FF3C11;
           margin-left: -22px;
           margin-bottom: 1rem;
           &:before {
-            content: 'Conseil';
+            content: attr(data-title);
             display: block;
             font-style: italic;
             font-weight: 900;
-          }
-          a {
-            color: $tralalere-green;
-            font-weight: bold;
-            text-decoration: underline;
           }
         }
       }
@@ -187,6 +188,7 @@ $tralalere-red: #FF3C11;
     min-width: 0;
     display: flex;
     flex-direction: column;
+    z-index: 1;
   }
 
   .tralalere-visualization {
@@ -243,6 +245,7 @@ $tralalere-red: #FF3C11;
 
   .blockly-editor {
     position: relative;
+    min-width: 550px;
     .layout-editor {
       min-height: 0;
     }
@@ -277,7 +280,8 @@ $tralalere-red: #FF3C11;
   bottom: 0;
   border-radius: 15px;
   overflow: hidden;
-  background: linear-gradient(to bottom, rgba(255,0,0,0) 0%, rgba(255,0,0,0) 80%, $tralalere-dark-blue 80%, $tralalere-dark-blue 100%);
+  background: rgba(255,0,0,0);
+  z-index: 1;
 }
 .blockly-flyout-wrapper-bottom {
   position: absolute;
@@ -366,6 +370,7 @@ $tralalere-red: #FF3C11;
       font-weight: 400;
       font-size: 16px;
       line-height: 19px;
+      min-width: 0;
     }
     code {
       color: $tralalere-red !important;
@@ -432,12 +437,12 @@ $tralalere-red: #FF3C11;
 }
 
 .tralalere-hints {
-  position: absolute;
-  padding-left: calc(10px + var(--flyout-width));
-  width: calc(100% - 8px);
-  top: 8px;
-  left: 0;
-  z-index: 50;
+  max-width: 800px;
+  padding: 0;
+  background: transparent;
+  &.is-mobile {
+    width: 95vw;
+  }
 
   .hint-unlock {
     margin-top: 10px;
@@ -464,14 +469,14 @@ $tralalere-red: #FF3C11;
   .carousel {
     .carousel-control-prev, .carousel-control-next, .carousel-control-prev:focus, .carousel-control-next:focus {
       color: white;
-      width: 7%;
+      width: 50px;
       opacity: 1;
     }
     .carousel-control-prev:hover, .carousel-control-next:hover {
       color: #ddd;
     }
     .carousel-item {
-      padding: 30px 40px 60px;
+      padding: 30px 50px 60px;
     }
     .carousel-indicators button {
       height: 6px;
@@ -753,7 +758,7 @@ $tralalere-red: #FF3C11;
   border-radius: 50px;
   font-style: normal;
   font-weight: 900;
-  font-size: 50px;
+  font-size: 45px;
   color: $tralalere-dark-blue;
   display: flex;
   align-items: center;
@@ -773,10 +778,51 @@ $tralalere-red: #FF3C11;
   }
 }
 
+
+
+.tralalere:not(.layout-mobile-horizontal):not(.layout-mobile-vertical) {
+  @media screen and (max-width: 1050px) {
+    .tralalere-instructions-left {
+      max-width: 90px;
+    }
+    .tralalere-success {
+      font-size: 20px;
+    }
+    .tralalere-instructions-shadow-down {
+      max-width: 90px;
+      top: 15px;
+      left: 0;
+    }
+    .tralalere-instructions-window {
+      left: 40px;
+    }
+    .tralalere-instructions .tralalere-instructions-container {
+      padding: 5px;
+      border-radius: 10px;
+      box-shadow: -10px 10px #383961;
+      h1 {
+        padding-top: 15px;
+        padding-left: 60px;
+        margin-bottom: 22px !important;
+      }
+      .advice {
+        margin-left: 0 !important;
+      }
+      .task-mission {
+        margin-right: 0;
+      }
+    }
+  }
+}
+
 // Responsive
 .layout-mobile-horizontal.tralalere, .layout-mobile-vertical.tralalere {
   .context-visualization {
     margin-top: 0;
+  }
+
+  .blockly-editor {
+    min-width: 0;
   }
 
   .task-visualization {
@@ -950,4 +996,34 @@ $tralalere-red: #FF3C11;
 
   width: 95vw;
   max-height: 90vh;
+}
+
+
+.tralalere-success-dialog {
+  background: transparent;
+  padding: 0;
+  width: 80vw;
+  max-width: 600px;
+
+  > .tralalere-box {
+    height: 100%;
+  }
+
+  &.is-mobile {
+    width: 95vw;
+    max-height: 90vh;
+  }
+
+  .next-button {
+    font-size: 16px;
+    width: fit-content;
+    padding: 5px 30px;
+    margin: auto;
+  }
+
+  .tralalere-success-dialog-message {
+    color: white;
+    text-align: center;
+    margin-top: 20px;
+  }
 }

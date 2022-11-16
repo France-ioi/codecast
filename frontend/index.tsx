@@ -49,6 +49,7 @@ log.getLogger('tests').setLevel('info');
 log.getLogger('platform').setLevel('info');
 log.getLogger('stepper').setLevel('info');
 log.getLogger('quickalgo_executor').setLevel('info');
+log.getLogger('replay').setLevel('info');
 
 export interface CodecastEnvironmentMonitoring {
     effectTriggered: Function,
@@ -129,6 +130,10 @@ declare global {
         SrlLogger: any,
         ace: any,
         subTask: any,
+        changeTaskLevel: (levelName: TaskLevelName) => void,
+        taskGetResourcesPost: (res, callback) => void,
+        FontsLoader: any,
+        implementGetResources?: (task: any) => void,
     }
 }
 
@@ -244,6 +249,11 @@ Codecast.start = function(options) {
 
     if (!isLocalMode() && /editor|player|sandbox/.test(options.start)) {
         mainStore.dispatch({type: StatisticsActionTypes.StatisticsInitLogData});
+    }
+
+    if (options.backend && !window.modulesPath) {
+        const href = window.location.href;
+        window.modulesPath = href.substring(0, href.lastIndexOf('/')) + "/bebras-modules/";
     }
 
     const urlParams = new URLSearchParams(window.location.search);

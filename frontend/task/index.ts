@@ -1,7 +1,7 @@
 import {getCurrentImmerState, getDefaultSourceCode} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
-import {all, call, cancel, cancelled, fork, put, select, take, takeEvery, takeLatest} from "typed-redux-saga";
+import {all, call, cancel, cancelled, delay, fork, put, select, take, takeEvery, takeLatest} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {App, Codecast} from "../index";
 import {AppStore, CodecastPlatform} from "../store";
@@ -141,10 +141,12 @@ if (!String.prototype.format) {
     }
 }
 
-if (!window.modulesPath) {
-    const href = window.location.href;
-    window.modulesPath = href.substring(0, href.lastIndexOf('/')) + "/bebras-modules/";
-}
+window.changeTaskLevel = (levelName: TaskLevelName) => {
+    const mainStore = Codecast.environments['main'].store;
+    mainStore.dispatch(taskChangeLevel(levelName));
+
+    return false;
+};
 
 let oldSagasTasks = {};
 
@@ -187,9 +189,12 @@ function* taskLoadSaga(app: App, action) {
         yield* put(currentTaskChange(state.options.task));
     } else if (selectedTask) {
         yield* put(currentTaskChangePredefined(selectedTask));
-    } else if (action.payload.selectedTask) {
-        yield* put(currentTaskChangePredefined(action.payload.selectedTask));
     }
+
+    // yield* put(hintsLoaded([
+    //     {content: 'aazazaz'},
+    //     {content: 'aazazazazazazz'},
+    // ]));
 
     if (state.options.taskHints) {
         console.log('load hints', state.options.taskHints);
@@ -672,8 +677,8 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(platformAnswerGraded.type, function*({payload: {score, message, error}}: ReturnType<typeof platformAnswerGraded>) {
-            if (score >= 1) {
+        yield* takeEvery(platformAnswerGraded.type, function*({payload: {score, message, error, maxScore}}: ReturnType<typeof platformAnswerGraded>) {
+            if (score >= maxScore) {
                 yield* put(taskSuccess(message));
             } else if (error) {
                 yield* put(stepperDisplayError(error));

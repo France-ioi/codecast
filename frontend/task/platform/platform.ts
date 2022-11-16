@@ -18,7 +18,12 @@ import {
     taskShowViewsEvent,
     taskUpdateTokenEvent,
     taskLoadEvent,
-    taskUnloadEvent, platformAnswerGraded, platformTaskRefresh, platformAnswerLoaded,
+    taskUnloadEvent,
+    platformAnswerGraded,
+    platformTaskRefresh,
+    platformAnswerLoaded,
+    taskGetResourcesPost,
+    platformTaskLink,
 } from './actionTypes';
 import {App, Codecast} from "../../index";
 import {AppStore} from "../../store";
@@ -34,6 +39,9 @@ import {generateTokenUrl} from "./task_token";
 import {levelScoringData} from "../task_submission";
 import {Effect} from "@redux-saga/types";
 import log from "loglevel";
+import {importPlatformModules} from '../libs/import_modules';
+import {taskLoad} from '../index';
+import {taskLoaded} from '../task_slice';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -77,8 +85,9 @@ export function getTaskMetadata() {
     return metadata;
 }
 
-function* linkTaskPlatformSaga (app: App) {
-    if ('main' !== app.environment) {
+function* linkTaskPlatformSaga() {
+    const state: AppStore = yield* select();
+    if ('main' !== state.environment) {
         return;
     }
 
@@ -95,23 +104,39 @@ function* linkTaskPlatformSaga (app: App) {
     });
 
     window.task = taskApi;
+    if (window.implementGetResources) {
+        window.implementGetResources(window.task);
+    }
     yield* call(platformApi.initWithTask, taskApi);
+
+    window.taskGetResourcesPost = (res, callback) => {
+        Codecast.environments['main'].store.dispatch(taskGetResourcesPost(res, callback));
+    };
 }
 
 function* taskAnswerReloadedSaga () {
-    log.getLogger('platform').debug('Task answer reloaded');
+    const nextVersion = yield* call(taskGetNextLevelToIncreaseScore);
+    log.getLogger('platform').debug('Task answer reloaded, next version = ' + nextVersion);
+
+    if (null !== nextVersion) {
+        yield* put(taskChangeLevel(nextVersion));
+    }
+}
+
+export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevelName = null): Generator<any, TaskLevelName, any> {
     const taskLevels = yield* select((state: AppStore) => state.platform.levels);
     let nextVersion: TaskLevelName = null;
+
+    const {maxScore} = yield* call(platformApi.getTaskParams, null, null);
 
     let currentReconciledScore = 0;
     for (let {level, score} of Object.values(taskLevels)) {
         const {scoreCoefficient} = levelScoringData[level];
-        const versionScore = score * scoreCoefficient;
+        const versionScore = (currentLevelMaxScore === level ? maxScore : score) * scoreCoefficient;
         log.getLogger('platform').debug({level, score, scoreCoefficient, versionScore});
         currentReconciledScore = Math.max(currentReconciledScore, versionScore);
     }
 
-    const {maxScore} = yield* call(platformApi.getTaskParams, null, null);
     for (let {level} of Object.values(taskLevels)) {
         const levelMaxScore = maxScore * levelScoringData[level].scoreCoefficient;
         if (levelMaxScore > currentReconciledScore) {
@@ -120,11 +145,7 @@ function* taskAnswerReloadedSaga () {
         }
     }
 
-    log.getLogger('platform').debug('Task answer reloaded, next version = ' + nextVersion);
-
-    if (null !== nextVersion) {
-        yield* put(taskChangeLevel(nextVersion));
-    }
+    return nextVersion;
 }
 
 
@@ -196,6 +217,39 @@ function* taskGetStateEventSaga ({payload: {success}}: ReturnType<typeof taskGet
     yield* call(success, strDump);
 }
 
+function* taskGetResourcesPostSaga ({payload: {resources, callback}}: ReturnType<typeof taskGetResourcesPost>) {
+    const options = yield* select((state: AppStore) => state.options);
+    const optionsToPreload = {
+        platform: options.platform,
+        language: options.language,
+    };
+
+    // Import necessary platform modules without waiting for them to be imported, the declaration is enough
+    const platform = yield* select((state: AppStore) => state.options.platform);
+    yield* call(importPlatformModules, platform, window.modulesPath);
+
+    window.jQuery('script.module').each(function() {
+        const scriptSrc = window.jQuery(this).attr('src');
+        if (scriptSrc && !resources.task_modules.find(resource => scriptSrc === resource.url)) {
+            resources.task_modules.push({type: 'javascript', url: scriptSrc, id: window.jQuery(this).attr('id')});
+        }
+    });
+
+    // For Castor platform, we need to add custom scripts that will be added to the assets during the generation of the task
+    const castorScriptInject = `window.codecastPreload = JSON.parse('${JSON.stringify(optionsToPreload)}');
+document.body.setAttribute('id', 'app');
+var reactContainerDiv = document.createElement('div');
+reactContainerDiv.setAttribute('id', 'react-container');
+document.body.appendChild(reactContainerDiv);
+try {
+    $('#question-iframe', window.parent.document).css('width', '100%');
+} catch(e) {
+}`;
+
+    resources.task.unshift({type: 'javascript', content: castorScriptInject, id: 'codecast-preload'});
+    callback(resources);
+}
+
 /**
  * Add a listener on this event in your code to execute actions
  */
@@ -249,10 +303,17 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
     yield* put(platformTokenUpdated(taskToken));
 
     try {
-        if (serverApi) {
-            const taskData = yield* call(serverApi, 'tasks', 'taskData', {task: taskToken});
-            //yield* put({type: taskInit, payload: {taskData}});
+        const taskLoadParameters: {level?: TaskLevelName} = {};
+        if (options.level) {
+            taskLoadParameters.level = options.level;
         }
+        yield* put(taskLoad(taskLoadParameters));
+        yield* take(taskLoaded.type);
+
+        // if (serverApi) {
+        //     const taskData = yield* call(serverApi, 'tasks', 'taskData', {task: taskToken});
+        //     //yield* put({type: taskInit, payload: {taskData}});
+        // }
 
         yield* call(success);
         yield* fork(windowHeightMonitorSaga, platformApi);
@@ -303,7 +364,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             }
 
             if (!silent) {
-                yield* put(platformAnswerGraded({score: currentScore, message: currentMessage}));
+                yield* put(platformAnswerGraded({score: currentScore, message: currentMessage, maxScore}));
             }
             yield* call(success, reconciledScore, currentMessage, currentScoreToken);
         } else {
@@ -313,7 +374,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             // }
             const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer, minScore, maxScore, noScore});
 
-            yield* put(platformAnswerGraded({score, message}));
+            yield* put(platformAnswerGraded({score, message, maxScore}));
             yield* call(success, score, message, scoreToken);
         }
     } catch (ex: any) {
@@ -363,8 +424,6 @@ export function setPlatformBundleParameters(parameters: PlatformBundleParameters
 }
 
 export default function (bundle: Bundle) {
-    bundle.addSaga(linkTaskPlatformSaga);
-
     bundle.addSaga(function* () {
         yield* takeEvery(taskLoadEvent.type, taskLoadEventSaga);
         yield* takeEvery(taskGetMetadataEvent.type, taskGetMetaDataEventSaga);
@@ -378,5 +437,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(taskGetAnswerEvent.type, taskGetAnswerEventSaga);
         yield* takeEvery(taskGradeAnswerEvent.type, taskGradeAnswerEventSaga);
         yield* takeEvery(taskReloadAnswerEvent.type, taskReloadAnswerEventSaga);
+        yield* takeEvery(taskGetResourcesPost.type, taskGetResourcesPostSaga);
+        yield* takeEvery(platformTaskLink.type, linkTaskPlatformSaga);
     });
 }

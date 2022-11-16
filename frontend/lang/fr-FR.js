@@ -248,6 +248,14 @@ module.exports = {
     ABOUT_LICENSE: "License :",
     ABOUT_CODECAST: "Codecast est un projet de France-IOI développé sous la licence MIT",
 
+    TRALALERE_MENU_DOCUMENTATION: "Documentation",
+    TRALALERE_MENU_HINTS: "Indices",
+    TRALALERE_HINTS_TITLE: "Indice",
+    TRALALERE_HINTS_ASK: "Demander un indice",
+    TRALALERE_ADVICE: "Conseil",
+    TRALALERE_TASK_SUCCESS: "Mission réussie",
+    TRALALERE_NEXT_LEVEL_MESSAGE: "Maintenant, à ton tour !",
+
     SUBMISSION_EXECUTE_ON: 'Exécuter sur...',
     SUBMISSION_EXECUTE_ON_CLIENT: 'navigateur',
     SUBMISSION_EXECUTE_ON_SERVER: 'serveur',

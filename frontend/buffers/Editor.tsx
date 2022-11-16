@@ -67,6 +67,14 @@ export function Editor(props: EditorProps) {
 
     const refEditor = useRef();
 
+    const scrollOnLastLines = () => {
+        const ace = editor.current;
+        const cursorDistanceToBottom = ace.renderer.$size.scrollerHeight + ace.renderer.session.getScrollTop() - ace.renderer.$cursorLayer.getPixelPosition().top;
+        if (cursorDistanceToBottom < 120) {
+            ace.renderer.session.setScrollTop(ace.renderer.session.getScrollTop() + 120 - cursorDistanceToBottom);
+        }
+    }
+
     /*
       Performance fix: Ace fires many redundant selection events, so we wait
       until the next animation frame before querying the selection and firing
@@ -86,6 +94,8 @@ export function Editor(props: EditorProps) {
             console.log('new selection', selection.current, selection_);
             selection.current = selection_;
             props.onSelect(selection_);
+            // Try to scroll if needed
+            scrollOnLastLines();
         });
     };
 
@@ -269,6 +279,7 @@ export function Editor(props: EditorProps) {
             dragEnabled: true,
         });
         editor.current.setOption("scrollPastEnd", 0.1);
+        editor.current.renderer.setScrollMargin(0, 80);
 
         const {onInit, onSelect, onEdit} = props;
         if (typeof onInit === 'function') {

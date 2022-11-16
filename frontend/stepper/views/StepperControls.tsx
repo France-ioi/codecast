@@ -198,12 +198,16 @@ export function StepperControls(props: StepperControlsProps) {
                 </div>}
                 {controlsType === StepperControlsType.StepByStep &&
                     <React.Fragment>
-                        {_button('expr', onStepExpr, getMessage('CONTROL_EXPR'), <i
-                            className="control-icon fi fi-step-expr"/>, null, 'is-small')}
-                        {_button('out', onStepOut, getMessage('CONTROL_OUT'), <i
-                            className="control-icon fi fi-step-out"/>, null, 'is-small')}
-                        {_button('over', onStepOver, getMessage('CONTROL_OVER'), <i
-                            className="control-icon fi fi-step-over"/>, null, 'is-small')}
+                        {_button('expr', onStepExpr, getMessage('CONTROL_EXPR'), <svg xmlns="http://www.w3.org/2000/svg" viewBox="100 -250 900 900" className="svg-inline--fa fa-w-16" style={{transform: 'scaleY(-1)'}}>
+                            <path fill="currentColor" d="M693 0h451v-138h-451v138zM0 0h451v-138h-451v138zM584 450c-21.2861 5.40625 -42.8008 7.84375 -64.1201 7.84375c-104.873 0 -205.003 -58.9941 -249.88 -113.844c-52 -62 -92 -146 -130 -246l-140 78.5c42 134 123 240.5 195 306.5c57 54 183 136 330 136 c162 0 280.5 -73.5 344.5 -154.5c48 -54 86.5 -112.5 132.5 -226.5l146 98l-132 -321l-323 178h177c-33 75 -140.656 220.088 -286 257z"/>
+                        </svg>, null, 'is-small')}
+                        {_button('out', onStepOut, getMessage('CONTROL_OUT'), <svg xmlns="http://www.w3.org/2000/svg" viewBox="-150 -200 900 900" className="svg-inline--fa fa-w-16" style={{transform: 'scaleY(-1)'}}>
+                            <path fill="currentColor" d="M124 0c0 75 62 136 137 136s136 -61 136 -136s-61 -138 -136 -138s-137 63 -137 138zM158 205v341h-204l308 273l306 -273l-208 -1v-340h-202z"/>
+                        </svg>, null, 'is-small')}
+                        {_button('over', onStepOver, getMessage('CONTROL_OVER'), <svg xmlns="http://www.w3.org/2000/svg" viewBox="100 -200 900 900" className="svg-inline--fa fa-w-16" style={{transform: 'scaleY(-1)'}}>
+                            <path fill="currentColor" d="M369 147c0 75 62 136 137 136s136 -61 136 -136s-61 -138 -136 -138s-137 63 -137 138zM584 450c-21.2861 5.40625 -42.8008 7.84375 -64.1201 7.84375c-104.873 0 -205.003 -58.9941 -249.88 -113.844c-52 -62 -92 -146 -130 -246l-140 78.5c42 134 123 240.5 195 306.5 c57 54 183 136 330 136c162 0 280.5 -73.5 344.5 -154.5c48 -54 86.5 -112.5 132.5 -226.5l146 98l-132 -321l-323 178h177c-33 75 -140.656 220.088 -286 257z"/>
+                        </svg>
+                        , null, 'is-small')}
                         {_button('undo', onUndo, getMessage('CONTROL_UNDO'), 'undo', null, 'is-small')}
                         {_button('redo', onRedo, getMessage('CONTROL_REDO'), 'redo', null, 'is-small')}
                     </React.Fragment>

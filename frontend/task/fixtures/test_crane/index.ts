@@ -25,6 +25,10 @@ const images = [
     {path: require('./assets/tower_10.png')},
     {path: require('./assets/tower_11.png')},
     {path: require('./assets/tower_12.png')},
+    {path: require('./assets/png/01.png')},
+    {path: require('./assets/png/02.png')},
+    {path: require('./assets/png/F-1.png')},
+    {path: require('./assets/png/F-1_alpha.png')},
 ];
 
 export default {
@@ -37,32 +41,23 @@ export default {
         rowLabelEnabled: false,
         showContLabels: true,
         showContOutline: true,
+        customItems: true,
         contextType: "numbers",
         hideControls: { saveOrLoad: false},
-        hiddenTests: true,
-        usedSkills: ['logic', 'memory'],
-        targetNbInstructions: 5,
 
         nbPlatforms: 100,
         maxInstructions: {
             easy: 40,
-            medium: 60,
+            medium: 40,
             hard: 100
         },
         includeBlocks: {
             groupByCategory: false,
             generatedBlocks: {
-                robot: ["left", "right", "take", "putDown", "drop", "topBlockBroken" ]
+                robot: [ "take" ]
             },
             standardBlocks: {
-                includeAll: false,
-                singleBlocks: ["controls_repeat", "controls_if"]
-            }
-        },
-        intro: {
-            default: false,
-            more: {
-                shared: [ { type: "custom", text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." } ]
+                includeAll: false
             }
         }
     },
@@ -73,66 +68,52 @@ export default {
 
                 ],
                 tiles: [
-                    [ 1, 1, 1, 1, 1, 1 ],
-                    [ 1, 1, 1, 1, 1, 1 ],
-                    [ 1, 1, 3, 1, 3, 1 ],
-                    [23, 1, 2, 1, 2, 1 ]
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 2, 1, 1, 1, 1]
                 ],
                 broken: [
-                    [ 0, 0, 0, 0, 0, 0 ],
-                    [ 0, 0, 0, 0, 0, 0 ],
-                    [ 0, 0, 0, 0, 1, 0 ],
-                    [ 0, 0, 0, 0, 0, 0 ]
-                ],
-                mask: [
-                    [ 0, 0, 0, 0, 0, 0 ],
-                    [ 0, 0, 0, 0, 0, 0 ],
-                    [ 0, 0, 1, 1, 1, 0 ],
-                    [ 0, 0, 0, 0, 0, 0 ]
-                ],
-                target: [
-                    [ 1, 1, 1, 1, 1, 1 ],
-                    [ 1, 1, 1, 1, 1, 1 ],
-                    [ 1, 1, 3, 1, 1, 1 ],
-                    [ 1, 1, 2, 1, 1, 1 ]
-                ],
-                initItems: [
 
                 ],
-                initCranePos: 0
-            },
+                target: [
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1]
+                ],
+                initItems: [
+                ],
+                customItems: {
+                },
+                initCranePos: 1
+            }
+        ],
+        medium: [
             {
                 container: [
 
                 ],
                 tiles: [
-                    [ 1, 1, 1, 1, 1, 1 ],
-                    [ 1, 1, 1, 1, 1, 1 ],
-                    [ 1, 1, 3, 1, 3, 1 ],
-                    [23, 1, 2, 1, 2, 1 ]
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 2, 1, 1, 1, 1]
                 ],
                 broken: [
-                    [ 0, 0, 0, 0, 0, 0 ],
-                    [ 0, 0, 0, 0, 0, 0 ],
-                    [ 0, 0, 1, 0, 0, 0 ],
-                    [ 0, 0, 0, 0, 0, 0 ]
-                ],
-                mask: [
-                    [ 0, 0, 0, 0, 0, 0 ],
-                    [ 0, 0, 0, 0, 0, 0 ],
-                    [ 0, 0, 1, 1, 1, 0 ],
-                    [ 0, 0, 0, 0, 0, 0 ]
-                ],
-                target: [
-                    [ 1, 1, 1, 1, 1, 1 ],
-                    [ 1, 1, 1, 1, 1, 1 ],
-                    [ 1, 1, 1, 1, 3, 1 ],
-                    [ 1, 1, 1, 1, 2, 1 ]
-                ],
-                initItems: [
 
                 ],
-                initCranePos: 0
+                target: [
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1],
+                    [ 1, 1, 1, 1, 1, 1]
+                ],
+                initItems: [
+                ],
+                customItems: {
+                },
+                initCranePos: 1
             }
         ]
     },

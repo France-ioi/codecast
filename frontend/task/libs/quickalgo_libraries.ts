@@ -19,7 +19,7 @@ import {ActionTypes as IOActionTypes} from "../../stepper/io/actionTypes";
 import {IoMode} from "../../stepper/io";
 import {PlayerInstant} from "../../player";
 import {makeContext, QuickalgoLibraryCall} from "../../stepper/api";
-import {importModules, importPlatformModules} from "./import_modules";
+import {importModules, importPlatformModules, loadFonts} from "./import_modules";
 import {createRunnerSaga} from "../../stepper";
 import {cancelModal, displayModal} from "../../common/prompt_modal";
 import {ModalType} from "../../common/modal_slice";
@@ -135,12 +135,15 @@ export function* createQuickalgoLibrary() {
         },
     };
 
-    const platform = yield* select((state: AppStore) => state.options.platform);
-    yield* call(importPlatformModules, platform, window.modulesPath);
+    if (!state.options.preload) {
+        const platform = state.options.platform
+        yield* call(importPlatformModules, platform, window.modulesPath);
 
-    if (levelGridInfos.importModules) {
-        yield* call(importModules, levelGridInfos.importModules, window.modulesPath);
+        if (levelGridInfos.importModules) {
+            yield* call(importModules, levelGridInfos.importModules, window.modulesPath);
+        }
     }
+    yield* call(loadFonts, state.options.theme);
 
     if (levelGridInfos.context) {
         if (!window.quickAlgoLibrariesList) {
@@ -173,9 +176,10 @@ export function* createQuickalgoLibrary() {
 
     console.log('created context', contextLib);
     contextLib.iTestCase = state.task.currentTestId;
+    contextLib.environment = state.environment;
 
-    if (contextLib.changeSoundEnabled && 'main' === state.environment) {
-        contextLib.changeSoundEnabled(state.task.soundEnabled);
+    if (contextLib.changeSoundEnabled) {
+        contextLib.changeSoundEnabled('main' === state.environment ? state.task.soundEnabled : false);
     }
 
     yield* call(createDisplayHelper);

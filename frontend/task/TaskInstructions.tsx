@@ -28,6 +28,7 @@ const defaultInstructionsHtml = `
     </p>
     <p>
         Pour pousser une caisse, mettez d'abord le robot face à la caisse, il avancera en la poussant.
+        <a onclick="changeTaskLevel('medium')">Aller au tuto</a>
     </p>
     <div class="advice">
         Pour le fonctionnement des blocs de boucle, pense à regarder la documentation.
@@ -80,6 +81,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
                 instructionsJQuery.find(`[data-lang~="${availablePlatform}"]:not([data-lang~="${platform}"]`).remove();
             }
         }
+        instructionsJQuery.find('.advice').attr('data-title', getMessage('TRALALERE_ADVICE'));
         for (let availableLevel of taskLevelsList) {
             if (taskLevel !== availableLevel) {
                 instructionsJQuery.find(`.${availableLevel}:not(.${taskLevel})`).remove();
