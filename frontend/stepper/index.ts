@@ -1303,6 +1303,15 @@ function postLink(app: App) {
         })
     });
 
+    recordApi.on(ActionTypes.StepperRunBackgroundFinished, function* (addEvent, {payload}) {
+        yield* call(addEvent, 'stepper.run_background_finished', payload.backgroundRunData);
+    });
+    replayApi.on('stepper.run_background_finished', function* (replayContext: ReplayContext, event) {
+        const backgroundRunData = event[2];
+
+        yield* put(stepperRunBackgroundFinished(backgroundRunData));
+    });
+
     recordApi.on(ActionTypes.StepperStarted, function* (addEvent, action) {
         const {mode, useSpeed} = action;
 
