@@ -935,7 +935,7 @@ function* stepperStepSaga(app: App, action) {
 
         const stepper = getStepper(state);
         if (stepper.status === StepperStatus.Starting) {
-            yield* put({type: ActionTypes.StepperStarted, mode: action.payload.mode});
+            yield* put({type: ActionTypes.StepperStarted, mode: action.payload.mode, useSpeed: action.payload.useSpeed});
 
             stepperContext = createStepperContext(stepper, {
                 dispatch: app.dispatch,
@@ -1304,12 +1304,13 @@ function postLink(app: App) {
     });
 
     recordApi.on(ActionTypes.StepperStarted, function* (addEvent, action) {
-        const {mode} = action;
+        const {mode, useSpeed} = action;
 
-        yield* call(addEvent, 'stepper.step', mode);
+        yield* call(addEvent, 'stepper.step', mode, useSpeed);
     });
     replayApi.on('stepper.step', function* (replayContext: ReplayContext, event) {
         const mode = event[2];
+        const useSpeed = event[3];
 
         let promiseResolve;
         const promise = new Promise((resolve) => {
@@ -1340,7 +1341,7 @@ function postLink(app: App) {
                 mode,
                 waitForProgress,
                 immediate,
-                useSpeed: true,
+                useSpeed,
                 setStepperContext,
                 quickAlgoCallsLogger: (call) => {
                     mainQuickAlgoLogger.logQuickAlgoLibraryCall(call);
