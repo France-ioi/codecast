@@ -129,17 +129,20 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
 
     const {maxScore} = yield* call(platformApi.getTaskParams, null, null);
 
-    let currentReconciledScore = 0;
-    for (let {level, score} of Object.values(taskLevels)) {
-        const {scoreCoefficient} = levelScoringData[level];
-        const versionScore = (currentLevelMaxScore === level ? maxScore : score) * scoreCoefficient;
-        log.getLogger('platform').debug({level, score, scoreCoefficient, versionScore});
-        currentReconciledScore = Math.max(currentReconciledScore, versionScore);
-    }
+    const levelScores = Object.values(taskLevels).map(element => ({
+        level: element.level,
+        score: currentLevelMaxScore === element.level ? maxScore : element.score,
+    }));
+    const reconciledScore = computeReconciledScore(levelScores);
 
+    const topLevel = getTopLevel(levelScores.map(elm => elm.level));
     for (let {level} of Object.values(taskLevels)) {
-        const levelMaxScore = maxScore * levelScoringData[level].scoreCoefficient;
-        if (levelMaxScore > currentReconciledScore) {
+        let {scoreCoefficient} = levelScoringData[level];
+        if (level === topLevel) {
+            scoreCoefficient = 1;
+        }
+        const levelMaxScore = maxScore * scoreCoefficient;
+        if (levelMaxScore > reconciledScore) {
             nextVersion = level;
             break;
         }
@@ -356,12 +359,11 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
                 yield* put(platformSaveScore({level, score, answer: answerObject[level]}));
             }
 
-            let reconciledScore = 0;
-            for (let {level} of Object.values(taskLevels)) {
-                let {scoreCoefficient} = levelScoringData[level];
-                let versionScore = versionsScore[level] * scoreCoefficient;
-                reconciledScore = Math.max(reconciledScore, versionScore);
-            }
+            const levelScores = Object.values(taskLevels).map(element => ({
+                level: element.level,
+                score: versionsScore[element.level],
+            }));
+            const reconciledScore = computeReconciledScore(levelScores);
 
             if (!silent) {
                 yield* put(platformAnswerGraded({score: currentScore, message: currentMessage, maxScore}));
@@ -382,6 +384,29 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             yield* call(error, message);
         }
     }
+}
+
+function computeReconciledScore(levelScores: {level: TaskLevelName, score: number}[]) {
+    let reconciledScore = 0;
+    const topLevel = getTopLevel(levelScores.map(elm => elm.level));
+    for (let {level, score} of levelScores) {
+        let {scoreCoefficient} = levelScoringData[level];
+        if (level === topLevel) {
+            scoreCoefficient = 1;
+        }
+        let versionScore = score * scoreCoefficient;
+        reconciledScore = Math.max(reconciledScore, versionScore);
+    }
+
+    return reconciledScore;
+}
+
+function getTopLevel(levels: TaskLevelName[]) {
+    const sortedLevels = levels.sort((a, b) => {
+        return levelScoringData[a].stars - levelScoringData[b].stars;
+    });
+
+    return sortedLevels[sortedLevels.length - 1];
 }
 
 export interface PlatformTaskGradingParameters {
