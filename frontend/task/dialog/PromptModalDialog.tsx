@@ -19,8 +19,8 @@ export function PromptModalDialog() {
     const [inputValue, setInputValue] = useState('');
 
     useEffect(() => {
-        log.getLogger('prompt').debug('change input value');
-        setInputValue(modalData.defaultInput);
+        log.getLogger('prompt').debug('change input value', modalData.defaultInput);
+        setInputValue(modalData.defaultInput ? modalData.defaultInput : '');
     }, [modalData.defaultInput, modalData.open]);
 
     const validate = () => {
@@ -86,7 +86,7 @@ export function PromptModalDialog() {
     return (
         <Dialog
             transitionDuration={ModalType.keypad === modalData.mode ? 0 : undefined}
-            transitionName={ModalType.keypad === modalData.mode ? "none" : null}
+            transitionName={ModalType.keypad === modalData.mode ? "none" : undefined}
             isOpen={modalData.open}
             className={`simple-dialog mode-${modalData.mode}`}
             canOutsideClickClose={canClose}
