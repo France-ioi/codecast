@@ -38,40 +38,33 @@ import {CustomDragLayer} from "./task/CustomDragLayer";
 import AbstractRunner from "./stepper/abstract_runner";
 import {TralalereApp} from "./tralalere/TralalereApp";
 import {TaskLevelName} from "./task/platform/platform_slice";
-import {isLocalStorageEnabled} from './common/utils';
 
 setAutoFreeze(true);
 
-// Define all loggers. Use "debug" if you want to output a specific logger in the console
-// You can also add a "loggers" entry in your local storage and separate logger names with a comma
-log.setLevel('trace');
-log.getLogger('redux').setLevel(process.env['NODE_ENV'] === 'development' ? 'debug' : 'info');
-log.getLogger('performance').setLevel('info');
-log.getLogger('blockly_runner').setLevel('info');
-log.getLogger('python_runner').setLevel('info');
-log.getLogger('printer_lib').setLevel('info');
-log.getLogger('tests').setLevel('info');
-log.getLogger('platform').setLevel('info');
-log.getLogger('stepper').setLevel('info');
-log.getLogger('quickalgo_executor').setLevel('info');
-log.getLogger('replay').setLevel('info');
-log.getLogger('editor').setLevel('info');
-log.getLogger('prompt').setLevel('info');
-log.getLogger('player').setLevel('info');
-log.getLogger('recorder').setLevel('info');
-log.getLogger('subtitles').setLevel('info');
-log.getLogger('task').setLevel('info');
-log.getLogger('layout').setLevel('info');
-log.getLogger('libraries').setLevel('info');
-
-if (isLocalStorageEnabled()) {
-    const loggers = window.localStorage.getItem('loggers');
-    if (loggers && loggers.length) {
-        for (let logger of loggers.split(',')) {
-            log.getLogger(logger).setLevel('debug');
-        }
-    }
-}
+// Define all loggers.
+// You can change the level of a specific logger by inputting
+// log.getLogger("logger_name").setLevel('debug')
+// in your web console. It will be saved in the browser local storage
+log.setDefaultLevel('trace');
+log.getLogger('blockly_runner').setDefaultLevel('info');
+log.getLogger('editor').setDefaultLevel('info');
+log.getLogger('layout').setDefaultLevel('info');
+log.getLogger('libraries').setDefaultLevel('info');
+log.getLogger('performance').setDefaultLevel('info');
+log.getLogger('platform').setDefaultLevel('info');
+log.getLogger('player').setDefaultLevel('info');
+log.getLogger('printer_lib').setDefaultLevel('info');
+log.getLogger('prompt').setDefaultLevel('info');
+log.getLogger('python_runner').setDefaultLevel('info');
+log.getLogger('quickalgo_executor').setDefaultLevel('info');
+log.getLogger('recorder').setDefaultLevel('info');
+log.getLogger('redux').setDefaultLevel(process.env['NODE_ENV'] === 'development' ? 'debug' : 'info');
+log.getLogger('replay').setDefaultLevel('info');
+log.getLogger('stepper').setDefaultLevel('info');
+log.getLogger('subtitles').setDefaultLevel('info');
+log.getLogger('task').setDefaultLevel('info');
+log.getLogger('tests').setDefaultLevel('info');
+window.log = log;
 
 export interface CodecastEnvironmentMonitoring {
     effectTriggered: Function,
@@ -156,6 +149,7 @@ declare global {
         taskGetResourcesPost: (res, callback) => void,
         FontsLoader: any,
         implementGetResources?: (task: any) => void,
+        log: any,
     }
 }
 
