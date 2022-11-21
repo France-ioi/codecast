@@ -11,6 +11,7 @@ import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {AppStore} from "../store";
 import {Bundle} from "../linker";
 import {getMessage} from "../lang";
+import log from 'loglevel';
 
 export default function(bundle: Bundle) {
     /* Clear (unload) the currently loaded subtitles, if any. */
@@ -91,7 +92,7 @@ function subtitlesLoadFailedReducer(state: AppStore, {payload: {error}}): void {
 
 function subtitlesLoadForTrimSucceededReducer(state: AppStore, {payload: {key, items}}): void {
     const index = state.subtitles.trim.loaded.findIndex(element => element.key === key);
-    console.log('load succeeded', state.subtitles.trim.loaded, index);
+    log.getLogger('subtitles').debug('load succeeded', state.subtitles.trim.loaded, index);
     if (index !== -1) {
         state.subtitles.trim.loaded[index] = {key, items};
     } else {
@@ -231,13 +232,13 @@ export function* subtitlesLoadForTrimSaga() {
         let text = (availableOptions[key].text || '').trim();
 
         try {
-            console.log('here text', {text});
+            log.getLogger('subtitles').debug('here text', {text});
             if (!text) {
                 text = yield* call(getSubtitles, url);
-                console.log('get subtitles');
+                log.getLogger('subtitles').debug('get subtitles');
             }
             const items = parseSync(text);
-            console.log('rsult items', {items});
+            log.getLogger('subtitles').debug('rsult items', {items});
             yield* put({type: ActionTypes.SubtitlesLoadForTrimSucceeded, payload: {key, items}});
         } catch (ex) {
         }

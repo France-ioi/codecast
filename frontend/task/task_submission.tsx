@@ -125,7 +125,7 @@ class TaskSubmissionExecutor {
             }
         } else {
             log.getLogger('tests').debug('Submission execution over', currentSubmission.results);
-            console.log(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
+            log.getLogger('tests').debug(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
             if (!currentSubmission.results.reduce((agg, next) => agg && next.result, true)) {
                 const error = {
                     type: 'task-tests-submission-results-overview',
@@ -160,7 +160,7 @@ class TaskSubmissionExecutor {
         let lastMessage = null;
         const state: AppStore = yield* select();
 
-        console.log('do grade answer');
+        log.getLogger('tests').debug('do grade answer');
         if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state)) {
             return {
                 score: minScore + (maxScore - minScore) * Number(answer) / recordingProgressSteps,
@@ -169,7 +169,7 @@ class TaskSubmissionExecutor {
         }
 
         const environment = state.environment;
-        console.log('start grading answer', environment);
+        log.getLogger('tests').debug('start grading answer', environment);
         const tests = yield* select(state => state.task.taskTests);
         if (!tests || 0 === Object.values(tests).length) {
             return {
@@ -197,7 +197,7 @@ class TaskSubmissionExecutor {
             }
         }
 
-        console.log('end grading answer');
+        log.getLogger('tests').debug('end grading answer');
 
         let worstRate = 1;
         for (let result of testResults) {

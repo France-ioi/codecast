@@ -5,6 +5,7 @@ import {useDispatch} from "react-redux";
 import {getMessage} from "../../lang";
 import {taskChangeLevel} from "../index";
 import {taskLevelsList} from "../platform/platform_slice";
+import log from 'loglevel';
 
 export interface TaskSuccessDialogProps {
     onClose: (event) => void,
@@ -16,7 +17,7 @@ export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const dispatch = useDispatch();
 
-    console.log('task success', currentLevel, levels);
+    log.getLogger('task').debug('task success', currentLevel, levels);
     if (!currentLevel || !(currentLevel in levels)) {
         return null;
     }

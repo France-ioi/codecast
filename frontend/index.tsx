@@ -38,9 +38,14 @@ import {CustomDragLayer} from "./task/CustomDragLayer";
 import AbstractRunner from "./stepper/abstract_runner";
 import {TralalereApp} from "./tralalere/TralalereApp";
 import {TaskLevelName} from "./task/platform/platform_slice";
+import {isLocalStorageEnabled} from './common/utils';
 
 setAutoFreeze(true);
+
+// Define all loggers. Use "debug" if you want to output a specific logger in the console
+// You can also add a "loggers" entry in your local storage and separate logger names with a comma
 log.setLevel('trace');
+log.getLogger('redux').setLevel(process.env['NODE_ENV'] === 'development' ? 'debug' : 'info');
 log.getLogger('performance').setLevel('info');
 log.getLogger('blockly_runner').setLevel('info');
 log.getLogger('python_runner').setLevel('info');
@@ -50,6 +55,23 @@ log.getLogger('platform').setLevel('info');
 log.getLogger('stepper').setLevel('info');
 log.getLogger('quickalgo_executor').setLevel('info');
 log.getLogger('replay').setLevel('info');
+log.getLogger('editor').setLevel('info');
+log.getLogger('prompt').setLevel('info');
+log.getLogger('player').setLevel('info');
+log.getLogger('recorder').setLevel('info');
+log.getLogger('subtitles').setLevel('info');
+log.getLogger('task').setLevel('info');
+log.getLogger('layout').setLevel('info');
+log.getLogger('libraries').setLevel('info');
+
+if (isLocalStorageEnabled()) {
+    const loggers = window.localStorage.getItem('loggers');
+    if (loggers && loggers.length) {
+        for (let logger of loggers.split(',')) {
+            log.getLogger(logger).setLevel('debug');
+        }
+    }
+}
 
 export interface CodecastEnvironmentMonitoring {
     effectTriggered: Function,
@@ -170,13 +192,11 @@ for (let environment of ['main', 'replay', 'background']) {
         bundle.include(editorBundle);
         bundle.include(statisticsBundle);
 
-        if (process.env['NODE_ENV'] === 'development') {
-            bundle.addEarlyReducer(function(state: AppStore, action): void {
-                if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
-                    log.debug(`action on ${environment}`, action);
-                }
-            });
-        }
+        bundle.addEarlyReducer(function(state: AppStore, action): void {
+            if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
+                log.getLogger('redux').debug(`action on ${environment}`, action);
+            }
+        });
     }, initScope);
     finalize(scope);
 

@@ -97,8 +97,6 @@ function* linkTaskPlatformSaga() {
     taskApi = ((yield* take(taskChannel)) as {task: any}).task;
 
     yield* takeEvery(taskChannel, function* (action: Action) {
-        const environment = yield* select((state: AppStore) => state.environment);
-        console.log('listen to event', action, environment, taskEventsEnvironment)
         const environmentStore = Codecast.environments[taskEventsEnvironment ?? 'main'].store;
         yield* call(environmentStore.dispatch, action);
     });
@@ -283,7 +281,6 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
     yield* put(platformTaskRandomSeedUpdated(randomSeed));
 
     let level = yield* select((state: AppStore) => state.task.currentLevel);
-    console.log('task load event', level);
     if (!level) {
         const urlParameters = new URLSearchParams(window.location.search);
         const query = Object.fromEntries(urlParameters);
@@ -328,7 +325,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
 export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, silent}}: ReturnType<typeof taskGradeAnswerEvent>) {
     try {
         const taskLevels = yield* select((state: AppStore) => state.platform.levels);
-        console.log('task levels', taskLevels);
+        log.getLogger('tests').debug('task levels', taskLevels);
         const {minScore, maxScore, noScore} = yield* call(platformApi.getTaskParams, null, null);
         if (taskLevels && Object.keys(taskLevels).length) {
             const versionsScore = {};
@@ -337,15 +334,15 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
             let currentMessage = null;
             let currentScoreToken = null;
             const answerObject = JSON.parse(answer);
-            console.log('answer data', answer);
+            log.getLogger('tests').debug('answer data', answer);
             for (let {level} of Object.values(taskLevels)) {
-                console.log('level', level, answerObject[level]);
+                log.getLogger('tests').debug('level', level, answerObject[level]);
                 if (!answerObject[level]) {
                     versionsScore[level] = 0;
                     continue;
                 }
 
-                console.log('info answer', level);
+                log.getLogger('tests').debug('info answer', level);
 
                 const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer],{level, answer: answerObject[level], minScore, maxScore, noScore});
 

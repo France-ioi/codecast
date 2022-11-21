@@ -9,6 +9,7 @@ import {NumericKeypad} from "../blocks/NumericKeypad";
 import {TralalereBox} from "../../tralalere/TralalereBox";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTimes} from "@fortawesome/free-solid-svg-icons";
+import log from 'loglevel';
 
 export function PromptModalDialog() {
     const modalData = useAppSelector(state => state.modal);
@@ -18,7 +19,7 @@ export function PromptModalDialog() {
     const [inputValue, setInputValue] = useState('');
 
     useEffect(() => {
-        console.log('change input value');
+        log.getLogger('prompt').debug('change input value');
         setInputValue(modalData.defaultInput);
     }, [modalData.defaultInput, modalData.open]);
 
@@ -42,7 +43,7 @@ export function PromptModalDialog() {
         }
     }
 
-    console.log('modal data type', modalData.mode, modalData.open);
+    log.getLogger('prompt').debug('modal data type', modalData.mode, modalData.open);
 
     let keypad = (
         <NumericKeypad

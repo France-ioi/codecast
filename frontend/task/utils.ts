@@ -107,7 +107,6 @@ export function getBlocksUsage(answer, platform: CodecastPlatform) {
 }
 
 export function getDefaultSourceCode(platform: CodecastPlatform, environment: string) {
-    console.log('get default source code');
     const context = quickAlgoLibraries.getContext(null, environment);
     if (CodecastPlatform.Python === platform) {
         if (context) {

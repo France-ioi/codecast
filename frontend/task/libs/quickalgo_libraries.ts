@@ -23,6 +23,7 @@ import {importModules, importPlatformModules, loadFonts} from "./import_modules"
 import {createRunnerSaga} from "../../stepper";
 import {cancelModal, displayModal} from "../../common/prompt_modal";
 import {ModalType} from "../../common/modal_slice";
+import log from 'loglevel';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -111,9 +112,9 @@ window.quickAlgoContext = function (display: boolean, infos: any) {
 export function* createQuickalgoLibrary() {
     let state: AppStore = yield* select();
     let context = quickAlgoLibraries.getContext(null, state.environment);
-    console.log('Create a context', context, state.environment);
+    log.getLogger('libraries').debug('Create a context', context, state.environment);
     if (context) {
-        console.log('Unload initial context first');
+        log.getLogger('libraries').debug('Unload initial context first');
         context.unload();
     }
 
@@ -154,7 +155,7 @@ export function* createQuickalgoLibrary() {
             const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];
             try {
                 contextLib = contextFactory(display, levelGridInfos);
-                console.log('create new library', contextLib);
+                log.getLogger('libraries').debug('create new library', contextLib);
                 quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context, state.environment);
             } catch (e) {
                 console.error("Cannot create context", e);
@@ -174,7 +175,7 @@ export function* createQuickalgoLibrary() {
         }
     }
 
-    console.log('created context', contextLib);
+    log.getLogger('libraries').debug('created context', contextLib);
     contextLib.iTestCase = state.task.currentTestId;
     contextLib.environment = state.environment;
 
@@ -188,9 +189,9 @@ export function* createQuickalgoLibrary() {
     }
 
     const testData = selectCurrentTest(state);
-    console.log('Create context with', {currentTask, currentLevel, testData});
+    log.getLogger('libraries').debug('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
-    console.log('Created context', context);
+    log.getLogger('libraries').debug('Created context', context);
     // if (!context.blocklyHelper) {
     //     context.blocklyHelper = {
     //         updateSize: () => {},
@@ -217,11 +218,11 @@ export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = 
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context) {
-        console.log('quickalgo reset and reload state', state.environment, context, innerState, currentTest);
+        log.getLogger('libraries').debug('quickalgo reset and reload state', state.environment, context, innerState, currentTest);
         context.resetAndReloadState(currentTest, state, innerState);
 
         const contextState = getCurrentImmerState(context.getInnerState());
-        console.log('get new state without instant', contextState);
+        log.getLogger('libraries').debug('get new state without instant', contextState);
         yield* put(taskUpdateState(contextState));
     }
 }
@@ -232,7 +233,7 @@ export function* quickAlgoLibraryRedrawDisplaySaga(app: App) {
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context && 'main' === state.environment && !context.implementsInnerState()) {
         const callsToReplay = mainQuickAlgoLogger.getQuickAlgoLibraryCalls();
-        console.log('calls to replay', callsToReplay);
+        log.getLogger('libraries').debug('calls to replay', callsToReplay);
         yield* call(contextReplayPreviousQuickalgoCalls, app, callsToReplay);
     }
 }
@@ -240,7 +241,7 @@ export function* quickAlgoLibraryRedrawDisplaySaga(app: App) {
 export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: QuickalgoLibraryCall[]) {
     yield* call(quickAlgoLibraryResetAndReloadStateSaga, app);
 
-    console.log('replay previous quickalgo calls', quickAlgoCalls);
+    log.getLogger('libraries').debug('replay previous quickalgo calls', quickAlgoCalls);
     if (!Codecast.runner) {
         Codecast.runner = yield* call(createRunnerSaga);
     }
@@ -268,11 +269,11 @@ export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: Q
 
     const executor = stepperContext.quickAlgoCallsExecutor;
 
-    console.log('our executor', executor);
+    log.getLogger('libraries').debug('our executor', executor);
 
     for (let quickalgoCall of quickAlgoCalls) {
         const {module, action, args} = quickalgoCall;
-        console.log('start call execution', quickalgoCall);
+        log.getLogger('libraries').debug('start call execution', quickalgoCall);
 
         // @ts-ignore
         yield* spawn(executor, module, action, args);
@@ -289,7 +290,7 @@ function* createDisplayHelper() {
 
 class DisplayHelper {
     async showPopupMessage(message, mode, yesButtonText, agreeFunc, noButtonText, avatarMood, defaultText, disagreeFunc) {
-        console.log('popup message', defaultText, noButtonText);
+        log.getLogger('libraries').debug('popup message', defaultText, noButtonText);
         const result = await new Promise(resolve => {
             const mainStore = Codecast.environments['main'].store;
             mainStore.dispatch(displayModal({message, mode, defaultInput: defaultText, yesButtonText, noButtonText, callback: resolve}));
@@ -317,7 +318,7 @@ class DisplayHelper {
         mainStore.dispatch(displayModal({mode: ModalType.keypad, callbackFinished, defaultInput: initialValue, position, callbackModify, options}));
     }
     set popupMessageShown(value) {
-        console.log('change value', value);
+        log.getLogger('libraries').debug('change value', value);
         if (false === value) {
             const mainStore = Codecast.environments['main'].store;
             mainStore.dispatch(cancelModal());
@@ -329,17 +330,17 @@ class MainQuickAlgoLogger {
     private quickalgoLibraryCalls: QuickalgoLibraryCall[] = [];
 
     logQuickAlgoLibraryCall(quickalgoLibraryCall: QuickalgoLibraryCall) {
-        console.log('LOG ACTION', quickalgoLibraryCall);
+        log.getLogger('libraries').debug('LOG ACTION', quickalgoLibraryCall);
         this.quickalgoLibraryCalls.push(quickalgoLibraryCall);
     }
 
     clearQuickAlgoLibraryCalls() {
-        console.log('clear quickalgo calls');
+        log.getLogger('libraries').debug('clear quickalgo calls');
         this.quickalgoLibraryCalls = [];
     }
 
     getQuickAlgoLibraryCalls(): QuickalgoLibraryCall[] {
-        console.log('get quickalgo calls', this.quickalgoLibraryCalls);
+        log.getLogger('libraries').debug('get quickalgo calls', this.quickalgoLibraryCalls);
         return [...this.quickalgoLibraryCalls];
     }
 
@@ -354,7 +355,7 @@ export default function(bundle: Bundle) {
     bundle.addSaga(function* (app: App) {
         // @ts-ignore
         yield* takeEvery(QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay, function* ({payload}) {
-            console.log('ici redraw display');
+            log.getLogger('libraries').debug('ici redraw display');
             const state = yield* select();
             const context = quickAlgoLibraries.getContext(null, state.environment);
             if (context) {
@@ -368,7 +369,7 @@ export default function(bundle: Bundle) {
                 if (context.redrawDisplay) {
                     // @ts-ignore
                     yield* apply(context, context.redrawDisplay);
-                    console.log('redraw display done it');
+                    log.getLogger('libraries').debug('redraw display done it');
                 } else {
                     yield* call(quickAlgoLibraryRedrawDisplaySaga, app);
                 }

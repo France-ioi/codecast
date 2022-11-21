@@ -38,7 +38,6 @@ export function ControlsAndErrors() {
     let error = null;
     let errorClosable = true;
     if (hasError) {
-        console.log({stepperError})
         if ('task-tests-submission-results-overview' === stepperError.type) {
             error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
         } else if ('compilation' === stepperError.type) {

@@ -241,14 +241,12 @@ export function link(rootBuilder, globalScope: App): Linker {
 
     function finalize(...args) {
         /* Call the deferred callbacks. */
-        console.log({actionMap})
         rootBundle._runDefers(...args);
     }
 
 
     function start(...args) {
         const rootSaga = rootBundle._saga();
-        console.log('run saga middleware', rootSaga);
 
         return sagaMiddleware.run(rootSaga, args);
     }

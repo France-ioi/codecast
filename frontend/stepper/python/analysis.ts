@@ -1,6 +1,7 @@
 import {VIEW_DIRECTIVE_PREFIX} from "./directives";
 import {AnalysisScope, AnalysisSnapshot, AnalysisStackFrame, AnalysisVariable} from "../analysis/analysis";
 import {DebugProtocol} from "vscode-debugprotocol";
+import log from 'loglevel';
 
 /**
  * Enable debug of skulpt analysis.
@@ -16,9 +17,9 @@ const SKULPT_ANALYSIS_DEBUG = 1;
 export const convertSkulptStateToAnalysisSnapshot = function (suspensions: readonly any[], lastAnalysis: AnalysisSnapshot, newStepNum: number): AnalysisSnapshot {
     // @ts-ignore
     if (SKULPT_ANALYSIS_DEBUG === 2) {
-        console.log('[¥¥¥¥¥¥¥] Building analysis');
-        console.log(suspensions);
-        console.log(lastAnalysis);
+        log.getLogger('python_runner').debug('[¥¥¥¥¥¥¥] Building analysis');
+        log.getLogger('python_runner').debug(suspensions);
+        log.getLogger('python_runner').debug(lastAnalysis);
     }
 
     let stackFrames: AnalysisStackFrame[] = [];
@@ -54,7 +55,7 @@ export const convertSkulptStateToAnalysisSnapshot = function (suspensions: reado
                 args: suspension._argnames,
             };
 
-            console.log('suspension loaded', suspension.$loaded_references);
+            log.getLogger('python_runner').debug('suspension loaded', suspension.$loaded_references);
 
             const scope = analyseSkulptScope(suspension);
             stackFrame.scopes.push(scope);
@@ -72,8 +73,8 @@ export const convertSkulptStateToAnalysisSnapshot = function (suspensions: reado
     };
 
     if (SKULPT_ANALYSIS_DEBUG > 0) {
-        console.log('[¥¥¥¥¥¥¥] End of building analysis');
-        console.log(analysis);
+        log.getLogger('python_runner').debug('[¥¥¥¥¥¥¥] End of building analysis');
+        log.getLogger('python_runner').debug(analysis);
     }
 
     return Object.freeze(analysis);
@@ -97,8 +98,8 @@ const isProgramSuspension = function(suspension): boolean {
 export const analyseSkulptScope = function(suspension: any): AnalysisScope {
     // @ts-ignore
     if (SKULPT_ANALYSIS_DEBUG === 2) {
-        console.log('////// Analyse scope...');
-        console.log(suspension);
+        log.getLogger('python_runner').debug('////// Analyse scope...');
+        log.getLogger('python_runner').debug(suspension);
     }
 
     let variables: (string | DebugProtocol.Variable)[] = [];
@@ -145,8 +146,8 @@ export const analyseSkulptScope = function(suspension: any): AnalysisScope {
 
     // @ts-ignore
     if (SKULPT_ANALYSIS_DEBUG === 2) {
-        console.log('////// End of analyse scope...');
-        console.log(analysis);
+        log.getLogger('python_runner').debug('////// End of analyse scope...');
+        log.getLogger('python_runner').debug(analysis);
     }
 
     return analysis;
@@ -254,7 +255,7 @@ export const getSkulptSuspensionsCopy = function(suspensions) {
 let variableReferenceCount = 1;
 
 export const convertSkulptValueToDAPVariable = (name: string, value: any, visited: {[uuid: string]: boolean}, loadReference: string, loadedReferences): AnalysisVariable => {
-    // console.log('convert value', name, value, visited, loadedReferences);
+    // log.getLogger('python_runner').debug('convert value', name, value, visited, loadedReferences);
     let variableData = {
         name,
         type: value.constructor.prototype.tp$name,
@@ -262,7 +263,7 @@ export const convertSkulptValueToDAPVariable = (name: string, value: any, visite
     };
 
     if (value._uuid && value._uuid in visited) {
-        console.log('already visited', visited, value._uuid);
+        log.getLogger('python_runner').debug('already visited', visited, value._uuid);
         return {
             ...variableData,
             value: null,

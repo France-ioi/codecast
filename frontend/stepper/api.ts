@@ -132,7 +132,7 @@ export default function(bundle: Bundle) {
     function* buildState(state: AppStoreReplay, environment: string): Generator<any, StepperState> {
         const {platform} = state.options;
 
-        console.log('do build state', state, environment);
+        log.getLogger('stepper').debug('do build state', state, environment);
 
         /*
          * Call all the init callbacks. Pass the global state so the player can
@@ -195,9 +195,9 @@ export default function(bundle: Bundle) {
             if (name === 'interact') {
                 lastResult = await stepperContext.interactAfter(value[1] || {});
             } else if (name === 'promise') {
-                console.log('await promise');
+                log.getLogger('stepper').debug('await promise');
                 lastResult = await value[1];
-                console.log('promise result', lastResult);
+                log.getLogger('stepper').debug('promise result', lastResult);
             } else if (name === 'builtin') {
                 const builtin = value[1];
                 if (!builtinHandlers.has(builtin)) {
@@ -285,20 +285,20 @@ async function executeSingleStep(stepperContext: StepperContext) {
         throw new StepperError('stuck', 'execution cannot proceed');
     }
 
-    console.log('execute single step, no interactive = ', stepperContext.noInteractive);
+    log.getLogger('stepper').debug('execute single step, no interactive = ', stepperContext.noInteractive);
     if (!stepperContext.noInteractive || stepperContext.noInteractiveSteps % stepperMaxStepsBetweenInteractBefore === 0) {
         await stepperContext.interactBefore();
 
         if (stepperContext.waitForProgress) {
             if (!stepperContext.waitForProgressOnlyAfterIterationsCount || stepperContext.lineCounter >= stepperContext.waitForProgressOnlyAfterIterationsCount) {
-                console.log('wait for progress', stepperContext.lineCounter);
+                log.getLogger('stepper').debug('wait for progress', stepperContext.lineCounter);
                 if (stepperContext.waitForProgressOnlyAfterIterationsCount) {
                     // For BC, after the first round of 10.000 actions, we leave at most 20 actions for the next rounds between each stepper.progress event
                     // This is to improve performance, for recordings with an infinite loop program
                     stepperContext.lineCounter = Math.max(0, stepperContext.waitForProgressOnlyAfterIterationsCount - 20);
                 }
                 await stepperContext.waitForProgress(stepperContext);
-                console.log('end wait for progress, continuing');
+                log.getLogger('stepper').debug('end wait for progress, continuing');
             } else {
                 stepperContext.lineCounter += 1;
             }
@@ -383,7 +383,7 @@ async function stepOut(stepperContext: StepperContext) {
             // The number of suspensions represents the number of layers of functions called.
             // We want it to be less, which means be got out of at least one level of function.
             await stepUntil(stepperContext, curState => {
-                console.log(curState.suspensions.length, nbSuspensions);
+                log.getLogger('stepper').debug(curState.suspensions.length, nbSuspensions);
                 return (curState.suspensions.length < nbSuspensions);
             });
         } else {

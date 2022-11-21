@@ -6,6 +6,7 @@ import merge from 'lodash.merge';
 import {getCurrentImmerState} from "../utils";
 import {mainQuickAlgoLogger} from "./quickalgo_libraries";
 import {stepperMaxSpeed} from "../../stepper";
+import log from 'loglevel';
 
 export class QuickAlgoLibrary {
     display: boolean;
@@ -66,7 +67,7 @@ export class QuickAlgoLibrary {
 
     // Set the localLanguageStrings for this context
     setLocalLanguageStrings(localLanguageStrings) {
-        console.log('set local language strings', localLanguageStrings);
+        log.getLogger('libraries').debug('set local language strings', localLanguageStrings);
         window.stringsLanguage = window.stringsLanguage && window.stringsLanguage in localLanguageStrings ? window.stringsLanguage : "fr";
         window.languageStrings = window.languageStrings || {};
 
@@ -121,7 +122,7 @@ export class QuickAlgoLibrary {
         // This function is used only to call the callback to move to next step,
         // but we handle the speed delay in an upper level
         let computedDelay = null !== delay ? delay : (this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : stepperMaxSpeed);
-        console.log('Quickalgo wait delay', callback, this.runner, computedDelay);
+        log.getLogger('libraries').debug('Quickalgo wait delay', callback, this.runner, computedDelay);
         if (this.runner) {
             this.runner.noDelay(callback, value);
             if (computedDelay > 0) {
@@ -167,7 +168,7 @@ export class QuickAlgoLibrary {
     };
 
     resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null, innerState: any = null) {
-        console.log('reset and reload state', taskInfos, innerState);
+        log.getLogger('libraries').debug('reset and reload state', taskInfos, innerState);
         this.reset(taskInfos, appState);
         // We do a second call because some libraries like barcode only reset their internal state when taskInfos is empty...
         this.reset();
@@ -178,7 +179,7 @@ export class QuickAlgoLibrary {
         } else {
             if (newInnerState.calls) {
                 // in fact maybe not necessary since redrawDisplay is the method that should update the display
-                console.log('TODO replay calls', newInnerState.calls);
+                log.getLogger('libraries').debug('TODO replay calls', newInnerState.calls);
                 mainQuickAlgoLogger.setQuickAlgoLibraryCalls(newInnerState.calls);
             }
         }
@@ -249,7 +250,7 @@ export class QuickAlgoLibrary {
 
     delayOver() {
         this.delaysEndedCount++;
-        console.log('delay over', this.delaysStartedCount, this.delaysEndedCount, this.callbacksOnReady);
+        log.getLogger('libraries').debug('delay over', this.delaysStartedCount, this.delaysEndedCount, this.callbacksOnReady);
         if (this.delaysEndedCount === this.delaysStartedCount) {
             if (this.callbacksOnReady.length) {
                 for (let callback of this.callbacksOnReady) {
@@ -261,12 +262,12 @@ export class QuickAlgoLibrary {
 
     // Execute this function when all animation delays are over
     executeWhenReady(callback: Function) {
-        console.log('execute on ready', this.delaysStartedCount, this.delaysEndedCount, performance.now());
+        log.getLogger('libraries').debug('execute on ready', this.delaysStartedCount, this.delaysEndedCount, performance.now());
         if (this.delaysEndedCount === this.delaysStartedCount) {
-            console.log('already ready');
+            log.getLogger('libraries').debug('already ready');
             callback();
         } else {
-            console.log('not ready yet');
+            log.getLogger('libraries').debug('not ready yet');
             this.callbacksOnReady.push(callback);
         }
     }

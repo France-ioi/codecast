@@ -18,7 +18,6 @@ export interface NumericKeypadProps {
 }
 
 export function NumericKeypad(props: NumericKeypadProps) {
-    console.log('keypad options', props.options);
     const [keypadValue, setKeypadValue] = useState('0');
     const keypadInputRef = useRef<HTMLInputElement>();
 

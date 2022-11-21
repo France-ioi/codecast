@@ -8,6 +8,7 @@ import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/b
 import {useAppSelector} from "../hooks";
 import {useDrop} from "react-dnd";
 import {DocumentModel} from "./index";
+import log from 'loglevel';
 
 const Range = window.ace.acequire('ace/range').Range;
 
@@ -91,7 +92,7 @@ export function Editor(props: EditorProps) {
             const selection_ = editor.current.selection.getRange();
             if (sameSelection(selection.current, selection_))
                 return;
-            console.log('new selection', selection.current, selection_);
+            log.getLogger('editor').debug('new selection', selection.current, selection_);
             selection.current = selection_;
             props.onSelect(selection_);
             // Try to scroll if needed
@@ -236,7 +237,7 @@ export function Editor(props: EditorProps) {
     };
 
     const highlight = (range) => {
-        console.log('make highlight');
+        log.getLogger('editor').debug('make highlight');
         wrapModelToEditor(() => {
             const session = editor.current.session;
             if (marker.current) {
@@ -354,7 +355,7 @@ export function Editor(props: EditorProps) {
 
     useEffect(() => {
         const editorObject = window.ace.edit(refEditor.current);
-        console.log('create editor', editorObject);
+        log.getLogger('editor').debug('create editor', editorObject);
         editor.current = editorObject;
         initEditor();
 

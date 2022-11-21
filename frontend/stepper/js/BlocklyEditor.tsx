@@ -3,6 +3,7 @@ import {useAppSelector} from "../../hooks";
 import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {ObjectDocument} from "../../buffers/document";
 import {BlockDocumentModel} from "../../buffers";
+import log from 'loglevel';
 
 export interface BlocklyEditorProps {
     onInit: Function,
@@ -22,11 +23,11 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const resetDisplayTimeout = useRef(null);
 
     const reset = (value, selection, firstVisibleRow) => {
-        console.log('[blockly.editor] reset', value);
+        log.getLogger('editor').debug('[blockly.editor] reset', value);
 
         if (null === value || null === value.getContent()) {
             let defaultBlockly = context.blocklyHelper.getDefaultContent();
-            console.log('get default', defaultBlockly);
+            log.getLogger('editor').debug('get default', defaultBlockly);
             context.blocklyHelper.programs = [{javascript:"", blockly: defaultBlockly, blocklyJS: ""}];
             context.blocklyHelper.languages[0] = "blockly";
         } else {
@@ -34,13 +35,13 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             context.blocklyHelper.languages[0] = "blockly";
         }
 
-        console.log('imported content', context.blocklyHelper.programs[0].blockly);
+        log.getLogger('editor').debug('imported content', context.blocklyHelper.programs[0].blockly);
         context.blocklyHelper.reloading = true;
         context.blocklyHelper.loadPrograms();
     };
 
     const highlight = (range) => {
-        console.log('[blockly.editor] highlight', range);
+        log.getLogger('editor').debug('[blockly.editor] highlight', range);
         if (!context.blocklyHelper.workspace) {
             return;
         }
@@ -57,11 +58,11 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     };
 
     const resize = () => {
-        console.log('[blockly.editor] resize');
+        log.getLogger('editor').debug('[blockly.editor] resize');
     };
 
     const onBlocklyEvent = (event) => {
-        console.log('blockly event', event);
+        log.getLogger('editor').debug('blockly event', event);
         const eventType = event ? event.constructor : null;
 
         let isBlockEvent = event ? (
@@ -71,22 +72,22 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             eventType === window.Blockly.Events.Change) : true;
 
         if ('selected' === event.element) {
-            console.log('is selected');
+            log.getLogger('editor').debug('is selected');
             props.onSelect(event.newValue);
         }
 
         if (isBlockEvent) {
             const blocklyHelper = context.blocklyHelper;
-            console.log('on editor change');
+            log.getLogger('editor').debug('on editor change');
             if (blocklyHelper.languages && blocklyHelper.languages.length && loaded.current && !blocklyHelper.reloading) {
                 blocklyHelper.savePrograms();
                 const answer = {...blocklyHelper.programs[0]};
                 if (answer.blockly !== previousValue.current) {
                     const document = new ObjectDocument(answer);
                     previousValue.current = answer.blockly;
-                    console.log('new value', answer);
+                    log.getLogger('editor').debug('new value', answer);
                     props.onEditPlain(document);
-                    console.log('timeout before removing highlight');
+                    log.getLogger('editor').debug('timeout before removing highlight');
                     if (resetDisplayTimeout.current) {
                         clearTimeout(resetDisplayTimeout.current);
                         resetDisplayTimeout.current = null;
@@ -101,11 +102,11 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
 
     const onLoad = () => {
         if (!currentTask || !context || !context.blocklyHelper) {
-            console.log('[blockly.editor] load no data');
+            log.getLogger('editor').debug('[blockly.editor] load no data');
             return;
         }
 
-        console.log('[blockly.editor] load with data', context.infos.includeBlocks);
+        log.getLogger('editor').debug('[blockly.editor] load with data', context.infos.includeBlocks);
         const blocklyHelper = context.blocklyHelper;
 
         const blocklyOptions = {
@@ -138,7 +139,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
             blocklyOptions.scrollbars = context.infos.scrollbars;
         }
 
-        console.log('[blockly.editor] load blockly editor', blocklyHelper, blocklyHelper.load);
+        log.getLogger('editor').debug('[blockly.editor] load blockly editor', blocklyHelper, blocklyHelper.load);
         blocklyHelper.load(language, true, 1, blocklyOptions);
 
         blocklyHelper.workspace.addChangeListener(onBlocklyEvent);
@@ -178,7 +179,7 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         onLoad();
 
         return () => {
-            console.log('[blockly.editor] unload');
+            log.getLogger('editor').debug('[blockly.editor] unload');
 
             if (context && context.blocklyHelper) {
                 context.blocklyHelper.unloadLevel();

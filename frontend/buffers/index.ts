@@ -58,6 +58,7 @@ import {Bundle} from "../linker";
 import {App} from "../index";
 import {updateSourceHighlightSaga} from "../stepper";
 import {BlockType} from "../task/blocks/blocks";
+import log from 'loglevel';
 
 const AceThemes = [
     'github',
@@ -307,7 +308,7 @@ function resetEditor(editor, model?: BufferContentModel, goToEnd?: boolean) {
         }
 
     } catch (error) {
-        console.log('failed to update editor view with model', error);
+        log.getLogger('editor').debug('failed to update editor view with model', error);
     }
 }
 
@@ -363,14 +364,14 @@ function addRecordHooks({recordApi}: App) {
 }
 
 function addReplayHooks({replayApi}: App) {
-    console.log('ADD REPLAY HOOKS');
+    log.getLogger('editor').debug('Add replay hooks for editor');
     replayApi.on('start', function* (replayContext: ReplayContext, event) {
         const {buffers} = event[2];
         for (let bufferName of Object.keys(buffers)) {
             const content = buffers[bufferName].document;
             const document = uncompressIntoDocument(content);
             const model = modelFromDocument(document);
-            console.log('gotten document', document);
+            log.getLogger('editor').debug('Gotten document', document);
             yield* put({type: ActionTypes.BufferReset, buffer: bufferName, model});
         }
 
@@ -435,7 +436,7 @@ function addReplayHooks({replayApi}: App) {
     });
     replayApi.onReset(function* ({state}: PlayerInstant, quick) {
         /* Reset all buffers. */
-        console.log('BUFFER RESET', state);
+        log.getLogger('editor').debug('Editor Buffer Reset', state);
         for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer].model;
 

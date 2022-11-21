@@ -9,6 +9,7 @@ import {LayoutElementMetadata} from "./layout";
 import {useAppSelector} from "../../hooks";
 import {useDispatch} from "react-redux";
 import {CodecastAnalysisSnapshot} from "../../stepper/analysis/analysis";
+import log from 'loglevel';
 
 interface LayoutDirectiveProps {
     directive: any,
@@ -48,7 +49,7 @@ export function LayoutDirective(props: LayoutDirectiveProps) {
         functionCallStack = functionCallStackMap[key];
     }
 
-    console.log('layout directive context', context);
+    log.getLogger('layout').debug('layout directive context', context);
 
     return (
         <DirectivePanel

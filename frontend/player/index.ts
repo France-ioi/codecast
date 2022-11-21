@@ -6,6 +6,7 @@ import {AppAction, AppStore, AppStoreReplay} from "../store";
 import {Bundle} from "../linker";
 import {CodecastRecord} from "../recorder/save_screen";
 import {QuickalgoLibraryCall} from "../stepper/api";
+import log from 'loglevel';
 
 export interface PlayerResetPayload {
     sliceName: string,
@@ -125,7 +126,7 @@ export default function(bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.PlayerResetFull);
     bundle.addReducer(ActionTypes.PlayerResetFull, (state: AppStore, {payload: {newState}}) => {
-        console.log('DO FULL RESET WITH', newState);
+        log.getLogger('player').debug('DO FULL RESET WITH', newState);
         return newState;
     });
 };
