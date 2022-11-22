@@ -333,7 +333,7 @@ export async function importPlatformModules(platform, modulesPath) {
 
 export function loadFonts(theme: string) {
     if (window.FontsLoader) {
-        const fontsToLoad = ['inconsolata'];
+        const fontsToLoad = ['inconsolata', 'blueprint-16'];
         if ('coursera' === theme) {
             fontsToLoad.push('source-sans-pro');
         } else {
