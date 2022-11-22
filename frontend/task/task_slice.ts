@@ -124,12 +124,15 @@ export const taskSlice = createSlice({
             } else {
                 state.currentTask = availableTasks.robot;
             }
+            state.previousTestId = null;
         },
         currentTaskChange(state, action: PayloadAction<any>) {
             state.currentTask = action.payload;
+            state.previousTestId = null;
         },
         taskCurrentLevelChange(state, action: PayloadAction<{level: TaskLevelName, record?: boolean}>) {
             state.currentLevel = action.payload.level;
+            state.previousTestId = null;
         },
         recordingEnabledChange(state, action: PayloadAction<boolean>) {
             state.recordingEnabled = action.payload;
@@ -150,6 +153,7 @@ export const taskSlice = createSlice({
                 data: testData,
                 contextState: null,
             } as TaskTest));
+            state.previousTestId = null;
         },
         updateCurrentTestId(state: TaskState, action: PayloadAction<{testId: number, record?: boolean, recreateContext?: boolean}>) {
             state.previousTestId = state.currentTestId;
