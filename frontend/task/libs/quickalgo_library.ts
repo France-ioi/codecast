@@ -35,6 +35,7 @@ export class QuickAlgoLibrary {
     delaysEndedCount: number = 0;
     callbacksOnReady: Function[] = [];
     needsRedrawDisplay: boolean = false;
+    environment: string;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -125,7 +126,7 @@ export class QuickAlgoLibrary {
         log.getLogger('libraries').debug('Quickalgo wait delay', callback, this.runner, computedDelay);
         if (this.runner) {
             this.runner.noDelay(callback, value);
-            if (computedDelay > 0) {
+            if (computedDelay > 0 && 'main' === this.environment) {
                 this.delaysStartedCount++;
                 setTimeout(() => {
                     this.delayOver();

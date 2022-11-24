@@ -24,6 +24,8 @@ import {ActionTypes as CompileActionTypes} from "./actionTypes";
 import {Codecast} from "../index";
 import log from "loglevel";
 import {TaskSubmissionResult, TaskSubmissionResultPayload} from "../task/task_slice";
+import {QueryCacheKey} from '@reduxjs/toolkit/dist/query/core/apiState';
+import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
 
 export interface QuickalgoLibraryCall {
     module: string,
@@ -56,6 +58,7 @@ export interface StepperContext {
     delayToWait?: number,
     noInteractiveSteps?: number,
     backgroundRunData?: TaskSubmissionResultPayload,
+    waitPreviousAnimations?: boolean,
 }
 
 export interface StepperContextParameters {
@@ -65,10 +68,12 @@ export interface StepperContextParameters {
     waitForProgressOnlyAfterIterationsCount?: number, // For backward compatbility with previous recordings
     onStepperDone?: Function,
     dispatch?: Function,
+    quickAlgoContext?: QuickAlgoLibrary,
     quickAlgoCallsLogger?: Function,
     environment?: string,
     speed?: number,
     executeEffects?: Function,
+    waitPreviousAnimations?: boolean,
 }
 
 export const delay = delay => new Promise((resolve) => setTimeout(resolve, delay));
@@ -234,7 +239,7 @@ export function getNodeStartRow(stepperState: StepperState) {
     return range && range.start.row;
 }
 
-export function makeContext(stepper: Stepper, stepperContextParameters: StepperContextParameters): StepperContext {
+export function makeContext(stepper: Stepper|null, stepperContextParameters: StepperContextParameters): StepperContext {
     /**
      * We create a new state object here instead of mutating the state. This is intended.
      */
@@ -251,6 +256,7 @@ export function makeContext(stepper: Stepper, stepperContextParameters: StepperC
         interactAfter: () => {
             return Promise.resolve(true);
         },
+        waitPreviousAnimations: true,
         ...stepperContextParameters,
         dispatch,
         resume: null,
@@ -471,10 +477,12 @@ export function createQuickAlgoLibraryExecutor(stepperContext: StepperContext) {
         const context = stepperContext.quickAlgoContext;
 
         // Wait that the context has finished all previous animations
-        log.getLogger('quickalgo_executor').debug('[quickalgo_executor] before ready check');
-        await new Promise((resolve) => {
-            context.executeWhenReady(resolve);
-        });
+        if (stepperContext.waitPreviousAnimations) {
+            log.getLogger('quickalgo_executor').debug('[quickalgo_executor] before ready check');
+            await new Promise((resolve) => {
+                context.executeWhenReady(resolve);
+            });
+        }
 
         log.getLogger('quickalgo_executor').debug('[quickalgo_executor] ready for call');
 

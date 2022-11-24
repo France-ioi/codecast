@@ -599,9 +599,12 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                     },
                     dispatch: app.dispatch,
                     environment: app.environment,
+                    // waitPreviousAnimations: false,
                 });
 
+                // Context.changeDelay is done in a replay saga in stepper/replay.ts
                 const executor = stepperContext.quickAlgoCallsExecutor;
+                log.getLogger('player').debug('Replay call with speed', stepperContext.speed, context.infos.actionDelay);
                 for (let quickalgoCall of instant.quickalgoLibraryCalls) {
                     const {module, action, args} = quickalgoCall;
                     log.getLogger('player').debug('start call execution', quickalgoCall);
