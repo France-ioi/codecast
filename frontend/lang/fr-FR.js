@@ -160,6 +160,7 @@ module.exports = {
     EDITOR_SUBTITLES_REMOVE: 'Supprimer',
     EDITOR_SUBTITLES_SAVE: 'Enregistrer',
     EDITOR_SUBTITLES_REMOVE_CONFIRM: 'Confirmez-vous la suppression des sous-titres {language} ?',
+    EDITOR_RELOAD_IMPOSSIBLE: "La réponse sauvegardée n'a pas pu être rechargée.",
 
     KEYWORD: 'mot-clé',
     CONSTANT: "constante",

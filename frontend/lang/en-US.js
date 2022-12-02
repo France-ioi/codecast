@@ -156,6 +156,7 @@ module.exports = {
     EDITOR_SUBTITLES_REMOVE: 'Remove',
     EDITOR_SUBTITLES_SAVE: 'Save',
     EDITOR_SUBTITLES_REMOVE_CONFIRM: 'Do you confirm the removal of language {language}?',
+    EDITOR_RELOAD_IMPOSSIBLE: "The saved answer couldn't be reloaded.",
 
     USER_SELECT_LOGIN_METHOD: "Select a login option:",
 

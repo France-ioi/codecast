@@ -4,6 +4,9 @@ import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {ObjectDocument} from "../../buffers/document";
 import {BlockDocumentModel} from "../../buffers";
 import log from 'loglevel';
+import {stepperDisplayError} from '../actionTypes';
+import {useDispatch} from 'react-redux';
+import {getMessage} from '../../lang';
 
 export interface BlocklyEditorProps {
     onInit: Function,
@@ -21,8 +24,9 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
     const previousValue = useRef(null);
     const loaded = useRef(false);
     const resetDisplayTimeout = useRef(null);
+    const dispatch = useDispatch();
 
-    const reset = (value, selection, firstVisibleRow) => {
+    const reset = (value, selection, firstVisibleRow, alreadyReset = false) => {
         log.getLogger('editor').debug('[blockly.editor] reset', value);
 
         if (null === value || null === value.getContent()) {
@@ -38,6 +42,17 @@ export const BlocklyEditor = (props: BlocklyEditorProps) => {
         log.getLogger('editor').debug('imported content', context.blocklyHelper.programs[0].blockly);
         context.blocklyHelper.reloading = true;
         context.blocklyHelper.loadPrograms();
+
+        // Check that all blocks exist and program is valid. Otherwide, reload default answer and cancel
+        try {
+            context.blocklyHelper.programs[0].blocklyJS = context.blocklyHelper.getCode("javascript");
+        } catch (e) {
+            console.error(e);
+            if (!alreadyReset) {
+                reset(null, selection, firstVisibleRow, true);
+                dispatch(stepperDisplayError(getMessage('EDITOR_RELOAD_IMPOSSIBLE')));
+            }
+        }
     };
 
     const highlight = (range) => {

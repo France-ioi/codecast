@@ -20,7 +20,7 @@ import {
 import {Bundle} from "../linker";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
 import {getCurrentImmerState} from "../task/utils";
-import {ActionTypes as CompileActionTypes} from "./actionTypes";
+import {ActionTypes, ActionTypes as CompileActionTypes} from "./actionTypes";
 import {Codecast} from "../index";
 import log from "loglevel";
 import {TaskSubmissionResult, TaskSubmissionResultPayload} from "../task/task_slice";
@@ -148,7 +148,17 @@ export default function(bundle: Bundle) {
             platform
         } as StepperState;
         for (let callback of initCallbacks) {
-            yield* call(callback, curStepperState, state, environment);
+            try {
+                yield* call(callback, curStepperState, state, environment);
+            } catch (e) {
+                console.error(e);
+                yield* put({
+                    type: ActionTypes.CompileFailed,
+                    payload: {
+                        error: String(e),
+                    },
+                });
+            }
         }
 
 
