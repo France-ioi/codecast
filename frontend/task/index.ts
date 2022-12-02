@@ -196,12 +196,15 @@ function* taskLoadSaga(app: App, action) {
         const taskLevels = yield* select((state: AppStore) => state.platform.levels);
         if (0 === Object.keys(taskLevels).length) {
             const levels = {};
-            for (let level of Object.keys(currentTask.data)) {
+            for (let [index, level] of Object.keys(currentTask.data).entries()) {
                 if (state.options.level && state.options.level !== level) {
                     continue;
                 }
 
                 levels[level] = getDefaultTaskLevel(level as TaskLevelName);
+                if (currentTask.gridInfos && currentTask.gridInfos.unlockedLevels && index >= currentTask.gridInfos.unlockedLevels) {
+                    levels[level].locked = true;
+                }
             }
 
             yield* put(platformSetTaskLevels(levels));

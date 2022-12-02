@@ -180,6 +180,8 @@ module.exports = {
     TASK_LEVEL_SUCCESS_NEXT_BUTTON: "Go to next version",
     TASK_LEVEL_SUCCESS_NEXT_LABEL: "We suggest you try the version {version}.",
     TASK_LEVEL_SUCCESS_FINISHED: "You have fully resolved this question.",
+    TASK_LEVEL_LOCKED_TITLE: "Version locked",
+    TASK_LEVEL_LOCKED_MESSAGE: "This version is currently locked, and the previous version must be resolved before being able to display this version.",
     TASK_BLOCKS_TITLE: "Available blocks",
     TASK_BLOCKS_SUBTITLE: "Click to insert",
     TASK_BLOCKS_LIMIT_EXPANDED: '{current}/{limit} remaining block|{current}/{limit} remaining blocks',

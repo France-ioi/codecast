@@ -185,6 +185,8 @@ module.exports = {
     TASK_LEVEL_SUCCESS_NEXT_LABEL_FAMILIAR: "Nous te proposons d'essayer la version {version}.",
     TASK_LEVEL_SUCCESS_FINISHED: "Vous avez entièrement résolu cette question.",
     TASK_LEVEL_SUCCESS_FINISHED_FAMILIAR: "Tu as entièrement résolu cette question.",
+    TASK_LEVEL_LOCKED_TITLE: "Version verrouillée",
+    TASK_LEVEL_LOCKED_MESSAGE: "Cette version est verrouillée, et la précédente doit être résolue avant de pouvoir afficher cette version.",
     TASK_BLOCKS_TITLE: "Blocs disponibles",
     TASK_BLOCKS_SUBTITLE: "Cliquez pour insérer",
     TASK_BLOCKS_LIMIT_EXPANDED: '{current}/{limit} bloc restant|{current}/{limit} blocs restants',

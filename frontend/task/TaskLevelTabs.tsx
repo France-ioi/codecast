@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import {useAppSelector} from "../hooks";
 import {useDispatch} from "react-redux";
 import {Stars} from "./Stars";
@@ -8,15 +8,27 @@ import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {taskChangeLevel} from "./index";
 import {TaskLevelName} from "./platform/platform_slice";
+import {Dialog} from '@blueprintjs/core';
 
 export function TaskLevelTabs() {
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const levels = useAppSelector(state => state.platform.levels);
+    const [lockedDialogOpen, setLockedDialogOpen] = useState(false);
+
+    const bypassLock = window.location.protocol === 'file:' || -1 !== ['localhost', '127.0.0.1', '0.0.0.0', 'lvh.me'].indexOf(window.location.hostname);
 
     const dispatch = useDispatch();
 
     const changeVersion = (level: TaskLevelName) => {
-        dispatch(taskChangeLevel(level));
+        if (levels[level].locked && !bypassLock) {
+            setLockedDialogOpen(true);
+        } else {
+            dispatch(taskChangeLevel(level));
+        }
+    };
+
+    const closeLockedDialog = () => {
+        setLockedDialogOpen(false);
     };
 
     return (
@@ -39,7 +51,11 @@ export function TaskLevelTabs() {
                         onClick={() => changeVersion(levelData.level)}
                     >
                         <span>{getMessage('TASK_LEVEL')}</span>
-                        <Stars starsCount={levelScoringData[levelData.level].stars} rating={levelData.score}/>
+                        <Stars
+                            starsCount={levelScoringData[levelData.level].stars}
+                            rating={levelData.score}
+                            disabled={levelData.locked}
+                        />
                     </a>
                     {index < Object.values(levels).length - 1 && <a
                         className="next-link"
@@ -49,6 +65,18 @@ export function TaskLevelTabs() {
                     </a>}
                 </div>
             )}
+
+            <Dialog
+                isOpen={lockedDialogOpen}
+                canOutsideClickClose={true}
+                canEscapeKeyClose={true}
+                onClose={closeLockedDialog}
+                title={getMessage('TASK_LEVEL_LOCKED_TITLE')}
+            >
+                <div className='bp3-dialog-body'>
+                    <p>{getMessage('TASK_LEVEL_LOCKED_MESSAGE')}</p>
+                </div>
+            </Dialog>
         </nav>
     );
 }
