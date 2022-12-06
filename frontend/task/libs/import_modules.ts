@@ -314,7 +314,7 @@ let jsLibLoaded = null;
 
 export async function importPlatformModules(platform, modulesPath) {
     if (!hasBlockPlatform(platform)) {
-        await importModules(['fonts-loader-1.0', 'quickAlgo_utils'], modulesPath);
+        await importModules(['fonts-loader-1.0', 'quickAlgo_utils', 'quickAlgo_i18n'], modulesPath);
         return;
     }
 
@@ -324,8 +324,8 @@ export async function importPlatformModules(platform, modulesPath) {
     jsLibLoaded = platform;
 
     const modulesToImport = {
-        blockly: ['fonts-loader-1.0', 'acorn', 'acorn-walk', 'interpreter', 'blockly', 'blockly_blocks', 'blockly_javascript', 'blockly_python', 'blockly_fioi', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
-        scratch: ['fonts-loader-1.0', 'acorn', 'acorn-walk', 'interpreter', 'scratch', 'scratch_blocks_common', 'scratch_blocks',  'blockly_javascript', 'blockly_python', 'blockly_fioi', 'scratch_fixes', 'scratch_procedures', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
+        blockly: ['fonts-loader-1.0', 'acorn', 'acorn-walk', 'interpreter', 'blockly', 'blockly_blocks', 'blockly_javascript', 'blockly_python', 'blockly_fioi', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface', 'quickAlgo_i18n'],
+        scratch: ['fonts-loader-1.0', 'acorn', 'acorn-walk', 'interpreter', 'scratch', 'scratch_blocks_common', 'scratch_blocks',  'blockly_javascript', 'blockly_python', 'blockly_fioi', 'scratch_fixes', 'scratch_procedures', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface', 'quickAlgo_i18n'],
     }
 
     await importModules(modulesToImport[platform], modulesPath);

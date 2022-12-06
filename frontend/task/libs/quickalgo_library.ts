@@ -1,7 +1,6 @@
 import {App} from "../../index";
 import {AppStoreReplay} from "../../store";
 import {createDraft} from "immer";
-import quickalgoI18n from "../../lang/quickalgoI18n";
 import merge from 'lodash.merge';
 import {getCurrentImmerState} from "../utils";
 import {mainQuickAlgoLogger} from "./quickalgo_libraries";
@@ -58,7 +57,7 @@ export class QuickAlgoLibrary {
         this.delayFactory = new window.DelayFactory();
         this.raphaelFactory = new window.RaphaelFactory();
 
-        this.setLocalLanguageStrings(quickalgoI18n);
+        this.setLocalLanguageStrings(window.quickAlgoLanguageStrings);
 
         // this.blocklyHelper = {
         //     updateSize: function () {
