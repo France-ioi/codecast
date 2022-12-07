@@ -7,20 +7,25 @@ import {useAppSelector} from "../../hooks";
 import {toHtml} from "../../utils/sanitize";
 import {hintUnlocked} from "./hints_slice";
 import {getMessage} from '../../lang';
+import {formatTaskInstructions} from '../utils';
 
 export function TaskHints() {
-    const dispatch = useDispatch();
-
     const availableHints = useAppSelector(state => state.hints.availableHints);
     const unlockedHintIds = useAppSelector(state => state.hints.unlockedHintIds);
+    const taskLevel = useAppSelector(state => state.task.currentLevel);
+    const platform = useAppSelector(state => state.options.platform);
 
     const carouselElements = unlockedHintIds.map(unlockedHintId => {
+        const instructionsJQuery = formatTaskInstructions(availableHints[unlockedHintId].content, platform, taskLevel);
+
         return (
-            <div key={unlockedHintId} className="hint-carousel-item" dangerouslySetInnerHTML={toHtml(availableHints[unlockedHintId].content)}></div>
+            <div key={unlockedHintId} className="hint-carousel-item" dangerouslySetInnerHTML={toHtml(instructionsJQuery.html())}></div>
         )
     });
 
     const nextAvailableHint = [...availableHints.keys()].find(key => -1 === unlockedHintIds.indexOf(key));
+
+    const dispatch = useDispatch();
 
     const unlockNextHint = () => {
         dispatch(hintUnlocked(nextAvailableHint));
