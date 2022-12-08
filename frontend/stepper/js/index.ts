@@ -229,12 +229,21 @@ export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary
     log.getLogger('blockly_runner').debug('blocks usage', answer);
 
     const blocks = getBlocksFromXml(answer.blockly);
+    let blocksUsed = 0;
+    for (let i = 0; i < blocks.length; i++) {
+        blocksUsed++;
+        let block = blocks[i];
+        if (context.blocklyHelper && context.blocklyHelper.blockCounts && typeof context.blocklyHelper.blockCounts[block.type] != 'undefined') {
+            blocksUsed += context.blocklyHelper.blockCounts[block.type] - 1;
+        }
+    }
+
     const limitations = (context.infos.limitedUses ? blocklyFindLimited(blocks, context.infos.limitedUses, context) : []) as {type: string, name: string, current: number, limit: number}[];
 
     log.getLogger('blockly_runner').debug('limitations', limitations);
 
     return {
-        blocksCurrent: blocks.length - 1,
+        blocksCurrent: blocksUsed - 1,
         limitations,
     };
 };
