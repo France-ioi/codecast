@@ -59,6 +59,11 @@ import {App} from "../index";
 import {updateSourceHighlightSaga} from "../stepper";
 import {BlockType} from "../task/blocks/blocks";
 import log from 'loglevel';
+import {selectAnswer} from '../task/selectors';
+import {stepperDisplayError} from '../stepper/actionTypes';
+import {getMessage} from '../lang';
+import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
+import {hasBlockPlatform} from '../stepper/js';
 
 const AceThemes = [
     'github',
@@ -294,6 +299,84 @@ function* buffersSaga() {
             editor.resize();
         }
     });
+    yield* takeEvery(ActionTypes.BufferDownload, function* () {
+        const state: AppStore = yield* select();
+        const platform = state.options.platform;
+        const sourceModel = getBufferModel(state, 'source');
+        const answer = sourceModel.document ? compressDocument(sourceModel.document) : null;
+
+        const data = new Blob([answer], {type: 'text/plain'});
+        const textFile = window.URL.createObjectURL(data);
+
+        const anchor = document.createElement('a');
+        anchor.href = textFile
+        anchor.target = '_blank';
+        anchor.download = `program_${platform}.txt`;
+        anchor.click();
+    });
+
+    yield* takeEvery(ActionTypes.BufferReload, function* () {
+        const state: AppStore = yield* select();
+
+        try {
+            const fileContent = yield* call(pickFileAndGetContent);
+            const document = uncompressIntoDocument(fileContent);
+
+            if (document instanceof ObjectDocument && !hasBlockPlatform(state.options.platform)) {
+                throw new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE'));
+            } else if (document instanceof Document && hasBlockPlatform(state.options.platform)) {
+                throw new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE'));
+            }
+
+            yield* put(platformAnswerLoaded(document.getContent()));
+            yield* put(platformTaskRefresh());
+        } catch (e: any) {
+            if (e && e.message) {
+                yield* put(stepperDisplayError(e.message));
+            }
+        }
+    });
+}
+
+function pickFileAndGetContent() {
+    return new Promise((resolve, reject) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        let fileSelected = false;
+
+        input.onchange = e => {
+            const files = (e.target as HTMLInputElement).files;
+            if (!files.length) {
+                reject();
+            }
+            fileSelected = true;
+
+            const file = files[0];
+            const textType = /text.*/;
+            if (!file.type.match(textType)) {
+                reject(new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE')));
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.readAsText(files[0],'UTF-8');
+
+            reader.onload = readerEvent => {
+                const content = readerEvent.target.result;
+                resolve(content);
+            }
+        }
+
+        document.body.onfocus = () => {
+            document.body.onfocus = null;
+            if (!fileSelected) {
+                reject();
+            }
+        };
+
+        input.click();
+    })
+
 }
 
 function resetEditor(editor, model?: BufferContentModel, goToEnd?: boolean) {

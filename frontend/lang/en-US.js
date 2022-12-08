@@ -89,6 +89,8 @@ module.exports = {
     MENU_EDIT_RECORDING: "Recording",
     MENU_EDIT_RECORDING_TITLE: "Recording",
     MENU_ABOUT: "About",
+    MENU_DOWNLOAD: "Save",
+    MENU_RELOAD: "Reload",
     EXAMPLES_LABEL: "Examples: ",
     EXAMPLES_BUTTON_TITLE: "View list",
     EXAMPLES_MESSAGE: "Loading an example interrupts any pending action",

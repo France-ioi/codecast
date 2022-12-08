@@ -90,6 +90,8 @@ module.exports = {
     MENU_EDIT_RECORDING: "Enregistrement",
     MENU_EDIT_RECORDING_TITLE: "Enregistrement",
     MENU_ABOUT: "À propos",
+    MENU_DOWNLOAD: "Enregistrer",
+    MENU_RELOAD: "Recharger",
     EXAMPLES_LABEL: "Exemples: ",
     EXAMPLES_BUTTON_TITLE: "Afficher la liste",
     EXAMPLES_MESSAGE: "Charger un exemple interrompt toute activité en cours",

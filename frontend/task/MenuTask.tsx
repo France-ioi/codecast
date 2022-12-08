@@ -5,6 +5,7 @@ import {recordingEnabledChange} from "./task_slice";
 import {SettingsDialog} from "../common/SettingsDialog";
 import {EditRecordingDialog} from "../editor/EditRecordingDialog";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {Screen} from "../common/screens";
 import {getMessage} from "../lang";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
@@ -12,6 +13,9 @@ import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
 import {hasBlockPlatform} from "../stepper/js";
 import {getJsLibLoaded} from "./libs/import_modules";
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faDownload} from '@fortawesome/free-solid-svg-icons/faDownload';
+import {faUpload} from '@fortawesome/free-solid-svg-icons/faUpload';
 
 export function MenuTask() {
     const recordingEnabled = useAppSelector(state => state.task.recordingEnabled);
@@ -66,6 +70,14 @@ export function MenuTask() {
         dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
     };
 
+    const downloadAnswer = () => {
+        dispatch({type: BufferActionTypes.BufferDownload});
+    };
+
+    const reloadAnswer = () => {
+        dispatch({type: BufferActionTypes.BufferReload});
+    };
+
     const forceSettingsOpen = hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded();
 
     return (
@@ -93,6 +105,14 @@ export function MenuTask() {
                     <Icon icon="help"/>
                     <span>{getMessage('MENU_ABOUT')}</span>
                 </div>}
+                <div className="menu-item" onClick={downloadAnswer}>
+                    <FontAwesomeIcon icon={faDownload}/>
+                    <span>{getMessage('MENU_DOWNLOAD')}</span>
+                </div>
+                <div className="menu-item" onClick={reloadAnswer}>
+                    <FontAwesomeIcon icon={faUpload}/>
+                    <span>{getMessage('MENU_RELOAD')}</span>
+                </div>
             </div>
             <SettingsDialog
                 open={settingsOpen || forceSettingsOpen}

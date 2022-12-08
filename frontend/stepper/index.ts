@@ -781,7 +781,6 @@ export function* stepperDisabledSaga(action, leaveContext = false, clearSourceHi
 
 function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: {resolve, reject}}: {payload: {stepperContext: StepperContext}, meta: {resolve: any, reject: any}}) {
     let state: AppStore = yield* select();
-    console.log('stepper interact before');
     /* Has the stepper been interrupted? */
     if (isStepperInterrupting(state) || StepperStatus.Clear === state.stepper.status) {
         log.getLogger('stepper').debug('stepper is still interrupting');
