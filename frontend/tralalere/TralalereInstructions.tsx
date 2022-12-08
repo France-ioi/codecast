@@ -20,7 +20,9 @@ export function TralalereInstructions(props: TralalereInstructionsProps) {
             <img className="tralalere-instructions-left  tralalere-instructions-design" src={window.modulesPath + 'img/algorea/crane/instructions-left-folded.png'}/>
             <div className="tralalere-instructions-container">
                 <TaskInstructions
+                    expanded={props.expanded}
                     changeDisplayShowMore={(displayExpanded) => setDisplayExpanded(displayExpanded)}
+                    hideShowMoreButton
                     missionRightSlot={
                         (isMobile || displayExpanded) && <div className="tralalere-instructions-more">
                             <div className="tralalere-button" onClick={() => props.onExpand()}>

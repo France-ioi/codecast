@@ -55,31 +55,12 @@ $tralalere-red: #FF3C11;
 
 .tralalere {
   .tralalere-instructions {
-    .task-mission {
-      .short, .long {
-        display: none !important;
-      }
-    }
-
     &.is-expanded {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       z-index: 1;
-
-      .task-mission {
-        .long {
-          display: block !important;
-        }
-      }
-    }
-    &:not(.is-expanded) {
-      .task-mission {
-        .short {
-          display: block !important;
-        }
-      }
     }
 
     .tralalere-instructions-container {

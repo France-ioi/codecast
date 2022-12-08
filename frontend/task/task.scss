@@ -182,6 +182,10 @@ html, body, #react-container {
   .task-mission {
     color: #7c7c7c;
 
+    .short, .long {
+      display: none !important;
+    }
+
     h1 {
       color: #30242B;
       margin-bottom: 1rem;
@@ -194,6 +198,26 @@ html, body, #react-container {
 
     :last-child {
       margin-bottom: 0 !important;
+    }
+
+    &:not(.is-expanded) .short {
+      display: block !important;
+    }
+
+    &.is-expanded .long {
+      display: block !important;
+    }
+
+    .bp3-button {
+      background-color: var(--primary-color);
+      background-image: none;
+      color: #fff;
+      outline: none;
+      border-radius: 50px;
+      box-shadow: none !important;
+      .bp3-icon {
+        color: #fff;
+      }
     }
   }
 
