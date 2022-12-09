@@ -85,12 +85,6 @@ $tralalere-red: #FF3C11;
           margin-bottom: .5rem !important;
         }
 
-        a {
-          color: $tralalere-green;
-          font-weight: bold;
-          text-decoration: underline;
-        }
-
         .advice {
           display: block;
           background: $tralalere-dark-blue;
@@ -488,6 +482,12 @@ $tralalere-red: #FF3C11;
       //margin-bottom: 0;
     }
   }
+}
+
+.tralalere-instructions-container .task-mission a, .hint-carousel-item a {
+  color: $tralalere-green !important;
+  font-weight: bold;
+  text-decoration: underline !important;
 }
 
 .tralalere-doc {
