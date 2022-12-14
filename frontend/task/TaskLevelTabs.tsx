@@ -8,23 +8,30 @@ import {faChevronLeft, faChevronRight} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {taskChangeLevel} from "./index";
 import {TaskLevelName} from "./platform/platform_slice";
-import {Dialog} from '@blueprintjs/core';
+import {Button, Dialog} from '@blueprintjs/core';
 
 export function TaskLevelTabs() {
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const levels = useAppSelector(state => state.platform.levels);
     const [lockedDialogOpen, setLockedDialogOpen] = useState(false);
+    const [levelToChange, setLevelToChange] = useState<TaskLevelName>(null);
 
     const bypassLock = window.location.protocol === 'file:' || -1 !== ['localhost', '127.0.0.1', '0.0.0.0', 'lvh.me'].indexOf(window.location.hostname);
 
     const dispatch = useDispatch();
 
     const changeVersion = (level: TaskLevelName) => {
-        if (levels[level].locked && !bypassLock) {
+        if (levels[level].locked) {
+            setLevelToChange(level);
             setLockedDialogOpen(true);
         } else {
             dispatch(taskChangeLevel(level));
         }
+    };
+
+    const doBypassLock = () => {
+        dispatch(taskChangeLevel(levelToChange));
+        closeLockedDialog();
     };
 
     const closeLockedDialog = () => {
@@ -74,7 +81,16 @@ export function TaskLevelTabs() {
                 title={getMessage('TASK_LEVEL_LOCKED_TITLE')}
             >
                 <div className='bp3-dialog-body'>
-                    <p>{getMessage('TASK_LEVEL_LOCKED_MESSAGE')}</p>
+                    <p>{getMessage(bypassLock ? 'TASK_LEVEL_LOCKED_MESSAGE_DEV' : 'TASK_LEVEL_LOCKED_MESSAGE')}</p>
+
+                    {bypassLock && <div className="has-text-centered">
+                        <Button
+                            className="quickalgo-button"
+                            onClick={doBypassLock}
+                        >
+                            {getMessage('TASK_LEVEL_LOCKED_MESSAGE_DEV_BUTTON')}
+                        </Button>
+                    </div>}
                 </div>
             </Dialog>
         </nav>

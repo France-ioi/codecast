@@ -207,18 +207,6 @@ html, body, #react-container {
     &.is-expanded .long {
       display: block !important;
     }
-
-    .bp3-button {
-      background-color: var(--primary-color);
-      background-image: none;
-      color: #fff;
-      outline: none;
-      border-radius: 50px;
-      box-shadow: none !important;
-      .bp3-icon {
-        color: #fff;
-      }
-    }
   }
 
   hr {
@@ -812,4 +800,16 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
 
 .visibility-hidden {
   visibility: hidden;
+}
+
+.quickalgo-button {
+  background-color: var(--primary-color) !important;
+  background-image: none !important;
+  color: #fff !important;
+  outline: none;
+  border-radius: 50px;
+  box-shadow: none !important;
+  .bp3-icon {
+    color: #fff;
+  }
 }
