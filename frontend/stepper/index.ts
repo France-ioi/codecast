@@ -809,6 +809,11 @@ function* stepperInteractBeforeSaga(app: App, {payload: {stepperContext}, meta: 
             const y2 = newDelay / 40;
             const y3 = newDelay;
 
+            // We create a cubic Bézier curve with 4 control points
+            // to create an acceleration from y0 to y1 at the beginning of the execution
+            // and a deceleration from y2 to y3 at the end of the execution
+            // See https://en.wikipedia.org/wiki/B%C3%A9zier_curve for the formula
+
             newDelay = (1-t)*((1-t)*((1-t)*y0+t*y1)+t*((1-t)*y1+t*y2))+t*((1-t)*((1-t)*y1+t*y2)+t*((1-t)*y2+t*y3));
             // log.getLogger('stepper').debug('new delay definition', {runData, steps: Codecast.runner._steps, maxSteps: runData.steps, t, newDelay})
         }
