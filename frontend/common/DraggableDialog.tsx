@@ -31,7 +31,7 @@ export function DraggableDialog({
                 dragHandleClassName={"bp3-dialog-header"}
                 {...rndProps}
             >
-                <Dialog usePortal={false} {...rest} />
+                <Dialog isOpen={true} usePortal={false} {...rest} />
             </Rnd>
         </div>
     );
