@@ -5,16 +5,22 @@ import {useDispatch} from "react-redux";
 import {getMessage} from "../../lang";
 import {cancelModal, validateModal} from "../../common/prompt_modal";
 import {ModalType} from "../../common/modal_slice";
+import {NumericKeypad} from "../blocks/NumericKeypad";
+import {TralalereBox} from "../../tralalere/TralalereBox";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faTimes} from "@fortawesome/free-solid-svg-icons";
+import log from 'loglevel';
 
 export function PromptModalDialog() {
     const modalData = useAppSelector(state => state.modal);
+    const options = useAppSelector(state => state.options);
     const dispatch = useDispatch();
 
     const [inputValue, setInputValue] = useState('');
 
     useEffect(() => {
-        console.log('change input value');
-        setInputValue(modalData.defaultInput);
+        log.getLogger('prompt').debug('change input value', modalData.defaultInput);
+        setInputValue(modalData.defaultInput ? modalData.defaultInput : '');
     }, [modalData.defaultInput, modalData.open]);
 
     const validate = () => {
@@ -22,10 +28,14 @@ export function PromptModalDialog() {
     };
 
     const cancel = () => {
+        if (ModalType.keypad === modalData.mode) {
+            modalData.callbackFinished(inputValue, true);
+        }
+
         dispatch(cancelModal());
     };
 
-    const canClose = ModalType.dialog === modalData.mode;
+    const canClose = ModalType.dialog === modalData.mode || ModalType.keypad === modalData.mode;
 
     const onClose = () => {
         if (canClose) {
@@ -33,8 +43,58 @@ export function PromptModalDialog() {
         }
     }
 
+    log.getLogger('prompt').debug('modal data type', modalData.mode, modalData.open);
+
+    let keypad = (
+        <NumericKeypad
+            initialValue={modalData.defaultInput}
+            position={modalData.position}
+            callbackModify={(value) => {
+                setInputValue(value);
+                modalData.callbackModify(value);
+            }}
+            callbackFinished={(value) => {
+                setInputValue(value);
+                modalData.callbackFinished(value, true);
+                dispatch(validateModal(value));
+            }}
+            options={modalData.options}
+        />
+    );
+
+    if ('tralalere' === options.app) {
+        keypad = (
+            <div className="numeric-keypad" style={modalData.position}>
+                <TralalereBox>
+                    <div className="keypad-close">
+                        <div className="tralalere-button" onClick={cancel}>
+                            <FontAwesomeIcon icon={faTimes}/>
+                        </div>
+                    </div>
+                    {keypad}
+                </TralalereBox>
+            </div>
+        )
+    } else {
+        keypad = (
+            <div className="numeric-keypad" style={modalData.position}>
+                {keypad}
+            </div>
+        )
+    };
+
     return (
-        <Dialog isOpen={modalData.open} className="simple-dialog" canOutsideClickClose={canClose} canEscapeKeyClose={canClose} onClose={onClose} key={modalData.id}>
+        <Dialog
+            transitionDuration={ModalType.keypad === modalData.mode ? 0 : undefined}
+            transitionName={ModalType.keypad === modalData.mode ? "none" : undefined}
+            isOpen={modalData.open}
+            className={`simple-dialog mode-${modalData.mode}`}
+            canOutsideClickClose={canClose}
+            canEscapeKeyClose={canClose}
+            backdropClassName={`dialog-backdrop dialog-backdrop-${modalData.mode}`}
+            onClose={onClose}
+            key={modalData.id}
+        >
             <div dangerouslySetInnerHTML={{__html: modalData.message}}></div>
 
             {ModalType.input === modalData.mode &&
@@ -43,20 +103,22 @@ export function PromptModalDialog() {
                 </div>
             }
 
-            {ModalType.dialog !== modalData.mode &&
-              <div className="simple-dialog-buttons">
-                  <button className="simple-dialog-button" onClick={validate}>
-                      <Icon icon="small-tick" iconSize={24}/>
-                      <span>{modalData.yesButtonText ? modalData.yesButtonText : getMessage((modalData.noButtonText ? 'VALIDATE' : 'ALRIGHT'))}</span>
-                  </button>
-
-                  {modalData.noButtonText &&
-                    <button className="simple-dialog-button ml-2" onClick={cancel}>
-                        <span>{modalData.noButtonText}</span>
+            {ModalType.dialog !== modalData.mode && ModalType.keypad !== modalData.mode &&
+                <div className="simple-dialog-buttons">
+                    <button className="simple-dialog-button" onClick={validate}>
+                        <Icon icon="small-tick" iconSize={24}/>
+                        <span>{modalData.yesButtonText ? modalData.yesButtonText : getMessage((modalData.noButtonText ? 'VALIDATE' : 'ALRIGHT'))}</span>
                     </button>
-                  }
-              </div>
+
+                    {modalData.noButtonText &&
+                      <button className="simple-dialog-button ml-2" onClick={cancel}>
+                          <span>{modalData.noButtonText}</span>
+                      </button>
+                    }
+                </div>
             }
+
+            {ModalType.keypad === modalData.mode && keypad}
         </Dialog>
     );
 }

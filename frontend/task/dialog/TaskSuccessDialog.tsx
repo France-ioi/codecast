@@ -1,19 +1,23 @@
 import {Dialog, Icon} from "@blueprintjs/core";
 import React from "react";
 import {useAppSelector} from "../../hooks";
-import {taskSuccessClear} from "../task_slice";
 import {useDispatch} from "react-redux";
 import {getMessage} from "../../lang";
 import {taskChangeLevel} from "../index";
 import {taskLevelsList} from "../platform/platform_slice";
+import log from 'loglevel';
 
-export function TaskSuccessDialog() {
-    const taskSuccess = useAppSelector(state => state.task.success);
+export interface TaskSuccessDialogProps {
+    onClose: (event) => void,
+}
+
+export function TaskSuccessDialog(props: TaskSuccessDialogProps) {
     const taskSuccessMessage = useAppSelector(state => state.task.successMessage);
     const levels = useAppSelector(state => state.platform.levels);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const dispatch = useDispatch();
 
+    log.getLogger('task').debug('task success', currentLevel, levels);
     if (!currentLevel || !(currentLevel in levels)) {
         return null;
     }
@@ -26,12 +30,8 @@ export function TaskSuccessDialog() {
         dispatch(taskChangeLevel(taskLevelsList[currentLevelIndex + 1]));
     };
 
-    const closeTaskSuccess = () => {
-        dispatch(taskSuccessClear({}));
-    };
-
     return (
-        <Dialog isOpen={taskSuccess} className="simple-dialog" onClose={closeTaskSuccess}>
+        <Dialog isOpen={true} className="simple-dialog" onClose={props.onClose}>
             <p className="simple-dialog-success">{taskSuccessMessage}</p>
 
             {currentLevelFinished && <React.Fragment>
@@ -46,7 +46,7 @@ export function TaskSuccessDialog() {
                         <Icon icon="small-tick" iconSize={24}/>
                         <span>{getMessage('TASK_LEVEL_SUCCESS_NEXT_BUTTON')}</span>
                     </button>
-                    : <button className="simple-dialog-button" onClick={closeTaskSuccess}>
+                    : <button className="simple-dialog-button" onClick={props.onClose}>
                         <Icon icon="small-tick" iconSize={24}/>
                         <span>{getMessage('OK')}</span>
                     </button>

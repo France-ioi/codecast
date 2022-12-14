@@ -3,6 +3,9 @@ export enum ActionTypes {
     StepperRestart = 'Stepper.Restart',
     StepperReset = 'Stepper.Reset',
     StepperCompileAndStep = 'Stepper.CompileAndStep',
+    StepperStepFromControls = 'Stepper.StepFromControls',
+    StepperRunBackground = 'Stepper.RunBackground',
+    StepperRunBackgroundFinished = 'Stepper.RunBackgroundFinished',
     StepperStep = 'Stepper.Step',
     StepperStarted = 'Stepper.Started',
     StepperInteractBefore = 'Stepper.Interact.Before',
@@ -43,10 +46,11 @@ export const stepperExecutionSuccess = (message) => ({
     },
 });
 
-export const stepperExecutionError = (error) => ({
+export const stepperExecutionError = (error, clearHighlight = true) => ({
     type: ActionTypes.StepperExecutionError,
     payload: {
         error,
+        clearHighlight,
     },
 });
 
@@ -59,4 +63,18 @@ export const stepperDisplayError = (error) => ({
 
 export const stepperClearError = () => ({
     type: ActionTypes.StepperClearError,
+});
+
+export const stepperRunBackground = (callback) => ({
+    type: ActionTypes.StepperRunBackground,
+    payload: {
+        callback,
+    },
+});
+
+export const stepperRunBackgroundFinished = (backgroundRunData) => ({
+    type: ActionTypes.StepperRunBackgroundFinished,
+    payload: {
+        backgroundRunData,
+    },
 });

@@ -25,6 +25,7 @@ import {EditorState} from "./editor";
 import {PlatformState, TaskLevelName} from "./task/platform/platform_slice";
 import {AnalysisState} from "./stepper/analysis/analysis_slice";
 import {ModalState} from "./common/modal_slice";
+import {HintsState, TaskHint} from "./task/hints/hints_slice";
 
 export enum CodecastPlatform {
     Python = 'python',
@@ -33,6 +34,14 @@ export enum CodecastPlatform {
     Blockly = 'blockly',
     Scratch = 'scratch',
 }
+
+export const platformsList = [
+    CodecastPlatform.Python,
+    CodecastPlatform.Unix,
+    CodecastPlatform.Arduino,
+    CodecastPlatform.Blockly,
+    CodecastPlatform.Scratch,
+];
 
 export enum CodecastOptionsMode {
     Edit = 'edit',
@@ -79,7 +88,12 @@ export interface CodecastOptions {
     origin: string,
     task?: string,
     taskInstructions?: string,
+    taskHints?: TaskHint[],
     theme?: string,
+    app?: string,
+    backend?: boolean,
+    preload?: boolean, // If true, we consider that all necessary assets have already been preloaded; this is needed
+                       // for Castor platforms in which assets are inlined into the HTML
 }
 
 export interface Panes {
@@ -130,6 +144,7 @@ export interface AppStore extends Store, AppStoreReplay {
     vumeterElement: any,
     task: TaskState,
     platform: PlatformState,
+    hints: HintsState,
 
     // TODO: Put the following in a "window" attribute instead of at the root of the store
     mainViewGeometry: typeof mainViewGeometries[0],

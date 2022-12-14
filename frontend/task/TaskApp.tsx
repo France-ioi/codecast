@@ -23,9 +23,10 @@ import {getMessage} from "../lang";
 import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
 import {SubtitlesPane} from "../subtitles/SubtitlesPane";
-import {TaskLevelName} from "./platform/platform_slice";
 import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {PromptModalDialog} from "./dialog/PromptModalDialog";
+import {taskSuccessClear} from "./task_slice";
+import {platformTaskLink} from './platform/actionTypes';
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -45,6 +46,7 @@ export function TaskApp() {
     const taskLevels = useAppSelector(state => state.platform.levels);
     const language = useAppSelector(state => state.options.language);
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
+    const taskSuccess = useAppSelector(state => state.task.success);
 
     let progress = null;
     let progressMessage = null;
@@ -58,6 +60,10 @@ export function TaskApp() {
 
     const dispatch = useDispatch();
 
+    const closeTaskSuccess = () => {
+        dispatch(taskSuccessClear({}));
+    };
+
     useEffect(() => {
         // Wait that the html is loaded before we create the context because some of them use jQuery to select elements
         if (options.theme) {
@@ -65,11 +71,6 @@ export function TaskApp() {
         }
 
         setTimeout(() => {
-            const taskLoadParameters: {level?: TaskLevelName} = {};
-            if (options.level) {
-                taskLoadParameters.level = options.level;
-            }
-
             if (options.audioUrl) {
                 if (CodecastOptionsMode.Edit === options.mode) {
                     dispatch({
@@ -94,7 +95,12 @@ export function TaskApp() {
                 }
             } else {
                 // If we have a recording, taskLoad is triggered afterwards, in playerPrepare, when we have the events data and know the task
-                dispatch(taskLoad(taskLoadParameters));
+                // const taskLoadParameters: {level?: TaskLevelName} = {};
+                // if (options.level) {
+                //     taskLoadParameters.level = options.level;
+                // }
+                // dispatch(taskLoad(taskLoadParameters));
+                dispatch(platformTaskLink());
             }
         });
     }, []);
@@ -118,7 +124,7 @@ export function TaskApp() {
     }
 
     return (
-        <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode}`}>
+        <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform}`}>
             <div className="layout-general">
                 <div className={`task-section`}>
                     <div className="task-section-container">
@@ -181,7 +187,7 @@ export function TaskApp() {
                 </div>}
             </Dialog>
 
-            <TaskSuccessDialog/>
+            {taskSuccess && <TaskSuccessDialog onClose={closeTaskSuccess}/>}
 
             <PromptModalDialog/>
         </Container>

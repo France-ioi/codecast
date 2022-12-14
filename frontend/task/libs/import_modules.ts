@@ -92,6 +92,7 @@ function importableModules(modulesPath) {
         'blockly-printer-2.1': {src: modulesPath+"/pemFioi/blocklyPrinter_lib-2.1.js", id: "blocklyPrinter_lib"},
         'blockly-turtle': {src: modulesPath+"/pemFioi/blocklyTurtle_lib.js", id: "blocklyTurtle_lib"},
         'blockly-processing': {src: modulesPath+"/pemFioi/blocklyProcessing_lib.js", id: "blocklyProcessing_lib"},
+        'blockly-crane-1.0': {src: modulesPath+"/pemFioi/blocklyCrane_lib-1.0.js", id: "blocklyCrane_lib"},
         'jwinf_css': {type: "stylesheet", src: modulesPath+"/pemFioi/jwinf.css", id: "jwinf_css"}, // for BWINF
 
         'quickAlgo_utils': {src: modulesPath+"/pemFioi/quickAlgo/utils.js", id: "quickAlgo_utils"},
@@ -278,7 +279,7 @@ async function importModules(modulesList, modulesPath) {
     const urlParameters = new URLSearchParams(window.location.search);
     const queryParameters = Object.fromEntries(urlParameters);
 
-    for(let iMod in modulesList) {
+    for (let iMod in modulesList) {
         let moduleName = modulesList[iMod];
         let curModule = importableModulesList[moduleName];
         if(curModule) {
@@ -313,6 +314,7 @@ let jsLibLoaded = null;
 
 export async function importPlatformModules(platform, modulesPath) {
     if (!hasBlockPlatform(platform)) {
+        await importModules(['fonts-loader-1.0', 'quickAlgo_utils'], modulesPath);
         return;
     }
 
@@ -322,11 +324,25 @@ export async function importPlatformModules(platform, modulesPath) {
     jsLibLoaded = platform;
 
     const modulesToImport = {
-        blockly: ['blockly', 'blockly_blocks', 'blockly_javascript', 'blockly_python', 'blockly_fioi', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
-        scratch: ['scratch', 'scratch_blocks_common', 'scratch_blocks',  'blockly_javascript', 'blockly_python', 'blockly_fioi', 'scratch_fixes', 'scratch_procedures', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
+        blockly: ['fonts-loader-1.0', 'acorn', 'acorn-walk', 'interpreter', 'blockly', 'blockly_blocks', 'blockly_javascript', 'blockly_python', 'blockly_fioi', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
+        scratch: ['fonts-loader-1.0', 'acorn', 'acorn-walk', 'interpreter', 'scratch', 'scratch_blocks_common', 'scratch_blocks',  'blockly_javascript', 'blockly_python', 'blockly_fioi', 'scratch_fixes', 'scratch_procedures', 'quickAlgo_utils', 'quickAlgo_blockly_blocks', 'quickAlgo_blockly_interface'],
     }
 
     await importModules(modulesToImport[platform], modulesPath);
+}
+
+export function loadFonts(theme: string) {
+    if (window.FontsLoader) {
+        const fontsToLoad = ['inconsolata', 'blueprint-16'];
+        if ('coursera' === theme) {
+            fontsToLoad.push('source-sans-pro');
+        } else {
+            fontsToLoad.push('open-sans');
+        }
+        window.FontsLoader.loadFonts(fontsToLoad);
+    } else {
+        console.warn('FontsLoader is not defined, could not load fonts');
+    }
 }
 
 export function getJsLibLoaded() {
@@ -338,7 +354,7 @@ function getScript(modSrc, modId, modClass, callback) {
     script.setAttribute('type', 'text/javascript');
     script.setAttribute('id', modId);
     script.setAttribute('class', modClass);
-    let prior = document.getElementsByTagName('script')[0];
+    let head = document.getElementsByTagName('head')[0];
 
     // @ts-ignore
     script.onload = script.onreadystatechange = function (_, isAbort) {
@@ -353,7 +369,7 @@ function getScript(modSrc, modId, modClass, callback) {
     };
 
     script.src = modSrc;
-    prior.parentNode.insertBefore(script, prior);
+    head.appendChild(script);
 }
 
 function getStyle(modSrc, modId, modClass) {

@@ -210,8 +210,6 @@ export class SortView extends React.PureComponent<SortViewProps> {
             return Math.max(currentMax, element.value);
         }, 0);
 
-        console.log('thresholds', view.thresholds);
-
         return (
             <DirectiveFrame {...this.props} hasFullView>
                 <div className='clearfix' style={{padding: '2px'}}>

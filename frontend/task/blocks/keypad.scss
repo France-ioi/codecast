@@ -1,0 +1,94 @@
+.numeric-keypad {
+  position: absolute;
+  z-index: 50;
+}
+
+.dialog-backdrop-keypad {
+  background-color: rgba(16, 22, 26, 0.01);
+}
+
+.simple-dialog.mode-keypad {
+  background: transparent;
+  padding: 0;
+  width: initial;
+}
+
+.numeric-keypad .keypad {
+  font-family: 'Titillium Web', Arial, Helvetica, sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #E2F4FC;
+  width: 228px;
+  height: 260px;
+  padding: 8px;
+  border-radius: 6px;
+
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+.numeric-keypad .keypad-value {
+  width: 204px;
+  height: 30px;
+  background-color: #FFF;
+  color: #4A90E2;
+  border-radius: 6px;
+  text-align: center;
+  line-height: 30px;
+  font-size: 26px;
+}
+.numeric-keypad .keypad-value.keypad-value-small {
+  font-size: 18px;
+}
+
+.numeric-keypad .keypad-row {
+  display: -ms-flexbox;
+  display: flex;
+  -ms-flex-pack: justify;
+  justify-content: space-between;
+  padding: 4px;
+}
+
+.numeric-keypad .keypad-row.keypad-row-margin {
+  margin-top: 8px;
+}
+
+.numeric-keypad .keypad-btn {
+  background-color: #4A90E2;
+  color: #FFF;
+  width: 64px;
+  height: 30px;
+  text-align: center;
+  font-size: 26px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+}
+
+.numeric-keypad .keypad-btn.keypad-btn-r {
+  background-color: #DB8B0A;
+}
+
+.numeric-keypad .keypad-btn.keypad-btn-v {
+  width: 136px;
+  background-color: #88BB88;
+  font-size: 24px;
+}
+
+.numeric-keypad .keypad-exit {
+  position: absolute;
+  right: -20px;
+  top: -20px;
+  height: 40px;
+  width: 40px;
+  text-align:  center;
+  background-color: #e86E64;
+  border-radius: 20px;
+  font-size: 20px;
+  color: #FFF;
+  line-height: 40px;
+}

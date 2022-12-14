@@ -4,11 +4,11 @@ import {
     taskSubmissionSetTestResult,
     taskSubmissionStartTest,
 } from "./task_slice";
-import {call, delay, put, select} from "typed-redux-saga";
+import {call, put, select} from "typed-redux-saga";
 import {AppStore} from "../store";
 import {Codecast} from "../index";
-import {getBufferModel} from "../buffers/selectors";
 import {getTaskPlatformMode, recordingProgressSteps, TaskActionTypes, TaskPlatformMode} from "./index";
+import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import log from "loglevel";
 import {stepperDisplayError} from "../stepper/actionTypes";
 import React from "react";
@@ -16,8 +16,10 @@ import {
     platformApi,
     PlatformTaskGradingParameters,
     PlatformTaskGradingResult,
+    taskGetNextLevelToIncreaseScore,
 } from "./platform/platform";
 import {selectAnswer} from "./selectors";
+import {delay} from "../player/sagas";
 
 export const levelScoringData = {
     basic: {
@@ -115,10 +117,15 @@ class TaskSubmissionExecutor {
 
         const finalScore = worstRate;
         if (finalScore >= 1) {
-            yield* call([platformApi, platformApi.validate], 'done');
+            const nextVersion = yield* call(taskGetNextLevelToIncreaseScore, level);
+
+            yield* call([platformApi, platformApi.validate], null !== nextVersion ? 'stay' : 'done');
+            if (window.SrlLogger) {
+                window.SrlLogger.validation(100, 'none', 0);
+            }
         } else {
             log.getLogger('tests').debug('Submission execution over', currentSubmission.results);
-            console.log(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
+            log.getLogger('tests').debug(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
             if (!currentSubmission.results.reduce((agg, next) => agg && next.result, true)) {
                 const error = {
                     type: 'task-tests-submission-results-overview',
@@ -135,11 +142,17 @@ class TaskSubmissionExecutor {
     *makeBackgroundExecution(level, testId, answer) {
         const backgroundStore = Codecast.environments['background'].store;
         const state: AppStore = yield* select();
-        const tests = state.task.taskTests.map(test => test.data);
+        const currentTask = state.task.currentTask;
+        const tests = currentTask.data[level];
 
         return yield new Promise<TaskSubmissionResultPayload>(resolve => {
             backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
         });
+    }
+
+    *cancelBackgroundExecution() {
+        const backgroundStore = Codecast.environments['background'].store;
+        backgroundStore.dispatch({type: StepperActionTypes.StepperExit});
     }
 
     *gradeAnswer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
@@ -147,7 +160,7 @@ class TaskSubmissionExecutor {
         let lastMessage = null;
         const state: AppStore = yield* select();
 
-        console.log('do grade answer');
+        log.getLogger('tests').debug('do grade answer');
         if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state)) {
             return {
                 score: minScore + (maxScore - minScore) * Number(answer) / recordingProgressSteps,
@@ -156,7 +169,7 @@ class TaskSubmissionExecutor {
         }
 
         const environment = state.environment;
-        console.log('start grading answer', environment);
+        log.getLogger('tests').debug('start grading answer', environment);
         const tests = yield* select(state => state.task.taskTests);
         if (!tests || 0 === Object.values(tests).length) {
             return {
@@ -184,7 +197,7 @@ class TaskSubmissionExecutor {
             }
         }
 
-        console.log('end grading answer');
+        log.getLogger('tests').debug('end grading answer');
 
         let worstRate = 1;
         for (let result of testResults) {

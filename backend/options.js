@@ -7,6 +7,7 @@ export function buildCommonOptions(config, start) {
         showStack: true,
         showViews: true,
         showIO: true,
+        backend: true,
         showDocumentation: true,
         showFullScreen: true,
         showMenu: true,
@@ -20,10 +21,12 @@ export function buildCommonOptions(config, start) {
 
 export function buildOptions(config, req, start, callback) {
     const options = buildCommonOptions(config, start);
-    options.baseUrl = config.baseUrl;
     options.audioWorkerUrl = config.audioWorkerUrl;
+    options.backend = true;
     options.callbackUrl = req.originalUrl;
     options.referer = req.headers.referer || null;
+    options.app = 'crane' === req.query.task ? 'tralalere' : config.app;
+    options.baseUrl = config.baseUrl;
     if (req.query.platform) {
         options.platform = req.query.platform;
     }

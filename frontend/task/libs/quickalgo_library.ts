@@ -5,6 +5,8 @@ import quickalgoI18n from "../../lang/quickalgoI18n";
 import merge from 'lodash.merge';
 import {getCurrentImmerState} from "../utils";
 import {mainQuickAlgoLogger} from "./quickalgo_libraries";
+import {stepperMaxSpeed} from "../../stepper";
+import log from 'loglevel';
 
 export class QuickAlgoLibrary {
     display: boolean;
@@ -29,6 +31,10 @@ export class QuickAlgoLibrary {
     blocklyHelper: any;
     onChange: any;
     docGenerator: any;
+    delaysStartedCount: number = 0;
+    delaysEndedCount: number = 0;
+    callbacksOnReady: Function[] = [];
+    needsRedrawDisplay: boolean = false;
 
     constructor(display: boolean, infos: any) {
         this.display = display;
@@ -61,7 +67,7 @@ export class QuickAlgoLibrary {
 
     // Set the localLanguageStrings for this context
     setLocalLanguageStrings(localLanguageStrings) {
-        console.log('set local language strings', localLanguageStrings);
+        log.getLogger('libraries').debug('set local language strings', localLanguageStrings);
         window.stringsLanguage = window.stringsLanguage && window.stringsLanguage in localLanguageStrings ? window.stringsLanguage : "fr";
         window.languageStrings = window.languageStrings || {};
 
@@ -101,17 +107,35 @@ export class QuickAlgoLibrary {
 
     // Default implementations
     changeDelay(newDelay) {
-        // Change the action delay while displaying
         this.infos.actionDelay = newDelay;
     };
 
-    waitDelay(callback, value = null) {
+    // Default implementation
+    changeSoundEnabled(soundEnabled: boolean): void {
+    };
+
+    getDelay(): number {
+        return this.infos.actionDelay;
+    };
+
+    waitDelay(callback, value = null, delay = null) {
         // This function is used only to call the callback to move to next step,
         // but we handle the speed delay in an upper level
-        if (this.runner && this.runner.returnCallback) {
-            this.runner.returnCallback(callback, value);
+        let computedDelay = null !== delay ? delay : (this.infos && undefined !== this.infos.actionDelay ? this.infos.actionDelay : stepperMaxSpeed);
+        log.getLogger('libraries').debug('Quickalgo wait delay', callback, this.runner, computedDelay);
+        if (this.runner) {
+            this.runner.noDelay(callback, value);
+            if (computedDelay > 0) {
+                this.delaysStartedCount++;
+                setTimeout(() => {
+                    this.delayOver();
+                }, computedDelay);
+            }
         } else {
-            callback(value);
+            // When a function is used outside an execution
+            setTimeout(function () {
+                callback(value);
+            }, computedDelay);
         }
     };
 
@@ -120,7 +144,7 @@ export class QuickAlgoLibrary {
         if (this.runner) {
             this.runner.noDelay(callback, value);
         } else {
-            // When a function is used outside of an execution
+            // When a function is used outside an execution
             callback(value);
         }
     };
@@ -144,7 +168,7 @@ export class QuickAlgoLibrary {
     };
 
     resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null, innerState: any = null) {
-        console.log('reset and reload state', taskInfos, innerState);
+        log.getLogger('libraries').debug('reset and reload state', taskInfos, innerState);
         this.reset(taskInfos, appState);
         // We do a second call because some libraries like barcode only reset their internal state when taskInfos is empty...
         this.reset();
@@ -155,7 +179,7 @@ export class QuickAlgoLibrary {
         } else {
             if (newInnerState.calls) {
                 // in fact maybe not necessary since redrawDisplay is the method that should update the display
-                console.log('TODO replay calls', newInnerState.calls);
+                log.getLogger('libraries').debug('TODO replay calls', newInnerState.calls);
                 mainQuickAlgoLogger.setQuickAlgoLibraryCalls(newInnerState.calls);
             }
         }
@@ -169,8 +193,28 @@ export class QuickAlgoLibrary {
         // Unload the context, cleaning up
     };
 
-    provideBlocklyColours() {
-        // Provide colours for Blockly
+    provideBlocklyColours(): any {
+        if ('tralalere' === window.app) {
+            return {
+                categories: {
+                    logic: 215,
+                    loops: 181,
+                    control: 215,
+                    math: 120,
+                    operator: 0,
+                    texts: 160,
+                    lists: 222,
+                    colour: 20,
+                    variables: 38,
+                    functions: 30,
+                    actions: 215,
+                    sensors: 215,
+                    _default: 290,
+                },
+                blocks: {}
+            };
+        }
+
         return {};
     };
 
@@ -199,7 +243,33 @@ export class QuickAlgoLibrary {
     };
 
     onError(diagnostics: any): void {
+    }
 
+    addSound(sound: string): void {
+    }
+
+    delayOver() {
+        this.delaysEndedCount++;
+        log.getLogger('libraries').debug('delay over', this.delaysStartedCount, this.delaysEndedCount, this.callbacksOnReady);
+        if (this.delaysEndedCount === this.delaysStartedCount) {
+            if (this.callbacksOnReady.length) {
+                for (let callback of this.callbacksOnReady) {
+                    callback();
+                }
+            }
+        }
+    }
+
+    // Execute this function when all animation delays are over
+    executeWhenReady(callback: Function) {
+        log.getLogger('libraries').debug('execute on ready', this.delaysStartedCount, this.delaysEndedCount, performance.now());
+        if (this.delaysEndedCount === this.delaysStartedCount) {
+            log.getLogger('libraries').debug('already ready');
+            callback();
+        } else {
+            log.getLogger('libraries').debug('not ready yet');
+            this.callbacksOnReady.push(callback);
+        }
     }
 }
 

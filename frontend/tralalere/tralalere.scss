@@ -1,0 +1,1029 @@
+$tralalere-green-blue: #05A8AA;
+$tralalere-violet: #5158BB;
+$tralalere-dark-blue: #043565;
+$tralalere-green: #85FF00;
+$tralalere-red: #FF3C11;
+
+@mixin tralalere-button {
+  height: 50px;
+  width: 50px;
+
+  background: $tralalere-dark-blue;
+  border: 2px solid $tralalere-green;
+  border-radius: 7px;
+
+  font-family: 'Roboto', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $tralalere-green;
+  font-size: 30px;
+  cursor: pointer;
+  font-weight: 900;
+  box-shadow: -4px 4px #1D1E47;
+  user-select: none;
+  padding-left: 0;
+  padding-right: 0;
+
+  &[disabled] {
+    cursor: not-allowed;
+    border: 2px solid rgba(133, 255, 0, 0.3);
+  }
+
+  &[disabled] svg {
+    opacity: 0.4;
+  }
+}
+
+@mixin tralalere-button-small {
+  width: 35px;
+  height: 35px;
+  border-radius: 5px;
+  font-size: 20px;
+  svg, img {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+[data-theme="tralalere"] {
+  --primary-color: #043565;
+  --secondary-color: #1f1f1f;
+  --font-family-sans-serif: 'Roboto', sans-serif;
+  --default-border-radius: 7px;
+}
+
+.tralalere {
+  .tralalere-instructions {
+    .task-mission {
+      .short, .long {
+        display: none !important;
+      }
+    }
+
+    &.is-expanded {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1;
+
+      .task-mission {
+        .long {
+          display: block !important;
+        }
+      }
+    }
+    &:not(.is-expanded) {
+      .task-mission {
+        .short {
+          display: block !important;
+        }
+      }
+    }
+
+    .tralalere-instructions-container {
+      margin-left: 20px;
+      margin-top: 12px;
+      padding-left: 134px;
+      padding-right: 30px;
+      background: $tralalere-green-blue;
+      border-radius: 50px;
+      box-shadow: -15px 15px #383961;
+
+      .task-mission {
+        color: white;
+        padding-top: 12px;
+        margin-right: 20px;
+        line-height: 22px;
+
+        h1 {
+          color: white;
+          font-weight: bold !important;
+          font-size: 1rem !important;
+          margin-bottom: .5rem !important;
+        }
+
+        a {
+          color: $tralalere-green;
+          font-weight: bold;
+          text-decoration: underline;
+        }
+
+        .advice {
+          display: block;
+          background: $tralalere-dark-blue;
+          border: 4px solid $tralalere-green-blue;
+          box-shadow: -5px 5px 0px #1D1E47;
+          border-radius: 15px;
+          padding: 10px 20px;
+          margin-left: -22px;
+          margin-bottom: 1rem;
+          &:before {
+            content: attr(data-title);
+            display: block;
+            font-style: italic;
+            font-weight: 900;
+          }
+        }
+      }
+
+      &.is-limited .task-mission {
+        height: 80px;
+        overflow: hidden;
+      }
+
+      .tralalere-instructions-more {
+        float: right;
+        margin-left: 20px;
+      }
+    }
+
+    .tralalere-instructions-window {
+      position: absolute;
+      left: 60px;
+      top: 3px;
+    }
+
+    .tralalere-instructions-left {
+      position: absolute;
+      left: 4px;
+      top: 2px;
+    }
+    .tralalere-instructions-shadow-right {
+      position: absolute;
+      left: 5px;
+      top: 6px;
+    }
+    .tralalere-instructions-shadow-down {
+      position: absolute;
+      left: -5px;
+      top: 20px;
+    }
+    .tralalere-instructions-around-left {
+      box-shadow: -15px 15px #383961;
+      border-radius: 50px;
+      position: absolute;
+      left: 14px;
+      top: 3px;
+      width: 134px;
+      height: 95px;
+      display: block;
+    }
+  }
+
+  .tralalere-section {
+    display: flex;
+    position: relative;
+    flex: 50%;
+    min-height: 0;
+    min-width: 0;
+    width: 100vw;
+    background: radial-gradient(65.09% 65.09% at 50% 50%, $tralalere-green-blue 0%, #383961 100%);
+  }
+
+  .tralalere-visualization, .blockly-editor {
+    flex: 50%;
+    min-height: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+  }
+
+  .tralalere-visualization {
+    background-size: cover;
+    border-radius: 6px 6px 0px 0px;
+    position: relative;
+
+    .context-visualization {
+      margin-top: 20px;
+    }
+  }
+
+  .tralalere-menu-icons {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+
+    > div:not(:first-child) {
+      margin-top: 10px;
+    }
+
+    .tralalere-menu-label {
+      display: none;
+      position: absolute;
+      color: white;
+      font-weight: 900;
+      font-size: 16px;
+      align-items: center;
+      text-align: center;
+      right: 50px;
+      padding: 5px 20px;
+
+      background: $tralalere-violet;
+      border-radius: 7px 0 0 7px;
+      box-shadow: -4px 4px #1D1E47;
+
+      &:after {
+        content: '';
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        top: -4px;
+        left: -4px;
+        background: #85FF00;
+        border-radius: 3px;
+      }
+    }
+
+    &.has-helps .tralalere-menu-label {
+      display: flex;
+    }
+  }
+
+  .blockly-editor {
+    position: relative;
+    min-width: 550px;
+    .layout-editor {
+      min-height: 0;
+    }
+    .blocklySvg {
+      background: transparent;
+    }
+    .blocklyFlyoutBackground {
+      fill: $tralalere-dark-blue;
+      fill-opacity: 1;
+    }
+    .blocklyTrash {
+      display: none;
+    }
+    &.group-by-category {
+      .blocklyFlyoutBackground {
+        stroke: $tralalere-green;
+        transform: translate(2px, 2px);
+        stroke-width: 4;
+        fill-opacity: 0.8;
+      }
+    }
+  }
+}
+
+.blockly-flyout-wrapper {
+  border: solid 4px $tralalere-green-blue;
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  width: var(--flyout-width);
+  bottom: 0;
+  border-radius: 15px;
+  overflow: hidden;
+  background: rgba(255,0,0,0);
+  z-index: 1;
+}
+.blockly-flyout-wrapper-bottom {
+  position: absolute;
+  bottom: 0;
+  right: -3px;
+  border-bottom-right-radius: 12px;
+}
+
+.tralalere-button {
+  @include tralalere-button;
+}
+
+.tralalere-controls-container {
+  display: flex;
+  width: 100%;
+  z-index: 5;
+  flex-wrap: wrap;
+  justify-content: right;
+  .controls-stepper.controls-right {
+    flex: 0 1;
+    justify-content: end;
+  }
+}
+
+.tralalere-controls {
+  width: calc(100% - 12px);
+  display: flex;
+  align-items: center;
+  position: absolute;
+  bottom: 15px;
+  padding-left: var(--flyout-width);
+  > div {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  .controls-stepper {
+    padding-left: 12px;
+    padding-right: 12px;
+    flex: 1 0;
+    max-width: initial !important;
+  }
+
+  .error-message {
+    background: $tralalere-dark-blue;
+    border: 3px solid $tralalere-red;
+    box-shadow: -6px 6px #1D1E47;
+    border-radius: 7px;
+    margin-left: 6px;
+    &.is-closable {
+      margin-right: 10px;
+    }
+    display: flex;
+    align-items: center;
+    .close-button {
+      background: #043565;
+      border: 2px solid $tralalere-red;
+      border-radius: 7px;
+      box-shadow: -6px 6px #1D1E47;
+      top: -16px;
+      right: -10px;
+      width: 30px;
+      height: 30px;
+      color: $tralalere-red;
+      padding: 0;
+      svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+    .error-message-wrapper {
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      svg {
+        margin-left: 15px;
+        margin-right: 15px;
+        min-width: 28px !important;
+      }
+    }
+    .message {
+      color: white;
+      font-weight: 400;
+      font-size: 16px;
+      line-height: 19px;
+      min-width: 0;
+    }
+    code {
+      color: $tralalere-red !important;
+    }
+  }
+}
+
+.tralalere-control-button-container {
+  margin-right: 8px;
+  .tralalere-button {
+    height: 50px;
+    width: 50px;
+    border-radius: 14px;
+    svg {
+      width: 25px;
+      height: 25px;
+    }
+  }
+}
+
+.tralalere-box {
+  background: $tralalere-dark-blue;
+  border: 4px solid $tralalere-green-blue;
+  box-shadow: -5px 5px 0px #1D1E47;
+  border-radius: 15px;
+  position: relative;
+
+  .tralalere-box-header {
+    background: $tralalere-green-blue;
+    border-radius: 7px;
+    display: flex;
+    height: 70px;
+    align-items: center;
+    box-shadow: 0px 5px 0px #1D1E47;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+
+    font-weight: 900;
+    font-size: 24px;
+    line-height: 28px;
+
+    color: #FFFFFF;
+
+    .tralalere-box-header-icon {
+      display: flex;
+      width: 60px;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+    }
+
+    .tralalere-box-header-title {
+      flex: 1 0;
+    }
+
+    .tralalere-box-header-close {
+      padding-right: 10px;
+      .tralalere-button {
+        width: 38px;
+        height: 38px;
+      }
+    }
+  }
+}
+
+.tralalere-hints {
+  max-width: 800px;
+  padding: 0;
+  background: transparent;
+  &.is-mobile {
+    width: 95vw;
+  }
+
+  .hint-unlock {
+    margin-top: 10px;
+
+    .hint-button {
+      font-size: 16px;
+      width: fit-content;
+      padding: 5px 30px;
+      margin: auto;
+    }
+  }
+
+  .hint-carousel-item {
+    font-weight: 400;
+    line-height: 20px;
+    color: white;
+  }
+
+  // Carousel
+  .carousel-container {
+    position: relative;
+  }
+
+  .carousel {
+    .carousel-control-prev, .carousel-control-next, .carousel-control-prev:focus, .carousel-control-next:focus {
+      color: white;
+      width: 50px;
+      opacity: 1;
+    }
+    .carousel-control-prev:hover, .carousel-control-next:hover {
+      color: #ddd;
+    }
+    .carousel-item {
+      padding: 30px 50px 60px;
+    }
+    .carousel-indicators button {
+      height: 6px;
+      opacity: 0.3;
+      &.active {
+        opacity: 1;
+      }
+    }
+    .carousel-item h3 {
+      color: #699669;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .carousel-item {
+      color: #727272;
+    }
+    .carousel-item .row {
+      align-items: center;
+    }
+    .carousel-item .row.is-vertical-top {
+      align-items: flex-start;
+    }
+    .carousel-item img {
+      width: 100%;
+    }
+    .carousel-item ul {
+      //margin-bottom: 0;
+    }
+  }
+}
+
+.tralalere-doc {
+  background: transparent;
+  padding: 0;
+  width: 80vw;
+  height: 600px;
+  max-height: 80vh;
+
+  > .tralalere-box {
+    height: 100%;
+  }
+
+  .documentation {
+    border-left: none;
+  }
+
+  .documentation-language-dropdown {
+    display: none;
+  }
+
+  .documentation-menu {
+    border-right: 4px solid $tralalere-green-blue !important;
+    border-bottom: 4px solid $tralalere-green-blue !important;
+    margin-bottom: -4px;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    margin-top: 4px;
+  }
+
+  .documentation-tab-left {
+    display: block;
+    background: $tralalere-dark-blue;
+    border: 2px solid $tralalere-green;
+    color: $tralalere-green;
+    border-radius: 6px;
+    padding: 10px 10px;
+    height: initial;
+    text-decoration: none;
+    font-weight: 900;
+    margin: 15px 15px;
+
+    .bp3-icon-dot {
+      display: none;
+    }
+
+    &.is-active {
+      background: $tralalere-green;
+      color: $tralalere-dark-blue;
+    }
+  }
+
+  .documentation-category-title {
+    display: none;
+  }
+
+  .documentation-content {
+    padding: 1rem;
+  }
+}
+
+.tralalere-box .keypad {
+  background: transparent !important;
+  height: initial !important;
+  width: initial !important;
+  .keypad-btn {
+    @include tralalere-button;
+    margin: 2px 6px;
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 18px !important;
+  }
+  .keypad-row {
+    justify-content: center;
+  }
+  .keypad-row-margin:last-child {
+    margin-top: 0 !important;
+    margin-bottom: 15px;
+  }
+
+  .keypad-value {
+    background: $tralalere-green-blue;
+    box-shadow: -4px 4px #1D1E47;
+    border-radius: 7px;
+    height: 38px;
+    color: white;
+    font-size: 18px;
+    font-weight: 900;
+    display: flex;
+    align-items: center;
+    text-align: center;
+    border: none;
+    width: 134px !important;
+    outline: none;
+  }
+}
+
+.tralalere-box .keypad-close {
+  position: absolute;
+  right: -15px;
+  top: -15px;
+  svg {
+    width: 12px;
+  }
+  .tralalere-button {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+  }
+}
+
+.tralalere-box-small-right {
+  position: absolute;
+  right: -4px;
+}
+
+.tralalere-blocks-usage {
+  background: $tralalere-dark-blue;
+  border: solid 4px $tralalere-green-blue;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  white-space: nowrap;
+  margin-right: 10px;
+  color: #fff;
+  height: 32px;
+  padding: 0 35px 0 15px;
+  border-radius: 50px;
+  z-index: 5;
+  user-select: none;
+  text-align: center;
+  position: relative;
+
+  .block-usage-status {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    top: -5px;
+    left: -2px;
+    background: #85FF00;
+    border-radius: 3px;
+    &.is-warning {
+      background: #ff9900;
+    }
+    &.is-error {
+      background: #ff0000;
+    }
+  }
+}
+
+.tralalere .blocklyToolboxDiv {
+  background: $tralalere-dark-blue !important;
+  min-width: 175px;
+  .blocklyTreeRoot {
+    padding: 12px 12px;
+  }
+  [role="treeitem"] {
+    margin-bottom: 5px;
+    .blocklyTreeRow {
+      padding: 0;
+      background: $tralalere-green-blue;
+      border-radius: 4px;
+      position: relative;
+      transition: margin-right 0.07s ease-in-out;
+      border-left-width: 0 !important;
+      &.blocklyTreeSelected, &:hover {
+        background: $tralalere-green !important;
+        .blocklyTreeLabel {
+          color: black;
+        }
+      }
+      &.blocklyTreeSelected {
+        margin-right: -20px;
+        z-index: 1;
+        position: relative;
+      }
+      &:after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        left: 0;
+        height: 0;
+        border-radius: 0px;
+        border-top: 25px solid transparent;
+        border-right: 8px solid $tralalere-dark-blue;
+      }
+    }
+    .blocklyTreeLabel {
+      color: white;
+      font-weight: 900;
+      font-size: 14px;
+    }
+    .blocklyTreeIcon {
+      display: inline-block;
+      margin-left: 8px;
+      margin-right: 4px;
+      height: 10px;
+      width: 10px;
+      background: var(--color);
+      border: solid 2px rgba(0, 0, 0, 0.25);
+      border-radius: 2px;
+    }
+  }
+}
+
+.tralalere-mobile-tabs {
+  display: flex;
+  .tralalere-mobile-tab {
+    flex: 50%;
+    border-radius: 10px 10px 0 0;
+    font-family: 'Roboto';
+    font-weight: 900;
+    text-align: center;
+
+    background: #5158BB;
+    border: 3px solid $tralalere-green-blue;
+    color: white;
+    padding: 5px 10px;
+
+    &.is-active {
+      background: $tralalere-green;
+      border: 3px solid $tralalere-green;
+      color: #043565;
+    }
+  }
+}
+
+.tralalere-instructions-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  z-index: 5;
+  background: $tralalere-green-blue;
+  border-radius: 10px;
+  padding: 7px 7px 10px 10px;
+  box-shadow: -5px 5px #383961;
+  .tralalere-button {
+    @include tralalere-button-small;
+    font-size: 20px;
+    border: 3px solid $tralalere-green;
+  }
+}
+
+.tralalere-success {
+  background: $tralalere-green;
+  border-radius: 50px;
+  font-style: normal;
+  font-weight: 900;
+  font-size: 45px;
+  color: $tralalere-dark-blue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 100px;
+  position: absolute;
+  top: 10px;
+  left: 20px;
+  right: 0;
+  z-index: 10;
+  height: 86px;
+  box-shadow: 0px 4px 22px #FFFFFF, -15px 15px #435456;
+  .tralalere-success-left {
+    position: absolute;
+    top: -8px;
+    left: -12px;
+  }
+}
+
+
+
+.tralalere:not(.layout-mobile-horizontal):not(.layout-mobile-vertical) {
+  @media screen and (max-width: 1050px) {
+    .tralalere-instructions-left {
+      max-width: 90px;
+    }
+    .tralalere-success {
+      font-size: 20px;
+    }
+    .tralalere-instructions-shadow-down {
+      max-width: 90px;
+      top: 15px;
+      left: 0;
+    }
+    .tralalere-instructions-window {
+      left: 40px;
+    }
+    .tralalere-instructions .tralalere-instructions-container {
+      padding: 5px;
+      border-radius: 10px;
+      box-shadow: -10px 10px #383961;
+      h1 {
+        padding-top: 15px;
+        padding-left: 60px;
+        margin-bottom: 22px !important;
+      }
+      .advice {
+        margin-left: 0 !important;
+      }
+      .task-mission {
+        margin-right: 0;
+      }
+    }
+  }
+}
+
+// Responsive
+.layout-mobile-horizontal.tralalere, .layout-mobile-vertical.tralalere {
+  .context-visualization {
+    margin-top: 0;
+  }
+
+  .blockly-editor {
+    min-width: 0;
+  }
+
+  .task-visualization {
+    min-height: 100px;
+  }
+
+  .tralalere-controls {
+    width: 100%;
+    position: static;
+    padding-left: initial;
+    padding: 5px 0;
+    background: $tralalere-dark-blue;
+
+    .tralalere-button {
+      @include tralalere-button-small;
+      border-radius: 10px;
+    }
+
+    .controls.controls-left {
+      order: 2;
+      margin: auto;
+      align-items: center;
+      justify-content: center;
+      margin-right: 70px;
+    }
+
+    .controls.controls-right {
+      order: 1;
+    }
+  }
+
+  .tralalere-instructions-design {
+    display: none;
+  }
+
+  .tralalere-instructions {
+    position: static;
+    z-index: 5;
+  }
+
+  .tralalere-instructions-more {
+    .tralalere-button {
+      @include tralalere-button-small;
+    }
+  }
+
+  .tralalere-instructions-container {
+    margin-left: 10px;
+    margin-top: 0;
+    margin-right: 5px;
+    padding: 5px 0 0;
+    border-radius: 7px;
+    box-shadow: -7px 7px #383961;
+    position: absolute;
+    bottom: 55px;
+    z-index: 20;
+
+    .advice {
+      margin-left: 0 !important;
+    }
+
+    .task-mission {
+      margin-right: 0;
+    }
+  }
+
+  .blocklyToolboxDiv {
+    min-width: initial;
+  }
+
+  .blocklyTreeRoot {
+    padding-left: 0;
+    padding-right: 0;
+
+    [role=treeitem] {
+      margin-bottom: 8px;
+    }
+
+    .blocklyTreeRow {
+      height: auto !important;
+      text-align: center;
+      padding: 6px 8px !important;
+      border-radius: 0 !important;
+
+      &:after {
+        display: none;
+      }
+
+      .blocklyTreeIcon {
+        display: block !important;
+        width: 20px;
+        height: 20px;
+        margin: auto;
+      }
+
+      .blocklyTreeLabel {
+        display: block !important;
+      }
+
+      &.blocklyTreeSelected {
+        margin-right: initial !important;
+        z-index: 1;
+        position: relative;
+      }
+    }
+  }
+
+  .tralalere-blocks-usage {
+    position: absolute;
+    bottom: 15px;
+    right: 50px;
+  }
+
+  .tralalere-editor-play {
+    position: absolute;
+    right: 15px;
+    bottom: 15px;
+    z-index: 20;
+
+    .tralalere-button {
+      @include tralalere-button-small;
+    }
+  }
+
+  &.platform-blockly, &.platform-scratch {
+    .tralalere-blocks-usage {
+      bottom: 25px;
+      right: 60px;
+    }
+
+    .tralalere-editor-play {
+      right: 25px;
+      bottom: 25px;
+    }
+  }
+
+  .tralalere-coding-overlay {
+    border: solid 2px $tralalere-green;
+    box-shadow: inset 0px 0px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 4px;
+    .blocklyToolboxDiv {
+      display: none;
+    }
+  }
+
+  .tralalere-menu-icons {
+    .tralalere-button {
+      @include tralalere-button-small;
+    }
+    .tralalere-menu-label {
+      right: 35px;
+    }
+  }
+
+  .hint-button {
+    padding: 5px 10px;
+  }
+  .carousel-control-prev, .carousel-control-next, .carousel-control-prev:focus, .carousel-control-next:focus {
+    width: 15%;
+  }
+
+  .tralalere-success {
+    font-size: 25px;
+  }
+}
+
+.tralalere-doc.is-mobile {
+  .documentation-tabs-menu {
+    display: none;
+  }
+
+  width: 95vw;
+  max-height: 90vh;
+}
+
+
+.tralalere-success-dialog {
+  background: transparent;
+  padding: 0;
+  width: 80vw;
+  max-width: 600px;
+
+  > .tralalere-box {
+    height: 100%;
+  }
+
+  &.is-mobile {
+    width: 95vw;
+    max-height: 90vh;
+  }
+
+  .next-button {
+    font-size: 16px;
+    width: fit-content;
+    padding: 5px 30px;
+    margin: auto;
+  }
+
+  .tralalere-success-dialog-message {
+    color: white;
+    text-align: center;
+    margin-top: 20px;
+  }
+}

@@ -3,7 +3,7 @@ head(lang='fr')
   meta(charset='utf-8')
   title Codecast - Signed in
 body
-  script(type='text/javascript', src=rebaseUrl('build/jschannel.js'))
+  script(type='text/javascript', src=rebaseUrl('build/bebras-modules/ext/jschannel/jschannel.js'))
   script.
     var channel = window.Channel.build({window: window.opener, origin: '*', scope: 'login'});
     channel.call({

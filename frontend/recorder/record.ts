@@ -21,6 +21,7 @@ import {ReplayContext} from "../player/sagas";
 import {App} from "../index";
 import {PlayerInstant, playerReset} from "../player";
 import {PayloadAction} from "@reduxjs/toolkit";
+import log from 'loglevel';
 
 export interface AutoRecordingParams {
     sliceName: string,
@@ -136,7 +137,7 @@ export default function(bundle: Bundle) {
             while (!done) {
                 const recordAction = yield* take(channel);
                 if (recordAction.payload && false === recordAction.payload.record) {
-                    console.log('skip record');
+                    log.getLogger('recorder').debug('skip record');
                     continue;
                 }
                 const state: AppStore = yield* select();

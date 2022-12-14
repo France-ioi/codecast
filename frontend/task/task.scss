@@ -76,13 +76,17 @@ body {
   overflow: hidden;
 }
 
+html, body, #react-container {
+  height: 100%;
+}
+
 // Hide Quickalgo instructions
 #task {
   display: none;
 }
 
 .task {
-  height: 100vh;
+  height: 100%;
 
   .layout-general {
     display: flex;
@@ -184,27 +188,12 @@ body {
       font-size: 1.5em !important;
     }
 
-    .basic, .easy, .medium, .hard {
-      display: none !important;
-    }
-
-    &.level-basic .basic,
-    &.level-easy .easy,
-    &.level-medium .medium,
-    &.level-hard .hard {
-      display: inline-block !important;
-    }
-
-    [data-lang] {
-      display: none !important;
-    }
-
-    [data-lang~="python"] {
-      display: inline-block !important;
-    }
-
     ul {
       margin-bottom: 1rem !important;
+    }
+
+    :last-child {
+      margin-bottom: 0 !important;
     }
   }
 
@@ -221,13 +210,10 @@ body {
   }
 
   .task-visualization-container {
-    padding: 20px;
+    padding: 0;
     width: 100%;
     height: 100%;
     flex: 1 1 auto;
-    @include mobile {
-      padding: 0;
-    }
   }
 
   .task-visualization {
@@ -278,7 +264,7 @@ body {
       display: none;
     }
     .task-body {
-      height: 100vh;
+      height: 100%;
     }
   }
 
@@ -618,6 +604,9 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
       border-radius: 0;
     }
   }
+  .error-message-wrapper .message {
+    min-width: initial !important;
+  }
 }
 
 .offline-download-link {
@@ -787,4 +776,12 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   border: none;
   background: none;
   cursor: pointer;
+}
+
+.ace_tooltip {
+  white-space: pre-wrap !important;
+}
+
+.visibility-hidden {
+  visibility: hidden;
 }

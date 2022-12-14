@@ -340,14 +340,16 @@ export class PrinterLib extends QuickAlgoLibrary {
         };
     };
 
-    inputKey(character) {
-        log.getLogger('printer_lib').debug('received action inputKey', character);
+    inputKey(character, callback) {
+        log.getLogger('printer_lib').debug('received action inputKey', character, callback);
         this.innerState.inputBuffer = this.innerState.inputBuffer + character;
+        callback();
     };
 
-    inputBackSpace() {
+    inputBackSpace(callback) {
         log.getLogger('printer_lib').debug('received action inputBackSpace');
         this.innerState.inputBuffer = this.innerState.inputBuffer.slice(0, -1);
+        callback();
     };
 
     *inputEnter() {
@@ -701,7 +703,6 @@ export class PrinterLib extends QuickAlgoLibrary {
         yield* put(taskInputNeeded(true));
 
         const {input} = yield* race({
-            interrupt: take(StepperActionTypes.StepperInterrupt),
             exit: take(StepperActionTypes.StepperExit),
             input: take<PayloadAction<{input: string}>>(taskInputEntered.type),
         });

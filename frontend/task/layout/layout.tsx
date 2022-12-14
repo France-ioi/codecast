@@ -27,6 +27,7 @@ import {PlayerInstant} from "../../player";
 import {askConfirmation} from "../../alert";
 import {selectAnswer} from "../selectors";
 import {StepperStatus} from "../../stepper";
+import log from 'loglevel';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -75,6 +76,7 @@ export interface LayoutProps {
     screen: Screen,
     options: CodecastOptions,
     currentTask: any,
+    showVariables: boolean,
 }
 
 export interface LayoutElementMetadata {
@@ -568,7 +570,7 @@ function buildZonesLayout(node: XmlParserNode, data: BuildZoneLayoutData): React
     }
 
     const reactTree = recursivelyConvertToReactElements(node);
-    console.log('final node', {node, reactTree});
+    log.getLogger('layout').debug('final node', {node, reactTree});
 
     return reactTree;
 }
@@ -653,7 +655,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 },
             })
         } : {}),
-        ...(layoutProps.options.showStack ? {
+        ...(layoutProps.showVariables ? {
             Variables: (attrs) => ({
                 type: LayoutStackView,
                 metadata: {
@@ -765,6 +767,7 @@ export enum LayoutMobileMode {
     Instructions = 'instructions',
     Editor = 'editor',
     Player = 'player',
+    EditorPlayer = 'editor_player',
 }
 
 export enum LayoutPlayerMode {
@@ -805,7 +808,7 @@ function* layoutSaga({replayApi}: App) {
         const instant = state.player.current;
         const instantSource = selectAnswer(instant.state);
 
-        console.log('current source', currentSource, instantSource);
+        log.getLogger('layout').debug('current source', currentSource, instantSource);
 
         let confirmed = true;
         if (currentSource !== instantSource) {

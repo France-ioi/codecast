@@ -1,6 +1,5 @@
 import React, {useEffect, useRef, useState} from 'react';
 import classnames from 'classnames';
-import * as ace from 'brace';
 import {addAutocompletion} from "./editorAutocompletion";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
 import {Document} from "./document";
@@ -9,8 +8,9 @@ import {DraggableBlockItem, getContextBlocksDataSelector} from "../task/blocks/b
 import {useAppSelector} from "../hooks";
 import {useDrop} from "react-dnd";
 import {DocumentModel} from "./index";
+import log from 'loglevel';
 
-const Range = ace.acequire('ace/range').Range;
+const Range = window.ace.acequire('ace/range').Range;
 
 interface EditorProps {
     readOnly: boolean,
@@ -52,13 +52,13 @@ function sameSelection(s1, s2) {
 }
 
 export function Editor(props: EditorProps) {
-    const [selection, setSelection] = useState<any>(null);
     const [scrollTop, setScrollTop] = useState(0);
     const [firstVisibleRow, setFirstVisibleRow] = useState(0);
     const [willUpdateSelection, setWillUpdateSelection] = useState(false);
 
     const editor = useRef(null);
     const mute = useRef(false);
+    const selection = useRef(null);
     const marker = useRef();
 
     const context = quickAlgoLibraries.getContext(null, 'main');
@@ -67,6 +67,14 @@ export function Editor(props: EditorProps) {
     const contextStrings = useAppSelector(state => state.task.contextStrings);
 
     const refEditor = useRef();
+
+    const scrollOnLastLines = () => {
+        const ace = editor.current;
+        const cursorDistanceToBottom = ace.renderer.$size.scrollerHeight + ace.renderer.session.getScrollTop() - ace.renderer.$cursorLayer.getPixelPosition().top;
+        if (cursorDistanceToBottom < 120) {
+            ace.renderer.session.setScrollTop(ace.renderer.session.getScrollTop() + 120 - cursorDistanceToBottom);
+        }
+    }
 
     /*
       Performance fix: Ace fires many redundant selection events, so we wait
@@ -82,10 +90,13 @@ export function Editor(props: EditorProps) {
         window.requestAnimationFrame(() => {
             setWillUpdateSelection(false);
             const selection_ = editor.current.selection.getRange();
-            if (sameSelection(selection, selection_))
+            if (sameSelection(selection.current, selection_))
                 return;
-            setSelection(selection_);
+            log.getLogger('editor').debug('new selection', selection.current, selection_);
+            selection.current = selection_;
             props.onSelect(selection_);
+            // Try to scroll if needed
+            scrollOnLastLines();
         });
     };
 
@@ -127,12 +138,12 @@ export function Editor(props: EditorProps) {
         }
     };
 
-    const reset = (value: Document, selection, firstVisibleRow) => {
+    const reset = (value: Document, newSelection, firstVisibleRow) => {
         wrapModelToEditor(() => {
             editor.current.getSession().setValue(null === value ? '' : value.toString());
             editor.current.resize(true);
-            setSelection(null);
-            doSetSelection(selection);
+            selection.current = null;
+            doSetSelection(newSelection);
             setFirstVisibleRow(firstVisibleRow);
             editor.current.scrollToLine(firstVisibleRow);
             setScrollTop(editor.current.getSession().getScrollTop());
@@ -213,10 +224,10 @@ export function Editor(props: EditorProps) {
 
     const doSetSelection = (selection_) => {
         wrapModelToEditor(() => {
-            if (sameSelection(selection, selection_)) {
+            if (sameSelection(selection.current, selection_)) {
                 return;
             }
-            setSelection(selection_);
+            selection.current = selection_;
             if (selection_ && selection_.start && selection_.end) {
                 editor.current.selection.setRange(toRange(selection_));
             } else {
@@ -226,17 +237,15 @@ export function Editor(props: EditorProps) {
     };
 
     const highlight = (range) => {
-        console.log('make highlight');
+        log.getLogger('editor').debug('make highlight');
         wrapModelToEditor(() => {
             const session = editor.current.session;
-            console.log('remove marker', marker.current);
             if (marker.current) {
                 session.removeMarker(marker.current);
                 marker.current = null;
             }
             if (range && range.start && range.end) {
                 // Add (and save) the marker.
-                console.log('add maker');
                 marker.current = session.addMarker(toRange(range), 'code-highlight', 'text');
                 if (!props.shield) {
                     /* Also scroll so that the line is visible.  Skipped if the editor has
@@ -270,6 +279,8 @@ export function Editor(props: EditorProps) {
             enableSnippets: false,
             dragEnabled: true,
         });
+        editor.current.setOption("scrollPastEnd", 0.1);
+        editor.current.renderer.setScrollMargin(0, 80);
 
         const {onInit, onSelect, onEdit} = props;
         if (typeof onInit === 'function') {
@@ -343,8 +354,8 @@ export function Editor(props: EditorProps) {
     }
 
     useEffect(() => {
-        const editorObject = ace.edit(refEditor.current);
-        console.log('create editor', editorObject);
+        const editorObject = window.ace.edit(refEditor.current);
+        log.getLogger('editor').debug('create editor', editorObject);
         editor.current = editorObject;
         initEditor();
 
@@ -421,3 +432,4 @@ export function Editor(props: EditorProps) {
         </div>
     );
 }
+

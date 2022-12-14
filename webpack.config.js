@@ -154,6 +154,29 @@ module.exports = (env, argv) => {
                 },
                 {
                     test: /\.(ico|gif|png|jpg|jpeg|svg)$/,
+                    include: [
+                        path.resolve(__dirname, "frontend/task/fixture"),
+                    ],
+                    use: [
+                        {
+                            loader: 'file-loader',
+                            options: {
+                                context: 'public',
+                                publicPath: './build/',
+                                name(resourcePath) {
+                                    const matches = /.+task\/fixtures\/[\w_]+\/(.*)/ig.exec(resourcePath);
+
+                                    return 'images/' + matches[1];
+                                },
+                            }
+                        }
+                    ],
+                },
+                {
+                    test: /\.(ico|gif|png|jpg|jpeg|svg)$/,
+                    exclude: [
+                        path.resolve(__dirname, "frontend/task/fixture"),
+                    ],
                     use: [
                         {
                             loader: 'file-loader',

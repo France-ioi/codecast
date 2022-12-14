@@ -184,7 +184,6 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
             block.caption = funcProto;
             block.description = blockHelp;
             block.snippet = getSnippet(block.caption);
-            // console.log('generated description', {blockDesc, funcProto, blockHelp});
         } else {
             if (block.description) {
                 block.description = block.description.replace(/@/g, block.code);
@@ -231,24 +230,26 @@ function* checkSourceSaga() {
         return;
     }
 
+    let blocksUsage: BlocksUsage = {};
     try {
         checkCompilingCode(answer, state.options.platform, state, false);
-
-        const currentUsage = getBlocksUsage(answer, state.options.platform);
-        if (currentUsage) {
-            const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
-
-            const blocksUsage: BlocksUsage = {
-                blocksCurrent: currentUsage.blocksCurrent,
-                blocksLimit: maxInstructions,
-                limitations: currentUsage.limitations.filter(limitation => 'uses' === limitation.type),
-            };
-
-            yield* put(taskSetBlocksUsage(blocksUsage));
-        }
     } catch (e) {
-        yield* put(taskSetBlocksUsage({error: e.toString()}));
+        blocksUsage.error = e.toString();
     }
+
+    const currentUsage = getBlocksUsage(answer, state.options.platform);
+    if (currentUsage) {
+        const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
+
+        blocksUsage = {
+            ...blocksUsage,
+            blocksCurrent: currentUsage.blocksCurrent,
+            blocksLimit: maxInstructions,
+            limitations: currentUsage.limitations.filter(limitation => 'uses' === limitation.type),
+        };
+    }
+
+    yield* put(taskSetBlocksUsage(blocksUsage));
 }
 
 export default function (bundle: Bundle) {

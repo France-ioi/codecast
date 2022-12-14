@@ -9,8 +9,6 @@ interface AnalysisFunctionLocalsProps {
 export const AnalysisFunctionLocals = (props: AnalysisFunctionLocalsProps): JSX.Element => {
     const variables = props.stackFrame.variables;
 
-    console.log('variables', variables);
-
     const variablesTemplate = variables.map((variable) => {
         const {name, value, type} = variable;
         if (value !== undefined && 'module' !== type && 'function' !== type) {

@@ -7,8 +7,10 @@ import QuickPiFixture from './fixtures/quickpi_testbed';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
 import DatabaseFixture from './fixtures/test_database';
 import P5Fixture from './fixtures/test_p5';
+import CraneFixture from './fixtures/test_crane';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
+import {isLocalStorageEnabled} from "../common/utils";
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -19,6 +21,7 @@ const availableTasks = {
     barcode: BarcodeFixture,
     database: DatabaseFixture,
     p5: P5Fixture,
+    crane: CraneFixture,
 };
 
 export interface TaskSubmission {
@@ -59,6 +62,8 @@ export interface TaskState {
     contextIncludeBlocks: any,
     blocksPanelCollapsed?: boolean,
     blocksUsage?: BlocksUsage,
+    soundEnabled?: boolean,
+    menuHelpsOpen?: boolean,
 }
 
 export interface TaskInputEnteredPayload {
@@ -70,6 +75,7 @@ export interface TaskSubmissionResultPayload {
     testId: number,
     result: boolean,
     message?: string,
+    steps?: number,
 }
 
 export interface TaskTest {
@@ -96,6 +102,8 @@ export const taskInitialState = {
     contextIncludeBlocks: {},
     blocksPanelCollapsed: false,
     blocksUsage: null,
+    soundEnabled: !isLocalStorageEnabled() || !window.localStorage.getItem('soundDisabled'),
+    menuHelpsOpen: false,
 } as TaskState;
 
 export const selectCurrentTest = (state: AppStore) => {
@@ -116,12 +124,17 @@ export const taskSlice = createSlice({
             } else {
                 state.currentTask = availableTasks.robot;
             }
+            state.previousTestId = null;
         },
         currentTaskChange(state, action: PayloadAction<any>) {
             state.currentTask = action.payload;
+            state.previousTestId = null;
+            state.currentTestId = null;
         },
         taskCurrentLevelChange(state, action: PayloadAction<{level: TaskLevelName, record?: boolean}>) {
             state.currentLevel = action.payload.level;
+            state.previousTestId = null;
+            state.currentTestId = null;
         },
         recordingEnabledChange(state, action: PayloadAction<boolean>) {
             state.recordingEnabled = action.payload;
@@ -142,6 +155,8 @@ export const taskSlice = createSlice({
                 data: testData,
                 contextState: null,
             } as TaskTest));
+            state.previousTestId = null;
+            state.currentTestId = null;
         },
         updateCurrentTestId(state: TaskState, action: PayloadAction<{testId: number, record?: boolean, recreateContext?: boolean}>) {
             state.previousTestId = state.currentTestId;
@@ -214,7 +229,8 @@ export const taskSlice = createSlice({
             state.contextId++;
         },
         taskSetContextStrings(state: TaskState, action: PayloadAction<any>) {
-            state.contextStrings = action.payload;
+            // Make a copy to put in the store so that the original "strings" object do not end frozen and thus immutable by Immer
+            state.contextStrings = action.payload ? JSON.parse(JSON.stringify(action.payload)) : {};
         },
         taskSetContextIncludeBlocks(state: TaskState, action: PayloadAction<any>) {
             state.contextIncludeBlocks = action.payload;
@@ -224,6 +240,19 @@ export const taskSlice = createSlice({
         },
         taskSetBlocksUsage(state: TaskState, action: PayloadAction<BlocksUsage>) {
             state.blocksUsage = action.payload;
+        },
+        taskChangeSoundEnabled(state: TaskState, action: PayloadAction<boolean>) {
+            state.soundEnabled = action.payload
+            if (isLocalStorageEnabled()) {
+                if (state.soundEnabled) {
+                    window.localStorage.removeItem('soundDisabled');
+                } else {
+                    window.localStorage.setItem('soundDisabled', 'yes');
+                }
+            }
+        },
+        taskSetMenuHelpsOpen(state: TaskState, action: PayloadAction<boolean>) {
+            state.menuHelpsOpen = action.payload;
         },
     },
 });
@@ -254,6 +283,8 @@ export const {
     taskSetContextIncludeBlocks,
     taskSetBlocksPanelCollapsed,
     taskSetBlocksUsage,
+    taskChangeSoundEnabled,
+    taskSetMenuHelpsOpen,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [
@@ -262,6 +293,7 @@ export const taskRecordableActions = [
     'taskInputNeeded',
     'updateCurrentTestId',
     'taskSetBlocksPanelCollapsed',
+    'taskChangeSoundEnabled',
 ];
 
 export default taskSlice;

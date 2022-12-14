@@ -25,7 +25,7 @@ export default abstract class AbstractRunner {
         return false;
     }
 
-    public async runNewStep(stepperContext: StepperContext) {
+    public async runNewStep(stepperContext: StepperContext, noInteractive = false) {
 
     }
 
@@ -35,6 +35,10 @@ export default abstract class AbstractRunner {
     }
 
     public initCodes(codes, availableBlocks = null) {
+
+    }
+
+    public stop() {
 
     }
 

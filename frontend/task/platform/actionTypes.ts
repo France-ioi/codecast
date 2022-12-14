@@ -8,6 +8,7 @@ const successErrorPayload = (success, error) => ({
 });
 
 export const platformTaskRefresh = createAction('platformTaskRefresh');
+export const platformTaskLink = createAction('platformTaskLink');
 
 export const platformAnswerLoaded = createAction('platformAnswerLoaded', (answer) => ({
     payload: {
@@ -15,11 +16,12 @@ export const platformAnswerLoaded = createAction('platformAnswerLoaded', (answer
     },
 }));
 
-export const platformAnswerGraded = createAction('platformAnswerGraded', ({score, message, error}: {score?: number, message?: string, error?: string}) => ({
+export const platformAnswerGraded = createAction('platformAnswerGraded', ({score, message, error, maxScore}: {score?: number, message?: string, error?: string, maxScore?: number}) => ({
     payload: {
         score,
         message,
         error,
+        maxScore,
     },
 }));
 
@@ -71,5 +73,11 @@ export const taskGradeAnswerEvent = createAction('taskEventGradeAnswer', (answer
         success,
         error,
         silent,
+    },
+}));
+export const taskGetResourcesPost = createAction('taskEventGetResourcesPost', (resources, callback) => ({
+    payload: {
+        resources,
+        callback,
     },
 }));

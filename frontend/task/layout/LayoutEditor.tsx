@@ -12,8 +12,13 @@ import {useDispatch} from "react-redux";
 import {BlocksUsage} from "../blocks/BlocksUsage";
 import {CodecastPlatform} from "../../store";
 
-export function LayoutEditor() {
-    const platform = useAppSelector(state => state.options.platform);
+export interface LayoutEditorProps {
+    style?: any,
+}
+
+export function LayoutEditor(props: LayoutEditorProps) {
+    const options = useAppSelector(state => state.options);
+    const platform = options.platform;
     const currentTask = useAppSelector(state => state.task.currentTask);
     const blocksCollapsed = useAppSelector(state => state.task.blocksPanelCollapsed);
     let sourceMode;
@@ -41,10 +46,10 @@ export function LayoutEditor() {
     const context = quickAlgoLibraries.getContext(null, 'main');
     const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector(state, context) : []);
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
-    const displayBlocks = !!(context && blocks.length && CodecastPlatform.Python === platform);
+    const displayBlocks = !!(context && blocks.length && CodecastPlatform.Python === platform && 'tralalere' !== options.app);
 
     return (
-        <div className="layout-editor">
+        <div className="layout-editor" style={props.style}>
             {currentTask && displayBlocks && <AvailableBlocks collapsed={blocksCollapsed}/>}
             <div className="task-layout-editor-container">
                 {currentTask && displayBlocks && <div className="task-available-blocks-collapser" style={{cursor: 'pointer'}} onClick={collapseBlocks}>
@@ -62,7 +67,7 @@ export function LayoutEditor() {
                     hasAutocompletion
                 />
             </div>
-            <BlocksUsage/>
+            {'tralalere' !== options.app && <BlocksUsage/>}
         </div>
     );
 }

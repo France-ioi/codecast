@@ -3,7 +3,7 @@
 // where source and input are buffer models (of shape {document, selection, firstVisibleRow}).
 
 import {buffers, eventChannel} from 'redux-saga';
-import {call, put, race, select, take, takeLatest, spawn, delay} from 'typed-redux-saga';
+import {call, put, race, select, take, takeLatest, spawn} from 'typed-redux-saga';
 import {findInstantIndex} from './utils';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
@@ -25,10 +25,13 @@ import {RECORDING_FORMAT_VERSION} from "../version";
 import {getCurrentImmerState} from "../task/utils";
 import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
-import {taskLoaded} from "../task/task_slice";
+import {currentTaskChange, currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
 import {LayoutPlayerMode} from "../task/layout/layout";
 import {setTaskEventsEnvironment} from "../task/platform/platform";
 import {createRunnerSaga} from "../stepper";
+import {delay as delay$1} from 'typed-redux-saga';
+import {platformTaskLink} from '../task/platform/actionTypes';
+import log from 'loglevel';
 
 export default function(bundle: Bundle) {
     bundle.addSaga(playerSaga);
@@ -47,6 +50,25 @@ export interface ReplayContext {
     stepperDone: any,
     stepperContext: StepperContext
 }
+
+let timersStarted = 0;
+let timersEnded = 0;
+export function* delay<T = true>(
+    ms: number,
+    val?: T,
+) {
+    timersStarted++;
+
+    let returned;
+    try {
+        returned = yield* delay$1(ms, val);
+    } finally {
+        timersEnded++;
+    }
+
+    return returned;
+}
+
 
 function* playerSaga(action) {
     yield* takeLatest(ActionTypes.PlayerPrepare, playerPrepare, action);
@@ -91,13 +113,13 @@ function* playerPrepare(app: App, action) {
 
     if (navigator && navigator.mediaSession) {
         navigator.mediaSession.setActionHandler('play', function(ev) {
-            console.log('[media session] made play');
+            log.getLogger('player').debug('[media session] made play');
             audio.pause();
             app.dispatch({type: LayoutActionTypes.LayoutPlayerModeBackToReplay, payload: {resumeImmediately: true}});
         });
 
         navigator.mediaSession.setActionHandler('pause', function(ev) {
-            console.log('[media session] made pause', ev);
+            log.getLogger('player').debug('[media session] made pause', ev);
             app.dispatch({type: ActionTypes.PlayerPause});
         });
     }
@@ -119,6 +141,11 @@ function* playerPrepare(app: App, action) {
 
         return;
     }
+
+    if (data.selectedTask) {
+        yield* put(currentTaskChangePredefined(data.selectedTask));
+    }
+
     /* Compute the future state after every event. */
     const chan = yield* call(requestAnimationFrames, 50);
 
@@ -137,7 +164,7 @@ function* playerPrepare(app: App, action) {
         });
     }
 
-    yield* put(taskLoad({selectedTask: data.selectedTask}));
+    yield* put(platformTaskLink());
     yield* take(taskLoaded.type);
     state = yield* select();
 
@@ -321,11 +348,11 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         const instant: PlayerInstant = {t, pos, event} as PlayerInstant;
         replayContext.instant = instant;
 
-        console.log('-------- REPLAY ---- EVENT ----', key, event);
+        log.getLogger('player').debug('-------- REPLAY ---- EVENT ----', key, event);
         yield new Promise(resolve => {
             replayStore.dispatch({type: PlayerActionTypes.PlayerApplyReplayEvent, payload: {replayApi, key, replayContext, event, resolve}});
         });
-        console.log('END REPLAY EVENT (computeInstants)');
+        log.getLogger('player').debug('END REPLAY EVENT (computeInstants)');
 
         // Get Redux state and context state and store them
         const instantState = createDraft(replayStore.getState());
@@ -334,13 +361,12 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         instant.state = finishDraft(instantState);
 
         Object.freeze(instant);
-        console.log('new instant', instant.state);
+        log.getLogger('player').debug('new instant', instant.state);
 
         replayContext.instants.push(instant);
         progress = Math.round(pos * 50 / events.length + t * 50 / duration) / 100;
         if (progress !== lastProgress) {
             lastProgress = progress;
-
             yield* call(replayContext.reportProgress, progress);
         }
     }
@@ -350,10 +376,9 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
  * This redux saga has been dispatched in the replay store and occurs in this store
  */
 function* playerReplayEvent(app: App, {type, payload}) {
-    console.log('START REPLAY EVENT (playerReplayEvent)', type, payload);
     const {replayApi, key, replayContext, event, resolve} = payload;
     const environment = app.environment;
-    console.log('environment', environment);
+    log.getLogger('replay').debug('START REPLAY EVENT (playerReplayEvent)', type, payload, environment);
 
     const triggeredEffects = {};
 
@@ -383,20 +408,22 @@ function* playerReplayEvent(app: App, {type, payload}) {
     });
 
     let remainingEffects = null;
+    let steps = 0;
     while (true) {
         let newRemainingEffects = JSON.stringify(Object.keys(triggeredEffects).filter(effectId => !triggeredEffects[effectId]));
-        console.log('new remaining effects', newRemainingEffects);
-        if (newRemainingEffects === remainingEffects) {
+        log.getLogger('replay').debug('new remaining effects', newRemainingEffects, timersStarted, timersEnded);
+        if (newRemainingEffects === remainingEffects && timersStarted === timersEnded) {
             break;
         }
 
         remainingEffects = newRemainingEffects;
-        console.log('PLAY REPLAY, before yield');
+        log.getLogger('replay').debug('PLAY REPLAY, before yield', steps);
         yield* delay(0);
-        console.log('after wait delay');
+        log.getLogger('replay').debug('after wait delay', steps);
+        steps++;
     }
 
-    console.log('END REPLAY EVENT (playerReplayEvent)');
+    log.getLogger('replay').debug('END REPLAY EVENT (playerReplayEvent)');
     resolve();
 }
 
@@ -522,13 +549,13 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
         return;
     }
 
-    console.log('replay, new instants', instantIndex, nextInstantIndex);
+    log.getLogger('player').debug('replay, new instants', instantIndex, nextInstantIndex);
 
     /* Update the DOM by replaying incremental events between (immediately
        after) `instant` and up to (including) `nextInstant`. */
     instantIndex += 1;
     while (instantIndex <= nextInstantIndex) {
-        console.log('upgrade instant');
+        log.getLogger('player').debug('upgrade instant');
         let instant = instants[instantIndex];
         if (instant.hasOwnProperty('mute')) {
             yield* put({type: ActionTypes.PlayerEditorMutedChanged, payload: {isMuted: instant.mute}});
@@ -550,7 +577,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
         }
 
         if (instant.quickalgoLibraryCalls && instant.quickalgoLibraryCalls.length) {
-            console.log('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.action).join(','));
+            log.getLogger('player').debug('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.action).join(','));
             const context = quickAlgoLibraries.getContext(null, 'main');
             // We start from the end state of the last instant, and apply the calls that happened during this instant
             const stepperState = instants[instantIndex-1].state.stepper;
@@ -577,7 +604,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                 const executor = stepperContext.quickAlgoCallsExecutor;
                 for (let quickalgoCall of instant.quickalgoLibraryCalls) {
                     const {module, action, args} = quickalgoCall;
-                    console.log('start call execution', quickalgoCall);
+                    log.getLogger('player').debug('start call execution', quickalgoCall);
 
                     // @ts-ignore
                     yield* spawn(executor, module, action, args);
@@ -619,7 +646,7 @@ function* resetToAudioTime(app: App, audioTime: number, quick?: boolean) {
 
 function* restartStepper() {
     /* Re-enable the stepper to allow the user to interact with it. */
-    console.log('restart stepper');
+    log.getLogger('player').debug('restart stepper');
     yield* put({type: StepperActionTypes.StepperEnabled});
 }
 

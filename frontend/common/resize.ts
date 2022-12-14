@@ -36,9 +36,14 @@ export default function(bundle: Bundle) {
     bundle.addReducer(ActionTypes.WindowResized, (state: AppStore, action) => {
         const {width, height} = action;
 
+        // We recompute layout type only when width changes, because on mobile the virtual keyboard opening
+        // triggers a window resized event and this should not change the layout to have the best UX
+        if (state.windowWidth !== width || state.windowHeight <= 200) {
+            state.layout.type = computeLayoutType(width, height);
+        }
+
         state.windowWidth = width;
         state.windowHeight = height;
-        state.layout.type = computeLayoutType(width, height);
     });
 
     // Event channel for resize events.

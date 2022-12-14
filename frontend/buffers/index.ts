@@ -38,69 +38,30 @@ import {
     Selection, uncompressIntoDocument
 } from "./document";
 
-import 'brace';
-import 'brace/mode/c_cpp';
-import 'brace/mode/python';
-import 'brace/snippets/html';
-import 'brace/ext/language_tools';
-import 'brace/theme/github';
-import 'brace/worker/javascript';
+window.ace = require("ace-builds");
+window.ace.acequire = window.ace.require || window.ace.acequire;
+import "ace-builds/src-min-noconflict/mode-c_cpp";
+import "ace-builds/src-min-noconflict/mode-python";
+import "ace-builds/src-min-noconflict/snippets/html";
+import "ace-builds/src-min-noconflict/ext-language_tools";
+import "ace-builds/src-min-noconflict/theme-github";
+import "ace-builds/src-min-noconflict/worker-javascript";
+
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "./selectors";
-import {current, immerable} from "immer";
+import {immerable} from "immer";
 import {AppStore, CodecastPlatform} from "../store";
 import {ReplayContext} from "../player/sagas";
 import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
 import {App} from "../index";
-import {getCurrentStepperState} from "../stepper/selectors";
-import {getNodeRange, updateSourceHighlightSaga} from "../stepper";
+import {updateSourceHighlightSaga} from "../stepper";
 import {BlockType} from "../task/blocks/blocks";
-
-// import 'brace/theme/ambiance';
-// import 'brace/theme/chaos';
-// import 'brace/theme/chrome';
-// import 'brace/theme/clouds';
-// import 'brace/theme/clouds_midnight';
-// import 'brace/theme/cobalt';
-// import 'brace/theme/crimson_editor';
-// import 'brace/theme/dawn';
-// import 'brace/theme/dreamweaver';
-// import 'brace/theme/eclipse';
-// import 'brace/theme/idle_fingers';
-// import 'brace/theme/iplastic';
-// import 'brace/theme/katzenmilch';
-// import 'brace/theme/kr_theme';
-// import 'brace/theme/kuroir';
-// import 'brace/theme/merbivore';
-// import 'brace/theme/merbivore_soft';
-// import 'brace/theme/mono_industrial';
-// import 'brace/theme/monokai';
-// import 'brace/theme/pastel_on_dark';
-// import 'brace/theme/solarized_dark';
-// import 'brace/theme/solarized_light';
-// import 'brace/theme/sqlserver';
-// import 'brace/theme/terminal';
-// import 'brace/theme/textmate';
-// import 'brace/theme/tomorrow';
-// import 'brace/theme/tomorrow_night';
-// import 'brace/theme/tomorrow_night_blue';
-// import 'brace/theme/tomorrow_night_bright';
-// import 'brace/theme/tomorrow_night_eighties';
-// import 'brace/theme/twilight';
-// import 'brace/theme/vibrant_ink';
-// import 'brace/theme/xcode';
+import log from 'loglevel';
 
 const AceThemes = [
     'github',
-    // 'ambiance', 'chaos', 'chrome', 'clouds', 'clouds_midnight', 'cobalt',
-    // 'crimson_editor', 'dawn', 'dreamweaver', 'eclipse', 'github', 'idle_fingers',
-    // 'iplastic', 'katzenmilch', 'kr_theme', 'kuroir', 'merbivore',
-    // 'merbivore_soft', 'mono_industrial', 'monokai', 'pastel_on_dark',
-    // 'solarized_dark', 'solarized_light', 'sqlserver', 'terminal', 'textmate',
-    // 'tomorrow', 'tomorrow_night', 'tomorrow_night_blue', 'tomorrow_night_bright',
-    // 'tomorrow_night_eighties', 'twilight', 'vibrant_ink', 'xcode'
 ];
 
 export abstract class BufferContentModel {
@@ -347,7 +308,7 @@ function resetEditor(editor, model?: BufferContentModel, goToEnd?: boolean) {
         }
 
     } catch (error) {
-        console.log('failed to update editor view with model', error);
+        log.getLogger('editor').debug('failed to update editor view with model', error);
     }
 }
 
@@ -403,14 +364,14 @@ function addRecordHooks({recordApi}: App) {
 }
 
 function addReplayHooks({replayApi}: App) {
-    console.log('ADD REPLAY HOOKS');
+    log.getLogger('editor').debug('Add replay hooks for editor');
     replayApi.on('start', function* (replayContext: ReplayContext, event) {
         const {buffers} = event[2];
         for (let bufferName of Object.keys(buffers)) {
             const content = buffers[bufferName].document;
             const document = uncompressIntoDocument(content);
             const model = modelFromDocument(document);
-            console.log('gotten document', document);
+            log.getLogger('editor').debug('Gotten document', document);
             yield* put({type: ActionTypes.BufferReset, buffer: bufferName, model});
         }
 
@@ -475,7 +436,7 @@ function addReplayHooks({replayApi}: App) {
     });
     replayApi.onReset(function* ({state}: PlayerInstant, quick) {
         /* Reset all buffers. */
-        console.log('BUFFER RESET', state);
+        log.getLogger('editor').debug('Editor Buffer Reset', state);
         for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer].model;
 

@@ -167,6 +167,7 @@ module.exports = {
     TASK_DESCRIPTION: 'Instructions',
     TASK_VARIABLES: 'Variables',
     TASK_DOCUMENTATION: 'Informations',
+    TASK_INSTRUCTIONS: 'Your mission',
     TASK_DOCUMENTATION_INSTRUCTIONS: 'Mission details',
     TASK_DOCUMENTATION_CODE_EXAMPLES: 'Code examples',
     TASK_DOCUMENTATION_LOAD_ERROR: "This content cannot be displayed because the connection to the task has been terminated. Close this tab and reopen the documentation from the task.",
@@ -182,6 +183,7 @@ module.exports = {
     TASK_BLOCKS_SUBTITLE: "Click to insert",
     TASK_BLOCKS_LIMIT_EXPANDED: '{current}/{limit} remaining block|{current}/{limit} remaining blocks',
     TASK_BLOCKS_LIMIT_BLOCK: '{remaining} block "{name}"|{remaining} blocks "{name}"',
+    TASK_BLOCKS_REMAINING_BLOCKS: '{remaining} Block|{remaining} Blocks',
     TASK_BLOCKS_LIMIT_REMAINING: 'remaining:',
     TASK_BLOCK_CATEGORY_ACTIONS: "Actions",
     TASK_BLOCK_CATEGORY_SENSORS: "Sensors",
@@ -234,4 +236,12 @@ module.exports = {
     ABOUT_TRANSLATORS: "and translated by:",
     ABOUT_LICENSE: "Licence:",
     ABOUT_CODECAST: "Codecast is a France-ioi project developed under MIT License",
+
+    TRALALERE_MENU_DOCUMENTATION: "Documentation",
+    TRALALERE_MENU_HINTS: "Hints",
+    TRALALERE_HINTS_TITLE: "Hint",
+    TRALALERE_HINTS_ASK: "Ask for a hint",
+    TRALALERE_ADVICE: "Advice",
+    TRALALERE_TASK_SUCCESS: "Mission accomplished",
+    TRALALERE_NEXT_LEVEL_MESSAGE: "And now, up to you!",
 };

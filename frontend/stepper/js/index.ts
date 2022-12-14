@@ -9,17 +9,40 @@ import {TaskLevelName} from "../../task/platform/platform_slice";
 import {extractLevelSpecific} from "../../task/utils";
 import {delay} from "../api";
 import {getMessage, getMessageChoices} from "../../lang";
-import {select} from "typed-redux-saga";
-import {displayModal} from "../../common/prompt_modal";
+import {put, select} from "typed-redux-saga";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
+import {LayoutType} from "../../task/layout/layout";
+import {taskIncreaseContextId} from "../../task/task_slice";
+import log from 'loglevel';
 
 let originalFireNow;
+let originalSetBackgroundPathVertical_;
 
 export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: TaskLevelName) {
     let blocklyHelper;
 
-    const language = yield* select((state: AppStore) => state.options.language.split('-')[0]);
+    if (context && context.blocklyHelper) {
+        context.blocklyHelper.unloadLevel();
+    }
+
+    log.getLogger('blockly_runner').debug('[stepper/js] load blockly helper', context.infos.includeBlocks, context.infos.includeBlocks.groupByCategory);
+    const state: AppStore = yield* select();
+    const options = state.options;
+    const language = options.language.split('-')[0];
     const languageTranslations = require('../../lang/blockly_' + language + '.js');
+    const isMobile = yield* select((state: AppStore) => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
+    if (context.infos && context.infos.includeBlocks) {
+        if (isMobile) {
+            if (undefined === context.infos.includeBlocks.originalGroupByCategory) {
+                context.infos.includeBlocks.originalGroupByCategory = !!context.infos.includeBlocks.groupByCategory;
+            }
+            context.infos.includeBlocks.groupByCategory = true;
+        } else if (undefined !== context.infos.includeBlocks.originalGroupByCategory) {
+            context.infos.includeBlocks.groupByCategory = !!context.infos.includeBlocks.originalGroupByCategory;
+        }
+    }
+    log.getLogger('blockly_runner').debug('group by category', context.infos.includeBlocks.groupByCategory);
+
     window.goog.provide('Blockly.Msg.' + language);
     window.Blockly.Msg = {...window.Blockly.Msg, ...languageTranslations.Msg};
 
@@ -39,15 +62,42 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
             setPlayPause: () => {},
             updateControlsDisplay: () => {},
             onResize: () => {},
+            displayKeypad: function(initialValue, position, callbackModify, callbackFinished, options) {
+                if (window.displayHelper) {
+                    window.displayHelper.showKeypad(initialValue, position, callbackModify, callbackFinished, options);
+                }
+            },
         };
     }
 
-    console.log('[blockly.editor] load blockly helper', context);
+    log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context);
     blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
     // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
     // during loadPrograms at the start of the program execution
     blocklyHelper.onChangeResetDisplay = () => {
     };
+    // Override this function to add x="0" y="0" so that cleanBlockAttributes works correctly by detecting x is not null
+    blocklyHelper.getEmptyContent = function() {
+        if (this.startingBlock) {
+            if(this.scratchMode) {
+                return '<xml><block type="robot_start" deletable="false" movable="false" x="10" y="20"></block></xml>';
+            } else {
+                return '<xml><block type="robot_start" deletable="false" movable="false" x="0" y="0"></block></xml>';
+            }
+        }
+        else {
+            return '<xml></xml>';
+        }
+    };
+    // Override this function to change parameters
+    blocklyHelper.getOrigin = function() {
+        // Get x/y origin
+        if (this.includeBlocks.groupByCategory && typeof this.options.scrollbars != 'undefined' && !this.options.scrollbars) {
+            return this.scratchMode ? {x: 340, y: 20} : {x: 105, y: 2};
+        }
+        return this.scratchMode ? {x: 20, y: 20} : {x: 20, y: 2};
+    };
+
     context.blocklyHelper = blocklyHelper;
     context.onChange = () => {};
 
@@ -59,20 +109,79 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     // We overload this function to catch the Blockly firing event instant so that we know when the program
     // is successfully reloaded and that the events won't trigger an editor content update which would trigger
     // a stepper.exit
-    window.Blockly.Events.fireNow_ = () => {
-        originalFireNow();
-        blocklyHelper.reloading = false;
+    if ('main' === state.environment) {
+        window.Blockly.Events.fireNow_ = () => {
+            originalFireNow();
+            blocklyHelper.reloading = false;
+        };
     }
 
-    console.log('[blockly.editor] load context into blockly editor');
+    log.getLogger('blockly_runner').debug('[blockly.editor] load context into blockly editor');
     blocklyHelper.loadContext(context);
 
     const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
     blocklyHelper.setIncludeBlocks(curIncludeBlocks);
+
+    const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
+    if (groupsCategory && 'tralalere' === options.app) {
+        overrideBlocklyFlyoutForCategories(isMobile);
+    } else if (originalSetBackgroundPathVertical_) {
+        window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = originalSetBackgroundPathVertical_;
+    }
+
+    yield* put(taskIncreaseContextId());
 }
 
+export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
+    // Override function from Blockly for two reasons:
+    // 1. Control width and height of Blockly flyout
+    // 2. Add border radiuses at top-left and bottom-left
+    if (!originalSetBackgroundPathVertical_) {
+        originalSetBackgroundPathVertical_ = window.Blockly.Flyout.prototype.setBackgroundPathVertical_;
+    }
+
+    window.Blockly.Flyout.prototype.setBackgroundPathVertical_ = function(width, height) {
+        const toolboxWidth = this.targetWorkspace_ && this.targetWorkspace_.toolbox_ ? this.targetWorkspace_.toolbox_.getWidth() : 0;
+        let atRight = this.toolboxPosition_ == window.Blockly.TOOLBOX_AT_RIGHT;
+        let computedHeight = isMobile ? window.innerHeight - 120 : Math.min(400, height);
+        let computedWidth = isMobile ? window.innerWidth - toolboxWidth - 2*this.CORNER_RADIUS + 4 : Math.max(300, width);
+        log.getLogger('blockly_runner').debug('background draw', {isMobile, toolboxWidth, width, computedWidth, windowWidth: window.innerWidth, workspace: this.targetWorkspace_});
+        // Decide whether to start on the left or right.
+        let path = ['M ' + (atRight ? this.width_ - this.CORNER_RADIUS : this.CORNER_RADIUS) + ',0'];
+        // Top.
+        path.push('h', String(computedWidth - this.CORNER_RADIUS));
+        // Rounded corner top-right
+        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
+            atRight ? "0" : "1",
+            atRight ? -this.CORNER_RADIUS : this.CORNER_RADIUS,
+            this.CORNER_RADIUS);
+        // Side closest to workspace.
+        path.push('v', String(Math.max(0, computedHeight - this.CORNER_RADIUS * 2)));
+        // Rounded corner bottom-right
+        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
+            atRight ? "0" : "1",
+            atRight ? this.CORNER_RADIUS : -this.CORNER_RADIUS,
+            this.CORNER_RADIUS);
+        // Bottom.
+        path.push('h', String(-(computedWidth - this.CORNER_RADIUS)));
+        // Rounded corner bottom-left
+        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
+            atRight ? "0" : "1",
+            atRight ? this.CORNER_RADIUS : -this.CORNER_RADIUS,
+            String(-this.CORNER_RADIUS));
+        path.push('v', String(-Math.max(0, computedHeight - this.CORNER_RADIUS * 2)));
+        // Rounded corner top-left
+        path.push('a', this.CORNER_RADIUS, this.CORNER_RADIUS, "0", "0",
+            atRight ? "0" : "1",
+            atRight ? -this.CORNER_RADIUS : this.CORNER_RADIUS,
+            String(-this.CORNER_RADIUS));
+        path.push('z');
+        this.svgBackground_.setAttribute('d', path.join(' '));
+    };
+};
+
 export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, state: AppStore, withEmptyCheck: boolean = true) {
-    console.log('check blockly code', answer, context.strings.code);
+    log.getLogger('blockly_runner').debug('check blockly code', answer, context.strings.code);
 
     if (!answer || !answer.blockly) {
         return;
@@ -117,12 +226,12 @@ export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary
         };
     }
 
-    console.log('blocks usage', answer);
+    log.getLogger('blockly_runner').debug('blocks usage', answer);
 
     const blocks = getBlocksFromXml(answer.blockly);
     const limitations = (context.infos.limitedUses ? blocklyFindLimited(blocks, context.infos.limitedUses, context) : []) as {type: string, name: string, current: number, limit: number}[];
 
-    console.log('limitations', limitations);
+    log.getLogger('blockly_runner').debug('limitations', limitations);
 
     return {
         blocksCurrent: blocks.length - 1,
@@ -185,10 +294,10 @@ export default function(bundle: Bundle) {
             const context = quickAlgoLibraries.getContext(null, environment);
             const language = state.options.language.split('-')[0];
 
-            console.log('init stepper', environment);
             if (hasBlockPlatform(platform)) {
+                log.getLogger('blockly_runner').debug('init stepper js', environment);
                 context.onError = (diagnostics) => {
-                    console.log('context error', diagnostics);
+                    log.getLogger('blockly_runner').debug('context error', diagnostics);
                     // channel.put({
                     //     type: CompileActionTypes.StepperInterrupting,
                     // });
@@ -198,8 +307,8 @@ export default function(bundle: Bundle) {
                 const blocksData = getContextBlocksDataSelector(state, context);
 
                 const blocklyHelper = context.blocklyHelper;
-                console.log('blockly helper', blocklyHelper);
-                console.log('display', context.display);
+                log.getLogger('blockly_runner').debug('blockly helper', blocklyHelper);
+                log.getLogger('blockly_runner').debug('display', context.display);
                 const blocklyXmlCode = answer.blockly;
                 if (!blocklyHelper.workspace) {
                     blocklyHelper.load(language, context.display, 1, {});
@@ -208,7 +317,7 @@ export default function(bundle: Bundle) {
                     blocklyHelper.programs.push({});
                 }
                 blocklyHelper.programs[0].blockly = blocklyXmlCode;
-                console.log('xml code', blocklyXmlCode);
+                log.getLogger('blockly_runner').debug('xml code', blocklyXmlCode);
 
                 blocklyHelper.reloading = true;
                 blocklyHelper.loadPrograms();
@@ -225,7 +334,7 @@ export default function(bundle: Bundle) {
                     + "highlightBlock(undefined);\n"
                     + "program_end();"
 
-                console.log('full code', fullCode);
+                log.getLogger('blockly_runner').debug('full code', fullCode);
 
                 const blocklyInterpreter = Codecast.runner;
                 blocklyInterpreter.initCodes([fullCode], blocksData);

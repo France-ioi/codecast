@@ -10,6 +10,7 @@ export enum Screen {
     EditorSave = 'editor_save',
     DocumentationSmall = 'documentation_small',
     DocumentationBig = 'documentation_big',
+    Hints = 'hints',
 }
 
 export default function(bundle: Bundle) {

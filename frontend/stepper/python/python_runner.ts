@@ -48,19 +48,17 @@ export default class PythonRunner extends AbstractRunner {
     private availableModules = [];
     private availableBlocks = [] as Block[];
     public _isFinished = false;
-    private _printedDuringStep = '';
-    public onError;
     private quickAlgoCallsExecutor;
     private _nbActions = 0;
+    public hasCalledHandler = false;
 
     constructor(context) {
         super(context);
         this.context = context;
-        this.onError = context.onError;
     }
 
     public static needsCompilation(): boolean {
-        return false;
+        return true;
     }
 
     public enrichStepperContext(stepperContext: StepperContext, state: StepperState) {
@@ -73,20 +71,26 @@ export default class PythonRunner extends AbstractRunner {
         return stepperState.isFinished;
     }
 
-    public async runNewStep(stepperContext: StepperContext) {
-        const result = await this.runStep(stepperContext.quickAlgoCallsExecutor);
+    public async runNewStep(stepperContext: StepperContext, noInteractive = false) {
+        log.getLogger('python_runner').debug('[Python runner] Run new step, no interactive = ', noInteractive);
+        const result = await this.runStep(stepperContext.quickAlgoCallsExecutor, noInteractive);
 
-        console.log('FINAL INTERACT', result);
+        if (noInteractive && !this._isFinished) {
+            return;
+        }
+
+        log.getLogger('python_runner').debug('FINAL INTERACT', result);
         stepperContext.makeDelay = true;
         await stepperContext.interactAfter({
             position: 0,
         });
-        console.log('AFTER FINAL INTERACT');
+        log.getLogger('python_runner').debug('AFTER FINAL INTERACT');
     }
 
     private static _skulptifyHandler(name, generatorName, blockName, nbArgs, type) {
         let handler = '';
         handler += "\tCodecast.runner.checkArgs('" + name + "', '" + generatorName + "', '" + blockName + "', arguments);";
+        handler += "\tCodecast.runner.hasCalledHandler = true;";
 
         handler += "\n\tvar susp = new Sk.misceval.Suspension();";
         handler += "\n\tvar result = Sk.builtin.none.none$;";
@@ -121,6 +125,7 @@ export default class PythonRunner extends AbstractRunner {
 
         return function () {
             self.checkArgs(name, generatorName, blockName, arguments);
+            self.hasCalledHandler = true;
 
             let susp = new Sk.misceval.Suspension();
             let result = Sk.builtin.none.none$;
@@ -170,7 +175,7 @@ export default class PythonRunner extends AbstractRunner {
 
     private _injectFunctions() {
         // Generate Python custom libraries from all generated blocks
-        console.log('inject functions', this.availableBlocks);
+        log.getLogger('python_runner').debug('inject functions', this.availableBlocks);
 
         let blocksByGeneratorName: {[generatorName: string]: Block[]} = {};
         for (let block of this.availableBlocks) {
@@ -190,8 +195,7 @@ export default class PythonRunner extends AbstractRunner {
                 modContents += PythonRunner._skulptifyHandler(code, generatorName, name, params, type);
                 // We do want to override Python's naturel input and output to replace them with our own modules
                 if (generatorName === 'printer' && ('input' === code || 'print' === code)) {
-                    const newCode = 'print' === code ? 'customPrint' : code;
-                    Sk.builtins[newCode] = this._createBuiltin(code, generatorName, name, params, type);
+                    Sk.builtins[code] = this._createBuiltin(code, generatorName, name, params, type);
                 }
             }
 
@@ -314,17 +318,6 @@ export default class PythonRunner extends AbstractRunner {
         this._timeouts.push(timeoutId);
     }
 
-    returnCallback(callback, value) {
-        log.getLogger('python_runner').debug('RETURN CALLBACK', value);
-        let primitive = this._createPrimitive(value);
-        if (primitive !== Sk.builtin.none.none$) {
-            this._resetCallstackOnNextStep = true;
-            this.reportValue(value);
-        }
-
-        callback(primitive);
-    }
-
     waitDelay(callback, value, delay) {
         log.getLogger('python_runner').debug('WAIT DELAY', value, delay);
         this._paused = true;
@@ -355,7 +348,6 @@ export default class PythonRunner extends AbstractRunner {
             this._resetCallstackOnNextStep = true;
             this.reportValue(value);
         }
-
         callback(primitive);
     }
 
@@ -388,10 +380,10 @@ export default class PythonRunner extends AbstractRunner {
 
     private _configure() {
         Sk.configure({
-            output: this.print,
-            inputfun: () => { console.log('input should be overloaded by our input method'); },
+            // output: this.print,
+            inputfun: () => { log.getLogger('python_runner').debug('input should be overloaded by our input method'); },
             inputfunTakesPrompt: true,
-            debugout: console.log,
+            debugout: log.getLogger('python_runner').debug,
             read: PythonRunner._builtinRead,
             yieldLimit: null,
             execLimit: null,
@@ -411,11 +403,6 @@ export default class PythonRunner extends AbstractRunner {
     print(message) {
         if (message.trim() === 'Program execution complete') {
             this._isFinished = true;
-        } else {
-            if (message && 'customPrint' in Sk.builtins) {
-                Sk.builtins['customPrint'](message.trim());
-            }
-            this._printedDuringStep += message;
         }
     }
 
@@ -433,7 +420,7 @@ export default class PythonRunner extends AbstractRunner {
     };
 
     _continue() {
-        console.log('make continue', this._paused, this._isRunning);
+        log.getLogger('python_runner').debug('make continue', this._paused, this._isRunning);
         if (this._steps >= this._maxIterations) {
             this._onStepError(window.languageStrings.tooManyIterations);
         }
@@ -446,7 +433,7 @@ export default class PythonRunner extends AbstractRunner {
         this._resetInterpreterState();
 
         if (Sk.running) {
-            console.log('running aleady');
+            log.getLogger('python_runner').debug('running aleady');
             if (typeof Sk.runQueue === 'undefined') {
                 Sk.runQueue = [];
             }
@@ -475,10 +462,10 @@ export default class PythonRunner extends AbstractRunner {
             }, (error) => {
                 this._debugger.error.bind(this._debugger);
 
-                this.onError(error + "\n");
+                this.context.onError(error + "\n");
             });
         } catch (e) {
-            this.onError(e.toString() + "\n");
+            this.context.onError(e.toString() + "\n");
         }
 
         this._resetInterpreterState();
@@ -487,15 +474,23 @@ export default class PythonRunner extends AbstractRunner {
         this._isRunning = true;
     }
 
-    runStep(quickAlgoCallsExecutor) {
+    runStep(quickAlgoCallsExecutor, noInteractive = false) {
         this.quickAlgoCallsExecutor = quickAlgoCallsExecutor;
         return new Promise((resolve, reject) => {
-            this.stepMode = true;
-            this._printedDuringStep = '';
+            this.stepMode = !noInteractive;
             if (this._isRunning && !this._stepInProgress) {
                 this.step(resolve, reject);
             }
-        });
+        }).then(() => {
+            if (this.hasCalledHandler) {
+                // Fix for Python: when Skulpt executes a custom handler it counts this as two execution steps.
+                // Therefore we need to do one more execution step
+                this.hasCalledHandler = false;
+                this._steps--;
+
+                return this.runStep(quickAlgoCallsExecutor);
+            }
+        })
     }
 
     reportValue(origValue, varName = null) {
@@ -525,8 +520,10 @@ export default class PythonRunner extends AbstractRunner {
                 }
             }
         }
-        this._resetInterpreterState();
 
+        Sk.running = false;
+        this._isRunning = false;
+        this._resetCallstackOnNextStep = false;
         this._isFinished = true;
     }
 
@@ -558,7 +555,7 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     step(resolve, reject) {
-        console.log('continue step', resolve, reject);
+        log.getLogger('python_runner').debug('continue step', resolve, reject);
         this._resetCallstack();
         this._stepInProgress = true;
 
@@ -603,7 +600,7 @@ export default class PythonRunner extends AbstractRunner {
         // Transform message depending on whether we successfully
         if (!this.context.success) {
             message = this.context.messagePrefixFailure + message;
-            this.onError(message);
+            this.context.onError(message);
         }
 
         if (typeof callback === 'function') {
@@ -633,7 +630,7 @@ export default class PythonRunner extends AbstractRunner {
         const analysisCode = analysis.code;
         const currentPythonStepNum = this._steps;
         const currentPythonCode = this._code;
-        console.log('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentPythonStepNum);
+        log.getLogger('python_runner').debug('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentPythonStepNum);
 
         return !(analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode);
     }

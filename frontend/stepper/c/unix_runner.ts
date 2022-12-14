@@ -2,6 +2,7 @@ import AbstractRunner from "../abstract_runner";
 import {getNodeStartRow, StepperContext, isStuck} from "../api";
 import * as C from '@france-ioi/persistent-c';
 import {StepperState} from "../index";
+import log from 'loglevel';
 
 export default class UnixRunner extends AbstractRunner {
     public static needsCompilation(): boolean {
@@ -21,9 +22,13 @@ export default class UnixRunner extends AbstractRunner {
         return !stepperState.programState.control;
     }
 
-    public async runNewStep(stepperContext: StepperContext) {
+    public async runNewStep(stepperContext: StepperContext, noInteractive = false) {
         const effects = C.step(stepperContext.state.programState);
         await stepperContext.executeEffects(stepperContext, effects[Symbol.iterator]());
+
+        if (noInteractive) {
+            return;
+        }
 
         /* Update the current position in source code. */
         const position = getNodeStartRow(stepperContext.state);
@@ -36,7 +41,7 @@ export default class UnixRunner extends AbstractRunner {
         }
 
         if (stepperContext.unixNextStepCondition % 3 === 2 || isStuck(stepperContext.state)) {
-            console.log('do interact');
+            log.getLogger('stepper').debug('do interact');
             stepperContext.makeDelay = true;
             stepperContext.unixNextStepCondition = 0;
             await stepperContext.interactAfter({

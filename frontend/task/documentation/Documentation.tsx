@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {ReactFragment, useEffect, useState} from 'react';
 import {Icon} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
@@ -16,6 +16,8 @@ import {CodecastPlatform} from "../../store";
 
 interface DocumentationProps {
     standalone: boolean,
+    hasTaskInstructions?: boolean,
+    header?: ReactFragment,
 }
 
 export function Documentation(props: DocumentationProps) {
@@ -28,6 +30,7 @@ export function Documentation(props: DocumentationProps) {
     const platform = useAppSelector(state => state.options.platform);
     const screen = useAppSelector(state => state.screen);
     const firstConcepts = concepts.slice(0, 3);
+    const isTralalere = useAppSelector(state => 'tralalere' === state.options.app);
 
     const [iframeRef, setIframeRef] = useState(null);
 
@@ -39,6 +42,9 @@ export function Documentation(props: DocumentationProps) {
         } else {
             urlSplit[1] = documentationLanguage;
         }
+        if (isTralalere) {
+            urlSplit[0] = urlSplit[0].replace(/index\.html/g, 'index_tralalere.html');
+        }
         conceptUrl = urlSplit.join('#');
     }
 
@@ -47,7 +53,7 @@ export function Documentation(props: DocumentationProps) {
         if (platformDocumentationLanguage !== documentationLanguage) {
             dispatch(documentationLanguageChanged(platformDocumentationLanguage));
         }
-        dispatch(documentationLoad(props.standalone));
+        dispatch(documentationLoad(props.standalone, false !== props.hasTaskInstructions));
     }, [documentationLanguage]);
 
     const iframeLoaded = () => {
@@ -142,7 +148,7 @@ export function Documentation(props: DocumentationProps) {
 
     return (
         <div className={`documentation ${Screen.DocumentationBig === screen ? 'is-big' : 'is-small'} ${props.standalone ? 'is-standalone' : ''}`}>
-            <div className="documentation-header">
+            {props.header ? props.header : <div className="documentation-header">
                 <div className="documentation-header-icon">
                     <Icon icon="zoom-in"/>
                 </div>
@@ -168,7 +174,7 @@ export function Documentation(props: DocumentationProps) {
                     <div className="documentation-close" onClick={closeDocumentation}>
                     </div>
                 </div>}
-            </div>
+            </div>}
             <div className="documentation-language-dropdown">
                 <div className="documentation-tabs-menu">
                     <Icon icon="code"/>

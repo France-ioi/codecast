@@ -39,7 +39,6 @@ const _BufferEditor = (props: BufferEditorProps) => {
     }, [props.width, props.height])
 
     const onInit = (editor) => {
-        console.log('on init');
         dispatch({type: ActionTypes.BufferInit, buffer, editor})
     };
 
