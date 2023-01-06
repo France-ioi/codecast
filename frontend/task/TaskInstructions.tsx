@@ -99,7 +99,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
             <div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>
 
             {!props.hideShowMoreButton && !props.expanded && <Button
-                className="quickalgo-button"
+                className="quickalgo-button mt-2"
                 onClick={toggleTaskInstructions}
                 icon={<FontAwesomeIcon icon={documentationOpen ? faMinus : faPlus}/>}
             >{getMessage(documentationOpen ? 'TASK_INSTRUCTIONS_LESS' : 'TASK_INSTRUCTIONS_MORE')}</Button>}

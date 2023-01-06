@@ -8,7 +8,7 @@
 */
 
 import * as C from '@france-ioi/persistent-c';
-import {all, apply, call, put} from 'typed-redux-saga';
+import {all, call, put} from 'typed-redux-saga';
 import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {
     initialStepperStateControls,
@@ -20,11 +20,10 @@ import {
 import {Bundle} from "../linker";
 import {quickAlgoLibraries} from "../task/libs/quickalgo_libraries";
 import {getCurrentImmerState} from "../task/utils";
-import {ActionTypes, ActionTypes as CompileActionTypes} from "./actionTypes";
+import {ActionTypes as CompileActionTypes} from "./actionTypes";
 import {Codecast} from "../index";
 import log from "loglevel";
-import {TaskSubmissionResult, TaskSubmissionResultPayload} from "../task/task_slice";
-import {QueryCacheKey} from '@reduxjs/toolkit/dist/query/core/apiState';
+import {TaskSubmissionResultPayload} from "../task/task_slice";
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
 
 export interface QuickalgoLibraryCall {
@@ -153,7 +152,7 @@ export default function(bundle: Bundle) {
             } catch (e) {
                 console.error(e);
                 yield* put({
-                    type: ActionTypes.CompileFailed,
+                    type: CompileActionTypes.CompileFailed,
                     payload: {
                         error: String(e),
                     },
