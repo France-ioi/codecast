@@ -1,14 +1,24 @@
 import React, {ReactElement, useEffect, useRef, useState} from "react";
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
-import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
-import {platformsList} from "../store";
-import {taskLevelsList} from "./platform/platform_slice";
 import {getMessage} from "../lang";
+import {formatTaskInstructions} from './utils';
+import {Button} from '@blueprintjs/core';
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {faPlus} from '@fortawesome/free-solid-svg-icons/faPlus';
+import {Screen} from '../common/screens';
+import {ActionTypes as CommonActionTypes} from '../common/actionTypes';
+import {useDispatch} from 'react-redux';
+import {documentationConceptSelected} from './documentation/documentation_slice';
+import {faMinus} from '@fortawesome/free-solid-svg-icons/faMinus';
+import {quickAlgoLibraries} from './libs/quickalgo_libraries';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
-    missionRightSlot: ReactElement,
+    missionRightSlot?: ReactElement,
+    withoutTitle?: boolean,
+    expanded?: boolean,
+    hideShowMoreButton?: boolean,
 }
 
 const defaultInstructionsHtml = `
@@ -37,6 +47,18 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const taskInstructionsHtmlFromOptions = useAppSelector(state => state.options.taskInstructions);
     const [instructionsHtml, setInstructionsHtml] = useState(null);
     const instructionsRef = useRef<HTMLDivElement>();
+    const screen = useAppSelector(state => state.screen);
+    const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
+    const dispatch = useDispatch();
+
+    const toggleTaskInstructions = () => {
+        if (documentationOpen) {
+            dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: null}});
+        } else {
+            dispatch(documentationConceptSelected('task-instructions'));
+            dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationSmall}});
+        }
+    };
 
     useEffect(() => {
         let newInstructionsHtml = taskInstructionsHtmlFromOptions ? taskInstructionsHtmlFromOptions : defaultInstructionsHtml;
@@ -55,19 +77,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
             }
         }
 
-        const instructionsJQuery = window.jQuery(`<div>${newInstructionsHtml}</div>`);
-        for (let availablePlatform of platformsList) {
-            if (platform !== availablePlatform) {
-                instructionsJQuery.find(`[data-lang~="${availablePlatform}"]:not([data-lang~="${platform}"]`).remove();
-            }
-        }
-        instructionsJQuery.find('.advice').attr('data-title', getMessage('TRALALERE_ADVICE'));
-        for (let availableLevel of taskLevelsList) {
-            if (taskLevel !== availableLevel) {
-                instructionsJQuery.find(`.${availableLevel}:not(.${taskLevel})`).remove();
-            }
-        }
-
+        const instructionsJQuery = formatTaskInstructions(newInstructionsHtml, platform, taskLevel);
         setInstructionsHtml(instructionsJQuery.html());
 
         if (props.changeDisplayShowMore) {
@@ -81,12 +91,18 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     }
 
     return (
-        <div ref={instructionsRef} className={`task-mission level-${taskLevel} platform-${platform}`} style={{fontSize: `${zoomLevel}rem`}}>
+        <div ref={instructionsRef} className={`task-mission ${props.expanded ? 'is-expanded' : ''}`} style={{fontSize: `${zoomLevel}rem`}}>
             {props.missionRightSlot}
 
-            <h1>{getMessage('TASK_INSTRUCTIONS')}</h1>
+            {!props.withoutTitle && <h1>{getMessage('TASK_INSTRUCTIONS')}</h1>}
 
             <div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>
+
+            {!props.hideShowMoreButton && !props.expanded && <Button
+                className="quickalgo-button mt-2"
+                onClick={toggleTaskInstructions}
+                icon={<FontAwesomeIcon icon={documentationOpen ? faMinus : faPlus}/>}
+            >{getMessage(documentationOpen ? 'TASK_INSTRUCTIONS_LESS' : 'TASK_INSTRUCTIONS_MORE')}</Button>}
         </div>
     );
 }

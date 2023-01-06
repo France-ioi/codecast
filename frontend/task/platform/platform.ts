@@ -353,7 +353,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
                     currentScoreToken = scoreToken;
                 }
 
-                yield* put(platformSaveScore({level, score, answer: answerObject[level]}));
+                yield* put(platformSaveScore({level, score, maxScore, answer: answerObject[level]}));
             }
 
             const levelScores = Object.values(taskLevels).map(element => ({

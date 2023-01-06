@@ -2,8 +2,9 @@ import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
 import {createDraft, current, isDraft} from "immer";
 import {checkPythonCode, getPythonBlocksUsage} from "./python_utils";
 import {getMessage} from "../lang";
-import {AppStore, CodecastPlatform} from "../store";
+import {AppStore, CodecastPlatform, platformsList} from "../store";
 import {checkBlocklyCode, getBlocklyBlocksUsage, hasBlockPlatform} from "../stepper/js";
+import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
 
 export function extractLevelSpecific(item, level) {
     if ((typeof item != "object")) {
@@ -130,6 +131,23 @@ export function getDefaultSourceCode(platform: CodecastPlatform, environment: st
 
 export function getCurrentImmerState(object) {
     return isDraft(object) ? current(object) : object;
+}
+
+export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName) {
+    const instructionsJQuery = window.jQuery(`<div>${instructions}</div>`);
+    for (let availablePlatform of platformsList) {
+        if (platform !== availablePlatform) {
+            instructionsJQuery.find(`[data-lang~="${availablePlatform}"]:not([data-lang~="${platform}"]`).remove();
+        }
+    }
+    instructionsJQuery.find('.advice').attr('data-title', getMessage('TRALALERE_ADVICE'));
+    for (let availableLevel of taskLevelsList) {
+        if (taskLevel !== availableLevel) {
+            instructionsJQuery.find(`.${availableLevel}:not(.${taskLevel})`).remove();
+        }
+    }
+
+    return instructionsJQuery;
 }
 
 // These functions are for retro-compatibility with blockly_block.js

@@ -191,7 +191,7 @@ export class Array2D extends React.PureComponent<Array2DProps> {
         const extractedView = extractView(context, functionCallStack[0], expr, view);
         Object.assign(view, extractedView);
         if (view.error) {
-            console.log(view.error);
+            // console.log(view.error);
             return (
                 <DirectiveFrame {...this.props}>
                     <div className='clearfix'>{view.error}</div>

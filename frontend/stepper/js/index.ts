@@ -218,6 +218,52 @@ export const hasBlockPlatform = (platform: CodecastPlatform) => {
     return CodecastPlatform.Blockly === platform || CodecastPlatform.Scratch === platform;
 };
 
+const getBlockCount = function (block, context: QuickAlgoLibrary) {
+    // How many "blocks" a specific block counts towards the total
+
+    // Block counts extra
+    if (context.blocklyHelper?.blockCounts && typeof context.blocklyHelper.blockCounts[block.type] == 'number') {
+        return context.blocklyHelper.blockCounts[block.type];
+    }
+
+    if (block.type == 'robot_start') {
+        // Program start block
+        return 0;
+    }
+
+    if (context.blocklyHelper?.scratchMode) {
+        // Don't count insertion markers (shadows when moving a block)
+        if (block.isInsertionMarker_) {
+            return 0;
+        }
+        // Don't count placeholders
+        if (block.type.substring(0, 12) == 'placeholder_') {
+            return 0;
+        }
+        // Counting is tricky because some blocks in Scratch don't count in Blockly
+        if (block.parentBlock_) {
+            // There's a parent (container) block
+            if ((block.type == 'math_number' && block.parentBlock_.type == 'control_repeat') ||
+                (block.type == 'data_variablemenu' &&
+                    (block.parentBlock_.type == 'data_variable' ||
+                        block.parentBlock_.type == 'data_setvariableto' ||
+                        block.parentBlock_.type == 'data_changevariableby'))) {
+                return 0;
+            }
+        } else {
+            if (block.type == 'data_variablemenu') {
+                return 0;
+            }
+        }
+        if (block.type == 'data_itemoflist' || block.type == 'data_replaceitemoflist') {
+            // Count one extra for these ones
+            return 2;
+        }
+    }
+
+    return 1;
+}
+
 export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary) {
     if (!answer || !answer.blockly) {
         return {
@@ -229,12 +275,18 @@ export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary
     log.getLogger('blockly_runner').debug('blocks usage', answer);
 
     const blocks = getBlocksFromXml(answer.blockly);
+    let blocksUsed = 0;
+    for (let i = 0; i < blocks.length; i++) {
+        let block = blocks[i];
+        blocksUsed += getBlockCount(block, context);
+    }
+
     const limitations = (context.infos.limitedUses ? blocklyFindLimited(blocks, context.infos.limitedUses, context) : []) as {type: string, name: string, current: number, limit: number}[];
 
     log.getLogger('blockly_runner').debug('limitations', limitations);
 
     return {
-        blocksCurrent: blocks.length - 1,
+        blocksCurrent: blocksUsed,
         limitations,
     };
 };

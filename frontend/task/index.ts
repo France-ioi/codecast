@@ -53,7 +53,7 @@ import {PlayerInstant} from "../player";
 import {ActionTypes as StepperActionTypes, stepperClearError, stepperDisplayError} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {clearSourceHighlightSaga, StepperState, StepperStatus, StepperStepMode} from "../stepper";
-import {createQuickAlgoLibraryExecutor, StepperContext} from "../stepper/api";
+import {createQuickAlgoLibraryExecutor, makeContext, StepperContext} from "../stepper/api";
 import {taskSubmissionExecutor} from "./task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
@@ -196,12 +196,15 @@ function* taskLoadSaga(app: App, action) {
         const taskLevels = yield* select((state: AppStore) => state.platform.levels);
         if (0 === Object.keys(taskLevels).length) {
             const levels = {};
-            for (let level of Object.keys(currentTask.data)) {
+            for (let [index, level] of Object.keys(currentTask.data).entries()) {
                 if (state.options.level && state.options.level !== level) {
                     continue;
                 }
 
                 levels[level] = getDefaultTaskLevel(level as TaskLevelName);
+                if (currentTask.gridInfos && currentTask.gridInfos.unlockedLevels && index >= currentTask.gridInfos.unlockedLevels) {
+                    levels[level].locked = true;
+                }
             }
 
             yield* put(platformSetTaskLevels(levels));
@@ -254,7 +257,7 @@ function* taskLoadSaga(app: App, action) {
 }
 
 function* handleLibrariesEventListenerSaga(app: App) {
-    const stepperContext: StepperContext = {
+    const stepperContext: StepperContext = makeContext(null, {
         interactAfter: (arg) => {
             return new Promise((resolve, reject) => {
                 app.dispatch({
@@ -264,11 +267,10 @@ function* handleLibrariesEventListenerSaga(app: App) {
                 });
             });
         },
+        environment: app.environment,
         dispatch: app.dispatch,
         quickAlgoContext: quickAlgoLibraries.getContext(null, app.environment),
-    };
-
-    stepperContext.quickAlgoCallsExecutor = createQuickAlgoLibraryExecutor(stepperContext);
+    });
 
     const listeners = quickAlgoLibraries.getEventListeners();
     log.getLogger('task').debug('create task listeners on ', app.environment, listeners);

@@ -1,10 +1,20 @@
 import React from 'react';
 import range from 'node-range';
 
-export function Stars({starsCount, rating}) {
+export interface StarsProps {
+    starsCount?: number,
+    rating?: number,
+    disabled?: boolean,
+}
+
+export function Stars(props: StarsProps) {
+    const {starsCount, rating, disabled} = props;
     const filledStars = starsCount * rating;
 
     const starPath = [[25,60],[5,37],[35,30],[50,5],[65,30],[95,37],[75,60],[78,90],[50,77],[22,90]];
+
+    const fillColor = disabled ? '#ddd' : '#fff';
+    const strokeColor = disabled ? '#ddd' : '#000';
 
     const formatStarPath = (path) => {
         return 'M' + path.map(pathElement => pathElement.join(',')).join('L') + 'Z';
@@ -34,7 +44,7 @@ export function Stars({starsCount, rating}) {
                         <rect x="0" y="0" width={star < filledStars - 1 ? 1 : (star > filledStars ? 0 : (filledStars - star))} height="1" />
                     </clipPath>
                     <path
-                        fill={'#fff'}
+                        fill={fillColor}
                         stroke="none"
                         d={formatStarPath(starPath)}
                         transform="matrix(0.24,0,0,0.24,0,0)"
@@ -56,7 +66,7 @@ export function Stars({starsCount, rating}) {
                     </path>
                     <path
                         fill="none"
-                        stroke="#000000"
+                        stroke={strokeColor}
                         d="M25,60L5,37L35,30L50,5L65,30L95,37L75,60L78,90L50,77L22,90Z"
                         strokeWidth="5"
                         transform="matrix(0.24,0,0,0.24,0,0)"
