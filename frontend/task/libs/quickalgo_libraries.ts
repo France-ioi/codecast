@@ -289,6 +289,8 @@ function* createDisplayHelper() {
 }
 
 class DisplayHelper {
+    public avatarType = 'none';
+
     async showPopupMessage(message, mode, yesButtonText, agreeFunc, noButtonText, avatarMood, defaultText, disagreeFunc) {
         log.getLogger('libraries').debug('popup message', defaultText, noButtonText);
         const result = await new Promise(resolve => {

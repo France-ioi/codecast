@@ -158,7 +158,15 @@ function* taskLoadSaga(app: App, action) {
     let state: AppStore = yield* select();
 
     if (urlParameters.has('taskId')) {
-        const task = yield* getTaskFromId(urlParameters.get('taskId'));
+        let task;
+        const taskId = urlParameters.get('taskId');
+        try {
+            task = yield* getTaskFromId(taskId);
+        } catch (e) {
+            console.error(e);
+            yield* put({type: ActionTypes.Error, payload: {source: 'task-loader', error: `Impossible to fetch task id ${taskId}`}});
+        }
+
         const defaultTask = {
             gridInfos: {
                 context: 'printer',

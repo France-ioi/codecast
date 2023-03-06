@@ -121,7 +121,7 @@ export function ControlsAndErrors() {
                         </div>
                         <div className="biswitch" onClick={changeExecutionMode}>
                             <div className={`biswitch-option ${SubmissionExecutionMode.Client === executionMode ? 'is-active' : ''}`}>{getMessage('SUBMISSION_EXECUTE_ON_CLIENT')}</div>
-                            <Switch checked={SubmissionExecutionMode.Server === executionMode}/>
+                            <Switch readOnly checked={SubmissionExecutionMode.Server === executionMode}/>
                             <div className={`biswitch-option ${SubmissionExecutionMode.Server === executionMode ? 'is-active' : ''}`}>{getMessage('SUBMISSION_EXECUTE_ON_SERVER')}</div>
                         </div>
                     </div>}
