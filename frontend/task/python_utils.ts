@@ -433,7 +433,7 @@ export const checkPythonCode = function (code: string, context: QuickAlgoLibrary
 
     // Check for functions used as values
     let re = /def\W+([^(]+)\(/g;
-    const availableBlocks = getContextBlocksDataSelector(state, context);
+    const availableBlocks = getContextBlocksDataSelector({state, context});
     const definedFunctions = [...new Set(availableBlocks.filter(block => BlockType.Function === block.type).map(block => block.code))];
     let match;
     while (match = re.exec(code)) {

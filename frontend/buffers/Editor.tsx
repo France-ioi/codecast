@@ -62,7 +62,7 @@ export function Editor(props: EditorProps) {
     const marker = useRef();
 
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const availableBlocks = useAppSelector(state => context && 'text' !== props.mode ? getContextBlocksDataSelector(state, context) : []);
+    const availableBlocks = useAppSelector(state => context && 'text' !== props.mode ? getContextBlocksDataSelector({state, context}) : []);
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const contextStrings = useAppSelector(state => state.task.contextStrings);
 
