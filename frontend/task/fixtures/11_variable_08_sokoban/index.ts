@@ -31,6 +31,7 @@ export default {
             medium: 30,
             hard: 40
         },
+        unlockedLevels: 2,
         zoom: {
             wheel: true,
         },

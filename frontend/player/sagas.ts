@@ -113,13 +113,13 @@ function* playerPrepare(app: App, action) {
 
     if (navigator && navigator.mediaSession) {
         navigator.mediaSession.setActionHandler('play', function(ev) {
-            console.log('[media session] made play');
+            log.getLogger('player').debug('[media session] made play');
             audio.pause();
             app.dispatch({type: LayoutActionTypes.LayoutPlayerModeBackToReplay, payload: {resumeImmediately: true}});
         });
 
         navigator.mediaSession.setActionHandler('pause', function(ev) {
-            console.log('[media session] made pause', ev);
+            log.getLogger('player').debug('[media session] made pause', ev);
             app.dispatch({type: ActionTypes.PlayerPause});
         });
     }
@@ -348,11 +348,11 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         const instant: PlayerInstant = {t, pos, event} as PlayerInstant;
         replayContext.instant = instant;
 
-        console.log('-------- REPLAY ---- EVENT ----', key, event);
+        log.getLogger('player').debug('-------- REPLAY ---- EVENT ----', key, event);
         yield new Promise(resolve => {
             replayStore.dispatch({type: PlayerActionTypes.PlayerApplyReplayEvent, payload: {replayApi, key, replayContext, event, resolve}});
         });
-        console.log('END REPLAY EVENT (computeInstants)');
+        log.getLogger('player').debug('END REPLAY EVENT (computeInstants)');
 
         // Get Redux state and context state and store them
         const instantState = createDraft(replayStore.getState());
@@ -361,13 +361,12 @@ function* computeInstants(replayApi: ReplayApi, replayContext: ReplayContext) {
         instant.state = finishDraft(instantState);
 
         Object.freeze(instant);
-        console.log('new instant', instant.state);
+        log.getLogger('player').debug('new instant', instant.state);
 
         replayContext.instants.push(instant);
         progress = Math.round(pos * 50 / events.length + t * 50 / duration) / 100;
         if (progress !== lastProgress) {
             lastProgress = progress;
-
             yield* call(replayContext.reportProgress, progress);
         }
     }
@@ -550,13 +549,13 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
         return;
     }
 
-    console.log('replay, new instants', instantIndex, nextInstantIndex);
+    log.getLogger('player').debug('replay, new instants', instantIndex, nextInstantIndex);
 
     /* Update the DOM by replaying incremental events between (immediately
        after) `instant` and up to (including) `nextInstant`. */
     instantIndex += 1;
     while (instantIndex <= nextInstantIndex) {
-        console.log('upgrade instant');
+        log.getLogger('player').debug('upgrade instant');
         let instant = instants[instantIndex];
         if (instant.hasOwnProperty('mute')) {
             yield* put({type: ActionTypes.PlayerEditorMutedChanged, payload: {isMuted: instant.mute}});
@@ -578,7 +577,7 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
         }
 
         if (instant.quickalgoLibraryCalls && instant.quickalgoLibraryCalls.length) {
-            console.log('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.action).join(','));
+            log.getLogger('player').debug('replay quickalgo library call', instant.quickalgoLibraryCalls.map(element => element.action).join(','));
             const context = quickAlgoLibraries.getContext(null, 'main');
             // We start from the end state of the last instant, and apply the calls that happened during this instant
             const stepperState = instants[instantIndex-1].state.stepper;
@@ -600,12 +599,15 @@ function* replayToAudioTime(app: App, instants: PlayerInstant[], startTime: numb
                     },
                     dispatch: app.dispatch,
                     environment: app.environment,
+                    // waitPreviousAnimations: false,
                 });
 
+                // Context.changeDelay is done in a replay saga in stepper/replay.ts
                 const executor = stepperContext.quickAlgoCallsExecutor;
+                log.getLogger('player').debug('Replay call with speed', stepperContext.speed, context.infos.actionDelay);
                 for (let quickalgoCall of instant.quickalgoLibraryCalls) {
                     const {module, action, args} = quickalgoCall;
-                    console.log('start call execution', quickalgoCall);
+                    log.getLogger('player').debug('start call execution', quickalgoCall);
 
                     // @ts-ignore
                     yield* spawn(executor, module, action, args);
@@ -647,7 +649,7 @@ function* resetToAudioTime(app: App, audioTime: number, quick?: boolean) {
 
 function* restartStepper() {
     /* Re-enable the stepper to allow the user to interact with it. */
-    console.log('restart stepper');
+    log.getLogger('player').debug('restart stepper');
     yield* put({type: StepperActionTypes.StepperEnabled});
 }
 

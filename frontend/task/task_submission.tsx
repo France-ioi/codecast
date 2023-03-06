@@ -129,7 +129,7 @@ class TaskSubmissionExecutor {
             }
         } else {
             log.getLogger('tests').debug('Submission execution over', currentSubmission.results);
-            console.log(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
+            log.getLogger('tests').debug(currentSubmission.results.reduce((agg, next) => agg && next.result, true));
             if (!currentSubmission.results.reduce((agg, next) => agg && next.result, true)) {
                 const error = {
                     type: 'task-tests-submission-results-overview',
@@ -146,7 +146,8 @@ class TaskSubmissionExecutor {
     *makeBackgroundExecution(level, testId, answer) {
         const backgroundStore = Codecast.environments['background'].store;
         const state: AppStore = yield* select();
-        const tests = state.task.taskTests.map(test => test.data);
+        const currentTask = state.task.currentTask;
+        const tests = currentTask.data[level];
 
         return yield new Promise<TaskSubmissionResultPayload>(resolve => {
             backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
@@ -162,6 +163,7 @@ class TaskSubmissionExecutor {
         const {answer, maxScore, minScore} = parameters;
         const state: AppStore = yield* select();
 
+        log.getLogger('tests').debug('do grade answer');
         if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state)) {
             return {
                 score: minScore + (maxScore - minScore) * Number(answer) / recordingProgressSteps,
@@ -239,7 +241,7 @@ class TaskSubmissionExecutor {
             }
         }
 
-        console.log('end grading answer');
+        log.getLogger('tests').debug('end grading answer');
 
         let worstRate = 1;
         for (let result of testResults) {

@@ -55,31 +55,12 @@ $tralalere-red: #FF3C11;
 
 .tralalere {
   .tralalere-instructions {
-    .task-mission {
-      .short, .long {
-        display: none !important;
-      }
-    }
-
     &.is-expanded {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       z-index: 1;
-
-      .task-mission {
-        .long {
-          display: block !important;
-        }
-      }
-    }
-    &:not(.is-expanded) {
-      .task-mission {
-        .short {
-          display: block !important;
-        }
-      }
     }
 
     .tralalere-instructions-container {
@@ -102,12 +83,6 @@ $tralalere-red: #FF3C11;
           font-weight: bold !important;
           font-size: 1rem !important;
           margin-bottom: .5rem !important;
-        }
-
-        a {
-          color: $tralalere-green;
-          font-weight: bold;
-          text-decoration: underline;
         }
 
         .advice {
@@ -507,6 +482,12 @@ $tralalere-red: #FF3C11;
       //margin-bottom: 0;
     }
   }
+}
+
+.tralalere-instructions-container .task-mission a, .hint-carousel-item a {
+  color: $tralalere-green !important;
+  font-weight: bold;
+  text-decoration: underline !important;
 }
 
 .tralalere-doc {

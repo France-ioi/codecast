@@ -2,6 +2,7 @@ import {race, put, take, takeEvery, call} from "typed-redux-saga";
 import {Bundle} from "../linker";
 import {modalHide, modalShow, PromptModalOptions} from "./modal_slice";
 import {PayloadAction} from "@reduxjs/toolkit";
+import log from 'loglevel';
 
 enum ModalActionTypes {
     Display = 'modal/display',
@@ -26,7 +27,7 @@ export const cancelModal = () => ({
 });
 
 export function* showPopupMessageSaga(modalOptions: PromptModalOptions) {
-    console.log('show popup', modalOptions);
+    log.getLogger('prompt').debug('show popup', modalOptions);
     yield* put(modalShow(modalOptions));
 
     const {validate, newDisplay} = yield* race({
@@ -35,7 +36,7 @@ export function* showPopupMessageSaga(modalOptions: PromptModalOptions) {
         newDisplay: take(ModalActionTypes.Display),
     });
 
-    console.log('validation', validate);
+    log.getLogger('prompt').debug('validation', validate);
     if (!newDisplay) {
         yield* put(modalHide());
     }
@@ -50,7 +51,7 @@ export function* showPopupMessageSaga(modalOptions: PromptModalOptions) {
 export default function(bundle: Bundle) {
     bundle.addSaga(function* () {
         yield* takeEvery<PayloadAction<PromptModalOptions>>(ModalActionTypes.Display, function* ({payload}) {
-            console.log('catch action display');
+            log.getLogger('prompt').debug('catch action display');
             const result = yield* call(showPopupMessageSaga, payload);
             if (payload.callback) {
                 payload.callback(result);

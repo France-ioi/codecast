@@ -24,6 +24,7 @@ import {selectAnswer} from "../task/selectors";
 import {taskSuccessClear} from "../task/task_slice";
 import {hasBlockPlatform} from "../stepper/js";
 import {getMessage} from '../lang';
+import {platformTaskLink} from '../task/platform/actionTypes';
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -84,6 +85,10 @@ export function TralalereApp() {
         window.app = 'tralalere';
         document.documentElement.setAttribute('data-theme', 'tralalere');
         selectMode(LayoutMobileMode.Player);
+
+        setTimeout(() => {
+            dispatch(platformTaskLink());
+        });
     }, []);
 
     useEffect(() => {

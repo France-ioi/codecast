@@ -340,7 +340,6 @@ function stringifyValue(programState, value, base) {
             }
             break;
         default:
-            console.log('handle type', value.type.kind);
             str = value.toString();
     }
 

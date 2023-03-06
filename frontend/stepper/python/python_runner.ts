@@ -175,7 +175,7 @@ export default class PythonRunner extends AbstractRunner {
 
     private _injectFunctions() {
         // Generate Python custom libraries from all generated blocks
-        console.log('inject functions', this.availableBlocks);
+        log.getLogger('python_runner').debug('inject functions', this.availableBlocks);
 
         let blocksByGeneratorName: {[generatorName: string]: Block[]} = {};
         for (let block of this.availableBlocks) {
@@ -381,9 +381,9 @@ export default class PythonRunner extends AbstractRunner {
     private _configure() {
         Sk.configure({
             // output: this.print,
-            inputfun: () => { console.log('input should be overloaded by our input method'); },
+            inputfun: () => { log.getLogger('python_runner').debug('input should be overloaded by our input method'); },
             inputfunTakesPrompt: true,
-            debugout: console.log,
+            debugout: log.getLogger('python_runner').debug,
             read: PythonRunner._builtinRead,
             yieldLimit: null,
             execLimit: null,
@@ -420,7 +420,7 @@ export default class PythonRunner extends AbstractRunner {
     };
 
     _continue() {
-        console.log('make continue', this._paused, this._isRunning);
+        log.getLogger('python_runner').debug('make continue', this._paused, this._isRunning);
         if (this._steps >= this._maxIterations) {
             this._onStepError(window.languageStrings.tooManyIterations);
         }
@@ -433,7 +433,7 @@ export default class PythonRunner extends AbstractRunner {
         this._resetInterpreterState();
 
         if (Sk.running) {
-            console.log('running aleady');
+            log.getLogger('python_runner').debug('running aleady');
             if (typeof Sk.runQueue === 'undefined') {
                 Sk.runQueue = [];
             }
@@ -555,7 +555,7 @@ export default class PythonRunner extends AbstractRunner {
     }
 
     step(resolve, reject) {
-        console.log('continue step', resolve, reject);
+        log.getLogger('python_runner').debug('continue step', resolve, reject);
         this._resetCallstack();
         this._stepInProgress = true;
 
@@ -630,7 +630,7 @@ export default class PythonRunner extends AbstractRunner {
         const analysisCode = analysis.code;
         const currentPythonStepNum = this._steps;
         const currentPythonCode = this._code;
-        console.log('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentPythonStepNum);
+        log.getLogger('python_runner').debug('check sync analysis, runner = ', analysisStepNum, 'executer = ', currentPythonStepNum);
 
         return !(analysisStepNum !== currentPythonStepNum || analysisCode !== currentPythonCode);
     }

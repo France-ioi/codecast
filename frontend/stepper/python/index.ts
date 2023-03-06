@@ -13,9 +13,10 @@ import {Action} from "redux";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {selectAnswer} from "../../task/selectors";
 import {delay} from "../../player/sagas";
+import log from 'loglevel';
 
 export function* compilePythonCodeSaga(source: string) {
-    console.log('compile python code', source);
+    log.getLogger('python_runner').debug('compile python code', source);
     const state = yield* select();
     const context = quickAlgoLibraries.getContext(null, state.environment);
 
@@ -70,12 +71,12 @@ export default function(bundle: Bundle) {
             const {platform} = state.options;
             const context = quickAlgoLibraries.getContext(null, environment);
 
-            console.log('init stepper python', environment);
+            log.getLogger('python_runner').debug('init stepper python', environment);
             if (platform === CodecastPlatform.Python) {
                 let channel = pythonInterpreterChannel;
 
                 context.onError = (diagnostics) => {
-                    console.log('context error', diagnostics);
+                    log.getLogger('python_runner').debug('context error', diagnostics);
                     channel.put(stepperExecutionError(diagnostics, false));
                 };
 

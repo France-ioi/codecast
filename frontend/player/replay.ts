@@ -2,6 +2,7 @@ import {call} from 'typed-redux-saga';
 import {PlayerInstant} from "./index";
 import {ReplayContext} from "./sagas";
 import {Bundle} from "../linker";
+import log from 'loglevel';
 
 export interface ReplayApi {
     on: (keys: string[] | string, saga: any) => void,
@@ -56,14 +57,14 @@ export default function(bundle: Bundle) {
                     yield* call(func, replayContext, event);
                 }
             } else {
-                console.log(`event ${key} ignored (no replay handler)`);
+                log.getLogger('player').debug(`event ${key} ignored (no replay handler)`);
             }
         },
         onReset: function(saga: (instant: PlayerInstant, quick?: boolean) => void): void {
             resetSagas.push(saga);
         },
         reset: function* (instant: PlayerInstant, quick?: boolean) {
-            console.log('RESET INSTANT', instant.state);
+            log.getLogger('player').debug('RESET INSTANT', instant.state);
             for (let saga of resetSagas) {
                 yield* call(saga, instant, quick);
             }

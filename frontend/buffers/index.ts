@@ -58,6 +58,12 @@ import {Bundle} from "../linker";
 import {App} from "../index";
 import {updateSourceHighlightSaga} from "../stepper";
 import {BlockType} from "../task/blocks/blocks";
+import log from 'loglevel';
+import {selectAnswer} from '../task/selectors';
+import {stepperDisplayError} from '../stepper/actionTypes';
+import {getMessage} from '../lang';
+import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
+import {hasBlockPlatform} from '../stepper/js';
 
 const AceThemes = [
     'github',
@@ -293,6 +299,84 @@ function* buffersSaga() {
             editor.resize();
         }
     });
+    yield* takeEvery(ActionTypes.BufferDownload, function* () {
+        const state: AppStore = yield* select();
+        const platform = state.options.platform;
+        const sourceModel = getBufferModel(state, 'source');
+        const answer = sourceModel.document ? compressDocument(sourceModel.document) : null;
+
+        const data = new Blob([answer], {type: 'text/plain'});
+        const textFile = window.URL.createObjectURL(data);
+
+        const anchor = document.createElement('a');
+        anchor.href = textFile
+        anchor.target = '_blank';
+        anchor.download = `program_${platform}.txt`;
+        anchor.click();
+    });
+
+    yield* takeEvery(ActionTypes.BufferReload, function* () {
+        const state: AppStore = yield* select();
+
+        try {
+            const fileContent = yield* call(pickFileAndGetContent);
+            const document = uncompressIntoDocument(fileContent);
+
+            if (document instanceof ObjectDocument && !hasBlockPlatform(state.options.platform)) {
+                throw new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE'));
+            } else if (document instanceof Document && hasBlockPlatform(state.options.platform)) {
+                throw new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE'));
+            }
+
+            yield* put(platformAnswerLoaded(document.getContent()));
+            yield* put(platformTaskRefresh());
+        } catch (e: any) {
+            if (e && e.message) {
+                yield* put(stepperDisplayError(e.message));
+            }
+        }
+    });
+}
+
+function pickFileAndGetContent() {
+    return new Promise((resolve, reject) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        let fileSelected = false;
+
+        input.onchange = e => {
+            const files = (e.target as HTMLInputElement).files;
+            if (!files.length) {
+                reject();
+            }
+            fileSelected = true;
+
+            const file = files[0];
+            const textType = /text.*/;
+            if (!file.type.match(textType)) {
+                reject(new Error(getMessage('EDITOR_RELOAD_IMPOSSIBLE')));
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.readAsText(files[0],'UTF-8');
+
+            reader.onload = readerEvent => {
+                const content = readerEvent.target.result;
+                resolve(content);
+            }
+        }
+
+        document.body.onfocus = () => {
+            document.body.onfocus = null;
+            if (!fileSelected) {
+                reject();
+            }
+        };
+
+        input.click();
+    })
+
 }
 
 function resetEditor(editor, model?: BufferContentModel, goToEnd?: boolean) {
@@ -307,7 +391,7 @@ function resetEditor(editor, model?: BufferContentModel, goToEnd?: boolean) {
         }
 
     } catch (error) {
-        console.log('failed to update editor view with model', error);
+        log.getLogger('editor').debug('failed to update editor view with model', error);
     }
 }
 
@@ -363,14 +447,14 @@ function addRecordHooks({recordApi}: App) {
 }
 
 function addReplayHooks({replayApi}: App) {
-    console.log('ADD REPLAY HOOKS');
+    log.getLogger('editor').debug('Add replay hooks for editor');
     replayApi.on('start', function* (replayContext: ReplayContext, event) {
         const {buffers} = event[2];
         for (let bufferName of Object.keys(buffers)) {
             const content = buffers[bufferName].document;
             const document = uncompressIntoDocument(content);
             const model = modelFromDocument(document);
-            console.log('gotten document', document);
+            log.getLogger('editor').debug('Gotten document', document);
             yield* put({type: ActionTypes.BufferReset, buffer: bufferName, model});
         }
 
@@ -435,7 +519,7 @@ function addReplayHooks({replayApi}: App) {
     });
     replayApi.onReset(function* ({state}: PlayerInstant, quick) {
         /* Reset all buffers. */
-        console.log('BUFFER RESET', state);
+        log.getLogger('editor').debug('Editor Buffer Reset', state);
         for (let buffer of Object.keys(state.buffers)) {
             const model = state.buffers[buffer].model;
 

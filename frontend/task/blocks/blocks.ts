@@ -184,7 +184,6 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
             block.caption = funcProto;
             block.description = blockHelp;
             block.snippet = getSnippet(block.caption);
-            // console.log('generated description', {blockDesc, funcProto, blockHelp});
         } else {
             if (block.description) {
                 block.description = block.description.replace(/@/g, block.code);

@@ -13,6 +13,7 @@ import {put, select} from "typed-redux-saga";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
 import {LayoutType} from "../../task/layout/layout";
 import {taskIncreaseContextId} from "../../task/task_slice";
+import log from 'loglevel';
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;
@@ -24,7 +25,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
         context.blocklyHelper.unloadLevel();
     }
 
-    console.log('[stepper/js] load blockly helper', context.infos.includeBlocks, context.infos.includeBlocks.groupByCategory);
+    log.getLogger('blockly_runner').debug('[stepper/js] load blockly helper', context.infos.includeBlocks, context.infos.includeBlocks.groupByCategory);
     const state: AppStore = yield* select();
     const options = state.options;
     const language = options.language.split('-')[0];
@@ -40,7 +41,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
             context.infos.includeBlocks.groupByCategory = !!context.infos.includeBlocks.originalGroupByCategory;
         }
     }
-    console.log('group by category', context.infos.includeBlocks.groupByCategory);
+    log.getLogger('blockly_runner').debug('group by category', context.infos.includeBlocks.groupByCategory);
 
     window.goog.provide('Blockly.Msg.' + language);
     window.Blockly.Msg = {...window.Blockly.Msg, ...languageTranslations.Msg};
@@ -69,7 +70,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
         };
     }
 
-    console.log('[blockly.editor] load blockly helper', context);
+    log.getLogger('blockly_runner').debug('[blockly.editor] load blockly helper', context);
     blocklyHelper = window.getBlocklyHelper(context.infos.maxInstructions, context);
     // Override this function to keep handling the display, and avoiding a call to un-highlight the current block
     // during loadPrograms at the start of the program execution
@@ -115,7 +116,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
         };
     }
 
-    console.log('[blockly.editor] load context into blockly editor');
+    log.getLogger('blockly_runner').debug('[blockly.editor] load context into blockly editor');
     blocklyHelper.loadContext(context);
 
     const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
@@ -144,7 +145,7 @@ export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
         let atRight = this.toolboxPosition_ == window.Blockly.TOOLBOX_AT_RIGHT;
         let computedHeight = isMobile ? window.innerHeight - 120 : Math.min(400, height);
         let computedWidth = isMobile ? window.innerWidth - toolboxWidth - 2*this.CORNER_RADIUS + 4 : Math.max(300, width);
-        console.log('background draw', {isMobile, toolboxWidth, width, computedWidth, windowWidth: window.innerWidth, workspace: this.targetWorkspace_});
+        log.getLogger('blockly_runner').debug('background draw', {isMobile, toolboxWidth, width, computedWidth, windowWidth: window.innerWidth, workspace: this.targetWorkspace_});
         // Decide whether to start on the left or right.
         let path = ['M ' + (atRight ? this.width_ - this.CORNER_RADIUS : this.CORNER_RADIUS) + ',0'];
         // Top.
@@ -180,7 +181,7 @@ export const overrideBlocklyFlyoutForCategories = (isMobile: boolean) => {
 };
 
 export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, state: AppStore, withEmptyCheck: boolean = true) {
-    console.log('check blockly code', answer, context.strings.code);
+    log.getLogger('blockly_runner').debug('check blockly code', answer, context.strings.code);
 
     if (!answer || !answer.blockly) {
         return;
@@ -217,6 +218,52 @@ export const hasBlockPlatform = (platform: CodecastPlatform) => {
     return CodecastPlatform.Blockly === platform || CodecastPlatform.Scratch === platform;
 };
 
+const getBlockCount = function (block, context: QuickAlgoLibrary) {
+    // How many "blocks" a specific block counts towards the total
+
+    // Block counts extra
+    if (context.blocklyHelper?.blockCounts && typeof context.blocklyHelper.blockCounts[block.type] == 'number') {
+        return context.blocklyHelper.blockCounts[block.type];
+    }
+
+    if (block.type == 'robot_start') {
+        // Program start block
+        return 0;
+    }
+
+    if (context.blocklyHelper?.scratchMode) {
+        // Don't count insertion markers (shadows when moving a block)
+        if (block.isInsertionMarker_) {
+            return 0;
+        }
+        // Don't count placeholders
+        if (block.type.substring(0, 12) == 'placeholder_') {
+            return 0;
+        }
+        // Counting is tricky because some blocks in Scratch don't count in Blockly
+        if (block.parentBlock_) {
+            // There's a parent (container) block
+            if ((block.type == 'math_number' && block.parentBlock_.type == 'control_repeat') ||
+                (block.type == 'data_variablemenu' &&
+                    (block.parentBlock_.type == 'data_variable' ||
+                        block.parentBlock_.type == 'data_setvariableto' ||
+                        block.parentBlock_.type == 'data_changevariableby'))) {
+                return 0;
+            }
+        } else {
+            if (block.type == 'data_variablemenu') {
+                return 0;
+            }
+        }
+        if (block.type == 'data_itemoflist' || block.type == 'data_replaceitemoflist') {
+            // Count one extra for these ones
+            return 2;
+        }
+    }
+
+    return 1;
+}
+
 export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary) {
     if (!answer || !answer.blockly) {
         return {
@@ -225,15 +272,21 @@ export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary
         };
     }
 
-    console.log('blocks usage', answer);
+    log.getLogger('blockly_runner').debug('blocks usage', answer);
 
     const blocks = getBlocksFromXml(answer.blockly);
+    let blocksUsed = 0;
+    for (let i = 0; i < blocks.length; i++) {
+        let block = blocks[i];
+        blocksUsed += getBlockCount(block, context);
+    }
+
     const limitations = (context.infos.limitedUses ? blocklyFindLimited(blocks, context.infos.limitedUses, context) : []) as {type: string, name: string, current: number, limit: number}[];
 
-    console.log('limitations', limitations);
+    log.getLogger('blockly_runner').debug('limitations', limitations);
 
     return {
-        blocksCurrent: blocks.length - 1,
+        blocksCurrent: blocksUsed,
         limitations,
     };
 };
@@ -294,9 +347,9 @@ export default function(bundle: Bundle) {
             const language = state.options.language.split('-')[0];
 
             if (hasBlockPlatform(platform)) {
-                console.log('init stepper js', environment);
+                log.getLogger('blockly_runner').debug('init stepper js', environment);
                 context.onError = (diagnostics) => {
-                    console.log('context error', diagnostics);
+                    log.getLogger('blockly_runner').debug('context error', diagnostics);
                     // channel.put({
                     //     type: CompileActionTypes.StepperInterrupting,
                     // });
@@ -306,8 +359,8 @@ export default function(bundle: Bundle) {
                 const blocksData = getContextBlocksDataSelector(state, context);
 
                 const blocklyHelper = context.blocklyHelper;
-                console.log('blockly helper', blocklyHelper);
-                console.log('display', context.display);
+                log.getLogger('blockly_runner').debug('blockly helper', blocklyHelper);
+                log.getLogger('blockly_runner').debug('display', context.display);
                 const blocklyXmlCode = answer.blockly;
                 if (!blocklyHelper.workspace) {
                     blocklyHelper.load(language, context.display, 1, {});
@@ -316,7 +369,7 @@ export default function(bundle: Bundle) {
                     blocklyHelper.programs.push({});
                 }
                 blocklyHelper.programs[0].blockly = blocklyXmlCode;
-                console.log('xml code', blocklyXmlCode);
+                log.getLogger('blockly_runner').debug('xml code', blocklyXmlCode);
 
                 blocklyHelper.reloading = true;
                 blocklyHelper.loadPrograms();
@@ -333,7 +386,7 @@ export default function(bundle: Bundle) {
                     + "highlightBlock(undefined);\n"
                     + "program_end();"
 
-                console.log('full code', fullCode);
+                log.getLogger('blockly_runner').debug('full code', fullCode);
 
                 const blocklyInterpreter = Codecast.runner;
                 blocklyInterpreter.initCodes([fullCode], blocksData);

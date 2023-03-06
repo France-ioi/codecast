@@ -27,6 +27,7 @@ import {PlayerInstant} from "../../player";
 import {askConfirmation} from "../../alert";
 import {selectAnswer} from "../selectors";
 import {StepperStatus} from "../../stepper";
+import log from 'loglevel';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -569,7 +570,7 @@ function buildZonesLayout(node: XmlParserNode, data: BuildZoneLayoutData): React
     }
 
     const reactTree = recursivelyConvertToReactElements(node);
-    console.log('final node', {node, reactTree});
+    log.getLogger('layout').debug('final node', {node, reactTree});
 
     return reactTree;
 }
@@ -807,7 +808,7 @@ function* layoutSaga({replayApi}: App) {
         const instant = state.player.current;
         const instantSource = selectAnswer(instant.state);
 
-        console.log('current source', currentSource, instantSource);
+        log.getLogger('layout').debug('current source', currentSource, instantSource);
 
         let confirmed = true;
         if (currentSource !== instantSource) {

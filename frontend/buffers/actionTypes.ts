@@ -11,4 +11,6 @@ export enum ActionTypes {
     BufferModelScroll = 'Buffer.Model.Scroll',
     BufferHighlight = 'Buffer.Highlight',
     BufferResize = 'Buffer.Resize',
+    BufferDownload = 'Buffer.Download',
+    BufferReload = 'Buffer.Reload',
 }

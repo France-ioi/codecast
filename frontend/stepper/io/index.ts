@@ -12,6 +12,7 @@ import {StepperContext} from "../api";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
+import log from 'loglevel';
 
 export enum IoMode {
     Terminal = 'terminal',
@@ -140,12 +141,12 @@ export default function(bundle: Bundle) {
 
             let result;
             const executorPromise = executor('printer', 'read', [], (res) => {
-                console.log('callback', res);
+                log.getLogger('stepper').debug('callback', res);
                 result = res;
             });
 
             yield ['promise', executorPromise];
-            console.log('the result', executorPromise, result, result.split('').map(function (char) {
+            log.getLogger('stepper').debug('the result', executorPromise, result, result.split('').map(function (char) {
                 return char.charCodeAt(0);
             }).join('/'));
 

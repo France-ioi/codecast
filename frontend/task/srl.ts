@@ -10,6 +10,7 @@ import {taskReloadStateEvent} from "./platform/actionTypes";
 import {hintUnlocked} from "./hints/hints_slice";
 import {AppStore} from "../store";
 import {taskSetBlocksUsage, taskSuccess} from "./task_slice";
+import log from 'loglevel';
 
 export interface StatsState {
     timeSpentSeconds?: number,
@@ -43,7 +44,7 @@ export function* statsGetStateSaga(): Generator<any, StatsState, any> {
 }
 
 function* statsReloadStateSaga({payload: {state}}: ReturnType<typeof taskReloadStateEvent>) {
-    console.log('receive new state from platform', state);
+    log.getLogger('task').debug('receive new state from platform', state);
     if (state && state.stats) {
         currentState = {
             ...currentState,

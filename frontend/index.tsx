@@ -40,16 +40,31 @@ import {TralalereApp} from "./tralalere/TralalereApp";
 import {TaskLevelName} from "./task/platform/platform_slice";
 
 setAutoFreeze(true);
-log.setLevel('trace');
-log.getLogger('performance').setLevel('info');
-log.getLogger('blockly_runner').setLevel('info');
-log.getLogger('python_runner').setLevel('info');
-log.getLogger('printer_lib').setLevel('info');
-log.getLogger('tests').setLevel('info');
-log.getLogger('platform').setLevel('info');
-log.getLogger('stepper').setLevel('info');
-log.getLogger('quickalgo_executor').setLevel('info');
-log.getLogger('replay').setLevel('info');
+
+// Define all loggers.
+// You can change the level of a specific logger by inputting
+// log.getLogger("logger_name").setLevel('debug')
+// in your web console. It will be saved in the browser local storage
+log.setDefaultLevel('trace');
+log.getLogger('blockly_runner').setDefaultLevel('info');
+log.getLogger('editor').setDefaultLevel('info');
+log.getLogger('layout').setDefaultLevel('info');
+log.getLogger('libraries').setDefaultLevel('info');
+log.getLogger('performance').setDefaultLevel('info');
+log.getLogger('platform').setDefaultLevel('info');
+log.getLogger('player').setDefaultLevel('info');
+log.getLogger('printer_lib').setDefaultLevel('info');
+log.getLogger('prompt').setDefaultLevel('info');
+log.getLogger('python_runner').setDefaultLevel('info');
+log.getLogger('quickalgo_executor').setDefaultLevel('info');
+log.getLogger('recorder').setDefaultLevel('info');
+log.getLogger('redux').setDefaultLevel(process.env['NODE_ENV'] === 'development' ? 'debug' : 'info');
+log.getLogger('replay').setDefaultLevel('info');
+log.getLogger('stepper').setDefaultLevel('info');
+log.getLogger('subtitles').setDefaultLevel('info');
+log.getLogger('task').setDefaultLevel('info');
+log.getLogger('tests').setDefaultLevel('info');
+window.log = log;
 
 export interface CodecastEnvironmentMonitoring {
     effectTriggered: Function,
@@ -134,6 +149,8 @@ declare global {
         taskGetResourcesPost: (res, callback) => void,
         FontsLoader: any,
         implementGetResources?: (task: any) => void,
+        log: any,
+        quickAlgoLanguageStrings: any,
     }
 }
 
@@ -170,13 +187,11 @@ for (let environment of ['main', 'replay', 'background']) {
         bundle.include(editorBundle);
         bundle.include(statisticsBundle);
 
-        if (process.env['NODE_ENV'] === 'development') {
-            bundle.addEarlyReducer(function(state: AppStore, action): void {
-                if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
-                    log.debug(`action on ${environment}`, action);
-                }
-            });
-        }
+        bundle.addEarlyReducer(function(state: AppStore, action): void {
+            if (!DEBUG_IGNORE_ACTIONS_MAP[action.type]) {
+                log.getLogger('redux').debug(`action on ${environment}`, action);
+            }
+        });
     }, initScope);
     finalize(scope);
 

@@ -13,6 +13,7 @@ import {ActionTypes} from "../../buffers/actionTypes";
 import {documentModelFromString} from "../../buffers";
 import {getMessage} from "../../lang";
 import {CodecastPlatform} from "../../store";
+import {TaskInstructions} from '../TaskInstructions';
 
 interface DocumentationProps {
     standalone: boolean,
@@ -259,17 +260,10 @@ export function Documentation(props: DocumentationProps) {
                         <div className="documentation-content">
                             {'task-instructions' === selectedConcept.id ?
                                 <div className="documentation-task-instructions">
-                                    <p>
-                                        Programmez le robot ci-contre pour qu&#39;il atteigne l&#39;étoile, en sautant
-                                        de plateforme en plateforme. Mettez le robot directement sous une plateforme
-                                        avant de le faire sauter pour le faire monter sur cette plateforme.
-                                    </p>
-                                    <p>
-                                        Votre programme sera testé sur 2 plateaux différents, et doit fonctionner sur les deux.
-                                    </p>
-                                    <p>
-                                        Chaque plateforme commence toujours à droite de celle en dessous d&#39;elle.
-                                    </p>
+                                    <TaskInstructions
+                                        expanded
+                                        withoutTitle
+                                    />
                                 </div>
                                 :
                                 <iframe

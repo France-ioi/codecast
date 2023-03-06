@@ -110,8 +110,8 @@ const pythonForbiddenBlocks = {
         'math_number': ['math_number'],
     },
     'functions': {
-        'procedures_defnoreturn': ['def', 'lambda'],
-        'procedures_defreturn': ['def', 'lambda'],
+        'procedures_defnoreturn': ['def'],
+        'procedures_defreturn': ['def'],
         'setattr' : ['setattr'],
     },
     'variables': {
@@ -471,7 +471,7 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
         },
         for: {
             caption: "for",
-            snippet: "for ${1:iteration}:\n\t${2:pass}",
+            snippet: "for loop in range(${1:iteration}):\n\t${2:pass}",
         },
     };
 

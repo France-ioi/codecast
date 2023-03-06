@@ -9,6 +9,7 @@ import {NumericKeypad} from "../blocks/NumericKeypad";
 import {TralalereBox} from "../../tralalere/TralalereBox";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTimes} from "@fortawesome/free-solid-svg-icons";
+import log from 'loglevel';
 
 export function PromptModalDialog() {
     const modalData = useAppSelector(state => state.modal);
@@ -18,8 +19,8 @@ export function PromptModalDialog() {
     const [inputValue, setInputValue] = useState('');
 
     useEffect(() => {
-        console.log('change input value');
-        setInputValue(modalData.defaultInput);
+        log.getLogger('prompt').debug('change input value', modalData.defaultInput);
+        setInputValue(modalData.defaultInput ? modalData.defaultInput : '');
     }, [modalData.defaultInput, modalData.open]);
 
     const validate = () => {
@@ -42,7 +43,7 @@ export function PromptModalDialog() {
         }
     }
 
-    console.log('modal data type', modalData.mode, modalData.open);
+    log.getLogger('prompt').debug('modal data type', modalData.mode, modalData.open);
 
     let keypad = (
         <NumericKeypad
@@ -85,7 +86,7 @@ export function PromptModalDialog() {
     return (
         <Dialog
             transitionDuration={ModalType.keypad === modalData.mode ? 0 : undefined}
-            transitionName={ModalType.keypad === modalData.mode ? "none" : null}
+            transitionName={ModalType.keypad === modalData.mode ? "none" : undefined}
             isOpen={modalData.open}
             className={`simple-dialog mode-${modalData.mode}`}
             canOutsideClickClose={canClose}

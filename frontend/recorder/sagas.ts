@@ -16,6 +16,7 @@ import {ReplayContext} from "../player/sagas";
 import {App} from "../index";
 import {Screen} from "../common/screens";
 import {StepperStatus} from "../stepper";
+import log from 'loglevel';
 
 export default function(bundle, deps) {
     bundle.use('recordApi');
@@ -163,7 +164,7 @@ export default function(bundle, deps) {
             const recorder = getRecorderState(state);
             const recorderStatus = recorder.status;
             if (recorderStatus !== RecorderStatus.Ready) {
-                console.log('not ready', recorder);
+                log.getLogger('recorder').debug('not ready', recorder);
 
                 return;
             }
@@ -280,7 +281,7 @@ export default function(bundle, deps) {
             const player = getPlayerState(state);
             const isPlaying = player.isPlaying;
             if (recorderStatus !== RecorderStatus.Paused || isPlaying) {
-                console.log('bad state', recorderStatus);
+                log.getLogger('recorder').debug('bad state', recorderStatus);
 
                 return;
             }

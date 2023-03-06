@@ -1,9 +1,10 @@
 import {AnalysisScope, AnalysisSnapshot, AnalysisStackFrame, AnalysisVariable} from "../analysis/analysis";
+import log from 'loglevel';
 
 export const fetchLatestBlocklyAnalysis = function (localVariables: any, lastAnalysis: AnalysisSnapshot, newStepNum: number): AnalysisSnapshot {
     let stackFrames: AnalysisStackFrame[] = [];
 
-    console.log('local variables', localVariables);
+    log.getLogger('blockly_runner').debug('local variables', localVariables);
 
     const stackFrame: AnalysisStackFrame = {
         id: 1,
@@ -43,14 +44,13 @@ export const fetchLatestBlocklyAnalysis = function (localVariables: any, lastAna
 let variableReferenceCount = 1;
 
 export const convertBlocklyValueToDAPFormat = (name: string, value: any, visited: any[]): AnalysisVariable => {
-    // console.log('convert value', name, value, visited);
     let variableData = {
         name,
         type: value && value.class ? value.class : (value && value.type ? value.type : typeof value),
     };
 
     if (visited.find(visitedElement => visitedElement === value)) {
-        console.log('already visited', visited);
+        log.getLogger('blockly_runner').debug('already visited', visited);
         return {
             ...variableData,
             value: null,
