@@ -57,7 +57,7 @@ export class QuickAlgoLibrary {
         this.delayFactory = new window.DelayFactory();
         this.raphaelFactory = new window.RaphaelFactory();
 
-        this.setLocalLanguageStrings(window.quickAlgoLanguageStrings);
+        this.setLocalLanguageStrings(window.quickAlgoLanguageStrings, true);
 
         // this.blocklyHelper = {
         //     updateSize: function () {
@@ -66,10 +66,10 @@ export class QuickAlgoLibrary {
     }
 
     // Set the localLanguageStrings for this context
-    setLocalLanguageStrings(localLanguageStrings) {
+    setLocalLanguageStrings(localLanguageStrings, reset = false) {
         log.getLogger('libraries').debug('set local language strings', localLanguageStrings);
         window.stringsLanguage = window.stringsLanguage && window.stringsLanguage in localLanguageStrings ? window.stringsLanguage : "fr";
-        window.languageStrings = window.languageStrings || {};
+        window.languageStrings = window.languageStrings && !reset ? window.languageStrings : {};
 
         if (typeof window.languageStrings != "object") {
             console.error("window.languageStrings is not an object");
