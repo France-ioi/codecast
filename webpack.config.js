@@ -164,9 +164,9 @@ module.exports = (env, argv) => {
                                 context: 'public',
                                 publicPath: './build/',
                                 name(resourcePath) {
-                                    const matches = /.+task\/fixtures\/[\w_]+\/(.*)/ig.exec(resourcePath);
+                                    const matches = /.+task\/fixtures\/([\w_\-]+)\/(.*)/ig.exec(resourcePath);
 
-                                    return 'images/' + matches[1];
+                                    return 'images/' + matches[1] + '/' + matches[2];
                                 },
                             }
                         }
