@@ -356,7 +356,7 @@ export default function(bundle: Bundle) {
                     // channel.put(stepperExecutionError(diagnostics));
                 };
 
-                const blocksData = getContextBlocksDataSelector(state, context);
+                const blocksData = getContextBlocksDataSelector({state, context});
 
                 const blocklyHelper = context.blocklyHelper;
                 log.getLogger('blockly_runner').debug('blockly helper', blocklyHelper);

@@ -12,7 +12,7 @@ export interface AvailableBlocksProps {
 
 export function AvailableBlocks(props: AvailableBlocksProps) {
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector(state, context) : []);
+    const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector({state, context}) : []);
     const showDirectives = useAppSelector(state => state.options.showDirectives);
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
     const [isDragging, setDragging] = useState(false);

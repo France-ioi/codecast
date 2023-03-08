@@ -9,6 +9,7 @@ import {BlocksUsage, taskSetBlocksUsage} from "../task_slice";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
 import {selectAnswer} from "../selectors";
 import {QuickAlgoLibrary} from "../libs/quickalgo_library";
+import {memoize} from 'proxy-memoize';
 
 export enum BlockType {
     Function = 'function',
@@ -74,7 +75,7 @@ function getSnippet(proto) {
     }
 }
 
-export const getContextBlocksDataSelector = function (state: AppStoreReplay, context: QuickAlgoLibrary): Block[] {
+export const getContextBlocksDataSelector = memoize(({state, context}: {state: AppStoreReplay, context: QuickAlgoLibrary}): Block[] => {
     const contextIncludeBlocks = state.task.contextIncludeBlocks;
     const contextStrings = state.task.contextStrings;
     const platform = state.options.platform;
@@ -218,7 +219,7 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
     }));
 
     return availableBlocks;
-}
+});
 
 function* checkSourceSaga() {
     const state: AppStore = yield* select();
