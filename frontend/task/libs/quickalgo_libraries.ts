@@ -362,6 +362,9 @@ export default function(bundle: Bundle) {
                 context.needsRedrawDisplay = false;
                 const currentTest = selectCurrentTest(state);
                 const contextState = getCurrentImmerState(context.getInnerState());
+                if ('main' === app.environment){
+                    context.display = true;
+                }
                 // For libs like barcode where we need to call context.reset to recreate context
                 context.resetAndReloadState(currentTest, state, contextState);
 
