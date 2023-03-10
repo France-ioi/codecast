@@ -27,47 +27,47 @@ export const testErrorCodeData: {[property in SubmissionTestErrorCode]: ErrorCod
     [SubmissionTestErrorCode.OtherError]: {
         icon: faExclamationTriangle,
         color: 'black',
-        colorLight: 'red',
+        colorLight: '#cfd0d4',
         message: 'submission_result_crash',
     },
     [SubmissionTestErrorCode.NoError]: {
         icon: faCheck,
         color: '#9acc68',
-        colorLight: 'red',
+        colorLight: '#dfeada',
     },
     [SubmissionTestErrorCode.WrongAnswer]: {
         icon: faTimes,
         color: '#ff0f2c',
-        colorLight: 'red',
+        colorLight: '#f3c1cb',
     },
     [SubmissionTestErrorCode.AbortError]: {
         icon: faExclamationTriangle,
         color: 'black',
-        colorLight: 'red',
+        colorLight: '#cfd0d4',
         message: 'submission_result_abort',
     },
     [SubmissionTestErrorCode.BusError]: {
         icon: faExclamationTriangle,
         color: 'black',
-        colorLight: 'red',
+        colorLight: '#cfd0d4',
         message: 'submission_result_buserror',
     },
     [SubmissionTestErrorCode.FloatingPointException]: {
         icon: faExclamationTriangle,
         color: 'black',
-        colorLight: 'red',
+        colorLight: '#cfd0d4',
         message: 'submission_result_floating',
     },
     [SubmissionTestErrorCode.SegFault]: {
         icon: faExclamationTriangle,
         color: 'black',
-        colorLight: 'red',
+        colorLight: '#cfd0d4',
         message: 'submission_result_memory',
     },
     [SubmissionTestErrorCode.TimeLimitExceeded]: {
         icon: faHourglassHalf,
-        color: 'dd',
-        colorLight: 'red',
+        color: '#f5a523',
+        colorLight: '#f1e2cc',
         message: 'submission_result_timeout',
     },
 }
@@ -76,6 +76,7 @@ export function SubmissionResultTest(props: SubmissionResultTestProps) {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const testResult = props.testResult;
     const test = currentTask.tests.find(test => test.id === testResult.testId);
+    console.log('the tests', currentTask.tests, testResult.testId);
 
     const testName = TaskTestGroupType.Evaluation === test.groupType
         ? getMessage('submission_test_number') + (props.index + 1)

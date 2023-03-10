@@ -1,14 +1,10 @@
 import React, {useState} from "react";
-import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
-import {SubmissionResult} from './SubmissionResult';
-import {Collapse, Dropdown} from 'react-bootstrap';
+import {Collapse} from 'react-bootstrap';
 import {SubmissionOutput, SubmissionSubtaskNormalized, SubmissionTestNormalized} from './task_platform';
-import {getMessage} from '../lang';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCaretUp} from '@fortawesome/free-solid-svg-icons/faCaretUp';
 import {faCaretDown} from '@fortawesome/free-solid-svg-icons/faCaretDown';
-import {AvailableBlock} from '../task/blocks/AvailableBlock';
 import {ErrorCodeData, SubmissionResultTest, testErrorCodeData} from './SubmissionResultTest';
 
 export interface SubmissionResultSubTaskProps {
@@ -70,9 +66,11 @@ export function SubmissionResultSubTask(props: SubmissionResultSubTaskProps) {
                 <div className="subtask-header-name">{subTask.name}</div>
                 {!open && <div className="subtask-header-summary">
                     {testsByIconValues.map((testsByIconValue, testIndex) =>
-                        <div className="subtask-header-summary-badge" key={testIndex}>
-                            <FontAwesomeIcon icon={testsByIconValue.errorCodeData.icon} className="subtask-header-summary-badge-icon"/>
-                            <span>{testsByIconValue.count}</span>
+                        <div className="subtask-header-summary-badge" key={testIndex} style={{background: testsByIconValue.errorCodeData.colorLight}}>
+                            <div className="subtask-header-summary-badge-icon" style={{background: testsByIconValue.errorCodeData.color}}>
+                                <FontAwesomeIcon icon={testsByIconValue.errorCodeData.icon}/>
+                            </div>
+                            <span className="subtask-header-summary-badge-content">{testsByIconValue.count}</span>
                         </div>
                     )}
                 </div>}

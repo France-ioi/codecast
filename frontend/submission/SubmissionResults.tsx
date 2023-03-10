@@ -14,7 +14,16 @@ export function SubmissionResults() {
     const [currentSubmission, setCurrentSubmission] = useState<SubmissionOutput>(null);
 
     const getSubmissionLabel = (submissionResult: SubmissionOutput) => {
-        return "Soumission en " + getMessage('PLATFORM_' + platform.toLocaleUpperCase()).s;
+        return <div className="submission-label">
+            <div className="submission-label-icon" style={{'--progression': `${Math.floor(submissionResult.score / 100 * 360)}deg`} as React.CSSProperties}>
+                <div className="submission-label-score">
+                    {submissionResult.score}
+                </div>
+            </div>
+            <div className="submission-label-name">
+                Soumission en {getMessage('PLATFORM_' + platform.toLocaleUpperCase()).s}
+            </div>
+        </div>
     };
 
     const closePane = () => {

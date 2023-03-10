@@ -57,6 +57,7 @@
   background: #f1f2f7;
   border-top: solid 2px #e7e7e7;
   height: 100%;
+  overflow: scroll;
 }
 
 .submission-result-test {
@@ -98,6 +99,8 @@
     font-size: 14px;
     border: none !important;
     outline: none;
+    padding-left: 5px !important;
+    padding-right: 5px !important;
     box-shadow: inset 0px 1px 0px 0px #b3b3b3 !important;
     &:after {
       top: calc(50% - 2px);
@@ -136,7 +139,7 @@
   border-radius: 500px;
   padding: 0 8px;
   color: white;
-  font-size: 0.9em;
+  font-size: 0.8em;
   font-weight: bold;
   background: #ff0f2c;
   &.is-success {
@@ -153,24 +156,75 @@
 }
 
 .subtask-header-summary {
-  margin-right: 8px;
+  margin-right: 10px;
   .subtask-header-summary-badge {
     margin-left: 8px;
     border-radius: 500px;
-    padding: 0 8px;
-    color: white;
-    font-size: 0.9em;
-    font-weight: bold;
-    background: #ff0f2c;
-    filter: brightness(120%);
+    color: #333;
+    font-size: 0.8em;
+    position: relative;
+    padding-left: 20px;
   }
 
   .subtask-header-summary-badge-icon {
-    background: green;
     border-radius: 500px;
-    filter: brightness(80%);
-    padding: 0 8px;
-    font-weight: bold;
     color: white;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    top: -1px;
+    left: 0;
   }
+
+  .subtask-header-summary-badge-content {
+    padding: 0 8px;
+  }
+}
+
+.submission-label {
+  display: flex;
+  align-items: center;
+  text-align: left;
+
+  .submission-label-icon {
+    margin-right: 8px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 36px;
+    width: 36px;
+    border-radius:50%;
+    background: conic-gradient(#f5a623 0, #f9d762 var(--progression), transparent var(--progression), transparent 360deg), conic-gradient(#969696 0deg, #969696 360deg);
+
+    $submission-label-width: 76%;
+
+    &:after {
+      position: absolute;
+      content: '';
+      height: $submission-label-width;
+      width: $submission-label-width;
+      top: calc((100% - $submission-label-width) / 2);
+      left: calc((100% - $submission-label-width) / 2);
+      border-radius: 50%;
+      background: white;
+    }
+  }
+
+  .submission-label-score {
+    z-index: 1;
+    font-size: 0.9em;
+  }
+
+  .submission-label-name {
+    flex: 1 0;
+  }
+}
+
+.dropdown-toggle .submission-label-icon:after {
+  background: #f2f2f2;
 }
