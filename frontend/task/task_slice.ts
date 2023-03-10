@@ -11,6 +11,7 @@ import CraneFixture from './fixtures/test_crane';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
+import {TaskOutput} from '../submission/task_platform';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -43,7 +44,7 @@ export interface BlocksUsage {
 }
 
 export interface TaskState {
-    currentTask?: any,
+    currentTask?: Task|null,
     currentLevel?: TaskLevelName,
     recordingEnabled?: boolean,
     resetDone?: boolean,
@@ -82,6 +83,13 @@ export interface TaskTest {
     data: any,
     contextState: any,
 }
+
+export interface QuickalgoTask {
+    gridInfos: any,
+    data: any,
+}
+
+export type Task = QuickalgoTask & Partial<TaskOutput>;
 
 export const taskInitialState = {
     currentTask: null,

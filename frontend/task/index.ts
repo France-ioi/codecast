@@ -53,8 +53,8 @@ import {PlayerInstant} from "../player";
 import {ActionTypes as StepperActionTypes, stepperClearError, stepperDisplayError} from "../stepper/actionTypes";
 import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {clearSourceHighlightSaga, StepperState, StepperStatus, StepperStepMode} from "../stepper";
-import {createQuickAlgoLibraryExecutor, makeContext, StepperContext} from "../stepper/api";
-import {taskSubmissionExecutor} from "./task_submission";
+import { makeContext, StepperContext} from "../stepper/api";
+import {taskSubmissionExecutor} from "../submission/task_submission";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {platformAnswerGraded, platformAnswerLoaded, taskGradeAnswerEvent,} from "./platform/actionTypes";
@@ -75,7 +75,7 @@ import {ObjectDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
 import {ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
-import {getTaskFromId} from "../submission/task_platform";
+import {getTaskFromId, TaskOutput} from "../submission/task_platform";
 import {
     submissionChangeExecutionMode,
     submissionChangePlatformName,
@@ -158,7 +158,7 @@ function* taskLoadSaga(app: App, action) {
     let state: AppStore = yield* select();
 
     if (urlParameters.has('taskId')) {
-        let task;
+        let task: TaskOutput|null = null;
         const taskId = urlParameters.get('taskId');
         try {
             task = yield* getTaskFromId(taskId);

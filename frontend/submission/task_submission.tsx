@@ -3,11 +3,11 @@ import {
     TaskSubmissionResultPayload,
     taskSubmissionSetTestResult,
     taskSubmissionStartTest,
-} from "./task_slice";
+} from "../task/task_slice";
 import {call, put, select} from "typed-redux-saga";
 import {AppStore} from "../store";
 import {Codecast} from "../index";
-import {getTaskPlatformMode, recordingProgressSteps, TaskActionTypes, TaskPlatformMode} from "./index";
+import {getTaskPlatformMode, recordingProgressSteps, TaskActionTypes, TaskPlatformMode} from "../task";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import log from "loglevel";
 import {stepperDisplayError} from "../stepper/actionTypes";
@@ -17,12 +17,12 @@ import {
     PlatformTaskGradingParameters,
     PlatformTaskGradingResult,
     taskGetNextLevelToIncreaseScore,
-} from "./platform/platform";
-import {selectAnswer} from "./selectors";
+} from "../task/platform/platform";
+import {selectAnswer} from "../task/selectors";
 import {delay} from "../player/sagas";
-import {SubmissionExecutionMode} from "../submission/submission_slice";
-import {getServerSubmissionResults, makeServerSubmission} from "../submission/task_platform";
-import {getAnswerTokenForLevel, getTaskTokenForLevel} from "./platform/task_token";
+import {submissionAddNewSubmissionResult, submissionChangePaneOpen, SubmissionExecutionMode} from "./submission_slice";
+import {getServerSubmissionResults, makeServerSubmission} from "./task_platform";
+import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
 import stringify from 'json-stable-stringify-without-jsonify';
 
 export const levelScoringData = {
@@ -193,18 +193,20 @@ class TaskSubmissionExecutor {
             throw new Error("Impossible to create submission");
         }
 
+        yield* put(submissionChangePaneOpen(true));
+
         console.log('submission data', submissionData);
 
         const submissionId = submissionData.submissionId;
-        const submissionResults = yield* getServerSubmissionResults(submissionId);
+        const submissionResult = yield* getServerSubmissionResults(submissionId);
+        console.log('submission results', submissionResult);
 
-        // TODO: add server submission to list of server submissions in submission_slice
-        // When new submissionk, automatically open submission panel on the left (with transition)
-
-        console.log('submission results', submissionResults);
+        yield* put(submissionAddNewSubmissionResult(submissionResult))
+        // TODO: When new submission, automatically open submission panel on the left (with transition)
 
         return {
-            score: 100,
+            score: submissionResult.score,
+            message: submissionResult.errorMessage,
         };
     }
 

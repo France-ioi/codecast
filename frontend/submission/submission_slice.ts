@@ -1,4 +1,5 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
+import {SubmissionOutput} from './task_platform';
 
 export enum SubmissionExecutionMode {
     Client = 'client',
@@ -15,12 +16,16 @@ export interface SubmissionState {
     executionMode: SubmissionExecutionMode,
     serverExecuteOn: SubmissionServerExecuteOn,
     platformName: string,
+    serverSubmissionsResults: SubmissionOutput[],
+    submissionsPaneOpen: boolean,
 }
 
 export const submissionInitialState = {
     executionMode: SubmissionExecutionMode.Client,
     serverExecuteOn: SubmissionServerExecuteOn.ThisTest,
     platformName: null,
+    serverSubmissionsResults: [],
+    submissionsPaneOpen: false,
 } as SubmissionState;
 
 export const submissionSlice = createSlice({
@@ -36,6 +41,12 @@ export const submissionSlice = createSlice({
         submissionChangePlatformName(state, action: PayloadAction<string>) {
             state.platformName = action.payload;
         },
+        submissionAddNewSubmissionResult(state, action: PayloadAction<SubmissionOutput>) {
+            state.serverSubmissionsResults.push(action.payload);
+        },
+        submissionChangePaneOpen(state, action: PayloadAction<boolean>) {
+            state.submissionsPaneOpen = action.payload;
+        },
     },
 });
 
@@ -43,6 +54,8 @@ export const {
     submissionChangeExecutionMode,
     submissionChangeServerExecuteOn,
     submissionChangePlatformName,
+    submissionAddNewSubmissionResult,
+    submissionChangePaneOpen,
 } = submissionSlice.actions;
 
 export default submissionSlice;

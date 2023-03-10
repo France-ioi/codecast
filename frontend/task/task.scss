@@ -97,7 +97,6 @@ html, body, #react-container {
   .task-section {
     display: flex;
     width: 100vw;
-    flex-direction: column;
     flex: 1 0;
     min-height: 0;
   }
@@ -818,4 +817,8 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   .bp3-icon {
     color: #fff;
   }
+}
+
+.io-visualization {
+  padding: 1rem;
 }

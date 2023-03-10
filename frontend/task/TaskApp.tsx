@@ -27,6 +27,7 @@ import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {PromptModalDialog} from "./dialog/PromptModalDialog";
 import {taskSuccessClear} from "./task_slice";
 import {platformTaskLink} from './platform/actionTypes';
+import {SubmissionResults} from '../submission/SubmissionResults';
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -47,6 +48,7 @@ export function TaskApp() {
     const language = useAppSelector(state => state.options.language);
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
     const taskSuccess = useAppSelector(state => state.task.success);
+    const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
 
     let progress = null;
     let progressMessage = null;
@@ -127,6 +129,7 @@ export function TaskApp() {
         <Container key={language} fluid className={`task ${fullScreenActive ? 'full-screen' : ''} layout-${layoutType} task-player-${layoutPlayerMode} platform-${options.platform}`}>
             <div className="layout-general">
                 <div className={`task-section`}>
+                    {submissionsPaneOpen && <SubmissionResults/>}
                     <div className="task-section-container">
                         <div className="task-header">
                             <span className="task-header__quick">QUICK</span>
@@ -154,7 +157,6 @@ export function TaskApp() {
 
                         <MenuTask/>
                     </div>
-
                 </div>
 
                 {recordingEnabled &&

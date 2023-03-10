@@ -79,7 +79,7 @@ import BlocklyRunner from "./js/blockly_runner";
 import UnixRunner from "./c/unix_runner";
 import {AnalysisSnapshot, CodecastAnalysisSnapshot, convertAnalysisDAPToCodecastFormat} from "./analysis/analysis";
 import log from "loglevel";
-import {taskSubmissionExecutor} from "../task/task_submission";
+import {taskSubmissionExecutor} from "../submission/task_submission";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {LayoutMobileMode} from "../task/layout/layout";
 import {DeferredPromise} from "../utils/app";

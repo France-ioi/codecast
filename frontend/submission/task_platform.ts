@@ -41,12 +41,19 @@ export interface TaskSubtaskNormalized {
     active: boolean,
 }
 
+export enum TaskTestGroupType {
+    Example = 'Example',
+    User = 'User',
+    Evaluation = 'Evaluation',
+    Submission = 'Submission',
+}
+
 export interface TaskTestNormalized {
     id: string,
     taskId: string,
     subtaskId: string|null,
     submissionId: string|null,
-    groupType: string,
+    groupType: TaskTestGroupType,
     userId: string|null,
     platformId: string|null,
     rank: number,
@@ -89,13 +96,24 @@ export interface SubmissionSubtaskNormalized {
     subtaskId: string,
 }
 
+export enum SubmissionTestErrorCode {
+    OtherError = -1,
+    NoError = 0,
+    WrongAnswer = 1,
+    AbortError = 6,
+    BusError = 7,
+    FloatingPointException = 8,
+    SegFault = 11,
+    TimeLimitExceeded = 137,
+}
+
 export interface SubmissionTestNormalized {
     id: string,
     testId: string,
     score: number,
     timeMs: number,
     memoryKb: number,
-    errorCode: number,
+    errorCode: SubmissionTestErrorCode,
     output: string|null,
     expectedOutput: string|null,
     errorMessage: string|null,

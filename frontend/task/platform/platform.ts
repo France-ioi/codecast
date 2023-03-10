@@ -36,7 +36,7 @@ import {
     TaskLevelName,
 } from "./platform_slice";
 import {generateTokenUrl} from "./task_token";
-import {levelScoringData} from "../task_submission";
+import {levelScoringData} from "../../submission/task_submission";
 import {Effect} from "@redux-saga/types";
 import log from "loglevel";
 import {importPlatformModules} from '../libs/import_modules';
