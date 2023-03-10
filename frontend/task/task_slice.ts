@@ -5,6 +5,7 @@ import ProcessingFixture from './fixtures/test_processing';
 import BarcodeFixture from './fixtures/test_barcode';
 import QuickPiFixture from './fixtures/quickpi_testbed';
 import SokobanFixture from './fixtures/11_variable_08_sokoban';
+import StringsLoginFixture from './fixtures/14_strings_01_login';
 import DatabaseFixture from './fixtures/test_database';
 import P5Fixture from './fixtures/test_p5';
 import CraneFixture from './fixtures/test_crane';
@@ -22,6 +23,7 @@ const availableTasks = {
     database: DatabaseFixture,
     p5: P5Fixture,
     crane: CraneFixture,
+    login: StringsLoginFixture,
 };
 
 export interface TaskSubmission {

@@ -1,0 +1,10 @@
+from printer import *
+
+print("Quel est votre nom ?")
+nom = input()
+print("Entrez votre mot de passe :")
+password = input()
+while password != "Sésame":
+    print("Essayez encore :")
+    password = input()
+print("Bonjour " + nom)

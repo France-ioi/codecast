@@ -1,0 +1,5 @@
+from printer import *
+
+print("Quel est votre nom ?")
+nom = input()
+print("Bonjour " + nom)
