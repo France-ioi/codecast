@@ -27,6 +27,7 @@ import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {PromptModalDialog} from "./dialog/PromptModalDialog";
 import {taskSuccessClear} from "./task_slice";
 import {platformTaskLink} from './platform/actionTypes';
+import {ContextVisualizationImages} from './ContextVisualizationImages';
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -155,6 +156,7 @@ export function TaskApp() {
                         <MenuTask/>
                     </div>
 
+                    <ContextVisualizationImages/>
                 </div>
 
                 {recordingEnabled &&

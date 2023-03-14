@@ -38,11 +38,6 @@ export function ContextVisualization() {
         <div className="context-visualization">
             <div className="task-visualization-container">
                 <div className="task-visualization" ref={ref} style={{fontSize: `${zoomLevel}rem`}}>
-                    {currentTask && currentTask.gridInfos && currentTask.gridInfos.images &&
-                        currentTask.gridInfos.images.map((element, key) =>
-                            <img id={element.id} key={key} src={element.path.default} style={{display: 'none'}}/>
-                        )
-                    }
                     {Visualization ? <Visualization/> :
                         <div id="taskContent">
                             <div id="taskIntro"/>

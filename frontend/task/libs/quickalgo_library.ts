@@ -169,6 +169,13 @@ export class QuickAlgoLibrary {
 
     resetAndReloadState(taskInfos = null, appState: AppStoreReplay = null, innerState: any = null) {
         log.getLogger('libraries').debug('reset and reload state', taskInfos, innerState);
+
+        // Avoid resetting context visualization if the paper does not have a visible container on the page
+        const hasVisualization = 0 < document.getElementsByClassName('context-visualization').length;
+        if (!hasVisualization) {
+            this.display = false;
+        }
+
         this.reset(taskInfos, appState);
         // We do a second call because some libraries like barcode only reset their internal state when taskInfos is empty...
         this.reset();
