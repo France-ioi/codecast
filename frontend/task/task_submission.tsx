@@ -56,7 +56,7 @@ class TaskSubmissionExecutor {
         const environment = state.environment;
         const level = state.task.currentLevel;
         const answer = selectAnswer(state);
-        const tests = yield* select(state => state.task.taskTests);
+        const tests = state.task.currentTask.data[level];
         if (!tests || 0 === Object.values(tests).length) {
             return;
         }
@@ -160,7 +160,6 @@ class TaskSubmissionExecutor {
         let lastMessage = null;
         const state: AppStore = yield* select();
 
-        log.getLogger('tests').debug('do grade answer');
         if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state)) {
             return {
                 score: minScore + (maxScore - minScore) * Number(answer) / recordingProgressSteps,
@@ -169,8 +168,10 @@ class TaskSubmissionExecutor {
         }
 
         const environment = state.environment;
-        log.getLogger('tests').debug('start grading answer', environment);
-        const tests = yield* select(state => state.task.taskTests);
+        const currentTask = yield* select(state => state.task.currentTask);
+        const tests = currentTask.data[level];
+
+        log.getLogger('tests').debug('start grading answer', environment, {level, answer, tests});
         if (!tests || 0 === Object.values(tests).length) {
             return {
                 score: 0,
