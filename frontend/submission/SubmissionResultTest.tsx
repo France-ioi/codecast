@@ -28,7 +28,7 @@ export const testErrorCodeData: {[property in SubmissionTestErrorCode]: ErrorCod
         icon: faExclamationTriangle,
         color: 'black',
         colorLight: '#cfd0d4',
-        message: 'submission_result_crash',
+        message: 'SUBMISSION_RESULT_CRASH',
     },
     [SubmissionTestErrorCode.NoError]: {
         icon: faCheck,
@@ -44,31 +44,31 @@ export const testErrorCodeData: {[property in SubmissionTestErrorCode]: ErrorCod
         icon: faExclamationTriangle,
         color: 'black',
         colorLight: '#cfd0d4',
-        message: 'submission_result_abort',
+        message: 'SUBMISSION_RESULT_ABORT',
     },
     [SubmissionTestErrorCode.BusError]: {
         icon: faExclamationTriangle,
         color: 'black',
         colorLight: '#cfd0d4',
-        message: 'submission_result_buserror',
+        message: 'SUBMISSION_RESULT_BUSERROR',
     },
     [SubmissionTestErrorCode.FloatingPointException]: {
         icon: faExclamationTriangle,
         color: 'black',
         colorLight: '#cfd0d4',
-        message: 'submission_result_floating',
+        message: 'SUBMISSION_RESULT_FLOATING',
     },
     [SubmissionTestErrorCode.SegFault]: {
         icon: faExclamationTriangle,
         color: 'black',
         colorLight: '#cfd0d4',
-        message: 'submission_result_memory',
+        message: 'SUBMISSION_RESULT_MEMORY',
     },
     [SubmissionTestErrorCode.TimeLimitExceeded]: {
         icon: faHourglassHalf,
         color: '#f5a523',
         colorLight: '#f1e2cc',
-        message: 'submission_result_timeout',
+        message: 'SUBMISSION_RESULT_TIMEOUT',
     },
 }
 

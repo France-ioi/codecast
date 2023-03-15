@@ -271,4 +271,10 @@ module.exports = {
     SUBMISSION_ERROR_EXECUTION: "Execution error:",
     SUBMISSION_NO_TESTS: "There are no tests for this task.",
     SUBMISSION_COMPILATION_OUTPUT: "Compilation result :",
+    SUBMISSION_RESULT_ABORT: "Abort",
+    SUBMISSION_RESULT_BUSERROR: "Bus Error",
+    SUBMISSION_RESULT_FLOATING: "Floating point Expression",
+    SUBMISSION_RESULT_MEMORY: "Invalid memory access",
+    SUBMISSION_RESULT_TIMEOUT: "Execution time limit exceeded",
+    SUBMISSION_RESULT_CRASH: "Execution error",
 };

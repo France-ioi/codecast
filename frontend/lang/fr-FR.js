@@ -282,4 +282,10 @@ module.exports = {
     SUBMISSION_ERROR_EXECUTION: "Erreur d'exécution :",
     SUBMISSION_NO_TESTS: "Il n'existe pas de tests pour ce problème.",
     SUBMISSION_COMPILATION_OUTPUT: "Résultat de la compilation :",
+    SUBMISSION_RESULT_ABORT: "Abort",
+    SUBMISSION_RESULT_BUSERROR: "Bus Error",
+    SUBMISSION_RESULT_FLOATING: "Floating point Expression",
+    SUBMISSION_RESULT_MEMORY: "Accès mémoire invalide",
+    SUBMISSION_RESULT_TIMEOUT: "Limite de temps d'exécution dépassée",
+    SUBMISSION_RESULT_CRASH: "Erreur d'exécution",
 };
