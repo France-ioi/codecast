@@ -128,6 +128,13 @@ export interface SubmissionOutput extends SubmissionNormalized {
     tests?: SubmissionTestNormalized[],
 }
 
+export interface ServerSubmission {
+    date: string, // ISO format
+    evaluated: boolean,
+    crashed?: boolean,
+    result?: SubmissionOutput,
+}
+
 export function* getTaskFromId(taskId: string): Generator<any, TaskOutput|null> {
     const state: AppStore = yield* select();
     const {taskPlatformUrl} = state.options;
@@ -140,7 +147,6 @@ export function* getServerSubmissionResults(submissionId: string): Generator<any
         results: call(longPollServerSubmissionResults, submissionId),
         timeout: delay(60*1000)
     });
-
 
     if (outcome.timeout) {
         throw new Error("Submission results have timeout");

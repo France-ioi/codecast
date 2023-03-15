@@ -1,6 +1,6 @@
 import React from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPlay} from "@fortawesome/free-solid-svg-icons";
+import {faPlay, faSpinner} from "@fortawesome/free-solid-svg-icons";
 import {Button} from "@blueprintjs/core";
 import {useDispatch} from "react-redux";
 import {submissionChangeServerExecuteOn, SubmissionServerExecuteOn} from "./submission_slice";
@@ -10,6 +10,8 @@ import {submissionTriggerPlatformValidate} from "./submission";
 
 export function SubmissionControls() {
     const serverExecuteOn = useAppSelector(state => state.submission.serverExecuteOn);
+    const lastSubmission = useAppSelector(state => 0 < state.submission.serverSubmissions.length ? state.submission.serverSubmissions[state.submission.serverSubmissions.length - 1] : null);
+    const isEvaluating = lastSubmission && !lastSubmission.evaluated;
     const dispatch = useDispatch();
 
     const changeExecuteOn = (newExecuteOn) => {
@@ -17,9 +19,8 @@ export function SubmissionControls() {
     }
 
     const submit = () => {
-        console.log('submit');
         dispatch(submissionTriggerPlatformValidate());
-    }
+    };
 
     return (
         <div className="submission-controls">
@@ -47,7 +48,8 @@ export function SubmissionControls() {
                 <Button
                     className="is-big"
                     onClick={submit}
-                    icon={<FontAwesomeIcon icon={faPlay}/>}
+                    disabled={isEvaluating}
+                    icon={isEvaluating ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>}
                 />
             </div>
         </div>

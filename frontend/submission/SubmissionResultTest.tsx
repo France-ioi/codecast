@@ -76,10 +76,9 @@ export function SubmissionResultTest(props: SubmissionResultTestProps) {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const testResult = props.testResult;
     const test = currentTask.tests.find(test => test.id === testResult.testId);
-    console.log('the tests', currentTask.tests, testResult.testId);
 
     const testName = TaskTestGroupType.Evaluation === test.groupType
-        ? getMessage('submission_test_number') + (props.index + 1)
+        ? getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: props.index + 1})
         : test.name;
 
     const hasRelativeScore = testResult.score > 0 && testResult.score < 100;

@@ -1,5 +1,5 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {SubmissionOutput} from './task_platform';
+import {ServerSubmission} from './task_platform';
 
 export enum SubmissionExecutionMode {
     Client = 'client',
@@ -16,16 +16,18 @@ export interface SubmissionState {
     executionMode: SubmissionExecutionMode,
     serverExecuteOn: SubmissionServerExecuteOn,
     platformName: string,
-    serverSubmissionsResults: SubmissionOutput[],
+    serverSubmissions: ServerSubmission[],
     submissionsPaneOpen: boolean,
+    currentSubmissionId: number|null,
 }
 
 export const submissionInitialState = {
     executionMode: SubmissionExecutionMode.Client,
-    serverExecuteOn: SubmissionServerExecuteOn.ThisTest,
+    serverExecuteOn: SubmissionServerExecuteOn.Submit,
     platformName: null,
-    serverSubmissionsResults: [],
+    serverSubmissions: [],
     submissionsPaneOpen: false,
+    currentSubmissionId: null,
 } as SubmissionState;
 
 export const submissionSlice = createSlice({
@@ -41,11 +43,17 @@ export const submissionSlice = createSlice({
         submissionChangePlatformName(state, action: PayloadAction<string>) {
             state.platformName = action.payload;
         },
-        submissionAddNewSubmissionResult(state, action: PayloadAction<SubmissionOutput>) {
-            state.serverSubmissionsResults.push(action.payload);
+        submissionAddNewServerSubmission(state, action: PayloadAction<ServerSubmission>) {
+            state.serverSubmissions.push(action.payload);
+        },
+        submissionUpdateServerSubmission(state, action: PayloadAction<{id: number, submission: ServerSubmission}>) {
+            state.serverSubmissions[action.payload.id] = action.payload.submission;
         },
         submissionChangePaneOpen(state, action: PayloadAction<boolean>) {
             state.submissionsPaneOpen = action.payload;
+        },
+        submissionChangeCurrentSubmissionId(state, action: PayloadAction<number>) {
+            state.currentSubmissionId = action.payload;
         },
     },
 });
@@ -54,8 +62,10 @@ export const {
     submissionChangeExecutionMode,
     submissionChangeServerExecuteOn,
     submissionChangePlatformName,
-    submissionAddNewSubmissionResult,
+    submissionAddNewServerSubmission,
+    submissionUpdateServerSubmission,
     submissionChangePaneOpen,
+    submissionChangeCurrentSubmissionId,
 } = submissionSlice.actions;
 
 export default submissionSlice;

@@ -34,31 +34,31 @@ export function SubmissionResult(props: SubmissionResultProps) {
     return (
         <div className="submission-result">
             {'UserTest' === submission.mode && <div>
-                <Alert intent={Intent.WARNING}>{getMessage('submission_usertest_warning')}</Alert>
+                <Alert intent={Intent.WARNING}>{getMessage('SUBMISSION_USER_TEST_WARNING')}</Alert>
             </div>}
             {!submission.evaluated && <div>
-                En cours d'évaluation...
+                {getMessage('SUBMISSION_RESULTS_EVALUATING')}
             </div>}
 
             {submission.evaluated && <React.Fragment>
                 {submission.compilationError && <div>
                     {submission.compilationMessage && <div>
-                        <strong>{getMessage('submission_error_compilation')}</strong><br />
+                        <strong>{getMessage('SUBMISSION_ERROR_COMPILATION')}</strong><br />
                         <pre>{submission.compilationMessage}</pre>
                     </div>}
                     {!submission.compilationMessage && <div>
-                        <strong>{getMessage('submission_error_execution')}</strong><br />
+                        <strong>{getMessage('SUBMISSION_ERROR_EXECUTION')}</strong><br />
                         <pre>{submission.errorMessage}</pre>
                     </div>}
                 </div>}
 
                 {!submission.compilationError && submission.tests.length === 0 && <div>
-                    {getMessage('submission_notests')}
+                    {getMessage('SUBMISSION_NO_TESTS')}
                 </div>}
 
                 {!submission.compilationError && submission.tests.length > 0 && <React.Fragment>
                     {0 < submission.compilationMessage.length && <div>
-                        <span>{getMessage('submission_compilation_output')}</span><br />
+                        <span>{getMessage('SUBMISSION_COMPILATION_OUTPUT')}</span><br />
                         <pre>{submission.compilationMessage}</pre>
                     </div>}
                     {subTasksOrdered.length > 0 && <div>

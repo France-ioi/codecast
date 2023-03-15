@@ -60,6 +60,10 @@
   border-top: solid 2px #e7e7e7;
   height: 100%;
   overflow-y: auto;
+  .submission-results__submission-loader {
+    text-align: center;
+    padding: 1rem;
+  }
 }
 
 .submission-result-test {
@@ -224,6 +228,17 @@
       left: calc((100% - $submission-label-width) / 2);
       border-radius: 50%;
       background: white;
+    }
+  }
+
+  .submission-label-loader {
+    margin-right: 8px;
+    width: 36px;
+    height: 36px;
+    svg {
+      margin: 4px;
+      height: 28px;
+      width: 28px;
     }
   }
 

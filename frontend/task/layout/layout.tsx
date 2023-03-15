@@ -28,6 +28,7 @@ import {askConfirmation} from "../../alert";
 import {selectAnswer} from "../selectors";
 import {StepperStatus} from "../../stepper";
 import log from 'loglevel';
+import {capitalizeFirstLetter} from '../../common/utils';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -573,10 +574,6 @@ function buildZonesLayout(node: XmlParserNode, data: BuildZoneLayoutData): React
     log.getLogger('layout').debug('final node', {node, reactTree});
 
     return reactTree;
-}
-
-function capitalizeFirstLetter(string: string): string {
-    return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
 function getAppropriateXmlLayout(layoutType: LayoutType, layoutMobileMode: LayoutMobileMode): string {

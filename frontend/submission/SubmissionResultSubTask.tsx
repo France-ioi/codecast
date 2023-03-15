@@ -51,8 +51,6 @@ export function SubmissionResultSubTask(props: SubmissionResultSubTaskProps) {
     });
     testsByIconValues.sort((a, b) => a.count - b.count);
 
-    console.log(testsByIconValues);
-
     return (
         <div className={`submission-result-subtask ${open ? 'is-open' : ''}`}>
             <div className="submission-result-subtask-header" onClick={() => setOpen(!open)}>

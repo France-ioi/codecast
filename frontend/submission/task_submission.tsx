@@ -20,7 +20,12 @@ import {
 } from "../task/platform/platform";
 import {selectAnswer} from "../task/selectors";
 import {delay} from "../player/sagas";
-import {submissionAddNewSubmissionResult, submissionChangePaneOpen, SubmissionExecutionMode} from "./submission_slice";
+import {
+    submissionAddNewServerSubmission, submissionChangeCurrentSubmissionId,
+    submissionChangePaneOpen,
+    SubmissionExecutionMode,
+    submissionUpdateServerSubmission
+} from "./submission_slice";
 import {getServerSubmissionResults, makeServerSubmission} from "./task_platform";
 import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
 import stringify from 'json-stable-stringify-without-jsonify';
@@ -188,21 +193,36 @@ class TaskSubmissionExecutor {
 
         console.log('start grading answer on server', {randomSeed, newTaskToken, answerToken});
 
-        const submissionData = yield* makeServerSubmission(answer, newTaskToken, answerToken);
-        if (!submissionData.success) {
-            throw new Error("Impossible to create submission");
-        }
+        const serverSubmission = {evaluated: false, date: new Date().toISOString()};
+        yield* put(submissionAddNewServerSubmission(serverSubmission));
+
+        const submissionIndex = yield* select((state: AppStore) => state.submission.serverSubmissions.length - 1);
 
         yield* put(submissionChangePaneOpen(true));
+        yield* put(submissionChangeCurrentSubmissionId(submissionIndex));
+
+        const submissionData = yield* makeServerSubmission(answer, newTaskToken, answerToken);
+        if (!submissionData.success) {
+            yield* put(submissionUpdateServerSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
+
+            return {score: 0};
+        }
 
         console.log('submission data', submissionData);
 
         const submissionId = submissionData.submissionId;
-        const submissionResult = yield* getServerSubmissionResults(submissionId);
-        console.log('submission results', submissionResult);
 
-        yield* put(submissionAddNewSubmissionResult(submissionResult))
-        // TODO: When new submission, automatically open submission panel on the left (with transition)
+        let submissionResult;
+        try {
+            submissionResult = yield* getServerSubmissionResults(submissionId);
+        } catch (e) {
+            yield* put(submissionUpdateServerSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
+
+            return {score: 0};
+        }
+
+        console.log('submission results', submissionResult);
+        yield* put(submissionUpdateServerSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result: submissionResult}}));
 
         return {
             score: submissionResult.score,
