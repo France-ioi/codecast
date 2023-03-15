@@ -1,6 +1,8 @@
 .submission-results {
   background: white;
   position: relative;
+  display: flex;
+  flex-direction: column;
   &:after {
     position: absolute;
     content: '';
@@ -57,7 +59,7 @@
   background: #f1f2f7;
   border-top: solid 2px #e7e7e7;
   height: 100%;
-  overflow: scroll;
+  overflow-y: auto;
 }
 
 .submission-result-test {
@@ -115,6 +117,14 @@
   .dropdown-menu {
     width: 100%;
   }
+  .dropdown-item {
+    outline: none;
+    text-decoration: initial;
+    &:active {
+      background-color: #e9ecef;
+      color: #1e2125;
+    }
+  }
 }
 
 .submission-result-subtask-header {
@@ -156,14 +166,15 @@
 }
 
 .subtask-header-summary {
-  margin-right: 10px;
+  margin-right: 4px;
   .subtask-header-summary-badge {
-    margin-left: 8px;
+    margin-left: 2px;
     border-radius: 500px;
     color: #333;
     font-size: 0.8em;
     position: relative;
     padding-left: 20px;
+    display: inline-block;
   }
 
   .subtask-header-summary-badge-icon {
@@ -181,6 +192,7 @@
 
   .subtask-header-summary-badge-content {
     padding: 0 8px;
+    font-size: 0.9em;
   }
 }
 
