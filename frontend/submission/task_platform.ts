@@ -2,6 +2,7 @@ import {call, delay, race, select} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
 import {AppStore} from "../store";
 import {Task} from '../task/task_slice';
+import {appSelect} from '../hooks';
 
 export interface TaskNormalized {
     id: string,
@@ -137,7 +138,7 @@ export interface ServerSubmission {
 }
 
 export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
 
     return (yield* call(asyncGetJson, taskPlatformUrl + '/tasks/' + taskId, false)) as TaskServer|null;
@@ -183,7 +184,7 @@ export function* getServerSubmissionResults(submissionId: string): Generator<any
 }
 
 export function* longPollServerSubmissionResults(submissionId: string) {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
 
     while (true) {
@@ -196,7 +197,7 @@ export function* longPollServerSubmissionResults(submissionId: string) {
 
 
 export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string) {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
     const answerDecoded = JSON.parse(answer);
 

@@ -29,6 +29,7 @@ import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
+import {appSelect} from '../../hooks';
 
 export enum PinMode {
   Input = 0,
@@ -102,7 +103,7 @@ export default function(bundle: Bundle) {
 
     bundle.defer(function({recordApi, replayApi, stepperApi}: App) {
         recordApi.onStart(function* (init) {
-            const state: AppStore = yield* select();
+            const state = yield* appSelect();
             const {platform} = state.options;
             if (platform === CodecastPlatform.Arduino) {
                 init.arduino = state.arduino;

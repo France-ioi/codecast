@@ -13,6 +13,7 @@ import {ReplayContext} from "../../../player/sagas";
 import {createDraft} from "immer";
 import log from 'loglevel';
 import {PayloadAction} from "@reduxjs/toolkit";
+import {appSelect} from '../../../hooks';
 
 function escapeHtml(unsafe) {
     return unsafe
@@ -314,7 +315,7 @@ export class PrinterLib extends QuickAlgoLibrary {
         if (this.display) {
             log.getLogger('printer_lib').debug('make reset display', this.innerState.initial, this.libInstance);
 
-            const currentTest = yield* select(selectCurrentTest);
+            const currentTest = yield* appSelect(selectCurrentTest);
             log.getLogger('printer_lib').debug('SYNC BUFFERS', this.libInstance, currentTest);
             const inputText = currentTest && currentTest.input ? currentTest.input : '';
             const outputText = currentTest && currentTest.output ? currentTest.output : '';
@@ -749,11 +750,11 @@ export class PrinterLib extends QuickAlgoLibrary {
             // @ts-ignore
             const {buffer} = action;
             if (inputBufferLibTest === buffer) {
-                const inputValue = yield* select((state: AppStore) => state.buffers[inputBufferLibTest].model.document.toString());
+                const inputValue = yield* appSelect(state => state.buffers[inputBufferLibTest].model.document.toString());
                 yield* put(updateCurrentTest({input: inputValue}));
             }
             if (outputBufferLibTest === buffer) {
-                const outputValue = yield* select((state: AppStore) => state.buffers[outputBufferLibTest].model.document.toString());
+                const outputValue = yield* appSelect(state => state.buffers[outputBufferLibTest].model.document.toString());
                 yield* put(updateCurrentTest({output: outputValue}));
             }
         });

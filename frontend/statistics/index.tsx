@@ -10,6 +10,7 @@ import {AppStore} from "../store";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {Screen} from "../common/screens";
+import {appSelect} from '../hooks';
 
 interface LogData {
     type: any,
@@ -178,7 +179,7 @@ function statisticsSearchStatusChangedReducer(state: AppStore): void {
 
 function* statisticsPrepareSaga() {
     /* Require the user to be logged in. */
-    while (!(yield* select((state: AppStore) => state.user))) {
+    while (!(yield* appSelect(state => state.user))) {
         yield* take(CommonActionTypes.LoginFeedback);
     }
 
@@ -186,7 +187,7 @@ function* statisticsPrepareSaga() {
 }
 
 function* statisticsInitLogDataSaga() {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const options = state.options;
     const {
         start: compileType,
@@ -219,7 +220,7 @@ function* statisticsInitLogDataSaga() {
 
 function* statisticsPlayerReadySaga(app: App, action) {
     try {
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
         const logData = state.statistics.logData;
         if (logData) {
             logData.name = (action.payload.data.hasOwnProperty('name')) ? action.payload.data.name : 'default';
@@ -234,7 +235,7 @@ function* statisticsPlayerReadySaga(app: App, action) {
 
 function* statisticsLogLoadingDataSaga() {
     try {
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
         const {baseUrl} = state.options;
         const logData = state.statistics.logData;
 
@@ -249,7 +250,7 @@ function* statisticsSearchSaga() {
 
     let response;
     try {
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
         const {baseUrl} = state.options;
 
         const statistics = state.statistics;

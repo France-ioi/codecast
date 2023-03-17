@@ -42,6 +42,7 @@ import log from "loglevel";
 import {importPlatformModules} from '../libs/import_modules';
 import {taskLoad} from '../index';
 import {taskLoaded} from '../task_slice';
+import {appSelect} from '../../hooks';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -60,9 +61,9 @@ export let setTaskEventsEnvironment = (environment: string) => {
 export function* getTaskAnswerAggregated () {
     const currentAnswer = yield getTaskAnswer();
 
-    const levels = yield* select((state: AppStore) => state.platform.levels);
+    const levels = yield* appSelect(state => state.platform.levels);
     if (levels && Object.keys(levels).length) {
-        const currentLevel = yield* select((state: AppStore) => state.task.currentLevel);
+        const currentLevel = yield* appSelect(state => state.task.currentLevel);
         const answers = {};
         for (let {level, answer} of Object.values(levels)) {
             answers[level] = level === currentLevel ? currentAnswer : answer;
@@ -86,7 +87,7 @@ export function getTaskMetadata() {
 }
 
 function* linkTaskPlatformSaga() {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     if ('main' !== state.environment) {
         return;
     }
@@ -122,7 +123,7 @@ function* taskAnswerReloadedSaga () {
 }
 
 export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevelName = null): Generator<any, TaskLevelName, any> {
-    const taskLevels = yield* select((state: AppStore) => state.platform.levels);
+    const taskLevels = yield* appSelect(state => state.platform.levels);
     let nextVersion: TaskLevelName = null;
 
     const {maxScore} = yield* call(platformApi.getTaskParams, null, null);
@@ -187,7 +188,7 @@ function* taskGetAnswerEventSaga (action: ReturnType<typeof taskGetAnswerEvent>)
 
 function* taskReloadAnswerEventSaga ({payload: {answer, success, error}}: ReturnType<typeof taskReloadAnswerEvent>) {
     try {
-        const taskLevels = yield* select((state: AppStore) => state.platform.levels);
+        const taskLevels = yield* appSelect(state => state.platform.levels);
         if (taskLevels && answer) {
             const currentLevel = yield getTaskLevel();
             const answerObject = JSON.parse(answer);
@@ -219,14 +220,14 @@ function* taskGetStateEventSaga ({payload: {success}}: ReturnType<typeof taskGet
 }
 
 function* taskGetResourcesPostSaga ({payload: {resources, callback}}: ReturnType<typeof taskGetResourcesPost>) {
-    const options = yield* select((state: AppStore) => state.options);
+    const options = yield* appSelect(state => state.options);
     const optionsToPreload = {
         platform: options.platform,
         language: options.language,
     };
 
     // Import necessary platform modules without waiting for them to be imported, the declaration is enough
-    const platform = yield* select((state: AppStore) => state.options.platform);
+    const platform = yield* appSelect(state => state.options.platform);
     yield* call(importPlatformModules, platform, window.modulesPath);
 
     window.jQuery('script.module').each(function() {
@@ -280,7 +281,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
     }
     yield* put(platformTaskRandomSeedUpdated(randomSeed));
 
-    let level = yield* select((state: AppStore) => state.task.currentLevel);
+    let level = yield* appSelect(state => state.task.currentLevel);
     if (!level) {
         const urlParameters = new URLSearchParams(window.location.search);
         const query = Object.fromEntries(urlParameters);
@@ -325,7 +326,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
 
 export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, silent}}: ReturnType<typeof taskGradeAnswerEvent>) {
     try {
-        const taskLevels = yield* select((state: AppStore) => state.platform.levels);
+        const taskLevels = yield* appSelect(state => state.platform.levels);
         log.getLogger('tests').debug('task levels', taskLevels);
         const {minScore, maxScore, noScore} = yield* call(platformApi.getTaskParams, null, null);
         if (taskLevels && Object.keys(taskLevels).length) {

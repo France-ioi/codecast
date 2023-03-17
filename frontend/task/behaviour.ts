@@ -7,6 +7,7 @@ import {App} from "../index";
 import {TaskActionTypes} from "./index";
 import {taskSetMenuHelpsOpen} from "./task_slice";
 import {AppStore} from "../store";
+import {appSelect} from '../hooks';
 
 const MENU_HELPS_MINIMUM_EXECUTION_ERRORS = 3;
 const MENU_HELPS_MINIMUM_TIME = 15 * 60; // sec
@@ -39,7 +40,7 @@ export default function (bundle: Bundle) {
         }
 
         function* hideMenuHelps() {
-            const menuHelpsOpen = yield* select((state: AppStore) => state.task.menuHelpsOpen);
+            const menuHelpsOpen = yield* appSelect(state => state.task.menuHelpsOpen);
             if (menuHelpsOpen) {
                 yield* put(taskSetMenuHelpsOpen(false));
             }

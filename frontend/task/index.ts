@@ -81,6 +81,7 @@ import {
     submissionChangePlatformName,
     SubmissionExecutionMode
 } from "../submission/submission_slice";
+import {appSelect} from '../hooks';
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -155,7 +156,7 @@ function* taskLoadSaga(app: App, action) {
     const urlParameters = new URLSearchParams(window.location.search);
     const selectedTask = urlParameters.has('task') ? urlParameters.get('task') : null;
 
-    let state: AppStore = yield* select();
+    let state = yield* appSelect();
 
     if (urlParameters.has('taskId')) {
         let task: TaskServer|null = null;
@@ -189,9 +190,9 @@ function* taskLoadSaga(app: App, action) {
         yield* put(hintsLoaded(state.options.taskHints));
     }
 
-    const currentTask = yield* select((state: AppStore) => state.task.currentTask);
+    const currentTask = yield* appSelect(state => state.task.currentTask);
     if (currentTask) {
-        let currentLevel = yield* select((state: AppStore) => state.task.currentLevel);
+        let currentLevel = yield* appSelect(state => state.task.currentLevel);
 
         if (action.payload.level && action.payload.level in currentTask.data) {
             yield* put(taskCurrentLevelChange({level: action.payload.level, record: false}));
@@ -204,7 +205,7 @@ function* taskLoadSaga(app: App, action) {
                 }
             }
         }
-        currentLevel = yield* select((state: AppStore) => state.task.currentLevel);
+        currentLevel = yield* appSelect(state => state.task.currentLevel);
         log.getLogger('task').debug('new current level', currentLevel);
 
         const tests = action.payload && action.payload.tests ? action.payload.tests : (currentTask.data ? currentTask.data[currentLevel] : []);
@@ -215,7 +216,7 @@ function* taskLoadSaga(app: App, action) {
         log.getLogger('task').debug('[task.load] update current test id', testId);
         yield* put(updateCurrentTestId({testId, record: false}));
 
-        const taskLevels = yield* select((state: AppStore) => state.platform.levels);
+        const taskLevels = yield* appSelect(state => state.platform.levels);
         if (0 === Object.keys(taskLevels).length) {
             const levels = {};
             if (currentTask.data && Object.keys(currentTask.data).length) {
@@ -263,13 +264,13 @@ function* taskLoadSaga(app: App, action) {
         }
     });
 
-    state = yield* select();
+    state = yield* appSelect();
     const source = selectAnswer(state);
     if ((!source || (typeof source === 'string' && !source.length)) && currentTask) {
         const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment);
         if (null !== defaultSourceCode) {
             log.getLogger('task').debug('Load default source code', defaultSourceCode);
-            const platform = yield* select((state: AppStore) => state.options.platform);
+            const platform = yield* appSelect(state => state.options.platform);
             yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: getModelFromAnswer(defaultSourceCode, platform), goToEnd: true});
         }
     }
@@ -315,7 +316,7 @@ function* handleLibrariesEventListenerSaga(app: App) {
         yield* takeEvery(eventName, function* ({payload}) {
             log.getLogger('task').debug('make payload', payload);
             const args = payload ? payload : [];
-            const state = yield* select();
+            const state = yield* appSelect();
             yield stepperContext.quickAlgoCallsExecutor(module, method, args, () => {
                 log.getLogger('task').debug('exec done, update task state');
                 const context = quickAlgoLibraries.getContext(null, state.environment);
@@ -359,14 +360,14 @@ function* taskRunExecution(app: App, {type, payload}) {
 }
 
 function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const currentLevel = state.task.currentLevel;
     const newLevel = payload.level;
     log.getLogger('task').debug('level change', currentLevel, newLevel);
 
     yield* put({type: StepperActionTypes.StepperExit});
 
-    const currentSubmission = yield* select((state: AppStore) => state.task.currentSubmission);
+    const currentSubmission = yield* appSelect(state => state.task.currentSubmission);
     if (null !== currentSubmission) {
         yield* put(taskClearSubmission());
     }
@@ -384,12 +385,12 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     // Change level
     yield* put(taskCurrentLevelChange({level: newLevel}));
 
-    const randomSeed = yield* select((state: AppStore) => state.platform.taskRandomSeed);
+    const randomSeed = yield* appSelect(state => state.platform.taskRandomSeed);
     const taskToken = getTaskTokenForLevel(newLevel, randomSeed);
     yield* put(platformTokenUpdated(taskToken));
 
     // Reload answer
-    let newLevelAnswer = yield* select((state: AppStore) => state.platform.levels[newLevel].answer);
+    let newLevelAnswer = yield* appSelect(state => state.platform.levels[newLevel].answer);
     log.getLogger('task').debug('new level answer', newLevelAnswer);
     if (!newLevelAnswer || (typeof newLevelAnswer === 'string' && !newLevelAnswer.length)) {
         newLevelAnswer = getDefaultSourceCode(state.options.platform, state.environment);
@@ -407,7 +408,7 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
 }
 
 function* taskLevelLoadedSaga() {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const currentTask = state.task.currentTask;
     const currentLevel = state.task.currentLevel;
 
@@ -418,7 +419,7 @@ function* taskLevelLoadedSaga() {
 }
 
 function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const context = quickAlgoLibraries.getContext(null, state.environment);
     log.getLogger('task').debug('update current test', context);
 
@@ -458,7 +459,7 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
 }
 
 function* getTaskAnswer () {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const taskPlatformMode = getTaskPlatformMode(state);
 
     if (TaskPlatformMode.RecordingProgress === taskPlatformMode) {
@@ -485,7 +486,7 @@ function* getTaskState () {
 }
 
 function* getTaskLevel () {
-    return yield* select((state: AppStore) => state.task.currentLevel);
+    return yield* appSelect(state => state.task.currentLevel);
 }
 
 function getAudioTimeStep(state: AppStore) {
@@ -497,16 +498,16 @@ function getAudioTimeStep(state: AppStore) {
 }
 
 function* watchRecordingProgressSaga(app: App) {
-    const state = yield* select();
+    const state = yield* appSelect();
     if ('main' !== app.environment || TaskPlatformMode.RecordingProgress !== getTaskPlatformMode(state)) {
         return;
     }
 
     log.getLogger('task').debug('[recording.progress] watching');
     while (true) {
-        const previousStep = yield* select((state: AppStore) => getAudioTimeStep(state));
+        const previousStep = yield* appSelect(state => getAudioTimeStep(state));
         yield* take(PlayerActionTypes.PlayerTick);
-        const nextStep = yield* select((state: AppStore) => getAudioTimeStep(state));
+        const nextStep = yield* appSelect(state => getAudioTimeStep(state));
         const shouldUpdate = previousStep !== nextStep;
         if (shouldUpdate) {
             log.getLogger('task').debug('[recording.progress] update', previousStep, nextStep);
@@ -559,7 +560,7 @@ export default function (bundle: Bundle) {
                 return;
             }
 
-            const state = yield* select();
+            const state = yield* appSelect();
             const recorderState = getRecorderState(state);
             if (!recorderState.status) {
                 yield* put({type: RecorderActionTypes.RecorderPrepare});
@@ -570,19 +571,19 @@ export default function (bundle: Bundle) {
             // @ts-ignore
             const {buffer} = action;
             if (buffer === 'source') {
-                const needsReset = yield* select(state => StepperStatus.Clear !== state.stepper.status || !state.task.resetDone || state.stepper.runningBackground);
+                const needsReset = yield* appSelect(state => StepperStatus.Clear !== state.stepper.status || !state.task.resetDone || state.stepper.runningBackground);
                 log.getLogger('task').debug('needs reset', needsReset);
                 if (needsReset) {
                     log.getLogger('task').debug('HANDLE RESET');
                     yield* put({type: StepperActionTypes.StepperExit});
                 }
 
-                const currentSubmission = yield* select((state: AppStore) => state.task.currentSubmission);
+                const currentSubmission = yield* appSelect(state => state.task.currentSubmission);
                 if (null !== currentSubmission) {
                     yield* put(taskClearSubmission());
                 }
 
-                const currentError = yield* select((state: AppStore) => state.stepper.error);
+                const currentError = yield* appSelect(state => state.stepper.error);
                 if (null !== currentError) {
                     yield* put(stepperClearError());
                 }
@@ -591,7 +592,7 @@ export default function (bundle: Bundle) {
 
         // @ts-ignore
         yield* takeEvery(StepperActionTypes.StepperExecutionSuccess, function* ({payload}) {
-            const currentTestId = yield* select(state => state.task.currentTestId);
+            const currentTestId = yield* appSelect(state => state.task.currentTestId);
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
                 result: true,
@@ -602,7 +603,7 @@ export default function (bundle: Bundle) {
 
         // @ts-ignore
         yield* takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function* ({payload}) {
-            const currentTestId = yield* select(state => state.task.currentTestId);
+            const currentTestId = yield* appSelect(state => state.task.currentTestId);
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
                 result: false,
@@ -612,7 +613,7 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(StepperActionTypes.StepperExit, function* () {
-            const state = yield* select();
+            const state = yield* appSelect();
             if ('main' === state.environment) {
                 mainQuickAlgoLogger.clearQuickAlgoLibraryCalls();
             }
@@ -629,7 +630,7 @@ export default function (bundle: Bundle) {
         // @ts-ignore
         yield* takeEvery(taskInputEntered.type, function* ({payload}) {
             log.getLogger('task').debug('add new input into store', payload);
-            const state = yield* select();
+            const state = yield* appSelect();
             if (!state.stepper.synchronizingAnalysis) {
                 yield* put(taskAddInput(payload.input));
             }
@@ -640,7 +641,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(taskInputNeeded.type, function* ({payload}) {
             log.getLogger('task').debug('task input needed', payload);
             if (payload) {
-                const state = yield* select();
+                const state = yield* appSelect();
                 log.getLogger('task').debug('sync', state.stepper.synchronizingAnalysis, 'inputs', state.task.inputs);
                 if (state.stepper.synchronizingAnalysis && state.task.inputs.length) {
                     const nextInput = state.task.inputs[0];
@@ -675,13 +676,13 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery(platformAnswerLoaded.type, function*({payload: {answer}}: ReturnType<typeof platformAnswerLoaded>) {
             log.getLogger('task').debug('Platform answer loaded', answer);
-            const platform = yield* select((state: AppStore) => state.options.platform);
+            const platform = yield* appSelect(state => state.options.platform);
             yield* put({type: BufferActionTypes.BufferReset, buffer: 'source', model: getModelFromAnswer(answer, platform), goToEnd: true});
         });
 
         yield* takeEvery(taskChangeSoundEnabled.type, function* () {
             const context = quickAlgoLibraries.getContext(null, 'main');
-            const state: AppStore = yield* select();
+            const state = yield* appSelect();
             if (context && context.changeSoundEnabled) {
                 context.changeSoundEnabled(state.task.soundEnabled);
             }
@@ -689,14 +690,14 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery(ActionTypes.WindowResized, function* () {
             const context = quickAlgoLibraries.getContext(null, 'main');
-            const state: AppStore = yield* select();
+            const state = yield* appSelect();
             if (hasBlockPlatform(state.options.platform) && state.task.currentTask) {
                 yield* call(loadBlocklyHelperSaga, context, state.task.currentLevel);
             }
         });
 
         yield* takeEvery([ActionTypes.WindowResized, LayoutActionTypes.LayoutMobileModeChanged], function* () {
-            const state: AppStore = yield* select();
+            const state = yield* appSelect();
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (!context) {
                 return;
@@ -719,7 +720,7 @@ export default function (bundle: Bundle) {
 
     bundle.defer(function (app: App) {
         app.recordApi.onStart(function* (init) {
-            const state: AppStore = yield* select();
+            const state = yield* appSelect();
             init.testId = state.task.currentTestId;
         });
 
@@ -750,8 +751,8 @@ export default function (bundle: Bundle) {
             let hasChangedLevel = false;
             let hasChangedTest = false;
             if (taskData) {
-                const currentLevel = yield* select((state: AppStore) => state.task.currentLevel);
-                const currentTestId = yield* select((state: AppStore) => state.task.currentTestId);
+                const currentLevel = yield* appSelect(state => state.task.currentLevel);
+                const currentTestId = yield* appSelect(state => state.task.currentTestId);
                 hasChangedLevel = taskData.currentLevel !== currentLevel;
                 hasChangedTest = taskData.currentTestId !== currentTestId;
 

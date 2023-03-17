@@ -24,6 +24,7 @@ import {createRunnerSaga} from "../../stepper";
 import {cancelModal, displayModal} from "../../common/prompt_modal";
 import {ModalType} from "../../common/modal_slice";
 import log from 'loglevel';
+import {appSelect} from '../../hooks';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -110,7 +111,7 @@ window.quickAlgoContext = function (display: boolean, infos: any) {
 }
 
 export function* createQuickalgoLibrary() {
-    let state: AppStore = yield* select();
+    let state = yield* appSelect();
     let context = quickAlgoLibraries.getContext(null, state.environment);
     log.getLogger('libraries').debug('Create a context', context, state.environment);
     if (context) {
@@ -120,8 +121,8 @@ export function* createQuickalgoLibrary() {
 
     const display = 'main' === state.environment;
 
-    const currentTask = yield* select(state => state.task.currentTask);
-    const currentLevel = yield* select(state => state.task.currentLevel);
+    const currentTask = yield* appSelect(state => state.task.currentTask);
+    const currentLevel = yield* appSelect(state => state.task.currentLevel);
     window.subTask = currentTask;
 
     let contextLib;
@@ -213,7 +214,7 @@ export function* createQuickalgoLibrary() {
 }
 
 export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = null, instant: PlayerInstant = null) {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const currentTest = selectCurrentTest(state);
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
@@ -228,7 +229,7 @@ export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = 
 }
 
 export function* quickAlgoLibraryRedrawDisplaySaga(app: App) {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context && 'main' === state.environment && !context.implementsInnerState()) {
@@ -245,7 +246,7 @@ export function* contextReplayPreviousQuickalgoCalls(app: App, quickAlgoCalls: Q
     if (!Codecast.runner) {
         Codecast.runner = yield* call(createRunnerSaga);
     }
-    const environment = yield* select((state: AppStore) => state.environment);
+    const environment = yield* appSelect(state => state.environment);
     const context = quickAlgoLibraries.getContext(null, environment);
     if (context) {
         context.runner = Codecast.runner;
@@ -358,7 +359,7 @@ export default function(bundle: Bundle) {
         // @ts-ignore
         yield* takeEvery(QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay, function* ({payload}) {
             log.getLogger('libraries').debug('ici redraw display');
-            const state = yield* select();
+            const state = yield* appSelect();
             const context = quickAlgoLibraries.getContext(null, state.environment);
             if (context) {
                 context.needsRedrawDisplay = false;

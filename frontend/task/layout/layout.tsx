@@ -29,6 +29,7 @@ import {selectAnswer} from "../selectors";
 import {StepperStatus} from "../../stepper";
 import log from 'loglevel';
 import {capitalizeFirstLetter} from '../../common/utils';
+import {appSelect} from '../../hooks';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -784,14 +785,14 @@ export interface LayoutState {
 
 function* layoutSaga({replayApi}: App) {
     yield* takeEvery(StepperActionTypes.StepperRestart, function* () {
-        const environment = yield* select((state: AppStore) => state.environment);
+        const environment = yield* appSelect(state => state.environment);
         if ('replay' === environment) {
             yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Player}});
         }
     });
 
     yield* takeEvery(StepperActionTypes.StepperExit, function* () {
-        const environment = yield* select((state: AppStore) => state.environment);
+        const environment = yield* appSelect(state => state.environment);
         if ('replay' === environment) {
             yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Editor}});
         }
@@ -799,7 +800,7 @@ function* layoutSaga({replayApi}: App) {
 
     // @ts-ignore
     yield* takeEvery(ActionTypes.LayoutPlayerModeBackToReplay, function* ({payload}) {
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
         const currentSource = selectAnswer(state);
 
         const instant = state.player.current;
@@ -817,7 +818,7 @@ function* layoutSaga({replayApi}: App) {
         }
 
         if (confirmed) {
-            const needsExit = yield* select(state => state.stepper && StepperStatus.Clear !== state.stepper.status);
+            const needsExit = yield* appSelect(state => state.stepper && StepperStatus.Clear !== state.stepper.status);
             if (needsExit) {
                 yield* put({type: StepperActionTypes.StepperExit});
             }

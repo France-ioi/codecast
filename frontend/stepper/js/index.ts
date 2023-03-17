@@ -14,6 +14,7 @@ import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
 import {LayoutType} from "../../task/layout/layout";
 import {taskIncreaseContextId} from "../../task/task_slice";
 import log from 'loglevel';
+import {appSelect} from '../../hooks';
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;
@@ -26,11 +27,11 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
     }
 
     log.getLogger('blockly_runner').debug('[stepper/js] load blockly helper', context.infos.includeBlocks, context.infos.includeBlocks.groupByCategory);
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const options = state.options;
     const language = options.language.split('-')[0];
     const languageTranslations = require('../../lang/blockly_' + language + '.js');
-    const isMobile = yield* select((state: AppStore) => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
+    const isMobile = yield* appSelect(state => LayoutType.MobileVertical === state.layout.type || LayoutType.MobileHorizontal === state.layout.type);
     if (context.infos && context.infos.includeBlocks) {
         if (isMobile) {
             if (undefined === context.infos.includeBlocks.originalGroupByCategory) {

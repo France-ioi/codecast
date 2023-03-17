@@ -17,6 +17,7 @@ import {App} from "../index";
 import {Screen} from "../common/screens";
 import {StepperStatus} from "../stepper";
 import log from 'loglevel';
+import {appSelect} from '../hooks';
 
 export default function(bundle, deps) {
     bundle.use('recordApi');
@@ -54,7 +55,7 @@ export default function(bundle, deps) {
                     break;
                 }
 
-                const state: AppStore = yield* select();
+                const state = yield* appSelect();
                 const junkTime = state.recorder.junkTime;
                 const recorderContext = state.recorder.context;
                 const elapsed = Math.round(recorderContext.audioContext.currentTime * 1000) - junkTime;
@@ -84,7 +85,7 @@ export default function(bundle, deps) {
             yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Record}});
 
             // Clean up any previous audioContext and worker.
-            const state: AppStore = yield* select();
+            const state = yield* appSelect();
             const recorder = getRecorderState(state);
             let recorderContext = recorder.context;
             if (recorderContext) {
@@ -160,7 +161,7 @@ export default function(bundle, deps) {
     function* recorderStart() {
         try {
             // The user clicked the "start recording" button.
-            const state: AppStore = yield* select();
+            const state = yield* appSelect();
             const recorder = getRecorderState(state);
             const recorderStatus = recorder.status;
             if (recorderStatus !== RecorderStatus.Ready) {
@@ -192,7 +193,7 @@ export default function(bundle, deps) {
 
     function* recorderStop() {
         try {
-            let state: AppStore = yield* select();
+            let state = yield* appSelect();
             let recorder = getRecorderState(state);
             let recorderStatus = recorder.status;
             if (!/recording|paused/.test(recorderStatus)) {
@@ -221,7 +222,7 @@ export default function(bundle, deps) {
 
     function* recorderPause() {
         try {
-            let state: AppStore = yield* select();
+            let state = yield* appSelect();
             let recorder = getRecorderState(state);
             if (recorder.status !== RecorderStatus.Recording) {
                 return;
@@ -242,7 +243,7 @@ export default function(bundle, deps) {
             yield* put({type: ActionTypes.RecorderAddEvent, event: [endTime, 'end']});
 
             const version = RECORDING_FORMAT_VERSION;
-            state = yield* select();
+            state = yield* appSelect();
             const options = state.options;
             recorder = getRecorderState(state);
             const data = {
@@ -275,7 +276,7 @@ export default function(bundle, deps) {
 
     function* recorderResume() {
         try {
-            const state: AppStore = yield* select();
+            const state = yield* appSelect();
             const recorder = getRecorderState(state);
             const recorderStatus = recorder.status;
             const player = getPlayerState(state);
@@ -315,7 +316,7 @@ export default function(bundle, deps) {
     }
 
     function* truncateRecording(audioTime, instant) {
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
         const {worker} = getRecorderState(state).context;
 
         yield* call(worker.call, 'truncate', {position: audioTime / 1000});

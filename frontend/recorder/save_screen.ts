@@ -12,6 +12,7 @@ import {Bundle} from "../linker";
 import {App} from "../index";
 import {Screen} from "../common/screens";
 import {isLocalStorageEnabled} from "../common/utils";
+import {appSelect} from '../hooks';
 
 export type CodecastRecord = {
     version: string,
@@ -120,7 +121,7 @@ export default function(bundle: Bundle) {
 }
 
 export function* ensureLoggedSaga() {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const {baseUrl} = state.options;
 
     const token = isLocalStorageEnabled() ? window.localStorage.getItem('token') : null;
@@ -139,7 +140,7 @@ function* encodingSaga() {
     yield* put({type: ActionTypes.SaveScreenEncodingStart, payload: {}});
     yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.Save}});
 
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const recorder = getRecorderState(state);
 
     /* Encode the audio track, reporting progress. */
@@ -199,7 +200,7 @@ function* uploadSaga(app: App, action) {
         // from the server.
         yield* put({type: ActionTypes.SaveScreenPreparing});
 
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
         const save = state.save;
         const {baseUrl} = state.options;
         const uploadParameters = {

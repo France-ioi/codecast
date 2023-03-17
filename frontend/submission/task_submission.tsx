@@ -29,6 +29,7 @@ import {
 import {getServerSubmissionResults, makeServerSubmission} from "./task_platform";
 import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
 import stringify from 'json-stable-stringify-without-jsonify';
+import {appSelect} from '../hooks';
 
 export const levelScoringData = {
     basic: {
@@ -60,12 +61,12 @@ class TaskSubmissionExecutor {
             return;
         }
 
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
         let currentSubmission = state.task.currentSubmission;
         const environment = state.environment;
         const level = state.task.currentLevel;
         const answer = selectAnswer(state);
-        const tests = yield* select(state => state.task.taskTests);
+        const tests = yield* appSelect(state => state.task.taskTests);
         if (!tests || 0 === Object.values(tests).length) {
             return;
         }
@@ -88,7 +89,7 @@ class TaskSubmissionExecutor {
                 continue;
             }
 
-            const currentSubmission = yield* select((state: AppStore) => state.task.currentSubmission);
+            const currentSubmission = yield* appSelect(state => state.task.currentSubmission);
             if (!currentSubmission) {
                 // Submission has been cancelled during progress
                 return;
@@ -113,7 +114,7 @@ class TaskSubmissionExecutor {
             }
         }
 
-        currentSubmission = yield* select((state: AppStore) => state.task.currentSubmission);
+        currentSubmission = yield* appSelect(state => state.task.currentSubmission);
         if (!currentSubmission) {
             // Submission has been cancelled during progress
             return;
@@ -150,7 +151,7 @@ class TaskSubmissionExecutor {
 
     *makeBackgroundExecution(level, testId, answer) {
         const backgroundStore = Codecast.environments['background'].store;
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
         const currentTask = state.task.currentTask;
         const tests = currentTask.data[level];
 
@@ -166,7 +167,7 @@ class TaskSubmissionExecutor {
 
     *gradeAnswer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
         const {answer, maxScore, minScore} = parameters;
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
 
         log.getLogger('tests').debug('do grade answer');
         if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state)) {
@@ -185,7 +186,7 @@ class TaskSubmissionExecutor {
 
     *gradeAnswerServer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
         const {level, answer, maxScore, minScore} = parameters;
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
 
         const randomSeed = state.platform.taskRandomSeed;
         const newTaskToken = getTaskTokenForLevel(level, randomSeed);
@@ -196,7 +197,7 @@ class TaskSubmissionExecutor {
         const serverSubmission = {evaluated: false, date: new Date().toISOString()};
         yield* put(submissionAddNewServerSubmission(serverSubmission));
 
-        const submissionIndex = yield* select((state: AppStore) => state.submission.serverSubmissions.length - 1);
+        const submissionIndex = yield* appSelect(state => state.submission.serverSubmissions.length - 1);
 
         yield* put(submissionChangePaneOpen(true));
         yield* put(submissionChangeCurrentSubmissionId(submissionIndex));
@@ -232,11 +233,11 @@ class TaskSubmissionExecutor {
 
     *gradeAnswerClient(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
         const {level, answer, maxScore, minScore} = parameters;
-        const state: AppStore = yield* select();
+        const state = yield* appSelect();
         const environment = state.environment;
         let lastMessage = null;
         console.log('start grading answer', environment);
-        const tests = yield* select(state => state.task.taskTests);
+        const tests = yield* appSelect(state => state.task.taskTests);
         if (!tests || 0 === Object.values(tests).length) {
             return {
                 score: 0,

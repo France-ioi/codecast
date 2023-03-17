@@ -13,6 +13,7 @@ import {App} from "../index";
 import {Screen} from "../common/screens";
 import intervalTree from "./interval_tree";
 import {SaveStep} from "../recorder/save_screen";
+import {appSelect} from '../hooks';
 
 export type EditorControl = 'none' | 'trim' | 'subtitles';
 
@@ -170,7 +171,7 @@ function editorAudioLoadProgressReducer(state: AppStore, {payload: {value}}): vo
 
 function* editorPrepareSaga(app: App, action) {
     /* Require the user to be logged in. */
-    while (!(yield* select((state: AppStore) => state.user))) {
+    while (!(yield* appSelect(state => state.user))) {
         yield* take(CommonActionTypes.LoginFeedback);
     }
 

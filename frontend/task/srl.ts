@@ -11,6 +11,7 @@ import {hintUnlocked} from "./hints/hints_slice";
 import {AppStore} from "../store";
 import {taskSetBlocksUsage, taskSuccess} from "./task_slice";
 import log from 'loglevel';
+import {appSelect} from '../hooks';
 
 export interface StatsState {
     timeSpentSeconds?: number,
@@ -31,7 +32,7 @@ let currentState: StatsState = {
 }
 
 export function* statsGetStateSaga(): Generator<any, StatsState, any> {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
 
@@ -56,7 +57,7 @@ function* statsReloadStateSaga({payload: {state}}: ReturnType<typeof taskReloadS
 
 function* onValidationErrorSaga() {
     currentState.incorrectSubmissionsCount++;
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const context = quickAlgoLibraries.getContext(null, 'main');
     if (context && context.addSound && 'tralalere' === state.options.app) {
         context.addSound('validationError');
@@ -116,7 +117,7 @@ export default function (bundle: Bundle) {
         });
 
         yield* takeEvery(taskSuccess.type, function*() {
-            const state: AppStore = yield* select();
+            const state = yield* appSelect();
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context && context.addSound && 'tralalere' === state.options.app) {
                 context.addSound('validationSuccess');
@@ -126,12 +127,12 @@ export default function (bundle: Bundle) {
         yield* takeEvery(taskReloadStateEvent.type, statsReloadStateSaga);
 
         yield* takeEvery(hintUnlocked.type, function*() {
-            const hintsUnlocked = yield* select((state: AppStore) => state.hints.unlockedHintIds.length);
+            const hintsUnlocked = yield* appSelect(state => state.hints.unlockedHintIds.length);
             currentState.hintsTaken = Math.max(currentState.hintsTaken, hintsUnlocked);
         });
 
         yield* takeEvery(taskSetBlocksUsage.type, function*() {
-            const blockUsage = yield* select((state: AppStore) => state.task.blocksUsage);
+            const blockUsage = yield* appSelect(state => state.task.blocksUsage);
             if (blockUsage && null !== blockUsage.blocksCurrent) {
                 currentState.blocksUsed = blockUsage.blocksCurrent;
             }

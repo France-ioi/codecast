@@ -9,6 +9,7 @@ import {BlocksUsage, taskSetBlocksUsage} from "../task_slice";
 import {checkCompilingCode, getBlocksUsage} from "../utils";
 import {selectAnswer} from "../selectors";
 import {QuickAlgoLibrary} from "../libs/quickalgo_library";
+import {appSelect} from '../../hooks';
 
 export enum BlockType {
     Function = 'function',
@@ -221,7 +222,7 @@ export const getContextBlocksDataSelector = function (state: AppStoreReplay, con
 }
 
 function* checkSourceSaga() {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
     const answer = selectAnswer(state);
     const context = quickAlgoLibraries.getContext(null, 'main');
     const currentTask = state.task.currentTask;

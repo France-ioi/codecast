@@ -12,6 +12,7 @@ import {ensureLoggedSaga} from "../recorder/save_screen";
 import {Screen} from "../common/screens";
 import {clearAllUnsaved} from "../subtitles/editor";
 import {asyncRequestJson} from "../utils/api";
+import {appSelect} from '../hooks';
 
 export default function (bundle: Bundle) {
     bundle.addReducer(AppActionTypes.AppInit, (state: AppStore) => {
@@ -93,7 +94,7 @@ function editorSaveSucceededReducer(state: AppStore, {payload: {playerUrl, edito
 }
 
 function* editorSaveAudioSaga() {
-    const state: AppStore = yield* select();
+    const state: AppStore = yield* appSelect();
 
     const editor = state.editor;
     const id = editor.base.replace(/^.*\//, '');
@@ -106,7 +107,7 @@ function* editorSaveAudioSaga() {
 }
 
 function* editorSaveSaga() {
-    const state: AppStore = yield* select();
+    const state: AppStore = yield* appSelect();
 
     const {baseUrl} = state.options;
     const editor = state.editor;

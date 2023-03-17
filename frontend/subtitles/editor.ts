@@ -14,6 +14,7 @@ import {SubtitlesOptions, SubtitlesState} from "./index";
 import {Bundle} from "../linker";
 import {App} from "../index";
 import {Screen} from "../common/screens";
+import {appSelect} from '../hooks';
 
 export default function(bundle: Bundle) {
     bundle.defineAction(ActionTypes.SubtitlesSelected);
@@ -315,7 +316,7 @@ function* subtitlesTextLoadedSaga(state, action) {
 }
 
 function* subtitlesSaveOptionSaga(app: App, action) {
-    const state: AppStore = yield* select();
+    const state = yield* appSelect();
 
     let blobContent;
     if (state.options.data && state.options.data.subtitlesData && action.payload.key in state.options.data.subtitlesData) {
