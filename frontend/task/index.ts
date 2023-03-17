@@ -75,7 +75,7 @@ import {ObjectDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
 import {ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
-import {getTaskFromId, TaskOutput} from "../submission/task_platform";
+import {convertServerTaskToCodecastFormat, getTaskFromId, TaskServer} from "../submission/task_platform";
 import {
     submissionChangeExecutionMode,
     submissionChangePlatformName,
@@ -158,7 +158,7 @@ function* taskLoadSaga(app: App, action) {
     let state: AppStore = yield* select();
 
     if (urlParameters.has('taskId')) {
-        let task: TaskOutput|null = null;
+        let task: TaskServer|null = null;
         const taskId = urlParameters.get('taskId');
         try {
             task = yield* getTaskFromId(taskId);
@@ -167,29 +167,8 @@ function* taskLoadSaga(app: App, action) {
             yield* put({type: ActionTypes.Error, payload: {source: 'task-loader', error: `Impossible to fetch task id ${taskId}`}});
         }
 
-        const defaultTask = {
-            gridInfos: {
-                context: 'printer',
-                importModules: [],
-                showLabels: true,
-                conceptViewer: true,
-                // maxInstructions: {
-                //     easy: 20,
-                //     medium: 30,
-                //     hard: 40
-                // },
-                // nbPlatforms: 100,
-                includeBlocks: {
-                    groupByCategory: true,
-                    standardBlocks: {
-                        includeAll: true,
-                        // singleBlocks: ["controls_repeat", "controls_if"]
-                    }
-                },
-            },
-        };
-        const fullTask = {...defaultTask, ...task};
-        yield* put(currentTaskChange(fullTask));
+        const convertedTask = convertServerTaskToCodecastFormat(task);
+        yield* put(currentTaskChange(convertedTask));
         yield* put(submissionChangeExecutionMode(SubmissionExecutionMode.Server));
         if (urlParameters.has('sPlatform')) {
             yield* put(submissionChangePlatformName(urlParameters.get('sPlatform')));

@@ -17,7 +17,7 @@ import {initialStateIoPane} from "./stepper/io";
 import {SubtitlesState} from "./subtitles";
 import {initialStateSave} from "./recorder/save_screen";
 import {initialStateTerminal} from "./stepper/io/terminal";
-import {TaskState} from "./task/task_slice";
+import {QuickalgoTask, TaskState} from "./task/task_slice";
 import {LayoutState} from "./task/layout/layout";
 import {DocumentationState} from "./task/documentation/documentation_slice";
 import {BufferState} from "./buffers";
@@ -87,7 +87,7 @@ export interface CodecastOptions {
         bucket: string
     },
     origin: string,
-    task?: string,
+    task?: QuickalgoTask,
     taskInstructions?: string,
     taskHints?: TaskHint[],
     theme?: string,

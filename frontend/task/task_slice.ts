@@ -11,7 +11,7 @@ import CraneFixture from './fixtures/test_crane';
 import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
-import {TaskOutput} from '../submission/task_platform';
+import {TaskServer, TaskTestGroupType} from '../submission/task_platform';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -80,16 +80,21 @@ export interface TaskSubmissionResultPayload {
 }
 
 export interface TaskTest {
+    id?: string,
+    subtaskId?: string|null,
+    groupType?: TaskTestGroupType,
+    active?: boolean,
+    name?: string,
     data: any,
     contextState: any,
 }
 
 export interface QuickalgoTask {
     gridInfos: any,
-    data: any,
+    data?: any,
 }
 
-export type Task = QuickalgoTask & Partial<TaskOutput>;
+export type Task = QuickalgoTask & Partial<TaskServer>;
 
 export const taskInitialState = {
     currentTask: null,
@@ -134,7 +139,7 @@ export const taskSlice = createSlice({
             }
             state.previousTestId = null;
         },
-        currentTaskChange(state, action: PayloadAction<any>) {
+        currentTaskChange(state, action: PayloadAction<Task|null>) {
             state.currentTask = action.payload;
             state.previousTestId = null;
             state.currentTestId = null;

@@ -1,6 +1,7 @@
 import {call, delay, race, select} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
 import {AppStore} from "../store";
+import {Task} from '../task/task_slice';
 
 export interface TaskNormalized {
     id: string,
@@ -48,7 +49,7 @@ export enum TaskTestGroupType {
     Submission = 'Submission',
 }
 
-export interface TaskTestNormalized {
+export interface TaskTestServer {
     id: string,
     taskId: string,
     subtaskId: string|null,
@@ -63,11 +64,11 @@ export interface TaskTestNormalized {
     output: string,
 }
 
-export interface TaskOutput extends TaskNormalized {
+export interface TaskServer extends TaskNormalized {
     limits: TaskLimitNormalized[],
     strings: TaskStringNormalized[],
     subTasks: TaskSubtaskNormalized[],
-    tests: TaskTestNormalized[],
+    tests: TaskTestServer[],
 }
 
 
@@ -135,11 +136,37 @@ export interface ServerSubmission {
     result?: SubmissionOutput,
 }
 
-export function* getTaskFromId(taskId: string): Generator<any, TaskOutput|null> {
+export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> {
     const state: AppStore = yield* select();
     const {taskPlatformUrl} = state.options;
 
-    return (yield* call(asyncGetJson, taskPlatformUrl + '/tasks/' + taskId, false)) as TaskOutput|null;
+    return (yield* call(asyncGetJson, taskPlatformUrl + '/tasks/' + taskId, false)) as TaskServer|null;
+}
+
+export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
+    const defaultTask = {
+        gridInfos: {
+            context: 'printer',
+            importModules: [],
+            showLabels: true,
+            conceptViewer: true,
+            // maxInstructions: {
+            //     easy: 20,
+            //     medium: 30,
+            //     hard: 40
+            // },
+            // nbPlatforms: 100,
+            includeBlocks: {
+                groupByCategory: true,
+                standardBlocks: {
+                    includeAll: true,
+                    // singleBlocks: ["controls_repeat", "controls_if"]
+                }
+            },
+        },
+    };
+
+    return {...defaultTask, ...task};
 }
 
 export function* getServerSubmissionResults(submissionId: string): Generator<any, SubmissionOutput|null> {

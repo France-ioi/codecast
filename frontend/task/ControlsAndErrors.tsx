@@ -112,7 +112,8 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    {!hasModes && <div className="execution-controls">
+                    {/*TODO: Re-enable this*/}
+                    {!hasModes && false && <div className="execution-controls">
                         <div>
                             <FontAwesomeIcon icon={faCogs} className="mr-2"/>
                             <span>
