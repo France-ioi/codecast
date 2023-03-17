@@ -6,13 +6,16 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheckCircle, faTimesCircle} from "@fortawesome/free-solid-svg-icons";
 import {Spinner} from "@blueprintjs/core";
 import {getMessage} from "../lang";
+import {submissionChangePaneOpen} from '../submission/submission_slice';
+import {faList} from '@fortawesome/free-solid-svg-icons/faList';
 
 export function TaskTestsSelector() {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const currentLevel = useAppSelector(state => state.task.currentLevel);
+    const taskTests = useAppSelector(state => state.task.taskTests);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
     const currentSubmission = useAppSelector(state => state.task.currentSubmission);
-    const levelData = currentTask.data[currentLevel];
+    const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
 
     const dispatch = useDispatch();
 
@@ -40,7 +43,7 @@ export function TaskTestsSelector() {
 
     let testStatuses = null;
     if (currentSubmission) {
-        testStatuses = levelData.map((test, index) => {
+        testStatuses = taskTests.map((test, index) => {
             // return 'executing';
             if (index in currentSubmission.results) {
                 const testResult = currentSubmission.results[index];
@@ -59,9 +62,20 @@ export function TaskTestsSelector() {
         })
     }
 
+    const toggleSubmissionPane = () => {
+        dispatch(submissionChangePaneOpen(!submissionsPaneOpen));
+    };
+
     return (
         <div className="tests-selector">
-            {levelData.map((testData, index) =>
+            <div
+                className={`tests-selector-tab tests-selector-menu`}
+                onClick={toggleSubmissionPane}>
+                <span>
+                    <FontAwesomeIcon icon={faList}/>
+                </span>
+            </div>
+            {taskTests.map((testData, index) =>
                 <div
                     key={index}
                     className={`tests-selector-tab${currentTestId === index ? ' is-active' : ''}${testStatuses && testStatuses[index] ? ' status-' + testStatuses[index] : ''}`}

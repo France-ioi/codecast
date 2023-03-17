@@ -163,11 +163,8 @@ export const taskSlice = createSlice({
         taskResetDone(state: TaskState, action: PayloadAction<boolean>) {
             state.resetDone = action.payload;
         },
-        updateTaskTests(state: TaskState, action: PayloadAction<any[]>) {
-            state.taskTests = action.payload.map(testData => ({
-                data: testData,
-                contextState: null,
-            } as TaskTest));
+        updateTaskTests(state: TaskState, action: PayloadAction<TaskTest[]>) {
+            state.taskTests = action.payload;
             state.previousTestId = null;
             state.currentTestId = null;
         },

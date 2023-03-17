@@ -31,7 +31,7 @@ import taskSlice, {
     taskResetDone,
     TaskSubmissionResultPayload,
     taskSuccess,
-    taskSuccessClear,
+    taskSuccessClear, TaskTest,
     taskUpdateState,
     updateCurrentTestId,
     updateTaskTests,
@@ -82,6 +82,7 @@ import {
     SubmissionExecutionMode
 } from "../submission/submission_slice";
 import {appSelect} from '../hooks';
+import {extractTestsFromTask} from '../submission/tests';
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -208,7 +209,12 @@ function* taskLoadSaga(app: App, action) {
         currentLevel = yield* appSelect(state => state.task.currentLevel);
         log.getLogger('task').debug('new current level', currentLevel);
 
-        const tests = action.payload && action.payload.tests ? action.payload.tests : (currentTask.data ? currentTask.data[currentLevel] : []);
+        let tests: TaskTest[];
+        if (action.payload && action.payload.tests) {
+            tests = action.payload.tests;
+        } else {
+            tests = extractTestsFromTask(currentTask, currentLevel);
+        }
         log.getLogger('task').debug('[task.load] update task tests', tests);
         yield* put(updateTaskTests(tests));
 
@@ -398,7 +404,7 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     yield* put(platformAnswerLoaded(newLevelAnswer));
 
     const currentTask = state.task.currentTask;
-    const tests = currentTask.data ? currentTask.data[newLevel] : [];
+    const tests = extractTestsFromTask(currentTask, newLevel);
     log.getLogger('task').debug('[task.currentLevelChange] update task tests', tests);
     yield* put(updateTaskTests(tests));
 

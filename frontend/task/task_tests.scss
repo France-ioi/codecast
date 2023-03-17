@@ -6,6 +6,7 @@
 
   .test-title {
     min-height: 40px;
+    font-size: 16px;
   }
 
   .test-thumbnail {
@@ -80,6 +81,13 @@
     &.status-failure .test-icon {
       color: red;
     }
+  }
+
+  .tests-selector-menu {
+    flex: 0 1;
+    padding-left: 13px;
+    padding-right: 15px;
+    color: var(--primary-color);
   }
 }
 

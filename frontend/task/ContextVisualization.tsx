@@ -8,7 +8,7 @@ import {useDispatch} from "react-redux";
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();
     const currentTask = useAppSelector(state => state.task.currentTask);
-    const currentLevel = useAppSelector(state => state.task.currentLevel);
+    const taskTests = useAppSelector(state => state.task.taskTests);
     const taskLoaded = useAppSelector(state => state.task.loaded);
     const {width, height, ref} = useResizeDetector();
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
@@ -29,9 +29,8 @@ export function ContextVisualization() {
     }, [width, height]);
 
     let testsSelectorEnabled = false;
-    if (currentTask && currentLevel) {
-        const levelData = currentTask.data[currentLevel];
-        testsSelectorEnabled = 1 < levelData.length && !currentTask.gridInfos.hiddenTests;
+    if (currentTask && taskTests.length) {
+        testsSelectorEnabled = 1 < taskTests.length && !currentTask.gridInfos.hiddenTests;
     }
 
     return (

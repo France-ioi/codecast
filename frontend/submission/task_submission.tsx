@@ -30,6 +30,7 @@ import {getServerSubmissionResults, makeServerSubmission} from "./task_platform"
 import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/task_token";
 import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
+import {extractTestsFromTask} from './tests';
 
 export const levelScoringData = {
     basic: {
@@ -153,7 +154,7 @@ class TaskSubmissionExecutor {
         const backgroundStore = Codecast.environments['background'].store;
         const state = yield* appSelect();
         const currentTask = state.task.currentTask;
-        const tests = currentTask.data[level];
+        const tests = extractTestsFromTask(currentTask, level);
 
         return yield new Promise<TaskSubmissionResultPayload>(resolve => {
             backgroundStore.dispatch({type: TaskActionTypes.TaskRunExecution, payload: {options: state.options, level, testId, tests, answer, resolve}});
