@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
-import {SubmissionResult} from './SubmissionResult';
+import {TestsPaneList} from './TestsPaneList';
 import {Dropdown} from 'react-bootstrap';
 import {ServerSubmission} from './task_platform';
 import {submissionChangeCurrentSubmissionId, submissionChangePaneOpen} from './submission_slice';
@@ -10,7 +10,7 @@ import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {capitalizeFirstLetter} from '../common/utils';
 
-export function SubmissionResults() {
+export function TestsPane() {
     const submissionResults = useAppSelector(state => state.submission.serverSubmissions);
     const dispatch = useDispatch();
     const platform = useAppSelector(state => state.options.platform)
@@ -67,7 +67,7 @@ export function SubmissionResults() {
             </div>
             {null !== currentSubmission && <div className="submission-results__submission">
                 {currentSubmission.evaluated ?
-                    <SubmissionResult
+                    <TestsPaneList
                         submission={currentSubmission.result}
                     />
                     :
@@ -76,6 +76,10 @@ export function SubmissionResults() {
                         {getMessage('SUBMISSION_RESULTS_EVALUATING')}
                     </div>
                 }
+            </div>}
+            {null === currentSubmission && <div className="submission-results__submission">
+                <TestsPaneList
+                />
             </div>}
         </div>
     )

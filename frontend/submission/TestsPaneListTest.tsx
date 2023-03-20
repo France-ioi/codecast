@@ -1,9 +1,11 @@
 import React from "react";
-import {useAppSelector} from "../hooks";
-import {SubmissionTestErrorCode, SubmissionTestNormalized, TaskTestGroupType} from './task_platform';
-import {createStoreHook} from 'react-redux';
+import {
+    SubmissionOutput,
+    SubmissionTestErrorCode,
+    TaskTestGroupType,
+    TaskTestServer
+} from './task_platform';
 import {getMessage} from '../lang';
-import Task from '../task';
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
 import {faTimes} from '@fortawesome/free-solid-svg-icons/faTimes';
 import {faExclamationTriangle} from '@fortawesome/free-solid-svg-icons/faExclamationTriangle';
@@ -13,7 +15,8 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 
 export interface SubmissionResultTestProps {
     index: number,
-    testResult: SubmissionTestNormalized,
+    test: TaskTestServer,
+    submission?: SubmissionOutput,
 }
 
 export interface ErrorCodeData {
@@ -72,37 +75,39 @@ export const testErrorCodeData: {[property in SubmissionTestErrorCode]: ErrorCod
     },
 }
 
-export function SubmissionResultTest(props: SubmissionResultTestProps) {
-    const currentTask = useAppSelector(state => state.task.currentTask);
-    const testResult = props.testResult;
-    const test = currentTask.tests.find(test => test.id === testResult.testId);
+export function TestsPaneListTest(props: SubmissionResultTestProps) {
+    const test = props.test;
+    const testResult = props.submission ? props.submission.tests.find(test => test.testId === props.test.id) : null;
 
     const testName = TaskTestGroupType.Evaluation === test.groupType
         ? getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: props.index + 1})
         : test.name;
 
-    const hasRelativeScore = testResult.score > 0 && testResult.score < 100;
+    const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 100;
 
-    const errorCodeData = testErrorCodeData[testResult.errorCode];
+    const errorCodeData = testResult? testErrorCodeData[testResult.errorCode] : null;
 
-    let message = errorCodeData.message;
-    if (hasRelativeScore) {
-        message = `réussi à ${testResult.score}% en ${Math.floor(testResult.timeMs/10)/100}s`;
-    } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
-        message = "validé";
-    } else if (SubmissionTestErrorCode.WrongAnswer === testResult.errorCode) {
-        message = "résultat incorrect en " + (Math.floor(testResult.timeMs/10)/100) + 's';
-    } else if (message) {
-        message = getMessage(message);
+    let message;
+    if (testResult) {
+        message = errorCodeData.message
+        if (hasRelativeScore) {
+            message = `réussi à ${testResult.score}% en ${Math.floor(testResult.timeMs/10)/100}s`;
+        } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
+            message = "validé";
+        } else if (SubmissionTestErrorCode.WrongAnswer === testResult.errorCode) {
+            message = "résultat incorrect en " + (Math.floor(testResult.timeMs/10)/100) + 's';
+        } else if (message) {
+            message = getMessage(message);
+        }
     }
 
     return (
         <div className="submission-result-test">
-            <div className="submission-result-icon-container" style={{backgroundColor: errorCodeData.color}}>
+            {testResult && <div className="submission-result-icon-container" style={{backgroundColor: errorCodeData.color}}>
                 <FontAwesomeIcon icon={errorCodeData.icon}/>
-            </div>
+            </div>}
             <span className="submission-result-test-title">{testName}</span>
-            <span className="submission-result-test-result">{message}</span>
+            {testResult && <span className="submission-result-test-result">{message}</span>}
         </div>
     )
 }

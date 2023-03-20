@@ -1,45 +1,46 @@
 import React, {useState} from "react";
 import {useAppSelector} from "../hooks";
 import {Collapse} from 'react-bootstrap';
-import {SubmissionOutput, SubmissionSubtaskNormalized, SubmissionTestNormalized} from './task_platform';
+import {
+    SubmissionOutput,
+    SubmissionSubtaskNormalized,
+    SubmissionTestNormalized,
+    TaskSubtaskNormalized
+} from './task_platform';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCaretUp} from '@fortawesome/free-solid-svg-icons/faCaretUp';
 import {faCaretDown} from '@fortawesome/free-solid-svg-icons/faCaretDown';
-import {ErrorCodeData, SubmissionResultTest, testErrorCodeData} from './SubmissionResultTest';
+import {ErrorCodeData, TestsPaneListTest, testErrorCodeData} from './TestsPaneListTest';
 
 export interface SubmissionResultSubTaskProps {
     submission: SubmissionOutput,
-    subTaskResult: SubmissionSubtaskNormalized,
+    subTask: TaskSubtaskNormalized,
 }
 
-export function SubmissionResultSubTask(props: SubmissionResultSubTaskProps) {
+export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
     const currentTask = useAppSelector(state => state.task.currentTask);
-    const subTaskResult = props.subTaskResult;
-    const subTask = currentTask.subTasks.find(subTask => subTask.id === subTaskResult.subtaskId);
+    const subTask = props.subTask;
+    const subTaskResult = props.submission ? props.submission.subTasks.find(submissionSubTask => submissionSubTask.subtaskId === subTask.id) : null;
     const [open, setOpen] = useState(false);
 
-    const getTestRank = (a: SubmissionTestNormalized) => {
-        const correspondingTest = currentTask.tests.find(test => test.id === a.testId);
-
-        return correspondingTest ? correspondingTest.rank : 0;
-    };
-
-    const testsOrdered = [...props.submission.tests.filter(test => test.submissionSubtaskId === subTaskResult.id)];
-    testsOrdered.sort((a, b) => getTestRank(a) - getTestRank(b));
+    const testsOrdered = [...currentTask.tests.filter(test => test.subtaskId === subTask.id)];
+    console.log('tests ordered', testsOrdered, currentTask.tests, subTask);
+    testsOrdered.sort((a, b) => a.rank - b.rank);
 
     let scoreClass = '';
-    if (subTaskResult.score >= subTask.pointsMax) {
+    if (subTaskResult && subTaskResult.score >= subTask.pointsMax) {
         scoreClass = 'is-success';
-    } else if (subTaskResult.score > 0) {
+    } else if (subTaskResult && subTaskResult.score > 0) {
         scoreClass = 'is-partial';
     }
 
     const testsByIcon: {[key: number]: number} = {};
     for (let test of testsOrdered) {
-        if (!(test.errorCode in testsByIcon)) {
-            testsByIcon[test.errorCode] = 0;
+        const testResult = props.submission ? props.submission.tests.find(test => test.testId === test.id) : null;
+        if (!(testResult.errorCode in testsByIcon)) {
+            testsByIcon[testResult.errorCode] = 0;
         }
-        testsByIcon[test.errorCode]++;
+        testsByIcon[testResult.errorCode]++;
     }
     const testsByIconValues: {errorCodeData: ErrorCodeData, count: number}[] = Object.entries(testsByIcon).map(([errorCode, count]) => {
         const errorCodeData = testErrorCodeData[errorCode];
@@ -54,13 +55,13 @@ export function SubmissionResultSubTask(props: SubmissionResultSubTaskProps) {
     return (
         <div className={`submission-result-subtask ${open ? 'is-open' : ''}`}>
             <div className="submission-result-subtask-header" onClick={() => setOpen(!open)}>
-                {subTaskResult.success ?
+                {subTaskResult && subTaskResult.success ?
                     <span className="glyphicon glyphicon-ok image_succeed_subtask"></span>
                     : <span className="glyphicon glyphicon-remove image_failure_subtask"></span>
                 }
-                <div className={`subtask-header-score ${scoreClass}`}>
+                {subTaskResult && <div className={`subtask-header-score ${scoreClass}`}>
                     {subTaskResult.score} / {subTask.pointsMax}
-                </div>
+                </div>}
                 <div className="subtask-header-name">{subTask.name}</div>
                 {!open && <div className="subtask-header-summary">
                     {testsByIconValues.map((testsByIconValue, testIndex) =>
@@ -79,10 +80,11 @@ export function SubmissionResultSubTask(props: SubmissionResultSubTaskProps) {
             <Collapse in={open}>
                 <div>
                     {testsOrdered.map((test, testIndex) =>
-                        <SubmissionResultTest
+                        <TestsPaneListTest
                             key={testIndex}
                             index={testIndex}
-                            testResult={test}
+                            test={test}
+                            submission={props.submission}
                         />
                     )}
                 </div>
