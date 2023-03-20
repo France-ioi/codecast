@@ -1,13 +1,26 @@
 import React from "react";
 import {useAppSelector} from "../hooks";
-import {updateCurrentTestId} from "./task_slice";
+import {TaskTest, updateCurrentTestId} from "./task_slice";
 import {useDispatch} from "react-redux";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCheckCircle, faTimesCircle} from "@fortawesome/free-solid-svg-icons";
 import {Spinner} from "@blueprintjs/core";
 import {getMessage} from "../lang";
 import {submissionChangePaneOpen} from '../submission/submission_slice';
 import {faList} from '@fortawesome/free-solid-svg-icons/faList';
+import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
+import {faChevronLeft} from '@fortawesome/free-solid-svg-icons/faChevronLeft';
+import {faCheckCircle} from '@fortawesome/free-solid-svg-icons/faCheckCircle';
+import {faTimesCircle} from '@fortawesome/free-solid-svg-icons/faTimesCircle';
+import {memoize} from 'proxy-memoize';
+
+const getTaskTestsByIndex = memoize((taskTests: TaskTest[]): {[key: number]: TaskTest} => {
+    const getTaskTestsByIndex = {};
+    for (let testIndex = 0; testIndex < taskTests.length; testIndex++) {
+        getTaskTestsByIndex[testIndex] = taskTests[testIndex];
+    }
+
+    return getTaskTestsByIndex;
+});
 
 export function TaskTestsSelector() {
     const currentTask = useAppSelector(state => state.task.currentTask);
@@ -21,7 +34,14 @@ export function TaskTestsSelector() {
 
     const selectTest = (index) => {
         dispatch(updateCurrentTestId({testId: index}));
-    }
+    };
+
+    const incrementTestId = (increment) => {
+        const newTestId = currentTestId + increment;
+        if (newTestId >= 0 && newTestId <= taskTests.length - 1) {
+            selectTest(newTestId);
+        }
+    };
 
     const existingImages = currentTask.gridInfos && currentTask.gridInfos.images ? currentTask.gridInfos.images.map(element => element.path.default) : [];
 
@@ -62,9 +82,13 @@ export function TaskTestsSelector() {
         })
     }
 
+    const taskTestsByIndex = getTaskTestsByIndex(taskTests);
+
     const toggleSubmissionPane = () => {
         dispatch(submissionChangePaneOpen(!submissionsPaneOpen));
     };
+
+    const tooManyTests = taskTests.length > 3;
 
     return (
         <div className="tests-selector">
@@ -75,27 +99,47 @@ export function TaskTestsSelector() {
                     <FontAwesomeIcon icon={faList}/>
                 </span>
             </div>
-            {taskTests.map((testData, index) =>
+            {Object.entries(tooManyTests ? {[currentTestId]: taskTestsByIndex[currentTestId]} : taskTestsByIndex).map(([index, testData]) =>
                 <div
                     key={index}
-                    className={`tests-selector-tab${currentTestId === index ? ' is-active' : ''}${testStatuses && testStatuses[index] ? ' status-' + testStatuses[index] : ''}`}
-                    onClick={() => selectTest(index)}>
-                    {getTestThumbNail(index) && <div className="test-thumbnail">
+                    className={`tests-selector-tab${currentTestId === Number(index) ? ' is-active' : ''}${testStatuses && testStatuses[index] ? ' status-' + testStatuses[index] : ''}`}
+                    onClick={() => selectTest(Number(index))}>
+                    {getTestThumbNail(Number(index)) && <div className="test-thumbnail">
                         <img
-                            src={getTestThumbNail(index)}
+                            src={getTestThumbNail(Number(index))}
                         />
                     </div>}
-                    <span className="test-title">
+                    <span className={`test-title ${tooManyTests ? 'too-many-tests' : ''}`}>
                         {testStatuses && <span className="test-icon">
                             {testStatuses[index] === 'executing' && <Spinner size={Spinner.SIZE_SMALL}/>}
                             {testStatuses && testStatuses[index] === 'success' && <FontAwesomeIcon icon={faCheckCircle}/>}
                             {testStatuses && testStatuses[index] === 'failure' && <FontAwesomeIcon icon={faTimesCircle}/>}
                         </span>}
 
-                        <span>{getMessage('TESTS_TAB_TITLE').format({index: index + 1})}</span>
+                        <span className="test-title-content">{getMessage('TESTS_TAB_TITLE').format({index: Number(index) + 1})}</span>
+
+                        {tooManyTests && <span className="test-index">
+                            {Number(index) + 1}/{taskTests.length}
+                        </span>}
                     </span>
                 </div>
             )}
+            {tooManyTests && <React.Fragment>
+                <div
+                    className={`tests-selector-tab tests-selector-menu ${currentTestId <= 0 ? 'is-disabled' : ''}`}
+                    onClick={() => incrementTestId(-1)}>
+                    <span>
+                        <FontAwesomeIcon icon={faChevronLeft}/>
+                    </span>
+                </div>
+                <div
+                    className={`tests-selector-tab tests-selector-menu ${currentTestId >= taskTests.length - 1 ? 'is-disabled' : ''}`}
+                    onClick={() => incrementTestId(1)}>
+                    <span>
+                        <FontAwesomeIcon icon={faChevronRight}/>
+                    </span>
+                </div>
+            </React.Fragment>}
         </div>
     );
 }

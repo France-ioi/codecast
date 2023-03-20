@@ -262,6 +262,7 @@ module.exports = {
     SUBMISSION_EXECUTE_MY_TESTS: 'My tests',
     SUBMISSION_EXECUTE_SUBMIT: 'Submit',
 
+    SUBMISSION_RESULTS_TESTS_TITLE: 'Tests list',
     SUBMISSION_RESULTS_TITLE: 'Tests results',
     SUBMISSION_RESULTS_EVALUATING: 'Evaluating submission...',
     SUBMISSION_RESULTS_LABEL: 'Submission in {platform}',

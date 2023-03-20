@@ -20,6 +20,23 @@
     }
   }
 
+  .test-index {
+    font-weight: normal;
+  }
+
+  .test-title.too-many-tests {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+
+    .test-title-content {
+      flex: 1 0;
+      text-align: left;
+    }
+  }
+
   .tests-selector-tab {
     flex: 1 0;
     cursor: pointer;
@@ -66,6 +83,13 @@
 
     &:not(.is-active) {
       box-shadow: 0 1px 0 0px #ccc inset;
+    }
+
+    &.is-disabled {
+      cursor: not-allowed;
+      svg {
+        opacity: 0.3;
+      }
     }
 
     .test-icon {

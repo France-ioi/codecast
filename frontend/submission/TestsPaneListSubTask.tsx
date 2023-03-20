@@ -24,7 +24,6 @@ export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
     const [open, setOpen] = useState(false);
 
     const testsOrdered = [...currentTask.tests.filter(test => test.subtaskId === subTask.id)];
-    console.log('tests ordered', testsOrdered, currentTask.tests, subTask);
     testsOrdered.sort((a, b) => a.rank - b.rank);
 
     let scoreClass = '';
@@ -34,23 +33,31 @@ export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
         scoreClass = 'is-partial';
     }
 
-    const testsByIcon: {[key: number]: number} = {};
-    for (let test of testsOrdered) {
-        const testResult = props.submission ? props.submission.tests.find(test => test.testId === test.id) : null;
-        if (!(testResult.errorCode in testsByIcon)) {
-            testsByIcon[testResult.errorCode] = 0;
+    let testsByIconValues: {errorCodeData: ErrorCodeData, count: number}[];
+    if (props.submission) {
+        const testsByIcon: {[key: number]: number} = {};
+        for (let test of testsOrdered) {
+            const testResult = props.submission.tests.find(submissionTest => submissionTest.testId === test.id);
+            if (testResult) {
+                if (!(testResult.errorCode in testsByIcon)) {
+                    testsByIcon[testResult.errorCode] = 0;
+                }
+                testsByIcon[testResult.errorCode]++;
+            } else {
+                console.error('Test result not found', test, props.submission.tests);
+            }
         }
-        testsByIcon[testResult.errorCode]++;
-    }
-    const testsByIconValues: {errorCodeData: ErrorCodeData, count: number}[] = Object.entries(testsByIcon).map(([errorCode, count]) => {
-        const errorCodeData = testErrorCodeData[errorCode];
 
-        return {
-            errorCodeData,
-            count,
-        };
-    });
-    testsByIconValues.sort((a, b) => a.count - b.count);
+        testsByIconValues = Object.entries(testsByIcon).map(([errorCode, count]) => {
+            const errorCodeData = testErrorCodeData[errorCode];
+
+            return {
+                errorCodeData,
+                count,
+            };
+        });
+        testsByIconValues.sort((a, b) => a.count - b.count);
+    }
 
     return (
         <div className={`submission-result-subtask ${open ? 'is-open' : ''}`}>
@@ -63,7 +70,7 @@ export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
                     {subTaskResult.score} / {subTask.pointsMax}
                 </div>}
                 <div className="subtask-header-name">{subTask.name}</div>
-                {!open && <div className="subtask-header-summary">
+                {!open && subTaskResult && <div className="subtask-header-summary">
                     {testsByIconValues.map((testsByIconValue, testIndex) =>
                         <div className="subtask-header-summary-badge" key={testIndex} style={{background: testsByIconValue.errorCodeData.colorLight}}>
                             <div className="subtask-header-summary-badge-icon" style={{background: testsByIconValue.errorCodeData.color}}>

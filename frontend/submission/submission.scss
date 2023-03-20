@@ -19,7 +19,7 @@
 }
 
 .submission-results__header {
-  padding: 1rem 1rem 0 1rem;
+  padding: 1rem;
   display: flex;
   align-items: center;
   position: relative;
@@ -98,6 +98,7 @@
 
 .submission-results__selector {
   padding: .5rem 1rem;
+  margin-top: -1rem;
   .dropdown-toggle {
     width: 100%;
     background: #f2f2f2 !important;

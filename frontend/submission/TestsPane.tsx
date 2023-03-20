@@ -46,11 +46,11 @@ export function TestsPane() {
     return (
         <div className="submission-results">
             <div className="submission-results__header">
-                <div className="submission-results__title">{getMessage('SUBMISSION_RESULTS_TITLE')}</div>
+                <div className="submission-results__title">{getMessage(currentSubmission ? 'SUBMISSION_RESULTS_TITLE' : 'SUBMISSION_RESULTS_TESTS_TITLE')}</div>
                 <div className="submission-results__close" onClick={closePane}>
                 </div>
             </div>
-            <div className="submission-results__selector">
+            {submissionResults.length > 0 && <div className="submission-results__selector">
                 <Dropdown>
                     <Dropdown.Toggle>
                         {null !== currentSubmission ? getSubmissionLabel(currentSubmission) : getMessage('SELECT')}
@@ -64,7 +64,7 @@ export function TestsPane() {
                         )}
                     </Dropdown.Menu>
                 </Dropdown>
-            </div>
+            </div>}
             {null !== currentSubmission && <div className="submission-results__submission">
                 {currentSubmission.evaluated ?
                     <TestsPaneList
