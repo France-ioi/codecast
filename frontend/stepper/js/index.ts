@@ -192,8 +192,8 @@ export const checkBlocklyCode = function (answer, context: QuickAlgoLibrary, sta
     const blocks = getBlocksFromXml(answer.blockly);
 
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
+    const totalCount = blocklyCount(blocks, context);
 
-    const totalCount = blocks.length - 1;
     if (maxInstructions && totalCount > maxInstructions) {
         throw getMessageChoices('TASK_BLOCKS_OVER_LIMIT', totalCount - maxInstructions).format({
             limit: maxInstructions,
@@ -276,12 +276,7 @@ export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary
     log.getLogger('blockly_runner').debug('blocks usage', answer);
 
     const blocks = getBlocksFromXml(answer.blockly);
-    let blocksUsed = 0;
-    for (let i = 0; i < blocks.length; i++) {
-        let block = blocks[i];
-        blocksUsed += getBlockCount(block, context);
-    }
-
+    const blocksUsed = blocklyCount(blocks, context);
     const limitations = (context.infos.limitedUses ? blocklyFindLimited(blocks, context.infos.limitedUses, context) : []) as {type: string, name: string, current: number, limit: number}[];
 
     log.getLogger('blockly_runner').debug('limitations', limitations);
@@ -291,6 +286,16 @@ export const getBlocklyBlocksUsage = function (answer, context: QuickAlgoLibrary
         limitations,
     };
 };
+
+export function blocklyCount(blocks: any[], context: QuickAlgoLibrary): number {
+    let blocksUsed = 0;
+    for (let i = 0; i < blocks.length; i++) {
+        let block = blocks[i];
+        blocksUsed += getBlockCount(block, context);
+    }
+
+    return blocksUsed;
+}
 
 const getBlocksFromXml = function (xmlText) {
     const xml = window.Blockly.Xml.textToDom(xmlText)
@@ -357,7 +362,7 @@ export default function(bundle: Bundle) {
                     // channel.put(stepperExecutionError(diagnostics));
                 };
 
-                const blocksData = getContextBlocksDataSelector(state, context);
+                const blocksData = getContextBlocksDataSelector({state, context});
 
                 const blocklyHelper = context.blocklyHelper;
                 log.getLogger('blockly_runner').debug('blockly helper', blocklyHelper);

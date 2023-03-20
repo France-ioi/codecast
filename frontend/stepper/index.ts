@@ -519,7 +519,7 @@ function stepperRestartReducer(state: AppStoreReplay, {payload: {stepperState}})
             const pythonSource = source + "\npass";
 
             const context = quickAlgoLibraries.getContext(null, state.environment);
-            const blocksData = getContextBlocksDataSelector(state, context);
+            const blocksData = getContextBlocksDataSelector({state, context});
 
             Codecast.runner.initCodes([pythonSource], blocksData);
         } else {
@@ -1064,7 +1064,7 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
         }
         taskContext.runner = Codecast.runner;
 
-        const blocksData = getContextBlocksDataSelector(state, taskContext);
+        const blocksData = getContextBlocksDataSelector({state, context: taskContext});
 
         const interpreter = Codecast.runner;
         interpreter.initCodes([stepperContext.state.analysis.code], blocksData);

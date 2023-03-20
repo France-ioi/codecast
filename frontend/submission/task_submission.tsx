@@ -170,7 +170,6 @@ class TaskSubmissionExecutor {
         const {answer, maxScore, minScore} = parameters;
         const state = yield* appSelect();
 
-        log.getLogger('tests').debug('do grade answer');
         if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state)) {
             return {
                 score: minScore + (maxScore - minScore) * Number(answer) / recordingProgressSteps,

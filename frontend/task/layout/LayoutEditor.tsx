@@ -44,7 +44,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
     };
 
     const context = quickAlgoLibraries.getContext(null, 'main');
-    const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector(state, context) : []);
+    const allBlocks = useAppSelector(state => context ? getContextBlocksDataSelector({state, context}) : []);
     const blocks = allBlocks.filter(block => false !== block.showInBlocks);
     const displayBlocks = !!(context && blocks.length && CodecastPlatform.Python === platform && 'tralalere' !== options.app);
 

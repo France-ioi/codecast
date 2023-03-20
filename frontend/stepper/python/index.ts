@@ -35,7 +35,7 @@ export function* compilePythonCodeSaga(source: string) {
      */
     const pythonSource = source + "\npass";
 
-    const blocksData = getContextBlocksDataSelector(state, context);
+    const blocksData = getContextBlocksDataSelector({state, context});
 
     const pythonInterpreter = Codecast.runner;
     pythonInterpreter.initCodes([pythonSource], blocksData);
@@ -92,7 +92,7 @@ export default function(bundle: Bundle) {
                 const source = selectAnswer(state);
                 const pythonSource = source + "\npass";
 
-                const blocksData = getContextBlocksDataSelector(state, context);
+                const blocksData = getContextBlocksDataSelector({state, context});
 
                 const pythonInterpreter = Codecast.runner;
                 pythonInterpreter.initCodes([pythonSource], blocksData);

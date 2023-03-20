@@ -27,6 +27,7 @@ import {selectDisplayAbout, TaskAbout} from "./TaskAbout";
 import {PromptModalDialog} from "./dialog/PromptModalDialog";
 import {taskSuccessClear} from "./task_slice";
 import {platformTaskLink} from './platform/actionTypes';
+import {ContextVisualizationImages} from './ContextVisualizationImages';
 import {TestsPane} from '../submission/TestsPane';
 
 export function TaskApp() {
@@ -157,6 +158,8 @@ export function TaskApp() {
 
                         <MenuTask/>
                     </div>
+
+                    <ContextVisualizationImages/>
                 </div>
 
                 {recordingEnabled &&
