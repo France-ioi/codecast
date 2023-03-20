@@ -289,4 +289,7 @@ module.exports = {
     SUBMISSION_RESULT_MEMORY: "Accès mémoire invalide",
     SUBMISSION_RESULT_TIMEOUT: "Limite de temps d'exécution dépassée",
     SUBMISSION_RESULT_CRASH: "Erreur d'exécution",
+    SUBMISSION_RESULT_VALIDATED: "Validé en {time}s",
+    SUBMISSION_RESULT_INCORRECT: "Résultat incorrect en {time}s",
+    SUBMISSION_RESULT_PARTIAL: "Réussi à {score}% en {time}s",
 };

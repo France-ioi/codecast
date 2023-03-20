@@ -89,13 +89,14 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
 
     let message;
     if (testResult) {
-        message = errorCodeData.message
+        message = errorCodeData.message;
+        const time = (Math.floor(testResult.timeMs/10)/100);
         if (hasRelativeScore) {
-            message = `réussi à ${testResult.score}% en ${Math.floor(testResult.timeMs/10)/100}s`;
+            message = getMessage('SUBMISSION_RESULT_PARTIAL').format({score: testResult.score, time});
         } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
-            message = "validé";
+            message = getMessage('SUBMISSION_RESULT_VALIDATED').format({time});
         } else if (SubmissionTestErrorCode.WrongAnswer === testResult.errorCode) {
-            message = "résultat incorrect en " + (Math.floor(testResult.timeMs/10)/100) + 's';
+            message = getMessage('SUBMISSION_RESULT_INCORRECT').format({time});
         } else if (message) {
             message = getMessage(message);
         }

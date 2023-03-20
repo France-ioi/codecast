@@ -278,4 +278,7 @@ module.exports = {
     SUBMISSION_RESULT_MEMORY: "Invalid memory access",
     SUBMISSION_RESULT_TIMEOUT: "Execution time limit exceeded",
     SUBMISSION_RESULT_CRASH: "Execution error",
+    SUBMISSION_RESULT_VALIDATED: "Validated in {time}s",
+    SUBMISSION_RESULT_INCORRECT: "Incorrect result in {time}s",
+    SUBMISSION_RESULT_PARTIAL: "{score}% successful in {time}s",
 };
