@@ -83,7 +83,6 @@ export function TaskTestsSelector() {
             return null;
         })
     }
-    console.log('current submission', {currentSubmission, taskTests, testStatuses})
 
     const taskTestsByIndex = getTaskTestsByIndex(taskTests);
 

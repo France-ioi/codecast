@@ -12,8 +12,9 @@ import {toHtml} from "../utils/sanitize";
 import {TaskTestsSubmissionResultOverview} from "./TaskTestsSubmissionResultOverview";
 import {getMessage} from "../lang";
 import {DraggableDialog} from "../common/DraggableDialog";
-import {submissionChangeExecutionMode, SubmissionExecutionMode} from "../submission/submission_slice";
+import {submissionChangeExecutionMode} from "../submission/submission_slice";
 import {SubmissionControls} from "../submission/SubmissionControls";
+import {TaskSubmissionEvaluateOn} from '../submission/submission';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -74,7 +75,7 @@ export function ControlsAndErrors() {
 
     const changeExecutionMode = (e) => {
         e.preventDefault();
-        dispatch(submissionChangeExecutionMode(SubmissionExecutionMode.Client === executionMode ? SubmissionExecutionMode.Server : SubmissionExecutionMode.Client));
+        dispatch(submissionChangeExecutionMode(TaskSubmissionEvaluateOn.Client === executionMode ? TaskSubmissionEvaluateOn.Server : TaskSubmissionEvaluateOn.Client));
     };
 
     return (
@@ -121,13 +122,13 @@ export function ControlsAndErrors() {
                             </span>
                         </div>
                         <div className="biswitch" onClick={changeExecutionMode}>
-                            <div className={`biswitch-option ${SubmissionExecutionMode.Client === executionMode ? 'is-active' : ''}`}>{getMessage('SUBMISSION_EXECUTE_ON_CLIENT')}</div>
-                            <Switch readOnly checked={SubmissionExecutionMode.Server === executionMode}/>
-                            <div className={`biswitch-option ${SubmissionExecutionMode.Server === executionMode ? 'is-active' : ''}`}>{getMessage('SUBMISSION_EXECUTE_ON_SERVER')}</div>
+                            <div className={`biswitch-option ${TaskSubmissionEvaluateOn.Client === executionMode ? 'is-active' : ''}`}>{getMessage('SUBMISSION_EXECUTE_ON_CLIENT')}</div>
+                            <Switch readOnly checked={TaskSubmissionEvaluateOn.Server === executionMode}/>
+                            <div className={`biswitch-option ${TaskSubmissionEvaluateOn.Server === executionMode ? 'is-active' : ''}`}>{getMessage('SUBMISSION_EXECUTE_ON_SERVER')}</div>
                         </div>
                     </div>}
-                    {SubmissionExecutionMode.Client === executionMode && <StepperControls enabled={true}/>}
-                    {SubmissionExecutionMode.Server === executionMode && <SubmissionControls/>}
+                    {TaskSubmissionEvaluateOn.Client === executionMode && <StepperControls enabled={true}/>}
+                    {TaskSubmissionEvaluateOn.Server === executionMode && <SubmissionControls/>}
                 </div>}
             </div>}
 

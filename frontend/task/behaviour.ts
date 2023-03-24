@@ -1,12 +1,10 @@
 import {Bundle} from "../linker";
-import {call, delay, put, race, select, take, takeEvery} from "typed-redux-saga";
+import {call, delay, put, race, take, takeEvery} from "typed-redux-saga";
 import {ActionTypes} from "../common/actionTypes";
 import {ActionTypes as StepperActionTypes} from "../stepper/actionTypes";
 import {Screen} from "../common/screens";
 import {App} from "../index";
-import {TaskActionTypes} from "./index";
-import {taskSetMenuHelpsOpen} from "./task_slice";
-import {AppStore} from "../store";
+import {TaskActionTypes, taskSetMenuHelpsOpen} from "./task_slice";
 import {appSelect} from '../hooks';
 
 const MENU_HELPS_MINIMUM_EXECUTION_ERRORS = 3;

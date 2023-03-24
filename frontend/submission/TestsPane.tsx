@@ -3,7 +3,10 @@ import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
 import {TestsPaneList} from './TestsPaneList';
 import {Dropdown} from 'react-bootstrap';
-import {submissionChangeCurrentSubmissionId, submissionChangePaneOpen} from './submission_slice';
+import {
+    submissionChangeCurrentSubmissionId,
+    submissionChangePaneOpen,
+} from './submission_slice';
 import {getMessage} from '../lang';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -12,9 +15,11 @@ import {isServerSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from
 
 export function TestsPane() {
     const submissionResults = useAppSelector(state => state.submission.taskSubmissions);
+    const executionMode = useAppSelector(state => state.submission.executionMode);
     const dispatch = useDispatch();
     const platform = useAppSelector(state => state.options.platform)
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? submissionResults[state.submission.currentSubmissionId] : null);
+    const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type);
 
     const getSubmissionLabel = (submissionResult: TaskSubmissionServer) => {
         return <div className="submission-label">
@@ -50,14 +55,14 @@ export function TestsPane() {
                 <div className="submission-results__close" onClick={closePane}>
                 </div>
             </div>
-            {submissionResults.length > 0 && <div className="submission-results__selector">
+            {TaskSubmissionEvaluateOn.Server === executionMode && serverSubmissionResults.length > 0 && <div className="submission-results__selector">
                 <Dropdown>
                     <Dropdown.Toggle>
                         {null !== currentSubmission && isServerSubmission(currentSubmission) ? getSubmissionLabel(currentSubmission) : getMessage('SELECT')}
                     </Dropdown.Toggle>
 
                     <Dropdown.Menu>
-                        {submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type).map((submission, submissionIndex) =>
+                        {serverSubmissionResults.map((submission, submissionIndex) =>
                             <Dropdown.Item key={submissionIndex} onClick={() => setCurrentSubmission(submissionIndex)}>
                                 <span>{getSubmissionLabel(submission as TaskSubmissionServer)}</span>
                             </Dropdown.Item>

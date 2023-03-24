@@ -61,6 +61,7 @@ log.getLogger('recorder').setDefaultLevel('info');
 log.getLogger('redux').setDefaultLevel(process.env['NODE_ENV'] === 'development' ? 'debug' : 'info');
 log.getLogger('replay').setDefaultLevel('info');
 log.getLogger('stepper').setDefaultLevel('info');
+log.getLogger('submission').setDefaultLevel('info');
 log.getLogger('subtitles').setDefaultLevel('info');
 log.getLogger('task').setDefaultLevel('info');
 log.getLogger('tests').setDefaultLevel('info');

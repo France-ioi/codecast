@@ -1,21 +1,16 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {TaskSubmission, TaskSubmissionResultPayload} from './submission';
+import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionResultPayload} from './submission';
 import {SubmissionTestErrorCode} from './task_platform';
 
-export enum SubmissionExecutionMode {
-    Client = 'client',
-    Server = 'server',
-}
-
-export enum SubmissionExecuteOn {
+export enum SubmissionExecutionScope {
     ThisTest = 'this_test',
     MyTests = 'my_tests',
     Submit = 'submit',
 }
 
 export interface SubmissionState {
-    executionMode: SubmissionExecutionMode,
-    executeOn: SubmissionExecuteOn,
+    executionMode: TaskSubmissionEvaluateOn,
+    executionScope: SubmissionExecutionScope,
     platformName: string,
     taskSubmissions: TaskSubmission[],
     submissionsPaneOpen: boolean,
@@ -23,8 +18,8 @@ export interface SubmissionState {
 }
 
 export const submissionInitialState = {
-    executionMode: SubmissionExecutionMode.Client,
-    executeOn: SubmissionExecuteOn.Submit,
+    executionMode: TaskSubmissionEvaluateOn.Client,
+    executionScope: SubmissionExecutionScope.Submit,
     platformName: null,
     taskSubmissions: [],
     submissionsPaneOpen: false,
@@ -35,11 +30,11 @@ export const submissionSlice = createSlice({
     name: 'submission',
     initialState: submissionInitialState,
     reducers: {
-        submissionChangeExecutionMode(state, action: PayloadAction<SubmissionExecutionMode>) {
+        submissionChangeExecutionMode(state, action: PayloadAction<TaskSubmissionEvaluateOn>) {
             state.executionMode = action.payload;
         },
-        submissionChangeExecuteOn(state, action: PayloadAction<SubmissionExecuteOn>) {
-            state.executeOn = action.payload;
+        submissionChangeExecutionScope(state, action: PayloadAction<SubmissionExecutionScope>) {
+            state.executionScope = action.payload;
         },
         submissionChangePlatformName(state, action: PayloadAction<string>) {
             state.platformName = action.payload;
@@ -73,7 +68,7 @@ export const submissionSlice = createSlice({
 
 export const {
     submissionChangeExecutionMode,
-    submissionChangeExecuteOn,
+    submissionChangeExecutionScope,
     submissionChangePlatformName,
     submissionAddNewTaskSubmission,
     submissionUpdateTaskSubmission,

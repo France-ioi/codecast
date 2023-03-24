@@ -1,8 +1,7 @@
 import React from "react";
 import {
     SubmissionTestErrorCode,
-    TaskTestGroupType,
-    TaskTestServer
+    TaskTestGroupType
 } from './task_platform';
 import {getMessage} from '../lang';
 import {faCheck} from '@fortawesome/free-solid-svg-icons/faCheck';
@@ -12,10 +11,11 @@ import {faHourglassHalf} from '@fortawesome/free-solid-svg-icons/faHourglassHalf
 import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {isServerSubmission, TaskSubmission, TaskSubmissionServerTestResult} from './submission';
+import {TaskTest} from '../task/task_slice';
 
 export interface SubmissionResultTestProps {
     index: number,
-    test: TaskTestServer,
+    test: TaskTest,
     submission?: TaskSubmission,
 }
 
@@ -79,10 +79,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
     const test = props.test;
     const testResult = props.submission ? props.submission.result.tests.find(test => test.testId === props.test.id) : null;
 
-    const testName = TaskTestGroupType.Evaluation === test.groupType
-        ? getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: props.index + 1})
-        : test.name;
-
+    const testName = test.name ?? getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: props.index + 1});
     const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 100;
 
     const errorCodeData = testResult? testErrorCodeData[testResult.errorCode] : null;

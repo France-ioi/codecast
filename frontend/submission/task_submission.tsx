@@ -1,6 +1,5 @@
 import {apply, call, put} from "typed-redux-saga";
 import {Codecast} from "../index";
-import {getTaskPlatformMode, recordingProgressSteps, TaskActionTypes, TaskPlatformMode} from "../task";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
 import log from "loglevel";
 import React from "react";
@@ -16,7 +15,6 @@ import {
     submissionAddNewTaskSubmission,
     submissionChangeCurrentSubmissionId,
     submissionChangePaneOpen,
-    SubmissionExecutionMode,
     submissionSetTestResult,
     submissionStartExecutingTest,
     submissionUpdateTaskSubmission,
@@ -27,6 +25,8 @@ import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
 import {extractTestsFromTask} from './tests';
 import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload, TaskSubmissionServer} from './submission';
+import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
+import {TaskActionTypes} from '../task/task_slice';
 
 export const levelScoringData = {
     basic: {
@@ -69,6 +69,7 @@ class TaskSubmissionExecutor {
         }
 
         if (!currentSubmissionId) {
+            log.getLogger('submission').log('[submission] Create new submission');
             yield* put(submissionAddNewTaskSubmission({
                 evaluated: false,
                 date: new Date().toISOString(),
@@ -82,9 +83,13 @@ class TaskSubmissionExecutor {
             yield* put(submissionChangeCurrentSubmissionId(currentSubmissionId));
         }
         yield* put(submissionSetTestResult({submissionId: currentSubmissionId, testId: result.testId, result}));
+        log.getLogger('submission').log('[submission] Set first test result');
 
         if (!result.result) {
             // We execute other tests only if the current one has succeeded
+            const currentSubmission = yield* appSelect(state => state.submission.taskSubmissions[currentSubmissionId]);
+            yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}}));
+
             return;
         }
 
@@ -121,6 +126,8 @@ class TaskSubmissionExecutor {
         for (let testResult of currentSubmission.result.tests) {
             worstRate = Math.min(worstRate, testResult.score);
         }
+
+        yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}}));
 
         const finalScore = worstRate;
         if (finalScore >= 100) {
@@ -172,7 +179,7 @@ class TaskSubmissionExecutor {
             }
         }
 
-        if (SubmissionExecutionMode.Server === state.submission.executionMode) {
+        if (TaskSubmissionEvaluateOn.Server === state.submission.executionMode) {
             return yield* apply(this, this.gradeAnswerServer, [parameters]);
         } else {
             return yield* apply(this, this.gradeAnswerClient, [parameters]);
@@ -186,8 +193,6 @@ class TaskSubmissionExecutor {
         const randomSeed = state.platform.taskRandomSeed;
         const newTaskToken = getTaskTokenForLevel(level, randomSeed);
         const answerToken = getAnswerTokenForLevel(stringify(answer), level, randomSeed);
-
-        console.log('start grading answer on server', {randomSeed, newTaskToken, answerToken});
 
         const serverSubmission: TaskSubmissionServer = {
             evaluated: false,
@@ -207,8 +212,6 @@ class TaskSubmissionExecutor {
 
             return {score: 0};
         }
-
-        console.log('submission data', submissionData);
 
         const submissionId = submissionData.submissionId;
 
@@ -235,7 +238,6 @@ class TaskSubmissionExecutor {
         const state = yield* appSelect();
         const environment = state.environment;
         let lastMessage = null;
-        console.log('start grading answer', environment);
         const tests = yield* appSelect(state => state.task.taskTests);
         if (!tests || 0 === Object.values(tests).length) {
             return {

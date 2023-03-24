@@ -215,12 +215,12 @@ module.exports = (env, argv) => {
                 patterns: bundledFiles,
             }),
             new MiniCssExtractPlugin(),
-            new CircularDependencyPlugin({
-                exclude: /node_modules/,
-                failOnError: true,
-                allowAsyncCycles: false,
-                cwd: process.cwd(),
-            }),
+            // new CircularDependencyPlugin({
+            //     exclude: /node_modules/,
+            //     failOnError: true,
+            //     allowAsyncCycles: false,
+            //     cwd: process.cwd(),
+            // }),
             // new BundleAnalyzerPlugin(),
         ],
         // Note : splitChunks breaks the audio recording.

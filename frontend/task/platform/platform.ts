@@ -1,4 +1,4 @@
-import {call, fork, put, select, take, takeEvery} from 'typed-redux-saga';
+import {call, fork, put, take, takeEvery} from 'typed-redux-saga';
 import stringify from 'json-stable-stringify-without-jsonify';
 import {getHeight, windowHeightMonitorSaga} from "./window_height_monitor";
 import {getTaskTokenForLevel} from "./task_token";
@@ -25,8 +25,7 @@ import {
     taskGetResourcesPost,
     platformTaskLink,
 } from './actionTypes';
-import {App, Codecast} from "../../index";
-import {AppStore} from "../../store";
+import {Codecast} from "../../index";
 import {Action, ActionCreator} from "redux";
 import {
     platformTokenUpdated,

@@ -1,12 +1,13 @@
 import {Task, TaskTest} from '../task/task_slice';
 import {TaskLevelName} from '../task/platform/platform_slice';
-import {SubmissionTestNormalized, TaskTestServer} from './task_platform';
+import {TaskTestServer} from './task_platform';
 
 export function extractTestsFromTask(task: Task, level: TaskLevelName): TaskTest[] {
     if (task.data) {
-        return task.data[level].map(data => ({
+        return task.data[level].map((data, testId) => ({
             data: data,
             contextState: null,
+            id: String(testId),
         }));
     }
     if (task.tests) {
@@ -23,6 +24,7 @@ export function extractTestsFromTask(task: Task, level: TaskLevelName): TaskTest
 
         return testsOrdered.map(test => {
             return {
+                ...test,
                 data: {
                     input: test.input,
                     output: test.output,

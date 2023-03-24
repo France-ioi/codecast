@@ -12,8 +12,8 @@ export interface SubmissionResultProps {
 
 export function TestsPaneList(props: SubmissionResultProps) {
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const testsOrdered = useAppSelector(state => state.task.taskTests);
     const submission = props.submission;
-    const testsOrdered = [...currentTask.tests];
     const subTasksOrdered = currentTask.subTasks ? [...currentTask.subTasks] : [];
     subTasksOrdered.sort((a, b) => a.rank - b.rank);
 

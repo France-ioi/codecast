@@ -1,4 +1,10 @@
-import {getCurrentImmerState, getDefaultSourceCode} from "./utils";
+import {
+    getCurrentImmerState,
+    getDefaultSourceCode,
+    getTaskPlatformMode,
+    recordingProgressSteps,
+    TaskPlatformMode
+} from "./utils";
 import {Bundle} from "../linker";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {all, call, cancel, cancelled, delay, fork, put, select, take, takeEvery, takeLatest} from "typed-redux-saga";
@@ -19,7 +25,7 @@ import taskSlice, {
     currentTaskChange,
     currentTaskChangePredefined,
     recordingEnabledChange,
-    selectCurrentTest,
+    selectCurrentTest, TaskActionTypes,
     taskAddInput,
     taskChangeSoundEnabled,
     taskCurrentLevelChange,
@@ -78,24 +84,10 @@ import {
     submissionChangeCurrentSubmissionId,
     submissionChangeExecutionMode,
     submissionChangePlatformName,
-    SubmissionExecutionMode
 } from "../submission/submission_slice";
 import {appSelect} from '../hooks';
 import {extractTestsFromTask} from '../submission/tests';
-import { TaskSubmissionResultPayload } from "../submission/submission";
-
-export enum TaskActionTypes {
-    TaskLoad = 'task/load',
-    TaskUnload = 'task/unload',
-    TaskRunExecution = 'task/runExecution',
-}
-
-export enum TaskPlatformMode {
-    Source = 'source',
-    RecordingProgress = 'recording_progress',
-}
-
-export const recordingProgressSteps = 10;
+import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload} from "../submission/submission";
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
     testId?: number,
@@ -171,7 +163,7 @@ function* taskLoadSaga(app: App, action) {
 
         const convertedTask = convertServerTaskToCodecastFormat(task);
         yield* put(currentTaskChange(convertedTask));
-        yield* put(submissionChangeExecutionMode(SubmissionExecutionMode.Server));
+        yield* put(submissionChangeExecutionMode(TaskSubmissionEvaluateOn.Server));
         if (urlParameters.has('sPlatform')) {
             yield* put(submissionChangePlatformName(urlParameters.get('sPlatform')));
         }
@@ -479,9 +471,6 @@ function* getTaskAnswer () {
     return null;
 }
 
-export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
-    return !state.task.currentTask && state.player.instants ? TaskPlatformMode.RecordingProgress : TaskPlatformMode.Source;
-}
 
 function* getTaskState () {
     const statsState = yield* call(statsGetStateSaga);

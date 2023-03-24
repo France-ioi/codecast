@@ -1,9 +1,8 @@
-import {call, delay, race, select} from "typed-redux-saga";
+import {call, delay, race} from "typed-redux-saga";
 import {asyncGetJson, asyncRequestJson} from "../utils/api";
-import {AppStore} from "../store";
 import {Task} from '../task/task_slice';
 import {appSelect} from '../hooks';
-import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServerResult} from './submission';
+import {TaskSubmissionServerResult} from './submission';
 
 export interface TaskNormalized {
     id: string,

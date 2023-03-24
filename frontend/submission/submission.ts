@@ -4,7 +4,8 @@ import {AppAction} from "../store";
 import {platformApi} from "../task/platform/platform";
 import {
     SubmissionNormalized,
-    SubmissionSubtaskNormalized, SubmissionTestErrorCode,
+    SubmissionSubtaskNormalized,
+    SubmissionTestErrorCode,
     SubmissionTestNormalized
 } from './task_platform';
 

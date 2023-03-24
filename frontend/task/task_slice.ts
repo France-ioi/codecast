@@ -27,6 +27,12 @@ const availableTasks = {
     login: StringsLoginFixture,
 };
 
+export enum TaskActionTypes {
+    TaskLoad = 'task/load',
+    TaskUnload = 'task/unload',
+    TaskRunExecution = 'task/runExecution',
+}
+
 export interface BlocksUsage {
     error?: string,
     blocksLimit?: number,

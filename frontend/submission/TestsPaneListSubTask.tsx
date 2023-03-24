@@ -16,13 +16,12 @@ export interface SubmissionResultSubTaskProps {
 }
 
 export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
-    const currentTask = useAppSelector(state => state.task.currentTask);
+    const taskTests = useAppSelector(state => state.task.taskTests);
     const subTask = props.subTask;
     const subTaskResult = props.submission ? props.submission.result.subTasks.find(submissionSubTask => submissionSubTask.subtaskId === subTask.id) : null;
     const [open, setOpen] = useState(false);
 
-    const testsOrdered = [...currentTask.tests.filter(test => test.subtaskId === subTask.id)];
-    testsOrdered.sort((a, b) => a.rank - b.rank);
+    const testsOrdered = [...taskTests.filter(test => test.subtaskId === subTask.id)];
 
     let scoreClass = '';
     if (subTaskResult && subTaskResult.score >= subTask.pointsMax) {

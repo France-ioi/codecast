@@ -1,10 +1,22 @@
 import {quickAlgoLibraries} from "./libs/quickalgo_libraries";
-import {createDraft, current, isDraft} from "immer";
+import {current, isDraft} from "immer";
 import {checkPythonCode, getPythonBlocksUsage} from "./python_utils";
 import {getMessage} from "../lang";
 import {AppStore, CodecastPlatform, platformsList} from "../store";
 import {checkBlocklyCode, getBlocklyBlocksUsage, hasBlockPlatform} from "../stepper/js";
 import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
+
+export enum TaskPlatformMode {
+    Source = 'source',
+    RecordingProgress = 'recording_progress',
+}
+
+
+export const recordingProgressSteps = 10;
+
+export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
+    return !state.task.currentTask && state.player.instants ? TaskPlatformMode.RecordingProgress : TaskPlatformMode.Source;
+}
 
 export function extractLevelSpecific(item, level) {
     if ((typeof item != "object")) {
