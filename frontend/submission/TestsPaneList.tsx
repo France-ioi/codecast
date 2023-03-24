@@ -1,13 +1,13 @@
 import React from "react";
-import {SubmissionOutput, SubmissionSubtaskNormalized, SubmissionTestNormalized} from './task_platform';
 import {Alert, Intent} from '@blueprintjs/core';
 import {getMessage} from '../lang';
 import {useAppSelector} from '../hooks';
 import {TestsPaneListSubTask} from './TestsPaneListSubTask';
 import {TestsPaneListTest} from './TestsPaneListTest';
+import {isServerSubmission, TaskSubmission, TaskSubmissionServer} from './submission';
 
 export interface SubmissionResultProps {
-    submission?: SubmissionOutput,
+    submission?: TaskSubmission,
 }
 
 export function TestsPaneList(props: SubmissionResultProps) {
@@ -19,7 +19,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
 
     return (
         <div className="submission-result">
-            {submission && 'UserTest' === submission.mode && <div>
+            {submission&& isServerSubmission(submission) && 'UserTest' === submission.result.mode && <div>
                 <Alert intent={Intent.WARNING}>{getMessage('SUBMISSION_USER_TEST_WARNING')}</Alert>
             </div>}
             {submission && !submission.evaluated && <div>
@@ -27,32 +27,32 @@ export function TestsPaneList(props: SubmissionResultProps) {
             </div>}
 
             <React.Fragment>
-                {submission && submission.compilationError && <div>
-                    {submission.compilationMessage && <div>
+                {submission && isServerSubmission(submission) && submission.result.compilationError && <div>
+                    {submission.result.compilationMessage && <div>
                         <strong>{getMessage('SUBMISSION_ERROR_COMPILATION')}</strong><br />
-                        <pre>{submission.compilationMessage}</pre>
+                        <pre>{submission.result.compilationMessage}</pre>
                     </div>}
-                    {!submission.compilationMessage && <div>
+                    {!submission.result.compilationMessage && <div>
                         <strong>{getMessage('SUBMISSION_ERROR_EXECUTION')}</strong><br />
-                        <pre>{submission.errorMessage}</pre>
+                        <pre>{submission.result.errorMessage}</pre>
                     </div>}
                 </div>}
 
-                {submission && !submission.compilationError && submission.tests.length === 0 && <div>
+                {submission && (!isServerSubmission(submission) || !submission.result.compilationError) && submission.result.tests.length === 0 && <div>
                     {getMessage('SUBMISSION_NO_TESTS')}
                 </div>}
 
-                {(!submission || (!submission.compilationError && submission.tests.length > 0)) && <React.Fragment>
-                    {submission && 0 < submission.compilationMessage.length && <div>
+                <React.Fragment>
+                    {submission && isServerSubmission(submission) && 0 < submission.result.compilationMessage.length && <div>
                         <span>{getMessage('SUBMISSION_COMPILATION_OUTPUT')}</span><br />
-                        <pre>{submission.compilationMessage}</pre>
+                        <pre>{submission.result.compilationMessage}</pre>
                     </div>}
                     {subTasksOrdered.length > 0 && <div>
                         {subTasksOrdered.map((subTask, subTaskIndex) =>
                             <TestsPaneListSubTask
                                 key={subTaskIndex}
                                 subTask={subTask}
-                                submission={submission}
+                                submission={submission as TaskSubmissionServer}
                             />
                         )}
                     </div>}
@@ -66,7 +66,7 @@ export function TestsPaneList(props: SubmissionResultProps) {
                             />
                         )}
                     </React.Fragment>}
-                </React.Fragment>}
+                </React.Fragment>
             </React.Fragment>
         </div>
     )

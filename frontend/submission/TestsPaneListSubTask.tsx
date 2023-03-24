@@ -2,25 +2,23 @@ import React, {useState} from "react";
 import {useAppSelector} from "../hooks";
 import {Collapse} from 'react-bootstrap';
 import {
-    SubmissionOutput,
-    SubmissionSubtaskNormalized,
-    SubmissionTestNormalized,
     TaskSubtaskNormalized
 } from './task_platform';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCaretUp} from '@fortawesome/free-solid-svg-icons/faCaretUp';
 import {faCaretDown} from '@fortawesome/free-solid-svg-icons/faCaretDown';
 import {ErrorCodeData, TestsPaneListTest, testErrorCodeData} from './TestsPaneListTest';
+import { TaskSubmissionServer} from './submission';
 
 export interface SubmissionResultSubTaskProps {
-    submission: SubmissionOutput,
+    submission: TaskSubmissionServer,
     subTask: TaskSubtaskNormalized,
 }
 
 export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const subTask = props.subTask;
-    const subTaskResult = props.submission ? props.submission.subTasks.find(submissionSubTask => submissionSubTask.subtaskId === subTask.id) : null;
+    const subTaskResult = props.submission ? props.submission.result.subTasks.find(submissionSubTask => submissionSubTask.subtaskId === subTask.id) : null;
     const [open, setOpen] = useState(false);
 
     const testsOrdered = [...currentTask.tests.filter(test => test.subtaskId === subTask.id)];
@@ -37,14 +35,14 @@ export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
     if (props.submission) {
         const testsByIcon: {[key: number]: number} = {};
         for (let test of testsOrdered) {
-            const testResult = props.submission.tests.find(submissionTest => submissionTest.testId === test.id);
+            const testResult = props.submission.result.tests.find(submissionTest => submissionTest.testId === test.id);
             if (testResult) {
                 if (!(testResult.errorCode in testsByIcon)) {
                     testsByIcon[testResult.errorCode] = 0;
                 }
                 testsByIcon[testResult.errorCode]++;
             } else {
-                console.error('Test result not found', test, props.submission.tests);
+                console.error('Test result not found', test, props.submission.result.tests);
             }
         }
 

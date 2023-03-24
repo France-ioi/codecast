@@ -12,6 +12,7 @@ import {faChevronLeft} from '@fortawesome/free-solid-svg-icons/faChevronLeft';
 import {faCheckCircle} from '@fortawesome/free-solid-svg-icons/faCheckCircle';
 import {faTimesCircle} from '@fortawesome/free-solid-svg-icons/faTimesCircle';
 import {memoize} from 'proxy-memoize';
+import {SubmissionTestErrorCode} from '../submission/task_platform';
 
 const getTaskTestsByIndex = memoize((taskTests: TaskTest[]): {[key: number]: TaskTest} => {
     const getTaskTestsByIndex = {};
@@ -27,7 +28,7 @@ export function TaskTestsSelector() {
     const currentLevel = useAppSelector(state => state.task.currentLevel);
     const taskTests = useAppSelector(state => state.task.taskTests);
     const currentTestId = useAppSelector(state => state.task.currentTestId);
-    const currentSubmission = useAppSelector(state => state.task.currentSubmission);
+    const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? state.submission.taskSubmissions[state.submission.currentSubmissionId] : null);
     const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
 
     const dispatch = useDispatch();
@@ -65,17 +66,16 @@ export function TaskTestsSelector() {
     if (currentSubmission) {
         testStatuses = taskTests.map((test, index) => {
             // return 'executing';
-            if (index in currentSubmission.results) {
-                const testResult = currentSubmission.results[index];
+            if (index in currentSubmission.result.tests) {
+                const testResult = currentSubmission.result.tests[index];
                 if (testResult.executing) {
                     return 'executing';
                 }
-                if (true === testResult.result) {
+                if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
                     return 'success';
                 }
-                if (false === testResult.result) {
-                    return 'failure';
-                }
+
+                return 'failure';
             }
 
             return 'unknown';

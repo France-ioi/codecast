@@ -27,17 +27,6 @@ const availableTasks = {
     login: StringsLoginFixture,
 };
 
-export interface TaskSubmission {
-    executing: boolean,
-    results: TaskSubmissionResult[], // One per test
-}
-
-export interface TaskSubmissionResult {
-    executing: boolean,
-    result?: boolean,
-    message?: string,
-}
-
 export interface BlocksUsage {
     error?: string,
     blocksLimit?: number,
@@ -57,7 +46,6 @@ export interface TaskState {
     taskTests: TaskTest[],
     currentTestId?: number,
     previousTestId?: number,
-    currentSubmission?: TaskSubmission,
     inputNeeded?: boolean,
     inputs?: any[],
     contextId: number,
@@ -72,13 +60,6 @@ export interface TaskState {
 export interface TaskInputEnteredPayload {
     input: string,
     clearInput?: boolean,
-}
-
-export interface TaskSubmissionResultPayload {
-    testId: number,
-    result: boolean,
-    message?: string,
-    steps?: number,
 }
 
 export interface TaskTest {
@@ -104,7 +85,6 @@ export const taskInitialState = {
     taskTests: [],
     currentTestId: null,
     previousTestId: null,
-    currentSubmission: null,
     recordingEnabled: false,
     resetDone: true,
     loaded: false,
@@ -218,25 +198,6 @@ export const taskSlice = createSlice({
         taskAddInput(state: TaskState, action: PayloadAction<any>) {
             state.inputs.push(action.payload);
         },
-        taskCreateSubmission(state: TaskState) {
-            state.currentSubmission = {
-                executing: true,
-                results: state.taskTests.map(() => ({executing: false})),
-            };
-        },
-        taskClearSubmission(state: TaskState) {
-            state.currentSubmission = null;
-        },
-        taskSubmissionStartTest(state: TaskState, action: PayloadAction<number>) {
-            state.currentSubmission.results[action.payload].executing = true;
-        },
-        taskSubmissionSetTestResult(state: TaskState, action: PayloadAction<TaskSubmissionResultPayload>) {
-            state.currentSubmission.results[action.payload.testId] = {
-                executing: false,
-                result: action.payload.result,
-                message: action.payload.message,
-            };
-        },
         taskIncreaseContextId(state: TaskState) {
             state.contextId++;
         },
@@ -284,10 +245,6 @@ export const {
     currentTaskChangePredefined,
     currentTaskChange,
     taskAddInput,
-    taskCreateSubmission,
-    taskClearSubmission,
-    taskSubmissionStartTest,
-    taskSubmissionSetTestResult,
     updateTestContextState,
     taskCurrentLevelChange,
     taskIncreaseContextId,

@@ -1,22 +1,22 @@
-import React, {useState} from "react";
+import React from "react";
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../hooks";
 import {TestsPaneList} from './TestsPaneList';
 import {Dropdown} from 'react-bootstrap';
-import {ServerSubmission} from './task_platform';
 import {submissionChangeCurrentSubmissionId, submissionChangePaneOpen} from './submission_slice';
 import {getMessage} from '../lang';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {capitalizeFirstLetter} from '../common/utils';
+import {isServerSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission';
 
 export function TestsPane() {
-    const submissionResults = useAppSelector(state => state.submission.serverSubmissions);
+    const submissionResults = useAppSelector(state => state.submission.taskSubmissions);
     const dispatch = useDispatch();
     const platform = useAppSelector(state => state.options.platform)
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? submissionResults[state.submission.currentSubmissionId] : null);
 
-    const getSubmissionLabel = (submissionResult: ServerSubmission) => {
+    const getSubmissionLabel = (submissionResult: TaskSubmissionServer) => {
         return <div className="submission-label">
             {submissionResult.evaluated ?
                 <div className="submission-label-icon" style={{'--progression': `${Math.floor(submissionResult.result.score / 100 * 360)}deg`} as React.CSSProperties}>
@@ -53,13 +53,13 @@ export function TestsPane() {
             {submissionResults.length > 0 && <div className="submission-results__selector">
                 <Dropdown>
                     <Dropdown.Toggle>
-                        {null !== currentSubmission ? getSubmissionLabel(currentSubmission) : getMessage('SELECT')}
+                        {null !== currentSubmission && isServerSubmission(currentSubmission) ? getSubmissionLabel(currentSubmission) : getMessage('SELECT')}
                     </Dropdown.Toggle>
 
                     <Dropdown.Menu>
-                        {submissionResults.map((submission, submissionIndex) =>
+                        {submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type).map((submission, submissionIndex) =>
                             <Dropdown.Item key={submissionIndex} onClick={() => setCurrentSubmission(submissionIndex)}>
-                                <span>{getSubmissionLabel(submission)}</span>
+                                <span>{getSubmissionLabel(submission as TaskSubmissionServer)}</span>
                             </Dropdown.Item>
                         )}
                     </Dropdown.Menu>
@@ -68,7 +68,7 @@ export function TestsPane() {
             {null !== currentSubmission && <div className="submission-results__submission">
                 {currentSubmission.evaluated ?
                     <TestsPaneList
-                        submission={currentSubmission.result}
+                        submission={currentSubmission}
                     />
                     :
                     <div className="submission-results__submission-loader">

@@ -3,6 +3,7 @@ import {asyncGetJson, asyncRequestJson} from "../utils/api";
 import {AppStore} from "../store";
 import {Task} from '../task/task_slice';
 import {appSelect} from '../hooks';
+import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServerResult} from './submission';
 
 export interface TaskNormalized {
     id: string,
@@ -125,18 +126,6 @@ export interface SubmissionTestNormalized {
     submissionSubtaskId: string|null,
 }
 
-export interface SubmissionOutput extends SubmissionNormalized {
-    subTasks?: SubmissionSubtaskNormalized[],
-    tests?: SubmissionTestNormalized[],
-}
-
-export interface ServerSubmission {
-    date: string, // ISO format
-    evaluated: boolean,
-    crashed?: boolean,
-    result?: SubmissionOutput,
-}
-
 export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> {
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
@@ -170,7 +159,7 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
     return {...defaultTask, ...task};
 }
 
-export function* getServerSubmissionResults(submissionId: string): Generator<any, SubmissionOutput|null> {
+export function* getServerSubmissionResults(submissionId: string): Generator<any, TaskSubmissionServerResult|null> {
     const outcome = yield* race({
         results: call(longPollServerSubmissionResults, submissionId),
         timeout: delay(60*1000)
@@ -188,7 +177,7 @@ export function* longPollServerSubmissionResults(submissionId: string) {
     const {taskPlatformUrl} = state.options;
 
     while (true) {
-        const result = (yield* call(asyncGetJson, taskPlatformUrl + '/submissions/' + submissionId + '?longPolling', false)) as SubmissionOutput|null;
+        const result = (yield* call(asyncGetJson, taskPlatformUrl + '/submissions/' + submissionId + '?longPolling', false)) as TaskSubmissionServerResult|null;
         if (result.evaluated) {
             return result;
         }

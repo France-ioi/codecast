@@ -1,6 +1,5 @@
 import React from "react";
 import {
-    SubmissionOutput,
     SubmissionTestErrorCode,
     TaskTestGroupType,
     TaskTestServer
@@ -12,11 +11,12 @@ import {faExclamationTriangle} from '@fortawesome/free-solid-svg-icons/faExclama
 import {faHourglassHalf} from '@fortawesome/free-solid-svg-icons/faHourglassHalf';
 import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
+import {isServerSubmission, TaskSubmission, TaskSubmissionServerTestResult} from './submission';
 
 export interface SubmissionResultTestProps {
     index: number,
     test: TaskTestServer,
-    submission?: SubmissionOutput,
+    submission?: TaskSubmission,
 }
 
 export interface ErrorCodeData {
@@ -77,7 +77,7 @@ export const testErrorCodeData: {[property in SubmissionTestErrorCode]: ErrorCod
 
 export function TestsPaneListTest(props: SubmissionResultTestProps) {
     const test = props.test;
-    const testResult = props.submission ? props.submission.tests.find(test => test.testId === props.test.id) : null;
+    const testResult = props.submission ? props.submission.result.tests.find(test => test.testId === props.test.id) : null;
 
     const testName = TaskTestGroupType.Evaluation === test.groupType
         ? getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: props.index + 1})
@@ -88,9 +88,9 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
     const errorCodeData = testResult? testErrorCodeData[testResult.errorCode] : null;
 
     let message;
-    if (testResult) {
+    if (testResult && isServerSubmission(props.submission)) {
         message = errorCodeData.message;
-        const time = (Math.floor(testResult.timeMs/10)/100);
+        const time = Math.floor((testResult as TaskSubmissionServerTestResult).timeMs/10)/100;
         if (hasRelativeScore) {
             message = getMessage('SUBMISSION_RESULT_PARTIAL').format({score: testResult.score, time});
         } else if (SubmissionTestErrorCode.NoError === testResult.errorCode) {

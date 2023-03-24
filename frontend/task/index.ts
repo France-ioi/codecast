@@ -22,14 +22,12 @@ import taskSlice, {
     selectCurrentTest,
     taskAddInput,
     taskChangeSoundEnabled,
-    taskClearSubmission,
     taskCurrentLevelChange,
     taskInputEntered,
     taskInputNeeded,
     taskLoaded,
     taskRecordableActions,
     taskResetDone,
-    TaskSubmissionResultPayload,
     taskSuccess,
     taskSuccessClear, TaskTest,
     taskUpdateState,
@@ -77,12 +75,14 @@ import {ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
 import {convertServerTaskToCodecastFormat, getTaskFromId, TaskServer} from "../submission/task_platform";
 import {
+    submissionChangeCurrentSubmissionId,
     submissionChangeExecutionMode,
     submissionChangePlatformName,
     SubmissionExecutionMode
 } from "../submission/submission_slice";
 import {appSelect} from '../hooks';
 import {extractTestsFromTask} from '../submission/tests';
+import { TaskSubmissionResultPayload } from "../submission/submission";
 
 export enum TaskActionTypes {
     TaskLoad = 'task/load',
@@ -373,9 +373,9 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
 
     yield* put({type: StepperActionTypes.StepperExit});
 
-    const currentSubmission = yield* appSelect(state => state.task.currentSubmission);
-    if (null !== currentSubmission) {
-        yield* put(taskClearSubmission());
+    const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
+    if (null !== currentSubmissionId) {
+        yield* put(submissionChangeCurrentSubmissionId(null));
     }
     yield* put(taskSuccessClear({record: false}));
 
@@ -584,9 +584,9 @@ export default function (bundle: Bundle) {
                     yield* put({type: StepperActionTypes.StepperExit});
                 }
 
-                const currentSubmission = yield* appSelect(state => state.task.currentSubmission);
-                if (null !== currentSubmission) {
-                    yield* put(taskClearSubmission());
+                const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
+                if (null !== currentSubmissionId) {
+                    yield* put(submissionChangeCurrentSubmissionId(null));
                 }
 
                 const currentError = yield* appSelect(state => state.stepper.error);
@@ -668,7 +668,7 @@ export default function (bundle: Bundle) {
         yield* takeEvery(StepperActionTypes.Compile, function*({payload}) {
             log.getLogger('task').debug('stepper restart, create new submission');
             if (!payload.keepSubmission) {
-                yield* put(taskClearSubmission());
+                yield* put(submissionChangeCurrentSubmissionId(null));
             }
         });
 
@@ -775,7 +775,6 @@ export default function (bundle: Bundle) {
                             resetDone: taskData.resetDone,
                             inputs: taskData.inputs,
                             inputNeeded: taskData.inputNeeded,
-                            currentSubmission: taskData.currentSubmission,
                         },
                     },
                 });

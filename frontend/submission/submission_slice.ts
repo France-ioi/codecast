@@ -1,12 +1,12 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {ServerSubmission} from './task_platform';
+import {TaskSubmission, TaskSubmissionResultPayload} from './submission';
 
 export enum SubmissionExecutionMode {
     Client = 'client',
     Server = 'server',
 }
 
-export enum SubmissionServerExecuteOn {
+export enum SubmissionExecuteOn {
     ThisTest = 'this_test',
     MyTests = 'my_tests',
     Submit = 'submit',
@@ -14,18 +14,18 @@ export enum SubmissionServerExecuteOn {
 
 export interface SubmissionState {
     executionMode: SubmissionExecutionMode,
-    serverExecuteOn: SubmissionServerExecuteOn,
+    executeOn: SubmissionExecuteOn,
     platformName: string,
-    serverSubmissions: ServerSubmission[],
+    taskSubmissions: TaskSubmission[],
     submissionsPaneOpen: boolean,
     currentSubmissionId: number|null,
 }
 
 export const submissionInitialState = {
     executionMode: SubmissionExecutionMode.Client,
-    serverExecuteOn: SubmissionServerExecuteOn.Submit,
+    executeOn: SubmissionExecuteOn.Submit,
     platformName: null,
-    serverSubmissions: [],
+    taskSubmissions: [],
     submissionsPaneOpen: false,
     currentSubmissionId: null,
 } as SubmissionState;
@@ -37,17 +37,28 @@ export const submissionSlice = createSlice({
         submissionChangeExecutionMode(state, action: PayloadAction<SubmissionExecutionMode>) {
             state.executionMode = action.payload;
         },
-        submissionChangeServerExecuteOn(state, action: PayloadAction<SubmissionServerExecuteOn>) {
-            state.serverExecuteOn = action.payload;
+        submissionChangeExecuteOn(state, action: PayloadAction<SubmissionExecuteOn>) {
+            state.executeOn = action.payload;
         },
         submissionChangePlatformName(state, action: PayloadAction<string>) {
             state.platformName = action.payload;
         },
-        submissionAddNewServerSubmission(state, action: PayloadAction<ServerSubmission>) {
-            state.serverSubmissions.push(action.payload);
+        submissionAddNewTaskSubmission(state, action: PayloadAction<TaskSubmission>) {
+            state.taskSubmissions.push(action.payload);
         },
-        submissionUpdateServerSubmission(state, action: PayloadAction<{id: number, submission: ServerSubmission}>) {
-            state.serverSubmissions[action.payload.id] = action.payload.submission;
+        submissionUpdateTaskSubmission(state, action: PayloadAction<{id: number, submission: TaskSubmission}>) {
+            state.taskSubmissions[action.payload.id] = action.payload.submission;
+        },
+        submissionStartExecutingTest(state, action: PayloadAction<{submissionId: number, testId: number}>) {
+            state.taskSubmissions[action.payload.submissionId].result.tests[action.payload.testId].executing = true;
+        },
+        submissionSetTestResult(state, action: PayloadAction<{submissionId: number, testId: number, result: TaskSubmissionResultPayload}>) {
+            state.taskSubmissions[action.payload.submissionId].result.tests[action.payload.testId] = {
+                ...state.taskSubmissions[action.payload.submissionId].result.tests[action.payload.testId],
+                executing: false,
+                score: action.payload.result.result ? 100 : 0,
+                message: action.payload.result.message,
+            };
         },
         submissionChangePaneOpen(state, action: PayloadAction<boolean>) {
             state.submissionsPaneOpen = action.payload;
@@ -60,12 +71,14 @@ export const submissionSlice = createSlice({
 
 export const {
     submissionChangeExecutionMode,
-    submissionChangeServerExecuteOn,
+    submissionChangeExecuteOn,
     submissionChangePlatformName,
-    submissionAddNewServerSubmission,
-    submissionUpdateServerSubmission,
+    submissionAddNewTaskSubmission,
+    submissionUpdateTaskSubmission,
     submissionChangePaneOpen,
     submissionChangeCurrentSubmissionId,
+    submissionStartExecutingTest,
+    submissionSetTestResult,
 } = submissionSlice.actions;
 
 export default submissionSlice;

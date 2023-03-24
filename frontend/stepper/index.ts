@@ -62,13 +62,11 @@ import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getCurrentStepperState, getStepper, getStepperControlsSelector, isStepperInterrupting} from "./selectors";
 import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
 import {TermBuffer} from "./io/terminal";
-import {PlayerInstant} from "../player";
-import {delay, ReplayContext} from "../player/sagas";
+import {delay} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App, Codecast} from "../index";
 import {mainQuickAlgoLogger, quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
-import {selectCurrentTest, taskResetDone, TaskSubmissionResultPayload, updateCurrentTestId} from "../task/task_slice";
-import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
+import {selectCurrentTest, taskResetDone, updateCurrentTestId} from "../task/task_slice";
 import {getCurrentImmerState} from "../task/utils";
 import PythonRunner from "./python/python_runner";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
@@ -85,6 +83,7 @@ import {LayoutMobileMode} from "../task/layout/layout";
 import {DeferredPromise} from "../utils/app";
 import {addStepperRecordAndReplayHooks} from './replay';
 import {appSelect} from '../hooks';
+import {TaskSubmissionResultPayload} from '../submission/submission';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
