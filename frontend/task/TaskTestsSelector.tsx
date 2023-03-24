@@ -13,6 +13,7 @@ import {faCheckCircle} from '@fortawesome/free-solid-svg-icons/faCheckCircle';
 import {faTimesCircle} from '@fortawesome/free-solid-svg-icons/faTimesCircle';
 import {memoize} from 'proxy-memoize';
 import {SubmissionTestErrorCode} from '../submission/task_platform';
+import {ErrorCodeData, testErrorCodeData} from '../submission/TestsPaneListTest';
 
 const getTaskTestsByIndex = memoize((taskTests: TaskTest[]): {[key: number]: TaskTest} => {
     const getTaskTestsByIndex = {};
@@ -62,25 +63,27 @@ export function TaskTestsSelector() {
         return element ? element : null;
     };
 
-    let testStatuses = null;
+    let testStatuses: ({executing: boolean, errorCodeData?: ErrorCodeData} | null)[] = [];
     if (currentSubmission) {
         testStatuses = taskTests.map((test, index) => {
             // return 'executing';
             if (index in currentSubmission.result.tests) {
                 const testResult = currentSubmission.result.tests[index];
-                if (testResult.executing) {
-                    return 'executing';
-                }
-                if (SubmissionTestErrorCode.NoError === testResult.errorCode) {
-                    return 'success';
-                }
+                if (testResult) {
+                    if (testResult.executing) {
+                        return {executing: true};
+                    }
 
-                return 'failure';
+                    const errorCodeData = testErrorCodeData[testResult.errorCode];
+
+                    return {executing: false, errorCodeData};
+                }
             }
 
-            return 'unknown';
+            return null;
         })
     }
+    console.log('current submission', {currentSubmission, taskTests, testStatuses})
 
     const taskTestsByIndex = getTaskTestsByIndex(taskTests);
 
@@ -110,10 +113,11 @@ export function TaskTestsSelector() {
                         />
                     </div>}
                     <span className={`test-title ${tooManyTests ? 'too-many-tests' : ''}`}>
-                        {testStatuses && <span className="test-icon">
-                            {testStatuses[index] === 'executing' && <Spinner size={Spinner.SIZE_SMALL}/>}
-                            {testStatuses && testStatuses[index] === 'success' && <FontAwesomeIcon icon={faCheckCircle}/>}
-                            {testStatuses && testStatuses[index] === 'failure' && <FontAwesomeIcon icon={faTimesCircle}/>}
+                        {testStatuses[index] && <span className="test-icon">
+                            {testStatuses[index].executing && <Spinner size={Spinner.SIZE_SMALL}/>}
+                            {!testStatuses[index].executing && testStatuses[index].errorCodeData && <div className="submission-result-icon-container" style={{backgroundColor: testStatuses[index].errorCodeData.color}}>
+                                <FontAwesomeIcon icon={testStatuses[index].errorCodeData.icon}/>
+                            </div>}
                         </span>}
 
                         <span className="test-title-content">{getMessage('TESTS_TAB_TITLE').format({index: Number(index) + 1})}</span>

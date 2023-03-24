@@ -90,10 +90,15 @@
   align-items: center;
   justify-content: center;
   color: white;
+  height: 20px;
+  width: 20px;
+  font-size: 12px;
+}
+
+.submission-result-test .submission-result-icon-container {
+  margin-right: 8px;
   height: 24px;
   width: 24px;
-  font-size: 12px;
-  margin-right: 8px;
 }
 
 .submission-results__selector {

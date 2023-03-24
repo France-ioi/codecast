@@ -1,4 +1,4 @@
-import {call, put} from "typed-redux-saga";
+import {apply, call, put} from "typed-redux-saga";
 import {Codecast} from "../index";
 import {getTaskPlatformMode, recordingProgressSteps, TaskActionTypes, TaskPlatformMode} from "../task";
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../stepper/actionTypes";
@@ -77,7 +77,9 @@ class TaskSubmissionExecutor {
                     tests: tests.map((test, testIndex) => ({executing: false, score: 0, testId: String(testIndex), errorCode: null})),
                 },
             }));
+
             currentSubmissionId = yield* appSelect(state => state.submission.taskSubmissions.length - 1);
+            yield* put(submissionChangeCurrentSubmissionId(currentSubmissionId));
         }
         yield* put(submissionSetTestResult({submissionId: currentSubmissionId, testId: result.testId, result}));
 
@@ -171,9 +173,9 @@ class TaskSubmissionExecutor {
         }
 
         if (SubmissionExecutionMode.Server === state.submission.executionMode) {
-            return yield* call(this.gradeAnswerServer, parameters);
+            return yield* apply(this, this.gradeAnswerServer, [parameters]);
         } else {
-            return yield* call(this.gradeAnswerClient, parameters);
+            return yield* apply(this, this.gradeAnswerClient, [parameters]);
         }
     }
 

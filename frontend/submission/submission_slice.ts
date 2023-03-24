@@ -1,5 +1,6 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {TaskSubmission, TaskSubmissionResultPayload} from './submission';
+import {SubmissionTestErrorCode} from './task_platform';
 
 export enum SubmissionExecutionMode {
     Client = 'client',
@@ -56,6 +57,7 @@ export const submissionSlice = createSlice({
             state.taskSubmissions[action.payload.submissionId].result.tests[action.payload.testId] = {
                 ...state.taskSubmissions[action.payload.submissionId].result.tests[action.payload.testId],
                 executing: false,
+                errorCode: action.payload.result.result ? SubmissionTestErrorCode.NoError : SubmissionTestErrorCode.WrongAnswer,
                 score: action.payload.result.result ? 100 : 0,
                 message: action.payload.result.message,
             };
