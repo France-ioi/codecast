@@ -101,7 +101,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
 
     return (
         <div className="submission-result-test">
-            {testResult && <div className="submission-result-icon-container" style={{backgroundColor: errorCodeData.color}}>
+            {testResult && errorCodeData && <div className="submission-result-icon-container" style={{backgroundColor: errorCodeData.color}}>
                 <FontAwesomeIcon icon={errorCodeData.icon}/>
             </div>}
             <span className="submission-result-test-title">{testName}</span>

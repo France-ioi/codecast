@@ -66,9 +66,8 @@ export function TaskTestsSelector() {
     let testStatuses: ({executing: boolean, errorCodeData?: ErrorCodeData} | null)[] = [];
     if (currentSubmission) {
         testStatuses = taskTests.map((test, index) => {
-            // return 'executing';
-            if (index in currentSubmission.result.tests) {
-                const testResult = currentSubmission.result.tests[index];
+            if (currentSubmission.result && currentSubmission.result.tests) {
+                const testResult = currentSubmission.result.tests.find(testResult => testResult.testId === test.id);
                 if (testResult) {
                     if (testResult.executing) {
                         return {executing: true};
