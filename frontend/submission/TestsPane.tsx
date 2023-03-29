@@ -63,7 +63,7 @@ export function TestsPane() {
                 <div className="submission-results__close" onClick={closePane}>
                 </div>
             </div>
-            {TaskSubmissionEvaluateOn.Server === executionMode && serverSubmissionResults.length > 0 && <div className="submission-results__selector">
+            {serverSubmissionResults.length > 0 && <div className="submission-results__selector">
                 <Dropdown>
                     <Dropdown.Toggle>
                         {null !== currentSubmission && isServerSubmission(currentSubmission) ? getSubmissionLabel(currentSubmission) : getMessage('SELECT')}

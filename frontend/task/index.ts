@@ -163,7 +163,6 @@ function* taskLoadSaga(app: App, action) {
 
         const convertedTask = convertServerTaskToCodecastFormat(task);
         yield* put(currentTaskChange(convertedTask));
-        yield* put(submissionChangeExecutionMode(TaskSubmissionEvaluateOn.Server));
         if (urlParameters.has('sPlatform')) {
             yield* put(submissionChangePlatformName(urlParameters.get('sPlatform')));
         }

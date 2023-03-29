@@ -68,7 +68,6 @@ export const submissionSlice = createSlice({
 
 export const {
     submissionChangeExecutionMode,
-    submissionChangeExecutionScope,
     submissionChangePlatformName,
     submissionAddNewTaskSubmission,
     submissionUpdateTaskSubmission,

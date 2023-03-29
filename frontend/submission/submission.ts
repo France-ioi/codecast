@@ -1,13 +1,17 @@
 import {Bundle} from "../linker";
 import {call, takeEvery} from "typed-redux-saga";
 import {AppAction} from "../store";
-import {platformApi} from "../task/platform/platform";
+import {getTaskAnswerAggregated, platformApi, PlatformTaskGradingParameters} from "../task/platform/platform";
 import {
     SubmissionNormalized,
     SubmissionSubtaskNormalized,
     SubmissionTestErrorCode,
     SubmissionTestNormalized
 } from './task_platform';
+import {taskSubmissionExecutor} from './task_submission';
+import {appSelect} from '../hooks';
+import {selectAnswer} from '../task/selectors';
+import stringify from 'json-stable-stringify-without-jsonify';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,
@@ -66,14 +70,23 @@ export interface TaskSubmissionResultPayload {
 
 export enum SubmissionActionTypes {
     SubmissionTriggerPlatformValidate = 'submission/triggerPlatformValidate',
+    SubmissionGradeAnswerServer = 'submission/gradeAnswerServer',
 }
 
 export interface SubmissionTriggerPlatformValidateAction extends AppAction {
     type: SubmissionActionTypes.SubmissionTriggerPlatformValidate,
 }
 
+export interface SubmissionGradeAnswerServerAction extends AppAction {
+    type: SubmissionActionTypes.SubmissionGradeAnswerServer,
+}
+
 export const submissionTriggerPlatformValidate = (): SubmissionTriggerPlatformValidateAction => ({
     type: SubmissionActionTypes.SubmissionTriggerPlatformValidate,
+});
+
+export const submissionGradeAnswerServer = (): SubmissionGradeAnswerServerAction => ({
+    type: SubmissionActionTypes.SubmissionGradeAnswerServer,
 });
 
 export default function (bundle: Bundle) {
@@ -83,6 +96,18 @@ export default function (bundle: Bundle) {
             if (window.SrlLogger) {
                 window.SrlLogger.validation(100, 'none', 0);
             }
+        });
+
+        yield* takeEvery(SubmissionActionTypes.SubmissionGradeAnswerServer, function* (action: SubmissionTriggerPlatformValidateAction) {
+            const answer = yield getTaskAnswerAggregated();
+            const submissionParameters: PlatformTaskGradingParameters = {
+                answer: stringify(answer),
+                minScore: 0,
+                maxScore: 100,
+                noScore: 0,
+            };
+
+            yield* call([taskSubmissionExecutor, taskSubmissionExecutor.gradeAnswerServer], submissionParameters);
         });
     });
 }

@@ -31,6 +31,25 @@
   }
 }
 
+@mixin codecast-dropdown {
+  .dropdown-toggle {
+    width: 100%;
+    border: none !important;
+    outline: none;
+  }
+  .dropdown-menu {
+    width: 100%;
+  }
+  .dropdown-item {
+    outline: none;
+    text-decoration: initial;
+    &:active {
+      background-color: #e9ecef;
+      color: #1e2125;
+    }
+  }
+}
+
 .task .controls-and-errors {
   position: relative;
   width: 100%;
@@ -57,9 +76,18 @@
   align-items: center;
   justify-content: space-between;
   padding: 10px 20px;
-  div {
+
+  .execution-controls-dropdown {
     display: flex;
     align-items: center;
+    .dropdown {
+      @include codecast-dropdown;
+      .dropdown-toggle {
+        background: var(--primary-color);
+        color: white;
+        box-shadow: none !important;
+      }
+    }
   }
 }
 
@@ -274,9 +302,5 @@
         height: 100%;
       }
     }
-  }
-
-  .bp3-button {
-    @include control-button;
   }
 }

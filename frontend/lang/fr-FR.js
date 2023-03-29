@@ -269,7 +269,7 @@ module.exports = {
     SUBMISSION_EXECUTE_ON: 'Exécuter sur...',
     SUBMISSION_EXECUTE_ON_CLIENT: 'navigateur',
     SUBMISSION_EXECUTE_ON_SERVER: 'serveur',
-    SUBMISSION_EXECUTE_THIS_TEST: 'Ce test',
+    SUBMISSION_EXECUTE_THIS_TEST: 'Exécuter sur ce test',
     SUBMISSION_EXECUTE_MY_TESTS: 'Mes tests',
     SUBMISSION_EXECUTE_SUBMIT: 'Soumettre',
 

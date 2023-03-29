@@ -2,19 +2,25 @@ import React, {useEffect, useState} from "react";
 import {StepperControls} from "../stepper/views/StepperControls";
 import {stepperClearError} from "../stepper/actionTypes";
 import {useDispatch} from "react-redux";
-import {Icon, Switch} from "@blueprintjs/core";
+import {Button, Icon, Switch} from "@blueprintjs/core";
 import {LayoutMobileMode, LayoutType} from "./layout/layout";
 import {ActionTypes} from "./layout/actionTypes";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
-import {faCogs, faFileAlt, faPencilAlt, faPlay} from "@fortawesome/free-solid-svg-icons";
+import {faCogs, faFileAlt, faPencilAlt, faPlay, faSpinner} from "@fortawesome/free-solid-svg-icons";
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
 import {TaskTestsSubmissionResultOverview} from "./TaskTestsSubmissionResultOverview";
 import {getMessage} from "../lang";
 import {DraggableDialog} from "../common/DraggableDialog";
-import {submissionChangeExecutionMode} from "../submission/submission_slice";
+import {submissionChangeExecutionMode, SubmissionExecutionScope} from "../submission/submission_slice";
 import {SubmissionControls} from "../submission/SubmissionControls";
-import {TaskSubmissionEvaluateOn} from '../submission/submission';
+import {
+    submissionGradeAnswerServer,
+    submissionTriggerPlatformValidate,
+    TaskSubmissionEvaluateOn
+} from '../submission/submission';
+import { Dropdown } from "react-bootstrap";
+import {capitalizeFirstLetter} from '../common/utils';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -22,6 +28,8 @@ export function ControlsAndErrors() {
     const {showStepper} = useAppSelector(state => state.options);
     const currentTask = useAppSelector(state => state.task.currentTask);
     const executionMode = useAppSelector(state => state.submission.executionMode);
+    const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
+    const isEvaluating = lastSubmission && !lastSubmission.evaluated;
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
@@ -73,9 +81,12 @@ export function ControlsAndErrors() {
         dispatch({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode}});
     };
 
-    const changeExecutionMode = (e) => {
-        e.preventDefault();
-        dispatch(submissionChangeExecutionMode(TaskSubmissionEvaluateOn.Client === executionMode ? TaskSubmissionEvaluateOn.Server : TaskSubmissionEvaluateOn.Client));
+    const changeExecutionMode = (newMode) => {
+        dispatch(submissionChangeExecutionMode(newMode));
+    };
+
+    const submitSubmission = () => {
+        dispatch(submissionGradeAnswerServer());
     };
 
     return (
@@ -113,22 +124,35 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    {/*TODO: Re-enable this*/}
-                    {!hasModes && true && <div className="execution-controls">
-                        <div>
-                            <FontAwesomeIcon icon={faCogs} className="mr-2"/>
-                            <span>
-                                {getMessage('SUBMISSION_EXECUTE_ON')}
-                            </span>
-                        </div>
-                        <div className="biswitch" onClick={changeExecutionMode}>
-                            <div className={`biswitch-option ${TaskSubmissionEvaluateOn.Client === executionMode ? 'is-active' : ''}`}>{getMessage('SUBMISSION_EXECUTE_ON_CLIENT')}</div>
-                            <Switch readOnly checked={TaskSubmissionEvaluateOn.Server === executionMode}/>
-                            <div className={`biswitch-option ${TaskSubmissionEvaluateOn.Server === executionMode ? 'is-active' : ''}`}>{getMessage('SUBMISSION_EXECUTE_ON_SERVER')}</div>
-                        </div>
-                    </div>}
                     {TaskSubmissionEvaluateOn.Client === executionMode && <StepperControls enabled={true}/>}
                     {TaskSubmissionEvaluateOn.Server === executionMode && <SubmissionControls/>}
+
+                    {!hasModes && true && <div className="execution-controls">
+                        <div className="execution-controls-dropdown">
+                            <FontAwesomeIcon icon={faCogs} className="mr-2"/>
+
+                            <Dropdown>
+                                <Dropdown.Toggle>
+                                    {capitalizeFirstLetter(getMessage(TaskSubmissionEvaluateOn.Client === executionMode ? 'SUBMISSION_EXECUTE_ON_CLIENT' : 'SUBMISSION_EXECUTE_ON_SERVER').s)}
+                                </Dropdown.Toggle>
+
+                                <Dropdown.Menu>
+                                    <Dropdown.Item key="client" onClick={() => changeExecutionMode(TaskSubmissionEvaluateOn.Client)}>{capitalizeFirstLetter(getMessage('SUBMISSION_EXECUTE_ON_CLIENT').s)}</Dropdown.Item>
+                                    <Dropdown.Item key="server" onClick={() => changeExecutionMode(TaskSubmissionEvaluateOn.Server)}>{capitalizeFirstLetter(getMessage('SUBMISSION_EXECUTE_ON_SERVER').s)}</Dropdown.Item>
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </div>
+                        <div>
+                            <Button
+                                className="quickalgo-button"
+                                disabled={isEvaluating}
+                                icon={isEvaluating ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
+                                onClick={submitSubmission}
+                            >
+                                {getMessage('SUBMISSION_EXECUTE_SUBMIT')}
+                            </Button>
+                        </div>
+                    </div>}
                 </div>}
             </div>}
 
