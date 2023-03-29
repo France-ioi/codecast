@@ -620,7 +620,7 @@ export class PrinterLib extends QuickAlgoLibrary {
 
     checkOutputHelper() {
         const currentOutputText = this.getOutputText();
-        let expectedLines = this.taskInfos.output.replace(/\s*$/,"").split("\n");
+        let expectedLines = String(this.taskInfos.output).replace(/\s*$/,"").split("\n");
         let actualLines = currentOutputText.replace(/\s*$/,"").split("\n");
 
         for (let iLine = 0; iLine < expectedLines.length && iLine < actualLines.length; iLine++) {

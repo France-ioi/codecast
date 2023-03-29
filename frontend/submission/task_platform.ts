@@ -150,7 +150,20 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
                 standardBlocks: {
                     includeAll: true,
                     // singleBlocks: ["controls_repeat", "controls_if"]
-                }
+                },
+                generatedBlocks: {
+                    printer: ["print", "read"]
+                },
+                variables: {},
+                // pythonAdditionalFunctions: ["len"]
+            },
+            checkEndEveryTurn: false,
+            checkEndCondition: function (context, lastTurn) {
+                console.log('check end condition');
+                if (!lastTurn) return;
+                context.checkOutputHelper();
+                context.success = true;
+                throw(window.languageStrings.messages.outputCorrect);
             },
         },
     };

@@ -18,7 +18,7 @@ export interface SubmissionResultSubTaskProps {
 export function TestsPaneListSubTask(props: SubmissionResultSubTaskProps) {
     const taskTests = useAppSelector(state => state.task.taskTests);
     const subTask = props.subTask;
-    const subTaskResult = props.submission ? props.submission.result.subTasks.find(submissionSubTask => submissionSubTask.subtaskId === subTask.id) : null;
+    const subTaskResult = props.submission && props.submission.result.subTasks ? props.submission.result.subTasks.find(submissionSubTask => submissionSubTask.subtaskId === subTask.id) : null;
     const [open, setOpen] = useState(false);
 
     const testsOrdered = [...taskTests.filter(test => test.subtaskId === subTask.id)];
