@@ -3,6 +3,7 @@
   line-height: 24px;
   text-align: center;
   background-color: #f1f2f7;
+  user-select: none;
 
   .test-title {
     min-height: 40px;
@@ -39,7 +40,6 @@
 
   .tests-selector-tab {
     flex: 1 0;
-    cursor: pointer;
     padding: 2px;
     position: relative;
     display: flex;
@@ -48,6 +48,10 @@
     align-items: center;
     color: #7c7c7c;
     font-weight: bold;
+
+    &.is-selectable {
+      cursor: pointer;
+    }
 
     &.is-active {
       box-shadow: 0 1px 0 0px #ccc;
@@ -111,6 +115,7 @@
     flex: 0 1;
     padding-left: 13px;
     padding-right: 15px;
+    cursor: pointer;
     color: var(--primary-color);
   }
 }

@@ -277,7 +277,7 @@ module.exports = {
     SUBMISSION_RESULTS_TITLE: 'Résultat des tests',
     SUBMISSION_RESULTS_EVALUATING: 'Évaluation en cours...',
     SUBMISSION_RESULTS_LABEL: 'Soumission en {platform}',
-    SUBMISSION_TEST_NUMBER: "Test n°{testNumber}",
+    SUBMISSION_TEST_NUMBER: "Test {testNumber}",
     SUBMISSION_USER_TEST_WARNING: "Attention : cette évaluation a été réalisée sur vos propres tests. Pour obtenir une note, n'oubliez pas de Valider votre réponse.",
     SUBMISSION_ERROR_COMPILATION: "Erreur de compilation :",
     SUBMISSION_ERROR_EXECUTION: "Erreur d'exécution :",

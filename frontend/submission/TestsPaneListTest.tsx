@@ -11,7 +11,9 @@ import {faHourglassHalf} from '@fortawesome/free-solid-svg-icons/faHourglassHalf
 import {IconDefinition} from '@fortawesome/fontawesome-svg-core';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {isServerSubmission, TaskSubmission, TaskSubmissionServerTestResult} from './submission';
-import {TaskTest} from '../task/task_slice';
+import {TaskTest, updateCurrentTestId} from '../task/task_slice';
+import {useDispatch} from 'react-redux';
+import {useAppSelector} from '../hooks';
 
 export interface SubmissionResultTestProps {
     index: number,
@@ -77,7 +79,9 @@ export const testErrorCodeData: {[property in SubmissionTestErrorCode]: ErrorCod
 
 export function TestsPaneListTest(props: SubmissionResultTestProps) {
     const test = props.test;
-    const testResult = props.submission ? props.submission.result.tests.find(test => test.testId === props.test.id) : null;
+    const currentTestId = useAppSelector(state => state.task.currentTestId);
+    const testResult = props.submission ? props.submission.result.tests.find(otherTest => otherTest.testId === test.id) : null;
+    const testIndex = useAppSelector(state => state.task.taskTests.findIndex(otherTest => otherTest.id === test.id));
 
     const testName = test.name ?? getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: props.index + 1});
     const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 100;
@@ -99,8 +103,14 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
         }
     }
 
+    const dispatch = useDispatch();
+
+    const selectTest = () => {
+        dispatch(updateCurrentTestId({testId: testIndex}));
+    };
+
     return (
-        <div className="submission-result-test">
+        <div className={`submission-result-test ${testIndex === currentTestId ? 'is-active' : ''}`} onClick={selectTest}>
             {testResult && errorCodeData && <div className="submission-result-icon-container" style={{backgroundColor: errorCodeData.color}}>
                 <FontAwesomeIcon icon={errorCodeData.icon}/>
             </div>}

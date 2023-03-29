@@ -91,6 +91,30 @@ export function TaskTestsSelector() {
 
     const tooManyTests = taskTests.length > 3;
 
+    const getTestName = (test: TaskTest, index: number) => {
+        const subTask = null !== test.subtaskId && currentTask.subTasks && currentTask.subTasks.length ? currentTask.subTasks.find(subTask => subTask.id === test.subtaskId) : null;
+        const parts = [];
+        if (subTask) {
+            parts.push(subTask.name);
+        }
+
+        let testName = test.name;
+        if (!testName) {
+            let testNumber;
+            if (null !== subTask) {
+                testNumber = taskTests.filter(otherTest => otherTest.subtaskId === subTask.id).findIndex(otherTest => otherTest.id === test.id);
+            } else  {
+                testNumber = index;
+            }
+
+            testName = getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: testNumber + 1});
+        }
+
+        parts.push(testName);
+
+        return parts.join(' - ');
+    };
+
     return (
         <div className="tests-selector">
             <div
@@ -100,11 +124,11 @@ export function TaskTestsSelector() {
                     <FontAwesomeIcon icon={faList}/>
                 </span>
             </div>
-            {Object.entries(tooManyTests ? {[currentTestId]: taskTestsByIndex[currentTestId]} : taskTestsByIndex).map(([index, testData]) =>
+            {Object.entries(tooManyTests ? (null !== currentTestId ? {[currentTestId]: taskTestsByIndex[currentTestId]} : {}) : taskTestsByIndex).map(([index, testData]) =>
                 <div
                     key={index}
-                    className={`tests-selector-tab${currentTestId === Number(index) ? ' is-active' : ''}${testStatuses && testStatuses[index] ? ' status-' + testStatuses[index] : ''}`}
-                    onClick={() => selectTest(Number(index))}>
+                    className={`tests-selector-tab${!tooManyTests ? ' is-selectable' : ''}${currentTestId === Number(index) ? ' is-active' : ''}${testStatuses && testStatuses[index] ? ' status-' + testStatuses[index] : ''}`}
+                    onClick={!tooManyTests ? () => selectTest(Number(index)) : () => {}}>
                     {getTestThumbNail(Number(index)) && <div className="test-thumbnail">
                         <img
                             src={getTestThumbNail(Number(index))}
@@ -118,7 +142,9 @@ export function TaskTestsSelector() {
                             </div>}
                         </span>}
 
-                        <span className="test-title-content">{getMessage('TESTS_TAB_TITLE').format({index: Number(index) + 1})}</span>
+                        <span className="test-title-content">
+                            {getTestName(testData, Number(index))}
+                        </span>
 
                         {tooManyTests && <span className="test-index">
                             {Number(index) + 1}/{taskTests.length}

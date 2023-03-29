@@ -70,8 +70,12 @@
   display: flex;
   align-items: center;
   padding: 8px 15px 8px 10px;
+  cursor: pointer;
   &:not(:first-child) {
     border-top: solid 1px #cecece;
+  }
+  &.is-active {
+    background: white;
   }
 }
 

@@ -224,7 +224,6 @@ class TaskSubmissionExecutor {
             return {score: 0};
         }
 
-        console.log('submission results', submissionResult);
         yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result: submissionResult}}));
 
         return {
