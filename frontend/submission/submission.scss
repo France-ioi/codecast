@@ -259,6 +259,12 @@
 
   .submission-label-name {
     flex: 1 0;
+    p {
+      margin-bottom: 0;
+    }
+    .submission-label-date {
+      font-size: 0.9em;
+    }
   }
 }
 

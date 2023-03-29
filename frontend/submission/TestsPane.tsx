@@ -12,6 +12,8 @@ import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {capitalizeFirstLetter} from '../common/utils';
 import {isServerSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission';
+import {DateTime} from 'luxon';
+import {faClock} from '@fortawesome/free-solid-svg-icons';
 
 export function TestsPane() {
     const submissionResults = useAppSelector(state => state.submission.taskSubmissions);
@@ -22,6 +24,8 @@ export function TestsPane() {
     const serverSubmissionResults = submissionResults.filter(submission => TaskSubmissionEvaluateOn.Server === submission.type);
 
     const getSubmissionLabel = (submissionResult: TaskSubmissionServer) => {
+        const dateTime = DateTime.fromISO(submissionResult.date);
+
         return <div className="submission-label">
             {submissionResult.evaluated ?
                 <div className="submission-label-icon" style={{'--progression': `${Math.floor(submissionResult.result.score / 100 * 360)}deg`} as React.CSSProperties}>
@@ -35,7 +39,11 @@ export function TestsPane() {
                 </div>
             }
             <div className="submission-label-name">
-                {getMessage('SUBMISSION_RESULTS_LABEL').format({platform: capitalizeFirstLetter(platform)})}
+                <p>{getMessage('SUBMISSION_RESULTS_LABEL').format({platform: capitalizeFirstLetter(platform)})}</p>
+                <p className="submission-label-date">
+                    <FontAwesomeIcon icon={faClock}/>
+                    <span className="ml-1">{dateTime.toLocaleString(DateTime.DATETIME_SHORT)}</span>
+                </p>
             </div>
         </div>
     };

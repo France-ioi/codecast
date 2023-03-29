@@ -1,7 +1,6 @@
 import {TralalereBox} from "./TralalereBox";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faTimes} from "@fortawesome/free-solid-svg-icons";
-import {faLightbulb} from "@fortawesome/free-regular-svg-icons";
 import {TaskHints} from "../task/hints/TaskHints";
 import {Dialog, Icon} from "@blueprintjs/core";
 import {TralalereControls} from "./TralalereControls";
