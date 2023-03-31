@@ -1,10 +1,10 @@
 import React from "react";
-import {updateCurrentTestId} from "./task_slice";
+import {updateCurrentTestId} from "../task/task_slice";
 import {useDispatch} from "react-redux";
 import {ActionTypes} from "../stepper/actionTypes";
 import {StepperStepMode} from "../stepper";
 import {getMessage} from "../lang";
-import {TaskSubmissionResultPayload} from '../submission/submission';
+import {TaskSubmissionResultPayload} from './submission';
 
 export interface TaskTestsSubmissionResultOverviewProps {
     results: TaskSubmissionResultPayload[],

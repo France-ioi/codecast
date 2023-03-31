@@ -264,7 +264,7 @@ function* taskLoadSaga(app: App, action) {
     state = yield* appSelect();
     const source = selectAnswer(state);
     if ((!source || (typeof source === 'string' && !source.length)) && currentTask) {
-        const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment);
+        const defaultSourceCode = getDefaultSourceCode(state.options.platform, state.environment, currentTask);
         if (null !== defaultSourceCode) {
             log.getLogger('task').debug('Load default source code', defaultSourceCode);
             const platform = yield* appSelect(state => state.options.platform);
@@ -386,15 +386,15 @@ function* taskChangeLevelSaga({payload}: ReturnType<typeof taskChangeLevel>) {
     const taskToken = getTaskTokenForLevel(newLevel, randomSeed);
     yield* put(platformTokenUpdated(taskToken));
 
+    const currentTask = state.task.currentTask;
     // Reload answer
     let newLevelAnswer = yield* appSelect(state => state.platform.levels[newLevel].answer);
     log.getLogger('task').debug('new level answer', newLevelAnswer);
     if (!newLevelAnswer || (typeof newLevelAnswer === 'string' && !newLevelAnswer.length)) {
-        newLevelAnswer = getDefaultSourceCode(state.options.platform, state.environment);
+        newLevelAnswer = getDefaultSourceCode(state.options.platform, state.environment, currentTask);
     }
     yield* put(platformAnswerLoaded(newLevelAnswer));
 
-    const currentTask = state.task.currentTask;
     const tests = extractTestsFromTask(currentTask, newLevel);
     log.getLogger('task').debug('[task.currentLevelChange] update task tests', tests);
     yield* put(updateTaskTests(tests));

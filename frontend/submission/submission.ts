@@ -1,6 +1,6 @@
 import {Bundle} from "../linker";
-import {call, takeEvery} from "typed-redux-saga";
-import {AppAction} from "../store";
+import {call, put, takeEvery} from "typed-redux-saga";
+import {AppAction, AppStore} from "../store";
 import {getTaskAnswerAggregated, platformApi, PlatformTaskGradingParameters} from "../task/platform/platform";
 import {
     SubmissionNormalized,
@@ -12,6 +12,9 @@ import {taskSubmissionExecutor} from './task_submission';
 import {appSelect} from '../hooks';
 import {selectAnswer} from '../task/selectors';
 import stringify from 'json-stable-stringify-without-jsonify';
+import {TaskState, updateCurrentTestId} from '../task/task_slice';
+import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
+import {getMessage} from '../lang';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,
@@ -89,12 +92,125 @@ export const submissionGradeAnswerServer = (): SubmissionGradeAnswerServerAction
     type: SubmissionActionTypes.SubmissionGradeAnswerServer,
 });
 
+export function selectCurrentServerSubmission(state: AppStore) {
+    if (null === state.submission.currentSubmissionId) {
+        return null;
+    }
+
+    const currentSubmission = state.submission.taskSubmissions[state.submission.currentSubmissionId];
+
+    return TaskSubmissionEvaluateOn.Server === currentSubmission.type ? currentSubmission : null;
+}
+
+export interface TestResultDiffLog {
+    msg: string,
+    solutionOutputLength: number,
+    diffRow: number,
+    diffCol: number,
+    displayedSolutionOutput: string,
+    displayedExpectedOutput: string,
+    truncatedBefore: boolean,
+    truncatedAfter: boolean,
+    excerptRow: number,
+    excerptCol: number,
+}
+
+export function getDiffHtmlFromLog(log: TestResultDiffLog) {
+    let resSol = '';
+    let resExp = '';
+    if (log.excerptRow > 1) {
+        resSol += '...\n';
+        resExp += '...\n';
+    }
+    let iRow;
+    let realdiffRow = log.diffRow - log.excerptRow;
+    let rowsSol = log.displayedSolutionOutput.split('\n');
+    let rowsExp = log.displayedExpectedOutput.split('\n');
+
+    // Rows before the diff
+    for (iRow = 0; iRow < realdiffRow; iRow++) {
+        resSol += rowsSol[iRow]+'\n';
+        resExp += rowsExp[iRow]+'\n';
+    }
+
+    // Row with the diff
+    let diffRowSol = realdiffRow < rowsSol.length ? rowsSol[realdiffRow] : '';
+    let diffCol = log.diffCol-1
+    // Highlight only the first different character
+    if (diffCol < diffRowSol.length) {
+        resSol += diffRowSol.substring(0, diffCol);
+        resSol += '<span class="errorInLog">';
+        resSol += diffRowSol.substring(diffCol, diffCol+1);
+        resSol += '</span>';
+        resSol += diffRowSol.substring(diffCol+1);
+    } else {
+        // There is no character in the solution on that position, we add a space
+        resSol += diffRowSol;
+        resSol += '<span class="errorInLog">&nbsp;</span>';
+    }
+    resSol += '\n';
+    resExp += realdiffRow < rowsExp.length ? (rowsExp[realdiffRow]+'\n') : '';
+
+    // Rows after the diff
+    for (iRow = realdiffRow+1; iRow < rowsSol.length; iRow++) {
+        resSol += iRow < rowsSol.length ? (rowsSol[iRow]+'\n') : '';
+    }
+    for (iRow = realdiffRow+1; iRow < rowsExp.length; iRow++) {
+        resExp += iRow < rowsExp.length ? (rowsExp[iRow]+'\n') : '';
+    }
+
+    if (log.truncatedAfter) {
+        resSol += '... ';
+        resExp += '... ';
+    }
+
+    return {
+        resSol,
+        resExp,
+    }
+}
+
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
         yield* takeEvery(SubmissionActionTypes.SubmissionTriggerPlatformValidate, function* (action: SubmissionTriggerPlatformValidateAction) {
             yield* call([platformApi, platformApi.validate], 'done');
             if (window.SrlLogger) {
                 window.SrlLogger.validation(100, 'none', 0);
+            }
+        });
+
+        // @ts-ignore
+        yield* takeEvery(updateCurrentTestId.type, function* ({payload}) {
+            const newTest = yield* appSelect(state => state.task.taskTests[state.task.currentTestId]);
+            const submission = yield* appSelect(selectCurrentServerSubmission);
+            if (null !== submission && null !== newTest && isServerSubmission(submission)) {
+                const testResult = submission.result.tests.find(test => test.testId === newTest.id);
+                if (undefined !== testResult) {
+                    console.log('the test result', testResult);
+                    if (testResult.errorMessage) {
+                        console.log('display error', testResult.errorMessage);
+                        yield* put(stepperDisplayError(testResult.errorMessage));
+                    } else if (testResult.noFeedback) {
+                        yield* put(stepperDisplayError(getMessage('SUBMISSION_RESULT_NO_FEEDBACK').s));
+                    } else if (testResult.log) {
+                        try {
+                            // Check if first line of the log is JSON data containing a diff
+                            const log = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
+                            const error = {
+                                type: 'task-submission-test-result-diff',
+                                props: {
+                                    log,
+                                }
+                            };
+
+                            yield* put(stepperDisplayError(error));
+                        } catch (e) {
+                            yield* put(stepperDisplayError(testResult.log));
+                        }
+                    } else {
+                        yield* put(stepperClearError());
+                    }
+                }
             }
         });
 

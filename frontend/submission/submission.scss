@@ -260,3 +260,27 @@
 .dropdown-toggle .submission-label-icon:after {
   background: #f2f2f2;
 }
+
+.submission-test-result-diff {
+  .errorInLog {
+    background-color: red;
+    color: #fff;
+    font-weight: 900;
+  }
+
+  p {
+    margin-bottom: .5rem;
+  }
+
+  pre {
+    display: block;
+    padding: 10px;
+    margin: 0 0 10px;
+    color: #333;
+    word-break: break-all;
+    word-wrap: break-word;
+    background-color: #f5f5f5 !important;
+    border: 1px solid #ccc !important;
+    border-radius: 4px;
+  }
+}

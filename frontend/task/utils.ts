@@ -5,6 +5,7 @@ import {getMessage} from "../lang";
 import {AppStore, CodecastPlatform, platformsList} from "../store";
 import {checkBlocklyCode, getBlocklyBlocksUsage, hasBlockPlatform} from "../stepper/js";
 import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
+import {isServerTask, Task} from './task_slice';
 
 export enum TaskPlatformMode {
     Source = 'source',
@@ -119,10 +120,10 @@ export function getBlocksUsage(answer, platform: CodecastPlatform) {
     return null;
 }
 
-export function getDefaultSourceCode(platform: CodecastPlatform, environment: string) {
+export function getDefaultSourceCode(platform: CodecastPlatform, environment: string, currentTask: Task) {
     const context = quickAlgoLibraries.getContext(null, environment);
     if (CodecastPlatform.Python === platform) {
-        if (context) {
+        if (context && !isServerTask(currentTask)) {
             const availableModules = getAvailableModules(context);
             let content = '';
             for (let i = 0; i < availableModules.length; i++) {

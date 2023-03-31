@@ -13,6 +13,7 @@ import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
 import {TaskServer, TaskTestGroupType} from '../submission/task_platform';
+import {TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from '../submission/submission';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -84,6 +85,10 @@ export interface QuickalgoTask {
 }
 
 export type Task = QuickalgoTask & Partial<TaskServer>;
+
+export function isServerTask(object: Task): boolean {
+    return null !== object.id;
+}
 
 export const taskInitialState = {
     currentTask: null,

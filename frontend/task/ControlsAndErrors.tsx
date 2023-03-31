@@ -9,19 +9,19 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {faCogs, faFileAlt, faPencilAlt, faPlay, faSpinner} from "@fortawesome/free-solid-svg-icons";
 import {useAppSelector} from "../hooks";
 import {toHtml} from "../utils/sanitize";
-import {TaskTestsSubmissionResultOverview} from "./TaskTestsSubmissionResultOverview";
+import {TaskTestsSubmissionResultOverview} from "../submission/TaskTestsSubmissionResultOverview";
 import {getMessage} from "../lang";
 import {DraggableDialog} from "../common/DraggableDialog";
-import {submissionChangeExecutionMode, SubmissionExecutionScope} from "../submission/submission_slice";
+import {submissionChangeExecutionMode} from "../submission/submission_slice";
 import {SubmissionControls} from "../submission/SubmissionControls";
 import {
     submissionGradeAnswerServer,
-    submissionTriggerPlatformValidate,
     TaskSubmissionEvaluateOn
 } from '../submission/submission';
 import { Dropdown } from "react-bootstrap";
-import {capitalizeFirstLetter} from '../common/utils';
+import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {StepperStatus} from '../stepper';
+import {SubmissionTestResultDiff} from '../submission/SubmissionTestResultDiff';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -54,11 +54,13 @@ export function ControlsAndErrors() {
     if (hasError) {
         if ('task-tests-submission-results-overview' === stepperError.type) {
             error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
+        } else if ('task-submission-test-result-diff' === stepperError.type) {
+            error = <SubmissionTestResultDiff {...stepperError.props}/>;
         } else if ('compilation' === stepperError.type) {
             const stepperErrorHtml = toHtml(stepperError.content);
             error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;
         } else {
-            const stepperErrorHtml = toHtml(stepperError);
+            const stepperErrorHtml = toHtml(nl2br(stepperError));
             error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
         }
     // } else if (blocksUsage && blocksUsage.error) {

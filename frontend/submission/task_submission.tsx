@@ -69,13 +69,13 @@ class TaskSubmissionExecutor {
         }
 
         if (!currentSubmissionId) {
-            log.getLogger('submission').log('[submission] Create new submission');
+            log.getLogger('submission').log('[submission] Create new submission', tests);
             yield* put(submissionAddNewTaskSubmission({
                 evaluated: false,
                 date: new Date().toISOString(),
                 type: TaskSubmissionEvaluateOn.Client,
                 result: {
-                    tests: tests.map((test, testIndex) => ({executing: false, score: 0, testId: String(testIndex), errorCode: null})),
+                    tests: tests.map((test, testIndex) => ({executing: false, score: 0, testId: test.id ? test.id : String(testIndex), errorCode: null})),
                 },
             }));
 
