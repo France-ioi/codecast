@@ -21,6 +21,7 @@ import {
 } from '../submission/submission';
 import { Dropdown } from "react-bootstrap";
 import {capitalizeFirstLetter} from '../common/utils';
+import {StepperStatus} from '../stepper';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -29,6 +30,7 @@ export function ControlsAndErrors() {
     const currentTask = useAppSelector(state => state.task.currentTask);
     const executionMode = useAppSelector(state => state.submission.executionMode);
     const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
+    const stepperStatus = useAppSelector(state => state.stepper.status);
     const isEvaluating = lastSubmission && !lastSubmission.evaluated;
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
@@ -127,7 +129,7 @@ export function ControlsAndErrors() {
                     {TaskSubmissionEvaluateOn.Client === executionMode && <StepperControls enabled={true}/>}
                     {TaskSubmissionEvaluateOn.Server === executionMode && <SubmissionControls/>}
 
-                    {!hasModes && true && <div className="execution-controls">
+                    {!hasModes && <div className="execution-controls">
                         <div className="execution-controls-dropdown">
                             <FontAwesomeIcon icon={faCogs} className="mr-2"/>
 
@@ -145,7 +147,7 @@ export function ControlsAndErrors() {
                         <div>
                             <Button
                                 className="quickalgo-button"
-                                disabled={isEvaluating}
+                                disabled={isEvaluating || StepperStatus.Clear !== stepperStatus}
                                 icon={isEvaluating ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
                                 onClick={submitSubmission}
                             >

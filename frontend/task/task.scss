@@ -817,6 +817,10 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   .bp3-icon {
     color: #fff;
   }
+  &[disabled] {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
 }
 
 .context-visualization-images {

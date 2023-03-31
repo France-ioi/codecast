@@ -446,12 +446,13 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
             const currentTest = selectCurrentTest(state);
             log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', currentTest, contextState);
             context.resetAndReloadState(currentTest, state, contextState);
-            yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
         } else {
             const currentTest = selectCurrentTest(state);
             log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test without state', currentTest);
             context.resetAndReloadState(currentTest, state);
         }
+
+        yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
     }
 }
 
