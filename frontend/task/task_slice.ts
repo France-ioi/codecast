@@ -87,7 +87,7 @@ export interface QuickalgoTask {
 export type Task = QuickalgoTask & Partial<TaskServer>;
 
 export function isServerTask(object: Task): boolean {
-    return null !== object.id;
+    return null !== object.id && undefined !== object.id;
 }
 
 export const taskInitialState = {

@@ -22,6 +22,7 @@ import { Dropdown } from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {StepperStatus} from '../stepper';
 import {SubmissionTestResultDiff} from '../submission/SubmissionTestResultDiff';
+import {isServerTask} from './task_slice';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -131,7 +132,7 @@ export function ControlsAndErrors() {
                     {TaskSubmissionEvaluateOn.Client === executionMode && <StepperControls enabled={true}/>}
                     {TaskSubmissionEvaluateOn.Server === executionMode && <SubmissionControls/>}
 
-                    {!hasModes && <div className="execution-controls">
+                    {!hasModes && null !== currentTask && isServerTask(currentTask) && <div className="execution-controls">
                         <div className="execution-controls-dropdown">
                             <FontAwesomeIcon icon={faCogs} className="mr-2"/>
 
