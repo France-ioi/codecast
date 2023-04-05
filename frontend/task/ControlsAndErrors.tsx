@@ -129,7 +129,7 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    {TaskSubmissionEvaluateOn.Client === executionMode && <StepperControls enabled={true}/>}
+                    {TaskSubmissionEvaluateOn.Client === executionMode && <div className="stepper-controls-container-flex"><StepperControls enabled={true}/></div>}
                     {TaskSubmissionEvaluateOn.Server === executionMode && <SubmissionControls/>}
 
                     {!hasModes && null !== currentTask && isServerTask(currentTask) && <div className="execution-controls">

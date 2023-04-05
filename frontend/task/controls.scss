@@ -70,6 +70,10 @@
   justify-content: center;
 }
 
+.task .stepper-controls-container-flex {
+  display: flex;
+}
+
 .task .execution-controls {
   width: 100%;
   display: flex;
