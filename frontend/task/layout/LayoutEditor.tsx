@@ -10,7 +10,7 @@ import {getContextBlocksDataSelector} from "../blocks/blocks";
 import {taskSetBlocksPanelCollapsed} from "../task_slice";
 import {useDispatch} from "react-redux";
 import {BlocksUsage} from "../blocks/BlocksUsage";
-import {CodecastPlatform} from "../../store";
+import {CodecastPlatform, platformsList} from "../../store";
 
 export interface LayoutEditorProps {
     style?: any,
@@ -21,19 +21,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const platform = options.platform;
     const currentTask = useAppSelector(state => state.task.currentTask);
     const blocksCollapsed = useAppSelector(state => state.task.blocksPanelCollapsed);
-    let sourceMode;
-    switch (platform) {
-        case CodecastPlatform.Arduino:
-            sourceMode = 'arduino';
-            break;
-        case CodecastPlatform.Python:
-            sourceMode = 'python';
-            break;
-        default:
-            sourceMode = 'c_cpp';
-            break;
-    }
-
+    const sourceMode = platformsList[platform].aceSourceMode;
     const player = useAppSelector(state => getPlayerState(state));
     const preventInput = player.isPlaying;
 

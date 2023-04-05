@@ -14,6 +14,7 @@ import {IoMode} from "../stepper/io";
 import {getMessage} from "../lang";
 import {getJsLibLoaded} from "../task/libs/import_modules";
 import {hasBlockPlatform} from "../stepper/js";
+import {platformsList} from '../store';
 
 interface SettingsDialogProps {
     open: boolean,
@@ -85,11 +86,9 @@ export function SettingsDialog(props: SettingsDialogProps) {
                             {getMessage('PLATFORM_SETTING')}
                             <div className='bp3-select'>
                                 <select onChange={setPlatform} value={platform}>
-                                    <option value='python'>{getMessage('PLATFORM_PYTHON')}</option>
-                                    <option value='unix'>{getMessage('PLATFORM_UNIX')}</option>
-                                    <option value='arduino'>{getMessage('PLATFORM_ARDUINO')}</option>
-                                    <option value='blockly'>{getMessage('PLATFORM_BLOCKLY')}</option>
-                                    <option value='scratch'>{getMessage('PLATFORM_SCRATCH')}</option>
+                                    {Object.keys(platformsList).map(platform =>
+                                        <option key={platform} value={platform}>{getMessage(`PLATFORM_${platform.toLocaleUpperCase()}`)}</option>
+                                    )}
                                 </select>
                             </div>
                         </label>

@@ -34,15 +34,23 @@ export enum CodecastPlatform {
     Arduino = 'arduino',
     Blockly = 'blockly',
     Scratch = 'scratch',
+    SmartPy = 'smartpy',
 }
 
-export const platformsList = [
-    CodecastPlatform.Python,
-    CodecastPlatform.Unix,
-    CodecastPlatform.Arduino,
-    CodecastPlatform.Blockly,
-    CodecastPlatform.Scratch,
-];
+export interface PlatformData {
+    needsCompilation?: boolean,
+    hasMicroSteps?: boolean,
+    aceSourceMode?: string,
+}
+
+export const platformsList: {[key in CodecastPlatform]: PlatformData} = {
+    [CodecastPlatform.Python]: {aceSourceMode: 'python'},
+    [CodecastPlatform.Unix]: {needsCompilation: true, hasMicroSteps: true, aceSourceMode: 'c_cpp'},
+    [CodecastPlatform.Arduino]: {needsCompilation: true, hasMicroSteps: true, aceSourceMode: 'arduino'},
+    [CodecastPlatform.Blockly]: {aceSourceMode: 'text'},
+    [CodecastPlatform.Scratch]: {aceSourceMode: 'text'},
+    [CodecastPlatform.SmartPy]: {aceSourceMode: 'python'},
+};
 
 export enum CodecastOptionsMode {
     Edit = 'edit',

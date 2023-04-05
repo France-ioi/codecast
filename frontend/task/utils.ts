@@ -148,7 +148,7 @@ export function getCurrentImmerState(object) {
 
 export function formatTaskInstructions(instructions: string, platform: CodecastPlatform, taskLevel?: TaskLevelName) {
     const instructionsJQuery = window.jQuery(`<div>${instructions}</div>`);
-    for (let availablePlatform of platformsList) {
+    for (let availablePlatform of Object.keys(platformsList)) {
         if (platform !== availablePlatform) {
             instructionsJQuery.find(`[data-lang~="${availablePlatform}"]:not([data-lang~="${platform}"]`).remove();
         }
