@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
-import {Button, FormGroup, HTMLSelect, Icon, Intent, ProgressBar, Spinner} from "@blueprintjs/core";
+import {Button, ControlGroup, FormGroup, HTMLSelect, Icon, Intent, ProgressBar, Spinner} from "@blueprintjs/core";
 import {ActionTypes} from "./actionTypes";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {useDispatch} from "react-redux";
 import {SaveStep} from "./save_screen";
 import {useAppSelector} from "../hooks";
@@ -80,6 +81,10 @@ export function SaveScreen(props: SaveScreenProps) {
         }
     };
 
+    const onChangeUser = () => {
+        dispatch({type: CommonActionTypes.LogoutFeedback});
+    };
+
     /* TODO: select target among user grants */
     return (
         <form className="save-screen">
@@ -115,7 +120,16 @@ export function SaveScreen(props: SaveScreenProps) {
                 />
             </FormGroup>}
             <FormGroup label={getMessage('UPLOADING_TARGET')}>
-                <HTMLSelect options={grantOptions} value={targetUrl} onChange={handleTargetChange}/>
+                <ControlGroup>
+                    <HTMLSelect options={grantOptions} value={targetUrl} onChange={handleTargetChange}/>
+                    <Button
+                        onClick={onChangeUser}
+                        intent={Intent.NONE}
+                        icon='user'
+                        className="ml-2"
+                        text={getMessage('USER_CHANGE_USER')}
+                    />
+                </ControlGroup>
             </FormGroup>
             <div className="encoding-status">
                 {busy ?

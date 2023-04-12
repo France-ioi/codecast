@@ -44,7 +44,7 @@ module.exports = {
     UPLOADING_URL_EVENTS: "URL événements",
     UPLOADING_URL_AUDIO_MP3: "URL audio (mp3)",
     UPLOADING_URL_AUDIO_WAV: "URL audio (wav)",
-    UPLOADING_TARGET: "Répertoire cible :",
+    UPLOADING_TARGET: "Répertoire cible",
     UPLOADING_PREPARE_UPLOAD: "Préparation de l'enregistrement...",
     UPLOADING_UPLOAD_EVENTS: "Envoi des évènements en cours...",
     UPLOADING_ASSEMBLE_AUDIO: "Assemblage de l'audio en cours...",
@@ -138,6 +138,7 @@ module.exports = {
     PROGRAM_MISSING_LIB_FAMILIAR: "Tu dois mettre la ligne {line} dans ton programme.",
 
     USER_SELECT_LOGIN_METHOD: "Choisissez une méthode de connexion :",
+    USER_CHANGE_USER: "Déconnexion",
 
     EDITOR_SPLIT: 'Diviser',
     EDITOR_MERGE: 'Fusionner',
