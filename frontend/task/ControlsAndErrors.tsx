@@ -138,10 +138,9 @@ export function ControlsAndErrors() {
 
                     {!hasModes && null !== currentTask && isServerTask(currentTask) && <div className="execution-controls">
                         <div className="execution-controls-dropdown">
-                            <FontAwesomeIcon icon={faCogs} className="mr-2"/>
-
                             <Dropdown>
                                 <Dropdown.Toggle>
+                                    <FontAwesomeIcon icon={faCogs} className="mr-2"/>
                                     {capitalizeFirstLetter(getMessage(TaskSubmissionEvaluateOn.Client === executionMode ? 'SUBMISSION_EXECUTE_ON_CLIENT' : 'SUBMISSION_EXECUTE_ON_SERVER').s)}
                                 </Dropdown.Toggle>
 
@@ -153,7 +152,7 @@ export function ControlsAndErrors() {
                         </div>
                         <div>
                             <Button
-                                className="quickalgo-button"
+                                className="quickalgo-button is-medium"
                                 disabled={isEvaluating || StepperStatus.Clear !== stepperStatus}
                                 icon={isEvaluating ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : null}
                                 onClick={submitSubmission}
