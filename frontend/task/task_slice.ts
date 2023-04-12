@@ -89,6 +89,23 @@ export function isServerTask(object: Task): boolean {
     return null !== object.id && undefined !== object.id;
 }
 
+export function isServerTest(object: TaskTest): boolean {
+    return null !== object.id && undefined !== object.id;
+}
+
+// TODO: update this function when we will have a "public" field in tm_task_tests
+export function isTestPublic(task: Task, test: TaskTest): boolean {
+    if (!isServerTest(test)) {
+        return true;
+    }
+
+    if (task && task.gridInfos && 'printer' === task.gridInfos.context) {
+        return !(test && test.data && !test.data.input);
+    }
+
+    return true;
+}
+
 export const taskInitialState = {
     currentTask: null,
     currentLevel: null,

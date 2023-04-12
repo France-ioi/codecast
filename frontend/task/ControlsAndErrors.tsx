@@ -21,13 +21,15 @@ import {
 import { Dropdown } from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {StepperStatus} from '../stepper';
-import {isServerTask} from './task_slice';
+import {isServerTask, isTestPublic} from './task_slice';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
     const layoutType = useAppSelector(state => state.layout.type);
     const {showStepper} = useAppSelector(state => state.options);
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const currentTestId = useAppSelector(state => state.task.currentTestId);
+    const taskTests = useAppSelector(state => state.task.taskTests);
     const executionMode = useAppSelector(state => state.submission.executionMode);
     const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
     const stepperStatus = useAppSelector(state => state.stepper.status);
@@ -94,6 +96,8 @@ export function ControlsAndErrors() {
         dispatch(submissionGradeAnswerServer());
     };
 
+    const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
+
     return (
         <div className="controls-and-errors">
             {(showStepper || hasModes) && <div className="mode-selector">
@@ -129,7 +133,7 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    {TaskSubmissionEvaluateOn.Client === executionMode && <div className="stepper-controls-container-flex"><StepperControls enabled={true}/></div>}
+                    {TaskSubmissionEvaluateOn.Client === executionMode && <div className="stepper-controls-container-flex"><StepperControls enabled={currentTestPublic}/></div>}
                     {TaskSubmissionEvaluateOn.Server === executionMode && <SubmissionControls/>}
 
                     {!hasModes && null !== currentTask && isServerTask(currentTask) && <div className="execution-controls">

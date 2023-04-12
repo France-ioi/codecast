@@ -184,6 +184,7 @@ module.exports = {
     TASK_DOCUMENTATION_LOAD_ERROR: "Le contenu ne peut pas être affiché car la connexion au sujet a été coupée. Fermez cet onglet et réouvrez la documentation depuis le sujet.",
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualisation {number}",
+    TASK_VISUALIZATION_NOT_PUBLIC: "Le contenu de ce test est volontairement indisponible.",
     TASK_LEVEL: 'Version',
     TASK_LEVEL_VERSION: "{count} étoiles",
     TASK_LEVEL_SUCCESS_NEXT_BUTTON: "Passer à la suite",

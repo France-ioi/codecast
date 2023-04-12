@@ -181,6 +181,7 @@ module.exports = {
     TASK_EDITOR: 'Editor',
     TASK_IO: 'Terminal',
     TASK_VISUALIZATION: "Visualization {number}",
+    TASK_VISUALIZATION_NOT_PUBLIC: "The content of this test is unavailable by design.",
     TASK_LEVEL: 'Version',
     TASK_LEVEL_VERSION: "{count} stars",
     TASK_LEVEL_SUCCESS_NEXT_BUTTON: "Go to next version",
