@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {StepperControls} from "../stepper/views/StepperControls";
 import {stepperClearError} from "../stepper/actionTypes";
 import {useDispatch} from "react-redux";
-import {Button, Icon, Switch} from "@blueprintjs/core";
+import {Button, Icon} from "@blueprintjs/core";
 import {LayoutMobileMode, LayoutType} from "./layout/layout";
 import {ActionTypes} from "./layout/actionTypes";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -21,7 +21,6 @@ import {
 import { Dropdown } from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {StepperStatus} from '../stepper';
-import {SubmissionTestResultDiff} from '../submission/SubmissionTestResultDiff';
 import {isServerTask} from './task_slice';
 
 export function ControlsAndErrors() {
@@ -56,7 +55,8 @@ export function ControlsAndErrors() {
         if ('task-tests-submission-results-overview' === stepperError.type) {
             error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
         } else if ('task-submission-test-result-diff' === stepperError.type) {
-            error = <SubmissionTestResultDiff {...stepperError.props}/>;
+            const stepperErrorHtml = toHtml(nl2br(stepperError.error));
+            error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
         } else if ('compilation' === stepperError.type) {
             const stepperErrorHtml = toHtml(stepperError.content);
             error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;

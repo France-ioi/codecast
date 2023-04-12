@@ -103,71 +103,16 @@ export function selectCurrentServerSubmission(state: AppStore) {
 }
 
 export interface TestResultDiffLog {
-    msg: string,
-    solutionOutputLength: number,
+    msg?: string,
+    solutionOutputLength?: number,
     diffRow: number,
     diffCol: number,
     displayedSolutionOutput: string,
     displayedExpectedOutput: string,
-    truncatedBefore: boolean,
-    truncatedAfter: boolean,
+    truncatedBefore?: boolean,
+    truncatedAfter?: boolean,
     excerptRow: number,
     excerptCol: number,
-}
-
-export function getDiffHtmlFromLog(log: TestResultDiffLog) {
-    let resSol = '';
-    let resExp = '';
-    if (log.excerptRow > 1) {
-        resSol += '...\n';
-        resExp += '...\n';
-    }
-    let iRow;
-    let realdiffRow = log.diffRow - log.excerptRow;
-    let rowsSol = log.displayedSolutionOutput.split('\n');
-    let rowsExp = log.displayedExpectedOutput.split('\n');
-
-    // Rows before the diff
-    for (iRow = 0; iRow < realdiffRow; iRow++) {
-        resSol += rowsSol[iRow]+'\n';
-        resExp += rowsExp[iRow]+'\n';
-    }
-
-    // Row with the diff
-    let diffRowSol = realdiffRow < rowsSol.length ? rowsSol[realdiffRow] : '';
-    let diffCol = log.diffCol-1
-    // Highlight only the first different character
-    if (diffCol < diffRowSol.length) {
-        resSol += diffRowSol.substring(0, diffCol);
-        resSol += '<span class="errorInLog">';
-        resSol += diffRowSol.substring(diffCol, diffCol+1);
-        resSol += '</span>';
-        resSol += diffRowSol.substring(diffCol+1);
-    } else {
-        // There is no character in the solution on that position, we add a space
-        resSol += diffRowSol;
-        resSol += '<span class="errorInLog">&nbsp;</span>';
-    }
-    resSol += '\n';
-    resExp += realdiffRow < rowsExp.length ? (rowsExp[realdiffRow]+'\n') : '';
-
-    // Rows after the diff
-    for (iRow = realdiffRow+1; iRow < rowsSol.length; iRow++) {
-        resSol += iRow < rowsSol.length ? (rowsSol[iRow]+'\n') : '';
-    }
-    for (iRow = realdiffRow+1; iRow < rowsExp.length; iRow++) {
-        resExp += iRow < rowsExp.length ? (rowsExp[iRow]+'\n') : '';
-    }
-
-    if (log.truncatedAfter) {
-        resSol += '... ';
-        resExp += '... ';
-    }
-
-    return {
-        resSol,
-        resExp,
-    }
 }
 
 export default function (bundle: Bundle) {
@@ -195,12 +140,13 @@ export default function (bundle: Bundle) {
                     } else if (testResult.log) {
                         try {
                             // Check if first line of the log is JSON data containing a diff
-                            const log = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
+                            const log: TestResultDiffLog = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
                             const error = {
                                 type: 'task-submission-test-result-diff',
                                 props: {
                                     log,
-                                }
+                                },
+                                error: getMessage('IOPANE_ERROR').format({line: log.diffRow + 1}),
                             };
 
                             yield* put(stepperDisplayError(error));

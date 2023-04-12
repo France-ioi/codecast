@@ -284,10 +284,10 @@ function* buffersSaga() {
         const state: AppStore = yield* appSelect();
 
         // @ts-ignore
-        const {buffer, range} = action;
+        const {buffer, range, className} = action;
         const editor = getBufferEditor(state, buffer);
         if (editor) {
-            editor.highlight(range);
+            editor.highlight(range, className);
         }
     });
     yield* takeEvery(ActionTypes.BufferResize, function* (action) {

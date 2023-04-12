@@ -311,6 +311,12 @@ span + .value-previous {
   z-index: 20;
 }
 
+.error-highlight {
+  position: absolute;
+  background-color: rgba(255, 18, 18, 0.5);
+  z-index: 20;
+}
+
 .mainView-lg {
   pre, .ace_editor, .terminal, .stack-view, .subtitles-band-frame {
     font-size: $font-size-lg;

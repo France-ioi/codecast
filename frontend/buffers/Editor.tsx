@@ -20,6 +20,7 @@ interface EditorProps {
     width: any,
     height: any,
     hasAutocompletion?: boolean,
+    hasScrollMargin?: boolean,
     onSelect: Function,
     onEdit: Function,
     onScroll: Function,
@@ -236,8 +237,8 @@ export function Editor(props: EditorProps) {
         });
     };
 
-    const highlight = (range) => {
-        log.getLogger('editor').debug('make highlight');
+    const highlight = (range, className = 'code-highlight') => {
+        log.getLogger('editor').debug('make highlight', range, className);
         wrapModelToEditor(() => {
             const session = editor.current.session;
             if (marker.current) {
@@ -246,7 +247,7 @@ export function Editor(props: EditorProps) {
             }
             if (range && range.start && range.end) {
                 // Add (and save) the marker.
-                marker.current = session.addMarker(toRange(range), 'code-highlight', 'text');
+                marker.current = session.addMarker(toRange(range), className, 'text');
                 if (!props.shield) {
                     /* Also scroll so that the line is visible.  Skipped if the editor has
                        a shield (preventing user input) as this means playback is active,
@@ -279,8 +280,10 @@ export function Editor(props: EditorProps) {
             enableSnippets: false,
             dragEnabled: true,
         });
-        editor.current.setOption("scrollPastEnd", 0.1);
-        editor.current.renderer.setScrollMargin(0, 80);
+        if (props.hasScrollMargin) {
+            editor.current.setOption("scrollPastEnd", 0.1);
+            editor.current.renderer.setScrollMargin(0, 80);
+        }
 
         const {onInit, onSelect, onEdit} = props;
         if (typeof onInit === 'function') {
