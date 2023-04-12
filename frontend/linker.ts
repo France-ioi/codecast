@@ -178,8 +178,9 @@ export function link(rootBuilder, globalScope: App): Linker {
     // Compose the enhancers.
     const sagaMiddleware = createSagaMiddleware({
         sagaMonitor,
-        onError: (error) => {
+        onError: (error, {sagaStack}) => {
             console.error(error);
+            console.error(sagaStack);
             setImmediate(() => {
                 throw error;
             });

@@ -27,7 +27,7 @@ import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
 import {currentTaskChange, currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
 import {LayoutPlayerMode} from "../task/layout/layout";
-import {setTaskEventsEnvironment} from "../task/platform/platform";
+import {isTaskPlatformLinked, setTaskEventsEnvironment} from "../task/platform/platform";
 import {createRunnerSaga} from "../stepper";
 import {delay as delay$1} from 'typed-redux-saga';
 import {platformTaskLink} from '../task/platform/actionTypes';
@@ -164,8 +164,11 @@ function* playerPrepare(app: App, action) {
         });
     }
 
-    yield* put(platformTaskLink());
-    yield* take(taskLoaded.type);
+    if (!isTaskPlatformLinked()) {
+        yield* put(platformTaskLink());
+        yield* take(taskLoaded.type);
+    }
+
     state = yield* select();
 
     const replayState = {
