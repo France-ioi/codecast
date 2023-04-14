@@ -40,8 +40,11 @@ import {
 
 window.ace = require("ace-builds");
 window.ace.acequire = window.ace.require || window.ace.acequire;
+
+
 import "ace-builds/src-min-noconflict/mode-c_cpp";
 import "ace-builds/src-min-noconflict/mode-python";
+import "./modes/archetype";
 import "ace-builds/src-min-noconflict/snippets/html";
 import "ace-builds/src-min-noconflict/ext-language_tools";
 import "ace-builds/src-min-noconflict/theme-github";
@@ -59,7 +62,6 @@ import {App} from "../index";
 import {updateSourceHighlightSaga} from "../stepper";
 import {BlockType} from "../task/blocks/blocks";
 import log from 'loglevel';
-import {selectAnswer} from '../task/selectors';
 import {stepperDisplayError} from '../stepper/actionTypes';
 import {getMessage} from '../lang';
 import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';

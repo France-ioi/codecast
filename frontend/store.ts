@@ -35,6 +35,7 @@ export enum CodecastPlatform {
     Blockly = 'blockly',
     Scratch = 'scratch',
     SmartPy = 'smartpy',
+    Archetype = 'archetype',
 }
 
 export interface PlatformData {
@@ -50,6 +51,7 @@ export const platformsList: {[key in CodecastPlatform]: PlatformData} = {
     [CodecastPlatform.Blockly]: {aceSourceMode: 'text'},
     [CodecastPlatform.Scratch]: {aceSourceMode: 'text'},
     [CodecastPlatform.SmartPy]: {aceSourceMode: 'python'},
+    [CodecastPlatform.Archetype]: {aceSourceMode: 'archetype'},
 };
 
 export enum CodecastOptionsMode {
