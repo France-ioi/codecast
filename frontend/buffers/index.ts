@@ -40,15 +40,18 @@ import {
 
 window.ace = require("ace-builds");
 window.ace.acequire = window.ace.require || window.ace.acequire;
+window.ace.config.set("loadWorkerFromBlob", false);
 
 
 import "ace-builds/src-min-noconflict/mode-c_cpp";
 import "ace-builds/src-min-noconflict/mode-python";
+import "ace-builds/src-min-noconflict/mode-javascript";
+import "ace-builds/src-min-noconflict/mode-ocaml";
 import "./modes/archetype";
+import "./modes/michelson";
 import "ace-builds/src-min-noconflict/snippets/html";
 import "ace-builds/src-min-noconflict/ext-language_tools";
 import "ace-builds/src-min-noconflict/theme-github";
-import "ace-builds/src-min-noconflict/worker-javascript";
 
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";

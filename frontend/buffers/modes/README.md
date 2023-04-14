@@ -2,7 +2,8 @@
 
 ## How to add a new Ace mode (= syntaxic coloration) from a tmLanguage file?
 
-Find a `{language}.tmLanguage.json` file on Internet. For example for Archetype: https://github.com/completium/vscode-archetype/blob/master/syntaxes/archetype.tmLanguage.json
+Find a `{language}.tmLanguage.json` file on Internet. For example for Archetype:
+https://github.com/completium/vscode-archetype/blob/master/syntaxes/archetype.tmLanguage.json
 (this file is part of the Visual Studio Archetype extension)
 
 Then, follow this tutorial: https://github.com/ajaxorg/ace/wiki/Importing-.tmtheme-and-.tmlanguage-Files-into-Ace

@@ -267,6 +267,7 @@ export function Editor(props: EditorProps) {
             addAutocompletion(availableBlocks, contextStrings);
         }
         const session = editor.current.getSession();
+        session.setUseWorker(false);
         editor.current.$blockScrolling = Infinity;
         // editor.setBehavioursEnabled(false);
         editor.current.setTheme(`ace/theme/${props.theme || 'github'}`);

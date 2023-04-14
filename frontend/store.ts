@@ -36,6 +36,9 @@ export enum CodecastPlatform {
     Scratch = 'scratch',
     SmartPy = 'smartpy',
     Archetype = 'archetype',
+    Michelson = 'michelson',
+    CameLIGO = 'cameligo',
+    JsLIGO = 'jsligo',
 }
 
 export interface PlatformData {
@@ -52,6 +55,9 @@ export const platformsList: {[key in CodecastPlatform]: PlatformData} = {
     [CodecastPlatform.Scratch]: {aceSourceMode: 'text'},
     [CodecastPlatform.SmartPy]: {aceSourceMode: 'python'},
     [CodecastPlatform.Archetype]: {aceSourceMode: 'archetype'},
+    [CodecastPlatform.Michelson]: {aceSourceMode: 'michelson'},
+    [CodecastPlatform.CameLIGO]: {aceSourceMode: 'ocaml'},
+    [CodecastPlatform.JsLIGO]: {aceSourceMode: 'javascript'},
 };
 
 export enum CodecastOptionsMode {
