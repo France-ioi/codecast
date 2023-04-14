@@ -12,6 +12,8 @@ import {useDispatch} from 'react-redux';
 import {documentationConceptSelected} from './documentation/documentation_slice';
 import {faMinus} from '@fortawesome/free-solid-svg-icons/faMinus';
 import {quickAlgoLibraries} from './libs/quickalgo_libraries';
+import {PlatformSelection} from '../common/PlatformSelection';
+import {LayoutView, selectActiveView} from './layout/layout';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -49,6 +51,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const instructionsRef = useRef<HTMLDivElement>();
     const screen = useAppSelector(state => state.screen);
     const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
+    const activeView = useAppSelector(selectActiveView);
     const dispatch = useDispatch();
 
     const toggleTaskInstructions = () => {
@@ -95,6 +98,12 @@ export function TaskInstructions(props: TaskInstructionsProps) {
             {props.missionRightSlot}
 
             {!props.withoutTitle && <h1>{getMessage('TASK_INSTRUCTIONS')}</h1>}
+
+            {LayoutView.Instructions === activeView && <div className="task-mission-platform-selection">
+                <PlatformSelection/>
+
+                <hr/>
+            </div>}
 
             <div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>
 

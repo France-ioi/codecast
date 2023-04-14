@@ -5,4 +5,5 @@ export enum ActionTypes {
   LayoutPlayerModeBackToReplay = 'Layout.PlayerMode.BackToReplay',
   LayoutZoomLevelChanged = 'Layout.ZoomLevel.Changed',
   LayoutRequiredTypeChanged = 'Layout.RequiredType.Changed',
+  LayoutViewsChanged = 'Layout.Views.Changed',
 }

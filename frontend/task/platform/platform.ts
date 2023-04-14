@@ -25,7 +25,7 @@ import {
     taskGetResourcesPost,
     platformTaskLink,
 } from './actionTypes';
-import {App, Codecast} from "../../index";
+import {Codecast} from "../../index";
 import {AppStore} from "../../store";
 import {Action, ActionCreator} from "redux";
 import {
@@ -42,6 +42,7 @@ import log from "loglevel";
 import {importPlatformModules} from '../libs/import_modules';
 import {taskLoad} from '../index';
 import {taskLoaded} from '../task_slice';
+import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
 
 let getTaskAnswer: () => Generator;
 let getTaskState: () => Generator;
@@ -149,15 +150,23 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
     return nextVersion;
 }
 
-
-function* taskShowViewsEventSaga ({payload: {success}}: ReturnType<typeof taskShowViewsEvent>) {
-    /* The reducer has stored the views to show, just call success. */
-    yield* call(success);
-}
-
 function* taskGetViewsEventSaga ({payload: {success}}: ReturnType<typeof taskGetViewsEvent>) {
     /* XXX only the 'task' view is declared */
-    yield* call(success, {'task': {}});
+
+    const views = {
+        instructions: {},
+        editor: {},
+        solve: {},
+    };
+
+    yield* call(success, views);
+}
+
+function* taskShowViewsEventSaga ({payload: {views, success}}: ReturnType<typeof taskShowViewsEvent>) {
+    /* The reducer has stored the views to show, just call success. */
+
+    yield* put({type: LayoutActionTypes.LayoutViewsChanged, payload: {views}});
+    yield* call(success);
 }
 
 function* taskUpdateTokenEventSaga ({payload: {success}}: ReturnType<typeof taskUpdateTokenEvent>) {
