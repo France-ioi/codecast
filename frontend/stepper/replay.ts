@@ -6,7 +6,7 @@ import {ActionTypes, stepperRunBackgroundFinished} from './actionTypes';
 import {PlayerInstant} from '../player';
 import log from 'loglevel';
 import {mainQuickAlgoLogger, quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
-import {selectCurrentTest} from '../task/task_slice';
+import {selectCurrentTestData} from '../task/task_slice';
 import {getCurrentStepperState, isStepperInterrupting} from './selectors';
 import {App, Codecast} from '../index';
 import {StepperContext} from './api';
@@ -46,7 +46,7 @@ export function addStepperRecordAndReplayHooks(app: App) {
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context) {
                 const state = yield* appSelect();
-                context.resetAndReloadState(selectCurrentTest(state), state);
+                context.resetAndReloadState(selectCurrentTestData(state), state);
             }
         })
     });

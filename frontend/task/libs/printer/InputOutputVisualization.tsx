@@ -12,13 +12,14 @@ export function InputOutputVisualization() {
     const ioMode = useAppSelector(state => state.ioPane.mode);
     const hasStepper = useAppSelector(state => !!getCurrentStepperState(state) || !state.task.resetDone);
     const currentTask = useAppSelector(state => state.task.currentTask);
+    const taskState = useAppSelector(state => state.task.state);
 
     let visualization;
 
     if (IoMode.Terminal === ioMode) {
         visualization = <TerminalView/>;
     } else if (IoMode.Split === ioMode) {
-        if (hasStepper) {
+        if (hasStepper || (taskState && taskState.ioEvents.length)) {
             visualization = <InputOutputView/>;
         } else {
             visualization = (

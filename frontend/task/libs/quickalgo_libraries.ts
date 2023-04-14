@@ -8,7 +8,7 @@ import {extractLevelSpecific, getCurrentImmerState} from "../utils";
 import {PrinterLib} from "./printer/printer_lib";
 import {hasBlockPlatform, loadBlocklyHelperSaga} from "../../stepper/js";
 import {
-    selectCurrentTest,
+    selectCurrentTestData,
     taskIncreaseContextId,
     taskSetBlocksPanelCollapsed,
     taskSetContextIncludeBlocks,
@@ -189,7 +189,7 @@ export function* createQuickalgoLibrary() {
         yield* call(loadBlocklyHelperSaga, contextLib, currentLevel);
     }
 
-    const testData = selectCurrentTest(state);
+    const testData = selectCurrentTestData(state);
     log.getLogger('libraries').debug('Create context with', {currentTask, currentLevel, testData});
     context = quickAlgoLibraries.getContext(null, state.environment);
     log.getLogger('libraries').debug('Created context', context);
@@ -213,9 +213,9 @@ export function* createQuickalgoLibrary() {
     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
 }
 
-export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = null, instant: PlayerInstant = null) {
+export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = null) {
     const state = yield* appSelect();
-    const currentTest = selectCurrentTest(state);
+    const currentTest = selectCurrentTestData(state);
 
     const context = quickAlgoLibraries.getContext(null, state.environment);
     if (context) {
@@ -363,7 +363,7 @@ export default function(bundle: Bundle) {
             const context = quickAlgoLibraries.getContext(null, state.environment);
             if (context) {
                 context.needsRedrawDisplay = false;
-                const currentTest = selectCurrentTest(state);
+                const currentTest = selectCurrentTestData(state);
                 const contextState = getCurrentImmerState(context.getInnerState());
                 if ('main' === app.environment){
                     context.display = true;

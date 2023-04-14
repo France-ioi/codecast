@@ -25,7 +25,7 @@ import taskSlice, {
     currentTaskChange,
     currentTaskChangePredefined,
     recordingEnabledChange,
-    selectCurrentTest, TaskActionTypes,
+    selectCurrentTestData, TaskActionTypes,
     taskAddInput,
     taskChangeSoundEnabled,
     taskCurrentLevelChange,
@@ -209,7 +209,7 @@ function* taskLoadSaga(app: App, action) {
         log.getLogger('task').debug('[task.load] update task tests', tests);
         yield* put(updateTaskTests(tests));
 
-        const testId = action.payload && action.payload.testId ? action.payload.testId : 0;
+        const testId = action.payload && action.payload.testId ? action.payload.testId : (tests.length ? 0 : null);
         log.getLogger('task').debug('[task.load] update current test id', testId);
         yield* put(updateCurrentTestId({testId, record: false}));
 
@@ -443,11 +443,11 @@ function* taskUpdateCurrentTestIdSaga(app: App, {payload}) {
         context.iTestCase = state.task.currentTestId;
         const contextState = state.task.taskTests[state.task.currentTestId].contextState;
         if (null !== contextState) {
-            const currentTest = selectCurrentTest(state);
+            const currentTest = selectCurrentTestData(state);
             log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test', currentTest, contextState);
             context.resetAndReloadState(currentTest, state, contextState);
         } else {
-            const currentTest = selectCurrentTest(state);
+            const currentTest = selectCurrentTestData(state);
             log.getLogger('task').debug('[taskUpdateCurrentTestIdSaga] reload current test without state', currentTest);
             context.resetAndReloadState(currentTest, state);
         }
@@ -783,7 +783,7 @@ export default function (bundle: Bundle) {
 
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context && (!quick || (instant.event && -1 !== ['compile.success'].indexOf(instant.event[1])) || hasChangedLevel || hasChangedTest)) {
-                yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, taskData && taskData.state ? taskData.state : null, instant);
+                yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, taskData && taskData.state ? taskData.state : null);
                 log.getLogger('replay').debug('DO RESET DISPLAY');
                 yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
             }
@@ -809,7 +809,7 @@ export default function (bundle: Bundle) {
         });
 
         app.stepperApi.onInit(function* (stepperState: StepperState, state: AppStore) {
-            const currentTest = selectCurrentTest(state);
+            const currentTest = selectCurrentTestData(state);
 
             log.getLogger('task').debug('stepper init, current test', currentTest, state.environment);
 

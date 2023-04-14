@@ -103,6 +103,7 @@ export function selectCurrentServerSubmission(state: AppStore) {
 }
 
 export interface TestResultDiffLog {
+    remainingInput?: string,
     msg?: string,
     solutionOutputLength?: number,
     diffRow: number,
@@ -131,13 +132,9 @@ export default function (bundle: Bundle) {
             if (null !== submission && null !== newTest && isServerSubmission(submission)) {
                 const testResult = submission.result.tests.find(test => test.testId === newTest.id);
                 if (undefined !== testResult) {
-                    console.log('the test result', testResult);
                     if (testResult.errorMessage) {
-                        console.log('display error', testResult.errorMessage);
                         yield* put(stepperDisplayError(testResult.errorMessage));
-                    } else if (testResult.noFeedback) {
-                        yield* put(stepperDisplayError(getMessage('SUBMISSION_RESULT_NO_FEEDBACK').s));
-                    } else if (testResult.log) {
+                    } else if (!testResult.noFeedback && testResult.log) {
                         try {
                             // Check if first line of the log is JSON data containing a diff
                             const log: TestResultDiffLog = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
@@ -146,7 +143,7 @@ export default function (bundle: Bundle) {
                                 props: {
                                     log,
                                 },
-                                error: getMessage('IOPANE_ERROR').format({line: log.diffRow + 1}),
+                                error: getMessage('IOPANE_ERROR').format({line: log.diffRow}),
                             };
 
                             yield* put(stepperDisplayError(error));

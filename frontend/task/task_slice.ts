@@ -94,8 +94,8 @@ export function isServerTest(object: TaskTest): boolean {
 }
 
 // TODO: update this function when we will have a "public" field in tm_task_tests
-export function isTestPublic(task: Task, test: TaskTest): boolean {
-    if (!isServerTest(test)) {
+export function isTestPublic(task: Task, test: TaskTest|null): boolean {
+    if (null === test || !isServerTest(test)) {
         return true;
     }
 
@@ -128,12 +128,18 @@ export const taskInitialState = {
     menuHelpsOpen: false,
 } as TaskState;
 
-export const selectCurrentTest = (state: AppStore) => {
+export const selectCurrentTestData = (state: AppStore) => {
+    const currentTest = selectCurrentTest(state);
+
+    return null !== currentTest ? currentTest.data : {};
+}
+
+export const selectCurrentTest = (state: AppStore): TaskTest|null => {
     if (null == state.task.currentTestId || !(state.task.currentTestId in state.task.taskTests)) {
-        return {};
+        return null;
     }
 
-    return state.task.taskTests[state.task.currentTestId].data;
+    return state.task.taskTests[state.task.currentTestId];
 }
 
 export const taskSlice = createSlice({

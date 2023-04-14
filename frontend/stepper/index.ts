@@ -66,7 +66,7 @@ import {delay} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App, Codecast} from "../index";
 import {mainQuickAlgoLogger, quickAlgoLibraries, QuickAlgoLibrariesActionType} from "../task/libs/quickalgo_libraries";
-import {selectCurrentTest, taskResetDone, updateCurrentTestId} from "../task/task_slice";
+import {selectCurrentTestData, taskResetDone, updateCurrentTestId} from "../task/task_slice";
 import {getCurrentImmerState} from "../task/utils";
 import PythonRunner from "./python/python_runner";
 import {getContextBlocksDataSelector} from "../task/blocks/blocks";
@@ -1054,7 +1054,7 @@ function* stepperRunFromBeginningIfNecessary(stepperContext: StepperContext) {
             taskContext.display = false;
         }
         stepperContext.taskDisplayNoneStatus = 'running';
-        taskContext.resetAndReloadState(selectCurrentTest(state), state);
+        taskContext.resetAndReloadState(selectCurrentTestData(state), state);
         stepperContext.state.contextState = getCurrentImmerState(taskContext.getInnerState());
         log.getLogger('stepper').debug('current task state', taskContext.getInnerState());
 

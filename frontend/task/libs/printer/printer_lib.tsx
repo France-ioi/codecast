@@ -7,7 +7,7 @@ import {ActionTypes as BufferActionTypes, ActionTypes} from "../../../buffers/ac
 import {ActionTypes as StepperActionTypes, stepperDisplayError} from "../../../stepper/actionTypes";
 import {documentModelFromString} from "../../../buffers";
 import {
-    selectCurrentTest,
+    selectCurrentTestData,
     taskInputEntered,
     taskInputNeeded,
     taskUpdateState,
@@ -15,14 +15,18 @@ import {
 } from "../../task_slice";
 import {App} from "../../../index";
 import {IoMode} from "../../../stepper/io";
-import {ReplayContext} from "../../../player/sagas";
+import {delay, ReplayContext} from "../../../player/sagas";
 import {createDraft} from "immer";
 import log from 'loglevel';
 import {PayloadAction} from "@reduxjs/toolkit";
 import {appSelect} from '../../../hooks';
 import {TestResultDiffLog} from '../../../submission/submission';
 import {getMessage} from '../../../lang';
-import {quickAlgoLibraries} from '../quickalgo_libraries';
+import {
+    quickAlgoLibraries,
+    QuickAlgoLibrariesActionType,
+    quickAlgoLibraryResetAndReloadStateSaga
+} from '../quickalgo_libraries';
 import {getCurrentImmerState} from '../../utils';
 
 function escapeHtml(unsafe) {
@@ -191,6 +195,7 @@ interface PrinterLibInputPosition {
 interface PrinterLibState {
     ioEvents: PrinterLineEvent[],
     initial: string,
+    unknownInput?: boolean,
     expectedOutput: string,
     inputBuffer: string,
     inputPosition: PrinterLibInputPosition,
@@ -330,10 +335,10 @@ export class PrinterLib extends QuickAlgoLibrary {
         if (this.display) {
             log.getLogger('printer_lib').debug('make reset display', this.innerState.initial, this.libInstance);
 
-            const currentTest = yield* appSelect(selectCurrentTest);
+            const currentTest = yield* appSelect(selectCurrentTestData);
             log.getLogger('printer_lib').debug('SYNC BUFFERS', this.libInstance, currentTest);
             const inputText = currentTest && currentTest.input ? currentTest.input : '';
-            const outputText = currentTest && currentTest.output ? currentTest.output : '';
+            const outputText = this.innerState.expectedOutput;
             yield* put({
                 type: ActionTypes.BufferReset,
                 buffer: inputBufferLibTest,
@@ -648,6 +653,7 @@ export class PrinterLib extends QuickAlgoLibrary {
                     this.success = false;
 
                     const log: TestResultDiffLog = {
+                        remainingInput: this.getInputText(),
                         diffRow: iLine + 1,
                         diffCol: iChar + 1,
                         displayedExpectedOutput: this.taskInfos.output,
@@ -778,11 +784,29 @@ export class PrinterLib extends QuickAlgoLibrary {
         });
 
         yield* takeEvery(StepperActionTypes.StepperDisplayError, function* (action) {
-
             // @ts-ignore
             const {payload} = action;
             if (payload.error && 'task-submission-test-result-diff' === payload.error.type) {
                 const log: TestResultDiffLog = payload.error.props.log;
+                const environment = yield* appSelect(state => state.environment);
+                const context = quickAlgoLibraries.getContext(null, environment);
+                if (context) {
+                    const innerState: PrinterLibState = {
+                        initial: log.remainingInput ? log.remainingInput : '',
+                        unknownInput: undefined === log.remainingInput,
+                        ioEvents: [
+                            {type: PrinterLineEventType.output, content: log.displayedSolutionOutput},
+                        ],
+                        inputBuffer: '',
+                        inputPosition: {event: 0, pos: 0},
+                        expectedOutput: log.displayedExpectedOutput,
+                    };
+
+                    yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, innerState);
+                    yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
+                }
+
+                yield* delay(0);
 
                 const range = {
                     start: {
@@ -794,16 +818,6 @@ export class PrinterLib extends QuickAlgoLibrary {
                         column: log.diffCol,
                     },
                 };
-
-                // Gérer les tests où il n'y a pas de feedback : qu'afficher ?
-
-                // const environment = yield* appSelect(state => state.environment);
-                // const context = quickAlgoLibraries.getContext(null, environment);
-                // if (context) {
-                //     const contextState = getCurrentImmerState(context.getInnerState());
-                //     contextState.errorLog = log;
-                //     app.dispatch(taskUpdateState(contextState));
-                // }
 
                 yield* put({
                     type: ActionTypes.BufferHighlight,

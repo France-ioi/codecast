@@ -11,13 +11,12 @@ import {getMessage} from '../lang';
 import {faSpinner} from '@fortawesome/free-solid-svg-icons';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
 import {capitalizeFirstLetter} from '../common/utils';
-import {isServerSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission';
+import {isServerSubmission, TaskSubmission, TaskSubmissionEvaluateOn, TaskSubmissionServer} from './submission';
 import {DateTime} from 'luxon';
 import {faClock} from '@fortawesome/free-solid-svg-icons';
 
 export function TestsPane() {
     const submissionResults = useAppSelector(state => state.submission.taskSubmissions);
-    const executionMode = useAppSelector(state => state.submission.executionMode);
     const dispatch = useDispatch();
     const platform = useAppSelector(state => state.options.platform)
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? submissionResults[state.submission.currentSubmissionId] : null);
@@ -52,8 +51,15 @@ export function TestsPane() {
         dispatch(submissionChangePaneOpen(false));
     };
 
-    const setCurrentSubmission = (submissionIndex: number) => {
-        dispatch(submissionChangeCurrentSubmissionId(submissionIndex));
+    const setCurrentSubmission = (submission: TaskSubmission|null, e = null) => {
+        if (null === submission) {
+            e.preventDefault();
+            e.stopPropagation();
+            dispatch(submissionChangeCurrentSubmissionId(null));
+        } else {
+            const submissionIndex = submissionResults.findIndex(otherSubmission => otherSubmission === submission);
+            dispatch(submissionChangeCurrentSubmissionId(submissionIndex));
+        }
     };
 
     return (
@@ -66,12 +72,16 @@ export function TestsPane() {
             {serverSubmissionResults.length > 0 && <div className="submission-results__selector">
                 <Dropdown>
                     <Dropdown.Toggle>
-                        {null !== currentSubmission && isServerSubmission(currentSubmission) ? getSubmissionLabel(currentSubmission) : getMessage('SELECT')}
+                        {null !== currentSubmission && isServerSubmission(currentSubmission) ? <div className="submission-toggle">
+                            {getSubmissionLabel(currentSubmission)}
+                            <div className="submission-results__close submission-toggle__close" onClick={(e) => setCurrentSubmission(null, e)}>
+                            </div>
+                        </div> : getMessage('SELECT')}
                     </Dropdown.Toggle>
 
                     <Dropdown.Menu>
                         {serverSubmissionResults.map((submission, submissionIndex) =>
-                            <Dropdown.Item key={submissionIndex} onClick={() => setCurrentSubmission(submissionIndex)}>
+                            <Dropdown.Item key={submissionIndex} onClick={() => setCurrentSubmission(submission)}>
                                 <span>{getSubmissionLabel(submission as TaskSubmissionServer)}</span>
                             </Dropdown.Item>
                         )}

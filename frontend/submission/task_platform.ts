@@ -159,7 +159,6 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
             },
             checkEndEveryTurn: false,
             checkEndCondition: function (context, lastTurn) {
-                console.log('check end condition');
                 if (!lastTurn) return;
                 context.checkOutputHelper();
                 context.success = true;

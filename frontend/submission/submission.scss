@@ -55,6 +55,15 @@
   }
 }
 
+.submission-toggle {
+  position: relative;
+}
+
+.submission-toggle__close {
+  top: calc(50% - 10px);
+  right: 25px;
+}
+
 .submission-results__submission {
   background: #f1f2f7;
   border-top: solid 2px #e7e7e7;
