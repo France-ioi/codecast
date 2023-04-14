@@ -231,6 +231,7 @@ html, body, #react-container {
     width: 100%;
     height: 100%;
     flex: 1 1 auto;
+    overflow-y: scroll;
   }
 
   .task-visualization {
@@ -277,7 +278,7 @@ html, body, #react-container {
   }
 
   &.full-screen {
-    .task-header, .layout-footer, .task-zone-left, .level-tabs {
+    .task-header, .layout-footer, .task-zone-left, .level-tabs, .submission-results {
       display: none;
     }
     .task-body {
