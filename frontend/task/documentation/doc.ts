@@ -8,12 +8,13 @@ import {
     DocumentationLanguage,
     documentationLanguageChanged
 } from "./documentation_slice";
-import {AppAction, CodecastPlatform} from "../../store";
+import {AppAction} from "../../store";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {getMessage} from "../../lang";
 import {App} from "../../index";
 import {Screen} from "../../common/screens";
 import {appSelect} from '../../hooks';
+import {CodecastPlatform} from '../../stepper/platforms';
 
 let openerChannel;
 

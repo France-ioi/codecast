@@ -223,6 +223,7 @@ module.exports = {
     TASK_BLOCK_CATEGORY_DISPLAY: "Display",
     TASK_BLOCK_CATEGORY_TURTLE: "Turtle",
     TASK_BLOCK_CATEGORY_CONSTANTS: "Constants",
+    TASK_BLOCK_CATEGORY_SMART_CONTRACTS: "Smart contracts",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Preview a specific layout:",
     LAYOUT_DefaultLayoutDesktop: 'Desktop',

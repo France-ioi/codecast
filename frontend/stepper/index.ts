@@ -60,7 +60,7 @@ import {ActionTypes as BufferActionTypes} from "../buffers/actionTypes";
 import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getCurrentStepperState, getStepper, getStepperControlsSelector, isStepperInterrupting} from "./selectors";
-import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
+import {AppStore, AppStoreReplay} from "../store";
 import {TermBuffer} from "./io/terminal";
 import {delay} from "../player/sagas";
 import {Bundle} from "../linker";
@@ -84,6 +84,7 @@ import {DeferredPromise} from "../utils/app";
 import {addStepperRecordAndReplayHooks} from './replay';
 import {appSelect} from '../hooks';
 import {TaskSubmissionResultPayload} from '../submission/submission';
+import {CodecastPlatform} from './platforms';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms

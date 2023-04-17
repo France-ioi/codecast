@@ -57,7 +57,7 @@ export interface TaskState {
     inputs?: any[],
     contextId: number,
     contextStrings: any,
-    contextIncludeBlocks: any,
+    contextIncludeBlocks: QuickalgoTaskIncludeBlocks,
     blocksPanelCollapsed?: boolean,
     blocksUsage?: BlocksUsage,
     soundEnabled?: boolean,
@@ -88,10 +88,12 @@ export interface QuickalgoTaskIncludeBlocks {
     generatedBlocks?: {[context: string]: string[]},
     standardBlocks?: {
         includeAll?: boolean,
+        includeAllPython?: boolean,
         wholeCategories?: NotionCategory[],
         singleBlocks?: Notion[],
     },
     variables?: string[],
+    procedures?: {ret: boolean, noret: boolean},
 }
 
 // We can customize the option for each level in the task definition
@@ -308,7 +310,7 @@ export const taskSlice = createSlice({
             // Make a copy to put in the store so that the original "strings" object do not end frozen and thus immutable by Immer
             state.contextStrings = action.payload ? JSON.parse(JSON.stringify(action.payload)) : {};
         },
-        taskSetContextIncludeBlocks(state: TaskState, action: PayloadAction<any>) {
+        taskSetContextIncludeBlocks(state: TaskState, action: PayloadAction<QuickalgoTaskIncludeBlocks>) {
             state.contextIncludeBlocks = action.payload;
         },
         taskSetBlocksPanelCollapsed(state: TaskState, action: PayloadAction<boolean>) {

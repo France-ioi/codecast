@@ -57,7 +57,7 @@ import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
 import {getBufferModel} from "./selectors";
 import {immerable} from "immer";
-import {AppStore, CodecastPlatform} from "../store";
+import {AppStore} from "../store";
 import {ReplayContext} from "../player/sagas";
 import {PlayerInstant} from "../player";
 import {Bundle} from "../linker";
@@ -70,6 +70,7 @@ import {getMessage} from '../lang';
 import {platformAnswerLoaded, platformTaskRefresh} from '../task/platform/actionTypes';
 import {hasBlockPlatform} from '../stepper/js';
 import {appSelect} from '../hooks';
+import {CodecastPlatform} from '../stepper/platforms';
 
 const AceThemes = [
     'github',

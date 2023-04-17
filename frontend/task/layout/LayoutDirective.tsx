@@ -1,5 +1,4 @@
 import React from "react";
-import {CodecastPlatform} from "../../store";
 import {initialStepperStateControls} from "../../stepper";
 import {DirectivePanel} from "../../stepper/views/DirectivePanel";
 import {getCurrentStepperState} from "../../stepper/selectors";
@@ -10,6 +9,7 @@ import {useAppSelector} from "../../hooks";
 import {useDispatch} from "react-redux";
 import {CodecastAnalysisSnapshot} from "../../stepper/analysis/analysis";
 import log from 'loglevel';
+import {CodecastPlatform} from '../../stepper/platforms';
 
 interface LayoutDirectiveProps {
     directive: any,

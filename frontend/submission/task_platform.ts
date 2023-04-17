@@ -135,7 +135,7 @@ export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> 
 export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
     const defaultTask = {
         gridInfos: {
-            context: 'printer',
+            context: 'smart_contract', //'printer',
             importModules: [],
             showLabels: true,
             conceptViewer: true,
@@ -152,7 +152,7 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
                     // singleBlocks: ["controls_repeat", "controls_if"]
                 },
                 generatedBlocks: {
-                    printer: ["print", "read"]
+                    // printer: ["print", "read"]
                 },
                 variables: [],
                 // pythonAdditionalFunctions: ["len"]

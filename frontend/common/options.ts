@@ -5,13 +5,14 @@ import {ActionTypes as StepperActionTypes} from '../stepper/actionTypes';
 import {ActionTypes as BufferActionTypes} from '../buffers/actionTypes';
 import {Bundle} from "../linker";
 import {put, select, takeEvery} from "typed-redux-saga";
-import {AppStore, CodecastOptions, CodecastOptionsMode, CodecastPlatform} from "../store";
+import {AppStore, CodecastOptions, CodecastOptionsMode} from "../store";
 import {parseCodecastUrl} from "../../backend/options";
 import {Languages} from "../lang";
 import {taskLoad} from "../task";
 import {platformSaveAnswer, TaskLevelName} from "../task/platform/platform_slice";
 import {isLocalStorageEnabled} from "./utils";
 import {appSelect} from '../hooks';
+import {CodecastPlatform} from '../stepper/platforms';
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {

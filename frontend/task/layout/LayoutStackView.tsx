@@ -1,9 +1,9 @@
 import React from "react";
 import {StackView} from "../../stepper/views/c/StackView";
 import {useAppSelector} from "../../hooks";
-import {CodecastPlatform} from "../../store";
 import {getMessage} from "../../lang";
 import {AnalysisStackView} from "../../stepper/analysis/AnalysisStackView";
+import {CodecastPlatform} from '../../stepper/platforms';
 
 export function LayoutStackView() {
     const currentStepperState = useAppSelector(state => state.stepper ? state.stepper.currentStepperState : null);

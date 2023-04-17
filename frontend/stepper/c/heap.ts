@@ -1,9 +1,10 @@
 import * as C from '@france-ioi/persistent-c';
-import {AppStore, CodecastPlatform} from "../../store";
+import {AppStore} from "../../store";
 import {StepperContext} from "../api";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App} from "../../index";
+import {CodecastPlatform} from '../platforms';
 
 const uint = C.builtinTypes['unsigned int'];
 const uintPtr = C.pointerType(uint);

@@ -9,7 +9,7 @@
 
 import * as C from '@france-ioi/persistent-c';
 import {all, call, put} from 'typed-redux-saga';
-import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
+import {AppStore, AppStoreReplay} from "../store";
 import {
     initialStepperStateControls,
     Stepper,
@@ -25,6 +25,7 @@ import {Codecast} from "../index";
 import log from "loglevel";
 import {TaskSubmissionResultPayload} from "../submission/submission";
 import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
+import {CodecastPlatform} from './platforms';
 
 export interface QuickalgoLibraryCall {
     module: string,

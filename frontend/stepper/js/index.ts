@@ -1,4 +1,4 @@
-import {AppStore, CodecastPlatform} from "../../store";
+import {AppStore} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App, Codecast} from "../../index";
@@ -14,6 +14,7 @@ import {LayoutType} from "../../task/layout/layout";
 import {taskIncreaseContextId} from "../../task/task_slice";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
+import {CodecastPlatform} from '../platforms';
 
 let originalFireNow;
 let originalSetBackgroundPathVertical_;

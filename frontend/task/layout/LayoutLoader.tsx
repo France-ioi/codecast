@@ -7,7 +7,7 @@ import {ActionTypes} from "./actionTypes";
 import {withResizeDetector} from 'react-resize-detector/build/withPolyfill';
 import {Directive} from "../../stepper/python/directives";
 import {Screen} from "../../common/screens";
-import {pythonForbiddenLists} from "../python_utils";
+import {getNotionsFromIncludeBlocks} from '../blocks/notions';
 
 interface LayoutLoaderStateToProps {
     advisedVisualization: string,
@@ -36,8 +36,8 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     const currentTask = state.task.currentTask;
     let showVariables = options.showStack;
     if (null !== currentTask) {
-        const forbidden = pythonForbiddenLists(state.task.contextIncludeBlocks).forbidden;
-        showVariables = showVariables && -1 === forbidden.indexOf('var_assign');
+        const notions = getNotionsFromIncludeBlocks(state.task.contextIncludeBlocks);
+        showVariables = showVariables && -1 === notions.indexOf('variables_set');
     }
 
     let layoutMobileMode = state.layout.mobileMode;

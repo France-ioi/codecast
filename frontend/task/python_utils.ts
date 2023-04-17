@@ -13,6 +13,45 @@ import {Block, BlockType, getContextBlocksDataSelector} from "./blocks/blocks";
 import {AppStore} from "../store";
 import {QuickAlgoLibrary} from "./libs/quickalgo_library";
 import {analysisDirectiveViewDict} from "../stepper/views";
+import {getCategoryNotions, getNotionsFromIncludeBlocks} from './blocks/notions';
+
+const pythonNotionsToBlocks = {
+    'dicts_create_with': ['dict_brackets'],
+    'dict_get_literal': ['dict_brackets'],
+    'dict_set_literal': ['dict_brackets'],
+    'dict_keys': ['dict_brackets'],
+    'controls_if': ['if', 'else', 'elif'],
+    'controls_if_else': ['if', 'else', 'elif'],
+    'logic_negate': ['not'],
+    'logic_operation': ['and', 'or'],
+    'controls_repeat': ['for'],
+    'controls_repeat_ext': ['for'],
+    'controls_for': ['for'],
+    'controls_forEach': ['for'],
+    'controls_whileUntil': ['while'],
+    'controls_untilWhile': ['while'],
+    'controls_infiniteloop': ['while'],
+    'controls_break_continue': ['break', 'continue'],
+    'lists_create_with_empty': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_create_with': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_repeat': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_length': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_isEmpty': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_indexOf': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_getIndex': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_setIndex': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_getSublist': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_sort': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_split': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_append': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
+    'lists_map_split': ['map', 'split'],
+    'math_number': ['math_number'],
+    'procedures_defnoreturn': ['def'],
+    'procedures_defreturn': ['def'],
+    'setattr' : ['setattr'],
+    'lambda' : ['lambda'],
+    'variables_set': ['var_assign'],
+};
 
 const pythonCountPatterns = [
     // Comments
@@ -68,58 +107,6 @@ function pythonCount(text) {
     return nbBlocks;
 }
 
-const pythonForbiddenBlocks = {
-    'dicts': {
-        'dicts_create_with': ['dict_brackets'],
-        'dict_get_literal': ['dict_brackets'],
-        'dict_set_literal': ['dict_brackets'],
-        'dict_keys': ['dict_brackets'],
-    },
-    'logic': {
-        'controls_if': ['if', 'else', 'elif'],
-        'controls_if_else': ['if', 'else', 'elif'],
-        'logic_negate': ['not'],
-        'logic_operation': ['and', 'or'],
-    },
-    'loops': {
-        'controls_repeat': ['for'],
-        'controls_repeat_ext': ['for'],
-        'controls_for': ['for'],
-        'controls_forEach': ['for'],
-        'controls_whileUntil': ['while'],
-        'controls_untilWhile': ['while'],
-        'controls_infiniteloop': ['while'],
-        'controls_break_continue': ['break', 'continue'],
-    },
-    'lists': {
-        'lists_create_with_empty': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_create_with': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_repeat': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_length': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_isEmpty': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_indexOf': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_getIndex': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_setIndex': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_getSublist': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_sort': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_split': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_append': ['list', 'set', 'list_brackets', '__getitem__', '__setitem__'],
-        'lists_map_split': ['map', 'split'],
-    },
-    'maths': {
-        'math_number': ['math_number'],
-    },
-    'functions': {
-        'procedures_defnoreturn': ['def'],
-        'procedures_defreturn': ['def'],
-        'setattr' : ['setattr'],
-        'lambda' : ['lambda'],
-    },
-    'variables': {
-        'variables_set': ['var_assign'],
-    }
-};
-
 export const pythonForbiddenLists = function (includeBlocks) {
     // Check for forbidden keywords in code
     const forbidden = ['for', 'while', 'if', 'else', 'elif', 'not', 'and', 'or', 'list', 'set', 'list_brackets', 'dict_brackets', '__getitem__', '__setitem__', 'var_assign', 'def', 'lambda', 'break', 'continue', 'setattr', 'map', 'split'];
@@ -157,33 +144,9 @@ export const pythonForbiddenLists = function (includeBlocks) {
         }
     }
 
-    if (includeBlocks && includeBlocks.standardBlocks) {
-        if (includeBlocks.standardBlocks.includeAll || includeBlocks.standardBlocks.includeAllPython) {
-            // Everything is allowed
-            removeForbidden(forbidden.slice());
-            return {forbidden: forbidden, allowed: allowed};
-        }
-
-        if (includeBlocks.standardBlocks.wholeCategories) {
-            for (let c = 0; c < includeBlocks.standardBlocks.wholeCategories.length; c++) {
-                let categoryName = includeBlocks.standardBlocks.wholeCategories[c];
-                if (pythonForbiddenBlocks[categoryName]) {
-                    for (let blockName of Object.keys(pythonForbiddenBlocks[categoryName])) {
-                        removeForbidden(pythonForbiddenBlocks[categoryName][blockName]);
-                    }
-                }
-            }
-        }
-        if (includeBlocks.standardBlocks.singleBlocks) {
-            for (let b = 0; b < includeBlocks.standardBlocks.singleBlocks.length; b++) {
-                let blockName = includeBlocks.standardBlocks.singleBlocks[b];
-                for (let categoryName in pythonForbiddenBlocks) {
-                    if (pythonForbiddenBlocks[categoryName][blockName]) {
-                        removeForbidden(pythonForbiddenBlocks[categoryName][blockName]);
-                    }
-                }
-            }
-        }
+    const notions = getNotionsFromIncludeBlocks(includeBlocks);
+    for (let notion of notions) {
+        removeForbidden(pythonNotionsToBlocks[notion]);
     }
 
     if (includeBlocks && includeBlocks.variables && includeBlocks.variables.length) {
@@ -307,18 +270,17 @@ export const pythonFindLimited = function (code, limitedUses, blockToCode) {
                 }
                 pythonKeys.push(blockToCode[blockName]);
             }
-            for (let categoryName in pythonForbiddenBlocks) {
-                let targetKeys = pythonForbiddenBlocks[categoryName][blockName];
-                if (!targetKeys) {
+
+            let targetKeys = pythonNotionsToBlocks[blockName];
+            if (!targetKeys) {
+                continue;
+            }
+            for (let j = 0; j < targetKeys.length; j++) {
+                let pyKey = pythonNotionsToBlocks[blockName][j];
+                if (pythonKeys.indexOf(pyKey) >= 0) {
                     continue;
                 }
-                for (let j = 0; j < targetKeys.length; j++) {
-                    let pyKey = pythonForbiddenBlocks[categoryName][blockName][j];
-                    if (pythonKeys.indexOf(pyKey) >= 0) {
-                        continue;
-                    }
-                    pythonKeys.push(pyKey);
-                }
+                pythonKeys.push(pyKey);
             }
         }
 
@@ -489,21 +451,23 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
     }
 
     if (contextIncludeBlocks) {
-        const allowedTokens = pythonForbiddenLists(contextIncludeBlocks).allowed;
-        const bracketsWords = { list_brackets: 'crochets [ ]+[]', dict_brackets: 'accolades { }+{}', var_assign: 'variables+x =' };
-        for(let bracketsCode in bracketsWords) {
-            const bracketsIdx = allowedTokens.indexOf(bracketsCode);
-            if (bracketsIdx !== -1) {
-                allowedTokens[bracketsIdx] = bracketsWords[bracketsCode];
+        const notions = getNotionsFromIncludeBlocks(contextIncludeBlocks);
+        const categoryNotions = getCategoryNotions();
+        let allowedTokens = [];
+        const tokenCategories = {};
+        for (let notion of notions) {
+            const tokens = pythonNotionsToBlocks[notion];
+            allowedTokens = [...allowedTokens, ...tokens];
+            for (let token of tokens) {
+                tokenCategories[token] = categoryNotions[notion];
             }
         }
 
-        const tokenCategories = {};
-        for (let [category, elements] of Object.entries(pythonForbiddenBlocks)) {
-            for (let tokens of Object.values(elements)) {
-                for (let token of tokens) {
-                    tokenCategories[token] = category;
-                }
+        const bracketsWords = { list_brackets: 'crochets [ ]+[]', dict_brackets: 'accolades { }+{}', var_assign: 'variables+x =' };
+        for (let bracketsCode in bracketsWords) {
+            const bracketsIdx = allowedTokens.indexOf(bracketsCode);
+            if (bracketsIdx !== -1) {
+                allowedTokens[bracketsIdx] = bracketsWords[bracketsCode];
             }
         }
 

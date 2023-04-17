@@ -14,7 +14,7 @@ import {IoMode} from "../stepper/io";
 import {getMessage} from "../lang";
 import {getJsLibLoaded} from "../task/libs/import_modules";
 import {hasBlockPlatform} from "../stepper/js";
-import {platformsList} from '../store';
+import {platformsList} from '../stepper/platforms';
 
 interface SettingsDialogProps {
     open: boolean,

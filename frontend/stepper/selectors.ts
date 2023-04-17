@@ -1,10 +1,11 @@
-import {AppStore, AppStoreReplay, CodecastPlatform, platformsList} from '../store';
-import {getRunnerClassFromPlatform, Stepper, StepperControlsType, StepperState} from "./index";
+import {AppStore, AppStoreReplay} from '../store';
+import {Stepper, StepperControlsType, StepperState} from "./index";
 import {getMessage} from "../lang";
 import {hasBlockPlatform} from "./js";
 import {CompileStatus} from "./compile";
 import {LayoutType} from "../task/layout/layout";
 import * as C from '@france-ioi/persistent-c';
+import {CodecastPlatform, platformsList} from './platforms';
 
 export function getStepper(state: AppStore): Stepper {
     return state.stepper;

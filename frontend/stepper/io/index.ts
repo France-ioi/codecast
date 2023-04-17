@@ -5,7 +5,7 @@ import {scanfBuiltin} from './scanf';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
-import {AppStore, CodecastPlatform} from "../../store";
+import {AppStore} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {StepperContext} from "../api";
@@ -14,6 +14,7 @@ import {App} from "../../index";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
+import {CodecastPlatform} from '../platforms';
 
 export enum IoMode {
     Terminal = 'terminal',

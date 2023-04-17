@@ -21,17 +21,17 @@ import {TextEncoder} from "text-encoding-utf-8";
 import {clearStepper, createRunnerSaga, getRunnerClassFromPlatform} from "./index";
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../actionTypes";
-import {AppStore, AppStoreReplay, CodecastPlatform} from "../store";
+import {AppStore, AppStoreReplay} from "../store";
 import {PlayerInstant} from "../player";
 import {ReplayContext} from "../player/sagas";
 import {Bundle} from "../linker";
 import {App, Codecast} from "../index";
 import {checkCompilingCode} from "../task/utils";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
-import {getMessage} from "../lang";
 import {selectAnswer} from "../task/selectors";
 import {compilePythonCodeSaga} from "./python";
 import {appSelect} from '../hooks';
+import {CodecastPlatform} from './platforms';
 
 export enum CompileStatus {
     Clear = 'clear',

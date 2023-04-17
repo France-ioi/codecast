@@ -12,8 +12,8 @@ import {faExternalLinkAlt} from "@fortawesome/free-solid-svg-icons";
 import {ActionTypes} from "../../buffers/actionTypes";
 import {documentModelFromString} from "../../buffers";
 import {getMessage} from "../../lang";
-import {CodecastPlatform} from "../../store";
 import {TaskInstructions} from '../TaskInstructions';
+import {CodecastPlatform} from '../../stepper/platforms';
 
 interface DocumentationProps {
     standalone: boolean,

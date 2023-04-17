@@ -21,7 +21,7 @@ import './style.scss';
 import {ActionTypes} from "./actionTypes";
 import {ActionTypes as AppActionTypes} from "../../actionTypes";
 import {NPorts} from "./config";
-import {AppStore, CodecastPlatform} from "../../store";
+import {AppStore} from "../../store";
 import {PlayerInstant} from "../../player";
 import {ReplayContext} from "../../player/sagas";
 import {StepperContext} from "../api";
@@ -30,6 +30,7 @@ import {Bundle} from "../../linker";
 import {App} from "../../index";
 import {ActionTypes as PlayerActionTypes} from "../../player/actionTypes";
 import {appSelect} from '../../hooks';
+import {CodecastPlatform} from '../platforms';
 
 export enum PinMode {
   Input = 0,

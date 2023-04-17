@@ -27,38 +27,7 @@ import {AnalysisState} from "./stepper/analysis/analysis_slice";
 import {ModalState} from "./common/modal_slice";
 import {HintsState, TaskHint} from "./task/hints/hints_slice";
 import {SubmissionState} from "./submission/submission_slice";
-
-export enum CodecastPlatform {
-    Python = 'python',
-    Unix = 'unix',
-    Arduino = 'arduino',
-    Blockly = 'blockly',
-    Scratch = 'scratch',
-    SmartPy = 'smartpy',
-    Archetype = 'archetype',
-    Michelson = 'michelson',
-    CameLIGO = 'cameligo',
-    JsLIGO = 'jsligo',
-}
-
-export interface PlatformData {
-    needsCompilation?: boolean,
-    hasMicroSteps?: boolean,
-    aceSourceMode?: string,
-}
-
-export const platformsList: {[key in CodecastPlatform]: PlatformData} = {
-    [CodecastPlatform.Python]: {aceSourceMode: 'python'},
-    [CodecastPlatform.Unix]: {needsCompilation: true, hasMicroSteps: true, aceSourceMode: 'c_cpp'},
-    [CodecastPlatform.Arduino]: {needsCompilation: true, hasMicroSteps: true, aceSourceMode: 'arduino'},
-    [CodecastPlatform.Blockly]: {aceSourceMode: 'text'},
-    [CodecastPlatform.Scratch]: {aceSourceMode: 'text'},
-    [CodecastPlatform.SmartPy]: {aceSourceMode: 'python'},
-    [CodecastPlatform.Archetype]: {aceSourceMode: 'archetype'},
-    [CodecastPlatform.Michelson]: {aceSourceMode: 'michelson'},
-    [CodecastPlatform.CameLIGO]: {aceSourceMode: 'ocaml'},
-    [CodecastPlatform.JsLIGO]: {aceSourceMode: 'javascript'},
-};
+import {CodecastPlatform} from './stepper/platforms';
 
 export enum CodecastOptionsMode {
     Edit = 'edit',

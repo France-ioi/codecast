@@ -4,7 +4,7 @@ import {
     ActionTypes,
     stepperExecutionError
 } from '../actionTypes';
-import {AppStore, CodecastPlatform} from "../../store";
+import {AppStore} from "../../store";
 import {StepperState} from "../index";
 import {Bundle} from "../../linker";
 import {App, Codecast} from "../../index";
@@ -15,6 +15,7 @@ import {selectAnswer} from "../../task/selectors";
 import {delay} from "../../player/sagas";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
+import {CodecastPlatform} from '../platforms';
 
 export function* compilePythonCodeSaga(source: string) {
     log.getLogger('python_runner').debug('compile python code', source);

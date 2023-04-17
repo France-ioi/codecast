@@ -2,13 +2,12 @@ import {App, Codecast} from "../../index";
 import {AppStore} from "../../store";
 import {QuickAlgoLibrary} from "./quickalgo_library";
 import {Bundle} from "../../linker";
-import {apply, call, put, select, spawn, takeEvery} from "typed-redux-saga";
+import {apply, call, put, spawn, takeEvery} from "typed-redux-saga";
 import {ActionTypes as StepperActionTypes} from "../../stepper/actionTypes";
 import {extractLevelSpecific, getCurrentImmerState} from "../utils";
 import {PrinterLib} from "./printer/printer_lib";
 import {hasBlockPlatform, loadBlocklyHelperSaga} from "../../stepper/js";
 import {
-    QuickalgoTaskIncludeBlocks,
     selectCurrentTestData,
     taskIncreaseContextId,
     taskSetBlocksPanelCollapsed,
@@ -18,7 +17,6 @@ import {
 } from "../task_slice";
 import {ActionTypes as IOActionTypes} from "../../stepper/io/actionTypes";
 import {IoMode} from "../../stepper/io";
-import {PlayerInstant} from "../../player";
 import {makeContext, QuickalgoLibraryCall} from "../../stepper/api";
 import {importModules, importPlatformModules, loadFonts} from "./import_modules";
 import {createRunnerSaga} from "../../stepper";
@@ -26,6 +24,7 @@ import {cancelModal, displayModal} from "../../common/prompt_modal";
 import {ModalType} from "../../common/modal_slice";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
+import {SmartContractLib} from './smart_contract/smart_contract_lib';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -152,6 +151,10 @@ export function* createQuickalgoLibrary() {
         if (!window.quickAlgoLibrariesList) {
             window.quickAlgoLibrariesList = [];
         }
+        window.quickAlgoLibrariesList.push(['smart_contract', (display, infos) => {
+            return new SmartContractLib(display, infos);
+        }]);
+
         const libraryIndex = window.quickAlgoLibrariesList.findIndex(element => levelGridInfos.context === element[0]);
         if (-1 !== libraryIndex) {
             const contextFactory = window.quickAlgoLibrariesList[libraryIndex][1];

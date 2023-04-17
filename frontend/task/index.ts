@@ -10,7 +10,7 @@ import {ActionTypes as RecorderActionTypes} from "../recorder/actionTypes";
 import {all, call, cancel, cancelled, delay, fork, put, select, take, takeEvery, takeLatest} from "typed-redux-saga";
 import {getRecorderState} from "../recorder/selectors";
 import {App, Codecast} from "../index";
-import {AppStore, CodecastPlatform} from "../store";
+import {AppStore} from "../store";
 import QuickalgoLibsBundle, {
     createQuickalgoLibrary,
     mainQuickAlgoLogger,
@@ -88,6 +88,7 @@ import {
 import {appSelect} from '../hooks';
 import {extractTestsFromTask} from '../submission/tests';
 import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload} from "../submission/submission";
+import {CodecastPlatform} from '../stepper/platforms';
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
     testId?: number,

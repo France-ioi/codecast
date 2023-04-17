@@ -4,9 +4,9 @@ import {ActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
 import {withResizeDetector} from "react-resize-detector/build/withPolyfill";
 import {Block} from "../task/blocks/blocks";
-import {CodecastPlatform} from "../store";
 import {BlocklyEditor} from "../stepper/js/BlocklyEditor";
 import {hasBlockPlatform} from "../stepper/js";
+import {CodecastPlatform} from '../stepper/platforms';
 
 interface BufferEditorProps {
     readOnly?: boolean,
