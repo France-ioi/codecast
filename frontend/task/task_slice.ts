@@ -13,6 +13,7 @@ import {AppStore} from "../store";
 import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
 import {TaskServer, TaskTestGroupType} from '../submission/task_platform';
+import {QuickAlgoLibrary} from './libs/quickalgo_library';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -78,8 +79,77 @@ export interface TaskTest {
     contextState: any,
 }
 
+export type NotionCategory = string;
+export type Notion = string;
+
+export interface QuickalgoTaskIncludeBlocks {
+    groupByCategory?: boolean,
+    originalGroupByCategory?: boolean,
+    generatedBlocks?: {[context: string]: string[]},
+    standardBlocks?: {
+        includeAll?: boolean,
+        wholeCategories?: NotionCategory[],
+        singleBlocks?: Notion[],
+    },
+    variables?: string[],
+}
+
+// We can customize the option for each level in the task definition
+export interface QuickalgoTaskIncludeBlocksAllLevels {
+    groupByCategory?: boolean|{[level: string]: boolean},
+    generatedBlocks?: {[context: string]: string[]}|{[context: string]: {[level: string]: string[]}},
+    standardBlocks?: {
+        includeAll?: boolean,
+        wholeCategories?: NotionCategory[]|{[level: string]: NotionCategory[]},
+        singleBlocks?: Notion[]|{[level: string]: Notion[]},
+    },
+    variables?: string[]|{[level: string]: string[]},
+}
+
+export interface QuickalgoTaskGridInfosNotLevelDependent {
+    context: string,
+    contextType?: string,
+    images?: {id?: string, path: {default: string}}[],
+    importModules?: string[],
+    conceptViewer?: boolean|string[],
+    backgroundColor?: string,
+    backgroundSrc?: string,
+    borderColor?: string,
+    showLabels?: boolean,
+    logOption?: boolean,
+    unlockedLevels?: number,
+    blocklyColourTheme?: string,
+    zoom?: {wheel?: boolean, controls?: boolean, scale?: number},
+    scrollbars?: boolean,
+    intro?: any,
+    hideSaveOrLoad?: boolean,
+    actionDelay?: number,
+    panelCollapsed?: boolean,
+    checkEndCondition?: (context: QuickAlgoLibrary, lastTurn: any) => void,
+    checkEndEveryTurn?: boolean,
+    hiddenTests?: boolean,
+    maxListSize?: number,
+    placeholderBlocks?: any,
+    usedSkills?: string[],
+    targetNbInstructions?: number,
+}
+
+export interface QuickalgoTaskGridInfos extends QuickalgoTaskGridInfosNotLevelDependent {
+    maxInstructions?: number|{[level: string]: number},
+    startingExample?: any,
+    limitedUses?: {[level: string]: {blocks: string[], nbUses: number}[]},
+    includeBlocks?: QuickalgoTaskIncludeBlocksAllLevels,
+}
+
+export interface QuickalgoLibraryInfos extends QuickalgoTaskGridInfosNotLevelDependent {
+    maxInstructions?: number,
+    startingExample: any,
+    limitedUses?: {blocks: string[], nbUses: number}[],
+    includeBlocks?: QuickalgoTaskIncludeBlocks,
+}
+
 export interface QuickalgoTask {
-    gridInfos: any,
+    gridInfos: QuickalgoTaskGridInfos,
     data?: any,
 }
 

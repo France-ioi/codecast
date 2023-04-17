@@ -8,6 +8,7 @@ import {extractLevelSpecific, getCurrentImmerState} from "../utils";
 import {PrinterLib} from "./printer/printer_lib";
 import {hasBlockPlatform, loadBlocklyHelperSaga} from "../../stepper/js";
 import {
+    QuickalgoTaskIncludeBlocks,
     selectCurrentTestData,
     taskIncreaseContextId,
     taskSetBlocksPanelCollapsed,

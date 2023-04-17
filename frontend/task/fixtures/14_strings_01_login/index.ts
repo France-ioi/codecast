@@ -1,3 +1,5 @@
+import {QuickalgoTask} from '../../task_slice';
+
 export default {
     gridInfos: {
         context: 'printer',
@@ -5,7 +7,6 @@ export default {
         conceptViewer: true,
         actionDelay: 200,
         includeBlocks: {
-            groupByCategory: false,
             generatedBlocks: {
                 printer: {
                     easy: ["print"],
@@ -88,4 +89,4 @@ export default {
             },
         ],
     }
-}
+} as QuickalgoTask

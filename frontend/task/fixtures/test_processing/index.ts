@@ -1,3 +1,5 @@
+import {QuickalgoTask} from '../../task_slice';
+
 export default {
     gridInfos: {
         context: 'processing',
@@ -43,5 +45,5 @@ export default {
             }
         ]
     },
-}
+} as QuickalgoTask
 

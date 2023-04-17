@@ -1,3 +1,5 @@
+import {QuickalgoTask} from '../../task_slice';
+
 const images = [
     {path: require('./box.png')},
     {path: require('./icon.png')},
@@ -268,4 +270,4 @@ export default {
             },
         ]
     }
-}
+} as QuickalgoTask

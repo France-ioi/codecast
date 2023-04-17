@@ -1,3 +1,5 @@
+import {QuickalgoTask} from '../../task_slice';
+
 const images = [
     {path: require('./angles.png')},
     {path: require('./angles60.png')},
@@ -45,7 +47,9 @@ export default {
         checkEndEveryTurn: false,
         checkEndCondition: function (context, lastTurn) {
             if (lastTurn) {
+                // @ts-ignore
                 let userImage = context.turtle.invisibleTurtle.drawingContext.getImageData(0, 0, 300, 300);
+                // @ts-ignore
                 let solutionImage = context.turtle.invisibleSolutionTurtle.drawingContext.getImageData(0, 0, 300, 300);
                 let len = Math.min(userImage.data.length, solutionImage.data.length);
                 let delta = 0;
@@ -217,4 +221,4 @@ export default {
             },
         }],
     }
-}
+} as QuickalgoTask

@@ -6,10 +6,9 @@ import {quickAlgoLibraries} from "../../task/libs/quickalgo_libraries";
 import {selectAnswer} from "../../task/selectors";
 import {getContextBlocksDataSelector} from "../../task/blocks/blocks";
 import {TaskLevelName} from "../../task/platform/platform_slice";
-import {extractLevelSpecific} from "../../task/utils";
 import {delay} from "../api";
 import {getMessage, getMessageChoices} from "../../lang";
-import {put, select} from "typed-redux-saga";
+import {put} from "typed-redux-saga";
 import {QuickAlgoLibrary} from "../../task/libs/quickalgo_library";
 import {LayoutType} from "../../task/layout/layout";
 import {taskIncreaseContextId} from "../../task/task_slice";
@@ -119,9 +118,7 @@ export function* loadBlocklyHelperSaga(context: QuickAlgoLibrary, currentLevel: 
 
     log.getLogger('blockly_runner').debug('[blockly.editor] load context into blockly editor');
     blocklyHelper.loadContext(context);
-
-    const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
-    blocklyHelper.setIncludeBlocks(curIncludeBlocks);
+    blocklyHelper.setIncludeBlocks(context.infos.includeBlocks);
 
     const groupsCategory = !!(context && context.infos && context.infos.includeBlocks && context.infos.includeBlocks.groupByCategory);
     if (groupsCategory && 'tralalere' === options.app) {

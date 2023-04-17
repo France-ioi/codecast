@@ -5,7 +5,7 @@ import {getMessage} from "../lang";
 import {AppStore, CodecastPlatform, platformsList} from "../store";
 import {checkBlocklyCode, getBlocklyBlocksUsage, hasBlockPlatform} from "../stepper/js";
 import {TaskLevelName, taskLevelsList} from './platform/platform_slice';
-import {isServerTask, Task} from './task_slice';
+import {isServerTask, QuickalgoTaskIncludeBlocksAllLevels, Task} from './task_slice';
 
 export enum TaskPlatformMode {
     Source = 'source',
@@ -19,7 +19,7 @@ export function getTaskPlatformMode(state: AppStore): TaskPlatformMode {
     return !state.task.currentTask && state.player.instants ? TaskPlatformMode.RecordingProgress : TaskPlatformMode.Source;
 }
 
-export function extractLevelSpecific(item, level) {
+export function extractLevelSpecific(item: any, level: TaskLevelName) {
     if ((typeof item != "object")) {
         return item;
     }

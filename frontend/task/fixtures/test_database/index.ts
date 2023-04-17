@@ -1,3 +1,5 @@
+import {QuickalgoTask} from '../../task_slice';
+
 const images = [
     {path: require('./img/apple.jpg')},
     {path: require('./img/banana.jpg')},
@@ -121,6 +123,7 @@ export default {
         checkEndEveryTurn: false,
         checkEndCondition: function(context, lastTurn) {
             //context.expectTable('valid_table');
+            // @ts-ignore
             context.expectHash(1868819174);
         },
         databaseConfig: {
@@ -179,4 +182,4 @@ export default {
             }
         ]
     },
-}
+} as QuickalgoTask

@@ -1,3 +1,5 @@
+import {QuickalgoTask} from '../../task_slice';
+
 export default {
     gridInfos: {
         context: 'barcode',
@@ -22,6 +24,7 @@ export default {
         maxInstructions: 100,
         checkEndEveryTurn: false,
         checkEndCondition: function(context, lastTurn) {
+            // @ts-ignore
             context.gradeResult();
         },
 
@@ -130,4 +133,4 @@ export default {
             }
         ]
     }
-}
+} as QuickalgoTask

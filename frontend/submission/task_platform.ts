@@ -154,7 +154,7 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
                 generatedBlocks: {
                     printer: ["print", "read"]
                 },
-                variables: {},
+                variables: [],
                 // pythonAdditionalFunctions: ["len"]
             },
             checkEndEveryTurn: false,

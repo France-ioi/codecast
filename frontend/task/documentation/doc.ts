@@ -1,7 +1,6 @@
 import {Bundle} from "../../linker";
 import {call, put, select, takeEvery} from "typed-redux-saga";
 import {quickAlgoLibraries} from "../libs/quickalgo_libraries";
-import {extractLevelSpecific} from "../utils";
 import {
     DocumentationConcept,
     documentationConceptSelected,
@@ -110,15 +109,11 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
             allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts());
-
-            const currentLevel = yield* appSelect(state => state.task.currentLevel);
-            const curIncludeBlocks = extractLevelSpecific(context.infos.includeBlocks, currentLevel);
-
-            concepts = window.getConceptsFromBlocks(curIncludeBlocks, allConcepts, context);
+            concepts = window.getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context);
         }
 
         const conceptViewer = context.infos.conceptViewer;
-        if (conceptViewer.length) {
+        if (Array.isArray(conceptViewer)) {
             concepts = concepts.concat(conceptViewer);
         } else {
             concepts.push('base');
