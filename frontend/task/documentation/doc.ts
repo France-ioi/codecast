@@ -15,6 +15,8 @@ import {App} from "../../index";
 import {Screen} from "../../common/screens";
 import {appSelect} from '../../hooks';
 import {CodecastPlatform} from '../../stepper/platforms';
+import {QuickalgoTaskIncludeBlocks} from '../task_slice';
+import {getNotionsFromIncludeBlocks} from '../blocks/notions';
 
 let openerChannel;
 
@@ -87,6 +89,69 @@ export function convertPlatformToDocumentationLanguage(platform: CodecastPlatfor
     }
 }
 
+// Extracted from _common/modules/pemFioi/conceptViewer-1.0-mobileFirst.js
+function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allConcepts) {
+    if (!includeBlocks) {
+        return [];
+    }
+
+    let concepts = ['language'];
+    let blocklyAliases = {
+        'controls_repeat_ext': 'controls_repeat'
+    };
+
+    const allConceptsById = {};
+    for (let c = 0; c < allConcepts.length; c++) {
+        allConceptsById[allConcepts[c].id] = allConcepts[c];
+    }
+
+    const notions = getNotionsFromIncludeBlocks(includeBlocks);
+    for (let notion of notions) {
+        let notionRealName = notion in blocklyAliases ? blocklyAliases[notion] : notion;
+        if (allConceptsById['blockly_' + notionRealName]) {
+            concepts.push(allConceptsById['blockly_' + notionRealName]);
+        }
+    }
+
+    // This seems useful for QuickPi
+    if (includeBlocks.generatedBlocks) {
+        for (let genName in includeBlocks.generatedBlocks) {
+            // this variable is used in order to make sure that we don't include two
+            // times a documentation
+            let includedConceptIds = [];
+            // We remove all concepts which have no "python" attribute
+            let filteredConcepts = allConcepts.filter(function (concept) {
+                return concept.python && concept.python != [];
+            });
+            for (let functionKey in includeBlocks.generatedBlocks[genName]) {
+                let functionName = includeBlocks.generatedBlocks[genName][functionKey];
+                let concept = findConceptByFunction(filteredConcepts, functionName);
+                if (concept) {
+                    // if we does not have the concept already pushed, we push it.
+                    if (includedConceptIds.indexOf(concept.id) == -1) {
+                        includedConceptIds.push(concept.id);
+                        concepts.push(concept);
+                    }
+                }
+            }
+        }
+    }
+
+    return concepts;
+}
+
+function findConceptByFunction(filteredConcepts, functionName) {
+    for (let conceptId in filteredConcepts) {
+        for (let conceptFunctionId in filteredConcepts[conceptId].python) {
+            if (filteredConcepts[conceptId].python[conceptFunctionId] === functionName) {
+                return filteredConcepts[conceptId];
+            }
+        }
+    }
+
+    return false;
+}
+
 function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolean) {
     if (standalone) {
         try {
@@ -110,7 +175,7 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
             allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts());
-            concepts = window.getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context);
+            concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts);
         }
 
         const conceptViewer = context.infos.conceptViewer;

@@ -115,7 +115,6 @@ declare global {
         stringsLanguage: any,
         getContext: Function,
         getConceptViewerBaseConcepts: Function,
-        getConceptsFromBlocks: Function,
         conceptViewer: ConceptViewer,
         conceptsFill: Function,
         Channel: any,
