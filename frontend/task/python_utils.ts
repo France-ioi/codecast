@@ -463,6 +463,8 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
             }
         }
 
+        allowedTokens = [...new Set(allowedTokens)];
+
         const bracketsWords = { list_brackets: 'crochets [ ]+[]', dict_brackets: 'accolades { }+{}', var_assign: 'variables+x =' };
         for (let bracketsCode in bracketsWords) {
             const bracketsIdx = allowedTokens.indexOf(bracketsCode);

@@ -38,7 +38,7 @@ export const defaultNotions = {
         'lists_append',
         'lists_map_split',
     ],
-    'maths': [
+    'math': [
         'math_number',
     ],
     'functions': [

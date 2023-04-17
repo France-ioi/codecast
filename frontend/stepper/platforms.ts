@@ -13,7 +13,7 @@ export enum CodecastPlatform {
     SmartPy = 'smartpy',
     Archetype = 'archetype',
     Michelson = 'michelson',
-    CameLIGO = 'cameligo',
+    CameLIGO = 'mligo',
     JsLIGO = 'jsligo',
 }
 
