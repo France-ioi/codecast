@@ -53,6 +53,8 @@ const pythonNotionsToBlocks = {
     'variables_set': ['var_assign'],
 };
 
+const pythonBlocksList = ['for', 'while', 'if', 'else', 'elif', 'not', 'and', 'or', 'list', 'set', 'list_brackets', 'dict_brackets', '__getitem__', '__setitem__', 'var_assign', 'def', 'lambda', 'break', 'continue', 'setattr', 'map', 'split'];
+
 const pythonCountPatterns = [
     // Comments
     {pattern: /^#[^\n\r]+/, block: false},
@@ -109,7 +111,7 @@ function pythonCount(text) {
 
 export const pythonForbiddenLists = function (includeBlocks) {
     // Check for forbidden keywords in code
-    const forbidden = ['for', 'while', 'if', 'else', 'elif', 'not', 'and', 'or', 'list', 'set', 'list_brackets', 'dict_brackets', '__getitem__', '__setitem__', 'var_assign', 'def', 'lambda', 'break', 'continue', 'setattr', 'map', 'split'];
+    const forbidden = [...pythonBlocksList];
     const allowed = [];
 
     if (!includeBlocks) {
@@ -457,9 +459,11 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
         const tokenCategories = {};
         for (let notion of notions) {
             const tokens = pythonNotionsToBlocks[notion];
-            allowedTokens = [...allowedTokens, ...tokens];
             for (let token of tokens) {
-                tokenCategories[token] = categoryNotions[notion];
+                if (-1 !== pythonBlocksList.indexOf(token)) {
+                    tokenCategories[token] = categoryNotions[notion];
+                    allowedTokens.push(token);
+                }
             }
         }
 
