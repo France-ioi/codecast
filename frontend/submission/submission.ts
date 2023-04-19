@@ -15,6 +15,8 @@ import stringify from 'json-stable-stringify-without-jsonify';
 import {TaskState, updateCurrentTestId} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
 import {getMessage} from '../lang';
+import {quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
+import {SmartContractLib} from '../task/libs/smart_contract/smart_contract_lib';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,
@@ -132,24 +134,16 @@ export default function (bundle: Bundle) {
             if (null !== submission && null !== newTest && isServerSubmission(submission)) {
                 const testResult = submission.result.tests.find(test => test.testId === newTest.id);
                 if (undefined !== testResult) {
+                    let error = null;
+                    const context = quickAlgoLibraries.getContext(null, 'main');
                     if (testResult.errorMessage) {
-                        yield* put(stepperDisplayError(testResult.errorMessage));
-                    } else if (!testResult.noFeedback && testResult.log) {
-                        try {
-                            // Check if first line of the log is JSON data containing a diff
-                            const log: TestResultDiffLog = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
-                            const error = {
-                                type: 'task-submission-test-result-diff',
-                                props: {
-                                    log,
-                                },
-                                error: getMessage('IOPANE_ERROR').format({line: log.diffRow}),
-                            };
+                        error = testResult.errorMessage;
+                    } else if (!testResult.noFeedback && testResult.log && context.getErrorFromTestResult) {
+                        error = context.getErrorFromTestResult(testResult);
+                    }
 
-                            yield* put(stepperDisplayError(error));
-                        } catch (e) {
-                            yield* put(stepperDisplayError(testResult.log));
-                        }
+                    if (null !== error) {
+                        yield* put(stepperDisplayError(error));
                     } else {
                         yield* put(stepperClearError());
                     }

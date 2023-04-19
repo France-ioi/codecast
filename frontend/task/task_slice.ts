@@ -93,6 +93,7 @@ export interface QuickalgoTaskIncludeBlocks {
         singleBlocks?: Notion[],
     },
     variables?: string[],
+    pythonAdditionalFunctions?: string[],
     procedures?: {ret: boolean, noret: boolean},
 }
 
@@ -106,6 +107,7 @@ export interface QuickalgoTaskIncludeBlocksAllLevels {
         singleBlocks?: Notion[]|{[level: string]: Notion[]},
     },
     variables?: string[]|{[level: string]: string[]},
+    pythonAdditionalFunctions?: string[],
 }
 
 export interface QuickalgoTaskGridInfosNotLevelDependent {

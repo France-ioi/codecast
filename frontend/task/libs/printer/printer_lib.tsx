@@ -20,7 +20,7 @@ import {createDraft} from "immer";
 import log from 'loglevel';
 import {PayloadAction} from "@reduxjs/toolkit";
 import {appSelect} from '../../../hooks';
-import {TestResultDiffLog} from '../../../submission/submission';
+import {TaskSubmissionServerTestResult, TestResultDiffLog} from '../../../submission/submission';
 import {getMessage} from '../../../lang';
 import {
     quickAlgoLibraries,
@@ -765,6 +765,23 @@ export class PrinterLib extends QuickAlgoLibrary {
             buffer: outputBufferLib,
             model: documentModelFromString(this.getOutputText()),
         });
+    }
+
+    getErrorFromTestResult(testResult: TaskSubmissionServerTestResult) {
+        try {
+            // Check if first line of the log is JSON data containing a diff
+            const log: TestResultDiffLog = JSON.parse(testResult.log.split(/\n\r|\r\n|\r|\n/).shift());
+
+            return {
+                type: 'task-submission-test-result-diff',
+                props: {
+                    log,
+                },
+                error: getMessage('IOPANE_ERROR').format({line: log.diffRow}),
+            };
+        } catch (e) {
+            return testResult.log;
+        }
     }
 
     *getSaga(app: App) {

@@ -133,41 +133,59 @@ export function* getTaskFromId(taskId: string): Generator<any, TaskServer|null> 
 }
 
 export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
-    const defaultTask = {
-        gridInfos: {
-            context: 'smart_contract', //'printer',
-            importModules: [],
-            showLabels: true,
-            conceptViewer: true,
-            // maxInstructions: {
-            //     easy: 20,
-            //     medium: 30,
-            //     hard: 40
-            // },
-            // nbPlatforms: 100,
-            includeBlocks: {
-                groupByCategory: true,
-                standardBlocks: {
-                    includeAll: true,
-                    // singleBlocks: ["controls_repeat", "controls_if"]
+    // Use this for now to check if it's a Smart Contract task. Change this in the future
+    if (-1 !== task.supportedLanguages.indexOf('michelson')) {
+        return {
+            ...task,
+            gridInfos: {
+                context: 'smart_contract',
+                importModules: [],
+                showLabels: true,
+                conceptViewer: true,
+                includeBlocks: {
+                    groupByCategory: true,
+                    standardBlocks: {
+                        includeAll: true,
+                    },
                 },
-                generatedBlocks: {
-                    // printer: ["print", "read"]
+            },
+        }
+    } else {
+        return {
+            ...task,
+            gridInfos: {
+                context: 'printer',
+                importModules: [],
+                showLabels: true,
+                conceptViewer: true,
+                // maxInstructions: {
+                //     easy: 20,
+                //     medium: 30,
+                //     hard: 40
+                // },
+                // nbPlatforms: 100,
+                includeBlocks: {
+                    groupByCategory: true,
+                    standardBlocks: {
+                        includeAll: true,
+                        singleBlocks: ["controls_repeat", "controls_if"]
+                    },
+                    generatedBlocks: {
+                        printer: ["print", "read"]
+                    },
+                    variables: [],
+                    pythonAdditionalFunctions: ["len"]
                 },
-                variables: [],
-                // pythonAdditionalFunctions: ["len"]
+                checkEndEveryTurn: false,
+                checkEndCondition: function (context, lastTurn) {
+                    if (!lastTurn) return;
+                    context.checkOutputHelper();
+                    context.success = true;
+                    throw(window.languageStrings.messages.outputCorrect);
+                },
             },
-            checkEndEveryTurn: false,
-            checkEndCondition: function (context, lastTurn) {
-                if (!lastTurn) return;
-                context.checkOutputHelper();
-                context.success = true;
-                throw(window.languageStrings.messages.outputCorrect);
-            },
-        },
-    };
-
-    return {...defaultTask, ...task};
+        }
+    }
 }
 
 export function* getServerSubmissionResults(submissionId: string): Generator<any, TaskSubmissionServerResult|null> {

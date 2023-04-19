@@ -56,7 +56,7 @@ export function ControlsAndErrors() {
     if (hasError) {
         if ('task-tests-submission-results-overview' === stepperError.type) {
             error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
-        } else if ('task-submission-test-result-diff' === stepperError.type) {
+        } else if (stepperError.error) {
             const stepperErrorHtml = toHtml(nl2br(stepperError.error));
             error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
         } else if ('compilation' === stepperError.type) {

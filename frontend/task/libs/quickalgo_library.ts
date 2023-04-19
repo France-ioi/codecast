@@ -7,8 +7,9 @@ import {mainQuickAlgoLogger} from "./quickalgo_libraries";
 import {stepperMaxSpeed} from "../../stepper";
 import log from 'loglevel';
 import {QuickalgoLibraryInfos} from '../task_slice';
+import {TaskSubmissionServerTestResult} from '../../submission/submission';
 
-export class QuickAlgoLibrary {
+export abstract class QuickAlgoLibrary {
     display: boolean;
     infos: QuickalgoLibraryInfos;
     placeholderBlocks: any;
@@ -283,5 +284,7 @@ export class QuickAlgoLibrary {
 
     checkOutputHelper() {
     }
+
+    getErrorFromTestResult?(testResult: TaskSubmissionServerTestResult): void;
 }
 

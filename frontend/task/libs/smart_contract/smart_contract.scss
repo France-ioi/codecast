@@ -1,0 +1,33 @@
+.smart-contract-visualization {
+  padding: 10px;
+
+  .smart-contract-log {
+    border: solid 1px grey;
+    padding: 5px;
+    .smart-contract-log__header {
+      display: flex;
+      .smart-contract-log__date {
+        color: grey;
+      }
+      .smart-contract-log__kind {
+        flex: 1 0;
+        margin-left: 10px;
+        font-weight: bold;
+      }
+    }
+    .smart-contract-log__scalars {
+      display: flex;
+      column-gap: 15px;
+      .smart-contract-scalar {
+        .smart-contract-scalar__header {
+          text-transform: uppercase;
+          font-size: 0.85em;
+          color: grey;
+        }
+        .smart-contract-scalar__value {
+          font-weight: bold;
+        }
+      }
+    }
+  }
+}

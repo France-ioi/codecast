@@ -25,6 +25,7 @@ import {ModalType} from "../../common/modal_slice";
 import log from 'loglevel';
 import {appSelect} from '../../hooks';
 import {SmartContractLib} from './smart_contract/smart_contract_lib';
+import {DefaultQuickalgoLibrary} from './default_quickalgo_library';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -107,7 +108,7 @@ export const quickAlgoLibraries = new QuickAlgoLibraries();
 window.quickAlgoLoadedLibraries = quickAlgoLibraries;
 window.quickAlgoResponsive = true;
 window.quickAlgoContext = function (display: boolean, infos: any) {
-    return new QuickAlgoLibrary(display, infos);
+    return new DefaultQuickalgoLibrary(display, infos);
 }
 
 export function* createQuickalgoLibrary() {
@@ -164,7 +165,7 @@ export function* createQuickalgoLibrary() {
                 quickAlgoLibraries.addLibrary(contextLib, levelGridInfos.context, state.environment);
             } catch (e) {
                 console.error("Cannot create context", e);
-                contextLib = new QuickAlgoLibrary(display, levelGridInfos);
+                contextLib = new DefaultQuickalgoLibrary(display, levelGridInfos);
                 quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);
             }
         }
@@ -175,7 +176,7 @@ export function* createQuickalgoLibrary() {
             quickAlgoLibraries.addLibrary(contextLib, 'printer', state.environment);
         } catch (e) {
             console.error("Cannot create context", e);
-            contextLib = new QuickAlgoLibrary(display, levelGridInfos);
+            contextLib = new DefaultQuickalgoLibrary(display, levelGridInfos);
             quickAlgoLibraries.addLibrary(contextLib, 'default', state.environment);
         }
     }

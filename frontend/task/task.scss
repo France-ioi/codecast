@@ -65,6 +65,7 @@ $sides: (top, bottom, left, right);
 @import "./levels.scss";
 @import "./blocks/blocks.scss";
 @import "./libs/quickpi.scss";
+@import "./libs/smart_contract/smart_contract.scss";
 @import "../stepper/js/blockly.scss";
 
 html {
