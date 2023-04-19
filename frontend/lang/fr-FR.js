@@ -230,6 +230,7 @@ module.exports = {
     TASK_BLOCK_CATEGORY_TURTLE: "Tortue",
     TASK_BLOCK_CATEGORY_CONSTANTS: "Constantes",
     TASK_BLOCK_CATEGORY_SMART_CONTRACTS: "Smart contracts",
+    TASK_BLOCK_CATEGORY_UNDEFINED: "Divers",
 
     LAYOUT_TYPE_REQUIRED_LABEL: "Se placer dans un agencement :",
     LAYOUT_DefaultLayoutDesktop: 'Ordinateur',
