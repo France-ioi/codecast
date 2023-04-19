@@ -59,6 +59,9 @@ export function ControlsAndErrors() {
         } else if (stepperError.error) {
             const stepperErrorHtml = toHtml(nl2br(stepperError.error));
             error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
+        } else if (stepperError.type && !stepperError.error) {
+            // We only show the result of an execution
+            hasError = false;
         } else if ('compilation' === stepperError.type) {
             const stepperErrorHtml = toHtml(stepperError.content);
             error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;

@@ -128,10 +128,19 @@ export interface SmartContractResultLogLine {
     stderr?: string,
     stdout?: string,
     storage: any,
+    updated_storage?: any,
+    operation?: string,
+    entrypoint?: string,
+    arg?: string,
+    storage_size: number,
+    consumed_gas: number,
+    paid_storage_size_diff: number,
+
 }
 
 interface SmartContractLibState {
-    resultLog?: SmartContractResultLogLine[]
+    resultLog?: SmartContractResultLogLine[],
+    errorMessage?: string,
 }
 
 export class SmartContractLib extends QuickAlgoLibrary {
@@ -200,6 +209,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
                 if (context) {
                     const innerState: SmartContractLibState = {
                         resultLog: log,
+                        errorMessage: payload.error.error,
                     };
 
                     yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, innerState);
@@ -212,16 +222,13 @@ export class SmartContractLib extends QuickAlgoLibrary {
     getErrorFromTestResult(testResult: TaskSubmissionServerTestResult) {
         try {
             const output = JSON.parse(testResult.output);
-            if (output.success) {
-                return null;
-            }
 
             return {
                 type: 'task-submission-test-result-smart-contract',
                 props: {
                     log: output.log,
                 },
-                error: output.error.message,
+                ...(output.error ? {error: output.error.message} : {}),
             };
 
         } catch (e) {

@@ -27,7 +27,7 @@ export function TestsPane() {
 
         return <div className="submission-label">
             {submissionResult.evaluated ?
-                <div className="submission-label-icon" style={{'--progression': `${Math.floor(submissionResult.result.score / 100 * 360)}deg`} as React.CSSProperties}>
+                <div className={`submission-label-icon ${100 === submissionResult.result.score ? 'submission-label-icon-success' : ''}`} style={{'--progression': `${Math.floor(submissionResult.result.score / 100 * 360)}deg`} as React.CSSProperties}>
                     <div className="submission-label-score">
                         {submissionResult.result.score}
                     </div>

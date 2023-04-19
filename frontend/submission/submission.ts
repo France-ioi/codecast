@@ -136,10 +136,11 @@ export default function (bundle: Bundle) {
                 if (undefined !== testResult) {
                     let error = null;
                     const context = quickAlgoLibraries.getContext(null, 'main');
-                    if (testResult.errorMessage) {
-                        error = testResult.errorMessage;
-                    } else if (!testResult.noFeedback && testResult.log && context.getErrorFromTestResult) {
+                    if (!testResult.noFeedback && testResult.log && context.getErrorFromTestResult) {
                         error = context.getErrorFromTestResult(testResult);
+                    }
+                    if (null === error && testResult.errorMessage) {
+                        error = testResult.errorMessage;
                     }
 
                     if (null !== error) {

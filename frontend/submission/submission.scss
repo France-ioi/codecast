@@ -212,6 +212,7 @@
   display: flex;
   align-items: center;
   text-align: left;
+  font-size: 14px;
 
   .submission-label-icon {
     margin-right: 8px;
@@ -222,11 +223,13 @@
 
     height: 36px;
     width: 36px;
-    border-radius:50%;
+    border-radius: 50%;
     background: conic-gradient(#f5a623 0, #f9d762 var(--progression), transparent var(--progression), transparent 360deg), conic-gradient(#969696 0deg, #969696 360deg);
+    &.submission-label-icon-success {
+      background: conic-gradient(#9acc68 0, #9acc68 360deg);
+    }
 
     $submission-label-width: 76%;
-
     &:after {
       position: absolute;
       content: '';
@@ -238,6 +241,7 @@
       background: white;
     }
   }
+
 
   .submission-label-loader {
     margin-right: 8px;

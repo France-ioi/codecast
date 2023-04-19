@@ -1,33 +1,108 @@
+$smart-contract-border-color: rgba(0, 0, 0, 0.176);
+
 .smart-contract-visualization {
   padding: 10px;
 
   .smart-contract-log {
-    border: solid 1px grey;
-    padding: 5px;
+    border: solid 1px $smart-contract-border-color;
+    border-radius: 6px;
+
     .smart-contract-log__header {
       display: flex;
+      padding: 8px;
+      background: rgba(0, 0, 0, 0.03);
+      border-bottom: solid 1px $smart-contract-border-color;
+      color: rgb(33, 37, 41);
       .smart-contract-log__date {
         color: grey;
+        white-space: nowrap;
       }
       .smart-contract-log__kind {
         flex: 1 0;
-        margin-left: 10px;
+        margin-left: 20px;
+        margin-right: 20px;
         font-weight: bold;
+      }
+      .smart-contract-log__hash {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        color: grey;
       }
     }
     .smart-contract-log__scalars {
       display: flex;
-      column-gap: 15px;
-      .smart-contract-scalar {
-        .smart-contract-scalar__header {
-          text-transform: uppercase;
-          font-size: 0.85em;
-          color: grey;
-        }
-        .smart-contract-scalar__value {
-          font-weight: bold;
-        }
-      }
+      column-gap: 25px;
     }
   }
+
+  .smart-contract-scalar {
+    .smart-contract-scalar__header {
+      text-transform: uppercase;
+      font-size: 0.85em;
+      color: grey;
+    }
+    .smart-contract-scalar__value {
+      //font-weight: bold;
+    }
+  }
+
+  .smart-contract-log__body {
+    padding: 8px;
+  }
+
+  .smart-contract-log__entry_point {
+    margin-top: 10px;
+    font-weight: bold;
+  }
+
+  .smart-contract-log__costs {
+    margin-top: 10px;
+  }
+
+  .smart-contract-log + .smart-contract-log {
+    margin-top: 10px;
+  }
+
+  .smart-contract-log__storage {
+    margin-top: 10px;
+
+    .smart-contract-scalar__value {
+      border: solid 1px $smart-contract-border-color;
+      border-radius: 6px;
+      padding: 5px;
+      display: inline-block;
+      min-width: 100px;
+    }
+  }
+
+  .smart-contract-log__storage-header {
+    font-size: .9em;
+    color: grey;
+    margin-bottom: 10px;
+  }
+
+  .smart-contract-log__see-more {
+    margin-bottom: 0 !important;
+    font-size: .85em !important;
+    color: var(--primary-color);
+    font-weight: bold;
+    svg {
+      vertical-align: middle;
+    }
+  }
+
+  .smart-contract-log__footer {
+    display: flex;
+    padding: 8px;
+    border-top: solid 1px $smart-contract-border-color;
+    font-weight: bold;
+    font-size: .9em;
+    color: #b60000;
+    background: #fdd;
+  }
+}
+
+.smart-contract-visualization-error {
+  margin-top: 10px;
+  color: #b60000;
 }
