@@ -125,7 +125,7 @@ export function* ensureLoggedSaga() {
 
     const token = isLocalStorageEnabled() ? window.localStorage.getItem('token') : null;
     if (token) {
-        const response: any = yield* call(asyncGetJson, baseUrl + '/me');
+        const response: any = yield* call(asyncGetJson, baseUrl + '/me', true);
         if (response.user) {
             yield* put({type: CommonActionTypes.LoginFeedback, payload: {user: response.user, token}});
             return;
