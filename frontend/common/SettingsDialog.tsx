@@ -15,6 +15,7 @@ import {getMessage} from "../lang";
 import {getJsLibLoaded} from "../task/libs/import_modules";
 import {hasBlockPlatform} from "../stepper/js";
 import {platformsList} from '../stepper/platforms';
+import {PlatformSelection} from './PlatformSelection';
 
 interface SettingsDialogProps {
     open: boolean,
@@ -37,14 +38,6 @@ export function SettingsDialog(props: SettingsDialogProps) {
     }
 
     const dispatch = useDispatch();
-
-    const setPlatform = (event) => {
-        const platform = event.target.value;
-        dispatch({
-            type: CommonActionTypes.PlatformChanged,
-            payload: {platform},
-        });
-    };
 
     const onIOModeChanged = (event) => {
         const mode = event.target.value;
@@ -81,22 +74,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
                     <LanguageSelection closeMenu={props.onClose}/>
                 </div>}
                 {canChangePlatform &&
-                    <div>
-                        <label className='bp3-label'>
-                            {getMessage('PLATFORM_SETTING')}
-                            <div className='bp3-select'>
-                                <select onChange={setPlatform} value={platform}>
-                                    {Object.keys(platformsList).map(platform =>
-                                        <option key={platform} value={platform}>{getMessage(`PLATFORM_${platform.toLocaleUpperCase()}`)}</option>
-                                    )}
-                                </select>
-                            </div>
-                        </label>
-
-                        {hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded() && <div className="mt-4">
-                            {getMessage('PLATFORM_RELOAD').format({platform: getMessage('PLATFORM_' + platform.toLocaleUpperCase())})}
-                        </div>}
-                    </div>
+                    <PlatformSelection/>
                 }
                 {ioModeSelect &&
                     <div>

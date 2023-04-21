@@ -1,7 +1,7 @@
 import React from "react";
 import {connect} from "react-redux";
 import {AppStore, CodecastOptions} from "../../store";
-import {createLayout, LayoutMobileMode, LayoutType} from "./layout";
+import {createLayout, LayoutMobileMode, LayoutType, selectActiveView} from "./layout";
 import {StepperStatus} from "../../stepper";
 import {ActionTypes} from "./actionTypes";
 import {withResizeDetector} from 'react-resize-detector/build/withPolyfill';
@@ -21,6 +21,7 @@ interface LayoutLoaderStateToProps {
     options: CodecastOptions,
     currentTask: any,
     showVariables: boolean,
+    activeView?: string,
 }
 
 function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
@@ -35,6 +36,8 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     const options = state.options;
     const currentTask = state.task.currentTask;
     let showVariables = options.showStack;
+    const activeView = selectActiveView(state);
+
     if (null !== currentTask) {
         const notions = getNotionsFromIncludeBlocks(state.task.contextIncludeBlocks);
         showVariables = showVariables && -1 === notions.indexOf('variables_set');
@@ -48,7 +51,7 @@ function mapStateToProps(state: AppStore): LayoutLoaderStateToProps {
     return {
         orderedDirectives, fullScreenActive, advisedVisualization, preferredVisualizations,
         layoutType, layoutMobileMode, screen, options, currentTask, layoutRequiredType,
-        showVariables,
+        showVariables, activeView,
     };
 }
 

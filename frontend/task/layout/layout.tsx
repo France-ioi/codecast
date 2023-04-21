@@ -79,6 +79,7 @@ export interface LayoutProps {
     options: CodecastOptions,
     currentTask: any,
     showVariables: boolean,
+    activeView?: string,
 }
 
 export interface LayoutElementMetadata {
@@ -631,7 +632,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 ...attrs,
             },
         }),
-        ...(layoutProps.currentTask ? {
+        ...(layoutProps.currentTask && 'solve' !== layoutProps.activeView ? {
             Instructions: (attrs) => ({
                 type: TaskInstructions,
                 metadata: {
@@ -696,8 +697,10 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
         layoutXml = '<Documentation/>';
     }
 
-    if (layoutProps.fullScreenActive) {
+    if (layoutProps.fullScreenActive || 'editor' === layoutProps.activeView) {
         layoutXml = '<Editor/>';
+    } else if ('instructions' === layoutProps.activeView) {
+        return <TaskInstructions hideShowMoreButton expanded/>;
     }
 
     const elementsTree = xmlToReact.convert(layoutXml);
@@ -731,6 +734,22 @@ function layoutRequiredTypeChangedReducer(state: AppStore, {payload: {requiredTy
 function layoutPlayerModeChangedReducer(state: AppStore, {payload: {playerMode, resumeImmediately}}) {
     state.layout.playerMode = playerMode;
     state.layout.playerModeResumeImmediately = !!resumeImmediately;
+}
+
+function layoutViewsChangedReducer(state: AppStore, {payload: {views}}) {
+    state.layout.views = views;
+}
+
+export enum LayoutView {
+    Editor = 'editor',
+    Instructions = 'instructions',
+    Solve = 'solve', // everything without instructions
+}
+
+export function selectActiveView(state: AppStore): LayoutView|null {
+    const activeViews = Object.entries(state.layout.views).find(([view, active]) => !!active);
+
+    return undefined !== activeViews ? activeViews[0] as LayoutView : null;
 }
 
 export function makeVisualizationAsPreferred(visualizations: string[], visualization: string): string[] {
@@ -781,6 +800,7 @@ export interface LayoutState {
     zoomLevel: number, // 1 is normal
     playerMode: LayoutPlayerMode,
     playerModeResumeImmediately?: boolean,
+    views: {[view: string]: boolean},
 }
 
 function* layoutSaga({replayApi}: App) {
@@ -839,6 +859,7 @@ export default function (bundle: Bundle) {
             mobileMode: LayoutMobileMode.Instructions,
             zoomLevel: 1,
             playerMode: LayoutPlayerMode.Execution,
+            views: {},
         };
     });
 
@@ -856,6 +877,9 @@ export default function (bundle: Bundle) {
 
     bundle.defineAction(ActionTypes.LayoutPlayerModeChanged);
     bundle.addReducer(ActionTypes.LayoutPlayerModeChanged, layoutPlayerModeChangedReducer);
+
+    bundle.defineAction(ActionTypes.LayoutViewsChanged);
+    bundle.addReducer(ActionTypes.LayoutViewsChanged, layoutViewsChangedReducer);
 
     bundle.addSaga(layoutSaga);
 
