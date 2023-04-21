@@ -145,7 +145,7 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
                 includeBlocks: {
                     groupByCategory: true,
                     standardBlocks: {
-                        includeAll: true,
+                        wholeCategories: ['smart_contract_main_blocks', 'smart_contract_types'],
                     },
                 },
             },

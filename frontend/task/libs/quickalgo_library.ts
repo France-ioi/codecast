@@ -8,6 +8,7 @@ import {stepperMaxSpeed} from "../../stepper";
 import log from 'loglevel';
 import {QuickalgoLibraryInfos} from '../task_slice';
 import {TaskSubmissionServerTestResult} from '../../submission/submission';
+import {defaultNotions, NotionArborescence} from '../blocks/notions';
 
 export abstract class QuickAlgoLibrary {
     display: boolean;
@@ -20,6 +21,7 @@ export abstract class QuickAlgoLibrary {
     customBlocks: any;
     customConstants: any;
     conceptList: any[];
+    notionsList: NotionArborescence;
     runner: any;
     curNode: any;
     lost: boolean = false;
@@ -106,6 +108,13 @@ export abstract class QuickAlgoLibrary {
     // function
     getConceptList() {
         return this.conceptList || [];
+    };
+
+    getNotionsList(): NotionArborescence {
+        return {
+            ...defaultNotions,
+            ...(this.notionsList || {}),
+        }
     };
 
     // Default implementations

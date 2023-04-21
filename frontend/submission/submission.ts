@@ -10,13 +10,10 @@ import {
 } from './task_platform';
 import {taskSubmissionExecutor} from './task_submission';
 import {appSelect} from '../hooks';
-import {selectAnswer} from '../task/selectors';
 import stringify from 'json-stable-stringify-without-jsonify';
-import {TaskState, updateCurrentTestId} from '../task/task_slice';
+import {updateCurrentTestId} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
-import {getMessage} from '../lang';
 import {quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
-import {SmartContractLib} from '../task/libs/smart_contract/smart_contract_lib';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,

@@ -1,6 +1,9 @@
-import {Notion, QuickalgoTaskIncludeBlocks} from '../task_slice';
+import {QuickalgoTaskIncludeBlocks} from '../task_slice';
+import {Block} from './blocks';
 
-export const defaultNotions = {
+export type NotionArborescence = {[category: string]: string[]};
+
+export const defaultNotions: NotionArborescence = {
     'dicts': [
         'dicts_create_with',
         'dict_get_literal',
@@ -52,51 +55,67 @@ export const defaultNotions = {
     ],
 };
 
-export function getCategoryNotions(): {[notion: string]: string} {
-    const categoryNotions = {};
-    for (let [category, notions] of Object.entries(defaultNotions)) {
-        for (let notion of notions) {
-            categoryNotions[notion] = category;
-        }
+export class NotionsBag {
+    private arborescence: NotionArborescence;
+
+    constructor(notions: NotionArborescence = {}) {
+        this.arborescence = notions;
     }
 
-    return categoryNotions;
-}
+    public getArborescence() {
+        return this.arborescence;
+    }
 
-export function getDefaultNotionsList(): string[] {
-    let notions = [];
-    for (let [category, values] of Object.entries(defaultNotions)) {
-        notions = [
+    public addCategory(category: string, notions: string[] = []) {
+        if (!(category in this.arborescence)) {
+            this.arborescence[category] = [];
+        }
+
+        this.arborescence[category] = [
+            ...this.arborescence[category],
             ...notions,
-            ...values,
         ];
     }
 
-    return notions;
-}
-
-export function getNotionsFromIncludeBlocks(includeBlocks: QuickalgoTaskIncludeBlocks = null): Notion[] {
-    let notions = [];
-    if (!includeBlocks) {
-        return [];
+    public addNotion(category: string, notion: string) {
+        this.addCategory(category);
+        if (-1 === this.arborescence[category].indexOf(notion)) {
+            this.arborescence[category].push(notion);
+        }
     }
 
-    const allNotions = getDefaultNotionsList(); // Add custom notions
+    public getNotionsList() {
+        return Object.values(this.arborescence).reduce((cur, next) => [...cur, ...next], []);
+    }
+
+    public hasNotion(notion: string) {
+        return -1 !== this.getNotionsList().indexOf(notion);
+    }
+
+    public getNotionsByCategory(category: string) {
+        return category in this.arborescence ? this.arborescence[category] : [];
+    }
+}
+
+export function getNotionsBagFromIncludeBlocks(includeBlocks: QuickalgoTaskIncludeBlocks = null, allNotions: NotionArborescence): NotionsBag {
+    if (!includeBlocks) {
+        return new NotionsBag();
+    }
+
+    let notionsBag = new NotionsBag();
 
     if (includeBlocks && includeBlocks.standardBlocks) {
         if (includeBlocks.standardBlocks.includeAll || includeBlocks.standardBlocks.includeAllPython) {
             // Everything is allowed
 
-            return allNotions;
+            return new NotionsBag(allNotions);
         }
 
         if (includeBlocks.standardBlocks.wholeCategories) {
             for (let c = 0; c < includeBlocks.standardBlocks.wholeCategories.length; c++) {
                 let categoryName = includeBlocks.standardBlocks.wholeCategories[c];
                 if (categoryName in allNotions) {
-                    for (let notion of allNotions[categoryName]) {
-                        notions.push(notion);
-                    }
+                    notionsBag.addCategory(categoryName, allNotions[categoryName]);
                 }
             }
         }
@@ -105,7 +124,7 @@ export function getNotionsFromIncludeBlocks(includeBlocks: QuickalgoTaskIncludeB
                 let blockName = includeBlocks.standardBlocks.singleBlocks[b];
                 for (let categoryName in allNotions) {
                     if (-1 !== allNotions[categoryName].indexOf(blockName)) {
-                        notions.push(blockName);
+                        notionsBag.addNotion(categoryName, blockName);
                     }
                 }
             }
@@ -113,13 +132,34 @@ export function getNotionsFromIncludeBlocks(includeBlocks: QuickalgoTaskIncludeB
     }
 
     if (includeBlocks && includeBlocks.variables && includeBlocks.variables.length) {
-        notions.push('variables_set');
+        notionsBag.addNotion('variables', 'variables_set');
     }
 
     if (includeBlocks && includeBlocks.procedures && (includeBlocks.procedures.ret || includeBlocks.procedures.noret)) {
-        notions.push('procedures_defnoreturn');
-        notions.push('procedures_defreturn');
+        notionsBag.addNotion('functions', 'procedures_defnoreturn');
+        notionsBag.addNotion('functions', 'procedures_defreturn');
     }
 
-    return [...new Set(notions)];
+    return notionsBag;
+}
+
+export function generateAvailableBlocksFromNotions(notionsBag: NotionsBag, availableBlocks: {[category: string]: {[notion: string]: Block[]}}) {
+    const userAvailableBlocks = [];
+
+    for (let [category, notions] of Object.entries(notionsBag.getArborescence())) {
+        if (category in availableBlocks) {
+            for (let notion of notions) {
+                if (notion in availableBlocks[category]) {
+                    for (let block of availableBlocks[category][notion]) {
+                        userAvailableBlocks.push({
+                            ...block,
+                            category,
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    return userAvailableBlocks;
 }

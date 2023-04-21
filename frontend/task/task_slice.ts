@@ -79,8 +79,6 @@ export interface TaskTest {
     contextState: any,
 }
 
-export type NotionCategory = string;
-export type Notion = string;
 
 export interface QuickalgoTaskIncludeBlocks {
     groupByCategory?: boolean,
@@ -89,12 +87,14 @@ export interface QuickalgoTaskIncludeBlocks {
     standardBlocks?: {
         includeAll?: boolean,
         includeAllPython?: boolean,
-        wholeCategories?: NotionCategory[],
-        singleBlocks?: Notion[],
+        wholeCategories?: string[],
+        singleBlocks?: string[],
     },
     variables?: string[],
     pythonAdditionalFunctions?: string[],
-    procedures?: {ret: boolean, noret: boolean},
+    procedures?: {ret: boolean, noret: boolean, disableArgs?: boolean},
+    pythonForceAllowed?: string[],
+    pythonForceForbidden?: string[],
 }
 
 // We can customize the option for each level in the task definition
@@ -103,8 +103,8 @@ export interface QuickalgoTaskIncludeBlocksAllLevels {
     generatedBlocks?: {[context: string]: string[]}|{[context: string]: {[level: string]: string[]}},
     standardBlocks?: {
         includeAll?: boolean,
-        wholeCategories?: NotionCategory[]|{[level: string]: NotionCategory[]},
-        singleBlocks?: Notion[]|{[level: string]: Notion[]},
+        wholeCategories?: string[]|{[level: string]: string[]},
+        singleBlocks?: string[]|{[level: string]: string[]},
     },
     variables?: string[]|{[level: string]: string[]},
     pythonAdditionalFunctions?: string[],

@@ -11,6 +11,7 @@ import {QuickAlgoLibrary} from "../libs/quickalgo_library";
 import {memoize} from 'proxy-memoize';
 import {appSelect} from '../../hooks';
 import {CodecastPlatform, platformsList} from '../../stepper/platforms';
+import {getNotionsBagFromIncludeBlocks} from './notions';
 
 export enum BlockType {
     Function = 'function',
@@ -163,7 +164,8 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
     }
 
     if (platformsList[platform].getSpecificBlocks) {
-        const specificBlocks = platformsList[platform].getSpecificBlocks(contextIncludeBlocks);
+        const notionsBag = getNotionsBagFromIncludeBlocks(contextIncludeBlocks, context.getNotionsList());
+        const specificBlocks = platformsList[platform].getSpecificBlocks(notionsBag, contextIncludeBlocks);
         availableBlocks = [...availableBlocks, ...specificBlocks];
     }
 

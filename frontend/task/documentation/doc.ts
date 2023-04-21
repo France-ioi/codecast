@@ -9,14 +9,17 @@ import {
     documentationLanguageChanged
 } from "./documentation_slice";
 import {AppAction} from "../../store";
-import {ActionTypes as CommonActionTypes} from "../../common/actionTypes";
+import {ActionTypes, ActionTypes as CommonActionTypes} from "../../common/actionTypes";
 import {getMessage} from "../../lang";
 import {App} from "../../index";
 import {Screen} from "../../common/screens";
 import {appSelect} from '../../hooks';
 import {CodecastPlatform} from '../../stepper/platforms';
-import {QuickalgoTaskIncludeBlocks} from '../task_slice';
-import {getNotionsFromIncludeBlocks} from '../blocks/notions';
+import {QuickalgoTaskIncludeBlocks, TaskActionTypes} from '../task_slice';
+import {getNotionsBagFromIncludeBlocks, NotionArborescence} from '../blocks/notions';
+import {useEffect} from 'react';
+import {ActionTypes as AppActionTypes} from '../../actionTypes';
+import {taskLoad} from '../index';
 
 let openerChannel;
 
@@ -90,7 +93,7 @@ export function convertPlatformToDocumentationLanguage(platform: CodecastPlatfor
 }
 
 // Extracted from _common/modules/pemFioi/conceptViewer-1.0-mobileFirst.js
-function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allConcepts) {
+function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allConcepts, notionsList: NotionArborescence) {
     if (!includeBlocks) {
         return [];
     }
@@ -105,15 +108,17 @@ function getConceptsFromBlocks(includeBlocks: QuickalgoTaskIncludeBlocks, allCon
         allConceptsById[allConcepts[c].id] = allConcepts[c];
     }
 
-    const notions = getNotionsFromIncludeBlocks(includeBlocks);
-    for (let notion of notions) {
+    const notionsBag = getNotionsBagFromIncludeBlocks(includeBlocks, notionsList);
+    for (let notion of notionsBag.getNotionsList()) {
         let notionRealName = notion in blocklyAliases ? blocklyAliases[notion] : notion;
         if (allConceptsById['blockly_' + notionRealName]) {
             concepts.push(allConceptsById['blockly_' + notionRealName]);
+        } else if (allConceptsById[notionRealName]) {
+            concepts.push(allConceptsById[notionRealName]);
         }
     }
 
-    // This seems useful for QuickPi
+    // Ole code, useful for QuickPi
     if (includeBlocks.generatedBlocks) {
         for (let genName in includeBlocks.generatedBlocks) {
             // this variable is used in order to make sure that we don't include two
@@ -175,7 +180,7 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
         if (DocumentationLanguage.C !== language) {
             allConcepts = context.getConceptList();
             allConcepts = allConcepts.concat(window.getConceptViewerBaseConcepts());
-            concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts);
+            concepts = getConceptsFromBlocks(context.infos.includeBlocks, allConcepts, context.getNotionsList());
         }
 
         const conceptViewer = context.infos.conceptViewer;
@@ -245,6 +250,16 @@ export default function (bundle: Bundle) {
 
         yield* takeEvery(DocumentationActionTypes.DocumentationLoad, function* (action: DocumentationLoadAction) {
             yield* call(documentationLoadSaga, action.payload.standalone, action.payload.hasTaskInstructions);
+        });
+
+        // @ts-ignore
+        yield* takeEvery([ActionTypes.PlatformChanged, TaskActionTypes.TaskLoad], function* () {
+            const newPlatform = yield* appSelect(state => state.options.platform);
+            const documentationLanguage = yield* appSelect(state => state.documentation.language);
+            const platformDocumentationLanguage = convertPlatformToDocumentationLanguage(newPlatform);
+            if (platformDocumentationLanguage !== documentationLanguage) {
+                yield* put(documentationLanguageChanged(platformDocumentationLanguage));
+            }
         });
     });
 }

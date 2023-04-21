@@ -87,7 +87,7 @@ import {
 } from "../submission/submission_slice";
 import {appSelect} from '../hooks';
 import {extractTestsFromTask} from '../submission/tests';
-import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload} from "../submission/submission";
+import {TaskSubmissionResultPayload} from "../submission/submission";
 import {CodecastPlatform, platformsList} from '../stepper/platforms';
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {

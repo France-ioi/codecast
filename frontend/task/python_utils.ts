@@ -13,7 +13,8 @@ import {Block, BlockType, getContextBlocksDataSelector} from "./blocks/blocks";
 import {AppStore} from "../store";
 import {QuickAlgoLibrary} from "./libs/quickalgo_library";
 import {analysisDirectiveViewDict} from "../stepper/views";
-import {getCategoryNotions, getNotionsFromIncludeBlocks} from './blocks/notions';
+import {getNotionsBagFromIncludeBlocks, NotionArborescence, NotionsBag} from './blocks/notions';
+import {QuickalgoTaskIncludeBlocks} from './task_slice';
 
 const pythonNotionsToBlocks = {
     'dicts_create_with': ['dict_brackets'],
@@ -109,7 +110,7 @@ function pythonCount(text) {
     return nbBlocks;
 }
 
-export const pythonForbiddenLists = function (includeBlocks) {
+export const pythonForbiddenLists = function (includeBlocks: QuickalgoTaskIncludeBlocks, notionsList: NotionArborescence) {
     // Check for forbidden keywords in code
     const forbidden = [...pythonBlocksList];
     const allowed = [];
@@ -146,8 +147,8 @@ export const pythonForbiddenLists = function (includeBlocks) {
         }
     }
 
-    const notions = getNotionsFromIncludeBlocks(includeBlocks);
-    for (let notion of notions) {
+    const notionsBag = getNotionsBagFromIncludeBlocks(includeBlocks, notionsList);
+    for (let notion of notionsBag.getNotionsList()) {
         removeForbidden(pythonNotionsToBlocks[notion]);
     }
 
@@ -172,8 +173,8 @@ function removeFromPatterns(code, patterns) {
     return code;
 }
 
-export const pythonForbidden = function (code, includeBlocks) {
-    let forbidden = pythonForbiddenLists(includeBlocks).forbidden;
+export const pythonForbidden = function (code, includeBlocks: QuickalgoTaskIncludeBlocks, notionsList: NotionArborescence) {
+    let forbidden = pythonForbiddenLists(includeBlocks, notionsList).forbidden;
 
     if (includeBlocks && includeBlocks.procedures && includeBlocks.procedures.disableArgs) {
         forbidden.push('def_args');
@@ -356,7 +357,7 @@ export const getPythonBlocksUsage = function (code: string, context: QuickAlgoLi
 
 export const checkPythonCode = function (code: string, context: QuickAlgoLibrary, state: AppStore, withEmptyCheck: boolean = true) {
     const includeBlocks = context.infos.includeBlocks;
-    const forbidden = pythonForbidden(code, includeBlocks);
+    const forbidden = pythonForbidden(code, includeBlocks, context.getNotionsList());
     const maxInstructions = context.infos.maxInstructions ? context.infos.maxInstructions : Infinity;
 
     if (forbidden) {
@@ -412,7 +413,7 @@ export const checkPythonCode = function (code: string, context: QuickAlgoLibrary
     }
 }
 
-export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
+export function getPythonSpecificBlocks(notionsBag: NotionsBag, contextIncludeBlocks?: QuickalgoTaskIncludeBlocks): Block[] {
     const availableBlocks: Block[] = [];
 
     let specialSnippets = {
@@ -453,16 +454,16 @@ export function getPythonSpecificBlocks(contextIncludeBlocks: any): Block[] {
     }
 
     if (contextIncludeBlocks) {
-        const notions = getNotionsFromIncludeBlocks(contextIncludeBlocks);
-        const categoryNotions = getCategoryNotions();
         let allowedTokens = [];
         const tokenCategories = {};
-        for (let notion of notions) {
-            const tokens = pythonNotionsToBlocks[notion];
-            for (let token of tokens) {
-                if (-1 !== pythonBlocksList.indexOf(token)) {
-                    tokenCategories[token] = categoryNotions[notion];
-                    allowedTokens.push(token);
+        for (let [category, notions] of Object.entries(notionsBag.getArborescence())) {
+            for (let notion of notions) {
+                const tokens = pythonNotionsToBlocks[notion];
+                for (let token of tokens) {
+                    if (-1 !== pythonBlocksList.indexOf(token)) {
+                        tokenCategories[token] = category;
+                        allowedTokens.push(token);
+                    }
                 }
             }
         }
