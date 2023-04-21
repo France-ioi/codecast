@@ -135,6 +135,10 @@ module.exports = {
     PLATFORM_BLOCKLY: "Blockly",
     PLATFORM_SCRATCH: "Scratch",
     PLATFORM_SMARTPY: "SmartPy",
+    PLATFORM_ARCHETYPE: "Archetype",
+    PLATFORM_MICHELSON: "Michelson",
+    PLATFORM_MLIGO: "CameLIGO",
+    PLATFORM_JSLIGO: "JsLIGO",
     PLATFORM_RELOAD: "We can't display the language {platform} in the current mode, please reload the page to update the display.",
     PROGRAM_MISSING_LIB: "You must include the line {line} in your program.",
 

@@ -48,20 +48,22 @@ export class SmartContractLib extends QuickAlgoLibrary {
 
         this.setLocalLanguageStrings({});
 
-        //TODO: Update concepts
-
         const conceptBaseUrl = (window.location.protocol == 'https:' ? 'https:' : 'http:') + '//'
-            + 'static4.castor-informatique.fr/help/printer_codecast.html';
+            + 'static4.castor-informatique.fr/help/smart_contracts.html';
 
         this.conceptList = [
             {
-                id: 'printer_introduction',
-                name: 'Les entrées/sorties',
-                url: conceptBaseUrl + '#printer_introduction',
+                id: 'smart_contracts_lorem',
+                name: 'Lorem',
+                url: conceptBaseUrl + '#smart_contracts_lorem',
                 isBase: true
             },
-            {id: 'printer_print', name: 'Afficher une ligne', url: conceptBaseUrl + '#printer_print', isBase: true},
-            {id: 'printer_read', name: 'Lire une ligne', url: conceptBaseUrl + '#printer_read', isBase: true}
+            {
+                id: 'smart_contracts_ipsum',
+                name: 'Ipsum',
+                url: conceptBaseUrl + '#smart_contracts_ipsum',
+                isBase: true
+            },
         ];
 
         this.innerState = {};

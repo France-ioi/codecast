@@ -14,6 +14,7 @@ import {faMinus} from '@fortawesome/free-solid-svg-icons/faMinus';
 import {quickAlgoLibraries} from './libs/quickalgo_libraries';
 import {PlatformSelection} from '../common/PlatformSelection';
 import {LayoutView, selectActiveView} from './layout/layout';
+import convertHtmlToReact from '@hedgedoc/html-to-react';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -49,6 +50,14 @@ const defaultInstructionsHtml = `
         Plus de détails sur la mission
     </p>
 `;
+
+function transformNode(node, props) {
+    if (node.attribs && 'select-lang-selector' in node.attribs) {
+        return <PlatformSelection key="platform-selection" withoutLabel/>;
+    }
+
+    return undefined;
+}
 
 export function TaskInstructions(props: TaskInstructionsProps) {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
@@ -120,13 +129,8 @@ export function TaskInstructions(props: TaskInstructionsProps) {
 
             {!props.withoutTitle && <h1>{instructionsTitle ? instructionsTitle : getMessage('TASK_INSTRUCTIONS')}</h1>}
 
-            {LayoutView.Instructions === activeView && <div className="task-mission-platform-selection">
-                <PlatformSelection/>
-
-                <hr/>
-            </div>}
-
-            <div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>
+            <div>{convertHtmlToReact(instructionsHtml, {transform: (node) => transformNode(node, props)})}</div>
+            {/*<div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>*/}
 
             {!props.hideShowMoreButton && !props.expanded && <Button
                 className="quickalgo-button mt-2"

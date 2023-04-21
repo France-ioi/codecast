@@ -6,15 +6,11 @@ import {useAppSelector} from "../hooks";
 import {isLocalMode} from "../utils/app";
 import {select} from "typed-redux-saga";
 import {StepperStatus} from "../stepper";
-import {ActionTypes as CommonActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
 import {ActionTypes as IOActionTypes} from "../stepper/io/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {IoMode} from "../stepper/io";
 import {getMessage} from "../lang";
-import {getJsLibLoaded} from "../task/libs/import_modules";
-import {hasBlockPlatform} from "../stepper/js";
-import {platformsList} from '../stepper/platforms';
 import {PlatformSelection} from './PlatformSelection';
 
 interface SettingsDialogProps {

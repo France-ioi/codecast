@@ -77,7 +77,7 @@ import {selectAnswer} from "./selectors";
 import {hasBlockPlatform, loadBlocklyHelperSaga} from "../stepper/js";
 import {ObjectDocument} from "../buffers/document";
 import {hintsLoaded} from "./hints/hints_slice";
-import {ActionTypes} from "../common/actionTypes";
+import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
 import log from 'loglevel';
 import {convertServerTaskToCodecastFormat, getTaskFromId, TaskServer} from "../submission/task_platform";
 import {
@@ -88,7 +88,7 @@ import {
 import {appSelect} from '../hooks';
 import {extractTestsFromTask} from '../submission/tests';
 import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload} from "../submission/submission";
-import {CodecastPlatform} from '../stepper/platforms';
+import {CodecastPlatform, platformsList} from '../stepper/platforms';
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
     testId?: number,
@@ -173,6 +173,7 @@ function* taskLoadSaga(app: App, action) {
         yield* put(currentTaskChangePredefined(selectedTask));
     }
 
+
     // yield* put(hintsLoaded([
     //     {content: 'aazazaz'},
     //     {content: 'aazazazazazazz'},
@@ -184,7 +185,15 @@ function* taskLoadSaga(app: App, action) {
     }
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
+    const platform = yield* appSelect(state => state.options.platform);
     if (currentTask) {
+        if (currentTask.supportedLanguages && currentTask.supportedLanguages.length && -1 === currentTask.supportedLanguages.indexOf(platform)) {
+            const availablePlatforms = Object.keys(platformsList).filter(platform => -1 !== currentTask.supportedLanguages.indexOf(platform));
+            if (availablePlatforms.length) {
+                yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: availablePlatforms[0], reloadTask: false}});
+            }
+        }
+
         let currentLevel = yield* appSelect(state => state.task.currentLevel);
 
         if (action.payload.level && action.payload.level in currentTask.data) {

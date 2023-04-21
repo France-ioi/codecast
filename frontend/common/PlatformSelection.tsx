@@ -8,8 +8,13 @@ import {getJsLibLoaded} from '../task/libs/import_modules';
 import {getMessage} from '../lang';
 import {platformsList} from '../stepper/platforms';
 
-export function PlatformSelection() {
+export interface PlatformSelectionProps {
+    withoutLabel?: boolean
+}
+
+export function PlatformSelection(props: PlatformSelectionProps) {
     const platform = useAppSelector(state => state.options.platform);
+    const currentTask = useAppSelector(state => state.task.currentTask);
     const dispatch = useDispatch();
 
     const setPlatform = (event) => {
@@ -20,17 +25,28 @@ export function PlatformSelection() {
         });
     };
 
+    let availablePlatforms = Object.keys(platformsList);
+    if (null !== currentTask && currentTask.supportedLanguages && currentTask.supportedLanguages.length) {
+        availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.indexOf(platform));
+    }
+
+    const selector = <div className='bp3-select'>
+        <select onChange={setPlatform} value={platform}>
+            {availablePlatforms.map(platform =>
+                <option key={platform} value={platform}>{getMessage(`PLATFORM_${platform.toLocaleUpperCase()}`)}</option>
+            )}
+        </select>
+    </div>;
+
+    if (props.withoutLabel) {
+        return selector;
+    }
+
     return (
         <div>
             <label className='bp3-label'>
                 {getMessage('PLATFORM_SETTING')}
-                <div className='bp3-select'>
-                    <select onChange={setPlatform} value={platform}>
-                        {Object.keys(platformsList).map(platform =>
-                            <option key={platform} value={platform}>{getMessage(`PLATFORM_${platform.toLocaleUpperCase()}`)}</option>
-                        )}
-                    </select>
-                </div>
+                {selector}
             </label>
 
             {hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded() && <div className="mt-4">
