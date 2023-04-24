@@ -9,7 +9,6 @@ import {PlayerControls} from "./PlayerControls";
 import {ActionTypes as PlayerActionTypes} from "../player/actionTypes";
 import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {LayoutLoader} from "./layout/LayoutLoader";
-import {taskLoad} from "./index";
 import {ActionTypes as EditorActionTypes} from "../editor/actionTypes";
 import {useAppSelector} from "../hooks";
 import {CodecastOptionsMode} from "../store";
@@ -29,6 +28,7 @@ import {taskSuccessClear} from "./task_slice";
 import {platformTaskLink} from './platform/actionTypes';
 import {ContextVisualizationImages} from './ContextVisualizationImages';
 import {TestsPane} from '../submission/TestsPane';
+import {TaskHintsDialog} from './dialog/TaskHintsDialog';
 
 export function TaskApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -192,6 +192,8 @@ export function TaskApp() {
                     <TaskAbout/>
                 </div>}
             </Dialog>
+
+            <TaskHintsDialog/>
 
             {taskSuccess && <TaskSuccessDialog onClose={closeTaskSuccess}/>}
 

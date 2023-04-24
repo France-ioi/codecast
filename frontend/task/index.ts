@@ -167,12 +167,14 @@ function* taskLoadSaga(app: App, action) {
         if (urlParameters.has('sPlatform')) {
             yield* put(submissionChangePlatformName(urlParameters.get('sPlatform')));
         }
+        if (convertedTask.hints && convertedTask.hints.length) {
+            yield* put(hintsLoaded(convertedTask.hints));
+        }
     } else if (state.options.task) {
         yield* put(currentTaskChange(state.options.task));
     } else if (selectedTask) {
         yield* put(currentTaskChangePredefined(selectedTask));
     }
-
 
     // yield* put(hintsLoaded([
     //     {content: 'aazazaz'},

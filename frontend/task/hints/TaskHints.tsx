@@ -9,7 +9,11 @@ import {hintUnlocked} from "./hints_slice";
 import {getMessage} from '../../lang';
 import {formatTaskInstructions} from '../utils';
 
-export function TaskHints() {
+export interface TaskHintProps {
+    askHintClassName?: string
+}
+
+export function TaskHints(props: TaskHintProps) {
     const availableHints = useAppSelector(state => state.hints.availableHints);
     const unlockedHintIds = useAppSelector(state => state.hints.unlockedHintIds);
     const taskLevel = useAppSelector(state => state.task.currentLevel);
@@ -34,7 +38,7 @@ export function TaskHints() {
     if (undefined !== nextAvailableHint) {
         carouselElements.push(
             <div className="hint-carousel-item hint-unlock">
-                <div className="tralalere-button hint-button" onClick={unlockNextHint}>
+                <div className={`hint-button ${props.askHintClassName}`} onClick={unlockNextHint}>
                     {getMessage('TRALALERE_HINTS_ASK')}
                 </div>
             </div>

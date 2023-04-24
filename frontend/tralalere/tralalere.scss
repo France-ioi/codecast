@@ -419,72 +419,27 @@ $tralalere-red: #FF3C11;
     width: 95vw;
   }
 
-  .hint-unlock {
-    margin-top: 10px;
-
-    .hint-button {
-      font-size: 16px;
-      width: fit-content;
-      padding: 5px 30px;
-      margin: auto;
-    }
-  }
-
   .hint-carousel-item {
-    font-weight: 400;
-    line-height: 20px;
     color: white;
   }
 
-  // Carousel
-  .carousel-container {
-    position: relative;
-  }
-
   .carousel {
+    .carousel-item {
+      color: #727272;
+    }
+
     .carousel-control-prev, .carousel-control-next, .carousel-control-prev:focus, .carousel-control-next:focus {
       color: white;
-      width: 50px;
       opacity: 1;
     }
     .carousel-control-prev:hover, .carousel-control-next:hover {
       color: #ddd;
-    }
-    .carousel-item {
-      padding: 30px 50px 60px;
-    }
-    .carousel-indicators button {
-      height: 6px;
-      opacity: 0.3;
-      &.active {
-        opacity: 1;
-      }
-    }
-    .carousel-item h3 {
-      color: #699669;
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 20px;
-    }
-    .carousel-item {
-      color: #727272;
-    }
-    .carousel-item .row {
-      align-items: center;
-    }
-    .carousel-item .row.is-vertical-top {
-      align-items: flex-start;
-    }
-    .carousel-item img {
-      width: 100%;
-    }
-    .carousel-item ul {
-      //margin-bottom: 0;
+      opacity: 1;
     }
   }
 }
 
-.tralalere-instructions-container .task-mission a, .hint-carousel-item a {
+.tralalere-instructions-container .task-mission a, .tralalere-hints .hint-carousel-item a {
   color: $tralalere-green !important;
   font-weight: bold;
   text-decoration: underline !important;

@@ -2,8 +2,9 @@ import React from 'react';
 import {Button} from '@blueprintjs/core';
 import {FullscreenButton} from "../common/FullscreenButton";
 import {useAppSelector} from "../hooks";
-import {ActionTypes} from "../common/actionTypes";
+import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
 import {useDispatch} from "react-redux";
+import {Screen} from '../common/screens';
 
 interface MenuIconsTaskProps {
     toggleMenu: () => void,
@@ -14,7 +15,9 @@ export function MenuIconsTask(props: MenuIconsTaskProps) {
     const showDocumentation = useAppSelector(state => state.options.showDocumentation);
     const showFullScreen = useAppSelector(state => state.options.showFullScreen);
     const showMenu = useAppSelector(state => state.options.showMenu);
+    const showHints = useAppSelector(state => !!(state.hints.availableHints && state.hints.availableHints.length > 0));
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
+    const screen = useAppSelector(state => state.screen);
 
     const dispatch = useDispatch();
 
@@ -25,6 +28,11 @@ export function MenuIconsTask(props: MenuIconsTaskProps) {
         props.toggleDocumentation();
     }
 
+    const toggleHints = () => {
+        const newScreen = Screen.Hints === screen ? null : Screen.Hints;
+        dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: newScreen}});
+    };
+
     return (
         <div id='menu'>
             <div className="menu-task-elements">
@@ -33,6 +41,9 @@ export function MenuIconsTask(props: MenuIconsTaskProps) {
                 </div>}
                 {showDocumentation && <div className="menu-task-element is-blue">
                     <Button onClick={toggleDocumentation} icon='help'/>
+                </div>}
+                {showHints && <div className="menu-task-element is-blue">
+                    <Button onClick={toggleHints} icon='lightbulb'/>
                 </div>}
                 {showMenu && <div className="menu-task-element">
                     <Button onClick={props.toggleMenu} icon='menu'/>

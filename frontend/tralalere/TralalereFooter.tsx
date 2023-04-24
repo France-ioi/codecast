@@ -83,7 +83,9 @@ export function TralalereFooter (props: TralalereFooterProps) {
                             </div>
                         </div>
                     </div>
-                    <TaskHints/>
+                    <TaskHints
+                        askHintClassName="tralalere-button"
+                    />
                 </TralalereBox>
             </Dialog>
 

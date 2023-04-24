@@ -3,6 +3,7 @@ import {asyncGetJson, asyncRequestJson} from "../utils/api";
 import {Task} from '../task/task_slice';
 import {appSelect} from '../hooks';
 import {TaskSubmissionServerResult} from './submission';
+import {TaskHint} from '../task/hints/hints_slice';
 
 export interface TaskNormalized {
     id: string,
@@ -70,6 +71,7 @@ export interface TaskServer extends TaskNormalized {
     strings: TaskStringNormalized[],
     subTasks: TaskSubtaskNormalized[],
     tests: TaskTestServer[],
+    hints?: TaskHint[],
 }
 
 
@@ -149,7 +151,11 @@ export function convertServerTaskToCodecastFormat(task: TaskServer): Task {
                     },
                 },
             },
-        }
+            hints: [
+                {content: 'Indice 1'},
+                {content: 'Indice 2'},
+            ],
+        };
     } else {
         return {
             ...task,
