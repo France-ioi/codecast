@@ -25,6 +25,7 @@ import {taskSuccessClear} from "../task/task_slice";
 import {hasBlockPlatform} from "../stepper/js";
 import {getMessage} from '../lang';
 import {platformTaskLink} from '../task/platform/actionTypes';
+import {ContextVisualizationImages} from '../task/ContextVisualizationImages';
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -236,6 +237,8 @@ export function TralalereApp() {
             </div>
 
             <PromptModalDialog/>
+
+            <ContextVisualizationImages/>
 
             <Dialog isOpen={documentationOpen} className={`simple-dialog tralalere-doc ${isMobile ? 'is-mobile' : ''}`} canOutsideClickClose={true} canEscapeKeyClose={true} onClose={closeDocumentation}>
                 <TralalereBox>
