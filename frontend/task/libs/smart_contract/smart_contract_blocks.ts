@@ -18,8 +18,8 @@ const smartPyBlocksList = {
             snippet: `import smartpy as sp
 
 class \${1:name}(sp.Contract):
-    def __init__(self):
-        self.init()
+    def __init__(self, value):
+        self.init(storage=value)
 
 sp.add_compilation_target("default", \${1:name}())`,
         }],
