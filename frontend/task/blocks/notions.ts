@@ -143,19 +143,17 @@ export function getNotionsBagFromIncludeBlocks(includeBlocks: QuickalgoTaskInclu
     return notionsBag;
 }
 
-export function generateAvailableBlocksFromNotions(notionsBag: NotionsBag, availableBlocks: {[category: string]: {[notion: string]: Block[]}}) {
+export function generateAvailableBlocksFromNotions(notionsBag: NotionsBag, availableBlocks: {[notion: string]: Block[]}) {
     const userAvailableBlocks = [];
 
     for (let [category, notions] of Object.entries(notionsBag.getArborescence())) {
-        if (category in availableBlocks) {
-            for (let notion of notions) {
-                if (notion in availableBlocks[category]) {
-                    for (let block of availableBlocks[category][notion]) {
-                        userAvailableBlocks.push({
-                            ...block,
-                            category,
-                        });
-                    }
+        for (let notion of notions) {
+            if (notion in availableBlocks) {
+                for (let block of availableBlocks[notion]) {
+                    userAvailableBlocks.push({
+                        ...block,
+                        category,
+                    });
                 }
             }
         }
