@@ -12,7 +12,7 @@ import {taskLoad} from "../task";
 import {platformSaveAnswer, TaskLevelName} from "../task/platform/platform_slice";
 import {isLocalStorageEnabled} from "./utils";
 import {appSelect} from '../hooks';
-import {CodecastPlatform} from '../stepper/platforms';
+import {CodecastPlatform, platformsList} from '../stepper/platforms';
 
 function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('language' in query) {
@@ -113,6 +113,10 @@ function appInitReducer(state: AppStore, {payload: {options, query}}) {
     }
 
     loadOptionsFromQuery(options, query);
+
+    if (!(state.options.platform in platformsList)) {
+        throw new Error("Unknown platform name: " + state.options.platform);
+    }
 }
 
 export default function(bundle: Bundle) {

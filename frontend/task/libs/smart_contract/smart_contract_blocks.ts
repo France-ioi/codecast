@@ -96,7 +96,7 @@ const michelsonBlocksList = {
             name: 'michelson_smart_contract',
             type: BlockType.Token,
             caption: 'Smart contract',
-            snippet: `storage   \${1:type};
+            snippet: `storage \${1:type};
 code
   {
     

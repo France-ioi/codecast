@@ -195,7 +195,9 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             let funcCode = block.caption;
             blockDesc = block.description;
             if (!blockDesc) {
-                block.caption = funcCode + '()';
+                if (CodecastPlatform.Python === platform) {
+                    block.caption = funcCode + '()';
+                }
             } else if (blockDesc.indexOf('</code>') < 0) {
                 let funcProtoEnd = blockDesc.indexOf(')') + 1;
                 if (funcProtoEnd > 0) {
@@ -210,7 +212,7 @@ export const getContextBlocksDataSelector = memoize(({state, context}: {state: A
             if (block.caption && block.caption.trim().substring(0, 1) === '%') {
                 block.caption = block.caption.substring(block.caption.indexOf('%') + 1).trim();
             }
-            block.snippet = getSnippet(block.caption);
+            block.snippet = block.snippet ? block.snippet : getSnippet(block.caption);
         }
 
         if (block.description && block.description.trim().substring(0, 1) === ':') {
