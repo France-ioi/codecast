@@ -475,7 +475,6 @@ export const getCursorMap = function(programState, localMap, cursorExprs, option
             cursorValue = evalExpr(programState, localMap, expr);
         } catch (ex) {
             // TODO: return errors somehow
-            //console.log('failed to evaluate cursor expression', expr, ex);
             return;
         }
         const cursorLabel = stringifyExpr(expr, 0);
@@ -489,7 +488,6 @@ export const getCursorMap = function(programState, localMap, cursorExprs, option
             }
             index = Math.floor(offset / cellSize);
         } else {
-            //console.log('invalid cursor expression value', expr);
             return;
         }
         if (index >= minIndex && index <= maxIndex) {

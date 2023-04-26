@@ -3,7 +3,9 @@ import {
     AnchorButton,
     Button,
     Callout,
-    FormGroup, HTMLSelect,
+    ControlGroup,
+    FormGroup,
+    HTMLSelect,
     Icon,
     InputGroup,
     Intent,
@@ -19,6 +21,8 @@ import {useDispatch} from "react-redux";
 import {LoginScreen} from "../common/LoginScreen";
 import {EditorSaveState} from "./index";
 import {getMessage} from "../lang";
+import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
+import {parseCodecastUrl} from '../../backend/options';
 
 export function EditorSave() {
     const editor = useAppSelector(state => state.editor);
@@ -44,9 +48,10 @@ export function EditorSave() {
     };
     const _save = () => {
         const grant = grants.find(grant => grant.url === targetUrl);
-
+        const currentUrlParsed = parseCodecastUrl(editor.base);
         if (grant) {
-            if (editor.trim.unsaved) {
+            const sameTarget = grant.s3Bucket === currentUrlParsed.s3Bucket && grant.uploadPath === currentUrlParsed.uploadPath;
+            if (!sameTarget || editor.trim.unsaved) {
                 dispatch({type: ActionTypes.EditorTrimSave, payload: {target: grant}});
             } else {
                 dispatch({type: ActionTypes.EditorSave, payload: {target: grant}});
@@ -57,7 +62,11 @@ export function EditorSave() {
         setTargetUrl(event.target.value);
     };
 
-    if (!targetUrl && grants.length) {
+    const onChangeUser = () => {
+        dispatch({type: CommonActionTypes.LogoutFeedback});
+    };
+
+    if ((!targetUrl || !grants.find(grant => grant.url === targetUrl)) && grants.length) {
         setTargetUrl(grants[0].url);
     }
 
@@ -84,8 +93,18 @@ export function EditorSave() {
                     onChange={_nameChanged}
                 />
             </Label>
-            <FormGroup label={getMessage('UPLOADING_TARGET')} className="mt-2">
-                <HTMLSelect options={grantOptions} value={targetUrl} onChange={handleTargetChange}/>
+
+            <FormGroup label={getMessage('UPLOADING_TARGET')}>
+                <ControlGroup>
+                    <HTMLSelect options={grantOptions} value={targetUrl} onChange={handleTargetChange}/>
+                    <Button
+                        onClick={onChangeUser}
+                        intent={Intent.NONE}
+                        icon='user'
+                        className="ml-2"
+                        text={getMessage('USER_CHANGE_USER')}
+                    />
+                </ControlGroup>
             </FormGroup>
             <div className='mt-2 mb-4'>
                 <Button onClick={_save} icon={IconNames.CLOUD_UPLOAD} text={getMessage('EDITOR_SAVE')} disabled={!canSave} intent={Intent.PRIMARY} className="mr-2"/>

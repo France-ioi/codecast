@@ -387,19 +387,15 @@ function* playerReplayEvent(app: App, {type, payload}) {
 
     Codecast.environments[environment].monitoring.clearListeners();
     Codecast.environments[environment].monitoring.effectTriggered(({effectId}) => {
-        // console.log('effect triggered', effectId);
         triggeredEffects[effectId] = false;
     });
     Codecast.environments[environment].monitoring.effectResolved((effectId) => {
-        // console.log('effect resolved', effectId);
         triggeredEffects[effectId] = true;
     });
     Codecast.environments[environment].monitoring.effectRejected((effectId) => {
-        // console.log('effect rejected', effectId);
         triggeredEffects[effectId] = true;
     });
     Codecast.environments[environment].monitoring.effectCancelled((effectId) => {
-        // console.log('effect cancelled', effectId);
         triggeredEffects[effectId] = true;
     });
 
