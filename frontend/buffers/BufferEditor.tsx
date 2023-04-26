@@ -20,6 +20,7 @@ interface BufferEditorProps {
     buffer: string,
     hasAutocompletion?: boolean,
     platform?: CodecastPlatform,
+    dragEnabled?: boolean,
 }
 
 const _BufferEditor = (props: BufferEditorProps) => {
@@ -84,6 +85,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
         height={props.requiredHeight}
         hasAutocompletion={props.hasAutocompletion}
         hasScrollMargin={'source' === buffer}
+        dragEnabled={props.dragEnabled}
     />;
 }
 

@@ -49,10 +49,10 @@ export function LayoutEditor(props: LayoutEditorProps) {
                     readOnly={false}
                     shield={preventInput}
                     mode={sourceMode}
-                    theme="textmate"
                     requiredWidth="100%"
                     requiredHeight="100%"
                     hasAutocompletion
+                    dragEnabled
                 />
             </div>
             {'tralalere' !== options.app && <BlocksUsage/>}

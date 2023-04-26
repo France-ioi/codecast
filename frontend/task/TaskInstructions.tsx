@@ -15,6 +15,8 @@ import {quickAlgoLibraries} from './libs/quickalgo_libraries';
 import {PlatformSelection} from '../common/PlatformSelection';
 import {LayoutView, selectActiveView} from './layout/layout';
 import convertHtmlToReact from '@hedgedoc/html-to-react';
+import {Editor} from '../buffers/Editor';
+import {CodecastPlatform, platformsList} from '../stepper/platforms';
 
 export interface TaskInstructionsProps {
     changeDisplayShowMore?: (display: boolean) => void,
@@ -51,9 +53,30 @@ const defaultInstructionsHtml = `
     </p>
 `;
 
-function transformNode(node, props) {
+function transformNode(node, context: {platform: CodecastPlatform}) {
     if (node.attribs && 'select-lang-selector' in node.attribs) {
         return <PlatformSelection key="platform-selection" withoutLabel/>;
+    } else if (node.attribs && 'data-show-source' in node.attribs) {
+        const code = node.attribs['data-code'];
+        const lang = node.attribs['data-lang'];
+
+        if ('all' !== lang && context.platform !== lang) {
+            return null;
+        }
+
+        const sourceMode = platformsList[context.platform].aceSourceMode;
+
+        return <Editor
+            content={code.trim()}
+            readOnly
+            mode={sourceMode}
+            width="100%"
+            hideGutter
+            hideCursor
+            printMarginColumn={false}
+            highlightActiveLine={false}
+            maxLines={Infinity}
+        />
     }
 
     return undefined;
@@ -63,7 +86,6 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const currentTask = useAppSelector(state => state.task.currentTask);
     const taskLevel = useAppSelector(state => state.task.currentLevel);
-    const platform = useAppSelector(state => state.options.platform);
     const contextId = useAppSelector(state => state.task.contextId);
     const isBackend = useAppSelector(state => state.options.backend);
     const language = useAppSelector(state => state.options.language.split('-')[0]);
@@ -73,8 +95,8 @@ export function TaskInstructions(props: TaskInstructionsProps) {
     const instructionsRef = useRef<HTMLDivElement>();
     const screen = useAppSelector(state => state.screen);
     const documentationOpen = Screen.DocumentationSmall === screen || Screen.DocumentationBig === screen;
-    const activeView = useAppSelector(selectActiveView);
     const dispatch = useDispatch();
+    const platform = useAppSelector(state => state.options.platform);
 
     const toggleTaskInstructions = () => {
         if (documentationOpen) {
@@ -129,7 +151,7 @@ export function TaskInstructions(props: TaskInstructionsProps) {
 
             {!props.withoutTitle && <h1>{instructionsTitle ? instructionsTitle : getMessage('TASK_INSTRUCTIONS')}</h1>}
 
-            <div>{convertHtmlToReact(instructionsHtml, {transform: (node) => transformNode(node, props)})}</div>
+            <div>{convertHtmlToReact(instructionsHtml, {transform: (node) => transformNode(node, {platform})})}</div>
             {/*<div dangerouslySetInnerHTML={toHtml(instructionsHtml)}/>*/}
 
             {!props.hideShowMoreButton && !props.expanded && <Button
