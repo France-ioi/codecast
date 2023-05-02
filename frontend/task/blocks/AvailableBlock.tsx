@@ -22,7 +22,7 @@ export function AvailableBlock(props: AvailableBlockProps) {
         collect: (monitor) => ({
             isDragging: monitor.isDragging(),
         }),
-    }))
+    }), [block])
 
     useEffect(() => {
         dragPreview(getEmptyImage(), {captureDraggingState: true});
