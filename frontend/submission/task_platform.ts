@@ -8,7 +8,7 @@ import {TaskHint} from '../task/hints/hints_slice';
 export interface TaskNormalized {
     id: string,
     textId: string,
-    supportedLanguages: string,
+    supportedLanguages: string[],
     author: string,
     showLimits: boolean,
     userTests: boolean,

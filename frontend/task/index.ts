@@ -187,15 +187,7 @@ function* taskLoadSaga(app: App, action) {
     }
 
     const currentTask = yield* appSelect(state => state.task.currentTask);
-    const platform = yield* appSelect(state => state.options.platform);
     if (currentTask) {
-        if (currentTask.supportedLanguages && currentTask.supportedLanguages.length && -1 === currentTask.supportedLanguages.indexOf(platform)) {
-            const availablePlatforms = Object.keys(platformsList).filter(platform => -1 !== currentTask.supportedLanguages.indexOf(platform));
-            if (availablePlatforms.length) {
-                yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: availablePlatforms[0], reloadTask: false}});
-            }
-        }
-
         let currentLevel = yield* appSelect(state => state.task.currentLevel);
 
         if (action.payload.level && action.payload.level in currentTask.data) {
@@ -257,7 +249,10 @@ function* taskLoadSaga(app: App, action) {
 
     let context = quickAlgoLibraries.getContext(null, state.environment);
     if (!context || (action.payload && action.payload.reloadContext)) {
-        yield* call(createQuickalgoLibrary);
+        const result = yield* call(createQuickalgoLibrary);
+        if (false === result) {
+            return;
+        }
     }
 
     oldSagasTasks[app.environment] = yield* fork(function* () {

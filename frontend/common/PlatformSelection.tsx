@@ -6,7 +6,6 @@ import {select} from 'typed-redux-saga';
 import {hasBlockPlatform} from '../stepper/js';
 import {getJsLibLoaded} from '../task/libs/import_modules';
 import {getMessage} from '../lang';
-import {platformsList} from '../stepper/platforms';
 
 export interface PlatformSelectionProps {
     withoutLabel?: boolean
@@ -14,7 +13,7 @@ export interface PlatformSelectionProps {
 
 export function PlatformSelection(props: PlatformSelectionProps) {
     const platform = useAppSelector(state => state.options.platform);
-    const currentTask = useAppSelector(state => state.task.currentTask);
+    const availablePlatforms = useAppSelector(state => state.task.availablePlatforms);
     const dispatch = useDispatch();
 
     const setPlatform = (event) => {
@@ -24,11 +23,6 @@ export function PlatformSelection(props: PlatformSelectionProps) {
             payload: {platform},
         });
     };
-
-    let availablePlatforms = Object.keys(platformsList);
-    if (null !== currentTask && currentTask.supportedLanguages && currentTask.supportedLanguages.length) {
-        availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.indexOf(platform));
-    }
 
     const selector = <div className='bp3-select'>
         <select onChange={setPlatform} value={platform}>

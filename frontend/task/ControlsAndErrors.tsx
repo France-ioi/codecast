@@ -20,7 +20,7 @@ import {
 } from '../submission/submission';
 import { Dropdown } from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
-import {StepperStatus} from '../stepper';
+import {doesPlatformHaveClientRunner, StepperStatus} from '../stepper';
 import {isServerTask, isTestPublic} from './task_slice';
 
 export function ControlsAndErrors() {
@@ -34,6 +34,7 @@ export function ControlsAndErrors() {
     const lastSubmission = useAppSelector(state => 0 < state.submission.taskSubmissions.length ? state.submission.taskSubmissions[state.submission.taskSubmissions.length - 1] : null);
     const stepperStatus = useAppSelector(state => state.stepper.status);
     const isEvaluating = lastSubmission && !lastSubmission.evaluated;
+    const platform = useAppSelector(state => state.options.platform);
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
@@ -100,6 +101,7 @@ export function ControlsAndErrors() {
     };
 
     const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
+    const clientControlsEnabled = currentTestPublic && doesPlatformHaveClientRunner(platform);
 
     return (
         <div className="controls-and-errors">
@@ -136,7 +138,7 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    {TaskSubmissionEvaluateOn.Client === executionMode && <div className="stepper-controls-container-flex"><StepperControls enabled={currentTestPublic}/></div>}
+                    {TaskSubmissionEvaluateOn.Client === executionMode && <div className="stepper-controls-container-flex"><StepperControls enabled={clientControlsEnabled}/></div>}
                     {TaskSubmissionEvaluateOn.Server === executionMode && <SubmissionControls/>}
 
                     {!hasModes && null !== currentTask && isServerTask(currentTask) && <div className="execution-controls">

@@ -13,7 +13,12 @@ import {
     QuickAlgoLibrariesActionType,
     quickAlgoLibraryResetAndReloadStateSaga
 } from '../quickalgo_libraries';
-import {generateGetSmartContractSpecificBlocks, SmartContractPlatform} from './smart_contract_blocks';
+import {
+    generateGetSmartContractSpecificBlocks,
+    SmartContractPlatform,
+    smartContractPlatforms
+} from './smart_contract_blocks';
+import {CodecastPlatform} from '../../../stepper/platforms';
 
 export interface SmartContractResultLogLine {
     amount: number,
@@ -92,6 +97,10 @@ export class SmartContractLib extends QuickAlgoLibrary {
 
         this.innerState = {};
     }
+
+    getSupportedPlatforms() {
+        return smartContractPlatforms;
+    };
 
     getInnerState() {
         return this.innerState;

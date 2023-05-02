@@ -9,6 +9,7 @@ import log from 'loglevel';
 import {QuickalgoLibraryInfos} from '../task_slice';
 import {TaskSubmissionServerTestResult} from '../../submission/submission';
 import {defaultNotions, NotionArborescence} from '../blocks/notions';
+import {CodecastPlatform} from '../../stepper/platforms';
 
 export abstract class QuickAlgoLibrary {
     display: boolean;
@@ -295,5 +296,13 @@ export abstract class QuickAlgoLibrary {
     }
 
     getErrorFromTestResult?(testResult: TaskSubmissionServerTestResult): void;
+
+    getSupportedPlatforms(): string[] {
+        return [
+            CodecastPlatform.Blockly,
+            CodecastPlatform.Scratch,
+            CodecastPlatform.Python,
+        ];
+    }
 }
 

@@ -14,6 +14,7 @@ import {TaskLevelName} from "./platform/platform_slice";
 import {isLocalStorageEnabled} from "../common/utils";
 import {TaskServer, TaskTestGroupType} from '../submission/task_platform';
 import {QuickAlgoLibrary} from './libs/quickalgo_library';
+import {CodecastPlatform} from '../stepper/platforms';
 
 const availableTasks = {
     robot: SokobanFixture,
@@ -58,6 +59,7 @@ export interface TaskState {
     contextId: number,
     contextStrings: any,
     contextIncludeBlocks: QuickalgoTaskIncludeBlocks,
+    availablePlatforms: string[],
     blocksPanelCollapsed?: boolean,
     blocksUsage?: BlocksUsage,
     soundEnabled?: boolean,
@@ -200,6 +202,7 @@ export const taskInitialState = {
     blocksUsage: null,
     soundEnabled: !isLocalStorageEnabled() || !window.localStorage.getItem('soundDisabled'),
     menuHelpsOpen: false,
+    availablePlatforms: [],
 } as TaskState;
 
 export const selectCurrentTestData = (state: AppStore) => {
@@ -334,6 +337,9 @@ export const taskSlice = createSlice({
         taskSetMenuHelpsOpen(state: TaskState, action: PayloadAction<boolean>) {
             state.menuHelpsOpen = action.payload;
         },
+        taskSetAvailablePlatforms(state: TaskState, action: PayloadAction<string[]>) {
+            state.availablePlatforms = action.payload;
+        },
     },
 });
 
@@ -361,6 +367,7 @@ export const {
     taskSetBlocksUsage,
     taskChangeSoundEnabled,
     taskSetMenuHelpsOpen,
+    taskSetAvailablePlatforms,
 } = taskSlice.actions;
 
 export const taskRecordableActions = [

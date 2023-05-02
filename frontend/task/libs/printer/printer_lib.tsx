@@ -28,6 +28,7 @@ import {
     quickAlgoLibraryResetAndReloadStateSaga
 } from '../quickalgo_libraries';
 import {getCurrentImmerState} from '../../utils';
+import {CodecastPlatform} from '../../../stepper/platforms';
 
 function escapeHtml(unsafe) {
     return unsafe
@@ -316,6 +317,15 @@ export class PrinterLib extends QuickAlgoLibrary {
         if (appState && appState.ioPane.mode) {
             this.ioMode = appState.ioPane.mode;
         }
+    };
+
+    getSupportedPlatforms() {
+        return [
+            CodecastPlatform.Blockly,
+            CodecastPlatform.Scratch,
+            CodecastPlatform.Python,
+            CodecastPlatform.Unix,
+        ];
     };
 
     getInnerState() {

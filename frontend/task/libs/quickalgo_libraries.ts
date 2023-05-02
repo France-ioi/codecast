@@ -9,7 +9,7 @@ import {PrinterLib} from "./printer/printer_lib";
 import {hasBlockPlatform, loadBlocklyHelperSaga} from "../../stepper/js";
 import {
     selectCurrentTestData,
-    taskIncreaseContextId,
+    taskIncreaseContextId, taskSetAvailablePlatforms,
     taskSetBlocksPanelCollapsed,
     taskSetContextIncludeBlocks,
     taskSetContextStrings,
@@ -26,6 +26,8 @@ import log from 'loglevel';
 import {appSelect} from '../../hooks';
 import {SmartContractLib} from './smart_contract/smart_contract_lib';
 import {DefaultQuickalgoLibrary} from './default_quickalgo_library';
+import {platformsList} from '../../stepper/platforms';
+import {ActionTypes as CommonActionTypes} from '../../common/actionTypes';
 
 export enum QuickAlgoLibrariesActionType {
     QuickAlgoLibrariesRedrawDisplay = 'quickalgoLibraries/redrawDisplay',
@@ -214,8 +216,24 @@ export function* createQuickalgoLibrary() {
     if (context.infos && context.infos.panelCollapsed) {
         yield* put(taskSetBlocksPanelCollapsed(true));
     }
+
+    let availablePlatforms = context.getSupportedPlatforms();
+    if (null !== currentTask && currentTask.supportedLanguages && currentTask.supportedLanguages.length) {
+        availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.indexOf(platform));
+    }
+    if (-1 === availablePlatforms.indexOf(state.options.platform) && availablePlatforms.length) {
+        console.log('change platform');
+        yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: availablePlatforms[0], reloadTask: true}});
+
+        return false;
+    }
+
+    yield* put(taskSetAvailablePlatforms(availablePlatforms));
+
     context.resetAndReloadState(testData, state);
     yield* put({type: QuickAlgoLibrariesActionType.QuickAlgoLibrariesRedrawDisplay});
+
+    return true;
 }
 
 export function* quickAlgoLibraryResetAndReloadStateSaga(app: App, innerState = null) {

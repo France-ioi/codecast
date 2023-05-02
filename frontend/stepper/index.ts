@@ -211,6 +211,16 @@ export function getRunnerClassFromPlatform(platform: CodecastPlatform) {
     throw "This platform does not have a runner: " + platform;
 }
 
+export function doesPlatformHaveClientRunner(platform: CodecastPlatform): boolean {
+    try {
+        getRunnerClassFromPlatform(platform);
+
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
 export type Stepper = typeof initialStateStepper;
 
 function initReducer(state: AppStoreReplay): void {

@@ -9,6 +9,14 @@ export enum SmartContractPlatform {
     JsLIGO = 'jsligo',
 }
 
+export const smartContractPlatforms = [
+    SmartContractPlatform.SmartPy,
+    SmartContractPlatform.Archetype,
+    SmartContractPlatform.Michelson,
+    SmartContractPlatform.CameLIGO,
+    SmartContractPlatform.JsLIGO,
+];
+
 const smartPyBlocksList = {
     'smart_contract': [{
         name: 'smartpy_smart_contract',
