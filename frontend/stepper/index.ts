@@ -1031,6 +1031,7 @@ function* stepperStepSaga(app: App, action) {
                         const aggregatedLibraryTestResult = executionResult instanceof LibraryTestResult
                             ? executionResult : LibraryTestResult.fromString(message);
                         aggregatedLibraryTestResult.successRate = gradeResult.successRate;
+                        aggregatedLibraryTestResult.message = gradeResult.message;
 
                         // @ts-ignore
                         if (taskContext.success) {

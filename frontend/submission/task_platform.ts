@@ -80,7 +80,7 @@ export interface SubmissionNormalized {
     success: boolean,
     totalTestsCount: number,
     passedTestsCount: number,
-    score: number,
+    score: number, // Initially from 0 to 100 in the server return, but converted from 0 to 1 to be consistent with other submission types
     compilationError: boolean,
     compilationMessage: string|null,
     errorMessage: string|null,

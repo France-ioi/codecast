@@ -126,11 +126,9 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
     const taskLevels = yield* appSelect(state => state.platform.levels);
     let nextVersion: TaskLevelName = null;
 
-    const {maxScore} = yield* call(platformApi.getTaskParams, null, null);
-
     const levelScores = Object.values(taskLevels).map(element => ({
         level: element.level,
-        score: currentLevelMaxScore === element.level ? maxScore : element.score,
+        score: currentLevelMaxScore === element.level ? 1 : element.score,
     }));
     const reconciledScore = computeReconciledScore(levelScores);
 
@@ -140,7 +138,7 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
         if (level === topLevel) {
             scoreCoefficient = 1;
         }
-        const levelMaxScore = maxScore * scoreCoefficient;
+        const levelMaxScore = scoreCoefficient;
         if (levelMaxScore > reconciledScore) {
             nextVersion = level;
             break;
@@ -336,7 +334,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
     try {
         const taskLevels = yield* appSelect(state => state.platform.levels);
         log.getLogger('tests').debug('task levels', taskLevels);
-        const {minScore, maxScore, noScore} = yield* call(platformApi.getTaskParams, null, null);
+        const {minScore, maxScore} = yield* call(platformApi.getTaskParams, null, null);
         if (taskLevels && Object.keys(taskLevels).length) {
             const versionsScore = {};
             const currentLevel = yield getTaskLevel();
@@ -354,7 +352,8 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
 
                 log.getLogger('tests').debug('info answer', level);
 
-                const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer],{level, answer: answerObject[level], minScore, maxScore, noScore});
+                // Score is between 0 and 1
+                const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer],{level, answer: answerObject[level]});
 
                 versionsScore[level] = score;
                 if (level === currentLevel) {
@@ -363,7 +362,7 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
                     currentScoreToken = scoreToken;
                 }
 
-                yield* put(platformSaveScore({level, score, maxScore, answer: answerObject[level]}));
+                yield* put(platformSaveScore({level, score, answer: answerObject[level]}));
             }
 
             const levelScores = Object.values(taskLevels).map(element => ({
@@ -371,20 +370,24 @@ export function* taskGradeAnswerEventSaga ({payload: {answer, success, error, si
                 score: versionsScore[element.level],
             }));
             const reconciledScore = computeReconciledScore(levelScores);
+            const scoreWithPlatformParameters = minScore + (maxScore - minScore) * reconciledScore;
 
             if (!silent) {
-                yield* put(platformAnswerGraded({score: currentScore, message: currentMessage, maxScore}));
+                yield* put(platformAnswerGraded({score: currentScore, message: currentMessage}));
             }
-            yield* call(success, reconciledScore, currentMessage, currentScoreToken);
+            yield* call(success, scoreWithPlatformParameters, currentMessage, currentScoreToken);
         } else {
             // if (!answerToken) {
             //     const answer = yield getTaskAnswer();
             //     answerToken = window.task_token.getAnswerToken(stringify(answer));
             // }
-            const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer, minScore, maxScore, noScore});
 
-            yield* put(platformAnswerGraded({score, message, maxScore}));
-            yield* call(success, score, message, scoreToken);
+            // Score is between 0 and 1
+            const {score, message, scoreToken} = yield* call([taskGrader, taskGrader.gradeAnswer], {answer});
+            const scoreWithPlatformParameters = minScore + (maxScore - minScore) * score;
+
+            yield* put(platformAnswerGraded({score, message}));
+            yield* call(success, scoreWithPlatformParameters, message, scoreToken);
         }
     } catch (ex: any) {
         const message = ex.message === 'Network request failed' ? "Vous n'êtes actuellement pas connecté à Internet."
@@ -423,9 +426,6 @@ function getTopLevel(levels: TaskLevelName[]) {
 export interface PlatformTaskGradingParameters {
     level?: TaskLevelName,
     answer?: any,
-    minScore: number,
-    maxScore: number,
-    noScore: number,
 }
 
 export interface PlatformTaskGradingResult {

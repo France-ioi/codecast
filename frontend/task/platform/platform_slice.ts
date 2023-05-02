@@ -54,7 +54,8 @@ export const platformSlice = createSlice({
         platformSetTaskLevels(state: PlatformState, action: PayloadAction<{[key: string]: TaskLevel}>) {
             state.levels = action.payload;
         },
-        platformSaveScore(state: PlatformState, action: PayloadAction<{level: TaskLevelName, answer: any, score: number, maxScore: number}>) {
+        platformSaveScore(state: PlatformState, action: PayloadAction<{level: TaskLevelName, answer: any, score: number}>) {
+            // Score is between 0 and 1 here
             const taskLevel = state.levels[action.payload.level];
             const currentScore = taskLevel.score;
             let newState = state;
@@ -62,7 +63,7 @@ export const platformSlice = createSlice({
                 state.levels[action.payload.level].bestAnswer = action.payload.answer;
                 state.levels[action.payload.level].score = action.payload.score;
 
-                if (action.payload.score >= action.payload.maxScore) {
+                if (action.payload.score >= 1) {
                     const levelNumber = taskLevelsList.indexOf(action.payload.level)
                     if (levelNumber + 1 <= taskLevelsList.length - 1) {
                         const nextLevel = taskLevelsList[levelNumber + 1];

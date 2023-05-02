@@ -149,13 +149,10 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(SubmissionActionTypes.SubmissionGradeAnswerServer, function* (action: SubmissionTriggerPlatformValidateAction) {
+        yield* takeEvery(SubmissionActionTypes.SubmissionGradeAnswerServer, function* () {
             const answer = yield getTaskAnswerAggregated();
             const submissionParameters: PlatformTaskGradingParameters = {
                 answer: stringify(answer),
-                minScore: 0,
-                maxScore: 100,
-                noScore: 0,
             };
 
             yield* call([taskSubmissionExecutor, taskSubmissionExecutor.gradeAnswerServer], submissionParameters);

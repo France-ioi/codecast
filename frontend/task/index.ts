@@ -678,11 +678,13 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(platformAnswerGraded.type, function*({payload: {score, message, error, maxScore}}: ReturnType<typeof platformAnswerGraded>) {
-            if (score >= maxScore) {
+        yield* takeEvery(platformAnswerGraded.type, function*({payload: {score, message, error}}: ReturnType<typeof platformAnswerGraded>) {
+            if (score >= 1) {
                 yield* put(taskSuccess(message));
             } else if (error) {
                 yield* put(stepperDisplayError(error));
+            } else if (score > 0) {
+                yield* put(stepperDisplayError(message));
             }
         });
 
