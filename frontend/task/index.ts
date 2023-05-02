@@ -89,6 +89,7 @@ import {appSelect} from '../hooks';
 import {extractTestsFromTask} from '../submission/tests';
 import {TaskSubmissionResultPayload} from "../submission/submission";
 import {CodecastPlatform, platformsList} from '../stepper/platforms';
+import {LibraryTestResult} from './libs/library_test_result';
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
     testId?: number,
@@ -600,22 +601,26 @@ export default function (bundle: Bundle) {
         // @ts-ignore
         yield* takeEvery(StepperActionTypes.StepperExecutionSuccess, function* ({payload}) {
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
+            const testResult: LibraryTestResult = payload.testResult;
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
                 result: true,
+                successRate: testResult.successRate,
                 steps: Codecast.runner._steps,
-                message: payload.message,
+                message: testResult.message,
             });
         });
 
         // @ts-ignore
         yield* takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function* ({payload}) {
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
+            const testResult: LibraryTestResult = payload.testResult;
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
                 result: false,
+                successRate: testResult.successRate,
                 steps: Codecast.runner._steps,
-                message: payload.error,
+                message: testResult.message,
             });
         });
 

@@ -27,6 +27,7 @@ import {extractTestsFromTask} from './tests';
 import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload, TaskSubmissionServer} from './submission';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
 import {TaskActionTypes} from '../task/task_slice';
+import {LibraryTestResult} from '../task/libs/library_test_result';
 
 export const levelScoringData = {
     basic: {
@@ -140,12 +141,9 @@ class TaskSubmissionExecutor {
         } else {
             log.getLogger('tests').debug('Submission execution over', currentSubmission.result.tests);
             if (currentSubmission.result.tests.find(testResult => testResult.score < 100)) {
-                const error = {
-                    type: 'task-tests-submission-results-overview',
-                    props: {
-                        results: displayedResults,
-                    }
-                };
+                const error = new LibraryTestResult(null, 'task-tests-submission-results-overview', {
+                    results: displayedResults,
+                });
 
                 yield* put(stepperDisplayError(error));
             }

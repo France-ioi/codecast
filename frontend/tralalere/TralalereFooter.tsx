@@ -13,6 +13,9 @@ import {useAppSelector} from "../hooks";
 import {ActionTypes as CommonActionTypes} from "../common/actionTypes";
 import {LayoutType} from "../task/layout/layout";
 import {getMessage} from '../lang';
+import {LibraryTestResult} from '../task/libs/library_test_result';
+import {nl2br} from '../common/utils';
+import {TaskTestsSubmissionResultOverview} from '../submission/TaskTestsSubmissionResultOverview';
 
 export interface TralalereFooterProps {
     instructionsExpanded?: boolean,
@@ -34,11 +37,24 @@ export function TralalereFooter (props: TralalereFooterProps) {
 
     let error = null;
     if (hasError) {
-        if ('compilation' === stepperError.type) {
-            const stepperErrorHtml = toHtml(stepperError.content);
-            error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;
+        if (stepperError instanceof LibraryTestResult) {
+            if (!stepperError.type) {
+                const stepperErrorHtml = toHtml(nl2br(stepperError.message));
+                error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
+            } else if ('task-tests-submission-results-overview' === stepperError.type) {
+                error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
+            } else if ('compilation' === stepperError.type) {
+                const stepperErrorHtml = toHtml(stepperError.props.content);
+                error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;
+            } else if (stepperError.message) {
+                const stepperErrorHtml = toHtml(nl2br(stepperError.message));
+                error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
+            } else {
+                // We only show the result of an execution
+                hasError = false;
+            }
         } else {
-            const stepperErrorHtml = toHtml(stepperError);
+            const stepperErrorHtml = toHtml(nl2br(stepperError));
             error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
         }
     } else if (blocksUsage && blocksUsage.error) {

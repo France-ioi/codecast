@@ -130,6 +130,7 @@ export interface QuickalgoTaskGridInfosNotLevelDependent {
     actionDelay?: number,
     panelCollapsed?: boolean,
     checkEndCondition?: (context: QuickAlgoLibrary, lastTurn: any) => void,
+    computeGrade?: (context: QuickAlgoLibrary, message: unknown) => {successRate: number, message: string},
     checkEndEveryTurn?: boolean,
     hiddenTests?: boolean,
     maxListSize?: number,

@@ -22,6 +22,7 @@ import { Dropdown } from "react-bootstrap";
 import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {StepperStatus} from '../stepper';
 import {isServerTask, isTestPublic} from './task_slice';
+import {LibraryTestResult} from './libs/library_test_result';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -54,25 +55,26 @@ export function ControlsAndErrors() {
     let error = null;
     let errorClosable = true;
     if (hasError) {
-        if ('task-tests-submission-results-overview' === stepperError.type) {
-            error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
-        } else if (stepperError.error) {
-            const stepperErrorHtml = toHtml(nl2br(stepperError.error));
-            error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
-        } else if (stepperError.type && !stepperError.error) {
-            // We only show the result of an execution
-            hasError = false;
-        } else if ('compilation' === stepperError.type) {
-            const stepperErrorHtml = toHtml(stepperError.content);
-            error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;
+        if (stepperError instanceof LibraryTestResult) {
+            if (!stepperError.type) {
+                const stepperErrorHtml = toHtml(nl2br(stepperError.message));
+                error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
+            } else if ('task-tests-submission-results-overview' === stepperError.type) {
+                error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
+            } else if ('compilation' === stepperError.type) {
+                const stepperErrorHtml = toHtml(stepperError.props.content);
+                error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;
+            } else if (stepperError.message) {
+                const stepperErrorHtml = toHtml(nl2br(stepperError.message));
+                error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
+            } else {
+                // We only show the result of an execution
+                hasError = false;
+            }
         } else {
             const stepperErrorHtml = toHtml(nl2br(stepperError));
             error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
         }
-    // } else if (blocksUsage && blocksUsage.error) {
-    //     hasError = true;
-    //     errorClosable = false;
-    //     error = <div>{blocksUsage.error}</div>;
     }
 
     const dispatch = useDispatch();

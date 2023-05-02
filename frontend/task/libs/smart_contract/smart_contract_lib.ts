@@ -14,6 +14,7 @@ import {
     quickAlgoLibraryResetAndReloadStateSaga
 } from '../quickalgo_libraries';
 import {generateGetSmartContractSpecificBlocks, SmartContractPlatform} from './smart_contract_blocks';
+import {LibraryTestResult} from '../library_test_result';
 
 export interface SmartContractResultLogLine {
     amount: number,
@@ -115,7 +116,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
         yield* takeEvery(StepperActionTypes.StepperDisplayError, function* (action) {
             // @ts-ignore
             const {payload} = action;
-            if (payload.error && 'task-submission-test-result-smart-contract' === payload.error.type) {
+            if (payload.error instanceof LibraryTestResult && 'task-submission-test-result-smart-contract' === payload.error.getType()) {
                 // state
                 const log = payload.error.props.log;
                 const environment = yield* appSelect(state => state.environment);
@@ -133,20 +134,19 @@ export class SmartContractLib extends QuickAlgoLibrary {
         });
     }
 
-    getErrorFromTestResult(testResult: TaskSubmissionServerTestResult) {
+    getErrorFromTestResult(testResult: TaskSubmissionServerTestResult): LibraryTestResult {
         try {
             const output = JSON.parse(testResult.output);
 
-            return {
-                type: 'task-submission-test-result-smart-contract',
-                props: {
+            return new LibraryTestResult(
+                output.error?.message,
+                'task-submission-test-result-smart-contract',
+                {
                     log: output.log,
                 },
-                ...(output.error ? {error: output.error.message} : {}),
-            };
-
+            );
         } catch (e) {
-            return testResult.log;
+            return LibraryTestResult.fromString(testResult.log);
         }
     }
 }

@@ -65,10 +65,10 @@ export interface TaskSubmissionServerTestResult extends TaskSubmissionTestResult
 export interface TaskSubmissionResultPayload {
     testId: number,
     result: boolean,
+    successRate?: number, // Between 0 and 1
     message?: string,
     steps?: number,
 }
-
 
 export enum SubmissionActionTypes {
     SubmissionTriggerPlatformValidate = 'submission/triggerPlatformValidate',
