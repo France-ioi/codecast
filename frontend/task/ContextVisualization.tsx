@@ -8,7 +8,7 @@ import {isTestPublic} from './task_slice';
 import {getMessage} from '../lang';
 import {
     isServerSubmission,
-    selectCurrentServerSubmission,
+    selectCurrentServerSubmission, selectSubmissionsPaneEnabled,
     TaskSubmissionServerTestResult
 } from '../submission/submission';
 
@@ -21,6 +21,7 @@ export function ContextVisualization() {
     const {width, height, ref} = useResizeDetector();
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const dispatch = useDispatch();
+    const submissionPaneEnabled = useAppSelector(selectSubmissionsPaneEnabled);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
 
@@ -38,7 +39,7 @@ export function ContextVisualization() {
 
     let testsSelectorEnabled = false;
     if (currentTask && taskTests.length) {
-        testsSelectorEnabled = 1 < taskTests.length && !currentTask.gridInfos.hiddenTests;
+        testsSelectorEnabled = (1 < taskTests.length || submissionPaneEnabled) && !currentTask.gridInfos.hiddenTests;
     }
 
     const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);

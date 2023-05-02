@@ -82,6 +82,8 @@ export interface CodecastOptions {
                        // for Castor platforms in which assets are inlined into the HTML
     taskId?: string,
     taskPlatformUrl?: string,
+    canAddUserTests?: boolean,
+    viewTestDetails?: boolean,
 }
 
 export interface Panes {

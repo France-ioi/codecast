@@ -87,6 +87,9 @@ function loadOptionsFromQuery(options: CodecastOptions, query) {
     if ('directives' in query) {
         options.showDirectives = true;
     }
+    if ('viewTestDetails' in query) {
+        options.viewTestDetails = true;
+    }
     options.canDownload = !('noDownload' in query);
 
     if (query.recording) {

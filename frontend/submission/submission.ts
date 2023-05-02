@@ -115,6 +115,10 @@ export interface TestResultDiffLog {
     excerptCol: number,
 }
 
+export function selectSubmissionsPaneEnabled(state: AppStore) {
+    return !!(state.options.viewTestDetails || state.options.canAddUserTests);
+}
+
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
         yield* takeEvery(SubmissionActionTypes.SubmissionTriggerPlatformValidate, function* (action: SubmissionTriggerPlatformValidateAction) {
