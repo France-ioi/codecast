@@ -178,8 +178,8 @@ function* taskLoadSaga(app: App, action) {
     }
 
     // yield* put(hintsLoaded([
-    //     {content: 'aazazaz'},
-    //     {content: 'aazazazazazazz'},
+    // {content: 'aazazaz', minScore: 0},
+    // {content: 'aazazazazazazz', minScore: 0.5},
     // ]));
 
     if (state.options.taskHints) {

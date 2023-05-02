@@ -26,6 +26,7 @@ import {hasBlockPlatform} from "../stepper/js";
 import {getMessage} from '../lang';
 import {platformTaskLink} from '../task/platform/actionTypes';
 import {ContextVisualizationImages} from '../task/ContextVisualizationImages';
+import {selectAvailableHints} from '../task/hints/hints_slice';
 
 export function TralalereApp() {
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
@@ -47,7 +48,7 @@ export function TralalereApp() {
     const taskLoaded = useAppSelector(state => state.task.loaded);
 
     const windowWidth = useAppSelector(state => state.windowWidth);
-    const availableHints = useAppSelector(state => state.hints.availableHints);
+    const availableHints = useAppSelector(selectAvailableHints);
     const answer = useAppSelector(state => selectAnswer(state));
     const compileStatus = useAppSelector(state => state.compile.status);
     const taskSuccess = useAppSelector(state => state.task.success);

@@ -1027,7 +1027,6 @@ function* stepperStepSaga(app: App, action) {
                         };
 
                         const gradeResult: {successRate: number, message: string} = computeGrade(taskContext, message);
-                        console.log('grade result', gradeResult);
                         const aggregatedLibraryTestResult = executionResult instanceof LibraryTestResult
                             ? executionResult : LibraryTestResult.fromString(message);
                         aggregatedLibraryTestResult.successRate = gradeResult.successRate;
