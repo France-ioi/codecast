@@ -25,13 +25,13 @@ import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
 import {extractTestsFromTask} from './tests';
 import {
-    TaskSubmissionEvaluateOn,
+    selectSubmissionsPaneEnabled,TaskSubmissionEvaluateOn,
     TaskSubmissionResultPayload,
     TaskSubmissionServer,
     TaskSubmissionServerResult
 } from './submission';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
-import {TaskActionTypes} from '../task/task_slice';
+import {isServerTask, TaskActionTypes, updateCurrentTestId} from '../task/task_slice';
 import {LibraryTestResult} from '../task/libs/library_test_result';
 
 export const levelScoringData = {
@@ -182,7 +182,7 @@ class TaskSubmissionExecutor {
             }
         }
 
-        if (TaskSubmissionEvaluateOn.Server === state.submission.executionMode) {
+        if (isServerTask(state.task.currentTask)) {
             return yield* apply(this, this.gradeAnswerServer, [parameters]);
         } else {
             return yield* apply(this, this.gradeAnswerClient, [parameters]);
@@ -206,7 +206,11 @@ class TaskSubmissionExecutor {
 
         const submissionIndex = yield* appSelect(state => state.submission.taskSubmissions.length - 1);
 
-        yield* put(submissionChangePaneOpen(true));
+        const submissionsPaneEnabled = yield* appSelect(selectSubmissionsPaneEnabled);
+        if (submissionsPaneEnabled) {
+            yield* put(submissionChangePaneOpen(true));
+        }
+
         yield* put(submissionChangeCurrentSubmissionId(submissionIndex));
 
         const submissionData = yield* makeServerSubmission(answer, newTaskToken, answerToken);
@@ -232,6 +236,12 @@ class TaskSubmissionExecutor {
         }
 
         yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result: submissionResult}}));
+        if (!submissionsPaneEnabled) {
+            const tests = submissionResult.tests;
+            if (tests.length) {
+                yield* put(updateCurrentTestId({testId: 0}));
+            }
+        }
 
         return {
             score: submissionResult.score / 100,

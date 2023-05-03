@@ -15,7 +15,7 @@ import {DraggableDialog} from "../common/DraggableDialog";
 import {submissionChangeExecutionMode} from "../submission/submission_slice";
 import {SubmissionControls} from "../submission/SubmissionControls";
 import {
-    submissionGradeAnswerServer,
+    submissionTriggerPlatformValidate,
     TaskSubmissionEvaluateOn
 } from '../submission/submission';
 import { Dropdown } from "react-bootstrap";
@@ -99,7 +99,7 @@ export function ControlsAndErrors() {
     };
 
     const submitSubmission = () => {
-        dispatch(submissionGradeAnswerServer());
+        dispatch(submissionTriggerPlatformValidate());
     };
 
     const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);

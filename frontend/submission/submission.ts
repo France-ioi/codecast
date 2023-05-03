@@ -1,7 +1,12 @@
 import {Bundle} from "../linker";
 import {call, put, takeEvery} from "typed-redux-saga";
 import {AppAction, AppStore} from "../store";
-import {getTaskAnswerAggregated, platformApi, PlatformTaskGradingParameters} from "../task/platform/platform";
+import {
+    getTaskAnswerAggregated,
+    platformApi,
+    PlatformTaskGradingParameters,
+    taskGetNextLevelToIncreaseScore
+} from "../task/platform/platform";
 import {
     SubmissionNormalized,
     SubmissionSubtaskNormalized,
@@ -72,23 +77,14 @@ export interface TaskSubmissionResultPayload {
 
 export enum SubmissionActionTypes {
     SubmissionTriggerPlatformValidate = 'submission/triggerPlatformValidate',
-    SubmissionGradeAnswerServer = 'submission/gradeAnswerServer',
 }
 
 export interface SubmissionTriggerPlatformValidateAction extends AppAction {
     type: SubmissionActionTypes.SubmissionTriggerPlatformValidate,
 }
 
-export interface SubmissionGradeAnswerServerAction extends AppAction {
-    type: SubmissionActionTypes.SubmissionGradeAnswerServer,
-}
-
 export const submissionTriggerPlatformValidate = (): SubmissionTriggerPlatformValidateAction => ({
     type: SubmissionActionTypes.SubmissionTriggerPlatformValidate,
-});
-
-export const submissionGradeAnswerServer = (): SubmissionGradeAnswerServerAction => ({
-    type: SubmissionActionTypes.SubmissionGradeAnswerServer,
 });
 
 export function selectCurrentServerSubmission(state: AppStore) {
@@ -116,7 +112,11 @@ export interface TestResultDiffLog {
 }
 
 export function selectSubmissionsPaneEnabled(state: AppStore) {
-    return !!(state.options.viewTestDetails || state.options.canAddUserTests);
+    if (!state.task.currentTask || state.task.currentTask.gridInfos.hiddenTests) {
+        return false;
+    }
+
+    return !!(state.options.viewTestDetails || state.options.canAddUserTests || (state.task.currentTask && state.task.taskTests.length > 1))
 }
 
 export default function (bundle: Bundle) {
@@ -151,15 +151,6 @@ export default function (bundle: Bundle) {
                     }
                 }
             }
-        });
-
-        yield* takeEvery(SubmissionActionTypes.SubmissionGradeAnswerServer, function* () {
-            const answer = yield getTaskAnswerAggregated();
-            const submissionParameters: PlatformTaskGradingParameters = {
-                answer: stringify(answer),
-            };
-
-            yield* call([taskSubmissionExecutor, taskSubmissionExecutor.gradeAnswerServer], submissionParameters);
         });
     });
 }

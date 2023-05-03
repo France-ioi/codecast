@@ -8,7 +8,8 @@ import {isTestPublic} from './task_slice';
 import {getMessage} from '../lang';
 import {
     isServerSubmission,
-    selectCurrentServerSubmission, selectSubmissionsPaneEnabled,
+    selectCurrentServerSubmission,
+    selectSubmissionsPaneEnabled,
     TaskSubmissionServerTestResult
 } from '../submission/submission';
 
@@ -37,11 +38,7 @@ export function ContextVisualization() {
         }
     }, [width, height]);
 
-    let testsSelectorEnabled = false;
-    if (currentTask && taskTests.length) {
-        testsSelectorEnabled = (1 < taskTests.length || submissionPaneEnabled) && !currentTask.gridInfos.hiddenTests;
-    }
-
+    const testsSelectorEnabled = submissionPaneEnabled;
     const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
 
     const submission = useAppSelector(selectCurrentServerSubmission);

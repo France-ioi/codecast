@@ -9,12 +9,8 @@ import {submissionChangePaneOpen} from '../submission/submission_slice';
 import {faList} from '@fortawesome/free-solid-svg-icons/faList';
 import {faChevronRight} from '@fortawesome/free-solid-svg-icons/faChevronRight';
 import {faChevronLeft} from '@fortawesome/free-solid-svg-icons/faChevronLeft';
-import {faCheckCircle} from '@fortawesome/free-solid-svg-icons/faCheckCircle';
-import {faTimesCircle} from '@fortawesome/free-solid-svg-icons/faTimesCircle';
 import {memoize} from 'proxy-memoize';
-import {SubmissionTestErrorCode} from '../submission/task_platform';
 import {ErrorCodeData, testErrorCodeData} from '../submission/TestsPaneListTest';
-import {selectSubmissionsPaneEnabled} from '../submission/submission';
 
 const getTaskTestsByIndex = memoize((taskTests: TaskTest[]): {[key: number]: TaskTest} => {
     const getTaskTestsByIndex = {};
@@ -32,7 +28,6 @@ export function TaskTestsSelector() {
     const currentTestId = useAppSelector(state => state.task.currentTestId);
     const currentSubmission = useAppSelector(state => null !== state.submission.currentSubmissionId ? state.submission.taskSubmissions[state.submission.currentSubmissionId] : null);
     const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
-    const submissionsPaneEnabled = useAppSelector(selectSubmissionsPaneEnabled);
 
     const dispatch = useDispatch();
 
