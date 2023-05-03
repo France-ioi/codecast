@@ -809,19 +809,24 @@ export interface LayoutState {
 }
 
 function* layoutSaga({replayApi}: App) {
-    yield* takeEvery(StepperActionTypes.StepperRestart, function* () {
+    yield* takeEvery(StepperActionTypes.StepperStepFromControls, function* () {
         const environment = yield* appSelect(state => state.environment);
         if ('replay' === environment) {
             yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Player}});
         }
 
-        yield* put(taskSetBlocksPanelCollapsed({collapsed: true}));
-        yield* put(submissionChangePaneOpen(false));
+        const submissionPaneOpen = yield* appSelect(state => state.submission.submissionsPaneOpen);
+        if (submissionPaneOpen) {
+            yield* put(submissionChangePaneOpen(false));
+        }
     });
 
     yield* takeEvery(submissionChangePaneOpen, function* (action) {
         if (action.payload) {
             yield* put(taskSetBlocksPanelCollapsed({collapsed: true}));
+        } else {
+            const blocksPanelWasOpen = yield* appSelect(state => state.task.blocksPanelWasOpen);
+            yield* put(taskSetBlocksPanelCollapsed({collapsed: !blocksPanelWasOpen}));
         }
     });
 

@@ -169,7 +169,7 @@ export function ControlsAndErrors() {
                                 startButtonsOnly
                             />
                         </div>}
-                        <div>
+                        <div className="execution-controls-submit">
                             <Button
                                 className="quickalgo-button is-medium"
                                 disabled={isEvaluating || StepperStatus.Clear !== stepperStatus}
