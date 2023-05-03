@@ -12,6 +12,8 @@ import {ActionTypes as LayoutActionTypes} from "../task/layout/actionTypes";
 import {IoMode} from "../stepper/io";
 import {getMessage} from "../lang";
 import {PlatformSelection} from './PlatformSelection';
+import {hasBlockPlatform} from '../stepper/js';
+import {getJsLibLoaded} from '../task/libs/import_modules';
 
 interface SettingsDialogProps {
     open: boolean,
@@ -61,6 +63,8 @@ export function SettingsDialog(props: SettingsDialogProps) {
         'DefaultLayoutMobileVerticalPlayer',
     ];
 
+    const forceSettingsOpen = hasBlockPlatform(platform) && platform !== getJsLibLoaded() && null !== getJsLibLoaded();
+
     const closable = props.closable !== false;
 
     return (
@@ -69,7 +73,7 @@ export function SettingsDialog(props: SettingsDialogProps) {
                 {canChangeLanguage && <div style={{marginBottom: '10px'}}>
                     <LanguageSelection closeMenu={props.onClose}/>
                 </div>}
-                {canChangePlatform &&
+                {(canChangePlatform || forceSettingsOpen) &&
                     <PlatformSelection/>
                 }
                 {ioModeSelect &&
