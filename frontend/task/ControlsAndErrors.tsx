@@ -23,6 +23,7 @@ import {capitalizeFirstLetter, nl2br} from '../common/utils';
 import {doesPlatformHaveClientRunner, StepperStatus} from '../stepper';
 import {isServerTask, isTestPublic} from './task_slice';
 import {LibraryTestResult} from './libs/library_test_result';
+import {getStepperControlsSelector} from '../stepper/selectors';
 
 export function ControlsAndErrors() {
     const stepperError = useAppSelector(state => state.stepper.error);
@@ -36,6 +37,7 @@ export function ControlsAndErrors() {
     const stepperStatus = useAppSelector(state => state.stepper.status);
     const isEvaluating = lastSubmission && !lastSubmission.evaluated;
     const platform = useAppSelector(state => state.options.platform);
+    const clientExecutionRunning = useAppSelector(state => getStepperControlsSelector(state, {enabled: true})).canRestart;
 
     let layoutMobileMode = useAppSelector(state => state.layout.mobileMode);
     if (LayoutMobileMode.Instructions === layoutMobileMode && !currentTask) {
@@ -105,6 +107,7 @@ export function ControlsAndErrors() {
     const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
     const platformHasClientRunner = doesPlatformHaveClientRunner(platform);
     const clientControlsEnabled = currentTestPublic && platformHasClientRunner;
+    const serverTask = null !== currentTask && isServerTask(currentTask);
 
     return (
         <div className="controls-and-errors">
@@ -141,10 +144,9 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    {TaskSubmissionEvaluateOn.Client === executionMode && platformHasClientRunner && <div className="stepper-controls-container-flex"><StepperControls enabled={clientControlsEnabled}/></div>}
-                    {TaskSubmissionEvaluateOn.Server === executionMode && <SubmissionControls/>}
+                    {((TaskSubmissionEvaluateOn.Client === executionMode && platformHasClientRunner && clientExecutionRunning) || !serverTask) && <div className="stepper-controls-container-flex"><StepperControls enabled={clientControlsEnabled}/></div>}
 
-                    {!hasModes && null !== currentTask && isServerTask(currentTask) && <div className="execution-controls">
+                    {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && serverTask && !clientExecutionRunning && <div className="execution-controls">
                         {platformHasClientRunner && <div className="execution-controls-dropdown">
                             <Dropdown>
                                 <Dropdown.Toggle>
@@ -158,8 +160,14 @@ export function ControlsAndErrors() {
                                 </Dropdown.Menu>
                             </Dropdown>
                         </div>}
-                        {!platformHasClientRunner && <div>
+                        {(!platformHasClientRunner || TaskSubmissionEvaluateOn.Server === executionMode) && <div>
                             <SubmissionControls/>
+                        </div>}
+                        {platformHasClientRunner && TaskSubmissionEvaluateOn.Client === executionMode && <div>
+                            <StepperControls
+                                enabled={clientControlsEnabled}
+                                startButtonsOnly
+                            />
                         </div>}
                         <div>
                             <Button

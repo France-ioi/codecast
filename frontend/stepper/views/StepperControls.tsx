@@ -24,6 +24,7 @@ import {useAppSelector} from "../../hooks";
 
 interface StepperControlsProps {
     enabled: boolean,
+    startButtonsOnly?: boolean,
 }
 
 export function StepperControls(props: StepperControlsProps) {
@@ -162,6 +163,15 @@ export function StepperControls(props: StepperControlsProps) {
     }
 
     const speedDisplayed = LayoutType.MobileVertical !== layoutType || speedDisplayedState;
+
+    if (props.startButtonsOnly) {
+        return (
+            <div className={`controls controls-stepper ${StepperControlsType.Normal}`}>
+                {!canInterrupt && _button('run', onStepRun, getMessage('CONTROL_RUN'), stepperControlsState.runningBackground ? <FontAwesomeIcon icon={faSpinner} className="fa-spin"/> : <FontAwesomeIcon icon={faPlay}/>, null, 'is-big')}
+                {_button('into', onStepByStep, getMessage('CONTROL_STEP_BY_STEP'), <FontAwesomeIcon icon={faShoePrints}/>, null, 'is-big')}
+            </div>
+        );
+    }
 
     return (!showControls && showCompile ?
         <div className="controls-compile">
