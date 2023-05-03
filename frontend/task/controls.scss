@@ -81,6 +81,10 @@
   justify-content: space-between;
   padding: 10px 20px;
 
+  .submission-controls {
+    padding-left: 0;
+  }
+
   .execution-controls-dropdown {
     display: flex;
     align-items: center;

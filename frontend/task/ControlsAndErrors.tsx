@@ -103,7 +103,8 @@ export function ControlsAndErrors() {
     };
 
     const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
-    const clientControlsEnabled = currentTestPublic && doesPlatformHaveClientRunner(platform);
+    const platformHasClientRunner = doesPlatformHaveClientRunner(platform);
+    const clientControlsEnabled = currentTestPublic && platformHasClientRunner;
 
     return (
         <div className="controls-and-errors">
@@ -140,11 +141,11 @@ export function ControlsAndErrors() {
                 }
 
                 {(!hasModes || LayoutMobileMode.Player === layoutMobileMode) && showStepper && <div className="stepper-controls-container">
-                    {TaskSubmissionEvaluateOn.Client === executionMode && <div className="stepper-controls-container-flex"><StepperControls enabled={clientControlsEnabled}/></div>}
+                    {TaskSubmissionEvaluateOn.Client === executionMode && platformHasClientRunner && <div className="stepper-controls-container-flex"><StepperControls enabled={clientControlsEnabled}/></div>}
                     {TaskSubmissionEvaluateOn.Server === executionMode && <SubmissionControls/>}
 
                     {!hasModes && null !== currentTask && isServerTask(currentTask) && <div className="execution-controls">
-                        <div className="execution-controls-dropdown">
+                        {platformHasClientRunner && <div className="execution-controls-dropdown">
                             <Dropdown>
                                 <Dropdown.Toggle>
                                     <FontAwesomeIcon icon={faCogs} className="mr-2"/>
@@ -156,7 +157,10 @@ export function ControlsAndErrors() {
                                     <Dropdown.Item key="server" onClick={() => changeExecutionMode(TaskSubmissionEvaluateOn.Server)}>{capitalizeFirstLetter(getMessage('SUBMISSION_EXECUTE_ON_SERVER').s)}</Dropdown.Item>
                                 </Dropdown.Menu>
                             </Dropdown>
-                        </div>
+                        </div>}
+                        {!platformHasClientRunner && <div>
+                            <SubmissionControls/>
+                        </div>}
                         <div>
                             <Button
                                 className="quickalgo-button is-medium"
