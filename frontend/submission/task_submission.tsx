@@ -24,9 +24,15 @@ import {getAnswerTokenForLevel, getTaskTokenForLevel} from "../task/platform/tas
 import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
 import {extractTestsFromTask} from './tests';
-import {TaskSubmissionEvaluateOn, TaskSubmissionResultPayload, TaskSubmissionServer} from './submission';
+import {
+    TaskSubmissionEvaluateOn,
+    TaskSubmissionResultPayload,
+    TaskSubmissionServer,
+    TaskSubmissionServerResult
+} from './submission';
 import {getTaskPlatformMode, recordingProgressSteps, TaskPlatformMode} from '../task/utils';
 import {TaskActionTypes} from '../task/task_slice';
+import {LibraryTestResult} from '../task/libs/library_test_result';
 
 export const levelScoringData = {
     basic: {
@@ -122,7 +128,7 @@ class TaskSubmissionExecutor {
 
         const currentSubmission = yield* appSelect(state => state.submission.taskSubmissions[currentSubmissionId]);
 
-        let worstRate = 100;
+        let worstRate = 1;
         for (let testResult of currentSubmission.result.tests) {
             worstRate = Math.min(worstRate, testResult.score);
         }
@@ -130,22 +136,19 @@ class TaskSubmissionExecutor {
         yield* put(submissionUpdateTaskSubmission({id: currentSubmissionId, submission: {...currentSubmission, evaluated: true}}));
 
         const finalScore = worstRate;
-        if (finalScore >= 100) {
+        if (finalScore > 0) {
             const nextVersion = yield* call(taskGetNextLevelToIncreaseScore, level);
 
-            yield* call([platformApi, platformApi.validate], null !== nextVersion ? 'stay' : 'done');
-            if (window.SrlLogger) {
+            yield* call([platformApi, platformApi.validate], null !== nextVersion || finalScore < 1 ? 'stay' : 'done');
+            if (1 <= finalScore && window.SrlLogger) {
                 window.SrlLogger.validation(100, 'none', 0);
             }
         } else {
             log.getLogger('tests').debug('Submission execution over', currentSubmission.result.tests);
-            if (currentSubmission.result.tests.find(testResult => testResult.score < 100)) {
-                const error = {
-                    type: 'task-tests-submission-results-overview',
-                    props: {
-                        results: displayedResults,
-                    }
-                };
+            if (currentSubmission.result.tests.find(testResult => testResult.score < 1)) {
+                const error = new LibraryTestResult(null, 'task-tests-submission-results-overview', {
+                    results: displayedResults,
+                });
 
                 yield* put(stepperDisplayError(error));
             }
@@ -169,12 +172,12 @@ class TaskSubmissionExecutor {
     }
 
     *gradeAnswer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
-        const {answer, maxScore, minScore} = parameters;
+        const {answer} = parameters;
         const state = yield* appSelect();
 
         if (TaskPlatformMode.RecordingProgress === getTaskPlatformMode(state)) {
             return {
-                score: minScore + (maxScore - minScore) * Number(answer) / recordingProgressSteps,
+                score: Number(answer) / recordingProgressSteps,
                 message: '',
             }
         }
@@ -187,7 +190,7 @@ class TaskSubmissionExecutor {
     }
 
     *gradeAnswerServer(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
-        const {level, answer, maxScore, minScore} = parameters;
+        const {level, answer} = parameters;
         const state = yield* appSelect();
 
         const randomSeed = state.platform.taskRandomSeed;
@@ -215,7 +218,7 @@ class TaskSubmissionExecutor {
 
         const submissionId = submissionData.submissionId;
 
-        let submissionResult;
+        let submissionResult: TaskSubmissionServerResult;
         try {
             submissionResult = yield* getServerSubmissionResults(submissionId);
         } catch (e) {
@@ -224,16 +227,20 @@ class TaskSubmissionExecutor {
             return {score: 0};
         }
 
+        for (let test of submissionResult.tests) {
+            test.score = test.score / 100;
+        }
+
         yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result: submissionResult}}));
 
         return {
-            score: submissionResult.score,
+            score: submissionResult.score / 100,
             message: submissionResult.errorMessage,
         };
     }
 
     *gradeAnswerClient(parameters: PlatformTaskGradingParameters): Generator<any, PlatformTaskGradingResult, any> {
-        const {level, answer, maxScore, minScore} = parameters;
+        const {level, answer} = parameters;
         const state = yield* appSelect();
         const environment = state.environment;
         let lastMessage = null;
@@ -245,7 +252,7 @@ class TaskSubmissionExecutor {
             };
         }
 
-        let testResults = [];
+        let testResults: TaskSubmissionResultPayload[] = [];
         for (let testIndex = 0; testIndex < tests.length; testIndex++) {
             if ('main' === environment) {
                 yield* delay(0);
@@ -268,13 +275,11 @@ class TaskSubmissionExecutor {
 
         let worstRate = 1;
         for (let result of testResults) {
-            worstRate = Math.min(worstRate, result.result ? 1 : 0);
+            worstRate = Math.min(worstRate, result.successRate);
         }
 
-        const finalScore = Math.round(worstRate * (maxScore - minScore) + minScore);
-
         return {
-            score: finalScore,
+            score: worstRate,
             message: lastMessage,
         };
     }

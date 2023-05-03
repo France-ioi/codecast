@@ -85,6 +85,8 @@ import {addStepperRecordAndReplayHooks} from './replay';
 import {appSelect} from '../hooks';
 import {TaskSubmissionResultPayload} from '../submission/submission';
 import {CodecastPlatform} from './platforms';
+import {LibraryTestResult} from '../task/libs/library_test_result';
+import {QuickAlgoLibrary} from '../task/libs/quickalgo_library';
 
 export const stepperThrottleDisplayDelay = 50; // ms
 export const stepperMaxSpeed = 255; // 255 - speed in ms
@@ -183,7 +185,7 @@ export const initialStateStepper = {
     options: {} as any, // TODO: Is this used ? If yes, put the type.
     controls: StepperControlsType.Normal,
     synchronizingAnalysis: false,
-    error: null as any,
+    error: null as string|LibraryTestResult,
     runningBackground: false,
     backgroundRunData: null as TaskSubmissionResultPayload,
 };
@@ -988,7 +990,7 @@ function* stepperStepSaga(app: App, action) {
                         yield* put({type: ActionTypes.StepperInterrupted});
                     }
                     if (ex.condition === 'error') {
-                        yield* put(stepperExecutionError(ex.message, false));
+                        yield* put(stepperExecutionError(LibraryTestResult.fromString(ex.message), false));
                     }
                 }
             }
@@ -1018,12 +1020,33 @@ function* stepperStepSaga(app: App, action) {
                 if (taskContext && taskContext.infos.checkEndCondition) {
                     try {
                         taskContext.infos.checkEndCondition(taskContext, true);
-                    } catch (message) {
+                    } catch (executionResult: unknown) {
+                        // checkEndCondition can throw the message or an object with more details
+                        const message: string = executionResult instanceof LibraryTestResult ? executionResult.getMessage() : executionResult as string;
+
+                        const computeGrade = taskContext.infos.computeGrade ? taskContext.infos.computeGrade : (context: QuickAlgoLibrary, message: string) => {
+                            let rate = 0;
+                            if (context.success) {
+                                rate = 1;
+                            }
+
+                            return {
+                                successRate: rate,
+                                message: message
+                            };
+                        };
+
+                        const gradeResult: {successRate: number, message: string} = computeGrade(taskContext, message);
+                        const aggregatedLibraryTestResult = executionResult instanceof LibraryTestResult
+                            ? executionResult : LibraryTestResult.fromString(message);
+                        aggregatedLibraryTestResult.successRate = gradeResult.successRate;
+                        aggregatedLibraryTestResult.message = gradeResult.message;
+
                         // @ts-ignore
                         if (taskContext.success) {
-                            yield* put(stepperExecutionSuccess(message));
+                            yield* put(stepperExecutionSuccess(aggregatedLibraryTestResult));
                         } else {
-                            yield* put(stepperExecutionError(message));
+                            yield* put(stepperExecutionError(aggregatedLibraryTestResult));
                         }
                     }
                 }
@@ -1275,7 +1298,7 @@ function* stepperSaga(app: App) {
     // @ts-ignore
     yield* takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function*({payload}) {
         log.getLogger('stepper').debug('receive an error, display it');
-        yield* put(stepperDisplayError(payload.error));
+        yield* put(stepperDisplayError(payload.testResult));
     });
 }
 

@@ -5,6 +5,7 @@ import {useAppSelector} from "../hooks";
 import {ActionTypes as CommonActionTypes, ActionTypes} from "../common/actionTypes";
 import {useDispatch} from "react-redux";
 import {Screen} from '../common/screens';
+import {selectAvailableHints} from './hints/hints_slice';
 
 interface MenuIconsTaskProps {
     toggleMenu: () => void,
@@ -15,7 +16,7 @@ export function MenuIconsTask(props: MenuIconsTaskProps) {
     const showDocumentation = useAppSelector(state => state.options.showDocumentation);
     const showFullScreen = useAppSelector(state => state.options.showFullScreen);
     const showMenu = useAppSelector(state => state.options.showMenu);
-    const showHints = useAppSelector(state => !!(state.hints.availableHints && state.hints.availableHints.length > 0));
+    const showHints = useAppSelector(state => selectAvailableHints(state).length > 0);
     const fullScreenActive = useAppSelector(state => state.fullscreen.active);
     const screen = useAppSelector(state => state.screen);
 

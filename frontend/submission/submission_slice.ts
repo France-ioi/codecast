@@ -53,7 +53,7 @@ export const submissionSlice = createSlice({
                 ...state.taskSubmissions[action.payload.submissionId].result.tests[action.payload.testId],
                 executing: false,
                 errorCode: action.payload.result.result ? SubmissionTestErrorCode.NoError : SubmissionTestErrorCode.WrongAnswer,
-                score: action.payload.result.result ? 100 : 0,
+                score: action.payload.result.successRate,
                 message: action.payload.result.message,
             };
         },

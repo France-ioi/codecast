@@ -10,6 +10,7 @@ import {QuickalgoLibraryInfos} from '../task_slice';
 import {TaskSubmissionServerTestResult} from '../../submission/submission';
 import {defaultNotions, NotionArborescence} from '../blocks/notions';
 import {CodecastPlatform} from '../../stepper/platforms';
+import {LibraryTestResult} from './library_test_result';
 
 export abstract class QuickAlgoLibrary {
     display: boolean;
@@ -18,6 +19,7 @@ export abstract class QuickAlgoLibrary {
     iTestCase: number; // Required for some libs such as barcode
     nbCodes: number;
     nbNodes: number;
+    nbMoves?: number;
     strings: any;
     customBlocks: any;
     customConstants: any;
@@ -295,7 +297,7 @@ export abstract class QuickAlgoLibrary {
     checkOutputHelper() {
     }
 
-    getErrorFromTestResult?(testResult: TaskSubmissionServerTestResult): void;
+    getErrorFromTestResult?(testResult: TaskSubmissionServerTestResult): LibraryTestResult;
 
     getSupportedPlatforms(): string[] {
         return [

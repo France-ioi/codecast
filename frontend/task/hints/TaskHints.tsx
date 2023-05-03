@@ -5,7 +5,7 @@ import {Carousel} from 'react-bootstrap';
 import {useDispatch} from "react-redux";
 import {useAppSelector} from "../../hooks";
 import {toHtml} from "../../utils/sanitize";
-import {hintUnlocked} from "./hints_slice";
+import {hintUnlocked, selectAvailableHints} from "./hints_slice";
 import {getMessage} from '../../lang';
 import {formatTaskInstructions} from '../utils';
 
@@ -14,7 +14,7 @@ export interface TaskHintProps {
 }
 
 export function TaskHints(props: TaskHintProps) {
-    const availableHints = useAppSelector(state => state.hints.availableHints);
+    const availableHints = useAppSelector(selectAvailableHints);
     const unlockedHintIds = useAppSelector(state => state.hints.unlockedHintIds);
     const taskLevel = useAppSelector(state => state.task.currentLevel);
     const platform = useAppSelector(state => state.options.platform);

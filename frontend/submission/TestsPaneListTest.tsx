@@ -84,7 +84,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
     const testIndex = useAppSelector(state => state.task.taskTests.findIndex(otherTest => otherTest.id === test.id));
 
     const testName = test.name ?? getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: props.index + 1});
-    const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 100;
+    const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 1;
 
     const errorCodeData = testResult? testErrorCodeData[testResult.errorCode] : null;
 

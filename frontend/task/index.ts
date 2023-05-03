@@ -89,6 +89,7 @@ import {appSelect} from '../hooks';
 import {extractTestsFromTask} from '../submission/tests';
 import {TaskSubmissionResultPayload} from "../submission/submission";
 import {CodecastPlatform, platformsList} from '../stepper/platforms';
+import {LibraryTestResult} from './libs/library_test_result';
 
 export const taskLoad = ({testId, level, tests, reloadContext, selectedTask}: {
     testId?: number,
@@ -177,8 +178,8 @@ function* taskLoadSaga(app: App, action) {
     }
 
     // yield* put(hintsLoaded([
-    //     {content: 'aazazaz'},
-    //     {content: 'aazazazazazazz'},
+    // {content: 'aazazaz', minScore: 0},
+    // {content: 'aazazazazazazz', minScore: 0.5},
     // ]));
 
     if (state.options.taskHints) {
@@ -595,22 +596,26 @@ export default function (bundle: Bundle) {
         // @ts-ignore
         yield* takeEvery(StepperActionTypes.StepperExecutionSuccess, function* ({payload}) {
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
+            const testResult: LibraryTestResult = payload.testResult;
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
                 result: true,
+                successRate: testResult.successRate,
                 steps: Codecast.runner._steps,
-                message: payload.message,
+                message: testResult.message,
             });
         });
 
         // @ts-ignore
         yield* takeEvery([StepperActionTypes.StepperExecutionError, StepperActionTypes.CompileFailed], function* ({payload}) {
             const currentTestId = yield* appSelect(state => state.task.currentTestId);
+            const testResult: LibraryTestResult = payload.testResult;
             yield taskSubmissionExecutor.afterExecution({
                 testId: currentTestId,
                 result: false,
+                successRate: testResult.successRate,
                 steps: Codecast.runner._steps,
-                message: payload.error,
+                message: testResult.message,
             });
         });
 
@@ -668,11 +673,13 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(platformAnswerGraded.type, function*({payload: {score, message, error, maxScore}}: ReturnType<typeof platformAnswerGraded>) {
-            if (score >= maxScore) {
+        yield* takeEvery(platformAnswerGraded.type, function*({payload: {score, message, error}}: ReturnType<typeof platformAnswerGraded>) {
+            if (score >= 1) {
                 yield* put(taskSuccess(message));
             } else if (error) {
                 yield* put(stepperDisplayError(error));
+            } else if (score > 0) {
+                yield* put(stepperDisplayError(message));
             }
         });
 
