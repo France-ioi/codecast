@@ -116,7 +116,7 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(taskSuccess.type, function*() {
+        yield* takeEvery(taskSuccess, function*() {
             const state = yield* appSelect();
             const context = quickAlgoLibraries.getContext(null, 'main');
             if (context && context.addSound && 'tralalere' === state.options.app) {
@@ -124,14 +124,14 @@ export default function (bundle: Bundle) {
             }
         });
 
-        yield* takeEvery(taskReloadStateEvent.type, statsReloadStateSaga);
+        yield* takeEvery(taskReloadStateEvent, statsReloadStateSaga);
 
-        yield* takeEvery(hintUnlocked.type, function*() {
+        yield* takeEvery(hintUnlocked, function*() {
             const hintsUnlocked = yield* appSelect(state => state.hints.unlockedHintIds.length);
             currentState.hintsTaken = Math.max(currentState.hintsTaken, hintsUnlocked);
         });
 
-        yield* takeEvery(taskSetBlocksUsage.type, function*() {
+        yield* takeEvery(taskSetBlocksUsage, function*() {
             const blockUsage = yield* appSelect(state => state.task.blocksUsage);
             if (blockUsage && null !== blockUsage.blocksCurrent) {
                 currentState.blocksUsed = blockUsage.blocksCurrent;

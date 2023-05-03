@@ -28,7 +28,7 @@ export function LayoutEditor(props: LayoutEditorProps) {
     const dispatch = useDispatch();
 
     const collapseBlocks = () => {
-        dispatch(taskSetBlocksPanelCollapsed(!blocksCollapsed));
+        dispatch(taskSetBlocksPanelCollapsed({collapsed: !blocksCollapsed, manual: true}));
     };
 
     const context = quickAlgoLibraries.getContext(null, 'main');

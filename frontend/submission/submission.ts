@@ -16,9 +16,10 @@ import {
 import {taskSubmissionExecutor} from './task_submission';
 import {appSelect} from '../hooks';
 import stringify from 'json-stable-stringify-without-jsonify';
-import {updateCurrentTestId} from '../task/task_slice';
+import {taskSetBlocksPanelCollapsed, taskSlice, updateCurrentTestId} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
 import {quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
+import {submissionChangePaneOpen} from './submission_slice';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,
@@ -128,8 +129,7 @@ export default function (bundle: Bundle) {
             }
         });
 
-        // @ts-ignore
-        yield* takeEvery(updateCurrentTestId.type, function* ({payload}) {
+        yield* takeEvery(updateCurrentTestId, function* ({payload}) {
             const newTest = yield* appSelect(state => state.task.taskTests[state.task.currentTestId]);
             const submission = yield* appSelect(selectCurrentServerSubmission);
             if (null !== submission && null !== newTest && isServerSubmission(submission)) {

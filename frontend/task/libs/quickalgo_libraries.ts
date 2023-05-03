@@ -214,7 +214,7 @@ export function* createQuickalgoLibrary() {
         yield* put(taskSetContextIncludeBlocks({...context.infos.includeBlocks}));
     }
     if (context.infos && context.infos.panelCollapsed) {
-        yield* put(taskSetBlocksPanelCollapsed(true));
+        yield* put(taskSetBlocksPanelCollapsed({collapsed: false, manual: true}));
     }
 
     let availablePlatforms = context.getSupportedPlatforms();

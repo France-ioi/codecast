@@ -61,6 +61,7 @@ export interface TaskState {
     contextIncludeBlocks: QuickalgoTaskIncludeBlocks,
     availablePlatforms: string[],
     blocksPanelCollapsed?: boolean,
+    blocksPanelWasOpen?: boolean,
     blocksUsage?: BlocksUsage,
     soundEnabled?: boolean,
     menuHelpsOpen?: boolean,
@@ -200,6 +201,7 @@ export const taskInitialState = {
     contextStrings: {},
     contextIncludeBlocks: {},
     blocksPanelCollapsed: false,
+    blocksPanelWasOpen: true,
     blocksUsage: null,
     soundEnabled: !isLocalStorageEnabled() || !window.localStorage.getItem('soundDisabled'),
     menuHelpsOpen: false,
@@ -319,8 +321,14 @@ export const taskSlice = createSlice({
         taskSetContextIncludeBlocks(state: TaskState, action: PayloadAction<QuickalgoTaskIncludeBlocks>) {
             state.contextIncludeBlocks = action.payload;
         },
-        taskSetBlocksPanelCollapsed(state: TaskState, action: PayloadAction<boolean>) {
-            state.blocksPanelCollapsed = action.payload;
+        taskSetBlocksPanelCollapsed(state: TaskState, action: PayloadAction<{collapsed: boolean, manual?: boolean}>) {
+            state.blocksPanelCollapsed = action.payload.collapsed;
+            if (action.payload.manual) {
+                state.blocksPanelWasOpen = !state.blocksPanelCollapsed;
+            }
+        },
+        blocksPanelWasOpen(state: TaskState, action: PayloadAction<boolean>) {
+            state.blocksPanelWasOpen = action.payload;
         },
         taskSetBlocksUsage(state: TaskState, action: PayloadAction<BlocksUsage>) {
             state.blocksUsage = action.payload;
@@ -365,6 +373,7 @@ export const {
     taskSetContextStrings,
     taskSetContextIncludeBlocks,
     taskSetBlocksPanelCollapsed,
+    taskSetBlocksPanelWasCollapsed,
     taskSetBlocksUsage,
     taskChangeSoundEnabled,
     taskSetMenuHelpsOpen,

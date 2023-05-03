@@ -30,6 +30,8 @@ import {StepperStatus} from "../../stepper";
 import log from 'loglevel';
 import {capitalizeFirstLetter} from '../../common/utils';
 import {appSelect} from '../../hooks';
+import {taskSetBlocksPanelCollapsed} from '../task_slice';
+import {submissionChangePaneOpen} from '../../submission/submission_slice';
 
 export const ZOOM_LEVEL_LOW = 1;
 export const ZOOM_LEVEL_HIGH = 1.5;
@@ -808,6 +810,15 @@ function* layoutSaga({replayApi}: App) {
         const environment = yield* appSelect(state => state.environment);
         if ('replay' === environment) {
             yield* put({type: ActionTypes.LayoutMobileModeChanged, payload: {mobileMode: LayoutMobileMode.Player}});
+        }
+
+        yield* put(taskSetBlocksPanelCollapsed({collapsed: true}));
+        yield* put(submissionChangePaneOpen(false));
+    });
+
+    yield* takeEvery(submissionChangePaneOpen, function* (action) {
+        if (action.payload) {
+            yield* put(taskSetBlocksPanelCollapsed({collapsed: true}));
         }
     });
 

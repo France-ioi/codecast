@@ -315,7 +315,7 @@ function* taskLoadEventSaga ({payload: {views: _views, success, error}}: ReturnT
             taskLoadParameters.level = options.level;
         }
         yield* put(taskLoad(taskLoadParameters));
-        yield* take(taskLoaded.type);
+        yield* take(taskLoaded);
 
         // if (serverApi) {
         //     const taskData = yield* call(serverApi, 'tasks', 'taskData', {task: taskToken});
@@ -457,19 +457,19 @@ export function setPlatformBundleParameters(parameters: PlatformBundleParameters
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
-        yield* takeEvery(taskLoadEvent.type, taskLoadEventSaga);
-        yield* takeEvery(taskGetMetadataEvent.type, taskGetMetaDataEventSaga);
-        yield* takeEvery(taskUnloadEvent.type, taskUnloadEventSaga);
-        yield* takeEvery(taskShowViewsEvent.type, taskShowViewsEventSaga);
-        yield* takeEvery(taskGetViewsEvent.type, taskGetViewsEventSaga);
-        yield* takeEvery(taskUpdateTokenEvent.type, taskUpdateTokenEventSaga);
-        yield* takeEvery(taskGetHeightEvent.type, taskGetHeightEventSaga);
-        yield* takeEvery(taskGetStateEvent.type, taskGetStateEventSaga);
-        yield* takeEvery(taskReloadStateEvent.type, taskReloadStateEventSaga);
-        yield* takeEvery(taskGetAnswerEvent.type, taskGetAnswerEventSaga);
-        yield* takeEvery(taskGradeAnswerEvent.type, taskGradeAnswerEventSaga);
-        yield* takeEvery(taskReloadAnswerEvent.type, taskReloadAnswerEventSaga);
-        yield* takeEvery(taskGetResourcesPost.type, taskGetResourcesPostSaga);
-        yield* takeEvery(platformTaskLink.type, linkTaskPlatformSaga);
+        yield* takeEvery(taskLoadEvent, taskLoadEventSaga);
+        yield* takeEvery(taskGetMetadataEvent, taskGetMetaDataEventSaga);
+        yield* takeEvery(taskUnloadEvent, taskUnloadEventSaga);
+        yield* takeEvery(taskShowViewsEvent, taskShowViewsEventSaga);
+        yield* takeEvery(taskGetViewsEvent, taskGetViewsEventSaga);
+        yield* takeEvery(taskUpdateTokenEvent, taskUpdateTokenEventSaga);
+        yield* takeEvery(taskGetHeightEvent, taskGetHeightEventSaga);
+        yield* takeEvery(taskGetStateEvent, taskGetStateEventSaga);
+        yield* takeEvery(taskReloadStateEvent, taskReloadStateEventSaga);
+        yield* takeEvery(taskGetAnswerEvent, taskGetAnswerEventSaga);
+        yield* takeEvery(taskGradeAnswerEvent, taskGradeAnswerEventSaga);
+        yield* takeEvery(taskReloadAnswerEvent, taskReloadAnswerEventSaga);
+        yield* takeEvery(taskGetResourcesPost, taskGetResourcesPostSaga);
+        yield* takeEvery(platformTaskLink, linkTaskPlatformSaga);
     });
 }
