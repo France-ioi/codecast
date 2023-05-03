@@ -82,6 +82,7 @@ export interface LayoutProps {
     currentTask: any,
     showVariables: boolean,
     activeView?: string,
+    advisedVisualization: string,
 }
 
 export interface LayoutElementMetadata {
@@ -598,6 +599,8 @@ function getAppropriateXmlLayout(layoutType: LayoutType, layoutMobileMode: Layou
 }
 
 export function createLayout(layoutProps: LayoutProps): ReactElement {
+    const instructionsAvailable = layoutProps.currentTask && 'solve' !== layoutProps.activeView && !(layoutProps.showVariables && 'variables' === layoutProps.advisedVisualization);
+
     const xmlToReact = new XMLToReact({
         HorizontalLayout: (attrs) => ({
             type: RelativeLayout,
@@ -634,7 +637,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 ...attrs,
             },
         }),
-        ...(layoutProps.currentTask && 'solve' !== layoutProps.activeView ? {
+        ...(instructionsAvailable ? {
             Instructions: (attrs) => ({
                 type: TaskInstructions,
                 metadata: {
@@ -656,7 +659,7 @@ export function createLayout(layoutProps: LayoutProps): ReactElement {
                 },
             })
         } : {}),
-        ...(layoutProps.showVariables ? {
+        ...(!instructionsAvailable ? {
             Variables: (attrs) => ({
                 type: LayoutStackView,
                 metadata: {

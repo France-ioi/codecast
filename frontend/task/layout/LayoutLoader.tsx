@@ -67,15 +67,6 @@ interface LayoutLoaderProps extends LayoutLoaderStateToProps, LayoutLoaderDispat
 }
 
 class _LayoutLoader extends React.PureComponent<LayoutLoaderProps> {
-    componentDidUpdate(prevProps) {
-        if (prevProps.advisedVisualization !== this.props.advisedVisualization && this.props.advisedVisualization) {
-            this.props.dispatch({
-                type: ActionTypes.LayoutVisualizationSelected,
-                payload: {visualization: this.props.advisedVisualization}
-            });
-        }
-    }
-
     render() {
         if (undefined !== this.props.width && undefined !== this.props.height) {
             return createLayout(this.props);
