@@ -3,6 +3,13 @@ $smart-contract-border-color: rgba(0, 0, 0, 0.176);
 .smart-contract-visualization {
   padding: 10px;
 
+  &.is-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
   .smart-contract-log {
     border: solid 1px $smart-contract-border-color;
     border-radius: 6px;

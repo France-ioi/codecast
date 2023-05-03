@@ -132,7 +132,7 @@ export class SmartContractLib extends QuickAlgoLibrary {
                 if (context) {
                     const innerState: SmartContractLibState = {
                         resultLog: log,
-                        errorMessage: payload.error.error,
+                        errorMessage: payload.error.message,
                     };
 
                     yield* call(quickAlgoLibraryResetAndReloadStateSaga, app, innerState);

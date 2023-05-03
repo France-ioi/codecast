@@ -4,11 +4,16 @@ import {useAppSelector} from "../../../hooks";
 import {SmartContractResultLogLine} from './smart_contract_lib';
 import {SmartContractViewTransaction} from './SmartContractViewTransaction';
 import {Alert} from "react-bootstrap";
+import {getMessage} from '../../../lang';
 
 export function SmartContractView() {
     const taskState = useAppSelector((state: AppStore) => state.task.state);
     if (!taskState || !taskState.resultLog) {
-        return null;
+        return (
+            <div className="smart-contract-visualization is-empty">
+                {getMessage('TASK_VISUALIZATION_EMPTY')}
+            </div>
+        );
     }
 
     const resultLog: SmartContractResultLogLine[] = taskState.resultLog;

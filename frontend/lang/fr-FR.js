@@ -191,6 +191,7 @@ module.exports = {
     TASK_VISUALIZATION: "Visualisation {number}",
     TASK_VISUALIZATION_NOT_PUBLIC: "Le contenu de ce test est volontairement indisponible.",
     TASK_VISUALIZATION_NO_FEEDBACK: "Les résultats de ce test sont cachés.",
+    TASK_VISUALIZATION_EMPTY: "Zone d'affichage du résultat de l'exécution",
     TASK_LEVEL: 'Version',
     TASK_LEVEL_VERSION: "{count} étoiles",
     TASK_LEVEL_SUCCESS_NEXT_BUTTON: "Passer à la suite",
