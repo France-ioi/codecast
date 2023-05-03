@@ -94,6 +94,10 @@
     }
   }
 
+  .submission-server-controls.no-padding .submission-controls {
+    padding-left: 0;
+  }
+
   .execution-controls-submit {
     flex: 1;
     text-align: right;

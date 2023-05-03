@@ -160,7 +160,7 @@ export function ControlsAndErrors() {
                                 </Dropdown.Menu>
                             </Dropdown>
                         </div>}
-                        {(!platformHasClientRunner || TaskSubmissionEvaluateOn.Server === executionMode) && <div>
+                        {(!platformHasClientRunner || TaskSubmissionEvaluateOn.Server === executionMode) && <div className={`submission-server-controls ${!platformHasClientRunner ? 'no-padding' : ''}`}>
                             <SubmissionControls/>
                         </div>}
                         {platformHasClientRunner && TaskSubmissionEvaluateOn.Client === executionMode && <div>
