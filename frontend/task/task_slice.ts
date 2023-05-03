@@ -327,9 +327,6 @@ export const taskSlice = createSlice({
                 state.blocksPanelWasOpen = !state.blocksPanelCollapsed;
             }
         },
-        blocksPanelWasOpen(state: TaskState, action: PayloadAction<boolean>) {
-            state.blocksPanelWasOpen = action.payload;
-        },
         taskSetBlocksUsage(state: TaskState, action: PayloadAction<BlocksUsage>) {
             state.blocksUsage = action.payload;
         },
@@ -373,7 +370,6 @@ export const {
     taskSetContextStrings,
     taskSetContextIncludeBlocks,
     taskSetBlocksPanelCollapsed,
-    taskSetBlocksPanelWasCollapsed,
     taskSetBlocksUsage,
     taskChangeSoundEnabled,
     taskSetMenuHelpsOpen,
