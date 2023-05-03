@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Editor} from "./Editor";
+import {Editor, EditorProps} from "./Editor";
 import {ActionTypes} from "./actionTypes";
 import {useDispatch} from "react-redux";
 import {withResizeDetector} from "react-resize-detector/build/withPolyfill";
@@ -21,6 +21,7 @@ interface BufferEditorProps {
     hasAutocompletion?: boolean,
     platform?: CodecastPlatform,
     dragEnabled?: boolean,
+    editorProps?: EditorProps,
 }
 
 const _BufferEditor = (props: BufferEditorProps) => {
@@ -86,6 +87,7 @@ const _BufferEditor = (props: BufferEditorProps) => {
         hasAutocompletion={props.hasAutocompletion}
         hasScrollMargin={'source' === buffer}
         dragEnabled={props.dragEnabled}
+        {...props.editorProps}
     />;
 }
 

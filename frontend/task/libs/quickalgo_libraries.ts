@@ -222,7 +222,6 @@ export function* createQuickalgoLibrary() {
         availablePlatforms = availablePlatforms.filter(platform => -1 !== currentTask.supportedLanguages.indexOf(platform));
     }
     if (-1 === availablePlatforms.indexOf(state.options.platform) && availablePlatforms.length) {
-        console.log('change platform');
         yield* put({type: CommonActionTypes.PlatformChanged, payload: {platform: availablePlatforms[0], reloadTask: true}});
 
         return false;

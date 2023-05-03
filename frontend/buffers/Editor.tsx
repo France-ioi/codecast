@@ -12,12 +12,12 @@ import log from 'loglevel';
 
 const Range = window.ace.acequire('ace/range').Range;
 
-interface EditorProps {
-    readOnly: boolean,
+export interface EditorProps {
+    readOnly?: boolean,
     shield?: boolean,
     theme?: string,
     mode?: string,
-    width: any,
+    width?: any,
     height?: any,
     hasAutocompletion?: boolean,
     hasScrollMargin?: boolean,
@@ -105,8 +105,10 @@ export function Editor(props: EditorProps) {
             if (props.onSelect) {
                 props.onSelect(selection_);
             }
-            // Try to scroll if needed
-            scrollOnLastLines();
+            if (props.hasScrollMargin) {
+                // Try to scroll if needed
+                scrollOnLastLines();
+            }
         });
     };
 

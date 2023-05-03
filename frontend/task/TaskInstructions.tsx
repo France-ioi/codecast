@@ -75,6 +75,7 @@ function transformNode(node, context: {platform: CodecastPlatform}) {
             hideCursor
             printMarginColumn={false}
             highlightActiveLine={false}
+            dragEnabled={false}
             maxLines={Infinity}
         />
     }
