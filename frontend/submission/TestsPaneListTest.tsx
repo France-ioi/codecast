@@ -85,6 +85,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
 
     const testName = test.name ?? getMessage('SUBMISSION_TEST_NUMBER').format({testNumber: props.index + 1});
     const hasRelativeScore = testResult && testResult.score > 0 && testResult.score < 1;
+    const submissionDisplayError = useAppSelector(state => state.submission.submissionDisplayedError);
 
     const errorCodeData = testResult? testErrorCodeData[testResult.errorCode] : null;
 
@@ -110,7 +111,7 @@ export function TestsPaneListTest(props: SubmissionResultTestProps) {
     };
 
     return (
-        <div className={`submission-result-test ${testIndex === currentTestId ? 'is-active' : ''}`} onClick={selectTest}>
+        <div className={`submission-result-test ${testIndex === currentTestId && !submissionDisplayError ? 'is-active' : ''}`} onClick={selectTest}>
             {testResult && errorCodeData && <div className="submission-result-icon-container" style={{backgroundColor: errorCodeData.color}}>
                 <FontAwesomeIcon icon={errorCodeData.icon}/>
             </div>}

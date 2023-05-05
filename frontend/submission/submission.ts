@@ -2,10 +2,7 @@ import {Bundle} from "../linker";
 import {call, put, takeEvery} from "typed-redux-saga";
 import {AppAction, AppStore} from "../store";
 import {
-    getTaskAnswerAggregated,
     platformApi,
-    PlatformTaskGradingParameters,
-    taskGetNextLevelToIncreaseScore
 } from "../task/platform/platform";
 import {
     SubmissionNormalized,
@@ -13,13 +10,14 @@ import {
     SubmissionTestErrorCode,
     SubmissionTestNormalized
 } from './task_platform';
-import {taskSubmissionExecutor} from './task_submission';
 import {appSelect} from '../hooks';
-import stringify from 'json-stable-stringify-without-jsonify';
-import {taskSetBlocksPanelCollapsed, taskSlice, updateCurrentTestId} from '../task/task_slice';
+import {updateCurrentTestId} from '../task/task_slice';
 import {stepperClearError, stepperDisplayError} from '../stepper/actionTypes';
 import {quickAlgoLibraries} from '../task/libs/quickalgo_libraries';
-import {submissionChangePaneOpen} from './submission_slice';
+import {CodecastPlatform} from '../stepper/platforms';
+import {submissionChangeDisplayedError, SubmissionErrorType} from './submission_slice';
+import {getMessage} from '../lang';
+import {LibraryTestResult} from '../task/libs/library_test_result';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,
@@ -39,6 +37,7 @@ export interface TaskSubmission {
     date: string, // ISO format
     evaluated: boolean,
     crashed?: boolean,
+    platform: CodecastPlatform,
     result?: TaskSubmissionResult,
 }
 
@@ -48,6 +47,9 @@ export function isServerSubmission(object: TaskSubmission): object is TaskSubmis
 
 export interface TaskSubmissionResult {
     tests: TaskSubmissionTestResult[],
+    compilationError?: boolean,
+    compilationMessage?: string|null,
+    errorMessage?: string|null,
 }
 
 export interface TaskSubmissionClient extends TaskSubmission {
@@ -74,6 +76,7 @@ export interface TaskSubmissionResultPayload {
     successRate?: number, // Between 0 and 1
     message?: string,
     steps?: number,
+    testResult?: LibraryTestResult,
 }
 
 export enum SubmissionActionTypes {
@@ -132,6 +135,10 @@ export default function (bundle: Bundle) {
         yield* takeEvery(updateCurrentTestId, function* ({payload}) {
             const newTest = yield* appSelect(state => state.task.taskTests[state.task.currentTestId]);
             const submission = yield* appSelect(selectCurrentServerSubmission);
+            const submissionDisplayedError = yield* appSelect(state => state.submission.submissionDisplayedError);
+            if (null !== submissionDisplayedError) {
+                yield* put(submissionChangeDisplayedError(null));
+            }
             if (null !== submission && null !== newTest && isServerSubmission(submission)) {
                 const testResult = submission.result.tests.find(test => test.testId === newTest.id);
                 if (undefined !== testResult) {
@@ -152,5 +159,15 @@ export default function (bundle: Bundle) {
                 }
             }
         });
+
+        yield* takeEvery(submissionChangeDisplayedError, function* ({payload}) {
+            if (SubmissionErrorType.CompilationError === payload) {
+                const error = getMessage('SUBMISSION_ERROR_COMPILATION').s;
+
+                yield* put(stepperDisplayError(error));
+            } else if (null === payload) {
+                yield* put(stepperClearError());
+            }
+        })
     });
 }

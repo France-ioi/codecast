@@ -220,7 +220,7 @@ export function* longPollServerSubmissionResults(submissionId: string) {
 }
 
 
-export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string) {
+export function* makeServerSubmission(answer: string, taskToken: string, answerToken: string, platform: string) {
     const state = yield* appSelect();
     const {taskPlatformUrl} = state.options;
     const answerDecoded = JSON.parse(answer);
@@ -229,7 +229,7 @@ export function* makeServerSubmission(answer: string, taskToken: string, answerT
         token: taskToken,
         answerToken: answerToken,
         answer: {
-            language: state.options.platform,
+            language: platform,
             sourceCode: answerDecoded,
         },
         userTests: [],

@@ -64,9 +64,6 @@ export function ControlsAndErrors() {
                 error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;
             } else if ('task-tests-submission-results-overview' === stepperError.type) {
                 error = <TaskTestsSubmissionResultOverview {...stepperError.props}/>;
-            } else if ('compilation' === stepperError.type) {
-                const stepperErrorHtml = toHtml(stepperError.props.content);
-                error = <div dangerouslySetInnerHTML={stepperErrorHtml} className="compilation"/>;
             } else if (stepperError.message) {
                 const stepperErrorHtml = toHtml(nl2br(stepperError.message));
                 error = <div dangerouslySetInnerHTML={stepperErrorHtml}/>;

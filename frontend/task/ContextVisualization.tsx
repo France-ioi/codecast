@@ -12,6 +12,10 @@ import {
     selectSubmissionsPaneEnabled,
     TaskSubmissionServerTestResult
 } from '../submission/submission';
+import {submissionChangeDisplayedError, SubmissionErrorType} from '../submission/submission_slice';
+import { Alert } from "react-bootstrap";
+import {toHtml} from '../utils/sanitize';
+import {nl2br} from '../common/utils';
 
 export function ContextVisualization() {
     const Visualization = quickAlgoLibraries.getVisualization();
@@ -23,6 +27,7 @@ export function ContextVisualization() {
     const zoomLevel = useAppSelector(state => state.layout.zoomLevel);
     const dispatch = useDispatch();
     const submissionPaneEnabled = useAppSelector(selectSubmissionsPaneEnabled);
+    const submissionDisplayedError = useAppSelector(state => state.submission.submissionDisplayedError);
 
     const context = quickAlgoLibraries.getContext(null, 'main');
 
@@ -38,17 +43,38 @@ export function ContextVisualization() {
         }
     }, [width, height]);
 
+    const dismissSubmissionError = () => {
+        dispatch(submissionChangeDisplayedError(null));
+    }
+
     const testsSelectorEnabled = submissionPaneEnabled;
     const currentTestPublic = null !== currentTestId && isTestPublic(currentTask, taskTests[currentTestId]);
 
-    const submission = useAppSelector(selectCurrentServerSubmission);
+    const submission = useAppSelector(state => null !== state.submission.currentSubmissionId ? state.submission.taskSubmissions[state.submission.currentSubmissionId] : null);
     let currentTestResult: TaskSubmissionServerTestResult|null = null;
     if (null !== submission && null !== currentTestId && isServerSubmission(submission) && submission.result) {
         currentTestResult = submission.result.tests.find(test => test.testId === taskTests[currentTestId].id);
     }
 
+    console.log('inner visuzalition', {submission, submissionDisplayedError});
+
     let innerVisualization = null;
-    if (currentTestResult && currentTestResult.noFeedback) {
+    if (submission && SubmissionErrorType.CompilationError === submissionDisplayedError && submission.result && submission.result.compilationError) {
+        innerVisualization = <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
+            <div className="error-content" dangerouslySetInnerHTML={toHtml(submission.result.compilationMessage)}></div>
+        </Alert></div>;
+    } else if (submission && SubmissionErrorType.CompilationWarning === submissionDisplayedError && submission.result && submission.result.compilationMessage) {
+        innerVisualization = <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
+            <div className="error-content">
+                {submission.result.compilationMessage}
+            </div>
+        </Alert></div>;
+    } else if (submission && SubmissionErrorType.ExecutionError === submissionDisplayedError && submission.result && submission.result.errorMessage) {
+        innerVisualization = <div className="task-visualization-error"><Alert variant="danger" dismissible onClose={dismissSubmissionError}>
+            <div className="error-content" dangerouslySetInnerHTML={toHtml(nl2br(submission.result.errorMessage))}>
+            </div>
+        </Alert></div>;
+    } else if (currentTestResult && currentTestResult.noFeedback) {
         innerVisualization = <div className="task-visualization-not-public">
             {getMessage('TASK_VISUALIZATION_NO_FEEDBACK')}
         </div>

@@ -540,10 +540,10 @@ function* onEditSource() {
         yield* put({type: StepperActionTypes.StepperExit});
     }
 
-    const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
-    if (null !== currentSubmissionId) {
-        yield* put(submissionChangeCurrentSubmissionId(null));
-    }
+    // const currentSubmissionId = yield* appSelect(state => state.submission.currentSubmissionId);
+    // if (null !== currentSubmissionId) {
+    // yield* put(submissionChangeCurrentSubmissionId(null));
+    // }
 
     const currentError = yield* appSelect(state => state.stepper.error);
     if (null !== currentError) {
@@ -629,6 +629,7 @@ export default function (bundle: Bundle) {
                 successRate: testResult.successRate,
                 steps: Codecast.runner._steps,
                 message: testResult.message,
+                testResult,
             });
         });
 

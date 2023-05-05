@@ -14,7 +14,9 @@ import {delay} from "../player/sagas";
 import {
     submissionAddNewTaskSubmission,
     submissionChangeCurrentSubmissionId,
+    submissionChangeDisplayedError,
     submissionChangePaneOpen,
+    SubmissionErrorType,
     submissionSetTestResult,
     submissionStartExecutingTest,
     submissionUpdateTaskSubmission,
@@ -25,7 +27,8 @@ import stringify from 'json-stable-stringify-without-jsonify';
 import {appSelect} from '../hooks';
 import {extractTestsFromTask} from './tests';
 import {
-    selectSubmissionsPaneEnabled,TaskSubmissionEvaluateOn,
+    selectSubmissionsPaneEnabled,
+    TaskSubmissionEvaluateOn,
     TaskSubmissionResultPayload,
     TaskSubmissionServer,
     TaskSubmissionServerResult
@@ -75,18 +78,29 @@ class TaskSubmissionExecutor {
         }
 
         if (!currentSubmissionId) {
+            const hasCompilationError = result.testResult && 'compilation' === result.testResult.type;
+
             log.getLogger('submission').log('[submission] Create new submission', tests);
             yield* put(submissionAddNewTaskSubmission({
                 evaluated: false,
                 date: new Date().toISOString(),
+                platform: state.options.platform,
                 type: TaskSubmissionEvaluateOn.Client,
                 result: {
                     tests: tests.map((test, testIndex) => ({executing: false, score: 0, testId: test.id ? test.id : String(testIndex), errorCode: null})),
+                    ...(hasCompilationError ? {
+                        compilationError: true,
+                        compilationMessage: result.testResult.props.content,
+                    } : {}),
                 },
             }));
 
             currentSubmissionId = yield* appSelect(state => state.submission.taskSubmissions.length - 1);
             yield* put(submissionChangeCurrentSubmissionId(currentSubmissionId));
+
+            if (hasCompilationError) {
+                yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
+            }
         }
         yield* put(submissionSetTestResult({submissionId: currentSubmissionId, testId: result.testId, result}));
         log.getLogger('submission').log('[submission] Set first test result');
@@ -196,10 +210,12 @@ class TaskSubmissionExecutor {
         const randomSeed = state.platform.taskRandomSeed;
         const newTaskToken = getTaskTokenForLevel(level, randomSeed);
         const answerToken = getAnswerTokenForLevel(stringify(answer), level, randomSeed);
+        const platform = state.options.platform;
 
         const serverSubmission: TaskSubmissionServer = {
             evaluated: false,
             date: new Date().toISOString(),
+            platform,
             type: TaskSubmissionEvaluateOn.Server,
         };
         yield* put(submissionAddNewTaskSubmission(serverSubmission));
@@ -213,7 +229,7 @@ class TaskSubmissionExecutor {
 
         yield* put(submissionChangeCurrentSubmissionId(submissionIndex));
 
-        const submissionData = yield* makeServerSubmission(answer, newTaskToken, answerToken);
+        const submissionData = yield* makeServerSubmission(answer, newTaskToken, answerToken, platform);
         if (!submissionData.success) {
             yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, crashed: true}}));
 
@@ -236,7 +252,9 @@ class TaskSubmissionExecutor {
         }
 
         yield* put(submissionUpdateTaskSubmission({id: submissionIndex, submission: {...serverSubmission, evaluated: true, result: submissionResult}}));
-        if (!submissionsPaneEnabled) {
+        if (submissionResult.compilationError) {
+            yield* put(submissionChangeDisplayedError(SubmissionErrorType.CompilationError));
+        } else if (!submissionsPaneEnabled) {
             const tests = submissionResult.tests;
             if (tests.length) {
                 yield* put(updateCurrentTestId({testId: 0}));

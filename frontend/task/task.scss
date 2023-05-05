@@ -626,6 +626,21 @@ pre, #app .ace_editor, .stack-view, .subtitles-band-frame {
   }
 }
 
+.task-visualization-error {
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  .alert {
+    width: 100%;
+  }
+  .alert .error-content {
+    white-space: pre;
+    font-family: $font-family-monospace;
+    overflow-x: auto;
+  }
+}
 
 @include mobile {
   .bp3-dialog {
