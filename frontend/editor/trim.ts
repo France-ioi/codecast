@@ -7,7 +7,7 @@ import {uploadBlobChannel} from '../utils/blobs';
 import {CodecastWorker, spawnWorker} from '../utils/worker_utils';
 // @ts-ignore
 import AudioWorker from '../audio_worker/index.worker';
-import {IntervalTree} from './interval_tree';
+import {IntervalTree, TrimInterval} from './interval_tree';
 import {findInstantIndex} from '../player/utils';
 import {findSubtitleIndex} from '../subtitles/utils';
 import {ActionTypes} from "./actionTypes";
@@ -177,34 +177,41 @@ function* editorTrimSaveSaga(action) {
     }
 }
 
-function trimEvents(data, intervals) {
+function trimEvents(data, intervals: IntervalTree) {
     const it = intervals[Symbol.iterator]();
     let start = 0;
     const endTime = data.events[data.events.length - 1][0];
-    let interval = {start: -1, end: -1, value: {skip: true, mute: false}};
+    let interval: TrimInterval = {start: -1, end: -1, value: {skip: true, mute: false}};
     const events = [];
+    let end = false;
     for (let event of data.events) {
-        if (event[0] >= interval.end) {
+        // Advance to the interval containing this event
+        while (event[0] >= interval.end) {
             /* Advance start time if past interval was not skipped. */
             if (!interval.value.skip) {
                 start += interval.end - interval.start;
             }
-            interval = it.next().value;
+            const nextIterator = it.next();
+            interval = nextIterator.value;
             /* Truncate the events if we get to the last interval and it is skipped. */
-            if (interval.value.skip && interval.end >= endTime) {
+            if (nextIterator.done || interval.value.skip && interval.end >= endTime) {
                 events.push([interval.start, 'end']);
+                end = true;
                 break;
             }
         }
-
-        event = event.slice();
-        if (interval.value.skip) {
-            event[0] = start;
-        } else {
-            event[0] = start + (event[0] - interval.start);
+        if (end) {
+            break;
         }
 
-        events.push(event);
+        const transformedEvent = [...event];
+        if (interval.value.skip) {
+            transformedEvent[0] = start;
+        } else {
+            transformedEvent[0] = start + (event[0] - interval.start);
+        }
+
+        events.push(transformedEvent);
     }
 
     const options = data.options;
