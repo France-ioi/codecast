@@ -103,6 +103,7 @@ module.exports = {
     EVAL_SUBSC_NONBLT: "tentative d'indexer avec une valeur non-scalaire",
     EVAL_ADDR_NONLVAL: "tentative de prendre l'addresse d'une non-lvalue",
     EVAL_UNSUP_EXPR: "unsupported expression",
+    EVAL_IS_NOT_DEFINED: "{variable} n'est pas défini",
     ARRAY1D_DIM_INVALID: "la valeur de la dimension {dim} est invalide",
     ARRAY1D_DIM_NOVAL: "la dimension {dim} est sans valeur ({ex})",
     ARRAY1D_DIM_UNK: "la dimension {expr} est inconnue",

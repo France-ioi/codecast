@@ -102,6 +102,7 @@ module.exports = {
     EVAL_SUBSC_NONBLT: "attempt to subscript with non-builtin index",
     EVAL_ADDR_NONLVAL: "attempt to take address of non-lvalue",
     EVAL_UNSUP_EXPR: "unsupported expression",
+    EVAL_IS_NOT_DEFINED: "{variable} is not defined",
     ARRAY1D_DIM_INVALID: "invalid value for dimension {dim}",
     ARRAY1D_DIM_NOVAL: "dimension {dim} has no value ({ex})",
     ARRAY1D_DIM_UNK: "dimension of {expr} is unknown",
