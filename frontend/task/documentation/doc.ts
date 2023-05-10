@@ -257,7 +257,7 @@ export default function (bundle: Bundle) {
                 if (concept) {
                     app.dispatch(documentationConceptSelected(concept));
                 }
-                app.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationBig}});
+                app.dispatch({type: CommonActionTypes.AppSwitchToScreen, payload: {screen: Screen.DocumentationSmall}});
             },
         };
 
