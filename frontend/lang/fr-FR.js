@@ -199,6 +199,7 @@ module.exports = {
     TASK_LEVEL_SUCCESS_NEXT_LABEL_FAMILIAR: "Nous te proposons d'essayer la version {version}.",
     TASK_LEVEL_SUCCESS_FINISHED: "Vous avez entièrement résolu cette question.",
     TASK_LEVEL_SUCCESS_FINISHED_FAMILIAR: "Tu as entièrement résolu cette question.",
+    TASK_LEVEL_SUCCESS_TRY_NEXT_TASK: "Nous vous proposons de passer à un autre sujet. S'il vous reste du temps, vous reviendrez plus tard essayer la version suivante.",
     TASK_LEVEL_LOCKED_TITLE: "Version verrouillée",
     TASK_LEVEL_LOCKED_MESSAGE: "Cette version est verrouillée, et la précédente doit être résolue avant de pouvoir afficher cette version.",
     TASK_LEVEL_LOCKED_MESSAGE_DEV: "Cette version est normalement verrouillée, et la précédente doit être résolue avant de pouvoir afficher cette version. Comme vous avez chargé ce sujet en local, vous pouvez néanmoins la voir.",

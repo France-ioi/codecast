@@ -77,6 +77,7 @@ export default {
                 hard: [ { type: "helpConcept", concepts: ["extra_function"] } ]
             }
         },
+        forceNextTaskAfter: 2,
     },
     data: {
         easy: [

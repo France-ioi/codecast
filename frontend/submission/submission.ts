@@ -18,6 +18,8 @@ import {CodecastPlatform} from '../stepper/platforms';
 import {submissionChangeDisplayedError, SubmissionErrorType} from './submission_slice';
 import {getMessage} from '../lang';
 import {LibraryTestResult} from '../task/libs/library_test_result';
+import {createAction} from '@reduxjs/toolkit';
+import {TaskLevelName} from '../task/platform/platform_slice';
 
 export interface TaskSubmissionTestResult {
     executing?: boolean,
@@ -79,17 +81,13 @@ export interface TaskSubmissionResultPayload {
     testResult?: LibraryTestResult,
 }
 
-export enum SubmissionActionTypes {
-    SubmissionTriggerPlatformValidate = 'submission/triggerPlatformValidate',
-}
+export const submissionTriggerPlatformValidate = createAction('submission/triggerPlatformValidate', (action?: string) => ({
+    payload: {
+        action,
+    },
+}));
 
-export interface SubmissionTriggerPlatformValidateAction extends AppAction {
-    type: SubmissionActionTypes.SubmissionTriggerPlatformValidate,
-}
 
-export const submissionTriggerPlatformValidate = (): SubmissionTriggerPlatformValidateAction => ({
-    type: SubmissionActionTypes.SubmissionTriggerPlatformValidate,
-});
 
 export function selectCurrentServerSubmission(state: AppStore) {
     if (null === state.submission.currentSubmissionId) {
@@ -125,11 +123,9 @@ export function selectSubmissionsPaneEnabled(state: AppStore) {
 
 export default function (bundle: Bundle) {
     bundle.addSaga(function* () {
-        yield* takeEvery(SubmissionActionTypes.SubmissionTriggerPlatformValidate, function* (action: SubmissionTriggerPlatformValidateAction) {
-            yield* call([platformApi, platformApi.validate], 'done');
-            if (window.SrlLogger) {
-                window.SrlLogger.validation(100, 'none', 0);
-            }
+        yield* takeEvery(submissionTriggerPlatformValidate, function* (action) {
+            const platformAction = action.payload.action ?? 'done';
+            yield* call([platformApi, platformApi.validate], platformAction);
         });
 
         yield* takeEvery(updateCurrentTestId, function* ({payload}) {
