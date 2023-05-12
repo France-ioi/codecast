@@ -47,7 +47,7 @@ export const documentationUseCodeExample = createAction('documentation/useCodeEx
 }));
 
 function getConceptsFromChannel() {
-    return new Promise<{concepts: any, selectedConceptId: number, availablePlatforms: CodecastPlatform[], screen: string, language: DocumentationLanguage}>((resolve, reject) => {
+    return new Promise<ConceptViewerConfigs>((resolve, reject) => {
         if (!openerChannel) {
             openerChannel = window.Channel.build({window: window.opener, origin: '*', scope: 'test'});
         }
@@ -207,7 +207,8 @@ function getConceptsFromLanguage(hasTaskInstructions: boolean, currentTask: Task
 function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolean) {
     if (standalone) {
         try {
-            const {concepts, selectedConceptId, availablePlatforms, screen, language} = yield* call(getConceptsFromChannel);
+            const conceptsConfig = yield* call(getConceptsFromChannel);
+            const {concepts, selectedConceptId, availablePlatforms, screen, language, canChangePlatform} = conceptsConfig;
             const currentSelectedConceptId = yield* appSelect(state => state.documentation.selectedConceptId);
             const firstLoad = null === currentSelectedConceptId;
             if (firstLoad) {
@@ -215,6 +216,7 @@ function* documentationLoadSaga(standalone: boolean, hasTaskInstructions: boolea
                 if (currentScreen !== screen) {
                     yield* put({type: CommonActionTypes.AppSwitchToScreen, payload: {screen}});
                 }
+                yield* put({type: CommonActionTypes.CanChangePlatformChanged, payload: {canChangePlatform}});
                 yield* put(taskSetAvailablePlatforms(availablePlatforms));
                 yield* put(documentationLanguageChanged(language));
             }
@@ -244,6 +246,15 @@ function* loadDocumentationConcepts(documentationConcepts, selectedConceptId = n
             yield* put(documentationConceptSelected(documentationConcepts[0].id));
         }
     }
+}
+
+export interface ConceptViewerConfigs {
+    concepts: DocumentationConcept[],
+    selectedConceptId: string,
+    availablePlatforms: string[],
+    screen: string,
+    language: DocumentationLanguage,
+    canChangePlatform: boolean,
 }
 
 export default function (bundle: Bundle) {
@@ -276,14 +287,16 @@ export default function (bundle: Bundle) {
             const fullscreenWindow = window.open(documentationUrl);
             const channel = window.Channel.build({window: fullscreenWindow, origin: '*', scope: 'test'});
 
-            const language = yield* appSelect(state => state.documentation.language);
-            const currentTask = yield* appSelect(state => state.task.currentTask);
-            const screen = yield* appSelect(state => state.screen);
-            const availablePlatforms = yield* appSelect(state => state.task.availablePlatforms);
-            const selectedConceptId = yield* appSelect(state => state.documentation.selectedConceptId);
+            const state = yield* appSelect();
+            const language = state.documentation.language;
+            const currentTask = state.task.currentTask;
+            const screen = state.screen;
+            const availablePlatforms = state.task.availablePlatforms;
+            const selectedConceptId = state.documentation.selectedConceptId;
             const hasTaskInstructions = action.payload.hasTaskInstructions;
+            const canChangePlatform = state.options.canChangePlatform;
 
-            channel.bind('getConceptViewerConfigs', () => {
+            channel.bind('getConceptViewerConfigs', (): ConceptViewerConfigs => {
                 const concepts = getConceptsFromLanguage(hasTaskInstructions, currentTask, language);
 
                 return {
@@ -291,6 +304,7 @@ export default function (bundle: Bundle) {
                     selectedConceptId,
                     language,
                     availablePlatforms,
+                    canChangePlatform,
                     screen,
                 };
             });

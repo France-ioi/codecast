@@ -34,6 +34,7 @@ export function Documentation(props: DocumentationProps) {
     const screen = useAppSelector(state => state.screen);
     const firstConcepts = concepts.slice(0, 3);
     const isTralalere = useAppSelector(state => 'tralalere' === state.options.app);
+    const canChangePlatform = useAppSelector(state => state.options.canChangePlatform);
 
     const [iframeRef, setIframeRef] = useState(null);
 
@@ -50,6 +51,7 @@ export function Documentation(props: DocumentationProps) {
             urlSplit[0] = urlSplit[0].replace(/index_en\.html/g, 'index_tralalere_en.html');
         }
         conceptUrl = urlSplit.join('#');
+        console.log('concept url', conceptUrl, selectedConcept, concepts);
     }
 
     useEffect(() => {
@@ -119,9 +121,9 @@ export function Documentation(props: DocumentationProps) {
                     <Icon icon="zoom-in"/>
                 </div>
                 <h2>{getMessage('TASK_DOCUMENTATION')}</h2>
-                <div className="documentation-language-selector">
+                {canChangePlatform && <div className="documentation-language-selector">
                     <DocumentationLanguageSelector/>
-                </div>
+                </div>}
                 {!props.standalone && <div className="documentation-new-window">
                     <a onClick={openDocumentationInNewWindow}>
                         <FontAwesomeIcon icon={faExternalLinkAlt}/>
@@ -136,9 +138,9 @@ export function Documentation(props: DocumentationProps) {
                 <div className="documentation-tabs-menu">
                     <Icon icon="code"/>
                 </div>
-                <div className="documentation-category-selector">
+                {canChangePlatform && <div className="documentation-category-selector">
                     <DocumentationLanguageSelector/>
-                </div>
+                </div>}
             </div>
             <div className="documentation-category-dropdown">
                 <div className="documentation-tabs-menu">

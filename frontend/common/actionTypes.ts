@@ -15,6 +15,7 @@ export enum ActionTypes {
     AppSwitchToScreen = 'App.Switch.To.Screen',
 
     PlatformChanged = 'Platform.Changed',
+    CanChangePlatformChanged = 'CanChangePlatform.Changed',
 
     WindowResized = 'Window.Resized'
 }
