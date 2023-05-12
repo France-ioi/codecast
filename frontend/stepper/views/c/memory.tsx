@@ -812,7 +812,7 @@ function extractView(layout, context, localMap, options) {
                 extraRows.push(row);
             }
         } catch (ex) {
-            //console.log('failed to evaluate extra expression', expr, ex);
+            console.error('failed to evaluate extra expression', expr, ex);
         }
     }
 

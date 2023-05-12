@@ -27,7 +27,7 @@ import {createDraft, finishDraft} from "immer";
 import {asyncGetJson} from "../utils/api";
 import {currentTaskChange, currentTaskChangePredefined, taskLoaded} from "../task/task_slice";
 import {LayoutPlayerMode} from "../task/layout/layout";
-import {setTaskEventsEnvironment} from "../task/platform/platform";
+import {isTaskPlatformLinked, setTaskEventsEnvironment} from "../task/platform/platform";
 import {createRunnerSaga} from "../stepper";
 import {delay as delay$1} from 'typed-redux-saga';
 import {platformTaskLink} from '../task/platform/actionTypes';
@@ -130,7 +130,7 @@ function* playerPrepare(app: App, action) {
     if (action.payload.data) {
         data = action.payload.data;
     } else {
-        data = yield* call(asyncGetJson, action.payload.eventsUrl);
+        data = yield* call(asyncGetJson, action.payload.eventsUrl, false);
     }
     data = Object.freeze(data);
 
@@ -165,8 +165,11 @@ function* playerPrepare(app: App, action) {
         });
     }
 
-    yield* put(platformTaskLink());
-    yield* take(taskLoaded.type);
+    if (!isTaskPlatformLinked()) {
+        yield* put(platformTaskLink());
+        yield* take(taskLoaded.type);
+    }
+
     state = yield* appSelect();
 
     const replayState = {
@@ -385,19 +388,15 @@ function* playerReplayEvent(app: App, {type, payload}) {
 
     Codecast.environments[environment].monitoring.clearListeners();
     Codecast.environments[environment].monitoring.effectTriggered(({effectId}) => {
-        // console.log('effect triggered', effectId);
         triggeredEffects[effectId] = false;
     });
     Codecast.environments[environment].monitoring.effectResolved((effectId) => {
-        // console.log('effect resolved', effectId);
         triggeredEffects[effectId] = true;
     });
     Codecast.environments[environment].monitoring.effectRejected((effectId) => {
-        // console.log('effect rejected', effectId);
         triggeredEffects[effectId] = true;
     });
     Codecast.environments[environment].monitoring.effectCancelled((effectId) => {
-        // console.log('effect cancelled', effectId);
         triggeredEffects[effectId] = true;
     });
 

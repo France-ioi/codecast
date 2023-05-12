@@ -212,6 +212,14 @@ html, body, #react-container {
     &.is-expanded .long {
       display: block !important;
     }
+
+    .task-mission-platform-selection {
+      max-width: 200px;
+      hr {
+        margin-top: 1rem !important;
+        margin-bottom: 1rem !important;
+      }
+    }
   }
 
   hr {

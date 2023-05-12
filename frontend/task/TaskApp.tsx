@@ -18,7 +18,7 @@ import {SubtitlesEditorPane} from "../subtitles/views/SubtitlesEditorPane";
 import {ActionTypes} from "../subtitles/actionTypes";
 import {SubtitlesEditor} from "../subtitles/SubtitlesEditor";
 import {LoginScreen} from "../common/LoginScreen";
-import {ZOOM_LEVEL_LOW} from "./layout/layout";
+import {LayoutView, selectActiveView, ZOOM_LEVEL_LOW} from "./layout/layout";
 import {getMessage} from "../lang";
 import {TaskLevelTabs} from "./TaskLevelTabs";
 import {TaskSuccessDialog} from "./dialog/TaskSuccessDialog";
@@ -49,6 +49,7 @@ export function TaskApp() {
     const language = useAppSelector(state => state.options.language);
     const displayAbout = useAppSelector(state => selectDisplayAbout(state));
     const taskSuccess = useAppSelector(state => state.task.success);
+    const activeView = useAppSelector(selectActiveView);
     const submissionsPaneOpen = useAppSelector(state => state.submission.submissionsPaneOpen);
 
     let progress = null;
@@ -156,7 +157,7 @@ export function TaskApp() {
                             }
                         </div>
 
-                        <MenuTask/>
+                        {LayoutView.Instructions !== activeView && <MenuTask/>}
                     </div>
 
                     <ContextVisualizationImages/>

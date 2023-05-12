@@ -41,6 +41,7 @@ import log from "loglevel";
 import {importPlatformModules} from '../libs/import_modules';
 import {taskLoad} from '../index';
 import {taskLoaded} from '../task_slice';
+import {ActionTypes as LayoutActionTypes} from '../layout/actionTypes';
 import {appSelect} from '../../hooks';
 
 let getTaskAnswer: () => Generator;
@@ -51,7 +52,7 @@ let taskGrader: TaskGrader;
 let taskEventsEnvironment = 'main';
 
 export let taskApi: any;
-export let platformApi: ReturnType<typeof makePlatformAdapter>;
+export let platformApi: ReturnType<typeof makePlatformAdapter> = null;
 export let serverApi = null;
 export let setTaskEventsEnvironment = (environment: string) => {
     taskEventsEnvironment = environment;
@@ -112,6 +113,10 @@ function* linkTaskPlatformSaga() {
     };
 }
 
+export function isTaskPlatformLinked(): boolean {
+    return null !== platformApi;
+}
+
 function* taskAnswerReloadedSaga () {
     const nextVersion = yield* call(taskGetNextLevelToIncreaseScore);
     log.getLogger('platform').debug('Task answer reloaded, next version = ' + nextVersion);
@@ -149,15 +154,23 @@ export function* taskGetNextLevelToIncreaseScore(currentLevelMaxScore: TaskLevel
     return nextVersion;
 }
 
-
-function* taskShowViewsEventSaga ({payload: {success}}: ReturnType<typeof taskShowViewsEvent>) {
-    /* The reducer has stored the views to show, just call success. */
-    yield* call(success);
-}
-
 function* taskGetViewsEventSaga ({payload: {success}}: ReturnType<typeof taskGetViewsEvent>) {
     /* XXX only the 'task' view is declared */
-    yield* call(success, {'task': {}});
+
+    const views = {
+        instructions: {},
+        editor: {},
+        solve: {},
+    };
+
+    yield* call(success, views);
+}
+
+function* taskShowViewsEventSaga ({payload: {views, success}}: ReturnType<typeof taskShowViewsEvent>) {
+    /* The reducer has stored the views to show, just call success. */
+
+    yield* put({type: LayoutActionTypes.LayoutViewsChanged, payload: {views}});
+    yield* call(success);
 }
 
 function* taskUpdateTokenEventSaga ({payload: {success}}: ReturnType<typeof taskUpdateTokenEvent>) {

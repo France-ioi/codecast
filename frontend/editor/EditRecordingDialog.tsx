@@ -14,10 +14,8 @@ export function EditRecordingDialog(props: EditRecordingDialogProps) {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        return function () {
-            dispatch({type: ActionTypes.EditorSaveClear});
-        };
-    });
+        dispatch({type: ActionTypes.EditorSaveClear});
+    }, []);
 
     return (
         <Dialog icon='menu' title={getMessage('MENU_EDIT_RECORDING_TITLE')} isOpen={props.open} onClose={props.onClose} className="edit-recording-dialog">
